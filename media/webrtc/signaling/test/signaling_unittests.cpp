@@ -1475,8 +1475,8 @@ class SignalingAgent {
     pObserver->addIceCandidateState = TestObserver::stateNoResponse;
     pc->AddIceCandidate(candidate.c_str(), mid.c_str(), level);
     ASSERT_TRUE(pObserver->addIceCandidateState ==
-                expectSuccess ? TestObserver::stateSuccess :
-                                TestObserver::stateError
+                (expectSuccess ? TestObserver::stateSuccess :
+                                TestObserver::stateError)
                );
 
     // Verify that adding ICE candidates does not change the signaling state

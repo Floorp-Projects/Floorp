@@ -550,14 +550,16 @@ class TransportConduitTest : public ::testing::Test
     mozilla::SyncRunnable::DispatchToThread(gMainThread,
                                             WrapRunnableNMRet(&mAudioSession,
                                                 &mozilla::AudioSessionConduit::Create));
-    if( !mAudioSession )
+    if( !mAudioSession ) {
       ASSERT_NE(mAudioSession, (void*)nullptr);
+    }
 
     mozilla::SyncRunnable::DispatchToThread(gMainThread,
                                             WrapRunnableNMRet(&mAudioSession2,
                                                 &mozilla::AudioSessionConduit::Create));
-    if( !mAudioSession2 )
+    if( !mAudioSession2 ) {
       ASSERT_NE(mAudioSession2, (void*)nullptr);
+    }
 
     WebrtcMediaTransport* xport = new WebrtcMediaTransport();
     ASSERT_NE(xport, (void*)nullptr);
@@ -615,15 +617,17 @@ class TransportConduitTest : public ::testing::Test
     mozilla::SyncRunnable::DispatchToThread(gMainThread,
                                             WrapRunnableNMRet(&mVideoSession,
                                                 &mozilla::VideoSessionConduit::Create));
-    if( !mVideoSession )
+    if( !mVideoSession ) {
       ASSERT_NE(mVideoSession, (void*)nullptr);
+   }
 
    // This session is for other one
     mozilla::SyncRunnable::DispatchToThread(gMainThread,
                                             WrapRunnableNMRet(&mVideoSession2,
                                                 &mozilla::VideoSessionConduit::Create));
-    if( !mVideoSession2 )
+    if( !mVideoSession2 ) {
       ASSERT_NE(mVideoSession2,(void*)nullptr);
+    }
 
     if (!send_vp8) {
       SetGmpCodecs();
@@ -716,8 +720,9 @@ class TransportConduitTest : public ::testing::Test
     mozilla::SyncRunnable::DispatchToThread(gMainThread,
                                             WrapRunnableNMRet(&videoSession,
                                                 &mozilla::VideoSessionConduit::Create));
-    if( !videoSession )
+    if( !videoSession ) {
       ASSERT_NE(videoSession, (void*)nullptr);
+    }
 
     //Test Configure Recv Codec APIS
     cerr << "   *************************************************" << endl;
@@ -831,8 +836,9 @@ class TransportConduitTest : public ::testing::Test
     mozilla::SyncRunnable::DispatchToThread(gMainThread,
                                             WrapRunnableNMRet(&mVideoSession,
                                                 &mozilla::VideoSessionConduit::Create));
-    if( !mVideoSession )
+    if( !mVideoSession ) {
       ASSERT_NE(mVideoSession, (void*)nullptr);
+    }
 
     mozilla::EncodingConstraints constraints;
     constraints.maxFs = max_fs;

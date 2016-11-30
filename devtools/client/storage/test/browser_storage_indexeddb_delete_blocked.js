@@ -13,19 +13,19 @@ add_task(function* () {
 
   info("test state before delete");
   yield checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb"]]
+    [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
   ]);
 
   info("do the delete");
   yield selectTreeItem(["indexedDB", "http://test1.example.org"]);
   let actor = gUI.getCurrentActor();
-  let result = yield actor.removeDatabase("http://test1.example.org", "idb");
+  let result = yield actor.removeDatabase("http://test1.example.org", "idb (default)");
 
   ok(result.blocked, "removeDatabase attempt is blocked");
 
   info("test state after blocked delete");
   yield checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb"]]
+    [["indexedDB", "http://test1.example.org"], ["idb (default)"]]
   ]);
 
   let eventWait = gUI.once("store-objects-updated");
@@ -47,7 +47,7 @@ add_task(function* () {
   info("try to delete database from nonexistent host");
   let errorThrown = false;
   try {
-    result = yield actor.removeDatabase("http://test2.example.org", "idb");
+    result = yield actor.removeDatabase("http://test2.example.org", "idb (default)");
   } catch (ex) {
     errorThrown = true;
   }
