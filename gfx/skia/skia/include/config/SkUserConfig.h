@@ -152,6 +152,9 @@
 
 #define SK_IGNORE_ETC1_SUPPORT
 
+// Don't use __stdcall with SkiaGLGlue - bug 1320644
+#define GR_GL_FUNCTION_TYPE
+
 #define SK_RASTERIZE_EVEN_ROUNDING
 
 #define SK_DISABLE_SCREENSPACE_TESS_AA_PATH_RENDERER
