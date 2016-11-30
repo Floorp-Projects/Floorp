@@ -122,6 +122,8 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvSyncWithCompositor() override { return IPC_OK(); }
 
+  virtual void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive) = 0;
+
   // HostIPCAllocator
   virtual base::ProcessId GetChildProcessId() override;
   virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
@@ -256,6 +258,8 @@ public:
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
+
+  void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive) override { }
 
   /**
    * Request that the compositor be recreated due to a shared device reset.

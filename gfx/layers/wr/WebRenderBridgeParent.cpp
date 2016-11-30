@@ -10,6 +10,7 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureHost.h"
@@ -21,19 +22,23 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
+WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
+                                             const uint64_t& aPipelineId,
                                              widget::CompositorWidget* aWidget,
                                              gl::GLContext* aGlContext,
                                              wrwindowstate* aWrWindowState,
                                              layers::Compositor* aCompositor)
-  : mPipelineId(aPipelineId)
+  : mCompositorBridge(aCompositorBridge)
+  , mPipelineId(aPipelineId)
   , mWidget(aWidget)
   , mWRState(nullptr)
   , mGLContext(aGlContext)
   , mWRWindowState(aWrWindowState)
   , mCompositor(aCompositor)
+  , mChildLayerObserverEpoch(0)
+  , mParentLayerObserverEpoch(0)
   , mDestroyed(false)
-  , mEpoch(0)
+  , mWREpoch(0)
 {
   MOZ_ASSERT(mGLContext);
   MOZ_ASSERT(mCompositor);
@@ -206,9 +211,13 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         NS_RUNTIMEABORT("not reached");
     }
   }
-  wr_dp_end(mWRWindowState, mWRState, mEpoch++);
+  wr_dp_end(mWRWindowState, mWRState, mWREpoch++);
   ScheduleComposition();
   DeleteOldImages();
+
+  if (ShouldParentObserveEpoch()) {
+    mCompositorBridge->ObserveLayerUpdate(mPipelineId, GetChildLayerObserverEpoch(), true);
+  }
 }
 
 mozilla::ipc::IPCResult
@@ -315,6 +324,20 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch)
+{
+  mChildLayerObserverEpoch = aLayerObserverEpoch;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvClearCachedResources()
+{
+  mCompositorBridge->ObserveLayerUpdate(mPipelineId, GetChildLayerObserverEpoch(), false);
+  return IPC_OK();
+}
+
 void
 WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -391,6 +414,18 @@ WebRenderBridgeParent::ClearResources()
     mCompositorScheduler = nullptr;
   }
   mGLContext = nullptr;
+  mCompositorBridge = nullptr;
+}
+
+bool
+WebRenderBridgeParent::ShouldParentObserveEpoch()
+{
+  if (mParentLayerObserverEpoch == mChildLayerObserverEpoch) {
+    return false;
+  }
+
+  mParentLayerObserverEpoch = mChildLayerObserverEpoch;
+  return true;
 }
 
 } // namespace layers

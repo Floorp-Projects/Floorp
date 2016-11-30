@@ -213,7 +213,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& 
   WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWRBridge.get();
 
   WebRenderBridgeParent* parent = new WebRenderBridgeParent(
-    aPipelineId, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
+    this, aPipelineId, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[aPipelineId].mWRBridge = parent;
   *aTextureFactoryIdentifier = parent->Compositor()->GetTextureFactoryIdentifier();
@@ -565,6 +565,20 @@ CrossProcessCompositorBridgeParent::UpdatePaintTime(LayerTransactionParent* aLay
   }
 
   state->mParent->UpdatePaintTime(aLayerTree, aPaintTime);
+}
+
+void
+CrossProcessCompositorBridgeParent::ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive)
+{
+  MOZ_ASSERT(aLayersId != 0);
+
+  CompositorBridgeParent::LayerTreeState* state =
+    CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
+  if (!state || !state->mParent) {
+    return;
+  }
+
+  Unused << state->mParent->SendObserveLayerUpdate(aLayersId, aEpoch, aActive);
 }
 
 } // namespace layers
