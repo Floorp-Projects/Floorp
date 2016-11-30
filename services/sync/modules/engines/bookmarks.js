@@ -275,6 +275,7 @@ BookmarksEngine.prototype = {
   _defaultSort: "index",
 
   syncPriority: 4,
+  allowSkippedRecord: false,
 
   // A diagnostic helper to get the string value for a bookmark's URL given
   // its ID. Always returns a string - on error will return a string in the
