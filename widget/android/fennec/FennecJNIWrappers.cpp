@@ -221,6 +221,14 @@ auto CodecProxy::Release() const -> bool
     return mozilla::jni::Method<Release_t>::Call(CodecProxy::mCtx, nullptr);
 }
 
+constexpr char CodecProxy::ReleaseOutput_t::name[];
+constexpr char CodecProxy::ReleaseOutput_t::signature[];
+
+auto CodecProxy::ReleaseOutput(mozilla::jni::Object::Param a0, bool a1) const -> bool
+{
+    return mozilla::jni::Method<ReleaseOutput_t>::Call(CodecProxy::mCtx, nullptr, a0, a1);
+}
+
 const char CodecProxy::NativeCallbacks::name[] =
         "org/mozilla/gecko/media/CodecProxy$NativeCallbacks";
 
