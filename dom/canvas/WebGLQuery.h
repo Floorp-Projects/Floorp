@@ -18,7 +18,6 @@ class WebGLQuery final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLQuery>
     , public LinkedListElement<WebGLQuery>
-    , public WebGLContextBoundObject
 {
     friend class AvailableRunnable;
     friend class WebGLRefCountedObject<WebGLQuery>;

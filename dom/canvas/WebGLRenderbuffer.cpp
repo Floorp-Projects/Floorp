@@ -47,7 +47,7 @@ EmulatePackedDepthStencil(gl::GLContext* gl)
 }
 
 WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mPrimaryRB( DoCreateRenderbuffer(webgl->gl) )
     , mEmulatePackedDepthStencil( EmulatePackedDepthStencil(webgl->gl) )
     , mSecondaryRB(0)

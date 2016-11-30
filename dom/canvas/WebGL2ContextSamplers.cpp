@@ -26,13 +26,7 @@ WebGL2Context::CreateSampler()
 void
 WebGL2Context::DeleteSampler(WebGLSampler* sampler)
 {
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObjectAllowDeletedOrNull("deleteSampler", sampler))
-        return;
-
-    if (!sampler || sampler->IsDeleted())
+    if (!ValidateDeleteObject("deleteSampler", sampler))
         return;
 
     for (int n = 0; n < mGLMaxTextureUnits; n++) {
@@ -47,18 +41,9 @@ WebGL2Context::DeleteSampler(WebGLSampler* sampler)
 }
 
 bool
-WebGL2Context::IsSampler(WebGLSampler* sampler)
+WebGL2Context::IsSampler(const WebGLSampler* sampler)
 {
-    if (IsContextLost())
-        return false;
-
-    if (!sampler)
-        return false;
-
-    if (!ValidateObjectAllowDeleted("isSampler", sampler))
-        return false;
-
-    if (sampler->IsDeleted())
+    if (!ValidateIsObject("isSampler", sampler))
         return false;
 
     MakeContextCurrent();
@@ -71,14 +56,11 @@ WebGL2Context::BindSampler(GLuint unit, WebGLSampler* sampler)
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowDeletedOrNull("bindSampler", sampler))
+    if (sampler && !ValidateObject("bindSampler", *sampler))
         return;
 
     if (GLint(unit) >= mGLMaxTextureUnits)
         return ErrorInvalidValue("bindSampler: unit must be < %d", mGLMaxTextureUnits);
-
-    if (sampler && sampler->IsDeleted())
-        return ErrorInvalidOperation("bindSampler: binding deleted sampler");
 
     ////
 
@@ -96,7 +78,7 @@ WebGL2Context::SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint para
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef(funcName, sampler))
+    if (!ValidateObject(funcName, sampler))
         return;
 
     sampler.SamplerParameter(funcName, pname, paramInt);
@@ -109,7 +91,7 @@ WebGL2Context::SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat pa
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef(funcName, sampler))
+    if (!ValidateObject(funcName, sampler))
         return;
 
     sampler.SamplerParameter(funcName, pname, WebGLIntOrFloat(paramFloat).AsInt());
@@ -125,7 +107,7 @@ WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler, GLen
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef(funcName, sampler))
+    if (!ValidateObject(funcName, sampler))
         return;
 
     ////
