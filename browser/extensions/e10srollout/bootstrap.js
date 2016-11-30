@@ -17,7 +17,7 @@ const TEST_THRESHOLD = {
 };
 
 const ADDON_ROLLOUT_POLICY = {
-  "beta"    : "50allmpc", // Any WebExtension or addon with mpc = true
+  "beta"    : "51alladdons", // Any WebExtension or addon with mpc = true
   "release" : "50allmpc", // Any WebExtension or addon with mpc = true
 };
 
