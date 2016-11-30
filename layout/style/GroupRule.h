@@ -38,8 +38,9 @@ protected:
   virtual ~GroupRule();
 public:
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(GroupRule)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(GroupRule, Rule)
+  NS_DECL_ISUPPORTS_INHERITED
+  virtual bool IsCCLeaf() const override;
 
   // implement part of Rule
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE

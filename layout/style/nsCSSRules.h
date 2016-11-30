@@ -53,6 +53,7 @@ private:
   ~MediaRule();
 public:
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaRule, GroupRule)
   NS_DECL_ISUPPORTS_INHERITED
 
   // Rule methods
@@ -248,9 +249,10 @@ public:
     // copy everything except our reference count
     : mozilla::css::Rule(aCopy), mDecl(aCopy.mDecl) {}
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsCSSFontFaceRule,
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsCSSFontFaceRule,
                                                          mozilla::css::Rule)
+  virtual bool IsCCLeaf() const override;
 
   // Rule methods
   DECL_STYLE_RULE_INHERIT
@@ -315,7 +317,8 @@ public:
       mFamilyList(aCopy.mFamilyList),
       mFeatureValues(aCopy.mFeatureValues) {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+  virtual bool IsCCLeaf() const override;
 
   // Rule methods
   DECL_STYLE_RULE_INHERIT
@@ -397,8 +400,9 @@ private:
   nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy);
   ~nsCSSKeyframeRule();
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCSSKeyframeRule, mozilla::css::Rule)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSKeyframeRule, mozilla::css::Rule)
+  virtual bool IsCCLeaf() const override;
 
   // Rule methods
   DECL_STYLE_RULE_INHERIT
@@ -524,8 +528,9 @@ private:
   nsCSSPageRule(const nsCSSPageRule& aCopy);
   ~nsCSSPageRule();
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCSSPageRule, nsIDOMCSSPageRule)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSPageRule, mozilla::css::Rule)
+  virtual bool IsCCLeaf() const override;
 
   // Rule methods
   DECL_STYLE_RULE_INHERIT
@@ -621,7 +626,8 @@ private:
   ~nsCSSCounterStyleRule();
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+  virtual bool IsCCLeaf() const override;
 
   // Rule methods
   DECL_STYLE_RULE_INHERIT
