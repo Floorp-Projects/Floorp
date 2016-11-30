@@ -1153,17 +1153,22 @@ nsLookAndFeel::Init()
     sInfoText = GDK_RGBA_TO_NS_RGBA(color);
     ReleaseStyleContext(style);
 
-    style = ClaimStyleContext(MOZ_GTK_MENUITEM);
-    {
-        GtkStyleContext* accelStyle =
-            CreateStyleForWidget(gtk_accel_label_new("M"), style);
-        gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_NORMAL, &color);
-        sMenuText = GDK_RGBA_TO_NS_RGBA(color);
-        gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_INSENSITIVE, &color);
-        sMenuTextInactive = GDK_RGBA_TO_NS_RGBA(color);
-        g_object_unref(accelStyle);
-    }
-    ReleaseStyleContext(style);
+    // menu foreground & menu background
+    GtkWidget *accel_label = gtk_accel_label_new("M");
+    GtkWidget *menuitem = gtk_menu_item_new();
+    GtkWidget *menu = gtk_menu_new();
+
+    g_object_ref_sink(menu);
+
+    gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+
+    style = gtk_widget_get_style_context(accel_label);
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
+    sMenuText = GDK_RGBA_TO_NS_RGBA(color);
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_INSENSITIVE, &color);
+    sMenuTextInactive = GDK_RGBA_TO_NS_RGBA(color);
+    g_object_unref(menu);
 
     style = ClaimStyleContext(MOZ_GTK_MENUPOPUP);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
@@ -1186,6 +1191,9 @@ nsLookAndFeel::Init()
     GtkWidget *combobox = gtk_combo_box_new();
     GtkWidget *comboboxLabel = gtk_label_new("M");
     gtk_container_add(GTK_CONTAINER(combobox), comboboxLabel);
+#else
+    GtkWidget *combobox = gtk_combo_box_new_with_entry();
+    GtkWidget *comboboxLabel = gtk_bin_get_child(GTK_BIN(combobox));
 #endif
     GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget *treeView = gtk_tree_view_new();
@@ -1199,9 +1207,7 @@ nsLookAndFeel::Init()
     gtk_container_add(GTK_CONTAINER(parent), button);
     gtk_container_add(GTK_CONTAINER(parent), treeView);
     gtk_container_add(GTK_CONTAINER(parent), linkButton);
-#if (MOZ_WIDGET_GTK == 2)
     gtk_container_add(GTK_CONTAINER(parent), combobox);
-#endif
     gtk_container_add(GTK_CONTAINER(parent), menuBar);
     gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuBarItem);
     gtk_container_add(GTK_CONTAINER(window), parent);
@@ -1301,24 +1307,17 @@ nsLookAndFeel::Init()
     sTextSelectedText = GDK_RGBA_TO_NS_RGBA(color);
     ReleaseStyleContext(style);
 
-    // Button text color
-    style = ClaimStyleContext(MOZ_GTK_BUTTON);
-    {
-        GtkStyleContext* labelStyle =
-            CreateStyleForWidget(gtk_label_new("M"), style);
-        gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_NORMAL, &color);
-        sButtonText = GDK_RGBA_TO_NS_RGBA(color);
-        gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_PRELIGHT, &color);
-        sButtonHoverText = GDK_RGBA_TO_NS_RGBA(color);
-        g_object_unref(labelStyle);
-    }
-    ReleaseStyleContext(style);
+    // Button text, background, border
+    style = gtk_widget_get_style_context(label);
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
+    sButtonText = GDK_RGBA_TO_NS_RGBA(color);
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
+    sButtonHoverText = GDK_RGBA_TO_NS_RGBA(color);
 
     // Combobox text color
-    style = ClaimStyleContext(MOZ_GTK_COMBOBOX_ENTRY_TEXTAREA);
+    style = gtk_widget_get_style_context(comboboxLabel);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sComboBoxText = GDK_RGBA_TO_NS_RGBA(color);
-    ReleaseStyleContext(style);
 
     // Menubar text and hover text colors    
     style = ClaimStyleContext(MOZ_GTK_MENUBARITEM);
