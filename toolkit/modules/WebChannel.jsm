@@ -171,7 +171,7 @@ this.WebChannel = function(id, originOrPermission) {
       // The permission manager operates on domain names rather than true
       // origins (bug 1066517).  To mitigate that, we explicitly check that
       // the scheme is https://.
-      let uri = Services.io.newURI(requestPrincipal.originNoSuffix, null, null);
+      let uri = Services.io.newURI(requestPrincipal.origin, null, null);
       if (uri.scheme != "https") {
         return false;
       }
@@ -183,7 +183,7 @@ this.WebChannel = function(id, originOrPermission) {
   } else {
     // a simple URI, so just check for an exact match.
     this._originCheckCallback = requestPrincipal => {
-      return originOrPermission.prePath === requestPrincipal.originNoSuffix;
+      return originOrPermission.prePath === requestPrincipal.origin;
     }
   }
   this._originOrPermission = originOrPermission;
