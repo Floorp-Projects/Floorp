@@ -11,7 +11,7 @@ class nsPageFrame;
 class nsSharedPageData;
 
 // Page frame class used by the simple page sequence frame
-class nsPageContentFrame : public ViewportFrame {
+class nsPageContentFrame : public mozilla::ViewportFrame {
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
