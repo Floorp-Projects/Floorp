@@ -117,9 +117,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     static MBasicBlock* NewPendingLoopHeader(MIRGraph& graph, const CompileInfo& info,
                                              MBasicBlock* pred, BytecodeSite* site,
                                              unsigned loopStateSlots);
-    static MBasicBlock* NewSplitEdge(MIRGraph& graph, const CompileInfo& info,
-                                     MBasicBlock* pred, size_t predEdgeIdx,
-                                     MBasicBlock* succ);
+    static MBasicBlock* NewSplitEdge(MIRGraph& graph, MBasicBlock* pred,
+                                     size_t predEdgeIdx, MBasicBlock* succ);
 
     bool dominates(const MBasicBlock* other) const {
         return other->domIndex() - domIndex() < numDominated();
