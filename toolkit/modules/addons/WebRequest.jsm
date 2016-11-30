@@ -624,10 +624,16 @@ HttpObserverManager = {
         data.originUrl = originPrincipal.URI.spec;
       }
 
+      // If there is no loadingPrincipal, check that the request is not going to
+      // inherit a system principal.  triggeringPrincipal is the context that
+      // initiated the load, but is not necessarily the principal that the
+      // request results in, only rely on that if no other principal is available.
       let {isSystemPrincipal} = Services.scriptSecurityManager;
-
-      data.isSystemPrincipal = (isSystemPrincipal(loadInfo.triggeringPrincipal) ||
-                                isSystemPrincipal(loadInfo.loadingPrincipal));
+      let isTopLevel = !loadInfo.loadingPrincipal && !!data.browser;
+      data.isSystemPrincipal = !isTopLevel &&
+                               isSystemPrincipal(loadInfo.loadingPrincipal ||
+                                                 loadInfo.principalToInherit ||
+                                                 loadInfo.triggeringPrincipal);
 
       if (loadInfo.frameOuterWindowID) {
         Object.assign(data, {

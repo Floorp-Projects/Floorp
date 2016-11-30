@@ -13,6 +13,7 @@ let commonEvents = {
 
 function background(events) {
   let expect;
+  let ignore;
   let defaultOrigin;
 
   browser.test.onMessage.addListener((msg, expected) => {
@@ -21,6 +22,7 @@ function background(events) {
     }
     expect = expected.expect;
     defaultOrigin = expected.origin;
+    ignore = expected.ignore;
     let promises = [];
     // Initialize some stuff we'll need in the tests.
     for (let entry of Object.values(expect)) {
@@ -55,6 +57,9 @@ function background(events) {
       filename = url.pathname;
     } else {
       filename = url.pathname.split("/").pop();
+    }
+    if (ignore && ignore.includes(filename)) {
+      return;
     }
     let expected = expect[filename];
     if (!expected) {
