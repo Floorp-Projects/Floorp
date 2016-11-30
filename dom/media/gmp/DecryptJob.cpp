@@ -4,8 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DecryptJob.h"
+#include <atomic>
 
 namespace mozilla {
+
+std::atomic<uint32_t> sDecryptJobInstanceCount = 0;
+
+DecryptJob::DecryptJob(MediaRawData* aSample)
+  : mId(++sDecryptJobInstanceCount )
+  , mSample(aSample)
+{
+}
+
+RefPtr<DecryptPromise>
+DecryptJob::Ensure()
+{
+  return mPromise.Ensure(__func__);
+}
 
 void
 DecryptJob::PostResult(DecryptStatus aResult)
