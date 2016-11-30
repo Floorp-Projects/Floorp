@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Size Management</h1>
+<h1 id="sizes_management">Size Management</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_New_Size">FT_New_Size</a></td><td><a href="#FT_Done_Size">FT_Done_Size</a></td><td><a href="#FT_Activate_Size">FT_Activate_Size</a></td><td></td></tr>
@@ -116,7 +116,7 @@
 
 <div class="section">
 <h3 id="FT_New_Size">FT_New_Size</h3>
-<p>Defined in FT_SIZES_H (ftsizes.h).</p>
+<p>Defined in FT_SIZES_H (freetype/ftsizes.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_New_Size</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
@@ -150,7 +150,7 @@
 
 <div class="section">
 <h3 id="FT_Done_Size">FT_Done_Size</h3>
-<p>Defined in FT_SIZES_H (ftsizes.h).</p>
+<p>Defined in FT_SIZES_H (freetype/ftsizes.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Done_Size</b>( <a href="ft2-base_interface.html#FT_Size">FT_Size</a>  size );
@@ -173,7 +173,7 @@
 
 <div class="section">
 <h3 id="FT_Activate_Size">FT_Activate_Size</h3>
-<p>Defined in FT_SIZES_H (ftsizes.h).</p>
+<p>Defined in FT_SIZES_H (freetype/ftsizes.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Activate_Size</b>( <a href="ft2-base_interface.html#FT_Size">FT_Size</a>  size );

@@ -327,7 +327,7 @@
 	Blaskey <listtarget@danbala.com>).
 
 	* src/sfnt/ttcmap.h (TT_CMap): Add member `unsorted'.
-	* src/sfnt/ttcmac.c: Use SFNT_Err_Ok where appropriate.
+	* src/sfnt/ttcmap.c: Use SFNT_Err_Ok where appropriate.
 
 	(tt_cmap0_validate, tt_cmap2_validate, tt_cmap6_validate,
 	tt_cmap8_validate, tt_cmap10_validate, tt_cmap12_validate): Use
@@ -571,7 +571,7 @@
 	doing anything else.  This avoids unnecessary heap allocations
 	(400KByte of heap memory for the LZW decoder).
 
-	* src/gzip/ftgzip.c (FT_Stream_OpenGZip): Ditto for the gzip
+	* src/gzip/ftgzip.c (FT_Stream_OpenGzip): Ditto for the gzip
 	decoder, although the code savings are smaller.
 
 	* docs/CHANGES: Updated.
@@ -756,7 +756,7 @@
 	(AF_AxisHintsRec): Add `max_segments' and `max_edges'.
 	(af_axis_hints_new_segment, af_axis_hints_new_edge): New prototypes.
 
-	* src/autofit/aflatin.c (af_latin_metricsc_scale): Don't call
+	* src/autofit/aflatin.c (af_latin_metrics_scale): Don't call
 	AF_SCALER_EQUAL_SCALES.
 	(af_latin_hints_compute_segments): Change return type to FT_Error.
 	Update all callers.
@@ -1014,7 +1014,7 @@
 	t42_parse_charstrings, t42_parse_dict): Check parser error value
 	after call to T1_Skip_PS_Token (where necessary).
 
-	* src/psaux/psobjc.c (skip_string, ps_parser_skip_PS_token,
+	* src/psaux/psobjs.c (skip_string, ps_parser_skip_PS_token,
 	ps_tobytes): Add error messages.
 
 2005-02-12  Werner Lemberg  <wl@gnu.org>
@@ -1112,7 +1112,7 @@
 	but return them as-is.
 
 	* docs/CHANGES: Mention new bitmap API.
-	* include/freetype/ftchapter.s: Updated.
+	* include/freetype/ftchapters.h: Updated.
 
 2004-12-11  Robert Clark  <freetype@ratty.org.uk>
 
@@ -1159,7 +1159,7 @@
 	(ah_test_extremum, ah_get_orientation): Removed.
 	(ah_outline_load): Use FT_Outline_Get_Orientation.
 
-	* src/base/ftsynth.c (ft_test_extrama, ft_get_orientation): Removed.
+	* src/base/ftsynth.c (ft_test_extrema, ft_get_orientation): Removed.
 	(FT_GlyphSlot_Embolden): Use FT_Outline_Get_Orientation.
 
 2004-11-23  Fernando Papa  <fpapa@netgate.com.uy>
@@ -1829,7 +1829,7 @@
 
 2004-08-05  David Turner  <david@freetype.org>
 
-	`Activate' gray-scale specifing hinting within the TrueType
+	`Activate' gray-scale specifying hinting within the TrueType
 	bytecode interpreter.  This is an experimental feature which
 	should probably be made optional.
 
@@ -1839,7 +1839,7 @@
 	(TT_Load_Glyph): Here.
 	Set `grayscale' flag except for `FT_LOAD_TARGET_MONO'.
 
-	* src/truetyep/ttinterp.c (Ins_GETINFO): Return MS rasterizer
+	* src/truetype/ttinterp.c (Ins_GETINFO): Return MS rasterizer
 	version 1.7.
 	Return rotation and stretching info only if glyph is rotated or
 	stretched, respectively.
@@ -1868,7 +1868,7 @@
 	(LITTLE_ENDIAN_USHORT, LITTLE_ENDIAN_UINT): New macros.
 	(T1_Read_PFM): New function.
 	(T1_Read_Metrics): New higher-level function to be used instead of
-	T1Read_AFM.
+	T1_Read_AFM.
 	Update all callers.
 
 2004-07-31  Werner Lemberg  <wl@gnu.org>
@@ -2048,7 +2048,7 @@
 	pcf_get_metrics, pcf_get_bitmaps, pcf_get_encodings): Improve
 	debugging messages.
 
-	* src/pcf/pcfdrivr.c (FT_COMPOMENT): Move up.
+	* src/pcf/pcfdrivr.c (FT_COMPONENT): Move up.
 	(PCF_Face_Init): Simplify code.
 
 	* src/bdf/bdfdrivr.h (BDF_FaceRec): New element `default_glyph'.
@@ -2116,7 +2116,7 @@
 	* include/freetype/cache/ftcmru.h (FTC_MruNode_CompareFunc): Change
 	return type to FT_Bool.
 
-	* src/cache/ftbasic.c (ftc_basic_family_compare): Change return
+	* src/cache/ftcbasic.c (ftc_basic_family_compare): Change return
 	type to FT_Bool.
 
 	* src/cache/ftccache.c (FTC_Cache_Init, ftc_cache_init): Make
@@ -2153,7 +2153,7 @@
 
 	* docs/CHANGES: Updated.
 
-2004-06-04  David Chester  <davidchester@gmx.net>
+2004-06-04  David Chester  <davidchester@qmx.net>
 
 	Improve inter-letter spacing for autohinted glyphs.
 
@@ -2289,7 +2289,7 @@
 
 	* src/cff/cffgload.h (CFF_Builder): Remove `error'.
 	* src/cff/cffgload.c (cff_decoder_parse_charstrings): Replace
-	`Memory_Error' with `Fail' und update all users.
+	`Memory_Error' with `Fail' and update all users.
 
 2004-05-11  Werner Lemberg  <wl@gnu.org>
 
@@ -2899,7 +2899,7 @@
 	Improve MacOS fond support.  Provide a new API
 	`FT_New_Face_From_FSSpec' similar to `FT_New_Face'.
 
-	* src/base/ftmac.c [__MWERKS__]: Include FSp_fpopen.h.
+	* src/base/ftmac.c [__MWERKS__]: Include FSp_fopen.h.
 	STREAM_FILE [__MWERKS__]: New macro.
 	(ft_FSp_stream_close, ft_FSp_stream_io) [__MWERKS__]: New functions.
 	(file_spec_from_path) [__MWERKS__]: Updated #if statement.
@@ -3331,7 +3331,7 @@
 
 	* src/cff/cffdrivr.c (cff_get_cmap_info): Call sfnt module's TT CMap
 	Info service function if the cmap comes from sfnt.  Return 0 if the
-	cmap is sythesized in cff module.
+	cmap is synthesized in cff module.
 
 2004-01-20  David Turner  <david@freetype.org>
 
@@ -3460,7 +3460,7 @@
 
 2003-12-25  Werner Lemberg  <wl@gnu.org>
 
-	* src/base/fttrigon.c, src/base/ftgloadr.c: Inlude
+	* src/base/fttrigon.c, src/base/ftgloadr.c: Include
 	FT_INTERNAL_OBJECTS_H.
 
 	* src/base/ftstroke.c (FT_Outline_GetInsideBorder,
@@ -3539,7 +3539,7 @@
 	src/cache/ftcsbits.c,
 	src/cache/ftccmap.c,
 	src/cache/ftcbasic.c (added),
-	src/cache/ftclru.c (removed):
+	src/cache/ftlru.c (removed):
 
 	  *Complete* rewrite of the cache sub-system to `solve' the
 	  following points:
@@ -4010,7 +4010,7 @@
 	* src/cff/cffload.h, src/cff/cffobjs.h, src/cff/cffparse.h: Don't
 	include FT_INTERNAL_CFF_TYPES_H but cfftypes.h directly.
 
-	* src/cif/cidriver.c: Include FT_SERVICE_POSTSCRIPT_INFO_H.
+	* src/cid/cidriver.c: Include FT_SERVICE_POSTSCRIPT_INFO_H.
 	(cid_ps_get_font_info): New function.
 	(cid_service_ps_info): New service.
 	(cid_services): Updated.
@@ -4119,7 +4119,7 @@
 	(fnt_cmap_class_rec, fnt_cmap_class), src/bdf/bdflib.c (empty,
 	_num_bdf_properties), src/gzip/infutil.c (inflate_mask),
 	src/gzip/inffixed.h (fixed_bl, fixed_bd, fixed_tl, fixed_td),
-	src/gzip/inftrees.h (inflate_trees_fixed), srf/gzip/inftrees.c
+	src/gzip/inftrees.h (inflate_trees_fixed), src/gzip/inftrees.c
 	(inflate_trees_fixed): Decorate with more `const' to avoid
 	writable global variables which are disallowed on ARM.
 
@@ -4659,7 +4659,7 @@
 
 	* src/type42/t42drivr.c: Include FT_SERVICE_XFREE86_NAME_H,
 	FT_SERVICE_GLYPH_DICT_H, and FT_SERVICE_POSTSCRIPT_NAME_H.
-	(t42_service_glyph_dict, t42_service_ps_name): New strucures
+	(t42_service_glyph_dict, t42_service_ps_name): New structures
 	providing Type 42 services.
 	(t42_services): New services list.
 	(T42_Get_Interface): Use `ft_service_list_lookup'.
@@ -4683,7 +4683,7 @@
 	(gindex,gindex).
 
 	* src/base/ftpfr.c (ft_pfr_check): Fix serious typo.
-	* src/pfr/prfload.c: Remove dead code.
+	* src/pfr/pfrload.c: Remove dead code.
 	(pfr_get_gindex, pfr_compare_kern_pairs, pfr_sort_kerning_pairs):
 	New functions.
 	(pfr_phy_font_done): Free `kern_pairs'.
@@ -5116,7 +5116,7 @@
 	ft_glyph_bbox_subpixels, ft_glyph_bbox_gridfit,
 	ft_glyph_bbox_truncate, ft_glyph_bbox_pixels): Replaced with
 	FT_GLYPH_BBOX_UNSCALED, FT_GLYPH_BBOX_SUBPIXELS,
-	FT_GLYPH_BBIX_GRIDFIT, FT_GLYPH_BBOX_TRUNCATE, FT_GLYPH_BBOX_PIXELS.
+	FT_GLYPH_BBOX_GRIDFIT, FT_GLYPH_BBOX_TRUNCATE, FT_GLYPH_BBOX_PIXELS.
 	The lowercase variants are now (deprecated aliases) to the uppercase
 	versions.
 	Updated all other files.
@@ -5346,7 +5346,7 @@
 	* src/cff/cffload (cff_subfont_load): Fix default values of
 	expansion_factor and blue_scale.
 
-	* src/cif/cidtoken.h, src/type1/t1tokens.h: Use T1_FIELD_FIXED_1000
+	* src/cid/cidtoken.h, src/type1/t1tokens.h: Use T1_FIELD_FIXED_1000
 	for blue_scale.
 
 	* src/pshinter/pshglob.c (psh_globals_new): Fix default value of
@@ -5569,7 +5569,7 @@
 	* src/bdf/bdfdrivr.c (BDF_Face_Init), src/pcf/pcfdriver.c
 	(PCF_Face_Init): Test for charset registry case-insensitively.
 
-	* src/gzip/ftgzip.c (ft_gzip_fil_io): Revert change from yesterday;
+	* src/gzip/ftgzip.c (ft_gzip_file_io): Revert change from yesterday;
 	it has already been fixed differently.
 
 	* src/truetype/ttinterp.c (DO_SFVTL): Add missing braces around
@@ -5706,7 +5706,7 @@
 	(ah_outline_compute_edges): Scale `edge_distance_threshold' down
 	after rounding instead of scaling comparison value in loop.
 
-	* src/autohint/ahhint.c (ah_hinter_align_stong_points): Provide
+	* src/autohint/ahhint.c (ah_hinter_align_strong_points): Provide
 	alternative code which runs faster.
 	Handle `before->scale == 0'.
 
@@ -5960,7 +5960,7 @@
 
 2003-03-27  David Turner  <david@freetype.org>
 
-	* README: Udpated.
+	* README: Updated.
 
 	* README.UNX: Removed (now replaced by docs/INSTALL.UNX).
 
@@ -6275,7 +6275,7 @@
 	(bdf_driver_class): Use `bdf_driver_requester'.
 
 	* src/pcf/pcfdrivr.c: Include FT_BDF_H.
-	(pcf_get_bdf_property, pdc_driver_requester): New functions
+	(pcf_get_bdf_property, pcf_driver_requester): New functions
 	(pcf_driver_class): Use `pcf_driver_requester'.
 
 	* src/pcf/pcfread.c: Include `pcfread.h'.
@@ -6547,7 +6547,7 @@
 
 2002-11-07  David Turner  <david@freetype.org>
 
-	* src/cache/ftcsbit.c (ftc_sbit_node_load): Fixed a small bug that
+	* src/cache/ftcsbits.c (ftc_sbit_node_load): Fixed a small bug that
 	caused problems with embedded bitmaps.
 
 	* src/otlayout/otlayout.h, src/otlyaout/otlconf.h,
@@ -6608,7 +6608,7 @@
 
 2002-11-01  David Turner  <david@freetype.org>
 
-	Added PFR-specific public API.  Fixed the kerning retrievel routine
+	Added PFR-specific public API.  Fixed the kerning retrieval routine
 	(it returned invalid values when the outline and metrics resolution
 	differ).
 
@@ -6695,7 +6695,7 @@
 	* src/pfr/pfrgload.c: Include `pfrsbit.h'.
 	* src/pfr/pfrload.c (pfr_extra_item_load_kerning_pairs): Rewritten.
 	(pfr_phy_font_done, pfr_phy_font_load): Updated.
-	* src/pfr/pfrobks.c: Include `pfrsbit.h'.
+	* src/pfr/pfrobjs.c: Include `pfrsbit.h'.
 	(pfr_face_init): Handle kerning and embedded bitmaps.
 	(pfr_slot_load): Load embedded bitmaps.
 	(PFR_KERN_INDEX): Removed.
@@ -6973,7 +6973,7 @@
 
 	* src/pshinter/pshalgo2.c (psh2_glyph_find_strong_points),
 	src/pshinter/pshalgo3.c (psh3_glyph_find_strong_points): Adding fix
-	to prevent seg fault when hints are provided in an empty glyph.
+	to prevent segfault when hints are provided in an empty glyph.
 
 	* src/cache/ftccache.i (GEN_CACHE_LOOKUP) [FT_DEBUG_LEVEL_ERROR]:
 	Removed conditional code.  This fixes a bug that prevented
@@ -7032,7 +7032,7 @@
 	(FTC_Image_Cache_Lookup): This function.
 	(ftc_image_family_init): Updated.
 
-	* src/cache/ftcsbit.c (FTC_SBitQueryRec, FTC_SBitFamilyRec):
+	* src/cache/ftcsbits.c (FTC_SBitQueryRec, FTC_SBitFamilyRec):
 	Updated.
 	(ftc_sbit_node_load): Updated.
 	Moved code to convert type flags to load flags to...
@@ -7155,7 +7155,7 @@
 	to ...
 	(FT_Glyph_{Init,Done,Transform,GetBBox,Copy,Prepare}Func): This.
 	(FTRenderer_{render,transform,getCBox,setMode}): Renamed to ...
-	(FT_Renderer_{RenderFunc,TransformFunc,GetCBoxFunc,SeteModeFunc}):
+	(FT_Renderer_{RenderFunc,TransformFunc,GetCBoxFunc,SetModeFunc}):
 	This.
 
 	Updated all affected code.
@@ -7556,7 +7556,7 @@
 	Get glyph offset.
 
 	* src/truetype/ttobjs.c (TT_Face_Init)
-	[FT_CONFIG_OPTION_INCOREMENTAL]: Added the incremental loading
+	[FT_CONFIG_OPTION_INCREMENTAL]: Added the incremental loading
 	system for the TrueType driver.
 
 	* src/cid/cidgload.c (cid_load_glyph)
@@ -7897,7 +7897,7 @@
 
 2002-06-21  Sven Neumann  <sven@convergence.de>
 
-	* src/prf/pfrtypes.h (PFR_KernPair): New structure.
+	* src/pfr/pfrtypes.h (PFR_KernPair): New structure.
 	(PFR_PhyFont): Use it.
 	(PFR_KernFlags): New enumeration.
 	* src/pfr/pfrload.c (pfr_extra_item_load_kerning_pairs): New
@@ -8245,7 +8245,7 @@
 	`fttype1.c' in src/base.
 
 	* src/pshinter/pshglob.c (psh_blues_scale_zones): Fixed a bug that
-	prevented family blue zones substitution from hapenning correctly.
+	prevented family blue zones substitution from happening correctly.
 
 	* include/freetype/ftbdf.h FT_Get_BDF_Charset_ID): Adding
 	documentation comment.
@@ -8622,7 +8622,7 @@
 
 2002-04-19  Werner Lemberg  <wl@gnu.org>
 
-	* src/pfr/pfrload.c (pfr_extra_items_farse): Fix debug message.
+	* src/pfr/pfrload.c (pfr_extra_items_parse): Fix debug message.
 	(pfr_phy_font_load): s/size/Size/ for local variable to avoid
 	compiler warning.
 	* src/pfr/pfrobjs.c (pfr_face_init): Fix debug message.
@@ -8676,7 +8676,7 @@
 
 2002-04-16  Francesco Zappa Nardelli  <Francesco.Zappa.Nardelli@ens.fr>
 
-	* src/pcf/pcfread (pcf_get_accell): Fix parsing of accelerator
+	* src/pcf/pcfread.c (pcf_get_accel): Fix parsing of accelerator
 	tables.
 
 2002-04-15  David Turner  <david@freetype.org>
@@ -8716,7 +8716,7 @@
 
 	src/cache/ftcimage.c, src/cache/ftcsbits.c,
 
-	src/cff/cffdriver.c, src/cff/cffload.c, src/cff/cffobjs.c,
+	src/cff/cffdrivr.c, src/cff/cffload.c, src/cff/cffobjs.c,
 
 	src/cid/cidload.c, src/cid/cidparse.c, src/cid/cidriver.c,
 
@@ -9068,7 +9068,7 @@
 
 	* include/freetype/internal/psaux.h, src/cid/cidload.c,
 	src/cidtoken.h, src/psaux/psobjs.c, src/psaux/psobjs.h,
-	src/psaux/t1decode.c, stc/type1/t1load.c, src/type1/t1tokens.h:
+	src/psaux/t1decode.c, src/type1/t1load.c, src/type1/t1tokens.h:
 	Updated common PostScript type definitions.
 	Renamed all enumeration values like to uppercase variants:
 
@@ -9076,7 +9076,7 @@
 	  t1_field_cid_info => T1_FIELD_LOCATION_CID_INFO
 	  etc.
 
-	* include/freetype/internal/psglobals.h: Removed.
+	* include/freetype/internal/psglobal.h: Removed.
 	* include/freetype/internal/pshints.h, src/pshinter/pshglob.h:
 	Updated.
 
@@ -9423,7 +9423,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2002, 2003, 2004, 2005, 2007, 2008 by
+Copyright 2002-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Basic Data Types</h1>
+<h1 id="basic_types">Basic Data Types</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Byte">FT_Byte</a></td><td><a href="#FT_Bool">FT_Bool</a></td><td><a href="#FT_UnitVector">FT_UnitVector</a></td></tr>
@@ -127,7 +127,7 @@
 
 <div class="section">
 <h3 id="FT_Byte">FT_Byte</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">char</span>  <b>FT_Byte</b>;
 </pre>
@@ -139,7 +139,7 @@
 
 <div class="section">
 <h3 id="FT_Bytes">FT_Bytes</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">const</span> <a href="ft2-basic_types.html#FT_Byte">FT_Byte</a>*  <b>FT_Bytes</b>;
 </pre>
@@ -151,7 +151,7 @@
 
 <div class="section">
 <h3 id="FT_Char">FT_Char</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">char</span>  <b>FT_Char</b>;
 </pre>
@@ -163,7 +163,7 @@
 
 <div class="section">
 <h3 id="FT_Int">FT_Int</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">int</span>  <b>FT_Int</b>;
 </pre>
@@ -175,7 +175,7 @@
 
 <div class="section">
 <h3 id="FT_UInt">FT_UInt</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">int</span>  <b>FT_UInt</b>;
 </pre>
@@ -187,7 +187,7 @@
 
 <div class="section">
 <h3 id="FT_Int16">FT_Int16</h3>
-<p>Defined in FT_CONFIG_CONFIG_H (config/ftconfig.h).</p>
+<p>Defined in FT_CONFIG_CONFIG_H (freetype/config/ftconfig.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">short</span>  <b>FT_Int16</b>;
 </pre>
@@ -199,7 +199,7 @@
 
 <div class="section">
 <h3 id="FT_UInt16">FT_UInt16</h3>
-<p>Defined in FT_CONFIG_CONFIG_H (config/ftconfig.h).</p>
+<p>Defined in FT_CONFIG_CONFIG_H (freetype/config/ftconfig.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">short</span>  <b>FT_UInt16</b>;
 </pre>
@@ -211,7 +211,7 @@
 
 <div class="section">
 <h3 id="FT_Int32">FT_Int32</h3>
-<p>Defined in FT_CONFIG_CONFIG_H (config/ftconfig.h).</p>
+<p>Defined in FT_CONFIG_CONFIG_H (freetype/config/ftconfig.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> XXX  <b>FT_Int32</b>;
 </pre>
@@ -223,7 +223,7 @@
 
 <div class="section">
 <h3 id="FT_UInt32">FT_UInt32</h3>
-<p>Defined in FT_CONFIG_CONFIG_H (config/ftconfig.h).</p>
+<p>Defined in FT_CONFIG_CONFIG_H (freetype/config/ftconfig.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> XXX  <b>FT_UInt32</b>;
 </pre>
@@ -232,7 +232,7 @@
 
 <div class="section">
 <h3 id="FT_Int64">FT_Int64</h3>
-<p>Defined in FT_CONFIG_CONFIG_H (config/ftconfig.h).</p>
+<p>Defined in FT_CONFIG_CONFIG_H (freetype/config/ftconfig.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> XXX  <b>FT_Int64</b>;
 </pre>
@@ -241,7 +241,7 @@
 
 <div class="section">
 <h3 id="FT_UInt64">FT_UInt64</h3>
-<p>Defined in FT_CONFIG_CONFIG_H (config/ftconfig.h).</p>
+<p>Defined in FT_CONFIG_CONFIG_H (freetype/config/ftconfig.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> XXX  <b>FT_UInt64</b>;
 </pre>
@@ -250,7 +250,7 @@
 
 <div class="section">
 <h3 id="FT_Short">FT_Short</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">short</span>  <b>FT_Short</b>;
 </pre>
@@ -262,7 +262,7 @@
 
 <div class="section">
 <h3 id="FT_UShort">FT_UShort</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">short</span>  <b>FT_UShort</b>;
 </pre>
@@ -274,7 +274,7 @@
 
 <div class="section">
 <h3 id="FT_Long">FT_Long</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">long</span>  <b>FT_Long</b>;
 </pre>
@@ -286,7 +286,7 @@
 
 <div class="section">
 <h3 id="FT_ULong">FT_ULong</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">long</span>  <b>FT_ULong</b>;
 </pre>
@@ -298,7 +298,7 @@
 
 <div class="section">
 <h3 id="FT_Bool">FT_Bool</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">char</span>  <b>FT_Bool</b>;
 </pre>
@@ -310,7 +310,7 @@
 
 <div class="section">
 <h3 id="FT_Offset">FT_Offset</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> size_t  <b>FT_Offset</b>;
 </pre>
@@ -322,7 +322,7 @@
 
 <div class="section">
 <h3 id="FT_PtrDist">FT_PtrDist</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> ft_ptrdiff_t  <b>FT_PtrDist</b>;
 </pre>
@@ -334,7 +334,7 @@
 
 <div class="section">
 <h3 id="FT_String">FT_String</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">char</span>  <b>FT_String</b>;
 </pre>
@@ -346,7 +346,7 @@
 
 <div class="section">
 <h3 id="FT_Tag">FT_Tag</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_UInt32">FT_UInt32</a>  <b>FT_Tag</b>;
 </pre>
@@ -358,7 +358,7 @@
 
 <div class="section">
 <h3 id="FT_Error">FT_Error</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">int</span>  <b>FT_Error</b>;
 </pre>
@@ -370,7 +370,7 @@
 
 <div class="section">
 <h3 id="FT_Fixed">FT_Fixed</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">long</span>  <b>FT_Fixed</b>;
 </pre>
@@ -382,7 +382,7 @@
 
 <div class="section">
 <h3 id="FT_Pointer">FT_Pointer</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>*  <b>FT_Pointer</b>;
 </pre>
@@ -394,7 +394,7 @@
 
 <div class="section">
 <h3 id="FT_Pos">FT_Pos</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">long</span>  <b>FT_Pos</b>;
 </pre>
@@ -406,7 +406,7 @@
 
 <div class="section">
 <h3 id="FT_Vector">FT_Vector</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Vector_
   {
@@ -433,7 +433,7 @@
 
 <div class="section">
 <h3 id="FT_BBox">FT_BBox</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_BBox_
   {
@@ -471,7 +471,7 @@
 
 <div class="section">
 <h3 id="FT_Matrix">FT_Matrix</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Matrix_
   {
@@ -483,8 +483,8 @@
 
 <p>A simple structure used to store a 2x2 matrix. Coefficients are in 16.16 fixed-point format. The computation performed is:</p>
 <pre class="colored">
-   x' = x*xx + y*xy                                             
-   y' = x*yx + y*yy                                             
+   x' = x*xx + y*xy
+   y' = x*yx + y*yy
 </pre>
 
 <h4>fields</h4>
@@ -508,7 +508,7 @@
 
 <div class="section">
 <h3 id="FT_FWord">FT_FWord</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">short</span>  <b>FT_FWord</b>;   /* distance in FUnits */
 </pre>
@@ -520,7 +520,7 @@
 
 <div class="section">
 <h3 id="FT_UFWord">FT_UFWord</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">short</span>  <b>FT_UFWord</b>;  /* <span class="keyword">unsigned</span> distance */
 </pre>
@@ -532,7 +532,7 @@
 
 <div class="section">
 <h3 id="FT_F2Dot14">FT_F2Dot14</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">short</span>  <b>FT_F2Dot14</b>;
 </pre>
@@ -544,7 +544,7 @@
 
 <div class="section">
 <h3 id="FT_UnitVector">FT_UnitVector</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_UnitVector_
   {
@@ -571,7 +571,7 @@
 
 <div class="section">
 <h3 id="FT_F26Dot6">FT_F26Dot6</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">long</span>  <b>FT_F26Dot6</b>;
 </pre>
@@ -583,7 +583,7 @@
 
 <div class="section">
 <h3 id="FT_Data">FT_Data</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Data_
   {
@@ -610,7 +610,7 @@
 
 <div class="section">
 <h3 id="FT_MAKE_TAG">FT_MAKE_TAG</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
 #define <b>FT_MAKE_TAG</b>( _x1, _x2, _x3, _x4 ) \
           (<a href="ft2-basic_types.html#FT_Tag">FT_Tag</a>)                        \
@@ -630,7 +630,7 @@
 
 <div class="section">
 <h3 id="FT_Generic">FT_Generic</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Generic_
   {
@@ -659,7 +659,7 @@
 
 <div class="section">
 <h3 id="FT_Generic_Finalizer">FT_Generic_Finalizer</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>  (*<b>FT_Generic_Finalizer</b>)(<span class="keyword">void</span>*  object);
 </pre>
@@ -674,7 +674,7 @@
 
 <div class="section">
 <h3 id="FT_Bitmap">FT_Bitmap</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Bitmap_
   {
@@ -723,15 +723,12 @@
 </td></tr>
 </table>
 
-<h4>note</h4>
-<p>For now, the only pixel modes supported by FreeType are mono and grays. However, drivers might be added in the future to support more &lsquo;colorful&rsquo; options.</p>
-
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
 <h3 id="FT_Pixel_Mode">FT_Pixel_Mode</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Pixel_Mode_
   {
@@ -793,7 +790,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_Format">FT_Glyph_Format</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Glyph_Format_
   {
@@ -842,7 +839,7 @@
 
 <div class="section">
 <h3 id="FT_IMAGE_TAG">FT_IMAGE_TAG</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
 #ifndef <b>FT_IMAGE_TAG</b>
 #define <b>FT_IMAGE_TAG</b>( value, _x1, _x2, _x3, _x4 )  \
@@ -858,7 +855,7 @@
 <h4>note</h4>
 <p>Since many 16-bit compilers don't like 32-bit enumerations, you should redefine this macro in case of problems to something like this:</p>
 <pre class="colored">
-  #define FT_IMAGE_TAG( value, _x1, _x2, _x3, _x4 )  value         
+  #define FT_IMAGE_TAG( value, _x1, _x2, _x3, _x4 )  value
 </pre>
 <p>to get a simple enumeration without assigning special numbers.</p>
 

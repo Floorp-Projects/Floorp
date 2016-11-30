@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>TrueType Tables</h1>
+<h1 id="truetype_tables">TrueType Tables</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#TT_Header">TT_Header</a></td><td>&nbsp;</td></tr>
@@ -124,7 +124,7 @@
 
 <div class="section">
 <h3 id="TT_Header">TT_Header</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  TT_Header_
   {
@@ -162,7 +162,7 @@
 
 <div class="section">
 <h3 id="TT_HoriHeader">TT_HoriHeader</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  TT_HoriHeader_
   {
@@ -259,7 +259,7 @@
 
 <div class="section">
 <h3 id="TT_VertHeader">TT_VertHeader</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  TT_VertHeader_
   {
@@ -359,7 +359,7 @@
 
 <div class="section">
 <h3 id="TT_OS2">TT_OS2</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  TT_OS2_
   {
@@ -367,7 +367,7 @@
     <a href="ft2-basic_types.html#FT_Short">FT_Short</a>   xAvgCharWidth;
     <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usWeightClass;
     <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  usWidthClass;
-    <a href="ft2-basic_types.html#FT_Short">FT_Short</a>   fsType;
+    <a href="ft2-basic_types.html#FT_UShort">FT_UShort</a>  fsType;
     <a href="ft2-basic_types.html#FT_Short">FT_Short</a>   ySubscriptXSize;
     <a href="ft2-basic_types.html#FT_Short">FT_Short</a>   ySubscriptYSize;
     <a href="ft2-basic_types.html#FT_Short">FT_Short</a>   ySubscriptXOffset;
@@ -427,7 +427,7 @@
 
 <div class="section">
 <h3 id="TT_Postscript">TT_Postscript</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  TT_Postscript_
   {
@@ -454,7 +454,7 @@
 
 <div class="section">
 <h3 id="TT_PCLT">TT_PCLT</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  TT_PCLT_
   {
@@ -484,7 +484,7 @@
 
 <div class="section">
 <h3 id="TT_MaxProfile">TT_MaxProfile</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  TT_MaxProfile_
   {
@@ -566,7 +566,7 @@
 
 <div class="section">
 <h3 id="FT_Sfnt_Tag">FT_Sfnt_Tag</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Sfnt_Tag_
   {
@@ -610,7 +610,7 @@
 <p>To access the font's <a href="ft2-truetype_tables.html#TT_HoriHeader">TT_HoriHeader</a> structure.</p>
 </td></tr>
 <tr><td class="val" id="FT_SFNT_VHEA">FT_SFNT_VHEA</td><td class="desc">
-<p>To access the font's <a href="ft2-truetype_tables.html#TT_VertHeader">TT_VertHeader</a> struture.</p>
+<p>To access the font's <a href="ft2-truetype_tables.html#TT_VertHeader">TT_VertHeader</a> structure.</p>
 </td></tr>
 <tr><td class="val" id="FT_SFNT_POST">FT_SFNT_POST</td><td class="desc">
 <p>To access the font's <a href="ft2-truetype_tables.html#TT_Postscript">TT_Postscript</a> structure.</p>
@@ -625,7 +625,7 @@
 
 <div class="section">
 <h3 id="FT_Get_Sfnt_Table">FT_Get_Sfnt_Table</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span>* )
   <b>FT_Get_Sfnt_Table</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>      face,
@@ -653,11 +653,11 @@
 <p>This function is only useful to access SFNT tables that are loaded by the sfnt, truetype, and opentype drivers. See <a href="ft2-truetype_tables.html#FT_Sfnt_Tag">FT_Sfnt_Tag</a> for a list.</p>
 <p>Here an example how to access the &lsquo;vhea&rsquo; table:</p>
 <pre class="colored">
-  TT_VertHeader*  vert_header;                                     
-                                                                   
-                                                                   
-  vert_header =                                                    
-    (TT_VertHeader*)FT_Get_Sfnt_Table( face, FT_SFNT_VHEA );       
+  TT_VertHeader*  vert_header;
+
+
+  vert_header =
+    (TT_VertHeader*)FT_Get_Sfnt_Table( face, FT_SFNT_VHEA );
 </pre>
 
 <hr>
@@ -665,7 +665,7 @@
 
 <div class="section">
 <h3 id="FT_Load_Sfnt_Table">FT_Load_Sfnt_Table</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Load_Sfnt_Table</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
@@ -731,7 +731,7 @@
 
 <div class="section">
 <h3 id="FT_Sfnt_Table_Info">FT_Sfnt_Table_Info</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Sfnt_Table_Info</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
@@ -777,7 +777,7 @@
 
 <div class="section">
 <h3 id="FT_Get_CMap_Language_ID">FT_Get_CMap_Language_ID</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a> )
   <b>FT_Get_CMap_Language_ID</b>( <a href="ft2-base_interface.html#FT_CharMap">FT_CharMap</a>  charmap );
@@ -801,7 +801,7 @@
 
 <div class="section">
 <h3 id="FT_Get_CMap_Format">FT_Get_CMap_Format</h3>
-<p>Defined in FT_TRUETYPE_TABLES_H (tttables.h).</p>
+<p>Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Long">FT_Long</a> )
   <b>FT_Get_CMap_Format</b>( <a href="ft2-base_interface.html#FT_CharMap">FT_CharMap</a>  charmap );
@@ -824,19 +824,20 @@
 
 <div class="section">
 <h3 id="FT_PARAM_TAG_UNPATENTED_HINTING">FT_PARAM_TAG_UNPATENTED_HINTING</h3>
-<p>Defined in FT_UNPATENTED_HINTING_H (ttunpat.h).</p>
+<p>Defined in FT_UNPATENTED_HINTING_H (freetype/ttunpat.h).</p>
 <pre>
 #define <b>FT_PARAM_TAG_UNPATENTED_HINTING</b>  <a href="ft2-basic_types.html#FT_MAKE_TAG">FT_MAKE_TAG</a>( 'u', 'n', 'p', 'a' )
 </pre>
 
-<p>A constant used as the tag of an <a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> structure to indicate that unpatented methods only should be used by the TrueType bytecode interpreter for a typeface opened by <a href="ft2-base_interface.html#FT_Open_Face">FT_Open_Face</a>.</p>
+<p>Deprecated.</p>
+<p>Previously: A constant used as the tag of an <a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> structure to indicate that unpatented methods only should be used by the TrueType bytecode interpreter for a typeface opened by <a href="ft2-base_interface.html#FT_Open_Face">FT_Open_Face</a>.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
 <h3 id="TT_PLATFORM_XXX">TT_PLATFORM_XXX</h3>
-<p>Defined in FT_TRUETYPE_IDS_H (ttnameid.h).</p>
+<p>Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).</p>
 <pre>
 #define <a href="ft2-truetype_tables.html#TT_PLATFORM_APPLE_UNICODE">TT_PLATFORM_APPLE_UNICODE</a>  0
 #define <a href="ft2-truetype_tables.html#TT_PLATFORM_MACINTOSH">TT_PLATFORM_MACINTOSH</a>      1
@@ -875,7 +876,7 @@
 
 <div class="section">
 <h3 id="TT_APPLE_ID_XXX">TT_APPLE_ID_XXX</h3>
-<p>Defined in FT_TRUETYPE_IDS_H (ttnameid.h).</p>
+<p>Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).</p>
 <pre>
 #define <a href="ft2-truetype_tables.html#TT_APPLE_ID_DEFAULT">TT_APPLE_ID_DEFAULT</a>           0 /* Unicode 1.0 */
 #define <a href="ft2-truetype_tables.html#TT_APPLE_ID_UNICODE_1_1">TT_APPLE_ID_UNICODE_1_1</a>       1 /* specify Hangul at U+34xx */
@@ -914,7 +915,7 @@
 
 <div class="section">
 <h3 id="TT_MAC_ID_XXX">TT_MAC_ID_XXX</h3>
-<p>Defined in FT_TRUETYPE_IDS_H (ttnameid.h).</p>
+<p>Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).</p>
 <pre>
 #define <a href="ft2-truetype_tables.html#TT_MAC_ID_ROMAN">TT_MAC_ID_ROMAN</a>                 0
 #define <a href="ft2-truetype_tables.html#TT_MAC_ID_JAPANESE">TT_MAC_ID_JAPANESE</a>              1
@@ -1065,7 +1066,7 @@
 
 <div class="section">
 <h3 id="TT_ISO_ID_XXX">TT_ISO_ID_XXX</h3>
-<p>Defined in FT_TRUETYPE_IDS_H (ttnameid.h).</p>
+<p>Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).</p>
 <pre>
 #define <a href="ft2-truetype_tables.html#TT_ISO_ID_7BIT_ASCII">TT_ISO_ID_7BIT_ASCII</a>  0
 #define <a href="ft2-truetype_tables.html#TT_ISO_ID_10646">TT_ISO_ID_10646</a>       1
@@ -1093,7 +1094,7 @@
 
 <div class="section">
 <h3 id="TT_MS_ID_XXX">TT_MS_ID_XXX</h3>
-<p>Defined in FT_TRUETYPE_IDS_H (ttnameid.h).</p>
+<p>Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).</p>
 <pre>
 #define <a href="ft2-truetype_tables.html#TT_MS_ID_SYMBOL_CS">TT_MS_ID_SYMBOL_CS</a>    0
 #define <a href="ft2-truetype_tables.html#TT_MS_ID_UNICODE_CS">TT_MS_ID_UNICODE_CS</a>   1
@@ -1140,7 +1141,7 @@
 
 <div class="section">
 <h3 id="TT_ADOBE_ID_XXX">TT_ADOBE_ID_XXX</h3>
-<p>Defined in FT_TRUETYPE_IDS_H (ttnameid.h).</p>
+<p>Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).</p>
 <pre>
 #define <a href="ft2-truetype_tables.html#TT_ADOBE_ID_STANDARD">TT_ADOBE_ID_STANDARD</a>  0
 #define <a href="ft2-truetype_tables.html#TT_ADOBE_ID_EXPERT">TT_ADOBE_ID_EXPERT</a>    1
