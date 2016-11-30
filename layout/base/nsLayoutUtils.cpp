@@ -3278,6 +3278,8 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
     builder.SetDescendIntoSubdocuments(false);
   }
 
+  builder.SetHitTestShouldStopAtFirstOpaque(aFlags & ONLY_VISIBLE);
+
   builder.EnterPresShell(aFrame);
   builder.SetDirtyRect(aRect);
   aFrame->BuildDisplayListForStackingContext(&builder, &list);
@@ -3294,7 +3296,6 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 #endif
 
   nsDisplayItem::HitTestState hitTestState;
-  builder.SetHitTestShouldStopAtFirstOpaque(aFlags & ONLY_VISIBLE);
   list.HitTest(&builder, aRect, &hitTestState, &aOutFrames);
   list.DeleteAll(&builder);
   return NS_OK;
