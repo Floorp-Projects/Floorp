@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cu, Cc, Ci, components} = require("chrome");
+const {Cc, Ci, components} = require("chrome");
 const Services = require("Services");
 const {Class} = require("sdk/core/heritage");
 const {Unknown} = require("sdk/platform/xpcom");
@@ -140,9 +140,8 @@ let Converter = Class({
     JsonViewUtils.exportIntoContentScope(win, Locale, "Locale");
 
     Events.once(win, "DOMContentLoaded", event => {
-      Cu.exportFunction(this.postChromeMessage.bind(this), win, {
-        defineAs: "postChromeMessage"
-      });
+      win.addEventListener("contentMessage",
+        this.onContentMessage.bind(this), false, true);
     });
 
     // The request doesn't have to be always nsIHttpChannel
@@ -263,10 +262,15 @@ let Converter = Class({
 
   // Chrome <-> Content communication
 
-  postChromeMessage: function (type, args, objects) {
-    let value = args;
+  onContentMessage: function (e) {
+    // Do not handle events from different documents.
+    let win = NetworkHelper.getWindowForRequest(this.channel);
+    if (win != e.target) {
+      return;
+    }
 
-    switch (type) {
+    let value = e.detail.value;
+    switch (e.detail.type) {
       case "copy":
         Clipboard.set(value, "text");
         break;
