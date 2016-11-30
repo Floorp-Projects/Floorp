@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.tabs;
 
-import android.support.v4.content.ContextCompat;
-
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
@@ -31,6 +29,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.support.annotation.UiThread;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -111,7 +110,6 @@ public class TabsPanel extends LinearLayout
     private IconTabWidget mTabWidget;
     private View mMenuButton;
     private ImageButton mAddTab;
-    private ImageButton mNavBackButton;
 
     private Panel mCurrentPanel;
     private boolean mVisible;
@@ -178,8 +176,8 @@ public class TabsPanel extends LinearLayout
             }
         });
 
-        mNavBackButton = (ImageButton) findViewById(R.id.nav_back);
-        mNavBackButton.setOnClickListener(new Button.OnClickListener() {
+        final ImageButton navBackButton = (ImageButton) findViewById(R.id.nav_back);
+        navBackButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mActivity.onBackPressed();
