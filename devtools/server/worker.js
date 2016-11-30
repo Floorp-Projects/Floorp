@@ -81,6 +81,9 @@ this.addEventListener("message", function (event) {
       let threadActor = new ThreadActor(parent, global);
       pool.addActor(threadActor);
 
+      // parentActor.threadActor is needed from the webconsole for grip previewing
+      parent.threadActor = threadActor;
+
       let consoleActor = new WebConsoleActor(connection, parent);
       pool.addActor(consoleActor);
 
