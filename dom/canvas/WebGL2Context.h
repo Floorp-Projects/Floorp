@@ -314,7 +314,7 @@ public:
 
     already_AddRefed<WebGLSampler> CreateSampler();
     void DeleteSampler(WebGLSampler* sampler);
-    bool IsSampler(WebGLSampler* sampler);
+    bool IsSampler(const WebGLSampler* sampler);
     void BindSampler(GLuint unit, WebGLSampler* sampler);
     void SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint param);
     void SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat param);
@@ -326,7 +326,7 @@ public:
     // Sync objects - WebGL2ContextSync.cpp
 
     already_AddRefed<WebGLSync> FenceSync(GLenum condition, GLbitfield flags);
-    bool IsSync(WebGLSync* sync);
+    bool IsSync(const WebGLSync* sync);
     void DeleteSync(WebGLSync* sync);
     GLenum ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 timeout);
     void WaitSync(const WebGLSync& sync, GLbitfield flags, GLint64 timeout);
@@ -339,7 +339,7 @@ public:
 
     already_AddRefed<WebGLTransformFeedback> CreateTransformFeedback();
     void DeleteTransformFeedback(WebGLTransformFeedback* tf);
-    bool IsTransformFeedback(WebGLTransformFeedback* tf);
+    bool IsTransformFeedback(const WebGLTransformFeedback* tf);
     void BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf);
     void BeginTransformFeedback(GLenum primitiveMode);
     void EndTransformFeedback();

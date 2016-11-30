@@ -222,7 +222,7 @@ WebGLContext::~WebGLContext()
 }
 
 template<typename T>
-static void
+void
 ClearLinkedList(LinkedList<T>& list)
 {
     while (!list.isEmpty()) {
