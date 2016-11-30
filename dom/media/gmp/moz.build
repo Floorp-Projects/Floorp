@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
 ]
 
 EXPORTS += [
+    'DecryptJob.h',
     'gmp-api/gmp-decryption.h',
     'gmp-api/gmp-entrypoints.h',
     'gmp-api/gmp-errors.h',
@@ -67,6 +68,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'DecryptJob.cpp',
     'GMPCDMCallbackProxy.cpp',
     'GMPCDMProxy.cpp',
     'GMPChild.cpp',
