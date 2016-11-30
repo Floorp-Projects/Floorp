@@ -678,6 +678,12 @@ public:
     return count;
   }
 
+  virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) {}
+
+  virtual void DidComposite(uint64_t aTransactionId,
+                            const mozilla::TimeStamp& aCompositeStart,
+                            const mozilla::TimeStamp& aCompositeEnd) {}
+
 protected:
   RefPtr<Layer> mRoot;
   gfx::UserData mUserData;
