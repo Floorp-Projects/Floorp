@@ -9,6 +9,8 @@
 #include "nsSMILTimedElement.h"
 #include <algorithm>
 
+#include "mozilla/AutoRestore.h"
+
 nsSMILTimeContainer::nsSMILTimeContainer()
 :
   mParent(nullptr),
@@ -18,6 +20,7 @@ nsSMILTimeContainer::nsSMILTimeContainer()
   mNeedsPauseSample(false),
   mNeedsRewind(false),
   mIsSeeking(false),
+  mHoldingEntries(false),
   mPauseState(PAUSE_BEGIN)
 {
 }
@@ -213,12 +216,14 @@ nsSMILTimeContainer::AddMilestone(const nsSMILMilestone& aMilestone,
   // time may change (e.g. if attributes are changed on the timed element in
   // between samples). If this happens, then we may do an unecessary sample
   // but that's pretty cheap.
+  MOZ_RELEASE_ASSERT(!mHoldingEntries);
   return mMilestoneEntries.Push(MilestoneEntry(aMilestone, aElement));
 }
 
 void
 nsSMILTimeContainer::ClearMilestones()
 {
+  MOZ_RELEASE_ASSERT(!mHoldingEntries);
   mMilestoneEntries.Clear();
 }
 
@@ -259,6 +264,8 @@ nsSMILTimeContainer::PopMilestoneElementsAtMilestone(
              "Trying to pop off earliest times but we have earlier ones that "
              "were overlooked");
 
+  MOZ_RELEASE_ASSERT(!mHoldingEntries);
+
   bool gotOne = false;
   while (!mMilestoneEntries.IsEmpty() &&
       mMilestoneEntries.Top().mMilestone == containerMilestone)
@@ -273,6 +280,8 @@ nsSMILTimeContainer::PopMilestoneElementsAtMilestone(
 void
 nsSMILTimeContainer::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 {
+  AutoRestore<bool> saveHolding(mHoldingEntries);
+  mHoldingEntries = true;
   const MilestoneEntry* p = mMilestoneEntries.Elements();
   while (p < mMilestoneEntries.Elements() + mMilestoneEntries.Length()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "mTimebase");
@@ -284,6 +293,7 @@ nsSMILTimeContainer::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 void
 nsSMILTimeContainer::Unlink()
 {
+  MOZ_RELEASE_ASSERT(!mHoldingEntries);
   mMilestoneEntries.Clear();
 }
 
@@ -307,6 +317,8 @@ nsSMILTimeContainer::NotifyTimeChange()
   // milestone elements. This is because any timed element with dependents and
   // with significant transitions yet to fire should have their next milestone
   // registered. Other timed elements don't matter.
+  AutoRestore<bool> saveHolding(mHoldingEntries);
+  mHoldingEntries = true;
   const MilestoneEntry* p = mMilestoneEntries.Elements();
 #if DEBUG
   uint32_t queueLength = mMilestoneEntries.Length();
