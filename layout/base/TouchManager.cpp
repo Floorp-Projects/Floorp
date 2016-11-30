@@ -8,8 +8,8 @@
 #include "TouchManager.h"
 
 #include "mozilla/dom/EventTarget.h"
-#include "nsIFrame.h"
 #include "mozilla/PresShell.h"
+#include "nsIFrame.h"
 #include "nsView.h"
 
 using namespace mozilla::dom;
