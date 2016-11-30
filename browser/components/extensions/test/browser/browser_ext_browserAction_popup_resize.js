@@ -180,7 +180,7 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
 
   // Wait long enough to make sure the initial resize debouncing timer has
   // expired.
-  yield new Promise(resolve => setTimeout(resolve, 100));
+  yield delay(100);
 
   let dims = yield promiseContentDimensions(browser);
 
@@ -295,8 +295,10 @@ add_task(function* testBrowserActionMenuResizeBottomArrow() {
       break;
     }
 
-    yield new Promise(resolve => setTimeout(resolve, 100));
+    yield delay(100);
   }
+
+  yield SimpleTest.promiseFocus(win);
 
   yield testPopupSize(true, win, "bottom");
 

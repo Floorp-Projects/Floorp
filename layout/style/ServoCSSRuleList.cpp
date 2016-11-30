@@ -97,7 +97,7 @@ ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex)
   nsresult rv = Servo_CssRules_InsertRule(mRawRules, mStyleSheet->RawSheet(),
                                           &rule, aIndex, nested, &type);
   if (!NS_FAILED(rv)) {
-    mRules.InsertElementAt(type);
+    mRules.InsertElementAt(aIndex, type);
   }
   return rv;
 }
