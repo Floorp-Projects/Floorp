@@ -107,34 +107,48 @@ ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule)
 }
 
 // QueryInterface implementation for ServoStyleRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoStyleRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(css::Rule)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ServoStyleRule)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ServoStyleRule)
+NS_IMPL_ADDREF_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_RELEASE_INHERITED(ServoStyleRule, css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ServoStyleRule)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ServoStyleRule)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+  // Keep this in sync with IsCCLeaf.
+
   // Trace the wrapper for our declaration.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
   tmp->mDecls.TraceWrapper(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ServoStyleRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+  // Keep this in sync with IsCCLeaf.
+
   // Unlink the wrapper for our declaraton.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
   tmp->mDecls.ReleaseWrapper(static_cast<nsISupports*>(p));
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ServoStyleRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+  // Keep this in sync with IsCCLeaf.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+bool
+ServoStyleRule::IsCCLeaf() const
+{
+  if (!Rule::IsCCLeaf()) {
+    return false;
+  }
+
+  return !mDecls.PreservingWrapper();
+}
 
 already_AddRefed<css::Rule>
 ServoStyleRule::Clone() const
