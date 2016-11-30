@@ -21,23 +21,25 @@
 #ifndef mozilla_PresShell_h
 #define mozilla_PresShell_h
 
-#include "nsIPresShell.h"
-#include "nsStubDocumentObserver.h"
-#include "nsISelectionController.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
-#include "nsCRT.h"
-#include "nsAutoPtr.h"
-#include "nsIWidget.h"
-#include "nsContentUtils.h" // For AddScriptBlocker().
-#include "nsRefreshDriver.h"
-#include "TouchManager.h"
+#include "MobileViewportManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/UniquePtr.h"
-#include "MobileViewportManager.h"
+#include "nsAutoPtr.h"
+#include "nsContentUtils.h" // For AddScriptBlocker().
+#include "nsCRT.h"
+#include "nsIObserver.h"
+#include "nsIPresShell.h"
+#include "nsISelectionController.h"
+#include "nsIWidget.h"
+#include "nsPresContext.h"
+#include "nsRefreshDriver.h"
+#include "nsStubDocumentObserver.h"
+#include "nsThreadUtils.h"
+#include "nsWeakReference.h"
+#include "TouchManager.h"
 #include "ZoomConstraintsClient.h"
 
 class nsIDocShell;
