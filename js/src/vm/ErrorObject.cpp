@@ -177,7 +177,7 @@ FindErrorInstanceOrPrototype(JSContext* cx, HandleObject obj, MutableHandleObjec
 
     RootedObject target(cx, CheckedUnwrap(obj));
     if (!target) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -196,7 +196,7 @@ FindErrorInstanceOrPrototype(JSContext* cx, HandleObject obj, MutableHandleObjec
 
         target = CheckedUnwrap(proto);
         if (!target) {
-            JS_ReportErrorASCII(cx, "Permission denied to access object");
+            ReportAccessDenied(cx);
             return false;
         }
     }
