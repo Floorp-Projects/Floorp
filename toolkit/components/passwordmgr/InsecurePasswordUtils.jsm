@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gScriptSecurityManager",
                                    "@mozilla.org/scriptsecuritymanager;1",
                                    "nsIScriptSecurityManager");
 XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", () => {
-  return this.devtools.require("devtools/server/actors/utils/webconsole-utils").Utils;
+  return this.devtools.require("devtools/server/actors/utils/webconsole-utils").WebConsoleUtils;
 });
 
 this.InsecurePasswordUtils = {

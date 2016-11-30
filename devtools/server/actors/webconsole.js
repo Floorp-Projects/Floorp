@@ -24,24 +24,19 @@ loader.lazyRequireGetter(this, "ServerLoggingListener", "devtools/shared/webcons
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
 loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", true);
+loader.lazyRequireGetter(this, "addWebConsoleCommands", "devtools/server/actors/utils/webconsole-utils", true);
+loader.lazyRequireGetter(this, "CONSOLE_WORKER_IDS", "devtools/server/actors/utils/webconsole-utils", true);
+loader.lazyRequireGetter(this, "WebConsoleUtils", "devtools/server/actors/utils/webconsole-utils", true);
 
-for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
-    "ConsoleAPIListener", "addWebConsoleCommands",
-    "ConsoleReflowListener", "CONSOLE_WORKER_IDS"]) {
-  Object.defineProperty(this, name, {
-    get: function (prop) {
-      if (prop == "WebConsoleUtils") {
-        prop = "Utils";
-      }
-      if (isWorker) {
-        return require("devtools/server/actors/utils/webconsole-worker-utils")[prop];
-      } else {
-        return require("devtools/server/actors/utils/webconsole-utils")[prop];
-      }
-    }.bind(null, name),
-    configurable: true,
-    enumerable: true
-  });
+// Overwrite implemented listeners for workers so that we don't attempt
+// to load an unsupported module.
+if (isWorker) {
+  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/utils/webconsole-worker-listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/utils/webconsole-worker-listeners", true);
+} else {
+  loader.lazyRequireGetter(this, "ConsoleAPIListener", "devtools/server/actors/utils/webconsole-listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/utils/webconsole-listeners", true);
+  loader.lazyRequireGetter(this, "ConsoleReflowListener", "devtools/server/actors/utils/webconsole-listeners", true);
 }
 
 /**
@@ -319,6 +314,11 @@ WebConsoleActor.prototype =
   },
 
   hasNativeConsoleAPI: function WCA_hasNativeConsoleAPI(aWindow) {
+    if (isWorker) {
+      // Can't use XPCNativeWrapper as a way to check for console API in workers
+      return true;
+    }
+
     let isNative = false;
     try {
       // We are very explicitly examining the "console" property of
@@ -562,11 +562,6 @@ WebConsoleActor.prototype =
    */
   onStartListeners: function WCA_onStartListeners(aRequest)
   {
-    // XXXworkers: Not handling the Console API yet for workers (Bug 1209353).
-    if (isWorker) {
-      aRequest.listeners = [];
-    }
-
     let startedListeners = [];
     let window = !this.parentActor.isRootActor ? this.window : null;
     let messageManager = null;
@@ -579,6 +574,10 @@ WebConsoleActor.prototype =
       let listener = aRequest.listeners.shift();
       switch (listener) {
         case "PageError":
+          // Workers don't support this message type yet
+          if (isWorker) {
+            break;
+          }
           if (!this.consoleServiceListener) {
             this.consoleServiceListener =
               new ConsoleServiceListener(window, this);
@@ -598,6 +597,10 @@ WebConsoleActor.prototype =
           startedListeners.push(listener);
           break;
         case "NetworkActivity":
+          // Workers don't support this message type
+          if (isWorker) {
+            break;
+          }
           if (!this.networkMonitor) {
             // Create a StackTraceCollector that's going to be shared both by the
             // NetworkMonitorChild (getting messages about requests from parent) and
@@ -625,6 +628,10 @@ WebConsoleActor.prototype =
           startedListeners.push(listener);
           break;
         case "FileActivity":
+          // Workers don't support this message type
+          if (isWorker) {
+            break;
+          }
           if (this.window instanceof Ci.nsIDOMWindow) {
             if (!this.consoleProgressListener) {
               this.consoleProgressListener =
@@ -636,6 +643,10 @@ WebConsoleActor.prototype =
           }
           break;
         case "ReflowActivity":
+          // Workers don't support this message type
+          if (isWorker) {
+            break;
+          }
           if (!this.consoleReflowListener) {
             this.consoleReflowListener =
               new ConsoleReflowListener(this.window, this);
@@ -643,6 +654,10 @@ WebConsoleActor.prototype =
           startedListeners.push(listener);
           break;
         case "ServerLogging":
+          // Workers don't support this message type
+          if (isWorker) {
+            break;
+          }
           if (!this.serverLoggingListener) {
             this.serverLoggingListener =
               new ServerLoggingListener(this.window, this);

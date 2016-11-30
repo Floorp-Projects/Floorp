@@ -9,7 +9,7 @@ var Services = require("Services");
 var { ActorPool } = require("devtools/server/actors/common");
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
-var { ConsoleAPIListener } = require("devtools/server/actors/utils/webconsole-utils");
+var { ConsoleAPIListener } = require("devtools/server/actors/utils/webconsole-listeners");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert, update } = DevToolsUtils;
 
