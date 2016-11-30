@@ -4,7 +4,6 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 var prefs;
 var spdypref;
 var http2pref;
-var tlspref;
 var origin;
 
 function run_test() {
@@ -19,11 +18,9 @@ function run_test() {
 
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");
   http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2");
-  tlspref = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");
 
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
-  prefs.setBoolPref("network.http.spdy.enforce-tls-profile", false);
   prefs.setCharPref("network.dns.localDomains", "foo.example.com, bar.example.com");
 
   // The moz-http2 cert is for foo.example.com and is signed by CA.cert.der
@@ -40,7 +37,6 @@ function run_test() {
 function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.enabled", spdypref);
   prefs.setBoolPref("network.http.spdy.enabled.http2", http2pref);
-  prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlspref);
   prefs.clearUserPref("network.dns.localDomains");
 }
 
