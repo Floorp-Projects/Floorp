@@ -52,12 +52,7 @@ public class AccountsHelper implements NativeEventListener {
         mContext = context;
         mProfile = profile;
 
-        EventDispatcher dispatcher = GeckoApp.getEventDispatcher();
-        if (dispatcher == null) {
-            Log.e(LOGTAG, "Gecko event dispatcher must not be null", new RuntimeException());
-            return;
-        }
-        dispatcher.registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
                 "Accounts:CreateFirefoxAccountFromJSON",
                 "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",
@@ -68,12 +63,7 @@ public class AccountsHelper implements NativeEventListener {
     }
 
     public synchronized void uninit() {
-        EventDispatcher dispatcher = GeckoApp.getEventDispatcher();
-        if (dispatcher == null) {
-            Log.e(LOGTAG, "Gecko event dispatcher must not be null", new RuntimeException());
-            return;
-        }
-        dispatcher.unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                 "Accounts:CreateFirefoxAccountFromJSON",
                 "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",

@@ -21,7 +21,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.PrefsHelper;
@@ -309,7 +308,7 @@ public class BrowserSearch extends HomeFragment
     public void onDestroyView() {
         super.onDestroyView();
 
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "SearchEngines:Data");
 
         mSearchEngineBar.setAdapter(null);
@@ -409,7 +408,7 @@ public class BrowserSearch extends HomeFragment
         });
 
         registerForContextMenu(mList);
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "SearchEngines:Data");
 
         mSearchEngineBar.setOnSearchBarClickListener(this);
