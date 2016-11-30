@@ -882,15 +882,28 @@ public:
     SkPath::Iter iter(aPath, true);
     SkPoint source[4];
     SkPath::Verb verb;
-    RefPtr<PathBuilderCG> pathBuilder =
-        new PathBuilderCG(GetFillRule(aPath.getFillType()));
+
+    if (!aPath.isFinite()) {
+      return;
+    }
+
+    if (aPath.isEmpty()) {
+      // Weirdly, CoreGraphics clips empty paths as all shown
+      // but empty rects as all clipped. We detect this situation and
+      // workaround it appropriately
+      CGContextClipToRect(mCG, CGRectZero);
+      return;
+    }
+
+    CGMutablePathRef cgPath = CGPathCreateMutable();
+    MOZ_ASSERT(cgPath);
 
     while ((verb = iter.next(source)) != SkPath::kDone_Verb) {
       switch (verb) {
       case SkPath::kMove_Verb:
       {
         SkPoint dest = source[0];
-        pathBuilder->MoveTo(Point(dest.fX, dest.fY));
+        CGPathMoveToPoint(cgPath, nullptr, dest.fX, dest.fY);
         break;
       }
       case SkPath::kLine_Verb:
@@ -898,7 +911,8 @@ public:
         // The first point should be the end point of whatever
         // verb we got to get here.
         SkPoint second = source[1];
-        pathBuilder->LineTo(Point(second.fX, second.fY));
+        MOZ_ASSERT(!CGPathIsEmpty(cgPath));
+        CGPathAddLineToPoint(cgPath, nullptr, second.fX, second.fY);
         break;
       }
       case SkPath::kQuad_Verb:
@@ -906,8 +920,10 @@ public:
         SkPoint second = source[1];
         SkPoint third = source[2];
 
-        pathBuilder->QuadraticBezierTo(Point(second.fX, second.fY),
-                                       Point(third.fX, third.fY));
+        MOZ_ASSERT(!CGPathIsEmpty(cgPath));
+        CGPathAddQuadCurveToPoint(cgPath, nullptr,
+                                  second.fX, second.fY,
+                                  third.fX, third.fY);
         break;
       }
       case SkPath::kCubic_Verb:
@@ -916,14 +932,18 @@ public:
         SkPoint third = source[2];
         SkPoint fourth = source[2];
 
-        pathBuilder->BezierTo(Point(second.fX, second.fY),
-                              Point(third.fX, third.fY),
-                              Point(fourth.fX, fourth.fY));
+        MOZ_ASSERT(!CGPathIsEmpty(cgPath));
+        CGPathAddCurveToPoint(cgPath, nullptr,
+                              second.fX, second.fY,
+                              third.fX, third.fY,
+                              fourth.fX, fourth.fY);
         break;
       }
       case SkPath::kClose_Verb:
       {
-        pathBuilder->Close();
+        if (!CGPathIsEmpty(cgPath)) {
+          CGPathCloseSubpath(cgPath);
+        }
         break;
       }
       default:
@@ -934,25 +954,19 @@ public:
       } // end switch
     } // end while
 
-    RefPtr<Path> path = pathBuilder->Finish();
-    PathCG* cgPath = static_cast<PathCG*>(path.get());
-
-    // Weirdly, CoreGraphics clips empty paths as all shown
-    // but empty rects as all clipped.  We detect this situation and
-    // workaround it appropriately
-    if (CGPathIsEmpty(cgPath->GetPath())) {
-      CGContextClipToRect(mCG, CGRectZero);
-      return;
-    }
+    MOZ_ASSERT(!CGPathIsEmpty(cgPath));
 
     CGContextBeginPath(mCG);
-    CGContextAddPath(mCG, cgPath->GetPath());
+    CGContextAddPath(mCG, cgPath);
 
-    if (cgPath->GetFillRule() == FillRule::FILL_EVEN_ODD) {
+    FillRule fillRule = GetFillRule(aPath.getFillType());
+    if (fillRule == FillRule::FILL_EVEN_ODD) {
       CGContextEOClip(mCG);
     } else {
       CGContextClip(mCG);
     }
+
+    CGPathRelease(cgPath);
   }
 
 private:
