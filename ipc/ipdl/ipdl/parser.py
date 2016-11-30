@@ -7,11 +7,6 @@ from ply import lex, yacc
 
 from ipdl.ast import *
 
-def _getcallerpath():
-    '''Return the absolute path of the file containing the code that
-**CALLED** this function.'''
-    return os.path.abspath(sys._getframe(1).f_code.co_filename)
-
 ##-----------------------------------------------------------------------------
 
 class ParseError(Exception):

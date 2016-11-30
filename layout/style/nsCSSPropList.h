@@ -3194,7 +3194,7 @@ CSS_PROP_OUTLINE(
     VARIANT_HKL | VARIANT_CALC,
     kBorderWidthKTable,
     offsetof(nsStyleOutline, mOutlineWidth),
-    eStyleAnimType_Coord)
+    eStyleAnimType_nscoord)
 CSS_PROP_SHORTHAND(
     overflow,
     overflow,
