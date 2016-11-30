@@ -275,12 +275,12 @@ MBasicBlock::NewPendingLoopHeader(MIRGraph& graph, const CompileInfo& info,
 }
 
 MBasicBlock*
-MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, size_t predEdgeIdx, MBasicBlock* succ)
+MBasicBlock::NewSplitEdge(MIRGraph& graph, MBasicBlock* pred, size_t predEdgeIdx, MBasicBlock* succ)
 {
     MBasicBlock* split = nullptr;
-    if (!pred->pc()) {
+    if (!succ->pc()) {
         // The predecessor does not have a PC, this is a Wasm compilation.
-        split = MBasicBlock::New(graph, info, pred, SPLIT_EDGE);
+        split = MBasicBlock::New(graph, succ->info(), pred, SPLIT_EDGE);
         if (!split)
             return nullptr;
     } else {
@@ -288,7 +288,7 @@ MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock*
         MResumePoint* succEntry = succ->entryResumePoint();
 
         BytecodeSite* site = new(graph.alloc()) BytecodeSite(succ->trackedTree(), succEntry->pc());
-        split = new(graph.alloc()) MBasicBlock(graph, info, site, SPLIT_EDGE);
+        split = new(graph.alloc()) MBasicBlock(graph, succ->info(), site, SPLIT_EDGE);
 
         if (!split->init())
             return nullptr;
