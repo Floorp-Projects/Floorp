@@ -32,6 +32,7 @@ class nsTransform2D;
 class nsImageLoadingContent;
 
 namespace mozilla {
+class PresShell;
 namespace layers {
   class ImageContainer;
   class ImageLayer;
@@ -239,7 +240,7 @@ protected:
 protected:
   friend class nsImageListener;
   friend class nsImageLoadingContent;
-  friend class PresShell;
+  friend class mozilla::PresShell;
 
   nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   nsresult OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect);
