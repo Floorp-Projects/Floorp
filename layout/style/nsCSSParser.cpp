@@ -4400,11 +4400,27 @@ CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
     return false;
   }
 
-  if (mToken.mType != eCSSToken_Ident) {
+  if (mToken.mType != eCSSToken_Ident && mToken.mType != eCSSToken_String) {
     REPORT_UNEXPECTED_TOKEN(PEKeyframeBadName);
     UngetToken();
     return false;
   }
+
+  if (mToken.mType == eCSSToken_Ident) {
+    // Check for keywords that are not allowed as custom-ident for the
+    // keyframes-name: standard CSS-wide keywords, plus 'none'.
+    static const nsCSSKeyword excludedKeywords[] = {
+      eCSSKeyword_none,
+      eCSSKeyword_UNKNOWN
+    };
+    nsCSSValue value;
+    if (!ParseCustomIdent(value, mToken.mIdent, excludedKeywords)) {
+      REPORT_UNEXPECTED_TOKEN(PEKeyframeBadName);
+      UngetToken();
+      return false;
+    }
+  }
+
   nsString name(mToken.mIdent);
 
   if (!ExpectSymbol('{', true)) {

@@ -20,13 +20,10 @@
 //   include_subdomains: (optional bool) whether subdomains of |name| are also covered
 //   pins: (string) the |name| member of an object in |pinsets|
 //
-// "extra_certs" is a list of base64-encoded certificates. These are used in
+// "extra_certificates" is a list of base64-encoded certificates. These are used in
 // pinsets that reference certificates not in our root program (for example,
-// Facebook).
+// Facebook or intermediate CA certs).
 
-// equifax -> aus3
-// Geotrust Primary -> www.mozilla.org
-// Geotrust Global -> *. addons.mozilla.org
 {
   "chromium_data" : {
     "cert_file_url": "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.pins?format=TEXT",
@@ -72,39 +69,14 @@
    },
   "pinsets": [
     {
-      // From bug 772756, mozilla uses GeoTrust, Digicert and Thawte.  Our
-      // cdn sites use Verisign and Baltimore. We exclude 1024-bit root certs
-      // from all providers. geotrust ca info:
-      // http://www.geotrust.com/resources/root-certificates/index.html
-      "name": "mozilla",
-      "sha256_hashes": [
-        "Baltimore CyberTrust Root",
-        "DigiCert Assured ID Root CA",
-        "DigiCert Global Root CA",
-        "DigiCert High Assurance EV Root CA",
-        "GeoTrust Global CA",
-        "GeoTrust Global CA 2",
-        "GeoTrust Primary Certification Authority",
-        "GeoTrust Primary Certification Authority - G2",
-        "GeoTrust Primary Certification Authority - G3",
-        "GeoTrust Universal CA",
-        "GeoTrust Universal CA 2",
-        "thawte Primary Root CA",
-        "thawte Primary Root CA - G2",
-        "thawte Primary Root CA - G3",
-        "Verisign Class 1 Public Primary Certification Authority - G3",
-        "Verisign Class 2 Public Primary Certification Authority - G3",
-        "Verisign Class 3 Public Primary Certification Authority - G3",
-        "VeriSign Class 3 Public Primary Certification Authority - G4",
-        "VeriSign Class 3 Public Primary Certification Authority - G5",
-        // "Verisign Class 4 Public Primary Certification Authority - G3",
-        "VeriSign Universal Root Certification Authority"
-      ]
-    },
-    {
       "name": "mozilla_services",
       "sha256_hashes": [
-        "DigiCert Global Root CA"
+        "DigiCert Global Root CA",
+        "DigiCert High Assurance EV Root CA",
+        // Backup intermediates with Let's Encrypt are not normally
+        // in use and require disabling Mozilla's sites blacklisting
+        "Let's Encrypt Authority X3",
+        "Let's Encrypt Authority X4"
       ]
     },
     // For pinning tests on pinning.example.com, the certificate must be 'End
@@ -185,21 +157,46 @@
     // Only domains that are operationally crucial to Firefox can have per-host
     // telemetry reporting (the "id") field
     { "name": "addons.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": false, "id": 1 },
+      "pins": "mozilla_services", "test_mode": false, "id": 1 },
     { "name": "addons.mozilla.net", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": false, "id": 2 },
+      "pins": "mozilla_services", "test_mode": false, "id": 2 },
+    // AUS servers MUST remain in test mode
+    // see: https://bugzilla.mozilla.org/show_bug.cgi?id=1301956#c23
     { "name": "aus4.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true, "id": 3 },
+      "pins": "mozilla_services", "test_mode": true, "id": 3 },
+    { "name": "aus5.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": true, "id": 7 },
+    // Firefox Accounts & sync
     { "name": "accounts.firefox.com", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": false, "id": 4 },
     { "name": "api.accounts.firefox.com", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": false, "id": 5 },
+    { "name": "sync.services.mozilla.com", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": false, "id": 13 },
+    // Catch-all for all CDN resources, including product delivery
     { "name": "cdn.mozilla.net", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": false },
+      "pins": "mozilla_services", "test_mode": false },
     { "name": "cdn.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": false },
+      "pins": "mozilla_services", "test_mode": false },
+    { "name": "download.mozilla.org", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 14 },
+    // Catch-all for everything hosted under services.mozilla.com
     { "name": "services.mozilla.com", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": false, "id": 6 },
+    // Catch-all for everything hosted under telemetry.mozilla.org
+    // MUST remain in test mode in order to receive telemetry on broken pins
+    { "name": "telemetry.mozilla.org", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": true, "id": 8 },
+    // Test Pilot
+    { "name": "testpilot.firefox.com", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 9 },
+    // Crash report sites
+    { "name": "crash-reports.mozilla.com", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 10 },
+    { "name": "crash-reports-xpsp2.mozilla.com", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 11 },
+    { "name": "crash-stats.mozilla.com", "include_subdomains": false,
+      "pins": "mozilla_services", "test_mode": false, "id": 12 },
     { "name": "include-subdomains.pinning.example.com",
       "include_subdomains": true, "pins": "mozilla_test",
       "test_mode": false },
@@ -213,10 +210,17 @@
     // twitterCDN. More specific rules take precedence because we search for
     // exact domain name first.
     { "name": "twitter.com", "include_subdomains": true,
-      "pins": "twitterCDN", "test_mode": false },
-    { "name": "aus5.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true, "id": 7 }
+      "pins": "twitterCDN", "test_mode": false }
   ],
-
-  "extra_certificates": []
+  // When pinning to non-root certs, like intermediates,
+  // place the PEM of the pinned certificate in this array
+  // so Firefox can find the subject DN and public key
+  "extra_certificates": [
+    // Subject: C=US, O=Let's Encrypt, CN=Let's Encrypt Authority X3
+    // Issuer: C=US, O=Internet Security Research Group, CN=ISRG Root X1
+    "MIIFjTCCA3WgAwIBAgIRANOxciY0IzLc9AUoUSrsnGowDQYJKoZIhvcNAQELBQAwTzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2VhcmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTYxMDA2MTU0MzU1WhcNMjExMDA2MTU0MzU1WjBKMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNTGV0J3MgRW5jcnlwdDEjMCEGA1UEAxMaTGV0J3MgRW5jcnlwdCBBdXRob3JpdHkgWDMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCc0wzwWuUuR7dyXTeDs2hjMOrXNSYZJeG9vjXxcJIvt7hLQQWrqZ41CFjssSrEaIcLo+N15Obzp2JxunmBYB/XkZqf89B4Z3HIaQ6Vkc/+5pnpYDxIzH7KTXcSJJ1HG1rrueweNwAcnKx7pwXqzkrrvUHlNpi5y/1tPJZo3yMqQpAMhnRnyH+lmrhSYRQTP2XpgofL2/oOVvaGifOFP5eGr7DcGu9rDZUWfcQroGWymQQ2dYBrrErzG5BJeC+ilk8qICUpBMZ0wNAxzY8xOJUWuqgzuEPxsR/DMH+ieTETPS02+OP88jNquTkxxa/EjQ0dZBYzqvqEKbbUC8DYfcOTAgMBAAGjggFnMIIBYzAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBADBUBgNVHSAETTBLMAgGBmeBDAECATA/BgsrBgEEAYLfEwEBATAwMC4GCCsGAQUFBwIBFiJodHRwOi8vY3BzLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMB0GA1UdDgQWBBSoSmpjBH3duubRObemRWXv86jsoTAzBgNVHR8ELDAqMCigJqAkhiJodHRwOi8vY3JsLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMHIGCCsGAQUFBwEBBGYwZDAwBggrBgEFBQcwAYYkaHR0cDovL29jc3Aucm9vdC14MS5sZXRzZW5jcnlwdC5vcmcvMDAGCCsGAQUFBzAChiRodHRwOi8vY2VydC5yb290LXgxLmxldHNlbmNyeXB0Lm9yZy8wHwYDVR0jBBgwFoAUebRZ5nu25eQBc4AIiMgaWPbpm24wDQYJKoZIhvcNAQELBQADggIBABnPdSA0LTqmRf/Q1eaM2jLonG4bQdEnqOJQ8nCqxOeTRrToEKtwT++36gTSlBGxA/5dut82jJQ2jxN8RI8L9QFXrWi4xXnA2EqA10yjHiR6H9cj6MFiOnb5In1eWsRMUM2v3e9tNsCAgBukPHAg1lQh07rvFKm/Bz9BCjaxorALINUfZ9DD64j2igLIxle2DPxW8dI/F2loHMjXZjqG8RkqZUdoxtID5+90FgsGIfkMpqgRS05f4zPbCEHqCXl1eO5HyELTgcVlLXXQDgAWnRzut1hFJeczY1tjQQno6f6s+nMydLN26WuU4s3UYvOuOsUxRlJu7TSRHqDC3lSE5XggVkzdaPkuKGQbGpny+01/47hfXXNB7HntWNZ6N2Vwp7G6OfY+YQrZwIaQmhrIqJZuigsrbe3W+gdn5ykE9+Ky0VgVUsfxo52mwFYs1JKY2PGDuWx8M6DlS6qQkvHaRUo0FMd8TsSlbF0/v965qGFKhSDeQoMpYnwcmQilRh/0ayLThlHLN81gSkJjVrPI0Y8xCVPB4twb1PFUd2fPM3sA1tJ83sZ5v8vgFv2yofKRPB0t6JzUA81mSqM3kxl5e+IZwhYAyO0OTg3/fs8HqGTNKd9BqoUwSRBzp06JMg5brUCGwbCUDI0mxadJ3Bz4WxR6fyNpBK2yAinWEsikxqEt",
+    // Subject: C=US, O=Let's Encrypt, CN=Let's Encrypt Authority X4
+    // Issuer: C=US, O=Internet Security Research Group, CN=ISRG Root X1
+    "MIIFjTCCA3WgAwIBAgIRAJObmZ6kjhYNW0JZtD0gE9owDQYJKoZIhvcNAQELBQAwTzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2VhcmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTYxMDA2MTU0NDM0WhcNMjExMDA2MTU0NDM0WjBKMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNTGV0J3MgRW5jcnlwdDEjMCEGA1UEAxMaTGV0J3MgRW5jcnlwdCBBdXRob3JpdHkgWDQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDhJHRCe7eRMdlz/ziq2M5EXLc5CtxErg29RbmXN2evvVBPX9MQVGv3QdqOY+ZtW8DoQKmMQfzRA4n/YmEJYNYHBXiakL0aZD5P3M93L4lry2evQU3FjQDAa/6NhNy18pUxqOj2kKBDSpN0XLM+Q2lLiSJHdFE+mWTDzSQB+YQvKHcXIqfdw2wITGYvN3TFb5OOsEY3FmHRUJjIsA9PWFN8rPbaLZZhUK1D3AqmT561Urmcju9O30azMdwg/GnCoyB1Puw4GzZOZmbS3/VmpJMve6YOlD5gPUpLHG+6tE0cPJFYbi9NxNpw2+0BOXbASefpNbUUBpDB5ZLiEP1rubSFAgMBAAGjggFnMIIBYzAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBADBUBgNVHSAETTBLMAgGBmeBDAECATA/BgsrBgEEAYLfEwEBATAwMC4GCCsGAQUFBwIBFiJodHRwOi8vY3BzLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMB0GA1UdDgQWBBTFsatOTLHNZDCTfsGEmQWr5gPiJTAzBgNVHR8ELDAqMCigJqAkhiJodHRwOi8vY3JsLnJvb3QteDEubGV0c2VuY3J5cHQub3JnMHIGCCsGAQUFBwEBBGYwZDAwBggrBgEFBQcwAYYkaHR0cDovL29jc3Aucm9vdC14MS5sZXRzZW5jcnlwdC5vcmcvMDAGCCsGAQUFBzAChiRodHRwOi8vY2VydC5yb290LXgxLmxldHNlbmNyeXB0Lm9yZy8wHwYDVR0jBBgwFoAUebRZ5nu25eQBc4AIiMgaWPbpm24wDQYJKoZIhvcNAQELBQADggIBAF4tI1yGjZgld9lP01+zftU3aSV0un0d2GKUMO7GxvwTLWAKQz/eT+u3J4+GvpD+BMfopIxkJcDCzMChjjZtZZwJpIY7BatVrO6OkEmaRNITtbZ/hCwNkUnbk3C7EG3OGJZlo9b2wzA8v9WBsPzHpTvLfOr+dS57LLPZBhp3ArHaLbdk33lIONRPt9sseDEkmdHnVmGmBRf4+J0Wy67mddOvz5rHH8uzY94raOayf20gzzcmqmot4hPXtDG4Y49MoFMMT2kcWck3EOTAH6QiGWkGJ7cxMfSL3S0niA6wgFJtfETETOZu8AVDgENgCJ3DS0bz/dhVKvs3WRkaKuuR/W0nnC2VDdaFj4+CRF8LGtn/8ERaH48TktH5BDyDVcF9zfJ75Scxcy23jAL2N6w3n/t3nnqoXt9Im4FprDr+mP1g2Z6Lf2YA0jE3kZalgZ6lNHu4CmvJYoOTSJw9X2qlGl1K+B4U327rG1tRxgjM76pN6lIS02PMECoyKJigpOSBu4V8+LVaUMezCJH9Qf4EKeZTHddQ1t96zvNd2s9ewSKx/DblXbKsBDzIdHJ+qi6+F9DIVM5/ICdtDdulOO+dr/BXB+pBZ3uVxjRANvJKKpdxkePyluITSNZHbanWRN07gMvwBWOL060i4VrL9er1sBQrRjU9iNpZQGTnLVAxQVFu"
+  ]
 }

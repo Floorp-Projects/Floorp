@@ -4,8 +4,11 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } =
+const { addons, createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
+
+const GridDisplaySettings = createFactory(require("./GridDisplaySettings"));
+const GridList = createFactory(require("./GridList"));
 
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
@@ -16,6 +19,10 @@ module.exports = createClass({
 
   propTypes: {
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+    highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
+    onToggleGridHighlighter: PropTypes.func.isRequired,
+    onToggleShowGridLineNumbers: PropTypes.func.isRequired,
+    onToggleShowInfiniteLines: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -23,20 +30,34 @@ module.exports = createClass({
   render() {
     let {
       grids,
+      highlighterSettings,
+      onToggleGridHighlighter,
+      onToggleShowGridLineNumbers,
+      onToggleShowInfiniteLines,
     } = this.props;
 
-    return dom.div(
-      {
-        id: "layout-grid-container",
-      },
-      !grids.length ?
-        dom.div(
-          {
-            className: "layout-no-grids"
-          },
-          getStr("layout.noGrids")
-        ) : null
-    );
+    return grids.length ?
+      dom.div(
+        {
+          id: "layout-grid-container",
+        },
+        GridList({
+          grids,
+          onToggleGridHighlighter,
+        }),
+        GridDisplaySettings({
+          highlighterSettings,
+          onToggleShowGridLineNumbers,
+          onToggleShowInfiniteLines,
+        })
+      )
+      :
+      dom.div(
+        {
+          className: "layout-no-grids",
+        },
+        getStr("layout.noGrids")
+      );
   },
 
 });

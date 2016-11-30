@@ -6887,9 +6887,14 @@ var Tabs = {
 };
 
 function ContextMenuItem(args) {
-  this.id = uuidgen.generateUUID().toString();
+  this.id = ContextMenuItem._nextId;
   this.args = args;
+
+  // Limit to Java int range.
+  ContextMenuItem._nextId = (ContextMenuItem._nextId + 1) & 0x7fffffff;
 }
+
+ContextMenuItem._nextId = 1;
 
 ContextMenuItem.prototype = {
   get order() {
