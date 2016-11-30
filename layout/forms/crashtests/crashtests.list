@@ -23,7 +23,7 @@ load 370967.html
 load 373586-1.xhtml
 load 375299.html
 load 378369.html
-asserts(4-10) load 378413-1.xhtml # bug 424225, bug 402850?
+load 378413-1.xhtml
 load 380116-1.xhtml
 load 382212-1.xhtml
 load 382610-1.html

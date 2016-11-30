@@ -332,7 +332,7 @@ add_task(async function test_telemetry_integration() {
   ok(bme.validation.problems)
   equal(bme.validation.checked, server.length);
   equal(bme.validation.took, duration);
-  bme.validation.problems.sort((a, b) => String.localeCompare(a.name, b.name));
+  bme.validation.problems.sort((a, b) => String(a.name).localeCompare(b.name));
   equal(bme.validation.version, new BookmarkValidator().version);
   deepEqual(bme.validation.problems, [
     { name: "badClientRoots", count: 3 },

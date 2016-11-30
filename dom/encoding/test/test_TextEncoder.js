@@ -182,7 +182,7 @@ function testStreamingOptions()
 }
 
 function arrayFromString(s) {
-  return s.split('').map(function(c){return String.charCodeAt(c)});
+  return s.split('').map(function(c){return c.charCodeAt(0)});
 }
 
 function testArrayOfStrings(test)
