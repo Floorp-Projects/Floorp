@@ -179,7 +179,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-XPCOMUtils.defineConstant(this, "DB_SCHEMA", 18);
+XPCOMUtils.defineConstant(this, "DB_SCHEMA", 19);
 
 const NOTIFICATION_TOOLBOXPROCESS_LOADED      = "ToolboxProcessLoaded";
 
@@ -803,6 +803,7 @@ function createAddonDetails(id, aAddon) {
     type: aAddon.type,
     version: aAddon.version,
     multiprocessCompatible: aAddon.multiprocessCompatible,
+    mpcOptedOut: aAddon.mpcOptedOut,
     runInSafeMode: aAddon.runInSafeMode,
     dependencies: aAddon.dependencies,
     hasEmbeddedWebExtension: aAddon.hasEmbeddedWebExtension,
@@ -1154,7 +1155,11 @@ let loadManifestFromRDF = Task.async(function*(aUri, aStream) {
   // Only read these properties for extensions.
   if (addon.type == "extension") {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
-    addon.multiprocessCompatible = getRDFProperty(ds, root, "multiprocessCompatible") == "true";
+
+    let mpcValue = getRDFProperty(ds, root, "multiprocessCompatible");
+    addon.multiprocessCompatible = mpcValue == "true";
+    addon.mpcOptedOut = mpcValue == "false";
+
     addon.hasEmbeddedWebExtension = getRDFProperty(ds, root, "hasEmbeddedWebExtension") == "true";
 
     if (addon.optionsType &&
@@ -7873,7 +7878,7 @@ function defineAddonWrapperProperty(name, getter) {
  "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
  "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
  "strictCompatibility", "compatibilityOverrides", "updateURL", "dependencies",
- "getDataDirectory", "multiprocessCompatible", "signedState",
+ "getDataDirectory", "multiprocessCompatible", "signedState", "mpcOptedOut",
  "isCorrectlySigned"].forEach(function(aProp) {
    defineAddonWrapperProperty(aProp, function() {
      let addon = addonFor(this);
