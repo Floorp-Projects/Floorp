@@ -8,9 +8,11 @@
 #define mozilla_layers_WebRenderBridgeParent_h
 
 #include "GLContextProvider.h"
+#include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/layers/PWebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderTypes.h"
+#include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
 
@@ -30,6 +32,7 @@ class CompositorVsyncScheduler;
 
 class WebRenderBridgeParent final : public PWebRenderBridgeParent
                                   , public CompositorVsyncSchedulerOwner
+                                  , public CompositableParentManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeParent)
 
@@ -85,8 +88,18 @@ public:
   void FinishPendingComposite() override { }
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
 
-protected:
+private:
   virtual ~WebRenderBridgeParent();
+
+  virtual PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo) override;
+  bool DeallocPCompositableParent(PCompositableParent* aActor) override;
+
+  // CompositableParentManager
+  bool IsSameProcess() const override;
+  base::ProcessId GetChildProcessId() override;
+  void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
+  void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+
   void DeleteOldImages();
   void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands);
   void ScheduleComposition();

@@ -9,7 +9,6 @@
 #include "gfxPlatform.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
-#include "mozilla/layers/WebRenderBridgeParent.h"
 
 namespace mozilla {
 namespace layers {
@@ -120,6 +119,98 @@ LayersIPCActor*
 WebRenderBridgeChild::GetLayersIPCActor()
 {
   return static_cast<LayersIPCActor*>(GetCompositorBridgeChild());
+}
+
+PCompositableChild*
+WebRenderBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo)
+{
+  return nullptr;
+}
+
+bool
+WebRenderBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
+{
+  return true;
+}
+
+void
+WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
+                              ImageContainer* aImageContainer)
+{
+
+}
+
+void
+WebRenderBridgeChild::UseTiledLayerBuffer(CompositableClient* aCompositable,
+                                          const SurfaceDescriptorTiles& aTiledDescriptor)
+{
+
+}
+
+void
+WebRenderBridgeChild::UpdateTextureRegion(CompositableClient* aCompositable,
+                                          const ThebesBufferData& aThebesBufferData,
+                                          const nsIntRegion& aUpdatedRegion)
+{
+
+}
+
+void
+WebRenderBridgeChild::Destroy(CompositableChild* aCompositable)
+{
+
+}
+
+bool
+WebRenderBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool synchronously)
+{
+  return true;
+}
+
+bool
+WebRenderBridgeChild::DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously)
+{
+  return true;
+}
+
+void
+WebRenderBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositable,
+                                                    TextureClient* aTexture)
+{
+
+}
+
+void
+WebRenderBridgeChild::UseTextures(CompositableClient* aCompositable,
+                                  const nsTArray<TimedTextureClient>& aTextures)
+{
+
+}
+
+void
+WebRenderBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
+                                                TextureClient* aClientOnBlack,
+                                                TextureClient* aClientOnWhite)
+{
+
+}
+
+void
+WebRenderBridgeChild::UpdateFwdTransactionId()
+{
+
+}
+
+uint64_t
+WebRenderBridgeChild::GetFwdTransactionId()
+{
+  return 0;
+}
+
+bool
+WebRenderBridgeChild::InForwarderThread()
+{
+  return NS_IsMainThread();
 }
 
 } // namespace layers

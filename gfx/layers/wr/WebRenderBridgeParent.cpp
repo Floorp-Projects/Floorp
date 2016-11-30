@@ -428,5 +428,41 @@ WebRenderBridgeParent::ShouldParentObserveEpoch()
   return true;
 }
 
+void
+WebRenderBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
+{
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
+void
+WebRenderBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId)
+{
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
+base::ProcessId
+WebRenderBridgeParent::GetChildProcessId()
+{
+  return OtherPid();
+}
+
+bool
+WebRenderBridgeParent::IsSameProcess() const
+{
+  return OtherPid() == base::GetCurrentProcId();
+}
+
+PCompositableParent*
+WebRenderBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo)
+{
+  return nullptr;
+}
+
+bool
+WebRenderBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
+{
+  return true;
+}
+
 } // namespace layers
 } // namespace mozilla
