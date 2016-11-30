@@ -100,7 +100,7 @@ public:
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
-  virtual nsresult Init() { return NS_OK; }
+  nsresult Init();
 
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
@@ -411,6 +411,8 @@ protected:
   MediaEventProducer<void> mOnMediaNotSeekable;
 
 private:
+  virtual nsresult InitInternal() { return NS_OK; }
+
   // Does any spinup that needs to happen on this task queue. This runs on a
   // different thread than Init, and there should not be ordering dependencies
   // between the two (even though in practice, Init will always run first right

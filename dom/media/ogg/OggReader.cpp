@@ -164,7 +164,7 @@ OggReader::~OggReader()
   }
 }
 
-nsresult OggReader::Init() {
+nsresult OggReader::InitInternal() {
   int ret = ogg_sync_init(&mOggState);
   NS_ENSURE_TRUE(ret == 0, NS_ERROR_FAILURE);
   return NS_OK;
