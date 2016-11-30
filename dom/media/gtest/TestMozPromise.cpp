@@ -148,13 +148,11 @@ TEST(MozPromise, CompletionPromises)
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue, &invokedPass] () -> void {
     TestPromise::CreateAndResolve(40, __func__)
-    ->Then(queue, __func__,
+    ->ThenPromise(queue, __func__,
       [] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndResolve(aVal + 10, __func__); },
       DO_FAIL)
-    ->CompletionPromise()
-    ->Then(queue, __func__, [&invokedPass] () -> void { invokedPass = true; }, DO_FAIL)
-    ->CompletionPromise()
-    ->Then(queue, __func__,
+    ->ThenPromise(queue, __func__, [&invokedPass] () -> void { invokedPass = true; }, DO_FAIL)
+    ->ThenPromise(queue, __func__,
       [queue] (int aVal) -> RefPtr<TestPromise> {
         RefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
         nsCOMPtr<nsIRunnable> resolver = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(aVal - 8), 10);
@@ -162,11 +160,9 @@ TEST(MozPromise, CompletionPromises)
         return RefPtr<TestPromise>(p);
       },
       DO_FAIL)
-    ->CompletionPromise()
-    ->Then(queue, __func__,
+    ->ThenPromise(queue, __func__,
       [queue] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndReject(double(aVal - 42) + 42.0, __func__); },
       DO_FAIL)
-    ->CompletionPromise()
     ->Then(queue, __func__,
       DO_FAIL,
       [queue, &invokedPass] (double aVal) -> void { EXPECT_EQ(aVal, 42.0); EXPECT_TRUE(invokedPass); queue->BeginShutdown(); });
@@ -232,12 +228,12 @@ TEST(MozPromise, Chaining)
     auto p = TestPromise::CreateAndResolve(42, __func__);
     const size_t kIterations = 100;
     for (size_t i = 0; i < kIterations; ++i) {
-      p = p->Then(queue, __func__,
+      p = p->ThenPromise(queue, __func__,
         [] (int aVal) {
           EXPECT_EQ(aVal, 42);
         },
         [] () {}
-      )->CompletionPromise();
+      );
 
       if (i == kIterations / 2) {
         p->Then(queue, __func__,
