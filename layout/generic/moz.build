@@ -19,7 +19,7 @@ with Files('nsLine*'):
 with Files('nsInlineFrame.*'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files('nsBRFrame.*'):
+with Files('BRFrame.*'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
 with Files('nsBulletFrame.*'):
@@ -127,6 +127,7 @@ EXPORTS.mozilla.layout += [
 UNIFIED_SOURCES += [
     'AsyncScrollBase.cpp',
     'BlockReflowInput.cpp',
+    'BRFrame.cpp',
     'CSSAlignUtils.cpp',
     'DetailsFrame.cpp',
     'FrameChildList.cpp',
@@ -135,7 +136,6 @@ UNIFIED_SOURCES += [
     'nsBackdropFrame.cpp',
     'nsBlockFrame.cpp',
     'nsBlockReflowContext.cpp',
-    'nsBRFrame.cpp',
     'nsBulletFrame.cpp',
     'nsCanvasFrame.cpp',
     'nsColumnSetFrame.cpp',
