@@ -81,6 +81,7 @@ ClientEngine.prototype = {
   _storeObj: ClientStore,
   _recordObj: ClientsRec,
   _trackerObj: ClientsTracker,
+  allowSkippedRecord: false,
 
   // Always sync client data as it controls other sync behavior
   get enabled() {
