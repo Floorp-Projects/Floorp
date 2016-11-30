@@ -30,9 +30,6 @@ interface nsIWindowCreator2 : nsIWindowCreator {
    * Definitions for contextFlags
    */
 
-  // Likely that the window is an advertising popup. 
-  const unsigned long PARENT_IS_LOADING_OR_RUNNING_TIMEOUT = 0x00000001;
-
   /** Create a new window. Gecko will/may call this method, if made
       available to it, to create new windows.
       @param parent Parent window, if any. Null if not. The newly created

@@ -484,7 +484,6 @@ nsresult
 nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
                                     nsIWebBrowserChrome* aParentChrome,
                                     uint32_t aChromeFlags,
-                                    uint32_t aContextFlags,
                                     nsITabParent* aOpeningTabParent,
                                     mozIDOMWindowProxy* aOpener,
                                     nsIWebBrowserChrome** aResult)
@@ -504,8 +503,9 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
   bool cancel = false;
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
   nsresult rv =
-    windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags, aContextFlags,
-                                        aOpeningTabParent, aOpener, &cancel,
+    windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags,
+                                        0 /* contextFlag */,  aOpeningTabParent,
+                                        aOpener, &cancel,
                                         getter_AddRefs(newWindowChrome));
 
   if (NS_SUCCEEDED(rv) && cancel) {
@@ -609,12 +609,6 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
     return NS_ERROR_UNEXPECTED;
   }
 
-  uint32_t contextFlags = 0;
-  if (parentWindowOuter->IsLoadingOrRunningTimeout()) {
-    contextFlags |=
-            nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
-  }
-
   uint32_t chromeFlags = CalculateChromeFlagsForChild(aFeatures);
 
   // A content process has asked for a new window, which implies
@@ -624,7 +618,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   nsCOMPtr<nsIWebBrowserChrome> parentChrome(do_GetInterface(parentTreeOwner));
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
-  CreateChromeWindow(aFeatures, parentChrome, chromeFlags, contextFlags,
+  CreateChromeWindow(aFeatures, parentChrome, chromeFlags, 0 /* contextFlags */,
                      aOpeningTabParent, nullptr, getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
@@ -970,37 +964,11 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     rv = NS_ERROR_FAILURE;
     if (mWindowCreator) {
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
-
-      /* If the window creator is an nsIWindowCreator2, we can give it
-         some hints. The only hint at this time is whether the opening window
-         is in a situation that's likely to mean this is an unrequested
-         popup window we're creating. However we're not completely honest:
-         we clear that indicator if the opener is chrome, so that the
-         downstream consumer can treat the indicator to mean simply
-         that the new window is subject to popup control. */
       nsCOMPtr<nsIWindowCreator2> windowCreator2(
         do_QueryInterface(mWindowCreator));
       if (windowCreator2) {
-        uint32_t contextFlags = 0;
-        bool popupConditions = false;
-
-        // is the parent under popup conditions?
-        if (parentWindow) {
-          popupConditions = parentWindow->IsLoadingOrRunningTimeout();
-        }
-
-        // chrome is always allowed, so clear the flag if the opener is chrome
-        if (popupConditions) {
-          popupConditions = !isCallerChrome;
-        }
-
-        if (popupConditions) {
-          contextFlags |=
-            nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
-        }
-
         mozIDOMWindowProxy* openerWindow = aForceNoOpener ? nullptr : aParent;
-        rv = CreateChromeWindow(features, parentChrome, chromeFlags, contextFlags,
+        rv = CreateChromeWindow(features, parentChrome, chromeFlags,
                                 nullptr, openerWindow, getter_AddRefs(newChrome));
 
       } else {

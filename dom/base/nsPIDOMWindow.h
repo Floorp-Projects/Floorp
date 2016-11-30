@@ -195,8 +195,6 @@ protected:
   void MaybeCreateDoc();
 
 public:
-  inline bool IsLoadingOrRunningTimeout() const;
-
   // Check whether a document is currently loading
   inline bool IsLoading() const;
   inline bool IsHandlingResizeEvent() const;
