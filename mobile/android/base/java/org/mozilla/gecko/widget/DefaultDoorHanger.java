@@ -15,6 +15,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.prompts.PromptInput;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -109,7 +110,8 @@ public class DefaultDoorHanger extends DoorHanger {
 
             for (int i = 0; i < inputs.length(); i++) {
                 try {
-                    PromptInput input = PromptInput.getInput(inputs.getJSONObject(i));
+                    PromptInput input = PromptInput.getInput(
+                            GeckoBundle.fromJSONObject(inputs.getJSONObject(i)));
                     mInputs.add(input);
 
                     final int padding = mResources.getDimensionPixelSize(R.dimen.doorhanger_section_padding_medium);

@@ -95,20 +95,18 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
       this.spectrum.updateUI();
     }
 
-    let {target} = this.inspector;
-    target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
-      let tooltipDoc = this.tooltip.doc;
-      let eyeButton = tooltipDoc.querySelector("#eyedropper-button");
-      if (value && this.inspector.selection.nodeFront.isInHTMLDocument) {
-        eyeButton.disabled = false;
-        eyeButton.removeAttribute("title");
-        eyeButton.addEventListener("click", this._openEyeDropper);
-      } else {
-        eyeButton.disabled = true;
-        eyeButton.title = L10N.getStr("eyedropper.disabled.title");
-      }
-      this.emit("ready");
-    }, e => console.error(e));
+    let tooltipDoc = this.tooltip.doc;
+    let eyeButton = tooltipDoc.querySelector("#eyedropper-button");
+    let canShowEyeDropper = yield this.inspector.supportsEyeDropper();
+    if (canShowEyeDropper) {
+      eyeButton.disabled = false;
+      eyeButton.removeAttribute("title");
+      eyeButton.addEventListener("click", this._openEyeDropper);
+    } else {
+      eyeButton.disabled = true;
+      eyeButton.title = L10N.getStr("eyedropper.disabled.title");
+    }
+    this.emit("ready");
   }),
 
   _onSpectrumColorChange: function (event, rgba, cssColor) {

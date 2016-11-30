@@ -11,6 +11,7 @@
 #include "nsNetUtil.h"
 #include "mozilla/HashFunctions.h"
 #include "nsHashKeys.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace image {
@@ -33,6 +34,7 @@ class ImageURL
 {
 public:
   explicit ImageURL(nsIURI* aURI, nsresult& aRv)
+    : mURI(new nsMainThreadPtrHolder<nsIURI>(aURI))
   {
     MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
 
@@ -97,10 +99,7 @@ public:
 
   already_AddRefed<nsIURI> ToIURI()
   {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "Convert to nsIURI on main thread only; it is not threadsafe.");
-    nsCOMPtr<nsIURI> newURI;
-    NS_NewURI(getter_AddRefs(newURI), mSpec);
+    nsCOMPtr<nsIURI> newURI = mURI.get();
     return newURI.forget();
   }
 
@@ -132,6 +131,8 @@ private:
     // For non-blob URIs, we hash the URI spec.
     return HashString(mSpec);
   }
+
+  nsMainThreadPtrHandle<nsIURI> mURI;
 
   // Since this is a basic storage class, no duplication of spec parsing is
   // included in the functionality. Instead, the class depends upon the
