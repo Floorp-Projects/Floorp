@@ -43,7 +43,7 @@ public:
 
   int GetInputFrameID();
   bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient> >& aDisplays);
-  bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);
+  bool RefreshVRDisplaysWithCallback(dom::Navigator* aNavigator);
 
   static void InitSameProcess();
   static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
@@ -144,7 +144,7 @@ private:
 
   nsTArray<RefPtr<VRDisplayClient> > mDisplays;
   bool mDisplaysInitialized;
-  nsTArray<uint64_t> mNavigatorCallbacks;
+  nsTArray<dom::Navigator*> mNavigatorCallbacks;
 
   int32_t mInputFrameID;
 
