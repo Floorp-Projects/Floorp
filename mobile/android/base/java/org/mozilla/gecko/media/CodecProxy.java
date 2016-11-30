@@ -131,6 +131,21 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
+    public synchronized boolean isAdaptivePlaybackSupported()
+    {
+      if (mRemote == null) {
+          Log.e(LOGTAG, "cannot check isAdaptivePlaybackSupported with an ended codec");
+          return false;
+      }
+      try {
+            return mRemote.isAdaptivePlaybackSupported();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @WrapForJNI
     public synchronized boolean input(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot send input to an ended codec");
