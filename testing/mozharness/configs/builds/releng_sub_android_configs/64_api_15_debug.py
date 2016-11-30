@@ -6,4 +6,5 @@ config = {
     'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/android/releng.manifest',
     'multi_locale_config_platform': 'android',
     'debug_build': True,
+    'artifact_flag_build_variant_in_try': 'api-15-debug-artifact',
 }
