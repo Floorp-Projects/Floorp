@@ -320,7 +320,8 @@ private:
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_RULE_IMPL_CID)
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StyleRule, Rule)
 
   // null for style attribute
   nsCSSSelectorList* Selector() { return mSelector; }
@@ -357,6 +358,10 @@ public:
 
 private:
   ~StyleRule();
+
+  // Drop our references to mDeclaration and mRule, and let them know we're
+  // doing that.
+  void DropReferences();
 
 private:
   nsCSSSelectorList*      mSelector; // null for style attribute
