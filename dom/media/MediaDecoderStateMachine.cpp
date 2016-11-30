@@ -1656,11 +1656,10 @@ ShutdownState::Enter()
   // Shut down the watch manager to stop further notifications.
   master->mWatchManager.Shutdown();
 
-  return Reader()->Shutdown()
-    ->Then(OwnerThread(), __func__, master,
-           &MediaDecoderStateMachine::FinishShutdown,
-           &MediaDecoderStateMachine::FinishShutdown)
-    ->CompletionPromise();
+  return Reader()->Shutdown()->ThenPromise(
+    OwnerThread(), __func__, master,
+    &MediaDecoderStateMachine::FinishShutdown,
+    &MediaDecoderStateMachine::FinishShutdown);
 }
 
 #define INIT_WATCHABLE(name, val) \
