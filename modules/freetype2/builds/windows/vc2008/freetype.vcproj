@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype255.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype27.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype255MT.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype27MT.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -220,7 +220,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype255ST.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype27ST.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -292,7 +292,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype255_D.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype27_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -365,7 +365,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype255ST_D.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype27ST_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -439,7 +439,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype255MT_D.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype27MT_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -1237,6 +1237,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\base\ftfntfmt.c"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\base\ftmm.c"
 					>
 					<FileConfiguration
@@ -1317,10 +1321,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\base\ftwinfnt.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\src\base\ftxf86.c"
 					>
 				</File>
 				<File
@@ -2154,23 +2154,23 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\config\ftconfig.h"
+				RelativePath="..\..\..\include\freetype\config\ftconfig.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\config\ftheader.h"
+				RelativePath="..\..\..\include\freetype\config\ftheader.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\config\ftmodule.h"
+				RelativePath="..\..\..\include\freetype\config\ftmodule.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\config\ftoption.h"
+				RelativePath="..\..\..\include\freetype\config\ftoption.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\config\ftstdlib.h"
+				RelativePath="..\..\..\include\freetype\config\ftstdlib.h"
 				>
 			</File>
 		</Filter>

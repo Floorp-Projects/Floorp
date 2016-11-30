@@ -3,7 +3,7 @@
 #
 #    Parse comment blocks to build content blocks (library file).
 #
-#  Copyright 2002, 2004, 2006-2009, 2012-2014 by
+#  Copyright 2002-2016 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,
@@ -46,16 +46,34 @@ re_code_end   = re.compile( r"(\s*)}\s*$" )
 
 
 #
-# A regular expression to isolate identifiers from other text.
+# A regular expression to isolate identifiers from other text.  Two syntax
+# forms are supported:
 #
-re_identifier = re.compile( r'((?:\w|-)*)' )
+#   <name>
+#   <name>[<id>]
+#
+# where both `<name>' and `<id>' consist of alphanumeric characters, `_',
+# and `-'.  Use `<id>' if there are multiple, valid `<name>' entries; in the
+# index, `<id>' will be appended in parentheses.
+#
+# For example,
+#
+#   stem_darkening[autofit]
+#
+# becomes `stem_darkening (autofit)' in the index.
+#
+re_identifier = re.compile( r"""
+                              ((?:\w|-)+
+                               (?:\[(?:\w|-)+\])?)
+                            """, re.VERBOSE )
 
 
 #
 # We collect macro names ending in `_H' (group 1), as defined in
-# `config/ftheader.h'.  While outputting the object data, we use this info
-# together with the object's file location (group 2) to emit the appropriate
-# header file macro and its associated file name before the object itself.
+# `freetype/config/ftheader.h'.  While outputting the object data, we use
+# this info together with the object's file location (group 2) to emit the
+# appropriate header file macro and its associated file name before the
+# object itself.
 #
 # Example:
 #

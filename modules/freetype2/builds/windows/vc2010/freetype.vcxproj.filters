@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -65,6 +65,9 @@
     <ClCompile Include="..\..\..\src\base\ftbbox.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftfntfmt.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftmm.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
@@ -78,9 +81,6 @@
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftwinfnt.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftxf86.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftlcdfil.c">
@@ -136,19 +136,19 @@
     <ClInclude Include="..\..\..\include\ft2build.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\config\ftconfig.h">
+    <ClInclude Include="..\..\..\include\freetype\config\ftconfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\config\ftheader.h">
+    <ClInclude Include="..\..\..\include\freetype\config\ftheader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\config\ftmodule.h">
+    <ClInclude Include="..\..\..\include\freetype\config\ftmodule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\config\ftoption.h">
+    <ClInclude Include="..\..\..\include\freetype\config\ftoption.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\config\ftstdlib.h">
+    <ClInclude Include="..\..\..\include\freetype\config\ftstdlib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

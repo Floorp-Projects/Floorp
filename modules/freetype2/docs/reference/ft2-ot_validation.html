@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>OpenType Validation</h1>
+<h1 id="ot_validation">OpenType Validation</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_OpenType_Validate">FT_OpenType_Validate</a></td><td>&nbsp;</td><td></td></tr>
@@ -114,7 +114,7 @@
 
 <div class="section">
 <h3 id="FT_OpenType_Validate">FT_OpenType_Validate</h3>
-<p>Defined in FT_OPENTYPE_VALIDATE_H (ftotval.h).</p>
+<p>Defined in FT_OPENTYPE_VALIDATE_H (freetype/ftotval.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_OpenType_Validate</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
@@ -169,7 +169,7 @@
 
 <div class="section">
 <h3 id="FT_OpenType_Free">FT_OpenType_Free</h3>
-<p>Defined in FT_OPENTYPE_VALIDATE_H (ftotval.h).</p>
+<p>Defined in FT_OPENTYPE_VALIDATE_H (freetype/ftotval.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_OpenType_Free</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
@@ -196,7 +196,7 @@
 
 <div class="section">
 <h3 id="FT_VALIDATE_OTXXX">FT_VALIDATE_OTXXX</h3>
-<p>Defined in FT_OPENTYPE_VALIDATE_H (ftotval.h).</p>
+<p>Defined in FT_OPENTYPE_VALIDATE_H (freetype/ftotval.h).</p>
 <pre>
 #define <a href="ft2-ot_validation.html#FT_VALIDATE_BASE">FT_VALIDATE_BASE</a>  0x0100
 #define <a href="ft2-ot_validation.html#FT_VALIDATE_GDEF">FT_VALIDATE_GDEF</a>  0x0200
@@ -205,12 +205,12 @@
 #define <a href="ft2-ot_validation.html#FT_VALIDATE_JSTF">FT_VALIDATE_JSTF</a>  0x1000
 #define <a href="ft2-ot_validation.html#FT_VALIDATE_MATH">FT_VALIDATE_MATH</a>  0x2000
 
-#define <a href="ft2-ot_validation.html#FT_VALIDATE_OT">FT_VALIDATE_OT</a>  <a href="ft2-ot_validation.html#FT_VALIDATE_BASE">FT_VALIDATE_BASE</a> | \
-                        <a href="ft2-ot_validation.html#FT_VALIDATE_GDEF">FT_VALIDATE_GDEF</a> | \
-                        <a href="ft2-ot_validation.html#FT_VALIDATE_GPOS">FT_VALIDATE_GPOS</a> | \
-                        <a href="ft2-ot_validation.html#FT_VALIDATE_GSUB">FT_VALIDATE_GSUB</a> | \
-                        <a href="ft2-ot_validation.html#FT_VALIDATE_JSTF">FT_VALIDATE_JSTF</a> | \
-                        <a href="ft2-ot_validation.html#FT_VALIDATE_MATH">FT_VALIDATE_MATH</a>
+#define <a href="ft2-ot_validation.html#FT_VALIDATE_OT">FT_VALIDATE_OT</a>  ( <a href="ft2-ot_validation.html#FT_VALIDATE_BASE">FT_VALIDATE_BASE</a> | \
+                          <a href="ft2-ot_validation.html#FT_VALIDATE_GDEF">FT_VALIDATE_GDEF</a> | \
+                          <a href="ft2-ot_validation.html#FT_VALIDATE_GPOS">FT_VALIDATE_GPOS</a> | \
+                          <a href="ft2-ot_validation.html#FT_VALIDATE_GSUB">FT_VALIDATE_GSUB</a> | \
+                          <a href="ft2-ot_validation.html#FT_VALIDATE_JSTF">FT_VALIDATE_JSTF</a> | \
+                          <a href="ft2-ot_validation.html#FT_VALIDATE_MATH">FT_VALIDATE_MATH</a> )
 </pre>
 
 <p>A list of bit-field constants used with <a href="ft2-ot_validation.html#FT_OpenType_Validate">FT_OpenType_Validate</a> to indicate which OpenType tables should be validated.</p>

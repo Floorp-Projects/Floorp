@@ -23,9 +23,11 @@ any of your projects or products.
     GPL.  Note  that the  FTL is  incompatible  with  GPLv2 due  to  its
     advertisement clause.
 
-The contributed BDF and PCF drivers come with a license similar  to that
+The contributed BDF and PCF drivers  come with a license similar to that
 of the X Window System.  It is compatible to the above two licenses (see
-file src/bdf/README and src/pcf/README).
+file src/bdf/README and  src/pcf/README).  The same holds  for the files
+`fthash.c' and  `fthash.h'; their  code was  part of  the BDF  driver in
+earlier FreeType versions.
 
 The gzip module uses the zlib license (see src/gzip/zlib.h) which too is
 compatible to the above two licenses.

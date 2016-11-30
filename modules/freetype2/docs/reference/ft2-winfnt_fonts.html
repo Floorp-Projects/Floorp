@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Window FNT Files</h1>
+<h1 id="winfnt_fonts">Window FNT Files</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_WinFNT_ID_XXX">FT_WinFNT_ID_XXX</a></td><td><a href="#FT_WinFNT_Header">FT_WinFNT_Header</a></td><td></td></tr>
@@ -114,7 +114,7 @@
 
 <div class="section">
 <h3 id="FT_WinFNT_ID_XXX">FT_WinFNT_ID_XXX</h3>
-<p>Defined in FT_WINFONTS_H (ftwinfnt.h).</p>
+<p>Defined in FT_WINFONTS_H (freetype/ftwinfnt.h).</p>
 <pre>
 #define <a href="ft2-winfnt_fonts.html#FT_WinFNT_ID_CP1252">FT_WinFNT_ID_CP1252</a>    0
 #define <a href="ft2-winfnt_fonts.html#FT_WinFNT_ID_DEFAULT">FT_WinFNT_ID_DEFAULT</a>   1
@@ -137,7 +137,7 @@
 #define <a href="ft2-winfnt_fonts.html#FT_WinFNT_ID_OEM">FT_WinFNT_ID_OEM</a>     255
 </pre>
 
-<p>A list of valid values for the &lsquo;charset&rsquo; byte in <a href="ft2-winfnt_fonts.html#FT_WinFNT_HeaderRec">FT_WinFNT_HeaderRec</a>. Exact mapping tables for the various cpXXXX encodings (except for cp1361) can be found at <a href="ftp://ftp.unicode.org/public">ftp://ftp.unicode.org/public</a> in the MAPPINGS/VENDORS/MICSFT/WINDOWS subdirectory. cp1361 is roughly a superset of MAPPINGS/OBSOLETE/EASTASIA/KSC/JOHAB.TXT.</p>
+<p>A list of valid values for the &lsquo;charset&rsquo; byte in <a href="ft2-winfnt_fonts.html#FT_WinFNT_HeaderRec">FT_WinFNT_HeaderRec</a>. Exact mapping tables for the various cpXXXX encodings (except for cp1361) can be found at <a href="ftp://ftp.unicode.org/Public">ftp://ftp.unicode.org/Public</a> in the MAPPINGS/VENDORS/MICSFT/WINDOWS subdirectory. cp1361 is roughly a superset of MAPPINGS/OBSOLETE/EASTASIA/KSC/JOHAB.TXT.</p>
 
 <h4>values</h4>
 <table class="fields">
@@ -156,7 +156,7 @@
 <p>The &lsquo;CreateFont&rsquo; documentation says: The FT_WinFNT_ID_OEM value specifies a character set that is operating-system dependent.</p>
 <p>The &lsquo;IFIMETRICS&rsquo; documentation from the &lsquo;Windows Driver Development Kit&rsquo; says: This font supports an OEM-specific character set. The OEM character set is system dependent.</p>
 <p>In general OEM, as opposed to ANSI (i.e., cp1252), denotes the second default codepage that most international versions of Windows have. It is one of the OEM codepages from</p>
-<p><a href="http://www.microsoft.com/globaldev/reference/cphome.mspx">http://www.microsoft.com/globaldev/reference/cphome.mspx</a>,</p>
+<p><a href="https://msdn.microsoft.com/en-us/goglobal/bb964655">https://msdn.microsoft.com/en-us/goglobal/bb964655</a>,</p>
 <p>and is used for the &lsquo;DOS boxes&rsquo;, to support legacy applications. A German Windows version for example usually uses ANSI codepage 1252 and OEM codepage 850.</p>
 </td></tr>
 <tr><td class="val" id="FT_WinFNT_ID_CP874">FT_WinFNT_ID_CP874</td><td class="desc">
@@ -211,7 +211,7 @@
 
 <div class="section">
 <h3 id="FT_WinFNT_HeaderRec">FT_WinFNT_HeaderRec</h3>
-<p>Defined in FT_WINFONTS_H (ftwinfnt.h).</p>
+<p>Defined in FT_WINFONTS_H (freetype/ftwinfnt.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_WinFNT_HeaderRec_
   {
@@ -262,7 +262,7 @@
 
 <div class="section">
 <h3 id="FT_WinFNT_Header">FT_WinFNT_Header</h3>
-<p>Defined in FT_WINFONTS_H (ftwinfnt.h).</p>
+<p>Defined in FT_WINFONTS_H (freetype/ftwinfnt.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_WinFNT_HeaderRec_*  <b>FT_WinFNT_Header</b>;
 </pre>
@@ -274,7 +274,7 @@
 
 <div class="section">
 <h3 id="FT_Get_WinFNT_Header">FT_Get_WinFNT_Header</h3>
-<p>Defined in FT_WINFONTS_H (ftwinfnt.h).</p>
+<p>Defined in FT_WINFONTS_H (freetype/ftwinfnt.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_WinFNT_Header</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>               face,

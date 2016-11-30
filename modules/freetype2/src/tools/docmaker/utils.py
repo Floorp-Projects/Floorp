@@ -3,7 +3,7 @@
 #
 #    Auxiliary functions for the `docmaker' tool (library file).
 #
-#  Copyright 2002, 2004, 2007, 2008, 2014 by
+#  Copyright 2002-2016 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,
@@ -79,7 +79,7 @@ def  check_output():
             if not os.path.isdir( output_dir ):
                 sys.stderr.write( "argument"
                                   + " '" + output_dir + "' "
-                                  + "is not a valid directory" )
+                                  + "is not a valid directory\n" )
                 sys.exit( 2 )
         else:
             output_dir = None

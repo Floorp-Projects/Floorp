@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Debugging and logging component for Win32 (body).                    */
 /*                                                                         */
-/*  Copyright 1996-2002, 2005, 2008, 2009, 2013 by                         */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -137,8 +137,8 @@
   /* for the memory and stream components which are set to 6 and 5,        */
   /* respectively.                                                         */
   /*                                                                       */
-  /* See the file <internal/fttrace.h> for details of the available toggle */
-  /* names.                                                                */
+  /* See the file `include/freetype/internal/fttrace.h' for details of the */
+  /* available toggle names.                                               */
   /*                                                                       */
   /* The level must be between 0 and 6; 0 means quiet (except for serious  */
   /* runtime errors), and 6 means _very_ verbose.                          */

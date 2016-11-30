@@ -330,7 +330,7 @@
 
 2001-12-22  Francesco Zappa Nardelli  <Francesco.Zappa.Nardelli@ens.fr>
 
-	* src/pfc/pcfread.c (pcf_load_font): Handle property `POINT_SIZE'
+	* src/pcf/pcfread.c (pcf_load_font): Handle property `POINT_SIZE'
 	and fix incorrect computation of `available_sizes'.
 
 2001-12-22  David Turner  <david@freetype.org>
@@ -412,7 +412,7 @@
 	* src/cff/cffgload.h: Updated.
 	* src/cff/cffobjs.c: Include FT_INTERNAL_POSTSCRIPT_HINTS_H.
 	(CFF_Size_Get_Globals_Funcs, CFF_Size_Done, CFF_Size_Init,
-	CFF_Size_Reset, CFF_GlyphSlot_Done, CFF_GLyphSlot_Init): New
+	CFF_Size_Reset, CFF_GlyphSlot_Done, CFF_GlyphSlot_Init): New
 	functions.
 	(CFF_Init_Face): Renamed to ...
 	(CFF_Face_Init): This.
@@ -1056,7 +1056,7 @@
 
 2001-08-30  Anthony Feik  <afeick@hotmail.com>
 
-	* src/type1/t1afm.c (T1_Read_Afm): Now correctly sets the flag
+	* src/type1/t1afm.c (T1_Read_AFM): Now correctly sets the flag
 	FT_FACE_FLAG_KERNING when appropriate for Type1 + AFM files.
 
 2001-08-25  Werner Lemberg  <wl@gnu.org>
@@ -1176,7 +1176,7 @@
 
 	* include/freetype/internal/psaux.h (PS_Table): Use FT_Offset for
 	`cursor' and `capacity'.
-	* src/psaux/psobjc.c (reallocate_t1_table): Use FT_Long for second
+	* src/psaux/psobjs.c (reallocate_t1_table): Use FT_Long for second
 	parameter.
 	(PS_Table_Add): Use FT_Offset for `new_size'.
 
@@ -1710,7 +1710,7 @@
 	`FT_Err_*' with `CFF_Err_*'.
 	* src/cid/cidparse.c: Replaced `FT_Err_*' with `T1_Err_*'.
 	* src/psaux/psobjs.c, src/psaux/t1decode.c: Ditto.
-	* src/sfnt/sfobcs.c, src/sfnt/ttload.c: Replaced `FT_Err_*' with
+	* src/sfnt/sfobjs.c, src/sfnt/ttload.c: Replaced `FT_Err_*' with
 	`TT_Err_*'.
 	* src/truetype/ttgload.c, src/truetype/ttobjs.c: Ditto.
 	* src/type1/t1gload.c, src/type1/t1load.c, src/type1/t1objs.c,
@@ -1730,7 +1730,7 @@
 	* src/cff/cffobjs.c (CFF_Init_Face, CFF_Done_Face): Use
 	FT_LOCAL_DEF.
 	* src/cid/cidobjs.c (CID_Done_Driver): Ditto.
-	* src/trutype/ttobjs.c (TT_Init_Face, TT_Done_Face, TT_Init_Size):
+	* src/truetype/ttobjs.c (TT_Init_Face, TT_Done_Face, TT_Init_Size):
 	Ditto.
 	* src/type1/t1objs.c (T1_Done_Driver): Ditto.
 	* src/pcf/pcfdriver.c (PCF_Done_Face): Ditto.
@@ -1759,7 +1759,7 @@
 
 2001-03-20  Werner Lemberg  <wl@gnu.org>
 
-	* builds/win32/detekt.mk: Fix .PHONY target for Intel compiler.
+	* builds/win32/detect.mk: Fix .PHONY target for Intel compiler.
 
 2001-03-20  David Turner  <david.turner@freetype.org>
 
@@ -2338,7 +2338,7 @@
 2000-12-06  Werner Lemberg  <wl@gnu.org>
 
 	* builds/module.mk: Replaced `xxx #' with `xxx$(space).
-	* builds/os2/detekt.mk, builds/win32/detekt.mk: Moved comment to
+	* builds/os2/detect.mk, builds/win32/detect.mk: Moved comment to
 	avoid trailing spaces in variable.
 	* builds/freetype.mk: Use $(D) instead of $D to make statement more
 	readable.
@@ -2412,7 +2412,7 @@
 	* builds/unix/detect.mk (.PHONY): Adding `devel', `unix', `lcc',
 	`setup'.
 
-2000-11-30  David Turner  <david.turner@freetype.ogr>
+2000-11-30  David Turner  <david.turner@freetype.org>
 
 	* INSTALL: Slightly updated the quick starter documentation to
 	include IDE compilation, prevent against BSD Make, and specify `make
@@ -2597,7 +2597,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2000, 2001, 2002, 2007 by
+Copyright 2000-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

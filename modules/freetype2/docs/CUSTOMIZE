@@ -8,7 +8,7 @@ How to customize the compilation of the library
 
 I. Configuration macros
 
-  The  file found  in `include/config/ftoption.h'  contains a  list of
+  The  file `include/freetype/config/ftoption.h'  contains a  list  of
   commented configuration macros that can  be toggled by developers to
   indicate which features should be active while building the library.
 
@@ -35,9 +35,9 @@ II. Modules list
   can keep the source files `clean'.
 
   If  you don't  use  GNU make  you  have to  manually  edit the  file
-  `include/config/ftmodule.h' (which  is *not*  used with  if compiled
-  with GNU make) to add or  remove the drivers and components you want
-  to   compile  into   the  library.    See  `INSTALL.ANY'   for  more
+  `include/freetype/config/ftmodule.h' (which  is *not* used  with  if
+  compiled with GNU make) to add  or remove the drivers and components
+  you want  to compile into  the library.  See `INSTALL.ANY'  for more
   information.
 
 
@@ -95,8 +95,9 @@ IV. Overriding default configuration and module headers
       #include FT_CONFIG_OPTIONS_H
       #include FT_CONFIG_MODULES_H
 
-    are compiled.  Their default  values being <config/ftoption.h> and
-    <config/ftmodule.h>, you can do something like:
+    are      compiled.       Their      default      values      being
+    <freetype/config/ftoption.h> and <freetype/config/ftmodule.h>, you
+    can do something like:
 
       custom/
         config/
@@ -116,15 +117,15 @@ IV. Overriding default configuration and module headers
     name  the configuration  headers.  To  do  so, you  need a  custom
     `ft2build.h' whose content can be as simple as:
 
-      #ifndef __FT2_BUILD_MY_PLATFORM_H__
-      #define __FT2_BUILD_MY_PLATFORM_H__
+      #ifndef FT2_BUILD_MY_PLATFORM_H_
+      #define FT2_BUILD_MY_PLATFORM_H_
 
       #define FT_CONFIG_OPTIONS_H  <custom/my-ftoption.h>
       #define FT_CONFIG_MODULES_H  <custom/my-ftmodule.h>
 
-      #include <config/ftheader.h>
+      #include <freetype/config/ftheader.h>
 
-      #endif /* __FT2_BUILD_MY_PLATFORM_H__ */
+      #endif /* FT2_BUILD_MY_PLATFORM_H_ */
 
     Place those files in a separate directory, e.g.,
 
@@ -138,7 +139,7 @@ IV. Overriding default configuration and module headers
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2005, 2006, 2012, 2013 by
+Copyright 2003-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

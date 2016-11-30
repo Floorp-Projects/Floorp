@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (specification).                        */
 /*                                                                         */
-/*  Copyright 2003-2008, 2010-2012, 2014 by                                */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __AFHINTS_H__
-#define __AFHINTS_H__
+#ifndef AFHINTS_H_
+#define AFHINTS_H_
 
 #include "aftypes.h"
 
@@ -207,35 +207,30 @@ FT_BEGIN_HEADER
 
 
   /* point hint flags */
-  typedef enum  AF_Flags_
-  {
-    AF_FLAG_NONE = 0,
+#define AF_FLAG_NONE  0
 
-    /* point type flags */
-    AF_FLAG_CONIC   = 1 << 0,
-    AF_FLAG_CUBIC   = 1 << 1,
-    AF_FLAG_CONTROL = AF_FLAG_CONIC | AF_FLAG_CUBIC,
+  /* point type flags */
+#define AF_FLAG_CONIC    ( 1U << 0 )
+#define AF_FLAG_CUBIC    ( 1U << 1 )
+#define AF_FLAG_CONTROL  ( AF_FLAG_CONIC | AF_FLAG_CUBIC )
 
-    /* point touch flags */
-    AF_FLAG_TOUCH_X = 1 << 2,
-    AF_FLAG_TOUCH_Y = 1 << 3,
+  /* point touch flags */
+#define AF_FLAG_TOUCH_X  ( 1U << 2 )
+#define AF_FLAG_TOUCH_Y  ( 1U << 3 )
 
-    /* candidates for weak interpolation have this flag set */
-    AF_FLAG_WEAK_INTERPOLATION = 1 << 4
+  /* candidates for weak interpolation have this flag set */
+#define AF_FLAG_WEAK_INTERPOLATION  ( 1U << 4 )
 
-  } AF_Flags;
+  /* the distance to the next point is very small */
+#define AF_FLAG_NEAR  ( 1U << 5 )
 
 
   /* edge hint flags */
-  typedef enum  AF_Edge_Flags_
-  {
-    AF_EDGE_NORMAL  = 0,
-    AF_EDGE_ROUND   = 1 << 0,
-    AF_EDGE_SERIF   = 1 << 1,
-    AF_EDGE_DONE    = 1 << 2,
-    AF_EDGE_NEUTRAL = 1 << 3  /* set if edge aligns to a neutral blue zone */
-
-  } AF_Edge_Flags;
+#define AF_EDGE_NORMAL  0
+#define AF_EDGE_ROUND    ( 1U << 0 )
+#define AF_EDGE_SERIF    ( 1U << 1 )
+#define AF_EDGE_DONE     ( 1U << 2 )
+#define AF_EDGE_NEUTRAL  ( 1U << 3 ) /* edge aligns to a neutral blue zone */
 
 
   typedef struct AF_PointRec_*    AF_Point;
@@ -265,6 +260,7 @@ FT_BEGIN_HEADER
     FT_Byte     flags;       /* edge/segment flags for this segment */
     FT_Char     dir;         /* segment direction                   */
     FT_Short    pos;         /* position of segment                 */
+    FT_Short    delta;       /* deviation from segment position     */
     FT_Short    min_coord;   /* minimum coordinate of segment       */
     FT_Short    max_coord;   /* maximum coordinate of segment       */
     FT_Short    height;      /* the hinted segment height           */
@@ -274,7 +270,6 @@ FT_BEGIN_HEADER
 
     AF_Segment  link;        /* (stem) link segment        */
     AF_Segment  serif;       /* primary segment for serifs */
-    FT_Pos      num_linked;  /* number of linked segments  */
     FT_Pos      score;       /* used during stem matching  */
     FT_Pos      len;         /* used during stem matching  */
 
@@ -297,7 +292,6 @@ FT_BEGIN_HEADER
     AF_Width    blue_edge;  /* non-NULL if this is a blue edge */
     AF_Edge     link;       /* link edge                       */
     AF_Edge     serif;      /* primary edge for serifs         */
-    FT_Short    num_linked; /* number of linked edges          */
     FT_Int      score;      /* used during stem matching       */
 
     AF_Segment  first;      /* first segment in edge */
@@ -305,6 +299,8 @@ FT_BEGIN_HEADER
 
   } AF_EdgeRec;
 
+#define AF_SEGMENTS_EMBEDDED  18   /* number of embedded segments   */
+#define AF_EDGES_EMBEDDED     12   /* number of embedded edges      */
 
   typedef struct  AF_AxisHintsRec_
   {
@@ -321,8 +317,19 @@ FT_BEGIN_HEADER
 
     AF_Direction  major_dir;    /* either vertical or horizontal */
 
+    /* two arrays to avoid allocation penalty */
+    struct
+    {
+      AF_SegmentRec  segments[AF_SEGMENTS_EMBEDDED];
+      AF_EdgeRec     edges[AF_EDGES_EMBEDDED];
+    } embedded;
+
+
   } AF_AxisHintsRec, *AF_AxisHints;
 
+
+#define AF_POINTS_EMBEDDED     96   /* number of embedded points   */
+#define AF_CONTOURS_EMBEDDED    8   /* number of embedded contours */
 
   typedef struct  AF_GlyphHintsRec_
   {
@@ -352,6 +359,14 @@ FT_BEGIN_HEADER
     FT_Pos           xmin_delta;    /* used for warping */
     FT_Pos           xmax_delta;
 
+    /* Two arrays to avoid allocation penalty.            */
+    /* The `embedded' structure must be the last element! */
+    struct
+    {
+      AF_Point       contours[AF_CONTOURS_EMBEDDED];
+      AF_PointRec    points[AF_POINTS_EMBEDDED];
+    } embedded;
+
   } AF_GlyphHintsRec;
 
 
@@ -369,9 +384,6 @@ FT_BEGIN_HEADER
           ( !_af_debug_disable_vert_hints                          && \
             !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_VERTICAL ) )
 
-#define AF_HINTS_DO_ADVANCE( h )                                \
-          !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_ADVANCE )
-
 #define AF_HINTS_DO_BLUES( h )  ( !_af_debug_disable_blue_hints )
 
 #else /* !FT_DEBUG_AUTOFIT */
@@ -382,12 +394,17 @@ FT_BEGIN_HEADER
 #define AF_HINTS_DO_VERTICAL( h )                                \
           !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_VERTICAL )
 
-#define AF_HINTS_DO_ADVANCE( h )                                \
-          !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_ADVANCE )
-
 #define AF_HINTS_DO_BLUES( h )  1
 
 #endif /* !FT_DEBUG_AUTOFIT */
+
+
+#define AF_HINTS_DO_ADVANCE( h )                                \
+          !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_ADVANCE )
+
+#define AF_HINTS_DO_WARP( h )                                  \
+          !AF_HINTS_TEST_SCALER( h, AF_SCALER_FLAG_NO_WARPER )
+
 
 
   FT_LOCAL( AF_Direction )
@@ -404,6 +421,7 @@ FT_BEGIN_HEADER
   af_axis_hints_new_edge( AF_AxisHints  axis,
                           FT_Int        fpos,
                           AF_Direction  dir,
+                          FT_Bool       top_to_bottom_hinting,
                           FT_Memory     memory,
                           AF_Edge      *edge );
 
@@ -457,7 +475,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __AFHINTS_H__ */
+#endif /* AFHINTS_H_ */
 
 
 /* END */
