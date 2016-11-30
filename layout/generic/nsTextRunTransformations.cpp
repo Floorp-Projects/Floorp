@@ -20,6 +20,7 @@
 #include "IrishCasing.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 // Unicode characters needing special casing treatment in tr/az languages
 #define LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE  0x0130
