@@ -6,15 +6,20 @@ var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.importGlobalProperties([ "URL" ]);
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource://gre/modules/LoginHelper.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MigrationUtils",
-                                  "resource:///modules/MigrationUtils.jsm");
 
 // Initialize profile.
 var gProfD = do_get_profile();
