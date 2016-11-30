@@ -9,9 +9,11 @@ include LayersSurfaces;
 include "mozilla/GfxMessageUtils.h";
 
 include WebRenderMessages;
+include protocol PCompositable;
 include protocol PCompositorBridge;
 include protocol PTexture;
 
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using WRImageFormat from "mozilla/gfx/webrender.h";
 using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
 
@@ -21,8 +23,11 @@ namespace layers {
 sync protocol PWebRenderBridge
 {
   manager PCompositorBridge;
+  manages PCompositable;
 
 parent:
+  async PCompositable(TextureInfo aTextureInfo);
+
   sync Create(uint32_t aWidth, uint32_t aHeight);
   sync AddImage(uint32_t aWidth, uint32_t aHeight, uint32_t aStride,
                 WRImageFormat aFormat, ByteBuffer aBytes)
