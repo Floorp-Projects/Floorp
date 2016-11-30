@@ -163,6 +163,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     0% { opacity: 0.2 }
     100% { opacity: 0.8 }
   }
+
+  @keyframes "string name 1" { /* using string for keyframes name */
+    0%, 100% { left: 1px }
+  }
+
+  @keyframes "string name 2" {
+    0%, 100% { left: 2px }
+  }
+
+  @keyframes custom\ ident\ 1 {
+    0%, 100% { left: 3px }
+  }
+
+  @keyframes custom\ ident\ 2 {
+    0%, 100% { left: 4px }
+  }
+
+  @keyframes "initial" {
+    0%, 100% { left: 5px }
+  }
+
+  @keyframes initial { /* illegal as an identifier, should be dropped */
+    0%, 100% { left: 6px }
+  }
+
+  @keyframes "none" {
+    0%, 100% { left: 7px }
+  }
+
+  @keyframes none { /* illegal as an identifier, should be dropped */
+    0%, 100% { left: 8px }
+  }
   </style>
 </head>
 <body>
@@ -2037,6 +2069,33 @@ div.style.animation = "opacitymid 2s linear";
 is(cs.getPropertyValue("opacity"), "0.2", "opacity animation overriding transition at 0s");
 advance_clock(500);
 is(cs.getPropertyValue("opacity"), "0.35", "opacity animation overriding transition at 0.5s");
+done_div();
+
+
+/*
+ * Bug 1320474 - keyframes-name may be a string, allows names that would otherwise be excluded
+ */
+new_div("position: relative; animation: \"string name 1\" 1s linear");
+advance_clock(0);
+is(cs.getPropertyValue("left"), "1px", "animation name as a string");
+div.style.animation = "string\\ name\\ 2 1s linear";
+is(cs.getPropertyValue("left"), "2px", "animation name specified as string, referenced using custom ident");
+div.style.animation = "custom\\ ident\\ 1 1s linear";
+is(cs.getPropertyValue("left"), "3px", "animation name specified as custom-ident");
+div.style.animation = "\"custom ident 2\" 1s linear";
+is(cs.getPropertyValue("left"), "4px", "animation name specified as custom-ident, referenced using string");
+div.style.animation = "unset";
+div.style.animation = "initial 1s linear";
+is(cs.getPropertyValue("left"), "0px", "animation name 'initial' as identifier is ignored");
+div.style.animation = "unset";
+div.style.animation = "\"initial\" 1s linear";
+is(cs.getPropertyValue("left"), "5px", "animation name 'initial' as string is accepted");
+div.style.animation = "unset";
+div.style.animation = "none 1s linear";
+is(cs.getPropertyValue("left"), "0px", "animation name 'none' as identifier is ignored");
+div.style.animation = "unset";
+div.style.animation = "\"none\" 1s linear";
+is(cs.getPropertyValue("left"), "7px", "animation name 'none' as string is accepted");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

@@ -1,14 +1,11 @@
 package org.mozilla.gecko.prompts;
 
-import org.json.JSONException;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.ThumbnailHelper;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.widget.GeckoActionProvider;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.Intent;
@@ -32,32 +29,32 @@ public class PromptListItem {
     public boolean mSelected;
     public Drawable mIcon;
 
-    PromptListItem(JSONObject aObject) {
+    PromptListItem(GeckoBundle aObject) {
         Context context = GeckoAppShell.getContext();
-        label = aObject.isNull("label") ? "" : aObject.optString("label");
-        isGroup = aObject.optBoolean("isGroup");
-        inGroup = aObject.optBoolean("inGroup");
-        disabled = aObject.optBoolean("disabled");
-        id = aObject.optInt("id");
-        mSelected = aObject.optBoolean("selected");
+        label = aObject.getString("label", "");
+        isGroup = aObject.getBoolean("isGroup");
+        inGroup = aObject.getBoolean("inGroup");
+        disabled = aObject.getBoolean("disabled");
+        id = aObject.getInt("id");
+        mSelected = aObject.getBoolean("selected");
 
-        JSONObject obj = aObject.optJSONObject("showAsActions");
+        GeckoBundle obj = aObject.getBundle("showAsActions");
         if (obj != null) {
             showAsActions = true;
-            String uri = obj.isNull("uri") ? "" : obj.optString("uri");
-            String type = obj.isNull("type") ? GeckoActionProvider.DEFAULT_MIME_TYPE :
-                                               obj.optString("type", GeckoActionProvider.DEFAULT_MIME_TYPE);
+            String uri = obj.getString("uri", "");
+            String type = obj.getString("type", GeckoActionProvider.DEFAULT_MIME_TYPE);
 
             mIntent = IntentHelper.getShareIntent(context, uri, type, "");
             isParent = true;
         } else {
             mIntent = null;
             showAsActions = false;
-            // Support both "isParent" (backwards compat for older consumers), and "menu" for the new Tabbed prompt ui.
-            isParent = aObject.optBoolean("isParent") || aObject.optBoolean("menu");
+            // Support both "isParent" (backwards compat for older consumers), and "menu"
+            // for the new Tabbed prompt ui.
+            isParent = aObject.getBoolean("isParent") || aObject.getBoolean("menu");
         }
 
-        final String iconStr = aObject.optString("icon");
+        final String iconStr = aObject.getString("icon");
         if (iconStr != null) {
             final ResourceDrawableUtils.BitmapLoader loader = new ResourceDrawableUtils.BitmapLoader() {
                     @Override
@@ -109,18 +106,16 @@ public class PromptListItem {
         showAsActions = false;
     }
 
-    static PromptListItem[] getArray(JSONArray items) {
+    static PromptListItem[] getArray(GeckoBundle[] items) {
         if (items == null) {
             return new PromptListItem[0];
         }
 
-        int length = items.length();
+        int length = items.length;
         List<PromptListItem> list = new ArrayList<>(length);
         for (int i = 0; i < length; i++) {
-            try {
-                PromptListItem item = new PromptListItem(items.getJSONObject(i));
-                list.add(item);
-            } catch (JSONException ex) { }
+            PromptListItem item = new PromptListItem(items[i]);
+            list.add(item);
         }
 
         return list.toArray(new PromptListItem[length]);

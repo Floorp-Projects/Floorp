@@ -2237,6 +2237,12 @@ addAsyncAnimTest(function *() {
   done_div();
 });
 
+// Bug 1320474 - keyframes-name may be a string, allows names that would
+// otherwise be excluded.
+// These tests don't need to be duplicated here as they relate purely to
+// the animation setup which is common to both main-thread and compositor
+// animations.
+
 // Bug 847287 - Test that changes of when an animation is dynamically
 // overridden work correctly.
 addAsyncAnimTest(function *() {

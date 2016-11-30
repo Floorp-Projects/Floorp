@@ -366,7 +366,7 @@ public final class EventDispatcher extends JNIObject {
             final GeckoBundle messageAsBundle;
             try {
                 messageAsBundle = jsMessage != null ?
-                        convertBundle(jsMessage.toBundle()) : bundleMessage;
+                        convertBundle(jsMessage.toBundle(), jsMessage) : bundleMessage;
             } catch (final NativeJSObject.InvalidPropertyException e) {
                 Log.e(LOGTAG, "Exception occurred while handling " + type, e);
                 return true;
@@ -425,7 +425,7 @@ public final class EventDispatcher extends JNIObject {
     }
 
     // XXX: temporary helper for converting Bundle to GeckoBundle.
-    private GeckoBundle convertBundle(final Bundle bundle) {
+    private GeckoBundle convertBundle(final Bundle bundle, final NativeJSObject jsObj) {
         if (bundle == null) {
             return null;
         }
@@ -437,15 +437,25 @@ public final class EventDispatcher extends JNIObject {
             final Object value = bundle.get(key);
 
             if (value instanceof Bundle) {
-                out.putBundle(key, convertBundle((Bundle) value));
+                final Bundle bundleValue = (Bundle) value;
+                try {
+                    // XXX: NativeJSObject.toBundle doesn't support object arrays, and
+                    // instead converts it to a Bundle with integer members; correct that.
+                    final NativeJSObject[] objs = jsObj.getObjectArray(key);
+                    final GeckoBundle[] outArray = new GeckoBundle[objs.length];
+                    for (int i = 0; i < objs.length; i++) {
+                        outArray[i] = convertBundle(
+                                bundleValue.getBundle(String.valueOf(i)), objs[i]);
+                    }
+                    out.putBundleArray(key, outArray);
+
+                } catch (final Exception e) {
+                    // Not an array
+                    out.putBundle(key, convertBundle(bundleValue, jsObj.getObject(key)));
+                }
 
             } else if (value instanceof Bundle[]) {
-                final Bundle[] inArray = (Bundle[]) value;
-                final GeckoBundle[] outArray = new GeckoBundle[inArray.length];
-                for (int i = 0; i < inArray.length; i++) {
-                    outArray[i] = convertBundle(inArray[i]);
-                }
-                out.putBundleArray(key, outArray);
+                throw new IllegalStateException("toBundle should not have generated Bundle[] values");
 
             } else {
                 out.put(key, value);
@@ -480,7 +490,7 @@ public final class EventDispatcher extends JNIObject {
             final GeckoBundle messageAsBundle;
             try {
                 messageAsBundle = jsMessage != null ?
-                        convertBundle(jsMessage.toBundle()) : bundleMessage;
+                        convertBundle(jsMessage.toBundle(), jsMessage) : bundleMessage;
             } catch (final NativeJSObject.InvalidPropertyException e) {
                 Log.e(LOGTAG, "Exception occurred while handling " + type, e);
                 return true;
