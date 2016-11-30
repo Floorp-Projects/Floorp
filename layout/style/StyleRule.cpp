@@ -1398,28 +1398,43 @@ StyleRule::StyleRule(const StyleRule& aCopy)
 StyleRule::~StyleRule()
 {
   delete mSelector;
+  DropReferences();
+}
+
+void
+StyleRule::DropReferences()
+{
   if (mDOMRule) {
     mDOMRule->DOMDeclaration()->DropReference();
+    mDOMRule = nullptr;
   }
 
   if (mDeclaration) {
     mDeclaration->SetOwningRule(nullptr);
+    mDeclaration = nullptr;
   }
 }
 
 // QueryInterface implementation for StyleRule
-NS_INTERFACE_MAP_BEGIN(StyleRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(StyleRule)
   if (aIID.Equals(NS_GET_IID(mozilla::css::StyleRule))) {
     *aInstancePtr = this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   else
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(Rule)
 
-NS_IMPL_ADDREF(StyleRule)
-NS_IMPL_RELEASE(StyleRule)
+NS_IMPL_ADDREF_INHERITED(StyleRule, Rule)
+NS_IMPL_RELEASE_INHERITED(StyleRule, Rule)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(StyleRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(StyleRule, Rule)
+  tmp->DropReferences();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(StyleRule, Rule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeclaration, mDOMRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 /* virtual */ int32_t
 StyleRule::GetType() const
