@@ -185,10 +185,15 @@ impl WebRenderFrameBuilder {
 }
 
 struct Notifier {
+    render_notifier: Arc<(Mutex<bool>, Condvar)>,
 }
 
 impl webrender_traits::RenderNotifier for Notifier {
     fn new_frame_ready(&mut self) {
+        let &(ref lock, ref cvar) = &*self.render_notifier;
+        let mut finished = lock.lock().unwrap();
+        *finished = true;
+        cvar.notify_one();
     }
     fn new_scroll_frame_ready(&mut self, _: bool) {
     }
@@ -199,26 +204,14 @@ impl webrender_traits::RenderNotifier for Notifier {
     }
 }
 
-struct FlushNotifier {
-    render_thread_notifier: Arc<(Mutex<bool>, Condvar)>,
-}
-
-impl webrender_traits::FlushNotifier for FlushNotifier {
-    fn all_messages_flushed(&mut self) {
-        let &(ref lock, ref cvar) = &*self.render_thread_notifier;
-        let mut finished = lock.lock().unwrap();
-        *finished = true;
-        cvar.notify_one();
-    }
-}
-
 pub struct WrWindowState {
     renderer: Renderer,
     api: webrender_traits::RenderApi,
     _gl_library: GlLibrary,
     root_pipeline_id: PipelineId,
     size: Size2D<u32>,
-    flush_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
+    epoch: Epoch,
+    render_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
 }
 
 pub struct WrState {
@@ -315,13 +308,10 @@ pub extern fn wr_init_window(root_pipeline_id: u64, external_image_handler: *mut
     let (mut renderer, sender) = Renderer::new(opts);
     let api = sender.create_api();
 
-    let notifier = Box::new(Notifier{});
+    let notification_lock = Arc::new((Mutex::new(false), Condvar::new()));
+    let notification_lock_clone = notification_lock.clone();
+    let notifier = Box::new(Notifier{render_notifier: notification_lock});
     renderer.set_render_notifier(notifier);
-
-    let flush_notification_lock = Arc::new((Mutex::new(false), Condvar::new()));
-    let flush_notifier_lock_clone = flush_notification_lock.clone();
-    let flush_notifier = Box::new(FlushNotifier{render_thread_notifier: flush_notification_lock});
-    renderer.set_flush_notifier(flush_notifier);
 
     if !external_image_handler.is_null() {
         renderer.set_external_image_handler(Box::new(
@@ -343,7 +333,8 @@ pub extern fn wr_init_window(root_pipeline_id: u64, external_image_handler: *mut
         _gl_library: library,
         root_pipeline_id: pipeline_id,
         size: Size2D::new(0, 0),
-        flush_notifier_lock: flush_notifier_lock_clone,
+        epoch: Epoch(0),
+        render_notifier_lock: notification_lock_clone,
     });
     Box::into_raw(state)
 }
@@ -441,6 +432,7 @@ pub extern fn wr_dp_end(window: &mut WrWindowState,
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let pipeline_id = state.pipeline_id;
     let (width, height) = state.size;
+    window.epoch = epoch;
 
     // Should be the root one
     assert!(state.frame_builder.dl_builder.len() == 1);
@@ -574,7 +566,7 @@ pub extern fn wr_destroy(state:*mut WrState) {
   }
 }
 
-fn wait_for_flush_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
+fn wait_for_render_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
     let &(ref lock, ref cvar) = &**notifier;
     let mut finished = lock.lock().unwrap();
     while !*finished {
@@ -585,10 +577,23 @@ fn wait_for_flush_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
 }
 
 fn force_sync_composite(window: &mut WrWindowState) {
-    window.api.flush();
-    wait_for_flush_notification(&window.flush_notifier_lock);
+    let last_frame_epoch = window.epoch;
 
-    wr_composite_window(window);
+    loop {
+        wait_for_render_notification(&window.render_notifier_lock);
+        wr_composite_window(window);
+
+        let rendered_epoch = window.renderer.current_epoch(window.root_pipeline_id);
+        match rendered_epoch {
+            Some(epoch) => {
+                if epoch == last_frame_epoch {
+                    break;
+                }
+            },
+            None => panic!("Could not get an epoch from the renderer"),
+        }
+    }
+
     gl::flush();
 }
 
