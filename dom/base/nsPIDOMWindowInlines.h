@@ -36,6 +36,16 @@ nsPIDOMWindow<T>::AsOuter() const
 
 template <class T>
 bool
+nsPIDOMWindow<T>::IsLoadingOrRunningTimeout() const
+{
+  if (IsOuterWindow()) {
+    return AsOuter()->GetCurrentInnerWindow()->IsLoadingOrRunningTimeout();
+  }
+  return !mIsDocumentLoaded || mRunningTimeout;
+}
+
+template <class T>
+bool
 nsPIDOMWindow<T>::IsLoading() const
 {
   if (IsOuterWindow()) {
