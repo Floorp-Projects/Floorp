@@ -391,7 +391,7 @@ public:
   nsresult Reset(bool aStart);
   bool IsHeader(ogg_packet* aPacket) override;
   nsresult PageIn(ogg_page* aPage) override;
-
+  already_AddRefed<MediaRawData> PacketOutAsMediaRawData() override;
   // Returns the end time that a granulepos represents.
   static int64_t Time(int aPreSkip, int64_t aGranulepos);
 
