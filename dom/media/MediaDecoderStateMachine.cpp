@@ -268,6 +268,9 @@ protected:
     return s->Enter(Move(aArgs)...);
   }
 
+  RefPtr<MediaDecoder::SeekPromise>
+  SetSeekingState(SeekJob&& aSeekJob, EventVisibility aVisibility);
+
   // Take a raw pointer in order not to change the life cycle of MDSM.
   // It is guaranteed to be valid by MDSM.
   Master* mMaster;
@@ -874,6 +877,9 @@ public:
     MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
   }
 
+protected:
+  SeekJob mSeekJob;
+
 private:
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
   {
@@ -919,10 +925,43 @@ private:
 
   void SeekCompleted();
 
-  SeekJob mSeekJob;
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
   RefPtr<SeekTask> mSeekTask;
 };
+
+class MediaDecoderStateMachine::AccurateSeekingState
+  : public MediaDecoderStateMachine::SeekingState
+{
+public:
+  explicit AccurateSeekingState(Master* aPtr) : SeekingState(aPtr)
+  {
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob,
+                                          EventVisibility aVisibility)
+  {
+    MOZ_ASSERT(aSeekJob.mTarget.IsAccurate() || aSeekJob.mTarget.IsFast());
+    return SeekingState::Enter(Move(aSeekJob), aVisibility);
+  }
+};
+
+class MediaDecoderStateMachine::NextFrameSeekingState
+  : public MediaDecoderStateMachine::SeekingState
+{
+public:
+  explicit NextFrameSeekingState(Master* aPtr) : SeekingState(aPtr)
+  {
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob,
+                                          EventVisibility aVisibility)
+  {
+    MOZ_ASSERT(aSeekJob.mTarget.IsNextFrame());
+    return SeekingState::Enter(Move(aSeekJob), aVisibility);
+  }
+};
+
+
 
 /**
  * Purpose: stop playback until enough data is decoded to continue playback.
@@ -1227,7 +1266,7 @@ StateObject::HandleSeek(SeekTarget aTarget)
   SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
-  return SetState<SeekingState>(Move(seekJob), EventVisibility::Observable);
+  return SetSeekingState(Move(seekJob), EventVisibility::Observable);
 }
 
 RefPtr<ShutdownPromise>
@@ -1302,10 +1341,26 @@ StateObject::HandleResumeVideoDecoding()
                                type,
                                true /* aVideoOnly */);
 
-  SetState<SeekingState>(Move(seekJob), EventVisibility::Suppressed)->Then(
+  SetSeekingState(Move(seekJob), EventVisibility::Suppressed)->Then(
     AbstractThread::MainThread(), __func__,
     [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
     [](){});
+}
+
+RefPtr<MediaDecoder::SeekPromise>
+MediaDecoderStateMachine::
+StateObject::SetSeekingState(SeekJob&& aSeekJob, EventVisibility aVisibility)
+{
+  if (aSeekJob.mTarget.IsAccurate() || aSeekJob.mTarget.IsFast()) {
+    return SetState<AccurateSeekingState>(Move(aSeekJob), aVisibility);
+  }
+
+  if (aSeekJob.mTarget.IsNextFrame()) {
+    return SetState<NextFrameSeekingState>(Move(aSeekJob), aVisibility);
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unknown SeekTarget::Type.");
+  return nullptr;
 }
 
 void
@@ -1364,7 +1419,7 @@ DormantState::HandlePlayStateChanged(MediaDecoder::PlayState aPlayState)
     // Exit dormant when the user wants to play.
     MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
     MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
-    SetState<SeekingState>(Move(mPendingSeek), EventVisibility::Suppressed);
+    SetSeekingState(Move(mPendingSeek), EventVisibility::Suppressed);
   }
 }
 
@@ -1373,7 +1428,7 @@ MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
   if (mPendingSeek.Exists()) {
-    SetState<SeekingState>(Move(mPendingSeek), EventVisibility::Observable);
+    SetSeekingState(Move(mPendingSeek), EventVisibility::Observable);
   } else {
     SetState<DecodingFirstFrameState>();
   }

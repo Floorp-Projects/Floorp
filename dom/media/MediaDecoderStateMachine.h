@@ -265,6 +265,8 @@ private:
   class DecodingFirstFrameState;
   class DecodingState;
   class SeekingState;
+  class AccurateSeekingState;
+  class NextFrameSeekingState;
   class BufferingState;
   class CompletedState;
   class ShutdownState;
