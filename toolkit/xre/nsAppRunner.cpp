@@ -3450,11 +3450,15 @@ XREMain::XRE_mainInit(bool* aExitFlag)
         if (RegQueryValueExW(key, choices[oneChoice],
                              0, &vtype,
                              reinterpret_cast<LPBYTE>(updateRevision),
-                             &len) == ERROR_SUCCESS &&
-            vtype == REG_BINARY && len == sizeof(updateRevision)) {
-          // The first word is unused
-          cpuUpdateRevision = static_cast<int>(updateRevision[1]);
-          break;
+                             &len) == ERROR_SUCCESS) {
+          if (vtype == REG_BINARY && len == sizeof(updateRevision)) {
+            // The first word is unused
+            cpuUpdateRevision = static_cast<int>(updateRevision[1]);
+            break;
+          } else if (vtype == REG_DWORD && len == sizeof(updateRevision[0])) {
+            cpuUpdateRevision = static_cast<int>(updateRevision[0]);
+            break;
+          }
         }
       }
     }
