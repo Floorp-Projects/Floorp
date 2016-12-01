@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use debug_font_data;
-use device::{Device, ProgramId, VAOId, TextureId, VertexFormat};
+use device::{Device, GpuMarker, ProgramId, VAOId, TextureId, VertexFormat};
 use device::{TextureFilter, VertexUsageHint, TextureTarget};
 use euclid::{Matrix4D, Point2D, Size2D, Rect};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, TextureSampler};
 use internal_types::{DebugFontVertex, DebugColorVertex, RenderTargetMode, PackedColor};
 use std::f32;
-use webrender_traits::{ColorF, ImageFormat};
+use webrender_traits::{ColorF, ImageFormat, DeviceUintSize};
 
 pub struct DebugRenderer {
     font_vertices: Vec<DebugFontVertex>,
@@ -160,7 +160,8 @@ impl DebugRenderer {
 
     pub fn render(&mut self,
                   device: &mut Device,
-                  viewport_size: &Size2D<u32>) {
+                  viewport_size: &DeviceUintSize) {
+        let _ = GpuMarker::new("debug");
         device.disable_depth();
         device.set_blend(true);
         device.set_blend_mode_alpha();

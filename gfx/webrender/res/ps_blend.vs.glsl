@@ -3,6 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+struct Blend {
+    ivec4 src_id_target_id_op_amount;
+};
+
+Blend fetch_blend(int index) {
+    PrimitiveInstance pi = fetch_instance(index);
+
+    Blend blend;
+    blend.src_id_target_id_op_amount = ivec4(pi.user_data.x,
+                                             pi.render_task_index,
+                                             pi.sub_index,
+                                             pi.user_data.y);
+
+    return blend;
+}
+
 void main(void) {
     Blend blend = fetch_blend(gl_InstanceID);
     Tile src = fetch_tile(blend.src_id_target_id_op_amount.x);

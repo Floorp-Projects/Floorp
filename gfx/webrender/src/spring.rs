@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use euclid::Point2D;
+use webrender_traits::LayerPoint;
 
 /// Some arbitrarily small positive number used as threshold value.
 pub const EPSILON: f32 = 0.1;
@@ -16,11 +16,11 @@ pub const DAMPING: f32 = 1.0;
 #[derive(Copy, Clone, Debug)]
 pub struct Spring {
     /// The current position of spring.
-    cur: Point2D<f32>,
+    cur: LayerPoint,
     /// The position of spring at previous tick.
-    prev: Point2D<f32>,
+    prev: LayerPoint,
     /// The destination of spring.
-    dest: Point2D<f32>,
+    dest: LayerPoint,
     /// How hard it springs back.
     stiffness: f32,
     /// Friction. 1.0 means no bounce.
@@ -29,7 +29,7 @@ pub struct Spring {
 
 impl Spring {
     /// Create a new spring at location.
-    pub fn at(pos: Point2D<f32>, stiffness: f32, damping: f32) -> Spring {
+    pub fn at(pos: LayerPoint, stiffness: f32, damping: f32) -> Spring {
         Spring {
             cur: pos,
             prev: pos,
@@ -40,13 +40,13 @@ impl Spring {
     }
 
     /// Set coords on a spring, mutating spring
-    pub fn coords(&mut self, cur: Point2D<f32>, prev: Point2D<f32>, dest: Point2D<f32>) {
+    pub fn coords(&mut self, cur: LayerPoint, prev: LayerPoint, dest: LayerPoint) {
         self.cur = cur;
         self.prev = prev;
         self.dest = dest
     }
 
-    pub fn current(&self) -> Point2D<f32> {
+    pub fn current(&self) -> LayerPoint {
         self.cur
     }
 
@@ -54,16 +54,16 @@ impl Spring {
     pub fn animate(&mut self) -> bool {
         if !is_resting(self.cur.x, self.prev.x, self.dest.x) ||
                 !is_resting(self.cur.y, self.prev.y, self.dest.y) {
-            let next = Point2D::new(next(self.cur.x,
-                                         self.prev.x,
-                                         self.dest.x,
-                                         self.stiffness,
-                                         self.damping),
-                                    next(self.cur.y,
-                                         self.prev.y,
-                                         self.dest.y,
-                                         self.stiffness,
-                                         self.damping));
+            let next = LayerPoint::new(next(self.cur.x,
+                                            self.prev.x,
+                                            self.dest.x,
+                                            self.stiffness,
+                                            self.damping),
+                                       next(self.cur.y,
+                                            self.prev.y,
+                                            self.dest.y,
+                                            self.stiffness,
+                                            self.damping));
             let (cur, dest) = (self.cur, self.dest);
             self.coords(next, cur, dest);
             false

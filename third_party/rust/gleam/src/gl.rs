@@ -1416,3 +1416,33 @@ pub fn generate_mipmap(target: GLenum) {
         ffi::GenerateMipmap(target)
     }
 }
+
+#[inline]
+#[cfg(not(android))]
+pub fn insert_event_marker_ext(message: &str) {
+    if ffi::InsertEventMarkerEXT::is_loaded() {
+        unsafe {
+            ffi::InsertEventMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
+        }
+    }
+}
+
+#[inline]
+#[cfg(not(android))]
+pub fn push_group_marker_ext(message: &str) {
+    if ffi::PushGroupMarkerEXT::is_loaded() {
+        unsafe {
+            ffi::PushGroupMarkerEXT(message.len() as GLsizei, message.as_ptr() as *const _);
+        }
+    }
+}
+
+#[inline]
+#[cfg(not(android))]
+pub fn pop_group_marker_ext() {
+    if ffi::PopGroupMarkerEXT::is_loaded() {
+        unsafe {
+            ffi::PopGroupMarkerEXT();
+        }
+    }
+}
