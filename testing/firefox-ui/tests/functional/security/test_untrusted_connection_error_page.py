@@ -31,5 +31,5 @@ class TestUntrustedConnectionErrorPage(PuppeteerMixin, MarionetteTestCase):
         button = self.marionette.find_element(By.ID, "returnButton")
         button.click()
 
-        Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda mn: target_url == self.marionette.get_url())
