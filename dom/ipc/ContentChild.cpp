@@ -1570,17 +1570,8 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                       const ContentParentId& aCpID,
                                       const bool& aIsForBrowser)
 {
-  // This runs after AllocPBrowserChild() returns and the IPC machinery for this
-  // PBrowserChild has been set up.
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    nsITabChild* tc =
-      static_cast<nsITabChild*>(static_cast<TabChild*>(aActor));
-    os->NotifyObservers(tc, "tab-child-created", nullptr);
-  }
-
-  return IPC_OK();
+  return nsIContentChild::RecvPBrowserConstructor(aActor, aTabId, aContext,
+                                                  aChromeFlags, aCpID, aIsForBrowser);
 }
 
 void
