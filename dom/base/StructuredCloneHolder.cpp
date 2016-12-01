@@ -21,7 +21,6 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
@@ -39,6 +38,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "MultipartBlobImpl.h"
+#include "nsIRemoteBlob.h"
 #include "nsQueryObject.h"
 
 #ifdef MOZ_WEBRTC
