@@ -27,7 +27,7 @@
     // Fragment uri's in session history should be restored correctly
     // upon back navigation.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Case 1: load a page containing a fragment link; the page should be 
       // stored in the bfcache.
@@ -122,10 +122,8 @@
           "document.location is not the original url");
       }
                       
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
     
   ]]></script>

@@ -43,7 +43,7 @@
     // navigating back and forwards, when the parent page
     // occupies multiple spots in the session history.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Make sure the bfcache is enabled.
       enableBFCache(8);
@@ -238,10 +238,8 @@
       
       verifyIframeInnerHtml("You made it");
       
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
     
   ]]></script>
