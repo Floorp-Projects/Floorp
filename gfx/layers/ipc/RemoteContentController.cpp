@@ -18,9 +18,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Unused.h"
 #include "Units.h"
-#ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#endif
 
 namespace mozilla {
 namespace layers {
@@ -139,12 +136,8 @@ RemoteContentController::NotifyPinchGesture(PinchGestureInput::PinchGestureType 
 void
 RemoteContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
 {
-#ifdef MOZ_WIDGET_ANDROID
-  AndroidBridge::Bridge()->PostTaskToUiThread(Move(aTask), aDelayMs);
-#else
   (MessageLoop::current() ? MessageLoop::current() : mCompositorThread)->
     PostDelayedTask(Move(aTask), aDelayMs);
-#endif
 }
 
 bool
