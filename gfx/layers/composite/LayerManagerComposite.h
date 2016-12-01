@@ -104,8 +104,6 @@ public:
   {
     MOZ_CRASH("GFX: Shouldn't be called for composited layer manager");
   }
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() = 0;
-
 
   virtual void ForcePresent() = 0;
   virtual void AddInvalidRegion(const nsIntRegion& aRegion) = 0;

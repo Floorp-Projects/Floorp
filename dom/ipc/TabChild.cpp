@@ -2510,7 +2510,11 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
 
     LayerManager* lm = mPuppetWidget->GetLayerManager();
     if (lm->AsWebRenderLayerManager()) {
-      lm->AsWebRenderLayerManager()->Initialize(compositorChild, aLayersId);
+      lm->AsWebRenderLayerManager()->Initialize(compositorChild,
+                                                aLayersId,
+                                                &mTextureFactoryIdentifier);
+      ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
+      gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
     }
 
     if (lf) {
@@ -2903,13 +2907,14 @@ TabChild::ReinitRendering()
 void
 TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier)
 {
+  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT
+             || mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_WR);
+
   RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
-  ClientLayerManager* clm = lm->AsClientLayerManager();
-  MOZ_ASSERT(clm);
 
   mTextureFactoryIdentifier = aNewIdentifier;
-  clm->UpdateTextureFactoryIdentifier(aNewIdentifier);
-  FrameLayerBuilder::InvalidateAllLayers(clm);
+  lm->UpdateTextureFactoryIdentifier(aNewIdentifier);
+  FrameLayerBuilder::InvalidateAllLayers(lm);
 }
 
 NS_IMETHODIMP
