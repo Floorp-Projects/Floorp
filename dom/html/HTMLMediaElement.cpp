@@ -3682,29 +3682,67 @@ HTMLMediaElement::NotifyXPCOMShutdown()
   ShutdownDecoder();
 }
 
-void
+already_AddRefed<Promise>
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
   if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
-    // NOTE: for promise-based-play, will return a pending promise here.
     MaybeDoLoad();
-    return;
+
+    // A blocked media element will be resumed later, so we return a pending
+    // promise which might be resolved/rejected depends on the result of
+    // resuming the blocked media element.
+    RefPtr<Promise> promise = CreateDOMPromise(aRv);
+
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    mPendingPlayPromises.AppendElement(promise);
+    return promise.forget();
   }
 
-  PlayInternal(aRv);
+  RefPtr<Promise> promise = PlayInternal(aRv);
 
   UpdateCustomPolicyAfterPlayed();
+
+  return promise.forget();
 }
 
-void
+already_AddRefed<Promise>
 HTMLMediaElement::PlayInternal(ErrorResult& aRv)
 {
   MOZ_ASSERT(!aRv.Failed());
 
+  // 4.8.12.8
+  // When the play() method on a media element is invoked, the user agent must
+  // run the following steps.
+
+  // 4.8.12.8 - Step 1:
+  // If the media element is not allowed to play, return a promise rejected
+  // with a "NotAllowedError" DOMException and abort these steps.
   if (!IsAllowedToPlay()) {
     // NOTE: for promise-based-play, will return a rejected promise here.
-    return NS_OK;
+    aRv.Throw(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+    return nullptr;
   }
+
+  // 4.8.12.8 - Step 2:
+  // If the media element's error attribute is not null and its code
+  // attribute has the value MEDIA_ERR_SRC_NOT_SUPPORTED, return a promise
+  // rejected with a "NotSupportedError" DOMException and abort these steps.
+  if (GetError() && GetError()->Code() == MEDIA_ERR_SRC_NOT_SUPPORTED) {
+    aRv.Throw(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  // 4.8.12.8 - Step 3:
+  // Let promise be a new promise and append promise to the list of pending
+  // play promises.
+  RefPtr<Promise> promise = CreateDOMPromise(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  mPendingPlayPromises.AppendElement(promise);
 
   // Play was not blocked so assume user interacted with the element.
   mHasUserInteraction = true;
@@ -3712,10 +3750,17 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   StopSuspendingAfterFirstFrame();
   SetPlayedOrSeeked(true);
 
+  // 4.8.12.8 - Step 4:
+  // If the media element's networkState attribute has the value NETWORK_EMPTY,
+  // invoke the media element's resource selection algorithm.
   MaybeDoLoad();
   if (mSuspendedForPreloadNone) {
     ResumeLoad(PRELOAD_ENOUGH);
   }
+
+  // 4.8.12.8 - Step 5:
+  // If the playback has ended and the direction of playback is forwards,
+  // seek to the earliest possible position of the media resource.
 
   // Even if we just did Load() or ResumeLoad(), we could already have a decoder
   // here if we managed to clone an existing decoder.
@@ -3726,8 +3771,14 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
     if (!mPausedForInactiveDocumentOrChannel) {
       nsresult rv = mDecoder->Play();
       if (NS_FAILED(rv)) {
+        // We don't need to remove the _promise_ from _mPendingPlayPromises_ here.
+        // If something wrong between |mPendingPlayPromises.AppendElement(promise);|
+        // and here, the _promise_ should already have been rejected. Otherwise,
+        // the _promise_ won't be returned to JS at all, so just leave it in the
+        // _mPendingPlayPromises_ and let it be resolved/rejected with the
+        // following actions and the promise-resolution won't be observed at all.
         aRv.Throw(rv);
-        return;
+        return nullptr;
       }
     }
   }
@@ -3736,7 +3787,7 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
     mCurrentPlayRangeStart = CurrentTime();
   }
 
-  bool oldPaused = mPaused;
+  const bool oldPaused = mPaused;
   mPaused = false;
   mAutoplaying = false;
 
@@ -3748,8 +3799,27 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
 
   // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
+
+  // 4.8.12.8 - Step 6:
+  // If the media element's paused attribute is true, run the following steps:
   if (oldPaused) {
+    // 6.1. Change the value of paused to false. (Already done.)
+    // This step is uplifted because the "block-media-playback" feature needs
+    // the mPaused to be false before UpdateAudioChannelPlayingState() being
+    // called.
+
+    // 6.2. If the show poster flag is true, set the element's show poster flag
+    //      to false and run the time marches on steps.
+
+    // 6.3. Queue a task to fire a simple event named play at the element.
     DispatchAsyncEvent(NS_LITERAL_STRING("play"));
+
+    // 6.4. If the media element's readyState attribute has the value
+    //      HAVE_NOTHING, HAVE_METADATA, or HAVE_CURRENT_DATA, queue a task to
+    //      fire a simple event named waiting at the element.
+    //      Otherwise, the media element's readyState attribute has the value
+    //      HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA: notify about playing for the
+    //      element.
     switch (mReadyState) {
     case nsIDOMHTMLMediaElement::HAVE_NOTHING:
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
@@ -3762,12 +3832,20 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
     case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
     case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
       FireTimeUpdate(false);
-      DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
+      NotifyAboutPlaying();
       break;
     }
+  } else if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+    // 7. Otherwise, if the media element's readyState attribute has the value
+    //    HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA, take pending play promises and
+    //    queue a task to resolve pending play promises with the result.
+    AsyncResolvePendingPlayPromises();
   }
 
-  return;
+  // 8. Set the media element's autoplaying flag to false. (Already done.)
+
+  // 9. Return promise.
+  return promise.forget();
 }
 
 void
@@ -3781,13 +3859,12 @@ HTMLMediaElement::MaybeDoLoad()
 NS_IMETHODIMP HTMLMediaElement::Play()
 {
   if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
-    // NOTE: for promise-based-play, will return a pending promise here.
     MaybeDoLoad();
     return NS_OK;
   }
 
   ErrorResult rv;
-  PlayInternal(rv);
+  RefPtr<Promise> toBeIgnored = PlayInternal(rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
