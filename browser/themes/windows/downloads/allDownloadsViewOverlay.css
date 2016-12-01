@@ -10,6 +10,12 @@
   --downloads-item-height: 6em;
 }
 
+@media (-moz-windows-default-theme) {
+  .downloadProgress > .progress-bar {
+    background-color: #3c9af8;
+  }
+}
+
 /*** Highlighted list items ***/
 
 @media not all and (-moz-os-version: windows-xp) {

@@ -35,6 +35,14 @@
   color: #aa1b08;
 }
 
+.downloadProgress > .progress-bar {
+  background-color: #3c9af8;
+}
+
+.downloadProgress[paused="true"] > .progress-bar {
+  background-color: #a6a6a6;
+}
+
 /*** Highlighted list items ***/
 
 @keyfocus@ @itemFocused@ {
