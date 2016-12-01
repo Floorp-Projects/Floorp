@@ -25,11 +25,7 @@ function error(aMessage) {
 }
 
 function continueTest() {
-  try {
-    generator.next();
-  } catch (e if e instanceof StopIteration) {
-    error("Stop test because of exception!");
-  }
+  generator.next();
 }
 
 function finish() {
@@ -45,7 +41,7 @@ function setCommand(aArg) {
   testFrame.src = fileURL + '#' + aArg;
 }
 
-function runTests() {
+function* runTests() {
   setCommand('play');
   yield undefined;
 
@@ -54,7 +50,6 @@ function runTests() {
   yield undefined;
 
   finish();
-  yield undefined;
 }
 
 function setupTestFrame() {

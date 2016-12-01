@@ -60,7 +60,13 @@ DocGroup::Dispatch(const char* aName,
                    TaskCategory aCategory,
                    already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return NS_DispatchToMainThread(Move(aRunnable));
+  return mTabGroup->Dispatch(aName, aCategory, Move(aRunnable));
+}
+
+already_AddRefed<nsIEventTarget>
+DocGroup::EventTargetFor(TaskCategory aCategory) const
+{
+  return mTabGroup->EventTargetFor(aCategory);
 }
 
 }

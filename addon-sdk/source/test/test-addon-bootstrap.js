@@ -21,7 +21,7 @@ const BOOTSTRAP_REASONS = {
   ADDON_DOWNGRADE : 8
 };
 
-exports["test install/startup/shutdown/uninstall all return a promise"] = function(assert) {
+exports["test install/startup/shutdown/uninstall all return a promise"] = function*(assert) {
   let uri = require.resolve("./fixtures/addon/bootstrap.js");
   let id = "test-min-boot@jetpack";
   let bootstrapScope = create({
