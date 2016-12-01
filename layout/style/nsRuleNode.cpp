@@ -110,21 +110,17 @@ nsConditionalResetStyleData::GetConditionalStyleData(nsStyleStructID aSID,
   return nullptr;
 }
 
-// Creates an imgRequestProxy based on the specified value in
-// aValue and calls aCallback with it.  If the nsPresContext
-// is static (e.g. for printing), then a static request (i.e.
-// showing the first frame, without animation) will be created.
-// (The expectation is then that aCallback will set the resulting
-// imgRequestProxy in a style struct somewhere.)
-static void
-SetImageRequest(std::function<void(imgRequestProxy*)> aCallback,
-                nsPresContext* aPresContext,
-                const nsCSSValue& aValue)
+// Creates an imgRequestProxy based on the specified value in aValue and
+// returns it.  If the nsPresContext is static (e.g. for printing), then
+// a static request (i.e. showing the first frame, without animation)
+// will be created.
+static already_AddRefed<imgRequestProxy>
+CreateImageRequest(nsPresContext* aPresContext, const nsCSSValue& aValue)
 {
   RefPtr<imgRequestProxy> req =
     aValue.GetPossiblyStaticImageValue(aPresContext->Document(),
                                        aPresContext);
-  aCallback(req);
+  return req.forget();
 }
 
 static void
@@ -134,16 +130,15 @@ SetStyleImageRequest(std::function<void(nsStyleImageRequest*)> aCallback,
                      nsStyleImageRequest::Mode aModeFlags =
                        nsStyleImageRequest::Mode::Track)
 {
-  SetImageRequest([&](imgRequestProxy* aProxy) {
-    css::ImageValue* imageValue = aValue.GetImageStructValue();
-    ImageTracker* imageTracker =
-      (aModeFlags & nsStyleImageRequest::Mode::Track)
-      ? aPresContext->Document()->ImageTracker()
-      : nullptr;
-    RefPtr<nsStyleImageRequest> request =
-      new nsStyleImageRequest(aModeFlags, aProxy, imageValue, imageTracker);
-    aCallback(request);
-  }, aPresContext, aValue);
+  css::ImageValue* imageValue = aValue.GetImageStructValue();
+  ImageTracker* imageTracker =
+    (aModeFlags & nsStyleImageRequest::Mode::Track)
+    ? aPresContext->Document()->ImageTracker()
+    : nullptr;
+  RefPtr<imgRequestProxy> proxy = CreateImageRequest(aPresContext, aValue);
+  RefPtr<nsStyleImageRequest> request =
+    new nsStyleImageRequest(aModeFlags, proxy, imageValue, imageTracker);
+  aCallback(request);
 }
 
 template<typename ReferenceBox>
@@ -8925,9 +8920,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
       }
       data.mType = type;
       if (type == eStyleContentType_Image) {
-        SetImageRequest([&](imgRequestProxy* req) {
-          data.SetImage(req);
-        }, mPresContext, value);
+        data.SetImage(CreateImageRequest(mPresContext, value));
       } else if (type <= eStyleContentType_Attr) {
         value.GetStringValue(buffer);
         data.mContent.mString = NS_strdup(buffer.get());
