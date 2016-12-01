@@ -37,8 +37,8 @@ parent:
   sync DeleteImage(WRImageKey aImageKey);
   sync DPBegin(uint32_t aWidth, uint32_t aHeight)
     returns (bool aOutSuccess);
-  async DPEnd(WebRenderCommand[] commands);
-  sync DPSyncEnd(WebRenderCommand[] commands);
+  async DPEnd(WebRenderCommand[] commands, uint64_t transactionId);
+  sync DPSyncEnd(WebRenderCommand[] commands, uint64_t transactionId);
   sync DPGetSnapshot(PTexture texture, IntRect dirtyRect);
   async AddExternalImageId(uint64_t aImageId, uint64_t aAsyncContainerId);
   async RemoveExternalImageId(uint64_t aImageId);

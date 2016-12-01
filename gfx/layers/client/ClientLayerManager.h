@@ -216,7 +216,10 @@ public:
   // Get a copy of the compositor-side APZ test data for our layers ID.
   void GetCompositorSideAPZTestData(APZTestData* aData) const;
 
-  void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) { mTransactionIdAllocator = aAllocator; }
+  virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override
+  {
+     mTransactionIdAllocator = aAllocator;
+  }
 
   float RequestProperty(const nsAString& aProperty) override;
 
@@ -226,13 +229,8 @@ public:
 
   virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
 
-  class DidCompositeObserver {
-  public:
-    virtual void DidComposite() = 0;
-  };
-
-  void AddDidCompositeObserver(DidCompositeObserver* aObserver);
-  void RemoveDidCompositeObserver(DidCompositeObserver* aObserver);
+  virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
+  virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
 
   virtual already_AddRefed<PersistentBufferProvider>
   CreatePersistentBufferProvider(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) override;

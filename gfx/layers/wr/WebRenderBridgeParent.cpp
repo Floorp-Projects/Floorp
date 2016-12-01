@@ -37,6 +37,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mCompositor(aCompositor)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
+  , mPendingTransactionId(0)
   , mDestroyed(false)
   , mWREpoch(0)
 {
@@ -156,22 +157,38 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
 
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
+WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                 const uint64_t& aTransactionId)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  ProcessWebrenderCommands(commands);
+  ProcessWebrenderCommands(aCommands);
+
+  // The transaction ID might get reset to 1 if the page gets reloaded, see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
+  // Otherwise, it should be continually increasing.
+  MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
+  mPendingTransactionId = aTransactionId;
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& commands)
+WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                     const uint64_t& aTransactionId)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  ProcessWebrenderCommands(commands);
+  ProcessWebrenderCommands(aCommands);
+
+  // The transaction ID might get reset to 1 if the page gets reloaded, see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
+  // Otherwise, it should be continually increasing.
+  MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
+  mPendingTransactionId = aTransactionId;
+
   return IPC_OK();
 }
 
@@ -355,6 +372,8 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
+  TimeStamp start = TimeStamp::Now();
+
   mCompositor->SetCompositionTime(TimeStamp::Now());
   mCompositor->AsWebRenderCompositorOGL()->UpdateExternalImages();
 
@@ -370,6 +389,10 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   wr_composite_window(mWRWindowState);
   mGLContext->SwapBuffers();
   mWidget->PostRender(&widgetContext);
+
+  TimeStamp end = TimeStamp::Now();
+  mCompositorBridge->NotifyDidComposite(mPendingTransactionId, start, end);
+  mPendingTransactionId = 0;
 
   // Calls for TextureHosts recycling
   mCompositor->EndFrame();

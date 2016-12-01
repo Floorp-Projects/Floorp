@@ -32,7 +32,7 @@ public:
   void AddWebRenderCommand(const WebRenderCommand& aCmd);
 
   bool DPBegin(uint32_t aWidth, uint32_t aHeight);
-  void DPEnd(bool aIsSync = false);
+  void DPEnd(bool aIsSync, uint64_t aTransactionId);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 
