@@ -9,3 +9,11 @@
 :root {
   --downloads-item-height: 6em;
 }
+
+.downloadProgress > .progress-bar {
+  background-color: #3c9af8;
+}
+
+.downloadProgress[paused="true"] > .progress-bar {
+  background-color: #a6a6a6;
+}

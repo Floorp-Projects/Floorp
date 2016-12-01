@@ -386,3 +386,6 @@ richlistitem[type="download"] > .downloadMainArea {
   -moz-margin-start: 64px;
   -moz-margin-end: 16px;
 }
+
+/*** Progressmeter ***/
+%include progressmeter.inc.css
