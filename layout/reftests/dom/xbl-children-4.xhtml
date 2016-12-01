@@ -20,7 +20,7 @@
             /* Now, append a frame to our children element, causing the pending restyle to descend into it. */
             var children = document.getElementsByTagName("xbl:children")[0];
             var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
-            span.appendChild(document.createTextNode("PASS"));
+            span.appendChild(document.createTextNode("FAIL"));
             children.appendChild(span);
             document.documentElement.removeAttribute("class");
         }
