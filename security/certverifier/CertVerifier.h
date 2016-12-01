@@ -23,13 +23,9 @@
 // Silence "Value.h(448): warning C4365: 'return': conversion from 'const
 // int32_t' to 'JS::Value::PayloadType', signed/unsigned mismatch"
 #pragma warning(disable:4365)
-// Silence "warning C5031: #pragma warning(pop): likely mismatch, popping
-// warning state pushed in different file 
-#pragma warning(disable:5031)
 #endif /* defined(_MSC_VER) */
 #include "mozilla/BasePrincipal.h"
 #if defined(_MSC_VER)
-#pragma warning(pop) /* popping the pragma in Vector.h */
 #pragma warning(pop) /* popping the pragma in this file */
 #endif /* defined(_MSC_VER) */
 
