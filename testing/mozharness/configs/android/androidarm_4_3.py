@@ -357,7 +357,7 @@ config = {
             ],
         },
         "marionette": {
-            "run_filename": os.path.join("marionette","runtests.py"),
+            "run_filename": os.path.join("harness", "marionette", "runtests.py"),
             "testsdir": "marionette",
             "options": [
                 "--emulator",
