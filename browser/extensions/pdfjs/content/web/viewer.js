@@ -507,13 +507,13 @@ var pdfjsWebLibs;
      _writeToStorage: function ViewHistory_writeToStorage() {
       return new Promise(function (resolve) {
        var databaseStr = JSON.stringify(this.database);
-       sessionStorage.setItem('pdfjsHistory', databaseStr);
+       sessionStorage.setItem('pdfjs.history', databaseStr);
        resolve();
       }.bind(this));
      },
      _readFromStorage: function ViewHistory_readFromStorage() {
       return new Promise(function (resolve) {
-       resolve(sessionStorage.getItem('pdfjsHistory'));
+       resolve(sessionStorage.getItem('pdfjs.history'));
       });
      },
      set: function ViewHistory_set(name, val) {
@@ -4263,7 +4263,13 @@ var pdfjsWebLibs;
       return result;
      },
      paintOnSvg: function PDFPageView_paintOnSvg(wrapper) {
-      return Promise.resolve('SVG rendering is not supported.');
+      return {
+       promise: Promise.reject(new Error('SVG rendering is not supported.')),
+       onRenderContinue: function (cont) {
+       },
+       cancel: function () {
+       }
+      };
      },
      setPageLabel: function PDFView_setPageLabel(label) {
       this.pageLabel = typeof label === 'string' ? label : null;

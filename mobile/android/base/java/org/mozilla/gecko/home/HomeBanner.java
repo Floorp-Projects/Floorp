@@ -6,7 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.json.JSONObject;
-import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -114,14 +114,14 @@ public class HomeBanner extends LinearLayout
             }
         });
 
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this, "HomeBanner:Data");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "HomeBanner:Data");
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
 
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this, "HomeBanner:Data");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "HomeBanner:Data");
     }
 
     public void setScrollingPages(boolean scrollingPages) {
