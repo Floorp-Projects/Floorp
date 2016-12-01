@@ -127,6 +127,8 @@ def create_parser(mach_interface=False):
                  ' the manifest')
     add_arg('--tpdelay', type=int,
             help="length of the pageloader delay")
+    add_arg('--no-download', action="store_true", dest="no_download",
+            help="Do not download the talos test pagesets")
     add_arg('--sourcestamp',
             help='Specify the hg revision or sourcestamp for the changeset'
                  ' we are testing.  This will use the value found in'
