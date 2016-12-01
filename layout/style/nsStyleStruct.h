@@ -3190,12 +3190,12 @@ struct nsStyleContentData
   void TrackImage(mozilla::dom::ImageTracker* aImageTracker);
   void UntrackImage(mozilla::dom::ImageTracker* aImageTracker);
 
-  void SetImage(imgRequestProxy* aRequest)
+  void SetImage(already_AddRefed<imgRequestProxy> aRequest)
   {
     MOZ_ASSERT(!mImageTracked,
                "Setting a new image without untracking the old one!");
     MOZ_ASSERT(mType == eStyleContentType_Image, "Wrong type!");
-    NS_IF_ADDREF(mContent.mImage = aRequest);
+    mContent.mImage = aRequest.take();
   }
 };
 

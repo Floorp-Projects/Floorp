@@ -140,8 +140,10 @@ The remainder of the run section is specific to the run-using implementation.
 The effect of a job description is to say "run this thing on this worker".  The
 job description must contain enough information about the worker to identify
 the workerType and the implementation (docker-worker, generic-worker, etc.).
-Any other task-description information is passed along verbatim, although it is
-augmented by the run-using implementation.
+Alternatively, job descriptions can specify the ``platforms`` field in
+conjunction with the  ``by-platform`` key to specify multiple workerTypes and
+implementations. Any other task-description information is passed along
+verbatim, although it is augmented by the run-using implementation.
 
 The run-using implementations are all located in
 ``taskcluster/taskgraph/transforms/job``, along with the schemas for their

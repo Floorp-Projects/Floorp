@@ -15,13 +15,14 @@ import copy
 import logging
 import os
 
-from taskgraph.transforms.base import validate_schema, TransformSequence
+from taskgraph.transforms.base import get_keyed_by, validate_schema, TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
+    Any,
+    Extra,
     Optional,
     Required,
     Schema,
-    Extra,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,9 +53,7 @@ job_description_schema = Schema({
     Optional('index'): task_description_schema['index'],
     Optional('run-on-projects'): task_description_schema['run-on-projects'],
     Optional('coalesce-name'): task_description_schema['coalesce-name'],
-    Optional('worker-type'): task_description_schema['worker-type'],
     Optional('needs-sccache'): task_description_schema['needs-sccache'],
-    Required('worker'): task_description_schema['worker'],
     Optional('when'): task_description_schema['when'],
 
     # A description of how to run this job.
@@ -66,6 +65,15 @@ job_description_schema = Schema({
         # own schema.
         Extra: object,
     },
+    Optional('platforms'): [basestring],
+    Required('worker-type'): Any(
+        task_description_schema['worker-type'],
+        {'by-platform': {basestring: task_description_schema['worker-type']}},
+    ),
+    Required('worker'): Any(
+        task_description_schema['worker'],
+        {'by-platform': {basestring: task_description_schema['worker']}},
+    ),
 })
 
 transforms = TransformSequence()
@@ -76,6 +84,36 @@ def validate(config, jobs):
     for job in jobs:
         yield validate_schema(job_description_schema, job,
                               "In job {!r}:".format(job['name']))
+
+
+@transforms.add
+def expand_platforms(config, jobs):
+    for job in jobs:
+        if 'platforms' not in job:
+            yield job
+            continue
+
+        for platform in job['platforms']:
+            pjob = copy.deepcopy(job)
+            pjob['platform'] = platform
+            del pjob['platforms']
+
+            platform, buildtype = platform.rsplit('/', 1)
+            pjob['name'] = '{}-{}-{}'.format(pjob['name'], platform, buildtype)
+            yield pjob
+
+
+@transforms.add
+def resolve_keyed_by(config, jobs):
+    fields = [
+        'worker-type',
+        'worker',
+    ]
+
+    for job in jobs:
+        for field in fields:
+            job[field] = get_keyed_by(item=job, field=field, item_name=job['name'])
+        yield job
 
 
 @transforms.add
@@ -90,6 +128,10 @@ def make_task_description(config, jobs):
             job['label'] = '{}-{}'.format(config.kind, job['name'])
         if job['name']:
             del job['name']
+        if 'platform' in job:
+            if 'treeherder' in job:
+                job['treeherder']['platform'] = job['platform']
+            del job['platform']
 
         taskdesc = copy.deepcopy(job)
 
