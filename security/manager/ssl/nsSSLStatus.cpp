@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "CTVerifyResult.h"
 #include "mozilla/Casting.h"
 #include "nsSSLStatus.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
 #include "nsNSSCertificate.h"
-#include "SignedCertificateTimestamp.h"
 #include "ssl.h"
 
 NS_IMETHODIMP
@@ -330,7 +330,7 @@ void
 nsSSLStatus::SetCertificateTransparencyInfo(
   const mozilla::psm::CertificateTransparencyInfo& info)
 {
-  using mozilla::ct::SignedCertificateTimestamp;
+  using mozilla::ct::VerifiedSCT;
 
   if (!info.enabled) {
     // CT disabled.
@@ -346,27 +346,28 @@ nsSSLStatus::SetCertificateTransparencyInfo(
     return;
   }
 
-  bool hasOKSCTs = false;
+  bool hasValidSCTs = false;
   bool hasUnknownLogSCTs = false;
   bool hasInvalidSCTs = false;
-  for (const SignedCertificateTimestamp& sct : info.verifyResult.scts) {
-    switch (sct.verificationStatus) {
-      case SignedCertificateTimestamp::VerificationStatus::OK:
-        hasOKSCTs = true;
+  for (const VerifiedSCT& verifiedSct : info.verifyResult.verifiedScts) {
+    switch (verifiedSct.status) {
+      case VerifiedSCT::Status::Valid:
+        hasValidSCTs = true;
         break;
-      case SignedCertificateTimestamp::VerificationStatus::UnknownLog:
+      case VerifiedSCT::Status::UnknownLog:
+      case VerifiedSCT::Status::ValidFromDisqualifiedLog:
         hasUnknownLogSCTs = true;
         break;
-      case SignedCertificateTimestamp::VerificationStatus::InvalidSignature:
-      case SignedCertificateTimestamp::VerificationStatus::InvalidTimestamp:
+      case VerifiedSCT::Status::InvalidSignature:
+      case VerifiedSCT::Status::InvalidTimestamp:
         hasInvalidSCTs = true;
         break;
       default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected SCT::VerificationStatus type");
+        MOZ_ASSERT_UNREACHABLE("Unexpected VerifiedSCT::Status type");
     }
   }
 
-  if (hasOKSCTs) {
+  if (hasValidSCTs) {
     mCertificateTransparencyStatus =
       nsISSLStatus::CERTIFICATE_TRANSPARENCY_OK;
   } else if (hasUnknownLogSCTs) {

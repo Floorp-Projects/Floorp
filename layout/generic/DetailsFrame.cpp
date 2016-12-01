@@ -28,6 +28,8 @@ NS_NewDetailsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) DetailsFrame(aContext);
 }
 
+namespace mozilla {
+
 DetailsFrame::DetailsFrame(nsStyleContext* aContext)
   : nsBlockFrame(aContext)
 {
@@ -129,3 +131,5 @@ DetailsFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
     aElements.AppendElement(mDefaultSummary);
   }
 }
+
+} // namespace mozilla

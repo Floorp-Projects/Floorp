@@ -981,13 +981,15 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   }
   
   nsCOMPtr<nsIWyciwygChannel> wyciwygChannel(do_QueryInterface(mRequest));
-  if (!wyciwygChannel) {
+  if (mCharsetSource < kCharsetFromUtf8OnlyMime && !wyciwygChannel) {
     // we aren't ready to commit to an encoding yet
     // leave converter uninstantiated for now
     return NS_OK;
   }
 
-  // We are reloading a document.open()ed doc.
+  // We are reloading a document.open()ed doc or loading JSON/WebVTT/etc. into
+  // a browsing context. In the latter case, there's no need to remove the
+  // BOM manually here, because the UTF-8 decoder removes it.
   mReparseForbidden = true;
   mFeedChardet = false;
 

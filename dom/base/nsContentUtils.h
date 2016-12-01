@@ -1026,14 +1026,20 @@ public:
   static bool IsChildOfSameType(nsIDocument* aDoc);
 
   /**
-  '* Returns true if the content-type is any of the supported script types.
+   * Returns true if the content-type is any of the supported script types.
    */
   static bool IsScriptType(const nsACString& aContentType);
 
   /**
-  '* Returns true if the content-type will be rendered as plain-text.
+   * Returns true if the content-type will be rendered as plain-text.
    */
   static bool IsPlainTextType(const nsACString& aContentType);
+
+  /**
+   * Returns true iff the type is rendered as plain text and doesn't support
+   * non-UTF-8 encodings.
+   */
+  static bool IsUtf8OnlyPlainTextType(const nsACString& aContentType);
 
   /**
    * Get the script file name to use when compiling the script

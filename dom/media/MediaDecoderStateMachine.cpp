@@ -196,6 +196,10 @@ public:
   virtual void HandleCDMProxyReady() {}
   virtual void HandleAudioDecoded(MediaData* aAudio) {}
   virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) {}
+  virtual void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError);
+  virtual void HandleAudioWaited(MediaData::Type aType);
+  virtual void HandleVideoWaited(MediaData::Type aType);
+  virtual void HandleNotWaited(const WaitForDataRejectValue& aRejection);
   virtual void HandleEndOfStream() {}
   virtual void HandleWaitingForData() {}
   virtual void HandleAudioCaptured() {}
@@ -756,7 +760,6 @@ public:
                                           EventVisibility aVisibility)
   {
     mSeekJob = Move(aSeekJob);
-    mVisibility = aVisibility;
 
     // Always switch off the blank decoder otherwise we might become visible
     // in the middle of seeking and won't have a valid video frame to show
@@ -766,9 +769,6 @@ public:
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::ExitVideoSuspend);
       Reader()->SetVideoBlankDecode(false);
     }
-
-    // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
-    mMaster->CancelMediaDecoderReaderWrapperCallback();
 
     // Create a new SeekTask instance for the incoming seek task.
     if (mSeekJob.mTarget.IsAccurate() ||
@@ -790,14 +790,9 @@ public:
       mMaster->StopPlayback();
     }
 
-    // mSeekJob.mTarget.mTime might be different from
-    // mSeekTask->GetSeekTarget().mTime because the seek task might clamp the
-    // seek target to [0, duration]. We want to update the playback position to
-    // the clamped value.
-    mMaster->UpdatePlaybackPositionInternal(
-      mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
+    mMaster->UpdatePlaybackPositionInternal(mSeekJob.mTarget.GetTime().ToMicroseconds());
 
-    if (mVisibility == EventVisibility::Observable) {
+    if (aVisibility == EventVisibility::Observable) {
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
       // We want dormant actions to be transparent to the user.
       // So we only notify the change when the seek request is from the user.
@@ -831,9 +826,6 @@ public:
     mSeekTaskRequest.DisconnectIfExists();
     mSeekJob.RejectIfExists(__func__);
     mSeekTask->Discard();
-
-    // Reset the MediaDecoderReaderWrapper's callbask.
-    mMaster->SetMediaDecoderReaderWrapperCallback();
   }
 
   State GetState() const override
@@ -843,12 +835,32 @@ public:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    MOZ_ASSERT(false);
+    mSeekTask->HandleAudioDecoded(aAudio);
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
-    MOZ_ASSERT(false);
+    mSeekTask->HandleVideoDecoded(aVideo, aDecodeStart);
+  }
+
+  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
+  {
+    mSeekTask->HandleNotDecoded(aType, aError);
+  }
+
+  void HandleAudioWaited(MediaData::Type aType) override
+  {
+    mSeekTask->HandleAudioWaited(aType);
+  }
+
+  void HandleVideoWaited(MediaData::Type aType) override
+  {
+    mSeekTask->HandleVideoWaited(aType);
+  }
+
+  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override
+  {
+    mSeekTask->HandleNotWaited(aRejection);
   }
 
   void HandleVideoSuspendTimeout() override
@@ -908,7 +920,6 @@ private:
   void SeekCompleted();
 
   SeekJob mSeekJob;
-  EventVisibility mVisibility = EventVisibility::Observable;
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
   RefPtr<SeekTask> mSeekTask;
 };
@@ -1117,6 +1128,11 @@ public:
     return DECODER_STATE_SHUTDOWN;
   }
 
+  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
+  {
+    return;
+  }
+
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
     MOZ_DIAGNOSTIC_ASSERT(false, "Can't seek in shutdown state.");
@@ -1139,6 +1155,70 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
   }
 };
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
+{
+  bool isAudio = aType == MediaData::AUDIO_DATA;
+  MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
+
+  // If the decoder is waiting for data, we tell it to call us back when the
+  // data arrives.
+  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
+    MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
+               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
+    Reader()->WaitForData(aType);
+    HandleWaitingForData();
+    return;
+  }
+
+  if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
+    if (isAudio) {
+      mMaster->EnsureAudioDecodeTaskQueued();
+    } else {
+      mMaster->EnsureVideoDecodeTaskQueued();
+    }
+    return;
+  }
+
+  // If this is a decode error, delegate to the generic error path.
+  if (aError != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    mMaster->DecodeError(aError);
+    return;
+  }
+
+  // This is an EOS. Finish off the queue, and then handle things based on our
+  // state.
+  if (isAudio) {
+    AudioQueue().Finish();
+  } else {
+    VideoQueue().Finish();
+  }
+
+  HandleEndOfStream();
+}
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleAudioWaited(MediaData::Type aType)
+{
+  mMaster->EnsureAudioDecodeTaskQueued();
+}
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleVideoWaited(MediaData::Type aType)
+{
+  mMaster->EnsureVideoDecodeTaskQueued();
+}
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleNotWaited(const WaitForDataRejectValue& aRejection)
+{
+
+}
 
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
@@ -1927,51 +2007,10 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
                                        const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
   SAMPLE_LOG("OnNotDecoded (aType=%u, aError=%u)", aType, aError.Code());
-  bool isAudio = aType == MediaData::AUDIO_DATA;
-  MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
 
-  if (IsShutdown()) {
-    // Already shutdown;
-    return;
-  }
-
-  // If the decoder is waiting for data, we tell it to call us back when the
-  // data arrives.
-  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
-    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
-               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
-    mReader->WaitForData(aType);
-    mStateObj->HandleWaitingForData();
-    return;
-  }
-
-  if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
-    if (isAudio) {
-      EnsureAudioDecodeTaskQueued();
-    } else {
-      EnsureVideoDecodeTaskQueued();
-    }
-    return;
-  }
-
-  // If this is a decode error, delegate to the generic error path.
-  if (aError != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-    DecodeError(aError);
-    return;
-  }
-
-  // This is an EOS. Finish off the queue, and then handle things based on our
-  // state.
-  if (isAudio) {
-    AudioQueue().Finish();
-  } else {
-    VideoQueue().Finish();
-  }
-
-  mStateObj->HandleEndOfStream();
+  mStateObj->HandleNotDecoded(aType, aError);
 }
 
 void
@@ -1987,6 +2026,29 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideo,
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld]", aVideo->mTime, aVideo->GetEndTime());
 
   mStateObj->HandleVideoDecoded(aVideo, aDecodeStartTime);
+}
+
+void
+MediaDecoderStateMachine::OnAudioWaited(MediaData::Type aType)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aType == MediaData::AUDIO_DATA);
+  mStateObj->HandleAudioWaited(aType);
+}
+
+void
+MediaDecoderStateMachine::OnVideoWaited(MediaData::Type aType)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aType == MediaData::VIDEO_DATA);
+  mStateObj->HandleVideoWaited(aType);
+}
+
+void
+MediaDecoderStateMachine::OnNotWaited(const WaitForDataRejectValue& aRejection)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  mStateObj->HandleNotWaited(aRejection);
 }
 
 bool
@@ -2091,14 +2153,18 @@ MediaDecoderStateMachine::SetMediaDecoderReaderWrapperCallback()
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
     mTaskQueue, [this] (WaitCallbackData aData) {
     if (aData.is<MediaData::Type>()) {
-      EnsureAudioDecodeTaskQueued();
+      OnAudioWaited(aData.as<MediaData::Type>());
+    } else {
+      OnNotWaited(aData.as<WaitForDataRejectValue>());
     }
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
     mTaskQueue, [this] (WaitCallbackData aData) {
     if (aData.is<MediaData::Type>()) {
-      EnsureVideoDecodeTaskQueued();
+      OnVideoWaited(aData.as<MediaData::Type>());
+    } else {
+      OnNotWaited(aData.as<WaitForDataRejectValue>());
     }
   });
 }

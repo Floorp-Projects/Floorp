@@ -20,6 +20,7 @@ android-api-15/debug:
             - disable_signing.py
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
         custom-build-variant-cfg: api-15-debug
         tooltool-downloads: internal
 
@@ -44,6 +45,7 @@ android-x86/opt:
             - disable_signing.py
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
         custom-build-variant-cfg: x86
         tooltool-downloads: internal
 
@@ -68,6 +70,7 @@ android-api-15/opt:
             - disable_signing.py
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
         custom-build-variant-cfg: api-15
         tooltool-downloads: internal
 
@@ -95,6 +98,7 @@ android-api-15-nightly/opt:
             - platform_supports_post_upload_to_latest.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
         custom-build-variant-cfg: api-15
         tooltool-downloads: internal
     run-on-projects: []
@@ -133,5 +137,6 @@ android-api-15-gradle/opt:
             - disable_signing.py
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
         custom-build-variant-cfg: api-15-gradle
         tooltool-downloads: internal
