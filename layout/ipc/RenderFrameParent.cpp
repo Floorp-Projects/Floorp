@@ -285,8 +285,8 @@ RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextur
 {
   RefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
-  if (lm && lm->AsClientLayerManager()) {
-    *aTextureFactoryIdentifier = lm->AsClientLayerManager()->GetTextureFactoryIdentifier();
+  if (lm) {
+    *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
   } else {
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
   }

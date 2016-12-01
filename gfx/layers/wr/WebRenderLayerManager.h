@@ -76,7 +76,7 @@ class WebRenderLayerManager final : public LayerManager
 {
 public:
   explicit WebRenderLayerManager(nsIWidget* aWidget);
-  void Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLayersId);
+  void Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLayersId, TextureFactoryIdentifier* aTextureFactoryIdentifier);
 
   virtual void Destroy() override;
 
@@ -120,7 +120,8 @@ public:
                             const mozilla::TimeStamp& aCompositeEnd) override;
 
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) override;
-
+  virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier) override;
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
 
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }

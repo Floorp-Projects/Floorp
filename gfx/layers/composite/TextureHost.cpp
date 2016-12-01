@@ -202,7 +202,8 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
       return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
 
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
-      if (aBackend == LayersBackend::LAYERS_OPENGL) {
+      if (aBackend == LayersBackend::LAYERS_OPENGL ||
+          aBackend == LayersBackend::LAYERS_WR) {
         return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
       } else {
         return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
