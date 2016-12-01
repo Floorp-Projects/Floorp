@@ -94,7 +94,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
         button = self.marionette.find_element(By.ID, 'ignoreWarningButton')
         button.click()
 
-        Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             expected.element_present(By.ID, 'main-feature'),
             message='Expected target element "#main-feature" has not been found',
         )
@@ -113,7 +113,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
 
             self.browser.tabbar.open_tab(lambda _: button.click())
 
-        Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda mn: report_page in mn.get_url(),
             message='The expected safe-browsing report page has not been opened',
         )
@@ -129,7 +129,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
                       .find_element('anon attribute', {'label': label}))
             button.click()
 
-        Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda mn: self.browser.default_homepage in mn.get_url(),
             message='The default home page has not been loaded',
         )
@@ -143,7 +143,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
                                     {'class': 'messageCloseButton close-icon tabbable'}))
             button.click()
 
-            Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
                 expected.element_stale(button),
                 message='The notification bar has not been closed',
             )
