@@ -78,7 +78,7 @@ function assert_animation_property_state_equals(actual, expected) {
 // Check that the animation is running on compositor and
 // warning property is not set for the CSS property regardless
 // expected values.
-function assert_property_state_on_compositor(actual, expected) {
+function assert_all_properties_running_on_compositor(actual, expected) {
   assert_equals(actual.length, expected.length);
 
   var sortedActual = actual.sort(compare_property_state);
@@ -365,7 +365,7 @@ function testStyleChanges() {
       var animation = addDivAndAnimate(t, { class: 'compositable' },
                                        subtest.frames, 100 * MS_PER_SEC);
       return animation.ready.then(function() {
-        assert_property_state_on_compositor(
+        assert_all_properties_running_on_compositor(
           animation.effect.getProperties(),
           subtest.expected);
         animation.effect.target.style = subtest.style;
@@ -377,7 +377,7 @@ function testStyleChanges() {
         animation.effect.target.style = '';
         return waitForFrame();
       }).then(function() {
-        assert_property_state_on_compositor(
+        assert_all_properties_running_on_compositor(
           animation.effect.getProperties(),
           subtest.expected);
       });
@@ -412,7 +412,7 @@ function testIdChanges() {
       var animation = addDivAndAnimate(t, { class: 'compositable' },
                                        subtest.frames, 100 * MS_PER_SEC);
       return animation.ready.then(function() {
-        assert_property_state_on_compositor(
+        assert_all_properties_running_on_compositor(
           animation.effect.getProperties(),
           subtest.expected);
         animation.effect.target.id = subtest.id;
@@ -424,7 +424,7 @@ function testIdChanges() {
         animation.effect.target.id = '';
         return waitForFrame();
       }).then(function() {
-        assert_property_state_on_compositor(
+        assert_all_properties_running_on_compositor(
           animation.effect.getProperties(),
           subtest.expected);
       });
@@ -504,7 +504,7 @@ function testMultipleAnimations() {
       });
       return waitForAllAnimations(animations).then(function() {
         animations.forEach(anim => {
-          assert_property_state_on_compositor(
+          assert_all_properties_running_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
         });
@@ -520,7 +520,7 @@ function testMultipleAnimations() {
         return waitForFrame();
       }).then(function() {
         animations.forEach(anim => {
-          assert_property_state_on_compositor(
+          assert_all_properties_running_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
         });
@@ -765,7 +765,7 @@ function testMultipleAnimationsWithGeometricAnimations() {
 
       return waitForAllAnimations(animations).then(function() {
         animations.forEach(anim => {
-          assert_property_state_on_compositor(
+          assert_all_properties_running_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
         });
@@ -788,7 +788,7 @@ function testMultipleAnimationsWithGeometricAnimations() {
       }).then(function() {
         // Now all animations are running on compositor.
         animations.forEach(anim => {
-          assert_property_state_on_compositor(
+          assert_all_properties_running_on_compositor(
             anim.effect.getProperties(),
             anim.expected);
         });
