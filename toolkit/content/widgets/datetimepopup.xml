@@ -11,6 +11,9 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="datetime-popup"
            extends="chrome://global/content/bindings/popup.xml#arrowpanel">
+    <resources>
+      <stylesheet src="chrome://global/skin/datetimepopup.css"/>
+    </resources>
     <implementation>
       <field name="dateTimePopupFrame">
         this.querySelector("#dateTimePopupFrame");
