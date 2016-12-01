@@ -87,11 +87,11 @@ static_assert(kEventCount < kExpiredEventId, "Should not overflow.");
 // This is the hard upper limit on the number of event records we keep in storage.
 // If we cross this limit, we will drop any further event recording until elements
 // are removed from storage.
-const uint32_t kMaxEventRecords = 1000;
+const uint32_t kMaxEventRecords = 10000;
 // Maximum length of any passed value string, in UTF8 byte sequence length.
-const uint32_t kMaxValueByteLength = 80;
+const uint32_t kMaxValueByteLength = 100;
 // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
-const uint32_t kMaxExtraValueByteLength = 80;
+const uint32_t kMaxExtraValueByteLength = 100;
 
 typedef nsDataHashtable<nsCStringHashKey, uint32_t> EventMapType;
 typedef nsClassHashtable<nsCStringHashKey, nsCString> StringMap;
@@ -519,13 +519,9 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
 
   // Trigger warnings or errors where needed.
   switch (res) {
-    case RecordEventResult::UnknownEvent: {
-      JS_ReportErrorASCII(cx, R"(Unknown event: ["%s", "%s", "%s"])",
-                          PromiseFlatCString(aCategory).get(),
-                          PromiseFlatCString(aMethod).get(),
-                          PromiseFlatCString(aObject).get());
+    case RecordEventResult::UnknownEvent:
+      JS_ReportErrorASCII(cx, "Unknown event.");
       return NS_ERROR_INVALID_ARG;
-    }
     case RecordEventResult::InvalidExtraKey:
       LogToBrowserConsole(nsIScriptError::warningFlag,
                           NS_LITERAL_STRING("Invalid extra key for event."));
@@ -577,15 +573,18 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
     const EventRecord& record = events[i];
     const EventInfo& info = gEventInfo[record.EventId()];
 
-    // Each entry is an array of one of the forms:
-    // [timestamp, category, method, object, value]
-    // [timestamp, category, method, object, null, extra]
+    // Each entry is an array of the form:
     // [timestamp, category, method, object, value, extra]
-    JS::AutoValueVector items(cx);
+    JS::RootedObject itemsArray(cx, JS_NewArrayObject(cx, 6));
+    if (!itemsArray) {
+      return NS_ERROR_FAILURE;
+    }
 
     // Add timestamp.
     JS::Rooted<JS::Value> val(cx);
-    if (!items.append(JS::NumberValue(floor(record.Timestamp())))) {
+    uint32_t itemIndex = 0;
+    val.setDouble(floor(record.Timestamp()));
+    if (!JS_DefineElement(cx, itemsArray, itemIndex++, val, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -595,35 +594,34 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
       info.method(),
       info.object(),
     };
-    for (const char* s : strings) {
-      const NS_ConvertUTF8toUTF16 wide(s);
-      if (!items.append(JS::StringValue(JS_NewUCStringCopyN(cx, wide.Data(), wide.Length())))) {
+    for (uint32_t s = 0; s < ArrayLength(strings); ++s) {
+      const NS_ConvertUTF8toUTF16 wide(strings[s]);
+      val.setString(JS_NewUCStringCopyN(cx, wide.Data(), wide.Length()));
+      if (!JS_DefineElement(cx, itemsArray, itemIndex++, val, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }
 
-    // Add the optional string value only when needed.
-    // When extra is empty and this has no value, we can save a little space.
-    if (record.Value()) {
+    // Add the optional string value.
+    if (!record.Value()) {
+      val.setNull();
+    } else {
       const NS_ConvertUTF8toUTF16 wide(record.Value().value());
-      if (!items.append(JS::StringValue(JS_NewUCStringCopyN(cx, wide.Data(), wide.Length())))) {
-        return NS_ERROR_FAILURE;
-      }
-    } else if (!record.Extra().IsEmpty()) {
-      if (!items.append(JS::NullValue())) {
-        return NS_ERROR_FAILURE;
-      }
+      val.setString(JS_NewUCStringCopyN(cx, wide.Data(), wide.Length()));
+    }
+    if (!JS_DefineElement(cx, itemsArray, itemIndex++, val, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
     }
 
     // Add the optional extra dictionary.
-    // To save a little space, only add it when it is not empty.
-    if (!record.Extra().IsEmpty()) {
+    if (record.Extra().IsEmpty()) {
+      val.setNull();
+    } else {
       JS::RootedObject obj(cx, JS_NewPlainObject(cx));
       if (!obj) {
         return NS_ERROR_FAILURE;
       }
 
-      // Add extra key & value entries.
       const ExtraArray& extra = record.Extra();
       for (uint32_t i = 0; i < extra.Length(); ++i) {
         const NS_ConvertUTF8toUTF16 wide(extra[i].value);
@@ -635,14 +633,12 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
         }
       }
       val.setObject(*obj);
-
-      if (!items.append(val)) {
-        return NS_ERROR_FAILURE;
-      }
+    }
+    if (!JS_DefineElement(cx, itemsArray, itemIndex++, val, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
     }
 
     // Add the record to the events array.
-    JS::RootedObject itemsArray(cx, JS_NewArrayObject(cx, items));
     if (!JS_DefineElement(cx, eventsArray, i, itemsArray, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }

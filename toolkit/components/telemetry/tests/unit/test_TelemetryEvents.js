@@ -9,22 +9,17 @@ function checkEventFormat(events) {
   Assert.ok(Array.isArray(events), "Events should be serialized to an array.");
   for (let e of events) {
     Assert.ok(Array.isArray(e), "Event should be an array.");
-    Assert.greaterOrEqual(e.length, 4, "Event should have at least 4 elements.");
-    Assert.lessOrEqual(e.length, 6, "Event should have at most 6 elements.");
+    Assert.equal(e.length, 6, "Event should have 6 elements.");
 
     Assert.equal(typeof(e[0]), "number", "Element 0 should be a number.");
     Assert.equal(typeof(e[1]), "string", "Element 1 should be a string.");
     Assert.equal(typeof(e[2]), "string", "Element 2 should be a string.");
     Assert.equal(typeof(e[3]), "string", "Element 3 should be a string.");
 
-    if (e.length > 4) {
-      Assert.ok(e[4] === null || typeof(e[4]) == "string",
-                "Event element 4 should be null or a string.");
-    }
-    if (e.length > 5) {
-      Assert.ok(e[5] === null || typeof(e[5]) == "object",
-                "Event element 5 should be null or an object.");
-    }
+    Assert.ok(e[4] === null || typeof(e[4]) == "string",
+              "Event element 4 should be null or a string.");
+    Assert.ok(e[5] === null || typeof(e[5]) == "object",
+              "Event element 4 should be null or an object.");
 
     let extra = e[5];
     if (extra) {
@@ -49,7 +44,7 @@ add_task(function* test_recording() {
     {optout: false, event: ["telemetry.test", "test1", "object1", null, {"key1": "value1"}]},
     {optout: false, event: ["telemetry.test", "test1", "object1", "value", {"key1": "value1", "key2": "value2"}]},
 
-    {optout: true,  event: ["telemetry.test", "optout", "object1"]},
+    {optout: true,  event: ["telemetry.test", "test_optout", "object1"]},
     {optout: false, event: ["telemetry.test.second", "test", "object1"]},
     {optout: false, event: ["telemetry.test.second", "test", "object1", null, {"key1": "value1"}]},
   ];
@@ -64,23 +59,15 @@ add_task(function* test_recording() {
     entry.tsAfter = Math.floor(Telemetry.msSinceProcessStart());
   }
 
-  // Strip off trailing null values to match the serialized events.
-  for (let entry of expected) {
-    let e = entry.event;
-    while ((e.length >= 3) && (e[e.length - 1] === null)) {
-      e.pop();
-    }
-  }
-
   // The following should not result in any recorded events.
   Assert.throws(() => Telemetry.recordEvent("unknown.category", "test1", "object1"),
-                /Error: Unknown event: \["unknown.category", "test1", "object1"\]/,
+                /Error: Unknown event\./,
                 "Should throw on unknown category.");
   Assert.throws(() => Telemetry.recordEvent("telemetry.test", "unknown", "object1"),
-                /Error: Unknown event: \["telemetry.test", "unknown", "object1"\]/,
+                /Error: Unknown event\./,
                 "Should throw on unknown method.");
   Assert.throws(() => Telemetry.recordEvent("telemetry.test", "test1", "unknown"),
-                /Error: Unknown event: \["telemetry.test", "test1", "unknown"\]/,
+                /Error: Unknown event\./,
                 "Should throw on unknown object.");
 
   let checkEvents = (events, expectedEvents) => {
@@ -96,6 +83,9 @@ add_task(function* test_recording() {
 
       let recordedData = events[i].slice(1);
       let expectedData = expectedEvents[i].event.slice();
+      for (let j = expectedData.length; j < 5; ++j) {
+        expectedData.push(null);
+      }
       Assert.deepEqual(recordedData, expectedData, "The recorded event data should match.");
     }
   };
@@ -133,17 +123,17 @@ add_task(function* test_expiry() {
   Telemetry.clearEvents();
 
   // Recording call with event that is expired by version.
-  Telemetry.recordEvent("telemetry.test", "expired_version", "object1");
+  Telemetry.recordEvent("telemetry.test", "test_expired_version", "object1");
   let events = Telemetry.snapshotBuiltinEvents(OPTIN, true);
   Assert.equal(events.length, 0, "Should not record event with expired version.");
 
   // Recording call with event that is expired by date.
-  Telemetry.recordEvent("telemetry.test", "expired_date", "object1");
+  Telemetry.recordEvent("telemetry.test", "test_expired_date", "object1");
   events = Telemetry.snapshotBuiltinEvents(OPTIN, true);
   Assert.equal(events.length, 0, "Should not record event with expired date.");
 
   // Recording call with event that has expiry_version and expiry_date in the future.
-  Telemetry.recordEvent("telemetry.test", "not_expired_optout", "object1");
+  Telemetry.recordEvent("telemetry.test", "test_not_expired_optout", "object1");
   events = Telemetry.snapshotBuiltinEvents(OPTOUT, true);
   Assert.equal(events.length, 1, "Should record event when date and version are not expired.");
 });
@@ -176,7 +166,7 @@ add_task(function* test_storageLimit() {
   Telemetry.clearEvents();
 
   // Record more events than the storage limit allows.
-  let LIMIT = 1000;
+  let LIMIT = 10000;
   let COUNT = LIMIT + 10;
   for (let i = 0; i < COUNT; ++i) {
     Telemetry.recordEvent("telemetry.test", "test1", "object1", String(i));
@@ -193,7 +183,7 @@ add_task(function* test_valueLimits() {
   Telemetry.clearEvents();
 
   // Record values that are at or over the limits for string lengths.
-  let LIMIT = 80;
+  let LIMIT = 100;
   let expected = [
     ["telemetry.test", "test1", "object1", "a".repeat(LIMIT - 10), null],
     ["telemetry.test", "test1", "object1", "a".repeat(LIMIT     ), null],
@@ -209,17 +199,10 @@ add_task(function* test_valueLimits() {
   for (let event of expected) {
     Telemetry.recordEvent(...event);
     if (event[3]) {
-      event[3] = event[3].substr(0, LIMIT);
+      event[3] = event[3].substr(0, 100);
     }
     if (event[4]) {
-      event[4].key1 = event[4].key1.substr(0, LIMIT);
-    }
-  }
-
-  // Strip off trailing null values to match the serialized events.
-  for (let e of expected) {
-    while ((e.length >= 3) && (e[e.length - 1] === null)) {
-      e.pop();
+      event[4].key1 = event[4].key1.substr(0, 100);
     }
   }
 

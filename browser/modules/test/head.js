@@ -95,14 +95,3 @@ function checkKeyedHistogram(h, key, expectedValue) {
   Assert.ok(key in snapshot, `The histogram must contain ${key}.`);
   Assert.equal(snapshot[key].sum, expectedValue, `The key ${key} must contain ${expectedValue}.`);
 }
-
-function checkEvents(events, expectedEvents) {
-  Assert.equal(events.length, expectedEvents.length, "Should have matching amount of events.");
-
-  // Strip timestamps from the events for easier comparison.
-  events = events.map(e => e.slice(1));
-
-  for (let i = 0; i < events.length; ++i) {
-    Assert.deepEqual(events[i], expectedEvents[i], "Events should match.");
-  }
-}
