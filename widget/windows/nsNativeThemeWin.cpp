@@ -6,6 +6,7 @@
 #include "nsNativeThemeWin.h"
 
 #include "mozilla/EventStates.h"
+#include "mozilla/Logging.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsDeviceContext.h"
 #include "nsRenderingContext.h"
@@ -42,7 +43,7 @@ using mozilla::IsVistaOrLater;
 using namespace mozilla;
 using namespace mozilla::widget;
 
-extern PRLogModuleInfo* gWindowsLog;
+extern mozilla::LazyLogModule gWindowsLog;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
