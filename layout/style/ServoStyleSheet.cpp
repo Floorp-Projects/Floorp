@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ServoStyleSheet.h"
+
+#include "mozilla/css/Rule.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSRuleList.h"

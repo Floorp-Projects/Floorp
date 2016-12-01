@@ -32,6 +32,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
