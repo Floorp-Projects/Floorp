@@ -6,6 +6,7 @@
 
 #include "PerformanceMainThread.h"
 #include "PerformanceNavigation.h"
+#include "nsICacheInfoChannel.h"
 
 namespace mozilla {
 namespace dom {
@@ -165,6 +166,17 @@ PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
 
     nsAutoCString protocol;
     channel->GetProtocolVersion(protocol);
+
+    // If this is a local fetch, nextHopProtocol should be set to empty string.
+    nsCOMPtr<nsICacheInfoChannel> cachedChannel = do_QueryInterface(channel);
+    if (cachedChannel) {
+      bool isFromCache;
+      if (NS_SUCCEEDED(cachedChannel->IsFromCache(&isFromCache))
+          && isFromCache) {
+        protocol.Truncate();
+      }
+    }
+
     performanceEntry->SetNextHopProtocol(NS_ConvertUTF8toUTF16(protocol));
 
     uint64_t encodedBodySize = 0;
