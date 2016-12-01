@@ -160,7 +160,8 @@ this.GeckoDriver = function(appName, server) {
 
     // proprietary extensions
     "specificationLevel": 0,
-    "processId" : Services.appinfo.processID,
+    "moz:processID": Services.appinfo.processID,
+    "moz:profile": Services.dirsvc.get("ProfD", Ci.nsIFile).path,
   };
 
   this.mm = globalMessageManager;

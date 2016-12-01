@@ -692,8 +692,8 @@
             // Initially the panel used for the searchbar (PopupSearchAutoComplete
             // in browser.xul) is hidden to avoid impacting startup / new
             // window performance. The base binding's openPopup would normally
-            // call the overriden openAutocompletePopup in urlbarBindings.xml's
-            // browser-autocomplete-result-popup binding to unhide the popup,
+            // call the overriden openAutocompletePopup in
+            // browser-search-autocomplete-result-popup binding to unhide the popup,
             // but since we're overriding openPopup we need to unhide the panel
             // ourselves.
             popup.hidden = false;
@@ -904,7 +904,7 @@
     </handlers>
   </binding>
 
-  <binding id="browser-search-autocomplete-result-popup" extends="chrome://browser/content/urlbarBindings.xml#browser-autocomplete-result-popup">
+  <binding id="browser-search-autocomplete-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
     <resources>
       <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
@@ -927,6 +927,78 @@
       <xul:vbox anonid="search-one-off-buttons" class="search-one-offs"/>
     </content>
     <implementation>
+      <field name="AppConstants" readonly="true">
+        (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
+      </field>
+
+      <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          // initially the panel is hidden
+          // to avoid impacting startup / new window performance
+          aInput.popup.hidden = false;
+
+          // this method is defined on the base binding
+          this._openAutocompletePopup(aInput, aElement);
+        ]]></body>
+      </method>
+
+      <method name="onPopupClick">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // Ignore all right-clicks
+          if (aEvent.button == 2)
+            return;
+
+          var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
+
+          var searchBar = BrowserSearch.searchBar;
+          var popupForSearchBar = searchBar && searchBar.textbox == this.mInput;
+          if (popupForSearchBar) {
+            searchBar.telemetrySearchDetails = {
+              index: controller.selection.currentIndex,
+              kind: "mouse"
+            };
+          }
+
+          // Check for unmodified left-click, and use default behavior
+          if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
+              !aEvent.altKey && !aEvent.metaKey) {
+            controller.handleEnter(true, aEvent);
+            return;
+          }
+
+          // Check for middle-click or modified clicks on the search bar
+          if (popupForSearchBar) {
+            // Handle search bar popup clicks
+            var search = controller.getValueAt(this.selectedIndex);
+
+            // close the autocomplete popup and revert the entered search term
+            this.closePopup();
+            controller.handleEscape();
+
+            // open the search results according to the clicking subtlety
+            var where = whereToOpenLink(aEvent, false, true);
+            let params = {};
+
+            // But open ctrl/cmd clicks on autocomplete items in a new background tab.
+            let modifier = this.AppConstants.platform == "macosx" ?
+                           aEvent.metaKey :
+                           aEvent.ctrlKey;
+            if (where == "tab" && (aEvent instanceof MouseEvent) &&
+                (aEvent.button == 1 || modifier))
+              params.inBackground = true;
+
+            searchBar.doSearch(search, where, null, params);
+            if (where == "tab" && params.inBackground)
+              searchBar.focus();
+            else
+              searchBar.value = search;
+          }
+        ]]></body>
+      </method>
+
       <!-- Popup rollup is triggered by native events before the mousedown event
            reaches the DOM. The will be set to true by the popuphiding event and
            false after the mousedown event has been triggered to detect what

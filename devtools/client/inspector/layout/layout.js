@@ -126,7 +126,7 @@ LayoutView.prototype = {
     let provider = createElement(Provider, {
       store,
       id: "layoutview",
-      title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
       key: "layoutview",
     }, app);
 
@@ -134,7 +134,7 @@ LayoutView.prototype = {
 
     this.inspector.addSidebarTab(
       "layoutview",
-      INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
+      INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
       provider,
       defaultTab == "layoutview"
     );

@@ -3758,6 +3758,16 @@ nsContentUtils::IsPlainTextType(const nsACString& aContentType)
 }
 
 bool
+nsContentUtils::IsUtf8OnlyPlainTextType(const nsACString& aContentType)
+{
+  // NOTE: This must be a subset of the list in IsPlainTextType().
+  return aContentType.EqualsLiteral(TEXT_CACHE_MANIFEST) ||
+         aContentType.EqualsLiteral(APPLICATION_JSON) ||
+         aContentType.EqualsLiteral(TEXT_JSON) ||
+         aContentType.EqualsLiteral(TEXT_VTT);
+}
+
+bool
 nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument* aDocument,
                                              nsIURI* aURI,
                                              nsACString& aScriptURI,

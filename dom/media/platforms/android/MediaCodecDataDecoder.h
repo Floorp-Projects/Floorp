@@ -128,6 +128,8 @@ protected:
   std::deque<media::TimeUnit> mDurations;
 
   nsString mDrmStubId;
+
+  bool mIsCodecSupportAdaptivePlayback = false;
 };
 
 } // namespace mozilla

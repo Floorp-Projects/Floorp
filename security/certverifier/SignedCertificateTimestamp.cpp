@@ -38,7 +38,8 @@ operator==(const ct::Buffer& a, const ct::Buffer& b)
 }
 
 bool
-operator!=(const ct::Buffer& a, const ct::Buffer& b) {
+operator!=(const ct::Buffer& a, const ct::Buffer& b)
+{
   return !(a == b);
 }
 
