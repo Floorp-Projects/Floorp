@@ -178,6 +178,14 @@ else:
     env.setdefault('CC', compiler)
     env.setdefault('CXX', cxx)
 
+rust_dir = os.path.join(DIR.tooltool, 'rustc')
+if os.path.exists(os.path.join(rust_dir, 'bin', 'rustc')):
+    env.setdefault('RUSTC', os.path.join(rust_dir, 'bin', 'rustc'))
+    env.setdefault('CARGO', os.path.join(rust_dir, 'bin', 'cargo'))
+else:
+    env.setdefault('RUSTC', 'rustc')
+    env.setdefault('CARGO', 'cargo')
+
 if platform.system() == 'Darwin':
     os.environ['SOURCE'] = DIR.source
     set_vars_from_script(os.path.join(DIR.scripts, 'macbuildenv.sh'),
