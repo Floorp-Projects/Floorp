@@ -469,11 +469,6 @@ public:
     return mPendingChildLoaders.AppendElement(aChild) != nullptr;
   }
 
-  mozilla::dom::DocGroup* GetDocGroup() const
-  {
-    return mDocument->GetDocGroup();
-  }
-
 private:
   virtual ~nsScriptLoader();
 

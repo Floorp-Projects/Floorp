@@ -17,9 +17,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
 #include "nsJSUtils.h"
-#include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
@@ -1719,31 +1718,19 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable
 {
   RefPtr<nsScriptLoadRequest> mRequest;
   RefPtr<nsScriptLoader> mLoader;
-  RefPtr<DocGroup> mDocGroup;
   void *mToken;
 
 public:
   NotifyOffThreadScriptLoadCompletedRunnable(nsScriptLoadRequest* aRequest,
                                              nsScriptLoader* aLoader)
-    : mRequest(aRequest)
-    , mLoader(aLoader)
-    , mDocGroup(aLoader->GetDocGroup())
-    , mToken(nullptr)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
+    : mRequest(aRequest), mLoader(aLoader), mToken(nullptr)
+  {}
 
   virtual ~NotifyOffThreadScriptLoadCompletedRunnable();
 
   void SetToken(void* aToken) {
     MOZ_ASSERT(aToken && !mToken);
     mToken = aToken;
-  }
-
-  static void Dispatch(already_AddRefed<NotifyOffThreadScriptLoadCompletedRunnable>&& aSelf) {
-    RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> self = aSelf;
-    RefPtr<DocGroup> docGroup = self->mDocGroup;
-    docGroup->Dispatch("OffThreadScriptLoader", TaskCategory::Other, self.forget());
   }
 
   NS_DECL_NSIRUNNABLE
@@ -1823,7 +1810,7 @@ OffThreadScriptLoaderCallback(void *aToken, void *aCallbackData)
   RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> aRunnable =
     dont_AddRef(static_cast<NotifyOffThreadScriptLoadCompletedRunnable*>(aCallbackData));
   aRunnable->SetToken(aToken);
-  NotifyOffThreadScriptLoadCompletedRunnable::Dispatch(aRunnable.forget());
+  NS_DispatchToMainThread(aRunnable);
 }
 
 nsresult
