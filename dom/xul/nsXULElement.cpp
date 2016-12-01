@@ -1277,7 +1277,7 @@ nsXULElement::IsEventStoppedFromAnonymousScrollbar(EventMessage aMessage)
             IsAnyOfXULElements(nsGkAtoms::scrollbar, nsGkAtoms::scrollcorner) &&
             (aMessage == eMouseClick || aMessage == eMouseDoubleClick ||
              aMessage == eXULCommand || aMessage == eContextMenu ||
-             aMessage == eDragStart));
+             aMessage == eDragStart  || aMessage == eMouseAuxClick));
 }
 
 nsresult
