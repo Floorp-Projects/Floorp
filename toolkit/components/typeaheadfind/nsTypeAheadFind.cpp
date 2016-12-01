@@ -1192,9 +1192,8 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   NS_ASSERTION(aPresShell && aPresContext && aRange && aFirstVisibleRange, 
                "params are invalid");
 
-  // We need to know if the range start is visible.
-  // Otherwise, return the first visible range start 
-  // in aFirstVisibleRange
+  // We need to know if the range start and end are both visible.
+  // In all cases, return the first visible range in aFirstVisibleRange.
   aRange->CloneRange(aFirstVisibleRange);
 
   if (aFlushLayout) {
@@ -1202,18 +1201,21 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   }
 
   nsCOMPtr<nsIDOMNode> node;
-  aRange->GetStartContainer(getter_AddRefs(node));
+  aRange->GetCommonAncestorContainer(getter_AddRefs(node));
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  if (!content)
+  if (!content) {
     return false;
+  }
 
   nsIFrame *frame = content->GetPrimaryFrame();
-  if (!frame)
+  if (!frame) {
     return false;  // No frame! Not visible then.
+  }
 
   // Having a primary frame doesn't mean that the range is visible inside the
   // viewport. Do a hit-test to determine that quickly and properly.
+  bool foundContent = false;
   AutoTArray<nsIFrame*,8> frames;
   nsIFrame *rootFrame = aPresShell->GetRootFrame();
   RefPtr<nsRange> range = static_cast<nsRange*>(aRange);
@@ -1224,11 +1226,35 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
              nsPresContext::CSSPixelsToAppUnits((float)rect->Y()),
              nsPresContext::CSSPixelsToAppUnits((float)rect->Width()),
              nsPresContext::CSSPixelsToAppUnits((float)rect->Height()));
+    // Append visible frames to frames array.
     nsLayoutUtils::GetFramesForArea(rootFrame, r, frames,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
+      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
+      nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME |
+      nsLayoutUtils::ONLY_VISIBLE);
+
+    // See if any of the frames contain the content. If they do, then the range
+    // is visible. We search for the content rather than the original frame,
+    // because nsTextContinuation frames might be returned instead of the
+    // original frame.
+    for (const auto &f: frames) {
+      if (f->GetContent() == content) {
+        foundContent = true;
+        break;
+      }
+    }
+
+    if (foundContent) {
+      break;
+    }
+
+    frames.ClearAndRetainStorage();
   }
-  if (!frames.Length())
+
+  // Test that content appears in the list of framesForArea. If it does, then
+  // that means that content is at least partly visible.
+  if (!foundContent) {
     return false;
+  }
 
   // Detect if we are _inside_ a text control, or something else with its own
   // selection controller.
