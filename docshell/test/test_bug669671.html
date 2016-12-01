@@ -65,7 +65,7 @@ function checkPopupLoadCount()
   return origCount;
 }
 
-function test()
+function* test()
 {
   // Step 0 - Make sure the count is reset to 0 in case of reload
   popup.location = 'file_bug669671.sjs?countreset';
@@ -132,7 +132,6 @@ function test()
   popup.close();
 
   SimpleTest.finish();
-  yield undefined;
 }
 
 // This will call into onChildLoad once it loads.
