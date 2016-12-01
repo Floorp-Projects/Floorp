@@ -25,6 +25,7 @@
 
 #include "mozilla/a11y/PDocAccessible.h"
 #include "AudioChannelService.h"
+#include "BlobParent.h"
 #include "CrashReporterParent.h"
 #include "DeviceStorageStatics.h"
 #include "GMPServiceParent.h"
@@ -63,7 +64,6 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/dom/URLClassifierParent.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
