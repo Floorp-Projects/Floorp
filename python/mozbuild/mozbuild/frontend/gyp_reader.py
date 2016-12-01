@@ -52,8 +52,8 @@ generator_default_variables = {
 }
 for dirname in [b'INTERMEDIATE_DIR', b'SHARED_INTERMEDIATE_DIR', b'PRODUCT_DIR',
                 b'LIB_DIR', b'SHARED_LIB_DIR']:
-  # Some gyp steps fail if these are empty(!).
-  generator_default_variables[dirname] = b'$' + dirname
+    # Some gyp steps fail if these are empty(!).
+    generator_default_variables[dirname] = b'$' + dirname
 
 for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
                'RULE_INPUT_DIRNAME', 'RULE_INPUT_EXT',
@@ -61,7 +61,7 @@ for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
                'STATIC_LIB_PREFIX', 'STATIC_LIB_SUFFIX',
                'SHARED_LIB_PREFIX', 'SHARED_LIB_SUFFIX',
                'LINKER_SUPPORTS_ICF']:
-  generator_default_variables[unused] = b''
+    generator_default_variables[unused] = b''
 
 
 class GypContext(TemplateContext):
@@ -78,34 +78,36 @@ class GypContext(TemplateContext):
 
 
 def handle_actions(actions, context, action_overrides):
-  idir = '$INTERMEDIATE_DIR/'
-  for action in actions:
-    name = action['action_name']
-    if name not in action_overrides:
-      raise RuntimeError('GYP action %s not listed in action_overrides' % name)
-    outputs = action['outputs']
-    if len(outputs) > 1:
-      raise NotImplementedError('GYP actions with more than one output not supported: %s' % name)
-    output = outputs[0]
-    if not output.startswith(idir):
-      raise NotImplementedError('GYP actions outputting to somewhere other than <(INTERMEDIATE_DIR) not supported: %s' % output)
-    output = output[len(idir):]
-    context['GENERATED_FILES'] += [output]
-    g = context['GENERATED_FILES'][output]
-    g.script = action_overrides[name]
-    g.inputs = action['inputs']
+    idir = '$INTERMEDIATE_DIR/'
+    for action in actions:
+        name = action['action_name']
+        if name not in action_overrides:
+            raise RuntimeError('GYP action %s not listed in action_overrides' % name)
+        outputs = action['outputs']
+        if len(outputs) > 1:
+            raise NotImplementedError('GYP actions with more than one output not supported: %s' % name)
+        output = outputs[0]
+        if not output.startswith(idir):
+            raise NotImplementedError('GYP actions outputting to somewhere other than <(INTERMEDIATE_DIR) not supported: %s' % output)
+        output = output[len(idir):]
+        context['GENERATED_FILES'] += [output]
+        g = context['GENERATED_FILES'][output]
+        g.script = action_overrides[name]
+        g.inputs = action['inputs']
+
 
 def handle_copies(copies, context):
-  dist = '$PRODUCT_DIR/dist/'
-  for copy in copies:
-    dest = copy['destination']
-    if not dest.startswith(dist):
-      raise NotImplementedError('GYP copies to somewhere other than <(PRODUCT_DIR)/dist not supported: %s' % dest)
-    dest_paths = dest[len(dist):].split('/')
-    exports = context['EXPORTS']
-    while dest_paths:
-      exports = getattr(exports, dest_paths.pop(0))
-    exports += sorted(copy['files'], key=lambda x: x.lower())
+    dist = '$PRODUCT_DIR/dist/'
+    for copy in copies:
+        dest = copy['destination']
+        if not dest.startswith(dist):
+            raise NotImplementedError('GYP copies to somewhere other than <(PRODUCT_DIR)/dist not supported: %s' % dest)
+        dest_paths = dest[len(dist):].split('/')
+        exports = context['EXPORTS']
+        while dest_paths:
+            exports = getattr(exports, dest_paths.pop(0))
+        exports += sorted(copy['files'], key=lambda x: x.lower())
+
 
 def read_from_gyp(config, path, output, vars, no_chromium, no_unified, action_overrides, non_unified_sources = set()):
     """Read a gyp configuration and emits GypContexts for the backend to
