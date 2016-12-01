@@ -338,7 +338,7 @@ GfxInfo::Init()
   // Unfortunately, the Device ID is nullptr, and we can't enumerate
   // it using the setup infrastructure (SetupDiGetClassDevsW below
   // will return INVALID_HANDLE_VALUE).
-  if (mWindowsVersion == kWindows8 &&
+  if (mWindowsVersion >= kWindows8 &&
       mDeviceID.Length() == 0 &&
       mDeviceString.EqualsLiteral("RDPUDD Chained DD"))
   {
