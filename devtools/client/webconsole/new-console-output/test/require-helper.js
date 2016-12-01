@@ -8,8 +8,9 @@ requireHacker.global_hook("default", path => {
   switch (path) {
     // For Enzyme
     case "react-dom":
+      return `const ReactDOM = require('devtools/client/shared/vendor/react-dom'); module.exports = ReactDOM`;
     case "react-dom/server":
-      return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React`;
+      return `const ReactDOMServer = require('devtools/client/shared/vendor/react-dom-server'); module.exports = ReactDOMServer`;
     case "react-addons-test-utils":
       return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React.addons.TestUtils`;
     case "react-redux":
