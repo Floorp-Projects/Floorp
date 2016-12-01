@@ -56,31 +56,12 @@ public class GeckoScreenOrientation {
 
     // Singleton instance.
     private static GeckoScreenOrientation sInstance;
-    // Default screen orientation, used for initialization and unlocking.
-    private static final ScreenOrientation DEFAULT_SCREEN_ORIENTATION = ScreenOrientation.DEFAULT;
     // Default rotation, used when device rotation is unknown.
     private static final int DEFAULT_ROTATION = Surface.ROTATION_0;
-    // Default orientation, used if screen orientation is unspecified.
-    private ScreenOrientation mDefaultScreenOrientation;
     // Last updated screen orientation.
     private ScreenOrientation mScreenOrientation;
     // Whether the update should notify Gecko about screen orientation changes.
     private boolean mShouldNotify = true;
-    // Configuration screen orientation preference path.
-    private static final String DEFAULT_SCREEN_ORIENTATION_PREF = "app.orientation.default";
-
-    public GeckoScreenOrientation() {
-        PrefsHelper.getPref(DEFAULT_SCREEN_ORIENTATION_PREF, new PrefsHelper.PrefHandlerBase() {
-            @Override public void prefValue(String pref, String value) {
-                // Read and update the configuration default preference.
-                mDefaultScreenOrientation = screenOrientationFromArrayString(value);
-                setRequestedOrientation(mDefaultScreenOrientation);
-            }
-        });
-
-        mDefaultScreenOrientation = DEFAULT_SCREEN_ORIENTATION;
-        update();
-    }
 
     public static GeckoScreenOrientation getInstance() {
         if (sInstance == null) {
@@ -325,10 +306,10 @@ public class GeckoScreenOrientation {
      */
     public static ScreenOrientation screenOrientationFromArrayString(String aArray) {
         List<String> orientations = Arrays.asList(aArray.split(","));
-        if (orientations.size() == 0) {
+        if ("".equals(aArray) || orientations.size() == 0) {
             // If nothing is listed, return default.
             Log.w(LOGTAG, "screenOrientationFromArrayString: no orientation in string");
-            return DEFAULT_SCREEN_ORIENTATION;
+            return ScreenOrientation.DEFAULT;
         }
 
         // We don't support multiple orientations yet. To avoid developer
@@ -361,7 +342,7 @@ public class GeckoScreenOrientation {
         }
 
         Log.w(LOGTAG, "screenOrientationFromString: unknown orientation string: " + aStr);
-        return DEFAULT_SCREEN_ORIENTATION;
+        return ScreenOrientation.DEFAULT;
     }
 
     /*
