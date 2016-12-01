@@ -110,9 +110,6 @@
 // NS_APP_CONTENT_PROCESS_TEMP_DIR, but that should not be relied upon.
 //
 #define NS_APP_CONTENT_PROCESS_TEMP_DIR         "ContentTmpD"
-#else
-// Otherwise NS_APP_CONTENT_PROCESS_TEMP_DIR must match NS_OS_TEMP_DIR.
-#define NS_APP_CONTENT_PROCESS_TEMP_DIR         "TmpD"
 #endif // (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
 
 #endif // nsAppDirectoryServiceDefs_h___
