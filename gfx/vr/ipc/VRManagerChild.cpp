@@ -42,7 +42,6 @@ void ReleaseVRManagerParentSingleton() {
 VRManagerChild::VRManagerChild()
   : TextureForwarder()
   , mDisplaysInitialized(false)
-  , mGamepadManager(nullptr)
   , mInputFrameID(-1)
   , mMessageLoop(MessageLoop::current())
   , mFrameRequestCallbackCounter(0)
@@ -484,10 +483,13 @@ VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
 #ifdef MOZ_GAMEPAD
   // VRManagerChild could be at other processes, but GamepadManager
-  // only exists at the content process or the parent process
+  // only exists at the content process or the same process
   // in non-e10s mode.
-  if (mGamepadManager) {
-      mGamepadManager->Update(aGamepadEvent);
+  MOZ_ASSERT(XRE_IsContentProcess() || IsSameProcess());
+
+  RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
+  if (gamepadManager) {
+    gamepadManager->Update(aGamepadEvent);
   }
 #endif
 
@@ -585,14 +587,6 @@ void
 VRManagerChild::HandleFatalError(const char* aName, const char* aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
-}
-
-void
-VRManagerChild::SetGamepadManager(dom::GamepadManager* aGamepadManager)
-{
-  MOZ_ASSERT(aGamepadManager);
-
-  mGamepadManager = aGamepadManager;
 }
 
 } // namespace gfx
