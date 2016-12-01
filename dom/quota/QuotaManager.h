@@ -19,6 +19,8 @@
 #include "Client.h"
 #include "PersistenceType.h"
 
+#include "prenv.h"
+
 #define QUOTA_MANAGER_CONTRACTID "@mozilla.org/dom/quota/manager;1"
 
 class mozIStorageConnection;
@@ -113,7 +115,11 @@ private:
 public:
   NS_INLINE_DECL_REFCOUNTING(QuotaManager)
 
-  static const bool kRunningXPCShellTests;
+  static bool IsRunningXPCShellTests()
+  {
+    static bool kRunningXPCShellTests = !!PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR");
+    return kRunningXPCShellTests;
+  }
 
   static const char kReplaceChars[];
 
