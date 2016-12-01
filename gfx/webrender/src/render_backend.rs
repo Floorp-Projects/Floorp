@@ -7,6 +7,7 @@ use frame::Frame;
 use internal_types::{FontTemplate, GLContextHandleWrapper, GLContextWrapper};
 use internal_types::{SourceTexture, ResultMsg, RendererFrame};
 use profiler::BackendProfileCounters;
+use record;
 use resource_cache::ResourceCache;
 use scene::Scene;
 use std::collections::HashMap;
@@ -16,9 +17,10 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
 use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
-use webrender_traits::{FlushNotifier, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
+use webrender_traits::{RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
+use webrender_traits::{DeviceIntSize};
 use webrender_traits::channel::{PayloadHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
-use record;
+use webrender_traits::{VRCompositorCommand, VRCompositorHandler};
 use tiling::FrameBuilderConfig;
 use offscreen_gl_context::GLContextDispatcher;
 
@@ -41,7 +43,6 @@ pub struct RenderBackend {
     frame: Frame,
 
     notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
-    flush_notifier: Arc<Mutex<Option<Box<FlushNotifier>>>>,
     webrender_context_handle: Option<GLContextHandleWrapper>,
     webgl_contexts: HashMap<WebGLContextId, GLContextWrapper>,
     current_bound_webgl_context_id: Option<WebGLContextId>,
@@ -49,6 +50,8 @@ pub struct RenderBackend {
     main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
 
     next_webgl_id: usize,
+
+    vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>
 }
 
 impl RenderBackend {
@@ -60,15 +63,14 @@ impl RenderBackend {
                texture_cache: TextureCache,
                enable_aa: bool,
                notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
-               flush_notifier: Arc<Mutex<Option<Box<FlushNotifier>>>>,
                webrender_context_handle: Option<GLContextHandleWrapper>,
                config: FrameBuilderConfig,
                debug: bool,
                enable_recording:bool,
-               main_thread_dispatcher:  Arc<Mutex<Option<Box<RenderDispatcher>>>>) -> RenderBackend {
+               main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
+               vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>) -> RenderBackend {
 
         let resource_cache = ResourceCache::new(texture_cache,
-                                                device_pixel_ratio,
                                                 enable_aa);
 
         RenderBackend {
@@ -82,13 +84,13 @@ impl RenderBackend {
             frame: Frame::new(debug, config),
             next_namespace_id: IdNamespace(1),
             notifier: notifier,
-            flush_notifier: flush_notifier,
             webrender_context_handle: webrender_context_handle,
             webgl_contexts: HashMap::new(),
             current_bound_webgl_context_id: None,
             enable_recording:enable_recording,
             main_thread_dispatcher: main_thread_dispatcher,
             next_webgl_id: 0,
+            vr_compositor_handler: vr_compositor_handler
         }
     }
 
@@ -134,10 +136,6 @@ impl RenderBackend {
                                                                    stride,
                                                                    format,
                                                                    data);
-                        }
-                        ApiMsg::Flush => {
-                            let mut flush_notifier = self.flush_notifier.lock();
-                            flush_notifier.as_mut().unwrap().as_mut().unwrap().all_messages_flushed();
                         }
                         ApiMsg::UpdateImage(id, width, height, format, bytes) => {
                             self.resource_cache.update_image_template(id,
@@ -245,6 +243,24 @@ impl RenderBackend {
                                 None => self.notify_compositor_of_new_scroll_frame(false),
                             }
                         }
+                        ApiMsg::ScrollLayersWithScrollId(origin, pipeline_id, scroll_root_id) => {
+                            let frame = profile_counters.total_time.profile(|| {
+                                if self.frame.scroll_layers(origin, pipeline_id, scroll_root_id) {
+                                    Some(self.render())
+                                } else {
+                                    None
+                                }
+                            });
+
+                            match frame {
+                                Some(frame) => {
+                                    self.publish_frame(frame, &mut profile_counters);
+                                    self.notify_compositor_of_new_scroll_frame(true)
+                                }
+                                None => self.notify_compositor_of_new_scroll_frame(false),
+                            }
+
+                        }
                         ApiMsg::TickScrollingBounce => {
                             let frame = profile_counters.total_time.profile(|| {
                                 self.frame.tick_scrolling_bounce_animations();
@@ -282,7 +298,8 @@ impl RenderBackend {
                                         self.webgl_contexts.insert(id, ctx);
 
                                         self.resource_cache
-                                            .add_webgl_texture(id, SourceTexture::WebGL(texture_id), real_size);
+                                            .add_webgl_texture(id, SourceTexture::WebGL(texture_id),
+                                                               DeviceIntSize::from_untyped(&real_size));
 
                                         tx.send(Ok((id, limits))).unwrap();
                                     },
@@ -302,7 +319,8 @@ impl RenderBackend {
                                     // Update webgl texture size. Texture id may change too.
                                     let (real_size, texture_id, _) = ctx.get_info();
                                     self.resource_cache
-                                        .update_webgl_texture(context_id, SourceTexture::WebGL(texture_id), real_size);
+                                        .update_webgl_texture(context_id, SourceTexture::WebGL(texture_id),
+                                                              DeviceIntSize::from_untyped(&real_size));
                                 },
                                 Err(msg) => {
                                     error!("Error resizing WebGLContext: {}", msg);
@@ -316,6 +334,10 @@ impl RenderBackend {
                             ctx.make_current();
                             ctx.apply_command(command);
                             self.current_bound_webgl_context_id = Some(context_id);
+                        },
+
+                        ApiMsg::VRCompositorCommand(context_id, command) => {
+                            self.handle_vr_compositor_command(context_id, command);
                         }
                         ApiMsg::GenerateFrame => {
                             let frame = profile_counters.total_time.profile(|| {
@@ -357,9 +379,7 @@ impl RenderBackend {
             webgl_context.unbind();
         }
 
-        self.frame.create(&self.scene,
-                          &mut new_pipeline_sizes,
-                          self.device_pixel_ratio);
+        self.frame.create(&self.scene, &mut new_pipeline_sizes);
 
         let mut updated_pipeline_sizes = HashMap::new();
 
@@ -448,6 +468,20 @@ impl RenderBackend {
         //           cleaner way to do this, or use the OnceMutex on crates.io?
         let mut notifier = self.notifier.lock();
         notifier.as_mut().unwrap().as_mut().unwrap().new_scroll_frame_ready(composite_needed);
+    }
+
+    fn handle_vr_compositor_command(&mut self, ctx_id: WebGLContextId, cmd: VRCompositorCommand) {
+        let texture = match cmd {
+            VRCompositorCommand::SubmitFrame(..) => {
+                    match self.resource_cache.get_webgl_texture(&ctx_id).texture_id {
+                        SourceTexture::WebGL(texture_id) => Some(texture_id),
+                        _=> None
+                    }
+            },
+            _ => None
+        };
+        let mut handler = self.vr_compositor_handler.lock();
+        handler.as_mut().unwrap().as_mut().unwrap().handle(cmd, texture);
     }
 }
 

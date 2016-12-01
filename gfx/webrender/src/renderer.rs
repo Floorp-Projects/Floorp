@@ -11,13 +11,13 @@
 
 use debug_colors;
 use debug_render::DebugRenderer;
-use device::{Device, ProgramId, TextureId, VertexFormat, GpuProfiler};
+use device::{Device, ProgramId, TextureId, VertexFormat, GpuMarker, GpuProfiler};
 use device::{TextureFilter, VAOId, VertexUsageHint, FileWatcherHandler, TextureTarget};
-use euclid::{Matrix4D, Point2D, Size2D};
+use euclid::{Size2D, Matrix4D};
 use fnv::FnvHasher;
 use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
 use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
-use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, DevicePoint, SourceTexture};
+use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, SourceTexture};
 use internal_types::{BatchTextures, TextureSampler, GLContextHandleWrapper};
 use profiler::{Profiler, BackendProfileCounters};
 use profiler::{GpuProfileTag, RendererProfileTimers, RendererProfileCounters};
@@ -36,9 +36,11 @@ use tiling::{self, Frame, FrameBuilderConfig, PrimitiveBatchData};
 use tiling::{RenderTarget, ClearTile};
 use time::precise_time_ns;
 use util::TransformedRectKind;
-use webrender_traits::{ColorF, Epoch, FlushNotifier, PipelineId, RenderNotifier, RenderDispatcher};
+use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
 use webrender_traits::{ExternalImageId, ImageFormat, RenderApiSender, RendererKind};
+use webrender_traits::{DeviceSize, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
 use webrender_traits::channel;
+use webrender_traits::VRCompositorHandler;
 
 pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
 
@@ -52,6 +54,7 @@ const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag { label: "Target", col
 const GPU_TAG_CLEAR_TILES: GpuProfileTag = GpuProfileTag { label: "Clear Tiles", color: debug_colors::BROWN };
 const GPU_TAG_PRIM_RECT: GpuProfileTag = GpuProfileTag { label: "Rect", color: debug_colors::RED };
 const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag { label: "Image", color: debug_colors::GREEN };
+const GPU_TAG_PRIM_YUV_IMAGE: GpuProfileTag = GpuProfileTag { label: "YuvImage", color: debug_colors::DARKGREEN };
 const GPU_TAG_PRIM_BLEND: GpuProfileTag = GpuProfileTag { label: "Blend", color: debug_colors::LIGHTBLUE };
 const GPU_TAG_PRIM_COMPOSITE: GpuProfileTag = GpuProfileTag { label: "Composite", color: debug_colors::MAGENTA };
 const GPU_TAG_PRIM_TEXT_RUN: GpuProfileTag = GpuProfileTag { label: "TextRun", color: debug_colors::BLUE };
@@ -118,6 +121,7 @@ impl VertexDataTexture {
 
 const TRANSFORM_FEATURE: &'static str = "TRANSFORM";
 const SUBPIXEL_AA_FEATURE: &'static str = "SUBPIXEL_AA";
+const CLIP_FEATURE: &'static str = "CLIP";
 
 enum ShaderKind {
     Primitive,
@@ -325,17 +329,20 @@ pub struct Renderer {
     pending_texture_updates: Vec<TextureUpdateList>,
     pending_shader_updates: Vec<PathBuf>,
     current_frame: Option<RendererFrame>,
-    device_pixel_ratio: f32,
 
     // These are "cache shaders". These shaders are used to
     // draw intermediate results to cache targets. The results
     // of these shaders are then used by the primitive shaders.
     cs_box_shadow: LazilyCompiledShader,
-    cs_clip_clear: LazilyCompiledShader,
-    cs_clip_rectangle: LazilyCompiledShader,
-    cs_clip_image: LazilyCompiledShader,
     cs_text_run: LazilyCompiledShader,
     cs_blur: LazilyCompiledShader,
+    /// These are "cache clip shaders". These shaders are used to
+    /// draw clip instances into the cached clip mask. The results
+    /// of these shaders are also used by the primitive shaders.
+    cs_clip_clear: LazilyCompiledShader,
+    cs_clip_copy: LazilyCompiledShader,
+    cs_clip_rectangle: LazilyCompiledShader,
+    cs_clip_image: LazilyCompiledShader,
 
     // The are "primitive shaders". These shaders draw and blend
     // final results on screen. They are aware of tile boundaries.
@@ -345,9 +352,11 @@ pub struct Renderer {
     // output, and the cache_image shader blits the results of
     // a cache shader (e.g. blur) to the screen.
     ps_rectangle: PrimitiveShader,
+    ps_rectangle_clip: PrimitiveShader,
     ps_text_run: PrimitiveShader,
     ps_text_run_subpixel: PrimitiveShader,
     ps_image: PrimitiveShader,
+    ps_yuv_image: PrimitiveShader,
     ps_border: PrimitiveShader,
     ps_gradient: PrimitiveShader,
     ps_angle_gradient: PrimitiveShader,
@@ -360,14 +369,12 @@ pub struct Renderer {
     tile_clear_shader: LazilyCompiledShader,
 
     max_clear_tiles: usize,
-    max_prim_blends: usize,
-    max_prim_composites: usize,
+    max_prim_instances: usize,
     max_cache_instances: usize,
+    max_clip_instances: usize,
     max_blurs: usize,
 
     notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
-    // Used to notify users that all pending work on render backend thread is done.
-    flush_notifier: Arc<Mutex<Option<Box<FlushNotifier>>>>,
 
     enable_profiler: bool,
     debug: DebugRenderer,
@@ -409,6 +416,10 @@ pub struct Renderer {
 
     /// Map of external image IDs to native textures.
     external_images: HashMap<ExternalImageId, TextureId, BuildHasherDefault<FnvHasher>>,
+
+    // Optional trait object that handles WebVR commands.
+    // Some WebVR commands such as SubmitFrame must be synced with the WebGL render thread.
+    vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>
 }
 
 impl Renderer {
@@ -437,7 +448,6 @@ impl Renderer {
         let (result_tx, result_rx) = channel();
 
         let notifier = Arc::new(Mutex::new(None));
-        let flush_notifier = Arc::new(Mutex::new(None));
 
         let file_watch_handler = FileWatcher {
             result_tx: result_tx.clone(),
@@ -445,9 +455,9 @@ impl Renderer {
         };
 
         let mut device = Device::new(options.resource_override_path.clone(),
-                                     options.device_pixel_ratio,
                                      Box::new(file_watch_handler));
-        device.begin_frame();
+        // device-pixel ratio doesn't matter here - we are just creating resources.
+        device.begin_frame(1.0);
 
         let max_ubo_size = device.get_capabilities().max_ubo_size;
         let max_ubo_vectors = max_ubo_size / 16;
@@ -455,31 +465,11 @@ impl Renderer {
         let max_prim_instances = get_ubo_max_len::<tiling::PrimitiveInstance>(max_ubo_size);
         let max_cache_instances = get_ubo_max_len::<tiling::CachePrimitiveInstance>(max_ubo_size);
         let max_clip_instances = get_ubo_max_len::<tiling::CacheClipInstance>(max_ubo_size);
-        let max_prim_blends = get_ubo_max_len::<tiling::PackedBlendPrimitive>(max_ubo_size);
-        let max_prim_composites = get_ubo_max_len::<tiling::PackedCompositePrimitive>(max_ubo_size);
         let max_blurs = get_ubo_max_len::<tiling::BlurCommand>(max_ubo_size);
 
         let cs_box_shadow = LazilyCompiledShader::new(ShaderKind::Cache,
                                                       "cs_box_shadow",
                                                       max_cache_instances,
-                                                      &[],
-                                                      &mut device,
-                                                      options.precache_shaders);
-        let cs_clip_clear = LazilyCompiledShader::new(ShaderKind::ClipCache,
-                                                      "cs_clip_clear",
-                                                      max_clip_instances,
-                                                      &[],
-                                                      &mut device,
-                                                      options.precache_shaders);
-        let cs_clip_rectangle = LazilyCompiledShader::new(ShaderKind::ClipCache,
-                                                          "cs_clip_rectangle",
-                                                          max_clip_instances,
-                                                          &[],
-                                                          &mut device,
-                                                          options.precache_shaders);
-        let cs_clip_image = LazilyCompiledShader::new(ShaderKind::ClipCache,
-                                                      "cs_clip_image",
-                                                      max_clip_instances,
                                                       &[],
                                                       &mut device,
                                                       options.precache_shaders);
@@ -496,12 +486,43 @@ impl Renderer {
                                                  &mut device,
                                                  options.precache_shaders);
 
+        let cs_clip_clear = LazilyCompiledShader::new(ShaderKind::ClipCache,
+                                                      "cs_clip_clear",
+                                                      max_clip_instances,
+                                                      &[],
+                                                      &mut device,
+                                                      options.precache_shaders);
+        let cs_clip_copy = LazilyCompiledShader::new(ShaderKind::ClipCache,
+                                                     "cs_clip_copy",
+                                                     max_clip_instances,
+                                                     &[],
+                                                     &mut device,
+                                                     options.precache_shaders);
+        let cs_clip_rectangle = LazilyCompiledShader::new(ShaderKind::ClipCache,
+                                                          "cs_clip_rectangle",
+                                                          max_clip_instances,
+                                                          &[],
+                                                          &mut device,
+                                                          options.precache_shaders);
+        let cs_clip_image = LazilyCompiledShader::new(ShaderKind::ClipCache,
+                                                      "cs_clip_image",
+                                                      max_clip_instances,
+                                                      &[],
+                                                      &mut device,
+                                                      options.precache_shaders);
+
         let ps_rectangle = PrimitiveShader::new("ps_rectangle",
                                                 max_ubo_vectors,
                                                 max_prim_instances,
                                                 &mut device,
                                                 &[],
                                                 options.precache_shaders);
+        let ps_rectangle_clip = PrimitiveShader::new("ps_rectangle",
+                                                     max_ubo_vectors,
+                                                     max_prim_instances,
+                                                     &mut device,
+                                                     &[ CLIP_FEATURE ],
+                                                     options.precache_shaders);
         let ps_text_run = PrimitiveShader::new("ps_text_run",
                                                max_ubo_vectors,
                                                max_prim_instances,
@@ -520,6 +541,12 @@ impl Renderer {
                                             &mut device,
                                             &[],
                                             options.precache_shaders);
+        let ps_yuv_image = PrimitiveShader::new("ps_yuv_image",
+                                                max_ubo_vectors,
+                                                max_prim_instances,
+                                                &mut device,
+                                                &[],
+                                                options.precache_shaders);
         let ps_border = PrimitiveShader::new("ps_border",
                                              max_ubo_vectors,
                                              max_prim_instances,
@@ -649,7 +676,9 @@ impl Renderer {
         let main_thread_dispatcher = Arc::new(Mutex::new(None));
         let backend_notifier = notifier.clone();
         let backend_main_thread_dispatcher = main_thread_dispatcher.clone();
-        let backend_flush_notifier = flush_notifier.clone();
+
+        let vr_compositor = Arc::new(Mutex::new(None));
+        let backend_vr_compositor = vr_compositor.clone();
 
         // We need a reference to the webrender context from the render backend in order to share
         // texture ids
@@ -674,12 +703,12 @@ impl Renderer {
                                                  texture_cache,
                                                  enable_aa,
                                                  backend_notifier,
-                                                 backend_flush_notifier,
                                                  context_handle,
                                                  config,
                                                  debug,
                                                  enable_recording,
-                                                 backend_main_thread_dispatcher);
+                                                 backend_main_thread_dispatcher,
+                                                 backend_vr_compositor);
             backend.run();
         });
 
@@ -689,18 +718,20 @@ impl Renderer {
             current_frame: None,
             pending_texture_updates: Vec::new(),
             pending_shader_updates: Vec::new(),
-            device_pixel_ratio: options.device_pixel_ratio,
             tile_clear_shader: tile_clear_shader,
             cs_box_shadow: cs_box_shadow,
-            cs_clip_clear: cs_clip_clear,
-            cs_clip_rectangle: cs_clip_rectangle,
-            cs_clip_image: cs_clip_image,
             cs_text_run: cs_text_run,
             cs_blur: cs_blur,
+            cs_clip_clear: cs_clip_clear,
+            cs_clip_copy: cs_clip_copy,
+            cs_clip_rectangle: cs_clip_rectangle,
+            cs_clip_image: cs_clip_image,
             ps_rectangle: ps_rectangle,
+            ps_rectangle_clip: ps_rectangle_clip,
             ps_text_run: ps_text_run,
             ps_text_run_subpixel: ps_text_run_subpixel,
             ps_image: ps_image,
+            ps_yuv_image: ps_yuv_image,
             ps_border: ps_border,
             ps_box_shadow: ps_box_shadow,
             ps_gradient: ps_gradient,
@@ -709,12 +740,11 @@ impl Renderer {
             ps_blend: ps_blend,
             ps_composite: ps_composite,
             max_clear_tiles: max_clear_tiles,
-            max_prim_blends: max_prim_blends,
-            max_prim_composites: max_prim_composites,
+            max_prim_instances: max_prim_instances,
             max_cache_instances: max_cache_instances,
+            max_clip_instances: max_clip_instances,
             max_blurs: max_blurs,
             notifier: notifier,
-            flush_notifier: flush_notifier,
             debug: debug_renderer,
             backend_profile_counters: BackendProfileCounters::new(),
             profile_counters: RendererProfileCounters::new(),
@@ -737,6 +767,7 @@ impl Renderer {
             cache_texture_id_map: Vec::new(),
             external_image_handler: None,
             external_images: HashMap::with_hasher(Default::default()),
+            vr_compositor_handler: vr_compositor
         };
 
         let sender = RenderApiSender::new(api_tx, payload_tx);
@@ -752,22 +783,21 @@ impl Renderer {
         *notifier_arc = Some(notifier);
     }
 
-    /// Sets the new FlushNotifier
-    ///
-    /// The FlushNotifier is called after all messages to the backend thread
-    /// have been processed. This should be used when we need to sync wait
-    /// for rendering to happen, such as with reftests.
-    pub fn set_flush_notifier(&self, flush_notifier: Box<FlushNotifier>) {
-        let mut flush_notifier_arc = self.flush_notifier.lock().unwrap();
-        *flush_notifier_arc = Some(flush_notifier);
-    }
-
     /// Sets the new MainThreadDispatcher.
     ///
     /// Allows to dispatch functions to the main thread's event loop.
     pub fn set_main_thread_dispatcher(&self, dispatcher: Box<RenderDispatcher>) {
         let mut dispatcher_arc = self.main_thread_dispatcher.lock().unwrap();
         *dispatcher_arc = Some(dispatcher);
+    }
+
+    /// Sets the VRCompositorHandler.
+    ///
+    /// It's used to handle WebVR render commands.
+    /// Some WebVR commands such as Vsync and SubmitFrame must be called in the WebGL render thread.
+    pub fn set_vr_compositor_handler(&self, creator: Box<VRCompositorHandler>) {
+        let mut handler_arc = self.vr_compositor_handler.lock().unwrap();
+        *handler_arc = Some(creator);
     }
 
     /// Returns the Epoch of the current frame in a pipeline.
@@ -835,6 +865,7 @@ impl Renderer {
     /// A Frame is supplied by calling [set_root_stacking_context()][newframe].
     /// [newframe]: ../../webrender_traits/struct.RenderApi.html#method.set_root_stacking_context
     pub fn render(&mut self, framebuffer_size: Size2D<u32>) {
+        let framebuffer_size = DeviceUintSize::from_untyped(&framebuffer_size);
         if let Some(mut frame) = self.current_frame.take() {
             if let Some(ref mut frame) = frame.frame {
                 let mut profile_timers = RendererProfileTimers::new();
@@ -846,9 +877,9 @@ impl Renderer {
                 }
 
                 profile_timers.cpu_time.profile(|| {
-                    self.device.begin_frame();
+                    self.device.begin_frame(frame.device_pixel_ratio);
                     self.gpu_profile.begin_frame();
-                    self.gpu_profile.add_marker(GPU_TAG_INIT);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_INIT);
 
                     self.device.disable_scissor();
                     self.device.disable_depth();
@@ -877,8 +908,8 @@ impl Renderer {
                 self.profile_counters.reset();
                 self.profile_counters.frame_counter.inc();
 
-                let debug_size = Size2D::new(framebuffer_size.width as u32,
-                                             framebuffer_size.height as u32);
+                let debug_size = DeviceUintSize::new(framebuffer_size.width as u32,
+                                                     framebuffer_size.height as u32);
                 self.debug.render(&mut self.device, &debug_size);
                 self.device.end_frame();
                 self.last_time = current_time;
@@ -912,6 +943,7 @@ impl Renderer {
 */
 
     fn update_texture_cache(&mut self) {
+        let _ = GpuMarker::new("texture cache update");
         let mut pending_texture_updates = mem::replace(&mut self.pending_texture_updates, vec![]);
         for update_list in pending_texture_updates.drain(..) {
             for update in update_list.updates {
@@ -968,8 +1000,8 @@ impl Renderer {
     }
 
     fn add_debug_rect(&mut self,
-                      p0: DevicePoint,
-                      p1: DevicePoint,
+                      p0: DeviceIntPoint,
+                      p1: DeviceIntPoint,
                       label: &str,
                       c: &ColorF) {
         let tile_x0 = p0.x;
@@ -1039,10 +1071,10 @@ impl Renderer {
     fn draw_target(&mut self,
                    render_target: Option<(TextureId, i32)>,
                    target: &RenderTarget,
-                   target_size: &Size2D<f32>,
+                   target_size: &DeviceSize,
                    cache_texture: Option<TextureId>,
                    should_clear: bool) {
-        self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
+        let _ = self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
 
         let dimensions = [target_size.width as u32, target_size.height as u32];
         self.device.bind_render_target(render_target, Some(dimensions));
@@ -1087,8 +1119,7 @@ impl Renderer {
         //           blur radii with fixed weights.
         if !target.vertical_blurs.is_empty() {
             self.device.set_blend(false);
-
-            self.gpu_profile.add_marker(GPU_TAG_BLUR);
+            let _ = self.gpu_profile.add_marker(GPU_TAG_BLUR);
             let shader = self.cs_blur.get(&mut self.device);
             let max_blurs = self.max_blurs;
             self.draw_ubo_batch(&target.vertical_blurs,
@@ -1101,8 +1132,7 @@ impl Renderer {
 
         if !target.horizontal_blurs.is_empty() {
             self.device.set_blend(false);
-
-            self.gpu_profile.add_marker(GPU_TAG_BLUR);
+            let _ = self.gpu_profile.add_marker(GPU_TAG_BLUR);
             let shader = self.cs_blur.get(&mut self.device);
             let max_blurs = self.max_blurs;
             self.draw_ubo_batch(&target.horizontal_blurs,
@@ -1116,7 +1146,7 @@ impl Renderer {
         // Draw any box-shadow caches for this target.
         if !target.box_shadow_cache_prims.is_empty() {
             self.device.set_blend(false);
-            self.gpu_profile.add_marker(GPU_TAG_CACHE_BOX_SHADOW);
+            let _ = self.gpu_profile.add_marker(GPU_TAG_CACHE_BOX_SHADOW);
             let shader = self.cs_box_shadow.get(&mut self.device);
             let max_prim_items = self.max_cache_instances;
             self.draw_ubo_batch(&target.box_shadow_cache_prims,
@@ -1128,45 +1158,72 @@ impl Renderer {
         }
 
         // Draw the clip items into the tiled alpha mask.
-        self.gpu_profile.add_marker(GPU_TAG_CACHE_CLIP);
-        // first, mark the target area as opaque
-        //Note: not needed if we know the target is cleared with opaque
-        self.device.set_blend(false);
-        if !target.clip_batcher.clears.is_empty() {
-            let shader = self.cs_clip_clear.get(&mut self.device);
-            let max_prim_items = self.max_clear_tiles;
-            self.draw_ubo_batch(&target.clip_batcher.clears,
-                                shader,
-                                1,
-                                &BatchTextures::no_texture(),
-                                max_prim_items,
-                                &projection);
-        }
-        // now switch to multiplicative blending
-        self.device.set_blend(true);
-        self.device.set_blend_mode_multiply();
-        let max_prim_items = self.max_cache_instances;
-        // draw rounded cornered rectangles
-        if !target.clip_batcher.rectangles.is_empty() {
-            let shader = self.cs_clip_rectangle.get(&mut self.device);
-            self.draw_ubo_batch(&target.clip_batcher.rectangles,
-                                shader,
-                                1,
-                                &BatchTextures::no_texture(),
-                                max_prim_items,
-                                &projection);
-        }
-        // draw image masks
-        for (mask_texture_id, items) in target.clip_batcher.images.iter() {
-            let texture_id = self.resolve_source_texture(mask_texture_id);
-            self.device.bind_texture(TextureSampler::Mask, texture_id);
-            let shader = self.cs_clip_image.get(&mut self.device);
-            self.draw_ubo_batch(items,
-                                shader,
-                                1,
-                                &BatchTextures::no_texture(),
-                                max_prim_items,
-                                &projection);
+        {
+            let _ = self.gpu_profile.add_marker(GPU_TAG_CACHE_CLIP);
+            // first, mark the target area as opaque
+            //Note: not needed if we know the target is cleared with opaque
+            self.device.set_blend(false);
+            if !target.clip_batcher.clears.is_empty() {
+                let shader = self.cs_clip_clear.get(&mut self.device);
+                let max_prim_items = self.max_clip_instances;
+                self.draw_ubo_batch(&target.clip_batcher.clears,
+                                    shader,
+                                    1,
+                                    &BatchTextures::no_texture(),
+                                    max_prim_items,
+                                    &projection);
+            }
+            // alternatively, copy the contents from another task
+            if !target.clip_batcher.copies.is_empty() {
+                let shader = self.cs_clip_copy.get(&mut self.device);
+                let max_prim_items = self.max_clip_instances;
+                self.draw_ubo_batch(&target.clip_batcher.copies,
+                                    shader,
+                                    1,
+                                    &BatchTextures::no_texture(),
+                                    max_prim_items,
+                                    &projection);
+            }
+            // the fast path for clear + rect, which is just the rectangle without blending
+            if !target.clip_batcher.rectangles_noblend.is_empty() {
+                let shader = self.cs_clip_rectangle.get(&mut self.device);
+                let max_prim_items = self.max_clip_instances;
+                self.draw_ubo_batch(&target.clip_batcher.rectangles_noblend,
+                                    shader,
+                                    1,
+                                    &BatchTextures::no_texture(),
+                                    max_prim_items,
+                                    &projection);
+            }
+            // now switch to multiplicative blending
+            self.device.set_blend(true);
+            self.device.set_blend_mode_multiply();
+            // draw rounded cornered rectangles
+            if !target.clip_batcher.rectangles.is_empty() {
+                let _ = GpuMarker::new("clip rectangles");
+                let shader = self.cs_clip_rectangle.get(&mut self.device);
+                let max_prim_items = self.max_clip_instances;
+                self.draw_ubo_batch(&target.clip_batcher.rectangles,
+                                    shader,
+                                    1,
+                                    &BatchTextures::no_texture(),
+                                    max_prim_items,
+                                    &projection);
+            }
+            // draw image masks
+            for (mask_texture_id, items) in target.clip_batcher.images.iter() {
+                let _ = GpuMarker::new("clip images");
+                let texture_id = self.resolve_source_texture(mask_texture_id);
+                self.device.bind_texture(TextureSampler::Mask, texture_id);
+                let shader = self.cs_clip_image.get(&mut self.device);
+                let max_prim_items = self.max_clip_instances;
+                self.draw_ubo_batch(items,
+                                    shader,
+                                    1,
+                                    &BatchTextures::no_texture(),
+                                    max_prim_items,
+                                    &projection);
+            }
         }
 
         // Draw any textrun caches for this target. For now, this
@@ -1179,7 +1236,7 @@ impl Renderer {
             self.device.set_blend(true);
             self.device.set_blend_mode_alpha();
 
-            self.gpu_profile.add_marker(GPU_TAG_CACHE_TEXT_RUN);
+            let _ = self.gpu_profile.add_marker(GPU_TAG_CACHE_TEXT_RUN);
             let shader = self.cs_text_run.get(&mut self.device);
             let max_cache_instances = self.max_cache_instances;
             self.draw_ubo_batch(&target.text_run_cache_prims,
@@ -1190,13 +1247,14 @@ impl Renderer {
                                 &projection);
         }
 
+        let _ = GpuMarker::new("alpha batches");
         self.device.set_blend(false);
         let mut prev_blend_mode = BlendMode::None;
 
         for batch in &target.alpha_batcher.batches {
             let transform_kind = batch.key.flags.transform_kind();
             let needs_clipping = batch.key.flags.needs_clipping();
-            assert!(!needs_clipping || batch.key.blend_mode == BlendMode::Alpha);
+            debug_assert!(!needs_clipping || batch.key.blend_mode == BlendMode::Alpha);
 
             if batch.key.blend_mode != prev_blend_mode {
                 match batch.key.blend_mode {
@@ -1217,7 +1275,7 @@ impl Renderer {
 
             match &batch.data {
                 &PrimitiveBatchData::CacheImage(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_CACHE_IMAGE);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_CACHE_IMAGE);
                     let (shader, max_prim_items) = self.ps_cache_image.get(&mut self.device,
                                                                            transform_kind);
                     self.draw_ubo_batch(ubo_data,
@@ -1228,9 +1286,9 @@ impl Renderer {
                                         &projection);
                 }
                 &PrimitiveBatchData::Blend(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_BLEND);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_BLEND);
                     let shader = self.ps_blend.get(&mut self.device);
-                    let max_prim_items = self.max_prim_blends;
+                    let max_prim_items = self.max_prim_instances;
                     self.draw_ubo_batch(ubo_data, shader,
                                         1,
                                         &batch.key.textures,
@@ -1238,9 +1296,9 @@ impl Renderer {
                                         &projection);
                 }
                 &PrimitiveBatchData::Composite(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_COMPOSITE);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_COMPOSITE);
                     let shader = self.ps_composite.get(&mut self.device);
-                    let max_prim_items = self.max_prim_composites;
+                    let max_prim_items = self.max_prim_instances;
 
                     // The composite shader only samples from sCache.
                     debug_assert!(cache_texture.is_some());
@@ -1253,8 +1311,12 @@ impl Renderer {
 
                 }
                 &PrimitiveBatchData::Rectangles(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_RECT);
-                    let (shader, max_prim_items) = self.ps_rectangle.get(&mut self.device, transform_kind);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_RECT);
+                    let (shader, max_prim_items) = if needs_clipping {
+                        self.ps_rectangle_clip.get(&mut self.device, transform_kind)
+                    } else {
+                        self.ps_rectangle.get(&mut self.device, transform_kind)
+                    };
                     self.draw_ubo_batch(ubo_data,
                                         shader,
                                         1,
@@ -1263,7 +1325,7 @@ impl Renderer {
                                         &projection);
                 }
                 &PrimitiveBatchData::Image(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_IMAGE);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_IMAGE);
                     let (shader, max_prim_items) = self.ps_image.get(&mut self.device, transform_kind);
                     self.draw_ubo_batch(ubo_data,
                                         shader,
@@ -1272,8 +1334,20 @@ impl Renderer {
                                         max_prim_items,
                                         &projection);
                 }
+                &PrimitiveBatchData::YuvImage(ref ubo_data) => {
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_YUV_IMAGE);
+                    let (shader, max_prim_items) = self.ps_yuv_image.get(
+                        &mut self.device, transform_kind
+                    );
+                    self.draw_ubo_batch(ubo_data,
+                                        shader,
+                                        1,
+                                        &batch.key.textures,
+                                        max_prim_items,
+                                        &projection);
+                }
                 &PrimitiveBatchData::Borders(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_BORDER);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_BORDER);
                     let (shader, max_prim_items) = self.ps_border.get(&mut self.device, transform_kind);
                     self.draw_ubo_batch(ubo_data,
                                         shader,
@@ -1283,7 +1357,7 @@ impl Renderer {
                                         &projection);
                 }
                 &PrimitiveBatchData::BoxShadow(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_BOX_SHADOW);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_BOX_SHADOW);
                     let (shader, max_prim_items) = self.ps_box_shadow.get(&mut self.device, transform_kind);
                     self.draw_ubo_batch(ubo_data,
                                         shader,
@@ -1293,7 +1367,7 @@ impl Renderer {
                                         &projection);
                 }
                 &PrimitiveBatchData::TextRun(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_TEXT_RUN);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_TEXT_RUN);
                     let (shader, max_prim_items) = match batch.key.blend_mode {
                         BlendMode::Subpixel(..) => self.ps_text_run_subpixel.get(&mut self.device, transform_kind),
                         BlendMode::Alpha | BlendMode::None => self.ps_text_run.get(&mut self.device, transform_kind),
@@ -1306,7 +1380,7 @@ impl Renderer {
                                         &projection);
                 }
                 &PrimitiveBatchData::AlignedGradient(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_GRADIENT);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_GRADIENT);
                     let (shader, max_prim_items) = self.ps_gradient.get(&mut self.device, transform_kind);
                     self.draw_ubo_batch(ubo_data,
                                         shader,
@@ -1316,7 +1390,7 @@ impl Renderer {
                                         &projection);
                 }
                 &PrimitiveBatchData::AngleGradient(ref ubo_data) => {
-                    self.gpu_profile.add_marker(GPU_TAG_PRIM_ANGLE_GRADIENT);
+                    let _ = self.gpu_profile.add_marker(GPU_TAG_PRIM_ANGLE_GRADIENT);
                     let (shader, max_prim_items) = self.ps_angle_gradient.get(&mut self.device, transform_kind);
                     self.draw_ubo_batch(ubo_data,
                                         shader,
@@ -1342,6 +1416,7 @@ impl Renderer {
                               .expect("Found external image, but no handler set!");
 
             for deferred_resolve in &frame.deferred_resolves {
+                GpuMarker::fire("deferred resolve");
                 let props = &deferred_resolve.image_properties;
                 let external_id = props.external_id
                                        .expect("BUG: Deferred resolves must be external images!");
@@ -1354,8 +1429,8 @@ impl Renderer {
                 self.external_images.insert(external_id, texture_id);
                 let resource_rect_index = deferred_resolve.resource_address.0 as usize;
                 let resource_rect = &mut frame.gpu_resource_rects[resource_rect_index];
-                resource_rect.uv0 = Point2D::new(image.u0, image.v0);
-                resource_rect.uv1 = Point2D::new(image.u1, image.v1);
+                resource_rect.uv0 = DevicePoint::new(image.u0, image.v0);
+                resource_rect.uv1 = DevicePoint::new(image.u1, image.v1);
             }
         }
     }
@@ -1374,22 +1449,26 @@ impl Renderer {
 
     fn draw_tile_frame(&mut self,
                        frame: &mut Frame,
-                       framebuffer_size: &Size2D<u32>) {
+                       framebuffer_size: &DeviceUintSize) {
+        let _ = GpuMarker::new("tile frame draw");
         self.update_deferred_resolves(frame);
 
         // Some tests use a restricted viewport smaller than the main screen size.
         // Ensure we clear the framebuffer in these tests.
         // TODO(gw): Find a better solution for this?
-        let viewport_size = Size2D::new(frame.viewport_size.width * self.device_pixel_ratio as i32,
-                                        frame.viewport_size.height * self.device_pixel_ratio as i32);
+        let viewport_size = DeviceIntSize::new(frame.viewport_size.width * frame.device_pixel_ratio as i32,
+                                               frame.viewport_size.height * frame.device_pixel_ratio as i32);
         let needs_clear = viewport_size.width < framebuffer_size.width as i32 ||
                           viewport_size.height < framebuffer_size.height as i32;
 
-        for debug_rect in frame.debug_rects.iter().rev() {
-            self.add_debug_rect(debug_rect.rect.origin,
-                                debug_rect.rect.bottom_right(),
-                                &debug_rect.label,
-                                &debug_rect.color);
+        {
+            let _ = GpuMarker::new("debug rectangles");
+            for debug_rect in frame.debug_rects.iter().rev() {
+                self.add_debug_rect(debug_rect.rect.origin,
+                                    debug_rect.rect.bottom_right(),
+                                    &debug_rect.label,
+                                    &debug_rect.color);
+            }
         }
 
         self.device.disable_depth_write();
@@ -1451,7 +1530,7 @@ impl Renderer {
             for (pass_index, pass) in frame.passes.iter().enumerate() {
                 let (do_clear, size, target_id) = if pass.is_framebuffer {
                     (needs_clear,
-                     Size2D::new(framebuffer_size.width as f32, framebuffer_size.height as f32),
+                     DeviceSize::new(framebuffer_size.width as f32, framebuffer_size.height as f32),
                      None)
                 } else {
                     (true, frame.cache_size, Some(self.render_targets[pass_index]))
@@ -1473,7 +1552,7 @@ impl Renderer {
             }
         }
 
-        self.gpu_profile.add_marker(GPU_TAG_CLEAR_TILES);
+        let _ = self.gpu_profile.add_marker(GPU_TAG_CLEAR_TILES);
 
         // Clear tiles with no items
         if !frame.clear_tiles.is_empty() {

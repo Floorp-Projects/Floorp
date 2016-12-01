@@ -3,18 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use euclid::{Point2D, Matrix4D, Rect, Size2D};
+use euclid::Size2D;
 use gpu_store::{GpuStore, GpuStoreAddress};
-use internal_types::{device_pixel, DeviceRect, DeviceSize, SourceTexture};
-use mask_cache::{MaskCacheInfo, MaskCacheKey};
+use internal_types::SourceTexture;
+use mask_cache::{ClipSource, MaskCacheInfo};
 use resource_cache::{ImageProperties, ResourceCache};
 use std::mem;
 use std::usize;
-use tiling::RenderTask;
+use tiling::{RenderTask, RenderTaskLocation};
 use util::TransformedRect;
-use webrender_traits::{AuxiliaryLists, ColorF, ImageKey, ImageRendering};
+use webrender_traits::{AuxiliaryLists, ColorF, ImageKey, ImageRendering, YuvColorSpace};
 use webrender_traits::{ClipRegion, ComplexClipRegion, ItemRange, GlyphKey};
 use webrender_traits::{FontKey, FontRenderMode, WebGLContextId};
+use webrender_traits::{device_length, DeviceIntRect, DeviceIntSize};
+use webrender_traits::{DeviceRect, DevicePoint, DeviceSize};
+use webrender_traits::{LayerRect, LayerSize, LayerPoint};
+use webrender_traits::LayerToWorldTransform;
 
 pub const CLIP_DATA_GPU_SIZE: usize = 5;
 pub const MASK_DATA_GPU_SIZE: usize = 1;
@@ -26,15 +30,15 @@ pub const MASK_DATA_GPU_SIZE: usize = 1;
 /// updated on the CPU when the texture size changes.
 #[derive(Clone)]
 pub struct TexelRect {
-    pub uv0: Point2D<f32>,
-    pub uv1: Point2D<f32>,
+    pub uv0: DevicePoint,
+    pub uv1: DevicePoint,
 }
 
 impl Default for TexelRect {
     fn default() -> TexelRect {
         TexelRect {
-            uv0: Point2D::zero(),
-            uv1: Point2D::zero(),
+            uv0: DevicePoint::zero(),
+            uv1: DevicePoint::zero(),
         }
     }
 }
@@ -69,6 +73,7 @@ pub enum PrimitiveKind {
     Rectangle,
     TextRun,
     Image,
+    YuvImage,
     Border,
     Gradient,
     BoxShadow,
@@ -77,8 +82,8 @@ pub enum PrimitiveKind {
 /// Geometry description for simple rectangular primitives, uploaded to the GPU.
 #[derive(Debug, Clone)]
 pub struct PrimitiveGeometry {
-    pub local_rect: Rect<f32>,
-    pub local_clip_rect: Rect<f32>,
+    pub local_rect: LayerRect,
+    pub local_clip_rect: LayerRect,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -87,18 +92,11 @@ pub enum PrimitiveCacheKey {
     TextShadow(PrimitiveIndex),
 }
 
-#[derive(Debug)]
-pub enum PrimitiveClipSource {
-    NoClip,
-    Complex(Rect<f32>, f32),
-    Region(ClipRegion),
-}
-
 // TODO(gw): Pack the fields here better!
 #[derive(Debug)]
 pub struct PrimitiveMetadata {
     pub is_opaque: bool,
-    pub clip_source: Box<PrimitiveClipSource>,
+    pub clip_source: Box<ClipSource>,
     pub clip_cache_info: Option<MaskCacheInfo>,
     pub prim_kind: PrimitiveKind,
     pub cpu_prim_index: SpecificPrimitiveIndex,
@@ -123,7 +121,7 @@ pub struct RectanglePrimitive {
 
 #[derive(Debug)]
 pub enum ImagePrimitiveKind {
-    Image(ImageKey, ImageRendering, Size2D<f32>),
+    Image(ImageKey, ImageRendering, LayerSize),
     WebGL(WebGLContextId),
 }
 
@@ -136,13 +134,52 @@ pub struct ImagePrimitiveCpu {
 
 #[derive(Debug, Clone)]
 pub struct ImagePrimitiveGpu {
-    pub stretch_size: Size2D<f32>,
-    pub tile_spacing: Size2D<f32>,
+    pub stretch_size: LayerSize,
+    pub tile_spacing: LayerSize,
+}
+
+#[derive(Debug)]
+pub struct YuvImagePrimitiveCpu {
+    pub y_key: ImageKey,
+    pub u_key: ImageKey,
+    pub v_key: ImageKey,
+    pub y_texture_id: SourceTexture,
+    pub u_texture_id: SourceTexture,
+    pub v_texture_id: SourceTexture,
+}
+
+#[derive(Debug, Clone)]
+pub struct YuvImagePrimitiveGpu {
+    pub y_uv0: DevicePoint,
+    pub y_uv1: DevicePoint,
+    pub u_uv0: DevicePoint,
+    pub u_uv1: DevicePoint,
+    pub v_uv0: DevicePoint,
+    pub v_uv1: DevicePoint,
+    pub size: LayerSize,
+    pub color_space: f32,
+    pub padding: f32,
+}
+
+impl YuvImagePrimitiveGpu {
+    pub fn new(size: LayerSize, color_space: YuvColorSpace) -> Self {
+        YuvImagePrimitiveGpu {
+            y_uv0: DevicePoint::zero(),
+            y_uv1: DevicePoint::zero(),
+            u_uv0: DevicePoint::zero(),
+            u_uv1: DevicePoint::zero(),
+            v_uv0: DevicePoint::zero(),
+            v_uv1: DevicePoint::zero(),
+            size: size,
+            color_space: color_space as u32 as f32,
+            padding: 0.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct BorderPrimitiveCpu {
-    pub inner_rect: Rect<f32>,
+    pub inner_rect: LayerRect,
 }
 
 #[derive(Debug, Clone)]
@@ -150,7 +187,7 @@ pub struct BorderPrimitiveGpu {
     pub style: [f32; 4],
     pub widths: [f32; 4],
     pub colors: [ColorF; 4],
-    pub radii: [Size2D<f32>; 4],
+    pub radii: [LayerSize; 4],
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -163,8 +200,8 @@ pub struct BoxShadowPrimitiveCacheKey {
 
 #[derive(Debug, Clone)]
 pub struct BoxShadowPrimitiveGpu {
-    pub src_rect: Rect<f32>,
-    pub bs_rect: Rect<f32>,
+    pub src_rect: LayerRect,
+    pub bs_rect: LayerRect,
     pub color: ColorF,
     pub border_radius: f32,
     pub edge_size: f32,
@@ -189,8 +226,8 @@ pub struct GradientStop {
 
 #[derive(Debug, Clone)]
 pub struct GradientPrimitiveGpu {
-    pub start_point: Point2D<f32>,
-    pub end_point: Point2D<f32>,
+    pub start_point: LayerPoint,
+    pub end_point: LayerPoint,
     pub kind: f32,
     pub padding: [f32; 3],
 }
@@ -205,7 +242,7 @@ pub struct GradientPrimitiveCpu {
 
 #[derive(Debug, Clone)]
 struct InstanceRect {
-    rect: Rect<f32>,
+    rect: LayerRect,
 }
 
 #[derive(Debug, Clone)]
@@ -216,7 +253,7 @@ pub struct TextRunPrimitiveGpu {
 #[derive(Debug, Clone)]
 pub struct TextRunPrimitiveCpu {
     pub font_key: FontKey,
-    pub font_size: Au,
+    pub logical_font_size: Au,
     pub blur_radius: Au,
     pub glyph_range: ItemRange,
     pub cache_dirty: bool,
@@ -230,19 +267,19 @@ pub struct TextRunPrimitiveCpu {
 
 #[derive(Debug, Clone)]
 struct GlyphPrimitive {
-    offset: Point2D<f32>,
-    padding: Point2D<f32>,
+    offset: LayerPoint,
+    padding: LayerPoint,
 }
 
 #[derive(Debug, Clone)]
 struct ClipRect {
-    rect: Rect<f32>,
+    rect: LayerRect,
     padding: [f32; 4],
 }
 
 #[derive(Debug, Clone)]
 struct ClipCorner {
-    rect: Rect<f32>,
+    rect: LayerRect,
     outer_radius_x: f32,
     outer_radius_y: f32,
     inner_radius_x: f32,
@@ -250,7 +287,7 @@ struct ClipCorner {
 }
 
 impl ClipCorner {
-    fn uniform(rect: Rect<f32>, outer_radius: f32, inner_radius: f32) -> ClipCorner {
+    fn uniform(rect: LayerRect, outer_radius: f32, inner_radius: f32) -> ClipCorner {
         ClipCorner {
             rect: rect,
             outer_radius_x: outer_radius,
@@ -263,8 +300,8 @@ impl ClipCorner {
 
 #[derive(Debug, Clone)]
 pub struct ImageMaskData {
-    uv_rect: Rect<f32>,
-    local_rect: Rect<f32>,
+    uv_rect: DeviceRect,
+    local_rect: LayerRect,
 }
 
 #[derive(Debug, Clone)]
@@ -280,39 +317,41 @@ impl ClipData {
     pub fn from_clip_region(clip: &ComplexClipRegion) -> ClipData {
         ClipData {
             rect: ClipRect {
-                rect: clip.rect,
+                rect: LayerRect::from_untyped(&clip.rect),
                 padding: [0.0, 0.0, 0.0, 0.0],
             },
             top_left: ClipCorner {
-                rect: Rect::new(Point2D::new(clip.rect.origin.x, clip.rect.origin.y),
-                                Size2D::new(clip.radii.top_left.width, clip.radii.top_left.height)),
+                rect: LayerRect::new(
+                    LayerPoint::new(clip.rect.origin.x, clip.rect.origin.y),
+                    LayerSize::new(clip.radii.top_left.width, clip.radii.top_left.height)),
                 outer_radius_x: clip.radii.top_left.width,
                 outer_radius_y: clip.radii.top_left.height,
                 inner_radius_x: 0.0,
                 inner_radius_y: 0.0,
             },
             top_right: ClipCorner {
-                rect: Rect::new(Point2D::new(clip.rect.origin.x + clip.rect.size.width - clip.radii.top_right.width,
-                                             clip.rect.origin.y),
-                                Size2D::new(clip.radii.top_right.width, clip.radii.top_right.height)),
+                rect: LayerRect::new(
+                    LayerPoint::new(clip.rect.origin.x + clip.rect.size.width - clip.radii.top_right.width, clip.rect.origin.y),
+                    LayerSize::new(clip.radii.top_right.width, clip.radii.top_right.height)),
                 outer_radius_x: clip.radii.top_right.width,
                 outer_radius_y: clip.radii.top_right.height,
                 inner_radius_x: 0.0,
                 inner_radius_y: 0.0,
             },
             bottom_left: ClipCorner {
-                rect: Rect::new(Point2D::new(clip.rect.origin.x,
-                                             clip.rect.origin.y + clip.rect.size.height - clip.radii.bottom_left.height),
-                                Size2D::new(clip.radii.bottom_left.width, clip.radii.bottom_left.height)),
+                rect: LayerRect::new(
+                    LayerPoint::new(clip.rect.origin.x, clip.rect.origin.y + clip.rect.size.height - clip.radii.bottom_left.height),
+                    LayerSize::new(clip.radii.bottom_left.width, clip.radii.bottom_left.height)),
                 outer_radius_x: clip.radii.bottom_left.width,
                 outer_radius_y: clip.radii.bottom_left.height,
                 inner_radius_x: 0.0,
                 inner_radius_y: 0.0,
             },
             bottom_right: ClipCorner {
-                rect: Rect::new(Point2D::new(clip.rect.origin.x + clip.rect.size.width - clip.radii.bottom_right.width,
-                                             clip.rect.origin.y + clip.rect.size.height - clip.radii.bottom_right.height),
-                                Size2D::new(clip.radii.bottom_right.width, clip.radii.bottom_right.height)),
+                rect: LayerRect::new(
+                    LayerPoint::new(clip.rect.origin.x + clip.rect.size.width - clip.radii.bottom_right.width,
+                                    clip.rect.origin.y + clip.rect.size.height - clip.radii.bottom_right.height),
+                    LayerSize::new(clip.radii.bottom_right.width, clip.radii.bottom_right.height)),
                 outer_radius_x: clip.radii.bottom_right.width,
                 outer_radius_y: clip.radii.bottom_right.height,
                 inner_radius_x: 0.0,
@@ -321,32 +360,32 @@ impl ClipData {
         }
     }
 
-    pub fn uniform(rect: Rect<f32>, radius: f32) -> ClipData {
+    pub fn uniform(rect: LayerRect, radius: f32) -> ClipData {
         ClipData {
             rect: ClipRect {
                 rect: rect,
                 padding: [0.0; 4],
             },
-            top_left: ClipCorner::uniform(Rect::new(Point2D::new(rect.origin.x,
-                                                                 rect.origin.y),
-                                                    Size2D::new(radius, radius)),
-                                          radius,
-                                          0.0),
-            top_right: ClipCorner::uniform(Rect::new(Point2D::new(rect.origin.x + rect.size.width - radius,
-                                                                  rect.origin.y),
-                                                    Size2D::new(radius, radius)),
-                                           radius,
-                                           0.0),
-            bottom_left: ClipCorner::uniform(Rect::new(Point2D::new(rect.origin.x,
-                                                                    rect.origin.y + rect.size.height - radius),
-                                                       Size2D::new(radius, radius)),
-                                             radius,
-                                             0.0),
-            bottom_right: ClipCorner::uniform(Rect::new(Point2D::new(rect.origin.x + rect.size.width - radius,
-                                                                     rect.origin.y + rect.size.height - radius),
-                                                        Size2D::new(radius, radius)),
-                                              radius,
-                                              0.0),
+            top_left: ClipCorner::uniform(
+                LayerRect::new(
+                    LayerPoint::new(rect.origin.x, rect.origin.y),
+                    LayerSize::new(radius, radius)),
+                radius, 0.0),
+            top_right: ClipCorner::uniform(
+                LayerRect::new(
+                    LayerPoint::new(rect.origin.x + rect.size.width - radius, rect.origin.y),
+                    LayerSize::new(radius, radius)),
+                radius, 0.0),
+            bottom_left: ClipCorner::uniform(
+                LayerRect::new(
+                    LayerPoint::new(rect.origin.x, rect.origin.y + rect.size.height - radius),
+                    LayerSize::new(radius, radius)),
+                radius, 0.0),
+            bottom_right: ClipCorner::uniform(
+                LayerRect::new(
+                    LayerPoint::new(rect.origin.x + rect.size.width - radius, rect.origin.y + rect.size.height - radius),
+                    LayerSize::new(radius, radius)),
+                radius, 0.0),
         }
     }
 }
@@ -356,16 +395,18 @@ pub enum PrimitiveContainer {
     Rectangle(RectanglePrimitive),
     TextRun(TextRunPrimitiveCpu, TextRunPrimitiveGpu),
     Image(ImagePrimitiveCpu, ImagePrimitiveGpu),
+    YuvImage(YuvImagePrimitiveCpu, YuvImagePrimitiveGpu),
     Border(BorderPrimitiveCpu, BorderPrimitiveGpu),
     Gradient(GradientPrimitiveCpu, GradientPrimitiveGpu),
-    BoxShadow(BoxShadowPrimitiveGpu, Vec<Rect<f32>>),
+    BoxShadow(BoxShadowPrimitiveGpu, Vec<LayerRect>),
 }
 
 pub struct PrimitiveStore {
     // CPU side information only
-    pub cpu_bounding_rects: Vec<Option<DeviceRect>>,
+    pub cpu_bounding_rects: Vec<Option<DeviceIntRect>>,
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
     pub cpu_images: Vec<ImagePrimitiveCpu>,
+    pub cpu_yuv_images: Vec<YuvImagePrimitiveCpu>,
     pub cpu_gradients: Vec<GradientPrimitiveCpu>,
     pub cpu_metadata: Vec<PrimitiveMetadata>,
     pub cpu_borders: Vec<BorderPrimitiveCpu>,
@@ -381,17 +422,17 @@ pub struct PrimitiveStore {
     pub gpu_resource_rects: GpuStore<TexelRect>,
 
     // General
-    device_pixel_ratio: f32,
     prims_to_resolve: Vec<PrimitiveIndex>,
 }
 
 impl PrimitiveStore {
-    pub fn new(device_pixel_ratio: f32) -> PrimitiveStore {
+    pub fn new() -> PrimitiveStore {
         PrimitiveStore {
             cpu_metadata: Vec::new(),
             cpu_bounding_rects: Vec::new(),
             cpu_text_runs: Vec::new(),
             cpu_images: Vec::new(),
+            cpu_yuv_images: Vec::new(),
             cpu_gradients: Vec::new(),
             cpu_borders: Vec::new(),
             gpu_geometry: GpuStore::new(),
@@ -400,7 +441,6 @@ impl PrimitiveStore {
             gpu_data64: GpuStore::new(),
             gpu_data128: GpuStore::new(),
             gpu_resource_rects: GpuStore::new(),
-            device_pixel_ratio: device_pixel_ratio,
             prims_to_resolve: Vec::new(),
         }
     }
@@ -415,7 +455,7 @@ impl PrimitiveStore {
 
     pub fn add_primitive(&mut self,
                          geometry: PrimitiveGeometry,
-                         clip_source: Box<PrimitiveClipSource>,
+                         clip_source: Box<ClipSource>,
                          clip_info: Option<MaskCacheInfo>,
                          container: PrimitiveContainer) -> PrimitiveIndex {
         let prim_index = self.cpu_metadata.len();
@@ -481,6 +521,24 @@ impl PrimitiveStore {
                 self.cpu_images.push(image_cpu);
                 metadata
             }
+            PrimitiveContainer::YuvImage(image_cpu, image_gpu) => {
+                let gpu_address = self.gpu_data64.push(image_gpu);
+
+                let metadata = PrimitiveMetadata {
+                    is_opaque: true,
+                    clip_source: clip_source,
+                    clip_cache_info: clip_info,
+                    prim_kind: PrimitiveKind::YuvImage,
+                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_yuv_images.len()),
+                    gpu_prim_index: gpu_address,
+                    gpu_data_address: GpuStoreAddress(0),
+                    gpu_data_count: 0,
+                    render_task: None,
+                };
+
+                self.cpu_yuv_images.push(image_cpu);
+                metadata
+            }
             PrimitiveContainer::Border(border_cpu, border_gpu) => {
                 let gpu_address = self.gpu_data128.push(border_gpu);
 
@@ -519,16 +577,6 @@ impl PrimitiveStore {
                 metadata
             }
             PrimitiveContainer::BoxShadow(box_shadow_gpu, instance_rects) => {
-                // TODO(gw): Account for zoom factor!
-                // Here, we calculate the size of the patch required in order
-                // to create the box shadow corner. First, scale it by the
-                // device pixel ratio since the cache shader expects vertices
-                // in device space. The shader adds a 1-pixel border around
-                // the patch, in order to prevent bilinear filter artifacts as
-                // the patch is clamped / mirrored across the box shadow rect.
-                let edge_size = box_shadow_gpu.edge_size.ceil() * self.device_pixel_ratio;
-                let edge_size = edge_size as i32 + 2;   // Account for bilinear filtering
-                let cache_size = DeviceSize::new(edge_size, edge_size);
                 let cache_key = PrimitiveCacheKey::BoxShadow(BoxShadowPrimitiveCacheKey {
                     blur_radius: Au::from_f32_px(box_shadow_gpu.blur_radius),
                     border_radius: Au::from_f32_px(box_shadow_gpu.border_radius),
@@ -536,6 +584,12 @@ impl PrimitiveStore {
                     shadow_rect_size: Size2D::new(Au::from_f32_px(box_shadow_gpu.bs_rect.size.width),
                                                   Au::from_f32_px(box_shadow_gpu.bs_rect.size.height)),
                 });
+
+                // The actual cache size is calculated during prepare_prim_for_render().
+                // This is necessary since the size may change depending on the device
+                // pixel ratio (for example, during zoom or moving the window to a
+                // monitor with a different device pixel ratio).
+                let cache_size = DeviceIntSize::zero();
 
                 // Create a render task for this box shadow primitive. This renders a small
                 // portion of the box shadow to a render target. That portion is then
@@ -578,21 +632,36 @@ impl PrimitiveStore {
         PrimitiveIndex(prim_index)
     }
 
-    pub fn resolve_primitives(&mut self, resource_cache: &ResourceCache) -> Vec<DeferredResolve> {
+    fn resolve_clip_cache_internal(gpu_data32: &mut GpuStore<GpuBlock32>,
+                                   clip_info: &MaskCacheInfo,
+                                   resource_cache: &ResourceCache) {
+        if let Some((ref mask, gpu_address)) = clip_info.image {
+            let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto);
+            let mask_data = gpu_data32.get_slice_mut(gpu_address, MASK_DATA_GPU_SIZE);
+            mask_data[0] = GpuBlock32::from(ImageMaskData {
+                uv_rect: DeviceRect::new(cache_item.uv0,
+                                         DeviceSize::new(cache_item.uv1.x - cache_item.uv0.x,
+                                                         cache_item.uv1.y - cache_item.uv0.y)),
+                local_rect: LayerRect::from_untyped(&mask.rect),
+            });
+        }
+    }
+
+    pub fn resolve_clip_cache(&mut self,
+                              clip_info: &MaskCacheInfo,
+                              resource_cache: &ResourceCache) {
+        Self::resolve_clip_cache_internal(&mut self.gpu_data32, clip_info, resource_cache)
+    }
+
+    pub fn resolve_primitives(&mut self,
+                              resource_cache: &ResourceCache,
+                              device_pixel_ratio: f32) -> Vec<DeferredResolve> {
         let mut deferred_resolves = Vec::new();
 
         for prim_index in self.prims_to_resolve.drain(..) {
             let metadata = &mut self.cpu_metadata[prim_index.0];
-
-            if let Some(MaskCacheInfo{ key: MaskCacheKey { image: Some(gpu_address), .. }, image: Some(ref mask), .. }) = metadata.clip_cache_info {
-                let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto);
-                let mask_data = self.gpu_data32.get_slice_mut(gpu_address, MASK_DATA_GPU_SIZE);
-                mask_data[0] = GpuBlock32::from(ImageMaskData {
-                    uv_rect: Rect::new(cache_item.uv0,
-                                       Size2D::new(cache_item.uv1.x - cache_item.uv0.x,
-                                                   cache_item.uv1.y - cache_item.uv0.y)),
-                    local_rect: mask.rect,
-                });
+            if let Some(ref clip_info) = metadata.clip_cache_info {
+                Self::resolve_clip_cache_internal(&mut self.gpu_data32, clip_info, resource_cache);
             }
 
             match metadata.prim_kind {
@@ -602,12 +671,13 @@ impl PrimitiveStore {
                 PrimitiveKind::Gradient => {}
                 PrimitiveKind::TextRun => {
                     let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
+                    let font_size_dp = text.logical_font_size.scale_by(device_pixel_ratio);
 
                     let dest_rects = self.gpu_resource_rects.get_slice_mut(text.resource_address,
                                                                            text.glyph_range.length);
 
                     let texture_id = resource_cache.get_glyphs(text.font_key,
-                                                               text.font_size,
+                                                               font_size_dp,
                                                                &text.glyph_indices,
                                                                text.render_mode, |index, uv0, uv1| {
                         let dest_rect = &mut dest_rects[index];
@@ -657,22 +727,49 @@ impl PrimitiveStore {
                     }
                     image_cpu.color_texture_id = texture_id;
                 }
+                PrimitiveKind::YuvImage => {
+                    let image_cpu = &mut self.cpu_yuv_images[metadata.cpu_prim_index.0];
+                    let image_gpu: &mut YuvImagePrimitiveGpu = unsafe {
+                        mem::transmute(self.gpu_data64.get_mut(metadata.gpu_prim_index))
+                    };
+
+                    if image_cpu.y_texture_id == SourceTexture::Invalid {
+                        let y_cache_item = resource_cache.get_cached_image(image_cpu.y_key, ImageRendering::Auto);
+                        image_cpu.y_texture_id = y_cache_item.texture_id;
+                        image_gpu.y_uv0 = y_cache_item.uv0;
+                        image_gpu.y_uv1 = y_cache_item.uv1;
+                    }
+
+                    if image_cpu.u_texture_id == SourceTexture::Invalid {
+                        let u_cache_item = resource_cache.get_cached_image(image_cpu.u_key, ImageRendering::Auto);
+                        image_cpu.u_texture_id = u_cache_item.texture_id;
+                        image_gpu.u_uv0 = u_cache_item.uv0;
+                        image_gpu.u_uv1 = u_cache_item.uv1;
+                    }
+
+                    if image_cpu.v_texture_id == SourceTexture::Invalid {
+                        let v_cache_item = resource_cache.get_cached_image(image_cpu.v_key, ImageRendering::Auto);
+                        image_cpu.v_texture_id = v_cache_item.texture_id;
+                        image_gpu.v_uv0 = v_cache_item.uv0;
+                        image_gpu.v_uv1 = v_cache_item.uv1;
+                    }
+                }
             }
         }
 
         deferred_resolves
     }
 
-    pub fn get_bounding_rect(&self, index: PrimitiveIndex) -> &Option<DeviceRect> {
+    pub fn get_bounding_rect(&self, index: PrimitiveIndex) -> &Option<DeviceIntRect> {
         &self.cpu_bounding_rects[index.0]
     }
 
-    pub fn set_clip_source(&mut self, index: PrimitiveIndex, source: PrimitiveClipSource) {
+    pub fn set_clip_source(&mut self, index: PrimitiveIndex, source: ClipSource) {
         let metadata = &mut self.cpu_metadata[index.0];
         let (rect, is_complex) = match source {
-            PrimitiveClipSource::NoClip => (None, false),
-            PrimitiveClipSource::Complex(rect, radius) => (Some(rect), radius > 0.0),
-            PrimitiveClipSource::Region(ref region) => (Some(region.main), region.is_complex()),
+            ClipSource::NoClip => (None, false),
+            ClipSource::Complex(rect, radius) => (Some(rect), radius > 0.0),
+            ClipSource::Region(ref region) => (Some(LayerRect::from_untyped(&region.main)), region.is_complex()),
         };
         if let Some(rect) = rect {
             self.gpu_geometry.get_mut(GpuStoreAddress(index.0 as i32))
@@ -694,9 +791,9 @@ impl PrimitiveStore {
 
     pub fn build_bounding_rect(&mut self,
                                prim_index: PrimitiveIndex,
-                               screen_rect: &DeviceRect,
-                               layer_transform: &Matrix4D<f32>,
-                               layer_combined_local_clip_rect: &Rect<f32>,
+                               screen_rect: &DeviceIntRect,
+                               layer_transform: &LayerToWorldTransform,
+                               layer_combined_local_clip_rect: &LayerRect,
                                device_pixel_ratio: f32) -> bool {
         let geom = &self.gpu_geometry.get(GpuStoreAddress(prim_index.0 as i32));
 
@@ -718,7 +815,7 @@ impl PrimitiveStore {
     pub fn prepare_prim_for_render(&mut self,
                                    prim_index: PrimitiveIndex,
                                    resource_cache: &mut ResourceCache,
-                                   layer_transform: &Matrix4D<f32>,
+                                   layer_transform: &LayerToWorldTransform,
                                    device_pixel_ratio: f32,
                                    auxiliary_lists: &AuxiliaryLists) -> bool {
 
@@ -732,7 +829,7 @@ impl PrimitiveStore {
                              &mut self.gpu_data32,
                              device_pixel_ratio,
                              auxiliary_lists);
-            if let &PrimitiveClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }) = metadata.clip_source.as_ref() {
+            if let &ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }) = metadata.clip_source.as_ref() {
                 resource_cache.request_image(mask.image, ImageRendering::Auto);
                 prim_needs_resolve = true;
             }
@@ -740,10 +837,27 @@ impl PrimitiveStore {
 
         match metadata.prim_kind {
             PrimitiveKind::Rectangle |
-            PrimitiveKind::Border |
-            PrimitiveKind::BoxShadow => {}
+            PrimitiveKind::Border  => {}
+            PrimitiveKind::BoxShadow => {
+                // TODO(gw): Account for zoom factor!
+                // Here, we calculate the size of the patch required in order
+                // to create the box shadow corner. First, scale it by the
+                // device pixel ratio since the cache shader expects vertices
+                // in device space. The shader adds a 1-pixel border around
+                // the patch, in order to prevent bilinear filter artifacts as
+                // the patch is clamped / mirrored across the box shadow rect.
+                let box_shadow_gpu: &BoxShadowPrimitiveGpu = unsafe {
+                    mem::transmute(self.gpu_data64.get(metadata.gpu_prim_index))
+                };
+                let edge_size = box_shadow_gpu.edge_size.ceil() * device_pixel_ratio;
+                let edge_size = edge_size as i32 + 2;   // Account for bilinear filtering
+                let cache_size = DeviceIntSize::new(edge_size, edge_size);
+                let location = RenderTaskLocation::Dynamic(None, cache_size);
+                metadata.render_task.as_mut().unwrap().location = location;
+            }
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
+                let font_size_dp = text.logical_font_size.scale_by(device_pixel_ratio);
                 prim_needs_resolve = true;
 
                 if text.cache_dirty {
@@ -756,9 +870,9 @@ impl PrimitiveStore {
                     let dest_glyphs = self.gpu_data16.get_slice_mut(metadata.gpu_data_address,
                                                                     text.glyph_range.length);
                     let mut glyph_key = GlyphKey::new(text.font_key,
-                                                      text.font_size,
+                                                      font_size_dp,
                                                       src_glyphs[0].index);
-                    let mut local_rect = Rect::zero();
+                    let mut local_rect = LayerRect::zero();
                     let mut actual_glyph_count = 0;
 
                     for src in src_glyphs {
@@ -778,12 +892,12 @@ impl PrimitiveStore {
                         let width = dimensions.width as f32 / device_pixel_ratio;
                         let height = dimensions.height as f32 / device_pixel_ratio;
 
-                        let local_glyph_rect = Rect::new(Point2D::new(x, y),
-                                                         Size2D::new(width, height));
+                        let local_glyph_rect = LayerRect::new(LayerPoint::new(x, y),
+                                                              LayerSize::new(width, height));
                         local_rect = local_rect.union(&local_glyph_rect);
 
                         dest_glyphs[actual_glyph_count] = GpuBlock16::from(GlyphPrimitive {
-                            padding: Point2D::zero(),
+                            padding: LayerPoint::zero(),
                             offset: local_glyph_rect.origin,
                         });
 
@@ -803,12 +917,12 @@ impl PrimitiveStore {
                         // render the text run to a target, and then apply a gaussian
                         // blur to that text run in order to build the actual primitive
                         // which will be blitted to the framebuffer.
-                        let cache_width = (local_rect.size.width * self.device_pixel_ratio).ceil() as i32;
-                        let cache_height = (local_rect.size.height * self.device_pixel_ratio).ceil() as i32;
-                        let cache_size = DeviceSize::new(cache_width, cache_height);
+                        let cache_width = (local_rect.size.width * device_pixel_ratio).ceil() as i32;
+                        let cache_height = (local_rect.size.height * device_pixel_ratio).ceil() as i32;
+                        let cache_size = DeviceIntSize::new(cache_width, cache_height);
                         let cache_key = PrimitiveCacheKey::TextShadow(prim_index);
-                        let blur_radius = device_pixel(text.blur_radius.to_f32_px(),
-                                                       self.device_pixel_ratio);
+                        let blur_radius = device_length(text.blur_radius.to_f32_px(),
+                                                        device_pixel_ratio);
                         Some(RenderTask::new_blur(cache_key,
                                                   cache_size,
                                                   blur_radius,
@@ -821,7 +935,7 @@ impl PrimitiveStore {
                 }
 
                 resource_cache.request_glyphs(text.font_key,
-                                              text.font_size,
+                                              font_size_dp,
                                               &text.glyph_indices,
                                               text.render_mode);
             }
@@ -844,6 +958,17 @@ impl PrimitiveStore {
                     }
                     ImagePrimitiveKind::WebGL(..) => {}
                 }
+            }
+            PrimitiveKind::YuvImage => {
+                let image_cpu = &mut self.cpu_yuv_images[metadata.cpu_prim_index.0];
+                prim_needs_resolve = true;
+
+                resource_cache.request_image(image_cpu.y_key, ImageRendering::Auto);
+                resource_cache.request_image(image_cpu.u_key, ImageRendering::Auto);
+                resource_cache.request_image(image_cpu.v_key, ImageRendering::Auto);
+
+                // TODO(nical): Currently assuming no tile_spacing for yuv images.
+                metadata.is_opaque = true;
             }
             PrimitiveKind::Gradient => {
                 let gradient = &mut self.cpu_gradients[metadata.cpu_prim_index.0];
@@ -963,6 +1088,14 @@ impl From<GradientStop> for GpuBlock32 {
     fn from(data: GradientStop) -> GpuBlock32 {
         unsafe {
             mem::transmute::<GradientStop, GpuBlock32>(data)
+        }
+    }
+}
+
+impl From<YuvImagePrimitiveGpu> for GpuBlock64 {
+    fn from(data: YuvImagePrimitiveGpu) -> GpuBlock64 {
+        unsafe {
+            mem::transmute::<YuvImagePrimitiveGpu, GpuBlock64>(data)
         }
     }
 }

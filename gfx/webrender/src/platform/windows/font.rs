@@ -62,7 +62,6 @@ impl FontContext {
                                                 font_key: FontKey,
                                                 size: Au,
                                                 glyph: u32,
-                                                device_pixel_ratio: f32,
                                                 render_mode: Option<FontRenderMode>)
                                                 -> (Option<GlyphDimensions>, Option<RasterizedGlyph>)
     {
@@ -74,7 +73,7 @@ impl FontContext {
 
         let em_size = size.to_f32_px() / 16.; // (16px per em)
         let du_per_pixel = face.metrics().designUnitsPerEm as f32 / 16.; // (once again, 16px per em)
-        let scaled_du_to_pixels = (em_size * device_pixel_ratio) / du_per_pixel;
+        let scaled_du_to_pixels = em_size / du_per_pixel;
 
         let width = (gm.advanceWidth as i32 - (gm.leftSideBearing + gm.rightSideBearing)) as f32
             * scaled_du_to_pixels;
@@ -112,7 +111,7 @@ impl FontContext {
 
         // size is in app units, which we convert to CSS pixels (1/96"), which
         // is the same as DIPs.
-        let size_dip = size.to_f32_px() * device_pixel_ratio;
+        let size_dip = size.to_f32_px();
 
         let rt = self.gdi_interop.create_bitmap_render_target(width_u, height_u);
         rt.set_pixels_per_dip(1.);
@@ -135,10 +134,9 @@ impl FontContext {
     pub fn get_glyph_dimensions(&self,
                                 font_key: FontKey,
                                 size: Au,
-                                glyph: u32,
-                                device_pixel_ratio: f32) -> Option<GlyphDimensions> {
+                                glyph: u32) -> Option<GlyphDimensions> {
         let (maybe_dims, _) =
-            self.get_glyph_dimensions_and_maybe_rasterize(font_key, size, glyph, device_pixel_ratio, None);
+            self.get_glyph_dimensions_and_maybe_rasterize(font_key, size, glyph, None);
         maybe_dims
     }
 
@@ -146,10 +144,9 @@ impl FontContext {
                            font_key: FontKey,
                            size: Au,
                            glyph: u32,
-                           device_pixel_ratio: f32,
                            render_mode: FontRenderMode) -> Option<RasterizedGlyph> {
         let (_, maybe_glyph) =
-            self.get_glyph_dimensions_and_maybe_rasterize(font_key, size, glyph, device_pixel_ratio, Some(render_mode));
+            self.get_glyph_dimensions_and_maybe_rasterize(font_key, size, glyph, Some(render_mode));
         maybe_glyph
     }
 }

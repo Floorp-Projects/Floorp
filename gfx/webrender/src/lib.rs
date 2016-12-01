@@ -76,6 +76,8 @@ mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
 }
 
+pub use record::{ApiRecordingReceiver, set_recording_detour};
+
 mod platform {
     #[cfg(target_os="macos")]
     pub use platform::macos::font;
@@ -122,7 +124,7 @@ extern crate time;
 extern crate webrender_traits;
 extern crate offscreen_gl_context;
 extern crate byteorder;
-extern crate rayon;
+extern crate threadpool;
 
 pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 pub use renderer::{Renderer, RendererOptions};

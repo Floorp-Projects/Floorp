@@ -7,10 +7,11 @@ use channel::{self, MsgSender, PayloadHelperMethods, PayloadSender};
 use euclid::{Point2D, Size2D};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
-use {ApiMsg, AuxiliaryLists, BuiltDisplayList, ColorF, Epoch};
+use {ApiMsg, ColorF, DisplayListBuilder, Epoch};
 use {FontKey, IdNamespace, ImageFormat, ImageKey, NativeFontHandle, PipelineId};
-use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState};
+use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState, ScrollLocation, ServoScrollRootId};
 use {GlyphKey, GlyphDimensions, ImageData, WebGLContextId, WebGLCommand};
+use VRCompositorCommand;
 
 impl RenderApiSender {
     pub fn new(api_sender: MsgSender<ApiMsg>,
@@ -99,15 +100,6 @@ impl RenderApi {
         key
     }
 
-    /// Flushes all messages and will send a notification when the render
-    /// backend thread has finished processing all previous messages.
-    /// This is a temporary API And users should not expect this to be API
-    /// to exist in the future.
-    pub fn flush(&self) {
-        let msg = ApiMsg::Flush;
-        self.api_sender.send(msg).unwrap();
-    }
-
     /// Updates a specific image.
     ///
     /// Currently doesn't support changing dimensions or format by updating.
@@ -165,10 +157,10 @@ impl RenderApi {
     pub fn set_root_display_list(&self,
                                  background_color: ColorF,
                                  epoch: Epoch,
-                                 pipeline_id: PipelineId,
                                  viewport_size: Size2D<f32>,
-                                 display_list: BuiltDisplayList,
-                                 auxiliary_lists: AuxiliaryLists) {
+                                 builder: DisplayListBuilder) {
+        let pipeline_id = builder.pipeline_id;
+        let (display_list, auxiliary_lists) = builder.finalize();
         let msg = ApiMsg::SetRootDisplayList(background_color,
                                              epoch,
                                              pipeline_id,
@@ -188,8 +180,16 @@ impl RenderApi {
     ///
     /// Webrender looks for the layer closest to the user
     /// which has `ScrollPolicy::Scrollable` set.
-    pub fn scroll(&self, delta: Point2D<f32>, cursor: Point2D<f32>, phase: ScrollEventPhase) {
-        let msg = ApiMsg::Scroll(delta, cursor, phase);
+    pub fn scroll(&self, scroll_location: ScrollLocation, cursor: Point2D<f32>, phase: ScrollEventPhase) {
+        let msg = ApiMsg::Scroll(scroll_location, cursor, phase);
+        self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn scroll_layers_with_scroll_root_id(&self,
+                                             new_scroll_origin: Point2D<f32>,
+                                             pipeline_id: PipelineId,
+                                             scroll_root_id: ServoScrollRootId) {
+        let msg = ApiMsg::ScrollLayersWithScrollId(new_scroll_origin, pipeline_id, scroll_root_id);
         self.api_sender.send(msg).unwrap();
     }
 
@@ -234,6 +234,11 @@ impl RenderApi {
 
     pub fn generate_frame(&self) {
         let msg = ApiMsg::GenerateFrame;
+        self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn send_vr_compositor_command(&self, context_id: WebGLContextId, command: VRCompositorCommand) {
+        let msg = ApiMsg::VRCompositorCommand(context_id, command);
         self.api_sender.send(msg).unwrap();
     }
 

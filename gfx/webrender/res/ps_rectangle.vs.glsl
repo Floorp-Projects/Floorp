@@ -21,5 +21,7 @@ void main(void) {
                                  prim.tile);
 #endif
 
+#ifdef WR_FEATURE_CLIP
     write_clip(vi.global_clamped_pos, prim.clip_area);
+#endif
 }

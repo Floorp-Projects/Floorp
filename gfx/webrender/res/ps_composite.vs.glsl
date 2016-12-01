@@ -3,6 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+struct Composite {
+    ivec4 src0_src1_target_id_op;
+};
+
+Composite fetch_composite(int index) {
+    PrimitiveInstance pi = fetch_instance(index);
+
+    Composite composite;
+    composite.src0_src1_target_id_op = ivec4(pi.user_data.xy,
+                                             pi.render_task_index,
+                                             pi.sub_index);
+
+    return composite;
+}
+
 void main(void) {
     Composite composite = fetch_composite(gl_InstanceID);
     Tile src0 = fetch_tile(composite.src0_src1_target_id_op.x);

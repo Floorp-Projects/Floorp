@@ -595,6 +595,33 @@ Image fetch_image(int index) {
     return image;
 }
 
+// YUV color spaces
+#define YUV_REC601 1
+#define YUV_REC709 2
+
+struct YuvImage {
+    vec4 y_st_rect;
+    vec4 u_st_rect;
+    vec4 v_st_rect;
+    vec2 size;
+    int color_space;
+};
+
+YuvImage fetch_yuv_image(int index) {
+    YuvImage image;
+
+    ivec2 uv = get_fetch_uv_4(index);
+
+    image.y_st_rect = texelFetchOffset(sData64, uv, 0, ivec2(0, 0));
+    image.u_st_rect = texelFetchOffset(sData64, uv, 0, ivec2(1, 0));
+    image.v_st_rect = texelFetchOffset(sData64, uv, 0, ivec2(2, 0));
+    vec4 size_color_space = texelFetchOffset(sData64, uv, 0, ivec2(3, 0));
+    image.size = size_color_space.xy;
+    image.color_space = int(size_color_space.z);
+
+    return image;
+}
+
 struct BoxShadow {
     vec4 src_rect;
     vec4 bs_rect;
@@ -613,33 +640,6 @@ BoxShadow fetch_boxshadow(int index) {
     bs.border_radius_edge_size_blur_radius_inverted = texelFetchOffset(sData64, uv, 0, ivec2(3, 0));
 
     return bs;
-}
-
-struct Blend {
-    ivec4 src_id_target_id_op_amount;
-};
-
-Blend fetch_blend(int index) {
-    Blend blend;
-
-    int offset = index * 1;
-    blend.src_id_target_id_op_amount = int_data[offset + 0];
-
-    return blend;
-}
-
-struct Composite {
-    ivec4 src0_src1_target_id_op;
-};
-
-Composite fetch_composite(int index) {
-    Composite composite;
-
-    int offset = index * 1;
-
-    composite.src0_src1_target_id_op = int_data[offset + 0];
-
-    return composite;
 }
 
 void write_clip(vec2 global_pos, ClipArea area) {

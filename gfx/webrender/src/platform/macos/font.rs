@@ -121,8 +121,7 @@ impl FontContext {
 
     fn get_ct_font(&mut self,
                    font_key: FontKey,
-                   size: Au,
-                   device_pixel_ratio: f32) -> Option<CTFont> {
+                   size: Au) -> Option<CTFont> {
         match self.ct_fonts.entry(((font_key).clone(), size)) {
             Entry::Occupied(entry) => Some((*entry.get()).clone()),
             Entry::Vacant(entry) => {
@@ -132,7 +131,7 @@ impl FontContext {
                 };
                 let ct_font = core_text::font::new_from_CGFont(
                         cg_font,
-                        size.to_f64_px() * (device_pixel_ratio as f64));
+                        size.to_f64_px());
                 entry.insert(ct_font.clone());
                 Some(ct_font)
             }
@@ -142,9 +141,8 @@ impl FontContext {
     pub fn get_glyph_dimensions(&mut self,
                                 font_key: FontKey,
                                 size: Au,
-                                character: u32,
-                                device_pixel_ratio: f32) -> Option<GlyphDimensions> {
-        self.get_ct_font(font_key, size, device_pixel_ratio).and_then(|ref ct_font| {
+                                character: u32) -> Option<GlyphDimensions> {
+        self.get_ct_font(font_key, size).and_then(|ref ct_font| {
             let glyph = character as CGGlyph;
             let metrics = get_glyph_metrics(ct_font, glyph);
             if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
@@ -164,9 +162,8 @@ impl FontContext {
                            font_key: FontKey,
                            size: Au,
                            character: u32,
-                           device_pixel_ratio: f32,
                            render_mode: FontRenderMode) -> Option<RasterizedGlyph> {
-        match self.get_ct_font(font_key, size, device_pixel_ratio) {
+        match self.get_ct_font(font_key, size) {
             Some(ref ct_font) => {
                 let glyph = character as CGGlyph;
                 let metrics = get_glyph_metrics(ct_font, glyph);

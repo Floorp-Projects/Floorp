@@ -35,8 +35,6 @@ pub enum ApiMsg {
     /// Drops an image from the resource cache.
     DeleteImage(ImageKey),
     CloneApi(MsgSender<IdNamespace>),
-    // Flushes all messages
-    Flush,
     /// Supplies a new frame to WebRender.
     ///
     /// After receiving this message, WebRender will read the display list, followed by the
@@ -48,7 +46,8 @@ pub enum ApiMsg {
                        BuiltDisplayListDescriptor,
                        AuxiliaryListsDescriptor),
     SetRootPipeline(PipelineId),
-    Scroll(Point2D<f32>, Point2D<f32>, ScrollEventPhase),
+    Scroll(ScrollLocation, Point2D<f32>, ScrollEventPhase),
+    ScrollLayersWithScrollId(Point2D<f32>, PipelineId, ServoScrollRootId),
     TickScrollingBounce,
     TranslatePointToLayerSpace(Point2D<f32>, MsgSender<(Point2D<f32>, PipelineId)>),
     GetScrollLayerState(MsgSender<Vec<ScrollLayerState>>),
@@ -56,6 +55,8 @@ pub enum ApiMsg {
     ResizeWebGLContext(WebGLContextId, Size2D<i32>),
     WebGLCommand(WebGLContextId, WebGLCommand),
     GenerateFrame,
+    // WebVR commands that must be called in the WebGL render thread.
+    VRCompositorCommand(WebGLContextId, VRCompositorCommand)
 }
 
 #[derive(Copy, Clone, Deserialize, Serialize, Debug)]
@@ -186,12 +187,6 @@ pub struct ClipRegion {
     pub image_mask: Option<ImageMask>,
 }
 
-impl ClipRegion {
-    pub fn is_complex(&self) -> bool {
-        self.complex.length !=0 || self.image_mask.is_some()
-    }
-}
-
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ComplexClipRegion {
     /// The boundaries of the rectangle.
@@ -243,6 +238,11 @@ pub enum FontRenderMode {
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct GlyphKey {
     pub font_key: FontKey,
+    // The font size is in *device* pixels, not logical pixels.
+    // It is stored as an Au since we need sub-pixel sizes, but
+    // can't store as a f32 due to use of this type as a hash key.
+    // TODO(gw): Perhaps consider having LogicalAu and DeviceAu
+    //           or something similar to that.
     pub size: Au,
     pub index: u32,
 }
@@ -315,6 +315,14 @@ pub struct ImageDisplayItem {
     pub image_rendering: ImageRendering,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct YuvImageDisplayItem {
+    pub y_image_key: ImageKey,
+    pub u_image_key: ImageKey,
+    pub v_image_key: ImageKey,
+    pub color_space: YuvColorSpace,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ImageFormat {
     Invalid,
@@ -322,6 +330,12 @@ pub enum ImageFormat {
     RGB8,
     RGBA8,
     RGBAF32,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum YuvColorSpace {
+    Rec601 = 1, // The values must match the ones in prim_shared.glsl
+    Rec709 = 2,
 }
 
 /// An arbitrary identifier for an external image provided by the
@@ -413,10 +427,6 @@ pub trait RenderNotifier: Send {
     fn pipeline_size_changed(&mut self, pipeline_id: PipelineId, size: Option<Size2D<f32>>);
 }
 
-pub trait FlushNotifier: Send {
-    fn all_messages_flushed(&mut self);
-}
-
 // Trait to allow dispatching functions to a specific thread or event loop.
 pub trait RenderDispatcher: Send {
     fn dispatch(&self, Box<Fn() + Send>);
@@ -449,6 +459,13 @@ impl ScrollLayerId {
             info: ScrollLayerInfo::Scrollable(0, ServoScrollRootId(0)),
         }
     }
+
+    pub fn scroll_root_id(&self) -> Option<ServoScrollRootId> {
+        match self.info {
+            ScrollLayerInfo::Scrollable(_, scroll_root_id) => Some(scroll_root_id),
+            ScrollLayerInfo::Fixed => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -470,6 +487,16 @@ pub enum ScrollPolicy {
     Fixed,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub enum ScrollLocation {
+    /// Scroll by a certain amount.
+    Delta(Point2D<f32>), 
+    /// Scroll to very top of element.
+    Start,
+    /// Scroll to very bottom of element. 
+    End 
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ServoScrollRootId(pub usize);
 
@@ -478,6 +505,7 @@ pub enum SpecificDisplayItem {
     Rectangle(RectangleDisplayItem),
     Text(TextDisplayItem),
     Image(ImageDisplayItem),
+    YuvImage(YuvImageDisplayItem),
     WebGL(WebGLDisplayItem),
     Border(BorderDisplayItem),
     BoxShadow(BoxShadowDisplayItem),
@@ -493,7 +521,6 @@ pub enum SpecificDisplayItem {
 pub struct StackingContext {
     pub scroll_policy: ScrollPolicy,
     pub bounds: Rect<f32>,
-    pub overflow: Rect<f32>,
     pub z_index: i32,
     pub transform: Matrix4D<f32>,
     pub perspective: Matrix4D<f32>,
@@ -760,4 +787,21 @@ pub enum WebGLShaderParameter {
     Int(i32),
     Bool(bool),
     Invalid,
+}
+
+pub type VRCompositorId = u64;
+
+// WebVR commands that must be called in the WebGL render thread.
+#[derive(Clone, Deserialize, Serialize)]
+pub enum VRCompositorCommand {
+    Create(VRCompositorId),
+    SyncPoses(VRCompositorId, f64, f64, MsgSender<Result<Vec<u8>,()>>),
+    SubmitFrame(VRCompositorId, [f32; 4], [f32; 4]),
+    Release(VRCompositorId)
+}
+
+// Trait object that handles WebVR commands.
+// Receives the texture_id associated to the WebGLContext.
+pub trait VRCompositorHandler: Send {
+    fn handle(&mut self, command: VRCompositorCommand, texture_id: Option<u32>);
 }

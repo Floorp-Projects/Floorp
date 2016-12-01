@@ -13,15 +13,17 @@ fn main() {
     let target = env::var("TARGET").unwrap();
 
     if target.contains("android") {
+        let extensions = ["GL_EXT_texture_format_BGRA8888"];
         // GLES 2.0 bindings for Android
-        Registry::new(Api::Gles2, (3, 0), Profile::Core, Fallbacks::All, ["GL_EXT_texture_format_BGRA8888"])
+        Registry::new(Api::Gles2, (3, 0), Profile::Core, Fallbacks::All, extensions)
             .write_bindings(gl_generator::StaticGenerator, &mut file)
             .unwrap();
 
         println!("cargo:rustc-link-lib=GLESv3");
     } else {
+        let extensions = ["GL_ARB_texture_rectangle", "GL_EXT_debug_marker"];
         // OpenGL 3.3 bindings for Linux/Mac/Windows
-        Registry::new(Api::Gl, (3, 3), Profile::Core, Fallbacks::All, ["GL_ARB_texture_rectangle"])
+        Registry::new(Api::Gl, (3, 3), Profile::Core, Fallbacks::All, extensions)
             .write_bindings(gl_generator::GlobalGenerator, &mut file)
             .unwrap();
 

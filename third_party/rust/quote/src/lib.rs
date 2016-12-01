@@ -1,9 +1,73 @@
+//! Quasi-quoting without a Syntex dependency, intended for use with [Macros
+//! 1.1](https://github.com/rust-lang/rfcs/blob/master/text/1681-macros-1.1.md).
+//!
+//! ```toml
+//! [dependencies]
+//! quote = "0.3"
+//! ```
+//!
+//! ```rust,ignore
+//! #[macro_use]
+//! extern crate quote;
+//! ```
+//!
+//! Interpolation is done with `#var`:
+//!
+//! ```text
+//! let tokens = quote! {
+//!     struct SerializeWith #generics #where_clause {
+//!         value: &'a #field_ty,
+//!         phantom: ::std::marker::PhantomData<#item_ty>,
+//!     }
+//!
+//!     impl #generics serde::Serialize for SerializeWith #generics #where_clause {
+//!         fn serialize<S>(&self, s: &mut S) -> Result<(), S::Error>
+//!             where S: serde::Serializer
+//!         {
+//!             #path(self.value, s)
+//!         }
+//!     }
+//!
+//!     SerializeWith {
+//!         value: #value,
+//!         phantom: ::std::marker::PhantomData::<#item_ty>,
+//!     }
+//! };
+//! ```
+//!
+//! Repetition is done using `#(...)*` or `#(...),*` very similar to `macro_rules!`:
+//!
+//! - `#(#var)*` - no separators
+//! - `#(#var),*` - the character before the asterisk is used as a separator
+//! - `#( struct #var; )*` - the repetition can contain other things
+//! - `#( #k => println!("{}", #v), )*` - even multiple interpolations
+//!
+//! The return type of `quote!` is `quote::Tokens`. Tokens can be interpolated into
+//! other quotes:
+//!
+//! ```text
+//! let t = quote! { /* ... */ };
+//! return quote! { /* ... */ #t /* ... */ };
+//! ```
+//!
+//! Call `to_string()` or `as_str()` on a Tokens to get a `String` or `&str` of Rust
+//! code.
+//!
+//! The `quote!` macro relies on deep recursion so some large invocations may fail
+//! with "recursion limit reached" when you compile. If it fails, bump up the
+//! recursion limit by adding `#![recursion_limit = "128"]` to your crate. An even
+//! higher limit may be necessary for especially large invocations.
+
 mod tokens;
 pub use tokens::Tokens;
 
 mod to_tokens;
-pub use to_tokens::{ToTokens, ByteStr};
+pub use to_tokens::{ToTokens, ByteStr, Hex};
 
+mod ident;
+pub use ident::Ident;
+
+/// The whole point.
 #[macro_export]
 macro_rules! quote {
     () => {
@@ -12,8 +76,6 @@ macro_rules! quote {
 
     ($($tt:tt)+) => {
         {
-            #[allow(unused_imports)]
-            use $crate::ToTokens;
             let mut _s = $crate::Tokens::new();
             quote_each_token!(_s $($tt)*);
             _s
@@ -158,7 +220,7 @@ macro_rules! quote_each_token {
     };
 
     ($tokens:ident # $first:ident $($rest:tt)*) => {
-        $first.to_tokens(&mut $tokens);
+        $crate::ToTokens::to_tokens(&$first, &mut $tokens);
         quote_each_token!($tokens $($rest)*);
     };
 
