@@ -5,6 +5,7 @@ NO_CACHE=1
 NO_NDK=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
+. "$topsrcdir/build/mozconfig.rust"
 
 . "$topsrcdir/mobile/android/config/mozconfigs/android-api-15/nightly"
 

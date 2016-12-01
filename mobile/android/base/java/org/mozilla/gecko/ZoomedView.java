@@ -240,10 +240,15 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
             }
         };
         touchListener = new ZoomedViewTouchListener();
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
-                "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
-                "Gesture:CloseZoomedView", "Browser:ZoomToPageWidth", "Browser:ZoomToRect",
-                "FormAssist:AutoComplete", "FormAssist:Hide");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+                "Gesture:clusteredLinksClicked",
+                "Window:Resize",
+                "Content:LocationChange",
+                "Gesture:CloseZoomedView",
+                "Browser:ZoomToPageWidth",
+                "Browser:ZoomToRect",
+                "FormAssist:AutoComplete",
+                "FormAssist:Hide");
     }
 
     void destroy() {
@@ -252,10 +257,15 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
             prefObserver = null;
         }
         ThreadUtils.removeCallbacksFromUiThread(requestRenderRunnable);
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
-                "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
-                "Gesture:CloseZoomedView", "Browser:ZoomToPageWidth", "Browser:ZoomToRect",
-                "FormAssist:AutoComplete", "FormAssist:Hide");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+                "Gesture:clusteredLinksClicked",
+                "Window:Resize",
+                "Content:LocationChange",
+                "Gesture:CloseZoomedView",
+                "Browser:ZoomToPageWidth",
+                "Browser:ZoomToRect",
+                "FormAssist:AutoComplete",
+                "FormAssist:Hide");
     }
 
     // This method (onFinishInflate) is called only when the zoomed view class is used inside
