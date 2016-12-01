@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStore =  { name: "Objects",
@@ -53,5 +53,4 @@ function testSteps()
   is(objectStore1.keyPath, objectStore2.keyPath, "Same keyPath");
 
   finishTest();
-  yield undefined;
 }

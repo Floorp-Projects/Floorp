@@ -83,7 +83,7 @@ add_task(function* () {
   let Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
   Telemetry.canRecordExtended = gOldParentCanRecord;
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, { oldCanRecord: gOldContentCanRecord }, function (arg) {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { oldCanRecord: gOldContentCanRecord }, function* (arg) {
     Cu.import("resource://gre/modules/PromiseUtils.jsm");
     yield new Promise(resolve => {
       let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
@@ -127,7 +127,7 @@ function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
   }).then(gather, gather);
 }
 
-var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix, check_documents=true) {
+var check_use_counter_iframe = async function(file, use_counter_middlefix, check_documents=true) {
   info("checking " + file + " with histogram " + use_counter_middlefix);
 
   let newTab = gBrowser.addTab( "about:blank");
@@ -138,13 +138,13 @@ var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix
   // interested in.
   let [histogram_page_before, histogram_document_before,
        histogram_docs_before, histogram_toplevel_docs_before] =
-      yield grabHistogramsFromContent(use_counter_middlefix);
+      await grabHistogramsFromContent(use_counter_middlefix);
 
   gBrowser.selectedBrowser.loadURI(gHttpTestRoot + "file_use_counter_outer.html");
-  yield waitForPageLoad(gBrowser.selectedBrowser);
+  await waitForPageLoad(gBrowser.selectedBrowser);
 
   // Inject our desired file into the iframe of the newly-loaded page.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function(opts) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function(opts) {
     Cu.import("resource://gre/modules/PromiseUtils.jsm");
     let deferred = PromiseUtils.defer();
 
@@ -174,12 +174,12 @@ var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix
   // The histograms only get recorded when the document actually gets
   // destroyed, which might not have happened yet due to GC/CC effects, etc.
   // Try to force document destruction.
-  yield waitForDestroyedDocuments();
+  await waitForDestroyedDocuments();
 
   // Grab histograms again and compare.
   let [histogram_page_after, histogram_document_after,
        histogram_docs_after, histogram_toplevel_docs_after] =
-      yield grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
+      await grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
 
   is(histogram_page_after, histogram_page_before + 1,
      "page counts for " + use_counter_middlefix + " after are correct");
@@ -189,9 +189,9 @@ var check_use_counter_iframe = Task.async(function* (file, use_counter_middlefix
     is(histogram_document_after, histogram_document_before + 1,
        "document counts for " + use_counter_middlefix + " after are correct");
   }
-});
+};
 
-var check_use_counter_img = Task.async(function* (file, use_counter_middlefix) {
+var check_use_counter_img = async function(file, use_counter_middlefix) {
   info("checking " + file + " as image with histogram " + use_counter_middlefix);
 
   let newTab = gBrowser.addTab("about:blank");
@@ -202,13 +202,13 @@ var check_use_counter_img = Task.async(function* (file, use_counter_middlefix) {
   // interested in.
   let [histogram_page_before, histogram_document_before,
        histogram_docs_before, histogram_toplevel_docs_before] =
-      yield grabHistogramsFromContent(use_counter_middlefix);
+      await grabHistogramsFromContent(use_counter_middlefix);
 
   gBrowser.selectedBrowser.loadURI(gHttpTestRoot + "file_use_counter_outer.html");
-  yield waitForPageLoad(gBrowser.selectedBrowser);
+  await waitForPageLoad(gBrowser.selectedBrowser);
 
   // Inject our desired file into the img of the newly-loaded page.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function(opts) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function*(opts) {
     Cu.import("resource://gre/modules/PromiseUtils.jsm");
     let deferred = PromiseUtils.defer();
 
@@ -239,12 +239,12 @@ var check_use_counter_img = Task.async(function* (file, use_counter_middlefix) {
   // The histograms only get recorded when the document actually gets
   // destroyed, which might not have happened yet due to GC/CC effects, etc.
   // Try to force document destruction.
-  yield waitForDestroyedDocuments();
+  await waitForDestroyedDocuments();
 
   // Grab histograms again and compare.
   let [histogram_page_after, histogram_document_after,
        histogram_docs_after, histogram_toplevel_docs_after] =
-      yield grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
+      await grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
   is(histogram_page_after, histogram_page_before + 1,
      "page counts for " + use_counter_middlefix + " after are correct");
   is(histogram_document_after, histogram_document_before + 1,
@@ -255,9 +255,9 @@ var check_use_counter_img = Task.async(function* (file, use_counter_middlefix) {
   // one for the SVG image itself.
   ok(histogram_docs_after >= histogram_docs_before + 2,
      "document counts are correct");
-});
+};
 
-var check_use_counter_direct = Task.async(function* (file, use_counter_middlefix, xfail=false) {
+var check_use_counter_direct = async function(file, use_counter_middlefix, xfail=false) {
   info("checking " + file + " with histogram " + use_counter_middlefix);
 
   let newTab = gBrowser.addTab( "about:blank");
@@ -268,10 +268,10 @@ var check_use_counter_direct = Task.async(function* (file, use_counter_middlefix
   // interested in.
   let [histogram_page_before, histogram_document_before,
        histogram_docs_before, histogram_toplevel_docs_before] =
-      yield grabHistogramsFromContent(use_counter_middlefix);
+      await grabHistogramsFromContent(use_counter_middlefix);
 
   gBrowser.selectedBrowser.loadURI(gHttpTestRoot + file);
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
     Cu.import("resource://gre/modules/PromiseUtils.jsm");
     yield new Promise(resolve => {
       let listener = () => {
@@ -292,12 +292,12 @@ var check_use_counter_direct = Task.async(function* (file, use_counter_middlefix
   // The histograms only get recorded when the document actually gets
   // destroyed, which might not have happened yet due to GC/CC effects, etc.
   // Try to force document destruction.
-  yield waitForDestroyedDocuments();
+  await waitForDestroyedDocuments();
 
   // Grab histograms again and compare.
   let [histogram_page_after, histogram_document_after,
        histogram_docs_after, histogram_toplevel_docs_after] =
-      yield grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
+      await grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
   (xfail ? todo_is : is)(histogram_page_after, histogram_page_before + 1,
                          "page counts for " + use_counter_middlefix + " after are correct");
   (xfail ? todo_is : is)(histogram_document_after, histogram_document_before + 1,
@@ -306,4 +306,4 @@ var check_use_counter_direct = Task.async(function* (file, use_counter_middlefix
      "top level document counts are correct");
   ok(histogram_docs_after >= histogram_docs_before + 1,
      "document counts are correct");
-});
+};

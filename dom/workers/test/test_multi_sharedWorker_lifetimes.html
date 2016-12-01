@@ -19,7 +19,7 @@
         const frameRelativeURL = "multi_sharedWorker_frame.html";
         const storedData = "0123456789abcdefghijklmnopqrstuvwxyz";
 
-        let testGenerator = (function() {
+        let testGenerator = (function*() {
           SimpleTest.waitForExplicitFinish();
 
 	  // Force scrollbar to always be shown.  The scrollbar setting is
@@ -143,10 +143,9 @@
           window.removeEventListener("message", sendToGenerator);
 
           SimpleTest.finish();
-          yield undefined;
         })();
 
-        let sendToGenerator = testGenerator.send.bind(testGenerator);
+        let sendToGenerator = testGenerator.next.bind(testGenerator);
 
       </script>
   </head>

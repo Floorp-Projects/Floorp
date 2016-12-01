@@ -13,7 +13,7 @@ function abortListener(evt)
   is(evt.target.error, null, "Expect a null error for an aborted transaction");
 }
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -380,5 +380,4 @@ function testSteps()
   ok(abortFired, "Abort should have fired!");
 
   finishTest();
-  yield undefined;
 }

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const osName = "people";
   const indexName = "weight";
@@ -1706,6 +1706,5 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }
 

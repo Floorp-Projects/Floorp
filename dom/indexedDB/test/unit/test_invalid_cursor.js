@@ -7,7 +7,7 @@ var disableWorkerTest = "Need to implement a gc() function for worker tests";
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const dbName = ("window" in this) ? window.location.pathname : "test";
   const dbVersion = 1;
@@ -60,5 +60,4 @@ function testSteps()
   is(event.target.result, null, "No more entries");
 
   finishTest();
-  yield undefined;
 }

@@ -66,7 +66,7 @@ function resetState() {
 /**
  * testing if anchor and area referrer attributes are honoured (1174913)
  */
-var tests = (function() {
+var tests = (function*() {
 
   // enable referrer attribute
   yield SpecialPowers.pushPrefEnv({"set": [['network.http.enablePerElementReferrer', true]]}, advance);
@@ -97,6 +97,6 @@ var tests = (function() {
     };
   };
 
-  // complete.  Be sure to yield so we don't call this twice.
-  yield SimpleTest.finish();
+  // complete.
+  SimpleTest.finish();
 })();

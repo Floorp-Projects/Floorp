@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -69,7 +69,7 @@ function testSteps()
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {
-        testGenerator.send(event);
+        testGenerator.next(event);
       }
     }
   }
@@ -1257,5 +1257,4 @@ function testSteps()
   is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
 
   finishTest();
-  yield undefined;
 }

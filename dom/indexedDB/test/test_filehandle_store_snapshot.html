@@ -10,7 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
-  function testSteps()
+  function* testSteps()
   {
     const READ_WRITE = "readwrite";
 
@@ -85,7 +85,6 @@
     yield undefined;
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="file.js"></script>
