@@ -1176,7 +1176,6 @@ class BuildReader(object):
             self._execution_time += time.time() - time_start
 
         for gyp_context in gyp_contexts:
-            context['DIRS'].append(mozpath.relpath(gyp_context.objdir, context.objdir))
             sandbox.subcontexts.append(gyp_context)
 
         for subcontext in sandbox.subcontexts:
