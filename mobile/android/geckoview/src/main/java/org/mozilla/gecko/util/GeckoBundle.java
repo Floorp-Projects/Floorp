@@ -636,7 +636,7 @@ public final class GeckoBundle {
             }
             Object out = null;
             for (int i = 0; i < len; i++) {
-                final Object element = fromJSONValue(array.opt(0));
+                final Object element = fromJSONValue(array.opt(i));
                 if (element == null) {
                     continue;
                 }
@@ -677,7 +677,7 @@ public final class GeckoBundle {
         }
 
         final String[] keys = new String[obj.length()];
-        final Object[] values = new String[obj.length()];
+        final Object[] values = new Object[obj.length()];
 
         final Iterator<String> iter = obj.keys();
         for (int i = 0; iter.hasNext(); i++) {
