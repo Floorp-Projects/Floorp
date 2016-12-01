@@ -8,6 +8,7 @@ Set dynamic task description properties of the android stuff.  Temporary!
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.job.common import SECRET_SCOPE
 
 transforms = TransformSequence()
 
@@ -41,6 +42,11 @@ def setup_task(config, tasks):
                     config.params['level'], config.params['project'], task['name']),
                 'mount-point': "/home/worker/workspace",
             })
+
+        # Need appropriate scopes for secrets, from the 'build' section
+        task['worker']['taskcluster-proxy'] = True
+        task['scopes'].append(SECRET_SCOPE.format(
+            'build', config.params['level'], '*'))
 
         del task['name']
         yield task
