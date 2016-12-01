@@ -105,7 +105,6 @@
    fun:g_object_newv
    fun:g_object_new_valist
    fun:g_object_new
-   fun:_ZN13nsLookAndFeel4InitEv
    ...
 }
 # set_color() in gtkstyle.c of GTK version 3.4.4 only can leak GdkRGBA
