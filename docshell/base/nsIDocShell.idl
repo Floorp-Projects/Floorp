@@ -151,6 +151,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    *                                  then no inheritance of any sort will happen: the
    *                                  load will just get a principal based on the URI
    *                                  being loaded.
+   * @param aPrincipalForContentPolicyChecks - Principal to be passed to content policy
+   *                               check. This should match the triggering principal,
+   *                               but may be nullptr in some cases where the
+   *                               triggering principal is system but we want to
+   *                               perform a content policy check anyway.
    * @param aFlags               - Any of the load flags defined within above.
    * @param aStopActiveDoc       - Flag indicating whether loading the current
    *                               document should be stopped.
@@ -179,6 +184,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in unsigned long aReferrerPolicy,
                               in nsIPrincipal aTriggeringPrincipal,
                               in nsIPrincipal aPrincipalToInherit,
+                              in nsIPrincipal aPrincipalForContentPolicyChecks,
                               in uint32_t aFlags,
                               in AString aWindowTarget,
                               in string aTypeHint,
