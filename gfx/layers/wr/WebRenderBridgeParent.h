@@ -78,6 +78,7 @@ public:
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  void SetWebRenderProfilerEnabled(bool aEnabled);
 
   void Destroy();
 
