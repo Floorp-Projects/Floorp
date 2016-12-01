@@ -19,10 +19,8 @@
 /*** List items and similar elements in the summary ***/
 
 :root {
-  --downloads-item-height: 7em;
+  --downloads-item-height: 6em;
   --downloads-item-font-size-factor: 0.95;
-  --downloads-item-target-margin-bottom: 6px;
-  --downloads-item-details-margin-top: 0;
   --downloads-item-details-opacity: 0.7;
 }
 

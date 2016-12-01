@@ -21,35 +21,14 @@
   height: var(--downloads-item-height);
 }
 
-%ifdef XP_WIN
-@media (-moz-os-version: windows-xp) {
-%endif
-#downloadsRichListBox > richlistitem.download {
-  padding: 5px 8px;
-}
-%ifdef XP_WIN
-}
-%endif
-
 .downloadTypeIcon {
-  margin-top: 8px;
-  margin-inline-end: 12px;
-  margin-bottom: 8px;
-  margin-inline-start: 0;
+  margin: 8px 13px;
   width: 32px;
   height: 32px;
 }
 
-%ifdef XP_WIN
-@media not all and (-moz-os-version: windows-xp) {
-  .downloadTypeIcon {
-    margin-inline-start: 8px;
-  }
-}
-%endif
-
 .downloadBlockedBadge {
-  margin: 0 4px;
+  margin: 0 5px;
   background: url("chrome://browser/skin/downloads/download-blocked.svg") top right / 16px no-repeat;
 }
 
@@ -70,12 +49,15 @@
 }
 
 .downloadTarget {
-  margin-bottom: 3px;
+  margin: 0;
 }
 
 .downloadDetails {
   opacity: 0.7;
   font-size: 95%;
+  /* Use calc() to keep the height consistent with .downloadTarget, so that the
+     progress bar can be vertically centered. */
+  margin: 4px 0 calc(1em / 0.95 - 1em);
 }
 
 .downloadButton {
@@ -84,10 +66,10 @@
   background: transparent;
   min-width: 0;
   min-height: 0;
-  margin: 3px;
+  margin: 0;
   border: none;
-  padding: 5px;
   color: inherit;
+  padding: 0 18px;
 }
 
 .downloadButton > .button-box {

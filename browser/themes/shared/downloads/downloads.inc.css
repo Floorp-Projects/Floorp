@@ -25,11 +25,9 @@
 
 #downloadsListBox {
   background: transparent;
-  padding: 0;
   color: inherit;
   -moz-appearance: none;
   margin: 0;
-  border: none;
 }
 
 #emptyDownloads {
@@ -150,7 +148,6 @@ toolbarseparator.downloadsDropmarkerSplitter {
 }
 
 #downloadsSummary {
-  padding: 0 12px;
   -moz-user-focus: normal;
 }
 
@@ -167,36 +164,26 @@ toolbarseparator.downloadsDropmarkerSplitter {
 #downloadsSummary,
 richlistitem[type="download"] {
   height: var(--downloads-item-height);
-  padding-inline-end: 0;
-  color: inherit;
 }
 
 richlistitem[type="download"] {
-  margin: 0;
   border-bottom: 1px solid var(--panel-separator-color);
   background: transparent;
-  padding: 0;
+  color: inherit;
 }
 
 richlistitem[type="download"]:last-child {
   border-bottom: none;
 }
 
-richlistitem[type="download"] > .downloadMainArea {
-  padding: 8px;
-}
-
 .downloadTypeIcon {
-  margin-top: 8px;
-  margin-inline-end: 12px;
-  margin-bottom: 8px;
-  margin-inline-start: 0;
+  margin: 8px 13px;
   width: 32px;
   height: 32px;
 }
 
 .downloadBlockedBadge {
-  margin: 0 4px;
+  margin: 0 5px;
   background: url("chrome://browser/skin/downloads/download-blocked.svg") top right / 16px no-repeat;
 }
 
@@ -226,24 +213,23 @@ richlistitem[type="download"] > .downloadMainArea {
    font-size of .downloadContainer's parent, we use calc to go from the
    smaller font-size back to the original font-size.
  */
-#downloadsSummaryDetails,
 .downloadContainer {
   font-size: calc(100% * var(--downloads-item-font-size-factor));
+  margin-inline-end: 13px;
 }
 
 #downloadsSummaryDescription,
 .downloadTarget {
-  margin-bottom: var(--downloads-item-target-margin-bottom);
-}
-
-.downloadTarget {
+  margin: 0;
   font-size: calc(100% / var(--downloads-item-font-size-factor));
 }
 
 #downloadsSummaryDetails,
 .downloadDetails {
-  margin-top: var(--downloads-item-details-margin-top);
   opacity: var(--downloads-item-details-opacity);
+  /* Use calc() to keep the height consistent with .downloadTarget, so that the
+     progress bar can be vertically centered. */
+  margin: 4px 0 calc(1em / var(--downloads-item-font-size-factor) - 1em);
 }
 
 @item@[verdict] > toolbarseparator {
@@ -256,7 +242,7 @@ richlistitem[type="download"] > .downloadMainArea {
   margin: 0;
   border: none;
   background: transparent;
-  padding: 8px;
+  padding: 0;
   color: inherit;
 }
 
