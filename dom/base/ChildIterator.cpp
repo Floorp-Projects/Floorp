@@ -383,7 +383,10 @@ AllChildrenIterator::AppendNativeAnonymousChildren()
 
   // The root scroll frame is not the primary frame of the root element.
   // Detect and handle this case.
-  if (mOriginalContent == mOriginalContent->OwnerDoc()->GetRootElement()) {
+  //
+  // XXXheycam This probably needs to find the nsCanvasFrame's NAC too.
+  if (!(mFlags & nsIContent::eSkipDocumentLevelNativeAnonymousContent) &&
+      mOriginalContent == mOriginalContent->OwnerDoc()->GetRootElement()) {
     nsIPresShell* presShell = mOriginalContent->OwnerDoc()->GetShell();
     nsIFrame* scrollFrame = presShell ? presShell->GetRootScrollFrame() : nullptr;
     if (scrollFrame) {
@@ -582,12 +585,6 @@ StyleChildrenIterator::IsNeeded(const Element* aElement)
   // If the node has native anonymous content, return true.
   nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
   if (ac) {
-    return true;
-  }
-
-  // The root element has a scroll frame that is not the primary frame, so we
-  // need to do special checking for that case.
-  if (aElement == aElement->OwnerDoc()->GetRootElement()) {
     return true;
   }
 
