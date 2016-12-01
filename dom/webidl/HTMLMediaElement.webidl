@@ -68,7 +68,7 @@ interface HTMLMediaElement : HTMLElement {
   [SetterThrows]
            attribute boolean loop;
   [Throws]
-  void play();
+  Promise<void> play();
   [Throws]
   void pause();
 
