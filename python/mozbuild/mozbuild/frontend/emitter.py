@@ -104,23 +104,6 @@ from mozbuild.base import ExecutionSummary
 
 
 ALLOWED_XPCOM_GLUE = {
-    ('TestStreamConv', 'netwerk/streamconv/test'),
-    ('PropertiesTest', 'netwerk/test'),
-    ('ReadNTLM', 'netwerk/test'),
-    ('TestBlockingSocket', 'netwerk/test'),
-    ('TestDNS', 'netwerk/test'),
-    ('TestIncrementalDownload', 'netwerk/test'),
-    ('TestNamedPipeService', 'netwerk/test'),
-    ('TestOpen', 'netwerk/test'),
-    ('TestProtocols', 'netwerk/test'),
-    ('TestServ', 'netwerk/test'),
-    ('TestStreamLoader', 'netwerk/test'),
-    ('TestUpload', 'netwerk/test'),
-    ('TestURLParser', 'netwerk/test'),
-    ('urltest', 'netwerk/test'),
-    ('TestBind', 'netwerk/test'),
-    ('TestCookie', 'netwerk/test'),
-    ('TestUDPSocket', 'netwerk/test'),
     ('xpcshell', 'js/xpconnect/shell'),
     ('testcrasher', 'toolkit/crashreporter/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),

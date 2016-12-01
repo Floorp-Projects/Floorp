@@ -161,11 +161,11 @@ ReadPrincipalInfo(JSStructuredCloneReader* aReader,
         aInfo = SystemPrincipalInfo();
     } else if (aTag == SCTAG_DOM_NULL_PRINCIPAL) {
         PrincipalOriginAttributes attrs;
-        nsAutoCString dummy;
-        if (!ReadSuffixAndSpec(aReader, attrs, dummy)) {
+        nsAutoCString spec;
+        if (!ReadSuffixAndSpec(aReader, attrs, spec)) {
             return false;
         }
-        aInfo = NullPrincipalInfo(attrs);
+        aInfo = NullPrincipalInfo(attrs, spec);
     } else if (aTag == SCTAG_DOM_EXPANDED_PRINCIPAL) {
         uint32_t length, unused;
         if (!JS_ReadUint32Pair(aReader, &length, &unused)) {
@@ -254,7 +254,7 @@ WritePrincipalInfo(JSStructuredCloneWriter* aWriter, const PrincipalInfo& aInfo)
     if (aInfo.type() == PrincipalInfo::TNullPrincipalInfo) {
         const NullPrincipalInfo& nullInfo = aInfo;
         return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NULL_PRINCIPAL, 0) &&
-               WriteSuffixAndSpec(aWriter, nullInfo.attrs(), EmptyCString());
+               WriteSuffixAndSpec(aWriter, nullInfo.attrs(), nullInfo.spec());
     }
     if (aInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
         return JS_WriteUint32Pair(aWriter, SCTAG_DOM_SYSTEM_PRINCIPAL, 0);

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TestCommon.h"
-#include "TestHarness.h"
+#include "gtest/gtest.h"
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
 #include "nsIServerSocket.h"
@@ -11,6 +11,8 @@
 #include "nsINetAddr.h"
 #include "mozilla/net/DNS.h"
 #include "prerror.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla::net;
 using namespace mozilla;
@@ -21,20 +23,22 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
 
-  ServerListener();
+  explicit ServerListener(WaitForCondition* waiter);
 
   // Port that is got from server side will be store here.
   uint32_t mClientPort;
   bool mFailed;
+  RefPtr<WaitForCondition> mWaiter;
 private:
   virtual ~ServerListener();
 };
 
 NS_IMPL_ISUPPORTS(ServerListener, nsIServerSocketListener)
 
-ServerListener::ServerListener()
+ServerListener::ServerListener(WaitForCondition* waiter)
   : mClientPort(-1)
   , mFailed(false)
+  , mWaiter(waiter)
 {
 }
 
@@ -49,13 +53,11 @@ ServerListener::OnSocketAccepted(nsIServerSocket *aServ,
   nsresult rv = aTransport->GetPeerAddr(&peerAddr);
   if (NS_FAILED(rv)) {
     mFailed = true;
-    fail("Server: not able to get peer address.");
-    QuitPumpingEvents();
+    mWaiter->Notify();
     return NS_OK;
   }
   mClientPort = PR_ntohs(peerAddr.inet.port);
-  passed("Server: received connection");
-  QuitPumpingEvents();
+  mWaiter->Notify();
   return NS_OK;
 }
 
@@ -72,17 +74,19 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAMCALLBACK
 
-  ClientInputCallback();
+  explicit ClientInputCallback(WaitForCondition* waiter);
 
   bool mFailed;
+  RefPtr<WaitForCondition> mWaiter;
 private:
   virtual ~ClientInputCallback();
 };
 
 NS_IMPL_ISUPPORTS(ClientInputCallback, nsIInputStreamCallback)
 
-ClientInputCallback::ClientInputCallback()
+ClientInputCallback::ClientInputCallback(WaitForCondition* waiter)
   : mFailed(false)
+  , mWaiter(waiter)
 {
 }
 
@@ -98,48 +102,31 @@ ClientInputCallback::OnInputStreamReady(nsIAsyncInputStream *aStream)
   if (NS_FAILED(rv)) {
     mFailed = true;
   }
-  QuitPumpingEvents();
+  mWaiter->Notify();
   return NS_OK;
 }
 
-int
-main(int32_t argc, char *argv[])
+TEST(TestBind, MainTest)
 {
-  ScopedXPCOM xpcom("SocketTransport");
-  if (xpcom.failed()) {
-    fail("Unable to initalize XPCOM.");
-    return -1;
-  }
-
   //
   // Server side.
   //
   nsCOMPtr<nsIServerSocket> server = do_CreateInstance("@mozilla.org/network/server-socket;1");
-  if (!server) {
-    fail("Failed to create server socket.");
-    return -1;
-  }
+  ASSERT_TRUE(server);
 
   nsresult rv = server->Init(-1, true, -1);
-  if (NS_FAILED(rv)) {
-    fail("Failed to initialize server.");
-    return -1;
-  }
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   int32_t serverPort;
   rv = server->GetPort(&serverPort);
-  if (NS_FAILED(rv)) {
-    fail("Unable to get server port.");
-    return -1;
-  }
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  RefPtr<WaitForCondition> waiter = new WaitForCondition();
 
   // Listening.
-  RefPtr<ServerListener> serverListener = new ServerListener();
+  RefPtr<ServerListener> serverListener = new ServerListener(waiter);
   rv = server->AsyncListen(serverListener);
-  if (NS_FAILED(rv)) {
-    fail("Server fail to start listening.");
-    return -1;
-  }
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   //
   // Client side
@@ -147,19 +134,16 @@ main(int32_t argc, char *argv[])
   uint32_t bindingPort = 20000;
   nsCOMPtr<nsISocketTransportService> sts =
     do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
-  if (NS_FAILED(rv)) {
-    fail("Unable to get socket transport service.");
-    return -1;
-  }
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  RefPtr<ClientInputCallback> clientCallback;
 
   for (int32_t tried = 0; tried < 100; tried++) {
     nsCOMPtr<nsISocketTransport> client;
     rv = sts->CreateTransport(nullptr, 0, NS_LITERAL_CSTRING("127.0.0.1"),
                               serverPort, nullptr, getter_AddRefs(client));
-    if (NS_FAILED(rv)) {
-      fail("Unable to create transport.");
-      return -1;
-    }
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
 
     // Bind to a port. It's possible that we are binding to a port that is
     // currently in use. If we failed to bind, we try next port.
@@ -168,25 +152,19 @@ main(int32_t argc, char *argv[])
     bindingAddr.inet.ip = 0;
     bindingAddr.inet.port = PR_htons(bindingPort);
     rv = client->Bind(&bindingAddr);
-    if (NS_FAILED(rv)) {
-      fail("Unable to bind a port.");
-      return -1;
-    }
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
 
     // Open IO streams, to make client SocketTransport connect to server.
-    RefPtr<ClientInputCallback> clientCallback = new ClientInputCallback();
-    nsCOMPtr<nsIInputStream> inputStream;
+    clientCallback = new ClientInputCallback(waiter);
     rv = client->OpenInputStream(nsITransport::OPEN_UNBUFFERED,
                                  0, 0, getter_AddRefs(inputStream));
-    if (NS_FAILED(rv)) {
-      fail("Failed to open an input stream.");
-      return -1;
-    }
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
     nsCOMPtr<nsIAsyncInputStream> asyncInputStream = do_QueryInterface(inputStream);
     rv = asyncInputStream->AsyncWait(clientCallback, 0, 0, nullptr);
 
     // Wait for server's response or callback of input stream.
-    PumpEvents();
+    waiter->Wait(1);
     if (clientCallback->mFailed) {
       // if client received error, we likely have bound a port that is in use.
       // we can try another port.
@@ -197,14 +175,12 @@ main(int32_t argc, char *argv[])
     }
   }
 
-  if (serverListener->mFailed) {
-    fail("Server failure.");
-    return -1;
-  }
-  if (serverListener->mClientPort != bindingPort) {
-    fail("Port that server got doesn't match what we are expecting.");
-    return -1;
-  }
-  passed("Port matched");
-  return 0;
+  ASSERT_FALSE(serverListener->mFailed);
+  ASSERT_EQ(serverListener->mClientPort, bindingPort);
+
+  inputStream->Close();
+  waiter->Wait(1);
+  ASSERT_TRUE(clientCallback->mFailed);
+
+  server->Close();
 }

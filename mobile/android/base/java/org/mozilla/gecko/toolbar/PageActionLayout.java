@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
@@ -61,14 +61,14 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "PageActions:Add",
             "PageActions:Remove");
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "PageActions:Add",
             "PageActions:Remove");
 

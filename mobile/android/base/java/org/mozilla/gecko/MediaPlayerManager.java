@@ -76,9 +76,10 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     protected final Map<String, GeckoPresentationDisplay> displays = new HashMap<String, GeckoPresentationDisplay>(); // used for Presentation API
 
     @Override
-    public void onStart() {
-        super.onStart();
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
                                                                   "MediaPlayer:Load",
                                                                   "MediaPlayer:Start",
                                                                   "MediaPlayer:Stop",
@@ -93,8 +94,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     }
 
     @Override
-    public void onStop() {
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+    public void onDestroy() {
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                                                                     "MediaPlayer:Load",
                                                                     "MediaPlayer:Start",
                                                                     "MediaPlayer:Stop",
@@ -106,7 +107,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                                                                     "AndroidCastDevice:Start",
                                                                     "AndroidCastDevice:Stop",
                                                                     "AndroidCastDevice:SyncDevice");
-        super.onStop();
+
+        super.onDestroy();
     }
 
     // GeckoEventListener implementation

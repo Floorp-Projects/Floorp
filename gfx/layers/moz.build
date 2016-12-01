@@ -321,7 +321,6 @@ UNIFIED_SOURCES += [
     'composite/ImageHost.cpp',
     'composite/ImageLayerComposite.cpp',
     'composite/LayerManagerComposite.cpp',
-    'composite/PaintCounter.cpp',
     'composite/PaintedLayerComposite.cpp',
     'composite/TextRenderer.cpp',
     'composite/TextureHost.cpp',
@@ -450,3 +449,8 @@ LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['MOZ_ENABLE_SKIA']:
+  UNIFIED_SOURCES += [
+    'composite/PaintCounter.cpp',
+  ]

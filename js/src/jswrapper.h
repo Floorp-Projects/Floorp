@@ -358,6 +358,9 @@ CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true);
 JS_FRIEND_API(JSObject*)
 UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy = true);
 
+void
+ReportAccessDenied(JSContext* cx);
+
 JS_FRIEND_API(bool)
 IsCrossCompartmentWrapper(JSObject* obj);
 
