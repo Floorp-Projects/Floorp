@@ -103,10 +103,6 @@ public:
   // was reconstructed, resulting in the content elements getting cloned.
   virtual void OnFrameReconstruction();
 
-  // Called by AccessibleCaretEventHub to inform us that the document
-  // becomes visible.
-  virtual void OnDocumentVisible();
-
   // Update the manager with the last input source that was observed. This
   // is used in part to determine if the carets should be shown or hidden.
   void SetLastInputSource(uint16_t aInputSource);
