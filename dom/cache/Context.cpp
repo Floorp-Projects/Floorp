@@ -871,7 +871,7 @@ Context::Dispatch(Action* aAction)
     return;
   }
 
-  MOZ_ASSERT(STATE_CONTEXT_READY);
+  MOZ_ASSERT(mState == STATE_CONTEXT_READY);
   DispatchAction(aAction);
 }
 

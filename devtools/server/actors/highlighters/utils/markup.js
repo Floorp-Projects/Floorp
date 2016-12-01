@@ -34,6 +34,7 @@ exports.getCSSStyleRules = (...args) =>
   lazyContainer.DOMUtils.getCSSStyleRules(...args);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STYLESHEET_URI = "resource://devtools/server/actors/" +
                        "highlighters.css";
@@ -181,8 +182,7 @@ exports.createSVGNode = createSVGNode;
  * @param {Window} This window's document will be used to create the element
  * @param {Object} Options for the node include:
  * - nodeType: the type of node, defaults to "div".
- * - namespace: if passed, doc.createElementNS will be used instead of
- *   doc.creatElement.
+ * - namespace: the namespace to use to create the node, defaults to XHTML namespace.
  * - attributes: a {name:value} object to be used as attributes for the node.
  * - prefix: a string that will be used to prefix the values of the id and class
  *   attributes.
@@ -191,13 +191,9 @@ exports.createSVGNode = createSVGNode;
  */
 function createNode(win, options) {
   let type = options.nodeType || "div";
+  let namespace = options.namespace || XHTML_NS;
 
-  let node;
-  if (options.namespace) {
-    node = win.document.createElementNS(options.namespace, type);
-  } else {
-    node = win.document.createElement(type);
-  }
+  let node = win.document.createElementNS(namespace, type);
 
   for (let name in options.attributes || {}) {
     let value = options.attributes[name];

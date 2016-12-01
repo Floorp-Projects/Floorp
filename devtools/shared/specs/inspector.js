@@ -438,6 +438,12 @@ const inspectorSpec = generateActorSpec({
     cancelPickColorFromPage: {
       request: {},
       response: {}
+    },
+    supportsHighlighters: {
+      request: {},
+      response: {
+        value: RetVal("boolean")
+      }
     }
   }
 });

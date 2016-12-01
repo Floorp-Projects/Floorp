@@ -28,6 +28,8 @@
 
 #include "ZeroPole.h"
 
+#include "DenormalDisabler.h"
+
 #include <cmath>
 #include <float.h>
 
@@ -62,14 +64,17 @@ void ZeroPole::process(const float *source, float *destination, int framesToProc
     
     // Locals to member variables. Flush denormals here so we don't
     // slow down the inner loop above.
+    #ifndef HAVE_DENORMAL
     if (lastX == 0.0f && lastY != 0.0f && fabsf(lastY) < FLT_MIN) {
         // Flush future values to zero (until there is new input).
         lastY = 0.0;
+
         // Flush calculated values.
         for (int i = framesToProcess; i-- && fabsf(destination[i]) < FLT_MIN; ) {
             destination[i] = 0.0f;
         }
     }
+    #endif
 
     m_lastX = lastX;
     m_lastY = lastY;

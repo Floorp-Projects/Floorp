@@ -9,6 +9,8 @@
 
 add_task(function* () {
   let Actions = require("devtools/client/netmonitor/actions/index");
+  let { getActiveFilters } = require("devtools/client/netmonitor/selectors/index");
+
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
@@ -19,8 +21,8 @@ add_task(function* () {
   // Use these getters instead of caching instances inside the panel win,
   // since the tool is reopened a bunch of times during this test
   // and the instances will differ.
-  let getView = () => monitor.panelWin.NetMonitorView;
   let getStore = () => monitor.panelWin.gStore;
+  let getState = () => getStore().getState();
 
   let prefsToCheck = {
     filters: {
@@ -28,7 +30,7 @@ add_task(function* () {
       newValue: ["html", "css"],
       // Getter used to retrieve the current value from the frontend, in order
       // to verify that the pref was applied properly.
-      validateValue: ($) => getView().RequestsMenu._activeFilters,
+      validateValue: ($) => getActiveFilters(getState()),
       // Predicate used to modify the frontend when setting the new pref value,
       // before trying to validate the changes.
       modifyFrontend: ($, value) => value.forEach(e =>

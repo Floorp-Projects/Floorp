@@ -42,7 +42,6 @@
 #include "imgIContainer.h"
 #include "BasicLayers.h"
 #include "nsBoxFrame.h"
-#include "nsViewportFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsSVGEffects.h"
 #include "nsSVGElement.h"
@@ -65,6 +64,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/ViewportFrame.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "ActiveLayerTracker.h"
 #include "nsContentUtils.h"
@@ -773,7 +773,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsBuildingForPopup(nsLayoutUtils::IsPopup(aReferenceFrame)),
       mForceLayerForScrollParent(false),
       mAsyncPanZoomEnabled(nsLayoutUtils::AsyncPanZoomEnabled(aReferenceFrame)),
-      mBuildingInvisibleItems(false)
+      mBuildingInvisibleItems(false),
+      mHitTestShouldStopAtFirstOpaque(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
   PL_InitArenaPool(&mPool, "displayListArena", 4096,
@@ -2216,6 +2217,13 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
         if (!GetMouseThrough(f) && IsFrameReceivingPointerEvents(f)) {
           writeFrames->AppendElement(f);
         }
+      }
+
+      if (aBuilder->HitTestShouldStopAtFirstOpaque() &&
+          item->GetOpaqueRegion(aBuilder, &snap).Contains(aRect)) {
+        // We're exiting early, so pop the remaining items off the buffer.
+        aState->mItemBuffer.SetLength(itemBufferStart);
+        break;
       }
     }
   }
