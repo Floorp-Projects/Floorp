@@ -12,13 +12,36 @@
 
 namespace mozilla {
 
+// Class containing only pre-parsed lowercase media MIME type/subtype.
+class MediaMIMEType
+{
+public:
+  // MIME "type/subtype", always lowercase.
+  const nsACString& AsString() const { return mMIMEType; }
+
+private:
+  friend Maybe<MediaMIMEType> MakeMediaMIMEType(const nsAString& aType);
+  friend class MediaExtendedMIMEType;
+  explicit MediaMIMEType(const nsACString& aType);
+
+  nsCString mMIMEType; // UTF8 MIME "type/subtype".
+};
+
+Maybe<MediaMIMEType> MakeMediaMIMEType(const nsAString& aType);
+Maybe<MediaMIMEType> MakeMediaMIMEType(const nsACString& aType);
+Maybe<MediaMIMEType> MakeMediaMIMEType(const char* aType);
+
+
 // Class containing pre-parsed media MIME type parameters, e.g.:
 // MIME type/subtype, optional codecs, etc.
 class MediaExtendedMIMEType
 {
 public:
+  explicit MediaExtendedMIMEType(const MediaMIMEType& aType);
+  explicit MediaExtendedMIMEType(MediaMIMEType&& aType);
+
   // MIME "type/subtype".
-  const nsACString& Type() const { return mMIMEType; }
+  const MediaMIMEType& Type() const { return mMIMEType; }
 
   // Was there an explicit 'codecs' parameter provided?
   bool HaveCodecs() const { return mHaveCodecs; }
@@ -43,13 +66,13 @@ private:
     return (aNumber < 0) ? Maybe<int32_t>(Nothing()) : Some(int32_t(aNumber));
   }
 
-  nsCString mMIMEType; // UTF8 MIME type.
-  bool mHaveCodecs; // If false, mCodecs must be empty.
+  MediaMIMEType mMIMEType; // MIME type/subtype.
+  bool mHaveCodecs = false; // If false, mCodecs must be empty.
   nsString mCodecs;
-  int32_t mWidth; // -1 if not provided.
-  int32_t mHeight; // -1 if not provided.
-  int32_t mFramerate; // -1 if not provided.
-  int32_t mBitrate; // -1 if not provided.
+  int32_t mWidth = -1; // -1 if not provided.
+  int32_t mHeight = -1; // -1 if not provided.
+  int32_t mFramerate = -1; // -1 if not provided.
+  int32_t mBitrate = -1; // -1 if not provided.
 };
 
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType);
