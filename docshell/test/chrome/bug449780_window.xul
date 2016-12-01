@@ -37,7 +37,7 @@
       return $(id).contentDocument.documentElement.innerHTML;
     }
 
-    var tester = (function() {
+    var tester = (function*() {
       var origDOM = getDOM("f1");
       $("f1").contentDocument.body.textContent = "Modified";
       var modifiedDOM = getDOM("f1");
@@ -62,7 +62,6 @@
       is(getDOM("f2"), origDOM, "Should have not have been bfcached");
       window.close();
       SimpleTest.finish();
-      yield undefined;
     })();
 
     function testDriver() {
