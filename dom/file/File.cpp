@@ -555,7 +555,11 @@ File::Constructor(const GlobalObject& aGlobal,
                   const FilePropertyBag& aBag,
                   ErrorResult& aRv)
 {
-  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(aName);
+  // Normalizing the filename
+  nsString name(aName);
+  name.ReplaceChar('/', ':');
+
+  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(name);
 
   nsAutoString type(aBag.mType);
   MakeValidBlobType(type);
