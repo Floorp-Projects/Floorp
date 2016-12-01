@@ -44,7 +44,21 @@ NewConsoleOutputWrapper.prototype = {
           }]));
         },
         hudProxyClient: this.jsterm.hud.proxy.client,
-        onViewSourceInDebugger: frame => this.toolbox.viewSourceInDebugger.call(
+        onViewSourceInDebugger: frame => {
+          this.toolbox.viewSourceInDebugger.call(
+            this.toolbox,
+            frame.url,
+            frame.line
+          ).then(() =>
+            this.jsterm.hud.emit("source-in-debugger-opened")
+          );
+        },
+        onViewSourceInScratchpad: frame => this.toolbox.viewSourceInScratchpad.call(
+          this.toolbox,
+          frame.url,
+          frame.line
+        ),
+        onViewSourceInStyleEditor: frame => this.toolbox.viewSourceInStyleEditor.call(
           this.toolbox,
           frame.url,
           frame.line
