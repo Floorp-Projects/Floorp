@@ -10,7 +10,6 @@
 
 #include "ContentChild.h"
 
-#include "BlobChild.h"
 #include "CrashReporterChild.h"
 #include "GeckoProfiler.h"
 #include "TabChild.h"
@@ -38,6 +37,7 @@
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/URLClassifierChild.h"
+#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
