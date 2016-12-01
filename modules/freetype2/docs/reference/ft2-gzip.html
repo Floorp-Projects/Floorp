@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>GZIP Streams</h1>
+<h1 id="gzip">GZIP Streams</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Stream_OpenGzip">FT_Stream_OpenGzip</a></td><td><a href="#FT_Gzip_Uncompress">FT_Gzip_Uncompress</a></td><td></td></tr>
@@ -113,7 +113,7 @@
 
 <div class="section">
 <h3 id="FT_Stream_OpenGzip">FT_Stream_OpenGzip</h3>
-<p>Defined in FT_GZIP_H (ftgzip.h).</p>
+<p>Defined in FT_GZIP_H (freetype/ftgzip.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stream_OpenGzip</b>( <a href="ft2-system_interface.html#FT_Stream">FT_Stream</a>  stream,
@@ -147,7 +147,7 @@
 
 <div class="section">
 <h3 id="FT_Gzip_Uncompress">FT_Gzip_Uncompress</h3>
-<p>Defined in FT_GZIP_H (ftgzip.h).</p>
+<p>Defined in FT_GZIP_H (freetype/ftgzip.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Gzip_Uncompress</b>( <a href="ft2-system_interface.html#FT_Memory">FT_Memory</a>       memory,
@@ -182,7 +182,7 @@
 <h4>inout</h4>
 <table class="fields">
 <tr><td class="val" id="output_len">output_len</td><td class="desc">
-<p>Before calling the function, this is the the total size of the output buffer, which must be large enough to hold the entire uncompressed data (so the size of the uncompressed data must be known in advance). After calling the function, &lsquo;output_len&rsquo; is the size of the used data in &lsquo;output&rsquo;.</p>
+<p>Before calling the function, this is the total size of the output buffer, which must be large enough to hold the entire uncompressed data (so the size of the uncompressed data must be known in advance). After calling the function, &lsquo;output_len&rsquo; is the size of the used data in &lsquo;output&rsquo;.</p>
 </td></tr>
 </table>
 

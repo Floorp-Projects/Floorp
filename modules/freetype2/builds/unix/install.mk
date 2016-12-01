@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002, 2003, 2006, 2013, 2014 by
+# Copyright 1996-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -24,35 +24,37 @@
 
 # Unix installation and deinstallation targets.
 #
-# Note that we remove any data in the `freetype' subdirectory found in
-# `$(includedir)/freetype2', which was the previous location of the header
-# files up to version 2.5.0.
+# Note that we remove any data found in `$(includedir)/freetype2' before
+# installing new files to avoid interferences with files installed by
+# previous FreeType versions (which use slightly different locations).
+#
+# We also remove `$(includedir)/ft2build.h' for the same reason.
 #
 install: $(PROJECT_LIBRARY)
-	$(MKINSTALLDIRS) $(DESTDIR)$(libdir)                      \
-                         $(DESTDIR)$(libdir)/pkgconfig            \
-                         $(DESTDIR)$(includedir)/freetype2/config \
-                         $(DESTDIR)$(bindir)                      \
-                         $(DESTDIR)$(datadir)/aclocal             \
+	-$(DELDIR) $(DESTDIR)$(includedir)/freetype2
+	-$(DELETE) $(DESTDIR)$(includedir)/ft2build.h
+	$(MKINSTALLDIRS) $(DESTDIR)$(libdir)                               \
+                         $(DESTDIR)$(libdir)/pkgconfig                     \
+                         $(DESTDIR)$(includedir)/freetype2/freetype/config \
+                         $(DESTDIR)$(bindir)                               \
+                         $(DESTDIR)$(datadir)/aclocal                      \
                          $(DESTDIR)$(mandir)/man1
 	$(LIBTOOL) --mode=install $(INSTALL)                             \
                                   $(PROJECT_LIBRARY) $(DESTDIR)$(libdir)
-	-for P in $(PUBLIC_H) ; do                  \
-          $(INSTALL_DATA)                           \
-            $$P $(DESTDIR)$(includedir)/freetype2 ; \
+	-for P in $(PUBLIC_H) ; do                           \
+          $(INSTALL_DATA)                                    \
+            $$P $(DESTDIR)$(includedir)/freetype2/freetype ; \
         done
-	-for P in $(CONFIG_H) ; do                         \
-          $(INSTALL_DATA)                                  \
-            $$P $(DESTDIR)$(includedir)/freetype2/config ; \
+	-for P in $(CONFIG_H) ; do                                  \
+          $(INSTALL_DATA)                                           \
+            $$P $(DESTDIR)$(includedir)/freetype2/freetype/config ; \
         done
-	-$(DELETE) $(DESTDIR)$(includedir)/freetype2/freetype/config/*
-	-$(DELDIR) $(DESTDIR)$(includedir)/freetype2/freetype/config
-	-$(DELETE) $(DESTDIR)$(includedir)/freetype2/freetype/*
-	-$(DELDIR) $(DESTDIR)$(includedir)/freetype2/freetype
-	$(INSTALL_DATA) $(OBJ_BUILD)/ftconfig.h               \
-          $(DESTDIR)$(includedir)/freetype2/config/ftconfig.h
-	$(INSTALL_DATA) $(OBJ_DIR)/ftmodule.h                 \
-          $(DESTDIR)$(includedir)/freetype2/config/ftmodule.h
+	$(INSTALL_DATA) $(TOP_DIR)/include/ft2build.h  \
+          $(DESTDIR)$(includedir)/freetype2/ft2build.h
+	$(INSTALL_DATA) $(OBJ_BUILD)/ftconfig.h                        \
+          $(DESTDIR)$(includedir)/freetype2/freetype/config/ftconfig.h
+	$(INSTALL_DATA) $(OBJ_DIR)/ftmodule.h                          \
+          $(DESTDIR)$(includedir)/freetype2/freetype/config/ftmodule.h
 	$(INSTALL_SCRIPT) -m 755 $(OBJ_BUILD)/freetype-config \
           $(DESTDIR)$(bindir)/freetype-config
 	$(INSTALL_SCRIPT) -m 644 $(BUILD_DIR)/freetype2.m4 \
@@ -65,9 +67,6 @@ install: $(PROJECT_LIBRARY)
 
 uninstall:
 	-$(LIBTOOL) --mode=uninstall $(RM) $(DESTDIR)$(libdir)/$(LIBRARY).$A
-	-$(DELETE) $(DESTDIR)$(includedir)/freetype2/config/*
-	-$(DELDIR) $(DESTDIR)$(includedir)/freetype2/config
-	-$(DELETE) $(DESTDIR)$(includedir)/freetype2/*
 	-$(DELDIR) $(DESTDIR)$(includedir)/freetype2
 	-$(DELETE) $(DESTDIR)$(bindir)/freetype-config
 	-$(DELETE) $(DESTDIR)$(datadir)/aclocal/freetype2.m4
@@ -90,7 +89,6 @@ clean_project_unix:
 
 distclean_project_unix: clean_project_unix
 	-$(DELETE) $(PROJECT_LIBRARY)
-	-$(DELETE) $(OBJ_DIR)/.libs/*
 	-$(DELDIR) $(OBJ_DIR)/.libs
 	-$(DELETE) *.orig *~ core *.core $(DISTCLEAN)
 

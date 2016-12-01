@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2001, 2003, 2006, 2008-2010, 2012-2014 by
+# Copyright 1996-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -169,22 +169,40 @@ modules:
 include $(TOP_DIR)/builds/modules.mk
 
 
+# get FreeType version string, using a
+# poor man's `sed' emulation with make's built-in string functions
+#
+work := $(strip $(shell $(CAT) $(TOP_DIR)/include/freetype/freetype.h))
+work := $(subst |,x,$(work))
+work := $(subst $(space),|,$(work))
+work := $(subst \#define|FREETYPE_MAJOR|,$(space),$(work))
+work := $(word 2,$(work))
+major := $(subst |,$(space),$(work))
+major := $(firstword $(major))
+
+work := $(subst \#define|FREETYPE_MINOR|,$(space),$(work))
+work := $(word 2,$(work))
+minor := $(subst |,$(space),$(work))
+minor := $(firstword $(minor))
+
+work := $(subst \#define|FREETYPE_PATCH|,$(space),$(work))
+work := $(word 2,$(work))
+patch := $(subst |,$(space),$(work))
+patch := $(firstword $(patch))
+
+ifneq ($(findstring x0x,x$(patch)x),)
+  version := $(major).$(minor)
+  winversion := $(major)$(minor)
+else
+  version := $(major).$(minor).$(patch)
+  winversion := $(major)$(minor)$(patch)
+endif
+
+
 # This target builds the tarballs.
 #
 # Not to be run by a normal user -- there are no attempts to make it
 # generic.
-
-# we check for `dist', not `distclean'
-ifneq ($(findstring distx,$(MAKECMDGOALS)x),)
-  FT_H := include/freetype.h
-
-  major := $(shell sed -n 's/.*FREETYPE_MAJOR[^0-9]*\([0-9]\+\)/\1/p' < $(FT_H))
-  minor := $(shell sed -n 's/.*FREETYPE_MINOR[^0-9]*\([0-9]\+\)/\1/p' < $(FT_H))
-  patch := $(shell sed -n 's/.*FREETYPE_PATCH[^0-9]*\([0-9]\+\)/\1/p' < $(FT_H))
-
-  version    := $(major).$(minor).$(patch)
-  winversion := $(major)$(minor)$(patch)
-endif
 
 dist:
 	-rm -rf tmp
