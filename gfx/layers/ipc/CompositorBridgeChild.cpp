@@ -558,8 +558,10 @@ CompositorBridgeChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTr
 {
   if (mLayerManager) {
     MOZ_ASSERT(aId == 0);
-    RefPtr<ClientLayerManager> m = mLayerManager->AsClientLayerManager();
-    MOZ_ASSERT(m);
+    MOZ_ASSERT(mLayerManager->GetBackendType() == LayersBackend::LAYERS_CLIENT ||
+               mLayerManager->GetBackendType() == LayersBackend::LAYERS_WR);
+    // Hold a reference to keep LayerManager alive. See Bug 1242668.
+    RefPtr<LayerManager> m = mLayerManager;
     m->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
   } else if (aId != 0) {
     RefPtr<dom::TabChild> child = dom::TabChild::GetFrom(aId);

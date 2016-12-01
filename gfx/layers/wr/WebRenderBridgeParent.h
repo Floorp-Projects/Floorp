@@ -64,8 +64,10 @@ public:
   mozilla::ipc::IPCResult RecvDPBegin(const uint32_t& aWidth,
                                       const uint32_t& aHeight,
                                       bool* aOutSuccess) override;
-  mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands) override;
-  mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& commands) override;
+  mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                    const uint64_t& aTransactionId) override;
+  mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                        const uint64_t& aTransactionId) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture,
                                             const gfx::IntRect& aRect) override;
 
@@ -81,6 +83,9 @@ public:
   void SetWebRenderProfilerEnabled(bool aEnabled);
 
   void Destroy();
+
+  const uint64_t& GetPendingTransactionId() { return mPendingTransactionId; }
+  void SetPendingTransactionId(uint64_t aId) { mPendingTransactionId = aId; }
 
   // CompositorVsyncSchedulerOwner
   bool IsPendingComposite() override { return false; }
@@ -124,6 +129,8 @@ private:
   // (via ObserveLayerUpdate).
   uint64_t mChildLayerObserverEpoch;
   uint64_t mParentLayerObserverEpoch;
+
+  uint64_t mPendingTransactionId;
 
   bool mDestroyed;
   uint32_t mWREpoch;

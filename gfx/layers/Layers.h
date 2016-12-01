@@ -97,6 +97,7 @@ class ShadowableLayer;
 class ShadowLayerForwarder;
 class LayerManagerComposite;
 class SpecificLayerAttributes;
+class TransactionIdAllocator;
 class Compositor;
 class FrameUniformityData;
 class PersistentBufferProvider;
@@ -113,6 +114,11 @@ class LayersPacket;
 
 // Defined in LayerUserData.h; please include that file instead.
 class LayerUserData;
+
+class DidCompositeObserver {
+  public:
+    virtual void DidComposite() = 0;
+};
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
@@ -684,12 +690,17 @@ public:
                             const mozilla::TimeStamp& aCompositeStart,
                             const mozilla::TimeStamp& aCompositeEnd) {}
 
+  virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) { MOZ_CRASH("GFX: LayerManager"); }
+  virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) { MOZ_CRASH("GFX: LayerManager"); }
+
   virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier) {}
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier()
   {
     return TextureFactoryIdentifier();
   }
+
+  virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) {}
 
 protected:
   RefPtr<Layer> mRoot;

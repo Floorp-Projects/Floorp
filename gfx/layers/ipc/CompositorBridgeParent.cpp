@@ -1801,8 +1801,14 @@ void
 CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
                                      TimeStamp& aCompositeEnd)
 {
-  Unused << SendDidComposite(0, mPendingTransaction, aCompositeStart, aCompositeEnd);
+  NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
   mPendingTransaction = 0;
+}
+
+void
+CompositorBridgeParent::NotifyDidComposite(uint64_t aTransactionId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
+{
+  Unused << SendDidComposite(0, aTransactionId, aCompositeStart, aCompositeEnd);
 
   if (mLayerManager) {
     nsTArray<ImageCompositeNotification> notifications;
