@@ -1037,16 +1037,14 @@ case "$target" in
         # MSVC warning C4267 warns for narrowing type conversions from size_t
         # to 32-bit integer types on 64-bit platforms.  Since this is virtually
         # the same thing as C4244, we disable C4267, too.
-        # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
-        # MSVC warning C4351 warns of newly conformant behavior as of VS2005.
         # MSVC warning C4800 warns when a value is implicitly cast to bool,
         # because this also forces narrowing to a single byte, which can be a
         # perf hit.  But this matters so little in practice (and often we want
         # that behavior) that it's better to turn it off.
-        # MSVC warning wd4595 warns non-member operator new or delete functions
+        # MSVC warning C4595 warns non-member operator new or delete functions
         # may not be declared inline, as of VS2015 Update 2.
         CFLAGS="$CFLAGS -wd4244 -wd4267"
-        CXXFLAGS="$CXXFLAGS -wd4251 -wd4244 -wd4267 -wd4345 -wd4351 -wd4800 -wd4595"
+        CXXFLAGS="$CXXFLAGS -wd4251 -wd4244 -wd4267 -wd4800 -wd4595"
         if test -n "$CLANG_CL"; then
             # XXX We should combine some of these with our generic GCC-style
             # warning checks.
