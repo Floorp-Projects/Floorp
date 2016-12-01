@@ -140,7 +140,7 @@ this.DateTimePickerHelper = {
     this.picker.loadPicker(type, detail);
     // The arrow panel needs an anchor to work. The popupAnchor (this._anchor)
     // is a transparent div that the arrow can point to.
-    this.picker.openPopup(this._anchor, "after_start", rect.left, rect.top);
+    this.picker.openPopup(this._anchor, "after_start", 0, 0);
 
     this.addPickerListeners();
   },
