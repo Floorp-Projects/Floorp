@@ -36,7 +36,7 @@ public:
 
   bool RecvPrintInitializationResult(const nsresult& aRv) final;
 
-  void ProcessPage(const nsCString& aPageFileName);
+  void ProcessPage(Shmem& aStoredPage);
 
   bool RecvPageProcessed() final;
 
