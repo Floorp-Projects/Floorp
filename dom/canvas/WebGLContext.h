@@ -536,11 +536,6 @@ public:
                               GLenum texImageTarget, WebGLTexture* tex,
                               GLint level);
 
-    // Framebuffer validation
-    bool ValidateFramebufferAttachment(const WebGLFramebuffer* fb, GLenum attachment,
-                                       const char* funcName,
-                                       bool badColorAttachmentIsInvalidOp = false);
-
     void FrontFace(GLenum mode);
     already_AddRefed<WebGLActiveInfo> GetActiveAttrib(const WebGLProgram& prog,
                                                       GLuint index);
@@ -1687,6 +1682,12 @@ protected:
     RefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
 
     bool ValidateFramebufferTarget(GLenum target, const char* const info);
+    bool ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
+                                       const dom::Sequence<GLenum>& attachments,
+                                       ErrorResult* const out_rv,
+                                       std::vector<GLenum>* const scopedVector,
+                                       GLsizei* const out_glNumAttachments,
+                                       const GLenum** const out_glAttachments);
 
     WebGLRefPtr<WebGLFramebuffer> mBoundDrawFramebuffer;
     WebGLRefPtr<WebGLFramebuffer> mBoundReadFramebuffer;
@@ -1827,6 +1828,8 @@ protected:
     bool mNeedsFakeNoDepth;
     bool mNeedsFakeNoStencil;
     bool mNeedsEmulatedLoneDepthStencil;
+
+    const bool mAllowFBInvalidation;
 
     bool Has64BitTimestamps() const;
 
