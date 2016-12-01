@@ -1,5 +1,4 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
-. "$topsrcdir/build/mozconfig.rust"
 
 # Global options
 ac_add_options --enable-debug
