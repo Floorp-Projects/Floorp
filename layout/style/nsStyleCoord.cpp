@@ -9,6 +9,8 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
 
+using namespace mozilla;
+
 nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
