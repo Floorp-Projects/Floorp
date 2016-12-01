@@ -51,9 +51,11 @@ version over:
 
 * cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react.js
 
-You also need to copy the ReactDOM package. It requires React, so
+You also need to copy the ReactDOM and ReactDOMServer package. It requires React, so
 right now we are just manually changing the path from `react` to
 `devtools/client/shared/vendor/react`.
 
 * cp build/react-dom.js <gecko-dev>/devtools/client/shared/vendor/react-dom.js
+* (change `require('react')` at the top of the file to the right path)
+* cp build/react-dom.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server.js
 * (change `require('react')` at the top of the file to the right path)
