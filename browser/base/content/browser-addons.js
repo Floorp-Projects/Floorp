@@ -90,6 +90,7 @@ const gXPInstallObserver = {
     var options = {
       displayURI: installInfo.originatingURI,
       persistent: true,
+      hideClose: true,
     };
 
     let acceptInstallation = () => {
