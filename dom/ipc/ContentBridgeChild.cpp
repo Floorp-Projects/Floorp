@@ -152,15 +152,12 @@ ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                             const ContentParentId& aCpID,
                                             const bool& aIsForBrowser)
 {
-  if (!ContentChild::GetSingleton()->RecvPBrowserConstructor(aActor,
-                                                             aTabId,
-                                                             aContext,
-                                                             aChromeFlags,
-                                                             aCpID,
-                                                             aIsForBrowser)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
+  return nsIContentChild::RecvPBrowserConstructor(aActor,
+                                                  aTabId,
+                                                  aContext,
+                                                  aChromeFlags,
+                                                  aCpID,
+                                                  aIsForBrowser);
 }
 
 PBlobChild*
