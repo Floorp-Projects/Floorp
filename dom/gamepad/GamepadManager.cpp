@@ -684,7 +684,6 @@ GamepadManager::ActorCreated(PBackgroundChild *aActor)
   // Construct VRManagerChannel and ask adding the connected
   // VR controllers to GamepadManager
   mVRChannelChild = gfx::VRManagerChild::Get();
-  mVRChannelChild->SetGamepadManager(this);
   mVRChannelChild->SendControllerListenerAdded();
 #endif
 }
