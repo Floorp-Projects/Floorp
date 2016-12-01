@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Web Console test for opening console call stacktrace links in Debugger</title>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+  </head>
+  <body>
+    <p>Web Console test for opening console call stacktrace links in Debugger.</p>
+    <script type="text/javascript">
+      "use strict";
+
+      function foo() {
+        bar();
+      }
+
+      function bar() {
+        console.trace();
+      }
+
+      foo();
+    </script>
+  </body>
+</html>
