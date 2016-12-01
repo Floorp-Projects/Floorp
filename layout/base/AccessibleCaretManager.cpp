@@ -752,13 +752,6 @@ AccessibleCaretManager::OnFrameReconstruction()
 }
 
 void
-AccessibleCaretManager::OnDocumentVisible()
-{
-  AC_LOG("%s: UpdateCarets()", __FUNCTION__);
-  UpdateCarets();
-}
-
-void
 AccessibleCaretManager::SetLastInputSource(uint16_t aInputSource)
 {
   mLastInputSource = aInputSource;
