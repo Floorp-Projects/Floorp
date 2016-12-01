@@ -9,6 +9,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCSSScanner.h"
 #include "mozilla/dom/CSSLexerBinding.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 
 namespace mozilla {
 namespace dom {
