@@ -644,6 +644,9 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
     return;
   }
 
+  DebugOnly<bool> removed = mTracks.RemoveElement(toRemove);
+  NS_ASSERTION(removed, "If there's a track port we should be able to remove it");
+
   // If the track comes from a TRACK_ANY input port (i.e., mOwnedPort), we need
   // to block it in the port. Doing this for a locked track is still OK as it
   // will first block the track, then destroy the port. Both cause the track to
@@ -652,11 +655,7 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
   // cases blocking the underlying track should be avoided.
   if (!aTrack.Ended()) {
     BlockPlaybackTrack(toRemove);
-
-    bool removed = mTracks.RemoveElement(toRemove);
-    if (removed) {
-      NotifyTrackRemoved(&aTrack);
-    }
+    NotifyTrackRemoved(&aTrack);
   }
 
   LOG(LogLevel::Debug, ("DOMMediaStream %p Removed track %p", this, &aTrack));
