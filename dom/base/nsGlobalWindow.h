@@ -103,6 +103,7 @@ struct nsRect;
 class nsWindowSizes;
 
 namespace mozilla {
+class AbstractThread;
 class DOMEventTargetHelper;
 class ThrottledEventQueue;
 namespace dom {
@@ -1774,6 +1775,9 @@ public:
 
   virtual nsIEventTarget*
   EventTargetFor(mozilla::dom::TaskCategory aCategory) const override;
+
+  virtual mozilla::AbstractThread*
+  AbstractMainThreadFor(mozilla::dom::TaskCategory aCategory) override;
 
 protected:
   // These members are only used on outer window objects. Make sure
