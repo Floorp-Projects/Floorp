@@ -539,7 +539,7 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::loop, aValue, aRv);
   }
 
-  void Play(ErrorResult& aRv);
+  already_AddRefed<Promise> Play(ErrorResult& aRv);
 
   void Pause(ErrorResult& aRv);
 
@@ -810,8 +810,7 @@ protected:
     nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
   };
 
-  // Will make this method return a already_AddRefed<Promise> in next patch.
-  void PlayInternal(ErrorResult& aRv);
+  already_AddRefed<Promise> PlayInternal(ErrorResult& aRv);
 
   /** Use this method to change the mReadyState member, so required
    * events can be fired.
