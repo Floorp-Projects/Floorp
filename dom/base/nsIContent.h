@@ -731,10 +731,9 @@ public:
    */
   inline nsIContent *GetFlattenedTreeParent() const;
 
-  /**
-   * Helper method, which we leave public so that it's accessible from nsINode.
-   */
-  nsINode *GetFlattenedTreeParentNodeInternal() const;
+  // Helper method, which we leave public so that it's accessible from nsINode.
+  enum FlattenedParentType { eNotForStyle, eForStyle };
+  nsINode* GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const;
 
   /**
    * Gets the custom element data used by web components custom element.

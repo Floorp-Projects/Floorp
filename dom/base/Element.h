@@ -401,6 +401,7 @@ public:
   Directionality GetComputedDirectionality() const;
 
   inline Element* GetFlattenedTreeParentElement() const;
+  inline Element* GetFlattenedTreeParentElementForStyle() const;
 
   bool HasDirtyDescendantsForServo() const
   {
