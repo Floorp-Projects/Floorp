@@ -10,6 +10,44 @@
 
 namespace mozilla {
 
+MediaMIMEType::MediaMIMEType(const nsACString& aType)
+  : mMIMEType(aType)
+{
+}
+
+Maybe<MediaMIMEType>
+MakeMediaMIMEType(const nsAString& aType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsContentTypeParser parser(aType);
+  nsAutoString mime;
+  nsresult rv = parser.GetType(mime);
+  if (!NS_SUCCEEDED(rv) || mime.IsEmpty()) {
+    return Nothing();
+  }
+
+  NS_ConvertUTF16toUTF8 mime8{mime};
+
+  return Some(MediaMIMEType(mime8));
+}
+
+Maybe<MediaMIMEType>
+MakeMediaMIMEType(const nsACString& aType)
+{
+  return MakeMediaMIMEType(NS_ConvertUTF8toUTF16(aType));
+}
+
+Maybe<MediaMIMEType>
+MakeMediaMIMEType(const char* aType)
+{
+  if (!aType) {
+    return Nothing();
+  }
+  return MakeMediaMIMEType(nsDependentCString(aType));
+}
+
+
 static int32_t
 GetParameterAsNumber(const nsContentTypeParser& aParser,
                      const char* aParameter,
@@ -32,13 +70,23 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(const nsACString& aMIMEType,
                                              const nsAString& aCodecs,
                                              int32_t aWidth, int32_t aHeight,
                                              int32_t aFramerate, int32_t aBitrate)
-  : mMIMEType(Move(aMIMEType))
+  : mMIMEType(aMIMEType)
   , mHaveCodecs(aHaveCodecs)
-  , mCodecs(Move(aCodecs))
+  , mCodecs(aCodecs)
   , mWidth(aWidth)
   , mHeight(aHeight)
   , mFramerate(aFramerate)
   , mBitrate(aBitrate)
+{
+}
+
+MediaExtendedMIMEType::MediaExtendedMIMEType(const MediaMIMEType& aType)
+  : mMIMEType(aType)
+{
+}
+
+MediaExtendedMIMEType::MediaExtendedMIMEType(MediaMIMEType&& aType)
+  : mMIMEType(Move(aType))
 {
 }
 
