@@ -9,6 +9,7 @@
 #include "mozilla/dom/File.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsNetCID.h"
+#include "nsProxyRelease.h"
 #include "WorkerPrivate.h"
 
 #define BLOB_MEMORY_TEMPORARY_FILE 1048576
