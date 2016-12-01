@@ -156,11 +156,11 @@ var WebChannelBroker = Object.create({
  * @param id {String}
  *        WebChannel id
  * @param originOrPermission {nsIURI/string}
- *        If an nsIURI, a valid origin that should be part of requests for
- *        this channel.  If a string, a permission for which the permission
- *        manager will be checked to determine if the request is allowed. Note
- *        that in addition to the permission manager check, the request must
- *        be made over https://
+ *        If an nsIURI, incoming events will be accepted from any origin matching
+ *        that URI's origin.
+ *        If a string, it names a permission, and incoming events will be accepted
+ *        from any https:// origin that has been granted that permission by the
+ *        permission manager.
  * @constructor
  */
 this.WebChannel = function(id, originOrPermission) {
@@ -173,6 +173,7 @@ this.WebChannel = function(id, originOrPermission) {
   // permission name.
   if (typeof originOrPermission == "string") {
     this._originCheckCallback = requestPrincipal => {
+      // Accept events from any secure origin having the named permission.
       // The permission manager operates on domain names rather than true
       // origins (bug 1066517).  To mitigate that, we explicitly check that
       // the scheme is https://.
@@ -186,7 +187,10 @@ this.WebChannel = function(id, originOrPermission) {
       return perm == Ci.nsIPermissionManager.ALLOW_ACTION;
     }
   } else {
-    // a simple URI, so just check for an exact match.
+    // Accept events from any origin matching the given URI.
+    // We deliberately use `originNoSuffix` here because we only want to
+    // restrict based on the site's origin, not on other origin attributes
+    // such as containers or private browsing.
     this._originCheckCallback = requestPrincipal => {
       return originOrPermission.prePath === requestPrincipal.originNoSuffix;
     }
