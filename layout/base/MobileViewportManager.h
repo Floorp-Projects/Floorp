@@ -14,6 +14,7 @@
 class nsIDOMEventTarget;
 class nsIDocument;
 class nsIPresShell;
+class nsViewportInfo;
 
 class MobileViewportManager final : public nsIDOMEventListener
                                   , public nsIObserver

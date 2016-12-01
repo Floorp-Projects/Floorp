@@ -19,6 +19,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
 #include <algorithm>
 
 #include "mozilla/Logging.h"
@@ -82,7 +83,6 @@
 #include "nsCanvasFrame.h"
 #include "nsContentCID.h"
 #include "nsError.h"
-#include "nsPresShell.h"
 #include "nsPresContext.h"
 #include "nsIJSON.h"
 #include "nsThreadUtils.h"
@@ -1191,12 +1191,7 @@ nsDOMStyleSheetSetList::EnsureFresh()
   for (int32_t index = 0; index < count; index++) {
     StyleSheet* sheet = mDocument->GetStyleSheetAt(index);
     NS_ASSERTION(sheet, "Null sheet in sheet list!");
-    // XXXheycam ServoStyleSheets don't expose their title yet.
-    if (sheet->IsServo()) {
-      NS_ERROR("stylo: ServoStyleSets don't expose their title yet");
-      continue;
-    }
-    sheet->AsGecko()->GetTitle(title);
+    sheet->GetTitle(title);
     if (!title.IsEmpty() && !mNames.Contains(title) && !Add(title)) {
       return;
     }
@@ -3968,11 +3963,7 @@ nsDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
     className##Init init;                                                     \
     init.mBubbles = true;                                                     \
     init.mCancelable = true;                                                  \
-    /* XXXheycam ServoStyleSheet doesn't implement DOM interfaces yet */      \
-    if (aSheet->IsServo()) {                                                  \
-      NS_ERROR("stylo: can't dispatch events for ServoStyleSheets yet");      \
-    }                                                                         \
-    init.mStylesheet = aSheet->IsGecko() ? aSheet->AsGecko() : nullptr;       \
+    init.mStylesheet = aSheet;                                                \
     init.memberName = argName;                                                \
                                                                               \
     RefPtr<className> event =                                               \
@@ -6006,20 +5997,12 @@ nsIDocument::GetSelectedStyleSheetSet(nsAString& aSheetSet)
     StyleSheet* sheet = GetStyleSheetAt(index);
     NS_ASSERTION(sheet, "Null sheet in sheet list!");
 
-    // XXXheycam Make this work with ServoStyleSheets.
-    if (sheet->IsServo()) {
-      NS_ERROR("stylo: can't handle alternate ServoStyleSheets yet");
-      continue;
-    }
-
-    bool disabled;
-    sheet->AsGecko()->GetDisabled(&disabled);
-    if (disabled) {
+    if (sheet->Disabled()) {
       // Disabled sheets don't affect the currently selected set
       continue;
     }
 
-    sheet->AsGecko()->GetTitle(title);
+    sheet->GetTitle(title);
 
     if (aSheetSet.IsEmpty()) {
       aSheetSet = title;
@@ -7638,9 +7621,12 @@ nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 
   // Load events must not propagate to |window| object, see bug 335251.
   if (aVisitor.mEvent->mMessage != eLoad) {
-    nsGlobalWindow* window = nsGlobalWindow::Cast(GetWindow());
-    aVisitor.mParentTarget =
-      window ? window->GetTargetForEventTargetChain() : nullptr;
+    nsPIDOMWindowInner* innerWindow = GetInnerWindow();
+    if (innerWindow && innerWindow->IsCurrentInnerWindow()) {
+      nsGlobalWindow* window = nsGlobalWindow::Cast(GetWindow());
+      aVisitor.mParentTarget =
+        window ? window->GetTargetForEventTargetChain() : nullptr;
+    }
   }
   return NS_OK;
 }

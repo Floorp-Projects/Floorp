@@ -54,7 +54,7 @@ add_task(function* () {
   return teardown(monitor);
 
   function verifyRequest(offset) {
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(offset),
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(offset),
       "GET", CONTENT_TYPE_SJS + "?fmt=json-long", {
         status: 200,
         statusText: "OK",

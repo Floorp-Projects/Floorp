@@ -37,6 +37,7 @@
 #include "nsTextNode.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGContentUtils.h"
+#include "SVGContextPaint.h"
 #include "SVGLengthList.h"
 #include "SVGNumberList.h"
 #include "SVGPathElement.h"

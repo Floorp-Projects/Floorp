@@ -11,6 +11,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "nsDeque.h"
 #include "nsFocusManager.h"
@@ -20,7 +21,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
-#include "nsPresShell.h"
 
 namespace mozilla {
 

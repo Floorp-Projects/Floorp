@@ -19,6 +19,7 @@ Test Event rep
 window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { Event } = browserRequire("devtools/client/shared/components/reps/event");
+  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
 
   try {
     // Test that correct rep is chosen
@@ -28,7 +29,11 @@ window.onload = Task.async(function* () {
     yield testEvent();
     yield testMouseEvent();
     yield testKeyboardEvent();
+    yield testKeyboardEventWithModifiers();
     yield testMessageEvent();
+
+    yield testOnMouseOver();
+    yield testOnMouseOut();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -36,31 +41,116 @@ window.onload = Task.async(function* () {
   }
 
   function testEvent() {
-    const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testEvent") });
+    const renderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testEvent"),
+    });
     is(renderedComponent.textContent,
-       "Event { isTrusted: true, eventPhase: 2, bubbles: false, 7 more… }",
-       "Event rep has expected text content for an event");
+      "beforeprint { target: http://example.com, isTrusted: true, " +
+      "currentTarget: http://example.com, 8 more… }",
+      "Event rep has expected text content for an event");
   }
 
   function testMouseEvent() {
-    const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testMouseEvent") });
+    const renderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testMouseEvent")
+    });
     is(renderedComponent.textContent,
-       "MouseEvent { clientX: 62, clientY: 18, layerX: 0, 2 more… }",
-       "Event rep has expected text content for a mouse event");
+      "click { target: div#test, clientX: 62, clientY: 18, 3 more… }",
+      "Event rep has expected text content for a mouse event");
+
+    const longRenderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testMouseEvent"),
+      mode: MODE.LONG,
+    });
+    is(longRenderedComponent.textContent,
+      "click { target: div#test, buttons: 0, clientX: 62, clientY: 18, layerX: 0, " +
+      "layerY: 0 }",
+      "Event rep has expected text content for a mouse event in long mode");
   }
 
   function testKeyboardEvent() {
-    const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testKeyboardEvent") });
+    const renderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testKeyboardEvent")
+    });
     is(renderedComponent.textContent,
-       "KeyboardEvent { key: \"Control\", charCode: 0, keyCode: 17 }",
+       "keyup { target: body, key: \"Control\", charCode: 0, 1 more… }",
        "Event rep has expected text content for a keyboard event");
+
+    const longRenderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testKeyboardEvent"),
+      mode: MODE.LONG,
+    });
+    is(longRenderedComponent.textContent,
+       `keyup { target: body, key: "Control", charCode: 0, keyCode: 17 }`,
+       "Event rep has expected text content for a keyboard event in long mode");
+  }
+
+  function testKeyboardEventWithModifiers() {
+    const renderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testKeyboardEventWithModifiers"),
+      mode: MODE.LONG,
+    });
+
+    is(renderedComponent.textContent,
+       `keyup Meta-Shift { target: body, key: "M", charCode: 0, keyCode: 77 }`,
+       "Event rep has expected text content for a keyboard event with modifiers " +
+       "in long mode");
   }
 
   function testMessageEvent() {
-    const renderedComponent = renderComponent(Event.rep, { object: getGripStub("testMessageEvent") });
+    const renderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testMessageEvent")
+    });
     is(renderedComponent.textContent,
-       "MessageEvent { isTrusted: false, data: \"test data\", origin: \"null\", 7 more… }",
+       `message { target: http://example.com, isTrusted: false, data: "test data", ` +
+       "8 more… }",
        "Event rep has expected text content for a message event");
+
+    const longRenderedComponent = renderComponent(Event.rep, {
+      object: getGripStub("testMessageEvent"),
+      mode: MODE.LONG,
+    });
+    is(longRenderedComponent.textContent,
+       `message { target: http://example.com, isTrusted: false, data: "test data", ` +
+       `origin: "null", lastEventId: "", source: , ports: message, currentTarget: , ` +
+       `eventPhase: 2, bubbles: false, 1 more… }`,
+       "Event rep has expected text content for a message event in long mode");
+  }
+
+  function testOnMouseOver() {
+    const stub = getGripStub("testMouseEvent");
+
+    let mouseOverValue;
+    let onDOMNodeMouseOver = (object) => {
+      mouseOverValue = object;
+    };
+    const renderedComponent = renderComponent(Event.rep, {
+      object: stub, onDOMNodeMouseOver
+    });
+
+    const node = renderedComponent.querySelector(".objectBox-node");
+    TestUtils.Simulate.mouseOver(node);
+
+    is(mouseOverValue, stub.preview.target, "onDOMNodeMouseOver is called with " +
+      "the expected argument when mouseover is fired on the Rep");
+  }
+
+  function testOnMouseOut() {
+    const stub = getGripStub("testMouseEvent");
+
+    let called = false;
+    let onDOMNodeMouseOut = (object) => {
+      called = true;
+    };
+    const renderedComponent = renderComponent(Event.rep, {
+      object: stub,
+      onDOMNodeMouseOut
+    });
+
+    const node = renderedComponent.querySelector(".objectBox-node");
+    TestUtils.Simulate.mouseOut(node);
+
+    is(called, true, "onDOMNodeMouseOut is called when mouseout is fired on the Rep");
   }
 
   function getGripStub(name) {
@@ -219,6 +309,44 @@ window.onload = Task.async(function* () {
           }
         };
 
+      case "testKeyboardEventWithModifiers":
+        return {
+          "type": "object",
+          "class": "KeyboardEvent",
+          "actor": "server1.conn21.obj49",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 1,
+          "preview": {
+            "kind": "DOMEvent",
+            "type": "keyup",
+            "properties": {
+              "key": "M",
+              "charCode": 0,
+              "keyCode": 77
+            },
+            "target": {
+              "type": "object",
+              "class": "HTMLBodyElement",
+              "actor": "server1.conn21.obj50",
+              "extensible": true,
+              "frozen": false,
+              "sealed": false,
+              "ownPropertyLength": 0,
+              "preview": {
+                "kind": "DOMNode",
+                "nodeType": 1,
+                "nodeName": "body",
+                "attributes": {},
+                "attributesLength": 0
+              }
+            },
+            "eventKind": "key",
+            "modifiers": ["Meta", "Shift"]
+          }
+        };
+
       case "testMessageEvent":
         return {
           "type": "object",
@@ -285,7 +413,7 @@ window.onload = Task.async(function* () {
               "ownPropertyLength": 760,
               "preview": {
                 "kind": "ObjectWithURL",
-                "url": ""
+                "url": "http://example.com"
               }
             }
           }

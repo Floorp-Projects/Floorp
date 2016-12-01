@@ -2,7 +2,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint key-spacing: 0 */
+/* import-globals-from ../../commandline/test/helpers.js */
+
 "use strict";
+
+// Import the GCLI test helper
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
+  this);
 
 // Testing that the gcli 'inspect' command works as it should.
 

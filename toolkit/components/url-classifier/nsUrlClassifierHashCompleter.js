@@ -516,6 +516,11 @@ HashCompleterRequest.prototype = {
   onStopRequest: function HCR_onStopRequest(aRequest, aContext, aStatusCode) {
     Services.obs.removeObserver(this, "quit-application");
 
+    if (this.timer_) {
+      this.timer_.cancel();
+      this.timer_ = null;
+    }
+
     if (this._shuttingDown) {
       throw Cr.NS_ERROR_ABORT;
     }
