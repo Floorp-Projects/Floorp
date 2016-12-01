@@ -18965,7 +18965,7 @@ DatabaseMaintenance::DetermineMaintenanceAction(
 
   bool lowDiskSpace = IndexedDatabaseManager::InLowDiskSpaceMode();
 
-  if (QuotaManager::kRunningXPCShellTests) {
+  if (QuotaManager::IsRunningXPCShellTests()) {
     // If we're running XPCShell then we want to test both the low disk space
     // and normal disk space code paths so pick semi-randomly based on the
     // current time.
