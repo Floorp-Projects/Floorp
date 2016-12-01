@@ -259,9 +259,7 @@ nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
 {
   if (!mDocument || !mDocument->IsInBackgroundWindow()) {
     nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);  
-    if (NS_FAILED(mDocument->Dispatch("ContinueInterruptedParsingAsync",
-                                      dom::TaskCategory::Other,
-                                      flusher.forget()))) {
+    if (NS_FAILED(NS_DispatchToMainThread(flusher))) {
       NS_WARNING("failed to dispatch executor flush event");
     }
   } else {
