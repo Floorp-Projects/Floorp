@@ -101,6 +101,14 @@
         var playback = new LocalMediaStreamPlayback(elem, audioStream);
         return playback.playMedia(false);
       }))
+    .then(() => getUserMedia({ audio: true, video: true })).then(stream => {
+      info("Test removing stopped tracks");
+      stream.getTracks().forEach(t => {
+        t.stop();
+        stream.removeTrack(t);
+      });
+      checkMediaStreamContains(stream, [], "Removed stopped tracks");
+    })
     .then(() => {
       var ac = new AudioContext();
 
