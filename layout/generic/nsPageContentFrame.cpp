@@ -9,8 +9,7 @@
 #include "nsIPresShell.h"
 #include "nsSimplePageSequenceFrame.h"
 
-using mozilla::LogicalSize;
-using mozilla::WritingMode;
+using namespace mozilla;
 
 nsPageContentFrame*
 NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

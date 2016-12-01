@@ -7,9 +7,10 @@
 #ifndef mozilla_RubyUtils_h_
 #define mozilla_RubyUtils_h_
 
-#include "nsTArray.h"
-#include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsGkAtoms.h"
+#include "nsIFrame.h"
+#include "nsTArray.h"
 
 #define RTC_ARRAY_SIZE 1
 
