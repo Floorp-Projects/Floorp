@@ -12,6 +12,7 @@
 #include "nsUXThemeData.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMWheelEvent.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
@@ -21,7 +22,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-extern PRLogModuleInfo* gWindowsLog;
+extern mozilla::LazyLogModule gWindowsLog;
 
 const wchar_t nsWinGesture::kGestureLibraryName[] =  L"user32.dll";
 HMODULE nsWinGesture::sLibraryHandle = nullptr;
