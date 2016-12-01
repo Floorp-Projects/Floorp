@@ -31,6 +31,11 @@ XPCOMUtils.defineLazyGetter(this, "sanitizer", () => {
   return sanitizer;
 });
 
+function clearCache() {
+  // Clearing the cache does not support timestamps.
+  return sanitizer.items.cache.clear();
+}
+
 let clearCookies = Task.async(function* (options) {
   // This code has been borrowed from sanitize.js.
   let yieldCounter = 0;
@@ -69,6 +74,9 @@ function doRemoval(options, dataToRemove, extension) {
   for (let dataType in dataToRemove) {
     if (dataToRemove[dataType]) {
       switch (dataType) {
+        case "cache":
+          removalPromises.push(clearCache());
+          break;
         case "cookies":
           removalPromises.push(clearCookies(options));
           break;
@@ -116,6 +124,9 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
       },
       remove(options, dataToRemove) {
         return doRemoval(options, dataToRemove, extension);
+      },
+      removeCache(options) {
+        return doRemoval(options, {cache: true});
       },
       removeCookies(options) {
         return doRemoval(options, {cookies: true});
