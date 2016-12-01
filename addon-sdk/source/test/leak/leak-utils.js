@@ -31,7 +31,6 @@ function gc() {
     Cu.schedulePreciseGC(genGCCallback());
   });
 }
-exports.gc = gc;
 
 // Execute the given test function and verify that we did not leak windows
 // in the process.  The test function must return a promise or be a generator.
