@@ -54,7 +54,8 @@ XBLChildrenElement::ParseAttribute(int32_t aNamespaceID,
     }
   }
 
-  return false;
+  return nsXMLElement::ParseAttribute(aNamespaceID, aAttribute,
+                                      aValue, aResult);
 }
 
 } // namespace dom
