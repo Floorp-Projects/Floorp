@@ -8,6 +8,7 @@
 #define mozilla_dom_ElementInlines_h
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/ServoBindings.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 
@@ -54,7 +55,7 @@ Element::NoteDirtyDescendantsForServo()
   Element* curr = this;
   while (curr && !curr->HasDirtyDescendantsForServo()) {
     curr->SetHasDirtyDescendantsForServo();
-    curr = curr->GetFlattenedTreeParentElement();
+    curr = curr->GetFlattenedTreeParentElementForStyle();
   }
 
   MOZ_ASSERT(DirtyDescendantsBitIsPropagatedForServo());
@@ -70,8 +71,10 @@ Element::DirtyDescendantsBitIsPropagatedForServo()
       return false;
     }
     nsINode* parentNode = curr->GetParentNode();
-    curr = curr->GetFlattenedTreeParentElement();
-    MOZ_ASSERT_IF(!curr, parentNode == OwnerDoc());
+    curr = curr->GetFlattenedTreeParentElementForStyle();
+    MOZ_ASSERT_IF(!curr,
+                  parentNode == OwnerDoc() ||
+                  parentNode == parentNode->OwnerDoc()->GetRootElement());
   }
   return true;
 }
