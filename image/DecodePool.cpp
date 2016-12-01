@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
-#include "nsPrintfCString.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
@@ -162,7 +161,6 @@ class DecodePoolWorker : public Runnable
 public:
   explicit DecodePoolWorker(DecodePoolImpl* aImpl)
     : mImpl(aImpl)
-    , mSerialNumber(++sNextSerialNumber)
   { }
 
   NS_IMETHOD Run() override
@@ -179,10 +177,8 @@ public:
     nsThreadManager::get().GetCurrentThread(getter_AddRefs(thisThread));
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
-    {
-      const nsPrintfCString threadName("ImgDecoder#%lu", mSerialNumber);
-      profiler_register_thread(threadName.get(), &stackBaseGuess);
-    }
+    // InitCurrentThread() has assigned the thread name.
+    profiler_register_thread(PR_GetThreadName(PR_GetCurrentThread()), &stackBaseGuess);
 #endif // MOZ_ENABLE_PROFILER_SPS
 
     do {
@@ -211,13 +207,8 @@ public:
   }
 
 private:
-  static uint32_t sNextSerialNumber;
-
   RefPtr<DecodePoolImpl> mImpl;
-  uint32_t mSerialNumber;
 };
-
-uint32_t DecodePoolWorker::sNextSerialNumber = 0;
 
 /* static */ void
 DecodePool::Initialize()

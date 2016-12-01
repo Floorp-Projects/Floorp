@@ -673,15 +673,8 @@ public:
   }
 
   bool
-  IsAllowedToPlay()
+  IsPlaybackBlocked()
   {
-    // The media element has already been paused or blocked, so it can't start
-    // playback again by script or user's intend until resuming by audio channel.
-    if (mSuspended == nsISuspendedTypes::SUSPENDED_PAUSE ||
-        mSuspended == nsISuspendedTypes::SUSPENDED_BLOCK) {
-      return false;
-    }
-
     // If the tab hasn't been activated yet, the media element in that tab can't
     // be playback now until the tab goes to foreground first time or user clicks
     // the unblocking tab icon.
@@ -689,10 +682,10 @@ public:
       // Even we haven't start playing yet, we still need to notify the audio
       // channe system because we need to receive the resume notification later.
       UpdateAudioChannelPlayingState(true /* force to start */);
-      return false;
+      return true;
     }
 
-    return true;
+    return false;
   }
 
   float
@@ -953,14 +946,14 @@ private:
   // It's used when we temporary lost platform audio focus. MediaElement can
   // only be resumed when we gain the audio focus again.
   // - SUSPENDED_PAUSE_DISPOSABLE
-  // It's used when user press the pause botton on the remote media-control.
-  // MediaElement can be resumed by reomte media-control or via play().
+  // It's used when user press the pause button on the remote media-control.
+  // MediaElement can be resumed by remote media-control or via play().
   // - SUSPENDED_BLOCK
-  // It's used to reduce the power comsuption, we won't play the auto-play
+  // It's used to reduce the power consumption, we won't play the auto-play
   // audio/video in the page we have never visited before. MediaElement would
   // be resumed when the page is active. See bug647429 for more details.
   // - SUSPENDED_STOP_DISPOSABLE
-  // When we permanently lost platform audio focus, we shuold stop playing
+  // When we permanently lost platform audio focus, we should stop playing
   // and stop the audio channel agent. MediaElement can only be restarted by
   // play().
   SuspendTypes mSuspended;
@@ -3568,7 +3561,8 @@ HTMLMediaElement::NotifyXPCOMShutdown()
 void
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
-  if (!IsAllowedToPlay()) {
+  if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
+    // NOTE: for promise-based-play, will return a pending promise here.
     MaybeDoLoad();
     return;
   }
@@ -3584,6 +3578,11 @@ HTMLMediaElement::Play(ErrorResult& aRv)
 nsresult
 HTMLMediaElement::PlayInternal()
 {
+  if (!IsAllowedToPlay()) {
+    // NOTE: for promise-based-play, will return a rejected promise here.
+    return NS_OK;
+  }
+
   // Play was not blocked so assume user interacted with the element.
   mHasUserInteraction = true;
 
@@ -3657,7 +3656,8 @@ HTMLMediaElement::MaybeDoLoad()
 
 NS_IMETHODIMP HTMLMediaElement::Play()
 {
-  if (!IsAllowedToPlay()) {
+  if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
+    // NOTE: for promise-based-play, will return a pending promise here.
     MaybeDoLoad();
     return NS_OK;
   }
@@ -5489,8 +5489,13 @@ bool HTMLMediaElement::CanActivateAutoplay()
     return false;
   }
 
-  if (mAudioChannelWrapper && !mAudioChannelWrapper->IsAllowedToPlay()) {
-    return false;
+  if (mAudioChannelWrapper) {
+    // Note: SUSPENDED_PAUSE and SUSPENDED_BLOCK will be merged into one single state.
+    if (mAudioChannelWrapper->GetSuspendType() == nsISuspendedTypes::SUSPENDED_PAUSE ||
+        mAudioChannelWrapper->GetSuspendType() == nsISuspendedTypes::SUSPENDED_BLOCK ||
+        mAudioChannelWrapper->IsPlaybackBlocked()) {
+      return false;
+    }
   }
 
   bool hasData =
@@ -6315,7 +6320,13 @@ HTMLMediaElement::IsAllowedToPlay()
 
   // Check our custom playback policy.
   if (mAudioChannelWrapper) {
-    return mAudioChannelWrapper->IsAllowedToPlay();
+    // Note: SUSPENDED_PAUSE and SUSPENDED_BLOCK will be merged into one single state.
+    if (mAudioChannelWrapper->GetSuspendType() == nsISuspendedTypes::SUSPENDED_PAUSE ||
+        mAudioChannelWrapper->GetSuspendType() == nsISuspendedTypes::SUSPENDED_BLOCK) {
+      return false;
+    }
+
+    return true;
   }
 
   // If the mAudioChannelWrapper doesn't exist that means the CC happened.
