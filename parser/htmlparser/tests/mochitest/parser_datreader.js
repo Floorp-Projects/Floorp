@@ -83,7 +83,7 @@ function parseTestcase(testcase) {
  *
  * @param The list of strings
  */
-function test_parser(testlist) {
+function* test_parser(testlist) {
   for (var testgroup of testlist) {
     var tests = testgroup.split("#data\n");
     tests = tests.filter(test => test).map(test => "#data\n" + test);
