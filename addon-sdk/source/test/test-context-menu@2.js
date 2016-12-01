@@ -416,7 +416,7 @@ exports["test iframe context"] = withTab(function*(assert) {
       label: "element",
       context: [new Contexts.Selector("*")]
     })
-  }, function(_) {
+  }, function*(_) {
     assert.deepEqual((yield captureContextMenu("iframe")),
                      menugroup(menuseparator(),
                                menuitem({label: "page"}),
