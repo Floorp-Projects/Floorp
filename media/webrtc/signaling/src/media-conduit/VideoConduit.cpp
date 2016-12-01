@@ -1187,9 +1187,8 @@ WebrtcVideoConduit::SelectBitrates(unsigned short width,
   // simulcast layers in this encoding!  So sum(layers.maxBitrate) <=
   // mNegotiatedMaxBitrate
   // Note that out_max already has had mPrefMaxBitrate applied to it
-  if (mNegotiatedMaxBitrate != 0 && mNegotiatedMaxBitrate > out_max) {
-    out_max = mNegotiatedMaxBitrate;
-  }
+  out_max = MinIgnoreZero(mNegotiatedMaxBitrate, out_max);
+
   MOZ_ASSERT(mPrefMaxBitrate == 0 || out_max <= mPrefMaxBitrate);
 }
 
