@@ -8,7 +8,8 @@
  * the document's scrollbars and contains fixed-positioned elements
  */
 
-#include "nsViewportFrame.h"
+#include "mozilla/ViewportFrame.h"
+
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
 #include "nsSubDocumentFrame.h"

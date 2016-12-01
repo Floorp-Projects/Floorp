@@ -84,6 +84,7 @@ const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
+const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const IMAGE_FETCHING_TIMEOUT = 500;
@@ -2839,6 +2840,29 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       this._eyeDropper.off("canceled", this._onColorPickCanceled);
       events.off(this.tabActor, "will-navigate", this.destroyEyeDropper);
     }
+  },
+
+  /**
+   * Check if the current document supports highlighters using a canvasFrame anonymous
+   * content container (ie all highlighters except the SimpleOutlineHighlighter).
+   * It is impossible to detect the feature programmatically as some document types simply
+   * don't render the canvasFrame without throwing any error.
+   */
+  supportsHighlighters: function () {
+    let doc = this.tabActor.window.document;
+    let ns = doc.documentElement.namespaceURI;
+
+    // XUL documents do not support insertAnonymousContent().
+    if (ns === XUL_NS) {
+      return false;
+    }
+
+    // SVG documents do not render the canvasFrame (see Bug 1157592).
+    if (ns === SVG_NS) {
+      return false;
+    }
+
+    return true;
   },
 
   _onColorPicked: function (e, color) {

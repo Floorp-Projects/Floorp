@@ -23,7 +23,7 @@ jobs:
             job-name: android-api-15-gradle-dependencies-opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
-            kind: build
+            kind: other
             tier: 2
             symbol: tc(Deps)
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
@@ -74,7 +74,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
-            kind: build
+            kind: test
             tier: 2
             symbol: tc(test)
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
@@ -125,7 +125,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
-            kind: build
+            kind: test
             tier: 2
             symbol: tc(lint)
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
@@ -187,7 +187,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
-            kind: build
+            kind: test
             tier: 2
             symbol: tc(checkstyle)
         worker-type: aws-provisioner-v1/gecko-{level}-b-android
@@ -239,7 +239,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
-            kind: build
+            kind: test
             tier: 2
             symbol: tc(findbugs)
         worker-type: aws-provisioner-v1/gecko-{level}-b-android

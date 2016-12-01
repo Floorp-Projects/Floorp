@@ -18,26 +18,28 @@
 
 /* a presentation of a document, part 2 */
 
-#ifndef nsPresShell_h_
-#define nsPresShell_h_
+#ifndef mozilla_PresShell_h
+#define mozilla_PresShell_h
 
-#include "nsIPresShell.h"
-#include "nsStubDocumentObserver.h"
-#include "nsISelectionController.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
-#include "nsCRT.h"
-#include "nsAutoPtr.h"
-#include "nsIWidget.h"
-#include "nsContentUtils.h" // For AddScriptBlocker().
-#include "nsRefreshDriver.h"
-#include "TouchManager.h"
+#include "MobileViewportManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/UniquePtr.h"
-#include "MobileViewportManager.h"
+#include "nsAutoPtr.h"
+#include "nsContentUtils.h" // For AddScriptBlocker().
+#include "nsCRT.h"
+#include "nsIObserver.h"
+#include "nsIPresShell.h"
+#include "nsISelectionController.h"
+#include "nsIWidget.h"
+#include "nsPresContext.h"
+#include "nsRefreshDriver.h"
+#include "nsStubDocumentObserver.h"
+#include "nsThreadUtils.h"
+#include "nsWeakReference.h"
+#include "TouchManager.h"
 #include "ZoomConstraintsClient.h"
 
 class nsIDocShell;
@@ -65,8 +67,6 @@ typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
 // coordinate system of that view's scrolled frame.
 typedef nsClassHashtable<nsUint64HashKey, mozilla::CSSIntRegion> VisibleRegions;
 
-} // namespace mozilla
-
 // This is actually pref-controlled, but we use this value if we fail
 // to get the pref for any reason.
 #ifdef MOZ_WIDGET_ANDROID
@@ -81,14 +81,6 @@ class PresShell final : public nsIPresShell,
                         public nsIObserver,
                         public nsSupportsWeakReference
 {
-  template <typename T> using Maybe = mozilla::Maybe<T>;
-  using Nothing = mozilla::Nothing;
-  using OnNonvisible = mozilla::OnNonvisible;
-  using RawSelectionType = mozilla::RawSelectionType;
-  using SelectionType = mozilla::SelectionType;
-  using VisibleFrames = mozilla::VisibleFrames;
-  using VisibleRegions = mozilla::VisibleRegions;
-
 public:
   PresShell();
 
@@ -447,7 +439,7 @@ protected:
     ++mChangeNestCount;
   }
   nsresult DidCauseReflow();
-  friend class nsAutoCauseReflowNotifier;
+  friend class ::nsAutoCauseReflowNotifier;
 
   nsresult DispatchEventToDOM(mozilla::WidgetEvent* aEvent,
                               nsEventStatus* aStatus,
@@ -497,9 +489,6 @@ protected:
    */
   void SetupFontInflation();
 
-  friend struct AutoRenderingStateSaveRestore;
-  friend struct RenderingState;
-
   struct RenderingState {
     explicit RenderingState(PresShell* aPresShell)
       : mResolution(aPresShell->mResolution)
@@ -533,7 +522,7 @@ protected:
 
   void SetRenderingState(const RenderingState& aState);
 
-  friend class nsPresShellEventCB;
+  friend class ::nsPresShellEventCB;
 
   bool mCaretEnabled;
 
@@ -966,4 +955,6 @@ protected:
   static bool               sDisableNonTestMouseEvents;
 };
 
-#endif /* !defined(nsPresShell_h_) */
+} // namespace mozilla
+
+#endif // mozilla_PresShell_h

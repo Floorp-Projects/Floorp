@@ -19,7 +19,7 @@ with Files('nsLine*'):
 with Files('nsInlineFrame.*'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files('nsBRFrame.*'):
+with Files('BRFrame.*'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
 with Files('nsBulletFrame.*'):
@@ -112,6 +112,7 @@ EXPORTS.mozilla += [
     'CSSAlignUtils.h',
     'ReflowInput.h',
     'ReflowOutput.h',
+    'ViewportFrame.h',
     'WritingModes.h',
 ]
 
@@ -126,6 +127,7 @@ EXPORTS.mozilla.layout += [
 UNIFIED_SOURCES += [
     'AsyncScrollBase.cpp',
     'BlockReflowInput.cpp',
+    'BRFrame.cpp',
     'CSSAlignUtils.cpp',
     'DetailsFrame.cpp',
     'FrameChildList.cpp',
@@ -134,7 +136,6 @@ UNIFIED_SOURCES += [
     'nsBackdropFrame.cpp',
     'nsBlockFrame.cpp',
     'nsBlockReflowContext.cpp',
-    'nsBRFrame.cpp',
     'nsBulletFrame.cpp',
     'nsCanvasFrame.cpp',
     'nsColumnSetFrame.cpp',
@@ -174,7 +175,6 @@ UNIFIED_SOURCES += [
     'nsTextFrameUtils.cpp',
     'nsTextRunTransformations.cpp',
     'nsVideoFrame.cpp',
-    'nsViewportFrame.cpp',
     'ReflowInput.cpp',
     'ReflowOutput.cpp',
     'RubyUtils.cpp',
@@ -183,6 +183,7 @@ UNIFIED_SOURCES += [
     'ScrollVelocityQueue.cpp',
     'StickyScrollContainer.cpp',
     'TextOverflow.cpp',
+    'ViewportFrame.cpp',
 ]
 
 # nsLineLayout.cpp needs to be built separately because it uses plarena.h.

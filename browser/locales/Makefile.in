@@ -87,8 +87,6 @@ $(list-json): $(call mkdir_deps,$(SEARCHPLUGINS_PATH)) $(if $(IS_LANGUAGE_REPACK
 	$(call py_action,generate_searchjson,$(srcdir)/search/list.json $(AB_CD) $(list-json))
 searchplugins:: $(list-json)
 
-$(STAGEDIST): $(DIST)/branding
-
 $(DIST)/branding:
 	$(NSINSTALL) -D $@
 
@@ -121,23 +119,13 @@ repackage-win32-installer: $(call ESCAPE_WILDCARD,$(WIN32_INSTALLER_IN)) $(SUBMA
 	              $(topsrcdir)/browser/installer/windows/app.tag'
 
 ifeq (WINNT,$(OS_ARCH))
-repackage-win32-installer-%: $(STAGEDIST)
+repackage-win32-installer-%: unpack
 	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN='$(WIN32_INSTALLER_IN)'
 
 repackage-zip-%: repackage-win32-installer-%
 else
 repackage-win32-installer-%: ;
 endif
-
-
-clobber-zip:
-	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
-	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
-	  $(STAGEDIST)/$(PREF_DIR)/firefox-l10n.js
-	$(RM) -rf  $(STAGEDIST)/dictionaries \
-	  $(STAGEDIST)/hyphenation \
-	  $(STAGEDIST)/defaults/profile \
-	  $(STAGEDIST)/chrome/$(AB_CD)
 
 
 langpack: langpack-$(AB_CD)

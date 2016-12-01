@@ -19,8 +19,8 @@ add_task(function* () {
   // Disable transferred size column support for this test.
   // Without this, the waterfall only has enough room for one division, which
   // would remove most of the value of this test.
-  $("#requests-menu-transferred-header-box").hidden = true;
-  $("#requests-menu-item-template .requests-menu-transferred").hidden = true;
+  // $("#requests-menu-transferred-header-box").hidden = true;
+  // $("#requests-menu-item-template .requests-menu-transferred").hidden = true;
 
   RequestsMenu.lazyUpdate = false;
 
@@ -46,22 +46,17 @@ add_task(function* () {
   ok($all(".requests-menu-timings-division").length >= 3,
     "There should be at least 3 tick labels in the network requests header.");
 
-  is($all(".requests-menu-timings-division")[0].getAttribute("value"),
-    L10N.getFormatStr("networkMenu.millisecond", 0),
-    "The first tick label has an incorrect value");
-  is($all(".requests-menu-timings-division")[1].getAttribute("value"),
-    L10N.getFormatStr("networkMenu.millisecond", 80),
-    "The second tick label has an incorrect value");
-  is($all(".requests-menu-timings-division")[2].getAttribute("value"),
-    L10N.getFormatStr("networkMenu.millisecond", 160),
-    "The third tick label has an incorrect value");
+  let timingDivisionEls = $all(".requests-menu-timings-division");
+  is(timingDivisionEls[0].textContent, L10N.getFormatStr("networkMenu.millisecond", 0),
+    "The first tick label has correct value");
+  is(timingDivisionEls[1].textContent, L10N.getFormatStr("networkMenu.millisecond", 80),
+    "The second tick label has correct value");
+  is(timingDivisionEls[2].textContent, L10N.getFormatStr("networkMenu.millisecond", 160),
+    "The third tick label has correct value");
 
-  is($all(".requests-menu-timings-division")[0].style.transform, "translateX(0px)",
-    "The first tick label has an incorrect translation");
-  is($all(".requests-menu-timings-division")[1].style.transform, "translateX(80px)",
-    "The second tick label has an incorrect translation");
-  is($all(".requests-menu-timings-division")[2].style.transform, "translateX(160px)",
-    "The third tick label has an incorrect translation");
+  is(timingDivisionEls[0].style.width, "78px", "The first tick label has correct width");
+  is(timingDivisionEls[1].style.width, "80px", "The second tick label has correct width");
+  is(timingDivisionEls[2].style.width, "80px", "The third tick label has correct width");
 
   ok(RequestsMenu._canvas, "A canvas should be created after the first request.");
   ok(RequestsMenu._ctx, "A 2d context should be created after the first request.");

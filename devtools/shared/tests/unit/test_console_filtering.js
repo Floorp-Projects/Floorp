@@ -4,7 +4,7 @@
 "use strict";
 
 const { console, ConsoleAPI } = require("resource://gre/modules/Console.jsm");
-const { ConsoleAPIListener } = require("devtools/server/actors/utils/webconsole-utils");
+const { ConsoleAPIListener } = require("devtools/server/actors/utils/webconsole-listeners");
 const Services = require("Services");
 
 var seenMessages = 0;

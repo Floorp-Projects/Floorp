@@ -573,7 +573,7 @@ StorageUI.prototype = {
   },
 
   /**
-   * Populates the selected entry from teh table in the sidebar for a more
+   * Populates the selected entry from the table in the sidebar for a more
    * detailed view.
    */
   displayObjectSidebar: Task.async(function* () {
@@ -615,6 +615,11 @@ StorageUI.prototype = {
         let otherProps = itemProps.filter(
           e => !["name", "value", "valueActor"].includes(e));
         for (let prop of otherProps) {
+          let column = this.table.columns.get(prop);
+          if (column && column.private) {
+            continue;
+          }
+
           let cookieProp = COOKIE_KEY_MAP[prop] || prop;
           // The pseduo property of HostOnly refers to converse of isDomain property
           rawObject[cookieProp] = (prop === "isDomain") ? !item[prop] : item[prop];
@@ -626,6 +631,11 @@ StorageUI.prototype = {
     } else {
       // Case when displaying IndexedDB db/object store properties.
       for (let key in item) {
+        let column = this.table.columns.get(key);
+        if (column && column.private) {
+          continue;
+        }
+
         mainScope.addItem(key, {}, true).setGrip(item[key]);
         this.parseItemValue(key, item[key]);
       }

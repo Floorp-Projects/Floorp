@@ -36,6 +36,7 @@
 #endif
 #include "mtransport/runnable_utils.h"
 
+#include "webaudio/blink/DenormalDisabler.h"
 #include "webaudio/blink/HRTFDatabaseLoader.h"
 
 using namespace mozilla::layers;
@@ -1400,6 +1401,8 @@ MediaStreamGraphImpl::UpdateMainThreadState()
 bool
 MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
+  WebCore::DenormalDisabler disabler;
+
   // Process graph message from the main thread for this iteration.
   RunMessagesInQueue();
 

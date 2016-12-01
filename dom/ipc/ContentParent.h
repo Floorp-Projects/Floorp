@@ -560,6 +560,7 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvClassifyLocal(const URIParams& aURI,
                     const nsCString& aTables,
+                    nsresult* aRv,
                     nsTArray<nsCString>* aResults) override;
 
   // Use the PHangMonitor channel to ask the child to repaint a tab.

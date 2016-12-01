@@ -18,7 +18,7 @@
 
 /* a presentation of a document, part 2 */
 
-#include "mozilla/Logging.h"
+#include "mozilla/PresShell.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -29,6 +29,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextEvents.h"
@@ -44,7 +45,6 @@
 
 #include "gfxPrefs.h"
 #include "gfxUserFontSet.h"
-#include "nsPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"

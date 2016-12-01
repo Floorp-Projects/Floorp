@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the Console API and Workers</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the Console API and Workers</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let expectedCachedConsoleCalls = [
+    {
+      level: "log",
+      filename: /console-test-worker/,
+      arguments: ['Log from worker init'],
+    },
+];
+
+let expectedConsoleAPICalls = [
+    {
+      level: "log",
+      arguments: ['Log was requested from worker'],
+    },
+];
+
+window.onload = Task.async(function*() {
+  let {state,response} = yield new Promise(resolve => {
+    attachConsoleToWorker(["ConsoleAPI"], (state, response) => {
+      resolve({state,response})
+    });
+  });
+
+  yield testCachedMessages(state);
+  yield testConsoleAPI(state);
+
+  closeDebugger(state, function() {
+    SimpleTest.finish();
+  });
+});
+
+let testCachedMessages = Task.async(function*(state) {
+  info("testCachedMessages entered");
+  return new Promise(resolve => {
+    let onCachedConsoleAPI = (response) => {
+      let consoleCalls = response.messages;
+
+      info('Received cached response. Checking console calls.');
+      checkConsoleAPICalls(consoleCalls, expectedCachedConsoleCalls);
+      resolve();
+    };
+    state.client.getCachedMessages(["ConsoleAPI"], onCachedConsoleAPI);
+  })
+});
+
+let testConsoleAPI = Task.async(function*(state) {
+  info("testConsoleAPI entered");
+  return new Promise(resolve => {
+    let onConsoleAPICall = (type, packet) => {
+      info("received message level: " + packet.message.level);
+      is(packet.from, state.actor, "console API call actor");
+      checkConsoleAPICalls([packet.message], expectedConsoleAPICalls);
+      state.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+      resolve();
+    }
+
+    info("testConsoleAPI: adding listener for consoleAPICall");
+    state.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+
+    state.client.evaluateJS("console.log('Log was requested from worker')",
+      () => { });
+  });
+});
+
+</script>
+</body>
+</html>

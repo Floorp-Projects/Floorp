@@ -1476,7 +1476,9 @@ DatabaseMetadata.prototype = {
 
   toObject() {
     return {
-      name: `${this._name} (${this.storage})`,
+      uniqueKey: `${this._name}${SEPARATOR_GUID}${this.storage}`,
+      name: this._name,
+      storage: this.storage,
       origin: this._origin,
       version: this._version,
       objectStores: this._objectStores.size
@@ -1688,7 +1690,9 @@ StorageActors.createActor({
     if ("objectStores" in item) {
       // DB meta data
       return {
+        uniqueKey: `${item.name} (${item.storage})`,
         db: item.name,
+        storage: item.storage,
         origin: item.origin,
         version: item.version,
         objectStores: item.objectStores
@@ -1830,7 +1834,9 @@ StorageActors.createActor({
       // Detail of indexedDB for one origin
       default:
         return [
+          { name: "uniqueKey", editable: false, private: true },
           { name: "db", editable: false },
+          { name: "storage", editable: false },
           { name: "origin", editable: false },
           { name: "version", editable: false },
           { name: "objectStores", editable: false },

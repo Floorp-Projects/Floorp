@@ -5401,7 +5401,8 @@
           switch (aTopic) {
             case "nsPref:changed":
               // This is the only pref observed.
-              let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
+              let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled")
+                                        && !PrivateBrowsingUtils.isWindowPrivate(window);
 
               const newTab = document.getElementById("new-tab-button");
               const newTab2 = document.getAnonymousElementByAttribute(this, "anonid", "tabs-newtab-button")

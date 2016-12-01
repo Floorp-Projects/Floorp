@@ -4811,7 +4811,7 @@ ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor)
 
 mozilla::ipc::IPCResult
 ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables,
-                                 nsTArray<nsCString>* aResults)
+                                 nsresult *aRv, nsTArray<nsCString>* aResults)
 {
   MOZ_ASSERT(aResults);
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
@@ -4823,9 +4823,6 @@ ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables
   if (!uriClassifier) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsresult rv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL(this, "ClassifyLocalWithTables error");
-  }
+  *aRv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
   return IPC_OK();
 }

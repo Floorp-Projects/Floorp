@@ -144,18 +144,15 @@ WebConsoleConnectionProxy.prototype = {
 
     let client = this.client = this.target.client;
 
-    if (this.target.isWorkerTarget) {
-      // XXXworkers: Not Console API yet inside of workers (Bug 1209353).
-    } else {
-      client.addListener("logMessage", this._onLogMessage);
-      client.addListener("pageError", this._onPageError);
-      client.addListener("consoleAPICall", this._onConsoleAPICall);
-      client.addListener("fileActivity", this._onFileActivity);
-      client.addListener("reflowActivity", this._onReflowActivity);
-      client.addListener("serverLogCall", this._onServerLogCall);
-      client.addListener("lastPrivateContextExited",
-                         this._onLastPrivateContextExited);
-    }
+    client.addListener("logMessage", this._onLogMessage);
+    client.addListener("pageError", this._onPageError);
+    client.addListener("consoleAPICall", this._onConsoleAPICall);
+    client.addListener("fileActivity", this._onFileActivity);
+    client.addListener("reflowActivity", this._onReflowActivity);
+    client.addListener("serverLogCall", this._onServerLogCall);
+    client.addListener("lastPrivateContextExited",
+                       this._onLastPrivateContextExited);
+
     this.target.on("will-navigate", this._onTabNavigated);
     this.target.on("navigate", this._onTabNavigated);
 

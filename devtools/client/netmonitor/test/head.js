@@ -250,62 +250,70 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
   return deferred.promise;
 }
 
-function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
+/**
+ * Convert a store record (model) to the rendered element. Tests that need to use
+ * this should be rewritten - test the rendered markup at unit level, integration
+ * mochitest should check only the store state.
+ */
+function getItemTarget(requestList, requestItem) {
+  const items = requestList.mountPoint.querySelectorAll(".request-list-item");
+  return [...items].find(el => el.dataset.id == requestItem.id);
+}
+
+function verifyRequestItemTarget(requestList, requestItem, aMethod, aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
   // This bloats log sizes significantly in automation (bug 992485)
-  // info("> Request: " + aRequestItem.attachment.toSource());
+  // info("> Request: " + requestItem.toSource());
 
-  let requestsMenu = aRequestItem.ownerView;
-  let widgetIndex = requestsMenu.indexOfItem(aRequestItem);
-  let visibleIndex = requestsMenu.visibleItems.indexOf(aRequestItem);
+  let visibleIndex = requestList.visibleItems.indexOf(requestItem);
 
-  info("Widget index of item: " + widgetIndex);
   info("Visible index of item: " + visibleIndex);
 
   let { fuzzyUrl, status, statusText, cause, type, fullMimeType,
         transferred, size, time, displayedStatus } = aData;
-  let { attachment, target } = aRequestItem;
+
+  let target = getItemTarget(requestList, requestItem);
 
   let unicodeUrl = decodeUnicodeUrl(aUrl);
   let name = getUrlBaseName(aUrl);
   let query = getUrlQuery(aUrl);
   let hostPort = getUrlHost(aUrl);
-  let remoteAddress = attachment.remoteAddress;
+  let remoteAddress = requestItem.remoteAddress;
 
   if (fuzzyUrl) {
-    ok(attachment.method.startsWith(aMethod), "The attached method is correct.");
-    ok(attachment.url.startsWith(aUrl), "The attached url is correct.");
+    ok(requestItem.method.startsWith(aMethod), "The attached method is correct.");
+    ok(requestItem.url.startsWith(aUrl), "The attached url is correct.");
   } else {
-    is(attachment.method, aMethod, "The attached method is correct.");
-    is(attachment.url, aUrl, "The attached url is correct.");
+    is(requestItem.method, aMethod, "The attached method is correct.");
+    is(requestItem.url, aUrl, "The attached url is correct.");
   }
 
-  is(target.querySelector(".requests-menu-method").getAttribute("value"),
+  is(target.querySelector(".requests-menu-method").textContent,
     aMethod, "The displayed method is correct.");
 
   if (fuzzyUrl) {
-    ok(target.querySelector(".requests-menu-file").getAttribute("value").startsWith(
+    ok(target.querySelector(".requests-menu-file").textContent.startsWith(
       name + (query ? "?" + query : "")), "The displayed file is correct.");
-    ok(target.querySelector(".requests-menu-file").getAttribute("tooltiptext").startsWith(unicodeUrl),
+    ok(target.querySelector(".requests-menu-file").getAttribute("title").startsWith(unicodeUrl),
       "The tooltip file is correct.");
   } else {
-    is(target.querySelector(".requests-menu-file").getAttribute("value"),
+    is(target.querySelector(".requests-menu-file").textContent,
       name + (query ? "?" + query : ""), "The displayed file is correct.");
-    is(target.querySelector(".requests-menu-file").getAttribute("tooltiptext"),
+    is(target.querySelector(".requests-menu-file").getAttribute("title"),
       unicodeUrl, "The tooltip file is correct.");
   }
 
-  is(target.querySelector(".requests-menu-domain").getAttribute("value"),
+  is(target.querySelector(".requests-menu-domain").textContent,
     hostPort, "The displayed domain is correct.");
 
   let domainTooltip = hostPort + (remoteAddress ? " (" + remoteAddress + ")" : "");
-  is(target.querySelector(".requests-menu-domain").getAttribute("tooltiptext"),
+  is(target.querySelector(".requests-menu-domain").getAttribute("title"),
     domainTooltip, "The tooltip domain is correct.");
 
   if (status !== undefined) {
-    let value = target.querySelector(".requests-menu-status-icon").getAttribute("code");
-    let codeValue = target.querySelector(".requests-menu-status-code").getAttribute("value");
-    let tooltip = target.querySelector(".requests-menu-status").getAttribute("tooltiptext");
+    let value = target.querySelector(".requests-menu-status-icon").getAttribute("data-code");
+    let codeValue = target.querySelector(".requests-menu-status-code").textContent;
+    let tooltip = target.querySelector(".requests-menu-status").getAttribute("title");
     info("Displayed status: " + value);
     info("Displayed code: " + codeValue);
     info("Tooltip status: " + tooltip);
@@ -314,41 +322,40 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
     is(tooltip, status + " " + statusText, "The tooltip status is correct.");
   }
   if (cause !== undefined) {
-    let causeLabel = target.querySelector(".requests-menu-cause-label");
-    let value = causeLabel.getAttribute("value");
-    let tooltip = causeLabel.getAttribute("tooltiptext");
+    let value = target.querySelector(".requests-menu-cause > .subitem-label").textContent;
+    let tooltip = target.querySelector(".requests-menu-cause").getAttribute("title");
     info("Displayed cause: " + value);
     info("Tooltip cause: " + tooltip);
     is(value, cause.type, "The displayed cause is correct.");
     is(tooltip, cause.loadingDocumentUri, "The tooltip cause is correct.")
   }
   if (type !== undefined) {
-    let value = target.querySelector(".requests-menu-type").getAttribute("value");
-    let tooltip = target.querySelector(".requests-menu-type").getAttribute("tooltiptext");
+    let value = target.querySelector(".requests-menu-type").textContent;
+    let tooltip = target.querySelector(".requests-menu-type").getAttribute("title");
     info("Displayed type: " + value);
     info("Tooltip type: " + tooltip);
     is(value, type, "The displayed type is correct.");
     is(tooltip, fullMimeType, "The tooltip type is correct.");
   }
   if (transferred !== undefined) {
-    let value = target.querySelector(".requests-menu-transferred").getAttribute("value");
-    let tooltip = target.querySelector(".requests-menu-transferred").getAttribute("tooltiptext");
+    let value = target.querySelector(".requests-menu-transferred").textContent;
+    let tooltip = target.querySelector(".requests-menu-transferred").getAttribute("title");
     info("Displayed transferred size: " + value);
     info("Tooltip transferred size: " + tooltip);
     is(value, transferred, "The displayed transferred size is correct.");
     is(tooltip, transferred, "The tooltip transferred size is correct.");
   }
   if (size !== undefined) {
-    let value = target.querySelector(".requests-menu-size").getAttribute("value");
-    let tooltip = target.querySelector(".requests-menu-size").getAttribute("tooltiptext");
+    let value = target.querySelector(".requests-menu-size").textContent;
+    let tooltip = target.querySelector(".requests-menu-size").getAttribute("title");
     info("Displayed size: " + value);
     info("Tooltip size: " + tooltip);
     is(value, size, "The displayed size is correct.");
     is(tooltip, size, "The tooltip size is correct.");
   }
   if (time !== undefined) {
-    let value = target.querySelector(".requests-menu-timings-total").getAttribute("value");
-    let tooltip = target.querySelector(".requests-menu-timings-total").getAttribute("tooltiptext");
+    let value = target.querySelector(".requests-menu-timings-total").textContent;
+    let tooltip = target.querySelector(".requests-menu-timings-total").getAttribute("title");
     info("Displayed time: " + value);
     info("Tooltip time: " + tooltip);
     ok(~~(value.match(/[0-9]+/)) >= 0, "The displayed time is correct.");
@@ -357,15 +364,11 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
 
   if (visibleIndex != -1) {
     if (visibleIndex % 2 == 0) {
-      ok(aRequestItem.target.hasAttribute("even"),
-        aRequestItem.value + " should have 'even' attribute.");
-      ok(!aRequestItem.target.hasAttribute("odd"),
-        aRequestItem.value + " shouldn't have 'odd' attribute.");
+      ok(target.classList.contains("even"), "Item should have 'even' class.");
+      ok(!target.classList.contains("odd"), "Item shouldn't have 'odd' class.");
     } else {
-      ok(!aRequestItem.target.hasAttribute("even"),
-        aRequestItem.value + " shouldn't have 'even' attribute.");
-      ok(aRequestItem.target.hasAttribute("odd"),
-        aRequestItem.value + " should have 'odd' attribute.");
+      ok(!target.classList.contains("even"), "Item shouldn't have 'even' class.");
+      ok(target.classList.contains("odd"), "Item should have 'odd' class.");
     }
   }
 }

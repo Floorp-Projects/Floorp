@@ -13,6 +13,7 @@
 #include <algorithm> // For std::max
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/ViewportFrame.h"
 #include "nsLayoutUtils.h"
 #include "AnimationCommon.h" // For GetLayerAnimationInfo
 #include "FrameLayerBuilder.h"
@@ -36,7 +37,6 @@
 #include "nsContainerFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsBlockFrame.h"
-#include "nsViewportFrame.h"
 #include "SVGTextFrame.h"
 #include "StickyScrollContainer.h"
 #include "nsIRootBox.h"

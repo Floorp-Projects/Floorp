@@ -6,6 +6,7 @@
 /* rendering object for HTML <br> elements */
 
 #include "nsCOMPtr.h"
+#include "nsContainerFrame.h"
 #include "nsFontMetrics.h"
 #include "nsFrame.h"
 #include "nsPresContext.h"
@@ -21,11 +22,13 @@
 
 using namespace mozilla;
 
+namespace mozilla {
+
 class BRFrame : public nsFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  friend nsIFrame* NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* ::NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint) override;
 
@@ -65,6 +68,8 @@ protected:
 
   nscoord mAscent;
 };
+
+} // namespace mozilla
 
 nsIFrame*
 NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
