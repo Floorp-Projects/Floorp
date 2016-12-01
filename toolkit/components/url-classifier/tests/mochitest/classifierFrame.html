@@ -32,6 +32,16 @@ function checkLoads() {
     return;
   }
 
+  let dwu = window.parent.SpecialPowers.getDOMWindowUtils(window);
+  let timer1 = window.setTimeout(function(){}, 0);
+  window.parent.ok(!dwu.isTimeoutTracking(timer1),
+                   "Timeout set from main script should not be considered as tracking");
+  let timer2 = getTrackerTimeout();
+  window.parent.ok(dwu.isTimeoutTracking(timer2),
+                   "Timeout set from included script should be considered as tracking");
+  window.clearTimeout(timer1);
+  window.clearTimeout(timer2);
+
   // End (parent) test.
   window.parent.SimpleTest.finish();
 }
@@ -40,6 +50,9 @@ function checkLoads() {
 
 <!-- Try loading from a malware javascript URI -->
 <script type="text/javascript" src="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
+
+<!-- Try loading from a tracker javascript URI -->
+<script type="text/javascript" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/tracker.js"></script>
 
 <!-- Try loading from an uwanted software css URI -->
 <link rel="stylesheet" type="text/css" href="http://unwanted.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
