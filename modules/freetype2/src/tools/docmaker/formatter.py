@@ -3,7 +3,7 @@
 #
 #    Convert parsed content blocks to a structured document (library file).
 #
-#  Copyright 2002, 2004, 2007, 2008, 2014 by
+#  Copyright 2002-2016 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,
@@ -55,6 +55,11 @@ class  Formatter:
 
         self.block_index = self.identifiers.keys()
         self.block_index.sort( key = index_key )
+
+        # also add section names to dictionary (without making them appear
+        # in the index)
+        for section in self.sections:
+            self.add_identifier( section.name, section )
 
     def  add_identifier( self, name, block ):
         if name in self.identifiers:

@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Incremental Loading</h1>
+<h1 id="incremental">Incremental Loading</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Incremental">FT_Incremental</a></td><td><a href="#FT_Incremental_GetGlyphMetricsFunc">FT_Incremental_GetGlyphMetricsFunc</a></td></tr>
@@ -119,7 +119,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental">FT_Incremental</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_IncrementalRec_*  <b>FT_Incremental</b>;
 </pre>
@@ -135,7 +135,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_MetricsRec">FT_Incremental_MetricsRec</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Incremental_MetricsRec_
   {
@@ -173,7 +173,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_Metrics">FT_Incremental_Metrics</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
    <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_Incremental_MetricsRec_*  <b>FT_Incremental_Metrics</b>;
 </pre>
@@ -185,7 +185,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_GetGlyphDataFunc">FT_Incremental_GetGlyphDataFunc</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_Error">FT_Error</a>
   (*<b>FT_Incremental_GetGlyphDataFunc</b>)( <a href="ft2-incremental.html#FT_Incremental">FT_Incremental</a>  incremental,
@@ -225,7 +225,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_FreeGlyphDataFunc">FT_Incremental_FreeGlyphDataFunc</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>
   (*<b>FT_Incremental_FreeGlyphDataFunc</b>)( <a href="ft2-incremental.html#FT_Incremental">FT_Incremental</a>  incremental,
@@ -249,7 +249,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_GetGlyphMetricsFunc">FT_Incremental_GetGlyphMetricsFunc</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_Error">FT_Error</a>
   (*<b>FT_Incremental_GetGlyphMetricsFunc</b>)
@@ -289,7 +289,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_FuncsRec">FT_Incremental_FuncsRec</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Incremental_FuncsRec_
   {
@@ -320,7 +320,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_InterfaceRec">FT_Incremental_InterfaceRec</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Incremental_InterfaceRec_
   {
@@ -361,7 +361,7 @@
 
 <div class="section">
 <h3 id="FT_Incremental_Interface">FT_Incremental_Interface</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-incremental.html#FT_Incremental_InterfaceRec">FT_Incremental_InterfaceRec</a>*   <b>FT_Incremental_Interface</b>;
 </pre>
@@ -373,7 +373,7 @@
 
 <div class="section">
 <h3 id="FT_PARAM_TAG_INCREMENTAL">FT_PARAM_TAG_INCREMENTAL</h3>
-<p>Defined in FT_INCREMENTAL_H (ftincrem.h).</p>
+<p>Defined in FT_INCREMENTAL_H (freetype/ftincrem.h).</p>
 <pre>
 #define <b>FT_PARAM_TAG_INCREMENTAL</b>  <a href="ft2-basic_types.html#FT_MAKE_TAG">FT_MAKE_TAG</a>( 'i', 'n', 'c', 'r' )
 </pre>

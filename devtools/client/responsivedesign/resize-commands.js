@@ -13,6 +13,8 @@ const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"].
                          createBundle("chrome://branding/locale/brand.properties").
                          GetStringFromName("brandShortName");
 
+const Services = require("Services");
+const osString = Services.appinfo.OS;
 const l10n = require("gcli/l10n");
 
 exports.items = [
@@ -42,7 +44,8 @@ exports.items = [
     name: "resize toggle",
     buttonId: "command-button-responsive",
     buttonClass: "command-button command-button-invertable",
-    tooltipText: l10n.lookup("resizeModeToggleTooltip"),
+    tooltipText: l10n.lookupFormat("resizeModeToggleTooltip2",
+                                   [(osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M")]),
     description: l10n.lookup("resizeModeToggleDesc"),
     manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
     state: {

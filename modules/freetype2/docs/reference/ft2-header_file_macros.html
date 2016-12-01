@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,44 +100,45 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Header File Macros</h1>
+<h1 id="header_file_macros">Header File Macros</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
-<tr><td><a href="#FT_CONFIG_CONFIG_H">FT_CONFIG_CONFIG_H</a></td><td><a href="#FT_LZW_H">FT_LZW_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_STANDARD_LIBRARY_H">FT_CONFIG_STANDARD_LIBRARY_H</a></td><td><a href="#FT_BZIP2_H">FT_BZIP2_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_OPTIONS_H">FT_CONFIG_OPTIONS_H</a></td><td><a href="#FT_WINFONTS_H">FT_WINFONTS_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_MODULES_H">FT_CONFIG_MODULES_H</a></td><td><a href="#FT_GLYPH_H">FT_GLYPH_H</a></td></tr>
-<tr><td><a href="#FT_FREETYPE_H">FT_FREETYPE_H</a></td><td><a href="#FT_BITMAP_H">FT_BITMAP_H</a></td></tr>
-<tr><td><a href="#FT_ERRORS_H">FT_ERRORS_H</a></td><td><a href="#FT_BBOX_H">FT_BBOX_H</a></td></tr>
-<tr><td><a href="#FT_MODULE_ERRORS_H">FT_MODULE_ERRORS_H</a></td><td><a href="#FT_CACHE_H">FT_CACHE_H</a></td></tr>
-<tr><td><a href="#FT_SYSTEM_H">FT_SYSTEM_H</a></td><td><a href="#FT_CACHE_IMAGE_H">FT_CACHE_IMAGE_H</a></td></tr>
-<tr><td><a href="#FT_IMAGE_H">FT_IMAGE_H</a></td><td><a href="#FT_CACHE_SMALL_BITMAPS_H">FT_CACHE_SMALL_BITMAPS_H</a></td></tr>
-<tr><td><a href="#FT_TYPES_H">FT_TYPES_H</a></td><td><a href="#FT_CACHE_CHARMAP_H">FT_CACHE_CHARMAP_H</a></td></tr>
-<tr><td><a href="#FT_LIST_H">FT_LIST_H</a></td><td><a href="#FT_MAC_H">FT_MAC_H</a></td></tr>
-<tr><td><a href="#FT_OUTLINE_H">FT_OUTLINE_H</a></td><td><a href="#FT_MULTIPLE_MASTERS_H">FT_MULTIPLE_MASTERS_H</a></td></tr>
-<tr><td><a href="#FT_SIZES_H">FT_SIZES_H</a></td><td><a href="#FT_SFNT_NAMES_H">FT_SFNT_NAMES_H</a></td></tr>
-<tr><td><a href="#FT_MODULE_H">FT_MODULE_H</a></td><td><a href="#FT_OPENTYPE_VALIDATE_H">FT_OPENTYPE_VALIDATE_H</a></td></tr>
-<tr><td><a href="#FT_RENDER_H">FT_RENDER_H</a></td><td><a href="#FT_GX_VALIDATE_H">FT_GX_VALIDATE_H</a></td></tr>
-<tr><td><a href="#FT_AUTOHINTER_H">FT_AUTOHINTER_H</a></td><td><a href="#FT_PFR_H">FT_PFR_H</a></td></tr>
-<tr><td><a href="#FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</a></td><td><a href="#FT_STROKER_H">FT_STROKER_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</a></td><td><a href="#FT_SYNTHESIS_H">FT_SYNTHESIS_H</a></td></tr>
-<tr><td><a href="#FT_TYPE1_TABLES_H">FT_TYPE1_TABLES_H</a></td><td><a href="#FT_XFREE86_H">FT_XFREE86_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_IDS_H">FT_TRUETYPE_IDS_H</a></td><td><a href="#FT_TRIGONOMETRY_H">FT_TRIGONOMETRY_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_TABLES_H">FT_TRUETYPE_TABLES_H</a></td><td><a href="#FT_LCD_FILTER_H">FT_LCD_FILTER_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_TAGS_H">FT_TRUETYPE_TAGS_H</a></td><td><a href="#FT_UNPATENTED_HINTING_H">FT_UNPATENTED_HINTING_H</a></td></tr>
-<tr><td><a href="#FT_BDF_H">FT_BDF_H</a></td><td><a href="#FT_INCREMENTAL_H">FT_INCREMENTAL_H</a></td></tr>
-<tr><td><a href="#FT_CID_H">FT_CID_H</a></td><td><a href="#FT_GASP_H">FT_GASP_H</a></td></tr>
-<tr><td><a href="#FT_GZIP_H">FT_GZIP_H</a></td><td><a href="#FT_ADVANCES_H">FT_ADVANCES_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_CONFIG_H">FT_CONFIG_CONFIG_H</a></td><td><a href="#FT_BZIP2_H">FT_BZIP2_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_STANDARD_LIBRARY_H">FT_CONFIG_STANDARD_LIBRARY_H</a></td><td><a href="#FT_WINFONTS_H">FT_WINFONTS_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_OPTIONS_H">FT_CONFIG_OPTIONS_H</a></td><td><a href="#FT_GLYPH_H">FT_GLYPH_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_MODULES_H">FT_CONFIG_MODULES_H</a></td><td><a href="#FT_BITMAP_H">FT_BITMAP_H</a></td></tr>
+<tr><td><a href="#FT_FREETYPE_H">FT_FREETYPE_H</a></td><td><a href="#FT_BBOX_H">FT_BBOX_H</a></td></tr>
+<tr><td><a href="#FT_ERRORS_H">FT_ERRORS_H</a></td><td><a href="#FT_CACHE_H">FT_CACHE_H</a></td></tr>
+<tr><td><a href="#FT_MODULE_ERRORS_H">FT_MODULE_ERRORS_H</a></td><td><a href="#FT_CACHE_IMAGE_H">FT_CACHE_IMAGE_H</a></td></tr>
+<tr><td><a href="#FT_SYSTEM_H">FT_SYSTEM_H</a></td><td><a href="#FT_CACHE_SMALL_BITMAPS_H">FT_CACHE_SMALL_BITMAPS_H</a></td></tr>
+<tr><td><a href="#FT_IMAGE_H">FT_IMAGE_H</a></td><td><a href="#FT_CACHE_CHARMAP_H">FT_CACHE_CHARMAP_H</a></td></tr>
+<tr><td><a href="#FT_TYPES_H">FT_TYPES_H</a></td><td><a href="#FT_MAC_H">FT_MAC_H</a></td></tr>
+<tr><td><a href="#FT_LIST_H">FT_LIST_H</a></td><td><a href="#FT_MULTIPLE_MASTERS_H">FT_MULTIPLE_MASTERS_H</a></td></tr>
+<tr><td><a href="#FT_OUTLINE_H">FT_OUTLINE_H</a></td><td><a href="#FT_SFNT_NAMES_H">FT_SFNT_NAMES_H</a></td></tr>
+<tr><td><a href="#FT_SIZES_H">FT_SIZES_H</a></td><td><a href="#FT_OPENTYPE_VALIDATE_H">FT_OPENTYPE_VALIDATE_H</a></td></tr>
+<tr><td><a href="#FT_MODULE_H">FT_MODULE_H</a></td><td><a href="#FT_GX_VALIDATE_H">FT_GX_VALIDATE_H</a></td></tr>
+<tr><td><a href="#FT_RENDER_H">FT_RENDER_H</a></td><td><a href="#FT_PFR_H">FT_PFR_H</a></td></tr>
+<tr><td><a href="#FT_AUTOHINTER_H">FT_AUTOHINTER_H</a></td><td><a href="#FT_STROKER_H">FT_STROKER_H</a></td></tr>
+<tr><td><a href="#FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</a></td><td><a href="#FT_SYNTHESIS_H">FT_SYNTHESIS_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</a></td><td><a href="#FT_FONT_FORMATS_H">FT_FONT_FORMATS_H</a></td></tr>
+<tr><td><a href="#FT_TYPE1_TABLES_H">FT_TYPE1_TABLES_H</a></td><td><a href="#FT_TRIGONOMETRY_H">FT_TRIGONOMETRY_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_IDS_H">FT_TRUETYPE_IDS_H</a></td><td><a href="#FT_LCD_FILTER_H">FT_LCD_FILTER_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_TABLES_H">FT_TRUETYPE_TABLES_H</a></td><td><a href="#FT_UNPATENTED_HINTING_H">FT_UNPATENTED_HINTING_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_TAGS_H">FT_TRUETYPE_TAGS_H</a></td><td><a href="#FT_INCREMENTAL_H">FT_INCREMENTAL_H</a></td></tr>
+<tr><td><a href="#FT_BDF_H">FT_BDF_H</a></td><td><a href="#FT_GASP_H">FT_GASP_H</a></td></tr>
+<tr><td><a href="#FT_CID_H">FT_CID_H</a></td><td><a href="#FT_ADVANCES_H">FT_ADVANCES_H</a></td></tr>
+<tr><td><a href="#FT_GZIP_H">FT_GZIP_H</a></td><td><a href="#':'">':'</a></td></tr>
+<tr><td><a href="#FT_LZW_H">FT_LZW_H</a></td><td></td></tr>
 </table>
 
 
 <p>The following macros are defined to the name of specific FreeType&nbsp;2 header files. They can be used directly in #include statements as in:</p>
 <pre class="colored">
-  #include FT_FREETYPE_H                                           
-  #include FT_MULTIPLE_MASTERS_H                                   
-  #include FT_GLYPH_H                                              
+  #include FT_FREETYPE_H
+  #include FT_MULTIPLE_MASTERS_H
+  #include FT_GLYPH_H
 </pre>
 <p>There are several reasons why we are now using macros to name public header files. The first one is that such macros are not limited to the infamous 8.3&nbsp;naming rule required by DOS (and &lsquo;FT_MULTIPLE_MASTERS_H&rsquo; is a lot more meaningful than &lsquo;ftmm.h&rsquo;).</p>
 <p>The second reason is that it allows for more flexibility in the way FreeType&nbsp;2 is installed on a given system.</p>
@@ -146,7 +147,7 @@
 <h3 id="FT_CONFIG_CONFIG_H">FT_CONFIG_CONFIG_H</h3>
 <pre>
 #ifndef <b>FT_CONFIG_CONFIG_H</b>
-#define <b>FT_CONFIG_CONFIG_H</b>  &lt;config/ftconfig.h&gt;
+#define <b>FT_CONFIG_CONFIG_H</b>  &lt;freetype/config/ftconfig.h&gt;
 #endif
 </pre>
 
@@ -159,7 +160,7 @@
 <h3 id="FT_CONFIG_STANDARD_LIBRARY_H">FT_CONFIG_STANDARD_LIBRARY_H</h3>
 <pre>
 #ifndef <b>FT_CONFIG_STANDARD_LIBRARY_H</b>
-#define <b>FT_CONFIG_STANDARD_LIBRARY_H</b>  &lt;config/ftstdlib.h&gt;
+#define <b>FT_CONFIG_STANDARD_LIBRARY_H</b>  &lt;freetype/config/ftstdlib.h&gt;
 #endif
 </pre>
 
@@ -172,7 +173,7 @@
 <h3 id="FT_CONFIG_OPTIONS_H">FT_CONFIG_OPTIONS_H</h3>
 <pre>
 #ifndef <b>FT_CONFIG_OPTIONS_H</b>
-#define <b>FT_CONFIG_OPTIONS_H</b>  &lt;config/ftoption.h&gt;
+#define <b>FT_CONFIG_OPTIONS_H</b>  &lt;freetype/config/ftoption.h&gt;
 #endif
 </pre>
 
@@ -185,7 +186,7 @@
 <h3 id="FT_CONFIG_MODULES_H">FT_CONFIG_MODULES_H</h3>
 <pre>
 #ifndef <b>FT_CONFIG_MODULES_H</b>
-#define <b>FT_CONFIG_MODULES_H</b>  &lt;config/ftmodule.h&gt;
+#define <b>FT_CONFIG_MODULES_H</b>  &lt;freetype/config/ftmodule.h&gt;
 #endif
 </pre>
 
@@ -197,7 +198,7 @@
 <div class="section">
 <h3 id="FT_FREETYPE_H">FT_FREETYPE_H</h3>
 <pre>
-#define <b>FT_FREETYPE_H</b>  &lt;freetype.h&gt;
+#define <b>FT_FREETYPE_H</b>  &lt;freetype/freetype.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the base FreeType&nbsp;2 API.</p>
@@ -208,7 +209,7 @@
 <div class="section">
 <h3 id="FT_ERRORS_H">FT_ERRORS_H</h3>
 <pre>
-#define <b>FT_ERRORS_H</b>  &lt;fterrors.h&gt;
+#define <b>FT_ERRORS_H</b>  &lt;freetype/fterrors.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the list of FreeType&nbsp;2 error codes (and messages).</p>
@@ -220,7 +221,7 @@
 <div class="section">
 <h3 id="FT_MODULE_ERRORS_H">FT_MODULE_ERRORS_H</h3>
 <pre>
-#define <b>FT_MODULE_ERRORS_H</b>  &lt;ftmoderr.h&gt;
+#define <b>FT_MODULE_ERRORS_H</b>  &lt;freetype/ftmoderr.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the list of FreeType&nbsp;2 module error offsets (and messages).</p>
@@ -231,7 +232,7 @@
 <div class="section">
 <h3 id="FT_SYSTEM_H">FT_SYSTEM_H</h3>
 <pre>
-#define <b>FT_SYSTEM_H</b>  &lt;ftsystem.h&gt;
+#define <b>FT_SYSTEM_H</b>  &lt;freetype/ftsystem.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 interface to low-level operations (i.e., memory management and stream i/o).</p>
@@ -243,7 +244,7 @@
 <div class="section">
 <h3 id="FT_IMAGE_H">FT_IMAGE_H</h3>
 <pre>
-#define <b>FT_IMAGE_H</b>  &lt;ftimage.h&gt;
+#define <b>FT_IMAGE_H</b>  &lt;freetype/ftimage.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing type definitions related to glyph images (i.e., bitmaps, outlines, scan-converter parameters).</p>
@@ -255,7 +256,7 @@
 <div class="section">
 <h3 id="FT_TYPES_H">FT_TYPES_H</h3>
 <pre>
-#define <b>FT_TYPES_H</b>  &lt;fttypes.h&gt;
+#define <b>FT_TYPES_H</b>  &lt;freetype/fttypes.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the basic data types defined by FreeType&nbsp;2.</p>
@@ -267,7 +268,7 @@
 <div class="section">
 <h3 id="FT_LIST_H">FT_LIST_H</h3>
 <pre>
-#define <b>FT_LIST_H</b>  &lt;ftlist.h&gt;
+#define <b>FT_LIST_H</b>  &lt;freetype/ftlist.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the list management API of FreeType&nbsp;2.</p>
@@ -279,7 +280,7 @@
 <div class="section">
 <h3 id="FT_OUTLINE_H">FT_OUTLINE_H</h3>
 <pre>
-#define <b>FT_OUTLINE_H</b>  &lt;ftoutln.h&gt;
+#define <b>FT_OUTLINE_H</b>  &lt;freetype/ftoutln.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the scalable outline management API of FreeType&nbsp;2.</p>
@@ -290,7 +291,7 @@
 <div class="section">
 <h3 id="FT_SIZES_H">FT_SIZES_H</h3>
 <pre>
-#define <b>FT_SIZES_H</b>  &lt;ftsizes.h&gt;
+#define <b>FT_SIZES_H</b>  &lt;freetype/ftsizes.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the API which manages multiple <a href="ft2-base_interface.html#FT_Size">FT_Size</a> objects per face.</p>
@@ -301,7 +302,7 @@
 <div class="section">
 <h3 id="FT_MODULE_H">FT_MODULE_H</h3>
 <pre>
-#define <b>FT_MODULE_H</b>  &lt;ftmodapi.h&gt;
+#define <b>FT_MODULE_H</b>  &lt;freetype/ftmodapi.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the module management API of FreeType&nbsp;2.</p>
@@ -312,7 +313,7 @@
 <div class="section">
 <h3 id="FT_RENDER_H">FT_RENDER_H</h3>
 <pre>
-#define <b>FT_RENDER_H</b>  &lt;ftrender.h&gt;
+#define <b>FT_RENDER_H</b>  &lt;freetype/ftrender.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the renderer module management API of FreeType&nbsp;2.</p>
@@ -323,7 +324,7 @@
 <div class="section">
 <h3 id="FT_AUTOHINTER_H">FT_AUTOHINTER_H</h3>
 <pre>
-#define <b>FT_AUTOHINTER_H</b>  &lt;ftautoh.h&gt;
+#define <b>FT_AUTOHINTER_H</b>  &lt;freetype/ftautoh.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the auto-hinting module.</p>
@@ -334,7 +335,7 @@
 <div class="section">
 <h3 id="FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</h3>
 <pre>
-#define <b>FT_CFF_DRIVER_H</b>  &lt;ftcffdrv.h&gt;
+#define <b>FT_CFF_DRIVER_H</b>  &lt;freetype/ftcffdrv.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the CFF driver module.</p>
@@ -345,7 +346,7 @@
 <div class="section">
 <h3 id="FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</h3>
 <pre>
-#define <b>FT_TRUETYPE_DRIVER_H</b>  &lt;ftttdrv.h&gt;
+#define <b>FT_TRUETYPE_DRIVER_H</b>  &lt;freetype/ftttdrv.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the TrueType driver module.</p>
@@ -356,7 +357,7 @@
 <div class="section">
 <h3 id="FT_TYPE1_TABLES_H">FT_TYPE1_TABLES_H</h3>
 <pre>
-#define <b>FT_TYPE1_TABLES_H</b>  &lt;t1tables.h&gt;
+#define <b>FT_TYPE1_TABLES_H</b>  &lt;freetype/t1tables.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the types and API specific to the Type&nbsp;1 format.</p>
@@ -367,7 +368,7 @@
 <div class="section">
 <h3 id="FT_TRUETYPE_IDS_H">FT_TRUETYPE_IDS_H</h3>
 <pre>
-#define <b>FT_TRUETYPE_IDS_H</b>  &lt;ttnameid.h&gt;
+#define <b>FT_TRUETYPE_IDS_H</b>  &lt;freetype/ttnameid.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the enumeration values which identify name strings, languages, encodings, etc. This file really contains a <i>large</i> set of constant macro definitions, taken from the TrueType and OpenType specifications.</p>
@@ -378,7 +379,7 @@
 <div class="section">
 <h3 id="FT_TRUETYPE_TABLES_H">FT_TRUETYPE_TABLES_H</h3>
 <pre>
-#define <b>FT_TRUETYPE_TABLES_H</b>  &lt;tttables.h&gt;
+#define <b>FT_TRUETYPE_TABLES_H</b>  &lt;freetype/tttables.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the types and API specific to the TrueType (as well as OpenType) format.</p>
@@ -389,7 +390,7 @@
 <div class="section">
 <h3 id="FT_TRUETYPE_TAGS_H">FT_TRUETYPE_TAGS_H</h3>
 <pre>
-#define <b>FT_TRUETYPE_TAGS_H</b>  &lt;tttags.h&gt;
+#define <b>FT_TRUETYPE_TAGS_H</b>  &lt;freetype/tttags.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the definitions of TrueType four-byte &lsquo;tags&rsquo; which identify blocks in SFNT-based font formats (i.e., TrueType and OpenType).</p>
@@ -400,7 +401,7 @@
 <div class="section">
 <h3 id="FT_BDF_H">FT_BDF_H</h3>
 <pre>
-#define <b>FT_BDF_H</b>  &lt;ftbdf.h&gt;
+#define <b>FT_BDF_H</b>  &lt;freetype/ftbdf.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the definitions of an API which accesses BDF-specific strings from a face.</p>
@@ -411,7 +412,7 @@
 <div class="section">
 <h3 id="FT_CID_H">FT_CID_H</h3>
 <pre>
-#define <b>FT_CID_H</b>  &lt;ftcid.h&gt;
+#define <b>FT_CID_H</b>  &lt;freetype/ftcid.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the definitions of an API which access CID font information from a face.</p>
@@ -422,7 +423,7 @@
 <div class="section">
 <h3 id="FT_GZIP_H">FT_GZIP_H</h3>
 <pre>
-#define <b>FT_GZIP_H</b>  &lt;ftgzip.h&gt;
+#define <b>FT_GZIP_H</b>  &lt;freetype/ftgzip.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the definitions of an API which supports gzip-compressed files.</p>
@@ -433,7 +434,7 @@
 <div class="section">
 <h3 id="FT_LZW_H">FT_LZW_H</h3>
 <pre>
-#define <b>FT_LZW_H</b>  &lt;ftlzw.h&gt;
+#define <b>FT_LZW_H</b>  &lt;freetype/ftlzw.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the definitions of an API which supports LZW-compressed files.</p>
@@ -444,7 +445,7 @@
 <div class="section">
 <h3 id="FT_BZIP2_H">FT_BZIP2_H</h3>
 <pre>
-#define <b>FT_BZIP2_H</b>  &lt;ftbzip2.h&gt;
+#define <b>FT_BZIP2_H</b>  &lt;freetype/ftbzip2.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the definitions of an API which supports bzip2-compressed files.</p>
@@ -455,7 +456,7 @@
 <div class="section">
 <h3 id="FT_WINFONTS_H">FT_WINFONTS_H</h3>
 <pre>
-#define <b>FT_WINFONTS_H</b>   &lt;ftwinfnt.h&gt;
+#define <b>FT_WINFONTS_H</b>   &lt;freetype/ftwinfnt.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the definitions of an API which supports Windows FNT files.</p>
@@ -466,7 +467,7 @@
 <div class="section">
 <h3 id="FT_GLYPH_H">FT_GLYPH_H</h3>
 <pre>
-#define <b>FT_GLYPH_H</b>  &lt;ftglyph.h&gt;
+#define <b>FT_GLYPH_H</b>  &lt;freetype/ftglyph.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the API of the optional glyph management component.</p>
@@ -477,7 +478,7 @@
 <div class="section">
 <h3 id="FT_BITMAP_H">FT_BITMAP_H</h3>
 <pre>
-#define <b>FT_BITMAP_H</b>  &lt;ftbitmap.h&gt;
+#define <b>FT_BITMAP_H</b>  &lt;freetype/ftbitmap.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the API of the optional bitmap conversion component.</p>
@@ -488,7 +489,7 @@
 <div class="section">
 <h3 id="FT_BBOX_H">FT_BBOX_H</h3>
 <pre>
-#define <b>FT_BBOX_H</b>  &lt;ftbbox.h&gt;
+#define <b>FT_BBOX_H</b>  &lt;freetype/ftbbox.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the API of the optional exact bounding box computation routines.</p>
@@ -499,7 +500,7 @@
 <div class="section">
 <h3 id="FT_CACHE_H">FT_CACHE_H</h3>
 <pre>
-#define <b>FT_CACHE_H</b>  &lt;ftcache.h&gt;
+#define <b>FT_CACHE_H</b>  &lt;freetype/ftcache.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the API of the optional FreeType&nbsp;2 cache sub-system.</p>
@@ -548,7 +549,7 @@
 <div class="section">
 <h3 id="FT_MAC_H">FT_MAC_H</h3>
 <pre>
-#define <b>FT_MAC_H</b>  &lt;ftmac.h&gt;
+#define <b>FT_MAC_H</b>  &lt;freetype/ftmac.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the Macintosh-specific FreeType&nbsp;2 API. The latter is used to access fonts embedded in resource forks.</p>
@@ -560,7 +561,7 @@
 <div class="section">
 <h3 id="FT_MULTIPLE_MASTERS_H">FT_MULTIPLE_MASTERS_H</h3>
 <pre>
-#define <b>FT_MULTIPLE_MASTERS_H</b>  &lt;ftmm.h&gt;
+#define <b>FT_MULTIPLE_MASTERS_H</b>  &lt;freetype/ftmm.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the optional multiple-masters management API of FreeType&nbsp;2.</p>
@@ -571,7 +572,7 @@
 <div class="section">
 <h3 id="FT_SFNT_NAMES_H">FT_SFNT_NAMES_H</h3>
 <pre>
-#define <b>FT_SFNT_NAMES_H</b>  &lt;ftsnames.h&gt;
+#define <b>FT_SFNT_NAMES_H</b>  &lt;freetype/ftsnames.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the optional FreeType&nbsp;2 API which accesses embedded &lsquo;name&rsquo; strings in SFNT-based font formats (i.e., TrueType and OpenType).</p>
@@ -582,7 +583,7 @@
 <div class="section">
 <h3 id="FT_OPENTYPE_VALIDATE_H">FT_OPENTYPE_VALIDATE_H</h3>
 <pre>
-#define <b>FT_OPENTYPE_VALIDATE_H</b>  &lt;ftotval.h&gt;
+#define <b>FT_OPENTYPE_VALIDATE_H</b>  &lt;freetype/ftotval.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the optional FreeType&nbsp;2 API which validates OpenType tables (BASE, GDEF, GPOS, GSUB, JSTF).</p>
@@ -593,7 +594,7 @@
 <div class="section">
 <h3 id="FT_GX_VALIDATE_H">FT_GX_VALIDATE_H</h3>
 <pre>
-#define <b>FT_GX_VALIDATE_H</b>  &lt;ftgxval.h&gt;
+#define <b>FT_GX_VALIDATE_H</b>  &lt;freetype/ftgxval.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the optional FreeType&nbsp;2 API which validates TrueTypeGX/AAT tables (feat, mort, morx, bsln, just, kern, opbd, trak, prop).</p>
@@ -604,7 +605,7 @@
 <div class="section">
 <h3 id="FT_PFR_H">FT_PFR_H</h3>
 <pre>
-#define <b>FT_PFR_H</b>  &lt;ftpfr.h&gt;
+#define <b>FT_PFR_H</b>  &lt;freetype/ftpfr.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which accesses PFR-specific data.</p>
@@ -615,7 +616,7 @@
 <div class="section">
 <h3 id="FT_STROKER_H">FT_STROKER_H</h3>
 <pre>
-#define <b>FT_STROKER_H</b>  &lt;ftstroke.h&gt;
+#define <b>FT_STROKER_H</b>  &lt;freetype/ftstroke.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which provides functions to stroke outline paths.</p>
@@ -626,7 +627,7 @@
 <div class="section">
 <h3 id="FT_SYNTHESIS_H">FT_SYNTHESIS_H</h3>
 <pre>
-#define <b>FT_SYNTHESIS_H</b>  &lt;ftsynth.h&gt;
+#define <b>FT_SYNTHESIS_H</b>  &lt;freetype/ftsynth.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which performs artificial obliquing and emboldening.</p>
@@ -635,12 +636,15 @@
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
-<h3 id="FT_XFREE86_H">FT_XFREE86_H</h3>
+<h3 id="FT_FONT_FORMATS_H">FT_FONT_FORMATS_H</h3>
 <pre>
-#define <b>FT_XFREE86_H</b>  &lt;ftxf86.h&gt;
+#define <b>FT_FONT_FORMATS_H</b>  &lt;freetype/ftfntfmt.h&gt;
+
+  /* deprecated */
+#define FT_XFREE86_H  <b>FT_FONT_FORMATS_H</b>
 </pre>
 
-<p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which provides functions specific to the XFree86 and X.Org X11 servers.</p>
+<p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which provides functions specific to font formats.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -648,7 +652,7 @@
 <div class="section">
 <h3 id="FT_TRIGONOMETRY_H">FT_TRIGONOMETRY_H</h3>
 <pre>
-#define <b>FT_TRIGONOMETRY_H</b>  &lt;fttrigon.h&gt;
+#define <b>FT_TRIGONOMETRY_H</b>  &lt;freetype/fttrigon.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which performs trigonometric computations (e.g., cosines and arc tangents).</p>
@@ -659,7 +663,7 @@
 <div class="section">
 <h3 id="FT_LCD_FILTER_H">FT_LCD_FILTER_H</h3>
 <pre>
-#define <b>FT_LCD_FILTER_H</b>  &lt;ftlcdfil.h&gt;
+#define <b>FT_LCD_FILTER_H</b>  &lt;freetype/ftlcdfil.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which performs color filtering for subpixel rendering.</p>
@@ -670,10 +674,10 @@
 <div class="section">
 <h3 id="FT_UNPATENTED_HINTING_H">FT_UNPATENTED_HINTING_H</h3>
 <pre>
-#define <b>FT_UNPATENTED_HINTING_H</b>  &lt;ttunpat.h&gt;
+#define <b>FT_UNPATENTED_HINTING_H</b>  &lt;freetype/ttunpat.h&gt;
 </pre>
 
-<p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which performs color filtering for subpixel rendering.</p>
+<p>Deprecated.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -681,10 +685,10 @@
 <div class="section">
 <h3 id="FT_INCREMENTAL_H">FT_INCREMENTAL_H</h3>
 <pre>
-#define <b>FT_INCREMENTAL_H</b>  &lt;ftincrem.h&gt;
+#define <b>FT_INCREMENTAL_H</b>  &lt;freetype/ftincrem.h&gt;
 </pre>
 
-<p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which performs color filtering for subpixel rendering.</p>
+<p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which performs incremental glyph loading.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -692,7 +696,7 @@
 <div class="section">
 <h3 id="FT_GASP_H">FT_GASP_H</h3>
 <pre>
-#define <b>FT_GASP_H</b>  &lt;ftgasp.h&gt;
+#define <b>FT_GASP_H</b>  &lt;freetype/ftgasp.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which returns entries from the TrueType GASP table.</p>
@@ -703,10 +707,30 @@
 <div class="section">
 <h3 id="FT_ADVANCES_H">FT_ADVANCES_H</h3>
 <pre>
-#define <b>FT_ADVANCES_H</b>  &lt;ftadvanc.h&gt;
+#define <b>FT_ADVANCES_H</b>  &lt;freetype/ftadvanc.h&gt;
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which returns individual and ranged glyph advances.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="':'">':'</h3>
+<p>Defined in FT_CONFIG_OPTIONS_H (freetype/config/ftoption.h).</p>
+<pre>
+#define FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+</pre>
+<h4>property-name1</h4>
+<p>'=' &lt;property-value1&gt;</p>
+
+<h4>module-name2</h4>
+<p>':'</p>
+
+<h4>property-name2</h4>
+<p>'=' &lt;property-value2&gt; ...</p>
+<p>Example:</p>
+<p>FREETYPE_PROPERTIES=truetype:interpreter-version=35 \ cff:no-stem-darkening=1 \ autofitter:warping=1</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>

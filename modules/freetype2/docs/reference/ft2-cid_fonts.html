@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>CID Fonts</h1>
+<h1 id="cid_fonts">CID Fonts</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Get_CID_Registry_Ordering_Supplement">FT_Get_CID_Registry_Ordering_Supplement</a></td></tr>
@@ -115,7 +115,7 @@
 
 <div class="section">
 <h3 id="FT_Get_CID_Registry_Ordering_Supplement">FT_Get_CID_Registry_Ordering_Supplement</h3>
-<p>Defined in FT_CID_H (ftcid.h).</p>
+<p>Defined in FT_CID_H (freetype/ftcid.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_CID_Registry_Ordering_Supplement</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>       face,
@@ -160,14 +160,14 @@
 
 <div class="section">
 <h3 id="FT_Get_CID_Is_Internally_CID_Keyed">FT_Get_CID_Is_Internally_CID_Keyed</h3>
-<p>Defined in FT_CID_H (ftcid.h).</p>
+<p>Defined in FT_CID_H (freetype/ftcid.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_CID_Is_Internally_CID_Keyed</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
                                       <a href="ft2-basic_types.html#FT_Bool">FT_Bool</a>  *is_cid );
 </pre>
 
-<p>Retrieve the type of the input face, CID keyed or not. In constrast to the <a href="ft2-base_interface.html#FT_IS_CID_KEYED">FT_IS_CID_KEYED</a> macro this function returns successfully also for CID-keyed fonts in an SNFT wrapper.</p>
+<p>Retrieve the type of the input face, CID keyed or not. In contrast to the <a href="ft2-base_interface.html#FT_IS_CID_KEYED">FT_IS_CID_KEYED</a> macro this function returns successfully also for CID-keyed fonts in an SFNT wrapper.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -197,7 +197,7 @@
 
 <div class="section">
 <h3 id="FT_Get_CID_From_Glyph_Index">FT_Get_CID_From_Glyph_Index</h3>
-<p>Defined in FT_CID_H (ftcid.h).</p>
+<p>Defined in FT_CID_H (freetype/ftcid.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_CID_From_Glyph_Index</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
