@@ -19,13 +19,14 @@ class WindowSurfaceXRender : public WindowSurfaceX11 {
 public:
   WindowSurfaceXRender(Display* aDisplay, Window aWindow, Visual* aVisual,
                        unsigned int aDepth);
+  ~WindowSurfaceXRender();
 
   already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion) override;
-  void CommitToDrawable(Drawable aDest, GC aGC,
-                        const LayoutDeviceIntRegion& aInvalidRegion) override;
+  void Commit(const LayoutDeviceIntRegion& aInvalidRegion) override;
 
 private:
   RefPtr<gfxXlibSurface> mXlibSurface;
+  GC mGC;
 };
 
 }  // namespace widget

@@ -26,6 +26,9 @@ public:
   // Swaps the provided invalid region from the back buffer to the window.
   // Implementations must permit invocation from any thread.
   virtual void Commit(const LayoutDeviceIntRegion& aInvalidRegion) = 0;
+
+  // Whether the window surface represents a fallback method.
+  virtual bool IsFallback() const { return false; }
 };
 
 }  // namespace widget
