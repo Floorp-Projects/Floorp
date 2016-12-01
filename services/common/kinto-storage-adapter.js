@@ -189,7 +189,9 @@ const currentSchemaVersion = 1;
  * Uses Sqlite as a backing store.
  *
  * Options:
- *  - path: the filename/path for the Sqlite database. If absent, use SQLITE_PATH.
+ *  - sqliteHandle: a handle to the Sqlite database this adapter will
+ *    use as its backing store. To open such a handle, use the
+ *    static openConnection() method.
  */
 class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
   constructor(collection, options = {}) {
@@ -200,9 +202,11 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
     this._options = options;
   }
 
-  // We need to be capable of calling this from "outside" the adapter
-  // so that someone can initialize a connection and pass it to us in
-  // adapterOptions.
+  /**
+   * Initialize a Sqlite connection to be suitable for use with Kinto.
+   *
+   * This will be called automatically by open().
+   */
   static _init(connection) {
     return Task.spawn(function* () {
       yield connection.executeTransaction(function* doSetup() {
@@ -224,30 +228,22 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
   }
 
   _executeStatement(statement, params) {
-    if (!this._connection) {
-      throw new Error("The storage adapter is not open");
-    }
     return this._connection.executeCached(statement, params);
   }
 
-  open() {
-    const self = this;
-    return Task.spawn(function* () {
-      if (!self._connection) {
-        const path = self._options.path || SQLITE_PATH;
-        const opts = { path, sharedMemoryCache: false };
-        self._connection = yield Sqlite.openConnection(opts).then(FirefoxAdapter._init);
-      }
-    });
-  }
-
-  close() {
-    if (this._connection) {
-      const promise = this._connection.close();
-      this._connection = null;
-      return promise;
-    }
-    return Promise.resolve();
+  /**
+   * Open and initialize a Sqlite connection to a database that Kinto
+   * can use. When you are done with this connection, close it by
+   * calling close().
+   *
+   * Options:
+   *   - path: The path for the Sqlite database
+   *
+   * @returns SqliteConnection
+   */
+  static async openConnection(options) {
+    const opts = Object.assign({}, { sharedMemoryCache: false }, options);
+    return await Sqlite.openConnection(opts).then(this._init);
   }
 
   clear() {
@@ -256,10 +252,6 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
   }
 
   execute(callback, options = { preload: [] }) {
-    if (!this._connection) {
-      throw new Error("The storage adapter is not open");
-    }
-
     let result;
     const conn = this._connection;
     const collection = this.collection;

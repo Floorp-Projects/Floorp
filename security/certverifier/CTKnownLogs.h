@@ -9,18 +9,34 @@
 #ifndef CTKnownLogs_h
 #define CTKnownLogs_h
 
+#include "CTLog.h"
+
 #include <stddef.h>
 
-struct CTLogInfo {
-  const char* const logName;
-  const char* const logUrl;
-  const char* const logKey;
-  const size_t logKeyLength;
+struct CTLogInfo
+{
+  const char* const name;
+  // Index within kCTLogOperatorList.
+  const mozilla::ct::CTLogStatus status;
+  // 0 for qualified logs, disqualification time for disqualified logs
+  // (in milliseconds, measured since the epoch, ignoring leap seconds).
+  const uint64_t disqualificationTime;
+  const size_t operatorIndex;
+  const char* const key;
+  const size_t keyLength;
+};
+
+struct CTLogOperatorInfo
+{
+  const char* const name;
+  const mozilla::ct::CTLogOperatorId id;
 };
 
 const CTLogInfo kCTLogList[] = {
   { "Google 'Pilot' log",
-    "https://ct.googleapis.com/pilot/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    0, // operated by Google
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x7d\xa8\x4b\x12\x29\x80\xa3\x3d\xad"
     "\xd3\x5a\x77\xb8\xcc\xe2\x88\xb3\xa5\xfd\xf1\xd3\x0c\xcd\x18\x0c\xe8\x41"
@@ -29,7 +45,9 @@ const CTLogInfo kCTLogList[] = {
     "\xa0",
     91 },
   { "Google 'Aviator' log",
-    "https://ct.googleapis.com/aviator/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    0, // operated by Google
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xd7\xf4\xcc\x69\xb2\xe4\x0e\x90\xa3"
     "\x8a\xea\x5a\x70\x09\x4f\xef\x13\x62\xd0\x8d\x49\x60\xff\x1b\x40\x50\x07"
@@ -38,7 +56,9 @@ const CTLogInfo kCTLogList[] = {
     "\xe9",
     91 },
   { "DigiCert Log Server",
-    "https://ct1.digicert-ct.com/log/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    1, // operated by DigiCert
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x02\x46\xc5\xbe\x1b\xbb\x82\x40\x16"
     "\xe8\xc1\xd2\xac\x19\x69\x13\x59\xf8\xf8\x70\x85\x46\x40\xb9\x38\xb0\x23"
@@ -47,7 +67,9 @@ const CTLogInfo kCTLogList[] = {
     "\xe8",
     91 },
   { "Google 'Rocketeer' log",
-    "https://ct.googleapis.com/rocketeer/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    0, // operated by Google
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x20\x5b\x18\xc8\x3c\xc1\x8b\xb3\x31"
     "\x08\x00\xbf\xa0\x90\x57\x2b\xb7\x47\x8c\x6f\xb5\x68\xb0\x8e\x90\x78\xe9"
@@ -56,7 +78,9 @@ const CTLogInfo kCTLogList[] = {
     "\x7a",
     91 },
   { "Certly.IO log",
-    "https://log.certly.io/",
+    mozilla::ct::CTLogStatus::Disqualified,
+    1460678400000, // Date.parse("2016-04-15T00:00:00Z")
+    2, // operated by Certly
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x0b\x23\xcb\x85\x62\x98\x61\x48\x04"
     "\x73\xeb\x54\x5d\xf3\xd0\x07\x8c\x2d\x19\x2d\x8c\x36\xf5\xeb\x8f\x01\x42"
@@ -65,7 +89,9 @@ const CTLogInfo kCTLogList[] = {
     "\x48",
     91 },
   { "Izenpe log",
-    "https://ct.izenpe.com/",
+    mozilla::ct::CTLogStatus::Disqualified,
+    1464566400000, // Date.parse("2016-05-30T00:00:00Z")
+    3, // operated by Izenpe
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x27\x64\x39\x0c\x2d\xdc\x50\x18\xf8"
     "\x21\x00\xa2\x0e\xed\x2c\xea\x3e\x75\xba\x9f\x93\x64\x09\x00\x11\xc4\x11"
@@ -74,7 +100,9 @@ const CTLogInfo kCTLogList[] = {
     "\xbe",
     91 },
   { "Symantec log",
-    "https://ct.ws.symantec.com/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    4, // operated by Symantec
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x96\xea\xac\x1c\x46\x0c\x1b\x55\xdc"
     "\x0d\xfc\xb5\x94\x27\x46\x57\x42\x70\x3a\x69\x18\xe2\xbf\x3b\xc4\xdb\xab"
@@ -83,7 +111,9 @@ const CTLogInfo kCTLogList[] = {
     "\x86",
     91 },
   { "Venafi log",
-    "https://ctlog.api.venafi.com/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    5, // operated by Venafi
     "\x30\x82\x01\x22\x30\x0d\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01\x05"
     "\x00\x03\x82\x01\x0f\x00\x30\x82\x01\x0a\x02\x82\x01\x01\x00\xa2\x5a\x48"
     "\x1f\x17\x52\x95\x35\xcb\xa3\x5b\x3a\x1f\x53\x82\x76\x94\xa3\xff\x80\xf2"
@@ -103,7 +133,9 @@ const CTLogInfo kCTLogList[] = {
     "\xc1\x02\x03\x01\x00\x01",
     294 },
   { "Symantec 'Vega' log",
-    "https://vega.ws.symantec.com/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    4, // operated by Symantec
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xea\x95\x9e\x02\xff\xee\xf1\x33\x6d"
     "\x4b\x87\xbc\xcd\xfd\x19\x17\x62\xff\x94\xd3\xd0\x59\x07\x3f\x02\x2d\x1c"
@@ -112,7 +144,9 @@ const CTLogInfo kCTLogList[] = {
     "\x4d",
     91 },
   { "CNNIC CT log",
-    "https://ctserver.cnnic.cn/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    6, // operated by CNNIC
     "\x30\x82\x01\x22\x30\x0d\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01\x05"
     "\x00\x03\x82\x01\x0f\x00\x30\x82\x01\x0a\x02\x82\x01\x01\x00\xbf\xb5\x08"
     "\x61\x9a\x29\x32\x04\xd3\x25\x63\xe9\xd8\x85\xe1\x86\xe0\x1f\xd6\x5e\x9a"
@@ -132,7 +166,9 @@ const CTLogInfo kCTLogList[] = {
     "\x35\x02\x03\x01\x00\x01",
     294 },
   { "WoSign log",
-    "https://ctlog.wosign.com/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    7, // operated by WoSign
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xcc\x11\x88\x7b\x2d\x66\xcb\xae\x8f"
     "\x4d\x30\x66\x27\x19\x25\x22\x93\x21\x46\xb4\x2f\x01\xd3\xc6\xf9\x2b\xd5"
@@ -141,7 +177,9 @@ const CTLogInfo kCTLogList[] = {
     "\x31",
     91 },
   { "StartCom log",
-    "https://ct.startssl.com/",
+    mozilla::ct::CTLogStatus::Included,
+    0, // no disqualification time
+    8, // operated by StartCom
     "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
     "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x48\xf3\x59\xf3\xf6\x05\x18\xd3\xdb"
     "\xb2\xed\x46\x7e\xcf\xc8\x11\xb5\x57\xb1\xa8\xd6\x4c\xe6\x9f\xb7\x4a\x1a"
@@ -149,6 +187,18 @@ const CTLogInfo kCTLogList[] = {
     "\xf8\xf7\x8e\x40\x55\xdc\xf4\xd2\xaf\xea\x75\x74\xfb\x4e\x7f\x60\x86\x2e"
     "\x51",
     91 }
+};
+
+const CTLogOperatorInfo kCTLogOperatorList[] = {
+  { "Google", 0 },
+  { "DigiCert", 1 },
+  { "Certly", 2 },
+  { "Izenpe", 3 },
+  { "Symantec", 4 },
+  { "Venafi", 5 },
+  { "CNNIC", 7 },
+  { "WoSign", 8 },
+  { "StartCom", 9 }
 };
 
 #endif // CTKnownLogs_h

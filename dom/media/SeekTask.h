@@ -60,7 +60,17 @@ public:
 
   virtual int64_t CalculateNewCurrentTime() const = 0;
 
-  const SeekTarget& GetSeekTarget();
+  virtual void HandleAudioDecoded(MediaData* aAudio) = 0;
+
+  virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) = 0;
+
+  virtual void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) = 0;
+
+  virtual void HandleAudioWaited(MediaData::Type aType) = 0;
+
+  virtual void HandleVideoWaited(MediaData::Type aType) = 0;
+
+  virtual void HandleNotWaited(const WaitForDataRejectValue& aRejection) = 0;
 
 protected:
   SeekTask(const void* aDecoderID,

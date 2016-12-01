@@ -33,22 +33,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
   });
 
   // The chrome window
-  let chromeWin;
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let BrowserApp = chromeWin.BrowserApp;
 
   // Track the tabs where the tests are happening
   let tabBlank;
   let tabTest;
 
+  function cleanupTabs() {
+    if (tabBlank) {
+      BrowserApp.closeTab(tabBlank);
+      tabBlank = null;
+    }
+
+    if (tabTest) {
+      BrowserApp.closeTab(tabTest);
+      tabTest = null;
+    }
+  }
+
   const url1 = "data:text/html;charset=utf-8,It%20was%20a%20dark%20and%20stormy%20night.";
   const url2 = "data:text/html;charset=utf-8,Suddenly%2C%20a%20tab%20was%20zombified.";
 
   add_task(function* test_sessionStoreZombify() {
-    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    let BrowserApp = chromeWin.BrowserApp;
-
     SimpleTest.registerCleanupFunction(function() {
-      BrowserApp.closeTab(tabBlank);
-      BrowserApp.closeTab(tabTest);
+      cleanupTabs();
     });
 
     // Add a new tab with some content
@@ -94,16 +103,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
 
     // Check that the test tab has loaded the correct url
     is(tabTest.browser.currentURI.spec, url2, "Test tab is showing the second URL.");
+
+    cleanupTabs();
   });
 
   add_task(function* test_sessionStoreKeepAsZombie() {
-    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    let BrowserApp = chromeWin.BrowserApp;
     let observerService = Services.obs;
 
     SimpleTest.registerCleanupFunction(function() {
-      BrowserApp.closeTab(tabBlank);
-      BrowserApp.closeTab(tabTest);
+      cleanupTabs();
     });
 
     // Add a new tab with some content
@@ -169,6 +177,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
     yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
     ok(!tabTest.browser.__SS_restore, "Test tab is no longer set for delay loading.");
     is(tabTest.browser.currentURI.spec, url1, "Test tab is showing the test URL.");
+
+    cleanupTabs();
   });
 
   </script>
