@@ -18,7 +18,7 @@
     }
 
     // Makes sure that we fire the visibilitychange events
-    function testIterator() {
+    function* testIterator() {
       // Enable bfcache
       enableBFCache(8);
 
@@ -165,10 +165,8 @@
       });
       yield undefined;
 
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;      
     }
   ]]></script>
 

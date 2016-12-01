@@ -27,19 +27,19 @@ gen = runTests();
 window.private = 42;
 
 window.addEventListener("message", function(e) {
-  gen.send(e.data);
+  gen.next(e.data);
 }, false);
 
 var url = "file_bug475636.sjs?";
 
-function runTests() {
+function* runTests() {
   var loader = document.getElementById('loader');
   for (var testNum = 1; ; ++testNum) {
     loader.src = url + testNum;
     let res = (yield);
     if (res == "done") {
       SimpleTest.finish();
-      yield undefined;
+      return;
     }
     is(res, "pass");
   }

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const databaseName =
     ("window" in this) ? window.location.pathname : "Test";
@@ -175,5 +175,4 @@ function testSteps()
   // Just allow this to remain blocked ...
 
   finishTest();
-  yield undefined;
 }

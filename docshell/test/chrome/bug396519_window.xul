@@ -92,14 +92,10 @@
     }
 
     function nextTest() {
-      try {
-        gTestsIterator.next();
-      } catch (err if err instanceof StopIteration) {
-        finish();
-      }
+      gTestsIterator.next();
     }
 
-    function testsIterator() {
+    function* testsIterator() {
 
       // Tests 1 + 2:
       //  Back/forward between two simple documents. Bfcache will be used.
@@ -162,6 +158,8 @@
       gExpected = [false, false, true, true, false, false];
       gBrowser.gotoIndex(5);
       yield undefined;
+
+      finish();
     }
   ]]></script>
 

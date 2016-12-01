@@ -78,9 +78,6 @@ public:
     int32_t *aHandle);
   void CancelFrameRequestCallback(int32_t aHandle);
   void RunFrameRequestCallbacks();
-  // GamepadManager has to be set by the content side to make sure we are using
-  // the same singleton GamepadManager from the same process.
-  void SetGamepadManager(dom::GamepadManager* aGamepadManager);
 
   void UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates);
   void FireDOMVRDisplayConnectEvent();
@@ -153,7 +150,6 @@ private:
   nsTArray<RefPtr<VRDisplayClient> > mDisplays;
   bool mDisplaysInitialized;
   nsTArray<uint64_t> mNavigatorCallbacks;
-  dom::GamepadManager* mGamepadManager;
 
   int32_t mInputFrameID;
 

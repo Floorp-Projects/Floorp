@@ -61,19 +61,20 @@ var gNeedsPaint = false;
 function executeTests() {
   var testYielder = tests();
   function execNext() {
-    try {
-      if (!gNeedsPaint) {
-        testYielder.next();
-        button.getBoundingClientRect(); // Flush.
-        gNeedsPaint = true;
+    if (!gNeedsPaint) {
+      let {done} = testYielder.next();
+      if (done) {
+        return;
       }
-      SimpleTest.executeSoon(execNext);
-    } catch (e) {}
+      button.getBoundingClientRect(); // Flush.
+      gNeedsPaint = true;
+    }
+    SimpleTest.executeSoon(execNext);
   }
   execNext();
 }
 
-function tests() {
+function* tests() {
   window.addEventListener("MozAfterPaint", paintListener, false);
   normalButtonCanvas = takeSnapshot();
   // Press the button.

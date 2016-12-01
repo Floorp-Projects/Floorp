@@ -152,6 +152,8 @@ protected:
 nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
   : nsFrame(aContext)
   , mInstanceOwner(nullptr)
+  , mInnerView(nullptr)
+  , mBackgroundSink(nullptr)
   , mReflowCallbackPosted(false)
 {
   MOZ_LOG(sPluginFrameLog, LogLevel::Debug,

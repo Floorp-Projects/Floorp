@@ -3032,7 +3032,11 @@ nsGlobalWindow::PreloadLocalStorage()
     return;
   }
 
-  storageManager->PrecacheStorage(principal);
+  // private browsing windows do not persist local storage to disk so we should
+  // only try to precache storage when we're not a private browsing window.
+  if (principal->GetPrivateBrowsingId() == 0) {
+    storageManager->PrecacheStorage(principal);
+  }
 }
 
 void
@@ -10790,6 +10794,8 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
       return nullptr;
     }
 
+    MOZ_DIAGNOSTIC_ASSERT((principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
+
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
                                            getter_AddRefs(storage));
@@ -10853,6 +10859,8 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
         return nullptr;
       }
     }
+
+    MOZ_DIAGNOSTIC_ASSERT((principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
 
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
@@ -14998,7 +15006,7 @@ nsPIDOMWindow<T>::TabGroup()
 
 template<typename T>
 mozilla::dom::DocGroup*
-nsPIDOMWindow<T>::GetDocGroup()
+nsPIDOMWindow<T>::GetDocGroup() const
 {
   nsIDocument* doc = GetExtantDoc();
   if (doc) {
@@ -15020,14 +15028,13 @@ nsGlobalWindow::Dispatch(const char* aName,
 }
 
 already_AddRefed<nsIEventTarget>
-nsGlobalWindow::CreateEventTarget(const char* aName,
-                                  TaskCategory aCategory)
+nsGlobalWindow::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (GetDocGroup()) {
-    return GetDocGroup()->CreateEventTarget(aName, aCategory);
+    return GetDocGroup()->EventTargetFor(aCategory);
   }
-  return DispatcherTrait::CreateEventTarget(aName, aCategory);
+  return DispatcherTrait::EventTargetFor(aCategory);
 }
 
 nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(

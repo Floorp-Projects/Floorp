@@ -28,7 +28,7 @@ function initTest()
 
 function runTest()
 {
-  Task.async(function () {
+  Task.async(function* () {
     yield pressKey(false);
 
     ok(window.scrollY > 0, "Space with no focus" + window.scrollY);
