@@ -780,7 +780,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
              */
             JSObject* wrapped = CheckedUnwrap(bufobj);
             if (!wrapped) {
-                JS_ReportErrorASCII(cx, "Permission denied to access object");
+                ReportAccessDenied(cx);
                 return nullptr;
             }
 
@@ -1166,7 +1166,7 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     } else {
         RootedObject unwrapped(cx, CheckedUnwrap(other));
         if (!unwrapped) {
-            JS_ReportErrorASCII(cx, "Permission denied to access object");
+            ReportAccessDenied(cx);
             return nullptr;
         }
 
@@ -1825,7 +1825,7 @@ DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallA
 
     JSObject* unwrapped = CheckedUnwrap(bufobj);
     if (!unwrapped) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 

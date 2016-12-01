@@ -382,6 +382,12 @@ js::UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy)
     return handler->hasSecurityPolicy() ? nullptr : Wrapper::wrappedObject(obj);
 }
 
+void
+js::ReportAccessDenied(JSContext* cx)
+{
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_ACCESS_DENIED);
+}
+
 const char Wrapper::family = 0;
 const Wrapper Wrapper::singleton((unsigned)0);
 const Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);

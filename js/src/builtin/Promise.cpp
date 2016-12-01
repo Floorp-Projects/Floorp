@@ -2242,7 +2242,7 @@ js::Promise_then(JSContext* cx, unsigned argc, Value* vp)
     } else {
         RootedObject unwrappedPromiseObj(cx, CheckedUnwrap(promiseObj));
         if (!unwrappedPromiseObj) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+            ReportAccessDenied(cx);
             return false;
         }
         if (!unwrappedPromiseObj->is<PromiseObject>()) {

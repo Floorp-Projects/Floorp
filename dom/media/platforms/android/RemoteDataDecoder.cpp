@@ -245,6 +245,8 @@ public:
     mInputDurations.Put(aSample->mDuration);
   }
 
+  bool SupportDecoderRecycling() const override { return true; }
+
 private:
   class DurationQueue {
   public:

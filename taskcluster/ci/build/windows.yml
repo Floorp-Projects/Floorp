@@ -16,7 +16,7 @@ win32/debug:
         using: mozharness
         script: mozharness/scripts/fx_desktop_build.py
         config:
-            - builds/taskcluster_firefox_win32_debug.py
+            - builds/taskcluster_firefox_windows_32_debug.py
 
 win32/opt:
     description: "Win32 Opt"
@@ -36,7 +36,7 @@ win32/opt:
         using: mozharness
         script: mozharness/scripts/fx_desktop_build.py
         config:
-            - builds/taskcluster_firefox_win32_opt.py
+            - builds/taskcluster_firefox_windows_32_opt.py
 
 win32/pgo:
     description: "Win32 Opt PGO"
@@ -57,7 +57,7 @@ win32/pgo:
         options: [enable-pgo]
         script: mozharness/scripts/fx_desktop_build.py
         config:
-            - builds/taskcluster_firefox_win32_opt.py
+            - builds/taskcluster_firefox_windows_32_opt.py
 
 win64/debug:
     description: "Win64 Debug"
@@ -77,7 +77,7 @@ win64/debug:
         using: mozharness
         script: mozharness/scripts/fx_desktop_build.py
         config:
-            - builds/taskcluster_firefox_win64_debug.py
+            - builds/taskcluster_firefox_windows_64_debug.py
 
 win64/opt:
     description: "Win64 Opt"
@@ -97,7 +97,7 @@ win64/opt:
         using: mozharness
         script: mozharness/scripts/fx_desktop_build.py
         config:
-            - builds/taskcluster_firefox_win64_opt.py
+            - builds/taskcluster_firefox_windows_64_opt.py
 
 win64/pgo:
     description: "Win64 Opt PGO"
@@ -118,5 +118,5 @@ win64/pgo:
         options: [enable-pgo]
         script: mozharness/scripts/fx_desktop_build.py
         config:
-            - builds/taskcluster_firefox_win64_opt.py
+            - builds/taskcluster_firefox_windows_64_opt.py
 

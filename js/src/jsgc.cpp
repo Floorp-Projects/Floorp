@@ -857,8 +857,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     generationalDisabled(0),
     compactingEnabled(true),
     compactingDisabledCount(0),
-    manipulatingDeadZones(false),
-    objectsMarkedInDeadZones(0),
     poked(false),
 #ifdef JS_GC_ZEAL
     zealModeBits(0),

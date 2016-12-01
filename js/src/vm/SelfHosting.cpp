@@ -996,7 +996,7 @@ intrinsic_IsWrappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
 
     JSObject* unwrapped = CheckedUnwrap(obj);
     if (!unwrapped) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -1027,7 +1027,7 @@ intrinsic_PossiblyWrappedArrayBufferByteLength(JSContext* cx, unsigned argc, Val
 
     JSObject* obj = CheckedUnwrap(&args[0].toObject());
     if (!obj) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -1052,7 +1052,7 @@ intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
         MOZ_ASSERT(wrapped->is<WrapperObject>());
         RootedObject toBufferObj(cx, CheckedUnwrap(wrapped));
         if (!toBufferObj) {
-            JS_ReportErrorASCII(cx, "Permission denied to access object");
+            ReportAccessDenied(cx);
             return false;
         }
         toBuffer = toBufferObj.as<T>();
@@ -1135,7 +1135,7 @@ intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp)
     if (args[0].isObject()) {
         JSObject* obj = CheckedUnwrap(&args[0].toObject());
         if (!obj) {
-            JS_ReportErrorASCII(cx, "Permission denied to access object");
+            ReportAccessDenied(cx);
             return false;
         }
 
@@ -1208,7 +1208,7 @@ intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx, unsigned argc, Value* v
 
     JSObject* obj = CheckedUnwrap(&args[0].toObject());
     if (!obj) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -1227,7 +1227,7 @@ intrinsic_PossiblyWrappedTypedArrayHasDetachedBuffer(JSContext* cx, unsigned arg
 
     JSObject* obj = CheckedUnwrap(&args[0].toObject());
     if (!obj) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
