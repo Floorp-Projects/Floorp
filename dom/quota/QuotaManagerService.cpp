@@ -438,7 +438,7 @@ QuotaManagerService::PerformIdleMaintenance()
 #ifdef MOZ_WIDGET_ANDROID
   // Android XPCShell doesn't load the AndroidBridge that is needed to make
   // GetCurrentBatteryInformation work...
-  if (!QuotaManager::kRunningXPCShellTests)
+  if (!QuotaManager::IsRunningXPCShellTests())
 #endif
   {
     GetCurrentBatteryInformation(&batteryInfo);
@@ -446,7 +446,7 @@ QuotaManagerService::PerformIdleMaintenance()
 
   // If we're running XPCShell because we always want to be able to test this
   // code so pretend that we're always charging.
-  if (QuotaManager::kRunningXPCShellTests) {
+  if (QuotaManager::IsRunningXPCShellTests()) {
     batteryInfo.level() = 100;
     batteryInfo.charging() = true;
   }
@@ -455,7 +455,7 @@ QuotaManagerService::PerformIdleMaintenance()
     return;
   }
 
-  if (QuotaManager::kRunningXPCShellTests) {
+  if (QuotaManager::IsRunningXPCShellTests()) {
     // We don't want user activity to impact this code if we're running tests.
     Unused << Observe(nullptr, OBSERVER_TOPIC_IDLE, nullptr);
   } else if (!mIdleObserverRegistered) {

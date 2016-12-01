@@ -59,7 +59,7 @@
 
 #include <shlwapi.h>
 
-PRLogModuleInfo* gWindowsLog = nullptr;
+mozilla::LazyLogModule gWindowsLog("Widget");
 
 using namespace mozilla::gfx;
 
@@ -462,9 +462,6 @@ static NtTestAlertPtr sNtTestAlert = nullptr;
 void
 WinUtils::Initialize()
 {
-  if (!gWindowsLog) {
-    gWindowsLog = PR_NewLogModule("Widget");
-  }
   if (!sDwmDll && IsVistaOrLater()) {
     sDwmDll = ::LoadLibraryW(kDwmLibraryName);
 
