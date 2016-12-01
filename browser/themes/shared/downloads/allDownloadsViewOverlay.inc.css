@@ -144,3 +144,6 @@
 .downloadIconRetry > .button-box > .button-icon {
   list-style-image: url("chrome://browser/skin/panel-icons.svg#retry");
 }
+
+/*** Progressmeter ***/
+%include progressmeter.inc.css
