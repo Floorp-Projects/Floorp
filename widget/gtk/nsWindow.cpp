@@ -497,14 +497,14 @@ nsWindow::~nsWindow()
 /* static */ void
 nsWindow::ReleaseGlobals()
 {
-  for (uint32_t i = 0; i < ArrayLength(gCursorCache); ++i) {
-    if (gCursorCache[i]) {
+  for (auto & cursor : gCursorCache) {
+    if (cursor) {
 #if (MOZ_WIDGET_GTK == 3)
-      g_object_unref(gCursorCache[i]);
+      g_object_unref(cursor);
 #else
-      gdk_cursor_unref(gCursorCache[i]);
+      gdk_cursor_unref(cursor);
 #endif
-      gCursorCache[i] = nullptr;
+      cursor = nullptr;
     }
   }
 }
