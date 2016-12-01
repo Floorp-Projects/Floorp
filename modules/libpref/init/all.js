@@ -2879,6 +2879,9 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 
 pref("dom.ipc.processCount", 1);
 
+// Disable support for SVG
+pref("svg.disabled", false);
+
 // Override default dom.ipc.processCount for some remote content process types.
 pref("dom.ipc.processCount.webLargeAllocation", 2);
 
