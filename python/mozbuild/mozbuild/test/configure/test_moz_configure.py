@@ -19,6 +19,10 @@ class TestMozConfigure(BaseConfigureTest):
             sandbox.option_impl('--with-foo', nargs='*',
                                 help='Help missing for old configure options')
 
+            # Remove all implied options, otherwise, getting
+            # all_configure_options below triggers them, and that triggers
+            # configure parts that aren't expected to run during this test.
+            del sandbox._implied_options[:]
             result = sandbox._value_for(sandbox['all_configure_options'])
             shell = mozpath.abspath('/bin/sh')
             return result.replace('CONFIG_SHELL=%s ' % shell, '')

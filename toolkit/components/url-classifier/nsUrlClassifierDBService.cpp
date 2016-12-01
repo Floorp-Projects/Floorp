@@ -214,11 +214,10 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
   return NS_OK;
 }
 
-static nsCString
-ProcessLookupResults(LookupResultArray* results)
+static nsresult
+ProcessLookupResults(LookupResultArray* results, nsTArray<nsCString>& tables)
 {
-  // Build a stringified list of result tables.
-  nsTArray<nsCString> tables;
+  // Build the result array.
   for (uint32_t i = 0; i < results->Length(); i++) {
     LookupResult& result = results->ElementAt(i);
     MOZ_ASSERT(!result.mNoise, "Lookup results should not have noise added");
@@ -227,13 +226,7 @@ ProcessLookupResults(LookupResultArray* results)
       tables.AppendElement(result.mTableName);
     }
   }
-  nsAutoCString tableStr;
-  for (uint32_t i = 0; i < tables.Length(); i++) {
-    if (i != 0)
-      tableStr.Append(',');
-    tableStr.Append(tables[i]);
-  }
-  return tableStr;
+  return NS_OK;
 }
 
 /**
@@ -1493,9 +1486,31 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
+nsUrlClassifierDBService::ClassifyLocal(nsIURI *aURI,
+                                        const nsACString& aTables,
+                                        nsACString& aTableResults)
+{
+  nsTArray<nsCString> results;
+  ClassifyLocalWithTables(aURI, aTables, results);
+
+  // Convert the result array to a comma separated string
+  aTableResults.AssignLiteral("");
+  bool first = true;
+  for (nsCString& result : results) {
+    if (first) {
+      first = false;
+    } else {
+      aTableResults.AppendLiteral(",");
+    }
+    aTableResults.Append(result);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
-                                                  const nsACString & aTables,
-                                                  nsACString & aTableResults)
+                                                  const nsACString& aTables,
+                                                  nsTArray<nsCString>& aTableResults)
 {
   MOZ_ASSERT(NS_IsMainThread(), "ClassifyLocalWithTables must be on main thread");
   if (gShuttingDownThread) {
@@ -1508,11 +1523,9 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
     URIParams uri;
     SerializeURI(aURI, uri);
     nsAutoCString tables(aTables);
-    nsAutoCString results;
     bool result = ContentChild::GetSingleton()->SendClassifyLocal(uri, tables,
-                                                                  &results);
+                                                                  &aTableResults);
     if (result) {
-      aTableResults = results;
       return NS_OK;
     }
     return NS_ERROR_FAILURE;
@@ -1538,7 +1551,8 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
   // In unittests, we may not have been initalized, so don't crash.
   rv = mWorkerProxy->DoLocalLookup(key, aTables, results);
   if (NS_SUCCEEDED(rv)) {
-    aTableResults = ProcessLookupResults(results);
+    rv = ProcessLookupResults(results, aTableResults);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
