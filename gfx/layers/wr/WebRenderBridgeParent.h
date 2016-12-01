@@ -34,8 +34,6 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent
                                   , public CompositorVsyncSchedulerOwner
                                   , public CompositableParentManager
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeParent)
-
 public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const uint64_t& aPipelineId,
