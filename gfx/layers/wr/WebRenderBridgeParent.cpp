@@ -47,7 +47,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
     // i.e. the one created by the CompositorBridgeParent as opposed to the
     // CrossProcessCompositorBridgeParent
     MOZ_ASSERT(mWidget);
-    mWRWindowState = wr_init_window(mPipelineId);
+    mWRWindowState = wr_init_window(mPipelineId, gfxPrefs::WebRenderProfilerEnabled());
   }
   if (mWidget) {
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
@@ -462,6 +462,15 @@ bool
 WebRenderBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
   return true;
+}
+
+void
+WebRenderBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
+{
+  if (mWidget) {
+    // Only set the flag to "root" WebRenderBridgeParent.
+    wr_profiler_set_enabled(mWRWindowState, aEnabled);
+  }
 }
 
 } // namespace layers
