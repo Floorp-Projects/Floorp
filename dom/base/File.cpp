@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/File.h"
 
-#include "ipc/nsIRemoteBlob.h"
 #include "MultipartBlobImpl.h"
 #include "nsCExternalHandlerService.h"
 #include "nsContentCID.h"
@@ -22,6 +21,7 @@
 #include "nsISeekableStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsIRemoteBlob.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIUUIDGenerator.h"
