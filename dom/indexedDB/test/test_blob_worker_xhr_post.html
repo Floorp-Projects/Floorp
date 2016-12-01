@@ -10,7 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
-  function testSteps()
+  function* testSteps()
   {
     const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
     const BLOB_TYPE = "text/plain";
@@ -101,7 +101,6 @@
     URL.revokeObjectURL(workerScriptUrl);
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

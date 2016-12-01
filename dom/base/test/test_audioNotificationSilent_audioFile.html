@@ -28,11 +28,7 @@ var observer = {
 };
 
 function continueTest() {
-  try {
-    generator.next();
-  } catch (e if e instanceof StopIteration) {
-    error("Stop test because of exception!");
-  }
+  generator.next();
 }
 
 function audioPlayingStart() {
@@ -58,12 +54,12 @@ function finish() {
   SimpleTest.finish();
 }
 
-function runTest() {
+function* runTest() {
   yield audioPlayingStart();
 
   yield audioBecomeSilentDuringPlaying();
 
-  yield finish();
+  finish();
 }
 
 continueTest();

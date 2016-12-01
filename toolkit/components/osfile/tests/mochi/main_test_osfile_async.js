@@ -114,23 +114,6 @@ var reference_fetch_file = function reference_fetch_file(path, test) {
   return promise.promise;
 };
 
-/**
- * Compare asynchronously the contents two files using xpcom.
- *
- * Used for comparing xpcom-based results to os.file-based results.
- *
- * @param {string} a The _absolute_ path to the first file.
- * @param {string} b The _absolute_ path to the second file.
- *
- * @resolves {null}
- */
-var reference_compare_files = function reference_compare_files(a, b, test) {
-  test.info("Comparing files " + a + " and " + b);
-  let a_contents = yield reference_fetch_file(a, test);
-  let b_contents = yield reference_fetch_file(b, test);
-  is(a_contents, b_contents, "Contents of files " + a + " and " + b + " match");
-};
-
 var reference_dir_contents = function reference_dir_contents(path) {
   let result = [];
   let entries = new FileUtils.File(path).directoryEntries;
@@ -150,7 +133,7 @@ function toggleDebugTest (pref, consoleListener) {
 }
 
 var test = maketest("Main", function main(test) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     SimpleTest.waitForExplicitFinish();
     yield test_stat();
     yield test_debug();
@@ -174,7 +157,7 @@ var EXISTING_FILE = OS.Path.join("chrome", "toolkit", "components",
  * Test OS.File.stat and OS.File.prototype.stat
  */
 var test_stat = maketest("stat", function stat(test) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     // Open a file and stat it
     let file = yield OS.File.open(EXISTING_FILE);
     let stat1;
@@ -226,7 +209,7 @@ var test_info_features_detect = maketest("features_detect", function features_de
  * Test file.{getPosition, setPosition}
  */
 var test_position = maketest("position", function position(test) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let file = yield OS.File.open(EXISTING_FILE);
 
     try {
@@ -257,7 +240,7 @@ var test_position = maketest("position", function position(test) {
  * Test OS.File.prototype.{DirectoryIterator}
  */
 var test_iter = maketest("iter", function iter(test) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let currentDir = yield OS.File.getCurrentDirectory();
 
     // Trivial walks through the directory
@@ -382,7 +365,7 @@ var test_iter = maketest("iter", function iter(test) {
  * Test OS.File.prototype.{exists}
  */
 var test_exists = maketest("exists", function exists(test) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let fileExists = yield OS.File.exists(EXISTING_FILE);
     test.ok(fileExists, "file exists");
     fileExists = yield OS.File.exists(EXISTING_FILE + ".tmp");
@@ -394,7 +377,7 @@ var test_exists = maketest("exists", function exists(test) {
  * Test changes to OS.Shared.DEBUG flag.
  */
 var test_debug = maketest("debug", function debug(test) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     function testSetDebugPref (pref) {
       try {
         Services.prefs.setBoolPref("toolkit.osfile.log", pref);
@@ -419,7 +402,7 @@ var test_debug = maketest("debug", function debug(test) {
  * OS.Shared.TEST flags.
  */
 var test_debug_test = maketest("debug_test", function debug_test(test) {
-  return Task.spawn(function () {
+  return Task.spawn(function* () {
     // Create a console listener.
     let consoleListener = {
       observe: function (aMessage) {

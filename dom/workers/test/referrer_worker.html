@@ -26,7 +26,7 @@ function finish() {
   // Let window.onerror have a chance to fire
   setTimeout(function() {
     setTimeout(function() {
-      tests.close();
+      tests.return();
       window.parent.postMessage("SimpleTest.finish();", "*");
     }, 0);
   }, 0);
@@ -119,7 +119,7 @@ function checkIndividualResults(aType, aPolicy, aExpected) {
   doXHR(GET_RESULT, onload, onerror);
 }
 
-var tests = (function() {
+var tests = (function*() {
 
   for (var type in testCases) {
     for (var policy in testCases[type]['Referrer-Policy']) {
@@ -137,8 +137,7 @@ var tests = (function() {
     }
   }
 
-  // complete.  Be sure to yield so we don't call this twice.
-  yield finish();
+  finish();
 })();
 </script>
 </body>

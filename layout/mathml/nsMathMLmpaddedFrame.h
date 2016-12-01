@@ -45,7 +45,20 @@ public:
   }
 
 protected:
-  explicit nsMathMLmpaddedFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLmpaddedFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext)
+    , mWidthSign(0)
+    , mHeightSign(0)
+    , mDepthSign(0)
+    , mLeadingSpaceSign(0)
+    , mVerticalOffsetSign(0)
+    , mWidthPseudoUnit(0)
+    , mHeightPseudoUnit(0)
+    , mDepthPseudoUnit(0)
+    , mLeadingSpacePseudoUnit(0)
+    , mVerticalOffsetPseudoUnit(0)
+  {}
+
   virtual ~nsMathMLmpaddedFrame();
 
   virtual nsresult

@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
     test.next();
   });
 
-  function runTest() {
+  function* runTest() {
     MockColorPicker.init(window);
     var element = null;
 
@@ -100,7 +100,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
 
     MockColorPicker.cleanup();
     SimpleTest.finish();
-    yield undefined;
   }
 
   </script>

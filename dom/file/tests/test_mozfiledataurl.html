@@ -10,8 +10,8 @@
 <p id="display">
 <iframe id=inner></iframe>
 <iframe id=iframe></iframe>
-<img id=img onload="gen.send(event);">
-<audio id=audio onloadeddata="gen.send(event);">
+<img id=img onload="gen.next(event);">
+<audio id=audio onloadeddata="gen.next(event);">
 </p>
 <div id="content" style="display: none">
 
@@ -24,11 +24,11 @@ try {
 } catch(e) { }
 
 window.addEventListener("message", function(e) {
-  gen.send(JSON.parse(e.data));
+  gen.next(JSON.parse(e.data));
 }, false);
 
 const innerSameSiteURI = "file_mozfiledataurl_inner.html";
-const innerCrossSiteURI = "http://example.com/tests/dom/base/test/file_mozfiledataurl_inner.html"
+const innerCrossSiteURI = "http://example.com/tests/dom/file/tests/file_mozfiledataurl_inner.html"
 
 var fileNames = ["file_mozfiledataurl_img.jpg",
                  "file_mozfiledataurl_audio.ogg",
@@ -59,12 +59,12 @@ function start() {
 
 SimpleTest.waitForExplicitFinish();
 
-function runTest([imgFile, audioFile, docFile, xhrFile]) {
+function* runTest([imgFile, audioFile, docFile, xhrFile]) {
   inner = document.getElementById('inner');
   img = document.getElementById('img');
   audio = document.getElementById('audio');
   iframe = document.getElementById('iframe');
-  inner.onload = function() { gen.send("inner loaded"); };
+  inner.onload = function() { gen.next("inner loaded"); };
 
   // Attempt to load a image in this document
   var fileurl = URL.createObjectURL(imgFile);
@@ -194,7 +194,7 @@ function runTest([imgFile, audioFile, docFile, xhrFile]) {
   // Attempt to load file url using XHR
   fileurl = URL.createObjectURL(xhrFile);
   xhr = new XMLHttpRequest;
-  xhr.onload = function() { gen.send("XHR finished"); };
+  xhr.onload = function() { gen.next("XHR finished"); };
   xhr.open("GET", fileurl);
   xhr.send();
   is((yield), "XHR finished", "correct gen.next()");
@@ -216,8 +216,6 @@ function runTest([imgFile, audioFile, docFile, xhrFile]) {
   is(res.didError, true, "load failed successfully");
 
   SimpleTest.finish();
-
-  yield undefined;
 }
 </script>
 </pre>

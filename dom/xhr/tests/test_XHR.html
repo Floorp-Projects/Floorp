@@ -18,7 +18,7 @@ SimpleTest.waitForExplicitFinish();
 var gen = runTests();
 function continueTest() { gen.next(); }
 
-function runTests() {
+function* runTests() {
 
 var path = "/tests/dom/xhr/tests/";
 
@@ -384,8 +384,6 @@ client.onreadystatechange = function() {
 client.abort();
 
 SimpleTest.finish();
-yield undefined;
-
 } /* runTests */
 </script>
 </pre>

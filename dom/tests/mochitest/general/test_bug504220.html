@@ -40,7 +40,7 @@ function run_test() {
 
   SimpleTest.waitForExplicitFinish();
 
-  function waitForHashchange() {
+  function* waitForHashchange() {
     // Change the document's hash.  If we've been running this test manually,
     // the hash might already be "#foo", so we need to check in order to be
     // sure we trigger a hashchange.
@@ -53,7 +53,6 @@ function run_test() {
 
     is(numEvents, 1, "Exactly one hashchange should have been fired.");
     SimpleTest.finish();
-    yield undefined;
   }
 
   var gGen = waitForHashchange();

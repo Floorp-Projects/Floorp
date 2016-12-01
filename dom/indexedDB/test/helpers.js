@@ -46,7 +46,7 @@ testHarnessGenerator.next();
 
 function testHarnessSteps() {
   function nextTestHarnessStep(val) {
-    testHarnessGenerator.send(val);
+    testHarnessGenerator.next(val);
   }
 
   let testScriptPath;
@@ -222,8 +222,6 @@ function finishTest()
                                                "free");
 
   SimpleTest.executeSoon(function() {
-    testGenerator.close();
-    testHarnessGenerator.close();
     clearAllDatabases(function() { SimpleTest.finish(); });
   });
 }
@@ -235,12 +233,11 @@ function browserRunTest()
 
 function browserFinishTest()
 {
-  setTimeout(function() { testGenerator.close(); }, 0);
 }
 
 function grabEventAndContinueHandler(event)
 {
-  testGenerator.send(event);
+  testGenerator.next(event);
 }
 
 function continueToNextStep()
@@ -442,7 +439,7 @@ function workerScript() {
   };
 
   self.grabEventAndContinueHandler = function(_event_) {
-    testGenerator.send(_event_);
+    testGenerator.next(_event_);
   };
 
   self.continueToNextStep = function() {
@@ -608,7 +605,7 @@ function workerScript() {
 
       case "getWasmBinaryDone":
         info("Worker: get wasm binary done");
-        testGenerator.send(message.wasmBinary);
+        testGenerator.next(message.wasmBinary);
         break;
 
       default:

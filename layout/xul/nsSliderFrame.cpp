@@ -81,6 +81,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 nsSliderFrame::nsSliderFrame(nsStyleContext* aContext):
   nsBoxFrame(aContext),
+  mRatio(0.0f),
   mCurPos(0),
   mChange(0),
   mDragFinished(true),

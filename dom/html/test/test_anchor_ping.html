@@ -23,11 +23,11 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 addLoadEvent(function () {
-  Task.spawn(function run_tests() {
+  Task.spawn(function* run_tests() {
     while (tests.length) {
       let test = tests.shift();
       info("-- running " + test.name);
-      yield Task.spawn(test);
+      yield* test();
     }
 
     SimpleTest.finish();
