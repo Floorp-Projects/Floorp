@@ -3816,9 +3816,6 @@ class BaseCompiler
                                          ValTypeVector& signature, ExprType retType);
     MOZ_MUST_USE bool emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE bool emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
-#ifdef INT_DIV_I64_CALLOUT
-    MOZ_MUST_USE bool emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType);
-#endif
     MOZ_MUST_USE bool emitGetLocal();
     MOZ_MUST_USE bool emitSetLocal();
     MOZ_MUST_USE bool emitTeeLocal();
@@ -3870,7 +3867,9 @@ class BaseCompiler
     void emitQuotientU32();
     void emitRemainderI32();
     void emitRemainderU32();
-#ifndef INT_DIV_I64_CALLOUT
+#ifdef INT_DIV_I64_CALLOUT
+    void emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType);
+#else
     void emitQuotientI64();
     void emitQuotientU64();
     void emitRemainderI64();
@@ -5880,13 +5879,11 @@ BaseCompiler::emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandT
 }
 
 #ifdef INT_DIV_I64_CALLOUT
-bool
+void
 BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType)
 {
     MOZ_ASSERT(operandType == ValType::I64);
-
-    if (deadCode_)
-        return true;
+    MOZ_ASSERT(!deadCode_);
 
     sync();
 
@@ -5917,8 +5914,6 @@ BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operand
     freeI32(temp);
     freeI64(rhs);
     pushI64(srcDest);
-
-    return true;
 }
 #endif // INT_DIV_I64_CALLOUT
 
@@ -6709,6 +6704,9 @@ BaseCompiler::emitBody()
         iter_.readConversion(inType, outType, &unused_a) && \
             (deadCode_ || doEmit(symbol, inType, outType))
 
+#define emitIntDivCallout(doEmit, symbol, type) \
+        iter_.readBinary(type, &unused_a, &unused_b) && (deadCode_ || (doEmit(symbol, type), true))
+
 #define CHECK(E)      if (!(E)) goto done
 #define NEXT()        continue
 #define CHECK_NEXT(E) if (!(E)) goto done; continue
@@ -6905,25 +6903,29 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitBinary(emitMultiplyI64, ValType::I64));
           case uint16_t(Op::I64DivS):
 #ifdef INT_DIV_I64_CALLOUT
-            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::DivI64, ValType::I64));
+            CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::DivI64,
+                                         ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientI64, ValType::I64));
 #endif
           case uint16_t(Op::I64DivU):
 #ifdef INT_DIV_I64_CALLOUT
-            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UDivI64, ValType::I64));
+            CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::UDivI64,
+                                         ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientU64, ValType::I64));
 #endif
           case uint16_t(Op::I64RemS):
 #ifdef INT_DIV_I64_CALLOUT
-            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::ModI64, ValType::I64));
+            CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::ModI64,
+                                         ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderI64, ValType::I64));
 #endif
           case uint16_t(Op::I64RemU):
 #ifdef INT_DIV_I64_CALLOUT
-            CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UModI64, ValType::I64));
+            CHECK_NEXT(emitIntDivCallout(emitDivOrModI64BuiltinCall, SymbolicAddress::UModI64,
+                                         ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderU64, ValType::I64));
 #endif

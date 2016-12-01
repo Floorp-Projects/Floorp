@@ -34,6 +34,8 @@ enum class TaskCategory {
 
   // Most DOM events (postMessage, media, plugins)
   Other,
+
+  Count
 };
 
 // This trait should be attached to classes like nsIGlobalObject and nsIDocument
@@ -52,7 +54,7 @@ public:
   // it is safe. For nsIGlobalWindow it is not safe. The nsIEventTarget can
   // always be used off the main thread.
   virtual already_AddRefed<nsIEventTarget>
-  CreateEventTarget(const char* aName, TaskCategory aCategory);
+  EventTargetFor(TaskCategory aCategory) const;
 };
 
 // Base class for DocGroup and TabGroup.
@@ -66,7 +68,11 @@ public:
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
   virtual already_AddRefed<nsIEventTarget>
-  CreateEventTarget(const char* aName, TaskCategory aCategory);
+  EventTargetFor(TaskCategory aCategory) const = 0;
+
+protected:
+  virtual already_AddRefed<nsIEventTarget>
+  CreateEventTargetFor(TaskCategory aCategory);
 };
 
 } // namespace dom

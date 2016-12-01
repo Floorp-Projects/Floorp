@@ -37,7 +37,7 @@ var gFiles;
 var gCurrentFileIsTransparent = false;
 var gHasTransparencyWasCalled = false;
 
-function testFiles() {
+function* testFiles() {
   // [A, B] where 'A' is the image and 'B' is whether it's transparent.
 
   // PNGs and GIFs may be transparent or not.
@@ -69,14 +69,15 @@ function testFiles() {
 
 function loadNext() {
   var currentFile = "";
-  try {
-    gHasTransparencyWasCalled = false;
-    [currentFile, gCurrentFileIsTransparent] = gFiles.next();
-    gImg.setAttribute("src", currentFile);
-  } catch (e) {
+  gHasTransparencyWasCalled = false;
+  let {done, value} = gFiles.next();
+  if (done) {
     // We ran out of test files.
     cleanUpAndFinish();
+    return;
   }
+  [currentFile, gCurrentFileIsTransparent] = value;
+  gImg.setAttribute("src", currentFile);
 }
 
 function onHasTransparency(aRequest) {

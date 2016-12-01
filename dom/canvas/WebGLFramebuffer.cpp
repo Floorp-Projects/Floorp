@@ -1633,8 +1633,8 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
         dstDepthFormat = fnGetFormat(dstFB->mResolvedCompleteData->depthBuffer);
         dstStencilFormat = fnGetFormat(dstFB->mResolvedCompleteData->stencilBuffer);
 
-        for (const auto& drawBuffer : dstFB->mColorDrawBuffers) {
-            fnCheckColorFormat(drawBuffer->Format()->format);
+        for (const auto& drawBufferEntry : dstFB->mResolvedCompleteData->drawSet) {
+            fnCheckColorFormat(drawBufferEntry.mRef.Format()->format);
         }
     } else {
         dstSampleBuffers = bool(gl->Screen()->Samples());

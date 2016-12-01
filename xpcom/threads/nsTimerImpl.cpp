@@ -651,6 +651,42 @@ nsTimerImpl::SetDelayInternal(uint32_t aDelay, TimeStamp aBase)
   }
 }
 
+void
+nsTimerImpl::GetName(nsACString& aName)
+{
+  switch (mCallbackType) {
+    case CallbackType::Function:
+      if (mName.is<NameString>()) {
+        aName.Assign(mName.as<NameString>());
+      } else if (mName.is<NameFunc>()) {
+        static const size_t buflen = 1024;
+        char buf[buflen];
+        mName.as<NameFunc>()(mITimer, mClosure, buf, buflen);
+        aName.Assign(buf);
+      } else {
+        MOZ_ASSERT(mName.is<NameNothing>());
+        aName.Truncate();
+      }
+      break;
+
+    case CallbackType::Interface:
+      if (nsCOMPtr<nsINamed> named = do_QueryInterface(mCallback.i)) {
+        named->GetName(aName);
+      }
+      break;
+
+    case CallbackType::Observer:
+      if (nsCOMPtr<nsINamed> named = do_QueryInterface(mCallback.o)) {
+        named->GetName(aName);
+      }
+      break;
+
+    case CallbackType::Unknown:
+      aName.Truncate();
+      break;
+  }
+}
+
 nsTimer::~nsTimer()
 {
 }

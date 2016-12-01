@@ -45,10 +45,10 @@ function childFrameScript() {
   }
 
   function grabAndContinue(arg) {
-    testGenerator.send(arg);
+    testGenerator.next(arg);
   }
 
-  function testSteps() {
+  function* testSteps() {
     addMessageListener(messageName, grabAndContinue);
     let message = yield undefined;
 
@@ -98,8 +98,6 @@ function childFrameScript() {
 
     info("Sending second slice");
     finish(slice);
-
-    yield undefined;
   }
 
   let testGenerator = testSteps();
@@ -115,10 +113,10 @@ function parentFrameScript(mm) {
   const sliceText = "an";
 
   function grabAndContinue(arg) {
-    testGenerator.send(arg);
+    testGenerator.next(arg);
   }
 
-  function testSteps() {
+  function* testSteps() {
     let slice = yield undefined;
 
     ok(slice instanceof Blob, "Received a Blob");
@@ -132,8 +130,6 @@ function parentFrameScript(mm) {
 
     is(reader.result, sliceText, "Slice has correct data");
     SimpleTest.finish();
-
-    yield undefined;
   }
 
   let testGenerator = testSteps();
@@ -153,7 +149,7 @@ function parentFrameScript(mm) {
       }
 
       case "done": {
-        testGenerator.send(data.result);
+        testGenerator.next(data.result);
         break;
       }
 

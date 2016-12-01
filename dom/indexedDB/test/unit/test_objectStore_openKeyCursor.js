@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps() {
+function* testSteps() {
   const dbName = this.window ?
                  window.location.pathname :
                  "test_objectStore_openKeyCursor";
@@ -396,5 +396,4 @@ function testSteps() {
   ok(match, "All keys matched");
 
   finishTest();
-  yield undefined;
 }

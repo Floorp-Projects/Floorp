@@ -149,6 +149,8 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetName(nsACString& aName) override;
+
   nsTimerEvent()
     : mTimer()
     , mGeneration(0)
@@ -265,6 +267,16 @@ nsTimerEvent::DeleteAllocatorIfNeeded()
     delete sAllocator;
     sAllocator = nullptr;
   }
+}
+
+NS_IMETHODIMP
+nsTimerEvent::GetName(nsACString& aName)
+{
+  bool current;
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(mTimer->mEventTarget->IsOnCurrentThread(&current)) && current);
+
+  mTimer->GetName(aName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

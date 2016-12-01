@@ -128,7 +128,6 @@ private:
   nsresult CreateChromeWindow(const nsACString& aFeatures,
                               nsIWebBrowserChrome* aParentChrome,
                               uint32_t aChromeFlags,
-                              uint32_t aContextFlags,
                               nsITabParent* aOpeningTabParent,
                               mozIDOMWindowProxy* aOpener,
                               nsIWebBrowserChrome** aResult);

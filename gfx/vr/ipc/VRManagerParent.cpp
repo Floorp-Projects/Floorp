@@ -19,9 +19,10 @@ namespace mozilla {
 using namespace layers;
 namespace gfx {
 
-VRManagerParent::VRManagerParent(ProcessId aChildProcessId)
+VRManagerParent::VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild)
   : HostIPCAllocator()
   , mHaveEventListener(false)
+  , mIsContentChild(aIsContentChild)
 {
   MOZ_COUNT_CTOR(VRManagerParent);
   MOZ_ASSERT(NS_IsMainThread());
@@ -156,7 +157,7 @@ VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
 {
   MessageLoop* loop = layers::CompositorThreadHolder::Loop();
 
-  RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid());
+  RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), true);
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
     vmp, &VRManagerParent::Bind, Move(aEndpoint)));
 
@@ -184,7 +185,7 @@ VRManagerParent::RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager
 VRManagerParent::CreateSameProcess()
 {
   MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
-  RefPtr<VRManagerParent> vmp = new VRManagerParent(base::GetCurrentProcId());
+  RefPtr<VRManagerParent> vmp = new VRManagerParent(base::GetCurrentProcId(), false);
   vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
   vmp->mSelfRef = vmp;
   loop->PostTask(NewRunnableFunction(RegisterVRManagerInCompositorThread, vmp.get()));
@@ -196,7 +197,7 @@ VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
 {
   MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
 
-  RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid());
+  RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), false);
   vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
     vmp, &VRManagerParent::Bind, Move(aEndpoint)));
@@ -313,6 +314,18 @@ VRManagerParent::RecvGetControllers(nsTArray<VRControllerInfo> *aControllers)
   VRManager* vm = VRManager::Get();
   vm->GetVRControllerInfo(*aControllers);
   return IPC_OK();
+}
+
+bool
+VRManagerParent::SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
+{
+  // GamepadManager only exists at the content process
+  // or the same process in non-e10s mode.
+  if (mIsContentChild || IsSameProcess()) {
+    return PVRManagerParent::SendGamepadUpdate(aGamepadEvent);
+  } else {
+    return true;
+  }
 }
 
 } // namespace gfx

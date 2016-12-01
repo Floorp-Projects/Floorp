@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "test_setVersion_throw";
 
@@ -50,5 +50,4 @@ function testSteps()
   is(event.target.error.name, "AbortError", "Request has AbortError");
 
   finishTest();
-  yield undefined;
 }

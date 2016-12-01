@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853571
   SimpleTest.waitForExplicitFinish();
   const Cu = Components.utils;
 
-  function mainTest() {
+  function* mainTest() {
     var iwin = $('ifr').contentWindow;
 
     // Test with a simple sandbox with no prototype.
@@ -46,9 +46,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853571
     target.addEventListener("message", function listener(event) {
       target.removeEventListener("message", listener);
       is(event.source, expectedSource, message);
-      try {
-        gen.next();
-      } catch (e if e instanceof StopIteration) {
+      let {done} = gen.next();
+      if (done) {
         // We're done.
       }
     });

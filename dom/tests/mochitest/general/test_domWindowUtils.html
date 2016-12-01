@@ -37,7 +37,7 @@ var gTests = [
                                  in boolean aIgnoreRootScrollFrame,
                                  in boolean aFlushLayout);
 */
-function testElementFromPoint() {
+async function testElementFromPoint() {
   let onscreen = document.getElementById("onscreen");
   let offscreen = document.getElementById("offscreen");
   let htmldoc = document.documentElement;
@@ -89,105 +89,84 @@ function testElementFromPoint() {
                                      x, y, ignoreScroll, flushLayout));
     is(found, expected, "at index " + i + " for data " + testData[i][0].toSource());
   }
-
-  SimpleTest.executeSoon(function() {
-    next();
-  });
 },
 
 /**
  * Test .isHandlingUserInput attribute.
  */
-function testHandlingUserInput() {
+async function testHandlingUserInput() {
   ok('isHandlingUserInput' in domWindowUtils,
      "isHandlingUserInput should be present");
 
   is(domWindowUtils.isHandlingUserInput, false,
      "isHandlingUserInput should return false if nothing is happening");
 
-  function testEvents() {
-    var data = [
-      {
-        eventName: "click",
-        result: true,
-      },
-      {
-        eventName: "mousemove",
-        result: false,
-      },
-      {
-        eventName: "mouseup",
-        result: true,
-      },
-      {
-        eventName: "mousedown",
-        result: true,
-      },
-      {
-        eventName: "keydown",
-        result: true,
-      },
-      {
-        eventName: "keyup",
-        result: true,
-      },
-    ];
+  var data = [
+    {
+      eventName: "click",
+      result: true,
+    },
+    {
+      eventName: "mousemove",
+      result: false,
+    },
+    {
+      eventName: "mouseup",
+      result: true,
+    },
+    {
+      eventName: "mousedown",
+      result: true,
+    },
+    {
+      eventName: "keydown",
+      result: true,
+    },
+    {
+      eventName: "keyup",
+      result: true,
+    },
+  ];
 
-    for (let i=0; i<data.length; ++i) {
+  for (let i=0; i<data.length; ++i) {
+    let eventPromise = new Promise(resolve => {
       document.addEventListener(data[i].eventName, function() {
-        document.removeEventListener(data[i].eventName, arguments.callee);
-
         is(domWindowUtils.isHandlingUserInput, data[i].result,
            "isHandlingUserInput should be " + data[i].result);
 
-        SimpleTest.executeSoon(function() {
-          try { testEventsRunner.next(); } catch (e) { }
-        });
-      });
-
-      SimpleTest.executeSoon(function() {
-        if (data[i].eventName == "click") {
-          synthesizeMouseAtCenter(document.body, {});
-        } else if (data[i].eventName.indexOf("key") == 0) {
-          synthesizeKey("VK_A", { type: data[i].eventName });
-        } else {
-          synthesizeMouseAtCenter(document.body, { type: data[i].eventName });
-        }
-      });
-
-      yield undefined;
-    }
+        SimpleTest.executeSoon(resolve);
+      }, {once: true});
+    });
 
     SimpleTest.executeSoon(function() {
-      next();
+      if (data[i].eventName == "click") {
+        synthesizeMouseAtCenter(document.body, {});
+      } else if (data[i].eventName.indexOf("key") == 0) {
+        synthesizeKey("VK_A", { type: data[i].eventName });
+      } else {
+        synthesizeMouseAtCenter(document.body, { type: data[i].eventName });
+      }
     });
-  }
 
-  var testEventsRunner = testEvents();
-  testEventsRunner.next();
+    await eventPromise;
+  }
 },
 ];
 
-function runner() {
+async function runner() {
   for (let i=0; i<gTests.length; ++i) {
-    gTests[i]();
-    yield undefined;
+    if (i > 0) {
+      await new Promise(r => SimpleTest.executeSoon(r));
+    }
+    await gTests[i]();
   }
 
   SimpleTest.finish();
 };
 
-var gTestRunner = runner();
-
-function next() {
-  try { gTestRunner.next(); } catch (e) { if (e != StopIteration) { throw e; } }
-}
-
 // Run the test from onload, since the onscreen and offscreen divs should be in
 // the right places by then.
-addLoadEvent(function() {
-  gTestRunner.next();
-});
+addLoadEvent(runner);
 
 </script>
 

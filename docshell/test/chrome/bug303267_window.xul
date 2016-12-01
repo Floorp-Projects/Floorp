@@ -27,7 +27,7 @@
     // displayed from the bfcache, the script globals should
     // remain intact from the page's initial load.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Load an initial test page which should be saved in the bfcache.
       var navData = {
@@ -82,10 +82,8 @@
       isnot(originalHTML, 
         newHTML, "HTML not updated on pageshow; javascript broken?");
 
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
 
     ////

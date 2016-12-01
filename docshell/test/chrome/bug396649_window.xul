@@ -40,7 +40,7 @@
     // viewers should be evicted from bfcache when going back if more
     // than MAX_BFCACHE_PAGES from the current index.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Make sure bfcache is on.
       enableBFCache(true);
@@ -110,10 +110,8 @@
         yield undefined;
       }
       
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
     
   ]]></script>

@@ -22,7 +22,7 @@ function promiseMessage(aMessage, browser) {
   });
 }
 
-add_task(function test1() {
+add_task(function* test1() {
   removePermission(testPageURL, "indexedDB");
 
   info("creating tab");
@@ -51,7 +51,7 @@ add_task(function test1() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(function test2() {
+add_task(function* test2() {
   info("creating private window");
   let win = yield BrowserTestUtils.openNewBrowserWindow({ private : true });
   
@@ -81,7 +81,7 @@ add_task(function test2() {
   win.close();
 });
 
-add_task(function test3() {
+add_task(function* test3() {
   info("creating tab");
   gBrowser.selectedTab = gBrowser.addTab();
 

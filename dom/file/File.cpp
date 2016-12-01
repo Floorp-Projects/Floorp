@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/File.h"
 
+#include "ipc/nsIRemoteBlob.h"
 #include "MultipartBlobImpl.h"
 #include "nsCExternalHandlerService.h"
 #include "nsContentCID.h"
@@ -21,7 +22,6 @@
 #include "nsISeekableStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsIRemoteBlob.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIUUIDGenerator.h"
@@ -555,7 +555,11 @@ File::Constructor(const GlobalObject& aGlobal,
                   const FilePropertyBag& aBag,
                   ErrorResult& aRv)
 {
-  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(aName);
+  // Normalizing the filename
+  nsString name(aName);
+  name.ReplaceChar('/', ':');
+
+  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(name);
 
   nsAutoString type(aBag.mType);
   MakeValidBlobType(type);

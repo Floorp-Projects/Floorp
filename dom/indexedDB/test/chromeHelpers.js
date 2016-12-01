@@ -19,14 +19,14 @@ if (!window.runTest) {
 function finishTest()
 {
   SimpleTest.executeSoon(function() {
-    testGenerator.close();
+    testGenerator.return();
     SimpleTest.finish();
   });
 }
 
 function grabEventAndContinueHandler(event)
 {
-  testGenerator.send(event);
+  testGenerator.next(event);
 }
 
 function continueToNextStep()

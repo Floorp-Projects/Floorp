@@ -21,7 +21,7 @@
     }
 
     function grabEventAndContinueHandler(event) {
-      testGenerator.send(event);
+      testGenerator.next(event);
     }
 
     function errorHandler(event) {
@@ -38,7 +38,6 @@
       // Let window.onerror have a chance to fire
       setTimeout(function() {
         setTimeout(function() {
-          testGenerator.close();
           window.parent.postMessage("SimpleTest.finish();", "*");
         }, 0);
       }, 0);
@@ -48,7 +47,7 @@
       is(message, "ConstraintError", "Expect a constraint error");
     };
 
-    function testSteps() {
+    function* testSteps() {
       window.parent.SpecialPowers.addPermission("indexedDB", true, document);
 
       let request = indexedDB.open(window.location.pathname, 1);
@@ -230,7 +229,6 @@
       event.preventDefault();
 
       finishTest();
-      yield undefined;
     }
   </script>
 

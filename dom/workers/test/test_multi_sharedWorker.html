@@ -25,7 +25,7 @@
         const errorMessage = "Error: Expected";
         const errorLineno = 34;
 
-        let testGenerator = (function() {
+        let testGenerator = (function*() {
           SimpleTest.waitForExplicitFinish();
 
           window.addEventListener("message", function(event) {
@@ -228,10 +228,9 @@
           window.removeEventListener("message", sendToGenerator);
 
           SimpleTest.finish();
-          yield undefined;
         })();
 
-        let sendToGenerator = testGenerator.send.bind(testGenerator);
+        let sendToGenerator = testGenerator.next.bind(testGenerator);
 
       </script>
   </head>

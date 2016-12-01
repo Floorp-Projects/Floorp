@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var testGenerator;
-
 function runTest()
 {
   SimpleTest.waitForExplicitFinish();
@@ -12,8 +10,7 @@ function runTest()
   SpecialPowers.pushPrefEnv({'set': [ ["dom.archivereader.enabled", true] ]}, function() {
     SpecialPowers.createFiles(filesToCreate(),
                               function (files) {
-                                testGenerator = testSteps(files);
-                                return testGenerator.next();
+                                testSteps(files);
                               },
                               function (msg) {
                                 ok(false, "File creation error: " + msg);
@@ -25,7 +22,6 @@ function runTest()
 function finishTest()
 {
   SpecialPowers.popPrefEnv(function() {
-    testGenerator.close();
     SimpleTest.finish();
   });
 }

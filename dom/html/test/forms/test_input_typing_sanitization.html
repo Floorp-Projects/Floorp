@@ -49,14 +49,9 @@ function urlify(aStr) {
 
 function runTestsForNextInputType()
 {
-  try {
-    testRunner.next();
-  } catch (e) {
-    if (e.toString() == '[object StopIteration]') {
-      SimpleTest.finish();
-    } else {
-      throw StopIteration;
-    }
+  let {done} = testRunner.next();
+  if (done) {
+    SimpleTest.finish();
   }
 }
 
@@ -116,7 +111,7 @@ var submitMethod = submitForm;
 
 SimpleTest.waitForExplicitFinish();
 
-function runTest()
+function* runTest()
 {
   SimpleTest.requestLongerTimeout(4);
 

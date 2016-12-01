@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
   var iter = runTests();
   nextTest();
 
-  function runTests() {
+  function* runTests() {
     var iframe = document.createElement("iframe");
     iframe.style.width = "300px";
     iframe.style.height = "300px";
@@ -40,6 +40,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
     h1.style.width = "300px";
     waitForReflow(iframe.docShell);
     yield is(300, h1.offsetWidth, "h1 has correct width");
+
+    SimpleTest.finish();
   }
 
   function waitForInterruptibleReflow(docShell) {
@@ -97,11 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
   }
 
   function nextTest() {
-    try {
-      iter.next();
-    } catch (e if e instanceof StopIteration) {
-      SimpleTest.finish();
-    }
+    iter.next();
   }
 
   ]]>

@@ -13,9 +13,6 @@ Test decoding a simple message
 window.onload = function() {
   const { utils: Cu } = Components;
   const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  const { Task } = require("devtools/shared/task");
-  const promise = require("promise");
-  const defer = require("devtools/shared/defer");
 
   const QR = require("devtools/shared/qrcode/index");
 
@@ -31,29 +28,28 @@ window.onload = function() {
     "t3jVw2dwTPwJq1KYG3gAklCgu37yGxeScYKyiCc+7DR34hPVQiuQ7UhJMagyEb" +
     "lymmzJk0a9q8iTOnzp0NCgAAOw==";
 
-  Task.spawn(function() {
-    let result = yield QR.decodeFromURI(testImage);
+  (async function() {
+    let result = await QR.decodeFromURI(testImage);
     is(result, "HELLO", "Decoded data URI result matches");
-    let canvas = yield drawToCanvas(testImage);
+    let canvas = await drawToCanvas(testImage);
     result = QR.decodeFromCanvas(canvas);
     is(result, "HELLO", "Decoded canvas result matches");
-  }).then(SimpleTest.finish, ok.bind(null, false));
+  })().then(SimpleTest.finish, ok.bind(null, false));
 
   function drawToCanvas(src) {
-    let deferred = defer();
-    let canvas = document.createElement("canvas");
-    let context = canvas.getContext("2d");
-    let image = new Image();
+    return new Promise(resolve => {
+      let canvas = document.createElement("canvas");
+      let context = canvas.getContext("2d");
+      let image = new Image();
 
-    image.onload = () => {
-      canvas.width = image.width;
-      canvas.height = image.height;
-      context.drawImage(image, 0, 0);
-      deferred.resolve(canvas);
-    };
-    image.src = src;
-
-    return deferred.promise;
+      image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
+        context.drawImage(image, 0, 0);
+        resolve(canvas);
+      };
+      image.src = src;
+    });
   }
 };
   </script>

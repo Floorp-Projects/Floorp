@@ -89,7 +89,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
     }, 0);
   }
 
-  function runTest()
+  function* runTest()
   {
     test('input');
     yield undefined;
@@ -98,7 +98,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
     testCorrectUpdateOnScroll();
     yield undefined;
     SimpleTest.finish();
-    yield undefined;
   }
 
   gTestRunner = runTest();

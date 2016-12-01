@@ -11,10 +11,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'dom'
 
 EXPORTS.mozilla.dom.ipc += [
-    'BlobChild.h',
-    'BlobParent.h',
     'IdType.h',
-    'nsIRemoteBlob.h',
     'StructuredCloneData.h',
 ]
 
@@ -70,22 +67,17 @@ UNIFIED_SOURCES += [
     'URLClassifierParent.cpp',
 ]
 
-# Blob.cpp cannot be compiled in unified mode because it triggers a fatal gcc warning.
 # CrashReporterChild.cpp cannot be compiled in unified mode because of name clashes
 # in OS X headers.
 # ContentChild.cpp cannot be compiled in unified mode on  linux due to Time conflict
 SOURCES += [
-    'Blob.cpp',
     'ContentChild.cpp',
     'CrashReporterChild.cpp',
     'ProcessHangMonitor.cpp',
 ]
 
 IPDL_SOURCES += [
-    'BlobTypes.ipdlh',
     'DOMTypes.ipdlh',
-    'PBlob.ipdl',
-    'PBlobStream.ipdl',
     'PBrowser.ipdl',
     'PBrowserOrId.ipdlh',
     'PColorPicker.ipdl',

@@ -172,3 +172,108 @@ add_task(function* openWindow_test() {
   yield BrowserTestUtils.closeWindow(win);
 });
 
+/**
+ * When the web page calls window.open, the top-level docshell in the new
+ * created window will have firstPartyDomain set.
+ */
+add_task(function* window_open_redirect_test() {
+  Services.prefs.setIntPref("browser.link.open_newwindow", 2);
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.link.open_newwindow");
+  });
+
+  let tab = gBrowser.addTab(BASE_URL + "window_redirect.html");
+  let win = yield BrowserTestUtils.waitForNewWindow();
+  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+
+  yield ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
+                 "window.open() should have firstPartyDomain attribute");
+    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
+                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
+  });
+
+  gBrowser.removeTab(tab);
+  yield BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * When the web page calls window.open, the top-level docshell in the new
+ * created window will inherit the firstPartyDomain attribute.
+ * However the top-level document will override the firstPartyDomain if the
+ * document is from another domain.
+ */
+add_task(function* window_open_iframe_test() {
+  Services.prefs.setIntPref("browser.link.open_newwindow", 2);
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.link.open_newwindow");
+  });
+
+  let tab = gBrowser.addTab(BASE_URL + "window2.html");
+  let win = yield BrowserTestUtils.waitForNewWindow();
+  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, true);
+
+  yield ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
+                 "window.open() should have firstPartyDomain attribute");
+
+    // The document is http://example.com/browser/browser/components/originattributes/test/browser/test_firstParty.html
+    // so the firstPartyDomain will be overriden to 'example.com'.
+    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
+                 "example.com", "The document should have firstPartyDomain");
+
+    let iframe = content.document.getElementById("iframe1");
+    Assert.equal(iframe.frameLoader.docShell.getOriginAttributes().firstPartyDomain,
+                 "example.com", "iframe's docshell should have firstPartyDomain");
+    Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
+                 "example.com", "iframe should have firstPartyDomain");
+  });
+
+  gBrowser.removeTab(tab);
+  yield BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Test for the loadInfo->TriggeringPrincipal is the document itself.
+ */
+add_task(function* form_test() {
+  let tab = gBrowser.addTab(BASE_URL + "test_form.html");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  yield ContentTask.spawn(tab.linkedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
+                 attrs.firstPartyDomain, "The document should have firstPartyDomain");
+
+    let submit = content.document.getElementById("submit");
+    submit.click();
+  });
+
+  gBrowser.removeTab(tab);
+});
+
+/**
+ * Another test for loadInfo->TriggeringPrincipal in the window.open case.
+ */
+add_task(function* window_open_form_test() {
+  Services.prefs.setIntPref("browser.link.open_newwindow", 2);
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.link.open_newwindow");
+  });
+
+  let tab = gBrowser.addTab(BASE_URL + "window3.html");
+  let win = yield BrowserTestUtils.waitForNewWindow();
+  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, true);
+
+  yield ContentTask.spawn(win.gBrowser.selectedBrowser, { firstPartyDomain: "mochi.test" }, function* (attrs) {
+    Assert.equal(docShell.getOriginAttributes().firstPartyDomain, attrs.firstPartyDomain,
+                 "window.open() should have firstPartyDomain attribute");
+    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
+                 "example.com", "The document should have firstPartyDomain");
+
+    let submit = content.document.getElementById("submit");
+    submit.click();
+  });
+
+  gBrowser.removeTab(tab);
+  yield BrowserTestUtils.closeWindow(win);
+});

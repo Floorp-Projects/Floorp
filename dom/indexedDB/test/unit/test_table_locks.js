@@ -17,7 +17,7 @@ const loopCount = 100;
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   let req = indexedDB.open(dbName, dbVersion);
   req.onerror = errorHandler;
@@ -57,7 +57,6 @@ function testSteps()
   yield undefined;
 
   finishTest();
-  yield undefined;
 }
 
 function doReadOnlyTransaction(db, key, remaining)

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -91,5 +91,4 @@ function testSteps()
   is(db.version, 2, "Database has correct version");
 
   finishTest();
-  yield undefined;
 }

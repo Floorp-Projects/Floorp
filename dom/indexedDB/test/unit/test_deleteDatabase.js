@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -102,5 +102,4 @@ function testSteps()
   ok(true, "after deleting a non-existent database, open should work");
 
   finishTest();
-  yield undefined;
 }

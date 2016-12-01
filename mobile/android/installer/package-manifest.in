@@ -118,6 +118,7 @@
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
 @BINPATH@/components/dom_events.xpt
+@BINPATH@/components/dom_file.xpt
 @BINPATH@/components/dom_geolocation.xpt
 @BINPATH@/components/dom_media.xpt
 @BINPATH@/components/dom_network.xpt

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -160,6 +160,5 @@ function testSteps()
   is(event.newVersion, 2, "Correct new version");
 
   finishTest();
-  yield undefined;
 }
 

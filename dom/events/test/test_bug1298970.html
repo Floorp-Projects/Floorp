@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1298970
+-->
+<head>
+  <title>Test for Bug 1298970</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1298970">Mozilla Bug 1298970</a>
+<p id="display"></p>
+<div id="inner"></div>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1298970 **/
+var target = document.getElementById("inner");
+var event = new Event("test", { bubbles: true, cancelable: true });
+
+is(event.cancelBubble, false, "Event.cancelBubble should be false by default");
+
+target.addEventListener("test", (e) => {
+  e.stopPropagation();
+  is(e.cancelBubble, true, "Event.cancelBubble should be true after stopPropagation");
+}, true);
+
+target.dispatchEvent(event);
+
+</script>
+</body>
+</html>
+

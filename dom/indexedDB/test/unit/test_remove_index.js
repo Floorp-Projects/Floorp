@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const indexName = "My Test Index";
@@ -54,5 +54,4 @@ function testSteps()
   event = yield undefined;
 
   finishTest();
-  yield undefined;
 }
