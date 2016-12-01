@@ -720,7 +720,7 @@ const DownloadsView = {
   /**
    * Maximum number of items shown by the list at any given time.
    */
-  kItemCountLimit: 3,
+  kItemCountLimit: 5,
 
   /**
    * Indicates whether we are still loading downloads data asynchronously.
