@@ -18,30 +18,6 @@
 namespace mozilla {
 using namespace mozilla::dom;
 
-static bool
-IsValidHost(const nsACString& host) {
-  if (host.Equals("addons.mozilla.org") ||
-      host.Equals("discovery.addons.mozilla.org") ||
-      host.Equals("testpilot.firefox.com")) {
-    return true;
-  }
-
-  // When testing allow access to the developer sites.
-  if (Preferences::GetBool("extensions.webapi.testing", false)) {
-    if (host.LowerCaseEqualsLiteral("addons.allizom.org") ||
-        host.LowerCaseEqualsLiteral("discovery.addons.allizom.org") ||
-        host.LowerCaseEqualsLiteral("addons-dev.allizom.org") ||
-        host.LowerCaseEqualsLiteral("discovery.addons-dev.allizom.org") ||
-        host.LowerCaseEqualsLiteral("testpilot.stage.mozaws.net") ||
-        host.LowerCaseEqualsLiteral("testpilot.dev.mozaws.net") ||
-        host.LowerCaseEqualsLiteral("example.com")) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 // Checks if the given uri is secure and matches one of the hosts allowed to
 // access the API.
 bool
@@ -57,13 +33,32 @@ AddonManagerWebAPI::IsValidSite(nsIURI* uri)
     return false;
   }
 
-  nsAutoCString host;
+  nsCString host;
   rv = uri->GetHost(host);
   if (NS_FAILED(rv)) {
     return false;
   }
 
-  return IsValidHost(host);
+  if (host.Equals("addons.mozilla.org") ||
+      host.Equals("discovery.addons.mozilla.org") ||
+      host.Equals("testpilot.firefox.com")) {
+    return true;
+  }
+
+  // When testing allow access to the developer sites.
+  if (Preferences::GetBool("extensions.webapi.testing", false)) {
+    if (host.Equals("addons.allizom.org") ||
+        host.Equals("discovery.addons.allizom.org") ||
+        host.Equals("addons-dev.allizom.org") ||
+        host.Equals("discovery.addons-dev.allizom.org") ||
+        host.Equals("testpilot.stage.mozaws.net") ||
+        host.Equals("testpilot.dev.mozaws.net") ||
+        host.Equals("example.com")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool
@@ -140,16 +135,5 @@ AddonManagerWebAPI::IsAPIEnabled(JSContext* cx, JSObject* obj)
   // Found a document with no inner window, don't grant access to the API.
   return false;
 }
-
-namespace dom {
-
-bool
-AddonManagerPermissions::IsHostPermitted(const GlobalObject& /*unused*/, const nsAString& host)
-{
-  return IsValidHost(NS_ConvertUTF16toUTF8(host));
-}
-
-} // namespace mozilla::dom
-
 
 } // namespace mozilla
