@@ -89,6 +89,9 @@ public:
   // Initialize TimeoutManager before the first time it is accessed.
   static void Initialize();
 
+  // Exposed only for testing
+  bool IsTimeoutTracking(uint32_t aTimeoutId);
+
   // Run some code for each Timeout in our list.  Note that this function
   // doesn't guarantee that Timeouts are iterated in any particular order.
   template <class Callable>
