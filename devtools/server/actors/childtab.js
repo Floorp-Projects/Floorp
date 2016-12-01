@@ -5,12 +5,12 @@
 "use strict";
 
 var { Cr } = require("chrome");
-var { TabActor } = require("devtools/server/actors/webbrowser");
+var { TabActor } = require("devtools/server/actors/tab");
 
 /**
  * Tab actor for documents living in a child process.
  *
- * Depends on TabActor, defined in webbrowser.js.
+ * Depends on TabActor, defined in tab.js.
  */
 
 /**
