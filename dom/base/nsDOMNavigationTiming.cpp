@@ -15,9 +15,6 @@
 #include "nsPrintfCString.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Telemetry.h"
-
-using namespace mozilla;
 
 nsDOMNavigationTiming::nsDOMNavigationTiming()
 {
@@ -55,26 +52,25 @@ nsDOMNavigationTiming::Clear()
 }
 
 DOMTimeMilliSec
-nsDOMNavigationTiming::TimeStampToDOM(TimeStamp aStamp) const
+nsDOMNavigationTiming::TimeStampToDOM(mozilla::TimeStamp aStamp) const
 {
   if (aStamp.IsNull()) {
     return 0;
   }
-
-  TimeDuration duration = aStamp - mNavigationStartTimeStamp;
+  mozilla::TimeDuration duration = aStamp - mNavigationStartTimeStamp;
   return GetNavigationStart() + static_cast<int64_t>(duration.ToMilliseconds());
 }
 
 DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart()
 {
-  return TimeStampToDOM(TimeStamp::Now());
+  return TimeStampToDOM(mozilla::TimeStamp::Now());
 }
 
 void
 nsDOMNavigationTiming::NotifyNavigationStart(DocShellState aDocShellState)
 {
   mNavigationStartHighRes = (double)PR_Now() / PR_USEC_PER_MSEC;
-  mNavigationStartTimeStamp = TimeStamp::Now();
+  mNavigationStartTimeStamp = mozilla::TimeStamp::Now();
   mDocShellHasBeenActiveSinceNavigationStart = (aDocShellState == DocShellState::eActive);
 }
 
@@ -131,7 +127,7 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
 }
 
 void
-nsDOMNavigationTiming::SetDOMLoadingTimeStamp(nsIURI* aURI, TimeStamp aValue)
+nsDOMNavigationTiming::SetDOMLoadingTimeStamp(nsIURI* aURI, mozilla::TimeStamp aValue)
 {
   if (!mDOMLoadingSet) {
     mLoadedURI = aURI;
