@@ -1,5 +1,4 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
-. "$topsrcdir/build/mozconfig.rust"
 
 # Android
 ac_add_options --target=i386-linux-android

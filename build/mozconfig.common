@@ -24,3 +24,4 @@ MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}
 ac_add_options --enable-js-shell
 
 . "$topsrcdir/build/mozconfig.automation"
+. "$topsrcdir/build/mozconfig.rust"

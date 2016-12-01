@@ -10,7 +10,6 @@ ac_add_options --enable-dmd
 
 ac_add_options --enable-clang-plugin
 
-. "$topsrcdir/build/mozconfig.rust"
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"
 
