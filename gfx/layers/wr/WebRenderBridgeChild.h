@@ -68,7 +68,7 @@ private:
   void UpdateTextureRegion(CompositableClient* aCompositable,
                            const ThebesBufferData& aThebesBufferData,
                            const nsIntRegion& aUpdatedRegion) override;
-  void Destroy(CompositableChild* aCompositable);
+  void Destroy(CompositableChild* aCompositable) override;
   bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
   bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
   void RemoveTextureFromCompositable(CompositableClient* aCompositable,
