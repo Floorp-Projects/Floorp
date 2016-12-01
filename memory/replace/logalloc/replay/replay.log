@@ -1,3 +1,4 @@
+1 1 jemalloc_stats()
 1 1 malloc(42)=#1
 1 1 malloc(24)=#2
 2 2 malloc(42)=#1

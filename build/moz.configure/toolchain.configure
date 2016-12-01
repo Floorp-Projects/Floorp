@@ -796,6 +796,30 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         set_config(pp_var, preprocessor)
         add_old_configure_assignment(pp_var, preprocessor)
 
+    if language == 'C':
+        linker_var = {
+            target: 'LD',
+            host: 'HOST_LD',
+        }[host_or_target]
+
+        @deprecated_option(env=linker_var, nargs=1)
+        def linker(value):
+            if value:
+                return value[0]
+
+        @depends(valid_compiler, linker)
+        def unused_linker(compiler, linker):
+            if linker and compiler.type != 'msvc':
+                log.warning('The value of %s is not used by this build system.'
+                            % linker_var)
+
+        if host_or_target == target:
+            @depends(valid_compiler)
+            def is_msvc(compiler):
+                return compiler.type == 'msvc'
+
+            imply_option('LINK', linker, reason='LD', when=is_msvc)
+
     return valid_compiler
 
 
@@ -943,5 +967,9 @@ set_define('HAVE_VISIBILITY_ATTRIBUTE',
 set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
-include('windows.configure')
+@depends(target)
+def is_windows(target):
+    return target.kernel == 'WINNT'
+
+include('windows.configure', when=is_windows)
 include('rust.configure')
