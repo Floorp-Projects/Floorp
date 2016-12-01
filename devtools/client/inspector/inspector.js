@@ -617,19 +617,32 @@ Inspector.prototype = {
   /**
    * Method to check whether the document is a HTML document and
    * pickColorFromPage method is available or not.
-   * Returns a boolean value
+   *
+   * @return {Boolean} true if the eyedropper highlighter is supported by the current
+   *         document.
    */
   supportsEyeDropper: Task.async(function* () {
-    let isInHTMLDocument = this.selection.nodeFront &&
-                            this.selection.nodeFront.isInHTMLDocument;
-    let pickColorAvailable = false;
     try {
-      pickColorAvailable = yield this.target
-                                      .actorHasMethod("inspector", "pickColorFromPage");
+      let hasSupportsHighlighters =
+        yield this.target.actorHasMethod("inspector", "supportsHighlighters");
+      let hasPickColorFromPage =
+        yield this.target.actorHasMethod("inspector", "pickColorFromPage");
+
+      let supportsHighlighters;
+      if (hasSupportsHighlighters) {
+        supportsHighlighters = yield this.inspector.supportsHighlighters();
+      } else {
+        // If the actor does not provide the supportsHighlighter method, fallback to
+        // check if the selected node's document is a HTML document.
+        let { nodeFront } = this.selection;
+        supportsHighlighters = nodeFront && nodeFront.isInHTMLDocument;
+      }
+
+      return supportsHighlighters && hasPickColorFromPage;
     } catch (e) {
       console.error(e);
+      return false;
     }
-    return isInHTMLDocument && pickColorAvailable;
   }),
 
   setupToolbar: Task.async(function* () {
@@ -656,6 +669,13 @@ Inspector.prototype = {
 
     // Setup the eye-dropper icon if we're in an HTML document and we have actor support.
     let canShowEyeDropper = yield this.supportsEyeDropper();
+
+    // Bail out if the inspector was destroyed in the meantime and panelDoc is no longer
+    // available.
+    if (!this.panelDoc) {
+      return;
+    }
+
     if (canShowEyeDropper) {
       this.onEyeDropperDone = this.onEyeDropperDone.bind(this);
       this.onEyeDropperButtonClicked = this.onEyeDropperButtonClicked.bind(this);

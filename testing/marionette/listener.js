@@ -1070,9 +1070,7 @@ function getTitle() {
  * Get source of the current browsing context's DOM.
  */
 function getPageSource() {
-  let XMLSerializer = curContainer.frame.XMLSerializer;
-  let source = new XMLSerializer().serializeToString(curContainer.frame.document);
-  return source;
+  return curContainer.frame.document.documentElement.outerHTML;
 }
 
 /**
