@@ -56,5 +56,5 @@ class TestSSLDisabledErrorPage(PuppeteerMixin, MarionetteTestCase):
             reset_button.click()
 
             # With the preferences reset, the page has to load correctly
-            Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
                 expected.element_present(By.LINK_TEXT, 'http://quality.mozilla.org'))
