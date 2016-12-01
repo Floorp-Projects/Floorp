@@ -89,14 +89,12 @@ impl FontContext {
     fn load_glyph(&self,
                   font_key: FontKey,
                   size: Au,
-                  character: u32,
-                  device_pixel_ratio: f32) -> Option<FT_GlyphSlot> {
+                  character: u32) -> Option<FT_GlyphSlot> {
         debug_assert!(self.faces.contains_key(&font_key));
         let face = self.faces.get(&font_key).unwrap();
 
         unsafe {
-            let char_size = float_to_fixed_ft(((0.5f64 + size.to_f64_px()) *
-                                               device_pixel_ratio as f64).floor());
+            let char_size = float_to_fixed_ft(size.to_f64_px());
             let result = FT_Set_Char_Size(face.face, char_size as FT_F26Dot6, 0, 0, 0);
             assert!(result.succeeded());
 
@@ -115,9 +113,8 @@ impl FontContext {
     pub fn get_glyph_dimensions(&self,
                                 font_key: FontKey,
                                 size: Au,
-                                character: u32,
-                                device_pixel_ratio: f32) -> Option<GlyphDimensions> {
-        self.load_glyph(font_key, size, character, device_pixel_ratio).and_then(|slot| {
+                                character: u32) -> Option<GlyphDimensions> {
+        self.load_glyph(font_key, size, character).and_then(|slot| {
             let metrics = unsafe { &(*slot).metrics };
             if metrics.width == 0 || metrics.height == 0 {
                 None
@@ -136,14 +133,12 @@ impl FontContext {
                            font_key: FontKey,
                            size: Au,
                            character: u32,
-                           device_pixel_ratio: f32,
                            render_mode: FontRenderMode) -> Option<RasterizedGlyph> {
         let mut glyph = None;
 
         if let Some(slot) = self.load_glyph(font_key,
                                             size,
-                                            character,
-                                            device_pixel_ratio) {
+                                            character) {
             let render_mode = match render_mode {
                 FontRenderMode::Mono => FT_RENDER_MODE_MONO,
                 FontRenderMode::Alpha => FT_RENDER_MODE_NORMAL,

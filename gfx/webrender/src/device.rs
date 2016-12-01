@@ -344,6 +344,7 @@ impl Drop for Texture {
 struct Program {
     id: gl::GLuint,
     u_transform: gl::GLint,
+    u_device_pixel_ratio: gl::GLint,
     name: String,
     vs_source: String,
     fs_source: String,
@@ -484,6 +485,10 @@ pub struct UBOId(gl::GLuint);
 const MAX_EVENTS_PER_FRAME: usize = 256;
 const MAX_PROFILE_FRAMES: usize = 4;
 
+pub trait NamedTag {
+    fn get_label(&self) -> &str;
+}
+
 #[derive(Debug, Clone)]
 pub struct GpuSample<T> {
     pub tag: T,
@@ -538,7 +543,10 @@ impl<T> GpuFrameProfile<T> {
     }
 
     #[cfg(not(target_os = "android"))]
-    fn add_marker(&mut self, tag: T) {
+    fn add_marker(&mut self, tag: T) -> GpuMarker
+    where T: NamedTag {
+        let marker = GpuMarker::new(tag.get_label());
+
         if self.pending_query != 0 {
             gl::end_query(gl::TIME_ELAPSED);
         }
@@ -555,6 +563,7 @@ impl<T> GpuFrameProfile<T> {
         }
 
         self.next_query += 1;
+        marker
     }
 
     #[cfg(target_os = "android")]
@@ -633,9 +642,47 @@ impl<T> GpuProfiler<T> {
         self.next_frame = (self.next_frame + 1) % MAX_PROFILE_FRAMES;
     }
 
+    #[cfg(not(target_os = "android"))]
+    pub fn add_marker(&mut self, tag: T) -> GpuMarker
+    where T: NamedTag {
+        self.frames[self.next_frame].add_marker(tag)
+    }
+
+    #[cfg(target_os = "android")]
     pub fn add_marker(&mut self, tag: T) {
-        let frame = &mut self.frames[self.next_frame];
-        frame.add_marker(tag);
+        self.frames[self.next_frame].add_marker(tag)
+    }
+}
+
+#[must_use]
+pub struct GpuMarker(());
+
+#[cfg(any(target_arch="arm", target_arch="aarch64"))]
+impl GpuMarker {
+    pub fn new(_: &str) -> GpuMarker {
+        GpuMarker(())
+    }
+
+    pub fn fire(_: &str) {}
+}
+
+
+#[cfg(not(any(target_arch="arm", target_arch="aarch64")))]
+impl GpuMarker {
+    pub fn new(message: &str) -> GpuMarker {
+       gl::push_group_marker_ext(message);
+       GpuMarker(())
+    }
+
+    pub fn fire(message: &str) {
+        gl::insert_event_marker_ext(message);
+    }
+}
+
+#[cfg(not(any(target_arch="arm", target_arch="aarch64")))]
+impl Drop for GpuMarker {
+    fn drop(&mut self) {
+        gl::pop_group_marker_ext();
     }
 }
 
@@ -769,7 +816,6 @@ pub struct Device {
 
 impl Device {
     pub fn new(resource_override_path: Option<PathBuf>,
-               device_pixel_ratio: f32,
                _file_changed_handler: Box<FileWatcherHandler>) -> Device {
         //let file_watcher = FileWatcherThread::new(file_changed_handler);
 
@@ -778,7 +824,9 @@ impl Device {
 
         Device {
             resource_override_path: resource_override_path,
-            device_pixel_ratio: device_pixel_ratio,
+            // This is initialized to 1 by default, but it is set
+            // every frame by the call to begin_frame().
+            device_pixel_ratio: 1.0,
             inside_frame: false,
 
             capabilities: Capabilities {
@@ -843,9 +891,10 @@ impl Device {
         }
     }
 
-    pub fn begin_frame(&mut self) {
+    pub fn begin_frame(&mut self, device_pixel_ratio: f32) {
         debug_assert!(!self.inside_frame);
         self.inside_frame = true;
+        self.device_pixel_ratio = device_pixel_ratio;
 
         // Retrive the currently set FBO.
         let default_fbo = gl::get_integer_v(gl::FRAMEBUFFER_BINDING);
@@ -920,7 +969,9 @@ impl Device {
         }
 
         let program = self.programs.get(&program_id).unwrap();
-        self.set_uniforms(program, projection);
+        self.set_uniforms(program,
+                          projection,
+                          self.device_pixel_ratio);
     }
 
     pub fn create_texture_ids(&mut self,
@@ -1227,6 +1278,7 @@ impl Device {
             name: base_filename.to_owned(),
             id: pid,
             u_transform: -1,
+            u_device_pixel_ratio: -1,
             vs_source: get_shader_source(&vs_name, &self.resource_override_path),
             fs_source: get_shader_source(&fs_name, &self.resource_override_path),
             prefix: prefix,
@@ -1320,6 +1372,7 @@ impl Device {
                 }
 
                 program.u_transform = gl::get_uniform_location(program.id, "uTransform");
+                program.u_device_pixel_ratio = gl::get_uniform_location(program.id, "uDevicePixelRatio");
 
                 program_id.bind();
                 let u_color_0 = gl::get_uniform_location(program.id, "sColor0");
@@ -1337,10 +1390,6 @@ impl Device {
                 let u_mask = gl::get_uniform_location(program.id, "sMask");
                 if u_mask != -1 {
                     gl::uniform_1i(u_mask, TextureSampler::Mask as i32);
-                }
-                let u_device_pixel_ratio = gl::get_uniform_location(program.id, "uDevicePixelRatio");
-                if u_device_pixel_ratio != -1 {
-                    gl::uniform_1f(u_device_pixel_ratio, self.device_pixel_ratio);
                 }
 
                 let u_cache = gl::get_uniform_location(program.id, "sCache");
@@ -1439,11 +1488,15 @@ impl Device {
         gl::uniform_2f(location, x, y);
     }
 
-    fn set_uniforms(&self, program: &Program, transform: &Matrix4D<f32>) {
+    fn set_uniforms(&self,
+                    program: &Program,
+                    transform: &Matrix4D<f32>,
+                    device_pixel_ratio: f32) {
         debug_assert!(self.inside_frame);
         gl::uniform_matrix_4fv(program.u_transform,
                                false,
                                &transform.to_row_major_array());
+        gl::uniform_1f(program.u_device_pixel_ratio, device_pixel_ratio);
     }
 
     fn update_image_for_2d_texture(&mut self,

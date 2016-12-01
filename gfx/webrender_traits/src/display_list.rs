@@ -3,17 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use euclid::{Point2D, Rect, Size2D};
+use euclid::{Matrix4D, Point2D, Rect, Size2D};
 use std::mem;
 use std::slice;
 use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem, BorderRadius};
 use {BorderSide, BoxShadowClipMode, BoxShadowDisplayItem, BuiltDisplayList};
 use {BuiltDisplayListDescriptor, ClipRegion, ComplexClipRegion, ColorF};
-use {DisplayItem, DisplayListMode, FilterOp};
+use {DisplayItem, DisplayListMode, FilterOp, YuvColorSpace};
 use {FontKey, GlyphInstance, GradientDisplayItem, GradientStop, IframeDisplayItem};
-use {ImageDisplayItem, ImageKey, ImageRendering, ItemRange, PipelineId,};
+use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, ItemRange, MixBlendMode, PipelineId};
 use {PushScrollLayerItem, PushStackingContextDisplayItem, RectangleDisplayItem, ScrollLayerId};
-use {SpecificDisplayItem, StackingContext, TextDisplayItem, WebGLContextId, WebGLDisplayItem};
+use {ScrollPolicy, ServoScrollRootId, SpecificDisplayItem, StackingContext, TextDisplayItem};
+use {WebGLContextId, WebGLDisplayItem, YuvImageDisplayItem};
 
 impl BuiltDisplayListDescriptor {
     pub fn size(&self) -> usize {
@@ -44,16 +45,23 @@ impl BuiltDisplayList {
     }
 }
 
+#[derive(Clone)]
 pub struct DisplayListBuilder {
     pub mode: DisplayListMode,
     pub list: Vec<DisplayItem>,
+    auxiliary_lists_builder: AuxiliaryListsBuilder,
+    pub pipeline_id: PipelineId,
+    next_scroll_layer_id: usize,
 }
 
 impl DisplayListBuilder {
-    pub fn new() -> DisplayListBuilder {
+    pub fn new(pipeline_id: PipelineId) -> DisplayListBuilder {
         DisplayListBuilder {
             mode: DisplayListMode::Default,
             list: Vec::new(),
+            auxiliary_lists_builder: AuxiliaryListsBuilder::new(),
+            pipeline_id: pipeline_id,
+            next_scroll_layer_id: 0,
         }
     }
 
@@ -103,6 +111,25 @@ impl DisplayListBuilder {
         self.list.push(display_item);
     }
 
+    pub fn push_yuv_image(&mut self,
+                          rect: Rect<f32>,
+                          clip: ClipRegion,
+                          y_key: ImageKey,
+                          u_key: ImageKey,
+                          v_key: ImageKey,
+                          color_space: YuvColorSpace) {
+        self.list.push(DisplayItem {
+            item: SpecificDisplayItem::YuvImage(YuvImageDisplayItem {
+                y_image_key: y_key,
+                u_image_key: u_key,
+                v_image_key: v_key,
+                color_space: color_space,
+            }),
+            rect: rect,
+            clip: clip,
+        });
+    }
+
     pub fn push_webgl_canvas(&mut self,
                              rect: Rect<f32>,
                              clip: ClipRegion,
@@ -127,8 +154,7 @@ impl DisplayListBuilder {
                      font_key: FontKey,
                      color: ColorF,
                      size: Au,
-                     blur_radius: Au,
-                     auxiliary_lists_builder: &mut AuxiliaryListsBuilder) {
+                     blur_radius: Au) {
         // Sanity check - anything with glyphs bigger than this
         // is probably going to consume too much memory to render
         // efficiently anyway. This is specifically to work around
@@ -138,7 +164,7 @@ impl DisplayListBuilder {
         if size < Au::from_px(4096) {
             let item = TextDisplayItem {
                 color: color,
-                glyphs: auxiliary_lists_builder.add_glyph_instances(&glyphs),
+                glyphs: self.auxiliary_lists_builder.add_glyph_instances(&glyphs),
                 font_key: font_key,
                 size: size,
                 blur_radius: blur_radius,
@@ -213,12 +239,11 @@ impl DisplayListBuilder {
                          clip: ClipRegion,
                          start_point: Point2D<f32>,
                          end_point: Point2D<f32>,
-                         stops: Vec<GradientStop>,
-                         auxiliary_lists_builder: &mut AuxiliaryListsBuilder) {
+                         stops: Vec<GradientStop>) {
         let item = GradientDisplayItem {
             start_point: start_point,
             end_point: end_point,
-            stops: auxiliary_lists_builder.add_gradient_stops(&stops),
+            stops: self.auxiliary_lists_builder.add_gradient_stops(&stops),
         };
 
         let display_item = DisplayItem {
@@ -230,13 +255,31 @@ impl DisplayListBuilder {
         self.list.push(display_item);
     }
 
-    pub fn push_stacking_context(&mut self, stacking_context: StackingContext) {
+    pub fn push_stacking_context(&mut self, 
+                                 scroll_policy: ScrollPolicy,
+                                 bounds: Rect<f32>,
+                                 clip: ClipRegion,
+                                 z_index: i32,
+                                 transform: &Matrix4D<f32>,
+                                 perspective: &Matrix4D<f32>,
+                                 mix_blend_mode: MixBlendMode,
+                                 filters: Vec<FilterOp>) {
+        let stacking_context = StackingContext {
+            scroll_policy: scroll_policy,
+            bounds: bounds,
+            z_index: z_index,
+            transform: transform.clone(),
+            perspective: perspective.clone(),
+            mix_blend_mode: mix_blend_mode,
+            filters: self.auxiliary_lists_builder.add_filters(&filters),
+        };
+
         let item = DisplayItem {
             item: SpecificDisplayItem::PushStackingContext(PushStackingContextDisplayItem {
                 stacking_context: stacking_context
             }),
             rect: Rect::zero(),
-            clip: ClipRegion::simple(&Rect::zero()),
+            clip: clip,
         };
         self.list.push(item);
     }
@@ -253,10 +296,13 @@ impl DisplayListBuilder {
     pub fn push_scroll_layer(&mut self,
                              clip: Rect<f32>,
                              content_size: Size2D<f32>,
-                             id: ScrollLayerId) {
+                             scroll_root_id: ServoScrollRootId) {
+        let scroll_layer_id = self.next_scroll_layer_id;
+        self.next_scroll_layer_id += 1;
+
         let item = PushScrollLayerItem {
             content_size: content_size,
-            id: id,
+            id: ScrollLayerId::new(self.pipeline_id, scroll_layer_id, scroll_root_id),
         };
 
         let item = DisplayItem {
@@ -285,19 +331,28 @@ impl DisplayListBuilder {
         self.list.push(item);
     }
 
-    pub fn finalize(self) -> BuiltDisplayList {
+    pub fn new_clip_region(&mut self,
+                           rect: &Rect<f32>,
+                           complex: Vec<ComplexClipRegion>,
+                           image_mask: Option<ImageMask>)
+                           -> ClipRegion {
+        ClipRegion::new(rect, complex, image_mask, &mut self.auxiliary_lists_builder)
+    }
+
+    pub fn finalize(self) -> (BuiltDisplayList, AuxiliaryLists) {
         unsafe {
             let blob = convert_pod_to_blob(&self.list).to_vec();
             let display_list_items_size = blob.len();
 
-            BuiltDisplayList {
-                descriptor: BuiltDisplayListDescriptor {
-                    mode: self.mode,
-                    display_list_items_size: display_list_items_size,
-                    display_items_size: 0,
-                },
-                data: blob,
-            }
+            (BuiltDisplayList {
+                 descriptor: BuiltDisplayListDescriptor {
+                     mode: self.mode,
+                     display_list_items_size: display_list_items_size,
+                     display_items_size: 0,
+                 },
+                 data: blob,
+             },
+             self.auxiliary_lists_builder.finalize())
         }
     }
 }

@@ -9,6 +9,8 @@ void main(void) {
     init_transform_fs(vLocalPos, vLocalRect, alpha);
 #endif
 
+#ifdef WR_FEATURE_CLIP
     alpha = min(alpha, do_clip());
+#endif
     oFragColor = vColor * vec4(1.0, 1.0, 1.0, alpha);
 }

@@ -158,7 +158,7 @@ impl<Native> GLContext<Native>
         if self.draw_buffer.is_some() {
             let color_attachment_type =
                 self.borrow_draw_buffer().unwrap().color_attachment_type();
-            self.create_draw_buffer(size, color_attachment_type)
+            self.init_offscreen(size, color_attachment_type)
         } else {
             Err("No DrawBuffer found")
         }
@@ -184,6 +184,8 @@ impl<T: NativeGLContextMethods> GLContextPrivateMethods for GLContext<T> {
         debug_assert!(self.is_current());
 
         unsafe {
+            gl::ClearColor(0.0, 0.0, 0.0, 0.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
             gl::Scissor(0, 0, size.width, size.height);
             gl::Viewport(0, 0, size.width, size.height);
         }

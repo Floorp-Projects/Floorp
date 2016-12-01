@@ -9,6 +9,7 @@ struct CacheClipInstance {
     int render_task_index;
     int layer_index;
     int data_index;
+    int base_task_index;
 };
 
 CacheClipInstance fetch_clip_item(int index) {
@@ -21,6 +22,7 @@ CacheClipInstance fetch_clip_item(int index) {
     cci.render_task_index = data0.x;
     cci.layer_index = data0.y;
     cci.data_index = data0.z;
+    cci.base_task_index = data0.w;
 
     return cci;
 }
