@@ -13,35 +13,37 @@ var server;
 // set up what we need to make storage adapters
 const kintoFilename = "kinto.sqlite";
 
-let kintoClient;
+function do_get_kinto_sqliteHandle() {
+  return FirefoxAdapter.openConnection({path: kintoFilename});
+}
 
-function do_get_kinto_collection() {
-  if (!kintoClient) {
-    let config = {
-      remote:`http://localhost:${server.identity.primaryPort}/v1/`,
-      headers: {Authorization: "Basic " + btoa("user:pass")},
-      adapter: FirefoxAdapter
-    };
-    kintoClient = new Kinto(config);
-  }
-  return kintoClient.collection("test_collection");
+function do_get_kinto_collection(sqliteHandle, collection="test_collection") {
+  let config = {
+    remote:`http://localhost:${server.identity.primaryPort}/v1/`,
+    headers: {Authorization: "Basic " + btoa("user:pass")},
+    adapter: FirefoxAdapter,
+    adapterOptions: {sqliteHandle},
+  };
+  return new Kinto(config).collection(collection);
 }
 
 function* clear_collection() {
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     yield collection.clear();
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 }
 
 // test some operations on a local collection
 add_task(function* test_kinto_add_get() {
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
 
     let newRecord = { foo: "bar" };
     // check a record is created
@@ -64,7 +66,7 @@ add_task(function* test_kinto_add_get() {
     yield collection.create(newRecord);
     yield Promise.all(promises);
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
@@ -72,12 +74,11 @@ add_task(clear_collection);
 
 // test some operations on multiple connections
 add_task(function* test_kinto_add_get() {
-  const collection1 = do_get_kinto_collection();
-  const collection2 = kintoClient.collection("test_collection_2");
-
+  let sqliteHandle;
   try {
-    yield collection1.db.open();
-    yield collection2.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection1 = do_get_kinto_collection(sqliteHandle);
+    const collection2 = do_get_kinto_collection(sqliteHandle, "test_collection_2");
 
     let newRecord = { foo: "bar" };
 
@@ -94,17 +95,17 @@ add_task(function* test_kinto_add_get() {
                        collection2.create(newRecord)]);
     yield Promise.all(promises);
   } finally {
-    yield collection1.db.close();
-    yield collection2.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 add_task(function* test_kinto_update() {
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     const newRecord = { foo: "bar" };
     // check a record is created
     let createResult = yield collection.create(newRecord);
@@ -121,16 +122,17 @@ add_task(function* test_kinto_update() {
     // the record
     do_check_eq(updateResult.data._status, "created");
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 add_task(function* test_kinto_clear() {
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
 
     // create an expected number of records
     const expected = 10;
@@ -146,16 +148,17 @@ add_task(function* test_kinto_clear() {
     list = yield collection.list();
     do_check_eq(list.data.length, 0);
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 add_task(function* test_kinto_delete(){
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     const newRecord = { foo: "bar" };
     // check a record is created
     let createResult = yield collection.create(newRecord);
@@ -173,14 +176,15 @@ add_task(function* test_kinto_delete(){
       do_throw("there should not be a result");
     } catch (e) { }
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(function* test_kinto_list(){
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     const expected = 10;
     const created = [];
     for (let i = 0; i < expected; i++) {
@@ -204,70 +208,74 @@ add_task(function* test_kinto_list(){
       do_check_true(found);
     }
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 add_task(function* test_loadDump_ignores_already_imported_records(){
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
     yield collection.loadDump([record]);
     let impactedRecords = yield collection.loadDump([record]);
     do_check_eq(impactedRecords.length, 0);
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 add_task(function* test_loadDump_should_overwrite_old_records(){
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
     yield collection.loadDump([record]);
     const updated = Object.assign({}, record, {last_modified: 1457896543});
     let impactedRecords = yield collection.loadDump([updated]);
     do_check_eq(impactedRecords.length, 1);
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 add_task(function* test_loadDump_should_not_overwrite_unsynced_records(){
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
     yield collection.create({id: recordId, title: "foo"}, {useRecordId: true});
     const record = {id: recordId, title: "bar", last_modified: 1457896541};
     let impactedRecords = yield collection.loadDump([record]);
     do_check_eq(impactedRecords.length, 0);
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 add_task(function* test_loadDump_should_not_overwrite_records_without_last_modified(){
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
-    yield collection.db.open();
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
     const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
     yield collection.create({id: recordId, title: "foo"}, {synced: true});
     const record = {id: recordId, title: "bar", last_modified: 1457896541};
     let impactedRecords = yield collection.loadDump([record]);
     do_check_eq(impactedRecords.length, 0);
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 
@@ -305,11 +313,12 @@ add_task(function* test_kinto_sync(){
   server.registerPathHandler(recordsPath, handleResponse);
 
   // create an empty collection, sync to populate
-  const collection = do_get_kinto_collection();
+  let sqliteHandle;
   try {
     let result;
+    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    const collection = do_get_kinto_collection(sqliteHandle);
 
-    yield collection.db.open();
     result = yield collection.sync();
     do_check_true(result.ok);
 
@@ -331,7 +340,7 @@ add_task(function* test_kinto_sync(){
     const after = list.data[0].title;
     do_check_neq(before, after);
   } finally {
-    yield collection.db.close();
+    yield sqliteHandle.close();
   }
 });
 

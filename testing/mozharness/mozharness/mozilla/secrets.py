@@ -52,7 +52,7 @@ class SecretsMixin(object):
 
         secret_files = self.config.get('secret_files', [])
 
-        scm_level = self.config.get('scm-level', 1)
+        scm_level = self.config.get('scm_level', 1)
         subst = {
             'scm-level': scm_level,
         }

@@ -213,7 +213,7 @@ if (AppConstants.platform != "android") {
         // changes, it means a client replaced the keyring, so we need to
         // reupload everything.
         const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-        const uuid = uuidgen.generateUUID();
+        const uuid = uuidgen.generateUUID().toString();
         data = {uuid};
       }
       return data;
@@ -664,7 +664,7 @@ this.ExtensionStorageSync = {
       const result = yield cryptoCollection.sync();
       if (result.resolved.length > 0) {
         if (result.resolved[0].uuid != cryptoKeyRecord.uuid) {
-          log.info("Detected a new UUID. Reseting sync status for everything.");
+          log.info(`Detected a new UUID (${result.resolved[0].uuid}, was ${cryptoKeyRecord.uuid}). Reseting sync status for everything.`);
           yield cryptoCollection.resetSyncStatus();
 
           // Server version is now correct. Return that result.
