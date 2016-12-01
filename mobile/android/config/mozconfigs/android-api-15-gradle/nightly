@@ -1,4 +1,5 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
+. "$topsrcdir/build/mozconfig.rust"
 
 . "$topsrcdir/mobile/android/config/mozconfigs/android-api-15/nightly"
 

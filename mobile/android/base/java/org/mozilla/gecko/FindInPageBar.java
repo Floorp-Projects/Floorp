@@ -67,7 +67,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         mStatusText = (TextView) content.findViewById(R.id.find_status);
 
         mInflated = true;
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "FindInPage:MatchesCountResult",
             "TextSelection:Data");
     }
@@ -112,7 +112,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         if (!mInflated) {
             return;
         }
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "FindInPage:MatchesCountResult",
             "TextSelection:Data");
     }

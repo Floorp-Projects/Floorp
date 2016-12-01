@@ -521,11 +521,6 @@ public:
 
     nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
 
-    if (principal->GetIsNullPrincipal()) {
-      mContentParent->KillHard("BroadcastChannel killed: no null principal.");
-      return NS_OK;
-    }
-
     nsAutoCString origin;
     nsresult rv = principal->GetOrigin(origin);
     if (NS_FAILED(rv)) {
@@ -638,7 +633,6 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
 
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {
-    MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
     return IPC_OK();
   }
 
