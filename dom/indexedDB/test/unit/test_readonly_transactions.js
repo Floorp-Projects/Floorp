@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const osName = "foo";
@@ -170,5 +170,4 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -93,5 +93,4 @@ function testSteps()
   is(objectStore.indexNames.length, 0, "Correct indexNames length still");
 
   finishTest();
-  yield undefined;
 }

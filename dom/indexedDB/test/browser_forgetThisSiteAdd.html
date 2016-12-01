@@ -7,7 +7,7 @@
     <title>Indexed Database Test</title>
 
     <script type="text/javascript;version=1.7">
-      function testSteps()
+      function* testSteps()
       {
         let request = indexedDB.open("browser_forgetThisSite.js", 11);
         request.onerror = grabEventAndContinueHandler;

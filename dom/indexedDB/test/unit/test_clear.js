@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const entryCount = 1000;
@@ -93,5 +93,4 @@ function testSteps()
   isnot(event.target.result, firstKey, "Got a different key");
 
   finishTest();
-  yield undefined;
 }

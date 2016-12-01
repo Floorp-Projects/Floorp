@@ -46,7 +46,7 @@ function createFiles() {
 
 function continueTest() { gen.next(); }
 
-function runTests() {
+function* runTests() {
 xhr = new XMLHttpRequest();
 xhr.open("GET", "file_XHRSendData_doc.xml", false);
 xhr.send();
@@ -258,7 +258,6 @@ function is_identical_arraybuffer(ab1, ab2) {
 }
 
 SimpleTest.finish();
-yield undefined;
 } /* runTests */
 
 </script>

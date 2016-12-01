@@ -1,6 +1,6 @@
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname :
 	       "test_storage_manager_estimate.js";
@@ -13,7 +13,7 @@ function testSteps()
      'estimate() method exists and returns a Promise');
 
   navigator.storage.estimate().then(estimation => {
-    testGenerator.send(estimation.usage);
+    testGenerator.next(estimation.usage);
   });
 
   let before = yield undefined;
@@ -31,7 +31,7 @@ function testSteps()
   yield undefined;
 
   navigator.storage.estimate().then(estimation => {
-    testGenerator.send(estimation.usage);
+    testGenerator.next(estimation.usage);
   });
   let usageAfterCreate = yield undefined;
   ok(usageAfterCreate > before, 'estimated usage must increase after createObjectStore');
@@ -45,14 +45,13 @@ function testSteps()
   event = yield undefined;
 
   navigator.storage.estimate().then(estimation => {
-    testGenerator.send(estimation.usage);
+    testGenerator.next(estimation.usage);
   });
   let usageAfterPut = yield undefined;
   ok(usageAfterPut > usageAfterCreate, 'estimated usage must increase after putting large object');
   db.close();
 
   finishTest();
-  yield undefined;
 }
 
 function setup()

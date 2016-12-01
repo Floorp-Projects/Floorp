@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const storeName_ToBeDeleted = "test store to be deleted";
@@ -167,5 +167,4 @@ function testSteps()
   db.close();
 
   finishTest();
-  yield undefined;
 }
