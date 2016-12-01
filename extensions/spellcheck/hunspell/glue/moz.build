@@ -11,12 +11,14 @@ SOURCES += [
     'RemoteSpellCheckEngineParent.cpp',
 ]
 
-CXXFLAGS += CONFIG['MOZ_HUNSPELL_CFLAGS']
-
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['MOZ_SYSTEM_HUNSPELL']:
+    CXXFLAGS += CONFIG['MOZ_HUNSPELL_CFLAGS']
+else:
+    LOCAL_INCLUDES += ['../src']
+
 LOCAL_INCLUDES += [
-    '../src',
     '/dom/base',
     '/extensions/spellcheck/src',
 ]

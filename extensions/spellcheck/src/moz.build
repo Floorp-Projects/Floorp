@@ -17,9 +17,13 @@ SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['MOZ_SYSTEM_HUNSPELL']:
+    CXXFLAGS += CONFIG['MOZ_HUNSPELL_CFLAGS']
+else:
+    LOCAL_INCLUDES += ['../hunspell/src']
+
 LOCAL_INCLUDES += [
     '../hunspell/glue',
-    '../hunspell/src',
     '/dom/base',
 ]
 EXPORTS.mozilla += [
