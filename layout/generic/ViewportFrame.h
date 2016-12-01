@@ -8,13 +8,15 @@
  * the document's scrollbars and contains fixed-positioned elements
  */
 
-#ifndef nsViewportFrame_h___
-#define nsViewportFrame_h___
+#ifndef mozilla_ViewportFrame_h
+#define mozilla_ViewportFrame_h
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 
 class nsPresContext;
+
+namespace mozilla {
 
 /**
   * ViewportFrame is the parent of a single child - the doc root frame or a scroll frame
@@ -104,5 +106,6 @@ protected:
   nsPoint AdjustReflowInputForScrollbars(ReflowInput* aReflowInput) const;
 };
 
+} // namespace mozilla
 
-#endif // nsViewportFrame_h___
+#endif // mozilla_ViewportFrame_h

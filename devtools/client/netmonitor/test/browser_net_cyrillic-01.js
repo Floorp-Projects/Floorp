@@ -22,7 +22,7 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
+  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
     "GET", CONTENT_TYPE_SJS + "?fmt=txt", {
       status: 200,
       statusText: "DA DA DA"

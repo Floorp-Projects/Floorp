@@ -1133,6 +1133,13 @@ public:
     mBuildingInvisibleItems = aBuildingInvisibleItems;
   }
 
+  bool HitTestShouldStopAtFirstOpaque() const {
+    return mHitTestShouldStopAtFirstOpaque;
+  }
+  void SetHitTestShouldStopAtFirstOpaque(bool aHitTestShouldStopAtFirstOpaque) {
+    mHitTestShouldStopAtFirstOpaque = aHitTestShouldStopAtFirstOpaque;
+  }
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -1282,6 +1289,7 @@ private:
   bool                           mForceLayerForScrollParent;
   bool                           mAsyncPanZoomEnabled;
   bool                           mBuildingInvisibleItems;
+  bool                           mHitTestShouldStopAtFirstOpaque;
 };
 
 class nsDisplayItem;
