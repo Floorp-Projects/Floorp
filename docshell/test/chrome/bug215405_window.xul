@@ -53,14 +53,10 @@
     }
 
     function nextTest() {
-      try {
-        gTestsIterator.next();
-      } catch (err if err instanceof StopIteration) {
-        finish();
-      }
+      gTestsIterator.next();
     }
 
-    function testsIterator() {
+    function* testsIterator() {
       // No-store tests
       var testName = "[nostore]";
 
@@ -156,10 +152,7 @@
       var formValue = gBrowser.contentDocument.getElementById("inp").value;
       is(formValue, text, testName + " form value not correctly restored");
       
-      // nextTest has to be called from here, as no events are fired in this
-      // step
-      setTimeout(nextTest, 0);
-      yield undefined;
+      finish();
     }
   ]]></script>
 

@@ -21,7 +21,7 @@ var advance = function() { tests.next(); };
  * testing if policy is overwritten if there are two meta statements (1165501)
  * XXX: would be nice to test this with CSP and meta as well
  */
-var tests = (function() {
+var tests = (function*() {
   var iframe = document.getElementById("testframe");
   const sjs = "/tests/dom/base/test/bug704320.sjs?action=generate-policy-test";
 
@@ -36,8 +36,8 @@ var tests = (function() {
   yield checkIndividualResults("no-referrer then default", ["full"]);
 
 
-  // complete.  Be sure to yield so we don't call this twice.
-  yield SimpleTest.finish();
+  // complete.
+  SimpleTest.finish();
 })();
 
 </script>

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const names = [
     //"",
@@ -41,6 +41,5 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }
 

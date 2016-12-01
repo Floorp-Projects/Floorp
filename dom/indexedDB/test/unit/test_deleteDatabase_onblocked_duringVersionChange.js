@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const dbVersion = 10;
@@ -80,5 +80,4 @@ function testSteps()
   db.close();
 
   finishTest();
-  yield undefined;
 }

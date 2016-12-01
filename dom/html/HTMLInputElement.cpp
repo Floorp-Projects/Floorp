@@ -360,18 +360,7 @@ class HTMLInputElementState final : public nsISupports
         if (aArray[i].IsFile()) {
           BlobImplOrDirectoryPath* data = mBlobImplsOrDirectoryPaths.AppendElement();
 
-          RefPtr<File> file = aArray[i].GetAsFile();
-
-          nsAutoString name;
-          file->GetName(name);
-
-          nsAutoString path;
-          path.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-          path.Append(name);
-
-          file->SetPath(path);
-
-          data->mBlobImpl = file->Impl();
+          data->mBlobImpl = aArray[i].GetAsFile()->Impl();
           data->mType = BlobImplOrDirectoryPath::eBlobImpl;
         } else {
           MOZ_ASSERT(aArray[i].IsDirectory());

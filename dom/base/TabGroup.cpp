@@ -21,7 +21,13 @@ namespace dom {
 static StaticRefPtr<TabGroup> sChromeTabGroup;
 
 TabGroup::TabGroup(bool aIsChrome)
+ : mLastWindowLeft(false)
 {
+  for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
+    TaskCategory category = static_cast<TaskCategory>(i);
+    mEventTargets[i] = CreateEventTargetFor(category);
+  }
+
   // Do not throttle runnables from chrome windows.  In theory we should
   // not have abuse issues from these windows and many browser chrome
   // tests have races that fail if we do throttle chrome runnables.
@@ -99,6 +105,18 @@ TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
 {
   MOZ_ASSERT(mWindows.Contains(aWindow));
   mWindows.RemoveElement(aWindow);
+
+  if (mWindows.IsEmpty()) {
+    mLastWindowLeft = true;
+
+    // There is a RefPtr cycle TabGroup -> DispatcherEventTarget -> TabGroup. To
+    // avoid leaks, we need to break the chain somewhere. We shouldn't be using
+    // the ThrottledEventQueue for this TabGroup when no windows belong to it,
+    // so it's safe to null out the queue here.
+    for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
+      mEventTargets[i] = nullptr;
+    }
+  }
 }
 
 nsresult
@@ -172,7 +190,25 @@ TabGroup::Dispatch(const char* aName,
                    TaskCategory aCategory,
                    already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return NS_DispatchToMainThread(Move(aRunnable));
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  if (aName) {
+    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
+      named->SetName(aName);
+    }
+  }
+  if (NS_IsMainThread()) {
+    return NS_DispatchToCurrentThread(runnable.forget());
+  } else {
+    return NS_DispatchToMainThread(runnable.forget());
+  }
+}
+
+already_AddRefed<nsIEventTarget>
+TabGroup::EventTargetFor(TaskCategory aCategory) const
+{
+  MOZ_RELEASE_ASSERT(!mLastWindowLeft);
+  nsCOMPtr<nsIEventTarget> target = mEventTargets[size_t(aCategory)];
+  return target.forget();
 }
 
 }

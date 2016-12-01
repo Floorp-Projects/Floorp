@@ -131,8 +131,21 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsTableRowFrame::nsTableRowFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
+  , mContentBSize(0)
+  , mStylePctBSize(0)
+  , mStyleFixedBSize(0)
+  , mMaxCellAscent(0)
+  , mMaxCellDescent(0)
+  , mBStartBorderWidth(0)
+  , mBEndBorderWidth(0)
+  , mIEndContBorderWidth(0)
+  , mBStartContBorderWidth(0)
+  , mIStartContBorderWidth(0)
 {
-  mBits.mRowIndex = mBits.mFirstInserted = 0;
+  mBits.mRowIndex = 0;
+  mBits.mHasFixedBSize = 0;
+  mBits.mHasPctBSize = 0;
+  mBits.mFirstInserted = 0;
   ResetBSize(0);
 }
 

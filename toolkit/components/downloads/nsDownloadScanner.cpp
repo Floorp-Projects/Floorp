@@ -514,7 +514,7 @@ nsDownloadScanner::Scan::DoScan()
     NS_DispatchToMainThread(this);
   } else {
     // We timed out, so just release
-    ReleaseDispatcher* releaser = new ReleaseDispatcher(this);
+    ReleaseDispatcher* releaser = new ReleaseDispatcher(ToSupports(this));
     if(releaser) {
       NS_ADDREF(releaser);
       NS_DispatchToMainThread(releaser);
@@ -698,7 +698,7 @@ nsDownloadScannerWatchdog::WatchdogThread(void *p) {
     waitStatus = WaitForMultipleObjects(2, (waitHandles+1), FALSE, waitTime);
     CloseHandle(hThread);
 
-    ReleaseDispatcher* releaser = new ReleaseDispatcher(scan);
+    ReleaseDispatcher* releaser = new ReleaseDispatcher(ToSupports(scan));
     if(!releaser)
       continue;
     NS_ADDREF(releaser);

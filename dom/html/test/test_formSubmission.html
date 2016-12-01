@@ -686,7 +686,7 @@ function onFilesSet() {
   });
 }
 
-function runTest() {
+function* runTest() {
   // Set up the expectedSub array
   fileReader1 = new FileReader;
   fileReader1.readAsBinaryString(myFile1);
@@ -816,7 +816,6 @@ function runTest() {
                     expectedSub.concat(expectedAugment), "send augmented FormData");
 
   SimpleTest.finish();
-  yield undefined;
 }
 
 </script>

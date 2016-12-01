@@ -1071,7 +1071,7 @@ this.DownloadObserver = {
                                      p.ON_LEAVE_PRIVATE_BROWSING);
         break;
       case "last-pb-context-exited":
-        let promise = Task.spawn(function() {
+        let promise = Task.spawn(function*() {
           let list = yield Downloads.getList(Downloads.PRIVATE);
           let downloads = yield list.getAll();
 

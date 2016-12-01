@@ -100,7 +100,7 @@ function continueTest() {
 var iframe = document.getElementById("iframe");
 var iframeCw = iframe.contentWindow;
 
-function run() {
+function* run() {
   var iframe = document.getElementById("iframe");
   var iframeCw = iframe.contentWindow;
 
@@ -245,7 +245,6 @@ function run() {
      "Wrong href after document.open().");
 
   SimpleTest.finish();
-  yield undefined;
 }
 
 window.addEventListener("load", function() {

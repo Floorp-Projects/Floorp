@@ -51,7 +51,7 @@ function childFrameScript() {
   }
 
   function grabAndContinue(arg) {
-    testGenerator.send(arg);
+    testGenerator.next(arg);
   }
 
   function errorHandler(event) {
@@ -61,7 +61,7 @@ function childFrameScript() {
     finish();
   }
 
-  function testSteps() {
+  function* testSteps() {
     addMessageListener(mmName, grabAndContinue);
     let message = yield undefined;
 
@@ -195,8 +195,6 @@ function childFrameScript() {
 
     info("Sending blob and slice from database to message manager");
     finish([blob, slice]);
-
-    yield undefined;
   }
 
   let testGenerator = testSteps();
@@ -211,10 +209,10 @@ function parentFrameScript(mm) {
   const blob = new Blob(blobData, { type: blobType });
 
   function grabAndContinue(arg) {
-    testGenerator.send(arg);
+    testGenerator.next(arg);
   }
 
-  function testSteps() {
+  function* testSteps() {
     let result = yield undefined;
 
     is(Array.isArray(result), true, "Child delivered an array of results");
@@ -264,7 +262,6 @@ function parentFrameScript(mm) {
     is(reader.result, blobData[0], "Second slice has correct data");
 
     SimpleTest.finish();
-    yield undefined;
   }
 
   let testGenerator = testSteps();
@@ -284,7 +281,7 @@ function parentFrameScript(mm) {
       }
 
       case "done": {
-        testGenerator.send(data.result);
+        testGenerator.next(data.result);
         break;
       }
 

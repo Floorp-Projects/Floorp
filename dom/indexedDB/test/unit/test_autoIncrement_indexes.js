@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
@@ -52,5 +52,4 @@ function testSteps()
   is (event.target.result.id, 1, "Entry in third");
 
   finishTest();
-  yield undefined;
 }

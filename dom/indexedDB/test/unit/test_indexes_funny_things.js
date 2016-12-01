@@ -5,12 +5,12 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   // Blob constructor is not implemented outside of windows yet (Bug 827723).
   if (!this.window) {
     finishTest();
-    yield undefined;
+    return;
   }
 
   const name = this.window ? window.location.pathname : "Splendid Test";
@@ -65,7 +65,7 @@ function testSteps()
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {
-        testGenerator.send(event);
+        testGenerator.next(event);
       }
     }
   }
@@ -164,5 +164,4 @@ function testSteps()
   is(keyIndex, objectStoreDataLengthSort.length, "Saw all the expected keys");
 
   finishTest();
-  yield undefined;
 }

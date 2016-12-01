@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const data = { key: 5, index: 10 };
 
@@ -72,5 +72,4 @@ function testSteps()
   ok(key === undefined, "Got the right value");
 
   finishTest();
-  yield undefined;
 }

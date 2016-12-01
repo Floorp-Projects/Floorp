@@ -195,6 +195,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame
 protected:
   explicit SVGTextFrame(nsStyleContext* aContext)
     : nsSVGDisplayContainerFrame(aContext)
+    , mTrailingUndisplayedCharacters(0)
     , mFontSizeScaleFactor(1.0f)
     , mLastContextScale(1.0f)
     , mLengthAdjustScaleFactor(1.0f)

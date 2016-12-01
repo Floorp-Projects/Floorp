@@ -101,7 +101,7 @@ function testCloneDocURI(aDoc) {
   is(clone.baseURI, aDoc.baseURI, "wrong base (clone)");
 }
 
-function runTest() {
+function* runTest() {
   is(document.baseURI, "http://example.org/", "wrong doc baseURI");
 
   // use content XHR and access URI properties from content privileged script
@@ -504,7 +504,6 @@ function runTest() {
 
   SimpleTest.finish();
   SpecialPowers.removePermission("systemXHR", document);
-  yield undefined;
 }
 
 </script>

@@ -7,7 +7,10 @@
 #ifndef mozilla_dom_BlobSet_h
 #define mozilla_dom_BlobSet_h
 
+#include "jsapi.h"
 #include "mozilla/RefPtr.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {

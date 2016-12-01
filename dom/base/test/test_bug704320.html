@@ -41,7 +41,7 @@ var advance = function() { tests.next(); };
  * This is the main test routine -- serialized by use of a generator.
  * It performs all tests in sequence using in the same iframe.
  */
-var tests = (function() {
+var tests = (function*() {
   SimpleTest.requestLongerTimeout(4);
   var iframe = document.getElementById("testframe");
   iframe.onload = function() {
@@ -57,8 +57,8 @@ var tests = (function() {
     yield checkExpectedGlobalResults();
   }
 
-  // complete.  Be sure to yield so we don't call this twice.
-  yield SimpleTest.finish();
+  // complete.
+  SimpleTest.finish();
 })();
 
 </script>

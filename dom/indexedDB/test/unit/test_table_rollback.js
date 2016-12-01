@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const dbName = ("window" in this) ? window.location.pathname : "test";
   const objName1 = "foo";
@@ -111,5 +111,4 @@ function testSteps()
   is(writeAborted, true, "Aborted readwrite transaction");
 
   finishTest();
-  yield undefined;
 }

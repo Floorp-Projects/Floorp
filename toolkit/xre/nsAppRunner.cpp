@@ -3443,18 +3443,23 @@ XREMain::XRE_mainInit(bool* aExitFlag)
       DWORD len = sizeof(updateRevision);
       DWORD vtype;
 
-      // Windows 7 uses Update Signature, 8 uses "Update Revision".
+      // Windows 7 uses "Update Signature", 8 uses "Update Revision".
+      // For AMD CPUs, "CurrentPatchLevel" is sometimes used.
       // Take the first one we find.
-      LPCWSTR choices[] = {L"Update Signature", L"Update Revision"};
+      LPCWSTR choices[] = {L"Update Signature", L"Update Revision", L"CurrentPatchLevel"};
       for (size_t oneChoice=0; oneChoice<ArrayLength(choices); oneChoice++) {
         if (RegQueryValueExW(key, choices[oneChoice],
                              0, &vtype,
                              reinterpret_cast<LPBYTE>(updateRevision),
-                             &len) == ERROR_SUCCESS &&
-            vtype == REG_BINARY && len == sizeof(updateRevision)) {
-          // The first word is unused
-          cpuUpdateRevision = static_cast<int>(updateRevision[1]);
-          break;
+                             &len) == ERROR_SUCCESS) {
+          if (vtype == REG_BINARY && len == sizeof(updateRevision)) {
+            // The first word is unused
+            cpuUpdateRevision = static_cast<int>(updateRevision[1]);
+            break;
+          } else if (vtype == REG_DWORD && len == sizeof(updateRevision[0])) {
+            cpuUpdateRevision = static_cast<int>(updateRevision[0]);
+            break;
+          }
         }
       }
     }

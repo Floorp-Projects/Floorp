@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
@@ -60,5 +60,4 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }

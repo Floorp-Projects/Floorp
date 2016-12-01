@@ -76,14 +76,10 @@
     }
 
     function nextTest() {
-      try {
-        gTestsIterator.next();
-      } catch (err if err instanceof StopIteration) {
-        finish();
-      }
+      gTestsIterator.next();
     }
 
-    function testsIterator() {
+    function* testsIterator() {
       // Load a page with a no-cache header, followed by a simple page
       // On pagehide, first page should report it is not being persisted
       var test1DocURI = "http://mochi.test:8888/tests/docshell/test/chrome/92598_nostore.html";
@@ -111,6 +107,8 @@
                    {type: "pageshow", title: "test1", persisted: false}];
       gBrowser.goBack();
       yield undefined;
+
+      finish();
     }
   ]]></script>
 

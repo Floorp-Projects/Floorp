@@ -523,6 +523,17 @@ public:
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
+  nsIFrame()
+    : mRect()
+    , mContent(nullptr)
+    , mStyleContext(nullptr)
+    , mParent(nullptr)
+    , mNextSibling(nullptr)
+    , mPrevSibling(nullptr)
+  {
+    mozilla::PodZero(&mOverflow);
+  }
+
   nsPresContext* PresContext() const {
     return StyleContext()->PresContext();
   }

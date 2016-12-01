@@ -15,7 +15,7 @@ function countListeners(target, type) {
   return listeners.filter(listener => listener.type == type).length;
 }
 
-exports['test window close clears listeners'] = function(assert) {
+exports['test window close clears listeners'] = function*(assert) {
   let window = yield openWindow();
   let loader = Loader(module);
 

@@ -10,7 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
-  function testSteps()
+  function* testSteps()
   {
     info("Setting up test fixtures: create an IndexedDB database and object store.");
 
@@ -269,7 +269,6 @@
 
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

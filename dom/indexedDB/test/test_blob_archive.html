@@ -11,7 +11,7 @@
 
   <script type="text/javascript;version=1.7">
 
-  function testSteps()
+  function* testSteps()
   {
     const BLOB_DATA =
       "504B03040A00000000002E6BF14000000000000000000000000005001C00746573742F" +
@@ -115,7 +115,6 @@
     ok(event.target.result == TEST_FILE_2_CONTENTS, "Correct text");
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

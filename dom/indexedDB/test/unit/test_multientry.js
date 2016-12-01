@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   // Test object stores
   
@@ -214,5 +214,4 @@ function testSteps()
   yield undefined;
 
   finishTest();
-  yield undefined;
 }

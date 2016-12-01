@@ -389,20 +389,6 @@ OptionalFileDescriptorSetToFDs(OptionalFileDescriptorSet& aOptionalSet,
   MOZ_CRASH("Should never get here!");
 }
 
-class NS_NO_VTABLE IPrivateRemoteInputStream
-  : public nsISupports
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(PRIVATE_REMOTE_INPUT_STREAM_IID)
-
-  // This will return the underlying stream.
-  virtual nsIInputStream*
-  BlockAndGetInternalStream() = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(IPrivateRemoteInputStream,
-                              PRIVATE_REMOTE_INPUT_STREAM_IID)
-
 // This class exists to keep a blob alive at least as long as its internal
 // stream.
 class BlobInputStreamTether final
@@ -484,6 +470,22 @@ NS_INTERFACE_MAP_BEGIN(BlobInputStreamTether)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
+} // namespace
+
+class NS_NO_VTABLE IPrivateRemoteInputStream
+  : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(PRIVATE_REMOTE_INPUT_STREAM_IID)
+
+  // This will return the underlying stream.
+  virtual nsIInputStream*
+  BlockAndGetInternalStream() = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(IPrivateRemoteInputStream,
+                              PRIVATE_REMOTE_INPUT_STREAM_IID)
+
 class RemoteInputStream final
   : public nsIInputStream
   , public nsISeekableStream
@@ -558,6 +560,8 @@ private:
   BlockAndGetInternalStream() override;
 };
 
+namespace {
+
 class InputStreamChild final
   : public PBlobStreamChild
 {
@@ -582,101 +586,6 @@ private:
   mozilla::ipc::IPCResult
   Recv__delete__(const InputStreamParams& aParams,
                  const OptionalFileDescriptorSet& aFDs) override;
-};
-
-class InputStreamParent final
-  : public PBlobStreamParent
-{
-  typedef mozilla::ipc::InputStreamParams InputStreamParams;
-  typedef mozilla::dom::OptionalFileDescriptorSet OptionalFileDescriptorSet;
-
-  bool* mSyncLoopGuard;
-  InputStreamParams* mParams;
-  OptionalFileDescriptorSet* mFDs;
-
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
-
-public:
-  InputStreamParent()
-    : mSyncLoopGuard(nullptr)
-    , mParams(nullptr)
-    , mFDs(nullptr)
-  {
-#ifdef DEBUG
-    mOwningThread = PR_GetCurrentThread();
-#endif
-
-    AssertIsOnOwningThread();
-
-    MOZ_COUNT_CTOR(InputStreamParent);
-  }
-
-  InputStreamParent(bool* aSyncLoopGuard,
-                    InputStreamParams* aParams,
-                    OptionalFileDescriptorSet* aFDs)
-    : mSyncLoopGuard(aSyncLoopGuard)
-    , mParams(aParams)
-    , mFDs(aFDs)
-  {
-#ifdef DEBUG
-    mOwningThread = PR_GetCurrentThread();
-#endif
-
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(aSyncLoopGuard);
-    MOZ_ASSERT(!*aSyncLoopGuard);
-    MOZ_ASSERT(aParams);
-    MOZ_ASSERT(aFDs);
-
-    MOZ_COUNT_CTOR(InputStreamParent);
-  }
-
-  ~InputStreamParent() override
-  {
-    AssertIsOnOwningThread();
-
-    MOZ_COUNT_DTOR(InputStreamParent);
-  }
-
-  void
-  AssertIsOnOwningThread() const
-  {
-#ifdef DEBUG
-    MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
-#endif
-  }
-
-  bool
-  Destroy(const InputStreamParams& aParams,
-          const OptionalFileDescriptorSet& aFDs)
-  {
-    AssertIsOnOwningThread();
-
-    if (mSyncLoopGuard) {
-      MOZ_ASSERT(!*mSyncLoopGuard);
-
-      *mSyncLoopGuard = true;
-      *mParams = aParams;
-      *mFDs = aFDs;
-
-      // We're not a live actor so manage the memory ourselves.
-      delete this;
-      return true;
-    }
-
-    // This will be destroyed by BlobParent::DeallocPBlobStreamParent.
-    return PBlobStreamParent::Send__delete__(this, aParams, aFDs);
-  }
-
-private:
-  // This method is only called by the IPDL message machinery.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override
-  {
-    // Nothing needs to be done here.
-  }
 };
 
 struct MOZ_STACK_CLASS CreateBlobImplMetadata final
@@ -708,6 +617,8 @@ struct MOZ_STACK_CLASS CreateBlobImplMetadata final
     return !mName.IsVoid();
   }
 };
+
+} // namespace
 
 already_AddRefed<BlobImpl>
 CreateBlobImpl(const nsID& aKnownBlobIDData,
@@ -1435,8 +1346,100 @@ RemoteInputStream::BlockAndGetInternalStream()
   return mStream;
 }
 
-} // namespace
+class InputStreamParent final
+  : public PBlobStreamParent
+{
+  typedef mozilla::ipc::InputStreamParams InputStreamParams;
+  typedef mozilla::dom::OptionalFileDescriptorSet OptionalFileDescriptorSet;
 
+  bool* mSyncLoopGuard;
+  InputStreamParams* mParams;
+  OptionalFileDescriptorSet* mFDs;
+
+#ifdef DEBUG
+  PRThread* mOwningThread;
+#endif
+
+public:
+  InputStreamParent()
+    : mSyncLoopGuard(nullptr)
+    , mParams(nullptr)
+    , mFDs(nullptr)
+  {
+#ifdef DEBUG
+    mOwningThread = PR_GetCurrentThread();
+#endif
+
+    AssertIsOnOwningThread();
+
+    MOZ_COUNT_CTOR(InputStreamParent);
+  }
+
+  InputStreamParent(bool* aSyncLoopGuard,
+                    InputStreamParams* aParams,
+                    OptionalFileDescriptorSet* aFDs)
+    : mSyncLoopGuard(aSyncLoopGuard)
+    , mParams(aParams)
+    , mFDs(aFDs)
+  {
+#ifdef DEBUG
+    mOwningThread = PR_GetCurrentThread();
+#endif
+
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(aSyncLoopGuard);
+    MOZ_ASSERT(!*aSyncLoopGuard);
+    MOZ_ASSERT(aParams);
+    MOZ_ASSERT(aFDs);
+
+    MOZ_COUNT_CTOR(InputStreamParent);
+  }
+
+  ~InputStreamParent() override
+  {
+    AssertIsOnOwningThread();
+
+    MOZ_COUNT_DTOR(InputStreamParent);
+  }
+
+  void
+  AssertIsOnOwningThread() const
+  {
+#ifdef DEBUG
+    MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+#endif
+  }
+
+  bool
+  Destroy(const InputStreamParams& aParams,
+          const OptionalFileDescriptorSet& aFDs)
+  {
+    AssertIsOnOwningThread();
+
+    if (mSyncLoopGuard) {
+      MOZ_ASSERT(!*mSyncLoopGuard);
+
+      *mSyncLoopGuard = true;
+      *mParams = aParams;
+      *mFDs = aFDs;
+
+      // We're not a live actor so manage the memory ourselves.
+      delete this;
+      return true;
+    }
+
+    // This will be destroyed by BlobParent::DeallocPBlobStreamParent.
+    return PBlobStreamParent::Send__delete__(this, aParams, aFDs);
+  }
+
+private:
+  // This method is only called by the IPDL message machinery.
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override
+  {
+    // Nothing needs to be done here.
+  }
+};
 StaticAutoPtr<BlobParent::IDTable> BlobParent::sIDTable;
 StaticAutoPtr<Mutex> BlobParent::sIDTableMutex;
 

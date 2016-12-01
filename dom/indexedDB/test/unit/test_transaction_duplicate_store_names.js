@@ -6,7 +6,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps() {
+function* testSteps() {
   const dbName = this.window ?
                  window.location.pathname :
                  "test_transaction_duplicate_store_names";
@@ -39,5 +39,4 @@ function testSteps() {
   ok(true, "Transaction created successfully");
 
   finishTest();
-  yield undefined;
 }

@@ -111,6 +111,8 @@ public:
     return mType >= nsITimer::TYPE_REPEATING_PRECISE;
   }
 
+  void GetName(nsACString& aName);
+
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
   void*                 mClosure;

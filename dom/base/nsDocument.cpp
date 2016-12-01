@@ -2868,7 +2868,7 @@ nsDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
 }
 
 mozilla::dom::DocGroup*
-nsIDocument::GetDocGroup()
+nsIDocument::GetDocGroup() const
 {
 #ifdef DEBUG
   // Sanity check that we have an up-to-date and accurate docgroup
@@ -2896,12 +2896,12 @@ nsIDocument::Dispatch(const char* aName,
 }
 
 already_AddRefed<nsIEventTarget>
-nsIDocument::CreateEventTarget(const char* aName, TaskCategory aCategory)
+nsIDocument::EventTargetFor(TaskCategory aCategory) const
 {
   if (mDocGroup) {
-    return mDocGroup->CreateEventTarget(aName, aCategory);
+    return mDocGroup->EventTargetFor(aCategory);
   }
-  return DispatcherTrait::CreateEventTarget(aName, aCategory);
+  return DispatcherTrait::EventTargetFor(aCategory);
 }
 
 NS_IMETHODIMP

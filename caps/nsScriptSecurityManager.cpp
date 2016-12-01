@@ -753,16 +753,27 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         currentURI->GetScheme(scheme);
         currentOtherURI->GetScheme(otherScheme);
 
+        bool schemesMatch = scheme.Equals(otherScheme, stringComparator);
+        bool isSamePage;
+        // about: URIs are special snowflakes.
+        if (scheme.EqualsLiteral("about")) {
+            nsAutoCString module, otherModule;
+            isSamePage = schemesMatch &&
+                NS_SUCCEEDED(NS_GetAboutModuleName(currentURI, module)) &&
+                NS_SUCCEEDED(NS_GetAboutModuleName(currentOtherURI, otherModule)) &&
+                module.Equals(otherModule);
+        } else {
+            bool equalExceptRef = false;
+            rv = currentURI->EqualsExceptRef(currentOtherURI, &equalExceptRef);
+            isSamePage = NS_SUCCEEDED(rv) && equalExceptRef;
+        }
+
         // If schemes are not equal, or they're equal but the target URI
         // is different from the source URI and doesn't always allow linking
         // from the same scheme, check if the URI flags of the current target
         // URI allow the current source URI to link to it.
         // The policy is specified by the protocol flags on both URIs.
-        bool equalExceptRef = false;
-        if (!scheme.Equals(otherScheme, stringComparator) ||
-            (denySameSchemeLinks &&
-             (!NS_SUCCEEDED(currentURI->EqualsExceptRef(currentOtherURI, &equalExceptRef)) ||
-              !equalExceptRef))) {
+        if (!schemesMatch || (denySameSchemeLinks && !isSamePage)) {
             return CheckLoadURIFlags(currentURI, currentOtherURI,
                                      sourceBaseURI, targetBaseURI, aFlags);
         }

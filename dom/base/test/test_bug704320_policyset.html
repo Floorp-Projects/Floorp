@@ -22,7 +22,7 @@ var advance = function() { tests.next(); };
  * It resets the counter, then performs two tests in sequence using
  * the same iframe.
  */
-var tests = (function() {
+var tests = (function*() {
   var iframe = document.getElementById("testframe");
   const sjs = "/tests/dom/base/test/bug704320.sjs?action=generate-policy-test";
 
@@ -89,8 +89,8 @@ var tests = (function() {
   yield iframe.src = sjs + "&policy=" + escape('\f OrigIn');
   yield checkIndividualResults("origin case insensitive", ["origin"]);
 
-  // complete.  Be sure to yield so we don't call this twice.
-  yield SimpleTest.finish();
+  // complete.
+  SimpleTest.finish();
 })();
 
 </script>

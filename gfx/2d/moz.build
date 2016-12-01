@@ -65,7 +65,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     ]
     UNIFIED_SOURCES += [
         'NativeFontResourceMac.cpp',
-        'PathCG.cpp',
         'ScaledFontMac.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':

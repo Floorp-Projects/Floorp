@@ -10,12 +10,13 @@
 #include "prthread.h"
 #include "prinrval.h"
 #include "MainThreadUtils.h"
-#include "nsIThreadManager.h"
-#include "nsIThread.h"
-#include "nsIRunnable.h"
 #include "nsICancelableRunnable.h"
 #include "nsIIdlePeriod.h"
 #include "nsIIncrementalRunnable.h"
+#include "nsINamed.h"
+#include "nsIRunnable.h"
+#include "nsIThreadManager.h"
+#include "nsIThread.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -250,11 +251,12 @@ private:
 };
 
 // This class is designed to be subclassed.
-class Runnable : public nsIRunnable
+class Runnable : public nsIRunnable, public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSINAMED
 
   Runnable() {}
 
@@ -264,6 +266,10 @@ private:
   Runnable(const Runnable&) = delete;
   Runnable& operator=(const Runnable&) = delete;
   Runnable& operator=(const Runnable&&) = delete;
+
+#ifndef RELEASE_OR_BETA
+  const char* mName = nullptr;
+#endif
 };
 
 // This class is designed to be subclassed.
@@ -331,6 +337,12 @@ private:
 } // namespace detail
 
 } // namespace mozilla
+
+inline nsISupports*
+ToSupports(mozilla::Runnable *p)
+{
+  return static_cast<nsIRunnable*>(p);
+}
 
 template<typename Function>
 already_AddRefed<mozilla::Runnable>

@@ -7,7 +7,7 @@ var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name =
     this.window ? window.location.pathname : "test_readwriteflush_disabled.js";
@@ -68,5 +68,4 @@ function testSteps()
      "exception has the correct message");
 
   finishTest();
-  yield undefined;
 }

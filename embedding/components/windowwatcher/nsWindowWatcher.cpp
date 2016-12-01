@@ -484,7 +484,6 @@ nsresult
 nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
                                     nsIWebBrowserChrome* aParentChrome,
                                     uint32_t aChromeFlags,
-                                    uint32_t aContextFlags,
                                     nsITabParent* aOpeningTabParent,
                                     mozIDOMWindowProxy* aOpener,
                                     nsIWebBrowserChrome** aResult)
@@ -504,8 +503,9 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
   bool cancel = false;
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
   nsresult rv =
-    windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags, aContextFlags,
-                                        aOpeningTabParent, aOpener, &cancel,
+    windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags,
+                                        0 /* contextFlag */,  aOpeningTabParent,
+                                        aOpener, &cancel,
                                         getter_AddRefs(newWindowChrome));
 
   if (NS_SUCCEEDED(rv) && cancel) {
@@ -609,12 +609,6 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
     return NS_ERROR_UNEXPECTED;
   }
 
-  uint32_t contextFlags = 0;
-  if (parentWindowOuter->IsLoadingOrRunningTimeout()) {
-    contextFlags |=
-            nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
-  }
-
   uint32_t chromeFlags = CalculateChromeFlagsForChild(aFeatures);
 
   // A content process has asked for a new window, which implies
@@ -624,8 +618,9 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   nsCOMPtr<nsIWebBrowserChrome> parentChrome(do_GetInterface(parentTreeOwner));
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
-  CreateChromeWindow(aFeatures, parentChrome, chromeFlags, contextFlags,
-                     aOpeningTabParent, nullptr, getter_AddRefs(newWindowChrome));
+  CreateChromeWindow(aFeatures, parentChrome, chromeFlags,
+                     aOpeningTabParent, nullptr,
+                     getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
     return NS_ERROR_UNEXPECTED;
@@ -981,26 +976,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       nsCOMPtr<nsIWindowCreator2> windowCreator2(
         do_QueryInterface(mWindowCreator));
       if (windowCreator2) {
-        uint32_t contextFlags = 0;
-        bool popupConditions = false;
-
-        // is the parent under popup conditions?
-        if (parentWindow) {
-          popupConditions = parentWindow->IsLoadingOrRunningTimeout();
-        }
-
-        // chrome is always allowed, so clear the flag if the opener is chrome
-        if (popupConditions) {
-          popupConditions = !isCallerChrome;
-        }
-
-        if (popupConditions) {
-          contextFlags |=
-            nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
-        }
-
         mozIDOMWindowProxy* openerWindow = aForceNoOpener ? nullptr : aParent;
-        rv = CreateChromeWindow(features, parentChrome, chromeFlags, contextFlags,
+        rv = CreateChromeWindow(features, parentChrome, chromeFlags,
                                 nullptr, openerWindow, getter_AddRefs(newChrome));
 
       } else {
@@ -1101,6 +1078,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     nsContentUtils::GetCurrentJSContext() ? nsContentUtils::SubjectPrincipal() :
                                             nullptr;
 
+  bool shouldCheckPrivateBrowsingId = false;
   if (windowIsNew) {
     auto* docShell = static_cast<nsDocShell*>(newDocShell.get());
 
@@ -1109,6 +1087,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     if (subjectPrincipal &&
         !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) &&
         docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
+      shouldCheckPrivateBrowsingId = true;
       DocShellOriginAttributes attrs;
       attrs.InheritFromDocToChildDocShell(BasePrincipal::Cast(subjectPrincipal)->OriginAttributesRef());
 
@@ -1241,9 +1220,13 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       do_QueryInterface(newDocShell);
 
     if (parentStorageManager && newStorageManager) {
+      if (shouldCheckPrivateBrowsingId) {
+        MOZ_DIAGNOSTIC_ASSERT(
+          (subjectPrincipal->GetPrivateBrowsingId() > 0) == isPrivateBrowsingWindow);
+      }
+
       nsCOMPtr<nsIDOMStorage> storage;
       nsCOMPtr<nsPIDOMWindowInner> pInnerWin = parentWindow->GetCurrentInnerWindow();
-
       parentStorageManager->GetStorage(pInnerWin, subjectPrincipal,
                                        getter_AddRefs(storage));
       if (storage) {

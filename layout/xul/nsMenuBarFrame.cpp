@@ -54,6 +54,7 @@ nsMenuBarFrame::nsMenuBarFrame(nsStyleContext* aContext):
   nsBoxFrame(aContext),
     mStayActive(false),
     mIsActive(false),
+    mActiveByKeyboard(false),
     mCurrentMenu(nullptr),
     mTarget(nullptr)
 {

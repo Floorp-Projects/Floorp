@@ -1,0 +1,24 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Represents an object with a name, such as a runnable or a timer.
+ */
+
+[scriptable, uuid(0c5fe7de-7e83-4d0d-a8a6-4a6518b9a7b3)]
+interface nsINamed : nsISupports
+{
+    /*
+     * A string describing the purpose of the runnable/timer/whatever. Useful
+     * for debugging. This attribute is read-only, but you can change it to a
+     * compile-time string literal with setName.
+     */
+    readonly attribute ACString name;
+
+    /* Note: The string you pass in should be a compile-time literal. */
+    [noscript] void setName(in string aName);
+};

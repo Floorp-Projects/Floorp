@@ -78,7 +78,7 @@ function resetState() {
  * It resets the counter, then performs two tests in sequence using
  * the same iframe.
  */
-var tests = (function() {
+var tests = (function*() {
   var iframe = document.getElementById("testframe");
   var sjs = "/tests/dom/base/test/referrer_change_server.sjs?action=generate-policy-test";
 
@@ -114,8 +114,8 @@ var tests = (function() {
   yield iframe.src = sjs + "&policy=" + escape('unsafe-url') + "&name=" + name + "&newPolicy=" + escape('no-referrer');
   yield checkIndividualResults("no-referrer (changed) with unsafe-url first", ["none"], [name+'no-referrer']);
 
-  // complete.  Be sure to yield so we don't call this twice.
-  yield SimpleTest.finish();
+  // complete.
+  SimpleTest.finish();
 })();
 
 </script>

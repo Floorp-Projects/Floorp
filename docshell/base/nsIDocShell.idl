@@ -52,7 +52,7 @@ interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
-   * in the object implementing	this interface.  If it can't be loaded here
+   * in the object implementing this interface.  If it can't be loaded here
    * however, the URL dispatcher will go through its normal process of content
    * loading.
    *
@@ -526,21 +526,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param numEntries - The number of entries removed
    */
   void historyPurged(in long numEntries);
-
-  /*
-   * @deprecated, use nsIDocShell.QueryInterface(nsIDOMStorageManager) instead.
-   *
-   * Retrieves the WebApps session storage object for the supplied principal.
-   *
-   * @param principal returns a storage for this principal
-   * @param documentURI new storage will be created with reference to this
-   *                    document.documentURI that will appear in storage event
-   * @param create If true and a session storage object doesn't
-   *               already exist, a new one will be created.
-   */
-  nsIDOMStorage getSessionStorageForPrincipal(in nsIPrincipal principal,
-                                              in DOMString documentURI,
-                                              in boolean create);
 
   /*
    * @deprecated, use nsIDocShell.QueryInterface(nsIDOMStorageManager) instead.

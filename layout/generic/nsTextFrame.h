@@ -56,6 +56,10 @@ public:
 
   explicit nsTextFrame(nsStyleContext* aContext)
     : nsFrame(aContext)
+    , mNextContinuation(nullptr)
+    , mContentOffset(0)
+    , mContentLengthHint(0)
+    , mAscent(0)
   {
     NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
   }
