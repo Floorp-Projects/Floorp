@@ -725,13 +725,6 @@ add_task(function* test_checkSubsessionEvents() {
     Telemetry.recordEvent(...event);
   }
 
-  // Strip off trailing null values to match the serialized events.
-  for (let e of expected) {
-    while ((e.length >= 3) && (e[e.length - 1] === null)) {
-      e.pop();
-    }
-  }
-
   // Check that events are not available in classic pings but are in subsession
   // pings. Also clear the subsession.
   let classic = TelemetrySession.getPayload();
