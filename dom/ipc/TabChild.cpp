@@ -354,7 +354,7 @@ TabChild::Create(nsIContentChild* aManager,
 {
     RefPtr<TabChild> iframe = new TabChild(aManager, aTabId,
                                              aContext, aChromeFlags);
-    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
+    return iframe.forget();
 }
 
 TabChild::TabChild(nsIContentChild* aManager,
