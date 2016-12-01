@@ -1352,7 +1352,12 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   if (lm->AsWebRenderLayerManager()) {
-    lm->AsWebRenderLayerManager()->Initialize(mCompositorBridgeChild, mCompositorSession->RootLayerTreeId());
+    TextureFactoryIdentifier textureFactoryIdentifier;
+    lm->AsWebRenderLayerManager()->Initialize(mCompositorBridgeChild,
+                                              mCompositorSession->RootLayerTreeId(),
+                                              &textureFactoryIdentifier);
+    ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+    gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
   }
 
   ShadowLayerForwarder* lf = lm->AsShadowForwarder();
@@ -1378,9 +1383,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     }
 
     lf->SetShadowManager(shadowManager);
-    if (ClientLayerManager* clm = lm->AsClientLayerManager()) {
-      clm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
-    }
+    lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
     // Some popup or transparent widgets may use a different backend than the
     // compositors used with ImageBridge and VR (and more generally web content).
     if (WidgetTypeSupportsAcceleration()) {

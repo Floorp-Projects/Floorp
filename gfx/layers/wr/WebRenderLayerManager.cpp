@@ -141,9 +141,12 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
 }
 
 void
-WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLayersId)
+WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
+                                  uint64_t aLayersId,
+                                  TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(mWRChild == nullptr);
+  MOZ_ASSERT(aTextureFactoryIdentifier);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
@@ -153,6 +156,7 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLa
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   WRBridge()->SendCreate(size.width, size.height);
   WRBridge()->IdentifyTextureHost(textureFactoryIdentifier);
+  *aTextureFactoryIdentifier = textureFactoryIdentifier;
 }
 
 void
@@ -324,6 +328,18 @@ void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   WRBridge()->SendClearCachedResources();
+}
+
+void
+WebRenderLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier)
+{
+  WRBridge()->IdentifyTextureHost(aNewIdentifier);
+}
+
+TextureFactoryIdentifier
+WebRenderLayerManager::GetTextureFactoryIdentifier()
+{
+  return WRBridge()->GetTextureFactoryIdentifier();
 }
 
 void

@@ -91,8 +91,8 @@ public:
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
   virtual already_AddRefed<RefLayer> CreateRefLayer() override;
 
-  void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier);
-  TextureFactoryIdentifier GetTextureFactoryIdentifier()
+  virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier) override;
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
   {
     return AsShadowForwarder()->GetTextureFactoryIdentifier();
   }

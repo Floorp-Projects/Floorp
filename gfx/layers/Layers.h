@@ -684,6 +684,13 @@ public:
                             const mozilla::TimeStamp& aCompositeStart,
                             const mozilla::TimeStamp& aCompositeEnd) {}
 
+  virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier) {}
+
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier()
+  {
+    return TextureFactoryIdentifier();
+  }
+
 protected:
   RefPtr<Layer> mRoot;
   gfx::UserData mUserData;
