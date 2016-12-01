@@ -45,7 +45,7 @@
                              class="downloadProgress"
                              min="0"
                              max="100"
-                             xbl:inherits="mode=progressmode,value=progress"/>
+                             xbl:inherits="mode=progressmode,value=progress,paused=progresspaused"/>
           <xul:description class="downloadDetails"
                            crop="end"
                            xbl:inherits="value=status,tooltiptext=statusTip"/>

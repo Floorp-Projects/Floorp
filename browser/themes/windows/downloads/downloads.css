@@ -38,6 +38,16 @@
   @item@[verdict="Malware"] {
     color: #aa1b08;
   }
+
+  /* Use unified color for the progressbar on default theme */
+  .downloadProgress > .progress-bar {
+    background-color: #3c9af8;
+  }
+
+  .downloadProgress[paused="true"] > .progress-bar {
+    background-color: #a6a6a6;
+  }
+
 }
 
 /*** Highlighted list items ***/
