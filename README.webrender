@@ -49,7 +49,10 @@ graphics branch
    features yet, just get the build working with the minimal changes.
 8) Commit the changes locally from step 7, and push everything to the
    graphics branch.
-9) Now you have an update webrender with the new features you wanted,
+9) Update the webrender commit below.
+10) Now you have an update webrender with the new features you wanted,
    so you can write gecko code against them.
 
 Yes, this is somewhat painful. It used to be worse. :)
+
+Latest Commit: 996f2ba9da276ac813a6c0dec67339769f1264db
