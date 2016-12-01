@@ -90,6 +90,7 @@ function background(events) {
     expected.test[phase] = true;
 
     let headers = details[`${phase}Headers`];
+    browser.test.log(`headers are ${JSON.stringify(headers)}`);
     browser.test.assertTrue(Array.isArray(headers), `${phase}Headers array present`);
 
     let {add, modify, remove} = expected.headers[phase];
