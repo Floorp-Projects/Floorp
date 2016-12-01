@@ -215,6 +215,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& 
   WebRenderBridgeParent* parent = new WebRenderBridgeParent(
     this, aPipelineId, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
   parent->AddRef(); // IPDL reference
+  sIndirectLayerTrees[aPipelineId].mCrossProcessParent = this;
   sIndirectLayerTrees[aPipelineId].mWRBridge = parent;
   *aTextureFactoryIdentifier = parent->Compositor()->GetTextureFactoryIdentifier();
   return parent;
@@ -312,6 +313,9 @@ CrossProcessCompositorBridgeParent::DidComposite(
   if (LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree) {
     Unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
     layerTree->SetPendingTransactionId(0);
+  } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWRBridge) {
+    Unused << SendDidComposite(aId, wrbridge->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
+    wrbridge->SetPendingTransactionId(0);
   }
 }
 

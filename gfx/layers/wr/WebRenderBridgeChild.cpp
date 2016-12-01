@@ -62,14 +62,14 @@ WebRenderBridgeChild::DPBegin(uint32_t aWidth, uint32_t aHeight)
 }
 
 void
-WebRenderBridgeChild::DPEnd(bool aIsSync)
+WebRenderBridgeChild::DPEnd(bool aIsSync, uint64_t aTransactionId)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
   if (aIsSync) {
-    this->SendDPSyncEnd(mCommands);
+    this->SendDPSyncEnd(mCommands, aTransactionId);
   } else {
-    this->SendDPEnd(mCommands);
+    this->SendDPEnd(mCommands, aTransactionId);
   }
 
   mCommands.Clear();

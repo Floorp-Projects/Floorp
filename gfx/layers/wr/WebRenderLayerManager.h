@@ -9,6 +9,7 @@
 #include "Layers.h"
 #include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/CompositorController.h"
+#include "mozilla/layers/TransactionIdAllocator.h"
 
 class nsIWidget;
 
@@ -123,6 +124,12 @@ public:
   virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier) override;
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
 
+  virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override
+  { mTransactionIdAllocator = aAllocator; }
+
+  virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
+  virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
+
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }
 
@@ -153,6 +160,11 @@ private:
   void *mPaintedLayerCallbackData;
 
   RefPtr<WebRenderBridgeChild> mWRChild;
+
+  RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
+  uint64_t mLatestTransactionId;
+
+  nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send
