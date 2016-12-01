@@ -4465,7 +4465,7 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, DestructuringFlavor fla
 }
 
 bool
-BytecodeEmitter::emitConditionallyExecutedDestructuringLHS(ParseNode* target, DestructuringFlavor flav)
+BytecodeEmitter::emitDestructuringLHSInBranch(ParseNode* target, DestructuringFlavor flav)
 {
     TDZCheckCache tdzCache(this);
     return emitDestructuringLHS(target, flav);
@@ -4509,7 +4509,7 @@ BytecodeEmitter::emitDefault(ParseNode* defaultExpr)
         return false;
     if (!emit1(JSOP_POP))                                 // .
         return false;
-    if (!emitConditionallyExecutedTree(defaultExpr))      // DEFAULTVALUE
+    if (!emitTreeInBranch(defaultExpr))                   // DEFAULTVALUE
         return false;
     if (!emitJumpTargetAndPatch(jump))
         return false;
@@ -4767,7 +4767,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                     return false;
                 if (!emitUint32Operand(JSOP_NEWARRAY, 0))         // ... OBJ? ARRAY
                     return false;
-                if (!emitConditionallyExecutedDestructuringLHS(member, flav)) // ... OBJ?
+                if (!emitDestructuringLHSInBranch(member, flav))  // ... OBJ?
                     return false;
 
                 if (!ifThenElse.emitElse())                       // ... OBJ? ITER
@@ -4784,7 +4784,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                 return false;
             if (!emit1(JSOP_POP))                                 // ... OBJ? ARRAY
                 return false;
-            if (!emitConditionallyExecutedDestructuringLHS(member, flav)) // ... OBJ?
+            if (!emitDestructuringLHSInBranch(member, flav))      // ... OBJ?
                 return false;
 
             if (!isHead) {
@@ -4836,7 +4836,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
         if (pndefault) {
             // Emit only pndefault tree here, as undefined check in emitDefault
             // should always be true.
-            if (!emitConditionallyExecutedTree(pndefault))        // ... OBJ? ITER VALUE
+            if (!emitTreeInBranch(pndefault))                     // ... OBJ? ITER VALUE
                 return false;
         } else {
             if (!isElision) {
@@ -4847,7 +4847,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
             }
         }
         if (!isElision) {
-            if (!emitConditionallyExecutedDestructuringLHS(subpattern, flav)) // ... OBJ? ITER
+            if (!emitDestructuringLHSInBranch(subpattern, flav))  // ... OBJ? ITER
                 return false;
         } else if (pndefault) {
             if (!emit1(JSOP_POP))                                 // ... OBJ? ITER
@@ -4879,7 +4879,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
         }
 
         if (!isElision) {
-            if (!emitConditionallyExecutedDestructuringLHS(subpattern, flav)) // ... OBJ? ITER
+            if (!emitDestructuringLHSInBranch(subpattern, flav))  // ... OBJ? ITER
                 return false;
         } else {
             if (!emit1(JSOP_POP))                                 // ... OBJ? ITER
@@ -5790,7 +5790,7 @@ BytecodeEmitter::emitIf(ParseNode* pn)
 
   if_again:
     /* Emit code for the condition before pushing stmtInfo. */
-    if (!emitConditionallyExecutedTree(pn->pn_kid1))
+    if (!emitTreeInBranch(pn->pn_kid1))
         return false;
 
     ParseNode* elseNode = pn->pn_kid3;
@@ -5803,7 +5803,7 @@ BytecodeEmitter::emitIf(ParseNode* pn)
     }
 
     /* Emit code for the then part. */
-    if (!emitConditionallyExecutedTree(pn->pn_kid2))
+    if (!emitTreeInBranch(pn->pn_kid2))
         return false;
 
     if (elseNode) {
@@ -5816,7 +5816,7 @@ BytecodeEmitter::emitIf(ParseNode* pn)
         }
 
         /* Emit code for the else part. */
-        if (!emitConditionallyExecutedTree(elseNode))
+        if (!emitTreeInBranch(elseNode))
             return false;
     }
 
@@ -6506,7 +6506,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
     if (jmp.offset == -1 && !emitLoopEntry(forBody, jmp))
         return false;
 
-    if (!emitConditionallyExecutedTree(forBody))
+    if (!emitTreeInBranch(forBody))
         return false;
 
     // Set loop and enclosing "update" offsets, for continue.  Note that we
@@ -7286,7 +7286,7 @@ BytecodeEmitter::emitWhile(ParseNode* pn)
     if (!emitLoopHead(pn->pn_right, &top))
         return false;
 
-    if (!emitConditionallyExecutedTree(pn->pn_right))
+    if (!emitTreeInBranch(pn->pn_right))
         return false;
 
     if (!emitLoopEntry(pn->pn_left, jmp))
@@ -8451,13 +8451,13 @@ BytecodeEmitter::emitConditionalExpression(ConditionalExpression& conditional)
     if (!ifThenElse.emitCond())
         return false;
 
-    if (!emitConditionallyExecutedTree(&conditional.thenExpression()))
+    if (!emitTreeInBranch(&conditional.thenExpression()))
         return false;
 
     if (!ifThenElse.emitElse())
         return false;
 
-    if (!emitConditionallyExecutedTree(&conditional.elseExpression()))
+    if (!emitTreeInBranch(&conditional.elseExpression()))
         return false;
 
     if (!ifThenElse.emitEnd())
@@ -9019,7 +9019,7 @@ BytecodeEmitter::emitFunctionFormalParameters(ParseNode* pn)
                 return false;
             if (!emit1(JSOP_POP))
                 return false;
-            if (!emitConditionallyExecutedTree(initializer))
+            if (!emitTreeInBranch(initializer))
                 return false;
             if (!emitJumpTargetAndPatch(jump))
                 return false;
@@ -9730,7 +9730,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 }
 
 bool
-BytecodeEmitter::emitConditionallyExecutedTree(ParseNode* pn)
+BytecodeEmitter::emitTreeInBranch(ParseNode* pn)
 {
     // Code that may be conditionally executed always need their own TDZ
     // cache.
