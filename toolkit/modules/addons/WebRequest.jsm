@@ -602,13 +602,9 @@ HttpObserverManager = {
         Cu.reportError(e);
       }
 
-      if (!result || !opts.blocking
-          || AddonManagerPermissions.isHostPermitted(uri.host)
-          || !loadInfo || !loadInfo.loadingPrincipal.URI
-          || AddonManagerPermissions.isHostPermitted(loadInfo.loadingPrincipal.URI.host)) {
+      if (!result || !opts.blocking) {
         continue;
       }
-
       if (result.cancel) {
         channel.cancel(Cr.NS_ERROR_ABORT);
         this.errorCheck(channel, loadContext);
