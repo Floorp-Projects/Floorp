@@ -48,7 +48,6 @@ DIRS += [
     'encoding',
     'events',
     'fetch',
-    'file',
     'filehandle',
     'filesystem',
     'flyweb',
