@@ -49,7 +49,7 @@ public class ActivityStream extends FrameLayout {
 
         adapter = new StreamRecyclerAdapter();
 
-        RecyclerView rv = (RecyclerView) findViewById(R.id.activity_stream_main_recyclerview);
+        final RecyclerView rv = (RecyclerView) findViewById(R.id.activity_stream_main_recyclerview);
 
         rv.setAdapter(adapter);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
