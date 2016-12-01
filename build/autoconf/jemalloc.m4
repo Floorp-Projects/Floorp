@@ -73,7 +73,7 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
       ac_configure_args="$ac_configure_args --disable-tls"
     fi
     EXTRA_CFLAGS="$CFLAGS"
-    for var in AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS EXTRA_CFLAGS LDFLAGS; do
+    for var in AS CC CXX CPP AR RANLIB STRIP CPPFLAGS EXTRA_CFLAGS LDFLAGS; do
       ac_configure_args="$ac_configure_args $var='`eval echo \\${${var}}`'"
     done
 
