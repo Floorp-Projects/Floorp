@@ -7,8 +7,8 @@
 #include "nsClientAuthRemember.h"
 
 #include "nsIX509Cert.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include "nsNSSCertHelper.h"
 #include "nsIObserverService.h"
@@ -59,9 +59,9 @@ nsClientAuthRememberService::Init()
 }
 
 NS_IMETHODIMP
-nsClientAuthRememberService::Observe(nsISupports     *aSubject,
-                               const char      *aTopic,
-                               const char16_t *aData)
+nsClientAuthRememberService::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const char16_t* aData)
 {
   // check the topic
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
@@ -184,7 +184,7 @@ nsClientAuthRememberService::AddEntryToList(
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    entry->mHostWithCert = entryKey;
+    entry->mEntryKey = entryKey;
 
     nsClientAuthRemember& settings = entry->mSettings;
     settings.mAsciiHost = aHostName;
