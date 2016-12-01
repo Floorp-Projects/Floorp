@@ -2287,8 +2287,8 @@ ZeroTexImageWithClear(WebGLContext* webgl, GLContext* gl, TexImageTarget target,
 bool
 ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
                 TexImageTarget target, uint32_t level,
-                const webgl::FormatUsageInfo* usage, uint32_t width, uint32_t height,
-                uint32_t depth)
+                const webgl::FormatUsageInfo* usage, uint32_t xOffset, uint32_t yOffset,
+                uint32_t zOffset, uint32_t width, uint32_t height, uint32_t depth)
 {
     // This has two usecases:
     // 1. Lazy zeroing of uninitialized textures:
@@ -2323,6 +2323,8 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
     ScopedBindTexture scopeBindTexture(gl, tex, scopeBindTarget);
     auto compression = usage->format->compression;
     if (compression) {
+        MOZ_RELEASE_ASSERT(!xOffset && !yOffset && !zOffset, "GFX: Can't zero compressed texture with offsets.");
+
         auto sizedFormat = usage->format->sizedFormat;
         MOZ_RELEASE_ASSERT(sizedFormat, "GFX: texture sized format not set");
 
@@ -2351,10 +2353,13 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
         gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1); // Don't bother with striding it
                                                         // well.
 
-        const auto error = DoCompressedTexSubImage(gl, target.get(), level, 0, 0, 0,
-                                                   width, height, depth, sizedFormat,
-                                                   byteCount, zeros.get());
-        return !error;
+        GLenum error = DoCompressedTexSubImage(gl, target.get(), level, xOffset, yOffset,
+                                               zOffset, width, height, depth, sizedFormat,
+                                               byteCount, zeros.get());
+        if (error)
+            return false;
+
+        return true;
     }
 
     const auto driverUnpackInfo = usage->idealUnpack;
@@ -2388,9 +2393,12 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
 
     ScopedUnpackReset scopedReset(webgl);
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1); // Don't bother with striding it well.
-    const auto error = DoTexSubImage(gl, target, level, 0, 0, 0, width, height, depth,
-                                     packing, zeros.get());
-    return !error;
+    const auto error = DoTexSubImage(gl, target, level, xOffset, yOffset, zOffset, width,
+                                     height, depth, packing, zeros.get());
+    if (error)
+        return false;
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
