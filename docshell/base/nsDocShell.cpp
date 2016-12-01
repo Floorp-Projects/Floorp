@@ -1505,6 +1505,11 @@ nsDocShell::LoadURI(nsIURI* aURI,
     principalToInherit = nsNullPrincipal::CreateWithInheritedAttributes(this);
   }
 
+  // Save the triggering principal for the content policy check. If it's null,
+  // we don't want to use the system principal so the content policy check
+  // is still executed.
+  nsCOMPtr<nsIPrincipal> principalForContentPolicyChecks = triggeringPrincipal;
+
   // If the triggeringPrincipal is not passed explicitly, we first try to create
   // a principal from the referrer, since the referrer URI reflects the web origin
   // that triggered the load. If there is no referrer URI, we fall back to using
@@ -1519,6 +1524,9 @@ nsDocShell::LoadURI(nsIURI* aURI,
       nsresult rv = CreatePrincipalFromReferrer(referrer,
                                                 getter_AddRefs(triggeringPrincipal));
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Assign triggering principal from referrer.
+      principalForContentPolicyChecks = triggeringPrincipal;
     }
     else {
       triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
@@ -1562,6 +1570,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
                       referrerPolicy,
                       triggeringPrincipal,
                       principalToInherit,
+                      principalForContentPolicyChecks,
                       flags,
                       target,
                       nullptr,      // No type hint
@@ -5360,6 +5369,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
   return InternalLoad(errorPageURI, nullptr, false, nullptr,
                       mozilla::net::RP_Default,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
+                      nsContentUtils::GetSystemPrincipal(),
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
                       nullptr, NullString(), nullptr, nullptr, LOAD_ERROR_PAGE,
                       nullptr, true, NullString(), this, nullptr, nullptr,
@@ -5441,6 +5451,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                       loadReplace,
                       mReferrerURI,
                       mReferrerPolicy,
+                      triggeringPrincipal,
                       triggeringPrincipal,
                       triggeringPrincipal,
                       flags,
@@ -9603,6 +9614,7 @@ public:
                                    mReferrer,
                                    mReferrerPolicy,
                                    mTriggeringPrincipal, mPrincipalToInherit,
+                                   mTriggeringPrincipal,
                                    mFlags, EmptyString(), mTypeHint.get(),
                                    NullString(), mPostData, mHeadersData,
                                    mLoadType, mSHEntry, mFirstParty,
@@ -9692,6 +9704,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          uint32_t aReferrerPolicy,
                          nsIPrincipal* aTriggeringPrincipal,
                          nsIPrincipal* aPrincipalToInherit,
+                         nsIPrincipal* aPrincipalForContentPolicyChecks,
                          uint32_t aFlags,
                          const nsAString& aWindowTarget,
                          const char* aTypeHint,
@@ -9848,7 +9861,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(contentType,
                                    aURI,
-                                   aTriggeringPrincipal,
+                                   aPrincipalForContentPolicyChecks,
                                    requestingContext,
                                    EmptyCString(),  // mime guess
                                    nullptr,  // extra
@@ -10051,6 +10064,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                                         aReferrerPolicy,
                                         aTriggeringPrincipal,
                                         principalToInherit,
+                                        aPrincipalForContentPolicyChecks,
                                         aFlags,
                                         EmptyString(),   // No window target
                                         aTypeHint,
@@ -12512,6 +12526,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     referrerPolicy,
                     triggeringPrincipal,
                     principalToInherit,
+                    triggeringPrincipal,
                     flags,
                     EmptyString(),      // No window target
                     contentType.get(),  // Type hint
@@ -14016,6 +14031,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              refererPolicy,             // Referer policy
                              aContent->NodePrincipal(), // Triggering is our node's
                                                         // principal
+                             aContent->NodePrincipal(),
                              aContent->NodePrincipal(),
                              flags,
                              target,                    // Window target
