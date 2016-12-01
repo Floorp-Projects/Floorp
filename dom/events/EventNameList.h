@@ -164,6 +164,10 @@ EVENT(change,
       eFormChange,
       EventNameType_HTMLXUL,
       eBasicEventClass)
+EVENT(auxclick,
+      eMouseAuxClick,
+      EventNameType_All,
+      eMouseEventClass)
 EVENT(click,
       eMouseClick,
       EventNameType_All,
