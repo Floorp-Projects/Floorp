@@ -722,8 +722,9 @@ HttpObserverManager = {
 
           if (result && typeof result === "object" && opts.blocking
               && !AddonManagerPermissions.isHostPermitted(uri.host)
-              && loadInfo && loadInfo.loadingPrincipal && loadInfo.loadingPrincipal.URI
-              && !AddonManagerPermissions.isHostPermitted(loadInfo.loadingPrincipal.URI.host)) {
+              && (!loadInfo || !loadInfo.loadingPrincipal
+                  || !loadInfo.loadingPrincipal.URI
+                  || !AddonManagerPermissions.isHostPermitted(loadInfo.loadingPrincipal.URI.host))) {
             handlerResults.push({opts, result});
           }
         } catch (e) {
