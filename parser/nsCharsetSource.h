@@ -22,5 +22,6 @@
 #define kCharsetFromParentForced       13 // propagates to child frames
 #define kCharsetFromUserForced         14 // propagates to child frames
 #define kCharsetFromByteOrderMark      15
+#define kCharsetFromUtf8OnlyMime       16 // For JSON, WebVTT and such
 
 #endif /* nsCharsetSource_h_ */

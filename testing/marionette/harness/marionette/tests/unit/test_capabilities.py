@@ -38,8 +38,14 @@ class TestCapabilities(MarionetteTestCase):
         self.assertFalse(self.caps["acceptInsecureCerts"])
 
     def test_additional_capabilities(self):
-        self.assertIn("processId", self.caps)
-        self.assertEqual(self.caps["processId"], self.appinfo["processID"])
+        self.assertIn("moz:processID", self.caps)
+        self.assertEqual(self.caps["moz:processID"], self.appinfo["processID"])
+        self.assertEqual(self.marionette.process_id, self.appinfo["processID"])
+
+        current_profile = self.marionette.instance.runner.profile.profile
+        self.assertIn("moz:profile", self.caps)
+        self.assertEqual(self.caps["moz:profile"], current_profile)
+        self.assertEqual(self.marionette.profile, current_profile)
 
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()

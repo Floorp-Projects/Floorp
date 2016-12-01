@@ -62,9 +62,7 @@ nsBaseDragService::nsBaseDragService()
 {
 }
 
-nsBaseDragService::~nsBaseDragService()
-{
-}
+nsBaseDragService::~nsBaseDragService() = default;
 
 NS_IMPL_ISUPPORTS(nsBaseDragService, nsIDragService, nsIDragSession)
 
@@ -561,8 +559,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   if (flo) {
     RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
     if (fl) {
-      mozilla::dom::TabParent* tp =
-        static_cast<mozilla::dom::TabParent*>(fl->GetRemoteBrowser());
+      auto* tp = static_cast<mozilla::dom::TabParent*>(fl->GetRemoteBrowser());
       if (tp && tp->TakeDragVisualization(*aSurface, aScreenDragRect)) {
         if (mImage) {
           // Just clear the surface if chrome has overridden it with an image.

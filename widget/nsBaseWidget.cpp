@@ -695,7 +695,7 @@ void nsBaseWidget::SetZIndex(int32_t aZIndex)
   mZIndex = aZIndex;
 
   // reorder this child in its parent's list.
-  nsBaseWidget* parent = static_cast<nsBaseWidget*>(GetParent());
+  auto* parent = static_cast<nsBaseWidget*>(GetParent());
   if (parent) {
     parent->RemoveChild(this);
     // Scope sib outside the for loop so we can check it afterward
@@ -2031,7 +2031,7 @@ nsIWidget::SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint, bool aLongTap,
 void
 nsIWidget::OnLongTapTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsIWidget *self = static_cast<nsIWidget *>(aClosure);
+  auto *self = static_cast<nsIWidget *>(aClosure);
 
   if ((self->mLongTapTouchPoint->mStamp + self->mLongTapTouchPoint->mDuration) >
       TimeStamp::Now()) {
