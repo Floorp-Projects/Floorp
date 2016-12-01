@@ -120,10 +120,6 @@ private:
   // uris on document loads.
   bool mCheckPhishing;
 
-  // TRUE if the nsURIClassifier implementation should check for tracking
-  // uris on document loads.
-  bool mCheckTracking;
-
   // TRUE if the nsURIClassifier implementation should check for blocked
   // uris on document loads.
   bool mCheckBlockedURIs;
