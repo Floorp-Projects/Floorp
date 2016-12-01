@@ -15,27 +15,22 @@ namespace mozilla { namespace ct {
 
 using namespace mozilla::pkix;
 
-// Note: this moves |sct| to the target list in |result|, invalidating |sct|.
+// Note: this moves |verifiedSct| to the target list in |result|.
 static Result
 StoreVerifiedSct(CTVerifyResult& result,
-                 SignedCertificateTimestamp&& sct,
-                 SignedCertificateTimestamp::VerificationStatus status)
+                 VerifiedSCT&& verifiedSct,
+                 VerifiedSCT::Status status)
 {
-  sct.verificationStatus = status;
-  if (!result.scts.append(Move(sct))) {
+  verifiedSct.status = status;
+  if (!result.verifiedScts.append(Move(verifiedSct))) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
   return Success;
 }
 
 Result
-MultiLogCTVerifier::AddLog(Input publicKey)
+MultiLogCTVerifier::AddLog(CTLogVerifier&& log)
 {
-  CTLogVerifier log;
-  Result rv = log.Init(publicKey);
-  if (rv != Success) {
-    return rv;
-  }
   if (!mLogs.append(Move(log))) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
@@ -65,8 +60,7 @@ MultiLogCTVerifier::Verify(Input cert,
       return rv;
     }
     rv = VerifySCTs(sctListFromCert, precertEntry,
-                    SignedCertificateTimestamp::Origin::Embedded, time,
-                    result);
+                    VerifiedSCT::Origin::Embedded, time, result);
     if (rv != Success) {
       return rv;
     }
@@ -81,8 +75,7 @@ MultiLogCTVerifier::Verify(Input cert,
   // Verify SCTs from a stapled OCSP response
   if (sctListFromOCSPResponse.GetLength() > 0) {
     rv = VerifySCTs(sctListFromOCSPResponse, x509Entry,
-                    SignedCertificateTimestamp::Origin::OCSPResponse, time,
-                    result);
+                    VerifiedSCT::Origin::OCSPResponse, time, result);
     if (rv != Success) {
       return rv;
     }
@@ -91,8 +84,7 @@ MultiLogCTVerifier::Verify(Input cert,
   // Verify SCTs from a TLS extension
   if (sctListFromTLSExtension.GetLength() > 0) {
     rv = VerifySCTs(sctListFromTLSExtension, x509Entry,
-                    SignedCertificateTimestamp::Origin::TLSExtension, time,
-                    result);
+                    VerifiedSCT::Origin::TLSExtension, time, result);
     if (rv != Success) {
       return rv;
     }
@@ -103,7 +95,7 @@ MultiLogCTVerifier::Verify(Input cert,
 Result
 MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
                                const LogEntry& expectedEntry,
-                               SignedCertificateTimestamp::Origin origin,
+                               VerifiedSCT::Origin origin,
                                Time time,
                                CTVerifyResult& result)
 {
@@ -129,9 +121,8 @@ MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
       result.decodingErrors++;
       continue;
     }
-    sct.origin = origin;
 
-    rv = VerifySingleSCT(Move(sct), expectedEntry, time, result);
+    rv = VerifySingleSCT(Move(sct), expectedEntry, origin, time, result);
     if (rv != Success) {
       return rv;
     }
@@ -142,12 +133,17 @@ MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
 Result
 MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
                                     const LogEntry& expectedEntry,
+                                    VerifiedSCT::Origin origin,
                                     Time time,
                                     CTVerifyResult& result)
 {
+  VerifiedSCT verifiedSct;
+  verifiedSct.origin = origin;
+  verifiedSct.sct = Move(sct);
+
   CTLogVerifier* matchingLog = nullptr;
   for (auto& log : mLogs) {
-    if (log.keyId() == sct.logId) {
+    if (log.keyId() == verifiedSct.sct.logId) {
       matchingLog = &log;
       break;
     }
@@ -155,39 +151,51 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
 
   if (!matchingLog) {
     // SCT does not match any known log.
-    return StoreVerifiedSct(result, Move(sct),
-      SignedCertificateTimestamp::VerificationStatus::UnknownLog);
+    return StoreVerifiedSct(result, Move(verifiedSct),
+                            VerifiedSCT::Status::UnknownLog);
   }
 
-  if (!matchingLog->SignatureParametersMatch(sct.signature)) {
+  verifiedSct.logOperatorId = matchingLog->operatorId();
+
+  if (!matchingLog->SignatureParametersMatch(verifiedSct.sct.signature)) {
     // SCT signature parameters do not match the log's.
-    return StoreVerifiedSct(result, Move(sct),
-      SignedCertificateTimestamp::VerificationStatus::InvalidSignature);
+    return StoreVerifiedSct(result, Move(verifiedSct),
+                            VerifiedSCT::Status::InvalidSignature);
   }
 
-  Result rv = matchingLog->Verify(expectedEntry, sct);
+  Result rv = matchingLog->Verify(expectedEntry, verifiedSct.sct);
   if (rv != Success) {
     if (rv == Result::ERROR_BAD_SIGNATURE) {
-      return StoreVerifiedSct(result, Move(sct),
-        SignedCertificateTimestamp::VerificationStatus::InvalidSignature);
+      return StoreVerifiedSct(result, Move(verifiedSct),
+                              VerifiedSCT::Status::InvalidSignature);
     }
     return rv;
   }
 
-  // |sct.timestamp| is measured in milliseconds since the epoch,
+  // Make sure the timestamp is legitimate (not in the future).
+  // SCT's |timestamp| is measured in milliseconds since the epoch,
   // ignoring leap seconds. When converting it to a second-level precision
   // pkix::Time, we need to round it either up or down. In our case, rounding up
-  // is more "secure", although practically it does not matter.
-  Time sctTime = TimeFromEpochInSeconds((sct.timestamp + 999u) / 1000u);
-
-  // SCT verified ok, just make sure the timestamp is legitimate.
+  // (towards the future) is more "secure", although practically
+  // it does not matter.
+  Time sctTime =
+    TimeFromEpochInSeconds((verifiedSct.sct.timestamp + 999u) / 1000u);
   if (sctTime > time) {
-    return StoreVerifiedSct(result, Move(sct),
-      SignedCertificateTimestamp::VerificationStatus::InvalidTimestamp);
+    return StoreVerifiedSct(result, Move(verifiedSct),
+                            VerifiedSCT::Status::InvalidTimestamp);
   }
 
-  return StoreVerifiedSct(result, Move(sct),
-    SignedCertificateTimestamp::VerificationStatus::OK);
+  // SCT verified ok, see if the log is qualified. Since SCTs from
+  // disqualified logs are treated as valid under certain circumstances (see
+  // the CT Policy), the log qualification check must be the last one we do.
+  if (matchingLog->isDisqualified()) {
+    verifiedSct.logDisqualificationTime = matchingLog->disqualificationTime();
+    return StoreVerifiedSct(result, Move(verifiedSct),
+                            VerifiedSCT::Status::ValidFromDisqualifiedLog);
+  }
+
+  return StoreVerifiedSct(result, Move(verifiedSct),
+                          VerifiedSCT::Status::Valid);
 }
 
 } } // namespace mozilla::ct

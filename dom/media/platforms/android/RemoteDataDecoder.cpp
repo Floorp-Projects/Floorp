@@ -221,7 +221,7 @@ public:
     if (mJavaDecoder == nullptr) {
       return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
-
+    mIsCodecSupportAdaptivePlayback = mJavaDecoder->IsAdaptivePlaybackSupported();
     mInputDurations.Clear();
 
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
@@ -245,7 +245,7 @@ public:
     mInputDurations.Put(aSample->mDuration);
   }
 
-  bool SupportDecoderRecycling() const override { return true; }
+  bool SupportDecoderRecycling() const override { return mIsCodecSupportAdaptivePlayback; }
 
 private:
   class DurationQueue {
@@ -281,6 +281,7 @@ private:
   const VideoInfo& mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
   DurationQueue mInputDurations;
+  bool mIsCodecSupportAdaptivePlayback = false;
 };
 
 class RemoteAudioDecoder final : public RemoteDataDecoder

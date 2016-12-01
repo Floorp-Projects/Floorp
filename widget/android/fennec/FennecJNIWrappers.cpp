@@ -205,6 +205,14 @@ auto CodecProxy::Input(mozilla::jni::ByteBuffer::Param a0, mozilla::jni::Object:
     return mozilla::jni::Method<Input_t>::Call(CodecProxy::mCtx, nullptr, a0, a1, a2);
 }
 
+constexpr char CodecProxy::IsAdaptivePlaybackSupported_t::name[];
+constexpr char CodecProxy::IsAdaptivePlaybackSupported_t::signature[];
+
+auto CodecProxy::IsAdaptivePlaybackSupported() const -> bool
+{
+    return mozilla::jni::Method<IsAdaptivePlaybackSupported_t>::Call(CodecProxy::mCtx, nullptr);
+}
+
 constexpr char CodecProxy::Release_t::name[];
 constexpr char CodecProxy::Release_t::signature[];
 
