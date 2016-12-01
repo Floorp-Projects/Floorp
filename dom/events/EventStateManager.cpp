@@ -489,6 +489,7 @@ IsMessageMouseUserActivity(EventMessage aMessage)
   return aMessage == eMouseMove ||
          aMessage == eMouseUp ||
          aMessage == eMouseDown ||
+         aMessage == eMouseAuxClick ||
          aMessage == eMouseDoubleClick ||
          aMessage == eMouseClick ||
          aMessage == eMouseActivate ||
@@ -4618,6 +4619,32 @@ EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
 }
 
 nsresult
+EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
+                                             nsEventStatus* aStatus,
+                                             EventMessage aMessage,
+                                             nsIPresShell* aPresShell,
+                                             nsIContent* aMouseTarget,
+                                             nsWeakFrame aCurrentTarget,
+                                             bool aNoContentDispatch)
+{
+  WidgetMouseEvent event(aEvent->IsTrusted(), aMessage,
+                         aEvent->mWidget, WidgetMouseEvent::eReal);
+
+  event.mRefPoint = aEvent->mRefPoint;
+  event.mClickCount = aEvent->mClickCount;
+  event.mModifiers = aEvent->mModifiers;
+  event.buttons = aEvent->buttons;
+  event.mTime = aEvent->mTime;
+  event.mTimeStamp = aEvent->mTimeStamp;
+  event.mFlags.mNoContentDispatch = aNoContentDispatch;
+  event.button = aEvent->button;
+  event.inputSource = aEvent->inputSource;
+
+  return aPresShell->HandleEventWithTarget(&event, aCurrentTarget,
+                                           aMouseTarget, aStatus);
+}
+
+nsresult
 EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
                                             nsEventStatus* aStatus)
 {
@@ -4636,17 +4663,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
      (aEvent->button == WidgetMouseEvent::eMiddleButton ||
       aEvent->button == WidgetMouseEvent::eRightButton);
 
-    WidgetMouseEvent event(aEvent->IsTrusted(), eMouseClick,
-                           aEvent->mWidget, WidgetMouseEvent::eReal);
-    event.mRefPoint = aEvent->mRefPoint;
-    event.mClickCount = aEvent->mClickCount;
-    event.mModifiers = aEvent->mModifiers;
-    event.buttons = aEvent->buttons;
-    event.mTime = aEvent->mTime;
-    event.mTimeStamp = aEvent->mTimeStamp;
-    event.mFlags.mNoContentDispatch = notDispatchToContents;
-    event.button = aEvent->button;
-    event.inputSource = aEvent->inputSource;
+    bool fireAuxClick = notDispatchToContents;
 
     nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
@@ -4665,25 +4682,22 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
 
       // HandleEvent clears out mCurrentTarget which we might need again
       nsWeakFrame currentTarget = mCurrentTarget;
-      ret = presShell->HandleEventWithTarget(&event, currentTarget,
-                                             mouseContent, aStatus);
+      ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseClick,
+                                      presShell, mouseContent, currentTarget,
+                                      notDispatchToContents);
+
       if (NS_SUCCEEDED(ret) && aEvent->mClickCount == 2 &&
           mouseContent && mouseContent->IsInComposedDoc()) {
         //fire double click
-        WidgetMouseEvent event2(aEvent->IsTrusted(), eMouseDoubleClick,
-                                aEvent->mWidget, WidgetMouseEvent::eReal);
-        event2.mRefPoint = aEvent->mRefPoint;
-        event2.mClickCount = aEvent->mClickCount;
-        event2.mModifiers = aEvent->mModifiers;
-        event2.buttons = aEvent->buttons;
-        event2.mTime = aEvent->mTime;
-        event2.mTimeStamp = aEvent->mTimeStamp;
-        event2.mFlags.mNoContentDispatch = notDispatchToContents;
-        event2.button = aEvent->button;
-        event2.inputSource = aEvent->inputSource;
-
-        ret = presShell->HandleEventWithTarget(&event2, currentTarget,
-                                               mouseContent, aStatus);
+        ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseDoubleClick,
+                                        presShell, mouseContent, currentTarget,
+                                        notDispatchToContents);
+      }
+      if (NS_SUCCEEDED(ret) && mouseContent && fireAuxClick &&
+          mouseContent->IsInComposedDoc()) {
+        ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseAuxClick,
+                                        presShell, mouseContent, currentTarget,
+                                        false);
       }
     }
   }
