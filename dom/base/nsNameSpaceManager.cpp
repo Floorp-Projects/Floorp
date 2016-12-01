@@ -28,9 +28,11 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+static const char* kPrefSVGDisabled = "svg.disabled";
 static const char* kPrefMathMLDisabled = "mathml.disabled";
 static const char* kObservedPrefs[] = {
   kPrefMathMLDisabled,
+  kPrefSVGDisabled,
   nullptr
 };
 StaticRefPtr<nsNameSpaceManager> nsNameSpaceManager::sInstance;
@@ -63,6 +65,7 @@ bool nsNameSpaceManager::Init()
 
   mozilla::Preferences::AddStrongObservers(this, kObservedPrefs);
   mMathMLDisabled = mozilla::Preferences::GetBool(kPrefMathMLDisabled);
+  mSVGDisabled = mozilla::Preferences::GetBool(kPrefSVGDisabled);
 
 
   // Need to be ordered according to ID.
@@ -79,6 +82,7 @@ bool nsNameSpaceManager::Init()
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_xul, kNameSpaceID_XUL);
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_svg, kNameSpaceID_SVG);
   REGISTER_DISABLED_NAMESPACE(nsGkAtoms::nsuri_mathml, kNameSpaceID_disabled_MathML);
+  REGISTER_DISABLED_NAMESPACE(nsGkAtoms::nsuri_svg, kNameSpaceID_disabled_SVG);
 
 #undef REGISTER_NAMESPACE
 #undef REGISTER_DISABLED_NAMESPACE
@@ -151,9 +155,11 @@ nsNameSpaceManager::GetNameSpaceID(nsIAtom* aURI,
   }
 
   int32_t nameSpaceID;
-  if (mMathMLDisabled &&
-      mDisabledURIToIDTable.Get(aURI, &nameSpaceID) &&
-      !aInChromeDoc) {
+  if (!aInChromeDoc
+      && (mMathMLDisabled || mSVGDisabled)
+      && mDisabledURIToIDTable.Get(aURI, &nameSpaceID)
+      && ((mMathMLDisabled && kNameSpaceID_disabled_MathML == nameSpaceID) ||
+      (mSVGDisabled && kNameSpaceID_disabled_SVG == nameSpaceID))) {
     NS_POSTCONDITION(nameSpaceID >= 0, "Bogus namespace ID");
     return nameSpaceID;
   }
@@ -186,7 +192,7 @@ NS_NewElement(Element** aResult,
     // disabled MathML nodes by swapping the namespace.
     nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
     if ((nsmgr && !nsmgr->mMathMLDisabled) ||
-        nsContentUtils::IsChromeDoc(ni->GetDocument())) {
+        nsContentUtils::IsSystemPrincipal(ni->GetDocument()->NodePrincipal())) {
       return NS_NewMathMLElement(aResult, ni.forget());
     }
 
@@ -197,7 +203,38 @@ NS_NewElement(Element** aResult,
     return NS_NewXMLElement(aResult, genericXMLNI.forget());
   }
   if (ns == kNameSpaceID_SVG) {
-    return NS_NewSVGElement(aResult, ni.forget(), aFromParser);
+    // If the svg.disabled pref. is true, convert all SVG nodes into
+    // disabled SVG nodes by swapping the namespace.
+    nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    bool SVGEnabled = false;
+
+    if (nsmgr && !nsmgr->mSVGDisabled) {
+      SVGEnabled = true;
+    } else {
+      nsCOMPtr<nsIChannel> channel = ni->GetDocument()->GetChannel();
+      // We don't have a channel for SVGs constructed inside a SVG script
+      if (channel) {
+        loadInfo  = channel->GetLoadInfo();
+      }
+    }
+    if (SVGEnabled ||
+        nsContentUtils::IsSystemPrincipal(ni->GetDocument()->NodePrincipal()) ||
+        (loadInfo &&
+         (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_IMAGE ||
+         loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_OTHER) &&
+         (nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal()) ||
+          nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal())
+         )
+        )
+       ) {
+      return NS_NewSVGElement(aResult, ni.forget(), aFromParser);
+    }
+    RefPtr<mozilla::dom::NodeInfo> genericXMLNI =
+      ni->NodeInfoManager()->
+      GetNodeInfo(ni->NameAtom(), ni->GetPrefixAtom(),
+        kNameSpaceID_disabled_SVG, ni->NodeType(), ni->GetExtraName());
+    return NS_NewXMLElement(aResult, genericXMLNI.forget());
   }
   if (ns == kNameSpaceID_XBL && ni->Equals(nsGkAtoms::children)) {
     NS_ADDREF(*aResult = new XBLChildrenElement(ni.forget()));
@@ -262,5 +299,6 @@ nsNameSpaceManager::Observe(nsISupports* aObject, const char* aTopic,
                             const char16_t* aMessage)
 {
   mMathMLDisabled = mozilla::Preferences::GetBool(kPrefMathMLDisabled);
+  mSVGDisabled = mozilla::Preferences::GetBool(kPrefSVGDisabled);
   return NS_OK;
 }
