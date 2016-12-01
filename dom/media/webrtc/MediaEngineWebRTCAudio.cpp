@@ -814,10 +814,11 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
 
   while (mRegisteredHandles.Length()) {
     MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-    Deallocate(nullptr); // XXX Extend concurrent constraints code to mics.
+    // on last Deallocate(), FreeChannel()s and DeInit()s if all channels are released
+    Deallocate(mRegisteredHandles[0].get());
   }
+  MOZ_ASSERT(mState == kReleased);
 
-  FreeChannel();
   mAudioInput = nullptr;
 }
 

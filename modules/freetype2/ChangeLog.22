@@ -260,7 +260,7 @@
 2006-04-26  Werner Lemberg  <wl@gnu.org>
 
 	* src/psaux/psobjs.c (shift_elements): Don't use FT_Long but
-	FT_PtrDiff for `delta'.  Reported by Céline PILLET
+	FT_PtrDist for `delta'.  Reported by Céline PILLET
 	<Celine.Pillet@Tagginfo.com>.
 
 2006-04-21  David Turner  <david@freetype.org>
@@ -352,7 +352,7 @@
 	* src/tools/docmaker/sources.py (re_bold, re_italic): Accept "'"
 	also.
 
-2006-03-23  David Turner <david@freetype.org>
+2006-03-23  David Turner  <david@freetype.org>
 
 	Add FT_Get_SubGlyph_Info API to retrieve subglyph data.  Note that
 	we do not expose the FT_SubGlyphRec structure.
@@ -360,7 +360,7 @@
 	* include/freetype/internal/ftgloadr.h (FT_SUBGLYPH_FLAGS_*): Moved
 	to...
 	* include/freetype/freetype.h (FT_SUBGLYPH_FLAGS_*): Here.
-	(FT_Get_SybGlyph_Info): New declaration.
+	(FT_Get_SubGlyph_Info): New declaration.
 
 	* src/base/ftobjs.c (FT_Get_SubGlyph_Info): New function.
 
@@ -387,10 +387,10 @@
 	(FTC_INode_Weight): Commented out.
 	* src/cache/ftcimage.h: Updated.
 
-	* src/cache/ftmanag.c (FTC_Manager_Compress,
+	* src/cache/ftcmanag.c (FTC_Manager_Compress,
 	FTC_Manager_RegisterCache, FTC_Manager_FlushN):
 	s/FT_EXPORT/FT_LOCAL/.
-	* src/cache/ftmanag.h: Updated.
+	* src/cache/ftcmanag.h: Updated.
 
 	* src/cache/ftcsbits.c (FTC_SNode_Free, FTC_SNode_New,
 	FTC_SNode_Compare): s/FT_EXPORT/FT_LOCAL/.
@@ -934,7 +934,7 @@
 	* include/freetype/freetype.h (FT_GlyphSlotRec): Improve
 	documentation of `outline' field.
 
-	* src/sfnt/sfobjc.s: Inckude FT_INTERNAL_DEBUG_H.
+	* src/sfnt/sfobjs.c: Include FT_INTERNAL_DEBUG_H.
 	* src/sfnt/sfdriver.c: Include ttmtx.h.
 
 	* src/autofit/afcjk.c: Include aftypes.h and aflatin.h.
@@ -1630,8 +1630,8 @@
 
 	* include/freetype/internal/t1types.h (T1_FaceRec): Updated.
 
-	* src/psaux/t1cmap.h (T1_CmapStdRec): Updated.
-	(T1_CmapUnicode, T1_CmapUnicodeRec): Removed.
+	* src/psaux/t1cmap.h (T1_CMapStdRec): Updated.
+	(T1_CMapUnicode, T1_CMapUnicodeRec): Removed.
 
 	* src/psaux/t1cmap.c (t1_get_glyph_name): New callback function.
 	(t1_cmap_unicode_init, t1_cmap_unicode_done,
@@ -1781,7 +1781,7 @@
 	Note that this doesn't force auto-hinting for all fonts, however.
 
 	* src/autofit/afhints.c (af_glyph_hints_reload): Don't set
-	scaler_fiags here but...
+	scaler_flags here but...
 	(af_glyph_hints_rescale): Here.
 
 	* src/autofit/aflatin.c (af_latin_hints_init): Disable horizontal
@@ -1813,7 +1813,7 @@
 	[TT_CONFIG_OPTION_BDF]: New structure.
 	(TT_FaceRec) [TT_CONFIG_OPTION_BDF]: New member `bdf'.
 
-	* include/freetype/ttags.h (TTAG_BDF): New macro.
+	* include/freetype/tttags.h (TTAG_BDF): New macro.
 
 	* src/sfnt/Jamfile (_sources): Add ttbdf.
 
@@ -1835,7 +1835,7 @@
 
 2005-12-07  Werner Lemberg  <wl@gnu.org>
 
-	* src/sfnt/sfobjc.c (sfnt_init_face): Move tag check to...
+	* src/sfnt/sfobjs.c (sfnt_init_face): Move tag check to...
 	* src/sfnt/ttload.c (sfnt_init): Here, before handling TTCs.
 
 2005-12-06  Chia-I Wu  <b90201047@ntu.edu.tw>
@@ -1962,7 +1962,7 @@
 
 	* docs/CHANGES: Mention scaling bug.
 
-2005-11-18  susuzki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+2005-11-18  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
 	* include/freetype/ftgxval.h, src/base/ftgxval.c
 	(FT_TrueTypeGX_Free, FT_ClassicKern_Free): New functions to free
@@ -2311,7 +2311,7 @@
 	CJK font).  A SING Glyphlet Font is an OpenType font that contains
 	the outline(s), either in a `glyf' or `CFF' table, for a glyph;
 	`cmap', `BASE', and `GSUB' tables are present with the same format
-	and functionaliy as a regular OpenType font; there are no `name',
+	and functionality as a regular OpenType font; there are no `name',
 	`head', `OS/2', and `post' tables; there are two new tables, `SING'
 	which contains details about the glyphlet, and `META' which contains
 	metadata.
@@ -2320,7 +2320,7 @@
 
 	  http://www.adobe.com/products/indesign/sing_gaiji.html
 
-	* include/freetype/ttags.h (TTAG_SING, TTAG_META): New macros for
+	* include/freetype/tttags.h (TTAG_SING, TTAG_META): New macros for
 	the OpenType tables `SING' and `META'.  These two tables are used in
 	SING Glyphlet Format fonts.
 
@@ -2371,7 +2371,7 @@
 	(gxv_kern_subtable_fmt1_valueTable_load,
 	gxv_kern_subtable_fmt1_subtable_setup,
 	gxv_kern_subtable_fmt1_entry_validate): Fix C++ compiler errors.
-	(gxv_kern_coverage_validate): Use KERN_DIALECT_UNKWOWN.
+	(gxv_kern_coverage_validate): Use KERN_DIALECT_UNKNOWN.
 	Improve trace message.
 	(gxv_kern_validate_generic): Fix C++ compiler error.
 	Improve trace message.
@@ -2821,7 +2821,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2005, 2006, 2007, 2008 by
+Copyright 2005-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

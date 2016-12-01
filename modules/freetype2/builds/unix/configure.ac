@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright 2001-2014 by
+# Copyright 2001-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.5.5], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.7], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.in])
 
 
-# Don't forget to update docs/VERSION.DLL!
+# Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='17:4:11'
+version_info='18:6:12'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -70,21 +70,26 @@ AC_SUBST(CC_BUILD)
 AC_SUBST(EXEEXT_BUILD)
 
 
-# auxiliary programs
-
-AC_CHECK_PROG([RMDIR], [rmdir], [rmdir])
-
-
-# Since this file will be finally moved to another directory we make
-# the path of the install script absolute.  This small code snippet has
-# been taken from automake's `ylwrap' script.
+# Since these files will be eventually called from another directory (namely
+# from the top level) we make the path of the scripts absolute.
+#
+# This small code snippet has been taken from automake's `ylwrap' script.
 
 AC_PROG_INSTALL
 case "$INSTALL" in
-/*)
+[[\\/]]* | ?:[[\\/]]*)
   ;;
-*/*)
+*[[\\/]]*)
   INSTALL="`pwd`/$INSTALL"
+  ;;
+esac
+
+AC_PROG_MKDIR_P
+case "$MKDIR_P" in
+[[\\/]]* | ?:[[\\/]]*)
+  ;;
+*[[\\/]]*)
+  MKDIR_P="`pwd`/$MKDIR_P"
   ;;
 esac
 
@@ -175,6 +180,8 @@ CPPFLAGS="${orig_CPPFLAGS}"
 
 # checks for library functions
 
+AC_SYS_LARGEFILE
+
 # Here we check whether we can use our mmap file component.
 
 AC_ARG_ENABLE([mmap],
@@ -228,6 +235,9 @@ if test "x$GCC" = xyes; then
   XX_CFLAGS="-Wall"
   case "$host" in
   *-*-mingw*)
+    XX_ANSIFLAGS="-pedantic"
+    ;;
+  *-*-aix*)
     XX_ANSIFLAGS="-pedantic"
     ;;
   *)
@@ -294,10 +304,10 @@ AC_SUBST([XX_ANSIFLAGS])
 # or a config script is called (libpng).
 #
 # The `xxx_reqpriv' variables are for the `Requires.private' field in
-# `freetype2.pc'.  The `xxx_libpriv' variables are for the `Libs.private'
+# `freetype2.pc'.  The `xxx_libspriv' variables are for the `Libs.private'
 # field in `freetype2.pc' if pkg-config doesn't find a proper .pc file.
 #
-# The `xxx_libstaticconf' variables are for the `freetype-config' script.
+# The `xxx_libsstaticconf' variables are for the `freetype-config' script.
 #
 # Note that a call to PKG_CHECK_MODULES(XXX, ...) sets and creates the
 # output variables `XXX_CFLAGS' and `XXX_LIBS'.  In case one or both are set
@@ -326,15 +336,15 @@ if test x"$with_zlib" = xyes -o x"$with_zlib" = xauto; then
   if test $have_zlib_pkg = yes; then
     # we have zlib.pc
     zlib_reqpriv="$zlib_pkg"
-    zlib_libpriv=
-    zlib_libstaticconf=`$PKG_CONFIG --static --libs "$zlib_pkg"`
+    zlib_libspriv=
+    zlib_libsstaticconf=`$PKG_CONFIG --static --libs "$zlib_pkg"`
   else
     zlib_reqpriv=
 
     if test "$have_zlib" != no; then
       # ZLIB_CFLAGS and ZLIB_LIBS are set by the user
-      zlib_libpriv="$ZLIB_LIBS"
-      zlib_libstaticconf="$ZLIB_LIBS"
+      zlib_libspriv="$ZLIB_LIBS"
+      zlib_libsstaticconf="$ZLIB_LIBS"
       have_zlib="yes (ZLIB_CFLAGS and ZLIB_LIBS)"
     else
       # fall back to standard autoconf test
@@ -342,9 +352,9 @@ if test x"$with_zlib" = xyes -o x"$with_zlib" = xauto; then
                    [gzsetparams],
                    [AC_CHECK_HEADER([zlib.h],
                                     [have_zlib="yes (autoconf test)"
-                                     zlib_libpriv="-lz"
-                                     zlib_libstaticconf="$zlib_libpriv"
-                                     ZLIB_LIBS="$zlib_libpriv"])])
+                                     zlib_libspriv="-lz"
+                                     zlib_libsstaticconf="$zlib_libspriv"
+                                     ZLIB_LIBS="$zlib_libspriv"])])
     fi
   fi
 fi
@@ -375,15 +385,15 @@ if test x"$with_bzip2" = xyes -o x"$with_bzip2" = xauto; then
   if test $have_bzip2_pkg = yes; then
     # we have bzip2.pc
     bzip2_reqpriv="$bzip2_pkg"
-    bzip2_libpriv=
-    bzip2_libstaticconf=`$PKG_CONFIG --static --libs "$bzip2_pkg"`
+    bzip2_libspriv=
+    bzip2_libsstaticconf=`$PKG_CONFIG --static --libs "$bzip2_pkg"`
   else
     bzip2_reqpriv=
 
     if test "$have_bzip2" != no; then
       # BZIP2_CFLAGS and BZIP2_LIBS are set by the user
-      bzip2_libpriv="$BZIP2_LIBS"
-      bzip2_libstaticconf="$BZIP2_LIBS"
+      bzip2_libspriv="$BZIP2_LIBS"
+      bzip2_libsstaticconf="$BZIP2_LIBS"
       have_bzip2="yes (BZIP2_CFLAGS and BZIP2_LIBS)"
     else
       # fall back to standard autoconf test
@@ -391,9 +401,9 @@ if test x"$with_bzip2" = xyes -o x"$with_bzip2" = xauto; then
                    [BZ2_bzDecompress],
                    [AC_CHECK_HEADER([bzlib.h],
                                     [have_bzip2="yes (autoconf test)"
-                                     bzip2_libpriv="-lbz2"
-                                     bzip2_libstaticconf="$bzip2_libpriv"
-                                     BZIP2_LIBS="$bzip2_libpriv"])])
+                                     bzip2_libspriv="-lbz2"
+                                     bzip2_libsstaticconf="$bzip2_libspriv"
+                                     BZIP2_LIBS="$bzip2_libspriv"])])
     fi
   fi
 fi
@@ -424,15 +434,15 @@ if test x"$with_png" = xyes -o x"$with_png" = xauto; then
   if test $have_libpng_pkg = yes; then
     # we have libpng.pc
     libpng_reqpriv="$libpng_pkg"
-    libpng_libpriv=
-    libpng_libstaticconf=`$PKG_CONFIG --static --libs "$libpng_pkg"`
+    libpng_libspriv=
+    libpng_libsstaticconf=`$PKG_CONFIG --static --libs "$libpng_pkg"`
   else
     libpng_reqpriv=
 
     if test "$have_libpng" != no; then
       # LIBPNG_CFLAGS and LIBPNG_LIBS are set by the user
-      libpng_libpriv="$LIBPNG_LIBS"
-      libpng_libstaticconf="$LIBPNG_LIBS"
+      libpng_libspriv="$LIBPNG_LIBS"
+      libpng_libsstaticconf="$LIBPNG_LIBS"
       have_libpng="yes (LIBPNG_CFLAGS and LIBPNG_LIBS)"
     else
       # fall back to config script.
@@ -440,8 +450,8 @@ if test x"$with_png" = xyes -o x"$with_png" = xauto; then
       if which libpng-config > /dev/null 2>&1; then
         LIBPNG_CFLAGS=`libpng-config --cflags`
         LIBPNG_LIBS=`libpng-config --ldflags`
-        libpng_libpriv=`libpng-config --static --ldflags`
-        libpng_libstaticconf="$libpng_libpriv"
+        libpng_libspriv=`libpng-config --static --ldflags`
+        libpng_libsstaticconf="$libpng_libspriv"
         have_libpng="yes (libpng-config)"
         AC_MSG_RESULT([yes])
       else
@@ -465,7 +475,7 @@ AC_ARG_WITH([harfbuzz],
 
 have_harfbuzz=no
 if test x"$with_harfbuzz" = xyes -o x"$with_harfbuzz" = xauto; then
-  harfbuzz_pkg="harfbuzz >= 0.9.19"
+  harfbuzz_pkg="harfbuzz >= 0.9.21"
   have_harfbuzz_pkg=no
 
   if test x"$HARFBUZZ_CFLAGS" = x -a x"$HARFBUZZ_LIBS" = x; then
@@ -477,15 +487,15 @@ if test x"$with_harfbuzz" = xyes -o x"$with_harfbuzz" = xauto; then
   if test $have_harfbuzz_pkg = yes; then
     # we have harfbuzz.pc
     harfbuzz_reqpriv="$harfbuzz_pkg"
-    harfbuzz_libpriv=
-    harfbuzz_libstaticconf=`$PKG_CONFIG --static --libs "$harfbuzz_pkg"`
+    harfbuzz_libspriv=
+    harfbuzz_libsstaticconf=`$PKG_CONFIG --static --libs "$harfbuzz_pkg"`
   else
     harfbuzz_reqpriv=
 
     if test "$have_harfbuzz" != no; then
       # HARFBUZZ_CFLAGS and HARFBUZZ_LIBS are set by the user
-      harfbuzz_libpriv="$HARFBUZZ_LIBS"
-      harfbuzz_libstaticconf="$HARFBUZZ_LIBS"
+      harfbuzz_libspriv="$HARFBUZZ_LIBS"
+      harfbuzz_libsstaticconf="$HARFBUZZ_LIBS"
       have_harfbuzz="yes (HARFBUZZ_CFLAGS and HARFBUZZ_LIBS)"
     else
       # since HarfBuzz is quite a new library we don't fall back to a
@@ -926,10 +936,10 @@ REQUIRES_PRIVATE=`echo "$REQUIRES_PRIVATE" \
                         -e 's/,*$//'       \
                         -e 's/,/, /g'`
 
-LIBS_PRIVATE="$zlib_libpriv     \
-              $bzip2_libpriv    \
-              $libpng_libpriv   \
-              $harfbuzz_libpriv \
+LIBS_PRIVATE="$zlib_libspriv     \
+              $bzip2_libspriv    \
+              $libpng_libspriv   \
+              $harfbuzz_libspriv \
               $ft2_extra_libs"
 # beautify
 LIBS_PRIVATE=`echo "$LIBS_PRIVATE"  \
@@ -937,11 +947,11 @@ LIBS_PRIVATE=`echo "$LIBS_PRIVATE"  \
                     -e 's/  *$//'   \
                     -e 's/  */ /g'`
 
-LIBSSTATIC_CONFIG="-lfreetype              \
-                   $zlib_libstaticconf     \
-                   $bzip2_libstaticconf    \
-                   $libpng_libstaticconf   \
-                   $harfbuzz_libstaticconf \
+LIBSSTATIC_CONFIG="-lfreetype               \
+                   $zlib_libsstaticconf     \
+                   $bzip2_libsstaticconf    \
+                   $libpng_libsstaticconf   \
+                   $harfbuzz_libsstaticconf \
                    $ft2_extra_libs"
 # remove -L/usr/lib and -L/usr/lib64 since `freetype-config' adds them later
 # on if necessary; also beautify
