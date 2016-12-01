@@ -29,16 +29,18 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired,
       // @TODO Change this to Object.values once it's supported in Node's version of V8
       mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-      isInterestingProp: React.PropTypes.func
+      isInterestingProp: React.PropTypes.func,
+      title: React.PropTypes.string,
     },
 
     getTitle: function (object) {
+      let title = this.props.title || object.class || "Object";
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: object
-        }, object.class);
+        }, title);
       }
-      return object.class || "Object";
+      return title;
     },
 
     safePropIterator: function (object, max) {

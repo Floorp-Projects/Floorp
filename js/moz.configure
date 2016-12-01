@@ -141,7 +141,11 @@ def callgrind(value):
 set_define('MOZ_CALLGRIND', callgrind)
 imply_option('--enable-profiling', callgrind)
 
-js_option('--enable-profiling', env='MOZ_PROFILING',
+@depends(milestone, '--help')
+def enable_profiling(milestone, help):
+    return milestone.is_nightly
+
+js_option('--enable-profiling', env='MOZ_PROFILING', default=enable_profiling,
           help='Set compile flags necessary for using sampling profilers '
                '(e.g. shark, perf)')
 

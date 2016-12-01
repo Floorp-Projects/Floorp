@@ -8,10 +8,6 @@
 # of Mozilla applications.
 # This makefile should be included, and then assumes that the including
 # makefile defines the following targets:
-# clobber-zip
-#   This target should remove all language dependent-files from $(STAGEDIST),
-#   depending on $(AB_CD) set to the locale code.
-#   $(AB_CD) will be en-US on the initial unpacking of the package
 # libs-%
 #   This target should call into the various libs targets that this
 #   application depends on.
@@ -72,29 +68,36 @@ STAGEDIST = $(ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources
 else
 STAGEDIST = $(ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif
+UNPACKED_INSTALLER = $(ABS_DIST)/unpacked-installer
 
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
 
 PACKAGE_BASE_DIR = $(ABS_DIST)/l10n-stage
 
-$(STAGEDIST): AB_CD:=en-US
-$(STAGEDIST): UNPACKAGE=$(call ESCAPE_WILDCARD,$(ZIP_IN))
-$(STAGEDIST): $(call ESCAPE_WILDCARD,$(ZIP_IN))
+$(UNPACKED_INSTALLER): AB_CD:=en-US
+$(UNPACKED_INSTALLER): UNPACKAGE=$(call ESCAPE_WILDCARD,$(ZIP_IN))
+$(UNPACKED_INSTALLER): $(call ESCAPE_WILDCARD,$(ZIP_IN))
 # only mac needs to remove the parent of STAGEDIST...
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-	$(RM) -r -v $(DIST)/l10n-stage
+	$(RM) -r -v $(UNPACKED_INSTALLER)
 else
 # ... and windows doesn't like removing STAGEDIST itself, remove all children
-	find $(STAGEDIST) -maxdepth 1 -print0 | xargs -0 $(RM) -r
+	find $(UNPACKED_INSTALLER) -maxdepth 1 -print0 | xargs -0 $(RM) -r
 endif
-	$(NSINSTALL) -D $(DIST)/l10n-stage
-	cd $(DIST)/l10n-stage && \
+	$(NSINSTALL) -D $(UNPACKED_INSTALLER)
+	cd $(UNPACKED_INSTALLER) && \
 	  $(INNER_UNMAKE_PACKAGE)
 
 
-unpack: $(STAGEDIST)
-	@echo done unpacking
+unpack: $(UNPACKED_INSTALLER)
+ifeq ($(OS_ARCH), WINNT)
+	$(RM) -r -f $(ABS_DIST)/l10n-stage
+	$(NSINSTALL) -D $(ABS_DIST)/l10n-stage
+	$(call copy_dir, $(UNPACKED_INSTALLER), $(ABS_DIST)/l10n-stage)
+else
+	rsync -rav --delete $(UNPACKED_INSTALLER)/ $(ABS_DIST)/l10n-stage
+endif
 
 # The path to the object dir for the mozilla-central build system,
 # may be overridden if necessary.
@@ -152,7 +155,7 @@ endif
 	mv -f '$(DIST)/l10n-stage/$(PACKAGE)' '$(ZIP_OUT)'
 	if test -f '$(DIST)/l10n-stage/$(PACKAGE).asc'; then mv -f '$(DIST)/l10n-stage/$(PACKAGE).asc' '$(ZIP_OUT).asc'; fi
 
-repackage-zip-%: $(STAGEDIST)
+repackage-zip-%: unpack
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN='$(ZIP_IN)'
 
 APP_DEFINES = $(firstword $(wildcard $(LOCALE_SRCDIR)/defines.inc) \

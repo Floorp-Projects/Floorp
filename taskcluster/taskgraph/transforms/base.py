@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import re
+import copy
 import pprint
 import voluptuous
 
@@ -65,7 +66,8 @@ def validate_schema(schema, obj, msg_prefix):
     beginning with msg_prefix.
     """
     try:
-        return schema(obj)
+        # deep copy the result since it may include mutable defaults
+        return copy.deepcopy(schema(obj))
     except voluptuous.MultipleInvalid as exc:
         msg = [msg_prefix]
         for error in exc.errors:
