@@ -6,45 +6,6 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsSummary {
-  background-color: hsla(210,4%,10%,.04);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
-  transition-duration: 150ms;
-  transition-property: background-color;
-}
-
-#downloadsSummary:hover {
-  background-color: hsla(210,4%,10%,.05);
-}
-
-#downloadsSummary:hover:active {
-  background-color: hsla(210,4%,10%,.1);
-  box-shadow: 0 2px 0 0 hsla(210,4%,10%,.1) inset;
-}
-
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-  @media (-moz-windows-default-theme) {
-    #downloadsSummary,
-    #downloadsSummary:hover,
-    #downloadsSummary:hover:active {
-      background-color: #f1f5fb;
-      box-shadow: 0px 1px 2px rgb(204,214,234) inset;
-      transition-duration: 0s;
-      cursor: pointer;
-    }
-
-    @media (-moz-os-version: windows-xp) {
-      #downloadsSummary,
-      #downloadsSummary:hover,
-      #downloadsSummary:hover:active {
-        background-color: hsla(216,45%,88%,.98);
-      }
-    }
-  }
-}
-
 @keyfocus@ #downloadsSummary:focus,
 @keyfocus@ .downloadsPanelFooterButton:focus {
   outline: 1px -moz-dialogtext dotted;
@@ -77,6 +38,16 @@
   @item@[verdict="Malware"] {
     color: #aa1b08;
   }
+
+  /* Use unified color for the progressbar on default theme */
+  .downloadProgress > .progress-bar {
+    background-color: #3c9af8;
+  }
+
+  .downloadProgress[paused="true"] > .progress-bar {
+    background-color: #a6a6a6;
+  }
+
 }
 
 /*** Highlighted list items ***/

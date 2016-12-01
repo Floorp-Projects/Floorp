@@ -2693,25 +2693,11 @@ ArenaLists::~ArenaLists()
 }
 
 void
-ArenaLists::finalizeNow(FreeOp* fop, const FinalizePhase& phase)
-{
-    gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
-    for (auto kind : phase.kinds)
-        finalizeNow(fop, kind, RELEASE_ARENAS, nullptr);
-}
-
-void
-ArenaLists::finalizeNow(FreeOp* fop, AllocKind thingKind, KeepArenasEnum keepArenas, Arena** empty)
+ArenaLists::finalizeNow(FreeOp* fop, AllocKind thingKind, Arena** empty)
 {
     MOZ_ASSERT(!IsBackgroundFinalized(thingKind));
-    forceFinalizeNow(fop, thingKind, keepArenas, empty);
-}
-
-void
-ArenaLists::forceFinalizeNow(FreeOp* fop, AllocKind thingKind,
-                             KeepArenasEnum keepArenas, Arena** empty)
-{
     MOZ_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
+    MOZ_ASSERT(empty);
 
     Arena* arenas = arenaLists[thingKind].head();
     if (!arenas)
@@ -2722,14 +2708,10 @@ ArenaLists::forceFinalizeNow(FreeOp* fop, AllocKind thingKind,
     SortedArenaList finalizedSorted(thingsPerArena);
 
     auto unlimited = SliceBudget::unlimited();
-    FinalizeArenas(fop, &arenas, finalizedSorted, thingKind, unlimited, keepArenas);
+    FinalizeArenas(fop, &arenas, finalizedSorted, thingKind, unlimited, KEEP_ARENAS);
     MOZ_ASSERT(!arenas);
 
-    if (empty) {
-        MOZ_ASSERT(keepArenas == KEEP_ARENAS);
-        finalizedSorted.extractEmpty(empty);
-    }
-
+    finalizedSorted.extractEmpty(empty);
     arenaLists[thingKind] = finalizedSorted.toArenaList();
 }
 
@@ -2839,12 +2821,12 @@ ArenaLists::queueForegroundObjectsForSweep(FreeOp* fop)
     // sweep phase, before control can return to the mutator. Otherwise,
     // mutator behavior can resurrect certain objects whose references would
     // otherwise have been erased by the finalizer.
-    finalizeNow(fop, AllocKind::OBJECT0, KEEP_ARENAS, &savedEmptyObjectArenas);
-    finalizeNow(fop, AllocKind::OBJECT2, KEEP_ARENAS, &savedEmptyObjectArenas);
-    finalizeNow(fop, AllocKind::OBJECT4, KEEP_ARENAS, &savedEmptyObjectArenas);
-    finalizeNow(fop, AllocKind::OBJECT8, KEEP_ARENAS, &savedEmptyObjectArenas);
-    finalizeNow(fop, AllocKind::OBJECT12, KEEP_ARENAS, &savedEmptyObjectArenas);
-    finalizeNow(fop, AllocKind::OBJECT16, KEEP_ARENAS, &savedEmptyObjectArenas);
+    finalizeNow(fop, AllocKind::OBJECT0, &savedEmptyObjectArenas);
+    finalizeNow(fop, AllocKind::OBJECT2, &savedEmptyObjectArenas);
+    finalizeNow(fop, AllocKind::OBJECT4, &savedEmptyObjectArenas);
+    finalizeNow(fop, AllocKind::OBJECT8, &savedEmptyObjectArenas);
+    finalizeNow(fop, AllocKind::OBJECT12, &savedEmptyObjectArenas);
+    finalizeNow(fop, AllocKind::OBJECT16, &savedEmptyObjectArenas);
 
     // Prevent the arenas from having new objects allocated into them. We need
     // to know which objects are marked while we incrementally sweep dead

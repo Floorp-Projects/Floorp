@@ -249,7 +249,7 @@ nsUnknownContentTypeDialog.prototype = {
       }
     }
 
-    Task.spawn(function() {
+    Task.spawn(function*() {
       if (!aForcePrompt) {
         // Check to see if the user wishes to auto save to the default download
         // folder without prompting. Note that preference might not be set.

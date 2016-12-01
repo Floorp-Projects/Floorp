@@ -35,7 +35,7 @@ var gFiles;
 var gNotifications = 0;
 var gLoads = 0;
 
-function fileToLoad() {
+function* fileToLoad() {
   yield "red.png";
   yield "invalid.jpg";
   yield "lime100x100.svg";
@@ -69,12 +69,13 @@ function failTest() {
 function onNotification()
 {
   gNotifications++;
-  try {
-    gImg.src = gFiles.next();
-    gContent.appendChild(gImg);
-  } catch(e) {
+  let {done, value} = gFiles.next();
+  if (done) {
     cleanUpAndFinish();
+    return;
   }
+  gImg.src = value;
+  gContent.appendChild(gImg);
 }
 
 function cleanUpAndFinish() {

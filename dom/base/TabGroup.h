@@ -110,11 +110,16 @@ public:
                             TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
+  virtual already_AddRefed<nsIEventTarget>
+  EventTargetFor(TaskCategory aCategory) const override;
+
 private:
   ~TabGroup();
   DocGroupMap mDocGroups;
+  bool mLastWindowLeft;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
   RefPtr<ThrottledEventQueue> mThrottledEventQueue;
+  nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
 };
 
 } // namespace dom

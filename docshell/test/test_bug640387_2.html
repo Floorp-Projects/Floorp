@@ -45,7 +45,7 @@ function childHashchange() {
   }
 }
 
-function run_test() {
+function* run_test() {
   var iframe = $('iframe').contentWindow;
 
   ok(true, 'Got first load');
@@ -76,7 +76,6 @@ function run_test() {
   yield undefined;
 
   SimpleTest.finish();
-  yield undefined;
 }
 
 callbackOnLoad = true;

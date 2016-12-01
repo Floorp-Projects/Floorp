@@ -29,25 +29,27 @@ SimpleTest.waitForExplicitFinish();
 
 var lastMessage = null;
 var crossOrigin = false;
-var generator = new getTestContent();
+var generator = getTestContent();
 
 function runNextSameOrigin() {
-  try {
-    lastMessage = generator.next();
-  } catch (e) {
-    generator = new getTestContent();
+  let {done, value} = generator.next();
+  if (done) {
+    generator = getTestContent();
     crossOrigin = true;
     runNextCrossOrigin();
-  } 
+    return;
+  }
+  lastMessage = value;
   window.frames.sameDomain.postMessage(lastMessage, "http://mochi.test:8888");
 }
 
 function runNextCrossOrigin() {
-  try {
-    lastMessage = generator.next();
-  } catch (e) {
+  let {done, value} = generator.next();
+  if (done) {
     SimpleTest.finish();
+    return;
   }
+  lastMessage = value;
   window.frames.crossDomain.postMessage(lastMessage, "http://example.org:8000");
 }
 
