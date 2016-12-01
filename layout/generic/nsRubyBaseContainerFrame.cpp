@@ -769,11 +769,10 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
     // We are not pulling an intra-level whitespace, which means all
     // elements we are going to pull can have non-whitespace content,
     // which may contain float which we need to reparent.
-    nsBlockFrame* oldFloatCB = nullptr;
-    for (nsIFrame* frame : aColumn) {
-      oldFloatCB = nsLayoutUtils::GetFloatContainingBlock(frame);
-      break;
-    }
+    MOZ_ASSERT(aColumn.begin() != aColumn.end(),
+               "Ruby column shouldn't be empty");
+    nsBlockFrame* oldFloatCB =
+      nsLayoutUtils::GetFloatContainingBlock(*aColumn.begin());
 #ifdef DEBUG
     MOZ_ASSERT(oldFloatCB, "Must have found a float containing block");
     for (nsIFrame* frame : aColumn) {
