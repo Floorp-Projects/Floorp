@@ -10,6 +10,8 @@
 #ifdef MOZ_X11
 
 #include "WindowSurfaceX11.h"
+#include "gfxXlibSurface.h"
+#include "gfxImageSurface.h"
 
 namespace mozilla {
 namespace widget {
@@ -21,11 +23,12 @@ public:
   ~WindowSurfaceX11Image();
 
   already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion) override;
-  void CommitToDrawable(Drawable aDest, GC aGC,
-                        const LayoutDeviceIntRegion& aInvalidRegion) override;
+  void Commit(const LayoutDeviceIntRegion& aInvalidRegion) override;
+  bool IsFallback() const override { return true; }
 
 private:
-  XImage* mImage;
+  RefPtr<gfxXlibSurface> mWindowSurface;
+  RefPtr<gfxImageSurface> mImageSurface;
 };
 
 }  // namespace widget
