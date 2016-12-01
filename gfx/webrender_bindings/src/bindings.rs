@@ -166,6 +166,10 @@ use self::macos::Library as GlLibrary;
 #[cfg(target_os = "windows")]
 use self::win::Library as GlLibrary;
 
+extern  {
+    fn is_in_compositor_thread() -> bool;
+}
+
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: PipelineId,
     pub root_dl_builder: webrender_traits::DisplayListBuilder,
@@ -188,6 +192,7 @@ struct Notifier {
 
 impl webrender_traits::RenderNotifier for Notifier {
     fn new_frame_ready(&mut self) {
+        assert!( unsafe { !is_in_compositor_thread() });
         let &(ref lock, ref cvar) = &*self.render_notifier;
         let mut finished = lock.lock().unwrap();
         *finished = true;
@@ -280,6 +285,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
 pub extern fn wr_init_window(root_pipeline_id: u64,
                              enable_profiler: bool,
                              external_image_handler: *mut WrExternalImageHandler) -> *mut WrWindowState {
+    assert!( unsafe { is_in_compositor_thread() });
     let library = GlLibrary::new();
     gl::load_with(|symbol| library.query(symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
@@ -341,6 +347,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
 
 #[no_mangle]
 pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, layers_id: u64) -> *mut WrState {
+    assert!( unsafe { is_in_compositor_thread() });
     let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
 
     let builder = WebRenderFrameBuilder::new(pipeline_id);
@@ -361,6 +368,7 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
 
 #[no_mangle]
 pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width: u32, height: u32) {
+    assert!( unsafe { is_in_compositor_thread() });
     state.size = (width, height);
     state.frame_builder.root_dl_builder.list.clear();
     state.frame_builder.dl_builder.clear();
@@ -388,12 +396,14 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
 #[no_mangle]
 pub extern fn wr_push_dl_builder(state:&mut WrState)
 {
+    assert!( unsafe { is_in_compositor_thread() });
     state.frame_builder.dl_builder.push(webrender_traits::DisplayListBuilder::new(state.pipeline_id));
 }
 
 #[no_mangle]
 pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, transform: &Matrix4D<f32>)
 {
+    assert!( unsafe { is_in_compositor_thread() });
     // 
     state.z_index += 1;
 
@@ -416,6 +426,7 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, transform: 
 
 #[no_mangle]
 pub fn wr_composite_window(window: &mut WrWindowState) {
+    assert!( unsafe { is_in_compositor_thread() });
     gl::clear(gl::COLOR_BUFFER_BIT);
     window.renderer.update();
     window.renderer.render(window.size);
@@ -425,6 +436,7 @@ pub fn wr_composite_window(window: &mut WrWindowState) {
 pub extern fn wr_dp_end(window: &mut WrWindowState,
                         state: &mut WrState,
                         epoch: Epoch) {
+    assert!( unsafe { is_in_compositor_thread() });
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let pipeline_id = state.pipeline_id;
     let (width, height) = state.size;
@@ -448,6 +460,7 @@ pub extern fn wr_dp_end(window: &mut WrWindowState,
 
 #[no_mangle]
 pub extern fn wr_add_image(window: &mut WrWindowState, width: u32, height: u32, stride: u32, format: ImageFormat, bytes: * const u8, size: usize) -> ImageKey {
+    assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
     let stride_option = match stride {
         0 => None,
@@ -459,22 +472,26 @@ pub extern fn wr_add_image(window: &mut WrWindowState, width: u32, height: u32, 
 
 #[no_mangle]
 pub extern fn wr_add_external_image_texture(window: &mut WrWindowState, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
+    assert!( unsafe { is_in_compositor_thread() });
     window.api.add_image(width, height, None, format, ImageData::External(ExternalImageId(external_image_id)))
 }
 
 #[no_mangle]
 pub extern fn wr_update_image(window: &mut WrWindowState, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
+    assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
     window.api.update_image(key, width, height, format, bytes);
 }
 
 #[no_mangle]
 pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
+    assert!( unsafe { is_in_compositor_thread() });
     window.api.delete_image(key)
 }
 
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
+    assert!( unsafe { is_in_compositor_thread() });
     assert!(!state.frame_builder.dl_builder.is_empty());
     let clip_region = state.frame_builder.dl_builder.last_mut().unwrap().new_clip_region(&clip.to_rect(), Vec::new(), None);
 
@@ -486,6 +503,7 @@ pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r
 
 #[no_mangle]
 pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
+    assert!( unsafe { is_in_compositor_thread() });
     assert!(!state.frame_builder.dl_builder.is_empty());
 
     let clip_region = state.frame_builder.dl_builder.last_mut().unwrap().new_clip_region(&clip.to_rect(),
@@ -524,6 +542,7 @@ impl WrRect
 
 #[no_mangle]
 pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, key: ImageKey) {
+    assert!( unsafe { is_in_compositor_thread() });
     assert!(!state.frame_builder.dl_builder.is_empty());
 
     let bounds = bounds.to_rect();
@@ -545,9 +564,10 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
 
 #[no_mangle]
 pub extern fn wr_destroy(state:*mut WrState) {
-  unsafe {
-    Box::from_raw(state);
-  }
+    assert!( unsafe { is_in_compositor_thread() });
+    unsafe {
+        Box::from_raw(state);
+    }
 }
 
 fn wait_for_render_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
@@ -561,6 +581,7 @@ fn wait_for_render_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
 }
 
 fn force_sync_composite(window: &mut WrWindowState) {
+    assert!( unsafe { is_in_compositor_thread() });
     let last_frame_epoch = window.epoch;
 
     loop {
@@ -585,6 +606,7 @@ fn force_sync_composite(window: &mut WrWindowState) {
 // read the function definition to make sure we free this memory correctly.
 pub extern fn wr_readback_buffer(window: &mut WrWindowState, width: u32, height: u32,
                                  out_length: *mut u32, out_capacity: *mut u32) -> *const c_uchar {
+    assert!( unsafe { is_in_compositor_thread() });
     force_sync_composite(window);
 
     let mut pixels = gl::read_pixels(0, 0,
@@ -604,6 +626,7 @@ pub extern fn wr_readback_buffer(window: &mut WrWindowState, width: u32, height:
 #[no_mangle]
 pub extern fn wr_free_buffer(vec_ptr: *mut c_uchar, length: u32, capacity: u32)
 {
+    assert!( unsafe { is_in_compositor_thread() });
     // note that vec_ptr loses its const here because we're doing unsafe things.
     unsafe {
         let rebuilt = Vec::from_raw_parts(vec_ptr, length as usize, capacity as usize);
@@ -613,5 +636,6 @@ pub extern fn wr_free_buffer(vec_ptr: *mut c_uchar, length: u32, capacity: u32)
 #[no_mangle]
 pub extern fn wr_profiler_set_enabled(window: &mut WrWindowState, enabled: bool)
 {
+    assert!( unsafe { is_in_compositor_thread() });
     window.renderer.set_profiler_enabled(enabled);
 }

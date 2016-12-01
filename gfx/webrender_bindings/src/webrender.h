@@ -7,6 +7,8 @@
 #ifndef WR_h
 #define WR_h
 extern "C" {
+bool is_in_compositor_thread();
+
 enum WRImageFormat {
     Invalid,
     A8,
@@ -95,7 +97,9 @@ struct wrstate;
 #endif
 
 WR_INLINE wrwindowstate*
-wr_init_window(uint64_t root_pipeline_id, bool enable_profiler, WRExternalImageHandler* handler = nullptr)
+wr_init_window(uint64_t root_pipeline_id,
+               bool enable_profiler,
+               WRExternalImageHandler* handler = nullptr)
 WR_FUNC;
 
 WR_INLINE wrstate*
