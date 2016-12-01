@@ -10,7 +10,7 @@ var self = this;
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const dbName = self.window ? window.location.pathname : "test_lowDiskSpace";
   const dbVersion = 1;
@@ -715,7 +715,6 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }
 
 function RequestCounter(expectedType) {

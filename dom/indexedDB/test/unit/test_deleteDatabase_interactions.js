@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -58,5 +58,4 @@ function testSteps()
   is(event.target.result.objectStoreNames.length, 0, "DB should have no object stores");
 
   finishTest();
-  yield undefined;
 }

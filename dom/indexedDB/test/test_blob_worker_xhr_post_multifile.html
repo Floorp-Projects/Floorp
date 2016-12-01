@@ -16,7 +16,7 @@
    * instead generate the expected 404.  This test is basically the same as
    * test_blob_worker_xhr_post.html except for the composite Blob.
    */
-  function testSteps()
+  function* testSteps()
   {
     const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
     const BLOB_TYPE = "text/plain";
@@ -101,7 +101,6 @@
     URL.revokeObjectURL(workerScriptUrl);
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
