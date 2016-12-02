@@ -519,9 +519,13 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
 
   // Trigger warnings or errors where needed.
   switch (res) {
-    case RecordEventResult::UnknownEvent:
-      JS_ReportErrorASCII(cx, "Unknown event.");
+    case RecordEventResult::UnknownEvent: {
+      JS_ReportErrorASCII(cx, R"(Unknown event: ["%s", "%s", "%s"])",
+                          PromiseFlatCString(aCategory).get(),
+                          PromiseFlatCString(aMethod).get(),
+                          PromiseFlatCString(aObject).get());
       return NS_ERROR_INVALID_ARG;
+    }
     case RecordEventResult::InvalidExtraKey:
       LogToBrowserConsole(nsIScriptError::warningFlag,
                           NS_LITERAL_STRING("Invalid extra key for event."));
