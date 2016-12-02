@@ -338,10 +338,11 @@ class FennecInstance(GeckoInstance):
         else:
             logcat_args["logfile"] = self.gecko_log
         self.runner.device.start_logcat(**logcat_args)
-        self.runner.device.setup_port_forwarding(
-            local_port=self.marionette_port,
-            remote_port=self.marionette_port,
-        )
+
+        # forward marionette port (localhost:2828)
+        self.runner.device.dm.forward(
+            local="tcp:{}".format(self.marionette_port),
+            remote="tcp:{}".format(self.marionette_port))
 
     def _get_runner_args(self):
         process_args = {
@@ -369,8 +370,7 @@ class FennecInstance(GeckoInstance):
         super(FennecInstance, self).close(restart)
         if self.runner and self.runner.device.connected:
             self.runner.device.dm.remove_forward(
-                "tcp:{}".format(int(self.marionette_port))
-            )
+                "tcp:{}".format(self.marionette_port))
 
 
 class DesktopInstance(GeckoInstance):
