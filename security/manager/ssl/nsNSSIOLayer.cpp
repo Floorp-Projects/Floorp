@@ -2478,6 +2478,14 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
+  if ((infoObject->GetProviderFlags() & nsISocketProvider::BE_CONSERVATIVE) &&
+      (range.max > SSL_LIBRARY_VERSION_TLS_1_2)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("[%p] nsSSLIOLayerSetOptions: range.max limited to 1.2 due to BE_CONSERVATIVE flag\n",
+             fd));
+    range.max = SSL_LIBRARY_VERSION_TLS_1_2;
+  }
+
   uint16_t maxEnabledVersion = range.max;
   StrongCipherStatus strongCiphersStatus = StrongCipherStatusUnknown;
   infoObject->SharedState().IOLayerHelpers()
@@ -2562,6 +2570,9 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   }
   if (flags & nsISocketProvider::MITM_OK) {
     peerId.AppendLiteral("bypassAuth:");
+  }
+  if (flags & nsISocketProvider::BE_CONSERVATIVE) {
+    peerId.AppendLiteral("beConservative:");
   }
   peerId.Append(host);
   peerId.Append(':');
