@@ -27,7 +27,7 @@
 #define kMinUnwrittenChanges   300
 #define kMinDumpInterval       20000 // in milliseconds
 #define kMaxBufSize            16384
-#define kIndexVersion          0x00000002
+#define kIndexVersion          0x00000003
 #define kUpdateIndexStartDelay 50000 // in milliseconds
 
 #define INDEX_NAME      "index"
@@ -1649,13 +1649,18 @@ CacheIndex::WriteIndexToDisk()
   AllocBuffer();
   mRWHash = new CacheHash();
 
-  CacheIndexHeader *hdr = reinterpret_cast<CacheIndexHeader *>(mRWBuf);
-  NetworkEndian::writeUint32(&hdr->mVersion, kIndexVersion);
-  NetworkEndian::writeUint32(&hdr->mTimeStamp,
+  mRWBufPos = 0;
+  // index version
+  NetworkEndian::writeUint32(mRWBuf + mRWBufPos, kIndexVersion);
+  mRWBufPos += sizeof(uint32_t);
+  // timestamp
+  NetworkEndian::writeUint32(mRWBuf + mRWBufPos,
                              static_cast<uint32_t>(PR_Now() / PR_USEC_PER_SEC));
-  NetworkEndian::writeUint32(&hdr->mIsDirty, 1);
+  mRWBufPos += sizeof(uint32_t);
+  // dirty flag
+  NetworkEndian::writeUint32(mRWBuf + mRWBufPos, 1);
+  mRWBufPos += sizeof(uint32_t);
 
-  mRWBufPos = sizeof(CacheIndexHeader);
   mSkipEntries = 0;
 }
 
@@ -2010,24 +2015,19 @@ CacheIndex::WriteLogToDisk()
   rv = indexFile->OpenNSPRFileDesc(PR_RDWR, 0600, &fd);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CacheIndexHeader header;
-  int32_t bytesRead = PR_Read(fd, &header, sizeof(CacheIndexHeader));
-  if (bytesRead != sizeof(CacheIndexHeader)) {
-    PR_Close(fd);
-    return NS_ERROR_FAILURE;
-  }
-
-  NetworkEndian::writeUint32(&header.mIsDirty, 0);
-
-  int64_t offset = PR_Seek64(fd, 0, PR_SEEK_SET);
+  // Seek to dirty flag in the index header and clear it.
+  static_assert(2 * sizeof(uint32_t) == offsetof(CacheIndexHeader, mIsDirty),
+                "Unexpected offset of CacheIndexHeader::mIsDirty");
+  int64_t offset = PR_Seek64(fd, 2 * sizeof(uint32_t), PR_SEEK_SET);
   if (offset == -1) {
     PR_Close(fd);
     return NS_ERROR_FAILURE;
   }
 
-  int32_t bytesWritten = PR_Write(fd, &header, sizeof(CacheIndexHeader));
+  uint32_t isDirty = 0;
+  int32_t bytesWritten = PR_Write(fd, &isDirty, sizeof(isDirty));
   PR_Close(fd);
-  if (bytesWritten != sizeof(CacheIndexHeader)) {
+  if (bytesWritten != sizeof(isDirty)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2140,41 +2140,37 @@ CacheIndex::ParseRecords()
   uint32_t pos = 0;
 
   if (!mSkipEntries) {
-    CacheIndexHeader *hdr = reinterpret_cast<CacheIndexHeader *>(
-                              moz_xmalloc(sizeof(CacheIndexHeader)));
-    memcpy(hdr, mRWBuf, sizeof(CacheIndexHeader));
-
-    if (NetworkEndian::readUint32(&hdr->mVersion) != kIndexVersion) {
-      free(hdr);
+    if (NetworkEndian::readUint32(mRWBuf + pos) != kIndexVersion) {
       FinishRead(false);
       return;
     }
+    pos += sizeof(uint32_t);
 
-    mIndexTimeStamp = NetworkEndian::readUint32(&hdr->mTimeStamp);
+    mIndexTimeStamp = NetworkEndian::readUint32(mRWBuf + pos);
+    pos += sizeof(uint32_t);
 
-    if (NetworkEndian::readUint32(&hdr->mIsDirty)) {
+    if (NetworkEndian::readUint32(mRWBuf + pos)) {
       if (mJournalHandle) {
         CacheFileIOManager::DoomFile(mJournalHandle, nullptr);
         mJournalHandle = nullptr;
       }
-      free(hdr);
     } else {
-      NetworkEndian::writeUint32(&hdr->mIsDirty, 1);
+      uint32_t * isDirty = reinterpret_cast<uint32_t *>(
+                             moz_xmalloc(sizeof(uint32_t)));
+      NetworkEndian::writeUint32(isDirty, 1);
 
       // Mark index dirty. The buffer is freed by CacheFileIOManager when
       // nullptr is passed as the listener and the call doesn't fail
       // synchronously.
-      rv = CacheFileIOManager::Write(mIndexHandle, 0,
-                                     reinterpret_cast<char *>(hdr),
-                                     sizeof(CacheIndexHeader), true, false,
-                                     nullptr);
+      rv = CacheFileIOManager::Write(mIndexHandle, 2 * sizeof(uint32_t),
+                                     reinterpret_cast<char *>(isDirty),
+                                     sizeof(uint32_t), true, false, nullptr);
       if (NS_FAILED(rv)) {
         // This is not fatal, just free the memory
-        free(hdr);
+        free(isDirty);
       }
     }
-
-    pos += sizeof(CacheIndexHeader);
+    pos += sizeof(uint32_t);
   }
 
   uint32_t hashOffset = pos;
@@ -2314,8 +2310,7 @@ CacheIndex::ParseJournal()
 
   while (pos + sizeof(CacheIndexRecord) <= mRWBufPos &&
          mSkipEntries != entryCnt) {
-    CacheIndexRecord *rec = reinterpret_cast<CacheIndexRecord *>(mRWBuf + pos);
-    CacheIndexEntry tmpEntry(&rec->mHash);
+    CacheIndexEntry tmpEntry(reinterpret_cast<SHA1Sum::Hash *>(mRWBuf + pos));
     tmpEntry.ReadFromBuf(mRWBuf + pos);
 
     CacheIndexEntry *entry = mTmpJournal.PutEntry(*tmpEntry.Hash());
