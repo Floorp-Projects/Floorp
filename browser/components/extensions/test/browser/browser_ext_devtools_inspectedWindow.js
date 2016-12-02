@@ -15,6 +15,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
  *   in the background page using the tabs API namespace.
  * - devtools API is available in the devtools page sub-frames when a valid
  *   extension URL has been loaded.
+ * - devtools.inspectedWindow.eval:
+ *   - returns a serialized version of the evaluation result.
+ *   - returns the expected error object when the return value serialization raises a
+ *     "TypeError: cyclic object value" exception.
+ *   - returns the expected exception when an exception has been raised from the evaluated
+ *     javascript code.
  */
 add_task(function* test_devtools_inspectedWindow_tabId() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
@@ -99,6 +105,128 @@ add_task(function* test_devtools_inspectedWindow_tabId() {
 
   is(devtoolsPageIframeTabId, backgroundPageCurrentTabId,
      "Got the expected tabId from devtool.inspectedWindow.tabId called in a devtool_page iframe");
+
+  yield gDevTools.closeToolbox(target);
+
+  yield target.destroy();
+
+  yield extension.unload();
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+add_task(function* test_devtools_inspectedWindow_eval() {
+  const TEST_TARGET_URL = "http://mochi.test:8888/";
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
+
+  function devtools_page() {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      if (msg !== "inspectedWindow-eval-request") {
+        browser.test.fail(`Unexpected test message received: ${msg}`);
+        return;
+      }
+
+      try {
+        const [evalResult, errorResult] = await browser.devtools.inspectedWindow.eval(...args);
+        browser.test.sendMessage("inspectedWindow-eval-result", {
+          evalResult,
+          errorResult,
+        });
+      } catch (err) {
+        browser.test.sendMessage("inspectedWindow-eval-result");
+        browser.test.fail(`Error: ${err} :: ${err.stack}`);
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      devtools_page: "devtools_page.html",
+    },
+    files: {
+      "devtools_page.html": `<!DOCTYPE html>
+      <html>
+       <head>
+         <meta charset="utf-8">
+         <script text="text/javascript" src="devtools_page.js"></script>
+       </head>
+       <body>
+       </body>
+      </html>`,
+      "devtools_page.js": devtools_page,
+    },
+  });
+
+  yield extension.startup();
+
+  let target = devtools.TargetFactory.forTab(tab);
+
+  yield gDevTools.showToolbox(target, "webconsole");
+  info("developer toolbox opened");
+
+  const evalTestCases = [
+    // Successful evaluation results.
+    {
+      args: ["window.location.href"],
+      expectedResults: {evalResult: TEST_TARGET_URL, errorResult: undefined},
+    },
+
+    // Error evaluation results.
+    {
+      args: ["window"],
+      expectedResults: {
+        evalResult: undefined,
+        errorResult: {
+          isError: true,
+          code: "E_PROTOCOLERROR",
+          description: "Inspector protocol error: %s",
+          details: [
+            "TypeError: cyclic object value",
+          ],
+        },
+      },
+    },
+
+    // Exception evaluation results.
+    {
+      args: ["throw new Error('fake eval exception');"],
+      expectedResults: {
+        evalResult: undefined,
+        errorResult: {
+          isException: true,
+          value: /Error: fake eval exception\n.*moz-extension:\/\//,
+        },
+      },
+
+    },
+  ];
+
+  for (let testCase of evalTestCases) {
+    info(`test inspectedWindow.eval with ${JSON.stringify(testCase)}`);
+
+    const {args, expectedResults} = testCase;
+
+    extension.sendMessage(`inspectedWindow-eval-request`, ...args);
+
+    const {evalResult, errorResult} = yield extension.awaitMessage(`inspectedWindow-eval-result`);
+
+    Assert.deepEqual(evalResult, expectedResults.evalResult, "Got the expected eval result");
+
+    if (errorResult) {
+      for (const errorPropName of Object.keys(expectedResults.errorResult)) {
+        const expected = expectedResults.errorResult[errorPropName];
+        const actual = errorResult[errorPropName];
+
+        if (expected instanceof RegExp) {
+          ok(expected.test(actual),
+             `Got exceptionInfo.${errorPropName} value ${actual} matches ${expected}`);
+        } else {
+          Assert.deepEqual(actual, expected,
+                           `Got the expected exceptionInfo.${errorPropName} value`);
+        }
+      }
+    }
+  }
 
   yield gDevTools.closeToolbox(target);
 
