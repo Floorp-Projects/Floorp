@@ -279,7 +279,7 @@ async function scheduleFuzzing() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz --ubsan"
     ],
     artifacts: {
       public: {

@@ -235,6 +235,26 @@ dtls_RetransmitDetected(sslSocket *ss)
     return rv;
 }
 
+static SECStatus
+dtls_HandleHandshakeMessage(sslSocket *ss, SSL3Opaque *data, PRBool last)
+{
+
+    /* At this point we are advancing our state machine, so we can free our last
+     * flight of messages. */
+    dtls_FreeHandshakeMessages(&ss->ssl3.hs.lastMessageFlight);
+    ss->ssl3.hs.recvdHighWater = -1;
+
+    /* Reset the timer to the initial value if the retry counter
+     * is 0, per Sec. 4.2.4.1 */
+    dtls_CancelTimer(ss);
+    if (ss->ssl3.hs.rtRetries == 0) {
+        ss->ssl3.hs.rtTimeoutMs = DTLS_RETRANSMIT_INITIAL_MS;
+    }
+
+    return ssl3_HandleHandshakeMessage(ss, data, ss->ssl3.hs.msg_len,
+                                       last);
+}
+
 /* Called only from ssl3_HandleRecord, for each (deciphered) DTLS record.
  * origBuf is the decrypted ssl record content and is expected to contain
  * complete handshake records
@@ -329,23 +349,10 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
             ss->ssl3.hs.msg_type = (SSL3HandshakeType)type;
             ss->ssl3.hs.msg_len = message_length;
 
-            /* At this point we are advancing our state machine, so
-             * we can free our last flight of messages */
-            dtls_FreeHandshakeMessages(&ss->ssl3.hs.lastMessageFlight);
-            ss->ssl3.hs.recvdHighWater = -1;
-            dtls_CancelTimer(ss);
-
-            /* Reset the timer to the initial value if the retry counter
-             * is 0, per Sec. 4.2.4.1 */
-            if (ss->ssl3.hs.rtRetries == 0) {
-                ss->ssl3.hs.rtTimeoutMs = DTLS_RETRANSMIT_INITIAL_MS;
-            }
-
-            rv = ssl3_HandleHandshakeMessage(ss, buf.buf, ss->ssl3.hs.msg_len,
+            rv = dtls_HandleHandshakeMessage(ss, buf.buf,
                                              buf.len == fragment_length);
             if (rv == SECFailure) {
-                /* Do not attempt to process rest of messages in this record */
-                break;
+                break; /* Discard the remainder of the record. */
             }
         } else {
             if (message_seq < ss->ssl3.hs.recvMessageSeq) {
@@ -446,24 +453,11 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 
                 /* If we have all the bytes, then we are good to go */
                 if (ss->ssl3.hs.recvdHighWater == ss->ssl3.hs.msg_len) {
-                    ss->ssl3.hs.recvdHighWater = -1;
+                    rv = dtls_HandleHandshakeMessage(ss, ss->ssl3.hs.msg_body.buf,
+                                                     buf.len == fragment_length);
 
-                    rv = ssl3_HandleHandshakeMessage(
-                        ss,
-                        ss->ssl3.hs.msg_body.buf, ss->ssl3.hs.msg_len,
-                        buf.len == fragment_length);
-                    if (rv == SECFailure)
-                        break; /* Skip rest of record */
-
-                    /* At this point we are advancing our state machine, so
-                     * we can free our last flight of messages */
-                    dtls_FreeHandshakeMessages(&ss->ssl3.hs.lastMessageFlight);
-                    dtls_CancelTimer(ss);
-
-                    /* If there have been no retries this time, reset the
-                     * timer value to the default per Section 4.2.4.1 */
-                    if (ss->ssl3.hs.rtRetries == 0) {
-                        ss->ssl3.hs.rtTimeoutMs = DTLS_RETRANSMIT_INITIAL_MS;
+                    if (rv == SECFailure) {
+                        break; /* Discard the rest of the record. */
                     }
                 }
             }

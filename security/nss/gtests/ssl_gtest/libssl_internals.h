@@ -11,6 +11,8 @@
 
 #include "prio.h"
 #include "seccomon.h"
+#include "ssl.h"
+#include "sslimpl.h"
 #include "sslt.h"
 
 SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd);
@@ -37,5 +39,13 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra);
 SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group);
+
+SECStatus SSLInt_SetCipherSpecChangeFunc(PRFileDesc *fd,
+                                         sslCipherSpecChangedFunc func,
+                                         void *arg);
+PK11SymKey *SSLInt_CipherSpecToKey(PRBool isServer, ssl3CipherSpec *spec);
+SSLCipherAlgorithm SSLInt_CipherSpecToAlgorithm(PRBool isServer,
+                                                ssl3CipherSpec *spec);
+unsigned char *SSLInt_CipherSpecToIv(PRBool isServer, ssl3CipherSpec *spec);
 
 #endif  // ndef libssl_internals_h_

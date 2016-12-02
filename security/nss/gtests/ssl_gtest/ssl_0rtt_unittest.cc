@@ -200,4 +200,82 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpnChangeBoth) {
   CheckAlpn("b");
 }
 
+// The client should abort the connection when sending a 0-rtt handshake but
+// the servers responds with a TLS 1.2 ServerHello. (no app data sent)
+TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngrade) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  server_->Set0RttEnabled(true);  // set ticket_allow_early_data
+  Connect();
+
+  SendReceive();  // Need to read so that we absorb the session tickets.
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  client_->StartConnect();
+  server_->StartConnect();
+
+  // We will send the early data xtn without sending actual early data. Thus
+  // a 1.2 server shouldn't fail until the client sends an alert because the
+  // client sends end_of_early_data only after reading the server's flight.
+  client_->Set0RttEnabled(true);
+
+  client_->Handshake();
+  server_->Handshake();
+  ASSERT_TRUE_WAIT(
+      (client_->error_code() == SSL_ERROR_RX_MALFORMED_SERVER_HELLO), 2000);
+
+  // DTLS will timeout as we bump the epoch when installing the early app data
+  // cipher suite. Thus the encrypted alert will be ignored.
+  if (mode_ == STREAM) {
+    // The client sends an encrypted alert message.
+    ASSERT_TRUE_WAIT(
+        (server_->error_code() == SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA),
+        2000);
+  }
+}
+
+// The client should abort the connection when sending a 0-rtt handshake but
+// the servers responds with a TLS 1.2 ServerHello. (with app data)
+TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngradeEarlyData) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  server_->Set0RttEnabled(true);  // set ticket_allow_early_data
+  Connect();
+
+  SendReceive();  // Need to read so that we absorb the session tickets.
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  client_->StartConnect();
+  server_->StartConnect();
+
+  // Send the early data xtn in the CH, followed by early app data. The server
+  // will fail right after sending its flight, when receiving the early data.
+  client_->Set0RttEnabled(true);
+  ZeroRttSendReceive(true, false);
+
+  client_->Handshake();
+  server_->Handshake();
+  ASSERT_TRUE_WAIT(
+      (client_->error_code() == SSL_ERROR_RX_MALFORMED_SERVER_HELLO), 2000);
+
+  // DTLS will timeout as we bump the epoch when installing the early app data
+  // cipher suite. Thus the encrypted alert will be ignored.
+  if (mode_ == STREAM) {
+    // The server sends an alert when receiving the early app data record.
+    ASSERT_TRUE_WAIT(
+        (server_->error_code() == SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA),
+        2000);
+  }
+}
+
 }  // namespace nss_test

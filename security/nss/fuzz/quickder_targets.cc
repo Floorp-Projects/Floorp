@@ -4,8 +4,8 @@
 
 #include <stdint.h>
 
+#include "asn1_mutators.h"
 #include "cert.h"
-
 #include "registry.h"
 
 void QuickDERDecode(void *dst, const SEC_ASN1Template *tpl, const uint8_t *buf,
@@ -25,7 +25,8 @@ extern "C" int cert_fuzzing_target(const uint8_t *Data, size_t Size) {
   return 0;
 }
 
-REGISTER_FUZZING_TARGET("cert", cert_fuzzing_target, 3072, "Certificate Import")
+REGISTER_FUZZING_TARGET("cert", cert_fuzzing_target, 3072, "Certificate Import",
+                        {&ASN1MutatorFlipConstructed, &ASN1MutatorChangeType})
 
 extern "C" int spki_fuzzing_target(const uint8_t *Data, size_t Size) {
   CERTSubjectPublicKeyInfo spki;
@@ -33,4 +34,5 @@ extern "C" int spki_fuzzing_target(const uint8_t *Data, size_t Size) {
   return 0;
 }
 
-REGISTER_FUZZING_TARGET("spki", spki_fuzzing_target, 1024, "SPKI Import")
+REGISTER_FUZZING_TARGET("spki", spki_fuzzing_target, 1024, "SPKI Import",
+                        {&ASN1MutatorFlipConstructed, &ASN1MutatorChangeType})
