@@ -73,7 +73,7 @@ public abstract class BrowserDB {
      */
     public abstract Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit);
 
-    public abstract CursorLoader getActivityStreamTopSites(Context context, int limit);
+    public abstract CursorLoader getActivityStreamTopSites(Context context, int suggestedRangeLimit, int limit);
 
     public abstract void updateVisitedHistory(ContentResolver cr, String uri);
 

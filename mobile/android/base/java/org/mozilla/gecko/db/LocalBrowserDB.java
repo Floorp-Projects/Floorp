@@ -1851,11 +1851,12 @@ public class LocalBrowserDB extends BrowserDB {
         }
     }
 
-    public CursorLoader getActivityStreamTopSites(Context context, int limit) {
+    public CursorLoader getActivityStreamTopSites(Context context, int suggestedRangeLimit, int limit) {
         final Uri uri = mTopSitesUriWithProfile.buildUpon()
                 .appendQueryParameter(BrowserContract.PARAM_LIMIT,
                         String.valueOf(limit))
-                .appendQueryParameter(BrowserContract.PARAM_TOPSITES_DISABLE_PINNED, Boolean.TRUE.toString())
+                .appendQueryParameter(BrowserContract.PARAM_SUGGESTEDSITES_LIMIT,
+                        String.valueOf(suggestedRangeLimit))
                 .build();
 
         return new TelemetrisedCursorLoader(context,
