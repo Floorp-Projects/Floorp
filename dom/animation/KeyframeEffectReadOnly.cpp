@@ -1316,12 +1316,6 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
   const nsIFrame* aFrame,
   AnimationPerformanceWarning::Type& aPerformanceWarning) const
 {
-  // We currently only expect this method to be called for effects whose
-  // animations are eligible for the compositor since, Animations that are
-  // paused, zero-duration, finished etc. should not block other animations from
-  // running on the compositor.
-  MOZ_ASSERT(mAnimation && mAnimation->IsPlaying());
-
   EffectSet* effectSet =
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
   for (const AnimationProperty& property : mProperties) {

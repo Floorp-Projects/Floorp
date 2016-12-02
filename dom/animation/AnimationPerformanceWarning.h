@@ -9,6 +9,9 @@
 
 #include <initializer_list>
 
+#include "mozilla/Maybe.h"
+#include "nsTArray.h"
+
 class nsXPIDLString;
 
 namespace mozilla {

@@ -9,6 +9,7 @@
 
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
@@ -35,7 +36,7 @@
 struct JSContext;
 class nsCSSPropertyIDSet;
 class nsIDocument;
-class nsPresContext;
+class nsIFrame;
 
 namespace mozilla {
 
@@ -280,6 +281,11 @@ public:
            (PlayState() == AnimationPlayState::Running ||
             mPendingState == PendingState::PlayPending);
   }
+
+  bool ShouldBeSynchronizedWithMainThread(
+    nsCSSPropertyID aProperty,
+    const nsIFrame* aFrame,
+    AnimationPerformanceWarning::Type& aPerformanceWarning) const;
 
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();

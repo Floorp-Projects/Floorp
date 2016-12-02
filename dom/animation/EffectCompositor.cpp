@@ -85,19 +85,15 @@ IsMatchForCompositor(const KeyframeEffectReadOnly& aEffect,
     return MatchForCompositor::No;
   }
 
-  bool isPlaying = animation->IsPlaying();
-
-  // If we are finding animations for transform, check if there are other
-  // animations that should block the transform animation. e.g. geometric
-  // properties' animation. This check should be done regardless of whether
-  // the effect has the target property |aProperty| or not.
   AnimationPerformanceWarning::Type warningType;
-  if (aProperty == eCSSProperty_transform &&
-      isPlaying &&
-      aEffect.ShouldBlockAsyncTransformAnimations(aFrame, warningType)) {
+  if (animation->ShouldBeSynchronizedWithMainThread(aProperty, aFrame,
+                                                    warningType)) {
     EffectCompositor::SetPerformanceWarning(
       aFrame, aProperty,
       AnimationPerformanceWarning(warningType));
+    // For a given |aFrame|, we don't want some animations of |aProperty| to
+    // run on the compositor and others to run on the main thread, so if any
+    // need to be synchronized with the main thread, run them all there.
     return MatchForCompositor::NoAndBlockThisProperty;
   }
 
@@ -105,7 +101,9 @@ IsMatchForCompositor(const KeyframeEffectReadOnly& aEffect,
     return MatchForCompositor::No;
   }
 
-  return isPlaying ? MatchForCompositor::Yes : MatchForCompositor::IfNeeded;
+  return animation->IsPlaying()
+         ? MatchForCompositor::Yes
+         : MatchForCompositor::IfNeeded;
 }
 
 // Helper function to factor out the common logic from
@@ -190,6 +188,9 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
       IsMatchForCompositor(*effect, aProperty, aFrame);
 
     if (matchResult == MatchForCompositor::NoAndBlockThisProperty) {
+      // For a given |aFrame|, we don't want some animations of |aProperty| to
+      // run on the compositor and others to run on the main thread, so if any
+      // need to be synchronized with the main thread, run them all there.
       if (aMatches) {
         aMatches->Clear();
       }
