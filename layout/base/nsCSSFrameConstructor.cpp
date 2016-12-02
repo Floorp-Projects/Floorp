@@ -340,6 +340,20 @@ IsFlexOrGridContainer(const nsIFrame* aFrame)
          t == nsGkAtoms::gridContainerFrame;
 }
 
+// Returns true IFF the given nsIFrame is a nsFlexContainerFrame and
+// represents a -webkit-{inline-}box container. The frame's GetType() result is
+// passed as a separate argument, since in most cases, the caller will have
+// looked it up already, and we'd rather not make redundant calls to the
+// virtual GetType() method.
+static inline bool
+IsFlexContainerForLegacyBox(const nsIFrame* aFrame,
+                            const nsIAtom* aFrameType)
+{
+  MOZ_ASSERT(aFrame->GetType() == aFrameType, "wrong aFrameType was passed");
+  return aFrameType == nsGkAtoms::flexContainerFrame &&
+    aFrame->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
+}
+
 #if DEBUG
 static void
 AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
@@ -9921,13 +9935,17 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  if (aItems.IsEmpty() ||
-      !::IsFlexOrGridContainer(aParentFrame)) {
+  if (aItems.IsEmpty()) {
+    return;
+  }
+  const nsIAtom* parentType = aParentFrame->GetType();
+  if (parentType != nsGkAtoms::flexContainerFrame &&
+      parentType != nsGkAtoms::gridContainerFrame) {
     return;
   }
 
-  const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(aParentFrame);
-
+  const bool isWebkitBox = IsFlexContainerForLegacyBox(aParentFrame,
+                                                       parentType);
   FCItemIterator iter(aItems);
   do {
     // Advance iter past children that don't want to be wrapped
@@ -12219,12 +12237,14 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // Situation #2 is a flex or grid container frame into which we're inserting
   // new inline non-replaced children, adjacent to an existing anonymous
   // flex or grid item.
-  if (::IsFlexOrGridContainer(aFrame)) {
+  nsIAtom* frameType = aFrame->GetType();
+  if (frameType == nsGkAtoms::flexContainerFrame ||
+      frameType == nsGkAtoms::gridContainerFrame) {
     FCItemIterator iter(aItems);
 
     // Check if we're adding to-be-wrapped content right *after* an existing
     // anonymous flex or grid item (which would need to absorb this content).
-    const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(aFrame);
+    const bool isWebkitBox = IsFlexContainerForLegacyBox(aFrame, frameType);
     if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
         iter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox)) {
       RecreateFramesForContent(aFrame->GetContent(), true,
@@ -12264,7 +12284,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // Skip over things that _do_ need an anonymous flex item, because
     // they're perfectly happy to go here -- they won't cause a reframe.
     nsIFrame* containerFrame = aFrame->GetParent();
-    const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(containerFrame);
+    const bool isWebkitBox =
+      IsFlexContainerForLegacyBox(containerFrame, containerFrame->GetType());
     if (!iter.SkipItemsThatNeedAnonFlexOrGridItem(aState,
                                                   isWebkitBox)) {
       // We hit something that _doesn't_ need an anonymous flex item!
@@ -12288,7 +12309,6 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   //    their sibling changes.
   // 2) The first effective child of a ruby frame must always be a ruby
   //    base container. It should be created or destroyed accordingly.
-  nsIAtom* frameType = aFrame->GetType();
   if (IsRubyPseudo(aFrame) ||
       frameType == nsGkAtoms::rubyFrame ||
       RubyUtils::IsRubyContainerBox(frameType)) {
