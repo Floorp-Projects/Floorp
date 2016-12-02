@@ -37,11 +37,11 @@ public:
                          nsDisplayList* aBackground, nsDisplayList* aForeground);
 
 
-  DrawResult PaintOutlineAndFocusBorders(nsDisplayListBuilder* aBuilder,
-                                         nsPresContext* aPresContext,
-                                         nsRenderingContext& aRenderingContext,
-                                         const nsRect& aDirtyRect,
-                                         const nsRect& aRect);
+  DrawResult PaintInnerFocusBorder(nsDisplayListBuilder* aBuilder,
+                                   nsPresContext* aPresContext,
+                                   nsRenderingContext& aRenderingContext,
+                                   const nsRect& aDirtyRect,
+                                   const nsRect& aRect);
 
   DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
                          nsPresContext* aPresContext,
@@ -58,10 +58,6 @@ public:
 
   void GetButtonRect(const nsRect& aRect, nsRect& aResult);
   void GetButtonInnerFocusRect(const nsRect& aRect, nsRect& aResult);
-  nsMargin GetButtonBorderAndPadding();
-  nsMargin GetButtonInnerFocusMargin();
-  nsMargin GetButtonInnerFocusBorderAndPadding();
-  nsMargin GetAddedButtonBorderAndPadding();
 
   nsStyleContext* GetStyleContext(int32_t aIndex) const;
   void SetStyleContext(int32_t aIndex, nsStyleContext* aStyleContext);
@@ -73,7 +69,7 @@ protected:
 
 private:
 
-  // cached style for focus and outline (used on Windows).
+  // cached style for optional inner focus outline (used on Windows).
   RefPtr<nsStyleContext> mInnerFocusStyle;
 
   nsFrame* mFrame;
