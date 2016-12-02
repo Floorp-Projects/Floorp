@@ -139,15 +139,11 @@ function readFile(file) {
 function addCertFromFile(certdb, filename, trustString) {
   let certFile = do_get_file(filename, false);
   let certBytes = readFile(certFile);
-  let successful = false;
   try {
-    certdb.addCert(certBytes, trustString, null);
-    successful = true;
+    return certdb.addCert(certBytes, trustString);
   } catch (e) {}
-  if (!successful) {
-    // It might be PEM instead of DER.
-    certdb.addCertFromBase64(pemToBase64(certBytes), trustString, null);
-  }
+  // It might be PEM instead of DER.
+  return certdb.addCertFromBase64(pemToBase64(certBytes), trustString);
 }
 
 function constructCertFromFile(filename) {
