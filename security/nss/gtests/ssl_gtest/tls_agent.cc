@@ -849,6 +849,7 @@ void TlsAgent::ConfigureSessionCache(SessionResumptionMode mode) {
 }
 
 void TlsAgent::DisableECDHEServerKeyReuse() {
+  ASSERT_TRUE(EnsureTlsSetup());
   ASSERT_EQ(TlsAgent::SERVER, role_);
   SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
   EXPECT_EQ(SECSuccess, rv);

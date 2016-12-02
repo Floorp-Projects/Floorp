@@ -339,7 +339,7 @@ function onFilesOpened(message) {
   } catch(e) {
     abortThrew = true;
   }
-  is(abortThrew, true, "abort() must throw if not loading");
+  is(abortThrew, false, "abort() doesn't throw");
   is(abortHasRun, false, "abort() is a no-op unless loading");
   r.readAsText(asciiFile);
   r.abort();
@@ -364,7 +364,7 @@ function onFilesOpened(message) {
   } catch(e) {
     abortThrew = true;
   }
-  is(abortThrew, true, "abort() must throw if not loading");
+  is(abortThrew, false, "abort() should not throw");
   is(reuseAbortHasRun, false, "abort() is a no-op unless loading");
   r.readAsText(asciiFile);
 

@@ -21,7 +21,6 @@ interface FileReader : EventTarget {
   [Throws]
   void readAsDataURL(Blob blob);
 
-  [Throws]
   void abort();
 
   // states
