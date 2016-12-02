@@ -102,6 +102,7 @@ WebRenderCanvasLayer::RenderLayer()
     transform.PreTranslate(0, size.height, 0).PreScale(1, -1, 1);
   }
   gfx::Rect rect(0, 0, size.width, size.height);
+  rect = RelativeToTransformedVisible(GetTransform().TransformBounds(rect));
 
   gfx::Rect clip;
   if (GetClipRect().isSome()) {
