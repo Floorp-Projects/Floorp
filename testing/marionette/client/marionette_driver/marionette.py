@@ -570,6 +570,7 @@ class Marionette(object):
         self.host = host
         self.port = self.local_port = int(port)
         self.bin = bin
+        self.client = None
         self.instance = None
         self.session = None
         self.session_id = None
@@ -1301,7 +1302,9 @@ class Marionette(object):
                 self.session_id = None
             self.session = None
             self.window = None
-            self.client.close()
+
+            if self.client is not None:
+                self.client.close()
 
     @property
     def session_capabilities(self):
