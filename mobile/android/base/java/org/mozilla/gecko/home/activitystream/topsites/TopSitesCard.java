@@ -5,6 +5,7 @@
 package org.mozilla.gecko.home.activitystream.topsites;
 
 import android.graphics.Color;
+import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -15,6 +16,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.icons.IconCallback;
@@ -79,6 +81,10 @@ class TopSitesCard extends RecyclerView.ViewHolder
                 .skipNetwork()
                 .build()
                 .execute(this);
+
+        final int pinResourceId = (topSite.type == BrowserContract.TopSites.TYPE_PINNED ?
+                R.drawable.pin : 0);
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(title, pinResourceId, 0, 0, 0);
     }
 
     @Override
