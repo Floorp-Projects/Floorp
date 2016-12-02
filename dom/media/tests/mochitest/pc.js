@@ -1451,7 +1451,10 @@ PeerConnectionWrapper.prototype = {
   waitForMediaFlow : function() {
     return Promise.all([].concat(
       this.localMediaElements.map(element => this.waitForMediaElementFlow(element)),
-      this.remoteMediaElements.map(element => this.waitForMediaElementFlow(element)),
+      Object.keys(this.expectedRemoteTrackInfoById)
+          .map(id => this.remoteMediaElements
+              .find(e => e.srcObject.getTracks().some(t => t.id == id)))
+          .map(e => this.waitForMediaElementFlow(e)),
       this._pc.getSenders().map(sender => this.waitForRtpFlow(sender.track)),
       this._pc.getReceivers().map(receiver => this.waitForRtpFlow(receiver.track))));
   },
