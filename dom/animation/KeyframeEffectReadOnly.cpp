@@ -1255,10 +1255,21 @@ KeyframeEffectReadOnly::GetPresContext() const
 KeyframeEffectReadOnly::IsGeometricProperty(
   const nsCSSPropertyID aProperty)
 {
+  MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
+             "Property should be a longhand property");
+
   switch (aProperty) {
     case eCSSProperty_bottom:
     case eCSSProperty_height:
     case eCSSProperty_left:
+    case eCSSProperty_margin_bottom:
+    case eCSSProperty_margin_left:
+    case eCSSProperty_margin_right:
+    case eCSSProperty_margin_top:
+    case eCSSProperty_padding_bottom:
+    case eCSSProperty_padding_left:
+    case eCSSProperty_padding_right:
+    case eCSSProperty_padding_top:
     case eCSSProperty_right:
     case eCSSProperty_top:
     case eCSSProperty_width:
