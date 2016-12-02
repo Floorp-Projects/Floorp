@@ -61,11 +61,15 @@ def Library(name):
 
 
 @template
-def RustLibrary(name):
+def RustLibrary(name, features=None):
     '''Template for Rust libraries.'''
     Library(name)
 
+    if not features:
+        features = []
+
     IS_RUST_LIBRARY = True
+    RUST_LIBRARY_FEATURES = features
 
 
 @template

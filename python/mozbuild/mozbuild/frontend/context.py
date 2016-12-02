@@ -952,6 +952,13 @@ VARIABLES = {
         a Cargo.toml file that exists in this moz.build's directory.
         """),
 
+    'RUST_LIBRARY_FEATURES': (List, list,
+        """Cargo features to activate for this library.
+
+        This variable should not be used directly; you should be using the
+        RustLibrary template instead.
+        """),
+
     'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files that can be compiled together.
 
