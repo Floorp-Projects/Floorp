@@ -338,4 +338,10 @@ def nsis_binary_type(nsis):
 
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
-# Please do not add anything after the include of old.configure.
+
+@imports('__sandbox__')
+def all_paths():
+    return __sandbox__._all_paths
+
+set_config('ALL_CONFIGURE_PATHS', all_paths())
+# Please do not add anything after setting ALL_CONFIGURE_PATHS.
