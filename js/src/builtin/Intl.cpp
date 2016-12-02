@@ -3044,21 +3044,22 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
+
+    RootedString str(cx);
+
     // 1. Assert: locale is a string.
-    MOZ_ASSERT(args[0].isString());
+    str = args[0].toString();
+    JSAutoByteString locale;
+    if (!locale.encodeUtf8(cx, str))
+        return false;
+
     // 2. Assert: style is a string.
-    MOZ_ASSERT(args[1].isString());
+    str = args[1].toString();
+    JSAutoByteString style;
+    if (!style.encodeUtf8(cx, str))
+        return false;
+
     // 3. Assert: keys is an Array.
-    MOZ_ASSERT(args[2].isObject());
-
-    JSAutoByteString locale(cx, args[0].toString());
-    if (!locale)
-        return false;
-
-    JSAutoByteString style(cx, args[1].toString());
-    if (!style)
-        return false;
-
     RootedArrayObject keys(cx, &args[2].toObject().as<ArrayObject>());
     if (!keys)
         return false;
