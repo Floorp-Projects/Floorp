@@ -63,7 +63,7 @@ ChildProcess()
   if (IsChildProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
     if (!cpc)
-      NS_RUNTIMEABORT("Content Process is nullptr!");
+      MOZ_CRASH("Content Process is nullptr!");
     return cpc;
   }
 

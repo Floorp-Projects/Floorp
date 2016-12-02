@@ -718,7 +718,7 @@ public:
     mCallback->SetResult(aResult);
     nsresult rv = mWorkerPrivate->DispatchToMainThread(mCallback);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      NS_RUNTIMEABORT("Failed to dispatch life cycle event handler.");
+      MOZ_CRASH("Failed to dispatch life cycle event handler.");
     }
 
     ReleaseWorker();

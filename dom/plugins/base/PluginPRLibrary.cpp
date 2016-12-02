@@ -319,7 +319,7 @@ PluginPRLibrary::BeginUpdateBackground(NPP instance, const nsIntRect&,
 nsresult
 PluginPRLibrary::EndUpdateBackground(NPP instance, const nsIntRect&)
 {
-  NS_RUNTIMEABORT("This should never be called");
+  MOZ_CRASH("This should never be called");
   return NS_ERROR_NOT_AVAILABLE;
 }
 

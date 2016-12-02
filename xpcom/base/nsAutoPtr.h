@@ -38,7 +38,7 @@ private:
     T* oldPtr = mRawPtr;
 
     if (aNewPtr && aNewPtr == oldPtr) {
-      NS_RUNTIMEABORT("Logic flaw in the caller");
+      MOZ_CRASH("Logic flaw in the caller");
     }
 
     mRawPtr = aNewPtr;

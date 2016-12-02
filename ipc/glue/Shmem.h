@@ -236,7 +236,7 @@ private:
   void AssertAligned() const
   {
     if (0 != (mSize % sizeof(T)))
-      NS_RUNTIMEABORT("shmem is not T-aligned");
+      MOZ_CRASH("shmem is not T-aligned");
   }
 
 #if !defined(DEBUG)

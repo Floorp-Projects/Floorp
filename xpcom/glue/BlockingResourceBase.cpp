@@ -216,7 +216,7 @@ BlockingResourceBase::BlockingResourceBase(
   // PR_CallOnce guaranatees that InitStatics is called in a
   // thread-safe way
   if (PR_SUCCESS != PR_CallOnce(&sCallOnce, InitStatics)) {
-    NS_RUNTIMEABORT("can't initialize blocking resource static members");
+    MOZ_CRASH("can't initialize blocking resource static members");
   }
 
   mChainPrev = 0;
@@ -251,7 +251,7 @@ BlockingResourceBase::InitStatics()
   PR_NewThreadPrivateIndex(&sResourceAcqnChainFrontTPI, 0);
   sDeadlockDetector = new DDT();
   if (!sDeadlockDetector) {
-    NS_RUNTIMEABORT("can't allocate deadlock detector");
+    MOZ_CRASH("can't allocate deadlock detector");
   }
   return PR_SUCCESS;
 }

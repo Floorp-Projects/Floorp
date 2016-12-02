@@ -44,7 +44,7 @@ TestLatencyParent::Main()
            resolution.ToSecondsSigDigits());
 
     if (mozilla::ipc::LoggingEnabled())
-        NS_RUNTIMEABORT("you really don't want to log all IPC messages during this test, trust me");
+        MOZ_CRASH("you really don't want to log all IPC messages during this test, trust me");
 
     PingPongTrial();
 }

@@ -139,7 +139,7 @@ DeviceStorageRequestChild::
     default:
     {
       DS_LOG_ERROR("unknown %u", mRequest->GetId());
-      NS_RUNTIMEABORT("not reached");
+      MOZ_CRASH("not reached");
       break;
     }
   }

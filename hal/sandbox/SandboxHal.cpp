@@ -246,19 +246,19 @@ DisableSystemTimezoneChangeNotifications()
 void
 Reboot()
 {
-  NS_RUNTIMEABORT("Reboot() can't be called from sandboxed contexts.");
+  MOZ_CRASH("Reboot() can't be called from sandboxed contexts.");
 }
 
 void
 PowerOff()
 {
-  NS_RUNTIMEABORT("PowerOff() can't be called from sandboxed contexts.");
+  MOZ_CRASH("PowerOff() can't be called from sandboxed contexts.");
 }
 
 void
 StartForceQuitWatchdog(ShutdownMode aMode, int32_t aTimeoutSecs)
 {
-  NS_RUNTIMEABORT("StartForceQuitWatchdog() can't be called from sandboxed contexts.");
+  MOZ_CRASH("StartForceQuitWatchdog() can't be called from sandboxed contexts.");
 }
 
 void
@@ -381,35 +381,35 @@ FactoryReset(FactoryResetReason& aReason)
 void
 StartDiskSpaceWatcher()
 {
-  NS_RUNTIMEABORT("StartDiskSpaceWatcher() can't be called from sandboxed contexts.");
+  MOZ_CRASH("StartDiskSpaceWatcher() can't be called from sandboxed contexts.");
 }
 
 void
 StopDiskSpaceWatcher()
 {
-  NS_RUNTIMEABORT("StopDiskSpaceWatcher() can't be called from sandboxed contexts.");
+  MOZ_CRASH("StopDiskSpaceWatcher() can't be called from sandboxed contexts.");
 }
 
 bool IsHeadphoneEventFromInputDev()
 {
-  NS_RUNTIMEABORT("IsHeadphoneEventFromInputDev() cannot be called from sandboxed contexts.");
+  MOZ_CRASH("IsHeadphoneEventFromInputDev() cannot be called from sandboxed contexts.");
   return false;
 }
 
 nsresult StartSystemService(const char* aSvcName, const char* aArgs)
 {
-  NS_RUNTIMEABORT("System services cannot be controlled from sandboxed contexts.");
+  MOZ_CRASH("System services cannot be controlled from sandboxed contexts.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void StopSystemService(const char* aSvcName)
 {
-  NS_RUNTIMEABORT("System services cannot be controlled from sandboxed contexts.");
+  MOZ_CRASH("System services cannot be controlled from sandboxed contexts.");
 }
 
 bool SystemServiceIsRunning(const char* aSvcName)
 {
-  NS_RUNTIMEABORT("System services cannot be controlled from sandboxed contexts.");
+  MOZ_CRASH("System services cannot be controlled from sandboxed contexts.");
   return false;
 }
 

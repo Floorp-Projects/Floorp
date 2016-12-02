@@ -1986,7 +1986,7 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
       NS_ENSURE_SUCCESS(rv, rv);
       jsData.setObject(*arrayBuf);
     } else {
-      NS_RUNTIMEABORT("Unknown binary type!");
+      MOZ_CRASH("Unknown binary type!");
       return NS_ERROR_UNEXPECTED;
     }
   } else {

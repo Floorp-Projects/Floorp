@@ -1197,7 +1197,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
                             FALSE, 0)
 #endif
      ) {
-    NS_RUNTIMEABORT("cannot open handle to child process");
+    MOZ_CRASH("cannot open handle to child process");
   }
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CREATED;
@@ -1221,7 +1221,7 @@ void
 GeckoChildProcessHost::OnChannelConnected(int32_t peer_pid)
 {
   if (!OpenPrivilegedHandle(peer_pid)) {
-    NS_RUNTIMEABORT("can't open handle to child process");
+    MOZ_CRASH("can't open handle to child process");
   }
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CONNECTED;
