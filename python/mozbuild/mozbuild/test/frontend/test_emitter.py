@@ -1083,6 +1083,23 @@ class TestEmitterBasic(unittest.TestCase):
              'Cannot link multiple Rust libraries'):
             self.read_topsrcdir(reader)
 
+    def test_rust_library_features(self):
+        '''Test that RustLibrary features are correctly emitted.'''
+        reader = self.reader('rust-library-features',
+                             extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
+        objs = self.read_topsrcdir(reader)
+        self.assertEqual(len(objs), 1)
+        lib = objs[0]
+        self.assertIsInstance(lib, RustLibrary)
+        self.assertEqual(lib.features, ['musthave', 'cantlivewithout'])
+
+    def test_rust_library_duplicate_features(self):
+        '''Test that duplicate RustLibrary features are rejected.'''
+        reader = self.reader('rust-library-duplicate-features')
+        with self.assertRaisesRegexp(SandboxValidationError,
+             'features for .* should not contain duplicates'):
+            self.read_topsrcdir(reader)
+
     def test_rust_program_no_cargo_toml(self):
         '''Test that specifying RUST_PROGRAMS without a Cargo.toml fails.'''
         reader = self.reader('rust-program-no-cargo-toml')
