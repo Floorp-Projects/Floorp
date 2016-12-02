@@ -211,6 +211,10 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
   br.ReadBits(2); // reserved_zero_2bits
   aDest.level_idc = br.ReadBits(8);
   aDest.seq_parameter_set_id = br.ReadUE();
+  if (aDest.seq_parameter_set_id >= MAX_SPS_COUNT) {
+    return false;
+  }
+
   if (aDest.profile_idc == 100 || aDest.profile_idc == 110 ||
       aDest.profile_idc == 122 || aDest.profile_idc == 244 ||
       aDest.profile_idc == 44 || aDest.profile_idc == 83 ||
@@ -533,6 +537,26 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
 H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
                              SPSData& aDest)
 {
+  H264ParametersSet ps;
+  if (!DecodeSPSDataSetFromExtraData(aExtraData, ps.SPSes)) {
+    return false;
+  }
+
+  uint16_t spsId = 0;
+  if (DecodePPSDataSetFromExtraData(aExtraData, ps.SPSes, ps.PPSes)) {
+    // We can't know which PPS is in use without parsing slice header if we
+    // have multiple PPSes, so we always use the first one.
+    spsId = ps.PPSes[0].seq_parameter_set_id;
+  }
+
+  aDest = Move(ps.SPSes[spsId]);
+  return true;
+}
+
+/* static */ bool
+H264::DecodeSPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
+                                    SPSDataSet& aDest)
+{
   if (!AnnexB::HasSPS(aExtraData)) {
     return false;
   }
@@ -547,29 +571,36 @@ H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
     // No SPS.
     return false;
   }
-  NS_ASSERTION(numSps == 1, "More than one SPS in extradata");
+  NS_ASSERTION(numSps <= MAX_SPS_COUNT, "Exceed the maximum SPS counts!");
 
-  uint16_t length = reader.ReadU16();
+  for (uint32_t idx = 0; idx < numSps; idx++) {
+    uint16_t length = reader.ReadU16();
 
-  if ((reader.PeekU8() & 0x1f) != 7) {
-    // Not a SPS NAL type.
-    return false;
+    if ((reader.PeekU8() & 0x1f) != 7) {
+      // Not a SPS NAL type.
+      return false;
+    }
+    const uint8_t* ptr = reader.Read(length);
+    if (!ptr) {
+      return false;
+    }
+
+    RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
+    rawNAL->AppendElements(ptr, length);
+
+    RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
+
+    if (!sps) {
+      return false;
+    }
+
+    SPSData spsData;
+    if (!DecodeSPS(sps, spsData)) {
+      return false;
+    }
+    aDest.AppendElement(spsData);
   }
-  const uint8_t* ptr = reader.Read(length);
-  if (!ptr) {
-    return false;
-  }
-
-  RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
-  rawNAL->AppendElements(ptr, length);
-
-  RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
-
-  if (!sps) {
-    return false;
-  }
-
-  return DecodeSPS(sps, aDest);
+  return true;
 }
 
 /* static */ bool
@@ -595,8 +626,8 @@ H264::EnsureSPSIsSane(SPSData& aSPS)
 }
 
 /* static */ bool
-H264::DecodePPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
-                             const SPSData& aSPS, PPSData& aDest)
+H264::DecodePPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
+                                    const SPSDataSet& aSPSes, PPSDataSet& aDest)
 {
   if (!AnnexB::HasPPS(aExtraData)) {
     return false;
@@ -630,47 +661,67 @@ H264::DecodePPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
     // No PPs.
     return false;
   }
-  NS_ASSERTION(numPps == 1, "More than one PPS in extradata");
-  uint16_t length = reader.ReadU16();
+  NS_ASSERTION(numPps <= MAX_PPS_COUNT, "Exceed the maximum PPS counts!");
 
-  if ((reader.PeekU8() & 0x1f) != 8) {
-    // Not a PPS NAL type.
-    return false;
+  for (uint32_t idx = 0; idx < numPps; idx++) {
+    uint16_t length = reader.ReadU16();
+
+    if ((reader.PeekU8() & 0x1f) != 8) {
+      // Not a PPS NAL type.
+      return false;
+    }
+    const uint8_t* ptr = reader.Read(length);
+    if (!ptr) {
+      return false;
+    }
+
+    RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
+    rawNAL->AppendElements(ptr, length);
+
+    RefPtr<mozilla::MediaByteBuffer> pps = DecodeNALUnit(rawNAL);
+
+    if (!pps) {
+      return false;
+    }
+
+    PPSData ppsData;
+    if(DecodePPS(pps, aSPSes, ppsData)) {
+      return false;
+    }
+    aDest[ppsData.pic_parameter_set_id] = Move(ppsData);
   }
-  const uint8_t* ptr = reader.Read(length);
-  if (!ptr) {
-    return false;
-  }
-
-  RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
-  rawNAL->AppendElements(ptr, length);
-
-  RefPtr<mozilla::MediaByteBuffer> pps = DecodeNALUnit(rawNAL);
-
-  if (!pps) {
-    return false;
-  }
-
-  return DecodePPS(pps, aSPS, aDest);
+  return true;
 }
 
 /* static */ bool
-H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS,const SPSData& aSPS,
+H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS, const SPSDataSet& aSPSes,
                 PPSData& aDest)
 {
   if (!aPPS) {
     return false;
   }
 
-  memcpy(aDest.scaling_matrix4x4, aSPS.scaling_matrix4x4,
-         sizeof(aDest.scaling_matrix4x4));
-  memcpy(aDest.scaling_matrix8x8, aSPS.scaling_matrix8x8,
-         sizeof(aDest.scaling_matrix8x8));
+  if (aSPSes.IsEmpty()) {
+    return false;
+  }
 
   BitReader br(aPPS);
 
   aDest.pic_parameter_set_id = br.ReadUE();
   aDest.seq_parameter_set_id = br.ReadUE();
+
+  if (aDest.pic_parameter_set_id >= MAX_PPS_COUNT ||
+      aDest.seq_parameter_set_id >= MAX_SPS_COUNT) {
+    return false;
+  }
+
+  const SPSData& sps = aSPSes[aDest.seq_parameter_set_id];
+
+  memcpy(aDest.scaling_matrix4x4, sps.scaling_matrix4x4,
+         sizeof(aDest.scaling_matrix4x4));
+  memcpy(aDest.scaling_matrix8x8, sps.scaling_matrix8x8,
+         sizeof(aDest.scaling_matrix8x8));
+
   aDest.entropy_coding_mode_flag = br.ReadBit();
   aDest.bottom_field_pic_order_in_frame_present_flag = br.ReadBit();
   aDest.num_slice_groups_minus1 = br.ReadUE();
@@ -729,7 +780,7 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS,const SPSData& aSPS,
   if (br.BitsLeft()) {
     aDest.transform_8x8_mode_flag = br.ReadBit();
     if (br.ReadBit()) { // pic_scaling_matrix_present_flag
-      if (aSPS.seq_scaling_matrix_present_flag) {
+      if (sps.seq_scaling_matrix_present_flag) {
         scaling_list(br, aDest.scaling_matrix4x4[0], Default_4x4_Intra);
         scaling_list(br, aDest.scaling_matrix4x4[1], Default_4x4_Intra,
                      aDest.scaling_matrix4x4[0]);
@@ -751,7 +802,7 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS,const SPSData& aSPS,
       scaling_list(br, aDest.scaling_matrix4x4[5], Default_4x4_Inter,
                    aDest.scaling_matrix4x4[4]);
       if (aDest.transform_8x8_mode_flag) {
-        if (aSPS.seq_scaling_matrix_present_flag) {
+        if (sps.seq_scaling_matrix_present_flag) {
           scaling_list(br, aDest.scaling_matrix8x8[0], Default_8x8_Intra);
           scaling_list(br, aDest.scaling_matrix8x8[1], Default_8x8_Inter);
         } else {
@@ -760,7 +811,7 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS,const SPSData& aSPS,
           scaling_list(br, aDest.scaling_matrix8x8[1], Default_8x8_Inter,
                        Default_8x8_Inter);
         }
-        if (aSPS.chroma_format_idc == 3) {
+        if (sps.chroma_format_idc == 3) {
           scaling_list(br, aDest.scaling_matrix8x8[2], Default_8x8_Intra,
                        aDest.scaling_matrix8x8[0]);
           scaling_list(br, aDest.scaling_matrix8x8[3], Default_8x8_Inter,
@@ -775,6 +826,14 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS,const SPSData& aSPS,
     aDest.second_chroma_qp_index_offset = br.ReadSE();
   }
   return true;
+}
+
+/* static */ bool
+H264::DecodeParametersSet(const mozilla::MediaByteBuffer* aExtraData,
+                         H264ParametersSet& aDest)
+{
+  return DecodeSPSDataSetFromExtraData(aExtraData, aDest.SPSes) &&
+         DecodePPSDataSetFromExtraData(aExtraData, aDest.SPSes, aDest.PPSes);
 }
 
 /* static */ uint32_t
