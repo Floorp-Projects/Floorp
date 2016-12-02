@@ -87,11 +87,11 @@ static_assert(kEventCount < kExpiredEventId, "Should not overflow.");
 // This is the hard upper limit on the number of event records we keep in storage.
 // If we cross this limit, we will drop any further event recording until elements
 // are removed from storage.
-const uint32_t kMaxEventRecords = 10000;
+const uint32_t kMaxEventRecords = 1000;
 // Maximum length of any passed value string, in UTF8 byte sequence length.
-const uint32_t kMaxValueByteLength = 100;
+const uint32_t kMaxValueByteLength = 80;
 // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
-const uint32_t kMaxExtraValueByteLength = 100;
+const uint32_t kMaxExtraValueByteLength = 80;
 
 typedef nsDataHashtable<nsCStringHashKey, uint32_t> EventMapType;
 typedef nsClassHashtable<nsCStringHashKey, nsCString> StringMap;

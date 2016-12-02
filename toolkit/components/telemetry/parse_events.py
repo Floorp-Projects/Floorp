@@ -9,11 +9,11 @@ import datetime
 import string
 from shared_telemetry_utils import add_expiration_postfix
 
-MAX_CATEGORY_NAME_LENGTH = 100
-MAX_METHOD_NAME_LENGTH = 40
-MAX_OBJECT_NAME_LENGTH = 40
-MAX_EXTRA_KEYS_COUNT = 20
-MAX_EXTRA_KEY_NAME_LENGTH = 20
+MAX_CATEGORY_NAME_LENGTH = 30
+MAX_METHOD_NAME_LENGTH = 20
+MAX_OBJECT_NAME_LENGTH = 20
+MAX_EXTRA_KEYS_COUNT = 10
+MAX_EXTRA_KEY_NAME_LENGTH = 15
 
 IDENTIFIER_PATTERN = r'^[a-zA-Z][a-zA-Z0-9_.]+[a-zA-Z0-9]$'
 DATE_PATTERN = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
@@ -126,8 +126,8 @@ def type_check_event_fields(category, definition):
 def string_check(category, field_name, value, min_length, max_length, regex=None):
     # Length check.
     if len(value) > max_length:
-        raise ValueError("Value for %s in %s exceeds maximum length of %d" %\
-                         (field_name, category, max_length))
+        raise ValueError("Value '%s' for %s in %s exceeds maximum length of %d" %\
+                         (value, field_name, category, max_length))
     # Regex check.
     if regex and not re.match(regex, value):
         raise ValueError, 'String value for %s in %s is not matching pattern "%s": %s' % \
