@@ -669,13 +669,19 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
           activeAnimations = true;
 
-          MOZ_ASSERT(!animation.startTime().IsNull(),
-                     "Failed to resolve start time of pending animations");
-          TimeDuration elapsedDuration =
-            (aPoint - animation.startTime()).MultDouble(animation.playbackRate());
+          MOZ_ASSERT(!animation.startTime().IsNull() ||
+                     animation.isNotPlaying(),
+                     "Failed to resolve start time of play-pending animations");
+          // If the animation is not currently playing , e.g. paused or
+          // finished, then use the hold time to stay at the same position.
+          TimeDuration elapsedDuration = animation.isNotPlaying()
+            ? animation.holdTime()
+            : (aPoint - animation.startTime())
+                .MultDouble(animation.playbackRate());
           TimingParams timing;
           timing.mDuration.emplace(animation.duration());
           timing.mDelay = animation.delay();
+          timing.mEndDelay = animation.endDelay();
           timing.mIterations = animation.iterations();
           timing.mIterationStart = animation.iterationStart();
           timing.mDirection =

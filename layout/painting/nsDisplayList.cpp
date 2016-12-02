@@ -394,10 +394,13 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   MOZ_ASSERT(aAnimation->GetEffect(),
              "Should not be adding an animation without an effect");
   MOZ_ASSERT(!aAnimation->GetCurrentOrPendingStartTime().IsNull() ||
+             !aAnimation->IsPlaying() ||
              (aAnimation->GetTimeline() &&
               aAnimation->GetTimeline()->TracksWallclockTime()),
-             "Animation should either have a resolved start time or "
-             "a timeline that tracks wallclock time");
+             "If the animation has an unresolved start time it should either"
+             " be static (so we don't need a start time) or else have a"
+             " timeline capable of converting TimeStamps (so we can calculate"
+             " one later");
   nsStyleContext* styleContext = aFrame->StyleContext();
   nsPresContext* presContext = aFrame->PresContext();
   TransformReferenceBox refBox(aFrame);
@@ -438,9 +441,10 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                            ? TimeStamp()
                            : aAnimation->GetTimeline()->
                               ToTimeStamp(startTime.Value());
-  animation->initialCurrentTime() = aAnimation->GetCurrentTime().Value()
-                                    - timing.mDelay;
+  animation->holdTime() = aAnimation->GetCurrentTime().Value();
+
   animation->delay() = timing.mDelay;
+  animation->endDelay() = timing.mEndDelay;
   animation->duration() = computedTiming.mDuration;
   animation->iterations() = computedTiming.mIterations;
   animation->iterationStart() = computedTiming.mIterationStart;
@@ -453,6 +457,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   animation->iterationComposite() =
     static_cast<uint8_t>(aAnimation->GetEffect()->
                          AsKeyframeEffect()->IterationComposite());
+  animation->isNotPlaying() = !aAnimation->IsPlaying();
 
   for (uint32_t segIdx = 0; segIdx < aProperty.mSegments.Length(); segIdx++) {
     const AnimationPropertySegment& segment = aProperty.mSegments[segIdx];
@@ -497,7 +502,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
     dom::Animation* anim = aAnimations[animIdx];
-    if (!anim->IsPlayableOnCompositor()) {
+    if (!anim->IsRelevant()) {
       continue;
     }
 

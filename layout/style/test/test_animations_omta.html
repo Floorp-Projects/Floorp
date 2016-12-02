@@ -1899,7 +1899,7 @@ addAsyncAnimTest(function *() {
   listen();
   yield waitForPaintsFlushed();
   advance_clock(0);
-  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
           "transform during backwards fill of zero-duration animation");
   advance_clock(2000); // Skip over animation
   yield waitForPaints();
@@ -1954,7 +1954,7 @@ addAsyncAnimTest(function *() {
   listen();
   yield waitForPaintsFlushed();
   advance_clock(0);
-  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
           "transform during backwards fill of infinitely repeating " +
           "zero-duration animation");
   advance_clock(2000);
