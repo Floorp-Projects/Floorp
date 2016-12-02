@@ -1313,7 +1313,6 @@ typedef struct {
   const char* pref;
   long id;
   bool enabledByDefault;
-  bool weak;
 } CipherPref;
 
 // Update the switch statement in AccumulateCipherSuite in nsNSSCallbacks.cpp
@@ -1368,31 +1367,6 @@ static const CipherPref sCipherPrefs[] = {
 
  { nullptr, 0 } // end marker
 };
-
-// Bit flags indicating what weak ciphers are enabled.
-// The bit index will correspond to the index in sCipherPrefs.
-// Wrtten by the main thread, read from any threads.
-static Atomic<uint32_t> sEnabledWeakCiphers;
-static_assert(MOZ_ARRAY_LENGTH(sCipherPrefs) - 1 <= sizeof(uint32_t) * CHAR_BIT,
-              "too many cipher suites");
-
-/*static*/ bool
-nsNSSComponent::AreAnyWeakCiphersEnabled()
-{
-  return !!sEnabledWeakCiphers;
-}
-
-/*static*/ void
-nsNSSComponent::UseWeakCiphersOnSocket(PRFileDesc* fd)
-{
-  const uint32_t enabledWeakCiphers = sEnabledWeakCiphers;
-  const CipherPref* const cp = sCipherPrefs;
-  for (size_t i = 0; cp[i].pref; ++i) {
-    if (enabledWeakCiphers & ((uint32_t)1 << i)) {
-      SSL_CipherPrefSet(fd, cp[i].id, true);
-    }
-  }
-}
 
 // This function will convert from pref values like 1, 2, ...
 // to the internal values of SSL_LIBRARY_VERSION_TLS_1_0,
@@ -1509,22 +1483,8 @@ CipherSuiteChangeObserver::Observe(nsISupports* aSubject,
       if (prefName.Equals(cp[i].pref)) {
         bool cipherEnabled = Preferences::GetBool(cp[i].pref,
                                                   cp[i].enabledByDefault);
-        if (cp[i].weak) {
-          // Weak ciphers will not be used by default even if they
-          // are enabled in prefs. They are only used on specific
-          // sockets as a part of a fallback mechanism.
-          // Only the main thread will change sEnabledWeakCiphers.
-          uint32_t enabledWeakCiphers = sEnabledWeakCiphers;
-          if (cipherEnabled) {
-            enabledWeakCiphers |= ((uint32_t)1 << i);
-          } else {
-            enabledWeakCiphers &= ~((uint32_t)1 << i);
-          }
-          sEnabledWeakCiphers = enabledWeakCiphers;
-        } else {
-          SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
-          SSL_ClearSessionCache();
-        }
+        SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
+        SSL_ClearSessionCache();
         break;
       }
     }
@@ -2449,22 +2409,12 @@ InitializeCipherSuite()
   }
 
   // Now only set SSL/TLS ciphers we knew about at compile time
-  uint32_t enabledWeakCiphers = 0;
   const CipherPref* const cp = sCipherPrefs;
   for (size_t i = 0; cp[i].pref; ++i) {
     bool cipherEnabled = Preferences::GetBool(cp[i].pref,
                                               cp[i].enabledByDefault);
-    if (cp[i].weak) {
-      // Weak ciphers are not used by default. See the comment
-      // in CipherSuiteChangeObserver::Observe for details.
-      if (cipherEnabled) {
-        enabledWeakCiphers |= ((uint32_t)1 << i);
-      }
-    } else {
-      SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
-    }
+    SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
   }
-  sEnabledWeakCiphers = enabledWeakCiphers;
 
   // Enable ciphers for PKCS#12
   SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);

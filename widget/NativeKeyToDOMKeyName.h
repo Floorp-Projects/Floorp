@@ -193,6 +193,7 @@ KEY_MAP_GTK     (Enter, GDK_Return)
 KEY_MAP_GTK     (Enter, GDK_KP_Enter)
 KEY_MAP_GTK     (Enter, GDK_ISO_Enter)
 KEY_MAP_GTK     (Enter, GDK_3270_Enter)
+KEY_MAP_ANDROID (Enter, AKEYCODE_DPAD_CENTER)
 KEY_MAP_ANDROID (Enter, AKEYCODE_ENTER)
 KEY_MAP_ANDROID (Enter, AKEYCODE_NUMPAD_ENTER)
 
@@ -281,6 +282,7 @@ KEY_MAP_ANDROID (Clear, AKEYCODE_CLEAR)
 // Copy
 KEY_MAP_WIN_CMD (Copy, APPCOMMAND_COPY)
 KEY_MAP_GTK     (Copy, GDK_Copy)
+KEY_MAP_ANDROID (Copy, AKEYCODE_COPY)
 
 // CrSel
 KEY_MAP_WIN     (CrSel, VK_CRSEL)
@@ -289,6 +291,7 @@ KEY_MAP_GTK     (CrSel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
 // Cut
 KEY_MAP_WIN_CMD (Cut, APPCOMMAND_CUT)
 KEY_MAP_GTK     (Cut, GDK_Cut)
+KEY_MAP_ANDROID (Cut, AKEYCODE_CUT)
 
 // Delete
 KEY_MAP_WIN     (Delete, VK_DELETE)
@@ -314,6 +317,7 @@ KEY_MAP_ANDROID (Insert, AKEYCODE_INSERT)
 // Paste
 KEY_MAP_WIN_CMD (Paste, APPCOMMAND_PASTE)
 KEY_MAP_GTK     (Paste, GDK_Paste)
+KEY_MAP_ANDROID (Paste, AKEYCODE_PASTE)
 
 // Redo
 KEY_MAP_WIN_CMD (Redo, APPCOMMAND_REDO)
@@ -328,7 +332,6 @@ KEY_MAP_GTK     (Undo, GDK_Undo)
  ******************************************************************************/
 // Accept
 KEY_MAP_WIN     (Accept, VK_ACCEPT)
-KEY_MAP_ANDROID (Accept, AKEYCODE_DPAD_CENTER)
 
 // Attn
 KEY_MAP_WIN_OTH (Attn, VK_ATTN) // not valid with Japanese keyboard layout
@@ -363,7 +366,7 @@ KEY_MAP_WIN     (Help, VK_HELP)
 KEY_MAP_WIN_CMD (Help, APPCOMMAND_HELP)
 KEY_MAP_COCOA   (Help, kVK_Help)
 KEY_MAP_GTK     (Help, GDK_Help)
-KEY_MAP_ANDROID (Help, AKEYCODE_ASSIST)
+KEY_MAP_ANDROID (Help, AKEYCODE_HELP)
 
 // Pause
 KEY_MAP_WIN     (Pause, VK_PAUSE)
@@ -393,9 +396,11 @@ KEY_MAP_ANDROID (ZoomOut, AKEYCODE_ZOOM_OUT)
  ******************************************************************************/
 // BrightnessDown
 KEY_MAP_GTK     (BrightnessDown, GDK_MonBrightnessDown)
+KEY_MAP_ANDROID (BrightnessDown, AKEYCODE_BRIGHTNESS_DOWN)
 
 // BrightnessUp
 KEY_MAP_GTK     (BrightnessUp, GDK_MonBrightnessUp)
+KEY_MAP_ANDROID (BrightnessUp, AKEYCODE_BRIGHTNESS_UP)
 
 // Eject
 KEY_MAP_GTK     (Eject, GDK_Eject)
@@ -426,9 +431,11 @@ KEY_MAP_WIN     (Standby, VK_SLEEP)
 KEY_MAP_GTK     (Standby, GDK_Standby)
 KEY_MAP_GTK     (Standby, GDK_Suspend)
 KEY_MAP_GTK     (Standby, GDK_Sleep)
+KEY_MAP_ANDROID (Standby, AKEYCODE_SLEEP)
 
 // WakeUp
 KEY_MAP_GTK     (WakeUp, GDK_WakeUp)
+KEY_MAP_ANDROID (WakeUp, AKEYCODE_WAKEUP)
 
 /******************************************************************************
  * IME and Composition Keys
@@ -788,6 +795,11 @@ KEY_MAP_GTK     (MailReply, GDK_Reply)
 KEY_MAP_WIN_CMD (MailSend, APPCOMMAND_SEND_MAIL)
 KEY_MAP_GTK     (MailSend, GDK_Send)
 
+// MediaFastForward
+KEY_MAP_WIN_CMD (MediaFastForward, APPCOMMAND_MEDIA_FAST_FORWARD)
+KEY_MAP_GTK     (MediaFastForward, GDK_AudioForward)
+KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
+
 // MediaPause
 KEY_MAP_WIN_CMD (MediaPause, APPCOMMAND_MEDIA_PAUSE)
 KEY_MAP_GTK     (MediaPause, GDK_AudioPause)
@@ -860,25 +872,28 @@ KEY_MAP_WIN_CMD (AudioBassBoostDown, APPCOMMAND_BASS_DOWN)
 KEY_MAP_WIN_CMD (AudioBassBoostUp, APPCOMMAND_BASS_UP)
 
 // AudioVolumeDown
-KEY_MAP_WIN               (AudioVolumeDown, VK_VOLUME_DOWN)
-KEY_MAP_WIN_CMD           (AudioVolumeDown, APPCOMMAND_VOLUME_DOWN)
-KEY_MAP_COCOA             (AudioVolumeDown, kVK_VolumeDown)
-KEY_MAP_GTK               (AudioVolumeDown, GDK_AudioLowerVolume)
-KEY_MAP_ANDROID           (AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
+KEY_MAP_WIN     (AudioVolumeDown, VK_VOLUME_DOWN)
+KEY_MAP_WIN_CMD (AudioVolumeDown, APPCOMMAND_VOLUME_DOWN)
+KEY_MAP_COCOA   (AudioVolumeDown, kVK_VolumeDown)
+KEY_MAP_GTK     (AudioVolumeDown, GDK_AudioLowerVolume)
+KEY_MAP_ANDROID (AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
 
 // AudioVolumeUp
-KEY_MAP_WIN               (AudioVolumeUp, VK_VOLUME_UP)
-KEY_MAP_WIN_CMD           (AudioVolumeUp, APPCOMMAND_VOLUME_UP)
-KEY_MAP_COCOA             (AudioVolumeUp, kVK_VolumeUp)
-KEY_MAP_GTK               (AudioVolumeUp, GDK_AudioRaiseVolume)
-KEY_MAP_ANDROID           (AudioVolumeUp, AKEYCODE_VOLUME_UP)
+KEY_MAP_WIN     (AudioVolumeUp, VK_VOLUME_UP)
+KEY_MAP_WIN_CMD (AudioVolumeUp, APPCOMMAND_VOLUME_UP)
+KEY_MAP_COCOA   (AudioVolumeUp, kVK_VolumeUp)
+KEY_MAP_GTK     (AudioVolumeUp, GDK_AudioRaiseVolume)
+KEY_MAP_ANDROID (AudioVolumeUp, AKEYCODE_VOLUME_UP)
 
 // AudioVolumeMute
-KEY_MAP_WIN               (AudioVolumeMute, VK_VOLUME_MUTE)
-KEY_MAP_WIN_CMD           (AudioVolumeMute, APPCOMMAND_VOLUME_MUTE)
-KEY_MAP_COCOA             (AudioVolumeMute, kVK_Mute)
-KEY_MAP_GTK               (AudioVolumeMute, GDK_AudioMute)
-KEY_MAP_ANDROID           (AudioVolumeMute, AKEYCODE_VOLUME_MUTE)
+KEY_MAP_WIN     (AudioVolumeMute, VK_VOLUME_MUTE)
+KEY_MAP_WIN_CMD (AudioVolumeMute, APPCOMMAND_VOLUME_MUTE)
+KEY_MAP_COCOA   (AudioVolumeMute, kVK_Mute)
+KEY_MAP_GTK     (AudioVolumeMute, GDK_AudioMute)
+KEY_MAP_ANDROID (AudioVolumeMute, AKEYCODE_VOLUME_MUTE)
+
+// MicrophoneVolumeMute
+KEY_MAP_ANDROID (MicrophoneVolumeMute, AKEYCODE_MUTE)
 
 /******************************************************************************
  * Application Keys
@@ -890,6 +905,9 @@ KEY_MAP_ANDROID (LaunchCalculator, AKEYCODE_CALCULATOR)
 // LaunchCalendar
 KEY_MAP_GTK     (LaunchCalendar, GDK_Calendar)
 KEY_MAP_ANDROID (LaunchCalendar, AKEYCODE_CALENDAR)
+
+// LaunchContacts
+KEY_MAP_ANDROID (LaunchContacts, AKEYCODE_CONTACTS)
 
 // LaunchMail
 KEY_MAP_WIN     (LaunchMail, VK_LAUNCH_MAIL)
@@ -993,7 +1011,6 @@ KEY_MAP_GTK     (LaunchApplication16, GDK_LaunchF)
 KEY_MAP_WIN     (BrowserBack, VK_BROWSER_BACK)
 KEY_MAP_WIN_CMD (BrowserBack, APPCOMMAND_BROWSER_BACKWARD)
 KEY_MAP_GTK     (BrowserBack, GDK_Back)
-KEY_MAP_ANDROID (BrowserBack, AKEYCODE_BACK)
 
 // BrowserFavorites
 KEY_MAP_WIN     (BrowserFavorites, VK_BROWSER_FAVORITES)
@@ -1031,6 +1048,9 @@ KEY_MAP_GTK     (BrowserStop, GDK_Stop)
 /******************************************************************************
  * Mobile Phone Keys
  ******************************************************************************/
+// AppSwitch
+KEY_MAP_ANDROID (AppSwitch, AKEYCODE_APP_SWITCH)
+
 // Call
 KEY_MAP_ANDROID (Call, AKEYCODE_CALL)
 
@@ -1038,11 +1058,26 @@ KEY_MAP_ANDROID (Call, AKEYCODE_CALL)
 KEY_MAP_ANDROID (Camera, AKEYCODE_CAMERA)
 
 // CameraFocus
-KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus,       AKEYCODE_FOCUS)
+KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus, AKEYCODE_FOCUS)
+
+// EndCall
+KEY_MAP_ANDROID (EndCall, AKEYCODE_ENDCALL)
+
+// GoBack
+KEY_MAP_ANDROID (GoBack, AKEYCODE_BACK)
 
 // GoHome
 KEY_MAP_ANDROID_EXCEPT_B2G(GoHome,     AKEYCODE_HOME)
 KEY_MAP_B2G               (HomeScreen, AKEYCODE_HOME)
+
+// HeadsetHook
+KEY_MAP_ANDROID (HeadsetHook, AKEYCODE_HEADSETHOOK)
+
+// Notification
+KEY_MAP_ANDROID (Notification, AKEYCODE_NOTIFICATION)
+
+// MannerMode
+KEY_MAP_ANDROID (MannerMode, AKEYCODE_MANNER_MODE)
 
 /******************************************************************************
  * TV Keys
@@ -1050,11 +1085,89 @@ KEY_MAP_B2G               (HomeScreen, AKEYCODE_HOME)
 // TV
 KEY_MAP_ANDROID (TV, AKEYCODE_TV)
 
+// TV3DMode
+KEY_MAP_ANDROID (TV3DMode, AKEYCODE_3D_MODE)
+
+// TVAntennaCable
+KEY_MAP_ANDROID (TVAntennaCable, AKEYCODE_TV_ANTENNA_CABLE)
+
+// TVAudioDescription
+KEY_MAP_ANDROID (TVAudioDescription, AKEYCODE_TV_AUDIO_DESCRIPTION)
+
+// TVAudioDescriptionMixDown
+KEY_MAP_ANDROID (TVAudioDescriptionMixDown, AKEYCODE_TV_AUDIO_DESCRIPTION_MIX_DOWN)
+
+// TVAudioDescriptionMixUp
+KEY_MAP_ANDROID (TVAudioDescriptionMixUp, AKEYCODE_TV_AUDIO_DESCRIPTION_MIX_UP)
+
+// TVContentsMenu
+KEY_MAP_ANDROID (TVContentsMenu, AKEYCODE_TV_CONTENTS_MENU)
+
+// TVDataService
+KEY_MAP_ANDROID (TVDataService, AKEYCODE_TV_DATA_SERVICE)
+
 // TVInput
 KEY_MAP_ANDROID (TVInput, AKEYCODE_TV_INPUT)
 
+// TVInputComponent1
+KEY_MAP_ANDROID (TVInputComponent1, AKEYCODE_TV_INPUT_COMPONENT_1)
+
+// TVInputComponent2
+KEY_MAP_ANDROID (TVInputComponent2, AKEYCODE_TV_INPUT_COMPONENT_2)
+
+// TVInputComposite1
+KEY_MAP_ANDROID (TVInputComposite1, AKEYCODE_TV_INPUT_COMPOSITE_1)
+
+// TVInputComposite2
+KEY_MAP_ANDROID (TVInputComposite2, AKEYCODE_TV_INPUT_COMPOSITE_2)
+
+// TVInputHDMI1
+KEY_MAP_ANDROID (TVInputHDMI1, AKEYCODE_TV_INPUT_HDMI_1)
+
+// TVInputHDMI2
+KEY_MAP_ANDROID (TVInputHDMI2, AKEYCODE_TV_INPUT_HDMI_2)
+
+// TVInputHDMI3
+KEY_MAP_ANDROID (TVInputHDMI3, AKEYCODE_TV_INPUT_HDMI_3)
+
+// TVInputHDMI4
+KEY_MAP_ANDROID (TVInputHDMI4, AKEYCODE_TV_INPUT_HDMI_4)
+
+// TVInputVGA1
+KEY_MAP_ANDROID (TVInputVGA1, AKEYCODE_TV_INPUT_VGA_1)
+
+// TVNetwork
+KEY_MAP_ANDROID (TVNetwork, AKEYCODE_TV_NETWORK)
+
+// TVNumberEntry
+KEY_MAP_ANDROID (TVNumberEntry, AKEYCODE_TV_NUMBER_ENTRY)
+
 // TVPower
 KEY_MAP_ANDROID (TVPower, AKEYCODE_TV_POWER)
+
+// TVRadioService
+KEY_MAP_ANDROID (TVRadioService, AKEYCODE_TV_RADIO_SERVICE)
+
+// TVSatellite
+KEY_MAP_ANDROID (TVSatellite, AKEYCODE_TV_SATELLITE)
+
+// TVSatelliteBS
+KEY_MAP_ANDROID (TVSatelliteBS, AKEYCODE_TV_SATELLITE_BS)
+
+// TVSatelliteCS
+KEY_MAP_ANDROID (TVSatelliteCS, AKEYCODE_TV_SATELLITE_CS)
+
+// TVSatelliteToggle
+KEY_MAP_ANDROID (TVSatelliteToggle, AKEYCODE_TV_SATELLITE_SERVICE)
+
+// TVTerrestrialAnalog
+KEY_MAP_ANDROID (TVTerrestrialAnalog, AKEYCODE_TV_TERRESTRIAL_ANALOG)
+
+// TVTerrestrialDigital
+KEY_MAP_ANDROID (TVTerrestrialDigital, AKEYCODE_TV_TERRESTRIAL_DIGITAL)
+
+// TVTimer
+KEY_MAP_ANDROID (TVTimer, AKEYCODE_TV_TIMER_PROGRAMMING)
 
 /******************************************************************************
  * Media Controller Keys
@@ -1081,8 +1194,14 @@ KEY_MAP_ANDROID (ColorF2Yellow, AKEYCODE_PROG_YELLOW)
 KEY_MAP_GTK     (ColorF3Blue, GDK_Blue)
 KEY_MAP_ANDROID (ColorF3Blue, AKEYCODE_PROG_BLUE)
 
+// ClosedCaptionToggle
+KEY_MAP_ANDROID (ClosedCaptionToggle, AKEYCODE_CAPTIONS)
+
 // Dimmer
 KEY_MAP_GTK     (Dimmer, GDK_BrightnessAdjust)
+
+// DVR
+KEY_MAP_ANDROID (DVR, AKEYCODE_DVR)
 
 // Guide
 KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
@@ -1090,12 +1209,41 @@ KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
 // Info
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 
-// MediaFastForward
-KEY_MAP_WIN_CMD (MediaFastForward, APPCOMMAND_MEDIA_FAST_FORWARD)
-KEY_MAP_GTK     (MediaFastForward, GDK_AudioForward)
-KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
+// MediaAudioTrack
+KEY_MAP_ANDROID (MediaAudioTrack, AKEYCODE_MEDIA_AUDIO_TRACK)
 
 // MediaLast
+KEY_MAP_ANDROID (MediaLast, AKEYCODE_LAST_CHANNEL)
+
+// MediaTopMenu
+KEY_MAP_ANDROID (MediaTopMenu, AKEYCODE_MEDIA_TOP_MENU)
+
+// MediaSkipBackward
+KEY_MAP_ANDROID (MediaSkipBackward, AKEYCODE_MEDIA_SKIP_BACKWARD)
+
+// MediaSkipForward
+KEY_MAP_ANDROID (MediaSkipForward, AKEYCODE_MEDIA_SKIP_FORWARD)
+
+// MediaStepBackward
+KEY_MAP_ANDROID (MediaStepBackward, AKEYCODE_MEDIA_STEP_BACKWARD)
+
+// MediaStepForward
+KEY_MAP_ANDROID (MediaStepForward, AKEYCODE_MEDIA_STEP_FORWARD)
+
+// NavigateIn
+KEY_MAP_ANDROID (NavigateIn, AKEYCODE_NAVIGATE_IN)
+
+// NavigateNext
+KEY_MAP_ANDROID (NavigateNext, AKEYCODE_NAVIGATE_NEXT)
+
+// NavigateOut
+KEY_MAP_ANDROID (NavigateOut, AKEYCODE_NAVIGATE_OUT)
+
+// NavigatePrevious
+KEY_MAP_ANDROID (NavigatePrevious, AKEYCODE_NAVIGATE_PREVIOUS)
+
+// Pairing
+KEY_MAP_ANDROID (Pairing, AKEYCODE_PAIRING)
 
 // PinPToggle
 KEY_MAP_ANDROID (PinPToggle, AKEYCODE_WINDOW)
@@ -1114,13 +1262,16 @@ KEY_MAP_ANDROID (STBPower, AKEYCODE_STB_POWER)
 
 // Subtitle
 KEY_MAP_GTK     (Subtitle, GDK_Subtitle)
-KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
+
+// Teletext
+KEY_MAP_ANDROID (Teletext, AKEYCODE_TV_TELETEXT)
 
 // VideoModeNext
 KEY_MAP_GTK     (VideoModeNext, GDK_Next_VMode)
 
 // ZoomToggle
 KEY_MAP_WIN     (ZoomToggle, VK_ZOOM)
+KEY_MAP_ANDROID (ZoomToggle, AKEYCODE_TV_ZOOM_MODE)
 
 /******************************************************************************
  * Keys not defined by any standards
