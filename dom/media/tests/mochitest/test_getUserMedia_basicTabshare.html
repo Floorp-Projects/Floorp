@@ -23,8 +23,10 @@
         return;
     }
     var testVideo = createMediaElement('video', 'testVideo');
+    var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 
     return Promise.resolve()
+      .then(() => pushPrefs(["media.getusermedia.browser.enabled", true]))
       .then(() => getUserMedia({
         video: { mediaSource: "browser",
                  scrollWithPage: true },

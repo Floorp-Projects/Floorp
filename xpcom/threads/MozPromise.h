@@ -278,8 +278,6 @@ public:
     // tries to access an inherited protected member.
     bool IsDisconnected() const { return mDisconnected; }
 
-    virtual MozPromise* CompletionPromise() = 0;
-
     virtual void AssertIsDead() = 0;
 
   protected:
@@ -300,6 +298,8 @@ protected:
    */
   class ThenValueBase : public Request
   {
+    friend class MozPromise;
+
   public:
     class ResolveOrRejectRunnable : public Runnable
     {
@@ -333,29 +333,10 @@ protected:
     };
 
     ThenValueBase(AbstractThread* aResponseTarget,
-                  const char* aCallSite,
-                  bool aInitCompletionPromise = false)
+                  const char* aCallSite)
       : mResponseTarget(aResponseTarget)
       , mCallSite(aCallSite)
-      , mInitCompletionPromise(aInitCompletionPromise)
-    {
-      if (mInitCompletionPromise) {
-        mCompletionPromise = new MozPromise::Private(
-          "<completion promise>", true /* aIsCompletionPromise */);
-      }
-    }
-
-    MozPromise* CompletionPromise() override
-    {
-      MOZ_DIAGNOSTIC_ASSERT(mInitCompletionPromise ||
-                            mResponseTarget->IsCurrentThreadIn());
-      MOZ_DIAGNOSTIC_ASSERT(!Request::mComplete);
-      if (!mInitCompletionPromise && !mCompletionPromise) {
-        mCompletionPromise = new MozPromise::Private(
-          "<completion promise>", true /* aIsCompletionPromise */);
-      }
-      return mCompletionPromise;
-    }
+    { }
 
     void AssertIsDead() override
     {
@@ -444,10 +425,6 @@ protected:
     RefPtr<MozPromise> mCompletionPromise;
 
     const char* mCallSite;
-
-    // True if mCompletionPromise should be initialized in the constructor
-    // to make CompletionPromise() thread-safe.
-    const bool mInitCompletionPromise;
   };
 
   /*
@@ -499,8 +476,8 @@ protected:
   public:
     MethodThenValue(AbstractThread* aResponseTarget, ThisType* aThisVal,
                     ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
-                    const char* aCallSite, bool aInitCompletionPromise = false)
-      : ThenValueBase(aResponseTarget, aCallSite, aInitCompletionPromise)
+                    const char* aCallSite)
+      : ThenValueBase(aResponseTarget, aCallSite)
       , mThisVal(aThisVal)
       , mResolveMethod(aResolveMethod)
       , mRejectMethod(aRejectMethod) {}
@@ -548,9 +525,8 @@ protected:
     FunctionThenValue(AbstractThread* aResponseTarget,
                       ResolveFunction&& aResolveFunction,
                       RejectFunction&& aRejectFunction,
-                      const char* aCallSite,
-                      bool aInitCompletionPromise = false)
-      : ThenValueBase(aResponseTarget, aCallSite, aInitCompletionPromise)
+                      const char* aCallSite)
+      : ThenValueBase(aResponseTarget, aCallSite)
     {
       mResolveFunction.emplace(Move(aResolveFunction));
       mRejectFunction.emplace(Move(aRejectFunction));
@@ -637,27 +613,25 @@ public:
     return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to RefPtr<Request>.
   }
 
-  // Equivalent to Then(target, ...)->CompletionPromise()
-  // without the restriction that CompletionPromise() must be called on the
-  // |target| thread. So ThenPromise() can be called on any thread as Then().
+  // ThenPromise() can be called on any thread as Then().
   // The syntax is close to JS promise and makes promise chaining easier
   // where you can do: p->ThenPromise()->ThenPromise()->ThenPromise();
   //
   // Note you would have to call Then() instead when the result needs to be held
   // by a MozPromiseRequestHolder for future disconnection.
-  //
-  // TODO: replace Then()->CompletionPromise() with ThenPromise() and
-  // stop exposing CompletionPromise() to the client code.
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
   MOZ_MUST_USE RefPtr<MozPromise>
   ThenPromise(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
               ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     using ThenType = MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>;
-    RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread, aThisVal, aResolveMethod,
-      aRejectMethod, aCallSite, true /* aInitCompletionPromise */);
+    RefPtr<ThenValueBase> thenValue = new ThenType(
+      aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
+    // mCompletionPromise must be created before ThenInternal() to avoid race.
+    thenValue->mCompletionPromise = new MozPromise::Private(
+      "<completion promise>", true /* aIsCompletionPromise */);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue->CompletionPromise();
+    return thenValue->mCompletionPromise;
   }
 
   template<typename ResolveFunction, typename RejectFunction>
@@ -666,10 +640,13 @@ public:
               ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
   {
     using ThenType = FunctionThenValue<ResolveFunction, RejectFunction>;
-    RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread, Move(aResolveFunction),
-      Move(aRejectFunction), aCallSite, true /* aInitCompletionPromise */);
+    RefPtr<ThenValueBase> thenValue = new ThenType(
+      aResponseThread, Move(aResolveFunction), Move(aRejectFunction), aCallSite);
+    // mCompletionPromise must be created before ThenInternal() to avoid race.
+    thenValue->mCompletionPromise = new MozPromise::Private(
+      "<completion promise>", true /* aIsCompletionPromise */);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue->CompletionPromise();
+    return thenValue->mCompletionPromise;
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)

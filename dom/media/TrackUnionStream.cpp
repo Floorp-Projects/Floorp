@@ -78,10 +78,14 @@ TrackUnionStream::TrackUnionStream() :
       mappedTracksFinished.AppendElement(true);
       mappedTracksWithMatchingInputTracks.AppendElement(false);
     }
-    bool allFinished = !mInputs.IsEmpty();
-    bool allHaveCurrentData = !mInputs.IsEmpty();
-    for (uint32_t i = 0; i < mInputs.Length(); ++i) {
-      MediaStream* stream = mInputs[i]->GetSource();
+
+    AutoTArray<MediaInputPort*, 32> inputs(mInputs);
+    inputs.AppendElements(mSuspendedInputs);
+
+    bool allFinished = !inputs.IsEmpty();
+    bool allHaveCurrentData = !inputs.IsEmpty();
+    for (uint32_t i = 0; i < inputs.Length(); ++i) {
+      MediaStream* stream = inputs[i]->GetSource();
       if (!stream->IsFinishedOnGraphThread()) {
         // XXX we really should check whether 'stream' has finished within time aTo,
         // not just that it's finishing when all its queued data eventually runs
@@ -97,12 +101,12 @@ TrackUnionStream::TrackUnionStream() :
         bool found = false;
         for (uint32_t j = 0; j < mTrackMap.Length(); ++j) {
           TrackMapEntry* map = &mTrackMap[j];
-          if (map->mInputPort == mInputs[i] && map->mInputTrackID == tracks->GetID()) {
+          if (map->mInputPort == inputs[i] && map->mInputTrackID == tracks->GetID()) {
             bool trackFinished = false;
             StreamTracks::Track* outputTrack = mTracks.FindTrack(map->mOutputTrackID);
             found = true;
             if (!outputTrack || outputTrack->IsEnded() ||
-                !mInputs[i]->PassTrackThrough(tracks->GetID())) {
+                !inputs[i]->PassTrackThrough(tracks->GetID())) {
               trackFinished = true;
             } else {
               CopyTrackData(tracks.get(), j, aFrom, aTo, &trackFinished);
@@ -112,10 +116,10 @@ TrackUnionStream::TrackUnionStream() :
             break;
           }
         }
-        if (!found && mInputs[i]->AllowCreationOf(tracks->GetID())) {
+        if (!found && inputs[i]->AllowCreationOf(tracks->GetID())) {
           bool trackFinished = false;
           trackAdded = true;
-          uint32_t mapIndex = AddTrack(mInputs[i], tracks.get(), aFrom);
+          uint32_t mapIndex = AddTrack(inputs[i], tracks.get(), aFrom);
           CopyTrackData(tracks.get(), mapIndex, aFrom, aTo, &trackFinished);
           mappedTracksFinished.AppendElement(trackFinished);
           mappedTracksWithMatchingInputTracks.AppendElement(true);
@@ -172,8 +176,10 @@ TrackUnionStream::TrackUnionStream() :
                  "if you can assure its availability, or we may not be able "
                  "to bind to the correct DOM-side track.");
 #ifdef DEBUG
-      for (size_t i = 0; mInputs[i] != aPort; ++i) {
-        MOZ_ASSERT(mInputs[i]->GetSourceTrackId() != TRACK_ANY,
+      AutoTArray<MediaInputPort*, 32> inputs(mInputs);
+      inputs.AppendElements(mSuspendedInputs);
+      for (size_t i = 0; inputs[i] != aPort; ++i) {
+        MOZ_ASSERT(inputs[i]->GetSourceTrackId() != TRACK_ANY,
                    "You are adding a MediaInputPort with a track mapping "
                    "while there already exist generic MediaInputPorts for this "
                    "destination stream. This can lead to TrackID collisions!");
