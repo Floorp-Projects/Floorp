@@ -145,8 +145,9 @@ void nsHttpConnectionInfo::BuildHashKey()
     // byte 3 is P/. P is for a private browising channel
     // byte 4 is I/. I is for insecure scheme on TLS for http:// uris
     // byte 5 is X/. X is for disallow_spdy flag
+    // byte 6 is C/. C is for be Conservative
 
-    mHashKey.AssignLiteral("......");
+    mHashKey.AssignLiteral(".......");
     mHashKey.Append(keyHost);
     if (!mNetworkInterfaceId.IsEmpty()) {
         mHashKey.Append('(');
@@ -257,6 +258,7 @@ nsHttpConnectionInfo::Clone() const
     clone->SetPrivate(GetPrivate());
     clone->SetInsecureScheme(GetInsecureScheme());
     clone->SetNoSpdy(GetNoSpdy());
+    clone->SetBeConservative(GetBeConservative());
     MOZ_ASSERT(clone->Equals(this));
 
     return clone;
@@ -279,6 +281,7 @@ nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI)
     clone->SetPrivate(GetPrivate());
     clone->SetInsecureScheme(GetInsecureScheme());
     clone->SetNoSpdy(GetNoSpdy());
+    clone->SetBeConservative(GetBeConservative());
     if (!mNetworkInterfaceId.IsEmpty()) {
         clone->SetNetworkInterfaceId(mNetworkInterfaceId);
     }

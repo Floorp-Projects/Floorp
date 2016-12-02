@@ -123,7 +123,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
                        a.thirdPartyFlags(), a.resumeAt(), a.startPos(),
                        a.entityID(), a.chooseApplicationCache(),
-                       a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(),
+                       a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(), a.beConservative(),
                        a.loadInfo(), a.synthesizedResponseHead(),
                        a.synthesizedSecurityInfoSerialization(),
                        a.cacheKey(), a.requestContextID(), a.preflightArgs(),
@@ -315,6 +315,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const nsCString&           appCacheClientID,
                                  const bool&                allowSpdy,
                                  const bool&                allowAltSvc,
+                                 const bool&                beConservative,
                                  const OptionalLoadInfoArgs& aLoadInfoArgs,
                                  const OptionalHttpResponseHead& aSynthesizedResponseHead,
                                  const nsCString&           aSecurityInfoSerialization,
@@ -525,6 +526,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   mChannel->SetThirdPartyFlags(thirdPartyFlags);
   mChannel->SetAllowSpdy(allowSpdy);
   mChannel->SetAllowAltSvc(allowAltSvc);
+  mChannel->SetBeConservative(beConservative);
   mChannel->SetInitialRwin(aInitialRwin);
   mChannel->SetBlockAuthPrompt(aBlockAuthPrompt);
 
