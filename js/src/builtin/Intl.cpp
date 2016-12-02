@@ -51,7 +51,8 @@ using mozilla::IsFinite;
 using mozilla::IsNegativeZero;
 using mozilla::MakeScopeExit;
 using mozilla::PodCopy;
-
+using mozilla::Range;
+using mozilla::RangedPtr;
 
 /*
  * Pervasive note: ICU functions taking a UErrorCode in/out parameter always
@@ -3016,27 +3017,42 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-template<size_t N>
-inline bool
-MatchPart(const char** pattern, const char (&part)[N])
+static void
+ReportBadKey(JSContext* cx, const Range<const JS::Latin1Char>& range)
 {
-    if (strncmp(*pattern, part, N - 1))
-        return false;
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
+                               range.begin().get());
+}
 
-    *pattern += N - 1;
+static void
+ReportBadKey(JSContext* cx, const Range<const char16_t>& range)
+{
+    JS_ReportErrorNumberUC(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
+                           range.begin().get());
+}
+
+template<typename ConstChar>
+static bool
+MatchPart(RangedPtr<ConstChar> iter, const RangedPtr<ConstChar> end,
+          const char* part, size_t partlen)
+{
+    for (size_t i = 0; i < partlen; iter++, i++) {
+        if (iter == end || *iter != part[i])
+            return false;
+    }
+
     return true;
 }
 
-static bool
-MatchSlash(JSContext* cx, const JSAutoByteString& pattern, const char** iter)
+template<typename ConstChar, size_t N>
+inline bool
+MatchPart(RangedPtr<ConstChar>* iter, const RangedPtr<ConstChar> end, const char (&part)[N])
 {
-    if (MOZ_LIKELY(**iter == '/')) {
-        *iter += 1;
-        return true;
-    }
+    if (!MatchPart(*iter, end, part, N - 1))
+        return false;
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-    return false;
+    *iter += N - 1;
+    return true;
 }
 
 enum class DisplayNameStyle
@@ -3046,44 +3062,56 @@ enum class DisplayNameStyle
     Long,
 };
 
+template<typename ConstChar>
 static JSString*
 ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenerator* dtpg,
                          DisplayNameStyle style,
                          Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE>& chars,
-                         const JSAutoByteString& pattern)
+                         const Range<ConstChar>& pattern)
 {
-    const char* pat = pattern.ptr();
+    RangedPtr<ConstChar> iter = pattern.begin();
+    const RangedPtr<ConstChar> end = pattern.end();
 
-    if (!MatchPart(&pat, "dates")) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+    auto MatchSlash = [cx, pattern, &iter, end]() {
+        if (MOZ_LIKELY(iter != end && *iter == '/')) {
+            iter++;
+            return true;
+        }
+
+        ReportBadKey(cx, pattern);
+        return false;
+    };
+
+    if (!MatchPart(&iter, end, "dates")) {
+        ReportBadKey(cx, pattern);
         return nullptr;
     }
 
-    if (!MatchSlash(cx, pattern, &pat))
+    if (!MatchSlash())
         return nullptr;
 
-    if (MatchPart(&pat, "fields")) {
-        if (!MatchSlash(cx, pattern, &pat))
+    if (MatchPart(&iter, end, "fields")) {
+        if (!MatchSlash())
             return nullptr;
 
         UDateTimePatternField fieldType;
 
-        if (MatchPart(&pat, "year")) {
+        if (MatchPart(&iter, end, "year")) {
             fieldType = UDATPG_YEAR_FIELD;
-        } else if (MatchPart(&pat, "month")) {
+        } else if (MatchPart(&iter, end, "month")) {
             fieldType = UDATPG_MONTH_FIELD;
-        } else if (MatchPart(&pat, "week")) {
+        } else if (MatchPart(&iter, end, "week")) {
             fieldType = UDATPG_WEEK_OF_YEAR_FIELD;
-        } else if (MatchPart(&pat, "day")) {
+        } else if (MatchPart(&iter, end, "day")) {
             fieldType = UDATPG_DAY_FIELD;
         } else {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            ReportBadKey(cx, pattern);
             return nullptr;
         }
 
         // This part must be the final part with no trailing data.
-        if (*pat != '\0') {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+        if (iter != end) {
+            ReportBadKey(cx, pattern);
             return nullptr;
         }
 
@@ -3094,15 +3122,15 @@ ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenera
         return NewStringCopyN<CanGC>(cx, UCharToChar16(value), size_t(resultSize));
     }
 
-    if (MatchPart(&pat, "gregorian")) {
-        if (!MatchSlash(cx, pattern, &pat))
+    if (MatchPart(&iter, end, "gregorian")) {
+        if (!MatchSlash())
             return nullptr;
 
         UDateFormatSymbolType symbolType;
         int32_t index;
 
-        if (MatchPart(&pat, "months")) {
-            if (!MatchSlash(cx, pattern, &pat))
+        if (MatchPart(&iter, end, "months")) {
+            if (!MatchSlash())
                 return nullptr;
 
             switch (style) {
@@ -3119,36 +3147,36 @@ ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenera
                 break;
             }
 
-            if (MatchPart(&pat, "january")) {
+            if (MatchPart(&iter, end, "january")) {
                 index = UCAL_JANUARY;
-            } else if (MatchPart(&pat, "february")) {
+            } else if (MatchPart(&iter, end, "february")) {
                 index = UCAL_FEBRUARY;
-            } else if (MatchPart(&pat, "march")) {
+            } else if (MatchPart(&iter, end, "march")) {
                 index = UCAL_MARCH;
-            } else if (MatchPart(&pat, "april")) {
+            } else if (MatchPart(&iter, end, "april")) {
                 index = UCAL_APRIL;
-            } else if (MatchPart(&pat, "may")) {
+            } else if (MatchPart(&iter, end, "may")) {
                 index = UCAL_MAY;
-            } else if (MatchPart(&pat, "june")) {
+            } else if (MatchPart(&iter, end, "june")) {
                 index = UCAL_JUNE;
-            } else if (MatchPart(&pat, "july")) {
+            } else if (MatchPart(&iter, end, "july")) {
                 index = UCAL_JULY;
-            } else if (MatchPart(&pat, "august")) {
+            } else if (MatchPart(&iter, end, "august")) {
                 index = UCAL_AUGUST;
-            } else if (MatchPart(&pat, "september")) {
+            } else if (MatchPart(&iter, end, "september")) {
                 index = UCAL_SEPTEMBER;
-            } else if (MatchPart(&pat, "october")) {
+            } else if (MatchPart(&iter, end, "october")) {
                 index = UCAL_OCTOBER;
-            } else if (MatchPart(&pat, "november")) {
+            } else if (MatchPart(&iter, end, "november")) {
                 index = UCAL_NOVEMBER;
-            } else if (MatchPart(&pat, "december")) {
+            } else if (MatchPart(&iter, end, "december")) {
                 index = UCAL_DECEMBER;
             } else {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                ReportBadKey(cx, pattern);
                 return nullptr;
             }
-        } else if (MatchPart(&pat, "weekdays")) {
-            if (!MatchSlash(cx, pattern, &pat))
+        } else if (MatchPart(&iter, end, "weekdays")) {
+            if (!MatchSlash())
                 return nullptr;
 
             switch (style) {
@@ -3165,46 +3193,46 @@ ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenera
                 break;
             }
 
-            if (MatchPart(&pat, "monday")) {
+            if (MatchPart(&iter, end, "monday")) {
                 index = UCAL_MONDAY;
-            } else if (MatchPart(&pat, "tuesday")) {
+            } else if (MatchPart(&iter, end, "tuesday")) {
                 index = UCAL_TUESDAY;
-            } else if (MatchPart(&pat, "wednesday")) {
+            } else if (MatchPart(&iter, end, "wednesday")) {
                 index = UCAL_WEDNESDAY;
-            } else if (MatchPart(&pat, "thursday")) {
+            } else if (MatchPart(&iter, end, "thursday")) {
                 index = UCAL_THURSDAY;
-            } else if (MatchPart(&pat, "friday")) {
+            } else if (MatchPart(&iter, end, "friday")) {
                 index = UCAL_FRIDAY;
-            } else if (MatchPart(&pat, "saturday")) {
+            } else if (MatchPart(&iter, end, "saturday")) {
                 index = UCAL_SATURDAY;
-            } else if (MatchPart(&pat, "sunday")) {
+            } else if (MatchPart(&iter, end, "sunday")) {
                 index = UCAL_SUNDAY;
             } else {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                ReportBadKey(cx, pattern);
                 return nullptr;
             }
-        } else if (MatchPart(&pat, "dayperiods")) {
-            if (!MatchSlash(cx, pattern, &pat))
+        } else if (MatchPart(&iter, end, "dayperiods")) {
+            if (!MatchSlash())
                 return nullptr;
 
             symbolType = UDAT_AM_PMS;
 
-            if (MatchPart(&pat, "am")) {
+            if (MatchPart(&iter, end, "am")) {
                 index = UCAL_AM;
-            } else if (MatchPart(&pat, "pm")) {
+            } else if (MatchPart(&iter, end, "pm")) {
                 index = UCAL_PM;
             } else {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                ReportBadKey(cx, pattern);
                 return nullptr;
             }
         } else {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            ReportBadKey(cx, pattern);
             return nullptr;
         }
 
         // This part must be the final part with no trailing data.
-        if (*pat != '\0') {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+        if (iter != end) {
+            ReportBadKey(cx, pattern);
             return nullptr;
         }
 
@@ -3227,7 +3255,7 @@ ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenera
         return NewStringCopyN<CanGC>(cx, chars.begin(), resultSize);
     }
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+    ReportBadKey(cx, pattern);
     return nullptr;
 }
 
@@ -3296,22 +3324,26 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // 5. For each element of keys,
-    JSAutoByteString pattern;
     RootedString keyValStr(cx);
     RootedValue v(cx);
     for (uint32_t i = 0; i < keys->length(); i++) {
         if (!GetElement(cx, keys, keys, i, &v))
             return false;
 
-        pattern.clear();
-
         keyValStr = v.toString();
-        if (!pattern.encodeUtf8(cx, keyValStr))
+
+        AutoStableStringChars stablePatternChars(cx);
+        if (!stablePatternChars.init(cx, keyValStr))
             return false;
 
         // 5.a. Perform an implementation dependent algorithm to map a key to a
         //      corresponding display name.
-        JSString* displayName = ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, chars, pattern);
+        JSString* displayName =
+            stablePatternChars.isLatin1()
+            ? ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, chars,
+                                       stablePatternChars.latin1Range())
+            : ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, chars,
+                                       stablePatternChars.twoByteRange());
         if (!displayName)
             return false;
 
