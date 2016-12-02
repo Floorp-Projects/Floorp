@@ -61,7 +61,7 @@ def rust_compiler(value, rustc, rustc_info):
             or by directly running the installer from https://rustup.rs/
             '''))
         version = rustc_info.version
-        min_version = Version('1.10')
+        min_version = Version('1.13')
         if version < min_version:
             die(dedent('''\
             Rust compiler {} is too old.
