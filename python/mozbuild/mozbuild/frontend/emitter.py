@@ -513,8 +513,15 @@ class TreeMetadataEmitter(LoggingMixin):
 
         dependencies = set(config.get('dependencies', {}).iterkeys())
 
+        features = context.get('RUST_LIBRARY_FEATURES', [])
+        unique_features = set(features)
+        if len(features) != len(unique_features):
+            raise SandboxValidationError(
+                'features for %s should not contain duplicates: %s' % (libname, features),
+                context)
+
         return RustLibrary(context, libname, cargo_file, crate_type,
-                           dependencies, **static_args)
+                           dependencies, features, **static_args)
 
     def _handle_linkables(self, context, passthru, generated_files):
         linkables = []
