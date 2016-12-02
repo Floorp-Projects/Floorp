@@ -92,6 +92,7 @@ if CONFIG['NS_PRINTING']:
         'nsDeviceContextSpecWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
+        'WindowsEMF.cpp',
     ]
 
 if CONFIG['NS_ENABLE_TSF']:
