@@ -1,3 +1,18 @@
+navigation:
+- methods: ["search"]
+  objects: ["about_home", "about_newtab", "contextmenu", "oneoff",
+            "suggestion", "alias", "enter", "searchbar", "urlbar"]
+  release_channel_collection: opt-in
+  description: >
+    This is recorded on each search navigation.
+    The value field records the action used to trigger the search:
+      "enter", "oneoff", "suggestion", "alias", null (for contextmenu)
+  bug_numbers: [1316281]
+  notification_emails: ["past@mozilla.com"]
+  expiry_version: "58.0"
+  extra_keys:
+    engine: The id of the search engine used.
+
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
 telemetry.test:
