@@ -208,13 +208,13 @@ static SECStatus
 tls13_HandleKeyShareEntry(const sslSocket *ss, TLSExtensionData *xtnData, SECItem *data)
 {
     SECStatus rv;
-    PRInt32 group;
+    PRUint32 group;
     const sslNamedGroupDef *groupDef;
     TLS13KeyShareEntry *ks = NULL;
     SECItem share = { siBuffer, NULL, 0 };
 
-    group = ssl3_ExtConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
-    if (group < 0) {
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &group, 2, &data->data, &data->len);
+    if (rv != SECSuccess) {
         PORT_SetError(SSL_ERROR_RX_MALFORMED_KEY_SHARE);
         goto loser;
     }
@@ -285,7 +285,7 @@ SECStatus
 tls13_ClientHandleKeyShareXtnHrr(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type, SECItem *data)
 {
     SECStatus rv;
-    PRInt32 tmp;
+    PRUint32 tmp;
     const sslNamedGroupDef *group;
 
     PORT_Assert(!ss->sec.isServer);
@@ -294,8 +294,8 @@ tls13_ClientHandleKeyShareXtnHrr(const sslSocket *ss, TLSExtensionData *xtnData,
     SSL_TRC(3, ("%d: SSL3[%d]: handle key_share extension in HRR",
                 SSL_GETPID(), ss->fd));
 
-    tmp = ssl3_ExtConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
-    if (tmp < 0) {
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &tmp, 2, &data->data, &data->len);
+    if (rv != SECSuccess) {
         return SECFailure; /* error code already set */
     }
     if (data->len) {
@@ -335,7 +335,7 @@ SECStatus
 tls13_ServerHandleKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type, SECItem *data)
 {
     SECStatus rv;
-    PRInt32 length;
+    PRUint32 length;
 
     PORT_Assert(ss->sec.isServer);
     PORT_Assert(PR_CLIST_IS_EMPTY(&xtnData->remoteKeyShares));
@@ -349,9 +349,9 @@ tls13_ServerHandleKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData, PR
 
     /* Redundant length because of TLS encoding (this vector consumes
      * the entire extension.) */
-    length = ssl3_ExtConsumeHandshakeNumber(ss, 2, &data->data,
-                                            &data->len);
-    if (length < 0)
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &length, 2, &data->data,
+                                        &data->len);
+    if (rv != SECSuccess)
         goto loser;
     if (length != data->len) {
         /* Check for consistency */
@@ -684,7 +684,8 @@ SECStatus
 tls13_ClientHandlePreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
                                   SECItem *data)
 {
-    PRInt32 index;
+    PRUint32 index;
+    SECStatus rv;
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle pre_shared_key extension",
                 SSL_GETPID(), ss->fd));
@@ -694,8 +695,8 @@ tls13_ClientHandlePreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData
         return SECSuccess;
     }
 
-    index = ssl3_ExtConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
-    if (index < 0)
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &index, 2, &data->data, &data->len);
+    if (rv != SECSuccess)
         return SECFailure;
 
     /* This should be the end of the extension. */

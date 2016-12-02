@@ -914,7 +914,6 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
           "button::-moz-focus-inner, input[type=\"reset\"]::-moz-focus-inner, "
           "input[type=\"button\"]::-moz-focus-inner, "
           "input[type=\"submit\"]::-moz-focus-inner { "
-          "padding: 1px 2px 1px 2px; "
           "border: %dpx %s transparent !important; }\n",
           focusRingWidth,
           focusRingStyle == 0 ? "solid" : "dotted");
