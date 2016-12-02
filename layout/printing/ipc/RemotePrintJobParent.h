@@ -34,7 +34,7 @@ public:
                                               const int32_t& aStartPage,
                                               const int32_t& aEndPage) final;
 
-  mozilla::ipc::IPCResult RecvProcessPage(const nsCString& aPageFileName) final;
+  mozilla::ipc::IPCResult RecvProcessPage(Shmem&& aStoredPage) final;
 
   mozilla::ipc::IPCResult RecvFinalizePrint() final;
 
@@ -70,7 +70,7 @@ private:
                                  const int32_t& aStartPage,
                                  const int32_t& aEndPage);
 
-  nsresult PrintPage(const nsCString& aPageFileName);
+  nsresult PrintPage(const Shmem& aStoredPage);
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   RefPtr<nsDeviceContext> mPrintDeviceContext;
