@@ -3,20 +3,21 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 ]>
-<window id="winTest" title="Title Test" windowtype="Test Type"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <dialog id="dia"
-                xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<dialog id="testDialogAnonymousNode"
+          buttons="accept, cancel"
+          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
   <bindings id="testBindings" xmlns="http://www.mozilla.org/xbl"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <binding id="framebox">
       <content orient="vertical" mousethrough="never">
         <xul:browser anonid="content" id="browser" flex="1"
-                   context="contentAreaContextMenu"
-                   src="test.xul"
-                   type="content"/>
+                     context="contentAreaContextMenu"
+                     src="test.xul"
+                     type="content"/>
       </content>
     </binding>
 
@@ -28,8 +29,9 @@
       </content>
     </binding>
   </bindings>
+
   <hbox id="testAnonymousContentBox"/>
   <hbox id="container" style="-moz-binding: url('#testBindings');"/>
   <hbox id="container2" style="-moz-binding: url('#iframebox');"/>
-  </dialog>
-</window>
+
+</dialog>

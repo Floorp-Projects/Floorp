@@ -4,17 +4,15 @@
 
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
-from marionette_driver.expected import element_present
 from marionette_driver.marionette import HTMLElement
-from marionette_driver.wait import Wait
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
-class TestAnonymousContent(WindowManagerMixin, MarionetteTestCase):
+class TestAnonymousNodes(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
-        super(TestAnonymousContent, self).setUp()
+        super(TestAnonymousNodes, self).setUp()
         self.marionette.set_context("chrome")
 
         def open_window_with_js():
@@ -25,10 +23,11 @@ class TestAnonymousContent(WindowManagerMixin, MarionetteTestCase):
 
         new_window = self.open_window(trigger=open_window_with_js)
         self.marionette.switch_to_window(new_window)
-        self.assertNotEqual(self.marionette.current_chrome_window_handle, self.start_window)
 
     def tearDown(self):
         self.close_all_windows()
+
+        super(TestAnonymousNodes, self).tearDown()
 
     def test_switch_to_anonymous_frame(self):
         self.marionette.find_element(By.ID, "testAnonymousContentBox")
@@ -37,7 +36,8 @@ class TestAnonymousContent(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_frame(anon_browser_el)
         self.assertTrue("test.xul" in self.marionette.get_url())
         self.marionette.find_element(By.ID, "testXulBox")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "testAnonymousContentBox")
+        self.assertRaises(NoSuchElementException,
+                          self.marionette.find_element, By.ID, "testAnonymousContentBox")
 
     def test_switch_to_anonymous_iframe(self):
         self.marionette.find_element(By.ID, "testAnonymousContentBox")
@@ -50,20 +50,41 @@ class TestAnonymousContent(WindowManagerMixin, MarionetteTestCase):
                           "testAnonymousContentBox")
 
     def test_find_anonymous_element_by_attribute(self):
-        el = Wait(self.marionette).until(element_present(By.ID, "dia"))
-        self.assertEquals(HTMLElement, type(el.find_element(By.ANON_ATTRIBUTE, {"anonid": "buttons"})))
-        self.assertEquals(1, len(el.find_elements(By.ANON_ATTRIBUTE, {"anonid": "buttons"})))
+        accept_button = (By.ANON_ATTRIBUTE, {"dlgtype": "accept"},)
+        not_existent = (By.ANON_ATTRIBUTE, {"anonid": "notexistent"},)
 
+        # By using the window document element
+        start_node = self.marionette.find_element(By.CSS_SELECTOR, ":root")
+        button = start_node.find_element(*accept_button)
+        self.assertEquals(HTMLElement, type(button))
         with self.assertRaises(NoSuchElementException):
-            el.find_element(By.ANON_ATTRIBUTE, {"anonid": "nonexistent"})
-        self.assertEquals([], el.find_elements(By.ANON_ATTRIBUTE, {"anonid": "nonexistent"}))
+            start_node.find_element(*not_existent)
+
+        # By using the default start node
+        self.assertEquals(button, self.marionette.find_element(*accept_button))
+        with self.assertRaises(NoSuchElementException):
+            self.marionette.find_element(*not_existent)
+
+    def test_find_anonymous_elements_by_attribute(self):
+        dialog_buttons = (By.ANON_ATTRIBUTE, {"anonid": "buttons"},)
+        not_existent = (By.ANON_ATTRIBUTE, {"anonid": "notexistent"},)
+
+        # By using the window document element
+        start_node = self.marionette.find_element(By.CSS_SELECTOR, ":root")
+        buttons = start_node.find_elements(*dialog_buttons)
+        self.assertEquals(1, len(buttons))
+        self.assertEquals(HTMLElement, type(buttons[0]))
+        self.assertListEqual([], start_node.find_elements(*not_existent))
+
+        # By using the default start node
+        self.assertListEqual(buttons, self.marionette.find_elements(*dialog_buttons))
+        self.assertListEqual([], self.marionette.find_elements(*not_existent))
 
     def test_find_anonymous_children(self):
-        el = Wait(self.marionette).until(element_present(By.ID, "dia"))
-        self.assertEquals(HTMLElement, type(el.find_element(By.ANON, None)))
-        self.assertEquals(2, len(el.find_elements(By.ANON, None)))
+        self.assertEquals(HTMLElement, type(self.marionette.find_element(By.ANON, None)))
+        self.assertEquals(2, len(self.marionette.find_elements(By.ANON, None)))
 
-        el = self.marionette.find_element(By.ID, "framebox")
+        frame = self.marionette.find_element(By.ID, "framebox")
         with self.assertRaises(NoSuchElementException):
-            el.find_element(By.ANON, None)
-        self.assertEquals([], el.find_elements(By.ANON, None))
+            frame.find_element(By.ANON, None)
+        self.assertListEqual([], frame.find_elements(By.ANON, None))
