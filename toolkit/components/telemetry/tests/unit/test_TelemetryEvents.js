@@ -44,7 +44,7 @@ add_task(function* test_recording() {
     {optout: false, event: ["telemetry.test", "test1", "object1", null, {"key1": "value1"}]},
     {optout: false, event: ["telemetry.test", "test1", "object1", "value", {"key1": "value1", "key2": "value2"}]},
 
-    {optout: true,  event: ["telemetry.test", "test_optout", "object1"]},
+    {optout: true,  event: ["telemetry.test", "optout", "object1"]},
     {optout: false, event: ["telemetry.test.second", "test", "object1"]},
     {optout: false, event: ["telemetry.test.second", "test", "object1", null, {"key1": "value1"}]},
   ];
@@ -123,17 +123,17 @@ add_task(function* test_expiry() {
   Telemetry.clearEvents();
 
   // Recording call with event that is expired by version.
-  Telemetry.recordEvent("telemetry.test", "test_expired_version", "object1");
+  Telemetry.recordEvent("telemetry.test", "expired_version", "object1");
   let events = Telemetry.snapshotBuiltinEvents(OPTIN, true);
   Assert.equal(events.length, 0, "Should not record event with expired version.");
 
   // Recording call with event that is expired by date.
-  Telemetry.recordEvent("telemetry.test", "test_expired_date", "object1");
+  Telemetry.recordEvent("telemetry.test", "expired_date", "object1");
   events = Telemetry.snapshotBuiltinEvents(OPTIN, true);
   Assert.equal(events.length, 0, "Should not record event with expired date.");
 
   // Recording call with event that has expiry_version and expiry_date in the future.
-  Telemetry.recordEvent("telemetry.test", "test_not_expired_optout", "object1");
+  Telemetry.recordEvent("telemetry.test", "not_expired_optout", "object1");
   events = Telemetry.snapshotBuiltinEvents(OPTOUT, true);
   Assert.equal(events.length, 1, "Should record event when date and version are not expired.");
 });
@@ -166,7 +166,7 @@ add_task(function* test_storageLimit() {
   Telemetry.clearEvents();
 
   // Record more events than the storage limit allows.
-  let LIMIT = 10000;
+  let LIMIT = 1000;
   let COUNT = LIMIT + 10;
   for (let i = 0; i < COUNT; ++i) {
     Telemetry.recordEvent("telemetry.test", "test1", "object1", String(i));
@@ -183,7 +183,7 @@ add_task(function* test_valueLimits() {
   Telemetry.clearEvents();
 
   // Record values that are at or over the limits for string lengths.
-  let LIMIT = 100;
+  let LIMIT = 80;
   let expected = [
     ["telemetry.test", "test1", "object1", "a".repeat(LIMIT - 10), null],
     ["telemetry.test", "test1", "object1", "a".repeat(LIMIT     ), null],
@@ -199,10 +199,10 @@ add_task(function* test_valueLimits() {
   for (let event of expected) {
     Telemetry.recordEvent(...event);
     if (event[3]) {
-      event[3] = event[3].substr(0, 100);
+      event[3] = event[3].substr(0, LIMIT);
     }
     if (event[4]) {
-      event[4].key1 = event[4].key1.substr(0, 100);
+      event[4].key1 = event[4].key1.substr(0, LIMIT);
     }
   }
 
