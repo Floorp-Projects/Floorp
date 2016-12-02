@@ -480,13 +480,10 @@ function toggleFIPS()
 
     var tokendb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
     var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
-    var slot = secmoddb.findSlotByName(internal_token.tokenName);
-    switch (slot.status) {
-      case nsIPKCS11Slot.SLOT_UNINITIALIZED:
-      case nsIPKCS11Slot.SLOT_READY:
-        // Token has either no or an empty password.
-        doPrompt(bundle.getString("fips_nonempty_password_required"));
-        return;
+    if (!internal_token.hasPassword) {
+      // Token has either no or an empty password.
+      doPrompt(bundle.getString("fips_nonempty_password_required"));
+      return;
     }
   }
 

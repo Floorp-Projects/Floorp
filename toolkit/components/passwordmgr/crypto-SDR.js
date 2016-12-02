@@ -19,16 +19,6 @@ LoginManagerCrypto_SDR.prototype = {
   classID : Components.ID("{dc6c2976-0f73-4f1f-b9ff-3d72b4e28309}"),
   QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerCrypto]),
 
-  __sdrSlot : null, // PKCS#11 slot being used by the SDR.
-  get _sdrSlot() {
-    if (!this.__sdrSlot) {
-      let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"].
-                    getService(Ci.nsIPKCS11ModuleDB);
-      this.__sdrSlot = modules.findSlotByName("");
-    }
-    return this.__sdrSlot;
-  },
-
   __decoderRing : null,  // nsSecretDecoderRing service
   get _decoderRing() {
     if (!this.__decoderRing)
@@ -170,14 +160,10 @@ LoginManagerCrypto_SDR.prototype = {
    * isLoggedIn
    */
   get isLoggedIn() {
-    let status = this._sdrSlot.status;
-    this.log("SDR slot status is " + status);
-    if (status == Ci.nsIPKCS11Slot.SLOT_READY ||
-        status == Ci.nsIPKCS11Slot.SLOT_LOGGED_IN)
-      return true;
-    if (status == Ci.nsIPKCS11Slot.SLOT_NOT_LOGGED_IN)
-      return false;
-    throw Components.Exception("unexpected slot status: " + status, Cr.NS_ERROR_FAILURE);
+    let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].
+                  getService(Ci.nsIPK11TokenDB);
+    let token = tokenDB.getInternalKeyToken();
+    return !token.hasPassword || token.isLoggedIn();
   },
 
 
