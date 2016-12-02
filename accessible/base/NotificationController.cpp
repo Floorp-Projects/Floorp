@@ -842,6 +842,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     size_t newDocCount = newChildDocs.Length();
     for (size_t i = 0; i < newDocCount; i++) {
       DocAccessible* childDoc = newChildDocs[i];
+      if (childDoc->IsDefunct()) {
+        continue;
+      }
+
       Accessible* parent = childDoc->Parent();
       DocAccessibleChild* parentIPCDoc = mDocument->IPCDoc();
       uint64_t id = reinterpret_cast<uintptr_t>(parent->UniqueID());
