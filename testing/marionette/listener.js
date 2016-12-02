@@ -875,10 +875,15 @@ function pollForReadyState(msg, start = undefined, callback = undefined) {
         callback();
         sendOk(command_id);
 
+      // document with an insecure cert
+      } else if (doc.readyState == "interactive" &&
+          doc.baseURI.startsWith("about:certerror")) {
+        callback();
+        sendError(new InsecureCertificateError(), command_id);
+
       // we have reached an error url without requesting it
       } else if (doc.readyState == "interactive" &&
-          /about:.+(error)\?/.exec(doc.baseURI) &&
-          !doc.baseURI.startsWith(url)) {
+          /about:.+(error)\?/.exec(doc.baseURI)) {
         callback();
         sendError(new UnknownError("Reached error page: " + doc.baseURI), command_id);
 
