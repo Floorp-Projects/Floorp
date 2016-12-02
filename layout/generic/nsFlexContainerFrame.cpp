@@ -87,6 +87,8 @@ IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
     aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox;
 }
 
+// XXXdholbert This will be merged into Init(), in a later patch in this series
+// (after all callers have been converted to check frame state bit).
 /* static */ bool
 nsFlexContainerFrame::IsLegacyBox(const nsIFrame* aFrame)
 {
@@ -2272,6 +2274,21 @@ NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 /* virtual */
 nsFlexContainerFrame::~nsFlexContainerFrame()
 {
+}
+
+/* virtual */
+void
+nsFlexContainerFrame::Init(nsIContent*       aContent,
+                           nsContainerFrame* aParent,
+                           nsIFrame*         aPrevInFlow)
+{
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+
+  if (nsFlexContainerFrame::IsLegacyBox(this)) {
+    // Toggle frame state bit to indicate that this frame represents a
+    // legacy -webkit-{inline-}box container:
+    AddStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
+  }
 }
 
 template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
