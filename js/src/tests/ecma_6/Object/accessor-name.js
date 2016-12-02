@@ -27,10 +27,9 @@ o = {get case() { }, set case(v) {}}
 assertEq(name(o, "case", true), "get case");
 assertEq(name(o, "case", false), "set case");
 
-// Congratulations on implementing these!
-assertEq(name({get ["a"]() {}}, "a", true), "");
-assertEq(name({get [123]() {}}, "123", true), "");
-assertEq(name({set ["a"](v) {}}, "a", false), "");
-assertEq(name({set [123](v) {}}, "123", false), "");
+assertEq(name({get ["a"]() {}}, "a", true), "get a");
+assertEq(name({get [123]() {}}, "123", true), "get 123");
+assertEq(name({set ["a"](v) {}}, "a", false), "set a");
+assertEq(name({set [123](v) {}}, "123", false), "set 123");
 
 reportCompare(true, true);

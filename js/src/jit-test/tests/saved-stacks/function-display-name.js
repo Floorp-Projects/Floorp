@@ -2,9 +2,8 @@
 
 function uno() { return dos(); }
 const dos = () => tres.quattro();
-const tres = {
-  quattro: () => saveStack()
-};
+let tres = {};
+tres.quattro = () => saveStack()
 
 const frame = uno();
 

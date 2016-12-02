@@ -17,7 +17,7 @@ function makeObject() {
 let tests = [
   { name: "Ctor",                     object: new Ctor        },
   { name: "nested.Ctor",              object: new nested.Ctor },
-  { name: "makeInstance/LexicalCtor", object: makeInstance()  },
+  { name: "LexicalCtor",              object: makeInstance()  },
   { name: null,                       object: {}              },
   { name: null,                       object: nested.object   },
   { name: null,                       object: makeObject()    },
