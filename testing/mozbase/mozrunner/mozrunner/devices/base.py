@@ -186,25 +186,6 @@ class Device(object):
         adb.wait()
         self.dm._verifyZip()
 
-    def setup_port_forwarding(self, local_port=None, remote_port=2828):
-        """
-        Set up TCP port forwarding to the specified port on the device,
-        using any availble local port (if none specified), and return the local port.
-
-        :param local_port: The local port to forward from, if unspecified a
-                           random port is chosen.
-        :param remote_port: The remote port to forward to, defaults to 2828.
-        :returns: The local_port being forwarded.
-        """
-        if not local_port:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind(("", 0))
-            local_port = s.getsockname()[1]
-            s.close()
-
-        self.dm.forward('tcp:%d' % int(local_port), 'tcp:%d' % int(remote_port))
-        return local_port
-
     def wait_for_net(self):
         active = False
         time_out = 0
