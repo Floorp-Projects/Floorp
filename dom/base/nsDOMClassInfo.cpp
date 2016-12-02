@@ -792,16 +792,6 @@ nsDOMClassInfo::PreCreate(nsISupports *nativeObj, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid id, JS::Handle<JS::Value> val,
-                            bool *_retval)
-{
-  NS_WARNING("nsDOMClassInfo::AddProperty Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
 nsDOMClassInfo::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsid id, JS::Value *vp,
                             bool *_retval)
@@ -1962,16 +1952,6 @@ nsEventTargetSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   *parentObj = native_parent ? native_parent->GetGlobalJSObject() : globalObj;
 
   return *parentObj ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsEventTargetSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *obj, jsid id, JS::Handle<JS::Value> val,
-                             bool *_retval)
-{
-  nsEventTargetSH::PreserveWrapper(GetNative(wrapper, obj));
-
-  return NS_OK;
 }
 
 void
