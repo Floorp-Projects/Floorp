@@ -1,3 +1,18 @@
+navigation:
+- methods: ["search"]
+  objects: ["about_home", "about_newtab", "contextmenu", "oneoff",
+            "suggestion", "alias", "enter", "searchbar", "urlbar"]
+  release_channel_collection: opt-in
+  description: >
+    This is recorded on each search navigation.
+    The value field records the action used to trigger the search:
+      "enter", "oneoff", "suggestion", "alias", null (for contextmenu)
+  bug_numbers: [1316281]
+  notification_emails: ["past@mozilla.com"]
+  expiry_version: "58.0"
+  extra_keys:
+    engine: The id of the search engine used.
+
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
 telemetry.test:
@@ -10,7 +25,7 @@ telemetry.test:
   extra_keys:
     key1: This is just a test description.
     key2: This is another test description.
-- methods: ["test_optout"]
+- methods: ["optout"]
   objects: ["object1", "object2"]
   bug_numbers: [1286606]
   notification_emails: ["telemetry-client-dev@mozilla.com"]
@@ -19,19 +34,19 @@ telemetry.test:
   release_channel_collection: opt-out
   extra_keys:
     key1: This is just a test description.
-- methods: ["test_expired_version"]
+- methods: ["expired_version"]
   objects: ["object1", "object2"]
   bug_numbers: [1286606]
   notification_emails: ["telemetry-client-dev@mozilla.com"]
   description: This is a test entry with an expired version.
   expiry_version: "3.6"
-- methods: ["test_expired_date"]
+- methods: ["expired_date"]
   objects: ["object1", "object2"]
   bug_numbers: [1286606]
   notification_emails: ["telemetry-client-dev@mozilla.com"]
   description: This is a test entry with an expired date.
   expiry_date: 2014-01-28
-- methods: ["test_not_expired_optout"]
+- methods: ["not_expired_optout"]
   objects: ["object1"]
   bug_numbers: [1286606]
   notification_emails: ["telemetry-client-dev@mozilla.com"]

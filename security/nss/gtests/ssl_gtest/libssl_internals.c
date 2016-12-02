@@ -10,8 +10,6 @@
 #include "nss.h"
 #include "pk11pub.h"
 #include "seccomon.h"
-#include "ssl.h"
-#include "sslimpl.h"
 
 SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd) {
   sslSocket *ss = ssl_FindSocket(fd);
@@ -312,4 +310,38 @@ SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group) {
   if (!groupDef) return ssl_kea_null;
 
   return groupDef->keaType;
+}
+
+SECStatus SSLInt_SetCipherSpecChangeFunc(PRFileDesc *fd,
+                                         sslCipherSpecChangedFunc func,
+                                         void *arg) {
+  sslSocket *ss;
+
+  ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  ss->ssl3.changedCipherSpecFunc = func;
+  ss->ssl3.changedCipherSpecArg = arg;
+
+  return SECSuccess;
+}
+
+static ssl3KeyMaterial *GetKeyingMaterial(PRBool isServer,
+                                          ssl3CipherSpec *spec) {
+  return isServer ? &spec->server : &spec->client;
+}
+
+PK11SymKey *SSLInt_CipherSpecToKey(PRBool isServer, ssl3CipherSpec *spec) {
+  return GetKeyingMaterial(isServer, spec)->write_key;
+}
+
+SSLCipherAlgorithm SSLInt_CipherSpecToAlgorithm(PRBool isServer,
+                                                ssl3CipherSpec *spec) {
+  return spec->cipher_def->calg;
+}
+
+unsigned char *SSLInt_CipherSpecToIv(PRBool isServer, ssl3CipherSpec *spec) {
+  return GetKeyingMaterial(isServer, spec)->write_iv;
 }

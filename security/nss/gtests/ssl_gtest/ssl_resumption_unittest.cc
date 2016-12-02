@@ -21,6 +21,7 @@ extern "C" {
 #include "tls_connect.h"
 #include "tls_filter.h"
 #include "tls_parser.h"
+#include "tls_protect.h"
 
 namespace nss_test {
 
@@ -577,6 +578,65 @@ TEST_F(TlsConnectTest, TestTls13ResumptionDuplicateNST) {
   ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
+}
+
+TEST_F(TlsConnectTest, TestTls13ResumptionDowngrade) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+
+  SendReceive();  // Need to read so that we absorb the session tickets.
+  CheckKeys();
+
+  // Try resuming the connection. This will fail resuming the 1.3 session
+  // from before, but will successfully establish a 1.2 connection.
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  Connect();
+
+  // Renegotiate to ensure we don't carryover any state
+  // from the 1.3 resumption attempt.
+  client_->SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_2);
+  client_->PrepareForRenegotiate();
+  server_->StartRenegotiate();
+  Handshake();
+
+  SendReceive();
+  CheckKeys();
+}
+
+TEST_F(TlsConnectTest, TestTls13ResumptionForcedDowngrade) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+
+  SendReceive();  // Need to read so that we absorb the session tickets.
+  CheckKeys();
+
+  // Try resuming the connection.
+  Reset();
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  // Enable the lower version on the client.
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+
+  // Add filters that set downgrade SH.version to 1.2 and the cipher suite
+  // to one that works with 1.2, so that we don't run into early sanity checks.
+  // We will eventually fail the (sid.version == SH.version) check.
+  std::vector<PacketFilter*> filters;
+  filters.push_back(new SelectedCipherSuiteReplacer(
+      TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256));
+  filters.push_back(new SelectedVersionReplacer(SSL_LIBRARY_VERSION_TLS_1_2));
+  server_->SetPacketFilter(new ChainedPacketFilter(filters));
+
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
 }
 
 }  // namespace nss_test

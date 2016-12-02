@@ -27,10 +27,6 @@ const {
   getUrlHost,
   parseQueryString,
 } = require("./request-utils");
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-const TimingsPanel = createFactory(require("./components/shared/timings-panel"));
 
 // 100 KB in bytes
 const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 102400;
@@ -90,15 +86,8 @@ DetailsView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize: function (store) {
+  initialize: function () {
     dumpn("Initializing the DetailsView");
-
-    this._timingsPanelNode = $("#react-timings-tabpanel-hook");
-
-    ReactDOM.render(Provider(
-      { store },
-      TimingsPanel()
-    ), this._timingsPanelNode);
 
     this.widget = $("#event-details-pane");
     this.sidebar = new ToolSidebar(this.widget, this, "netmonitor", {
@@ -145,7 +134,6 @@ DetailsView.prototype = {
    */
   destroy: function () {
     dumpn("Destroying the DetailsView");
-    ReactDOM.unmountComponentAtNode(this._timingsPanelNode);
     this.sidebar.destroy();
     $("tabpanels", this.widget).removeEventListener("select",
       this._onTabSelect);
@@ -254,6 +242,10 @@ DetailsView.prototype = {
         // "Response"
         case 3:
           yield view._setResponseBody(src.url, src.responseContent);
+          break;
+        // "Timings"
+        case 4:
+          yield view._setTimingsInformation(src.eventTimings);
           break;
         // "Security"
         case 5:
@@ -692,6 +684,87 @@ DetailsView.prototype = {
 
     window.emit(EVENTS.RESPONSE_BODY_DISPLAYED);
   }),
+
+  /**
+   * Sets the timings information shown in this view.
+   *
+   * @param object response
+   *        The message received from the server.
+   */
+  _setTimingsInformation: function (response) {
+    if (!response) {
+      return;
+    }
+    let { blocked, dns, connect, send, wait, receive } = response.timings;
+
+    let tabboxWidth = $("#details-pane").getAttribute("width");
+
+    // Other nodes also take some space.
+    let availableWidth = tabboxWidth / 2;
+    let scale = (response.totalTime > 0 ?
+                 Math.max(availableWidth / response.totalTime, 0) :
+                 0);
+
+    $("#timings-summary-blocked .requests-menu-timings-box")
+      .setAttribute("width", blocked * scale);
+    $("#timings-summary-blocked .requests-menu-timings-total")
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", blocked));
+
+    $("#timings-summary-dns .requests-menu-timings-box")
+      .setAttribute("width", dns * scale);
+    $("#timings-summary-dns .requests-menu-timings-total")
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", dns));
+
+    $("#timings-summary-connect .requests-menu-timings-box")
+      .setAttribute("width", connect * scale);
+    $("#timings-summary-connect .requests-menu-timings-total")
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", connect));
+
+    $("#timings-summary-send .requests-menu-timings-box")
+      .setAttribute("width", send * scale);
+    $("#timings-summary-send .requests-menu-timings-total")
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", send));
+
+    $("#timings-summary-wait .requests-menu-timings-box")
+      .setAttribute("width", wait * scale);
+    $("#timings-summary-wait .requests-menu-timings-total")
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", wait));
+
+    $("#timings-summary-receive .requests-menu-timings-box")
+      .setAttribute("width", receive * scale);
+    $("#timings-summary-receive .requests-menu-timings-total")
+      .setAttribute("value", L10N.getFormatStr("networkMenu.totalMS", receive));
+
+    $("#timings-summary-dns .requests-menu-timings-box")
+      .style.transform = "translateX(" + (scale * blocked) + "px)";
+    $("#timings-summary-connect .requests-menu-timings-box")
+      .style.transform = "translateX(" + (scale * (blocked + dns)) + "px)";
+    $("#timings-summary-send .requests-menu-timings-box")
+      .style.transform =
+        "translateX(" + (scale * (blocked + dns + connect)) + "px)";
+    $("#timings-summary-wait .requests-menu-timings-box")
+      .style.transform =
+        "translateX(" + (scale * (blocked + dns + connect + send)) + "px)";
+    $("#timings-summary-receive .requests-menu-timings-box")
+      .style.transform =
+        "translateX(" + (scale * (blocked + dns + connect + send + wait)) +
+          "px)";
+
+    $("#timings-summary-dns .requests-menu-timings-total")
+      .style.transform = "translateX(" + (scale * blocked) + "px)";
+    $("#timings-summary-connect .requests-menu-timings-total")
+      .style.transform = "translateX(" + (scale * (blocked + dns)) + "px)";
+    $("#timings-summary-send .requests-menu-timings-total")
+      .style.transform =
+        "translateX(" + (scale * (blocked + dns + connect)) + "px)";
+    $("#timings-summary-wait .requests-menu-timings-total")
+      .style.transform =
+        "translateX(" + (scale * (blocked + dns + connect + send)) + "px)";
+    $("#timings-summary-receive .requests-menu-timings-total")
+      .style.transform =
+        "translateX(" + (scale * (blocked + dns + connect + send + wait)) +
+         "px)";
+  },
 
   /**
    * Sets the preview for HTML responses shown in this view.

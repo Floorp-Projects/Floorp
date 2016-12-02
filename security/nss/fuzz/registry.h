@@ -11,35 +11,45 @@
 #include "FuzzerInternal.h"
 #include "nss.h"
 
+using namespace fuzzer;
+using namespace std;
+
+typedef decltype(LLVMFuzzerCustomMutator)* Mutator;
+
 class Registry {
  public:
-  static void Add(std::string name, fuzzer::UserCallback func, uint16_t max_len,
-                  std::string desc) {
+  static void Add(string name, UserCallback func, uint16_t max_len, string desc,
+                  vector<Mutator> mutators = {}) {
     assert(!Has(name));
-    GetInstance().targets_[name] = TargetData(func, max_len, desc);
+    GetInstance().targets_[name] = TargetData(func, max_len, desc, mutators);
   }
 
-  static bool Has(std::string name) {
+  static bool Has(string name) {
     return GetInstance().targets_.count(name) > 0;
   }
 
-  static fuzzer::UserCallback Func(std::string name) {
+  static UserCallback Func(string name) {
     assert(Has(name));
-    return std::get<0>(Get(name));
+    return get<0>(Get(name));
   }
 
-  static uint16_t MaxLen(std::string name) {
+  static uint16_t MaxLen(string name) {
     assert(Has(name));
-    return std::get<1>(Get(name));
+    return get<1>(Get(name));
   }
 
-  static std::string& Desc(std::string name) {
+  static string& Desc(string name) {
     assert(Has(name));
-    return std::get<2>(Get(name));
+    return get<2>(Get(name));
   }
 
-  static std::vector<std::string> Names() {
-    std::vector<std::string> names;
+  static vector<Mutator>& Mutators(string name) {
+    assert(Has(name));
+    return get<3>(Get(name));
+  }
+
+  static vector<string> Names() {
+    vector<string> names;
     for (auto& it : GetInstance().targets_) {
       names.push_back(it.first);
     }
@@ -47,25 +57,23 @@ class Registry {
   }
 
  private:
-  typedef std::tuple<fuzzer::UserCallback, uint16_t, std::string> TargetData;
+  typedef tuple<UserCallback, uint16_t, string, vector<Mutator>> TargetData;
 
   static Registry& GetInstance() {
     static Registry registry;
     return registry;
   }
 
-  static TargetData& Get(std::string name) {
-    return GetInstance().targets_[name];
-  }
+  static TargetData& Get(string name) { return GetInstance().targets_[name]; }
 
   Registry() {}
 
-  std::map<std::string, TargetData> targets_;
+  map<string, TargetData> targets_;
 };
 
-#define REGISTER_FUZZING_TARGET(name, func, max_len, desc)     \
-  static void __attribute__((constructor)) Register_##func() { \
-    Registry::Add(name, func, max_len, desc);                  \
+#define REGISTER_FUZZING_TARGET(name, func, max_len, desc, ...) \
+  static void __attribute__((constructor)) Register_##func() {  \
+    Registry::Add(name, func, max_len, desc, __VA_ARGS__);      \
   }
 
 #endif  // registry_h__

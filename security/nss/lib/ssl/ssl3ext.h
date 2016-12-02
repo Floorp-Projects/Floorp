@@ -145,12 +145,13 @@ SECStatus ssl3_ExtAppendHandshakeVariable(const sslSocket *ss,
 void ssl3_ExtSendAlert(const sslSocket *ss, SSL3AlertLevel level,
                        SSL3AlertDescription desc);
 void ssl3_ExtDecodeError(const sslSocket *ss);
-SECStatus ssl3_ExtConsumeHandshake(const sslSocket *ss, void *v, PRInt32 bytes,
+SECStatus ssl3_ExtConsumeHandshake(const sslSocket *ss, void *v, PRUint32 bytes,
                                    SSL3Opaque **b, PRUint32 *length);
-PRInt32 ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRInt32 bytes,
-                                       SSL3Opaque **b, PRUint32 *length);
+SECStatus ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRUint32 *num,
+                                         PRUint32 bytes, SSL3Opaque **b,
+                                         PRUint32 *length);
 SECStatus ssl3_ExtConsumeHandshakeVariable(const sslSocket *ss, SECItem *i,
-                                           PRInt32 bytes, SSL3Opaque **b,
+                                           PRUint32 bytes, SSL3Opaque **b,
                                            PRUint32 *length);
 
 #endif
