@@ -15,8 +15,6 @@ import os
 import sys
 from collections import defaultdict
 
-import moznetwork
-
 import httpd
 
 __all__ = ["default_doc_root",
@@ -137,15 +135,16 @@ class ServerProc(BlockingChannel):
         return False
 
 
-def http_server(doc_root, ssl_config, **kwargs):
-    return httpd.FixtureServer(doc_root, url="http://%s:0/" % moznetwork.get_ip())
+def http_server(doc_root, ssl_config, host="127.0.0.1", **kwargs):
+    return httpd.FixtureServer(doc_root, url="http://{}:0/".format(host), **kwargs)
 
 
-def https_server(doc_root, ssl_config, **kwargs):
+def https_server(doc_root, ssl_config, host="127.0.0.1", **kwargs):
     return httpd.FixtureServer(doc_root,
-                               url="https://%s:0/" % moznetwork.get_ip(),
+                               url="https://{}:0/".format(host),
                                ssl_key=ssl_config["key_path"],
-                               ssl_cert=ssl_config["cert_path"])
+                               ssl_cert=ssl_config["cert_path"],
+                               **kwargs)
 
 
 def start_servers(doc_root, ssl_config, **kwargs):
@@ -173,7 +172,6 @@ def start(doc_root=None, **kwargs):
 
     global servers
     servers = start_servers(doc_root, ssl_config, **kwargs)
-
     return servers
 
 
@@ -212,7 +210,7 @@ def main(args):
 
     servers = start(args.doc_root)
     for url in iter_url(servers):
-        print >>sys.stderr, "%s: listening on %s" % (sys.argv[0], url)
+        print >>sys.stderr, "{}: listening on {}".format(sys.argv[0], url)
 
     try:
         while any(proc.is_alive for proc in iter_proc(servers)):
