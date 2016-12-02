@@ -23,11 +23,11 @@
 "size": 1179901
 },
 {
-"version": "clang 3.9.0/r262971",
-"size": 169861843,
-"digest": "8caa5a89aea981b618233d39f01bb934b79b85ee8167104bfa4f07936145df5e8ca5e8e007123d75ccc12d2baa926ffc827b40bf793fa9d4bc2670fa519b0ec0",
+"version": "clang 4.0pre/r286542",
+"size": 206088429,
+"digest": "a6de709a5097d98084b6111e340f53cd8397736f783aa6f76c9d45bcb694d3983ab3b7aea7f96756fcc4ee44f7b0e57df5ebabbd59242cd51942742fe1769d9a",
 "algorithm": "sha512",
-"filename": "clang32.tar.bz2",
+"filename": "clang.tar.bz2",
 "unpack": true
 }
 ]
