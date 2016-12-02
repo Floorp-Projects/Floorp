@@ -310,6 +310,13 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       case AVCOL_SPC_BT470BG:
         b.mYUVColorSpace = YUVColorSpace::BT601;
         break;
+      case AVCOL_SPC_UNSPECIFIED:
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+        if (mCodecContext->codec_id == AV_CODEC_ID_VP9) {
+          b.mYUVColorSpace = YUVColorSpace::BT709;
+        }
+#endif
+        break;
       default:
         break;
     }
