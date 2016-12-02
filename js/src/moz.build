@@ -197,6 +197,7 @@ UNIFIED_SOURCES += [
     'gc/Zone.cpp',
     'irregexp/NativeRegExpMacroAssembler.cpp',
     'irregexp/RegExpAST.cpp',
+    'irregexp/RegExpCharacters.cpp',
     'irregexp/RegExpEngine.cpp',
     'irregexp/RegExpInterpreter.cpp',
     'irregexp/RegExpMacroAssembler.cpp',
