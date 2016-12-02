@@ -340,6 +340,13 @@ private:
   TimedMetadataEventProducer* mTimedMetadataEvent;
   MediaEventProducer<void>* mOnSeekableEvent;
 
+  // This will be populated only if a content change occurs, otherwise it
+  // will be left as null so the original metadata is used.
+  // It is updated once a chained ogg is encountered.
+  // As Ogg chaining is only supported for audio, we only need an audio track
+  // info.
+  RefPtr<SharedTrackInfo> mSharedAudioTrackInfo;
+
   friend class OggTrackDemuxer;
 };
 
