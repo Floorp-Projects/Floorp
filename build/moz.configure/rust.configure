@@ -56,16 +56,25 @@ def rust_compiler(value, rustc, rustc_info):
             Rust compiler not found.
             To compile rust language sources, you must have 'rustc' in your path.
             See https//www.rust-lang.org/ for more information.
+
+            You can install rust by running './mach bootstrap'
+            or by directly running the installer from https://rustup.rs/
             '''))
         version = rustc_info.version
         min_version = Version('1.10')
         if version < min_version:
             die(dedent('''\
             Rust compiler {} is too old.
+
             To compile Rust language sources please install at least
             version {} of the 'rustc' toolchain and make sure it is
             first in your path.
+
             You can verify this by typing 'rustc --version'.
+
+            If you have the 'rustup' tool installed you can upgrade
+            to the latest release by typing 'rustup update'. The
+            installer is available from https://rustup.rs/
             '''.format(version, min_version)))
         return True
 
