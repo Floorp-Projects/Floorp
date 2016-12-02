@@ -74,13 +74,13 @@ add_task(function* test_recording() {
 
   // The following should not result in any recorded events.
   Assert.throws(() => Telemetry.recordEvent("unknown.category", "test1", "object1"),
-                /Error: Unknown event\./,
+                /Error: Unknown event: \["unknown.category", "test1", "object1"\]/,
                 "Should throw on unknown category.");
   Assert.throws(() => Telemetry.recordEvent("telemetry.test", "unknown", "object1"),
-                /Error: Unknown event\./,
+                /Error: Unknown event: \["telemetry.test", "unknown", "object1"\]/,
                 "Should throw on unknown method.");
   Assert.throws(() => Telemetry.recordEvent("telemetry.test", "test1", "unknown"),
-                /Error: Unknown event\./,
+                /Error: Unknown event: \["telemetry.test", "test1", "unknown"\]/,
                 "Should throw on unknown object.");
 
   let checkEvents = (events, expectedEvents) => {
