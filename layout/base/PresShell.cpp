@@ -9918,6 +9918,7 @@ PresShell::DelayedKeyEvent::DelayedKeyEvent(WidgetKeyboardEvent* aEvent) :
                             aEvent->mWidget);
   keyEvent->AssignKeyEventData(*aEvent, false);
   keyEvent->mFlags.mIsSynthesizedForTests = aEvent->mFlags.mIsSynthesizedForTests;
+  keyEvent->mFlags.mIsSuppressedOrDelayed = true;
   mEvent = keyEvent;
 }
 
