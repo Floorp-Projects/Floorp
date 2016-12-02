@@ -85,10 +85,7 @@ const DEFAULT_CERT_EXTENSION = "crt";
  *          Generated filename.
  */
 function certToFilename(cert) {
-  let filename = cert.commonName;
-  if (!filename) {
-    filename = cert.windowTitle;
-  }
+  let filename = cert.displayName;
 
   // Remove unneeded and/or unsafe characters.
   filename = filename.replace(/\s/g, "")
