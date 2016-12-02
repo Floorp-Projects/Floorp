@@ -161,6 +161,7 @@ namespace jit {
     _(StringReplace)                                                        \
     _(Lambda)                                                               \
     _(LambdaArrow)                                                          \
+    _(SetFunName)                                                           \
     _(KeepAliveObject)                                                      \
     _(Slots)                                                                \
     _(Elements)                                                             \
