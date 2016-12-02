@@ -34,4 +34,5 @@ extern "C" int pkcs8_fuzzing_target(const uint8_t *Data, size_t Size) {
   return 0;
 }
 
-REGISTER_FUZZING_TARGET("pkcs8", pkcs8_fuzzing_target, 2048, "PKCS#8 Import")
+REGISTER_FUZZING_TARGET("pkcs8", pkcs8_fuzzing_target, 2048, "PKCS#8 Import",
+                        {})

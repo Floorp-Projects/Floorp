@@ -171,15 +171,15 @@ ssl3_ParseExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
 
     while (*length) {
         SECStatus rv;
-        PRInt32 extension_type;
+        PRUint32 extension_type;
         SECItem extension_data = { siBuffer, NULL, 0 };
         TLSExtension *extension;
         PRCList *cursor;
 
         /* Get the extension's type field */
-        extension_type = ssl3_ConsumeHandshakeNumber(ss, 2, b, length);
-        if (extension_type < 0) { /* failure to decode extension_type */
-            return SECFailure;    /* alert already sent */
+        rv = ssl3_ConsumeHandshakeNumber(ss, &extension_type, 2, b, length);
+        if (rv != SECSuccess) {
+            return SECFailure; /* alert already sent */
         }
 
         SSL_TRC(10, ("%d: SSL3[%d]: parsing extension %d",
@@ -505,22 +505,22 @@ ssl3_ExtDecodeError(const sslSocket *ss)
 }
 
 SECStatus
-ssl3_ExtConsumeHandshake(const sslSocket *ss, void *v, PRInt32 bytes,
+ssl3_ExtConsumeHandshake(const sslSocket *ss, void *v, PRUint32 bytes,
                          SSL3Opaque **b, PRUint32 *length)
 {
     return ssl3_ConsumeHandshake((sslSocket *)ss, v, bytes, b, length);
 }
 
-PRInt32
-ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRInt32 bytes,
-                               SSL3Opaque **b, PRUint32 *length)
+SECStatus
+ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRUint32 *num,
+                               PRUint32 bytes, SSL3Opaque **b, PRUint32 *length)
 {
-    return ssl3_ConsumeHandshakeNumber((sslSocket *)ss, bytes, b, length);
+    return ssl3_ConsumeHandshakeNumber((sslSocket *)ss, num, bytes, b, length);
 }
 
 SECStatus
 ssl3_ExtConsumeHandshakeVariable(const sslSocket *ss, SECItem *i,
-                                 PRInt32 bytes, SSL3Opaque **b,
+                                 PRUint32 bytes, SSL3Opaque **b,
                                  PRUint32 *length)
 {
     return ssl3_ConsumeHandshakeVariable((sslSocket *)ss, i, bytes, b, length);

@@ -373,6 +373,22 @@ void TlsConnectTestBase::ConnectExpectFail() {
   ASSERT_EQ(TlsAgent::STATE_ERROR, server_->state());
 }
 
+void TlsConnectTestBase::ConnectExpectFailOneSide(TlsAgent::Role failing_side) {
+  server_->StartConnect();
+  client_->StartConnect();
+  client_->SetServerKeyBits(server_->server_key_bits());
+  client_->Handshake();
+  server_->Handshake();
+  TlsAgent* fail_agent;
+
+  if (failing_side == TlsAgent::CLIENT) {
+    fail_agent = client_;
+  } else {
+    fail_agent = server_;
+  }
+  ASSERT_TRUE_WAIT(fail_agent->state() == TlsAgent::STATE_ERROR, 5000);
+}
+
 void TlsConnectTestBase::ConfigureVersion(uint16_t version) {
   client_->SetVersionRange(version, version);
   server_->SetVersionRange(version, version);

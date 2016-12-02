@@ -2030,9 +2030,6 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             if (widget == MOZ_GTK_TOOLBAR_BUTTON)
                 gtk_style_context_restore(style);
 
-            // XXX: Subtract 1 pixel from the border to account for the added
-            // -moz-focus-inner border (Bug 1228281).
-            *left -= 1; *top -= 1; *right -= 1; *bottom -= 1;
             moz_gtk_add_style_border(style, left, top, right, bottom);
 
             ReleaseStyleContext(style);

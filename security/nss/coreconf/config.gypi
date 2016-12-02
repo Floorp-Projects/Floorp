@@ -273,9 +273,17 @@
                 'cflags': ['-m64'],
                 'ldflags': ['-m64'],
               }],
-              [ 'use_pprof==1' , {
-                'ldflags': [ '-lprofiler' ],
-              }],
+            ],
+          }],
+          [ 'use_pprof==1 and OS=="linux"', {
+            'ldflags': [ '-lprofiler' ],
+          }],
+          [ 'use_pprof==1 and OS=="mac"', {
+            'xcode_settings': {
+              'OTHER_LDFLAGS': [ '-lprofiler' ],
+            },
+            'library_dirs': [
+              '/usr/local/lib/',
             ],
           }],
           [ 'disable_werror==0 and (OS=="linux" or OS=="mac")', {
@@ -288,7 +296,7 @@
               '-Wno-unused-function',
             ]
           }],
-          [ 'use_asan==1 or use_ubsan==1', {
+          [ 'fuzz==1 or use_asan==1 or use_ubsan==1', {
             'cflags': ['-O1'],
             'xcode_settings': {
               'GCC_OPTIMIZATION_LEVEL': '1', # -O1

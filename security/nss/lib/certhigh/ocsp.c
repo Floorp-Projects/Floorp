@@ -2195,7 +2195,7 @@ SetRequestExts(void *object, CERTCertExtension **exts)
     request->tbsRequest->requestExtensions = exts;
 }
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(NSS_NO_GCC48)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wvarargs"
 #endif
@@ -2265,7 +2265,7 @@ loser:
         (void)CERT_FinishExtensions(extHandle);
     return rv;
 }
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(NSS_NO_GCC48)
 #pragma GCC diagnostic pop
 #endif
 
