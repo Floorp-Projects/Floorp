@@ -393,7 +393,7 @@ OggDemuxer::SetupTargetTheora(TheoraState* aTheoraState, OggHeaders& aHeaders)
                       aTheoraState->mInfo.frame_height);
   if (IsValidVideoRegion(frameSize, picture, displaySize)) {
     // Video track's frame sizes will not overflow. Activate the video track.
-    mInfo.mVideo.mMimeType = "video/ogg; codecs=theora";
+    mInfo.mVideo.mMimeType = "video/theora";
     mInfo.mVideo.mDisplay = displaySize;
     mInfo.mVideo.mImage = frameSize;
     mInfo.mVideo.SetImageRect(picture);
@@ -423,7 +423,7 @@ OggDemuxer::SetupTargetVorbis(VorbisState* aVorbisState, OggHeaders& aHeaders)
   memcpy(&mVorbisInfo, &aVorbisState->mInfo, sizeof(mVorbisInfo));
   mVorbisInfo.codec_setup = nullptr;
 
-  mInfo.mAudio.mMimeType = "audio/ogg; codecs=vorbis";
+  mInfo.mAudio.mMimeType = "audio/vorbis";
   mInfo.mAudio.mRate = aVorbisState->mInfo.rate;
   mInfo.mAudio.mChannels = aVorbisState->mInfo.channels;
 
@@ -444,7 +444,7 @@ OggDemuxer::SetupTargetOpus(OpusState* aOpusState, OggHeaders& aHeaders)
     mOpusState->Reset();
   }
 
-  mInfo.mAudio.mMimeType = "audio/ogg; codecs=opus";
+  mInfo.mAudio.mMimeType = "audio/opus";
   mInfo.mAudio.mRate = aOpusState->mRate;
   mInfo.mAudio.mChannels = aOpusState->mChannels;
 
@@ -830,7 +830,7 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     if (msgInfo) {
       InitTrack(msgInfo, &mInfo.mAudio, true);
     }
-    mInfo.mAudio.mMimeType = NS_LITERAL_CSTRING("audio/ogg; codec=vorbis");
+    mInfo.mAudio.mMimeType = NS_LITERAL_CSTRING("audio/vorbis");
     mInfo.mAudio.mRate = newVorbisState->mInfo.rate;
     mInfo.mAudio.mChannels = newVorbisState->mInfo.channels;
 
@@ -849,7 +849,7 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     if (msgInfo) {
       InitTrack(msgInfo, &mInfo.mAudio, true);
     }
-    mInfo.mAudio.mMimeType = NS_LITERAL_CSTRING("audio/ogg; codec=opus");
+    mInfo.mAudio.mMimeType = NS_LITERAL_CSTRING("audio/opus");
     mInfo.mAudio.mRate = newOpusState->mRate;
     mInfo.mAudio.mChannels = newOpusState->mChannels;
 
