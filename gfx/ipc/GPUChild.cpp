@@ -82,7 +82,7 @@ GPUChild::EnsureGPUReady()
   SendGetDeviceStatus(&data);
 
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
-  Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_LAUNCH_TIME_MS, mHost->GetLaunchTime());
+  Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_LAUNCH_TIME_MS_2, mHost->GetLaunchTime());
   mGPUReady = true;
 }
 
@@ -95,7 +95,7 @@ GPUChild::RecvInitComplete(const GPUDeviceData& aData)
   }
 
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(aData);
-  Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_LAUNCH_TIME_MS, mHost->GetLaunchTime());
+  Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_LAUNCH_TIME_MS_2, mHost->GetLaunchTime());
   mGPUReady = true;
   return IPC_OK();
 }
