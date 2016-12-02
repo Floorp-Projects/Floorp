@@ -44,18 +44,12 @@ function doPrompt(msg)
  */
 function AddCertChain(node, chain)
 {
-  var child = document.getElementById(node);
-  var currCert;
-  var displayVal;
+  let child = document.getElementById(node);
   for (let i = chain.length - 1; i >= 0; i--) {
-    currCert = chain.queryElementAt(i, nsIX509Cert);
-    if (currCert.commonName) {
-      displayVal = currCert.commonName;
-    } else {
-      displayVal = currCert.windowTitle;
-    }
+    let currCert = chain.queryElementAt(i, nsIX509Cert);
+    let displayValue = currCert.displayName;
     let addTwistie = i != 0;
-    child = addChildrenToTree(child, displayVal, currCert.dbKey, addTwistie);
+    child = addChildrenToTree(child, displayValue, currCert.dbKey, addTwistie);
   }
 }
 
@@ -82,7 +76,7 @@ function setWindowName()
 
   let cert = window.arguments[0].QueryInterface(Ci.nsIX509Cert);
   document.title = bundle.getFormattedString("certViewerTitle",
-                                             [cert.windowTitle]);
+                                             [cert.displayName]);
 
   //
   //  Set the cert attributes for viewing

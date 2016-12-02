@@ -340,7 +340,7 @@ VRManager::RefreshVRControllers()
 {
   nsTArray<RefPtr<gfx::VRControllerHost>> controllers;
 
-  ScanForDevices();
+  ScanForControllers();
 
   for (uint32_t i = 0; i < mControllerManagers.Length()
       && controllers.Length() == 0; ++i) {
@@ -372,11 +372,20 @@ VRManager::RefreshVRControllers()
 }
 
 void
-VRManager::ScanForDevices()
+VRManager::ScanForControllers()
 {
   for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
     mControllerManagers[i]->ScanForDevices();
   }
+}
+
+void
+VRManager::RemoveControllers()
+{
+  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+    mControllerManagers[i]->RemoveDevices();
+  }
+  mVRControllers.Clear();
 }
 
 template<class T>

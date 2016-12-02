@@ -297,14 +297,15 @@ VRManagerParent::RecvControllerListenerAdded()
 {
   VRManager* vm = VRManager::Get();
   // Ask the connected gamepads to be added to GamepadManager
-  vm->ScanForDevices();
-
+  vm->ScanForControllers();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 VRManagerParent::RecvControllerListenerRemoved()
 {
+  VRManager* vm = VRManager::Get();
+  vm->RemoveControllers();
   return IPC_OK();
 }
 
