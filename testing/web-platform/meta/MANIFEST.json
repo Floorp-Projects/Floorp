@@ -39516,6 +39516,13 @@
             "url": "/fetch/api/redirect/redirect-count-worker.html"
           }
         ],
+        "fetch/api/redirect/redirect-count.html": [
+          {
+            "path": "fetch/api/redirect/redirect-count.html",
+            "timeout": "long",
+            "url": "/fetch/api/redirect/redirect-count.html"
+          }
+        ],
         "fetch/api/redirect/redirect-referrer-worker.html": [
           {
             "path": "fetch/api/redirect/redirect-referrer-worker.html",

@@ -2209,7 +2209,7 @@ class BaseCompiler
         }
     }
 
-    // TODO / OPTIMIZE (Bug 1316820): This is expensive; let's roll the iterator
+    // TODO / OPTIMIZE (Bug 1316821): This is expensive; let's roll the iterator
     // walking into the walking done for passArg.  See comments in passArg.
 
     size_t stackArgAreaSize(const ValTypeVector& args) {
@@ -2232,7 +2232,7 @@ class BaseCompiler
         return call.abi.next(MIRType::Pointer);
     }
 
-    // TODO / OPTIMIZE (Bug 1316820): Note passArg is used only in one place.
+    // TODO / OPTIMIZE (Bug 1316821): Note passArg is used only in one place.
     // (Or it was, until Luke wandered through, but that can be fixed again.)
     // I'm not saying we should manually inline it, but we could hoist the
     // dispatch into the caller and have type-specific implementations of

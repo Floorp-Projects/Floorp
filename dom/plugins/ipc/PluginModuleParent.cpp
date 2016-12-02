@@ -2756,6 +2756,19 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     // Now replace it with the instance
     instance->pdata = static_cast<PluginDataResolver*>(parentInstance);
 
+    // Any IPC messages for the PluginInstance actor should be dispatched to the
+    // DocGroup for the plugin's document.
+    RefPtr<nsPluginInstanceOwner> owner = parentInstance->GetOwner();
+    nsCOMPtr<nsIDOMElement> elt;
+    owner->GetDOMElement(getter_AddRefs(elt));
+    if (nsCOMPtr<nsINode> node = do_QueryInterface(elt)) {
+        nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
+        if (doc) {
+            nsCOMPtr<nsIEventTarget> eventTarget = doc->EventTargetFor(dom::TaskCategory::Other);
+            SetEventTargetForActor(parentInstance, eventTarget);
+        }
+    }
+
     if (!SendPPluginInstanceConstructor(parentInstance,
                                         nsDependentCString(pluginType), mode,
                                         names, values)) {
