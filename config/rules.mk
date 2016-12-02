@@ -942,6 +942,8 @@ ifndef MOZ_OPTIMIZE
 rustflags_override = RUSTFLAGS='-C opt-level=0'
 endif
 
+CARGO_BUILD = env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(cargo_build_flags)
+
 ifdef RUST_LIBRARY_FILE
 
 # Assume any system libraries rustc links against are already in the target's LIBS.
@@ -951,7 +953,7 @@ ifdef RUST_LIBRARY_FILE
 # build.
 force-cargo-library-build:
 	$(REPORT_BUILD)
-	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build --lib $(cargo_build_flags) $(cargo_target_flag) --
+	$(CARGO_BUILD) --lib $(cargo_target_flag)
 
 $(RUST_LIBRARY_FILE): force-cargo-library-build
 endif # RUST_LIBRARY_FILE
@@ -959,14 +961,14 @@ endif # RUST_LIBRARY_FILE
 ifdef RUST_PROGRAMS
 force-cargo-program-build:
 	$(REPORT_BUILD)
-	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_build_flags) $(cargo_target_flag) --
+	$(CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 
 $(RUST_PROGRAMS): force-cargo-program-build
 endif # RUST_PROGRAMS
 ifdef HOST_RUST_PROGRAMS
 force-cargo-host-program-build:
 	$(REPORT_BUILD)
-	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_build_flags) $(cargo_host_flag) --
+	$(CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 
 $(HOST_RUST_PROGRAMS): force-cargo-host-program-build
 endif # HOST_RUST_PROGRAMS
