@@ -87,6 +87,11 @@ impl fmt::Display for XmlVersion {
     }
 }
 
+impl fmt::Debug for XmlVersion {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(self, f)
+    }
+}
 
 /// Checks whether the given character is a white space character (`S`)
 /// as is defined by XML 1.1 specification, [section 2.3][1].

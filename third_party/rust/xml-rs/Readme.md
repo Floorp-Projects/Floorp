@@ -139,7 +139,7 @@ error or end-of-document event once and will produce `None` afterwards.
 It is also possible to tweak parsing process a little using `xml::reader::ParserConfig` structure.
 See its documentation for more information and examples.
 
-You can find a more extensive example of using `EventReader` in `src/analyzer.rs`, which is a
+You can find a more extensive example of using `EventReader` in `src/analyze.rs`, which is a
 small program (BTW, it is built with `cargo build` and can be run after that) which shows various
 statistics about specified XML document. It can also be used to check for well-formedness of
 XML documents - if a document is not well-formed, this program will exit with an error.

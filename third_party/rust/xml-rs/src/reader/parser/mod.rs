@@ -551,7 +551,7 @@ mod tests {
                 e => panic!("Unexpected event: {:?}", e)
             }
         );
-        ($r:expr, $p:expr, $t:pat [ $c:expr ]) => (
+        ($r:expr, $p:expr, $t:pat => $c:expr ) => (
             match $p.next(&mut $r) {
                 $t if $c => {}
                 e => panic!("Unexpected event: {:?}", e)
@@ -575,14 +575,13 @@ mod tests {
         "#);
 
         expect_event!(r, p, Ok(XmlEvent::StartDocument { .. }));
-        expect_event!(r, p, Ok(XmlEvent::StartElement { ref name, ref attributes, ref namespace })
-            [ *name == OwnedName::local("a") &&
-               attributes.len() == 1 &&
-               attributes[0] == OwnedAttribute::new(OwnedName::local("attr"), "zzz;zzz") &&
-               namespace.is_essentially_empty()
-            ]
+        expect_event!(r, p, Ok(XmlEvent::StartElement { ref name, ref attributes, ref namespace }) =>
+            *name == OwnedName::local("a") &&
+             attributes.len() == 1 &&
+             attributes[0] == OwnedAttribute::new(OwnedName::local("attr"), "zzz;zzz") &&
+             namespace.is_essentially_empty()
         );
-        expect_event!(r, p, Ok(XmlEvent::EndElement { ref name }) [ *name == OwnedName::local("a") ]);
+        expect_event!(r, p, Ok(XmlEvent::EndElement { ref name }) => *name == OwnedName::local("a"));
         expect_event!(r, p, Ok(XmlEvent::EndDocument));
     }
 
@@ -593,9 +592,9 @@ mod tests {
         "#);
 
         expect_event!(r, p, Ok(XmlEvent::StartDocument { .. }));
-        expect_event!(r, p, Err(ref e)
-            [ e.msg() == "Unexpected token inside attribute value: <"
-                && e.position() == TextPosition { row: 1, column: 24 } ]
+        expect_event!(r, p, Err(ref e) =>
+            e.msg() == "Unexpected token inside attribute value: <" &&
+            e.position() == TextPosition { row: 1, column: 24 }
         );
     }
 }
