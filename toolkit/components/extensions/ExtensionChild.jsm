@@ -903,9 +903,9 @@ defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function()
   return childManager;
 });
 
-class DevtoolsContextChild extends ExtensionBaseContextChild {
+class DevToolsContextChild extends ExtensionBaseContextChild {
   /**
-   * This DevtoolsContextChild represents a devtools-related addon execution
+   * This DevToolsContextChild represents a devtools-related addon execution
    * environment that has access to the devtools API namespace and to the same subset
    * of APIs available in a content script execution environment.
    *
@@ -930,7 +930,7 @@ class DevtoolsContextChild extends ExtensionBaseContextChild {
   }
 }
 
-defineLazyGetter(DevtoolsContextChild.prototype, "childManager", function() {
+defineLazyGetter(DevToolsContextChild.prototype, "childManager", function() {
   let localApis = {};
   devtoolsAPIManager.generateAPIs(this, localApis);
 
@@ -1091,7 +1091,7 @@ ExtensionChild = {
     let uri = contentWindow.document.documentURIObject;
 
     if (devtoolsToolboxInfo) {
-      context = new DevtoolsContextChild(extension, {
+      context = new DevToolsContextChild(extension, {
         viewType, contentWindow, uri, tabId, devtoolsToolboxInfo,
       });
     } else {
