@@ -42,6 +42,7 @@ PrefsEngine.prototype = {
   version: 2,
 
   syncPriority: 1,
+  allowSkippedRecord: false,
 
   getChangedIDs: function () {
     // No need for a proper timestamp (no conflict resolution needed).
