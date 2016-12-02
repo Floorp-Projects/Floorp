@@ -125,6 +125,18 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
+  // First check for newly-started transform animations that should be
+  // synchronized with geometric animations. We need to do this before any
+  // other early returns (the one above is ok) since we can only check this
+  // state when the animation is newly-started.
+  if (aProperty == eCSSProperty_transform) {
+    PendingAnimationTracker* tracker =
+      aFrame->PresContext()->Document()->GetPendingAnimationTracker();
+    if (tracker) {
+      tracker->MarkAnimationsThatMightNeedSynchronization();
+    }
+  }
+
   // If the property will be added to the animations level of the cascade but
   // there is an !important rule for that property in the cascade then the
   // animation will not be applied since the !important rule overrides it.
