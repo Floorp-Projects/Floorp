@@ -28,9 +28,9 @@ class TlsHandshakeSkipFilter : public TlsRecordFilter {
  protected:
   // Takes a record; if it is a handshake record, it removes the first handshake
   // message that is of handshake_type_ type.
-  virtual PacketFilter::Action FilterRecord(const RecordHeader& record_header,
-                                            const DataBuffer& input,
-                                            DataBuffer* output) {
+  virtual PacketFilter::Action FilterRecord(
+      const TlsRecordHeader& record_header, const DataBuffer& input,
+      DataBuffer* output) {
     if (record_header.content_type() != kTlsHandshakeType) {
       return KEEP;
     }
@@ -98,6 +98,40 @@ class TlsSkipTest
   }
 };
 
+class Tls13SkipTest : public TlsConnectTestBase,
+                      public ::testing::WithParamInterface<std::string> {
+ protected:
+  Tls13SkipTest()
+      : TlsConnectTestBase(GetParam(), SSL_LIBRARY_VERSION_TLS_1_3) {}
+
+  void ServerSkipTest(TlsRecordFilter* filter, int32_t error) {
+    EnsureTlsSetup();
+    server_->SetPacketFilter(filter);
+    filter->EnableDecryption();
+    if (mode_ == STREAM) {
+      ConnectExpectFail();
+    } else {
+      ConnectExpectFailOneSide(TlsAgent::CLIENT);
+    }
+    client_->CheckErrorCode(error);
+    if (mode_ == STREAM) {
+      server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+    } else {
+      ASSERT_EQ(TlsAgent::STATE_CONNECTING, server_->state());
+    }
+  }
+
+  void ClientSkipTest(TlsRecordFilter* filter, int32_t error) {
+    EnsureTlsSetup();
+    client_->SetPacketFilter(filter);
+    filter->EnableDecryption();
+    ConnectExpectFailOneSide(TlsAgent::SERVER);
+
+    server_->CheckErrorCode(error);
+    ASSERT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+  }
+};
+
 TEST_P(TlsSkipTest, SkipCertificateRsa) {
   EnableOnlyStaticRsaCiphers();
   ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate));
@@ -148,11 +182,41 @@ TEST_P(TlsSkipTest, SkipCertAndKeyExchEcdsa) {
   client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_HELLO_DONE);
 }
 
+TEST_P(Tls13SkipTest, SkipEncryptedExtensions) {
+  ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeEncryptedExtensions),
+                 SSL_ERROR_RX_UNEXPECTED_CERTIFICATE);
+}
+
+TEST_P(Tls13SkipTest, SkipServerCertificate) {
+  ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate),
+                 SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY);
+}
+
+TEST_P(Tls13SkipTest, SkipServerCertificateVerify) {
+  ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificateVerify),
+                 SSL_ERROR_RX_UNEXPECTED_FINISHED);
+}
+
+TEST_P(Tls13SkipTest, SkipClientCertificate) {
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  ClientSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate),
+                 SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY);
+}
+
+TEST_P(Tls13SkipTest, SkipClientCertificateVerify) {
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  ClientSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificateVerify),
+                 SSL_ERROR_RX_UNEXPECTED_FINISHED);
+}
+
 INSTANTIATE_TEST_CASE_P(SkipTls10, TlsSkipTest,
                         ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
                                            TlsConnectTestBase::kTlsV10));
 INSTANTIATE_TEST_CASE_P(SkipVariants, TlsSkipTest,
                         ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
                                            TlsConnectTestBase::kTlsV11V12));
-
+INSTANTIATE_TEST_CASE_P(Skip13Variants, Tls13SkipTest,
+                        TlsConnectTestBase::kTlsModesAll);
 }  // namespace nss_test
