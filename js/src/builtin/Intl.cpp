@@ -3039,6 +3039,198 @@ MatchSlash(JSContext* cx, const JSAutoByteString& pattern, const char** iter)
     return false;
 }
 
+enum class DisplayNameStyle
+{
+    Narrow,
+    Short,
+    Long,
+};
+
+static JSString*
+ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenerator* dtpg,
+                         DisplayNameStyle style,
+                         Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE>& chars,
+                         const JSAutoByteString& pattern)
+{
+    const char* pat = pattern.ptr();
+
+    if (!MatchPart(&pat, "dates")) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+        return nullptr;
+    }
+
+    if (!MatchSlash(cx, pattern, &pat))
+        return nullptr;
+
+    if (MatchPart(&pat, "fields")) {
+        if (!MatchSlash(cx, pattern, &pat))
+            return nullptr;
+
+        UDateTimePatternField fieldType;
+
+        if (MatchPart(&pat, "year")) {
+            fieldType = UDATPG_YEAR_FIELD;
+        } else if (MatchPart(&pat, "month")) {
+            fieldType = UDATPG_MONTH_FIELD;
+        } else if (MatchPart(&pat, "week")) {
+            fieldType = UDATPG_WEEK_OF_YEAR_FIELD;
+        } else if (MatchPart(&pat, "day")) {
+            fieldType = UDATPG_DAY_FIELD;
+        } else {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            return nullptr;
+        }
+
+        // This part must be the final part with no trailing data.
+        if (*pat != '\0') {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            return nullptr;
+        }
+
+        int32_t resultSize;
+        const UChar* value = udatpg_getAppendItemName(dtpg, fieldType, &resultSize);
+        MOZ_ASSERT(resultSize >= 0);
+
+        return NewStringCopyN<CanGC>(cx, UCharToChar16(value), size_t(resultSize));
+    }
+
+    if (MatchPart(&pat, "gregorian")) {
+        if (!MatchSlash(cx, pattern, &pat))
+            return nullptr;
+
+        UDateFormatSymbolType symbolType;
+        int32_t index;
+
+        if (MatchPart(&pat, "months")) {
+            if (!MatchSlash(cx, pattern, &pat))
+                return nullptr;
+
+            switch (style) {
+              case DisplayNameStyle::Narrow:
+                symbolType = UDAT_STANDALONE_NARROW_MONTHS;
+                break;
+
+              case DisplayNameStyle::Short:
+                symbolType = UDAT_STANDALONE_SHORT_MONTHS;
+                break;
+
+              case DisplayNameStyle::Long:
+                symbolType = UDAT_STANDALONE_MONTHS;
+                break;
+            }
+
+            if (MatchPart(&pat, "january")) {
+                index = UCAL_JANUARY;
+            } else if (MatchPart(&pat, "february")) {
+                index = UCAL_FEBRUARY;
+            } else if (MatchPart(&pat, "march")) {
+                index = UCAL_MARCH;
+            } else if (MatchPart(&pat, "april")) {
+                index = UCAL_APRIL;
+            } else if (MatchPart(&pat, "may")) {
+                index = UCAL_MAY;
+            } else if (MatchPart(&pat, "june")) {
+                index = UCAL_JUNE;
+            } else if (MatchPart(&pat, "july")) {
+                index = UCAL_JULY;
+            } else if (MatchPart(&pat, "august")) {
+                index = UCAL_AUGUST;
+            } else if (MatchPart(&pat, "september")) {
+                index = UCAL_SEPTEMBER;
+            } else if (MatchPart(&pat, "october")) {
+                index = UCAL_OCTOBER;
+            } else if (MatchPart(&pat, "november")) {
+                index = UCAL_NOVEMBER;
+            } else if (MatchPart(&pat, "december")) {
+                index = UCAL_DECEMBER;
+            } else {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return nullptr;
+            }
+        } else if (MatchPart(&pat, "weekdays")) {
+            if (!MatchSlash(cx, pattern, &pat))
+                return nullptr;
+
+            switch (style) {
+              case DisplayNameStyle::Narrow:
+                symbolType = UDAT_STANDALONE_NARROW_WEEKDAYS;
+                break;
+
+              case DisplayNameStyle::Short:
+                symbolType = UDAT_STANDALONE_SHORT_WEEKDAYS;
+                break;
+
+              case DisplayNameStyle::Long:
+                symbolType = UDAT_STANDALONE_WEEKDAYS;
+                break;
+            }
+
+            if (MatchPart(&pat, "monday")) {
+                index = UCAL_MONDAY;
+            } else if (MatchPart(&pat, "tuesday")) {
+                index = UCAL_TUESDAY;
+            } else if (MatchPart(&pat, "wednesday")) {
+                index = UCAL_WEDNESDAY;
+            } else if (MatchPart(&pat, "thursday")) {
+                index = UCAL_THURSDAY;
+            } else if (MatchPart(&pat, "friday")) {
+                index = UCAL_FRIDAY;
+            } else if (MatchPart(&pat, "saturday")) {
+                index = UCAL_SATURDAY;
+            } else if (MatchPart(&pat, "sunday")) {
+                index = UCAL_SUNDAY;
+            } else {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return nullptr;
+            }
+        } else if (MatchPart(&pat, "dayperiods")) {
+            if (!MatchSlash(cx, pattern, &pat))
+                return nullptr;
+
+            symbolType = UDAT_AM_PMS;
+
+            if (MatchPart(&pat, "am")) {
+                index = UCAL_AM;
+            } else if (MatchPart(&pat, "pm")) {
+                index = UCAL_PM;
+            } else {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return nullptr;
+            }
+        } else {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            return nullptr;
+        }
+
+        // This part must be the final part with no trailing data.
+        if (*pat != '\0') {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            return nullptr;
+        }
+
+        UErrorCode status = U_ZERO_ERROR;
+        int32_t resultSize =
+            udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
+                            INITIAL_CHAR_BUFFER_SIZE, &status);
+        if (status == U_BUFFER_OVERFLOW_ERROR) {
+            if (!chars.resize(resultSize))
+                return nullptr;
+            status = U_ZERO_ERROR;
+            udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
+                            resultSize, &status);
+        }
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return nullptr;
+        }
+
+        return NewStringCopyN<CanGC>(cx, chars.begin(), resultSize);
+    }
+
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+    return nullptr;
+}
+
 bool
 js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -3058,6 +3250,16 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     JSAutoByteString style;
     if (!style.encodeUtf8(cx, str))
         return false;
+
+    DisplayNameStyle dnStyle;
+    if (equal(style, "narrow")) {
+        dnStyle = DisplayNameStyle::Narrow;
+    } else if (equal(style, "short")) {
+        dnStyle = DisplayNameStyle::Short;
+    } else {
+        MOZ_ASSERT(equal(style, "long"));
+        dnStyle = DisplayNameStyle::Long;
+    }
 
     // 3. Assert: keys is an Array.
     RootedArrayObject keys(cx, &args[2].toObject().as<ArrayObject>());
@@ -3089,216 +3291,33 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     }
     ScopedICUObject<UDateTimePatternGenerator, udatpg_close> datPgToClose(dtpg);
 
-    RootedValue keyValue(cx);
-    RootedString keyValStr(cx);
-    RootedValue wordVal(cx);
     Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
     if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
         return false;
 
     // 5. For each element of keys,
+    JSAutoByteString pattern;
+    RootedString keyValStr(cx);
+    RootedValue v(cx);
     for (uint32_t i = 0; i < keys->length(); i++) {
-        /**
-         * We iterate over keys array looking for paths that we have code
-         * branches for.
-         *
-         * For any unknown path branch, the wordVal will keep NullValue and
-         * we'll throw at the end.
-         */
-
-        if (!GetElement(cx, keys, keys, i, &keyValue))
+        if (!GetElement(cx, keys, keys, i, &v))
             return false;
 
-        JSAutoByteString pattern;
-        keyValStr = keyValue.toString();
+        pattern.clear();
+
+        keyValStr = v.toString();
         if (!pattern.encodeUtf8(cx, keyValStr))
             return false;
 
-        wordVal.setNull();
-
         // 5.a. Perform an implementation dependent algorithm to map a key to a
         //      corresponding display name.
-        const char* pat = pattern.ptr();
-
-        if (!MatchPart(&pat, "dates")) {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+        JSString* displayName = ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle, chars, pattern);
+        if (!displayName)
             return false;
-        }
-
-        if (!MatchSlash(cx, pattern, &pat))
-            return false;
-
-        if (MatchPart(&pat, "fields")) {
-            if (!MatchSlash(cx, pattern, &pat))
-                return false;
-
-            UDateTimePatternField fieldType;
-
-            if (MatchPart(&pat, "year")) {
-                fieldType = UDATPG_YEAR_FIELD;
-            } else if (MatchPart(&pat, "month")) {
-                fieldType = UDATPG_MONTH_FIELD;
-            } else if (MatchPart(&pat, "week")) {
-                fieldType = UDATPG_WEEK_OF_YEAR_FIELD;
-            } else if (MatchPart(&pat, "day")) {
-                fieldType = UDATPG_DAY_FIELD;
-            } else {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-                return false;
-            }
-
-            // This part must be the final part with no trailing data.
-            if (*pat != '\0') {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-                return false;
-            }
-
-            int32_t resultSize;
-
-            const UChar* value = udatpg_getAppendItemName(dtpg, fieldType, &resultSize);
-            if (U_FAILURE(status)) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-                return false;
-            }
-
-            JSString* word = NewStringCopyN<CanGC>(cx, UCharToChar16(value), resultSize);
-            if (!word)
-                return false;
-
-            wordVal.setString(word);
-        } else if (MatchPart(&pat, "gregorian")) {
-            if (!MatchSlash(cx, pattern, &pat))
-                return false;
-
-            UDateFormatSymbolType symbolType;
-            int32_t index;
-
-            if (MatchPart(&pat, "months")) {
-                if (!MatchSlash(cx, pattern, &pat))
-                    return false;
-
-                if (equal(style, "narrow")) {
-                    symbolType = UDAT_STANDALONE_NARROW_MONTHS;
-                } else if (equal(style, "short")) {
-                    symbolType = UDAT_STANDALONE_SHORT_MONTHS;
-                } else {
-                    MOZ_ASSERT(equal(style, "long"));
-                    symbolType = UDAT_STANDALONE_MONTHS;
-                }
-
-                if (MatchPart(&pat, "january")) {
-                    index = UCAL_JANUARY;
-                } else if (MatchPart(&pat, "february")) {
-                    index = UCAL_FEBRUARY;
-                } else if (MatchPart(&pat, "march")) {
-                    index = UCAL_MARCH;
-                } else if (MatchPart(&pat, "april")) {
-                    index = UCAL_APRIL;
-                } else if (MatchPart(&pat, "may")) {
-                    index = UCAL_MAY;
-                } else if (MatchPart(&pat, "june")) {
-                    index = UCAL_JUNE;
-                } else if (MatchPart(&pat, "july")) {
-                    index = UCAL_JULY;
-                } else if (MatchPart(&pat, "august")) {
-                    index = UCAL_AUGUST;
-                } else if (MatchPart(&pat, "september")) {
-                    index = UCAL_SEPTEMBER;
-                } else if (MatchPart(&pat, "october")) {
-                    index = UCAL_OCTOBER;
-                } else if (MatchPart(&pat, "november")) {
-                    index = UCAL_NOVEMBER;
-                } else if (MatchPart(&pat, "december")) {
-                    index = UCAL_DECEMBER;
-                } else {
-                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-                    return false;
-                }
-            } else if (MatchPart(&pat, "weekdays")) {
-                if (!MatchSlash(cx, pattern, &pat))
-                    return false;
-
-                if (equal(style, "narrow")) {
-                    symbolType = UDAT_STANDALONE_NARROW_WEEKDAYS;
-                } else if (equal(style, "short")) {
-                    symbolType = UDAT_STANDALONE_SHORT_WEEKDAYS;
-                } else {
-                    MOZ_ASSERT(equal(style, "long"));
-                    symbolType = UDAT_STANDALONE_WEEKDAYS;
-                }
-
-                if (MatchPart(&pat, "monday")) {
-                    index = UCAL_MONDAY;
-                } else if (MatchPart(&pat, "tuesday")) {
-                    index = UCAL_TUESDAY;
-                } else if (MatchPart(&pat, "wednesday")) {
-                    index = UCAL_WEDNESDAY;
-                } else if (MatchPart(&pat, "thursday")) {
-                    index = UCAL_THURSDAY;
-                } else if (MatchPart(&pat, "friday")) {
-                    index = UCAL_FRIDAY;
-                } else if (MatchPart(&pat, "saturday")) {
-                    index = UCAL_SATURDAY;
-                } else if (MatchPart(&pat, "sunday")) {
-                    index = UCAL_SUNDAY;
-                } else {
-                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-                    return false;
-                }
-            } else if (MatchPart(&pat, "dayperiods")) {
-                if (!MatchSlash(cx, pattern, &pat))
-                    return false;
-
-                symbolType = UDAT_AM_PMS;
-
-                if (MatchPart(&pat, "am")) {
-                    index = UCAL_AM;
-                } else if (MatchPart(&pat, "pm")) {
-                    index = UCAL_PM;
-                } else {
-                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-                    return false;
-                }
-            } else {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-                return false;
-            }
-
-            // This part must be the final part with no trailing data.
-            if (*pat != '\0') {
-                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-                return false;
-            }
-
-            int32_t resultSize =
-                udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
-                                INITIAL_CHAR_BUFFER_SIZE, &status);
-            if (status == U_BUFFER_OVERFLOW_ERROR) {
-                if (!chars.resize(resultSize))
-                    return false;
-                status = U_ZERO_ERROR;
-                udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
-                                resultSize, &status);
-            }
-            if (U_FAILURE(status)) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-                return false;
-            }
-
-            JSString* word = NewStringCopyN<CanGC>(cx, chars.begin(), resultSize);
-            if (!word)
-                return false;
-
-            wordVal.setString(word);
-        } else {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
-            return false;
-        }
-
-        MOZ_ASSERT(wordVal.isString());
 
         // 5.b. Append the result string to result.
-        if (!DefineElement(cx, result, i, wordVal))
+        v.setString(displayName);
+        if (!DefineElement(cx, result, i, v))
             return false;
     }
 
