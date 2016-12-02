@@ -9075,7 +9075,7 @@ nsGlobalWindow::EnterModalState()
 
     topWin->mSuspendedDoc = topDoc;
     if (topDoc) {
-      topDoc->SuppressEventHandling(nsIDocument::eAnimationsOnly);
+      topDoc->SuppressEventHandling(nsIDocument::eEvents);
     }
 
     nsGlobalWindow* inner = topWin->GetCurrentInnerWindowInternal();
@@ -9112,7 +9112,7 @@ nsGlobalWindow::LeaveModalState()
 
     if (topWin->mSuspendedDoc) {
       nsCOMPtr<nsIDocument> currentDoc = topWin->GetExtantDoc();
-      topWin->mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eAnimationsOnly,
+      topWin->mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eEvents,
                                                                   currentDoc == topWin->mSuspendedDoc);
       topWin->mSuspendedDoc = nullptr;
     }
