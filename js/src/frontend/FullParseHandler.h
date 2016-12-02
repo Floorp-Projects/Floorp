@@ -667,6 +667,11 @@ class FullParseHandler
                                                                    ParseNode* pn);
     inline void setLastFunctionFormalParameterDestructuring(ParseNode* funcpn, ParseNode* pn);
 
+    void checkAndSetIsDirectRHSAnonFunction(ParseNode* pn) {
+        if (IsAnonymousFunctionDefinition(pn))
+            pn->setDirectRHSAnonFunction(true);
+    }
+
     ParseNode* newFunctionStatement() {
         return new_<CodeNode>(PNK_FUNCTION, JSOP_NOP, pos());
     }
@@ -948,6 +953,8 @@ FullParseHandler::setLastFunctionFormalParameterDefault(ParseNode* funcpn, Parse
     ParseNode* pn = newBinary(PNK_ASSIGN, arg, defaultValue, JSOP_NOP);
     if (!pn)
         return false;
+
+    checkAndSetIsDirectRHSAnonFunction(defaultValue);
 
     funcpn->pn_body->pn_pos.end = pn->pn_pos.end;
     ParseNode* pnchild = funcpn->pn_body->pn_head;
