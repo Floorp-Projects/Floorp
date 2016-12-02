@@ -444,7 +444,7 @@ FreeArgv(char** argv, int argc)
   delete[](argv);
 }
 
-typedef void (*GeckoStart_t)(JNIEnv*, char**, int, const nsXREAppData*);
+typedef void (*GeckoStart_t)(JNIEnv*, char**, int, const StaticXREAppData&);
 typedef int GeckoProcessType;
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
@@ -463,7 +463,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jo
     }
 
     ElfLoader::Singleton.ExpectShutdown(false);
-    GeckoStart(jenv, argv, argc, &sAppData);
+    GeckoStart(jenv, argv, argc, sAppData);
     ElfLoader::Singleton.ExpectShutdown(true);
   } else {
     void (*fXRE_SetAndroidChildFds)(int, int);

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''Parses a given application.ini file and outputs the corresponding
-   XULAppData structure as a C++ header file'''
+   StaticXREAppData structure as a C++ header file'''
 
 import ConfigParser
 import sys
@@ -34,10 +34,8 @@ def main(output, file):
     if not 'Crash Reporter:serverurl' in appdata:
         appdata['Crash Reporter:serverurl'] = ''
 
-    output.write('''#include "nsXREAppData.h"
-             static const nsXREAppData sAppData = {
-                 sizeof(nsXREAppData),
-                 NULL, // directory
+    output.write('''#include "mozilla/XREAppData.h"
+             static const mozilla::StaticXREAppData sAppData = {
                  "%(App:vendor)s",
                  "%(App:name)s",
                  "%(App:remotingname)s",
@@ -46,7 +44,6 @@ def main(output, file):
                  "%(App:id)s",
                  NULL, // copyright
                  %(flags)s,
-                 NULL, // xreDirectory
                  "%(Gecko:minversion)s",
                  "%(Gecko:maxversion)s",
                  "%(Crash Reporter:serverurl)s",
