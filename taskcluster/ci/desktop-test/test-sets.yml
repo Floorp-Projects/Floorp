@@ -100,15 +100,15 @@ windows-vm-tests:
     - external-media-tests
     #- gtest
     #- jittest
-    #- jsreftest
+    - jsreftest
     #- marionette
     #- mochitest
     #- mochitest-browser-chrome
-    #- mochitest-devtools-chrome
-    #- mochitest-jetpack
+    - mochitest-devtools-chrome
+    - mochitest-jetpack
     #- mochitest-media
     #- web-platform-tests
-    #- web-platform-tests-reftests
+    - web-platform-tests-reftests
     #- xpcshell
 
 # windows-gpu-tests:
