@@ -118,6 +118,10 @@ public:
                                        { mHashKey.SetCharAt(aNoSpdy ? 'X' : '.', 5); }
     bool          GetNoSpdy() const    { return mHashKey.CharAt(5) == 'X'; }
 
+    void          SetBeConservative(bool aBeConservative)
+                                            { mHashKey.SetCharAt(aBeConservative ? 'C' : '.', 6); }
+    bool          GetBeConservative() const { return mHashKey.CharAt(6) == 'C'; }
+
     const nsCString &GetNetworkInterfaceId() const { return mNetworkInterfaceId; }
 
     const nsCString &GetNPNToken() { return mNPNToken; }
