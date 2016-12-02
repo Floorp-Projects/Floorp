@@ -902,3 +902,21 @@ FunctionBox::trace(JSTracer* trc)
     if (enclosingScope_)
         TraceRoot(trc, &enclosingScope_, "funbox-enclosingScope");
 }
+
+bool
+js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn)
+{
+    // ES 2017 draft
+    // 12.15.2 (ArrowFunction, AsyncArrowFunction).
+    // 14.1.12 (FunctionExpression).
+    // 14.4.8 (GeneratorExpression).
+    // 14.6.8 (AsyncFunctionExpression)
+    if (pn->isKind(PNK_FUNCTION) && !pn->pn_funbox->function()->explicitName())
+        return true;
+
+    // 14.5.8 (ClassExpression)
+    if (pn->is<ClassNode>() && !pn->as<ClassNode>().names())
+        return true;
+
+    return false;
+}

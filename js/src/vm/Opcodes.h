@@ -1870,7 +1870,16 @@
      *   Stack: =>
      */ \
     macro(JSOP_POPVARENV,          181, "popvarenv",            NULL,  1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED182,     182,"unused182",  NULL,     1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops the top two values on the stack as 'name' and 'fun', defines the
+     * name of 'fun' to 'name' with prefix if any, and pushes 'fun' back onto
+     * the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint8_t prefixKind
+     *   Stack: fun, name => fun
+     */ \
+    macro(JSOP_SETFUNNAME,    182,"setfunname", NULL,     2,  2,  1,  JOF_UINT8) \
     macro(JSOP_UNUSED183,     183,"unused183",  NULL,     1,  0,  0,  JOF_BYTE) \
     \
     /*
