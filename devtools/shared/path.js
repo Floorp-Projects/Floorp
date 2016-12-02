@@ -13,9 +13,8 @@ exports.joinURI = (initialPath, ...paths) => {
 
   try {
     url = new URL(initialPath);
-  }
-  catch (e) {
-    return;
+  } catch (e) {
+    return null;
   }
 
   for (let path of paths) {
