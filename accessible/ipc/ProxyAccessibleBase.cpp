@@ -52,15 +52,31 @@ ProxyAccessibleBase<Derived>::Shutdown()
 
 template <class Derived>
 void
-ProxyAccessibleBase<Derived>::SetChildDoc(DocAccessibleParent* aParent)
+ProxyAccessibleBase<Derived>::SetChildDoc(DocAccessibleParent* aChildDoc)
 {
-  if (aParent) {
-    MOZ_ASSERT(mChildren.IsEmpty());
-    mChildren.AppendElement(aParent);
-    mOuterDoc = true;
+  // DocAccessibleParent::AddChildDoc tolerates replacing one document with
+  // another. We must reflect that here.
+  MOZ_ASSERT(aChildDoc);
+  MOZ_ASSERT(mChildren.Length() <= 1);
+  if (mChildren.IsEmpty()) {
+    mChildren.AppendElement(aChildDoc);
   } else {
-    MOZ_ASSERT(mChildren.Length() == 1);
-    mChildren.Clear();
+    mChildren.ReplaceElementAt(0, aChildDoc);
+  }
+  mOuterDoc = true;
+}
+
+template <class Derived>
+void
+ProxyAccessibleBase<Derived>::ClearChildDoc(DocAccessibleParent* aChildDoc)
+{
+  MOZ_ASSERT(aChildDoc);
+  // This is possible if we're replacing one document with another: Doc 1
+  // has not had a chance to remove itself, but was already replaced by Doc 2
+  // in SetChildDoc(). This could result in two subsequent calls to
+  // ClearChildDoc() even though mChildren.Length() == 1.
+  MOZ_ASSERT(mChildren.Length() <= 1);
+  if (mChildren.RemoveElement(aChildDoc)) {
     mOuterDoc = false;
   }
 }

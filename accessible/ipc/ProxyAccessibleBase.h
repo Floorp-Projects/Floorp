@@ -78,7 +78,8 @@ public:
 
   void Shutdown();
 
-  void SetChildDoc(DocAccessibleParent*);
+  void SetChildDoc(DocAccessibleParent* aChildDoc);
+  void ClearChildDoc(DocAccessibleParent* aChildDoc);
 
   /**
    * Remove The given child.
