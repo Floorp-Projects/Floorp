@@ -288,8 +288,7 @@ VorbisDataDecoder::Flush()
 bool
 VorbisDataDecoder::IsVorbis(const nsACString& aMimeType)
 {
-  return aMimeType.EqualsLiteral("audio/webm; codecs=vorbis") ||
-         aMimeType.EqualsLiteral("audio/ogg; codecs=vorbis");
+  return aMimeType.EqualsLiteral("audio/vorbis");
 }
 
 /* static */ const AudioConfig::Channel*
