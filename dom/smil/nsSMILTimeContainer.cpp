@@ -20,7 +20,9 @@ nsSMILTimeContainer::nsSMILTimeContainer()
   mNeedsPauseSample(false),
   mNeedsRewind(false),
   mIsSeeking(false),
+#ifdef DEBUG
   mHoldingEntries(false),
+#endif
   mPauseState(PAUSE_BEGIN)
 {
 }
@@ -216,14 +218,14 @@ nsSMILTimeContainer::AddMilestone(const nsSMILMilestone& aMilestone,
   // time may change (e.g. if attributes are changed on the timed element in
   // between samples). If this happens, then we may do an unecessary sample
   // but that's pretty cheap.
-  MOZ_RELEASE_ASSERT(!mHoldingEntries);
+  MOZ_ASSERT(!mHoldingEntries);
   return mMilestoneEntries.Push(MilestoneEntry(aMilestone, aElement));
 }
 
 void
 nsSMILTimeContainer::ClearMilestones()
 {
-  MOZ_RELEASE_ASSERT(!mHoldingEntries);
+  MOZ_ASSERT(!mHoldingEntries);
   mMilestoneEntries.Clear();
 }
 
@@ -264,7 +266,7 @@ nsSMILTimeContainer::PopMilestoneElementsAtMilestone(
              "Trying to pop off earliest times but we have earlier ones that "
              "were overlooked");
 
-  MOZ_RELEASE_ASSERT(!mHoldingEntries);
+  MOZ_ASSERT(!mHoldingEntries);
 
   bool gotOne = false;
   while (!mMilestoneEntries.IsEmpty() &&
@@ -280,8 +282,10 @@ nsSMILTimeContainer::PopMilestoneElementsAtMilestone(
 void
 nsSMILTimeContainer::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 {
+#ifdef DEBUG
   AutoRestore<bool> saveHolding(mHoldingEntries);
   mHoldingEntries = true;
+#endif
   const MilestoneEntry* p = mMilestoneEntries.Elements();
   while (p < mMilestoneEntries.Elements() + mMilestoneEntries.Length()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "mTimebase");
@@ -293,7 +297,7 @@ nsSMILTimeContainer::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 void
 nsSMILTimeContainer::Unlink()
 {
-  MOZ_RELEASE_ASSERT(!mHoldingEntries);
+  MOZ_ASSERT(!mHoldingEntries);
   mMilestoneEntries.Clear();
 }
 
@@ -324,8 +328,10 @@ nsSMILTimeContainer::NotifyTimeChange()
   nsTArray<RefPtr<mozilla::dom::SVGAnimationElement>> elems;
 
   {
+#ifdef DEBUG
     AutoRestore<bool> saveHolding(mHoldingEntries);
     mHoldingEntries = true;
+#endif
     for (const MilestoneEntry* p = mMilestoneEntries.Elements();
         p < mMilestoneEntries.Elements() + mMilestoneEntries.Length();
         ++p) {
