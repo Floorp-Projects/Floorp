@@ -526,9 +526,11 @@ class RustLibrary(StaticLibrary):
         'crate_type',
         'dependencies',
         'deps_path',
+        'features',
     )
 
-    def __init__(self, context, basename, cargo_file, crate_type, dependencies, **args):
+    def __init__(self, context, basename, cargo_file, crate_type, dependencies,
+                 features, **args):
         StaticLibrary.__init__(self, context, basename, **args)
         self.cargo_file = cargo_file
         self.crate_type = crate_type
@@ -544,6 +546,7 @@ class RustLibrary(StaticLibrary):
         build_dir = cargo_target_directory(context)
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, 'deps')
+        self.features = features
 
 
 class SharedLibrary(Library):
