@@ -2564,6 +2564,20 @@ CodeGenerator::emitLambdaInit(Register output, Register envChain,
     masm.storePtr(ImmGCPtr(info.fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 }
 
+typedef bool (*SetFunNameFn)(JSContext*, HandleFunction, HandleValue, FunctionPrefixKind);
+static const VMFunction SetFunNameInfo =
+    FunctionInfo<SetFunNameFn>(js::SetFunctionNameIfNoOwnName, "SetFunName");
+
+void
+CodeGenerator::visitSetFunName(LSetFunName* lir)
+{
+    pushArg(Imm32(lir->mir()->prefixKind()));
+    pushArg(ToValue(lir, LSetFunName::NameValue));
+    pushArg(ToRegister(lir->fun()));
+
+    callVM(SetFunNameInfo, lir);
+}
+
 void
 CodeGenerator::visitOsiPoint(LOsiPoint* lir)
 {

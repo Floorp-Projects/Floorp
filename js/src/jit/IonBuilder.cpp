@@ -2116,6 +2116,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_LAMBDA_ARROW:
         return jsop_lambda_arrow(info().getFunction(pc));
 
+      case JSOP_SETFUNNAME:
+        return jsop_setfunname(GET_UINT8(pc));
+
       case JSOP_ITER:
         return jsop_iter(GET_INT8(pc));
 
@@ -13362,6 +13365,21 @@ IonBuilder::jsop_lambda_arrow(JSFunction* fun)
                                           newTargetDef, fun);
     current->add(ins);
     current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_setfunname(uint8_t prefixKind)
+{
+    MDefinition* name = current->pop();
+    MDefinition* fun = current->pop();
+    MOZ_ASSERT(fun->type() == MIRType::Object);
+
+    MSetFunName* ins = MSetFunName::New(alloc(), fun, name, prefixKind);
+
+    current->add(ins);
+    current->push(fun);
 
     return resumeAfter(ins);
 }
