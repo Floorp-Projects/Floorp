@@ -1430,12 +1430,10 @@ var gBrowserInit = {
         if (window.closed) {
           return;
         }
-        let secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                       .getService(Ci.nsIPKCS11ModuleDB);
-        let slot = secmodDB.findSlotByName("");
-        let mpEnabled = slot &&
-                        slot.status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED &&
-                        slot.status != Ci.nsIPKCS11Slot.SLOT_READY;
+        let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                        .getService(Ci.nsIPK11TokenDB);
+        let token = tokenDB.getInternalKeyToken();
+        let mpEnabled = token.hasPassword;
         if (mpEnabled) {
           Services.telemetry.getHistogramById("MASTER_PASSWORD_ENABLED").add(mpEnabled);
         }

@@ -263,19 +263,12 @@ this.LoginTestUtils.masterPassword = {
       newPW = "";
     }
 
-    let secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                     .getService(Ci.nsIPKCS11ModuleDB);
-    let slot = secmodDB.findSlotByName("");
-    if (!slot) {
-      throw new Error("Can't find slot");
-    }
-
     // Set master password. Note that this does not log you in, so the next
     // invocation of pwmgr can trigger a MP prompt.
     let pk11db = Cc["@mozilla.org/security/pk11tokendb;1"]
                    .getService(Ci.nsIPK11TokenDB);
-    let token = pk11db.findTokenByName("");
-    if (slot.status == Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED) {
+    let token = pk11db.getInternalKeyToken();
+    if (token.needsUserInit) {
       dump("MP initialized to " + newPW + "\n");
       token.initPassword(newPW);
     } else {
