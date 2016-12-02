@@ -65,7 +65,7 @@ set_config('MOZ_DMD', dmd)
 set_define('MOZ_DMD', dmd)
 add_old_configure_assignment('MOZ_DMD', dmd)
 imply_option('--enable-profiling', dmd)
-imply_option('--enable-jemalloc', dmd)
+# --enable-jemalloc is implied below.
 imply_option('--enable-replace-malloc', dmd)
 
 # JACK cubeb backend
@@ -571,7 +571,16 @@ def stylo(value):
 
 set_config('MOZ_STYLO', stylo)
 set_define('MOZ_STYLO', stylo)
-imply_option('--enable-jemalloc', depends_if('--enable-stylo')(lambda _: 'moz'))
+
+@depends(stylo, dmd)
+def jemalloc(stylo, dmd):
+    if stylo:
+        return 'moz'
+    elif dmd:
+        return True
+
+imply_option('--enable-jemalloc', jemalloc,
+             reason='--enable-dmd or --enable-stylo')
 
 option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
        help='Absolute path of the target directory where libgeckoservo can '

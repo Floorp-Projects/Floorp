@@ -2325,10 +2325,7 @@ ConvertAndroidKeyCodeToKeyNameIndex(int keyCode, int action,
         case AKEYCODE_RO:                 // Japanese Ro key
             return KEY_NAME_INDEX_USE_STRING;
 
-        case AKEYCODE_ENDCALL:
         case AKEYCODE_NUM:                // XXX Not sure
-        case AKEYCODE_HEADSETHOOK:
-        case AKEYCODE_NOTIFICATION:       // XXX Not sure
         case AKEYCODE_PICTSYMBOLS:
 
         case AKEYCODE_BUTTON_A:
@@ -2347,10 +2344,7 @@ ConvertAndroidKeyCodeToKeyNameIndex(int keyCode, int action,
         case AKEYCODE_BUTTON_SELECT:
         case AKEYCODE_BUTTON_MODE:
 
-        case AKEYCODE_MUTE: // mutes the microphone
         case AKEYCODE_MEDIA_CLOSE:
-
-        case AKEYCODE_DVR:
 
         case AKEYCODE_BUTTON_1:
         case AKEYCODE_BUTTON_2:
@@ -2368,10 +2362,6 @@ ConvertAndroidKeyCodeToKeyNameIndex(int keyCode, int action,
         case AKEYCODE_BUTTON_14:
         case AKEYCODE_BUTTON_15:
         case AKEYCODE_BUTTON_16:
-
-        case AKEYCODE_MANNER_MODE:
-        case AKEYCODE_3D_MODE:
-        case AKEYCODE_CONTACTS:
             return KEY_NAME_INDEX_Unidentified;
 
         case AKEYCODE_UNKNOWN:
