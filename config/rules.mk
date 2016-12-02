@@ -946,6 +946,10 @@ CARGO_BUILD = env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) MOZ_DI
 
 ifdef RUST_LIBRARY_FILE
 
+ifdef RUST_LIBRARY_FEATURES
+rust_features_flag := --features "$(RUST_LIBRARY_FEATURES)"
+endif
+
 # Assume any system libraries rustc links against are already in the target's LIBS.
 #
 # We need to run cargo unconditionally, because cargo is the only thing that
@@ -953,7 +957,7 @@ ifdef RUST_LIBRARY_FILE
 # build.
 force-cargo-library-build:
 	$(REPORT_BUILD)
-	$(CARGO_BUILD) --lib $(cargo_target_flag)
+	$(CARGO_BUILD) --lib $(cargo_target_flag) $(rust_features_flag)
 
 $(RUST_LIBRARY_FILE): force-cargo-library-build
 endif # RUST_LIBRARY_FILE
