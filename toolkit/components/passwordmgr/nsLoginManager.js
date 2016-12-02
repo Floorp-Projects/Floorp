@@ -485,14 +485,17 @@ LoginManager.prototype = {
     let form = LoginFormFactory.createFromField(aElement);
     let isSecure = InsecurePasswordUtils.isFormSecure(form);
     let isPasswordField = aElement.type == "password";
-    if (isPasswordField) {
-      // The login items won't be filtered for password field.
-      aSearchString = "";
+    if (isPasswordField && aSearchString) {
+      // Return empty result on password fields with password already filled.
+      setTimeout(function() {
+        aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString, [], {isSecure, isPasswordField}));
+      }, 0);
+      return;
     }
 
     if (!this._remember) {
       setTimeout(function() {
-        aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString, [], {isSecure}));
+        aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString, [], {isSecure, isPasswordField}));
       }, 0);
       return;
     }
