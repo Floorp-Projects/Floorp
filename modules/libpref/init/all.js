@@ -805,6 +805,10 @@ pref("gfx.logging.peak-texture-usage.enabled", false);
 
 pref("gfx.ycbcr.accurate-conversion", false);
 
+#ifdef MOZ_ENABLE_WEBRENDER
+pref("gfx.webrender.enabled", true);
+#endif
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
