@@ -11,6 +11,7 @@
 
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
+#include "FilteringWrapper.h"
 
 #include "jsfriendapi.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -177,6 +178,12 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext* cx, HandleObject wrapper, H
     if (JSID_IS_STRING(id)) {
         if (IsPermitted(type, JSID_TO_FLAT_STRING(id), act == Wrapper::SET))
             return true;
+    } else if (type != CrossOriginOpaque &&
+               IsCrossOriginWhitelistedSymbol(cx, id)) {
+        // We always allow access to @@toStringTag, @@hasInstance, and
+        // @@isConcatSpreadable.  But then we nerf them to be a value descriptor
+        // with value undefined in CrossOriginXrayWrapper.
+        return true;
     }
 
     if (act != Wrapper::GET)

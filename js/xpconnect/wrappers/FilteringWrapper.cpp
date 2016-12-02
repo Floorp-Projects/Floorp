@@ -16,6 +16,29 @@ using namespace js;
 
 namespace xpc {
 
+static JS::SymbolCode sCrossOriginWhitelistedSymbolCodes[] = {
+    JS::SymbolCode::toStringTag,
+    JS::SymbolCode::hasInstance,
+    JS::SymbolCode::isConcatSpreadable
+};
+
+bool
+IsCrossOriginWhitelistedSymbol(JSContext* cx, JS::HandleId id)
+{
+    if (!JSID_IS_SYMBOL(id)) {
+        return false;
+    }
+
+    JS::Symbol* symbol = JSID_TO_SYMBOL(id);
+    for (auto code : sCrossOriginWhitelistedSymbolCodes) {
+        if (symbol == JS::GetWellKnownSymbol(cx, code)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 template <typename Policy>
 static bool
 Filter(JSContext* cx, HandleObject wrapper, AutoIdVector& props)
@@ -188,6 +211,12 @@ CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
     if (!SecurityXrayDOM::getPropertyDescriptor(cx, wrapper, id, desc))
         return false;
     if (desc.object()) {
+        // Cross-origin DOM objects do not have symbol-named properties apart
+        // from the ones we add ourselves here.
+        MOZ_ASSERT(!JSID_IS_SYMBOL(id),
+                   "What's this symbol-named property that appeared on a "
+                   "Window or Location instance?");
+
         // All properties on cross-origin DOM objects are |own|.
         desc.object().set(wrapper);
 
@@ -197,7 +226,16 @@ CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
         desc.attributesRef() &= ~JSPROP_PERMANENT;
         if (!desc.getter() && !desc.setter())
             desc.attributesRef() |= JSPROP_READONLY;
+    } else if (IsCrossOriginWhitelistedSymbol(cx, id)) {
+        // Spec says to return PropertyDescriptor {
+        //   [[Value]]: undefined, [[Writable]]: false, [[Enumerable]]: false,
+        //   [[Configurable]]: true
+        // }.
+        //
+        desc.setDataDescriptor(JS::UndefinedHandleValue, JSPROP_READONLY);
+        desc.object().set(wrapper);
     }
+
     return true;
 }
 
@@ -218,7 +256,27 @@ CrossOriginXrayWrapper::ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wra
     // All properties on cross-origin objects are supposed |own|, despite what
     // the underlying native object may report. Override the inherited trap to
     // avoid passing JSITER_OWNONLY as a flag.
-    return SecurityXrayDOM::getPropertyKeys(cx, wrapper, JSITER_HIDDEN, props);
+    if (!SecurityXrayDOM::getPropertyKeys(cx, wrapper, JSITER_HIDDEN, props)) {
+        return false;
+    }
+
+    // Now add the three symbol-named props cross-origin objects have.
+#ifdef DEBUG
+    for (size_t n = 0; n < props.length(); ++n) {
+        MOZ_ASSERT(!JSID_IS_SYMBOL(props[n]),
+                   "Unexpected existing symbol-name prop");
+    }
+#endif
+    if (!props.reserve(props.length() +
+                       ArrayLength(sCrossOriginWhitelistedSymbolCodes))) {
+        return false;
+    }
+
+    for (auto code : sCrossOriginWhitelistedSymbolCodes) {
+        props.infallibleAppend(SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, code)));
+    }
+
+    return true;
 }
 
 bool
