@@ -1054,8 +1054,6 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA: value = 5; break;
     case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA: value = 6; break;
     case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA: value = 7; break;
-    case TLS_ECDHE_RSA_WITH_RC4_128_SHA: value = 8; break;
-    case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA: value = 9; break;
     case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 10; break;
     case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256: value = 11; break;
     case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256: value = 12; break;
@@ -1079,8 +1077,6 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA: value = 44; break;
     case TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 45; break;
     case TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA: value = 46; break;
-    case TLS_ECDH_ECDSA_WITH_RC4_128_SHA: value = 47; break;
-    case TLS_ECDH_RSA_WITH_RC4_128_SHA: value = 48; break;
     // RSA key exchange
     case TLS_RSA_WITH_AES_128_CBC_SHA: value = 61; break;
     case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 62; break;
@@ -1089,8 +1085,6 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA: value = 65; break;
     case TLS_RSA_WITH_3DES_EDE_CBC_SHA: value = 66; break;
     case TLS_RSA_WITH_SEED_CBC_SHA: value = 67; break;
-    case TLS_RSA_WITH_RC4_128_SHA: value = 68; break;
-    case TLS_RSA_WITH_RC4_128_MD5: value = 69; break;
     // TLS 1.3 PSK resumption
     case TLS_AES_128_GCM_SHA256: value = 70; break;
     case TLS_CHACHA20_POLY1305_SHA256: value = 71; break;
@@ -1213,7 +1207,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                            infoObject->GetPort(),
                                            versions.max);
 
-  bool usesFallbackCipher = false;
   SSLChannelInfo channelInfo;
   rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
   MOZ_ASSERT(rv == SECSuccess);
@@ -1233,8 +1226,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                 sizeof cipherInfo);
     MOZ_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
-      usesFallbackCipher = channelInfo.keaType == ssl_kea_dh;
-
       // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
       Telemetry::Accumulate(
         infoObject->IsFullHandshake()
@@ -1325,14 +1316,12 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   } else {
     state = nsIWebProgressListener::STATE_IS_SECURE |
             nsIWebProgressListener::STATE_SECURE_HIGH;
-    if (!usesFallbackCipher) {
-      SSLVersionRange defVersion;
-      rv = SSL_VersionRangeGetDefault(ssl_variant_stream, &defVersion);
-      if (rv == SECSuccess && versions.max >= defVersion.max) {
-        // we know this site no longer requires a fallback cipher
-        ioLayerHelpers.removeInsecureFallbackSite(infoObject->GetHostName(),
-                                                  infoObject->GetPort());
-      }
+    SSLVersionRange defVersion;
+    rv = SSL_VersionRangeGetDefault(ssl_variant_stream, &defVersion);
+    if (rv == SECSuccess && versions.max >= defVersion.max) {
+      // we know this site no longer requires a version fallback
+      ioLayerHelpers.removeInsecureFallbackSite(infoObject->GetHostName(),
+                                                infoObject->GetPort());
     }
   }
 

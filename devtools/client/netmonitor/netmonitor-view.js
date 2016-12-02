@@ -50,7 +50,7 @@ var NetMonitorView = {
 
     this.Toolbar.initialize(gStore);
     this.RequestsMenu.initialize(gStore);
-    this.NetworkDetails.initialize();
+    this.NetworkDetails.initialize(gStore);
     this.CustomRequest.initialize();
     this.PerformanceStatistics.initialize(gStore);
   },

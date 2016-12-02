@@ -1450,8 +1450,6 @@ class CheckTypes(TcheckVisitor):
 
 
     def visitManager(self, mgr):
-        # FIXME/bug 541126: check that the protocol graph is acyclic
-
         pdecl = mgr.of.decl
         ptype, pname = pdecl.type, pdecl.shortname
 
