@@ -527,6 +527,14 @@ auto GeckoAppShell::KillAnyZombies() -> void
     return mozilla::jni::Method<KillAnyZombies_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
+constexpr char GeckoAppShell::LaunchOrBringToFront_t::name[];
+constexpr char GeckoAppShell::LaunchOrBringToFront_t::signature[];
+
+auto GeckoAppShell::LaunchOrBringToFront() -> void
+{
+    return mozilla::jni::Method<LaunchOrBringToFront_t>::Call(GeckoAppShell::Context(), nullptr);
+}
+
 constexpr char GeckoAppShell::LoadPluginClass_t::name[];
 constexpr char GeckoAppShell::LoadPluginClass_t::signature[];
 
@@ -591,14 +599,6 @@ constexpr char GeckoAppShell::OpenUriExternal_t::signature[];
 auto GeckoAppShell::OpenUriExternal(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3, mozilla::jni::String::Param a4, mozilla::jni::String::Param a5) -> bool
 {
     return mozilla::jni::Method<OpenUriExternal_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5);
-}
-
-constexpr char GeckoAppShell::OpenWindowForNotification_t::name[];
-constexpr char GeckoAppShell::OpenWindowForNotification_t::signature[];
-
-auto GeckoAppShell::OpenWindowForNotification() -> void
-{
-    return mozilla::jni::Method<OpenWindowForNotification_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
 constexpr char GeckoAppShell::PerformHapticFeedback_t::name[];

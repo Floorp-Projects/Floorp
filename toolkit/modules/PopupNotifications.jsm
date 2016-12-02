@@ -259,10 +259,8 @@ PopupNotifications.prototype = {
    *          notification exists.
    */
   getNotification: function PopupNotifications_getNotification(id, browser) {
-    let n = null;
     let notifications = this._getNotificationsForBrowser(browser || this.tabbrowser.selectedBrowser);
-    notifications.some(x => x.id == id && (n = x));
-    return n;
+    return notifications.find(x => x.id == id) || null;
   },
 
   /**

@@ -356,7 +356,8 @@ function onFilesOpened(message) {
     is(event.target.error.name, "AbortError", "error set to AbortError for aborted reads");
     is(event.target.result, null, "file data should be null on aborted reads");
   }
-  r.onload = function() { ok(false, "load should not fire for aborted reads") };
+  r.onload = function() { ok(false, "load should fire for nested reads"); };
+
   var abortThrew = false;
   try {
     r.abort();
@@ -366,8 +367,15 @@ function onFilesOpened(message) {
   is(abortThrew, true, "abort() must throw if not loading");
   is(reuseAbortHasRun, false, "abort() is a no-op unless loading");
   r.readAsText(asciiFile);
-  r.readAsText(asciiFile);
-  is(reuseAbortHasRun, true, "abort should fire sync");
+
+  var readThrew = false;
+  try {
+    r.readAsText(asciiFile);
+  } catch(e) {
+    readThrew = true;
+  }
+  is(readThrew, true, "readAsText() must throw if loading");
+  is(reuseAbortHasRun, false, "abort should not fire");
   r.onload = getLoadHandler(testASCIIData, testASCIIData.length, "reuse-as-abort reading");
   expectedTestCount++;
 
