@@ -117,6 +117,7 @@ struct HttpChannelOpenArgs
   nsCString                   appCacheClientID;
   bool                        allowSpdy;
   bool                        allowAltSvc;
+  bool                        beConservative;
   OptionalLoadInfoArgs        loadInfo;
   OptionalHttpResponseHead    synthesizedResponseHead;
   nsCString                   synthesizedSecurityInfoSerialization;

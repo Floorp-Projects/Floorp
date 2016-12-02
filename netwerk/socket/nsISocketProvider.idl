@@ -105,6 +105,13 @@ interface nsISocketProvider : nsISupports
      * a TLS socket without authentication.
      */
     const unsigned long MITM_OK = 1 << 3;
+
+    /**
+     * If set, do not use newer protocol features that might have interop problems
+     * on the Internet. Intended only for use with critical infra like the updater.
+     * default is false.
+     */
+    const unsigned long BE_CONSERVATIVE = 1 << 4;
 };
 
 %{C++
