@@ -173,17 +173,11 @@ wr_dp_push_iframe(wrstate* wrState, WRRect bounds, WRRect clip,
                   uint64_t layers_id)
 WR_FUNC;
 
-// The pointer returned by wr_readback_buffer must be freed by rust, not C.
-// After using the data, it is the responsibility of the caller to free the memory
-// by giving the pointer, out_length, out_capacity to wr_free_buffer.
+// It is the responsibility of the caller to manage the dst_buffer memory
+// and also free it at the proper time.
 WR_INLINE const uint8_t*
-wr_readback_buffer(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
-                   uint32_t* out_length, uint32_t* out_capacity)
-WR_FUNC;
-
-WR_INLINE void
-wr_free_buffer(const uint8_t* pointer, uint32_t length, uint32_t capacity)
-
+wr_readback_into_buffer(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
+                        uint8_t* dst_buffer, uint32_t buffer_length);
 WR_FUNC;
 
 WR_INLINE void

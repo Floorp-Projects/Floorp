@@ -273,39 +273,21 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture,
 
   MOZ_ASSERT(bufferTexture->GetBufferDescriptor().type() == BufferDescriptor::TRGBDescriptor);
   uint32_t stride = ImageDataSerializer::GetRGBStride(bufferTexture->GetBufferDescriptor().get_RGBDescriptor());
-  RefPtr<DrawTarget> target =
-    Factory::CreateDrawTargetForData(gfx::BackendType::SKIA,
-                                     bufferTexture->GetBuffer(),
-                                     bufferTexture->GetSize(),
-                                     stride,
-                                     bufferTexture->GetFormat());
-  MOZ_ASSERT(target);
-  if (!target) {
-    // We kill the content process rather than have it continue with an invalid
-    // snapshot, that may be too harsh and we could decide to return some sort
-    // of error to the child process and let it deal with it...
-    return IPC_FAIL_NO_REASON(this);
-  }
+  uint8_t* buffer = bufferTexture->GetBuffer();
+  IntSize size = bufferTexture->GetSize();
+
+  // We only support B8G8R8A8 for now.
+  MOZ_ASSERT(buffer);
+  MOZ_ASSERT(bufferTexture->GetFormat() == SurfaceFormat::B8G8R8A8);
+  uint32_t buffer_size = size.width * size.height * 4;
+
+  // Assert the size and stride of the buffer is what webrender expects
+  MOZ_ASSERT(size == aRect.Size());
+  MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
   MOZ_ASSERT(mWRState);
   mGLContext->MakeCurrent();
-
-  uint32_t length = 0;
-  uint32_t capacity = 0;
-  const uint8_t* webrenderSnapshot = wr_readback_buffer(mWRWindowState, aRect.width, aRect.height, &length, &capacity);
-
-  // TODO: fixup for proper surface format.
-  RefPtr<DataSourceSurface> snapshot =
-    Factory::CreateWrappingDataSourceSurface(const_cast<uint8_t*>(webrenderSnapshot),
-                                             aRect.width * 4,
-                                             IntSize(aRect.width, aRect.height),
-                                             SurfaceFormat::B8G8R8A8);
-
-  Rect floatRect = Rect(0, 0, aRect.width, aRect.height);
-  target->DrawSurface(snapshot, floatRect, floatRect, DrawSurfaceOptions(), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-  target->Flush();
-
-  wr_free_buffer(webrenderSnapshot, length, capacity);
+  wr_readback_into_buffer(mWRWindowState, aRect.width, aRect.height, buffer, buffer_size);
 
   return IPC_OK();
 }
