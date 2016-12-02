@@ -8,15 +8,13 @@
  */
 
 add_task(function* () {
-  let Actions = require("devtools/client/netmonitor/actions/index");
-
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { NetMonitorView, gStore } = monitor.panelWin;
+  let { NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -39,19 +37,24 @@ add_task(function* () {
 
   check(-1, false);
 
-  gStore.dispatch(Actions.selectDelta(+Infinity));
+  RequestsMenu.focusLastVisibleItem();
   check(1, true);
-  gStore.dispatch(Actions.selectDelta(-Infinity));
+  RequestsMenu.focusFirstVisibleItem();
   check(0, true);
 
-  gStore.dispatch(Actions.selectDelta(+1));
+  RequestsMenu.focusNextItem();
   check(1, true);
-  gStore.dispatch(Actions.selectDelta(-1));
+  RequestsMenu.focusPrevItem();
   check(0, true);
 
-  gStore.dispatch(Actions.selectDelta(+10));
+  RequestsMenu.focusItemAtDelta(+1);
   check(1, true);
-  gStore.dispatch(Actions.selectDelta(-10));
+  RequestsMenu.focusItemAtDelta(-1);
+  check(0, true);
+
+  RequestsMenu.focusItemAtDelta(+10);
+  check(1, true);
+  RequestsMenu.focusItemAtDelta(-10);
   check(0, true);
 
   wait = waitForNetworkEvents(monitor, 18);
@@ -60,25 +63,25 @@ add_task(function* () {
   });
   yield wait;
 
-  gStore.dispatch(Actions.selectDelta(+Infinity));
+  RequestsMenu.focusLastVisibleItem();
   check(19, true);
-  gStore.dispatch(Actions.selectDelta(-Infinity));
+  RequestsMenu.focusFirstVisibleItem();
   check(0, true);
 
-  gStore.dispatch(Actions.selectDelta(+1));
+  RequestsMenu.focusNextItem();
   check(1, true);
-  gStore.dispatch(Actions.selectDelta(-1));
+  RequestsMenu.focusPrevItem();
   check(0, true);
 
-  gStore.dispatch(Actions.selectDelta(+10));
+  RequestsMenu.focusItemAtDelta(+10);
   check(10, true);
-  gStore.dispatch(Actions.selectDelta(-10));
+  RequestsMenu.focusItemAtDelta(-10);
   check(0, true);
 
-  gStore.dispatch(Actions.selectDelta(+100));
+  RequestsMenu.focusItemAtDelta(+100);
   check(19, true);
-  gStore.dispatch(Actions.selectDelta(-100));
+  RequestsMenu.focusItemAtDelta(-100);
   check(0, true);
 
-  return teardown(monitor);
+  yield teardown(monitor);
 });

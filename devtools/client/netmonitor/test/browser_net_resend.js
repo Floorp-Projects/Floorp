@@ -39,15 +39,13 @@ add_task(function* () {
   RequestsMenu.cloneSelectedRequest();
   yield onPopulated;
 
-  testCustomForm(origItem);
+  testCustomForm(origItem.attachment);
 
   let customItem = RequestsMenu.selectedItem;
   testCustomItem(customItem, origItem);
 
   // edit the custom request
   yield editCustomForm();
-  // FIXME: reread the customItem, it's been replaced by a new object (immutable!)
-  customItem = RequestsMenu.selectedItem;
   testCustomItemChanged(customItem, origItem);
 
   // send the new request
@@ -56,20 +54,30 @@ add_task(function* () {
   yield wait;
 
   let sentItem = RequestsMenu.selectedItem;
-  testSentRequest(sentItem, origItem);
+  testSentRequest(sentItem.attachment, origItem.attachment);
 
   return teardown(monitor);
 
   function testCustomItem(item, orig) {
-    is(item.method, orig.method, "item is showing the same method as original request");
-    is(item.url, orig.url, "item is showing the same URL as original request");
+    let method = item.target.querySelector(".requests-menu-method").value;
+    let origMethod = orig.target.querySelector(".requests-menu-method").value;
+    is(method, origMethod, "menu item is showing the same method as original request");
+
+    let file = item.target.querySelector(".requests-menu-file").value;
+    let origFile = orig.target.querySelector(".requests-menu-file").value;
+    is(file, origFile, "menu item is showing the same file name as original request");
+
+    let domain = item.target.querySelector(".requests-menu-domain").value;
+    let origDomain = orig.target.querySelector(".requests-menu-domain").value;
+    is(domain, origDomain, "menu item is showing the same domain as original request");
   }
 
   function testCustomItemChanged(item, orig) {
-    let url = item.url;
-    let expectedUrl = orig.url + "&" + ADD_QUERY;
+    let file = item.target.querySelector(".requests-menu-file").value;
+    let expectedFile = orig.target.querySelector(".requests-menu-file").value +
+      "&" + ADD_QUERY;
 
-    is(url, expectedUrl, "menu item is updated to reflect url entered in form");
+    is(file, expectedFile, "menu item is updated to reflect url entered in form");
   }
 
   /*

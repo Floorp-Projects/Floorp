@@ -23,8 +23,8 @@ add_task(function* () {
   is(toolbox.currentToolId, "netmonitor", "Network panel was opened");
   let panel = toolbox.getCurrentPanel();
   let selected = panel.panelWin.NetMonitorView.RequestsMenu.selectedItem;
-  is(selected.method, request.request.method,
+  is(selected.attachment.method, request.request.method,
      "The correct request is selected");
-  is(selected.url, request.request.url,
+  is(selected.attachment.url, request.request.url,
      "The correct request is definitely selected");
 });
