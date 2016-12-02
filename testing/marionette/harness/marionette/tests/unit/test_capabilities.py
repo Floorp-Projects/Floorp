@@ -34,9 +34,8 @@ class TestCapabilities(MarionetteTestCase):
 
     def test_supported_features(self):
         self.assertIn("rotatable", self.caps)
-        self.assertIn("acceptSslCerts", self.caps)
-
-        self.assertFalse(self.caps["acceptSslCerts"])
+        self.assertIn("acceptInsecureCerts", self.caps)
+        self.assertFalse(self.caps["acceptInsecureCerts"])
 
     def test_additional_capabilities(self):
         self.assertIn("processId", self.caps)
