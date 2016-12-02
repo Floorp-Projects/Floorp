@@ -1,6 +1,5 @@
 use std::ffi::CStr;
 use std::{mem, slice};
-use std::os::raw::c_uchar;
 use std::os::raw::c_void;
 use gleam::gl;
 use euclid::{Size2D, Point2D, Rect, Matrix4D};
@@ -603,33 +602,19 @@ fn force_sync_composite(window: &mut WrWindowState) {
 }
 
 #[no_mangle]
-// read the function definition to make sure we free this memory correctly.
-pub extern fn wr_readback_buffer(window: &mut WrWindowState, width: u32, height: u32,
-                                 out_length: *mut u32, out_capacity: *mut u32) -> *const c_uchar {
+pub extern fn wr_readback_into_buffer(window: &mut WrWindowState, width: u32, height: u32,
+                                      dst_buffer: *mut u8, buffer_size: usize) {
     assert!( unsafe { is_in_compositor_thread() });
     force_sync_composite(window);
 
-    let mut pixels = gl::read_pixels(0, 0,
-                                 width as gl::GLsizei,
-                                 height as gl::GLsizei,
-                                 gl::BGRA,
-                                 gl::UNSIGNED_BYTE);
-    let pointer = pixels.as_mut_ptr();
     unsafe {
-        *out_length = pixels.len() as u32;
-        *out_capacity = pixels.capacity() as u32;
-        mem::forget(pixels); // Ensure rust doesn't clean this up.
-    }
-    return pointer;
-}
-
-#[no_mangle]
-pub extern fn wr_free_buffer(vec_ptr: *mut c_uchar, length: u32, capacity: u32)
-{
-    assert!( unsafe { is_in_compositor_thread() });
-    // note that vec_ptr loses its const here because we're doing unsafe things.
-    unsafe {
-        let rebuilt = Vec::from_raw_parts(vec_ptr, length as usize, capacity as usize);
+        let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
+        gl::read_pixels_into_buffer(0, 0,
+                                    width as gl::GLsizei,
+                                    height as gl::GLsizei,
+                                    gl::BGRA,
+                                    gl::UNSIGNED_BYTE,
+                                    slice);
     }
 }
 
