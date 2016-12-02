@@ -497,8 +497,10 @@ Layer::StartPendingAnimations(const TimeStamp& aReadyTime)
         for (size_t animIdx = 0, animEnd = layer->mAnimations.Length();
              animIdx < animEnd; animIdx++) {
           Animation& anim = layer->mAnimations[animIdx];
-          if (anim.startTime().IsNull()) {
-            anim.startTime() = aReadyTime - anim.initialCurrentTime();
+
+          // If the animation is play-pending, resolve the start time.
+          if (anim.startTime().IsNull() && !anim.isNotPlaying()) {
+            anim.startTime() = aReadyTime - anim.holdTime() + anim.delay();
             updated = true;
           }
         }

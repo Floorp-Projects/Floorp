@@ -1282,7 +1282,7 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
   // animations are eligible for the compositor since, Animations that are
   // paused, zero-duration, finished etc. should not block other animations from
   // running on the compositor.
-  MOZ_ASSERT(mAnimation && mAnimation->IsPlayableOnCompositor());
+  MOZ_ASSERT(mAnimation && mAnimation->IsPlaying());
 
   EffectSet* effectSet =
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
