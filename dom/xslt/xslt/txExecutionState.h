@@ -94,6 +94,14 @@ public:
     // Stack functions
     nsresult pushEvalContext(txIEvalContext* aContext);
     txIEvalContext* popEvalContext();
+
+    /**
+     * Helper that deletes all entries before |aContext| and then
+     * pops it off the stack. The caller must delete |aContext| if
+     * desired.
+     */
+    void popAndDeleteEvalContextUntil(txIEvalContext* aContext);
+
     nsresult pushBool(bool aBool);
     bool popBool();
     nsresult pushResultHandler(txAXMLEventHandler* aHandler);
