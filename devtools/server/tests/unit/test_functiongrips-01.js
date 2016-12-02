@@ -52,7 +52,7 @@ function test_inferred_name_function() {
     do_check_eq(args[0].class, "Function");
     // No name for an anonymous function, but it should have an inferred name.
     do_check_eq(args[0].name, undefined);
-    do_check_eq(args[0].displayName, "o.m");
+    do_check_eq(args[0].displayName, "m");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getParameterNames(function (aResponse) {
