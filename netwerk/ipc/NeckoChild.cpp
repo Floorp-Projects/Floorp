@@ -113,7 +113,7 @@ NeckoChild::AllocPFTPChannelChild(const PBrowserOrId& aBrowser,
                                   const FTPChannelCreationArgs& aOpenArgs)
 {
   // We don't allocate here: see FTPChannelChild::AsyncOpen()
-  NS_RUNTIMEABORT("AllocPFTPChannelChild should not be called");
+  MOZ_CRASH("AllocPFTPChannelChild should not be called");
   return nullptr;
 }
 
