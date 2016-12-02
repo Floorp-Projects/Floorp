@@ -7,6 +7,7 @@
 // Tests that theme utilities work
 
 const {getColor, getTheme, setTheme} = require("devtools/client/shared/theme");
+const {PrefObserver} = require("devtools/client/shared/prefs");
 
 add_task(function* () {
   testGetTheme();
@@ -31,13 +32,14 @@ function testGetTheme() {
 
 function testSetTheme() {
   let originalTheme = getTheme();
-  gDevTools.once("pref-changed", (_, { pref, oldValue, newValue }) => {
+
+  let prefObserver = new PrefObserver("devtools.");
+  prefObserver.once("devtools.theme", pref => {
     is(pref, "devtools.theme",
-      "The 'pref-changed' event triggered by setTheme has correct pref.");
-    is(oldValue, originalTheme,
-      "The 'pref-changed' event triggered by setTheme has correct oldValue.");
+      "A preference event triggered by setTheme has correct pref.");
+    let newValue = Services.prefs.getCharPref("devtools.theme");
     is(newValue, "dark",
-      "The 'pref-changed' event triggered by setTheme has correct newValue.");
+      "A preference event triggered by setTheme comes after the value is set.");
   });
   setTheme("dark");
   is(Services.prefs.getCharPref("devtools.theme"), "dark",
@@ -52,6 +54,8 @@ function testSetTheme() {
   is(Services.prefs.getCharPref("devtools.theme"), "unknown",
      "setTheme() correctly sets an unknown theme.");
   Services.prefs.setCharPref("devtools.theme", originalTheme);
+
+  prefObserver.destroy();
 }
 
 function testGetColor() {

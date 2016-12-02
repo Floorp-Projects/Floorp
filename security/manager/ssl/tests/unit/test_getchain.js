@@ -67,12 +67,15 @@ function run_test() {
   clearOCSPCache();
   clearSessionCache();
 
+  let ee_cert = null;
   for (let cert of certList) {
-    addCertFromFile(certdb, `test_getchain/${cert}.pem`, ",,");
+    let result = addCertFromFile(certdb, `test_getchain/${cert}.pem`, ",,");
+    if (cert == "ee") {
+      ee_cert = result;
+    }
   }
 
-  let ee_cert = certdb.findCertByNickname('ee');
-  notEqual(ee_cert, null, "EE cert should be in the cert DB");
+  notEqual(ee_cert, null, "EE cert should have successfully loaded");
 
   let ca = get_ca_array();
 
