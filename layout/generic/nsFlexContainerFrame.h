@@ -111,12 +111,6 @@ public:
                                     uint32_t* aNumPackingSpacesRemaining,
                                     nscoord* aPackingSpaceRemaining);
 
-  /**
-   * Returns true if aFrame is the frame for an element with
-   * "display:-webkit-box" or "display:-webkit-inline-box".
-   */
-  static bool IsLegacyBox(const nsIFrame* aFrame);
-
 protected:
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(nsStyleContext* aContext)
