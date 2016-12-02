@@ -14,7 +14,7 @@ def main():
     if host_arch in ('amd64', 'x86_64'):
         host_arch = 'x64'
     elif fnmatch.fnmatch(host_arch, 'i?86') or host_arch == 'i86pc':
-        host_arch = 'x64'
+        host_arch = 'ia32'
     elif host_arch.startswith('arm'):
         host_arch = 'arm'
     elif host_arch.startswith('mips'):

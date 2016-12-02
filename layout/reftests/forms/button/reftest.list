@@ -1,20 +1,18 @@
 == first-letter-1.html first-letter-1-ref.html
 != first-letter-1.html first-letter-1-noref.html
 
-== focus-area-percent-units-1.html focus-area-percent-units-1-ref.html
-== focus-area-percent-units-2.html focus-area-percent-units-2-ref.html
-
 == max-height.html max-height-ref.html
 == min-height.html min-height-ref.html
-== overflow-areas-1.html overflow-areas-1-ref.html
+
+# Android is off ever-so-slightly on the points where the text
+# runs into the border on this text, so a little fuzz is needed.
+fuzzy-if(Android,1,16) == overflow-areas-1.html overflow-areas-1-ref.html
 
 # The buttons in these tests have some fancy shading applied to their corners
 # on Android, despite their "-moz-appearance: none; background: gray", so they
 # don't quite match the reference case's normal <div>. That's why they're fuzzy.
-fuzzy-if(Android,125,20) == percent-height-child-1.html percent-height-child-1-ref.html
-pref(browser.display.focus_ring_width,1) fuzzy-if(Android,125,80) == percent-height-child-2.html percent-height-child-2-ref.html
-fuzzy-if(Android,125,20) == percent-width-child-1.html  percent-width-child-1-ref.html
-pref(browser.display.focus_ring_width,1) fuzzy-if(Android,125,80) == percent-width-child-2.html  percent-width-child-2-ref.html
+fuzzy-if(Android,125,20) == percent-height-child.html percent-height-child-ref.html
+fuzzy-if(Android,125,20) == percent-width-child.html  percent-width-child-ref.html
 
 == vertical-centering.html vertical-centering-ref.html
 
@@ -36,14 +34,8 @@ fails-if(Android) == disabled-1.html disabled-1-ref.html
 == width-auto-size-em-ltr.html width-auto-size-em-ltr-ref.html
 == width-auto-size-ltr.html width-auto-size-ltr-ref.html
 == width-exact-fit-ltr.html width-auto-size-ltr-ref.html
-== width-erode-part-focuspadding-ltr.html width-erode-part-focuspadding-ltr-ref.html
-== width-erode-all-focuspadding-ltr.html width-erode-all-focuspadding-ltr-ref.html
-== width-erode-overflow-focuspadding-ltr.html width-erode-overflow-focuspadding-ltr-ref.html
 == width-auto-size-em-rtl.html width-auto-size-em-rtl-ref.html
 == width-auto-size-rtl.html width-auto-size-rtl-ref.html
 == width-exact-fit-rtl.html width-auto-size-rtl-ref.html
-== width-erode-part-focuspadding-rtl.html width-erode-part-focuspadding-rtl-ref.html
-== width-erode-all-focuspadding-rtl.html width-erode-all-focuspadding-rtl-ref.html
-== width-erode-overflow-focuspadding-rtl.html width-erode-overflow-focuspadding-rtl-ref.html
 == display-grid-flex-columnset.html display-grid-flex-columnset-ref.html
 == 1317351.html 1317351-ref.html

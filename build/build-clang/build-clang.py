@@ -205,6 +205,8 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
                   "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
                   "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
                   src_dir];
+    if is_windows():
+        cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
     build_package(build_dir, run_cmake, cmake_args)
 
     if is_linux():

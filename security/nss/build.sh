@@ -13,7 +13,7 @@ show_help() {
 cat << EOF
 
 Usage: ${0##*/} [-hcgv] [-j <n>] [--test] [--fuzz] [--scan-build[=output]]
-                [-m32] [--opt|-o] [--asan] [--ubsan] [--sancov[=edge|bb|func]]
+                [-m32] [--opt|-o] [--asan] [--ubsan] [--sancov[=edge|bb|func|...]]
                 [--pprof] [--msan]
 
 This script builds NSS with gyp and ninja.
@@ -54,6 +54,7 @@ rebuild_gyp=0
 target=Debug
 verbose=0
 fuzz=0
+sancov_default=edge,indirect-calls,8bit-counters
 
 # parse parameters to store in config
 params=$(echo "$*" | perl -pe 's/-c|-v|-g|-j [0-9]*|-h//g' | perl -pe 's/^\s*(.*?)\s*$/\1/')
@@ -77,11 +78,9 @@ enable_fuzz()
 {
     fuzz=1
     nspr_sanitizer asan
-    nspr_sanitizer ubsan
-    nspr_sanitizer sancov edge
+    nspr_sanitizer sancov $sancov_default
     gyp_params+=(-Duse_asan=1)
-    gyp_params+=(-Duse_ubsan=1)
-    gyp_params+=(-Duse_sancov=edge)
+    gyp_params+=(-Duse_sancov=$sancov_default)
 
     # Adding debug symbols even for opt builds.
     nspr_opt+=(--enable-debug-symbols)
@@ -102,7 +101,7 @@ while [ $# -gt 0 ]; do
         -m32|--m32) build_64=0 ;;
         --asan) gyp_params+=(-Duse_asan=1); nspr_sanitizer asan ;;
         --ubsan) gyp_params+=(-Duse_ubsan=1); nspr_sanitizer ubsan ;;
-        --sancov) gyp_params+=(-Duse_sancov=edge); nspr_sanitizer sancov edge ;;
+        --sancov) gyp_params+=(-Duse_sancov=$sancov_default); nspr_sanitizer sancov $sancov_default ;;
         --sancov=?*) gyp_params+=(-Duse_sancov="${1#*=}"); nspr_sanitizer sancov "${1#*=}" ;;
         --pprof) gyp_params+=(-Duse_pprof=1) ;;
         --msan) gyp_params+=(-Duse_msan=1); nspr_sanitizer msan ;;
@@ -121,7 +120,6 @@ if [ "$build_64" == "1" ]; then
     nspr_opt+=(--enable-64bit)
 else
     gyp_params+=(-Dtarget_arch=ia32)
-    nspr_opt+=(--enable-x32)
 fi
 
 # clone fuzzing stuff

@@ -25,6 +25,7 @@ def main():
             try:
                 v = subprocess.check_output([cc, '-dumpversion'], stderr=sink)
                 v = v.strip(' \r\n').split('.')
+                v = list(map(int, v))
                 if v[0] < 4 or (v[0] == 4 and v[1] < 8):
                     # gcc 4.8 minimum
                     return False
