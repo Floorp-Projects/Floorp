@@ -79,7 +79,7 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
   }
 
-  void Abort(ErrorResult& aRv);
+  void Abort();
 
   uint16_t ReadyState() const
   {

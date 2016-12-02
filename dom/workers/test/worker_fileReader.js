@@ -300,7 +300,7 @@ onmessage = function(message) {
   } catch(e) {
     abortThrew = true;
   }
-  is(abortThrew, true, "abort() must throw if not loading");
+  is(abortThrew, false, "abort() never throws");
   is(abortHasRun, false, "abort() is a no-op unless loading");
   r.readAsText(asciiFile);
   r.abort();
@@ -318,7 +318,7 @@ onmessage = function(message) {
   } catch(e) {
     abortThrew = true;
   }
-  is(abortThrew, true, "abort() must throw if not loading");
+  is(abortThrew, false, "abort() never throws");
   is(reuseAbortHasRun, false, "abort() is a no-op unless loading");
   r.readAsText(asciiFile);
 
