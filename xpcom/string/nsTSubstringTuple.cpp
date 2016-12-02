@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/CheckedInt.h"
 
 /**
  * computes the aggregate string length
@@ -12,14 +13,16 @@
 nsTSubstringTuple_CharT::size_type
 nsTSubstringTuple_CharT::Length() const
 {
-  uint32_t len;
+  mozilla::CheckedInt<size_type> len;
   if (mHead) {
     len = mHead->Length();
   } else {
     len = TO_SUBSTRING(mFragA).Length();
   }
 
-  return len + TO_SUBSTRING(mFragB).Length();
+  len += TO_SUBSTRING(mFragB).Length();
+  MOZ_RELEASE_ASSERT(len.isValid(), "Substring tuple length is invalid");
+  return len.value();
 }
 
 
@@ -34,14 +37,14 @@ nsTSubstringTuple_CharT::WriteTo(char_type* aBuf, uint32_t aBufLen) const
 {
   const substring_type& b = TO_SUBSTRING(mFragB);
 
-  NS_ASSERTION(aBufLen >= b.Length(), "buffer too small");
+  MOZ_RELEASE_ASSERT(aBufLen >= b.Length(), "buffer too small");
   uint32_t headLen = aBufLen - b.Length();
   if (mHead) {
     mHead->WriteTo(aBuf, headLen);
   } else {
     const substring_type& a = TO_SUBSTRING(mFragA);
 
-    NS_ASSERTION(a.Length() == headLen, "buffer incorrectly sized");
+    MOZ_RELEASE_ASSERT(a.Length() == headLen, "buffer incorrectly sized");
     char_traits::copy(aBuf, a.Data(), a.Length());
   }
 
