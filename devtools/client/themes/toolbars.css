@@ -194,6 +194,7 @@
 .scrollbutton-up > .toolbarbutton-icon,
 .scrollbutton-down > .toolbarbutton-icon,
 #black-boxed-message-button .button-icon,
+#requests-menu-perf-notice-button .button-icon,
 #canvas-debugging-empty-notice-button .button-icon,
 #toggle-breakpoints[checked] > image,
 .event-tooltip-debugger-icon {

@@ -41,9 +41,9 @@ add_task(function* () {
 
   let panel = toolbox.getCurrentPanel();
   let selected = panel.panelWin.NetMonitorView.RequestsMenu.selectedItem;
-  is(selected.method, htmlRequest.request.method,
+  is(selected.attachment.method, htmlRequest.request.method,
      "The correct request is selected");
-  is(selected.url, htmlRequest.request.url,
+  is(selected.attachment.url, htmlRequest.request.url,
      "The correct request is definitely selected");
 
   // Filter out the HTML request.
@@ -54,9 +54,9 @@ add_task(function* () {
   yield hud.ui.openNetworkPanel(htmlRequest.actor);
 
   panel.panelWin.NetMonitorView.RequestsMenu.selectedItem;
-  is(selected.method, htmlRequest.request.method,
+  is(selected.attachment.method, htmlRequest.request.method,
      "The correct request is selected");
-  is(selected.url, htmlRequest.request.url,
+  is(selected.attachment.url, htmlRequest.request.url,
      "The correct request is definitely selected");
 
   // All tests are done. Shutdown.
