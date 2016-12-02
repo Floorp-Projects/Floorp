@@ -39,7 +39,6 @@ XPIDL_SOURCES += [
     'nsITokenDialogs.idl',
     'nsITokenPasswordDialogs.idl',
     'nsIU2FToken.idl',
-    'nsIWeakCryptoOverride.idl',
     'nsIX509Cert.idl',
     'nsIX509CertDB.idl',
     'nsIX509CertList.idl',
@@ -140,7 +139,6 @@ UNIFIED_SOURCES += [
     'SharedSSLState.cpp',
     'SSLServerCertVerification.cpp',
     'TransportSecurityInfo.cpp',
-    'WeakCryptoOverride.cpp',
 ]
 
 IPDL_SOURCES += [
