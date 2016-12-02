@@ -49,6 +49,12 @@ Element::GetFlattenedTreeParentElementForStyle() const
   return nullptr;
 }
 
+inline bool
+Element::ShouldTraverseForServo()
+{
+  return HasDirtyDescendantsForServo() || Servo_Element_ShouldTraverse(this);
+}
+
 inline void
 Element::NoteDirtyDescendantsForServo()
 {
