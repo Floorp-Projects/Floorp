@@ -56,11 +56,16 @@ typedef struct {
   uint32_t mIsDirty;
 } CacheIndexHeader;
 
+static_assert(
+  sizeof(CacheIndexHeader::mVersion) + sizeof(CacheIndexHeader::mTimeStamp) +
+  sizeof(CacheIndexHeader::mIsDirty) == sizeof(CacheIndexHeader),
+  "Unexpected sizeof(CacheIndexHeader)!");
+
 struct CacheIndexRecord {
   SHA1Sum::Hash   mHash;
   uint32_t        mFrecency;
-  uint32_t        mExpirationTime;
   OriginAttrsHash mOriginAttrsHash;
+  uint32_t        mExpirationTime;
 
   /*
    *    1000 0000 0000 0000 0000 0000 0000 0000 : initialized
@@ -72,15 +77,21 @@ struct CacheIndexRecord {
    *    0000 0011 0000 0000 0000 0000 0000 0000 : reserved
    *    0000 0000 1111 1111 1111 1111 1111 1111 : file size (in kB)
    */
-  uint32_t      mFlags;
+  uint32_t        mFlags;
 
   CacheIndexRecord()
     : mFrecency(0)
-    , mExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)
     , mOriginAttrsHash(0)
+    , mExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)
     , mFlags(0)
   {}
 };
+
+static_assert(
+  sizeof(CacheIndexRecord::mHash) + sizeof(CacheIndexRecord::mFrecency) +
+  sizeof(CacheIndexRecord::mOriginAttrsHash) + sizeof(CacheIndexRecord::mExpirationTime) +
+  sizeof(CacheIndexRecord::mFlags) == sizeof(CacheIndexRecord),
+  "Unexpected sizeof(CacheIndexRecord)!");
 
 class CacheIndexEntry : public PLDHashEntryHdr
 {
@@ -221,36 +232,24 @@ public:
 
   void WriteToBuf(void *aBuf)
   {
-    CacheIndexRecord *dst = reinterpret_cast<CacheIndexRecord *>(aBuf);
-
-    // Copy the whole record to the buffer.
-    memcpy(aBuf, mRec, sizeof(CacheIndexRecord));
-
+    uint8_t* ptr = static_cast<uint8_t*>(aBuf);
+    memcpy(ptr, mRec->mHash, sizeof(SHA1Sum::Hash)); ptr += sizeof(SHA1Sum::Hash);
+    NetworkEndian::writeUint32(ptr, mRec->mFrecency); ptr += sizeof(uint32_t);
+    NetworkEndian::writeUint64(ptr, mRec->mOriginAttrsHash); ptr += sizeof(uint64_t);
+    NetworkEndian::writeUint32(ptr, mRec->mExpirationTime); ptr += sizeof(uint32_t);
     // Dirty and fresh flags should never go to disk, since they make sense only
     // during current session.
-    dst->mFlags &= ~kDirtyMask;
-    dst->mFlags &= ~kFreshMask;
-
-#if defined(IS_LITTLE_ENDIAN)
-    // Data in the buffer are in machine byte order and we want them in network
-    // byte order.
-    NetworkEndian::writeUint32(&dst->mFrecency, dst->mFrecency);
-    NetworkEndian::writeUint32(&dst->mExpirationTime, dst->mExpirationTime);
-    NetworkEndian::writeUint64(&dst->mOriginAttrsHash, dst->mOriginAttrsHash);
-    NetworkEndian::writeUint32(&dst->mFlags, dst->mFlags);
-#endif
+    NetworkEndian::writeUint32(ptr, mRec->mFlags & ~(kDirtyMask | kFreshMask));
   }
 
   void ReadFromBuf(void *aBuf)
   {
-    CacheIndexRecord *src= reinterpret_cast<CacheIndexRecord *>(aBuf);
-    MOZ_ASSERT(memcmp(&mRec->mHash, &src->mHash,
-               sizeof(SHA1Sum::Hash)) == 0);
-
-    mRec->mFrecency = NetworkEndian::readUint32(&src->mFrecency);
-    mRec->mExpirationTime = NetworkEndian::readUint32(&src->mExpirationTime);
-    mRec->mOriginAttrsHash = NetworkEndian::readUint64(&src->mOriginAttrsHash);
-    mRec->mFlags = NetworkEndian::readUint32(&src->mFlags);
+    const uint8_t* ptr = static_cast<const uint8_t*>(aBuf);
+    MOZ_ASSERT(memcmp(&mRec->mHash, ptr, sizeof(SHA1Sum::Hash)) == 0); ptr += sizeof(SHA1Sum::Hash);
+    mRec->mFrecency = NetworkEndian::readUint32(ptr); ptr += sizeof(uint32_t);
+    mRec->mOriginAttrsHash = NetworkEndian::readUint64(ptr); ptr += sizeof(uint64_t);
+    mRec->mExpirationTime = NetworkEndian::readUint32(ptr); ptr += sizeof(uint32_t);
+    mRec->mFlags = NetworkEndian::readUint32(ptr);
   }
 
   void Log() const {
