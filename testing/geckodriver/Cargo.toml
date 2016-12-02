@@ -13,6 +13,7 @@ license = "MPL-2.0"
 
 [dependencies]
 chrono = "^0.2"
+clap = {version = "^2.19", default-features = false, features = ["suggestions", "wrap_help"]}
 hyper = {version = "0.9", default-features = false}
 lazy_static = "0.1"
 log = "0.3"
@@ -28,8 +29,3 @@ slog-stream = "1"
 uuid = "0.1.18"
 webdriver = "0.16"
 zip = "0.1.16"
-
-[dependencies.clap]
-version = "2.9"
-default-features = false
-features = ["suggestions", "wrap_help"]
