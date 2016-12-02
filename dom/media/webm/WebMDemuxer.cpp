@@ -400,9 +400,9 @@ WebMDemuxer::ReadMetadata()
       mHasAudio = true;
       mAudioCodec = nestegg_track_codec_id(context, track);
       if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
-        mInfo.mAudio.mMimeType = "audio/webm; codecs=vorbis";
+        mInfo.mAudio.mMimeType = "audio/vorbis";
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
-        mInfo.mAudio.mMimeType = "audio/webm; codecs=opus";
+        mInfo.mAudio.mMimeType = "audio/opus";
         OpusDataDecoder::AppendCodecDelay(mInfo.mAudio.mCodecSpecificConfig,
             media::TimeUnit::FromNanoseconds(params.codec_delay).ToMicroseconds());
       }
