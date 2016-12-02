@@ -53,7 +53,7 @@ class TestAboutPrivateBrowsing(PuppeteerMixin, MarionetteTestCase):
                     link.click()
 
             tab = pb_window.tabbar.open_tab(trigger=tab_opener)
-            Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
                 lambda _: tab.location == self.pb_url)
 
         finally:

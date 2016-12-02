@@ -58,20 +58,11 @@ function downloadRoots() {
 }
 
 function makeFormattedNickname(cert) {
-  if (cert.nickname.startsWith("Builtin Object Token:")) {
-    return `"${cert.nickname.substring("Builtin Object Token:".length)}"`;
+  if (cert.isBuiltInRoot) {
+    return `"${cert.displayName}"`;
   }
   // Otherwise, this isn't a built-in and we have to comment it out.
-  if (cert.commonName) {
-    return `// "${cert.commonName}"`;
-  }
-  if (cert.organizationalUnit) {
-    return `// "${cert.organizationalUnit}"`;
-  }
-  if (cert.organization) {
-    return `// "${cert.organization}"`;
-  }
-  throw new Error(`couldn't make nickname for ${cert.subjectName}`);
+  return `// "${cert.displayName}"`;
 }
 
 var roots = downloadRoots();

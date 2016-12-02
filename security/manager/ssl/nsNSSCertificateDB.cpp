@@ -11,6 +11,7 @@
 #include "SharedSSLState.h"
 #include "certdb.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Unused.h"
 #include "nsArray.h"
@@ -91,36 +92,6 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
   }
 
   shutdown(ShutdownCalledFrom::Object);
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::FindCertByNickname(const nsAString& nickname,
-                                       nsIX509Cert** _rvCert)
-{
-  NS_ENSURE_ARG_POINTER(_rvCert);
-  *_rvCert = nullptr;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  char *asciiname = nullptr;
-  NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
-  asciiname = const_cast<char*>(aUtf8Nickname.get());
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"\n", asciiname));
-  UniqueCERTCertificate cert(PK11_FindCertFromNickname(asciiname, nullptr));
-  if (!cert) {
-    cert.reset(CERT_FindCertByNickname(CERT_GetDefaultCertDB(), asciiname));
-  }
-  if (cert) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("got it\n"));
-    nsCOMPtr<nsIX509Cert> pCert = nsNSSCertificate::Create(cert.get());
-    if (pCert) {
-      pCert.forget(_rvCert);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1038,80 +1009,6 @@ nsNSSCertificateDB::ExportPKCS12File(nsISupports* aToken,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString& aNickname,
-                                            nsIX509Cert** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nullptr;
-
-  if (aNickname.IsEmpty())
-    return NS_OK;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  char *asciiname = nullptr;
-  NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
-  asciiname = const_cast<char*>(aUtf8Nickname.get());
-
-  /* Find a good cert in the user's database */
-  UniqueCERTCertificate cert(CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
-                                                      asciiname,
-                                                      certUsageEmailRecipient,
-                                                      true, ctx));
-  if (!cert) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
-  if (!nssCert) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nssCert.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::FindEmailSigningCert(const nsAString& aNickname,
-                                         nsIX509Cert** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nullptr;
-
-  if (aNickname.IsEmpty())
-    return NS_OK;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  char *asciiname = nullptr;
-  NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
-  asciiname = const_cast<char*>(aUtf8Nickname.get());
-
-  /* Find a good cert in the user's database */
-  UniqueCERTCertificate cert(CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
-                                                      asciiname,
-                                                      certUsageEmailSigner,
-                                                      true, ctx));
-  if (!cert) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
-  if (!nssCert) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nssCert.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSCertificateDB::FindCertByEmailAddress(const char* aEmailAddress,
                                            nsIX509Cert** _retval)
 {
@@ -1332,8 +1229,14 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
 NS_IMETHODIMP
 nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
                                       const nsACString& aTrust,
-                                      const nsACString& /*aName*/)
+                                      nsIX509Cert** addedCertificate)
 {
+  MOZ_ASSERT(addedCertificate);
+  if (!addedCertificate) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *addedCertificate = nullptr;
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1359,7 +1262,12 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
   // If there's already a certificate that matches this one in the database, we
   // still want to set its trust to the given value.
   if (tmpCert->isperm) {
-    return SetCertTrustFromString(newCert, aTrust);
+    rv = SetCertTrustFromString(newCert, aTrust);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    newCert.forget(addedCertificate);
+    return NS_OK;
   }
 
   UniquePORTString nickname(CERT_MakeCANickname(tmpCert.get()));
@@ -1373,17 +1281,22 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
 
   SECStatus srv = CERT_AddTempCertToPerm(tmpCert.get(), nickname.get(),
                                          trust.GetTrust());
-  return MapSECStatus(srv);
+  if (srv != SECSuccess) {
+    return MapSECStatus(srv);
+  }
+  newCert.forget(addedCertificate);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::AddCert(const nsACString& aCertDER, const nsACString& aTrust,
-                            const nsACString& aName)
+nsNSSCertificateDB::AddCert(const nsACString& aCertDER,
+                            const nsACString& aTrust,
+                            nsIX509Cert** addedCertificate)
 {
   nsCString base64;
   nsresult rv = Base64Encode(aCertDER, base64);
   NS_ENSURE_SUCCESS(rv, rv);
-  return AddCertFromBase64(base64, aTrust, aName);
+  return AddCertFromBase64(base64, aTrust, addedCertificate);
 }
 
 NS_IMETHODIMP

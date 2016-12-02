@@ -275,7 +275,7 @@ OptionsPanel.prototype = {
       inputRadio.setAttribute("value", theme.id);
       inputRadio.setAttribute("name", "devtools-theme-item");
       inputRadio.addEventListener("change", function (e) {
-        setPrefAndEmit(themeBox.getAttribute("data-pref"),
+        SetPref(themeBox.getAttribute("data-pref"),
           e.target.value);
       });
 
@@ -305,7 +305,7 @@ OptionsPanel.prototype = {
       }
       prefCheckbox.addEventListener("change", function (e) {
         let checkbox = e.target;
-        setPrefAndEmit(checkbox.getAttribute("data-pref"), checkbox.checked);
+        SetPref(checkbox.getAttribute("data-pref"), checkbox.checked);
       });
     }
     // Themes radio inputs are handled in setupThemeList
@@ -320,7 +320,7 @@ OptionsPanel.prototype = {
         }
 
         radioInput.addEventListener("change", function (e) {
-          setPrefAndEmit(radioGroup.getAttribute("data-pref"),
+          SetPref(radioGroup.getAttribute("data-pref"),
             e.target.value);
         });
       }
@@ -340,7 +340,7 @@ OptionsPanel.prototype = {
 
       prefSelect.addEventListener("change", function (e) {
         let select = e.target;
-        setPrefAndEmit(select.getAttribute("data-pref"),
+        SetPref(select.getAttribute("data-pref"),
           select.options[select.selectedIndex].value);
       });
     }
@@ -422,17 +422,3 @@ OptionsPanel.prototype = {
     return this.destroyPromise;
   }
 };
-
-/* Set a pref and emit the pref-changed event if needed. */
-function setPrefAndEmit(prefName, newValue) {
-  let data = {
-    pref: prefName,
-    newValue: newValue
-  };
-  data.oldValue = GetPref(data.pref);
-  SetPref(data.pref, data.newValue);
-
-  if (data.newValue != data.oldValue) {
-    gDevTools.emit("pref-changed", data);
-  }
-}

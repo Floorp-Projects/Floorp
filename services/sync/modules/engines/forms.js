@@ -111,7 +111,6 @@ FormEngine.prototype = {
   _trackerObj: FormTracker,
   _recordObj: FormRec,
   applyIncomingBatchSize: FORMS_STORE_BATCH_SIZE,
-  allowSkippedRecord: true,
 
   syncPriority: 6,
 

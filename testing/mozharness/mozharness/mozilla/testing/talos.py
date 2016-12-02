@@ -326,20 +326,24 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
             self.suite = self.config['suite']
 
         # now that have the suite name, check if pageset is required, if so download it
+        # the --no-download option will override this
         if self.query_pagesets_name():
-            self.info("Downloading pageset with tooltool...")
-            self.src_talos_webdir = os.path.join(self.talos_path, 'talos')
-            src_talos_pageset = os.path.join(self.src_talos_webdir, 'tests')
-            manifest_file = os.path.join(self.talos_path, 'tp5n-pageset.manifest')
-            self.tooltool_fetch(
-                manifest_file,
-                output_dir=src_talos_pageset,
-                cache=self.config.get('tooltool_cache')
-            )
-            archive = os.path.join(src_talos_pageset, self.pagesets_name)
-            unzip = self.query_exe('unzip')
-            unzip_cmd = [unzip, '-q', '-o', archive, '-d', src_talos_pageset]
-            self.run_command(unzip_cmd, halt_on_failure=True)
+            if '--no-download' not in self.config['talos_extra_options']:
+                self.info("Downloading pageset with tooltool...")
+                self.src_talos_webdir = os.path.join(self.talos_path, 'talos')
+                src_talos_pageset = os.path.join(self.src_talos_webdir, 'tests')
+                manifest_file = os.path.join(self.talos_path, 'tp5n-pageset.manifest')
+                self.tooltool_fetch(
+                    manifest_file,
+                    output_dir=src_talos_pageset,
+                    cache=self.config.get('tooltool_cache')
+                )
+                archive = os.path.join(src_talos_pageset, self.pagesets_name)
+                unzip = self.query_exe('unzip')
+                unzip_cmd = [unzip, '-q', '-o', archive, '-d', src_talos_pageset]
+                self.run_command(unzip_cmd, halt_on_failure=True)
+            else:
+                self.info("Not downloading pageset because the no-download option was specified")
 
     # Action methods. {{{1
     # clobber defined in BaseScript

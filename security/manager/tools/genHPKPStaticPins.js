@@ -28,7 +28,6 @@ var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);
 
-const BUILT_IN_NICK_PREFIX = "Builtin Object Token:";
 const SHA256_PREFIX = "sha256/";
 const GOOGLE_PIN_PREFIX = "GOOGLE_PIN_";
 
@@ -402,7 +401,7 @@ function loadNSSCertinfo(extraCertificates) {
     if (!isCertBuiltIn(cert)) {
       continue;
     }
-    let name = cert.nickname.substr(BUILT_IN_NICK_PREFIX.length);
+    let name = cert.displayName;
     let SKD = cert.sha256SubjectPublicKeyInfoDigest;
     certNameToSKD[name] = SKD;
     certSKDToName[SKD] = name;

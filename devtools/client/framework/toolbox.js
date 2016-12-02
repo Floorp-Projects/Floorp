@@ -113,7 +113,9 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this.highlighterUtils = getHighlighterUtils(this);
   this._highlighterReady = this._highlighterReady.bind(this);
   this._highlighterHidden = this._highlighterHidden.bind(this);
-  this._prefChanged = this._prefChanged.bind(this);
+  this._applyCacheSettings = this._applyCacheSettings.bind(this);
+  this._applyServiceWorkersTestingSettings =
+    this._applyServiceWorkersTestingSettings.bind(this);
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onBrowserMessage = this._onBrowserMessage.bind(this);
@@ -367,7 +369,10 @@ Toolbox.prototype = {
       this.closeButton = this.doc.getElementById("toolbox-close");
       this.closeButton.addEventListener("click", this.destroy, true);
 
-      gDevTools.on("pref-changed", this._prefChanged);
+      Services.prefs.addObserver("devtools.cache.disabled", this._applyCacheSettings,
+                                false);
+      Services.prefs.addObserver("devtools.serviceWorkers.testing.enabled",
+                                 this._applyServiceWorkersTestingSettings, false);
 
       let framesMenu = this.doc.getElementById("command-button-frames");
       framesMenu.addEventListener("click", this.showFramesMenu, false);
@@ -483,29 +488,6 @@ Toolbox.prototype = {
     this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
                                              system.getScreenDimensions());
     this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
-  },
-
-  /**
-   * Because our panels are lazy loaded this is a good place to watch for
-   * "pref-changed" events.
-   * @param  {String} event
-   *         The event type, "pref-changed".
-   * @param  {Object} data
-   *         {
-   *           newValue: The new value
-   *           oldValue:  The old value
-   *           pref: The name of the preference that has changed
-   *         }
-   */
-  _prefChanged: function (event, data) {
-    switch (data.pref) {
-      case "devtools.cache.disabled":
-        this._applyCacheSettings();
-        break;
-      case "devtools.serviceWorkers.testing.enabled":
-        this._applyServiceWorkersTestingSettings();
-        break;
-    }
   },
 
   _buildOptions: function () {
@@ -2214,7 +2196,9 @@ Toolbox.prototype = {
     gDevTools.off("tool-registered", this._toolRegistered);
     gDevTools.off("tool-unregistered", this._toolUnregistered);
 
-    gDevTools.off("pref-changed", this._prefChanged);
+    Services.prefs.removeObserver("devtools.cache.disabled", this._applyCacheSettings);
+    Services.prefs.removeObserver("devtools.serviceWorkers.testing.enabled",
+                                  this._applyServiceWorkersTestingSettings);
 
     this._lastFocusedElement = null;
     if (this._sourceMapService) {

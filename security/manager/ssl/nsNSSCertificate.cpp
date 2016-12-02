@@ -9,6 +9,7 @@
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "certdb.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
@@ -366,58 +367,71 @@ nsNSSCertificate::GetDbKey(const UniqueCERTCertificate& cert, nsACString& aDbKey
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetWindowTitle(nsAString& aWindowTitle)
+nsNSSCertificate::GetDisplayName(nsAString& aDisplayName)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  aWindowTitle.Truncate();
+  aDisplayName.Truncate();
 
+  MOZ_ASSERT(mCert, "mCert should not be null in GetDisplayName");
   if (!mCert) {
-    NS_ERROR("Somehow got nullptr for mCert in nsNSSCertificate.");
     return NS_ERROR_FAILURE;
   }
 
   UniquePORTString commonName(CERT_GetCommonName(&mCert->subject));
+  UniquePORTString organizationalUnitName(CERT_GetOrgUnitName(&mCert->subject));
+  UniquePORTString organizationName(CERT_GetOrgName(&mCert->subject));
 
-  const char* titleOptions[] = {
-    mCert->nickname,
+  bool isBuiltInRoot;
+  nsresult rv = GetIsBuiltInRoot(&isBuiltInRoot);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Only use the nickname for built-in roots where we already have a hard-coded
+  // reasonable display name (unfortunately we have to strip off the leading
+  // slot identifier followed by a ':'). Otherwise, attempt to use the following
+  // in order:
+  //  - the common name, if present
+  //  - an organizational unit name, if present
+  //  - an organization name, if present
+  //  - the entire subject distinguished name, if non-empty
+  //  - an email address, if one can be found
+  // In the unlikely event that none of these fields are present and non-empty
+  // (the subject really shouldn't be empty), an empty string is returned.
+  nsAutoCString builtInRootNickname;
+  if (isBuiltInRoot) {
+    nsAutoCString fullNickname(mCert->nickname);
+    int32_t index = fullNickname.Find(":");
+    if (index != kNotFound) {
+      // Substring will gracefully handle the case where index is the last
+      // character in the string (that is, if the nickname is just
+      // "Builtin Object Token:"). In that case, we'll get an empty string.
+      builtInRootNickname = Substring(fullNickname,
+                                      AssertedCast<uint32_t>(index + 1));
+    }
+  }
+  const char* nameOptions[] = {
+    builtInRootNickname.get(),
     commonName.get(),
+    organizationalUnitName.get(),
+    organizationName.get(),
     mCert->subjectName,
     mCert->emailAddr
   };
 
-  nsAutoCString titleOption;
-  for (size_t i = 0; i < ArrayLength(titleOptions); i++) {
-    titleOption = titleOptions[i];
-    if (titleOption.Length() > 0 && IsUTF8(titleOption)) {
-      CopyUTF8toUTF16(titleOption, aWindowTitle);
+  nsAutoCString nameOption;
+  for (auto nameOptionPtr : nameOptions) {
+    nameOption.Assign(nameOptionPtr);
+    if (nameOption.Length() > 0 && IsUTF8(nameOption)) {
+      CopyUTF8toUTF16(nameOption, aDisplayName);
       return NS_OK;
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::GetNickname(nsAString& aNickname)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  if (mCert->nickname) {
-    CopyUTF8toUTF16(mCert->nickname, aNickname);
-  } else {
-    nsresult rv;
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-    if (NS_FAILED(rv) || !nssComponent) {
-      return NS_ERROR_FAILURE;
-    }
-    nssComponent->GetPIPNSSBundleString("CertNoNickname", aNickname);
-  }
   return NS_OK;
 }
 
@@ -655,7 +669,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(_rvChain);
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting chain for \"%s\"\n", mCert->nickname));
 
   mozilla::pkix::Time now(mozilla::pkix::Now());
 
@@ -689,9 +702,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     if ((usage & otherUsagesToTest) == 0) {
       continue;
     }
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("pipnss: PKIX attempting chain(%d) for '%s'\n",
-            usage, mCert->nickname));
     if (certVerifier->VerifyCert(mCert.get(), usage, now,
                                  nullptr, /*XXX fixme*/
                                  nullptr, /*hostname*/
@@ -707,9 +717,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     // There is not verified path for the chain, however we still want to
     // present to the user as much of a possible chain as possible, in the case
     // where there was a problem with the cert or the issuers.
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("pipnss: getchain :CertVerify failed to get chain for '%s'\n",
-            mCert->nickname));
     nssChain = UniqueCERTCertList(
       CERT_GetCertChainFromCert(mCert.get(), PR_Now(), certUsageSSLClient));
   }
@@ -726,8 +733,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   for (node = CERT_LIST_HEAD(nssChain.get());
        !CERT_LIST_END(node, nssChain.get());
        node = CERT_LIST_NEXT(node)) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("adding %s to chain\n", node->cert->nickname));
     nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
     array->AppendElement(cert, false);
   }
@@ -749,7 +754,6 @@ nsNSSCertificate::GetAllTokenNames(uint32_t* aLength, char16_t*** aTokenNames)
   *aTokenNames = nullptr;
 
   // Get the slots from NSS
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting slots for \"%s\"\n", mCert->nickname));
   UniquePK11SlotList slots(PK11_GetAllSlotsForCert(mCert.get(), nullptr));
   if (!slots) {
     if (PORT_GetError() == SEC_ERROR_NO_TOKEN) {

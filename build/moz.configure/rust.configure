@@ -85,6 +85,7 @@ def rust_triple_alias(host_or_target):
     @imports(_from='mozbuild.configure.util', _import='LineIO')
     @imports(_from='mozbuild.shellutil', _import='quote')
     @imports(_from='tempfile', _import='mkstemp')
+    @imports(_from='textwrap', _import='dedent')
     def rust_target(rustc, host_or_target):
         # Rust's --target options are similar to, but not exactly the same
         # as, the autoconf-derived targets we use.  An example would be that
@@ -155,7 +156,13 @@ def rust_triple_alias(host_or_target):
                 in_path,
             ]
             def failed():
-                die('Cannot compile for {} with {}'.format(host_or_target.alias, rustc))
+                die(dedent('''\
+                Cannot compile for {} with {}
+                The target may be unsupported, or you may not have
+                a rust std library for that target installed. Try:
+
+                  rustup target add {}
+                '''.format(host_or_target.alias, rustc, rustc_target)))
             check_cmd_output(*cmd, onerror=failed)
             if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
                 failed()

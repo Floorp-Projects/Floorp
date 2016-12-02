@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const {PrefObserver} = require("devtools/client/shared/prefs");
+
 /**
  * A collection of `AudioNodeModel`s used throughout the editor
  * to keep track of audio nodes within the audio context.
@@ -58,7 +60,9 @@ var WebAudioEditorController = {
     // Hook into theme change so we can change
     // the graph's marker styling, since we can't do this
     // with CSS
-    gDevTools.on("pref-changed", this._onThemeChange);
+
+    this._prefObserver = new PrefObserver("");
+    this._prefObserver.on("devtools.theme", this._onThemeChange);
 
     // Store the AudioNode definitions from the WebAudioFront, if the method exists.
     // If not, get the JSON directly. Using the actor method is preferable so the client
@@ -90,7 +94,8 @@ var WebAudioEditorController = {
     gFront.off("disconnect-node", this._onDisconnectNode);
     gFront.off("change-param", this._onChangeParam);
     gFront.off("destroy-node", this._onDestroyNode);
-    gDevTools.off("pref-changed", this._onThemeChange);
+    this._prefObserver.off("devtools.theme", this._onThemeChange);
+    this._prefObserver.destroy();
   },
 
   /**
@@ -129,8 +134,9 @@ var WebAudioEditorController = {
    * so that the graph can update marker styling, as that
    * cannot currently be done with CSS.
    */
-  _onThemeChange: function (event, data) {
-    window.emit(EVENTS.THEME_CHANGE, data.newValue);
+  _onThemeChange: function () {
+    let newValue = Services.prefs.getCharPref("devtools.theme");
+    window.emit(EVENTS.THEME_CHANGE, newValue);
   },
 
   /**

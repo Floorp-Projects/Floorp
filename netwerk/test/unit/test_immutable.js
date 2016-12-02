@@ -52,7 +52,7 @@ function readFile(file) {
 function addCertFromFile(certdb, filename, trustString) {
   let certFile = do_get_file(filename, false);
   let der = readFile(certFile);
-  certdb.addCert(der, trustString, null);
+  certdb.addCert(der, trustString);
 }
 
 function makeChan(origin, path) {

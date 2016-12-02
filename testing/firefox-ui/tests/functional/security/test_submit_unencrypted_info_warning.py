@@ -46,7 +46,7 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
             try:
                 Wait(self.marionette,
                      ignored_exceptions=NoAlertPresentException,
-                     timeout=self.browser.timeout_page_load).until(
+                     timeout=self.marionette.timeout.page_load).until(
                     lambda _: warning.text == message)
             finally:
                 warning.accept()
@@ -55,7 +55,7 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
             Wait(self.marionette).until(expected.element_stale(searchbox))
 
             # TODO: Bug 1140470: use replacement for mozmill's waitforPageLoad
-            Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
                 lambda mn: mn.execute_script('return document.readyState == "DOMContentLoaded" ||'
                                              '       document.readyState == "complete";')
             )

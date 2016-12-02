@@ -8,6 +8,8 @@
 
 "use strict";
 
+const {PrefObserver} = require("devtools/client/shared/prefs");
+
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 1307871 - preference for toggling timestamps in messages";
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
@@ -19,9 +21,11 @@ add_task(function* () {
 
   testPrefDefaults(outputEl);
 
+  let observer = new PrefObserver("");
   let toolbox = gDevTools.getToolbox(hud.target);
   let optionsPanel = yield toolbox.selectTool("options");
-  yield togglePref(optionsPanel);
+  yield togglePref(optionsPanel, observer);
+  observer.destroy();
 
   yield testChangedPref(outputEl);
 
@@ -35,13 +39,11 @@ function testPrefDefaults(outputEl) {
      "Messages should have no timestamp (class name check)");
 }
 
-function* togglePref(panel) {
+function* togglePref(panel, observer) {
   info("Options panel opened");
 
   info("Changing pref");
-  let prefChanged = new Promise(resolve => {
-    gDevTools.once("pref-changed", resolve);
-  });
+  let prefChanged = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
   let checkbox = panel.panelDoc.getElementById("webconsole-timestamp-messages");
   checkbox.click();
 

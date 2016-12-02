@@ -8,7 +8,7 @@
 // it is preffed on.
 
 var PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
-const { PrefObserver } = require("devtools/client/styleeditor/utils");
+const { PrefObserver } = require("devtools/client/shared/prefs");
 
 const TEST_URI = URL_ROOT + "doc_author-sheet.html";
 
