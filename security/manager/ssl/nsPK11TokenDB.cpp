@@ -359,6 +359,23 @@ nsPK11Token::ChangePassword(const nsACString& oldPassword,
 }
 
 NS_IMETHODIMP
+nsPK11Token::GetHasPassword(bool* hasPassword)
+{
+  NS_ENSURE_ARG_POINTER(hasPassword);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // PK11_NeedLogin returns true if the token is currently configured to require
+  // the user to log in (whether or not the user is actually logged in makes no
+  // difference).
+  *hasPassword = PK11_NeedLogin(mSlot.get()) && !PK11_NeedUserInit(mSlot.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPK11Token::IsHardwareToken(bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);

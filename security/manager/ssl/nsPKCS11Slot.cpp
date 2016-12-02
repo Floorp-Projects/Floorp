@@ -453,6 +453,10 @@ nsPKCS11ModuleDB::FindSlotByName(const nsACString& name,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (name.IsEmpty()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   UniquePK11SlotInfo slotInfo(
     PK11_FindSlotByName(PromiseFlatCString(name).get()));
   if (!slotInfo) {
