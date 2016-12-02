@@ -67,7 +67,7 @@ pub fn read_buffer(mode: GLenum) {
     }
 }
 
-pub fn read_pixels(x: GLint, y: GLint, width: GLsizei, height: GLsizei, format: GLenum, pixel_type: GLenum) -> Vec<u8> {
+fn calculate_length(width: GLsizei, height: GLsizei, format: GLenum, pixel_type: GLenum) -> usize {
     let colors = match format {
         ffi::RGB => 3,
 #[cfg(not(target_os="android"))]
@@ -87,16 +87,28 @@ pub fn read_pixels(x: GLint, y: GLint, width: GLsizei, height: GLsizei, format: 
         _ => panic!("unsupported pixel_type for read_pixels"),
     };
 
-    let len = width * height * colors * depth;
-    let mut pixels: Vec<u8> = Vec::new();
-    pixels.reserve(len as usize);
+    return (width * height * colors * depth) as usize;
+}
+
+pub fn read_pixels_into_buffer(x: GLint, y: GLint, width: GLsizei, height: GLsizei,
+                               format: GLenum, pixel_type: GLenum, dst_buffer: &mut [u8]) {
+    // Assumes that the user properly allocated the size for dst_buffer.
+    assert!(calculate_length(width, height, format, pixel_type) == dst_buffer.len());
 
     unsafe {
         // We don't want any alignment padding on pixel rows.
         ffi::PixelStorei(ffi::PACK_ALIGNMENT, 1);
-        ffi::ReadPixels(x, y, width, height, format, pixel_type, pixels.as_mut_ptr() as *mut c_void);
-        pixels.set_len(len as usize);
+        ffi::ReadPixels(x, y, width, height, format, pixel_type, dst_buffer.as_mut_ptr() as *mut c_void);
     }
+}
+
+pub fn read_pixels(x: GLint, y: GLint, width: GLsizei, height: GLsizei, format: GLenum, pixel_type: GLenum) -> Vec<u8> {
+    let len = calculate_length(width, height, format, pixel_type);
+    let mut pixels: Vec<u8> = Vec::new();
+    pixels.reserve(len);
+    unsafe { pixels.set_len(len); }
+
+    read_pixels_into_buffer(x, y, width, height, format, pixel_type, pixels.as_mut_slice());
 
     pixels
 }
