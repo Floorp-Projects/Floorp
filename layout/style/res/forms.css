@@ -660,12 +660,12 @@ input[type="button"],
 input[type="submit"] {
   -moz-appearance: button;
   /* The sum of border and padding on block-start and block-end
-     must be the same here, for text inputs, and for <select>.  For
-     buttons, make sure to include the -moz-focus-inner border/padding. */
+     must be the same here, for text inputs, and for <select>.
+     Note -moz-focus-inner padding does not affect button size. */
   padding-block-start: 0px;
-  padding-inline-end: 6px;
+  padding-inline-end: 8px;
   padding-block-end: 0px;
-  padding-inline-start: 6px;
+  padding-inline-start: 8px;
   border: 2px outset ThreeDLightShadow;
   background-color: ButtonFace;
   cursor: default;
@@ -758,9 +758,9 @@ input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
 %ifndef XP_MACOSX
   padding-block-start: 0px;
-  padding-inline-end: 5px;
+  padding-inline-end: 7px;
   padding-block-end: 0px;
-  padding-inline-start: 7px;
+  padding-inline-start: 9px;
 %endif
   border-style: inset;
   background-color: ButtonFace;
@@ -779,6 +779,7 @@ input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner,
 input[type="file"] > button[type="button"]::-moz-focus-inner {
+  /* Note this padding only affects the -moz-focus-inner ring, not the button itself */
   padding-block-start: 0px;
   padding-inline-end: 2px;
   padding-block-end: 0px;
@@ -809,9 +810,9 @@ input[type="submit"]:disabled {
   /* The sum of border and padding on block-start and block-end
      must be the same here and for text inputs */
   padding-block-start: 0px;
-  padding-inline-end: 6px;
+  padding-inline-end: 8px;
   padding-block-end: 0px;
-  padding-inline-start: 6px;
+  padding-inline-start: 8px;
   border: 2px outset ThreeDLightShadow;
   cursor: inherit;
 }
