@@ -234,7 +234,7 @@ PluginInstanceParent::AllocPBrowserStreamParent(const nsCString& url,
                                                 PStreamNotifyParent* notifyData,
                                                 const nsCString& headers)
 {
-    NS_RUNTIMEABORT("Not reachable");
+    MOZ_CRASH("Not reachable");
     return nullptr;
 }
 
@@ -1318,7 +1318,7 @@ PluginInstanceParent::GetImageContainer()
 PPluginBackgroundDestroyerParent*
 PluginInstanceParent::AllocPPluginBackgroundDestroyerParent()
 {
-    NS_RUNTIMEABORT("'Power-user' ctor is used exclusively");
+    MOZ_CRASH("'Power-user' ctor is used exclusively");
     return nullptr;
 }
 
@@ -1832,7 +1832,7 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         BrowserStreamParent* sp =
             static_cast<BrowserStreamParent*>(s);
         if (sp->mNPP != this)
-            NS_RUNTIMEABORT("Mismatched plugin data");
+            MOZ_CRASH("Mismatched plugin data");
 
         sp->NPP_DestroyStream(reason);
         return NPERR_NO_ERROR;
@@ -1841,7 +1841,7 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         PluginStreamParent* sp =
             static_cast<PluginStreamParent*>(s);
         if (sp->mInstance != this)
-            NS_RUNTIMEABORT("Mismatched plugin data");
+            MOZ_CRASH("Mismatched plugin data");
 
         return PPluginStreamParent::Call__delete__(sp, reason, false) ?
             NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
@@ -2405,7 +2405,7 @@ PluginInstanceParent::Cast(NPP aInstance, PluginAsyncSurrogate** aSurrogate)
     PluginInstanceParent* instancePtr = resolver->GetInstance();
 
     if (instancePtr && aInstance != instancePtr->mNPP) {
-        NS_RUNTIMEABORT("Corrupted plugin data.");
+        MOZ_CRASH("Corrupted plugin data.");
     }
 
     if (aSurrogate) {

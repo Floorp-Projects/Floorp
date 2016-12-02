@@ -508,7 +508,7 @@ LayerManagerComposite::UpdateAndRender()
 already_AddRefed<DrawTarget>
 LayerManagerComposite::CreateOptimalMaskDrawTarget(const IntSize &aSize)
 {
-  NS_RUNTIMEABORT("Should only be called on the drawing side");
+  MOZ_CRASH("Should only be called on the drawing side");
   return nullptr;
 }
 

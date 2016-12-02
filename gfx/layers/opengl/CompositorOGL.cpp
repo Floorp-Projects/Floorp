@@ -235,7 +235,7 @@ CompositorOGL::Initialize(nsCString* const out_failureReason)
 #ifdef MOZ_WIDGET_ANDROID
   if (!mGLContext){
     *out_failureReason = "FEATURE_FAILURE_OPENGL_NO_ANDROID_CONTEXT";
-    NS_RUNTIMEABORT("We need a context on Android");
+    MOZ_CRASH("We need a context on Android");
   }
 #endif
 

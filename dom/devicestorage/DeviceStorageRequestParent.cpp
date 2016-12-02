@@ -180,7 +180,7 @@ DeviceStorageRequestParent::Dispatch()
     }
     default:
     {
-      NS_RUNTIMEABORT("not reached");
+      MOZ_CRASH("not reached");
       return;
     }
   }

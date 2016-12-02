@@ -174,14 +174,14 @@ struct nsTArrayInfallibleAllocatorBase
 
   static ResultTypeProxy FailureResult()
   {
-    NS_RUNTIMEABORT("Infallible nsTArray should never fail");
+    MOZ_CRASH("Infallible nsTArray should never fail");
     return ResultTypeProxy();
   }
 
   static ResultType ConvertBoolToResultType(bool aValue)
   {
     if (!aValue) {
-      NS_RUNTIMEABORT("infallible nsTArray should never convert false to ResultType");
+      MOZ_CRASH("infallible nsTArray should never convert false to ResultType");
     }
   }
 };
