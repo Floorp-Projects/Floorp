@@ -304,20 +304,14 @@ onmessage = function(message) {
   is(abortHasRun, false, "abort() is a no-op unless loading");
   r.readAsText(asciiFile);
   r.abort();
-  is(abortHasRun, true, "abort should fire sync");
+  is(abortHasRun, true, "1 abort should fire sync");
   is(loadEndHasRun, true, "loadend should fire sync");
 
   // Test calling readAsX to cause abort()
   var reuseAbortHasRun = false;
   r = new FileReader();
-  r.onabort = function (event) {
-    is(reuseAbortHasRun, false, "abort should only fire once");
-    reuseAbortHasRun = true;
-    is(event.target.readyState, FileReader.DONE, "should be DONE while firing onabort");
-    is(event.target.error.name, "AbortError", "error set to AbortError for aborted reads");
-    is(event.target.result, null, "file data should be null on aborted reads");
-  }
-  r.onload = function() { ok(false, "load should not fire for aborted reads") };
+  r.onabort = function (event) { reuseAbortHasRun = true; }
+  r.onload = function() { ok(true, "load should fire for aborted reads") };
   var abortThrew = false;
   try {
     r.abort();
@@ -327,8 +321,16 @@ onmessage = function(message) {
   is(abortThrew, true, "abort() must throw if not loading");
   is(reuseAbortHasRun, false, "abort() is a no-op unless loading");
   r.readAsText(asciiFile);
+
+  var readThrew = false;
+  try {
   r.readAsText(asciiFile);
-  is(reuseAbortHasRun, true, "abort should fire sync");
+  } catch(e) {
+    readThrew = true;
+  }
+
+  is(readThrew, true, "readAsText() must throw if loading");
+  is(reuseAbortHasRun, false, "2 abort should fire sync");
   r.onload = getLoadHandler(testASCIIData, testASCIIData.length, "reuse-as-abort reading");
   expectedTestCount++;
 

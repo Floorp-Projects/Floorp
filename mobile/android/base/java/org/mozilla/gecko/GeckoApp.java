@@ -207,6 +207,8 @@ public abstract class GeckoApp
 
     private int lastSelectedTabId = -1;
 
+    private boolean foregrounded = false;
+
     private static final class LastSessionParser extends SessionParser {
         private JSONArray tabs;
         private JSONObject windowObject;
@@ -2071,6 +2073,11 @@ public abstract class GeckoApp
     }
 
     @Override
+    public boolean isForegrounded() {
+        return foregrounded;
+    }
+
+    @Override
     public void onResume()
     {
         // After an onPause, the activity is back in the foreground.
@@ -2079,6 +2086,8 @@ public abstract class GeckoApp
         if (mIsAbortingAppLaunch) {
             return;
         }
+
+        foregrounded = true;
 
         GeckoAppShell.setGeckoInterface(this);
 
@@ -2159,6 +2168,8 @@ public abstract class GeckoApp
             super.onPause();
             return;
         }
+
+        foregrounded = false;
 
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         if (selectedTab != null) {

@@ -13,209 +13,394 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.importGlobalProperties(["TextEncoder"]);
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
+const {
+  DefaultMap,
+} = ExtensionUtils;
+
+XPCOMUtils.defineLazyServiceGetter(this, "mimeHeader", "@mozilla.org/network/mime-hdrparam;1",
+                                   "nsIMIMEHeaderParam");
+
+const BinaryInputStream = Components.Constructor(
+  "@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream",
+  "setInputStream");
+const ConverterInputStream = Components.Constructor(
+  "@mozilla.org/intl/converter-input-stream;1", "nsIConverterInputStream",
+  "init");
 
 var WebRequestUpload;
 
-function rewind(stream) {
-  try {
-    if (stream instanceof Ci.nsISeekableStream) {
-      stream.seek(0, 0);
+/**
+ * Parses the given raw header block, and stores the value of each
+ * lower-cased header name in the resulting map.
+ */
+class Headers extends Map {
+  constructor(headerText) {
+    super();
+
+    if (headerText) {
+      this.parseHeaders(headerText);
     }
-  } catch (e) {
-    // It might be already closed, e.g. because of a previous error.
+  }
+
+  parseHeaders(headerText) {
+    let lines = headerText.split("\r\n");
+
+    let lastHeader;
+    for (let line of lines) {
+      // The first empty line indicates the end of the header block.
+      if (line === "") {
+        return;
+      }
+
+      // Lines starting with whitespace are appended to the previous
+      // header.
+      if (/^\s/.test(line)) {
+        if (lastHeader) {
+          let val = this.get(lastHeader);
+          this.set(lastHeader, `${val}\r\n${line}`);
+        }
+        continue;
+      }
+
+      let match = /^(.*?)\s*:\s+(.*)/.exec(line);
+      if (match) {
+        lastHeader = match[1].toLowerCase();
+        this.set(lastHeader, match[2]);
+      }
+    }
+  }
+
+  /**
+   * If the given header exists, and contains the given parameter,
+   * returns the value of that parameter.
+   *
+   * @param {string} name
+   *        The lower-cased header name.
+   * @param {string} paramName
+   *        The name of the parameter to retrieve, or empty to retrieve
+   *        the first (possibly unnamed) parameter.
+   * @returns {string | null}
+   */
+  getParam(name, paramName) {
+    return Headers.getParam(this.get(name), paramName);
+  }
+
+  /**
+   * If the given header value is non-null, and contains the given
+   * parameter, returns the value of that parameter.
+   *
+   * @param {string | null} header
+   *        The text of the header from which to retrieve the param.
+   * @param {string} paramName
+   *        The name of the parameter to retrieve, or empty to retrieve
+   *        the first (possibly unnamed) parameter.
+   * @returns {string | null}
+   */
+  static getParam(header, paramName) {
+    if (header) {
+      // The service expects this to be a raw byte string, so convert to
+      // UTF-8.
+      let bytes = new TextEncoder().encode(header);
+      let binHeader = String.fromCharCode(...bytes);
+
+      return mimeHeader.getParameterHTTP(binHeader, paramName, null,
+                                         false, {});
+    }
+
+    return null;
   }
 }
 
+/**
+ * Creates a new Object with a corresponding property for every
+ * key-value pair in the given Map.
+ *
+ * @param {Map} map
+ *        The map to convert.
+ * @returns {Object}
+ */
+function mapToObject(map) {
+  let result = {};
+  for (let [key, value] of map) {
+    result[key] = value;
+  }
+  return result;
+}
+
+/**
+ * Rewinds the given seekable input stream to its beginning, and catches
+ * any resulting errors.
+ *
+ * @param {nsISeekableStream} stream
+ *        The stream to rewind.
+ */
+function rewind(stream) {
+  // Do this outside the try-catch so that we throw if the stream is not
+  // actually seekable.
+  stream.QueryInterface(Ci.nsISeekableStream);
+
+  try {
+    stream.seek(0, 0);
+  } catch (e) {
+    // It might be already closed, e.g. because of a previous error.
+    Cu.reportError(e);
+  }
+}
+
+/**
+ * Iterates over all of the sub-streams that make up the given stream,
+ * or yields the stream itself if it is not a multi-part stream.
+ *
+ * @param {nsIIMultiplexInputStream|nsIStreamBufferAccess<nsIMultiplexInputStream>|nsIInputStream} outerStream
+ *        The outer stream over which to iterate.
+ */
+function* getStreams(outerStream) {
+  // If this is a multi-part stream, we need to iterate over its sub-streams,
+  // rather than treating it as a simple input stream. Since it may be wrapped
+  // in a buffered input stream, unwrap it before we do any checks.
+  let unbuffered = outerStream;
+  if (outerStream instanceof Ci.nsIStreamBufferAccess) {
+    unbuffered = outerStream.unbufferedStream;
+  }
+
+  if (unbuffered instanceof Ci.nsIMultiplexInputStream) {
+    let count = unbuffered.count;
+    for (let i = 0; i < count; i++) {
+      yield unbuffered.getStream(i);
+    }
+  } else {
+    yield outerStream;
+  }
+}
+
+/**
+ * Parses the form data of the given stream as either multipart/form-data or
+ * x-www-form-urlencoded, and returns a map of its fields.
+ *
+ * @param {nsIInputStream} stream
+ *        The input stream from which to parse the form data.
+ * @param {nsIHttpChannel} channel
+ *        The channel to which the stream belongs.
+ * @param {boolean} [lenient = false]
+ *        If true, the operation will succeed even if there are UTF-8
+ *        decoding errors.
+ *
+ * @returns {Map<string, Array<string>> | null}
+ */
 function parseFormData(stream, channel, lenient = false) {
-  const BUFFER_SIZE = 8192; // Empirically it seemed a good compromise.
-
-  let mimeStream = null;
-
-  if (stream instanceof Ci.nsIMIMEInputStream && stream.data) {
-    mimeStream = stream;
-    stream = stream.data;
-  }
-  let multiplexStream = null;
-  if (stream instanceof Ci.nsIMultiplexInputStream) {
-    multiplexStream = stream;
-  }
+  const BUFFER_SIZE = 8192;
 
   let touchedStreams = new Set();
 
+  /**
+   * Creates a converter input stream from the given raw input stream,
+   * and adds it to the list of streams to be rewound at the end of
+   * parsing.
+   *
+   * Returns null if the given raw stream cannot be rewound.
+   *
+   * @param {nsIInputStream} stream
+   *        The base stream from which to create a converter.
+   * @returns {ConverterInputStream | null}
+   */
   function createTextStream(stream) {
-    let textStream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
-    textStream.init(stream, "UTF-8", 0, lenient ? textStream.DEFAULT_REPLACEMENT_CHARACTER : 0);
-    if (stream instanceof Ci.nsISeekableStream) {
-      touchedStreams.add(stream);
+    if (!(stream instanceof Ci.nsISeekableStream)) {
+      return null;
     }
-    return textStream;
+
+    touchedStreams.add(stream);
+    return ConverterInputStream(
+      stream, "UTF-8", 0,
+      lenient ? Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
+              : 0);
   }
 
-  let streamIdx = 0;
-  function nextTextStream() {
-    for (; streamIdx < multiplexStream.count;) {
-      let currentStream = multiplexStream.getStream(streamIdx++);
-      if (currentStream instanceof Ci.nsIStringInputStream) {
-        touchedStreams.add(multiplexStream);
-        return createTextStream(currentStream);
+  /**
+   * Reads a string of no more than the given length from the given text
+   * stream.
+   *
+   * @param {ConverterInputStream} stream
+   *        The stream to read.
+   * @param {integer} [length = BUFFER_SIZE]
+   *        The maximum length of data to read.
+   * @returns {string}
+   */
+  function readString(stream, length = BUFFER_SIZE) {
+    let data = {};
+    stream.readString(length, data);
+    return data.value;
+  }
+
+  /**
+   * Iterates over all of the sub-streams of the given (possibly multi-part)
+   * input stream, and yields a ConverterInputStream for each
+   * nsIStringInputStream among them.
+   *
+   * @param {nsIInputStream|nsIMultiplexInputStream} outerStream
+   *        The multi-part stream over which to iterate.
+   */
+  function* getTextStreams(outerStream) {
+    for (let stream of getStreams(outerStream)) {
+      if (stream instanceof Ci.nsIStringInputStream) {
+        touchedStreams.add(outerStream);
+        yield createTextStream(stream);
       }
     }
-    return null;
   }
 
-  let textStream;
-  if (multiplexStream) {
-    textStream = nextTextStream();
-  } else {
-    textStream = createTextStream(mimeStream || stream);
-  }
-
-  if (!textStream) {
-    return null;
-  }
-
-  function readString() {
-    if (textStream) {
-      let textBuffer = {};
-      textStream.readString(BUFFER_SIZE, textBuffer);
-      return textBuffer.value;
-    }
-    return "";
-  }
-
-  function multiplexRead() {
-    let str = readString();
-    if (!str) {
-      textStream = nextTextStream();
-      if (textStream) {
-        str = multiplexRead();
+  /**
+   * Iterates over all of the string streams of the given (possibly
+   * multi-part) input stream, and yields all of the available data in each as
+   * chunked strings, each no more than BUFFER_SIZE in length.
+   *
+   * @param {nsIInputStream|nsIMultiplexInputStream} outerStream
+   *        The multi-part stream over which to iterate.
+   */
+  function* readAllStrings(outerStream) {
+    for (let textStream of getTextStreams(outerStream)) {
+      let str;
+      while ((str = readString(textStream))) {
+        yield str;
       }
     }
-    return str;
   }
 
-  let readChunk;
-  if (multiplexStream) {
-    readChunk = multiplexRead;
-  } else {
-    readChunk = readString;
-  }
+  /**
+   * Iterates over the text contents of all of the string streams in the given
+   * (possibly multi-part) input stream, splits them at occurrences of the
+   * given boundary string, and yields each part.
+   *
+   * @param {nsIInputStream|nsIMultiplexInputStream} stream
+   *        The multi-part stream over which to iterate.
+   * @param {string} boundary
+   *        The boundary at which to split the parts.
+   * @param {string} [tail = ""]
+   *        Any initial data to prepend to the start of the stream data.
+   */
+  function* getParts(stream, boundary, tail = "") {
+    for (let chunk of readAllStrings(stream)) {
+      chunk = tail + chunk;
 
-  function appendFormData(formData, name, value) {
-    if (name in formData) {
-      formData[name].push(value);
-    } else {
-      formData[name] = [value];
+      let parts = chunk.split(boundary);
+      tail = parts.pop();
+
+      yield* parts;
+    }
+
+    if (tail) {
+      yield tail;
     }
   }
 
-  function parseMultiPart(firstChunk, boundary = "") {
-    let formData = Object.create(null);
+  /**
+   * Parses the given stream as multipart/form-data and returns a map of its fields.
+   *
+   * @param {nsIMultiplexInputStream|nsIInputStream} stream
+   *        The (possibly multi-part) stream to parse.
+   * @param {string} boundary
+   *        The boundary at which to split the parts.
+   * @returns {Map<string, Array<string>>}
+   */
+  function parseMultiPart(stream, boundary) {
+    let formData = new DefaultMap(() => []);
 
-    if (!boundary) {
-      let match = firstChunk.match(/^--\S+/);
-      if (!match) {
-        return null;
+    for (let part of getParts(stream, boundary, "\r\n")) {
+      if (part === "") {
+        // The first part will always be empty.
+        continue;
       }
-      boundary = match[0];
-    }
-
-    let unslash = (s) => s.replace(/\\"/g, '"');
-    let tail = "";
-    for (let chunk = firstChunk;
-         chunk || tail;
-         chunk = readChunk()) {
-      let parts;
-      if (chunk) {
-        chunk = tail + chunk;
-        parts = chunk.split(boundary);
-        tail = parts.pop();
-      } else {
-        parts = [tail];
-        tail = "";
+      if (part === "--\r\n") {
+        // This indicates the end of the stream.
+        break;
       }
 
-      for (let part of parts) {
-        let match = part.match(/^\r\nContent-Disposition: form-data; name="(.*)"\r\n(?:Content-Type: (\S+))?.*\r\n/i);
-        if (!match) {
-          continue;
-        }
-        let [header, name, contentType] = match;
-        if (contentType) {
-          let fileName;
-          // Since escaping inside Content-Disposition subfields is still poorly defined and buggy (see Bug 136676),
-          // currently we always consider backslash-prefixed quotes as escaped even if that's not generally true
-          // (i.e. in a field whose value actually ends with a backslash).
-          // Therefore in this edge case we may end coalescing name and filename, which is marginally better than
-          // potentially truncating the name field at the wrong point, at least from a XSS filter POV.
-          match = name.match(/^(.*[^\\])"; filename="(.*)/);
-          if (match) {
-            [, name, fileName] = match;
-          }
-          appendFormData(formData, unslash(name), fileName ? unslash(fileName) : "");
-        } else {
-          appendFormData(formData, unslash(name), part.slice(header.length, -2));
-        }
+      let end = part.indexOf("\r\n\r\n");
+
+      // All valid parts must begin with \r\n, and we can't process form
+      // fields without any header block.
+      if (!part.startsWith("\r\n") || end <= 0) {
+        throw new Error("Invalid MIME stream");
       }
+
+      let content = part.slice(end + 4);
+      let headerText = part.slice(2, end);
+      let headers = new Headers(headerText);
+
+      let name = headers.getParam("content-disposition", "name");
+      if (!name || headers.getParam("content-disposition", "") !== "form-data") {
+        throw new Error("Invalid MIME stream: No valid Content-Disposition header");
+      }
+
+      if (headers.has("content-type")) {
+        // For file upload fields, we return the filename, rather than the
+        // file data.
+        let filename = headers.getParam("content-disposition", "filename");
+        content = filename || "";
+      }
+      formData.get(name).push(content);
     }
 
     return formData;
   }
 
-  function parseUrlEncoded(firstChunk) {
-    let formData = Object.create(null);
+  /**
+   * Parses the given stream as x-www-form-urlencoded, and returns a map of its fields.
+   *
+   * @param {nsIInputStream} stream
+   *        The stream to parse.
+   * @returns {Map<string, Array<string>>}
+   */
+  function parseUrlEncoded(stream) {
+    let formData = new DefaultMap(() => []);
 
-    let tail = "";
-    for (let chunk = firstChunk;
-         chunk || tail;
-         chunk = readChunk()) {
-      let pairs;
-      if (chunk) {
-        chunk = tail + chunk.trim();
-        pairs = chunk.split("&");
-        tail = pairs.pop();
-      } else {
-        chunk = tail;
-        tail = "";
-        pairs = [chunk];
-      }
-      for (let pair of pairs) {
-        let [name, value] = pair.replace(/\+/g, " ").split("=").map(decodeURIComponent);
-        appendFormData(formData, name, value);
-      }
+    for (let part of getParts(stream, "&")) {
+      let [name, value] = part.replace(/\+/g, " ").split("=").map(decodeURIComponent);
+      formData.get(name).push(value);
     }
 
     return formData;
   }
 
   try {
-    let chunk = readChunk();
+    let headers;
+    if (stream instanceof Ci.nsIMIMEInputStream && stream.data) {
+      // MIME input streams encode additional headers as a block at the
+      // beginning of their stream. The actual request data comes from a
+      // sub-stream, which is accessible via their `data` member. The
+      // difference in available bytes between the outer stream and the
+      // inner data stream tells us the size of that header block.
+      //
+      // Since we need to know at least the value of the Content-Type
+      // header to properly parse the request body, we need to read and
+      // parse the header block in order to extract it.
 
-    if (multiplexStream) {
-      touchedStreams.add(multiplexStream);
-      return parseMultiPart(chunk);
+      headers = readString(createTextStream(stream),
+                           stream.available() - stream.data.available());
+
+      rewind(stream);
+      stream = stream.data;
     }
+
     let contentType;
-    if (/^Content-Type:/i.test(chunk)) {
-      contentType = chunk.replace(/^Content-Type:\s*/i, "");
-      chunk = chunk.slice(chunk.indexOf("\r\n\r\n") + 4);
-    } else {
-      try {
-        contentType = channel.getRequestHeader("Content-Type");
-      } catch (e) {
-        Cu.reportError(e);
-        return null;
-      }
+    try {
+      contentType = channel.getRequestHeader("Content-Type");
+    } catch (e) {
+      contentType = new Headers(headers).get("content-type");
     }
 
-    let match = contentType.match(/^(?:multipart\/form-data;\s*boundary=(\S*)|application\/x-www-form-urlencoded\s)/i);
-    if (match) {
-      let boundary = match[1];
-      if (boundary) {
-        return parseMultiPart(chunk, boundary);
-      }
-      return parseUrlEncoded(chunk);
+    switch (Headers.getParam(contentType, "")) {
+      case "multipart/form-data":
+        let boundary = Headers.getParam(contentType, "boundary");
+        return parseMultiPart(stream, `\r\n--${boundary}`);
+
+      case "application/x-www-form-urlencoded":
+        return parseUrlEncoded(stream);
     }
   } finally {
     for (let stream of touchedStreams) {
@@ -226,10 +411,31 @@ function parseFormData(stream, channel, lenient = false) {
   return null;
 }
 
-function createFormData(stream, channel) {
+/**
+ * Parses the form data of the given stream as either multipart/form-data or
+ * x-www-form-urlencoded, and returns a map of its fields.
+ *
+ * Returns null if the stream is not seekable.
+ *
+ * @param {nsIMultiplexInputStream|nsIInputStream} stream
+ *        The (possibly multi-part) stream from which to create the form data.
+ * @param {nsIChannel} channel
+ *        The channel to which the stream belongs.
+ * @param {boolean} [lenient = false]
+ *        If true, the operation will succeed even if there are UTF-8
+ *        decoding errors.
+ * @returns {Map<string, Array<string>> | null}
+ */
+function createFormData(stream, channel, lenient) {
+  if (!(stream instanceof Ci.nsISeekableStream)) {
+    return null;
+  }
+
   try {
-    rewind(stream);
-    return parseFormData(stream, channel);
+    let formData = parseFormData(stream, channel, lenient);
+    if (formData) {
+      return mapToObject(formData);
+    }
   } catch (e) {
     Cu.reportError(e);
   } finally {
@@ -238,84 +444,89 @@ function createFormData(stream, channel) {
   return null;
 }
 
-function convertRawData(outerStream) {
-  let raw = [];
-  let totalBytes = 0;
-
-  // Here we read the stream up to WebRequestUpload.MAX_RAW_BYTES, returning false if we had to truncate the result.
-  function readAll(stream) {
-    let unbuffered = stream.unbufferedStream || stream;
-    if (unbuffered instanceof Ci.nsIFileInputStream) {
-      raw.push({file: "<file>"}); // Full paths not supported yet for naked files (follow up bug)
-      return true;
+/**
+ * Iterates over all of the sub-streams of the given (possibly multi-part)
+ * input stream, and yields an object containing the data for each chunk, up
+ * to a total of `maxRead` bytes.
+ *
+ * @param {nsIMultiplexInputStream|nsIInputStream} outerStream
+ *        The stream for which to return data.
+ * @param {integer} [maxRead = WebRequestUpload.MAX_RAW_BYTES]
+ *        The maximum total bytes to read.
+ */
+function* getRawDataChunked(outerStream, maxRead = WebRequestUpload.MAX_RAW_BYTES) {
+  for (let stream of getStreams(outerStream)) {
+    // We need to inspect the stream to make sure it's not a file input
+    // stream. If it's wrapped in a buffered input stream, unwrap it first,
+    // so we can inspect the inner stream directly.
+    let unbuffered = stream;
+    if (stream instanceof Ci.nsIStreamBufferAccess) {
+      unbuffered = stream.unbufferedStream;
     }
-    rewind(stream);
 
-    let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
-    binaryStream.setInputStream(stream);
-    const MAX_BYTES = WebRequestUpload.MAX_RAW_BYTES;
+    // For file fields, we return an object containing the full path of
+    // the file, rather than its data.
+    if (unbuffered instanceof Ci.nsIFileInputStream) {
+      // But this is not actually supported yet.
+      yield {file: "<file>"};
+      continue;
+    }
+
     try {
-      for (let available; (available = binaryStream.available());) {
-        let size = Math.min(MAX_BYTES - totalBytes, available);
-        let bytes = new ArrayBuffer(size);
-        binaryStream.readArrayBuffer(size, bytes);
-        let chunk = {bytes};
-        raw.push(chunk);
-        totalBytes += size;
+      let binaryStream = BinaryInputStream(stream);
+      let available;
+      while ((available = binaryStream.available())) {
+        let buffer = new ArrayBuffer(Math.min(maxRead, available));
+        binaryStream.readArrayBuffer(buffer.byteLength, buffer);
 
-        if (totalBytes >= MAX_BYTES) {
-          if (size < available) {
-            chunk.truncated = true;
-            chunk.originalSize = available;
-            return false;
-          }
-          break;
+        maxRead -= buffer.byteLength;
+
+        let chunk = {bytes: buffer};
+
+        if (buffer.byteLength < available) {
+          chunk.truncated = true;
+          chunk.originalSize = available;
+        }
+
+        yield chunk;
+
+        if (maxRead <= 0) {
+          return;
         }
       }
     } finally {
       rewind(stream);
     }
-    return true;
   }
-
-  let unbuffered = outerStream;
-  if (outerStream instanceof Ci.nsIStreamBufferAccess) {
-    unbuffered = outerStream.unbufferedStream;
-  }
-
-  if (unbuffered instanceof Ci.nsIMultiplexInputStream) {
-    for (let i = 0, count = unbuffered.count; i < count; i++) {
-      if (!readAll(unbuffered.getStream(i))) {
-        break;
-      }
-    }
-  } else {
-    readAll(outerStream);
-  }
-
-  return raw;
 }
 
 WebRequestUpload = {
   createRequestBody(channel) {
-    let requestBody = null;
     if (channel instanceof Ci.nsIUploadChannel && channel.uploadStream) {
       try {
-        let stream = channel.uploadStream.QueryInterface(Ci.nsISeekableStream);
+        let stream = channel.uploadStream;
+
         let formData = createFormData(stream, channel);
         if (formData) {
-          requestBody = {formData};
-        } else {
-          requestBody = {raw: convertRawData(stream), lenientFormData: createFormData(stream, channel, true)};
+          return {formData};
         }
+
+        // If we failed to parse the stream as form data, return it as a
+        // sequence of raw data chunks, along with a leniently-parsed form
+        // data object, which ignores encoding errors.
+        return {
+          raw: Array.from(getRawDataChunked(stream)),
+          lenientFormData: createFormData(stream, channel, true),
+        };
       } catch (e) {
         Cu.reportError(e);
-        requestBody = {error: e.message || String(e)};
+        return {error: e.message || String(e)};
       }
-      requestBody = Object.freeze(requestBody);
     }
-    return requestBody;
+
+    return null;
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(WebRequestUpload, "MAX_RAW_BYTES", "webextensions.webRequest.requestBodyMaxRawBytes");
+XPCOMUtils.defineLazyPreferenceGetter(WebRequestUpload, "MAX_RAW_BYTES",
+                                      "webextensions.webRequest.requestBodyMaxRawBytes");

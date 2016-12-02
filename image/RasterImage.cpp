@@ -1059,6 +1059,7 @@ RasterImage::RequestDecodeForSize(const IntSize& aSize, uint32_t aFlags)
   }
 
   if (!mHasSize) {
+    mWantFullDecode = true;
     return NS_OK;
   }
 
