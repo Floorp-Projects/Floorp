@@ -291,6 +291,44 @@ function testKeyframesWithGeometricProperties() {
   });
 }
 
+// Test that the expected set of geometric properties all block transform
+// animations.
+function testSetOfGeometricProperties() {
+  const geometricProperties = [
+    'width', 'height',
+    'top', 'right', 'bottom', 'left',
+    'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+    'padding-top', 'padding-right', 'padding-bottom', 'padding-left'
+  ];
+
+  geometricProperties.forEach(property => {
+    promise_test(function(t) {
+      const keyframes = {
+        [propertyToIDL(property)]: [ '100px', '200px' ],
+        transform: [ 'translate(0px)', 'translate(100px)' ]
+      };
+      var animation = addDivAndAnimate(t, { class: 'compositable' },
+                                       keyframes, 100 * MS_PER_SEC);
+
+      return animation.ready.then(function() {
+        assert_animation_property_state_equals(
+          animation.effect.getProperties(),
+          [
+            {
+              property,
+              runningOnCompositor: false
+            },
+            {
+              property: 'transform',
+              runningOnCompositor: false,
+              warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
+            }
+          ]);
+      }, 'Transform animation should be run on the main thread');
+    }, `${property} is treated as a geometric property`);
+  });
+}
+
 // Performance warning tests that set and clear a style property.
 function testStyleChanges() {
   [
@@ -855,6 +893,7 @@ function start() {
 
   testBasicOperation();
   testKeyframesWithGeometricProperties();
+  testSetOfGeometricProperties();
   testStyleChanges();
   testIdChanges();
   testMultipleAnimations();
