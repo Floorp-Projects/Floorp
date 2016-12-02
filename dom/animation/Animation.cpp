@@ -726,7 +726,6 @@ Animation::ElapsedTimeToTimeStamp(
                                   mEffect->SpecifiedTiming().mDelay);
 }
 
-
 // https://w3c.github.io/web-animations/#silently-set-the-current-time
 void
 Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
