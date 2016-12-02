@@ -680,7 +680,7 @@ FunctionObject(ParseNode* fn)
 static inline PropertyName*
 FunctionName(ParseNode* fn)
 {
-    if (JSAtom* name = FunctionObject(fn)->name())
+    if (JSAtom* name = FunctionObject(fn)->explicitName())
         return name->asPropertyName();
     return nullptr;
 }
@@ -8038,7 +8038,7 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
 static bool
 HandleInstantiationFailure(JSContext* cx, CallArgs args, const AsmJSMetadata& metadata)
 {
-    RootedAtom name(cx, args.callee().as<JSFunction>().name());
+    RootedAtom name(cx, args.callee().as<JSFunction>().explicitName());
 
     if (cx->isExceptionPending())
         return false;
@@ -8129,7 +8129,7 @@ InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
 static JSFunction*
 NewAsmJSModuleFunction(ExclusiveContext* cx, JSFunction* origFun, HandleObject moduleObj)
 {
-    RootedAtom name(cx, origFun->name());
+    RootedAtom name(cx, origFun->explicitName());
 
     JSFunction::Flags flags = origFun->isLambda() ? JSFunction::ASMJS_LAMBDA_CTOR
                                                   : JSFunction::ASMJS_CTOR;
@@ -8849,7 +8849,7 @@ js::AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool addParenToLambda
     if (!out.append("function "))
         return nullptr;
 
-    if (fun->name() && !out.append(fun->name()))
+    if (fun->explicitName() && !out.append(fun->explicitName()))
         return nullptr;
 
     bool haveSource = source->hasSourceData();
@@ -8897,8 +8897,8 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
 
     if (!haveSource) {
         // asm.js functions can't be anonymous
-        MOZ_ASSERT(fun->name());
-        if (!out.append(fun->name()))
+        MOZ_ASSERT(fun->explicitName());
+        if (!out.append(fun->explicitName()))
             return nullptr;
         if (!out.append("() {\n    [sourceless code]\n}"))
             return nullptr;

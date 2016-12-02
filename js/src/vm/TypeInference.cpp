@@ -4548,7 +4548,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
             uintptr_t(script.get()), script->filename(), script->lineno());
 
     if (script->functionNonDelazifying()) {
-        if (JSAtom* name = script->functionNonDelazifying()->name())
+        if (JSAtom* name = script->functionNonDelazifying()->explicitName())
             name->dumpCharsNoNewline();
     }
 
