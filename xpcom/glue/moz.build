@@ -67,7 +67,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'AppData.h',
     'AutoRestore.h',
     'BlockingResourceBase.h',
     'CondVar.h',

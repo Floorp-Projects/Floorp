@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsXULAppAPI.h"
-#include "mozilla/AppData.h"
+#include "mozilla/XREAppData.h"
 #include "application.ini.h"
 #include "nsXPCOMGlue.h"
 #if defined(XP_WIN)
@@ -163,8 +163,7 @@ static bool IsArg(const char* arg, const char* s)
 }
 
 XRE_GetFileFromPathType XRE_GetFileFromPath;
-XRE_CreateAppDataType XRE_CreateAppData;
-XRE_FreeAppDataType XRE_FreeAppData;
+XRE_ParseAppDataType XRE_ParseAppData;
 XRE_TelemetryAccumulateType XRE_TelemetryAccumulate;
 XRE_StartupTimelineRecordType XRE_StartupTimelineRecord;
 XRE_mainType XRE_main;
@@ -181,8 +180,7 @@ XRE_LibFuzzerGetFuncsType XRE_LibFuzzerGetFuncs;
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
-    { "XRE_CreateAppData", (NSFuncPtr*) &XRE_CreateAppData },
-    { "XRE_FreeAppData", (NSFuncPtr*) &XRE_FreeAppData },
+    { "XRE_ParseAppData", (NSFuncPtr*) &XRE_ParseAppData },
     { "XRE_TelemetryAccumulate", (NSFuncPtr*) &XRE_TelemetryAccumulate },
     { "XRE_StartupTimelineRecord", (NSFuncPtr*) &XRE_StartupTimelineRecord },
     { "XRE_main", (NSFuncPtr*) &XRE_main },
@@ -262,8 +260,8 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
   }
 
   if (appini) {
-    nsXREAppData *appData;
-    rv = XRE_CreateAppData(appini, &appData);
+    XREAppData appData;
+    rv = XRE_ParseAppData(appini, appData);
     if (NS_FAILED(rv)) {
       Output("Couldn't read application.ini");
       return 255;
@@ -275,14 +273,13 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
     appData->flags |=
       DllBlocklist_CheckStatus() ? NS_XRE_DLL_BLOCKLIST_ENABLED : 0;
 #endif
-    // xreDirectory already has a refcount from NS_NewLocalFile
-    appData->xreDirectory = xreDirectory;
-    int result = XRE_main(argc, argv, appData, mainFlags);
-    XRE_FreeAppData(appData);
-    return result;
+    appData.xreDirectory = xreDirectory;
+    appini->GetParent(getter_AddRefs(appData.directory));
+    return XRE_main(argc, argv, appData, mainFlags);
   }
 
-  ScopedAppData appData(&sAppData);
+  XREAppData appData;
+  appData = sAppData;
   nsCOMPtr<nsIFile> exeFile;
   rv = mozilla::BinaryPath::GetFile(argv[0], getter_AddRefs(exeFile));
   if (NS_FAILED(rv)) {
@@ -299,8 +296,7 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
   greDir->Clone(getter_AddRefs(appSubdir));
   appSubdir->Append(NS_LITERAL_STRING(kDesktopFolder));
 
-  SetStrongPtr(appData.directory, static_cast<nsIFile*>(appSubdir.get()));
-  // xreDirectory already has a refcount from NS_NewLocalFile
+  appData.directory = appSubdir;
   appData.xreDirectory = xreDirectory;
 
 #if defined(HAS_DLL_BLOCKLIST)
@@ -325,7 +321,7 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
     XRE_LibFuzzerSetMain(argc, argv, libfuzzer_main);
 #endif
 
-  return XRE_main(argc, argv, &appData, mainFlags);
+  return XRE_main(argc, argv, appData, mainFlags);
 }
 
 static bool
