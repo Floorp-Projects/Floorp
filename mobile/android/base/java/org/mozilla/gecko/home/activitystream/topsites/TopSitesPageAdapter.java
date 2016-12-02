@@ -25,11 +25,13 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
         public final long id;
         public final String url;
         public final String title;
+        public final int type;
 
-        TopSite(long id, String url, String title) {
+        TopSite(long id, String url, String title, int type) {
             this.id = id;
             this.url = url;
             this.title = title;
+            this.type = type;
         }
     }
 
@@ -77,8 +79,9 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
             final long id = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
             final String title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
+            final int type = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.TopSites.TYPE));
 
-            topSites.add(new TopSite(id, url, title));
+            topSites.add(new TopSite(id, url, title, type));
         }
 
         notifyDataSetChanged();
