@@ -25,8 +25,7 @@ add_task(function* () {
 
   info("Checking the preflight and flight methods");
   ["OPTIONS", "POST"].forEach((method, i) => {
-    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(i),
-      method, requestUrl);
+    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i), method, requestUrl);
   });
 
   yield teardown(monitor);

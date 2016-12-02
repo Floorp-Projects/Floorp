@@ -14,7 +14,10 @@ function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelDoc = iframeWindow.document;
   this._toolbox = toolbox;
 
-  this._netmonitor = new iframeWindow.Netmonitor(toolbox);
+  this._view = this.panelWin.NetMonitorView;
+  this._controller = this.panelWin.NetMonitorController;
+  this._controller._target = this.target;
+  this._controller._toolbox = this._toolbox;
 
   EventEmitter.decorate(this);
 }
@@ -43,8 +46,7 @@ NetMonitorPanel.prototype = {
       yield this.target.makeRemote();
     }
 
-    yield this._netmonitor.init();
-
+    yield this._controller.startupNetMonitor();
     this.isReady = true;
     this.emit("ready");
 
@@ -65,7 +67,7 @@ NetMonitorPanel.prototype = {
     let deferred = promise.defer();
     this._destroying = deferred.promise;
 
-    yield this._netmonitor.destroy();
+    yield this._controller.shutdownNetMonitor();
     this.emit("destroyed");
 
     deferred.resolve();
