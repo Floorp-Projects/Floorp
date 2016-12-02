@@ -148,6 +148,88 @@ enum {
     AKEYCODE_KANA               = 218,
     AKEYCODE_ASSIST             = 219,
 #endif
+#if __ANDROID_API__ < 18
+    AKEYCODE_BRIGHTNESS_DOWN    = 220,
+    AKEYCODE_BRIGHTNESS_UP      = 221,
+#endif
+#if __ANDROID_API__ < 19
+    AKEYCODE_MEDIA_AUDIO_TRACK  = 222,
+#endif
+#if __ANDROID_API__ < 20
+    AKEYCODE_SLEEP              = 223,
+    AKEYCODE_WAKEUP             = 224,
+#endif
+#if __ANDROID_API__ < 21
+    AKEYCODE_PAIRING                       = 225,
+    AKEYCODE_MEDIA_TOP_MENU                = 226,
+    AKEYCODE_11                            = 227,
+    AKEYCODE_12                            = 228,
+    AKEYCODE_LAST_CHANNEL                  = 229,
+    AKEYCODE_TV_DATA_SERVICE               = 230,
+    AKEYCODE_VOICE_ASSIST                  = 231,
+    AKEYCODE_TV_RADIO_SERVICE              = 232,
+    AKEYCODE_TV_TELETEXT                   = 233,
+    AKEYCODE_TV_NUMBER_ENTRY               = 234,
+    AKEYCODE_TV_TERRESTRIAL_ANALOG         = 235,
+    AKEYCODE_TV_TERRESTRIAL_DIGITAL        = 236,
+    AKEYCODE_TV_SATELLITE                  = 237,
+    AKEYCODE_TV_SATELLITE_BS               = 238,
+    AKEYCODE_TV_SATELLITE_CS               = 239,
+    AKEYCODE_TV_SATELLITE_SERVICE          = 240,
+    AKEYCODE_TV_NETWORK                    = 241,
+    AKEYCODE_TV_ANTENNA_CABLE              = 242,
+    AKEYCODE_TV_INPUT_HDMI_1               = 243,
+    AKEYCODE_TV_INPUT_HDMI_2               = 244,
+    AKEYCODE_TV_INPUT_HDMI_3               = 245,
+    AKEYCODE_TV_INPUT_HDMI_4               = 246,
+    AKEYCODE_TV_INPUT_COMPOSITE_1          = 247,
+    AKEYCODE_TV_INPUT_COMPOSITE_2          = 248,
+    AKEYCODE_TV_INPUT_COMPONENT_1          = 249,
+    AKEYCODE_TV_INPUT_COMPONENT_2          = 250,
+    AKEYCODE_TV_INPUT_VGA_1                = 251,
+    AKEYCODE_TV_AUDIO_DESCRIPTION          = 252,
+    AKEYCODE_TV_AUDIO_DESCRIPTION_MIX_UP   = 253,
+    AKEYCODE_TV_AUDIO_DESCRIPTION_MIX_DOWN = 254,
+    AKEYCODE_TV_ZOOM_MODE                  = 255,
+    AKEYCODE_TV_CONTENTS_MENU              = 256,
+    AKEYCODE_TV_MEDIA_CONTEXT_MENU         = 257,
+    AKEYCODE_TV_TIMER_PROGRAMMING          = 258,
+    AKEYCODE_HELP                          = 259,
+#endif
+#if __ANDROID_API__ < 23
+    AKEYCODE_NAVIGATE_PREVIOUS  = 260,
+    AKEYCODE_NAVIGATE_NEXT      = 261,
+    AKEYCODE_NAVIGATE_IN        = 262,
+    AKEYCODE_NAVIGATE_OUT       = 263,
+#endif
+#if __ANDROID_API__ < 24
+    AKEYCODE_STEM_PRIMARY       = 264,
+    AKEYCODE_STEM_1             = 265,
+    AKEYCODE_STEM_2             = 266,
+    AKEYCODE_STEM_3             = 267,
+    AKEYCODE_DPAD_UP_LEFT       = 268,
+    AKEYCODE_DPAD_DOWN_LEFT     = 269,
+    AKEYCODE_DPAD_UP_RIGHT      = 270,
+    AKEYCODE_DPAD_DOWN_RIGHT    = 271,
+#endif
+#if __ANDROID_API__ < 23
+    AKEYCODE_MEDIA_SKIP_FORWARD  = 272,
+    AKEYCODE_MEDIA_SKIP_BACKWARD = 273,
+    AKEYCODE_MEDIA_STEP_FORWARD  = 274,
+    AKEYCODE_MEDIA_STEP_BACKWARD = 275,
+#endif
+#if __ANDROID_API__ < 24
+    AKEYCODE_SOFT_SLEEP         = 276,
+    AKEYCODE_CUT                = 277,
+    AKEYCODE_COPY               = 278,
+    AKEYCODE_PASTE              = 279,
+#endif
+#if __ANDROID_API__ < 25
+    AKEYCODE_SYSTEM_NAVIGATION_UP    = 280,
+    AKEYCODE_SYSTEM_NAVIGATION_DOWN  = 281,
+    AKEYCODE_SYSTEM_NAVIGATION_LEFT  = 282,
+    AKEYCODE_SYSTEM_NAVIGATION_RIGHT = 283,
+#endif
 
     AMETA_FUNCTION_ON           = 0x00000008,
     AMETA_CTRL_ON               = 0x00001000,
