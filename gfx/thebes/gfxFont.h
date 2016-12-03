@@ -81,7 +81,6 @@ struct gfxFontStyle {
                  bool aPrinterFont,
                  bool aWeightSynthesis, bool aStyleSynthesis,
                  const nsString& aLanguageOverride);
-    gfxFontStyle(const gfxFontStyle& aStyle);
 
     // the language (may be an internal langGroup code rather than an actual
     // language code) specified in the document or element's lang property,
@@ -136,6 +135,15 @@ struct gfxFontStyle {
     // constants; see gfxFontConstants.h).
     int8_t stretch;
 
+    // The style of font (normal, italic, oblique)
+    uint8_t style;
+
+    // caps variant (small-caps, petite-caps, etc.)
+    uint8_t variantCaps;
+
+    // sub/superscript variant
+    uint8_t variantSubSuper;
+
     // Say that this font is a system font and therefore does not
     // require certain fixup that we do for fonts from untrusted
     // sources.
@@ -146,9 +154,6 @@ struct gfxFontStyle {
 
     // Used to imitate -webkit-font-smoothing: antialiased
     bool useGrayscaleAntialiasing : 1;
-
-    // The style of font (normal, italic, oblique)
-    uint8_t style : 2;
 
     // Whether synthetic styles are allowed
     bool allowSyntheticWeight : 1;
@@ -161,12 +166,6 @@ struct gfxFontStyle {
     // whether the |language| field comes from explicit lang tagging in the
     // document, or was inferred from charset/system locale
     bool explicitLanguage : 1;
-
-    // caps variant (small-caps, petite-caps, etc.)
-    uint8_t variantCaps;
-
-    // sub/superscript variant
-    uint8_t variantSubSuper;
 
     // Return the final adjusted font size for the given aspect ratio.
     // Not meant to be called when sizeAdjust = -1.0.
@@ -193,6 +192,8 @@ struct gfxFontStyle {
             (*reinterpret_cast<const uint64_t*>(&size) ==
              *reinterpret_cast<const uint64_t*>(&other.size)) &&
             (style == other.style) &&
+            (weight == other.weight) &&
+            (stretch == other.stretch) &&
             (variantCaps == other.variantCaps) &&
             (variantSubSuper == other.variantSubSuper) &&
             (allowSyntheticWeight == other.allowSyntheticWeight) &&
@@ -201,16 +202,14 @@ struct gfxFontStyle {
             (printerFont == other.printerFont) &&
             (useGrayscaleAntialiasing == other.useGrayscaleAntialiasing) &&
             (explicitLanguage == other.explicitLanguage) &&
-            (weight == other.weight) &&
-            (stretch == other.stretch) &&
             (language == other.language) &&
             (baselineOffset == other.baselineOffset) &&
             (*reinterpret_cast<const uint32_t*>(&sizeAdjust) ==
              *reinterpret_cast<const uint32_t*>(&other.sizeAdjust)) &&
             (featureSettings == other.featureSettings) &&
-            (languageOverride == other.languageOverride) &&
             (alternateValues == other.alternateValues) &&
-            (featureValueLookup == other.featureValueLookup);
+            (featureValueLookup == other.featureValueLookup) &&
+            (languageOverride == other.languageOverride);
     }
 
     static void ParseFontFeatureSettings(const nsString& aFeatureString,
