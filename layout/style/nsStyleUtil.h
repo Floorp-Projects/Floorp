@@ -71,6 +71,12 @@ public:
   static void AppendFontFeatureSettings(const nsCSSValue& src,
                                         nsAString& aResult);
 
+  static void AppendFontVariationSettings(const nsTArray<gfxFontVariation>& aVariations,
+                                          nsAString& aResult);
+
+  static void AppendFontVariationSettings(const nsCSSValue& src,
+                                          nsAString& aResult);
+
   static void AppendUnicodeRange(const nsCSSValue& aValue, nsAString& aResult);
 
   static void AppendCSSNumber(float aNumber, nsAString& aResult)
