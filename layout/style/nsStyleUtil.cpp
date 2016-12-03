@@ -391,6 +391,45 @@ nsStyleUtil::AppendFontFeatureSettings(const nsCSSValue& aSrc,
 }
 
 /* static */ void
+nsStyleUtil::AppendFontVariationSettings(const nsTArray<gfxFontVariation>& aVariations,
+                                         nsAString& aResult)
+{
+  for (uint32_t i = 0, numVars = aVariations.Length(); i < numVars; i++) {
+    const gfxFontVariation& var = aVariations[i];
+
+    if (i != 0) {
+      aResult.AppendLiteral(", ");
+    }
+
+    // output tag
+    AppendFontTagAsString(var.mTag, aResult);
+
+    // output value
+    aResult.Append(' ');
+    aResult.AppendFloat(var.mValue);
+  }
+}
+
+/* static */ void
+nsStyleUtil::AppendFontVariationSettings(const nsCSSValue& aSrc,
+                                         nsAString& aResult)
+{
+  nsCSSUnit unit = aSrc.GetUnit();
+
+  if (unit == eCSSUnit_Normal) {
+    aResult.AppendLiteral("normal");
+    return;
+  }
+
+  NS_PRECONDITION(unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep,
+                  "improper value unit for font-variation-settings:");
+
+  nsTArray<gfxFontVariation> variationSettings;
+  nsRuleNode::ComputeFontVariations(aSrc.GetPairListValue(), variationSettings);
+  AppendFontVariationSettings(variationSettings, aResult);
+}
+
+/* static */ void
 nsStyleUtil::GetFunctionalAlternatesName(int32_t aFeature,
                                          nsAString& aFeatureName)
 {

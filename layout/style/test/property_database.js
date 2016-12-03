@@ -5687,6 +5687,31 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright.enabled")) {
   }
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
+  gCSSProperties["font-variation-settings"] = {
+    domProp: "fontVariationSettings",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "normal" ],
+    other_values: [
+      "'wdth' 0", "'wdth' -.1", "\"wdth\" 1", "'wdth' 2, 'wght' 3", "\"XXXX\" 0"
+    ],
+    invalid_values: [
+      "wdth", "wdth 1", // unquoted tags
+      "'wdth'", "'wdth' 'wght'", "'wdth', 'wght'", // missing values
+      "'' 1", "'wid' 1", "'width' 1", // incorrect tag lengths
+      "'wd\th' 1", // non-graphic character in tag
+      "'wdth' 1 'wght' 2", // missing comma between pairs
+      "'wdth' 1,", // trailing comma
+      "'wdth' 1 , , 'wght' 2", // extra comma
+      "'wdth', 1" // comma within pair
+    ],
+    unbalanced_values: [
+      "'wdth\" 1", "\"wdth' 1" // mismatched quotes
+    ]
+  }
+}
+
 if (IsCSSPropertyPrefEnabled("svg.paint-order.enabled")) {
   gCSSProperties["paint-order"] = {
     domProp: "paintOrder",
