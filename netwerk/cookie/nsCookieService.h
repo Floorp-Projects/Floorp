@@ -274,6 +274,8 @@ class nsCookieService final : public nsICookieService
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     void                          InitDBStates();
     OpenDBResult                  TryInitDB(bool aDeleteExistingDB);
+    nsresult                      CreateTableWorker(const char* aName);
+    nsresult                      CreateIndex();
     nsresult                      CreateTable();
     nsresult                      CreateTableForSchemaVersion6();
     nsresult                      CreateTableForSchemaVersion5();
