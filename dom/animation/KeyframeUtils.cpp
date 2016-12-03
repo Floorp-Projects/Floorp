@@ -813,6 +813,13 @@ ConvertKeyframeSequence(JSContext* aCx,
       keyframe->mOffset.emplace(keyframeDict.mOffset.Value());
     }
 
+    if (keyframeDict.mComposite.WasPassed()) {
+      // FIXME: Bug 1311620: We don't support additive animation yet.
+      if (keyframeDict.mComposite.Value() != dom::CompositeOperation::Add) {
+        keyframe->mComposite.emplace(keyframeDict.mComposite.Value());
+      }
+    }
+
     ErrorResult rv;
     keyframe->mTimingFunction =
       TimingParams::ParseEasing(keyframeDict.mEasing, aDocument, rv);
@@ -1372,6 +1379,8 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
     segment->mFromValue = aEntries[i].mValue;
     segment->mToValue   = aEntries[j].mValue;
     segment->mTimingFunction = aEntries[i].mTimingFunction;
+    segment->mFromComposite = aEntries[i].mComposite;
+    segment->mToComposite = aEntries[j].mComposite;
 
     i = j;
   }
@@ -1406,6 +1415,14 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
                          false)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
+  }
+
+  Maybe<dom::CompositeOperation> composite;
+  if (keyframeDict.mComposite.WasPassed()) {
+    // FIXME: Bug 1311620: We don't support additive animation yet.
+    if (keyframeDict.mComposite.Value() != dom::CompositeOperation::Add) {
+      composite.emplace(keyframeDict.mComposite.Value());
+    }
   }
 
   Maybe<ComputedTimingFunction> easing =
@@ -1453,6 +1470,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
       Keyframe* keyframe = processedKeyframes.LookupOrAdd(offset);
       if (keyframe->mPropertyValues.IsEmpty()) {
         keyframe->mTimingFunction = easing;
+        keyframe->mComposite = composite;
         keyframe->mComputedOffset = offset;
       }
       keyframe->mPropertyValues.AppendElement(
