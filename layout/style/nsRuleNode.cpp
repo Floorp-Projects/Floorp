@@ -3994,6 +3994,41 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     break;
   }
 
+  // font-variation-settings
+  const nsCSSValue* variationSettingsValue =
+    aRuleData->ValueForFontVariationSettings();
+
+  switch (variationSettingsValue->GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+
+    case eCSSUnit_Normal:
+    case eCSSUnit_Initial:
+      aFont->mFont.fontVariationSettings.Clear();
+      break;
+
+    case eCSSUnit_Inherit:
+    case eCSSUnit_Unset:
+      aConditions.SetUncacheable();
+      aFont->mFont.fontVariationSettings =
+        aParentFont->mFont.fontVariationSettings;
+      break;
+
+    case eCSSUnit_System_Font:
+      aFont->mFont.fontVariationSettings = systemFont.fontVariationSettings;
+      break;
+
+    case eCSSUnit_PairList:
+    case eCSSUnit_PairListDep:
+      ComputeFontVariations(variationSettingsValue->GetPairListValue(),
+                            aFont->mFont.fontVariationSettings);
+      break;
+
+    default:
+      MOZ_ASSERT(false, "unexpected value unit");
+      break;
+  }
+
   // font-language-override
   const nsCSSValue* languageOverrideValue =
     aRuleData->ValueForFontLanguageOverride();
@@ -4126,6 +4161,18 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
               SETFCT_NONE | SETFCT_UNSET_INHERIT);
 }
 
+static inline void
+AssertValidFontTag(const nsString& aString)
+{
+  // To be valid as a font feature tag, a string MUST be:
+  MOZ_ASSERT(aString.Length() == 4 &&              // (1) exactly 4 chars long
+             NS_IsAscii(aString.BeginReading()) && // (2) entirely ASCII
+             isprint(aString[0]) &&                // (3) all printable chars
+             isprint(aString[1]) &&
+             isprint(aString[2]) &&
+             isprint(aString[3]));
+}
+
 /* static */ void
 nsRuleNode::ComputeFontFeatures(const nsCSSValuePairList *aFeaturesList,
                                 nsTArray<gfxFontFeature>& aFeatureSettings)
@@ -4153,6 +4200,37 @@ nsRuleNode::ComputeFontFeatures(const nsCSSValuePairList *aFeaturesList,
     feat.mValue = p->mYValue.GetIntValue();
 
     aFeatureSettings.AppendElement(feat);
+  }
+}
+
+/* static */ void
+nsRuleNode::ComputeFontVariations(const nsCSSValuePairList* aVariationsList,
+                                  nsTArray<gfxFontVariation>& aVariationSettings)
+{
+  aVariationSettings.Clear();
+  for (const nsCSSValuePairList* p = aVariationsList; p; p = p->mNext) {
+    gfxFontVariation var;
+
+    MOZ_ASSERT(aVariationsList->mXValue.GetUnit() == eCSSUnit_String,
+               "unexpected value unit");
+
+    // tag is a 4-byte ASCII sequence
+    nsAutoString tag;
+    p->mXValue.GetStringValue(tag);
+    AssertValidFontTag(tag);
+    if (tag.Length() != 4) {
+      continue;
+    }
+    // parsing validates that these are ASCII chars
+    // tags are always big-endian
+    var.mTag = (tag[0] << 24) | (tag[1] << 16) | (tag[2] << 8)  | tag[3];
+
+    // value
+    NS_ASSERTION(p->mYValue.GetUnit() == eCSSUnit_Number,
+                 "should have found a number unit");
+    var.mValue = p->mYValue.GetFloatValue();
+
+    aVariationSettings.AppendElement(var);
   }
 }
 
