@@ -75,6 +75,7 @@ bool nsFont::Equals(const nsFont& aOther) const
       (kerning == aOther.kerning) &&
       (synthesis == aOther.synthesis) &&
       (fontFeatureSettings == aOther.fontFeatureSettings) &&
+      (fontVariationSettings == aOther.fontVariationSettings) &&
       (languageOverride == aOther.languageOverride) &&
       (variantAlternates == aOther.variantAlternates) &&
       (variantCaps == aOther.variantCaps) &&
@@ -294,4 +295,13 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
   if (smoothing == NS_FONT_SMOOTHING_GRAYSCALE) {
     aStyle->useGrayscaleAntialiasing = true;
   }
+}
+
+void nsFont::AddFontVariationsToStyle(gfxFontStyle *aStyle) const
+{
+  // TODO: add variation settings from specific CSS properties
+  // such as weight, width, optical-size
+
+  // Add in arbitrary values from font-variation-settings
+  aStyle->variationSettings.AppendElements(fontVariationSettings);
 }

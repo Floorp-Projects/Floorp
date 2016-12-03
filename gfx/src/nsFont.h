@@ -10,6 +10,7 @@
 #include <sys/types.h>                  // for int16_t
 #include "gfxFontFamilyList.h"
 #include "gfxFontFeatures.h"
+#include "gfxFontVariations.h"
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsCoord.h"                    // for nscoord
 #include "nsStringFwd.h"                // for nsSubstring
@@ -101,6 +102,9 @@ struct nsFont {
   // Font features from CSS font-feature-settings
   nsTArray<gfxFontFeature> fontFeatureSettings;
 
+  // Font variations from CSS font-variation-settings
+  nsTArray<gfxFontVariation> fontVariationSettings;
+
   // Language system tag, to override document language;
   // this is an OpenType "language system" tag represented as a 32-bit integer
   // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
@@ -136,6 +140,8 @@ struct nsFont {
 
   // Add featureSettings into style
   void AddFontFeaturesToStyle(gfxFontStyle *aStyle) const;
+
+  void AddFontVariationsToStyle(gfxFontStyle *aStyle) const;
 
 protected:
   void Init(); // helper method for initialization

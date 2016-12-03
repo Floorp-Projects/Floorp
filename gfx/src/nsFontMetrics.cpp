@@ -135,6 +135,7 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
                        aFont.languageOverride);
 
     aFont.AddFontFeaturesToStyle(&style);
+    aFont.AddFontVariationsToStyle(&style);
 
     gfxFloat devToCssSize = gfxFloat(mP2A) /
         gfxFloat(mDeviceContext->AppUnitsPerCSSPixel());
