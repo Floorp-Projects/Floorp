@@ -39577,6 +39577,12 @@
             "url": "/web-animations/animation-model/animation-types/spacing-keyframes-transform.html"
           }
         ],
+        "web-animations/animation-model/combining-effects/effect-composition.html": [
+          {
+            "path": "web-animations/animation-model/combining-effects/effect-composition.html",
+            "url": "/web-animations/animation-model/combining-effects/effect-composition.html"
+          }
+        ],
         "web-animations/interfaces/KeyframeEffect/copy-contructor.html": [
           {
             "path": "web-animations/interfaces/KeyframeEffect/copy-contructor.html",
