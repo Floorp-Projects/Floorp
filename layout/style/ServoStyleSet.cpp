@@ -6,6 +6,7 @@
 
 #include "mozilla/ServoStyleSet.h"
 
+#include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "nsCSSAnonBoxes.h"
@@ -46,7 +47,8 @@ ServoStyleSet::BeginShutdown()
   // Note that this is pretty bad for performance; we should find a way to
   // get by with the ServoNodeDatas being dropped as part of the document
   // going away.
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
     ServoRestyleManager::ClearServoDataFromSubtree(root);
   }
 }
@@ -448,13 +450,14 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 void
 ServoStyleSet::StyleDocument()
 {
-  // Grab the root.
-  nsIDocument* doc = mPresContext->Document();
-  Element* root = doc->GetRootElement();
-  MOZ_ASSERT(root);
-
-  // Restyle the document.
-  Servo_TraverseSubtree(root, mRawSet.get(), SkipRootBehavior::DontSkip);
+  // Restyle the document from the root element and each of the document level
+  // NAC subtree roots.
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
+    if (root->ShouldTraverseForServo()) {
+      Servo_TraverseSubtree(root, mRawSet.get(), SkipRootBehavior::DontSkip);
+    }
+  }
 }
 
 void
