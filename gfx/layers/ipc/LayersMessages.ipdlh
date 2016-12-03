@@ -160,6 +160,11 @@ union Animatable {
   TransformFunction[];
 };
 
+union BaseAnimationStyle {
+  null_t;
+  Animatable;
+};
+
 struct AnimationSegment {
   Animatable startState;
   Animatable endState;
@@ -221,6 +226,11 @@ struct Animation {
   // True if the animation has a fixed current time (e.g. paused and
   // forward-filling animations).
   bool isNotPlaying;
+  // The base style that animations should composite with. This is only set for
+  // animations with a composite mode of additive or accumulate, and only for
+  // the first animation in the set (i.e. the animation that is lowest in the
+  // stack). In all other cases the value is null_t.
+  BaseAnimationStyle baseStyle;
 };
 
 // Change a layer's attributes

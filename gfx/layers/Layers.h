@@ -1938,6 +1938,8 @@ protected:
 #endif
   // Store display list log.
   nsCString mDisplayListLog;
+
+  StyleAnimationValue mBaseAnimationStyle;
 };
 
 /**
