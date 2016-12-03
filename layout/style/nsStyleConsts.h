@@ -155,6 +155,12 @@ enum class StyleShapeOutsideShapeBox : uint8_t {
   Margin
 };
 
+// <shape-radius> for <basic-shape>
+enum class StyleShapeRadius : uint8_t {
+  FarthestSide,
+  ClosestSide
+};
+
 // Shape source type
 enum class StyleShapeSourceType : uint8_t {
   None,
@@ -218,9 +224,6 @@ enum class StyleOrient : uint8_t {
   Horizontal,
   Vertical,
 };
-
-#define NS_RADIUS_FARTHEST_SIDE 0
-#define NS_RADIUS_CLOSEST_SIDE  1
 
 // stack-sizing
 #define NS_STYLE_STACK_SIZING_IGNORE         0

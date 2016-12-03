@@ -1023,10 +1023,10 @@ nsCSSValue::AppendCircleOrEllipseToString(nsCSSKeyword aFunctionId,
   // closest-side is the default, so we don't need to
   // output it if all values are closest-side.
   if (array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
-      array->Item(1).GetIntValue() == NS_RADIUS_CLOSEST_SIDE &&
+      StyleShapeRadius(array->Item(1).GetIntValue()) == StyleShapeRadius::ClosestSide &&
       (aFunctionId == eCSSKeyword_circle ||
        (array->Item(2).GetUnit() == eCSSUnit_Enumerated &&
-        array->Item(2).GetIntValue() == NS_RADIUS_CLOSEST_SIDE))) {
+        StyleShapeRadius(array->Item(2).GetIntValue()) == StyleShapeRadius::ClosestSide))) {
     hasRadii = false;
   } else {
     AppendPositionCoordinateToString(array->Item(1), aProperty,

@@ -9755,7 +9755,7 @@ GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
                                                 aConditions);
         MOZ_ASSERT(didSetRadius, "unexpected radius unit");
       } else {
-        radius.SetIntValue(NS_RADIUS_CLOSEST_SIDE, eStyleUnit_Enumerated);
+        radius.SetEnumValue(StyleShapeRadius::ClosestSide);
       }
       basicShape->Coordinates().AppendElement(radius);
     }
