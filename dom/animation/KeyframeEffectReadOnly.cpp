@@ -322,10 +322,12 @@ KeyframeEffectReadOnly::CompositeValue(
       // FIXME: Bug 1311620: Once we implement additive operation, we need to
       // calculate it here.
       return aUnderlyingValue;
-    case dom::CompositeOperation::Accumulate:
-      // FIXME: Bug 1291468: Implement accumulate operation.
-      MOZ_ASSERT_UNREACHABLE("Not implemented yet");
-      break;
+    case dom::CompositeOperation::Accumulate: {
+      StyleAnimationValue result(aValueToComposite);
+      return StyleAnimationValue::Accumulate(aProperty,
+                                             aUnderlyingValue,
+                                             Move(result));
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown compisite operation type");
       break;
@@ -1000,6 +1002,10 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
       keyframeDict.mEasing.Truncate();
       keyframe.mTimingFunction.ref().AppendToString(keyframeDict.mEasing);
     } // else if null, leave easing as its default "linear".
+
+    if (keyframe.mComposite) {
+      keyframeDict.mComposite.Construct(keyframe.mComposite.value());
+    }
 
     JS::Rooted<JS::Value> keyframeJSValue(aCx);
     if (!ToJSValue(aCx, keyframeDict, &keyframeJSValue)) {
