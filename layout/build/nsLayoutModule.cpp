@@ -351,7 +351,7 @@ nsresult
 Initialize()
 {
   if (gInitialized) {
-    NS_RUNTIMEABORT("Recursive layout module initialization");
+    MOZ_CRASH("Recursive layout module initialization");
     return NS_ERROR_FAILURE;
   }
   if (XRE_GetProcessType() == GeckoProcessType_GPU) {

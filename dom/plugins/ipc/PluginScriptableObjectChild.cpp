@@ -133,7 +133,7 @@ PluginScriptableObjectChild::ScriptableAllocate(NPP aInstance,
   AssertPluginThread();
 
   if (aClass != GetClass()) {
-    NS_RUNTIMEABORT("Huh?! Wrong class!");
+    MOZ_CRASH("Huh?! Wrong class!");
   }
 
   return new ChildNPObject();
@@ -146,7 +146,7 @@ PluginScriptableObjectChild::ScriptableInvalidate(NPObject* aObject)
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -165,7 +165,7 @@ PluginScriptableObjectChild::ScriptableDeallocate(NPObject* aObject)
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -186,7 +186,7 @@ PluginScriptableObjectChild::ScriptableHasMethod(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -216,7 +216,7 @@ PluginScriptableObjectChild::ScriptableInvoke(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -258,7 +258,7 @@ PluginScriptableObjectChild::ScriptableInvokeDefault(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -297,7 +297,7 @@ PluginScriptableObjectChild::ScriptableHasProperty(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -325,7 +325,7 @@ PluginScriptableObjectChild::ScriptableGetProperty(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -362,7 +362,7 @@ PluginScriptableObjectChild::ScriptableSetProperty(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -396,7 +396,7 @@ PluginScriptableObjectChild::ScriptableRemoveProperty(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -425,7 +425,7 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
@@ -478,7 +478,7 @@ PluginScriptableObjectChild::ScriptableConstruct(NPObject* aObject,
   AssertPluginThread();
 
   if (aObject->_class != GetClass()) {
-    NS_RUNTIMEABORT("Don't know what kind of object this is!");
+    MOZ_CRASH("Don't know what kind of object this is!");
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);

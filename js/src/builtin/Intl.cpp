@@ -2168,7 +2168,7 @@ js::SharedIntlData::TimeZoneHasher::match(TimeZoneName key, const Lookup& lookup
 static bool
 IsLegacyICUTimeZone(const char* timeZone)
 {
-    for (const auto& legacyTimeZone : timezone::legacyICUTimeZones) {
+    for (const auto& legacyTimeZone : js::timezone::legacyICUTimeZones) {
         if (equal(timeZone, legacyTimeZone))
             return true;
     }

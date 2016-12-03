@@ -93,7 +93,7 @@ doTest@${ourFile}:56:7
           checkExn.bind(null, 90, "ReferenceError",
                         "thereIsNoSuchContentFunction3 is not defined",
                         undefined, ourFile, 6,
-                        `doTest/<.then@${ourFile}:90:32
+                        `then@${ourFile}:90:32
 ` + (asyncStack ? `Async*doTest@${ourFile}:89:7\n` + parentFrame : ""))),
       t.testPromiseWithDOMExceptionThrowingPromiseInit().then(
           ensurePromiseFail.bind(null, 7),

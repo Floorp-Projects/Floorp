@@ -3853,7 +3853,7 @@ nsTableFrame::GetTableFrame(nsIFrame* aFrame)
       return static_cast<nsTableFrame*>(ancestor);
     }
   }
-  NS_RUNTIMEABORT("unable to find table parent");
+  MOZ_CRASH("unable to find table parent");
   return nullptr;
 }
 

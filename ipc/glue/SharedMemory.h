@@ -68,17 +68,17 @@ public:
   {
     char* memStart = reinterpret_cast<char*>(memory());
     if (!memStart)
-      NS_RUNTIMEABORT("SharedMemory region points at NULL!");
+      MOZ_CRASH("SharedMemory region points at NULL!");
     char* memEnd = memStart + Size();
 
     char* protStart = aAddr;
     if (!protStart)
-      NS_RUNTIMEABORT("trying to Protect() a NULL region!");
+      MOZ_CRASH("trying to Protect() a NULL region!");
     char* protEnd = protStart + aSize;
 
     if (!(memStart <= protStart
           && protEnd <= memEnd))
-      NS_RUNTIMEABORT("attempt to Protect() a region outside this SharedMemory");
+      MOZ_CRASH("attempt to Protect() a region outside this SharedMemory");
 
     // checks alignment etc.
     SystemProtect(aAddr, aSize, aRights);

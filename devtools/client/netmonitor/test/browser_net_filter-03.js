@@ -104,6 +104,82 @@ add_task(function* () {
     is(RequestsMenu.items.length, order.length,
       "There should be a specific amount of items in the requests menu.");
     is(RequestsMenu.visibleItems.length, visible,
-      "There should be a specific amount of visible items in the requests menu.");
+      "There should be a specific amount of visbile items in the requests menu.");
+
+    for (let i = 0; i < order.length; i++) {
+      is(RequestsMenu.getItemAtIndex(i), RequestsMenu.items[i],
+        "The requests menu items aren't ordered correctly. Misplaced item " + i + ".");
+    }
+
+    for (let i = 0, len = order.length / 7; i < len; i++) {
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i]),
+        "GET", CONTENT_TYPE_SJS + "?fmt=html", {
+          fuzzyUrl: true,
+          status: 200,
+          statusText: "OK",
+          type: "html",
+          fullMimeType: "text/html; charset=utf-8"
+        });
+    }
+    for (let i = 0, len = order.length / 7; i < len; i++) {
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len]),
+        "GET", CONTENT_TYPE_SJS + "?fmt=css", {
+          fuzzyUrl: true,
+          status: 200,
+          statusText: "OK",
+          type: "css",
+          fullMimeType: "text/css; charset=utf-8"
+        });
+    }
+    for (let i = 0, len = order.length / 7; i < len; i++) {
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 2]),
+        "GET", CONTENT_TYPE_SJS + "?fmt=js", {
+          fuzzyUrl: true,
+          status: 200,
+          statusText: "OK",
+          type: "js",
+          fullMimeType: "application/javascript; charset=utf-8"
+        });
+    }
+    for (let i = 0, len = order.length / 7; i < len; i++) {
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 3]),
+        "GET", CONTENT_TYPE_SJS + "?fmt=font", {
+          fuzzyUrl: true,
+          status: 200,
+          statusText: "OK",
+          type: "woff",
+          fullMimeType: "font/woff"
+        });
+    }
+    for (let i = 0, len = order.length / 7; i < len; i++) {
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 4]),
+        "GET", CONTENT_TYPE_SJS + "?fmt=image", {
+          fuzzyUrl: true,
+          status: 200,
+          statusText: "OK",
+          type: "png",
+          fullMimeType: "image/png"
+        });
+    }
+    for (let i = 0, len = order.length / 7; i < len; i++) {
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 5]),
+        "GET", CONTENT_TYPE_SJS + "?fmt=audio", {
+          fuzzyUrl: true,
+          status: 200,
+          statusText: "OK",
+          type: "ogg",
+          fullMimeType: "audio/ogg"
+        });
+    }
+    for (let i = 0, len = order.length / 7; i < len; i++) {
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(order[i + len * 6]),
+        "GET", CONTENT_TYPE_SJS + "?fmt=video", {
+          fuzzyUrl: true,
+          status: 200,
+          statusText: "OK",
+          type: "webm",
+          fullMimeType: "video/webm"
+        });
+    }
   }
 });

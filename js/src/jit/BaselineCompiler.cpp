@@ -9,6 +9,8 @@
 #include "mozilla/Casting.h"
 #include "mozilla/SizePrintfMacros.h"
 
+#include "jsfun.h"
+
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/FixedList.h"
@@ -1679,6 +1681,29 @@ BaselineCompiler::emit_JSOP_LAMBDA_ARROW()
     masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
     frame.push(R0);
     return true;
+}
+
+typedef bool (*SetFunNameFn)(JSContext*, HandleFunction, HandleValue, FunctionPrefixKind);
+static const VMFunction SetFunNameInfo =
+    FunctionInfo<SetFunNameFn>(js::SetFunctionNameIfNoOwnName, "SetFunName");
+
+bool
+BaselineCompiler::emit_JSOP_SETFUNNAME()
+{
+    frame.popRegsAndSync(2);
+
+    frame.push(R0);
+    frame.syncStack(0);
+
+    FunctionPrefixKind prefixKind = FunctionPrefixKind(GET_UINT8(pc));
+    masm.unboxObject(R0, R0.scratchReg());
+
+    prepareVMCall();
+
+    pushArg(Imm32(int32_t(prefixKind)));
+    pushArg(R1);
+    pushArg(R0.scratchReg());
+    return callVM(SetFunNameInfo);
 }
 
 void
