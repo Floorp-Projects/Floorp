@@ -9,6 +9,7 @@
 
 #include "gfxTypes.h"
 #include "gfxFontEntry.h"
+#include "gfxFontVariations.h"
 #include "nsString.h"
 #include "gfxPoint.h"
 #include "gfxPattern.h"
@@ -103,6 +104,9 @@ struct gfxFontStyle {
 
     // -- object used to look these up once the font is matched
     RefPtr<gfxFontFeatureValueSet> featureValueLookup;
+
+    // opentype variation settings
+    nsTArray<gfxFontVariation> variationSettings;
 
     // The logical size of the font, in pixels
     gfxFloat size;
@@ -209,6 +213,7 @@ struct gfxFontStyle {
             (featureSettings == other.featureSettings) &&
             (alternateValues == other.alternateValues) &&
             (featureValueLookup == other.featureValueLookup) &&
+            (variationSettings == other.variationSettings) &&
             (languageOverride == other.languageOverride);
     }
 
