@@ -5942,10 +5942,11 @@ nsLayoutUtils::GetLastLineBaseline(WritingMode aWM,
           kid->GetLogicalNormalPosition(aWM, containerSize).B(aWM);
         return true;
       } else if (kid->GetType() == nsGkAtoms::scrollFrame) {
-        // Use the bottom of the scroll frame.
-        // XXX CSS2.1 really doesn't say what to do here.
-        *aResult = kid->GetLogicalNormalPosition(aWM, containerSize).B(aWM) +
-                   kid->BSize(aWM);
+        // Defer to nsFrame::GetLogicalBaseline (which synthesizes a baseline
+        // from the margin-box).
+        kidBaseline = kid->GetLogicalBaseline(aWM);
+        *aResult = kidBaseline +
+          kid->GetLogicalNormalPosition(aWM, containerSize).B(aWM);
         return true;
       }
     } else {
