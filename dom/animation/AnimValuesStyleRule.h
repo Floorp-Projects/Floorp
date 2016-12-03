@@ -45,6 +45,11 @@ public:
   void AddValue(nsCSSPropertyID aProperty, const StyleAnimationValue &aValue);
   void AddValue(nsCSSPropertyID aProperty, StyleAnimationValue&& aValue);
 
+  bool HasValue(nsCSSPropertyID aProperty) const {
+    return mAnimationValues.Contains(aProperty);
+  }
+  bool GetValue(nsCSSPropertyID aProperty, StyleAnimationValue& aValue) const;
+
 private:
   ~AnimValuesStyleRule() {}
 
