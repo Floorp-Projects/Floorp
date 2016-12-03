@@ -3032,7 +3032,8 @@ var gCSSProperties = {
       "\"liga\" off", "\"liga\" 0", '"cv01" 3, "cv02" 4',
       '"cswh", "smcp" off, "salt" 4', '"cswh" 1, "smcp" off, "salt" 4',
       '"cswh" 0, \'blah\', "liga", "smcp" off, "salt" 4',
-      '"liga"        ,"smcp" 0         , "blah"'
+      '"liga"        ,"smcp" 0         , "blah"',
+      '"ab\\"c"', '"ab\\\\c"'
     ],
     invalid_values: [
       'liga', 'liga 1', 'liga normal', '"liga" normal', 'normal liga',
