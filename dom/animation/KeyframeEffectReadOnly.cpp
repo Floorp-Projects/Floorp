@@ -305,6 +305,34 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
 
+/* static */ StyleAnimationValue
+KeyframeEffectReadOnly::CompositeValue(
+  nsCSSPropertyID aProperty,
+  const StyleAnimationValue& aValueToComposite,
+  const StyleAnimationValue& aUnderlyingValue,
+  CompositeOperation aCompositeOperation)
+{
+  switch (aCompositeOperation) {
+    case dom::CompositeOperation::Replace:
+      return aValueToComposite;
+    case dom::CompositeOperation::Add:
+      // So far nothing to do since we come to here only in case of missing
+      // keyframe, that means we have only to use the base value or the
+      // underlying value as the composited value.
+      // FIXME: Bug 1311620: Once we implement additive operation, we need to
+      // calculate it here.
+      return aUnderlyingValue;
+    case dom::CompositeOperation::Accumulate:
+      // FIXME: Bug 1291468: Implement accumulate operation.
+      MOZ_ASSERT_UNREACHABLE("Not implemented yet");
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown compisite operation type");
+      break;
+  }
+  return StyleAnimationValue();
+}
+
 StyleAnimationValue
 KeyframeEffectReadOnly::CompositeValue(
   nsCSSPropertyID aProperty,
@@ -350,26 +378,10 @@ KeyframeEffectReadOnly::CompositeValue(
     SetNeedsBaseStyle(aProperty);
   }
 
-  switch (aCompositeOperation) {
-    case dom::CompositeOperation::Add:
-      // So far nothing to do since we come to here only in case of missing
-      // keyframe, that means we just use the base value as the composited
-      // value.
-      // FIXME: Bug 1311620: Once we implement additive composition, we need to
-      // use it here only if |aValueToCompose| is not null.
-      return result;
-    case dom::CompositeOperation::Accumulate:
-      // FIXME: Bug 1291468: Implement accumulate operation.
-      MOZ_ASSERT_UNREACHABLE("Not implemented yet");
-      break;
-    case dom::CompositeOperation::Replace:
-      MOZ_ASSERT_UNREACHABLE("Replace should have already handled");
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown compisite operation type");
-      break;
-  }
-  return result;
+  return CompositeValue(aProperty,
+                        aValueToComposite,
+                        result,
+                        aCompositeOperation);
 }
 
 void
