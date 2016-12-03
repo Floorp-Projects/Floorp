@@ -28,6 +28,7 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 
 static bool
 IsLocalRefURL(nsStringBuffer* aString)

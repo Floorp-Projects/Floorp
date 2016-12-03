@@ -14,6 +14,8 @@
 #include "mozilla/Likely.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 /* Character class tables and related helper functions. */
 
 static const uint8_t IS_HEX_DIGIT  = 0x01;
