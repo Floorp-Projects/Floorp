@@ -423,6 +423,28 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
   return new nsCSSValueSharedList(result.forget());
 }
 
+static StyleAnimationValue
+ToStyleAnimationValue(const Animatable& aAnimatable)
+{
+  StyleAnimationValue result;
+
+  switch (aAnimatable.type()) {
+    case Animatable::TArrayOfTransformFunction: {
+      const InfallibleTArray<TransformFunction>& transforms =
+        aAnimatable.get_ArrayOfTransformFunction();
+      result.SetTransformValue(CreateCSSValueList(transforms));
+      break;
+    }
+    case Animatable::Tfloat:
+      result.SetFloatValue(aAnimatable.get_float());
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported type");
+  }
+
+  return result;
+}
+
 void
 Layer::SetAnimations(const AnimationArray& aAnimations)
 {
@@ -446,6 +468,11 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
         break;
     }
 
+    if (animation.baseStyle().type() != BaseAnimationStyle::Tnull_t) {
+      mBaseAnimationStyle =
+        ToStyleAnimationValue(animation.baseStyle().get_Animatable());
+    }
+
     AnimData* data = mAnimationData.AppendElement();
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
@@ -462,24 +489,9 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
     // animation.
     InfallibleTArray<StyleAnimationValue>& startValues = data->mStartValues;
     InfallibleTArray<StyleAnimationValue>& endValues = data->mEndValues;
-    for (uint32_t j = 0; j < segments.Length(); j++) {
-      const AnimationSegment& segment = segments[j];
-      StyleAnimationValue* startValue = startValues.AppendElement();
-      StyleAnimationValue* endValue = endValues.AppendElement();
-      if (segment.endState().type() == Animatable::TArrayOfTransformFunction) {
-        const InfallibleTArray<TransformFunction>& startFunctions =
-          segment.startState().get_ArrayOfTransformFunction();
-        startValue->SetTransformValue(CreateCSSValueList(startFunctions));
-
-        const InfallibleTArray<TransformFunction>& endFunctions =
-          segment.endState().get_ArrayOfTransformFunction();
-        endValue->SetTransformValue(CreateCSSValueList(endFunctions));
-      } else {
-        NS_ASSERTION(segment.endState().type() == Animatable::Tfloat,
-                     "Unknown Animatable type");
-        startValue->SetFloatValue(segment.startState().get_float());
-        endValue->SetFloatValue(segment.endState().get_float());
-      }
+    for (const AnimationSegment& segment : segments) {
+      startValues.AppendElement(ToStyleAnimationValue(segment.startState()));
+      endValues.AppendElement(ToStyleAnimationValue(segment.endState()));
     }
   }
 

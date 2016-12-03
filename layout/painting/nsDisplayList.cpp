@@ -386,6 +386,59 @@ ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
 }
 
 static void
+SetAnimatable(nsCSSPropertyID aProperty,
+              const StyleAnimationValue& aAnimationValue,
+              nsIFrame* aFrame,
+              const TransformReferenceBox& aRefBox,
+              layers::Animatable& aAnimatable)
+{
+  MOZ_ASSERT(aFrame);
+
+  switch (aProperty) {
+    case eCSSProperty_opacity:
+      if (!aAnimationValue.IsNull()) {
+        aAnimatable = aAnimationValue.GetFloatValue();
+      } else {
+        aAnimatable = 0.0;
+      }
+      break;
+    case eCSSProperty_transform:
+      aAnimatable = InfallibleTArray<TransformFunction>();
+      if (!aAnimationValue.IsNull()) {
+        nsCSSValueSharedList* list =
+          aAnimationValue.GetCSSValueSharedListValue();
+        TransformReferenceBox refBox(aFrame);
+        AddTransformFunctions(list->mHead,
+                              aFrame->StyleContext(),
+                              aFrame->PresContext(),
+                              refBox,
+                              aAnimatable.get_ArrayOfTransformFunction());
+      }
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported property");
+  }
+}
+
+static void
+SetBaseAnimationStyle(nsCSSPropertyID aProperty,
+                      nsIFrame* aFrame,
+                      const TransformReferenceBox& aRefBox,
+                      layers::BaseAnimationStyle& aBaseStyle)
+{
+  MOZ_ASSERT(aFrame);
+
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  StyleAnimationValue baseValue = effects->GetBaseStyle(aProperty);
+  MOZ_ASSERT(!baseValue.IsNull(),
+             "The base value should be already there");
+
+  layers::Animatable animatable;
+  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, animatable);
+  aBaseStyle = animatable;
+}
+
+static void
 AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                         dom::Animation* aAnimation, Layer* aLayer,
                         AnimationData& aData, bool aPending)
@@ -401,9 +454,6 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
              " be static (so we don't need a start time) or else have a"
              " timeline capable of converting TimeStamps (so we can calculate"
              " one later");
-  nsStyleContext* styleContext = aFrame->StyleContext();
-  nsPresContext* presContext = aFrame->PresContext();
-  TransformReferenceBox refBox(aFrame);
 
   layers::Animation* animation =
     aPending ?
@@ -459,26 +509,31 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                          AsKeyframeEffect()->IterationComposite());
   animation->isNotPlaying() = !aAnimation->IsPlaying();
 
+  TransformReferenceBox refBox(aFrame);
+
+  // If the animation is additive or accumulates, we need to pass its base value
+  // to the compositor.
+  if (aAnimation->GetEffect()->AsKeyframeEffect()->
+        NeedsBaseStyle(aProperty.mProperty)) {
+    SetBaseAnimationStyle(aProperty.mProperty,
+                          aFrame, refBox,
+                          animation->baseStyle());
+  } else {
+    animation->baseStyle() = null_t();
+  }
+
   for (uint32_t segIdx = 0; segIdx < aProperty.mSegments.Length(); segIdx++) {
     const AnimationPropertySegment& segment = aProperty.mSegments[segIdx];
 
     AnimationSegment* animSegment = animation->segments().AppendElement();
-    if (aProperty.mProperty == eCSSProperty_transform) {
-      animSegment->startState() = InfallibleTArray<TransformFunction>();
-      animSegment->endState() = InfallibleTArray<TransformFunction>();
-
-      nsCSSValueSharedList* list =
-        segment.mFromValue.GetCSSValueSharedListValue();
-      AddTransformFunctions(list->mHead, styleContext, presContext, refBox,
-                            animSegment->startState().get_ArrayOfTransformFunction());
-
-      list = segment.mToValue.GetCSSValueSharedListValue();
-      AddTransformFunctions(list->mHead, styleContext, presContext, refBox,
-                            animSegment->endState().get_ArrayOfTransformFunction());
-    } else if (aProperty.mProperty == eCSSProperty_opacity) {
-      animSegment->startState() = segment.mFromValue.GetFloatValue();
-      animSegment->endState() = segment.mToValue.GetFloatValue();
-    }
+    SetAnimatable(aProperty.mProperty,
+                  segment.mFromValue,
+                  aFrame, refBox,
+                  animSegment->startState());
+    SetAnimatable(aProperty.mProperty,
+                  segment.mToValue,
+                  aFrame, refBox,
+                  animSegment->endState());
 
     animSegment->startPortion() = segment.mFromKey;
     animSegment->endPortion() = segment.mToKey;
