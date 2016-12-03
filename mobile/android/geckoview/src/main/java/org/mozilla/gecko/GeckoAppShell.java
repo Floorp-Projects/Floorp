@@ -1727,6 +1727,12 @@ public class GeckoAppShell
         public Activity getActivity();
         public String getDefaultUAString();
         public void doRestart();
+
+        /**
+         * This API doesn't make sense for arbitrary GeckoView consumers. In future, consider an
+         * API like Android WebView's, which provides a View to the consumer to display fullscreen.
+         * See <a href="https://developer.android.com/reference/android/webkit/WebChromeClient.html#onShowCustomView(android.view.View,%20android.webkit.WebChromeClient.CustomViewCallback)">https://developer.android.com/reference/android/webkit/WebChromeClient.html#onShowCustomView(android.view.View,%20android.webkit.WebChromeClient.CustomViewCallback)</a>.
+         */
         public void setFullScreen(boolean fullscreen);
         public void addPluginView(View view);
         public void removePluginView(final View view);
