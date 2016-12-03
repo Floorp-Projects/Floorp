@@ -16,6 +16,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
 #include "nsPrintfCString.h"
+#include <cctype>
 
 using namespace mozilla;
 
@@ -328,6 +329,24 @@ nsStyleUtil::AppendPaintOrderValue(uint8_t aValue,
 }
 
 /* static */ void
+nsStyleUtil::AppendFontTagAsString(uint32_t aTag, nsAString& aResult)
+{
+  // A font tag (for feature/variation settings) is a 4-char code interpreted
+  // as a bigendian 32-bit value and stored/processed as a uint32_t.
+  // To serialize it, we put the four bytes (which are all guaranteed to be
+  // printable ASCII values) into a string, starting from the high byte of the
+  // value, then append that to the result with CSS escaping and quotes.
+  nsAutoString tagStr;
+  for (int shiftAmount = 24; shiftAmount >= 0; shiftAmount -= 8) {
+    char c = (aTag >> shiftAmount) & 0xff;
+    MOZ_ASSERT(isascii(c) && isprint(c),
+               "parser should have restricted tag to printable ASCII chars");
+    tagStr.Append(c);
+  }
+  AppendEscapedCSSString(tagStr, aResult);
+}
+
+/* static */ void
 nsStyleUtil::AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures,
                                        nsAString& aResult)
 {
@@ -335,19 +354,10 @@ nsStyleUtil::AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures
     const gfxFontFeature& feat = aFeatures[i];
 
     if (i != 0) {
-        aResult.AppendLiteral(", ");
+      aResult.AppendLiteral(", ");
     }
 
-    // output tag
-    char tag[7];
-    tag[0] = '"';
-    tag[1] = (feat.mTag >> 24) & 0xff;
-    tag[2] = (feat.mTag >> 16) & 0xff;
-    tag[3] = (feat.mTag >> 8) & 0xff;
-    tag[4] = feat.mTag & 0xff;
-    tag[5] = '"';
-    tag[6] = 0;
-    aResult.AppendASCII(tag);
+    AppendFontTagAsString(feat.mTag, aResult);
 
     // output value, if necessary
     if (feat.mValue == 0) {
@@ -378,6 +388,45 @@ nsStyleUtil::AppendFontFeatureSettings(const nsCSSValue& aSrc,
   nsTArray<gfxFontFeature> featureSettings;
   nsRuleNode::ComputeFontFeatures(aSrc.GetPairListValue(), featureSettings);
   AppendFontFeatureSettings(featureSettings, aResult);
+}
+
+/* static */ void
+nsStyleUtil::AppendFontVariationSettings(const nsTArray<gfxFontVariation>& aVariations,
+                                         nsAString& aResult)
+{
+  for (uint32_t i = 0, numVars = aVariations.Length(); i < numVars; i++) {
+    const gfxFontVariation& var = aVariations[i];
+
+    if (i != 0) {
+      aResult.AppendLiteral(", ");
+    }
+
+    // output tag
+    AppendFontTagAsString(var.mTag, aResult);
+
+    // output value
+    aResult.Append(' ');
+    aResult.AppendFloat(var.mValue);
+  }
+}
+
+/* static */ void
+nsStyleUtil::AppendFontVariationSettings(const nsCSSValue& aSrc,
+                                         nsAString& aResult)
+{
+  nsCSSUnit unit = aSrc.GetUnit();
+
+  if (unit == eCSSUnit_Normal) {
+    aResult.AppendLiteral("normal");
+    return;
+  }
+
+  NS_PRECONDITION(unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep,
+                  "improper value unit for font-variation-settings:");
+
+  nsTArray<gfxFontVariation> variationSettings;
+  nsRuleNode::ComputeFontVariations(aSrc.GetPairListValue(), variationSettings);
+  AppendFontVariationSettings(variationSettings, aResult);
 }
 
 /* static */ void

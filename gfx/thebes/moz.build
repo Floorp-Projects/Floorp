@@ -26,6 +26,7 @@ EXPORTS += [
     'gfxFontPrefLangList.h',
     'gfxFontTest.h',
     'gfxFontUtils.h',
+    'gfxFontVariations.h',
     'gfxGradientCache.h',
     'gfxImageSurface.h',
     'gfxLineSegment.h',
