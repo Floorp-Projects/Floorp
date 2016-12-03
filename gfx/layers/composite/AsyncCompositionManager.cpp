@@ -576,18 +576,35 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
   return;
 }
 
+struct StyleAnimationValueCompositePair {
+  StyleAnimationValue mValue;
+  dom::CompositeOperation mComposite;
+};
+
 static StyleAnimationValue
-SampleValue(float aPortion, Animation& aAnimation,
-            const StyleAnimationValue& aStart, const StyleAnimationValue& aEnd,
-            const StyleAnimationValue& aLastValue, uint64_t aCurrentIteration)
+SampleValue(float aPortion, const Animation& aAnimation,
+            const StyleAnimationValueCompositePair& aStart,
+            const StyleAnimationValueCompositePair& aEnd,
+            const StyleAnimationValue& aLastValue,
+            uint64_t aCurrentIteration,
+            const StyleAnimationValue& aUnderlyingValue)
 {
-  NS_ASSERTION(aStart.GetUnit() == aEnd.GetUnit() ||
-               aStart.GetUnit() == StyleAnimationValue::eUnit_None ||
-               aEnd.GetUnit() == StyleAnimationValue::eUnit_None,
+  NS_ASSERTION(aStart.mValue.GetUnit() == aEnd.mValue.GetUnit() ||
+               aStart.mValue.GetUnit() == StyleAnimationValue::eUnit_None ||
+               aEnd.mValue.GetUnit() == StyleAnimationValue::eUnit_None,
                "Must have same unit");
 
-  StyleAnimationValue startValue = aStart;
-  StyleAnimationValue endValue = aEnd;
+  StyleAnimationValue startValue =
+    dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
+                                                aStart.mValue,
+                                                aUnderlyingValue,
+                                                aStart.mComposite);
+  StyleAnimationValue endValue =
+    dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
+                                                aEnd.mValue,
+                                                aUnderlyingValue,
+                                                aEnd.mComposite);
+
   // Iteration composition for accumulate
   if (static_cast<dom::IterationCompositeOperation>
         (aAnimation.iterationComposite()) ==
@@ -688,7 +705,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
         InfallibleTArray<AnimData>& animationData = layer->GetAnimationData();
 
-        StyleAnimationValue interpolatedValue;
+        StyleAnimationValue animationValue = layer->GetBaseAnimationStyle();
+        bool hasInEffectAnimations = false;
+
         // Process in order, since later animations override earlier ones.
         for (size_t i = 0, iEnd = animations.Length(); i < iEnd; ++i) {
           Animation& animation = animations[i];
@@ -745,13 +764,22 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                                                positionInSegment,
                                            computedTiming.mBeforeFlag);
 
+          StyleAnimationValueCompositePair from {
+            animData.mStartValues[segmentIndex],
+            static_cast<dom::CompositeOperation>(segment->startComposite())
+          };
+          StyleAnimationValueCompositePair to {
+            animData.mEndValues[segmentIndex],
+            static_cast<dom::CompositeOperation>(segment->endComposite())
+          };
           // interpolate the property
-          interpolatedValue =
-            SampleValue(portion, animation,
-                        animData.mStartValues[segmentIndex],
-                        animData.mEndValues[segmentIndex],
-                        animData.mEndValues.LastElement(),
-                        computedTiming.mCurrentIteration);
+          animationValue = SampleValue(portion,
+                                       animation,
+                                       from, to,
+                                       animData.mEndValues.LastElement(),
+                                       computedTiming.mCurrentIteration,
+                                       animationValue);
+          hasInEffectAnimations = true;
         }
 
 #ifdef DEBUG
@@ -777,12 +805,13 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                      "All of members of TransformData should be the same");
         }
 #endif
-        if (!interpolatedValue.IsNull()) {
+        // If all of animations are 
+        if (hasInEffectAnimations) {
           Animation& animation = animations.LastElement();
           ApplyAnimatedValue(layer,
                              animation.property(),
                              animation.data(),
-                             interpolatedValue);
+                             animationValue);
         }
       });
   return activeAnimations;

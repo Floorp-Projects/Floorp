@@ -537,6 +537,10 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
     animSegment->startPortion() = segment.mFromKey;
     animSegment->endPortion() = segment.mToKey;
+    animSegment->startComposite() =
+      static_cast<uint8_t>(segment.mFromComposite);
+    animSegment->endComposite() =
+      static_cast<uint8_t>(segment.mToComposite);
     animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
   }
 }
