@@ -3965,33 +3965,33 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aRuleData->ValueForFontFeatureSettings();
 
   switch (featureSettingsValue->GetUnit()) {
-  case eCSSUnit_Null:
-    break;
+    case eCSSUnit_Null:
+      break;
 
-  case eCSSUnit_Normal:
-  case eCSSUnit_Initial:
-    aFont->mFont.fontFeatureSettings.Clear();
-    break;
+    case eCSSUnit_Normal:
+    case eCSSUnit_Initial:
+      aFont->mFont.fontFeatureSettings.Clear();
+      break;
 
-  case eCSSUnit_Inherit:
-  case eCSSUnit_Unset:
-    aConditions.SetUncacheable();
-    aFont->mFont.fontFeatureSettings = aParentFont->mFont.fontFeatureSettings;
-    break;
+    case eCSSUnit_Inherit:
+    case eCSSUnit_Unset:
+      aConditions.SetUncacheable();
+      aFont->mFont.fontFeatureSettings = aParentFont->mFont.fontFeatureSettings;
+      break;
 
-  case eCSSUnit_System_Font:
-    aFont->mFont.fontFeatureSettings = systemFont.fontFeatureSettings;
-    break;
+    case eCSSUnit_System_Font:
+      aFont->mFont.fontFeatureSettings = systemFont.fontFeatureSettings;
+      break;
 
-  case eCSSUnit_PairList:
-  case eCSSUnit_PairListDep:
-    ComputeFontFeatures(featureSettingsValue->GetPairListValue(),
-                        aFont->mFont.fontFeatureSettings);
-    break;
+    case eCSSUnit_PairList:
+    case eCSSUnit_PairListDep:
+      ComputeFontFeatures(featureSettingsValue->GetPairListValue(),
+                          aFont->mFont.fontFeatureSettings);
+      break;
 
-  default:
-    MOZ_ASSERT(false, "unexpected value unit");
-    break;
+    default:
+      MOZ_ASSERT(false, "unexpected value unit");
+      break;
   }
 
   // font-variation-settings
@@ -4179,7 +4179,7 @@ nsRuleNode::ComputeFontFeatures(const nsCSSValuePairList *aFeaturesList,
 {
   aFeatureSettings.Clear();
   for (const nsCSSValuePairList* p = aFeaturesList; p; p = p->mNext) {
-    gfxFontFeature feat = {0, 0};
+    gfxFontFeature feat;
 
     MOZ_ASSERT(aFeaturesList->mXValue.GetUnit() == eCSSUnit_String,
                "unexpected value unit");
@@ -4187,6 +4187,7 @@ nsRuleNode::ComputeFontFeatures(const nsCSSValuePairList *aFeaturesList,
     // tag is a 4-byte ASCII sequence
     nsAutoString tag;
     p->mXValue.GetStringValue(tag);
+    AssertValidFontTag(tag);
     if (tag.Length() != 4) {
       continue;
     }

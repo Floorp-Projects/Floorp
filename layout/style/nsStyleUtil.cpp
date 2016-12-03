@@ -354,7 +354,7 @@ nsStyleUtil::AppendFontFeatureSettings(const nsTArray<gfxFontFeature>& aFeatures
     const gfxFontFeature& feat = aFeatures[i];
 
     if (i != 0) {
-        aResult.AppendLiteral(", ");
+      aResult.AppendLiteral(", ");
     }
 
     AppendFontTagAsString(feat.mTag, aResult);
