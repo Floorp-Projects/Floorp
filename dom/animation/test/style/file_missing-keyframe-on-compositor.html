@@ -1,0 +1,476 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+div {
+  /* Element needs geometry to be eligible for layerization */
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
+</style>
+<body>
+<script>
+'use strict';
+
+if (!SpecialPowers.DOMWindowUtils.layerManagerRemote ||
+    !SpecialPowers.getBoolPref(
+      'layers.offmainthreadcomposition.async-animations')) {
+  // If OMTA is disabled, nothing to run.
+  done();
+}
+
+function waitForPaintsFlushed() {
+  return new Promise(function(resolve, reject) {
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+// Note that promise tests run in sequence so this ensures the document is
+// loaded before any of the other tests run.
+promise_test(t => {
+  // Without this, the first test case fails on Android.
+  return waitForDocumentLoad();
+}, 'Ensure document has been loaded');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'opacity: 0.1' });
+  div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    assert_equals(opacity, '0.1',
+                  'The initial opacity value should be the base value');
+  });
+}, 'Initial opacity value for animation with no no keyframe at offset 0');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'opacity: 0.1' });
+  div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
+  div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    assert_equals(opacity, '0.5',
+                  'The initial opacity value should be the value of ' +
+                  'lower-priority animation value');
+  });
+}, 'Initial opacity value for animation with no keyframe at offset 0 when ' +
+   'there is a lower-priority animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div =
+    addDiv(t, { style: 'opacity: 0.1; transition: opacity 100s linear' });
+  getComputedStyle(div).opacity;
+
+  div.style.opacity = '0.5';
+  div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    assert_equals(opacity, '0.1',
+                  'The initial opacity value should be the initial value of ' +
+                  'the transition');
+  });
+}, 'Initial opacity value for animation with no keyframe at offset 0 when ' +
+   'there is a transition on the same property');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'opacity: 0' });
+  div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    assert_equals(opacity, '0.5',
+                  'Opacity value at 50% should be composed onto the base ' +
+                  'value');
+  });
+}, 'Opacity value for animation with no keyframe at offset 1 at 50% ');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'opacity: 0' });
+  div.animate({ opacity: [ 0.5, 0.5 ] }, 100 * MS_PER_SEC);
+  div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    assert_equals(opacity, '0.75', // (0.5 + 1) * 0.5
+                  'Opacity value at 50% should be composed onto the value ' +
+                  'of middle of lower-priority animation');
+  });
+}, 'Opacity value for animation with no keyframe at offset 1 at 50% when ' +
+   'there is a lower-priority animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div =
+    addDiv(t, { style: 'opacity: 0; transition: opacity 100s linear' });
+  getComputedStyle(div).opacity;
+
+  div.style.opacity = '0.5';
+  div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    assert_equals(opacity, '0.625', // ((0 + 0.5) * 0.5 + 1) * 0.5
+                  'Opacity value at 50% should be composed onto the value ' +
+                  'of middle of transition');
+  });
+}, 'Opacity value for animation with no keyframe at offset 1 at 50% when ' +
+   'there is a transition on the same property');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation = div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
+  var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    lowerAnimation.pause();
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    // The underlying value is the value that is staying at 0ms of the
+    // lowerAnimation, that is 0.5.
+    // (0.5 + 1.0) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 0.75.
+    assert_equals(opacity, '0.75',
+                  'Composed opacity value should be composed onto the value ' +
+                  'of lower-priority paused animation');
+  });
+}, 'Opacity value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a paused underlying animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation = div.animate({ opacity: [ 0.5, 1 ] }, 100 * MS_PER_SEC);
+  var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    lowerAnimation.playbackRate = 0;
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    // The underlying value is the value that is staying at 0ms of the
+    // lowerAnimation, that is 0.5.
+    // (0.5 + 1.0) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 0.75.
+    assert_equals(opacity, '0.75',
+                  'Composed opacity value should be composed onto the value ' +
+                  'of lower-priority zero playback rate animation');
+  });
+}, 'Opacity value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a zero playback rate underlying animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation = div.animate({ opacity: [ 1, 0.5 ] }, 100 * MS_PER_SEC);
+  var higherAnimation = div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    lowerAnimation.effect.timing.duration = 0;
+    lowerAnimation.effect.timing.fill = 'forwards';
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var opacity =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+    // The underlying value is the value that is filling forwards state of the
+    // lowerAnimation, that is 0.5.
+    // (0.5 + 1.0) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 0.75.
+    assert_equals(opacity, '0.75',
+                  'Composed opacity value should be composed onto the value ' +
+                  'of lower-priority zero active duration animation');
+  });
+}, 'Opacity value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a zero active duration underlying animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+  div.animate({ transform: 'translateX(200px)' }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 100, 0)',
+      'The initial transform value should be the base value');
+  });
+}, 'Initial transform value for animation with no keyframe at offset 0');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+  div.animate({ transform: [ 'translateX(200px)', 'translateX(300px)' ] },
+              100 * MS_PER_SEC);
+  div.animate({ transform: 'translateX(400px)' }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 200, 0)',
+      'The initial transform value should be lower-priority animation value');
+  });
+}, 'Initial transform value for animation with no keyframe at offset 0 when ' +
+   'there is a lower-priority animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div =
+    addDiv(t, { style: 'transform: translateX(100px);' +
+                       'transition: transform 100s linear' });
+  getComputedStyle(div).transform;
+
+  div.style.transform = 'translateX(200px)';
+  div.animate({ transform: 'translateX(400px)' }, 100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 100, 0)',
+      'The initial transform value should be the initial value of the ' +
+      'transition');
+  });
+}, 'Initial transform value for animation with no keyframe at offset 0 when ' +
+   'there is a transition');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+  div.animate([{ offset: 0, transform: 'translateX(200pX)' }],
+              100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 150, 0)',
+      'Transform value at 50% should be the base value');
+  });
+}, 'Transform value for animation with no keyframe at offset 1 at 50%');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+  div.animate({ transform: [ 'translateX(200px)', 'translateX(200px)' ] },
+              100 * MS_PER_SEC);
+  div.animate([{ offset: 0, transform: 'translateX(300px)' }],
+              100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 250, 0)',
+      'The final transform value should be the base value');
+  });
+}, 'Transform value for animation with no keyframe at offset 1 at 50% when ' +
+   'there is a lower-priority animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div =
+    addDiv(t, { style: 'transform: translateX(100px);' +
+                       'transition: transform 100s linear' });
+  getComputedStyle(div).transform;
+
+  div.style.transform = 'translateX(200px)';
+  div.animate([{ offset: 0, transform: 'translateX(300px)' }],
+              100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+                                                   // (150px + 300px) * 0.5
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 225, 0)',
+      'The final transform value should be the final value of the transition');
+  });
+}, 'Transform value for animation with no keyframe at offset 1 at 50% when ' +
+   'there is a transition');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation =
+    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                100 * MS_PER_SEC);
+  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                    100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    lowerAnimation.pause();
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    // The underlying value is the value that is staying at 0ms of the
+    // lowerAnimation, that is 100px.
+    // (100px + 300px) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 200px.
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 200, 0)',
+      'Composed transform value should be composed onto the value of ' +
+      'lower-priority paused animation');
+  });
+}, 'Transform value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a paused underlying animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation =
+    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                100 * MS_PER_SEC);
+  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                    100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    lowerAnimation.playbackRate = 0;
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    // The underlying value is the value that is staying at 0ms of the
+    // lowerAnimation, that is 100px.
+    // (100px + 300px) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 200px.
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 200, 0)',
+      'Composed transform value should be composed onto the value of ' +
+      'lower-priority zero playback rate animation');
+  });
+}, 'Transform value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a zero playback rate underlying animation');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation =
+    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                { duration: 10 * MS_PER_SEC,
+                  fill: 'forwards' });
+  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                    100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    // We need to wait for a paint so that we can send the state of the lower
+    // animation that is actually finished at this point.
+    return waitForPaintsFlushed();
+  }).then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    // (200px + 300px) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 250px.
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 250, 0)',
+      'Composed transform value should be composed onto the value of ' +
+      'lower-priority animation with fill:forwards');
+  });
+}, 'Transform value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a underlying animation with fill:forwards');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation =
+    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                { duration: 10 * MS_PER_SEC,
+                  endDelay: -5 * MS_PER_SEC,
+                  fill: 'forwards' });
+  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                    100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    // We need to wait for a paint just like the above test.
+    return waitForPaintsFlushed();
+  }).then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    // (150px + 300px) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 225px.
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 225, 0)',
+      'Composed transform value should be composed onto the value of ' +
+      'lower-priority animation with fill:forwards and negative endDelay');
+  });
+}, 'Transform value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a underlying animation with fill:forwards and negative ' +
+   'endDelay');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation =
+    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                { duration: 10 * MS_PER_SEC,
+                  endDelay: 100 * MS_PER_SEC,
+                  fill: 'forwards' });
+  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                    100 * MS_PER_SEC);
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    // (200px + 300px) * 0.5
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 250, 0)',
+      'Composed transform value should be composed onto the value of ' +
+      'lower-priority animation with fill:forwards during positive endDelay');
+  });
+}, 'Transform value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto a underlying animation with fill:forwards during positive ' +
+   'endDelay');
+
+done();
+</script>
+</body>
