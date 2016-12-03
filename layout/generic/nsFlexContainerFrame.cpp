@@ -87,33 +87,16 @@ IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
     aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox;
 }
 
-/* static */ bool
-nsFlexContainerFrame::IsLegacyBox(const nsIFrame* aFrame)
+// Returns true if aFlexContainer is the frame for an element with
+// "display:-webkit-box" or "display:-webkit-inline-box". aFlexContainer is
+// expected to be an instance of nsFlexContainerFrame (enforced with an assert);
+// otherwise, this function's state-bit-check here is bogus.
+static bool
+IsLegacyBox(const nsIFrame* aFlexContainer)
 {
-  nsStyleContext* styleContext = aFrame->StyleContext();
-  const nsStyleDisplay* styleDisp = styleContext->StyleDisplay();
-
-  // Trivial case: just check "display" directly.
-  bool isLegacyBox = IsDisplayValueLegacyBox(styleDisp);
-
-  // If this frame is for a scrollable element, then it will actually have
-  // "display:block", and its *parent* will have the real flex-flavored display
-  // value. So in that case, check the parent to find out if we're legacy.
-  if (!isLegacyBox && styleDisp->mDisplay == mozilla::StyleDisplay::Block) {
-    nsStyleContext* parentStyleContext = styleContext->GetParent();
-    NS_ASSERTION(parentStyleContext &&
-                 (styleContext->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
-                  styleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
-                 "The only way a nsFlexContainerFrame can have 'display:block' "
-                 "should be if it's the inner part of a scrollable or button "
-                 "element");
-    isLegacyBox = IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay());
-  }
-
-  NS_ASSERTION(!isLegacyBox ||
-               aFrame->GetType() == nsGkAtoms::flexContainerFrame,
-               "legacy box with unexpected frame type");
-  return isLegacyBox;
+  MOZ_ASSERT(aFlexContainer->GetType() == nsGkAtoms::flexContainerFrame,
+             "only flex containers may be passed to this function");
+  return aFlexContainer->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
 }
 
 // Returns the "align-items" value that's equivalent to the legacy "box-align"
@@ -1131,7 +1114,7 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     return true;
   }
 
-  bool isInLegacyBox = nsFlexContainerFrame::IsLegacyBox(aFrame1->GetParent());
+  const bool isInLegacyBox = IsLegacyBox(aFrame1->GetParent());
 
   int32_t order1 = GetOrderOrBoxOrdinalGroup(aFrame1, isInLegacyBox);
   int32_t order2 = GetOrderOrBoxOrdinalGroup(aFrame2, isInLegacyBox);
@@ -1209,7 +1192,7 @@ IsOrderLEQ(nsIFrame* aFrame1,
     return true;
   }
 
-  bool isInLegacyBox = nsFlexContainerFrame::IsLegacyBox(aFrame1->GetParent());
+  const bool isInLegacyBox = IsLegacyBox(aFrame1->GetParent());
 
   int32_t order1 = GetOrderOrBoxOrdinalGroup(aFrame1, isInLegacyBox);
   int32_t order2 = GetOrderOrBoxOrdinalGroup(aFrame2, isInLegacyBox);
@@ -2272,6 +2255,40 @@ NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 /* virtual */
 nsFlexContainerFrame::~nsFlexContainerFrame()
 {
+}
+
+/* virtual */
+void
+nsFlexContainerFrame::Init(nsIContent*       aContent,
+                           nsContainerFrame* aParent,
+                           nsIFrame*         aPrevInFlow)
+{
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+
+  const nsStyleDisplay* styleDisp = StyleContext()->StyleDisplay();
+
+  // Figure out if we should set a frame state bit to indicate that this frame
+  // represents a legacy -webkit-{inline-}box container.
+  // First, the trivial case: just check "display" directly.
+  bool isLegacyBox = IsDisplayValueLegacyBox(styleDisp);
+
+  // If this frame is for a scrollable element, then it will actually have
+  // "display:block", and its *parent* will have the real flex-flavored display
+  // value. So in that case, check the parent to find out if we're legacy.
+  if (!isLegacyBox && styleDisp->mDisplay == mozilla::StyleDisplay::Block) {
+    nsStyleContext* parentStyleContext = mStyleContext->GetParent();
+    NS_ASSERTION(parentStyleContext &&
+                 (mStyleContext->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
+                  mStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
+                 "The only way a nsFlexContainerFrame can have 'display:block' "
+                 "should be if it's the inner part of a scrollable or button "
+                 "element");
+    isLegacyBox = IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay());
+  }
+
+  if (isLegacyBox) {
+    AddStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
+  }
 }
 
 template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>

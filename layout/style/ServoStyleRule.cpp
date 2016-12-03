@@ -8,6 +8,7 @@
 
 #include "mozilla/ServoStyleRule.h"
 
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDeclarationBlock.h"
 

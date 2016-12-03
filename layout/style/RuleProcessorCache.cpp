@@ -11,6 +11,7 @@
 #include "RuleProcessorCache.h"
 
 #include <algorithm>
+#include "mozilla/CSSStyleSheet.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsThreadUtils.h"
 

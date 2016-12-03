@@ -16,6 +16,7 @@ config = {
         'clone-tools',
         'build',
         'check-test',
+        'generate-build-stats'
     ],
     'exes': {
         'python2.7': sys.executable,

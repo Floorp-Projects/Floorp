@@ -18,7 +18,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
 
-function jsonReplacer(key, value) {
+/**
+ * Helper function used to sanitize the objects that have to be saved in the ExtensionStorage.
+ *
+ * @param {BaseContext} context
+ *   The current extension context.
+ * @param {string} key
+ *   The key of the current JSON property.
+ * @param {any} value
+ *   The value of the current JSON property.
+ *
+ * @returns {any}
+ *   The sanitized value of the property.
+ */
+function jsonReplacer(context, key, value) {
   switch (typeof(value)) {
     // Serialize primitive types as-is.
     case "string":
@@ -49,7 +62,7 @@ function jsonReplacer(key, value) {
   if (!key) {
     // If this is the root object, and we can't serialize it, serialize
     // the value to an empty object.
-    return {};
+    return new context.cloneScope.Object();
   }
 
   // Everything else, omit entirely.
@@ -72,7 +85,7 @@ this.ExtensionStorage = {
    *        The sanitized value.
    */
   sanitize(value, context) {
-    let json = context.jsonStringify(value, jsonReplacer);
+    let json = context.jsonStringify(value, jsonReplacer.bind(null, context));
     return JSON.parse(json);
   },
 
