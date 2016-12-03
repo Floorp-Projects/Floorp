@@ -1923,6 +1923,22 @@ AppendToCSSValueList(UniquePtr<nsCSSValueList>& aHead,
   }
 }
 
+void
+AppendToCSSValuePairList(UniquePtr<nsCSSValuePairList>& aHead,
+                         UniquePtr<nsCSSValuePairList>&& aValueToAppend,
+                         nsCSSValuePairList** aTail)
+{
+  MOZ_ASSERT(!aHead == !*aTail,
+             "Can't have head w/o tail, & vice versa");
+
+  if (!aHead) {
+    aHead = Move(aValueToAppend);
+    *aTail = aHead.get();
+  } else {
+    (*aTail) = (*aTail)->mNext = aValueToAppend.release();
+  }
+}
+
 static UniquePtr<nsCSSValueList>
 AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
                        double aCoeff2, const nsCSSValue &aValue2,
@@ -4505,14 +4521,13 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
         }
 
         case eCSSProperty_font_variation_settings: {
-          const nsStyleFont *font =
-            static_cast<const nsStyleFont*>(styleStruct);
-          nsAutoPtr<nsCSSValuePairList> result;
+          auto font = static_cast<const nsStyleFont*>(styleStruct);
+          UniquePtr<nsCSSValuePairList> result;
           if (!font->mFont.fontVariationSettings.IsEmpty()) {
             // Make a new list that clones the current settings
-            nsCSSValuePairList **resultTail = getter_Transfers(result);
+            nsCSSValuePairList* tail = nullptr;
             for (auto v : font->mFont.fontVariationSettings) {
-              nsCSSValuePairList *clone = new nsCSSValuePairList;
+              auto clone = MakeUnique<nsCSSValuePairList>();
               // OpenType font tags are stored in nsFont as 32-bit unsigned
               // values, but represented in CSS as 4-character ASCII strings,
               // beginning with the high byte of the value. So to clone the
@@ -4522,12 +4537,11 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
               tagString.Append(char(v.mTag >> 16));
               tagString.Append(char(v.mTag >> 8));
               tagString.Append(char(v.mTag));
-              clone->mXValue = nsCSSValue(tagString, eCSSUnit_String);
-              clone->mYValue = nsCSSValue(v.mValue, eCSSUnit_Number);
-              *resultTail = clone;
-              resultTail = &clone->mNext;
+              clone->mXValue.SetStringValue(tagString, eCSSUnit_String);
+              clone->mYValue.SetFloatValue(v.mValue, eCSSUnit_Number);
+              AppendToCSSValuePairList(result, Move(clone), &tail);
             }
-            aComputedValue.SetAndAdoptCSSValuePairListValue(result.forget());
+            aComputedValue.SetAndAdoptCSSValuePairListValue(result.release());
           } else {
             aComputedValue.SetNormalValue();
           }
