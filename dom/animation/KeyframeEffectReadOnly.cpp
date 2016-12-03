@@ -800,11 +800,13 @@ CreatePropertyValue(nsCSSPropertyID aProperty,
 {
   aResult.mOffset = aOffset;
 
-  nsString stringValue;
-  DebugOnly<bool> uncomputeResult =
-    StyleAnimationValue::UncomputeValue(aProperty, aValue, stringValue);
-  MOZ_ASSERT(uncomputeResult, "failed to uncompute value");
-  aResult.mValue = stringValue;
+  if (!aValue.IsNull()) {
+    nsString stringValue;
+    DebugOnly<bool> uncomputeResult =
+      StyleAnimationValue::UncomputeValue(aProperty, aValue, stringValue);
+    MOZ_ASSERT(uncomputeResult, "failed to uncompute value");
+    aResult.mValue.Construct(stringValue);
+  }
 
   if (aTimingFunction) {
     aResult.mEasing.Construct();
