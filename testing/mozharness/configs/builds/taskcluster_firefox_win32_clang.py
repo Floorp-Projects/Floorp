@@ -20,7 +20,6 @@ config = {
         'clone-tools',
         'build',
         'check-test',
-        'generate-build-stats'
     ],
     'exes': {
         'python2.7': sys.executable,
@@ -62,8 +61,7 @@ config = {
      ###### 32 bit specific ######
     'base_name': 'WINNT_5.2_%(branch)s',
     'platform': 'win32',
-    'stage_platform': 'win32-debug',
-    'debug_build': True,
+    'stage_platform': 'win32',
     'publish_nightly_en_US_routes': True,
     'env': {
         'BINSCOPE': os.path.join(
@@ -78,7 +76,6 @@ config = {
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/c/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
-        'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'MSYSTEM': 'MINGW32',
     },
     'upload_env': {
@@ -90,7 +87,7 @@ config = {
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s\\minidumps',
     },
     'enable_pymake': True,
-    'src_mozconfig': 'browser\\config\\mozconfigs\\win32\\debug',
-    'tooltool_manifest_src': 'browser\\config\\tooltool-manifests\\win32\\releng.manifest',
+    'src_mozconfig': 'browser\\config\\mozconfigs\\win32\\clang',
+    'tooltool_manifest_src': 'browser\\config\\tooltool-manifests\\win32\\clang.manifest',
     #########################################################################
 }
