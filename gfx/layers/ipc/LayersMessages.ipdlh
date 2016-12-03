@@ -170,6 +170,8 @@ struct AnimationSegment {
   Animatable endState;
   float startPortion;
   float endPortion;
+  uint8_t startComposite;
+  uint8_t endComposite;
   TimingFunction sampleFn;
 };
 
