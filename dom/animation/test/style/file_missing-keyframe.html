@@ -1,0 +1,94 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+test(t => {
+  var div = addDiv(t, { style: 'margin-left: 100px' });
+  div.animate([{ marginLeft: '200px' }], 100 * MS_PER_SEC);
+
+  assert_equals(getComputedStyle(div).marginLeft, '100px',
+                'The initial margin-left value should be the base value');
+}, 'Initial margin-left value for an animation with no keyframe at offset 0');
+
+test(t => {
+  var div = addDiv(t, { style: 'margin-left: 100px' });
+  div.animate([{ offset: 0, marginLeft: '200px' },
+               { offset: 1, marginLeft: '300px' }],
+              100 * MS_PER_SEC);
+  div.animate([{ marginLeft: '200px' }], 100 * MS_PER_SEC);
+
+  assert_equals(getComputedStyle(div).marginLeft, '200px',
+                'The initial margin-left value should be the initial value ' +
+                'of lower-priority animation');
+}, 'Initial margin-left value for an animation with no keyframe at offset 0 ' +
+   'is that of lower-priority animations');
+
+test(t => {
+  var div = addDiv(t, { style: 'margin-left: 100px;' +
+                               'transition: margin-left 100s -50s linear'});
+  flushComputedStyle(div);
+
+  div.style.marginLeft = '200px';
+  flushComputedStyle(div);
+
+  div.animate([{ marginLeft: '300px' }], 100 * MS_PER_SEC);
+
+  assert_equals(getComputedStyle(div).marginLeft, '150px',
+                'The initial margin-left value should be the initial value ' +
+                'of the transition');
+}, 'Initial margin-left value for an animation with no keyframe at offset 0 ' +
+   'is that of transition');
+
+test(t => {
+  var div = addDiv(t, { style: 'margin-left: 100px' });
+  var animation = div.animate([{ offset: 0, marginLeft: '200px' }],
+                              100 * MS_PER_SEC);
+
+  animation.currentTime = 50 * MS_PER_SEC;
+  assert_equals(getComputedStyle(div).marginLeft, '150px',
+                'The margin-left value at 50% should be the base value');
+}, 'margin-left value at 50% for an animation with no keyframe at offset 1');
+
+test(t => {
+  var div = addDiv(t, { style: 'margin-left: 100px' });
+  var lowerAnimation = div.animate([{ offset: 0, marginLeft: '200px' },
+                                    { offset: 1, marginLeft: '300px' }],
+                                   100 * MS_PER_SEC);
+  var higherAnimation = div.animate([{ offset: 0, marginLeft: '400px' }],
+                                    100 * MS_PER_SEC);
+
+  lowerAnimation.currentTime = 50 * MS_PER_SEC;
+  higherAnimation.currentTime = 50 * MS_PER_SEC;
+                                                 // (250px + 400px) * 0.5
+  assert_equals(getComputedStyle(div).marginLeft, '325px',
+                'The margin-left value at 50% should be additive value of ' +
+                'lower-priority animation and higher-priority animation');
+}, 'margin-left value at 50% for an animation with no keyframe at offset 1 ' +
+   'is that of lower-priority animations');
+
+test(t => {
+  var div = addDiv(t, { style: 'margin-left: 100px;' +
+                               'transition: margin-left 100s linear' });
+  flushComputedStyle(div);
+
+  div.style.marginLeft = '300px';
+  flushComputedStyle(div);
+
+  div.animate([{ offset: 0, marginLeft: '200px' }], 100 * MS_PER_SEC);
+
+  div.getAnimations().forEach(animation => {
+    animation.currentTime = 50 * MS_PER_SEC;
+  });
+                                                 // (200px + 200px) * 0.5
+  assert_equals(getComputedStyle(div).marginLeft, '200px',
+                'The margin-left value at 50% should be additive value of ' +
+                'of the transition and animation');
+}, 'margin-left value at 50% for an animation with no keyframe at offset 1 ' +
+   'is that of transition');
+
+done();
+</script>
+</body>
