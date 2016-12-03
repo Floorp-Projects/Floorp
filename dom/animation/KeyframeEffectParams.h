@@ -58,7 +58,7 @@ struct KeyframeEffectParams
 
   dom::IterationCompositeOperation mIterationComposite =
     dom::IterationCompositeOperation::Replace;
-  // FIXME: Bug 1216844: Add CompositeOperation
+  dom::CompositeOperation mComposite = dom::CompositeOperation::Replace;
   SpacingMode mSpacingMode = SpacingMode::distribute;
   nsCSSPropertyID mPacedProperty = eCSSProperty_UNKNOWN;
 };

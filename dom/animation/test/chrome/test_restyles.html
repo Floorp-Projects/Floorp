@@ -809,6 +809,46 @@ waitForAllPaints(function() {
     }
   );
 
+  // Tests that additive animations don't throttle at all.
+  add_task(function* no_throttling_animations_out_of_view_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'transform: translateY(-400px);' });
+    var animation =
+      div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+
+    is(markers.length, 5,
+       'Discrete animation has has no keyframe whose offset is 0 or 1 in an ' +
+       'out-of-view element should not be throttled');
+    yield ensureElementRemoval(div);
+  });
+
+  // Counter part of the above test.
+  add_task(function* no_restyling_discrete_animations_out_of_view_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'transform: translateY(-400px);' });
+    var animation =
+      div.animate({ visibility: ['visible', 'hidden'] }, 100 * MS_PER_SEC);
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+
+    is(markers.length, 0,
+       'Discrete animation running on the main-thread in an out-of-view ' +
+       'element should never cause restyles');
+    yield ensureElementRemoval(div);
+  });
+
 });
 
 </script>

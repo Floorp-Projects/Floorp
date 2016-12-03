@@ -272,6 +272,7 @@ struct KeyframeValueEntry
   StyleAnimationValue mValue;
   float mOffset;
   Maybe<ComputedTimingFunction> mTimingFunction;
+  dom::CompositeOperation mComposite;
 
   struct PropertyOffsetComparator
   {
@@ -464,13 +465,10 @@ KeyframeUtils::GetKeyframesFromObject(JSContext* aCx,
     return keyframes;
   }
 
-  // We currently don't support additive animation. However, Web Animations
-  // says that if you don't have a keyframe at offset 0 or 1, then you should
-  // synthesize one using an additive zero value when you go to compose style.
-  // Until we implement additive animations we just throw if we encounter any
-  // set of keyframes that would put us in that situation.
-
-  if (RequiresAdditiveAnimation(keyframes, aDocument)) {
+  // FIXME: Bug 1311257: Support missing keyframes for Servo backend.
+  if ((!AnimationUtils::IsCoreAPIEnabled() ||
+       aDocument->IsStyledByServo()) &&
+      RequiresAdditiveAnimation(keyframes, aDocument)) {
     aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
     keyframes.Clear();
   }
@@ -669,6 +667,7 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   const nsTArray<Keyframe>& aKeyframes,
   const nsTArray<ComputedKeyframeValues>& aComputedValues,
+  dom::CompositeOperation aEffectComposite,
   nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aKeyframes.Length() == aComputedValues.Length(),
@@ -687,6 +686,8 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
       entry->mProperty = value.mProperty;
       entry->mValue = value.mValue;
       entry->mTimingFunction = frame.mTimingFunction;
+      entry->mComposite =
+        frame.mComposite ? frame.mComposite.value() : aEffectComposite;
     }
   }
 
@@ -1134,6 +1135,94 @@ IsComputeValuesFailureKey(const PropertyValuePair& aPair)
            eCSSPropertyExtra_no_properties;
 }
 
+static void
+AppendInitialSegment(AnimationProperty* aAnimationProperty,
+                     const KeyframeValueEntry& aFirstEntry)
+{
+  AnimationPropertySegment* segment =
+    aAnimationProperty->mSegments.AppendElement();
+  segment->mFromKey        = 0.0f;
+  segment->mFromComposite  = dom::CompositeOperation::Add;
+  segment->mToKey          = aFirstEntry.mOffset;
+  segment->mToValue        = aFirstEntry.mValue;
+  segment->mToComposite    = aFirstEntry.mComposite;
+}
+
+static void
+AppendFinalSegment(AnimationProperty* aAnimationProperty,
+                   const KeyframeValueEntry& aLastEntry)
+{
+  AnimationPropertySegment* segment =
+    aAnimationProperty->mSegments.AppendElement();
+  segment->mFromKey        = aLastEntry.mOffset;
+  segment->mFromValue      = aLastEntry.mValue;
+  segment->mFromComposite  = aLastEntry.mComposite;
+  segment->mToKey          = 1.0f;
+  segment->mToComposite    = dom::CompositeOperation::Add;
+  segment->mTimingFunction = aLastEntry.mTimingFunction;
+}
+
+// Returns a newly created AnimationProperty if one was created to fill-in the
+// missing keyframe, nullptr otherwise (if we decided not to fill the keyframe
+// becase we don't support additive animation).
+static AnimationProperty*
+HandleMissingInitialKeyframe(nsTArray<AnimationProperty>& aResult,
+                             const KeyframeValueEntry& aEntry)
+{
+  MOZ_ASSERT(aEntry.mOffset != 0.0f,
+             "The offset of the entry should not be 0.0");
+
+  // If the preference of the core Web Animations API is not enabled, don't fill
+  // in the missing keyframe since the missing keyframe requires support for
+  // additive animation which is guarded by this pref.
+  if (!AnimationUtils::IsCoreAPIEnabled()){
+    return nullptr;
+  }
+
+  AnimationProperty* result = aResult.AppendElement();
+  result->mProperty = aEntry.mProperty;
+
+  AppendInitialSegment(result, aEntry);
+
+  return result;
+}
+
+static void
+HandleMissingFinalKeyframe(nsTArray<AnimationProperty>& aResult,
+                           const KeyframeValueEntry& aEntry,
+                           AnimationProperty* aCurrentAnimationProperty)
+{
+  MOZ_ASSERT(aEntry.mOffset != 1.0f,
+             "The offset of the entry should not be 1.0");
+
+  // If the preference of the core Web Animations API is not enabled, don't fill
+  // in the missing keyframe since the missing keyframe requires support for
+  // additive animation which is guarded by this pref.
+  if (!AnimationUtils::IsCoreAPIEnabled()){
+    // If we have already appended a new entry for the property so we have to
+    // remove it.
+    if (aCurrentAnimationProperty) {
+      aResult.RemoveElementAt(aResult.Length() - 1);
+    }
+    return;
+  }
+
+  // If |aCurrentAnimationProperty| is nullptr, that means this is the first
+  // entry for the property, we have to append a new AnimationProperty for this
+  // property.
+  if (!aCurrentAnimationProperty) {
+    aCurrentAnimationProperty = aResult.AppendElement();
+    aCurrentAnimationProperty->mProperty = aEntry.mProperty;
+
+    // If we have only one entry whose offset is neither 1 nor 0 for this
+    // property, we need to append the initial segment as well.
+    if (aEntry.mOffset != 0.0f) {
+      AppendInitialSegment(aCurrentAnimationProperty, aEntry);
+    }
+  }
+  AppendFinalSegment(aCurrentAnimationProperty, aEntry);
+}
+
 /**
  * Builds an array of AnimationProperty objects to represent the keyframe
  * animation segments in aEntries.
@@ -1170,10 +1259,9 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
   // one KeyframeValueEntry with offset 0.0, and at least one with offset 1.0.
   // However, since it is possible that when building |aEntries|, the call to
   // StyleAnimationValue::ComputeValues might fail, this can't be guaranteed.
-  // Furthermore, since we don't yet implement additive animation and hence
-  // don't have sensible fallback behavior when these values are missing, the
-  // following loop takes care to identify properties that lack a value at
-  // offset 0.0/1.0 and drops those properties from |aResult|.
+  // Furthermore, if additive animation is disabled, the following loop takes
+  // care to identify properties that lack a value at offset 0.0/1.0 and drops
+  // those properties from |aResult|.
 
   nsCSSPropertyID lastProperty = eCSSProperty_UNKNOWN;
   AnimationProperty* animationProperty = nullptr;
@@ -1181,12 +1269,18 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
   size_t i = 0, n = aEntries.Length();
 
   while (i < n) {
-    // Check that the last property ends with an entry at offset 1.
+    // If we've reached the end of the array of entries, synthesize a final (and
+    // initial) segment if necessary.
     if (i + 1 == n) {
-      if (aEntries[i].mOffset != 1.0f && animationProperty) {
-        aResult.RemoveElementAt(aResult.Length() - 1);
-        animationProperty = nullptr;
+      if (aEntries[i].mOffset != 1.0f) {
+        HandleMissingFinalKeyframe(aResult, aEntries[i], animationProperty);
+      } else if (aEntries[i].mOffset == 1.0f && !animationProperty) {
+        // If the last entry with offset 1 and no animation property, that means
+        // it is the only entry for this property so append a single segment
+        // from 0 offset to |aEntry[i].offset|.
+        Unused << HandleMissingInitialKeyframe(aResult, aEntries[i]);
       }
+      animationProperty = nullptr;
       break;
     }
 
@@ -1194,23 +1288,30 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
                aEntries[i + 1].mProperty != eCSSProperty_UNKNOWN,
                "Each entry should specify a valid property");
 
-    // Skip properties that don't have an entry with offset 0.
+    // No keyframe for this property at offset 0.
     if (aEntries[i].mProperty != lastProperty &&
         aEntries[i].mOffset != 0.0f) {
-      // Since the entries are sorted by offset for a given property, and
-      // since we don't update |lastProperty|, we will keep hitting this
-      // condition until we change property.
-      ++i;
-      continue;
+      // If we don't support additive animation we can't fill in the missing
+      // keyframes and we should just skip this property altogether. Since the
+      // entries are sorted by offset for a given property, and since we don't
+      // update |lastProperty|, we will keep hitting this condition until we
+      // change property.
+      animationProperty = HandleMissingInitialKeyframe(aResult, aEntries[i]);
+      if (animationProperty) {
+        lastProperty = aEntries[i].mProperty;
+      } else {
+        // Skip this entry if we did not handle the missing entry.
+        ++i;
+        continue;
+      }
     }
 
-    // Drop properties that don't end with an entry with offset 1.
+    // No keyframe for this property at offset 1.
     if (aEntries[i].mProperty != aEntries[i + 1].mProperty &&
         aEntries[i].mOffset != 1.0f) {
-      if (animationProperty) {
-        aResult.RemoveElementAt(aResult.Length() - 1);
-        animationProperty = nullptr;
-      }
+      HandleMissingFinalKeyframe(aResult, aEntries[i], animationProperty);
+      // Move on to new property.
+      animationProperty = nullptr;
       ++i;
       continue;
     }
@@ -1322,6 +1423,8 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
     return;
   }
 
+  bool isServoBackend = aDocument->IsStyledByServo();
+
   // Create a set of keyframes for each property.
   nsCSSParser parser(aDocument->CSSLoader());
   nsClassHashtable<nsFloatHashKey, Keyframe> processedKeyframes;
@@ -1331,10 +1434,13 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
       // No animation values for this property.
       continue;
     }
-    if (count == 1) {
-      // We don't support additive values and so can't support an
-      // animation that goes from the underlying value to this
-      // specified value.  Throw an exception until we do support this.
+
+    // If we only have one value, we should animate from the underlying value
+    // using additive animation--however, we don't support additive animation
+    // for Servo backend (bug 1311257) or when the core animation API pref is
+    // switched off.
+    if ((!AnimationUtils::IsCoreAPIEnabled() || isServoBackend) &&
+        count == 1) {
       aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
       return;
     }
