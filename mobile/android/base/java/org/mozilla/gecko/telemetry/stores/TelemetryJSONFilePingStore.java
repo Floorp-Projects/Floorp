@@ -196,7 +196,7 @@ public class TelemetryJSONFilePingStore extends TelemetryPingStore {
             inputStream = new FileInputStream(file);
         } catch (final FileNotFoundException e) {
             // permission problem might also cause same exception. To get more debug information.
-            String fileInfo = String.format("existence: %b, can write: %b, size: %l.",
+            String fileInfo = String.format("existence: %b, can write: %b, size: %d.",
                     file.exists(), file.canWrite(), file.length());
             String msg = String.format(
                     "Expected file to exist but got exception in thread: %s. File info - %s",
