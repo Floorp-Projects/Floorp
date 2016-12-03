@@ -2906,6 +2906,7 @@ exports.CSS_PROPERTIES = {
       "font-variant-ligatures",
       "font-variant-numeric",
       "font-variant-position",
+      "font-variation-settings",
       "font-weight",
       "-moz-force-broken-image-icon",
       "grid-auto-columns",
@@ -6266,6 +6267,18 @@ exports.CSS_PROPERTIES = {
       "normal",
       "sub",
       "super",
+      "unset"
+    ]
+  },
+  "font-variation-settings": {
+    "isInherited": true,
+    "subproperties": [
+      "font-variation-settings"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
       "unset"
     ]
   },
