@@ -1022,7 +1022,7 @@ public:
     return !!mStyleData.GetStyleData(aSID);
   }
 
-  static void ComputeFontFeatures(const nsCSSValuePairList *aFeaturesList,
+  static void ComputeFontFeatures(const nsCSSValuePairList* aFeaturesList,
                                   nsTArray<gfxFontFeature>& aFeatureSettings);
 
   static void ComputeFontVariations(const nsCSSValuePairList* aVariationsList,
