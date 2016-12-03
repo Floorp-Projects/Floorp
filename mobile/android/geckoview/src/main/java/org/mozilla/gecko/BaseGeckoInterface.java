@@ -5,15 +5,10 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.RectF;
-import android.hardware.SensorEventListener;
-import android.location.LocationListener;
 import android.view.View;
 import android.widget.AbsoluteLayout;
 
@@ -64,12 +59,7 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
 
     @Override
     public void setFullScreen(final boolean fullscreen) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ActivityUtils.setFullScreen(getActivity(), fullscreen);
-            }
-        });
+        // This API doesn't make sense for GeckoView, so we do nothing for now.
     }
 
     // Bug 908779: Implement this
