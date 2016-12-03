@@ -23,6 +23,7 @@
 #include "nsGkAtoms.h"
 #include "nsQueryObject.h"
 #include "nsString.h"
+#include "nsStyleSet.h"
 #include "nsTArray.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "mozilla/dom/CSSRuleList.h"

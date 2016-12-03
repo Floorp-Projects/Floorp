@@ -19,6 +19,7 @@
 #include "nsDeviceContext.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocument.h"
+#include "nsIWidget.h"
 #include "nsContentUtils.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"

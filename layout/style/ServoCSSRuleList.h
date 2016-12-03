@@ -19,7 +19,7 @@ namespace css {
 class Rule;
 } // namespace css
 
-class ServoCSSRuleList final : public CSSRuleList
+class ServoCSSRuleList final : public dom::CSSRuleList
 {
 public:
   ServoCSSRuleList(ServoStyleSheet* aStyleSheet,
