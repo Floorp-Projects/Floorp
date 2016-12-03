@@ -217,9 +217,6 @@ struct gfxFontStyle {
             (languageOverride == other.languageOverride);
     }
 
-    static void ParseFontFeatureSettings(const nsString& aFeatureString,
-                                         nsTArray<gfxFontFeature>& aFeatures);
-
     static uint32_t ParseFontLanguageOverride(const nsString& aLangTag);
 };
 
