@@ -9,6 +9,7 @@
 
 #include "nsChangeHint.h"
 #include "nsCSSPropertyID.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
@@ -19,7 +20,6 @@
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/KeyframeEffectParams.h"
-#include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
 #include "mozilla/ServoBindingTypes.h" // RawServoDeclarationBlock and
                                        // associated RefPtrTraits
 #include "mozilla/StyleAnimationValue.h"
@@ -28,7 +28,6 @@
 
 struct JSContext;
 class JSObject;
-class nsCSSPropertyIDSet;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
@@ -330,6 +329,10 @@ public:
   // in detail which change hint can be ignored.
   bool CanIgnoreIfNotVisible() const;
 
+  // Returns true if the effect is run on the compositor for |aProperty| and
+  // needs a base style to composite with.
+  bool NeedsBaseStyle(nsCSSPropertyID aProperty) const;
+
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
@@ -404,6 +407,10 @@ protected:
     const StyleAnimationValue& aValueToComposite,
     CompositeOperation aCompositeOperation);
 
+  // Set a bit in mNeedsBaseStyleSet if |aProperty| can be run on the
+  // compositor.
+  void SetNeedsBaseStyle(nsCSSPropertyID aProperty);
+
   Maybe<OwningAnimationTarget> mTarget;
 
   KeyframeEffectParams mEffectOptions;
@@ -427,6 +434,11 @@ protected:
   // We need to track when we go to or from being "in effect" since
   // we need to re-evaluate the cascade of animations when that changes.
   bool mInEffectOnLastAnimationTimingUpdate;
+
+  // Represents whether or not the corresponding property requires a base style
+  // to composite with. This is only set when the property is run on the
+  // compositor.
+  nsCSSPropertyIDSet mNeedsBaseStyleSet;
 
 private:
   nsChangeHint mCumulativeChangeHint;

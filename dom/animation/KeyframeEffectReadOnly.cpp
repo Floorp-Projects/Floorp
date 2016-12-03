@@ -344,7 +344,10 @@ KeyframeEffectReadOnly::CompositeValue(
     RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
     result = EffectCompositor::GetBaseStyle(aProperty,
                                             styleContext,
-                                            *mTarget->mElement);
+                                            *mTarget->mElement,
+                                            mTarget->mPseudoType);
+    MOZ_ASSERT(!result.IsNull(), "The base style should be set");
+    SetNeedsBaseStyle(aProperty);
   }
 
   switch (aCompositeOperation) {
@@ -383,6 +386,8 @@ KeyframeEffectReadOnly::ComposeStyle(
   if (computedTiming.mProgress.IsNull()) {
     return;
   }
+
+  mNeedsBaseStyleSet.Empty();
 
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx)
@@ -1503,6 +1508,31 @@ KeyframeEffectReadOnly::HasComputedTimingChanged() const
             IterationCompositeOperation::Accumulate &&
          computedTiming.mCurrentIteration !=
           mCurrentIterationOnLastCompose);
+}
+
+void
+KeyframeEffectReadOnly::SetNeedsBaseStyle(nsCSSPropertyID aProperty)
+{
+  for (size_t i = 0; i < LayerAnimationInfo::kRecords; i++) {
+    if (LayerAnimationInfo::sRecords[i].mProperty == aProperty) {
+      mNeedsBaseStyleSet.AddProperty(aProperty);
+      break;
+    }
+  }
+}
+
+bool
+KeyframeEffectReadOnly::NeedsBaseStyle(nsCSSPropertyID aProperty) const
+{
+  for (size_t i = 0; i < LayerAnimationInfo::kRecords; i++) {
+    if (LayerAnimationInfo::sRecords[i].mProperty == aProperty) {
+      return mNeedsBaseStyleSet.HasProperty(aProperty);
+    }
+  }
+  MOZ_ASSERT_UNREACHABLE(
+    "Expected a property that can be run on the compositor");
+
+  return false;
 }
 
 } // namespace dom
