@@ -45,7 +45,7 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
 // Non-standard extensions
 dictionary AnimationPropertyValueDetails {
   required double             offset;
-  required DOMString          value;
+           DOMString          value;
            DOMString          easing;
   required CompositeOperation composite;
 };
