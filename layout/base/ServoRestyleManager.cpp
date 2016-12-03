@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ServoRestyleManager.h"
+
+#include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoRestyleManagerInlines.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "nsContentUtils.h"
@@ -289,11 +292,9 @@ ServoRestyleManager::ProcessPendingRestyles()
 
   ServoStyleSet* styleSet = StyleSet();
   nsIDocument* doc = PresContext()->Document();
-  Element* root = doc->GetRootElement();
 
   // XXXbholley: Should this be while() per bug 1316247?
   if (HasPendingRestyles()) {
-    MOZ_ASSERT(root);
     mInStyleRefresh = true;
     styleSet->StyleDocument();
 
@@ -309,7 +310,10 @@ ServoRestyleManager::ProcessPendingRestyles()
 
     // Recreate style contexts and queue up change hints.
     nsStyleChangeList currentChanges;
-    RecreateStyleContexts(root, nullptr, styleSet, currentChanges);
+    DocumentStyleRootIterator iter(doc);
+    while (Element* root = iter.GetNextStyleRoot()) {
+      RecreateStyleContexts(root, nullptr, styleSet, currentChanges);
+    }
 
     // Process the change hints.
     //

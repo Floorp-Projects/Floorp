@@ -7,6 +7,7 @@
 #ifndef mozilla_ServoRestyleManager_h
 #define mozilla_ServoRestyleManager_h
 
+#include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/RestyleManagerBase.h"
 #include "mozilla/ServoBindings.h"
@@ -78,11 +79,7 @@ public:
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
-  bool HasPendingRestyles()
-  {
-    Element* root = PresContext()->Document()->GetRootElement();
-    return root && root->HasDirtyDescendantsForServo();
-  }
+  inline bool HasPendingRestyles();
 
 
   /**

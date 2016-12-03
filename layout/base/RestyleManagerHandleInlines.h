@@ -9,6 +9,7 @@
 
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/ServoRestyleManagerInlines.h"
 
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
   if (IsGecko()) { \
