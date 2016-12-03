@@ -103,6 +103,7 @@ struct Keyframe
     mOffset         = aOther.mOffset;
     mComputedOffset = aOther.mComputedOffset;
     mTimingFunction = Move(aOther.mTimingFunction);
+    mComposite      = Move(aOther.mComposite);
     mPropertyValues = Move(aOther.mPropertyValues);
     return *this;
   }
@@ -112,14 +113,19 @@ struct Keyframe
   double                        mComputedOffset = kComputedOffsetNotSet;
   Maybe<ComputedTimingFunction> mTimingFunction; // Nothing() here means
                                                  // "linear"
+  Maybe<dom::CompositeOperation> mComposite;
   nsTArray<PropertyValuePair>   mPropertyValues;
 };
 
 struct AnimationPropertySegment
 {
   float mFromKey, mToKey;
+  // NOTE: In the case that no keyframe for 0 or 1 offset is specified
+  // the unit of mFromValue or mToValue is eUnit_Null.
   StyleAnimationValue mFromValue, mToValue;
   Maybe<ComputedTimingFunction> mTimingFunction;
+  dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
+  dom::CompositeOperation mToComposite = dom::CompositeOperation::Replace;
 
   bool operator==(const AnimationPropertySegment& aOther) const
   {
@@ -127,7 +133,9 @@ struct AnimationPropertySegment
            mToKey == aOther.mToKey &&
            mFromValue == aOther.mFromValue &&
            mToValue == aOther.mToValue &&
-           mTimingFunction == aOther.mTimingFunction;
+           mTimingFunction == aOther.mTimingFunction &&
+           mFromComposite == aOther.mFromComposite &&
+           mToComposite == aOther.mToComposite;
   }
   bool operator!=(const AnimationPropertySegment& aOther) const
   {
@@ -385,6 +393,16 @@ protected:
   // A wrapper for marking cascade update according to the current
   // target and its effectSet.
   void MarkCascadeNeedsUpdate();
+
+  // Composites |aValueToComposite| using |aCompositeOperation| onto the value
+  // for |aProperty| in |aAnimationRule|, or, if there is no suitable value in
+  // |aAnimationRule|, uses the base value for the property recorded on the
+  // target element's EffectSet.
+  StyleAnimationValue CompositeValue(
+    nsCSSPropertyID aProperty,
+    const RefPtr<AnimValuesStyleRule>& aAnimationRule,
+    const StyleAnimationValue& aValueToComposite,
+    CompositeOperation aCompositeOperation);
 
   Maybe<OwningAnimationTarget> mTarget;
 
