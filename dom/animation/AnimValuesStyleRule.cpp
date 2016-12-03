@@ -83,6 +83,13 @@ AnimValuesStyleRule::AddValue(nsCSSPropertyID aProperty,
     nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
 }
 
+bool
+AnimValuesStyleRule::GetValue(nsCSSPropertyID aProperty,
+                              StyleAnimationValue& aValue) const
+{
+  return mAnimationValues.Get(aProperty, &aValue);
+}
+
 #ifdef DEBUG
 void
 AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
