@@ -1769,6 +1769,7 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
           }
           double diffsquared = 0.0;
           switch (unit) {
+            case eCSSUnit_Number:
             case eCSSUnit_Pixel: {
               float diff = v1.GetFloatValue() - v2.GetFloatValue();
               diffsquared = diff * diff;
@@ -2273,9 +2274,13 @@ AddCSSValuePairList(nsCSSPropertyID aProperty,
       if (unit == eCSSUnit_Null) {
         return nullptr;
       }
-      if (!AddCSSValuePixelPercentCalc(restrictions, unit,
-                                       aCoeff1, v1,
-                                       aCoeff2, v2, vr)) {
+      if (unit == eCSSUnit_Number) {
+        AddCSSValueNumber(aCoeff1, v1,
+                          aCoeff2, v2,
+                          vr, restrictions);
+      } else if (!AddCSSValuePixelPercentCalc(restrictions, unit,
+                                              aCoeff1, v1,
+                                              aCoeff2, v2, vr)) {
         if (v1 != v2) {
           return nullptr;
         }
@@ -4496,6 +4501,36 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
 
           aComputedValue.SetTransformValue(
               new nsCSSValueSharedList(result.forget()));
+          break;
+        }
+
+        case eCSSProperty_font_variation_settings: {
+          const nsStyleFont *font =
+            static_cast<const nsStyleFont*>(styleStruct);
+          nsAutoPtr<nsCSSValuePairList> result;
+          if (!font->mFont.fontVariationSettings.IsEmpty()) {
+            // Make a new list that clones the current settings
+            nsCSSValuePairList **resultTail = getter_Transfers(result);
+            for (auto v : font->mFont.fontVariationSettings) {
+              nsCSSValuePairList *clone = new nsCSSValuePairList;
+              // OpenType font tags are stored in nsFont as 32-bit unsigned
+              // values, but represented in CSS as 4-character ASCII strings,
+              // beginning with the high byte of the value. So to clone the
+              // tag here, we append each of its 4 bytes to a string.
+              nsAutoString tagString;
+              tagString.Append(char(v.mTag >> 24));
+              tagString.Append(char(v.mTag >> 16));
+              tagString.Append(char(v.mTag >> 8));
+              tagString.Append(char(v.mTag));
+              clone->mXValue = nsCSSValue(tagString, eCSSUnit_String);
+              clone->mYValue = nsCSSValue(v.mValue, eCSSUnit_Number);
+              *resultTail = clone;
+              resultTail = &clone->mNext;
+            }
+            aComputedValue.SetAndAdoptCSSValuePairListValue(result.forget());
+          } else {
+            aComputedValue.SetNormalValue();
+          }
           break;
         }
 
