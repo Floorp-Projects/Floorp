@@ -330,6 +330,8 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
   // e.g removing !important, so we should update the cascading result.
   effectSet->MarkCascadeNeedsUpdate();
 
+  ClearBaseStyles(*aElement, aPseudoType);
+
   for (KeyframeEffectReadOnly* effect : *effectSet) {
     effect->UpdateProperties(aStyleContext);
   }
@@ -872,25 +874,55 @@ EffectCompositor::SetPerformanceWarning(
 /* static */ StyleAnimationValue
 EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
                                nsStyleContext* aStyleContext,
-                               dom::Element& aElement)
+                               dom::Element& aElement,
+                               CSSPseudoElementType aPseudoType)
 {
   MOZ_ASSERT(aStyleContext, "Need style context to resolve the base value");
   MOZ_ASSERT(!aStyleContext->StyleSource().IsServoComputedValues(),
              "Bug 1311257: Servo backend does not support the base value yet");
+
+  StyleAnimationValue result;
+
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(&aElement, aPseudoType);
+  if (!effectSet) {
+    return result;
+  }
+
+  // Check whether there is a cached style.
+  result = effectSet->GetBaseStyle(aProperty);
+  if (!result.IsNull()) {
+    return result;
+  }
 
   RefPtr<nsStyleContext> styleContextWithoutAnimation =
     aStyleContext->PresContext()->StyleSet()->AsGecko()->
       ResolveStyleWithoutAnimation(&aElement, aStyleContext,
                                    eRestyle_AllHintsWithAnimations);
 
-  StyleAnimationValue baseStyle;
-  DebugOnly<bool> result =
+  DebugOnly<bool> success =
     StyleAnimationValue::ExtractComputedValue(aProperty,
                                               styleContextWithoutAnimation,
-                                              baseStyle);
-  MOZ_ASSERT(result, "could not extract computed value");
+                                              result);
+  MOZ_ASSERT(success, "Should be able to extract computed animation value");
+  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
 
-  return baseStyle;
+  effectSet->PutBaseStyle(aProperty, result);
+
+  return result;
+}
+
+/* static */ void
+EffectCompositor::ClearBaseStyles(dom::Element& aElement,
+                                  CSSPseudoElementType aPseudoType)
+{
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(&aElement, aPseudoType);
+  if (!effectSet) {
+    return;
+  }
+
+  effectSet->ClearBaseStyles();
 }
 
 // ---------------------------------------------------------
