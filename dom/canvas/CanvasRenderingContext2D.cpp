@@ -4059,6 +4059,11 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     AdjustedTarget target(mCtx);
     RefPtr<gfxContext> thebes =
       gfxContext::CreatePreservingTransformOrNull(target);
+    if (!thebes) {
+      // If CreatePreservingTransformOrNull returns null, it will also have
+      // issued a gfxCriticalNote already, so here we'll just bail out.
+      return;
+    }
     gfxTextRun::DrawParams params(thebes);
 
     if (mState->StyleIsColor(style)) { // Color

@@ -1237,9 +1237,12 @@ exports.CSS_PROPERTIES = {
       "-moz-tab-size"
     ],
     "supports": [
+      6,
       7
     ],
     "values": [
+      "-moz-calc",
+      "calc",
       "inherit",
       "initial",
       "unset"
@@ -2906,6 +2909,7 @@ exports.CSS_PROPERTIES = {
       "font-variant-ligatures",
       "font-variant-numeric",
       "font-variant-position",
+      "font-variation-settings",
       "font-weight",
       "-moz-force-broken-image-icon",
       "grid-auto-columns",
