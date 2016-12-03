@@ -3410,7 +3410,7 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
     bool isExpression = pn->pn_funbox->isExprBody();
 
     RootedValue id(cx);
-    RootedAtom funcAtom(cx, func->name());
+    RootedAtom funcAtom(cx, func->explicitName());
     if (!optIdentifier(funcAtom, nullptr, &id))
         return false;
 

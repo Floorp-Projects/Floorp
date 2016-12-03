@@ -264,7 +264,7 @@ nsImageFrame::Init(nsIContent*       aContent,
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
   if (!imageLoader) {
-    NS_RUNTIMEABORT("Why do we have an nsImageFrame here at all?");
+    MOZ_CRASH("Why do we have an nsImageFrame here at all?");
   }
 
   imageLoader->AddObserver(mListener);

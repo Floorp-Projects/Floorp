@@ -10,15 +10,15 @@ const EXPECTED_REFLOWS = [
   // Loading a tab causes a reflow.
   "loadTabs@chrome://browser/content/tabbrowser.xml|" +
     "loadOneOrMoreURIs@chrome://browser/content/browser.js|" +
-    "gBrowserInit._delayedStartup@chrome://browser/content/browser.js|",
+    "_delayedStartup@chrome://browser/content/browser.js|",
 
   // Selecting the address bar causes a reflow.
   "select@chrome://global/content/bindings/textbox.xml|" +
     "focusAndSelectUrlBar@chrome://browser/content/browser.js|" +
-    "gBrowserInit._delayedStartup@chrome://browser/content/browser.js|",
+    "_delayedStartup@chrome://browser/content/browser.js|",
 
   // Focusing the content area causes a reflow.
-  "gBrowserInit._delayedStartup@chrome://browser/content/browser.js|",
+  "_delayedStartup@chrome://browser/content/browser.js|",
 
   // Sometimes sessionstore collects data during this test, which causes a sync reflow
   // (https://bugzilla.mozilla.org/show_bug.cgi?id=892154 will fix this)
@@ -29,23 +29,23 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
   // TabsInTitlebar._update causes a reflow on OS X and Windows trying to do calculations
   // since layout info is already dirty. This doesn't seem to happen before
   // MozAfterPaint on Linux.
-  EXPECTED_REFLOWS.push("TabsInTitlebar._update/rect@chrome://browser/content/browser-tabsintitlebar.js|" +
-                          "TabsInTitlebar._update@chrome://browser/content/browser-tabsintitlebar.js|" +
+  EXPECTED_REFLOWS.push("rect@chrome://browser/content/browser-tabsintitlebar.js|" +
+                          "_update@chrome://browser/content/browser-tabsintitlebar.js|" +
                           "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js|" +
                           "handleEvent@chrome://browser/content/tabbrowser.xml|");
 }
 
 if (Services.appinfo.OS == "Darwin") {
   // _onOverflow causes a reflow getting widths.
-  EXPECTED_REFLOWS.push("OverflowableToolbar.prototype._onOverflow@resource:///modules/CustomizableUI.jsm|" +
-                        "OverflowableToolbar.prototype.init@resource:///modules/CustomizableUI.jsm|" +
-                        "OverflowableToolbar.prototype.observe@resource:///modules/CustomizableUI.jsm|" +
-                        "gBrowserInit._delayedStartup@chrome://browser/content/browser.js|");
+  EXPECTED_REFLOWS.push("_onOverflow@resource:///modules/CustomizableUI.jsm|" +
+                        "init@resource:///modules/CustomizableUI.jsm|" +
+                        "observe@resource:///modules/CustomizableUI.jsm|" +
+                        "_delayedStartup@chrome://browser/content/browser.js|");
   // Same as above since in packaged builds there are no function names and the resource URI includes "app"
   EXPECTED_REFLOWS.push("@resource://app/modules/CustomizableUI.jsm|" +
                           "@resource://app/modules/CustomizableUI.jsm|" +
                           "@resource://app/modules/CustomizableUI.jsm|" +
-                          "gBrowserInit._delayedStartup@chrome://browser/content/browser.js|");
+                          "_delayedStartup@chrome://browser/content/browser.js|");
 }
 
 /*

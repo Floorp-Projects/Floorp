@@ -15,7 +15,7 @@ const EXPECTED_REQUESTS = [
     method: "GET",
     url: CAUSE_URL,
     causeType: "document",
-    causeUri: null,
+    causeUri: "",
     // The document load has internal privileged JS code on the stack
     stack: true
   },
@@ -103,11 +103,11 @@ add_task(function* () {
     let { method, url, causeType, causeUri, stack } = spec;
 
     let requestItem = RequestsMenu.getItemAtIndex(i);
-    verifyRequestItemTarget(RequestsMenu, requestItem,
+    verifyRequestItemTarget(requestItem,
       method, url, { cause: { type: causeType, loadingDocumentUri: causeUri } }
     );
 
-    let { stacktrace } = requestItem.cause;
+    let { stacktrace } = requestItem.attachment.cause;
     let stackLen = stacktrace ? stacktrace.length : 0;
 
     if (stack) {
@@ -137,7 +137,9 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-cause-button"));
   let expectedOrder = EXPECTED_REQUESTS.map(r => r.causeType).sort();
   expectedOrder.forEach((expectedCause, i) => {
-    const cause = RequestsMenu.getItemAtIndex(i).cause.type;
+    let { target } = RequestsMenu.getItemAtIndex(i);
+    let causeLabel = target.querySelector(".requests-menu-cause-label");
+    let cause = causeLabel.getAttribute("value");
     is(cause, expectedCause, `The request #${i} has the expected cause after sorting`);
   });
 

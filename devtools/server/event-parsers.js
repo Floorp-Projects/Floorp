@@ -105,44 +105,58 @@ var parsers = [
       return jQueryLiveGetListeners(node, false);
     },
     normalizeListener: function (handlerDO) {
-      let paths = [
-        [".event.proxy/", ".event.proxy/", "*"],
-        [".proxy/", "*"]
-      ];
+      function isFunctionInProxy(funcDO) {
+        // If the anonymous function is inside the |proxy| function and the
+        // function only has guessed atom, the guessed atom should starts with
+        // "proxy/".
+        let displayName = funcDO.displayName;
+        if (displayName && displayName.startsWith("proxy/")) {
+          return true;
+        }
 
-      let name = handlerDO.displayName;
+        // If the anonymous function is inside the |proxy| function and the
+        // function gets name at compile time by SetFunctionName, its guessed
+        // atom doesn't contain "proxy/".  In that case, check if the caller is
+        // "proxy" function, as a fallback.
+        let calleeDO = funcDO.environment.callee;
+        if (!calleeDO) {
+          return false;
+        }
+        let calleeName = calleeDO.displayName;
+        return calleeName == "proxy";
+      }
 
-      if (!name) {
+      function getFirstFunctionVariable(funcDO) {
+        // The handler function inside the |proxy| function should point the
+        // unwrapped function via environment variable.
+        let names = funcDO.environment.names();
+        for (let varName of names) {
+          let varDO = handlerDO.environment.getVariable(varName);
+          if (!varDO) {
+            continue;
+          }
+          if (varDO.class == "Function") {
+            return varDO;
+          }
+        }
+        return null;
+      }
+
+      if (!isFunctionInProxy(handlerDO)) {
         return handlerDO;
       }
 
-      for (let path of paths) {
-        if (name.includes(path[0])) {
-          path.splice(0, 1);
+      const MAX_NESTED_HANDLER_COUNT = 2;
+      for (let i = 0; i < MAX_NESTED_HANDLER_COUNT; i++) {
+        let funcDO = getFirstFunctionVariable(handlerDO);
+        if (!funcDO)
+          return handlerDO;
 
-          for (let point of path) {
-            let names = handlerDO.environment.names();
-
-            for (let varName of names) {
-              let temp = handlerDO.environment.getVariable(varName);
-              if (!temp) {
-                continue;
-              }
-
-              let displayName = temp.displayName;
-              if (!displayName) {
-                continue;
-              }
-
-              if (temp.class === "Function" &&
-                  (displayName.includes(point) || point === "*")) {
-                handlerDO = temp;
-                break;
-              }
-            }
-          }
-          break;
+        handlerDO = funcDO;
+        if (isFunctionInProxy(handlerDO)) {
+          continue;
         }
+        break;
       }
 
       return handlerDO;

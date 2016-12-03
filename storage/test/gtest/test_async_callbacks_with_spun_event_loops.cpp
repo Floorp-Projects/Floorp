@@ -63,7 +63,7 @@ public:
     sResult = true;
     spin_events_loop_until_true(&mCompleted);
     if (!sAlive) {
-      NS_RUNTIMEABORT("The statement callback was destroyed prematurely.");
+      MOZ_CRASH("The statement callback was destroyed prematurely.");
     }
     return NS_OK;
   }
@@ -73,7 +73,7 @@ public:
     sError = true;
     spin_events_loop_until_true(&mCompleted);
     if (!sAlive) {
-      NS_RUNTIMEABORT("The statement callback was destroyed prematurely.");
+      MOZ_CRASH("The statement callback was destroyed prematurely.");
     }
     return NS_OK;
   }

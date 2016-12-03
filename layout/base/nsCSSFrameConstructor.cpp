@@ -9100,7 +9100,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     newFrame = NS_NewDetailsFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
   } else {
-    NS_RUNTIMEABORT("unexpected frame type");
+    MOZ_CRASH("unexpected frame type");
   }
 
   // Init() set newFrame to be a fluid continuation of aFrame.

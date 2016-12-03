@@ -1966,7 +1966,7 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
 PColorPickerChild*
 TabChild::AllocPColorPickerChild(const nsString&, const nsString&)
 {
-  NS_RUNTIMEABORT("unused");
+  MOZ_CRASH("unused");
   return nullptr;
 }
 
@@ -1981,7 +1981,7 @@ TabChild::DeallocPColorPickerChild(PColorPickerChild* aColorPicker)
 PDatePickerChild*
 TabChild::AllocPDatePickerChild(const nsString&, const nsString&)
 {
-  NS_RUNTIMEABORT("unused");
+  MOZ_CRASH("unused");
   return nullptr;
 }
 
@@ -1996,7 +1996,7 @@ TabChild::DeallocPDatePickerChild(PDatePickerChild* aDatePicker)
 PFilePickerChild*
 TabChild::AllocPFilePickerChild(const nsString&, const int16_t&)
 {
-  NS_RUNTIMEABORT("unused");
+  MOZ_CRASH("unused");
   return nullptr;
 }
 

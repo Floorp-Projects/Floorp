@@ -31,19 +31,19 @@ add_task(function* () {
     multipartForm: RequestsMenu.getItemAtIndex(3)
   };
 
-  let data = yield createCurlData(requests.get, gNetwork);
+  let data = yield createCurlData(requests.get.attachment, gNetwork);
   testFindHeader(data);
 
-  data = yield createCurlData(requests.post, gNetwork);
+  data = yield createCurlData(requests.post.attachment, gNetwork);
   testIsUrlEncodedRequest(data);
   testWritePostDataTextParams(data);
 
-  data = yield createCurlData(requests.multipart, gNetwork);
+  data = yield createCurlData(requests.multipart.attachment, gNetwork);
   testIsMultipartRequest(data);
   testGetMultipartBoundary(data);
   testRemoveBinaryDataFromMultipartText(data);
 
-  data = yield createCurlData(requests.multipartForm, gNetwork);
+  data = yield createCurlData(requests.multipartForm.attachment, gNetwork);
   testGetHeadersFromMultipartText(data);
 
   if (Services.appinfo.OS != "WINNT") {

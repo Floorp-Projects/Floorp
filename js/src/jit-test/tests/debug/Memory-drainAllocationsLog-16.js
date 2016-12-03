@@ -24,7 +24,7 @@ root.eval(
   this.tests = [
     { name: "Ctor",                     fn: () => new Ctor             },
     { name: "nested.Ctor",              fn: () => new nested.Ctor      },
-    { name: "makeInstance/LexicalCtor", fn: () => makeInstance()       },
+    { name: "LexicalCtor",              fn: () => makeInstance()       },
     { name: null,                       fn: () => ({})                 },
     { name: null,                       fn: () => (nested.object = {}) },
     { name: null,                       fn: () => makeObject()         },

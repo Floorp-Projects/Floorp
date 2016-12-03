@@ -89,7 +89,7 @@ BrowserStreamChild::RecvWrite(const int32_t& offset,
   AssertPluginThread();
 
   if (ALIVE != mState)
-    NS_RUNTIMEABORT("Unexpected state: received data after NPP_DestroyStream?");
+    MOZ_CRASH("Unexpected state: received data after NPP_DestroyStream?");
 
   if (kStreamOpen != mStreamStatus)
     return IPC_OK();
@@ -116,7 +116,7 @@ BrowserStreamChild::RecvNPP_StreamAsFile(const nsCString& fname)
   AssertPluginThread();
 
   if (ALIVE != mState)
-    NS_RUNTIMEABORT("Unexpected state: received file after NPP_DestroyStream?");
+    MOZ_CRASH("Unexpected state: received file after NPP_DestroyStream?");
 
   if (kStreamOpen != mStreamStatus)
     return IPC_OK();
@@ -134,7 +134,7 @@ BrowserStreamChild::RecvNPP_DestroyStream(const NPReason& reason)
   PLUGIN_LOG_DEBUG_METHOD;
 
   if (ALIVE != mState)
-    NS_RUNTIMEABORT("Unexpected state: recevied NPP_DestroyStream twice?");
+    MOZ_CRASH("Unexpected state: recevied NPP_DestroyStream twice?");
 
   mState = DYING;
   mDestroyPending = DESTROY_PENDING;
@@ -151,7 +151,7 @@ BrowserStreamChild::Recv__delete__()
   AssertPluginThread();
 
   if (DELETING != mState)
-    NS_RUNTIMEABORT("Bad state, not DELETING");
+    MOZ_CRASH("Bad state, not DELETING");
 
   return IPC_OK();
 }
@@ -226,7 +226,7 @@ BrowserStreamChild::Deliver()
   if (DESTROY_PENDING == mDestroyPending) {
     mDestroyPending = DESTROYED;
     if (mState != DYING)
-      NS_RUNTIMEABORT("mDestroyPending but state not DYING");
+      MOZ_CRASH("mDestroyPending but state not DYING");
 
     NS_ASSERTION(NPRES_DONE != mStreamStatus, "Success status set too early!");
     if (kStreamOpen == mStreamStatus)
@@ -254,7 +254,7 @@ bool
 BrowserStreamChild::DeliverPendingData()
 {
   if (mState != ALIVE && mState != DYING)
-    NS_RUNTIMEABORT("Unexpected state");
+    MOZ_CRASH("Unexpected state");
 
   NS_ASSERTION(mPendingData.Length(), "Called from Deliver with empty pending");
 

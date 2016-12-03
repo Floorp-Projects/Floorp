@@ -269,10 +269,10 @@ struct ParamTraits<base::FileDescriptor>
 {
   typedef base::FileDescriptor paramType;
   static void Write(Message* aMsg, const paramType& aParam) {
-    NS_RUNTIMEABORT("FileDescriptor isn't meaningful on this platform");
+    MOZ_CRASH("FileDescriptor isn't meaningful on this platform");
   }
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
-    NS_RUNTIMEABORT("FileDescriptor isn't meaningful on this platform");
+    MOZ_CRASH("FileDescriptor isn't meaningful on this platform");
     return false;
   }
 };

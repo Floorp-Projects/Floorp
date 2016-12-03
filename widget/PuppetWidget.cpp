@@ -326,7 +326,8 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
              "Unexpected event dispatch!");
 
   AutoCacheNativeKeyCommands autoCache(this);
-  if (event->mFlags.mIsSynthesizedForTests && !mNativeKeyCommandsValid) {
+  if ((event->mFlags.mIsSynthesizedForTests ||
+       event->mFlags.mIsSuppressedOrDelayed) && !mNativeKeyCommandsValid) {
     WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent();
     if (keyEvent) {
       mTabChild->RequestNativeKeyBindings(&autoCache, keyEvent);

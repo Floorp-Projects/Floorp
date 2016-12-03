@@ -187,7 +187,7 @@ namespace WebAudioUtils {
     if (mozilla::IsNaN(f)) {
       // It is the responsibility of the caller to deal with NaN values.
       // If we ever get to this point, we have a serious bug to fix.
-      NS_RUNTIMEABORT("We should never see a NaN here");
+      MOZ_CRASH("We should never see a NaN here");
     }
 
     if (f > FloatType(numeric_limits<IntType>::max())) {

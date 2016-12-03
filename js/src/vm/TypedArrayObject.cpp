@@ -2797,7 +2797,7 @@ bool
 DataViewObject::defineGetter(JSContext* cx, PropertyName* name, HandleNativeObject proto)
 {
     RootedId id(cx, NameToId(name));
-    RootedAtom atom(cx, IdToFunctionName(cx, id, "get"));
+    RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Get));
     if (!atom)
         return false;
     unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;

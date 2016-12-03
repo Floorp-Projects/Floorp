@@ -190,4 +190,28 @@ prepopulated_cache_test(simple_entries, function(cache, entries) {
         });
   }, 'Cache.match with a network error Response');
 
+cache_test(function(cache) {
+    // This test validates that we can get a Response from the Cache API,
+    // clone it, and read just one side of the clone.  This was previously
+    // bugged in FF for Responses with large bodies.
+    var data = [];
+    data.length = 80 * 1024;
+    data.fill('F');
+    var response;
+    return cache.put('/', new Response(data.toString()))
+      .then(function(result) {
+          return cache.match('/');
+        })
+      .then(function(r) {
+          // Make sure the original response is not GC'd.
+          response = r;
+          // Return only the clone.  We purposefully test that the other
+          // half of the clone does not need to be read here.
+          return response.clone().text();
+        })
+      .then(function(text) {
+          assert_equals(text, data.toString(), 'cloned body text can be read correctly');
+        })
+  }, 'Cache produces large Responses that can be cloned and read correctly.');
+
 done();
