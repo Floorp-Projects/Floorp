@@ -101,7 +101,7 @@ KeyframeEffectReadOnly::IterationComposite() const
 CompositeOperation
 KeyframeEffectReadOnly::Composite() const
 {
-  return CompositeOperation::Replace;
+  return mEffectOptions.mComposite;
 }
 
 void
@@ -583,6 +583,10 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
     // then the default value 'Replace' will be used.
     if (AnimationUtils::IsCoreAPIEnabledForCaller()) {
       result.mIterationComposite = options.mIterationComposite;
+      // FIXME: Bug 1311620: We don't support additive animation yet.
+      if (options.mComposite != dom::CompositeOperation::Add) {
+        result.mComposite = options.mComposite;
+      }
     }
   }
   return result;

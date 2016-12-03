@@ -86,6 +86,24 @@ promise_test(t => {
   });
 }, 'Composite when mixing accumulate and replace');
 
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+  div.animate([{ transform: 'translateX(100px)', composite: 'replace' },
+               { transform: 'translateX(300px)' }],
+              { duration: 100 * MS_PER_SEC, composite: 'accumulate' });
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 250, 0)',
+      'Transform value at 50%');
+  });
+}, 'Composite specified on a keyframe overrides the composite mode of the ' +
+   'effect');
+
 done();
 </script>
 </body>
