@@ -12,7 +12,6 @@ pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
 pref("security.ssl.require_safe_negotiation",  false);
 pref("security.ssl.enable_ocsp_stapling", true);
 pref("security.ssl.enable_false_start", true);
-pref("security.ssl.false_start.require-npn", false);
 pref("security.ssl.enable_alpn", true);
 
 pref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", true);
