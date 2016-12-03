@@ -383,15 +383,10 @@ AllChildrenIterator::AppendNativeAnonymousChildren()
 
   // The root scroll frame is not the primary frame of the root element.
   // Detect and handle this case.
-  //
-  // XXXheycam This probably needs to find the nsCanvasFrame's NAC too.
   if (!(mFlags & nsIContent::eSkipDocumentLevelNativeAnonymousContent) &&
       mOriginalContent == mOriginalContent->OwnerDoc()->GetRootElement()) {
-    nsIPresShell* presShell = mOriginalContent->OwnerDoc()->GetShell();
-    nsIFrame* scrollFrame = presShell ? presShell->GetRootScrollFrame() : nullptr;
-    if (scrollFrame) {
-      AppendNativeAnonymousChildrenFromFrame(scrollFrame);
-    }
+    nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
+        mOriginalContent->OwnerDoc(), mAnonKids);
   }
 }
 
