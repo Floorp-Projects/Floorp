@@ -40,7 +40,7 @@ assertName(Foo, 'Foo</<');
 
 /* various properties and such */
 var x = {fox: { bax: function(){} } };
-assertName(x.fox.bax, 'x.fox.bax');
+assertName(x.fox.bax, 'bax');
 var foo = {foo: {foo: {}}};
 foo.foo.foo = function(){};
 assertName(foo.foo.foo, 'foo.foo.foo');
@@ -48,20 +48,20 @@ var z = {
     foz: function() {
              var baz = function() {
                  var y = {bay: function() {}};
-                 assertName(y.bay, 'z.foz/baz/y.bay');
+                 assertName(y.bay, 'bay');
              };
-             assertName(baz, 'z.foz/baz');
+             assertName(baz, 'baz');
              baz();
          }
 };
-assertName(z.foz, 'z.foz');
+assertName(z.foz, 'foz');
 z.foz();
 
 var outer = function() {
     x.fox.bax.nx = function(){};
     var w = {fow: { baw: function(){} } };
     assertName(x.fox.bax.nx, 'outer/x.fox.bax.nx')
-    assertName(w.fow.baw, 'outer/w.fow.baw');
+    assertName(w.fow.baw, 'baw');
 };
 assertName(outer, 'outer');
 outer();
@@ -69,7 +69,7 @@ function Fuz(){};
 Fuz.prototype = {
   add: function() {}
 }
-assertName(Fuz.prototype.add, 'Fuz.prototype.add');
+assertName(Fuz.prototype.add, 'add');
 
 var x = 1;
 x = function(){};
@@ -94,7 +94,7 @@ a.b = function() {
     assertName(arguments.callee, 'a.b<');
     return { a: function() {} }
 }();
-assertName(a.b.a, 'a.b</<.a');
+assertName(a.b.a, 'a');
 
 a = {
     b: function(a) {
@@ -104,9 +104,9 @@ a = {
             return function() {};
     }
 };
-assertName(a.b, 'a.b');
-assertName(a.b(true), 'a.b/<')
-assertName(a.b(false), 'a.b/<')
+assertName(a.b, 'b');
+assertName(a.b(true), 'b/<')
+assertName(a.b(false), 'b/<')
 
 function f(g) {
     assertName(g, 'x<');
@@ -116,7 +116,7 @@ var x = f(function () { return function() {}; });
 assertName(x, 'x</<');
 
 var a = {'b': function(){}};
-assertName(a.b, 'a.b');
+assertName(a.b, 'b');
 
 function g(f) {
   assertName(f, '');
@@ -138,15 +138,15 @@ a = {
   "\"\'quotes\'\"": function(){},
   "!@#$%": function(){}
 };
-assertName(a["embedded spaces"], 'a["embedded spaces"]');
-assertName(a["dots.look.like.property.references"], 'a["dots.look.like.property.references"]');
-assertName(a["\"\'quotes\'\""], 'a["\\\"\'quotes\'\\\""]');
-assertName(a["!@#$%"], 'a["!@#$%"]');
+assertName(a["embedded spaces"], 'embedded spaces');
+assertName(a["dots.look.like.property.references"], 'dots.look.like.property.references');
+assertName(a["\"\'quotes\'\""], '"\'quotes\'"');
+assertName(a["!@#$%"], '!@#$%');
 
 a.b = {};
 a.b.c = {};
 a.b["c"]["d e"] = { f: { 1: { "g": { "h i": function() {} } } } };
-assertName(a.b.c["d e"].f[1].g["h i"], 'a.b.c["d e"].f[1].g["h i"]');
+assertName(a.b.c["d e"].f[1].g["h i"], 'h i');
 
 this.m = function () {};
 assertName(m, "this.m");

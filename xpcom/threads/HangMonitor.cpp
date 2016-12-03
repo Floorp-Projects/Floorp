@@ -120,7 +120,7 @@ Crash()
   }
 #endif
 
-  NS_RUNTIMEABORT("HangMonitor triggered");
+  MOZ_CRASH("HangMonitor triggered");
 }
 
 #ifdef REPORT_CHROME_HANGS

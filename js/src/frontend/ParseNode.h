@@ -450,6 +450,9 @@ class ParseNode
     uint8_t pn_op;      /* see JSOp enum and jsopcode.tbl */
     uint8_t pn_arity:4; /* see ParseNodeArity enum */
     bool pn_parens:1;   /* this expr was enclosed in parens */
+    bool pn_rhs_anon_fun:1;  /* this expr is anonymous function or class that
+                              * is a direct RHS of PNK_ASSIGN or PNK_COLON of
+                              * property, that needs SetFunctionName. */
 
     ParseNode(const ParseNode& other) = delete;
     void operator=(const ParseNode& other) = delete;
@@ -460,6 +463,7 @@ class ParseNode
         pn_op(op),
         pn_arity(arity),
         pn_parens(false),
+        pn_rhs_anon_fun(false),
         pn_pos(0, 0),
         pn_next(nullptr)
     {
@@ -472,6 +476,7 @@ class ParseNode
         pn_op(op),
         pn_arity(arity),
         pn_parens(false),
+        pn_rhs_anon_fun(false),
         pn_pos(pos),
         pn_next(nullptr)
     {
@@ -511,6 +516,13 @@ class ParseNode
     bool isInParens() const                { return pn_parens; }
     bool isLikelyIIFE() const              { return isInParens(); }
     void setInParens(bool enabled)         { pn_parens = enabled; }
+
+    bool isDirectRHSAnonFunction() const {
+        return pn_rhs_anon_fun;
+    }
+    void setDirectRHSAnonFunction(bool enabled) {
+        pn_rhs_anon_fun = enabled;
+    }
 
     TokenPos            pn_pos;         /* two 16-bit pairs here, for 64 bits */
     ParseNode*          pn_next;        /* intrinsic link in parent PN_LIST */
@@ -1447,6 +1459,9 @@ FunctionFormalParametersList(ParseNode* fn, unsigned* numFormals)
     MOZ_ASSERT(argsBody->isArity(PN_LIST));
     return argsBody->pn_head;
 }
+
+bool
+IsAnonymousFunctionDefinition(ParseNode* pn);
 
 } /* namespace frontend */
 } /* namespace js */

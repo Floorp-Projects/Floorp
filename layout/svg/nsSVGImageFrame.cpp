@@ -165,7 +165,7 @@ nsSVGImageFrame::Init(nsIContent*       aContent,
   mListener = new nsSVGImageListener(this);
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
-    NS_RUNTIMEABORT("Why is this not an image loading content?");
+    MOZ_CRASH("Why is this not an image loading content?");
   }
 
   // We should have a PresContext now, so let's notify our image loader that

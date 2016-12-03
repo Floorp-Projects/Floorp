@@ -1,0 +1,15 @@
+[package]
+name = "gkrust"
+version = "0.1.0"
+authors = [
+  "Nobody <nobody@mozilla.org>",
+]
+
+[lib]
+crate-type = ["staticlib"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

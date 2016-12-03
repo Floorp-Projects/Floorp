@@ -1202,7 +1202,9 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_rust_library(self, libdef, backend_file):
         backend_file.write_once('RUST_LIBRARY_FILE := %s\n' % libdef.import_name)
-        backend_file.write('CARGO_FILE := $(srcdir)/Cargo.toml')
+        backend_file.write('CARGO_FILE := $(srcdir)/Cargo.toml\n')
+        if libdef.features:
+            backend_file.write('RUST_LIBRARY_FEATURES := %s\n' % ' '.join(libdef.features))
 
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)

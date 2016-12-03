@@ -151,13 +151,13 @@ LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
   } while (GetLastError() == ERROR_FILE_EXISTS);
 
   if (hFile == INVALID_HANDLE_VALUE) {
-    NS_RUNTIMEABORT("Um, how did we get here?");
+    MOZ_CRASH("Um, how did we get here?");
   }
 
   // http://support.microsoft.com/kb/139640
   int fd = _open_osfhandle((intptr_t)hFile, _O_APPEND);
   if (fd == -1) {
-    NS_RUNTIMEABORT("Um, how did we get here?");
+    MOZ_CRASH("Um, how did we get here?");
   }
 
   stream = _fdopen(fd, "w");

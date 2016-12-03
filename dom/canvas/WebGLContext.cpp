@@ -1288,8 +1288,7 @@ WebGLContext::UpdateLastUseIndex()
     // should never happen with 64-bit; trying to handle this would be riskier than
     // not handling it as the handler code would never get exercised.
     if (!sIndex.isValid())
-        NS_RUNTIMEABORT("Can't believe it's been 2^64 transactions already!");
-
+        MOZ_CRASH("Can't believe it's been 2^64 transactions already!");
     mLastUseIndex = sIndex.value();
 }
 

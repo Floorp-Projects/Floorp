@@ -32,63 +32,69 @@ function test() {
 
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      is(typeof requestItem.id, "string",
+      is(typeof requestItem.value, "string",
         "The attached request id is incorrect.");
-      isnot(requestItem.id, "",
+      isnot(requestItem.value, "",
         "The attached request id should not be empty.");
 
-      is(typeof requestItem.startedMillis, "number",
+      is(typeof requestItem.attachment.startedDeltaMillis, "number",
+        "The attached startedDeltaMillis is incorrect.");
+      is(requestItem.attachment.startedDeltaMillis, 0,
+        "The attached startedDeltaMillis should be zero.");
+
+      is(typeof requestItem.attachment.startedMillis, "number",
         "The attached startedMillis is incorrect.");
-      isnot(requestItem.startedMillis, 0,
+      isnot(requestItem.attachment.startedMillis, 0,
         "The attached startedMillis should not be zero.");
 
-      is(requestItem.requestHeaders, undefined,
+      is(requestItem.attachment.requestHeaders, undefined,
         "The requestHeaders should not yet be set.");
-      is(requestItem.requestCookies, undefined,
+      is(requestItem.attachment.requestCookies, undefined,
         "The requestCookies should not yet be set.");
-      is(requestItem.requestPostData, undefined,
+      is(requestItem.attachment.requestPostData, undefined,
         "The requestPostData should not yet be set.");
 
-      is(requestItem.responseHeaders, undefined,
+      is(requestItem.attachment.responseHeaders, undefined,
         "The responseHeaders should not yet be set.");
-      is(requestItem.responseCookies, undefined,
+      is(requestItem.attachment.responseCookies, undefined,
         "The responseCookies should not yet be set.");
 
-      is(requestItem.httpVersion, undefined,
+      is(requestItem.attachment.httpVersion, undefined,
         "The httpVersion should not yet be set.");
-      is(requestItem.status, undefined,
+      is(requestItem.attachment.status, undefined,
         "The status should not yet be set.");
-      is(requestItem.statusText, undefined,
+      is(requestItem.attachment.statusText, undefined,
         "The statusText should not yet be set.");
 
-      is(requestItem.headersSize, undefined,
+      is(requestItem.attachment.headersSize, undefined,
         "The headersSize should not yet be set.");
-      is(requestItem.transferredSize, undefined,
+      is(requestItem.attachment.transferredSize, undefined,
         "The transferredSize should not yet be set.");
-      is(requestItem.contentSize, undefined,
+      is(requestItem.attachment.contentSize, undefined,
         "The contentSize should not yet be set.");
 
-      is(requestItem.mimeType, undefined,
+      is(requestItem.attachment.mimeType, undefined,
         "The mimeType should not yet be set.");
-      is(requestItem.responseContent, undefined,
+      is(requestItem.attachment.responseContent, undefined,
         "The responseContent should not yet be set.");
 
-      is(requestItem.totalTime, undefined,
+      is(requestItem.attachment.totalTime, undefined,
         "The totalTime should not yet be set.");
-      is(requestItem.eventTimings, undefined,
+      is(requestItem.attachment.eventTimings, undefined,
         "The eventTimings should not yet be set.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
     monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_HEADERS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
-      ok(requestItem.requestHeaders,
-        "There should be a requestHeaders data available.");
-      is(requestItem.requestHeaders.headers.length, 10,
-        "The requestHeaders data has an incorrect |headers| property.");
-      isnot(requestItem.requestHeaders.headersSize, 0,
-        "The requestHeaders data has an incorrect |headersSize| property.");
+
+      ok(requestItem.attachment.requestHeaders,
+        "There should be a requestHeaders attachment available.");
+      is(requestItem.attachment.requestHeaders.headers.length, 9,
+        "The requestHeaders attachment has an incorrect |headers| property.");
+      isnot(requestItem.attachment.requestHeaders.headersSize, 0,
+        "The requestHeaders attachment has an incorrect |headersSize| property.");
       // Can't test for the exact request headers size because the value may
       // vary across platforms ("User-Agent" header differs).
 
@@ -98,12 +104,12 @@ function test() {
     monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_COOKIES, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      ok(requestItem.requestCookies,
-        "There should be a requestCookies data available.");
-      is(requestItem.requestCookies.cookies.length, 2,
-        "The requestCookies data has an incorrect |cookies| property.");
+      ok(requestItem.attachment.requestCookies,
+        "There should be a requestCookies attachment available.");
+      is(requestItem.attachment.requestCookies.cookies.length, 2,
+        "The requestCookies attachment has an incorrect |cookies| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
     monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
@@ -113,40 +119,40 @@ function test() {
     monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_HEADERS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      ok(requestItem.responseHeaders,
-        "There should be a responseHeaders data available.");
-      is(requestItem.responseHeaders.headers.length, 10,
-        "The responseHeaders data has an incorrect |headers| property.");
-      is(requestItem.responseHeaders.headersSize, 330,
-        "The responseHeaders data has an incorrect |headersSize| property.");
+      ok(requestItem.attachment.responseHeaders,
+        "There should be a responseHeaders attachment available.");
+      is(requestItem.attachment.responseHeaders.headers.length, 10,
+        "The responseHeaders attachment has an incorrect |headers| property.");
+      is(requestItem.attachment.responseHeaders.headersSize, 330,
+        "The responseHeaders attachment has an incorrect |headersSize| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
     monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_COOKIES, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      ok(requestItem.responseCookies,
-        "There should be a responseCookies data available.");
-      is(requestItem.responseCookies.cookies.length, 2,
-        "The responseCookies data has an incorrect |cookies| property.");
+      ok(requestItem.attachment.responseCookies,
+        "There should be a responseCookies attachment available.");
+      is(requestItem.attachment.responseCookies.cookies.length, 2,
+        "The responseCookies attachment has an incorrect |cookies| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
     monitor.panelWin.once(monitor.panelWin.EVENTS.STARTED_RECEIVING_RESPONSE, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      is(requestItem.httpVersion, "HTTP/1.1",
-        "The httpVersion data has an incorrect value.");
-      is(requestItem.status, "200",
-        "The status data has an incorrect value.");
-      is(requestItem.statusText, "Och Aye",
-        "The statusText data has an incorrect value.");
-      is(requestItem.headersSize, 330,
-        "The headersSize data has an incorrect value.");
+      is(requestItem.attachment.httpVersion, "HTTP/1.1",
+        "The httpVersion attachment has an incorrect value.");
+      is(requestItem.attachment.status, "200",
+        "The status attachment has an incorrect value.");
+      is(requestItem.attachment.statusText, "Och Aye",
+        "The statusText attachment has an incorrect value.");
+      is(requestItem.attachment.headersSize, 330,
+        "The headersSize attachment has an incorrect value.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         status: "200",
         statusText: "Och Aye"
       });
@@ -155,53 +161,58 @@ function test() {
     monitor.panelWin.once(monitor.panelWin.EVENTS.UPDATING_RESPONSE_CONTENT, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      is(requestItem.transferredSize, "12",
-        "The transferredSize data has an incorrect value.");
-      is(requestItem.contentSize, "12",
-        "The contentSize data has an incorrect value.");
-      is(requestItem.mimeType, "text/plain; charset=utf-8",
-        "The mimeType data has an incorrect value.");
+      is(requestItem.attachment.transferredSize, "12",
+        "The transferredSize attachment has an incorrect value.");
+      is(requestItem.attachment.contentSize, "12",
+        "The contentSize attachment has an incorrect value.");
+      is(requestItem.attachment.mimeType, "text/plain; charset=utf-8",
+        "The mimeType attachment has an incorrect value.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
       });
     });
 
     monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      ok(requestItem.responseContent,
-        "There should be a responseContent data available.");
-      is(requestItem.responseContent.content.mimeType,
+      ok(requestItem.attachment.responseContent,
+        "There should be a responseContent attachment available.");
+      is(requestItem.attachment.responseContent.content.mimeType,
         "text/plain; charset=utf-8",
-        "The responseContent data has an incorrect |content.mimeType| property.");
-      is(requestItem.responseContent.content.text,
+        "The responseContent attachment has an incorrect |content.mimeType| property.");
+      is(requestItem.attachment.responseContent.content.text,
         "Hello world!",
-        "The responseContent data has an incorrect |content.text| property.");
-      is(requestItem.responseContent.content.size,
+        "The responseContent attachment has an incorrect |content.text| property.");
+      is(requestItem.attachment.responseContent.content.size,
         12,
-        "The responseContent data has an incorrect |content.size| property.");
+        "The responseContent attachment has an incorrect |content.size| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
       });
     });
 
     monitor.panelWin.once(monitor.panelWin.EVENTS.UPDATING_EVENT_TIMINGS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      is(typeof requestItem.totalTime, "number",
+      is(typeof requestItem.attachment.totalTime, "number",
         "The attached totalTime is incorrect.");
-      ok(requestItem.totalTime >= 0,
+      ok(requestItem.attachment.totalTime >= 0,
         "The attached totalTime should be positive.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
+      is(typeof requestItem.attachment.endedMillis, "number",
+        "The attached endedMillis is incorrect.");
+      ok(requestItem.attachment.endedMillis >= 0,
+        "The attached endedMillis should be positive.");
+
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         time: true
       });
     });
@@ -209,24 +220,24 @@ function test() {
     monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_EVENT_TIMINGS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
-      ok(requestItem.eventTimings,
-        "There should be a eventTimings data available.");
-      is(typeof requestItem.eventTimings.timings.blocked, "number",
-        "The eventTimings data has an incorrect |timings.blocked| property.");
-      is(typeof requestItem.eventTimings.timings.dns, "number",
-        "The eventTimings data has an incorrect |timings.dns| property.");
-      is(typeof requestItem.eventTimings.timings.connect, "number",
-        "The eventTimings data has an incorrect |timings.connect| property.");
-      is(typeof requestItem.eventTimings.timings.send, "number",
-        "The eventTimings data has an incorrect |timings.send| property.");
-      is(typeof requestItem.eventTimings.timings.wait, "number",
-        "The eventTimings data has an incorrect |timings.wait| property.");
-      is(typeof requestItem.eventTimings.timings.receive, "number",
-        "The eventTimings data has an incorrect |timings.receive| property.");
-      is(typeof requestItem.eventTimings.totalTime, "number",
-        "The eventTimings data has an incorrect |totalTime| property.");
+      ok(requestItem.attachment.eventTimings,
+        "There should be a eventTimings attachment available.");
+      is(typeof requestItem.attachment.eventTimings.timings.blocked, "number",
+        "The eventTimings attachment has an incorrect |timings.blocked| property.");
+      is(typeof requestItem.attachment.eventTimings.timings.dns, "number",
+        "The eventTimings attachment has an incorrect |timings.dns| property.");
+      is(typeof requestItem.attachment.eventTimings.timings.connect, "number",
+        "The eventTimings attachment has an incorrect |timings.connect| property.");
+      is(typeof requestItem.attachment.eventTimings.timings.send, "number",
+        "The eventTimings attachment has an incorrect |timings.send| property.");
+      is(typeof requestItem.attachment.eventTimings.timings.wait, "number",
+        "The eventTimings attachment has an incorrect |timings.wait| property.");
+      is(typeof requestItem.attachment.eventTimings.timings.receive, "number",
+        "The eventTimings attachment has an incorrect |timings.receive| property.");
+      is(typeof requestItem.attachment.eventTimings.totalTime, "number",
+        "The eventTimings attachment has an incorrect |totalTime| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
+      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         time: true
       });
     });

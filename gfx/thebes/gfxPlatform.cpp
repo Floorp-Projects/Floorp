@@ -603,7 +603,7 @@ gfxPlatform::Init()
     MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
 
     if (gEverInitialized) {
-        NS_RUNTIMEABORT("Already started???");
+        MOZ_CRASH("Already started???");
     }
     gEverInitialized = true;
 
@@ -719,7 +719,7 @@ gfxPlatform::Init()
     if (usePlatformFontList) {
         rv = gfxPlatformFontList::Init();
         if (NS_FAILED(rv)) {
-            NS_RUNTIMEABORT("Could not initialize gfxPlatformFontList");
+            MOZ_CRASH("Could not initialize gfxPlatformFontList");
         }
     }
 
@@ -727,7 +727,7 @@ gfxPlatform::Init()
         gPlatform->CreateOffscreenSurface(IntSize(1, 1),
                                           SurfaceFormat::A8R8G8B8_UINT32);
     if (!gPlatform->mScreenReferenceSurface) {
-        NS_RUNTIMEABORT("Could not initialize mScreenReferenceSurface");
+        MOZ_CRASH("Could not initialize mScreenReferenceSurface");
     }
 
     gPlatform->mScreenReferenceDrawTarget =
@@ -735,12 +735,12 @@ gfxPlatform::Init()
                                                     SurfaceFormat::B8G8R8A8);
     if (!gPlatform->mScreenReferenceDrawTarget ||
         !gPlatform->mScreenReferenceDrawTarget->IsValid()) {
-      NS_RUNTIMEABORT("Could not initialize mScreenReferenceDrawTarget");
+      MOZ_CRASH("Could not initialize mScreenReferenceDrawTarget");
     }
 
     rv = gfxFontCache::Init();
     if (NS_FAILED(rv)) {
-        NS_RUNTIMEABORT("Could not initialize gfxFontCache");
+        MOZ_CRASH("Could not initialize gfxFontCache");
     }
 
     /* Create and register our CMS Override observer. */
@@ -771,7 +771,7 @@ gfxPlatform::Init()
     // Request the imgITools service, implicitly initializing ImageLib.
     nsCOMPtr<imgITools> imgTools = do_GetService("@mozilla.org/image/tools;1");
     if (!imgTools) {
-      NS_RUNTIMEABORT("Could not initialize ImageLib");
+      MOZ_CRASH("Could not initialize ImageLib");
     }
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
@@ -2472,8 +2472,8 @@ gfxPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends
       tell_me_once = 1;
     }
 #ifdef MOZ_WIDGET_ANDROID
-    NS_RUNTIMEABORT("OpenGL-accelerated layers are a hard requirement on this platform. "
-                    "Cannot continue without support for them");
+    MOZ_CRASH("OpenGL-accelerated layers are a hard requirement on this platform. "
+              "Cannot continue without support for them");
 #endif
   }
 }

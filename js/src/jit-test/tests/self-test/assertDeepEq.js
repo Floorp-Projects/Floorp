@@ -77,7 +77,8 @@ assertDeepEq(q, p);
 assertNotDeepEq(() => 1, () => 2);
 assertNotDeepEq((...x) => 1, x => 1);
 assertNotDeepEq(function f(){}, function g(){});
-var f1 = function () {}, f2 = function () {};
+// Avoid setting name property.
+var [f1, f2] = [function () {}, function () {}];
 assertDeepEq(f1, f1);
 assertDeepEq(f1, f2);  // same text, close enough
 f1.prop = 1;

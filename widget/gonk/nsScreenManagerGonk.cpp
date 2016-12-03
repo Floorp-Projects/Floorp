@@ -139,7 +139,7 @@ nsScreenGonk::nsScreenGonk(uint32_t aId,
     if (mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_WIDTH, &mVirtualBounds.width) ||
         mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_HEIGHT, &mVirtualBounds.height) ||
         mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_FORMAT, &mSurfaceFormat)) {
-        NS_RUNTIMEABORT("Failed to get native window size, aborting...");
+        MOZ_CRASH("Failed to get native window size, aborting...");
     }
 
     mNaturalBounds = mVirtualBounds;

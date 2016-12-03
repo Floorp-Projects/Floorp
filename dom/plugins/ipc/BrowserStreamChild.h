@@ -45,12 +45,12 @@ public:
   void EnsureCorrectInstance(PluginInstanceChild* i)
   {
     if (i != mInstance)
-      NS_RUNTIMEABORT("Incorrect stream instance");
+      MOZ_CRASH("Incorrect stream instance");
   }
   void EnsureCorrectStream(NPStream* s)
   {
     if (s != &mStream)
-      NS_RUNTIMEABORT("Incorrect stream data");
+      MOZ_CRASH("Incorrect stream data");
   }
 
   NPError NPN_RequestRead(NPByteRange* aRangeList);

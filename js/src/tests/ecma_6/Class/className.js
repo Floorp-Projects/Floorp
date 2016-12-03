@@ -174,27 +174,29 @@ testName(ExtendedExpr3, "base", false, false, false);
 
 // Anonymous class expressions don't get name properties unless specified in a
 // static manner.
-let Anon = class {
+// Use property assignment to avoid setting name property.
+let tmp = {};
+let Anon = tmp.value = class {
     constructor() {}
 };
 testName(Anon, "", false, false, false);
 
-let AnonDefault = class { };
+let AnonDefault = tmp.value = class { };
 testName(AnonDefault, "", false, false, false);
 
-let AnonWithGetter = class {
+let AnonWithGetter = tmp.value = class {
     constructor() {}
     static get name() { return "base"; }
 };
 testName(AnonWithGetter, "base", false, true, false);
 
-let AnonWithSetter = class {
+let AnonWithSetter = tmp.value = class {
     constructor() {}
     static set name(v) {}
 };
 testName(AnonWithSetter, undefined, false, false, true);
 
-let AnonWithGetterSetter = class {
+let AnonWithGetterSetter = tmp.value = class {
     constructor() {}
     static get name() { return "base"; }
     static set name(v) {}
@@ -202,15 +204,15 @@ let AnonWithGetterSetter = class {
 testName(AnonWithGetterSetter, "base", false, true, true);
 
 
-let ExtendedAnon1 = class extends Anon {
+let ExtendedAnon1 = tmp.value = class extends Anon {
     constructor() {}
 };
 testName(ExtendedAnon1, "", false, false, false);
 
-let ExtendedAnonDefault = class extends Anon { };
+let ExtendedAnonDefault = tmp.value = class extends Anon { };
 testName(ExtendedAnonDefault, "", false, false, false);
 
-let ExtendedAnon2 = class extends AnonWithGetterSetter {
+let ExtendedAnon2 = tmp.value = class extends AnonWithGetterSetter {
     constructor() {}
     static get name() { return "extend"; }
 };
@@ -218,7 +220,7 @@ testName(ExtendedAnon2, "extend", false, true, false);
 delete ExtendedAnon2.name;
 testName(ExtendedAnon2, "base", false, false, false);
 
-let ExtendedAnon3 = class extends AnonWithGetterSetter {
+let ExtendedAnon3 = tmp.value = class extends AnonWithGetterSetter {
     constructor() {}
     static set name(v) {}
 };

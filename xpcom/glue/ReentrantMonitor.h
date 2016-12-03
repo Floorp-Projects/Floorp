@@ -50,7 +50,7 @@ public:
     MOZ_COUNT_CTOR(ReentrantMonitor);
     mReentrantMonitor = PR_NewMonitor();
     if (!mReentrantMonitor) {
-      NS_RUNTIMEABORT("Can't allocate mozilla::ReentrantMonitor");
+      MOZ_CRASH("Can't allocate mozilla::ReentrantMonitor");
     }
   }
 

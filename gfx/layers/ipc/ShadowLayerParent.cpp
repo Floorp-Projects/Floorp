@@ -125,7 +125,7 @@ ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
 {
   switch (why) {
   case AncestorDeletion:
-    NS_RUNTIMEABORT("shadow layer deleted out of order!");
+    MOZ_CRASH("shadow layer deleted out of order!");
     return;                     // unreached
 
   case Deletion:
@@ -143,7 +143,7 @@ ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
     break;
 
   case FailedConstructor:
-    NS_RUNTIMEABORT("FailedConstructor isn't possible in PLayerTransaction");
+    MOZ_CRASH("FailedConstructor isn't possible in PLayerTransaction");
     return;                     // unreached
   }
 

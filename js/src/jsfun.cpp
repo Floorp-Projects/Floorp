@@ -562,7 +562,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
             return false;
         }
 
-        if (fun->name() || fun->hasGuessedAtom())
+        if (fun->explicitName() || fun->hasCompileTimeName() || fun->hasGuessedAtom())
             firstword |= HasAtom;
 
         if (fun->isStarGenerator())
@@ -990,8 +990,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
         if (!ok)
             return nullptr;
     }
-    if (fun->name()) {
-        if (!out.append(fun->name()))
+    if (fun->explicitName()) {
+        if (!out.append(fun->explicitName()))
             return nullptr;
     }
 
@@ -1309,14 +1309,14 @@ JSFunction::getUnresolvedName(JSContext* cx)
     if (isClassConstructor()) {
         // It's impossible to have an empty named class expression. We use
         // empty as a sentinel when creating default class constructors.
-        MOZ_ASSERT(name() != cx->names().empty);
+        MOZ_ASSERT(explicitOrCompileTimeName() != cx->names().empty);
 
         // Unnamed class expressions should not get a .name property at all.
-        return name();
+        return explicitOrCompileTimeName();
     }
 
-    // Returns the empty string for unnamed functions (FIXME: bug 883377).
-    return name() != nullptr ? name() : cx->names().empty;
+    return explicitOrCompileTimeName() != nullptr ? explicitOrCompileTimeName()
+                                                  : cx->names().empty;
 }
 
 static const js::Value&
@@ -2079,32 +2079,107 @@ js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject enclo
  * Implements steps 3-5 of 9.2.11 SetFunctionName in ES2016.
  */
 JSAtom*
-js::IdToFunctionName(JSContext* cx, HandleId id, const char* prefix /* = nullptr */)
+js::IdToFunctionName(JSContext* cx, HandleId id,
+                     FunctionPrefixKind prefixKind /* = FunctionPrefixKind::None */)
 {
-    if (JSID_IS_ATOM(id) && !prefix)
+    // No prefix fastpath.
+    if (JSID_IS_ATOM(id) && prefixKind == FunctionPrefixKind::None)
         return JSID_TO_ATOM(id);
 
-    // Step 3.
-    MOZ_ASSERT_IF(prefix, !JSID_IS_SYMBOL(id));
+    // Step 3 (implicit).
 
     // Step 4.
     if (JSID_IS_SYMBOL(id)) {
+        // Step 4.a.
         RootedAtom desc(cx, JSID_TO_SYMBOL(id)->description());
+
+        // Step 4.b, no prefix fastpath.
+        if (!desc && prefixKind == FunctionPrefixKind::None)
+            return cx->names().empty;
+
+        // Step 5 (reordered).
         StringBuffer sb(cx);
-        if (!sb.append('[') || !sb.append(desc) || !sb.append(']'))
-            return nullptr;
+        if (prefixKind == FunctionPrefixKind::Get) {
+            if (!sb.append("get "))
+                return nullptr;
+        } else if (prefixKind == FunctionPrefixKind::Set) {
+            if (!sb.append("set "))
+                return nullptr;
+        }
+
+        // Step 4.b.
+        if (desc) {
+            // Step 4.c.
+            if (!sb.append('[') || !sb.append(desc) || !sb.append(']'))
+                return nullptr;
+        }
         return sb.finishAtom();
     }
 
-    // Step 5.
     RootedValue idv(cx, IdToValue(id));
-    if (!prefix)
-        return ToAtom<CanGC>(cx, idv);
+    RootedAtom name(cx, ToAtom<CanGC>(cx, idv));
+    if (!name)
+        return nullptr;
+
+    // Step 5.
+    return NameToFunctionName(cx, name, prefixKind);
+}
+
+JSAtom*
+js::NameToFunctionName(ExclusiveContext* cx, HandleAtom name,
+                       FunctionPrefixKind prefixKind /* = FunctionPrefixKind::None */)
+{
+    if (prefixKind == FunctionPrefixKind::None)
+        return name;
 
     StringBuffer sb(cx);
-    if (!sb.append(prefix, strlen(prefix)) || !sb.append(' ') || !sb.append(ToAtom<CanGC>(cx, idv)))
+    if (prefixKind == FunctionPrefixKind::Get) {
+        if (!sb.append("get "))
+            return nullptr;
+    } else {
+        if (!sb.append("set "))
+            return nullptr;
+    }
+    if (!sb.append(name))
         return nullptr;
     return sb.finishAtom();
+}
+
+bool
+js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue name,
+                               FunctionPrefixKind prefixKind)
+{
+    MOZ_ASSERT(name.isString() || name.isSymbol() || name.isNumber());
+
+    if (fun->isClassConstructor()) {
+        // A class may have static 'name' method or accessor.
+        RootedId nameId(cx, NameToId(cx->names().name));
+        bool result;
+        if (!HasOwnProperty(cx, fun, nameId, &result))
+            return false;
+
+        if (result)
+            return true;
+    } else {
+        // Anonymous function shouldn't have own 'name' property at this point.
+        MOZ_ASSERT(!fun->containsPure(cx->names().name));
+    }
+
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, name, &id))
+        return false;
+
+    RootedAtom funNameAtom(cx, IdToFunctionName(cx, id, prefixKind));
+    if (!funNameAtom)
+        return false;
+
+    RootedValue funNameVal(cx, StringValue(funNameAtom));
+    if (!NativeDefineProperty(cx, fun, cx->names().name, funNameVal, nullptr, nullptr,
+                              JSPROP_READONLY))
+    {
+        return false;
+    }
+    return true;
 }
 
 JSFunction*

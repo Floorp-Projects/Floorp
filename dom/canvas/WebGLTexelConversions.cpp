@@ -422,7 +422,7 @@ ConvertImage(size_t width, size_t height,
         // the dst image may be left uninitialized, so we better not try to
         // continue even in release builds. This should never happen anyway,
         // and would be a bug in our code.
-        NS_RUNTIMEABORT("programming mistake in WebGL texture conversions");
+        MOZ_CRASH("programming mistake in WebGL texture conversions");
     }
 
     return true;

@@ -1231,7 +1231,7 @@ gfxFT2FontList::FindFonts()
 
     if (mFontFamilies.Count() == 0) {
         // if we can't find/read the font directory, we are doomed!
-        NS_RUNTIMEABORT("Could not read the system fonts directory");
+        MOZ_CRASH("Could not read the system fonts directory");
     }
 
     // Look for fonts stored in omnijar, unless we're on a low-memory

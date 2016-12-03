@@ -67,7 +67,7 @@ public:
   virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
   virtual bool BeginTransaction() { return true; }
   virtual already_AddRefed<ImageLayer> CreateImageLayer() {
-    NS_RUNTIMEABORT("Not implemented.");
+    MOZ_CRASH("Not implemented.");
     return nullptr;
   }
   virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() {

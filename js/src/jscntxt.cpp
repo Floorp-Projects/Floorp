@@ -810,7 +810,7 @@ js::ReportMissingArg(JSContext* cx, HandleValue v, unsigned arg)
 
     SprintfLiteral(argbuf, "%u", arg);
     if (IsFunctionObject(v)) {
-        RootedAtom name(cx, v.toObject().as<JSFunction>().name());
+        RootedAtom name(cx, v.toObject().as<JSFunction>().explicitName());
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, name);
         if (!bytes)
             return;

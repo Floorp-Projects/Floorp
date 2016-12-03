@@ -1739,7 +1739,7 @@ MessageChannel::DispatchAsyncMessage(const Message& aMsg)
     MOZ_RELEASE_ASSERT(!aMsg.is_interrupt() && !aMsg.is_sync());
 
     if (aMsg.routing_id() == MSG_ROUTING_NONE) {
-        NS_RUNTIMEABORT("unhandled special message!");
+        MOZ_CRASH("unhandled special message!");
     }
 
     Result rv;
@@ -1783,10 +1783,10 @@ MessageChannel::DispatchInterruptMessage(Message&& aMsg, size_t stackDepth)
             defer = (mSide != ChildSide);
             break;
           case RIPError:
-            NS_RUNTIMEABORT("NYI: 'Error' Interrupt race policy");
+            MOZ_CRASH("NYI: 'Error' Interrupt race policy");
             return;
           default:
-            NS_RUNTIMEABORT("not reached");
+            MOZ_CRASH("not reached");
             return;
         }
 
@@ -2067,7 +2067,7 @@ MessageChannel::ReportConnectionError(const char* aChannelName, Message* aMsg) c
         break;
 
       default:
-        NS_RUNTIMEABORT("unreached");
+        MOZ_CRASH("unreached");
     }
 
     if (aMsg) {
@@ -2112,7 +2112,7 @@ MessageChannel::MaybeHandleError(Result code, const Message& aMsg, const char* c
         break;
 
     default:
-        NS_RUNTIMEABORT("unknown Result code");
+        MOZ_CRASH("unknown Result code");
         return false;
     }
 
@@ -2152,7 +2152,7 @@ MessageChannel::OnChannelErrorFromLink()
 
     if (ChannelClosing != mChannelState) {
         if (mAbortOnError) {
-            NS_RUNTIMEABORT("Aborting on channel error.");
+            MOZ_CRASH("Aborting on channel error.");
         }
         mChannelState = ChannelError;
         mMonitor->Notify();
@@ -2323,7 +2323,7 @@ MessageChannel::Close()
         if (ChannelClosed == mChannelState) {
             // XXX be strict about this until there's a compelling reason
             // to relax
-            NS_RUNTIMEABORT("Close() called on closed channel!");
+            MOZ_CRASH("Close() called on closed channel!");
         }
 
         // Notify the other side that we're about to close our socket. If we've
@@ -2344,7 +2344,7 @@ MessageChannel::NotifyChannelClosed()
     mMonitor->AssertNotCurrentThreadOwns();
 
     if (ChannelClosed != mChannelState)
-        NS_RUNTIMEABORT("channel should have been closed!");
+        MOZ_CRASH("channel should have been closed!");
 
     Clear();
 

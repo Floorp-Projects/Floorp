@@ -649,7 +649,7 @@ XRE_InitChildProcess(int aArgc,
 
       switch (XRE_GetProcessType()) {
       case GeckoProcessType_Default:
-        NS_RUNTIMEABORT("This makes no sense");
+        MOZ_CRASH("This makes no sense");
         break;
 
       case GeckoProcessType_Plugin:
@@ -705,7 +705,7 @@ XRE_InitChildProcess(int aArgc,
 #ifdef MOZ_IPDL_TESTS
         process = new IPDLUnitTestProcessChild(parentPID);
 #else 
-        NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
+        MOZ_CRASH("rebuild with --enable-ipdl-tests");
 #endif
         break;
 
@@ -718,7 +718,7 @@ XRE_InitChildProcess(int aArgc,
         break;
 
       default:
-        NS_RUNTIMEABORT("Unknown main thread class");
+        MOZ_CRASH("Unknown main thread class");
       }
 
       if (!process->Init()) {

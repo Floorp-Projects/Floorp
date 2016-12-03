@@ -2084,7 +2084,7 @@ DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
         getter != JS_PropertyStub && setter != JS_StrictPropertyStub)
     {
         if (getter && !(attrs & JSPROP_GETTER)) {
-            RootedAtom atom(cx, IdToFunctionName(cx, id, "get"));
+            RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Get));
             if (!atom)
                 return false;
             JSFunction* getobj = NewNativeFunction(cx, (Native) getter, 0, atom);
@@ -2100,7 +2100,7 @@ DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
         if (setter && !(attrs & JSPROP_SETTER)) {
             // Root just the getter, since the setter is not yet a JSObject.
             AutoRooterGetterSetter getRoot(cx, JSPROP_GETTER, &getter, nullptr);
-            RootedAtom atom(cx, IdToFunctionName(cx, id, "set"));
+            RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Set));
             if (!atom)
                 return false;
             JSFunction* setobj = NewNativeFunction(cx, (Native) setter, 1, atom);
@@ -3604,7 +3604,7 @@ JS_GetFunctionObject(JSFunction* fun)
 JS_PUBLIC_API(JSString*)
 JS_GetFunctionId(JSFunction* fun)
 {
-    return fun->name();
+    return fun->explicitName();
 }
 
 JS_PUBLIC_API(JSString*)

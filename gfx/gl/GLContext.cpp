@@ -2152,13 +2152,13 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
     if (drawFB_out) {
         *drawFB_out = drawFB;
     } else if (drawFB) {
-        NS_RUNTIMEABORT("drawFB created when not requested!");
+        MOZ_CRASH("drawFB created when not requested!");
     }
 
     if (readFB_out) {
         *readFB_out = readFB;
     } else if (readFB) {
-        NS_RUNTIMEABORT("readFB created when not requested!");
+        MOZ_CRASH("readFB created when not requested!");
     }
 
     return isComplete;

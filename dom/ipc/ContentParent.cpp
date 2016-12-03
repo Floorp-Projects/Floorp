@@ -3824,7 +3824,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 {
 #ifndef MOZ_X11
-  NS_RUNTIMEABORT("This message only makes sense on X11 platforms");
+  MOZ_CRASH("This message only makes sense on X11 platforms");
 #else
   MOZ_ASSERT(0 > mChildXSocketFdDup.get(),
              "Already backed up X resources??");
