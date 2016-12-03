@@ -134,6 +134,11 @@ Script.prototype = {
       return false;
     }
 
+    // Documents from data: URIs inherit the principal.
+    if (Services.netUtils.URIChainHasFlags(uri, Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT)) {
+      uri = window.document.nodePrincipal.URI;
+    }
+
     if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
       return false;
     }
