@@ -37,14 +37,11 @@ function handleCmd(evt) {
     return false;
   }  
 
-  // Grab privileges so we can access cross-domain windows
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   if ("load" in cmd) {
     var testNum = cmd.load;
-    var win = wins[testNum];
+    var win = SpecialPowers.wrap(wins[testNum]).wrappedJSObject;
     win.childWin.x = testNum;
-    if (win.childWin.opener == win) {
+    if (SpecialPowers.unwrap(win.childWin.opener) == SpecialPowers.unwrap(win)) {
       if ("xsite" in cmd) {
         var loc = r(window.location.href, "bug346659-opener-echoer.html");
       } else {
