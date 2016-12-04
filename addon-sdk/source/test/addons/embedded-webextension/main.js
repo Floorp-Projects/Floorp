@@ -135,7 +135,7 @@ exports.testEmbeddedWebExtensionContentScript = function* (assert, done) {
       browser.runtime.onConnect.addListener(portListener);
     });
 
-    let url = "data:text/html;charset=utf-8,<h1>Test Page</h1>";
+    let url = "http://example.org/";
 
     var openedTab;
     tabs.once('open', function onOpen(tab) {
