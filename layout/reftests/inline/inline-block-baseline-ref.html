@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+.inline-block { display: inline-block; }
+.test {
+  background-color: lightgrey;
+  overflow: hidden;
+}
+.border { border: solid blue;  border-width: 1px 3px 5px 7px; }
+.padding { padding: 10px; }
+.margin { margin: 1px 3px 5px 7px; }
+</style>
+
+</head><body>
+
+The boxes should align vertically:
+<div class="test inline-block margin border padding overflow"></div>
+
+<div class="test inline-block margin border padding overflow"></div>
+
+<br>
+
+The boxes should align vertically:
+<div class="test inline-block margin border padding overflow">X</div>
+
+<div class="test inline-block margin border padding overflow">X</div>
+
+</body></html>
