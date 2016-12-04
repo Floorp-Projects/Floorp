@@ -12,7 +12,7 @@
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
-#include "mozilla/gfx/Polygon.h"        // for Polygon3D
+#include "mozilla/gfx/Polygon.h"        // for Polygon
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
 #include "mozilla/gfx/Types.h"          // for Float
 #include "mozilla/gfx/Triangle.h"       // for Triangle, TexturedTriangle
@@ -312,14 +312,14 @@ public:
                     gfx::Float aOpacity,
                     const gfx::Matrix4x4& aTransform,
                     const gfx::Rect& aVisibleRect,
-                    const Maybe<gfx::Polygon3D>& aGeometry);
+                    const Maybe<gfx::Polygon>& aGeometry);
 
   void DrawGeometry(const gfx::Rect& aRect,
                     const gfx::IntRect& aClipRect,
                     const EffectChain &aEffectChain,
                     gfx::Float aOpacity,
                     const gfx::Matrix4x4& aTransform,
-                    const Maybe<gfx::Polygon3D>& aGeometry)
+                    const Maybe<gfx::Polygon>& aGeometry)
   {
     DrawGeometry(aRect, aClipRect, aEffectChain, aOpacity,
                  aTransform, aRect, aGeometry);
