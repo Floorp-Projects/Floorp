@@ -272,7 +272,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture,
   }
 
   MOZ_ASSERT(bufferTexture->GetBufferDescriptor().type() == BufferDescriptor::TRGBDescriptor);
-  uint32_t stride = ImageDataSerializer::GetRGBStride(bufferTexture->GetBufferDescriptor().get_RGBDescriptor());
+  DebugOnly<uint32_t> stride = ImageDataSerializer::GetRGBStride(bufferTexture->GetBufferDescriptor().get_RGBDescriptor());
   uint8_t* buffer = bufferTexture->GetBuffer();
   IntSize size = bufferTexture->GetSize();
 
