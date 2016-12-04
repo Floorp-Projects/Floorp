@@ -179,7 +179,7 @@ function dispatch(fn) {
     throw new TypeError("Provided dispatch handler is not a function");
   }
 
-  return function(msg) {
+  return function (msg) {
     let id = msg.json.command_id;
 
     let req = Task.spawn(function*() {
@@ -691,11 +691,11 @@ function emitMultiEvents(type, touch, touches) {
   let doc = target.ownerDocument;
   let win = doc.defaultView;
   // touches that are in the same document
-  let documentTouches = doc.createTouchList(touches.filter(function(t) {
+  let documentTouches = doc.createTouchList(touches.filter(function (t) {
     return ((t.target.ownerDocument === doc) && (type != 'touchcancel'));
   }));
   // touches on the same target
-  let targetTouches = doc.createTouchList(touches.filter(function(t) {
+  let targetTouches = doc.createTouchList(touches.filter(function (t) {
     return ((t.target === target) && ((type != 'touchcancel') || (type != 'touchend')));
   }));
   // Create changed touches
