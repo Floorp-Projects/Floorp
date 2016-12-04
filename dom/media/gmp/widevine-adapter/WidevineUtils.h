@@ -42,23 +42,19 @@ Log(const char* aFormat, ...);
 GMPErr
 ToGMPErr(cdm::Status aStatus);
 
+class WidevineDecryptor;
+
 class CDMWrapper {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CDMWrapper)
 
-  explicit CDMWrapper(cdm::ContentDecryptionModule_8* aCDM)
-    : mCDM(aCDM)
-  {
-    MOZ_ASSERT(mCDM);
-  }
+  explicit CDMWrapper(cdm::ContentDecryptionModule_8* aCDM,
+                      WidevineDecryptor* aDecryptor);
   cdm::ContentDecryptionModule_8* GetCDM() const { return mCDM; }
 private:
+  ~CDMWrapper();
   cdm::ContentDecryptionModule_8* mCDM;
-  ~CDMWrapper() {
-    Log("CDMWrapper destroying CDM=%p", mCDM);
-    mCDM->Destroy();
-    mCDM = nullptr;
-  }
+  RefPtr<WidevineDecryptor> mDecryptor;
 };
 
 void InitInputBuffer(const GMPEncryptedBufferMetadata* aCrypto,
