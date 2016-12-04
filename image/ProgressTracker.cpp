@@ -23,29 +23,34 @@ namespace mozilla {
 namespace image {
 
 static void
-CheckProgressConsistency(Progress aOldProgress, Progress aNewProgress)
+CheckProgressConsistency(Progress aOldProgress, Progress aNewProgress, bool aIsMultipart)
 {
   // Check preconditions for every progress bit.
+
+  // Error's do not get propagated from the tracker for each image part to the
+  // tracker for the multipart image because we don't want one bad part to
+  // prevent the remaining parts from showing. So we need to consider whether
+  // this is a tracker for a multipart image for these assertions to work.
 
   if (aNewProgress & FLAG_SIZE_AVAILABLE) {
     // No preconditions.
   }
   if (aNewProgress & FLAG_DECODE_COMPLETE) {
     MOZ_ASSERT(aNewProgress & FLAG_SIZE_AVAILABLE);
-    MOZ_ASSERT(aNewProgress & (FLAG_FRAME_COMPLETE | FLAG_HAS_ERROR));
+    MOZ_ASSERT(aIsMultipart || aNewProgress & (FLAG_FRAME_COMPLETE | FLAG_HAS_ERROR));
   }
   if (aNewProgress & FLAG_FRAME_COMPLETE) {
     MOZ_ASSERT(aNewProgress & FLAG_SIZE_AVAILABLE);
   }
   if (aNewProgress & FLAG_LOAD_COMPLETE) {
-    MOZ_ASSERT(aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
+    MOZ_ASSERT(aIsMultipart || aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
   }
   if (aNewProgress & FLAG_ONLOAD_BLOCKED) {
     // No preconditions.
   }
   if (aNewProgress & FLAG_ONLOAD_UNBLOCKED) {
     MOZ_ASSERT(aNewProgress & FLAG_ONLOAD_BLOCKED);
-    MOZ_ASSERT(aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
+    MOZ_ASSERT(aIsMultipart || aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
   }
   if (aNewProgress & FLAG_IS_ANIMATED) {
     // No preconditions; like FLAG_HAS_TRANSPARENCY, we should normally never
@@ -375,7 +380,7 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
     progress &= ~FLAG_ONLOAD_UNBLOCKED;
   }
 
-  CheckProgressConsistency(mProgress, mProgress | progress);
+  CheckProgressConsistency(mProgress, mProgress | progress, mIsMultipart);
 
   // XXX(seth): Hack to work around the fact that some observers have bugs and
   // need to get onload blocking notifications multiple times. We should fix
