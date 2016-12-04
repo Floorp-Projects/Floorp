@@ -227,7 +227,7 @@ static void
 UpdateTextureCoordinates(gfx::TexturedTriangle& aTriangle,
                          const gfx::Rect& aRect,
                          const gfx::Rect& aIntersection,
-                         gfx::Rect aTextureCoords)
+                         const gfx::Rect& aTextureCoords)
 {
   // Calculate the relative offset of the intersection within the layer.
   float dx = (aIntersection.x - aRect.x) / aRect.width;
@@ -241,10 +241,8 @@ UpdateTextureCoordinates(gfx::TexturedTriangle& aTriangle,
   float w = aTextureCoords.width * aIntersection.width / aRect.width;
   float h = aTextureCoords.height * aIntersection.height / aRect.height;
 
-  static const auto ValidateAndClamp = [](float& f) {
-    // Allow some numerical inaccuracy.
-    MOZ_ASSERT(f >= -0.0001f && f <= 1.0001f);
-
+  static const auto Clamp = [](float& f)
+  {
     if (f >= 1.0f) f = 1.0f;
     if (f <= 0.0f) f = 0.0f;
   };
@@ -254,8 +252,8 @@ UpdateTextureCoordinates(gfx::TexturedTriangle& aTriangle,
     t.x = x + (p.x - aIntersection.x) / aIntersection.width * w;
     t.y = y + (p.y - aIntersection.y) / aIntersection.height * h;
 
-    ValidateAndClamp(t.x);
-    ValidateAndClamp(t.y);
+    Clamp(t.x);
+    Clamp(t.y);
   };
 
   UpdatePoint(aTriangle.p1, aTriangle.textureCoords.p1);
@@ -270,7 +268,7 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
                          gfx::Float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Rect& aVisibleRect,
-                         const Maybe<gfx::Polygon3D>& aGeometry)
+                         const Maybe<gfx::Polygon>& aGeometry)
 {
   if (!aGeometry) {
     DrawQuad(aRect, aClipRect, aEffectChain,
@@ -283,11 +281,10 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
     return;
   }
 
-  gfx::Polygon3D clipped = aGeometry->ClipPolygon(aRect);
-  nsTArray<gfx::Triangle> triangles = clipped.ToTriangles();
+  const gfx::Polygon clipped = aGeometry->ClipPolygon(aRect);
 
-  for (gfx::Triangle& geometry : triangles) {
-    const gfx::Rect intersection = aRect.Intersect(geometry.BoundingBox());
+  for (gfx::Triangle& triangle : clipped.ToTriangles()) {
+    const gfx::Rect intersection = aRect.Intersect(triangle.BoundingBox());
 
     // Cull invisible triangles.
     if (intersection.IsEmpty()) {
@@ -297,21 +294,24 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
     MOZ_ASSERT(aRect.width > 0.0f && aRect.height > 0.0f);
     MOZ_ASSERT(intersection.width > 0.0f && intersection.height > 0.0f);
 
-    gfx::TexturedTriangle triangle(Move(geometry));
-    triangle.width = aRect.width;
-    triangle.height = aRect.height;
+    gfx::TexturedTriangle texturedTriangle(Move(triangle));
+    texturedTriangle.width = aRect.width;
+    texturedTriangle.height = aRect.height;
 
     // Since the texture was created for non-split geometry, we need to
     // update the texture coordinates to account for the split.
-    if (aEffectChain.mPrimaryEffect->mType == EffectTypes::RGB) {
+    const EffectTypes type = aEffectChain.mPrimaryEffect->mType;
+
+    if (type == EffectTypes::RGB || type == EffectTypes::YCBCR ||
+        type == EffectTypes::NV12 || type == EffectTypes::RENDER_TARGET) {
       TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
 
-      UpdateTextureCoordinates(triangle, aRect, intersection,
+      UpdateTextureCoordinates(texturedTriangle, aRect, intersection,
                                texturedEffect->mTextureCoords);
     }
 
-    DrawTriangle(triangle, aClipRect, aEffectChain,
+    DrawTriangle(texturedTriangle, aClipRect, aEffectChain,
                  aOpacity, aTransform, aVisibleRect);
   }
 }
