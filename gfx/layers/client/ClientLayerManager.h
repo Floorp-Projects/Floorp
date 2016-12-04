@@ -53,6 +53,11 @@ public:
     return mForwarder;
   }
 
+  virtual KnowsCompositor* AsKnowsCompositor() override
+  {
+    return mForwarder;
+  }
+
   virtual ClientLayerManager* AsClientLayerManager() override
   {
     return this;
