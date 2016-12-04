@@ -66,7 +66,7 @@ event.Modifiers = {
  * @throws {TypeError}
  *     If the event is unsupported.
  */
-event.sendMouseEvent = function(mouseEvent, target, window = undefined) {
+event.sendMouseEvent = function (mouseEvent, target, window = undefined) {
   if (!event.MouseEvents.hasOwnProperty(mouseEvent.type)) {
     throw new TypeError("Unsupported event type: " + mouseEvent.type);
   }
@@ -136,7 +136,7 @@ event.sendMouseEvent = function(mouseEvent, target, window = undefined) {
  * For now this method only works for English letters (lower and upper
  * case) and the digits 0-9.
  */
-event.sendChar = function(char, window = undefined) {
+event.sendChar = function (char, window = undefined) {
   // DOM event charcodes match ASCII (JS charcodes) for a-zA-Z0-9
   let hasShift = (char == char.toUpperCase());
   event.synthesizeKey(char, {shiftKey: hasShift}, window);
@@ -148,7 +148,7 @@ event.sendChar = function(char, window = undefined) {
  * For now this method only works for English letters (lower and upper
  * case) and the digits 0-9.
  */
-event.sendString = function(string, window = undefined) {
+event.sendString = function (string, window = undefined) {
   for (let i = 0; i < string.length; ++i) {
     event.sendChar(string.charAt(i), window);
   }
@@ -161,14 +161,14 @@ event.sendString = function(string, window = undefined) {
  * in the nsIDOMKeyEvent constant name for this key.  No modifiers are
  * handled at this point.
  */
-event.sendKey = function(key, window = undefined) {
+event.sendKey = function (key, window = undefined) {
   let keyName = "VK_" + key.toUpperCase();
   event.synthesizeKey(keyName, {shiftKey: false}, window);
 };
 
 // TODO(ato): Unexpose this when action.Chain#emitMouseEvent
 // no longer emits its own events
-event.parseModifiers_ = function(modifiers) {
+event.parseModifiers_ = function (modifiers) {
   let mval = 0;
   if (modifiers.shiftKey) {
     mval |= Ci.nsIDOMNSEvent.SHIFT_MASK;
@@ -215,7 +215,7 @@ event.parseModifiers_ = function(modifiers) {
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  */
-event.synthesizeMouse = function(
+event.synthesizeMouse = function (
     element, offsetX, offsetY, opts, window = undefined) {
   let rect = element.getBoundingClientRect();
   event.synthesizeMouseAtPoint(
@@ -239,7 +239,7 @@ event.synthesizeMouse = function(
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  */
-event.synthesizeMouseAtPoint = function(
+event.synthesizeMouseAtPoint = function (
     left, top, opts, window = undefined) {
 
   let domutils = getDOMWindowUtils(window);
@@ -263,7 +263,7 @@ event.synthesizeMouseAtPoint = function(
  * Call event.synthesizeMouse with coordinates at the centre of the
  * target.
  */
-event.synthesizeMouseAtCenter = function(element, event, window) {
+event.synthesizeMouseAtCenter = function (element, event, window) {
   let rect = element.getBoundingClientRect();
   event.synthesizeMouse(
       element,
@@ -303,7 +303,7 @@ event.synthesizeMouseAtCenter = function(element, event, window) {
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  */
-event.synthesizeMouseScroll = function(
+event.synthesizeMouseScroll = function (
     target, offsetX, offsetY, ev, window = undefined) {
 
   let domutils = getDOMWindowUtils(window);
@@ -447,7 +447,7 @@ function computeKeyCodeFromChar_(char) {
  * The key code should be one of consts of nsIDOMKeyEvent.DOM_VK_*,
  * or a key name begins with "VK_", or a character.
  */
-event.isKeypressFiredKey = function(key) {
+event.isKeypressFiredKey = function (key) {
   if (typeof key == "string") {
     if (key.indexOf("VK_") === 0) {
       key = Ci.nsIDOMKeyEvent["DOM_" + key];
@@ -496,7 +496,7 @@ event.isKeypressFiredKey = function(key) {
  * @throws {TypeError}
  *     If unknown key.
  */
-event.synthesizeKey = function(key, event, win = undefined)
+event.synthesizeKey = function (key, event, win = undefined)
 {
   var TIP = getTIP_(win);
   if (!TIP) {
@@ -941,7 +941,7 @@ function checkExpectedEvent_(
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  */
-event.synthesizeMouseExpectEvent = function(
+event.synthesizeMouseExpectEvent = function (
     target, offsetX, offsetY, ev, expectedTarget, expectedEvent,
     testName, window = undefined) {
 
@@ -980,7 +980,7 @@ event.synthesizeMouseExpectEvent = function(
  *
  * aWindow is optional, and defaults to the current window object.
  */
-event.synthesizeKeyExpectEvent = function(
+event.synthesizeKeyExpectEvent = function (
     key, ev, expectedTarget, expectedEvent, testName,
     window = undefined) {
 
@@ -1009,7 +1009,7 @@ event.synthesizeKeyExpectEvent = function(
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  */
-event.synthesizeComposition = function(ev, window = undefined) {
+event.synthesizeComposition = function (ev, window = undefined) {
   let domutils = getDOMWindowUtils(window);
   domutils.sendCompositionEvent(ev.type, ev.data || "", ev.locale || "");
 };
@@ -1054,7 +1054,7 @@ event.synthesizeComposition = function(ev, window = undefined) {
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  */
-event.synthesizeText = function(ev, window = undefined) {
+event.synthesizeText = function (ev, window = undefined) {
   let domutils = getDOMWindowUtils(window);
 
   if (!ev.composition ||
@@ -1106,7 +1106,7 @@ event.synthesizeText = function(ev, window = undefined) {
  * @return {(nsIQueryContentEventResult|null)}
  *     Event's result, or null if it failed.
  */
-event.synthesizeQuerySelectedText = function(window = undefined) {
+event.synthesizeQuerySelectedText = function (window = undefined) {
   let domutils = getDOMWindowUtils(window);
   return domutils.sendQueryContentEvent(
       domutils.QUERY_SELECTED_TEXT, 0, 0, 0, 0);
@@ -1129,7 +1129,7 @@ event.synthesizeQuerySelectedText = function(window = undefined) {
  *
  * @return         True, if succeeded.  Otherwise false.
  */
-event.synthesizeSelectionSet = function(
+event.synthesizeSelectionSet = function (
     offset, length, reverse, window = undefined) {
   let domutils = getDOMWindowUtils(window);
   return domutils.sendSelectionSetEvent(offset, length, reverse);
@@ -1206,7 +1206,7 @@ function getKeyCode(c) {
   return c;
 }
 
-event.sendKeyDown = function(keyToSend, modifiers, document) {
+event.sendKeyDown = function (keyToSend, modifiers, document) {
   modifiers.type = "keydown";
   event.sendSingleKey(keyToSend, modifiers, document);
   if (["VK_SHIFT", "VK_CONTROL", "VK_ALT", "VK_META"].indexOf(getKeyCode(keyToSend)) < 0) {
@@ -1216,13 +1216,13 @@ event.sendKeyDown = function(keyToSend, modifiers, document) {
   delete modifiers.type;
 };
 
-event.sendKeyUp = function(keyToSend, modifiers, window = undefined) {
+event.sendKeyUp = function (keyToSend, modifiers, window = undefined) {
   modifiers.type = "keyup";
   event.sendSingleKey(keyToSend, modifiers, window);
   delete modifiers.type;
 };
 
-event.sendSingleKey = function(keyToSend, modifiers, window = undefined) {
+event.sendSingleKey = function (keyToSend, modifiers, window = undefined) {
   let keyCode = getKeyCode(keyToSend);
   if (keyCode in KEYCODES_LOOKUP) {
     let modName = KEYCODES_LOOKUP[keyCode];
@@ -1257,7 +1257,7 @@ function focusElement(element) {
  * @param {Object.<string, boolean>=} opts
  * @param {Window=} window
  */
-event.sendKeysToElement = function(
+event.sendKeysToElement = function (
     keySequence, el, opts = {}, window = undefined) {
 
   if (opts.ignoreVisibility || element.isVisible(el)) {
@@ -1280,7 +1280,7 @@ event.sendKeysToElement = function(
   }
 };
 
-event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
+event.sendEvent = function (eventType, el, modifiers = {}, opts = {}) {
   opts.canBubble = opts.canBubble || true;
 
   let doc = el.ownerDocument || el.document;
@@ -1295,7 +1295,7 @@ event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
   el.dispatchEvent(ev);
 };
 
-event.focus = function(el, opts = {}) {
+event.focus = function (el, opts = {}) {
   opts.canBubble = opts.canBubble || true;
   let doc = el.ownerDocument || el.document;
   let win = doc.defaultView;
@@ -1305,30 +1305,30 @@ event.focus = function(el, opts = {}) {
   el.dispatchEvent(ev);
 };
 
-event.mouseover = function(el, modifiers = {}, opts = {}) {
+event.mouseover = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mouseover", el, modifiers, opts);
 };
 
-event.mousemove = function(el, modifiers = {}, opts = {}) {
+event.mousemove = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mousemove", el, modifiers, opts);
 };
 
-event.mousedown = function(el, modifiers = {}, opts = {}) {
+event.mousedown = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mousedown", el, modifiers, opts);
 };
 
-event.mouseup = function(el, modifiers = {}, opts = {}) {
+event.mouseup = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mouseup", el, modifiers, opts);
 };
 
-event.click = function(el, modifiers = {}, opts = {}) {
+event.click = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("click", el, modifiers, opts);
 };
 
-event.change = function(el, modifiers = {}, opts = {}) {
+event.change = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("change", el, modifiers, opts);
 };
 
-event.input = function(el, modifiers = {}, opts = {}) {
+event.input = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("input", el, modifiers, opts);
 };
