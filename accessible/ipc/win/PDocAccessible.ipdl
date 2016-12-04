@@ -8,6 +8,7 @@ include protocol PFileDescriptorSet;
 include protocol PBrowser;
 
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/COMPtrTypes.h";
+using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace a11y {
@@ -60,6 +61,9 @@ parent:
    * document.
    */
   async BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
+
+  sync GetWindowedPluginIAccessible(WindowsHandle aHwnd)
+    returns (IAccessibleHolder aPluginCOMProxy);
 
   // For now we'll add the command to send the proxy here. This might move to
   // PDocAccessible constructor in PBrowser.
