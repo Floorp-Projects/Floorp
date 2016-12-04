@@ -9,6 +9,7 @@
 
 #include "nsChangeHint.h"
 #include "nsCSSPropertyID.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
@@ -19,7 +20,6 @@
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/KeyframeEffectParams.h"
-#include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
 #include "mozilla/ServoBindingTypes.h" // RawServoDeclarationBlock and
                                        // associated RefPtrTraits
 #include "mozilla/StyleAnimationValue.h"
@@ -28,7 +28,6 @@
 
 struct JSContext;
 class JSObject;
-class nsCSSPropertyIDSet;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
@@ -103,6 +102,7 @@ struct Keyframe
     mOffset         = aOther.mOffset;
     mComputedOffset = aOther.mComputedOffset;
     mTimingFunction = Move(aOther.mTimingFunction);
+    mComposite      = Move(aOther.mComposite);
     mPropertyValues = Move(aOther.mPropertyValues);
     return *this;
   }
@@ -112,14 +112,19 @@ struct Keyframe
   double                        mComputedOffset = kComputedOffsetNotSet;
   Maybe<ComputedTimingFunction> mTimingFunction; // Nothing() here means
                                                  // "linear"
+  Maybe<dom::CompositeOperation> mComposite;
   nsTArray<PropertyValuePair>   mPropertyValues;
 };
 
 struct AnimationPropertySegment
 {
   float mFromKey, mToKey;
+  // NOTE: In the case that no keyframe for 0 or 1 offset is specified
+  // the unit of mFromValue or mToValue is eUnit_Null.
   StyleAnimationValue mFromValue, mToValue;
   Maybe<ComputedTimingFunction> mTimingFunction;
+  dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
+  dom::CompositeOperation mToComposite = dom::CompositeOperation::Replace;
 
   bool operator==(const AnimationPropertySegment& aOther) const
   {
@@ -127,7 +132,9 @@ struct AnimationPropertySegment
            mToKey == aOther.mToKey &&
            mFromValue == aOther.mFromValue &&
            mToValue == aOther.mToValue &&
-           mTimingFunction == aOther.mTimingFunction;
+           mTimingFunction == aOther.mTimingFunction &&
+           mFromComposite == aOther.mFromComposite &&
+           mToComposite == aOther.mToComposite;
   }
   bool operator!=(const AnimationPropertySegment& aOther) const
   {
@@ -282,6 +289,16 @@ public:
   // in |aPropertiesToSkip|.
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
+
+  // Composite |aValueToComposite| on |aUnderlyingValue| with
+  // |aCompositeOperation|.
+  // Returns |aValueToComposite| if |aCompositeOperation| is Replace.
+  static StyleAnimationValue CompositeValue(
+    nsCSSPropertyID aProperty,
+    const StyleAnimationValue& aValueToComposite,
+    const StyleAnimationValue& aUnderlyingValue,
+    CompositeOperation aCompositeOperation);
+
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSPropertyID aProperty, bool aIsRunning);
@@ -321,6 +338,10 @@ public:
   // See nsChangeHint_Hints_CanIgnoreIfNotVisible in nsChangeHint.h
   // in detail which change hint can be ignored.
   bool CanIgnoreIfNotVisible() const;
+
+  // Returns true if the effect is run on the compositor for |aProperty| and
+  // needs a base style to composite with.
+  bool NeedsBaseStyle(nsCSSPropertyID aProperty) const;
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
@@ -386,6 +407,20 @@ protected:
   // target and its effectSet.
   void MarkCascadeNeedsUpdate();
 
+  // Composites |aValueToComposite| using |aCompositeOperation| onto the value
+  // for |aProperty| in |aAnimationRule|, or, if there is no suitable value in
+  // |aAnimationRule|, uses the base value for the property recorded on the
+  // target element's EffectSet.
+  StyleAnimationValue CompositeValue(
+    nsCSSPropertyID aProperty,
+    const RefPtr<AnimValuesStyleRule>& aAnimationRule,
+    const StyleAnimationValue& aValueToComposite,
+    CompositeOperation aCompositeOperation);
+
+  // Set a bit in mNeedsBaseStyleSet if |aProperty| can be run on the
+  // compositor.
+  void SetNeedsBaseStyle(nsCSSPropertyID aProperty);
+
   Maybe<OwningAnimationTarget> mTarget;
 
   KeyframeEffectParams mEffectOptions;
@@ -409,6 +444,11 @@ protected:
   // We need to track when we go to or from being "in effect" since
   // we need to re-evaluate the cascade of animations when that changes.
   bool mInEffectOnLastAnimationTimingUpdate;
+
+  // Represents whether or not the corresponding property requires a base style
+  // to composite with. This is only set when the property is run on the
+  // compositor.
+  nsCSSPropertyIDSet mNeedsBaseStyleSet;
 
 private:
   nsChangeHint mCumulativeChangeHint;

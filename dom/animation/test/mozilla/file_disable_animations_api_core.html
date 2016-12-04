@@ -25,6 +25,38 @@ test(function(t) {
 }, 'iterationComposite should not affect at all if the Web Animations API ' +
    'is not enabled');
 
+// Tests for cases we don't handle and should throw an exception for in case
+// the Web Animation API is disabled.
+var gTests = [
+  { desc: "single Keyframe with no offset",
+    keyframes: [{ left: "100px" }] },
+  { desc: "multiple Keyframes with missing 0% Keyframe",
+    keyframes: [{ left: "100px", offset: 0.25 },
+                { left: "200px", offset: 0.50 },
+                { left: "300px", offset: 1.00 }] },
+  { desc: "multiple Keyframes with missing 100% Keyframe",
+    keyframes: [{ left: "100px", offset: 0.00 },
+                { left: "200px", offset: 0.50 },
+                { left: "300px", offset: 0.75 }] },
+  { desc: "multiple Keyframes with missing properties on first Keyframe",
+    keyframes: [{ left: "100px", offset: 0.0 },
+                { left: "200px", top: "200px", offset: 0.5 },
+                { left: "300px", top: "300px", offset: 1.0 }] },
+  { desc: "multiple Keyframes with missing properties on last Keyframe",
+    keyframes: [{ left: "100px", top: "200px", offset: 0.0 },
+                { left: "200px", top: "200px", offset: 0.5 },
+                { left: "300px", offset: 1.0 }] },
+];
+
+gTests.forEach(function(subtest) {
+  test(function(t) {
+    var div = addDiv(t);
+    assert_throws("NotSupportedError", function() {
+      div.animate(subtest.keyframes, 100 * MS_PER_SEC);
+    });
+  }, "Element.animate() throws with " + subtest.desc);
+});
+
 done();
 </script>
 </body>

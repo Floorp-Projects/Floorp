@@ -1,0 +1,364 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Bug 1276688 - Test for properties that parse correctly but which we fail
+       to convert to computed values</title>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1276688"
+  target="_blank">Mozilla Bug 1276688</a>
+<div id="log"></div>
+<script>
+'use strict';
+
+function assert_properties_equal(actual, expected) {
+  assert_equals(actual.length, expected.length);
+
+  var compareProperties = (a, b) =>
+    a.property == b.property ? 0 : (a.property < b.property ? -1 : 1);
+
+  var sortedActual   = actual.sort(compareProperties);
+  var sortedExpected = expected.sort(compareProperties);
+
+  // We want to serialize the values in the following form:
+  //
+  //  { offset: 0, easing: linear, composite: replace, value: 5px }, ...
+  //
+  // So that we can just compare strings and, in the failure case,
+  // easily see where the differences lie.
+  var serializeMember = value => {
+    return typeof value === 'undefined' ? '<not set>' : value;
+  }
+  var serializeValues = values =>
+    values.map(value =>
+      '{ ' +
+        [ 'offset', 'value', 'easing', 'composite' ].map(
+          member => `${member}: ${serializeMember(value[member])}`
+        ).join(', ') +
+      ' }')
+    .join(', ');
+
+  for (var i = 0; i < sortedActual.length; i++) {
+    assert_equals(sortedActual[i].property,
+                  sortedExpected[i].property,
+                  'CSS property name should match');
+    assert_equals(serializeValues(sortedActual[i].values),
+                  serializeValues(sortedExpected[i].values),
+                  `Values arrays do not match for `
+                  + `${sortedActual[i].property} property`);
+  }
+}
+
+// Shorthand for constructing a value object
+function value(offset, value, composite, easing) {
+  return { offset: offset, value: value, easing: easing, composite: composite };
+}
+
+var gTests = [
+  // ---------------------------------------------------------------------
+  //
+  // Tests for properties that parse correctly but which we fail to
+  // convert to computed values.
+  //
+  // ---------------------------------------------------------------------
+
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' initial keyframe',
+    frames:   [ { margin: '5px', simulateComputeValuesFailure: true },
+                { margin: '5px' } ],
+    expected: [  ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' initial keyframe where we have enough values to create'
+              + ' a final segment',
+    frames:   [ { margin: '5px', simulateComputeValuesFailure: true },
+                { margin: '5px' },
+                { margin: '5px' } ],
+    expected: [  ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' initial overlapping keyframes (first in series of two)',
+    frames:   [ { margin: '5px', offset: 0,
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', offset: 0 },
+                { margin: '5px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' initial overlapping keyframes (second in series of two)',
+    frames:   [ { margin: '5px', offset: 0 },
+                { margin: '5px', offset: 0,
+                  simulateComputeValuesFailure: true },
+                { margin: '5px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' initial overlapping keyframes (second in series of three)',
+    frames:   [ { margin: '5px', offset: 0 },
+                { margin: '5px', offset: 0,
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', offset: 0 },
+                { margin: '5px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace'),
+                            value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace'),
+                            value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace'),
+                            value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace'),
+                            value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final keyframe',
+    frames:   [ { margin: '5px' },
+                { margin: '5px', simulateComputeValuesFailure: true } ],
+    expected: [  ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final keyframe where it forms the last segment in the series',
+    frames:   [ { margin: '5px' },
+                { margin: '5px',
+                  marginLeft: '5px',
+                  marginRight: '5px',
+                  marginBottom: '5px',
+                  // margin-top sorts last and only it will be missing since
+                  // the other longhand components are specified
+                  simulateComputeValuesFailure: true } ],
+    expected: [ { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final keyframe where we have enough values to create'
+              + ' an initial segment',
+    frames:   [ { margin: '5px' },
+                { margin: '5px' },
+                { margin: '5px', simulateComputeValuesFailure: true } ],
+    expected: [  ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final overlapping keyframes (first in series of two)',
+    frames:   [ { margin: '5px' },
+                { margin: '5px', offset: 1,
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', offset: 1 } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final overlapping keyframes (second in series of two)',
+    frames:   [ { margin: '5px' },
+                { margin: '5px', offset: 1 },
+                { margin: '5px', offset: 1,
+                  simulateComputeValuesFailure: true } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final overlapping keyframes (second in series of three)',
+    frames:   [ { margin: '5px' },
+                { margin: '5px', offset: 1 },
+                { margin: '5px', offset: 1,
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', offset: 1 } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' intermediate keyframe',
+    frames:   [ { margin: '5px' },
+                { margin: '5px', simulateComputeValuesFailure: true },
+                { margin: '5px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' initial keyframe along with other values',
+    // simulateComputeValuesFailure only applies to shorthands so we can set
+    // it on the same keyframe and it will only apply to |margin| and not
+    // |left|.
+    frames:   [ { margin: '77%', left: '10px',
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', left: '20px' } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] } ],
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' initial keyframe along with other values where those'
+              + ' values sort after the property with missing values',
+    frames:   [ { margin: '77%', right: '10px',
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', right: '20px' } ],
+    expected: [ { property: 'right',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] } ],
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final keyframe along with other values',
+    frames:   [ { margin: '5px', left: '10px' },
+                { margin: '5px', left: '20px',
+                  simulateComputeValuesFailure: true } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] } ],
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' final keyframe along with other values where those'
+              + ' values sort after the property with missing values',
+    frames:   [ { margin: '5px', right: '10px' },
+                { margin: '5px', right: '20px',
+                  simulateComputeValuesFailure: true } ],
+    expected: [ { property: 'right',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '20px', 'replace') ] } ],
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' an intermediate keyframe along with other values',
+    frames:   [ { margin: '5px', left: '10px' },
+                { margin: '5px', left: '20px',
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', left: '30px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'left',
+                  values: [ value(0,   '10px', 'replace', 'linear'),
+                            value(0.5, '20px', 'replace', 'linear'),
+                            value(1,   '30px', 'replace') ] } ]
+  },
+  { desc:     'a property that can\'t be resolved to computed values in'
+              + ' an intermediate keyframe by itself',
+    frames:   [ { margin: '5px', left: '10px' },
+                { margin: '5px',
+                  simulateComputeValuesFailure: true },
+                { margin: '5px', left: '30px' } ],
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '5px', 'replace', 'linear'),
+                            value(1, '5px', 'replace') ] },
+                { property: 'left',
+                  values: [ value(0,   '10px', 'replace', 'linear'),
+                            value(1,   '30px', 'replace') ] } ]
+  },
+];
+
+setup({explicit_done: true});
+
+SpecialPowers.pushPrefEnv(
+  { set: [["dom.animations-api.core.enabled", false]] },
+  function() {
+    gTests.forEach(function(subtest) {
+      test(function(t) {
+        var div = addDiv(t);
+        var animation = div.animate(subtest.frames, 100 * MS_PER_SEC);
+        assert_properties_equal(animation.effect.getProperties(),
+                                subtest.expected);
+      }, subtest.desc);
+    });
+
+    done();
+  }
+);
+</script>
+</body>

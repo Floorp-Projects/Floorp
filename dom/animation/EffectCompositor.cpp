@@ -17,6 +17,7 @@
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
@@ -54,6 +55,58 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EffectCompositor, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EffectCompositor, Release)
+
+namespace {
+enum class MatchForCompositor {
+  // This animation matches and should run on the compositor if possible.
+  Yes,
+  // This (not currently playing) animation matches and can be run on the
+  // compositor if there are other animations for this property that return
+  // 'Yes'.
+  IfNeeded,
+  // This animation does not match or can't be run on the compositor.
+  No,
+  // This animation does not match or can't be run on the compositor and,
+  // furthermore, its presence means we should not run any animations for this
+  // property on the compositor.
+  NoAndBlockThisProperty
+};
+}
+
+static MatchForCompositor
+IsMatchForCompositor(const KeyframeEffectReadOnly& aEffect,
+                     nsCSSPropertyID aProperty,
+                     const nsIFrame* aFrame)
+{
+  const Animation* animation = aEffect.GetAnimation();
+  MOZ_ASSERT(animation);
+
+  if (!animation->IsRelevant()) {
+    return MatchForCompositor::No;
+  }
+
+  bool isPlaying = animation->IsPlaying();
+
+  // If we are finding animations for transform, check if there are other
+  // animations that should block the transform animation. e.g. geometric
+  // properties' animation. This check should be done regardless of whether
+  // the effect has the target property |aProperty| or not.
+  AnimationPerformanceWarning::Type warningType;
+  if (aProperty == eCSSProperty_transform &&
+      isPlaying &&
+      aEffect.ShouldBlockAsyncTransformAnimations(aFrame, warningType)) {
+    EffectCompositor::SetPerformanceWarning(
+      aFrame, aProperty,
+      AnimationPerformanceWarning(warningType));
+    return MatchForCompositor::NoAndBlockThisProperty;
+  }
+
+  if (!aEffect.HasEffectiveAnimationOfProperty(aProperty)) {
+    return MatchForCompositor::No;
+  }
+
+  return isPlaying ? MatchForCompositor::Yes : MatchForCompositor::IfNeeded;
+}
 
 // Helper function to factor out the common logic from
 // GetAnimationsForCompositor and HasAnimationsForCompositor.
@@ -131,45 +184,45 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     content = content->GetParent();
   }
 
-  bool foundSome = false;
+  bool foundRunningAnimations = false;
   for (KeyframeEffectReadOnly* effect : *effects) {
-    MOZ_ASSERT(effect && effect->GetAnimation());
-    Animation* animation = effect->GetAnimation();
+    MatchForCompositor matchResult =
+      IsMatchForCompositor(*effect, aProperty, aFrame);
 
-    if (!animation->IsPlayableOnCompositor()) {
-      continue;
-    }
-
-    AnimationPerformanceWarning::Type warningType;
-    if (aProperty == eCSSProperty_transform &&
-        effect->ShouldBlockAsyncTransformAnimations(aFrame,
-                                                    warningType)) {
+    if (matchResult == MatchForCompositor::NoAndBlockThisProperty) {
       if (aMatches) {
         aMatches->Clear();
       }
-      EffectCompositor::SetPerformanceWarning(
-        aFrame, aProperty,
-        AnimationPerformanceWarning(warningType));
       return false;
     }
 
-    if (!effect->HasEffectiveAnimationOfProperty(aProperty)) {
+    if (matchResult == MatchForCompositor::No) {
       continue;
     }
 
     if (aMatches) {
-      aMatches->AppendElement(animation);
+      aMatches->AppendElement(effect->GetAnimation());
     }
-    foundSome = true;
+
+    if (matchResult == MatchForCompositor::Yes) {
+      foundRunningAnimations = true;
+    }
   }
 
-  MOZ_ASSERT(!foundSome || !aMatches || !aMatches->IsEmpty(),
+  // If all animations we added were not currently playing animations, don't
+  // send them to the compositor.
+  if (aMatches && !foundRunningAnimations) {
+    aMatches->Clear();
+  }
+
+  MOZ_ASSERT(!foundRunningAnimations || !aMatches || !aMatches->IsEmpty(),
              "If return value is true, matches array should be non-empty");
 
-  if (aMatches && foundSome) {
+  if (aMatches && foundRunningAnimations) {
     aMatches->Sort(AnimationPtrComparator<RefPtr<dom::Animation>>());
   }
-  return foundSome;
+
+  return foundRunningAnimations;
 }
 
 void
@@ -276,6 +329,8 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
   // Style context change might cause CSS cascade level,
   // e.g removing !important, so we should update the cascading result.
   effectSet->MarkCascadeNeedsUpdate();
+
+  ClearBaseStyles(*aElement, aPseudoType);
 
   for (KeyframeEffectReadOnly* effect : *effectSet) {
     effect->UpdateProperties(aStyleContext);
@@ -814,6 +869,60 @@ EffectCompositor::SetPerformanceWarning(
   for (KeyframeEffectReadOnly* effect : *effects) {
     effect->SetPerformanceWarning(aProperty, aWarning);
   }
+}
+
+/* static */ StyleAnimationValue
+EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
+                               nsStyleContext* aStyleContext,
+                               dom::Element& aElement,
+                               CSSPseudoElementType aPseudoType)
+{
+  MOZ_ASSERT(aStyleContext, "Need style context to resolve the base value");
+  MOZ_ASSERT(!aStyleContext->StyleSource().IsServoComputedValues(),
+             "Bug 1311257: Servo backend does not support the base value yet");
+
+  StyleAnimationValue result;
+
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(&aElement, aPseudoType);
+  if (!effectSet) {
+    return result;
+  }
+
+  // Check whether there is a cached style.
+  result = effectSet->GetBaseStyle(aProperty);
+  if (!result.IsNull()) {
+    return result;
+  }
+
+  RefPtr<nsStyleContext> styleContextWithoutAnimation =
+    aStyleContext->PresContext()->StyleSet()->AsGecko()->
+      ResolveStyleWithoutAnimation(&aElement, aStyleContext,
+                                   eRestyle_AllHintsWithAnimations);
+
+  DebugOnly<bool> success =
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              styleContextWithoutAnimation,
+                                              result);
+  MOZ_ASSERT(success, "Should be able to extract computed animation value");
+  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
+
+  effectSet->PutBaseStyle(aProperty, result);
+
+  return result;
+}
+
+/* static */ void
+EffectCompositor::ClearBaseStyles(dom::Element& aElement,
+                                  CSSPseudoElementType aPseudoType)
+{
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(&aElement, aPseudoType);
+  if (!effectSet) {
+    return;
+  }
+
+  effectSet->ClearBaseStyles();
 }
 
 // ---------------------------------------------------------
