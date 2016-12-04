@@ -515,6 +515,19 @@ GetSuitableScale(float aMaxScale, float aMinScale,
   return std::max(std::min(aMaxScale, displayVisibleRatio), aMinScale);
 }
 
+static inline void
+UpdateMinMaxScale(const nsIFrame* aFrame,
+                  const StyleAnimationValue& aValue,
+                  gfxSize& aMinScale,
+                  gfxSize& aMaxScale)
+{
+  gfxSize size = aValue.GetScaleValue(aFrame);
+  aMaxScale.width = std::max<float>(aMaxScale.width, size.width);
+  aMaxScale.height = std::max<float>(aMaxScale.height, size.height);
+  aMinScale.width = std::min<float>(aMinScale.width, size.width);
+  aMinScale.height = std::min<float>(aMinScale.height, size.height);
+}
+
 static void
 GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
                                       nsTArray<RefPtr<dom::Animation>>&
@@ -534,19 +547,28 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
     MOZ_ASSERT(effect, "A playing animation should have a keyframe effect");
     for (size_t propIdx = effect->Properties().Length(); propIdx-- != 0; ) {
       const AnimationProperty& prop = effect->Properties()[propIdx];
-      if (prop.mProperty == eCSSProperty_transform) {
-        for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
-          const AnimationPropertySegment& segment = prop.mSegments[segIdx];
-          gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
-          aMaxScale.width = std::max<float>(aMaxScale.width, from.width);
-          aMaxScale.height = std::max<float>(aMaxScale.height, from.height);
-          aMinScale.width = std::min<float>(aMinScale.width, from.width);
-          aMinScale.height = std::min<float>(aMinScale.height, from.height);
-          gfxSize to = segment.mToValue.GetScaleValue(aFrame);
-          aMaxScale.width = std::max<float>(aMaxScale.width, to.width);
-          aMaxScale.height = std::max<float>(aMaxScale.height, to.height);
-          aMinScale.width = std::min<float>(aMinScale.width, to.width);
-          aMinScale.height = std::min<float>(aMinScale.height, to.height);
+      if (prop.mProperty != eCSSProperty_transform) {
+        continue;
+      }
+
+      // We need to factor in the scale of the base style if the base style
+      // will be used on the compositor.
+      if (effect->NeedsBaseStyle(prop.mProperty)) {
+        EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+        StyleAnimationValue baseStyle =
+          effects->GetBaseStyle(prop.mProperty);
+        MOZ_ASSERT(!baseStyle.IsNull(), "The base value should be set");
+        UpdateMinMaxScale(aFrame, baseStyle, aMinScale, aMaxScale);
+      }
+
+      for (const AnimationPropertySegment& segment : prop.mSegments) {
+        // In case of add or accumulate composite, StyleAnimationValue does
+        // not have a valid value.
+        if (segment.mFromComposite == dom::CompositeOperation::Replace) {
+          UpdateMinMaxScale(aFrame, segment.mFromValue, aMinScale, aMaxScale);
+        }
+        if (segment.mToComposite == dom::CompositeOperation::Replace) {
+          UpdateMinMaxScale(aFrame, segment.mToValue, aMinScale, aMaxScale);
         }
       }
     }

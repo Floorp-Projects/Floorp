@@ -101,8 +101,8 @@ addAsyncAnimTest(function *() {
 
   advance_clock(1500);
   yield waitForPaints();
-  omta_is(div, "transform", { tx: 100 }, RunningOn.MainThread,
-          "The end delay is performed on the main thread");
+  omta_is(div, "transform", { tx: 100 }, RunningOn.Compositor,
+          "The end delay is performed on the compositor thread");
 
   done_div();
 });

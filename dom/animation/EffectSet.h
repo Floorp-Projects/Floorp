@@ -199,6 +199,24 @@ public:
     return mPropertiesForAnimationsLevel;
   }
 
+  StyleAnimationValue GetBaseStyle(nsCSSPropertyID aProperty) const
+  {
+    StyleAnimationValue result;
+    DebugOnly<bool> hasProperty = mBaseStyleValues.Get(aProperty, &result);
+    MOZ_ASSERT(hasProperty || result.IsNull());
+    return result;
+  }
+
+  void PutBaseStyle(nsCSSPropertyID aProperty,
+                    const StyleAnimationValue& aValue)
+  {
+    return mBaseStyleValues.Put(aProperty, aValue);
+  }
+  void ClearBaseStyles()
+  {
+    return mBaseStyleValues.Clear();
+  }
+
 private:
   static nsIAtom* GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType);
 
@@ -246,6 +264,11 @@ private:
   // animations level of the cascade and hence should be skipped when we are
   // composing the animation style for the transitions level of the cascede.
   nsCSSPropertyIDSet mPropertiesForAnimationsLevel;
+
+  // The non-animated values for properties animated by effects in this set that
+  // contain at least one animation value that is composited with the underlying
+  // value (i.e. it uses the additive or accumulate composite mode).
+  nsDataHashtable<nsUint32HashKey, StyleAnimationValue> mBaseStyleValues;
 
 #ifdef DEBUG
   // Track how many iterators are referencing this effect set when we are
