@@ -591,50 +591,6 @@ public:
     }
   }
 
-public:
-
-  // ThenPromise() can be called on any thread as Then().
-  // The syntax is close to JS promise and makes promise chaining easier
-  // where you can do: p->ThenPromise()->ThenPromise()->ThenPromise();
-  //
-  // Note you would have to call Then() instead when the result needs to be held
-  // by a MozPromiseRequestHolder for future disconnection.
-  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  MOZ_MUST_USE RefPtr<MozPromise>
-  ThenPromise(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-              ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
-  {
-    using ThenType = MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>;
-    RefPtr<ThenValueBase> thenValue = new ThenType(
-      aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
-    // mCompletionPromise must be created before ThenInternal() to avoid race.
-    RefPtr<MozPromise> p = new MozPromise::Private(
-      "<completion promise>", true /* aIsCompletionPromise */);
-    thenValue->mCompletionPromise = p;
-    // Note ThenInternal() might nullify mCompletionPromise before return.
-    // So we need to return p instead of mCompletionPromise.
-    ThenInternal(aResponseThread, thenValue, aCallSite);
-    return p;
-  }
-
-  template<typename ResolveFunction, typename RejectFunction>
-  MOZ_MUST_USE RefPtr<MozPromise>
-  ThenPromise(AbstractThread* aResponseThread, const char* aCallSite,
-              ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
-  {
-    using ThenType = FunctionThenValue<ResolveFunction, RejectFunction>;
-    RefPtr<ThenValueBase> thenValue = new ThenType(
-      aResponseThread, Move(aResolveFunction), Move(aRejectFunction), aCallSite);
-    // mCompletionPromise must be created before ThenInternal() to avoid race.
-    RefPtr<MozPromise> p = new MozPromise::Private(
-      "<completion promise>", true /* aIsCompletionPromise */);
-    thenValue->mCompletionPromise = p;
-    // Note ThenInternal() might nullify mCompletionPromise before return.
-    // So we need to return p instead of mCompletionPromise.
-    ThenInternal(aResponseThread, thenValue, aCallSite);
-    return p;
-  }
-
 private:
   /*
    * A command object to store all information needed to make a request to
