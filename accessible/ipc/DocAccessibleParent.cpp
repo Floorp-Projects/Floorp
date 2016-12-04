@@ -486,6 +486,37 @@ DocAccessibleParent::RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
   aParentCOMProxy->Set(IAccessibleHolder::COMPtrType(rawNative));
   return IPC_OK();
 }
+
+mozilla::ipc::IPCResult
+DocAccessibleParent::RecvGetWindowedPluginIAccessible(
+      const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy)
+{
+#if defined(MOZ_CONTENT_SANDBOX)
+  // We don't actually want the accessible object for aHwnd, but rather the
+  // one that belongs to its child (see HTMLWin32ObjectAccessible).
+  HWND childWnd = ::GetWindow(reinterpret_cast<HWND>(aHwnd), GW_CHILD);
+  if (!childWnd) {
+    return IPC_FAIL(this, "GetWindow failed");
+  }
+
+  IAccessible* rawAccPlugin = nullptr;
+  HRESULT hr = ::AccessibleObjectFromWindow(childWnd, OBJID_WINDOW,
+                                            IID_IAccessible,
+                                            (void**)&rawAccPlugin);
+  if (FAILED(hr)) {
+    // This might happen if the plugin doesn't handle WM_GETOBJECT properly.
+    // We should not consider that a failure.
+    return IPC_OK();
+  }
+
+  aPluginCOMProxy->Set(IAccessibleHolder::COMPtrType(rawAccPlugin));
+
+  return IPC_OK();
+#else
+  return IPC_FAIL(this, "Message unsupported in this build configuration");
+#endif
+}
+
 #endif // defined(XP_WIN)
 
 } // a11y
