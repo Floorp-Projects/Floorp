@@ -388,7 +388,9 @@ CompositorBridgeParent::Initialize()
 
   LayerScope::SetPixelScale(mScale.scale);
 
-  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+  if (!gfxPrefs::WebRenderEnabled()) {
+    mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+  }
 }
 
 mozilla::ipc::IPCResult
