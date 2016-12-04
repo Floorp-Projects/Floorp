@@ -98,6 +98,21 @@ add_task(function* test_user_defined_commands() {
         shiftKey: true,
       },
     },
+    // Function keys
+    {
+      name: "function-keys",
+      shortcut: "Alt+Shift+F3",
+      key: "VK_F3",
+      modifiers: {
+        altKey: true,
+        shiftKey: true,
+      },
+    },
+    {
+      name: "function-keys",
+      shortcut: "F2",
+      key: "VK_F2",
+    },
     // Misc Shortcuts
     {
       name: "valid-command-with-unrecognized-property-name",
