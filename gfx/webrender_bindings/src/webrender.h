@@ -177,7 +177,7 @@ WR_FUNC;
 // and also free it at the proper time.
 WR_INLINE const uint8_t*
 wr_readback_into_buffer(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
-                        uint8_t* dst_buffer, uint32_t buffer_length);
+                        uint8_t* dst_buffer, uint32_t buffer_length)
 WR_FUNC;
 
 WR_INLINE void
