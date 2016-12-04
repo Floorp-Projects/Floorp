@@ -93,6 +93,7 @@ class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
 class HostLayer;
+class KnowsCompositor;
 class ShadowableLayer;
 class ShadowLayerForwarder;
 class LayerManagerComposite;
@@ -200,6 +201,9 @@ public:
   bool IsDestroyed() { return mDestroyed; }
 
   virtual ShadowLayerForwarder* AsShadowForwarder()
+  { return nullptr; }
+
+  virtual KnowsCompositor* AsKnowsCompositor()
   { return nullptr; }
 
   virtual LayerManagerComposite* AsLayerManagerComposite()

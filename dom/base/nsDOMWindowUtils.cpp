@@ -2317,7 +2317,7 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
   if (!mgr)
     return NS_ERROR_FAILURE;
 
-  *retval = !!mgr->AsShadowForwarder();
+  *retval = !!mgr->AsKnowsCompositor();
   return NS_OK;
 }
 
@@ -2335,7 +2335,7 @@ nsDOMWindowUtils::GetSupportsHardwareH264Decoding(JS::MutableHandle<JS::Value> a
   LayerManager *mgr = widget->GetLayerManager();
   NS_ENSURE_STATE(mgr);
   RefPtr<Promise> promise =
-    MP4Decoder::IsVideoAccelerated(mgr->AsShadowForwarder(), parentObject);
+    MP4Decoder::IsVideoAccelerated(mgr->AsKnowsCompositor(), parentObject);
   NS_ENSURE_STATE(promise);
   aPromise.setObject(*promise->PromiseObj());
 #else
