@@ -29,12 +29,11 @@ var promptState;
 
 function registerMockPromptService()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var XPCOMUtils = SpecialPowers.Cu.import("resource://gre/modules/XPCOMUtils.jsm").XPCOMUtils;
   var Ci = SpecialPowers.Ci;
 
   function MockPrompt(aDOMWindow) {
-    this.domWindow = aDOMWindow;
+    this.domWindow = SpecialPowers.unwrap(aDOMWindow);
   }
 
   MockPrompt.prototype = {
