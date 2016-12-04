@@ -33,9 +33,9 @@ MediaDecoderReaderWrapper::ReadMetadata()
   MOZ_ASSERT(!mShutdown);
   return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                      &MediaDecoderReader::AsyncReadMetadata)
-         ->ThenPromise(mOwnerThread, __func__, this,
-                       &MediaDecoderReaderWrapper::OnMetadataRead,
-                       &MediaDecoderReaderWrapper::OnMetadataNotRead);
+         ->Then(mOwnerThread, __func__, this,
+                &MediaDecoderReaderWrapper::OnMetadataRead,
+                &MediaDecoderReaderWrapper::OnMetadataNotRead);
 }
 
 void
