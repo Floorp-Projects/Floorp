@@ -29,6 +29,31 @@ function assert_times_equal(actual, expected, description) {
   assert_approx_equals(actual, expected, TIME_PRECISION, description);
 }
 
+/*
+ * Compare matrix string like 'matrix(1, 0, 0, 1, 100, 0)'.
+ * This function allows error, 0.01, because on Android when we are scaling down
+ * the document, it results in some errors.
+ */
+function assert_matrix_equals(actual, expected, description) {
+  var matrixRegExp = /^matrix\((.+),(.+),(.+),(.+),(.+),(.+)\)/;
+  assert_regexp_match(actual, matrixRegExp,
+    'Actual value should be a matrix')
+  assert_regexp_match(expected, matrixRegExp,
+    'Expected value should be a matrix');
+
+  var actualMatrixArray = actual.match(matrixRegExp).slice(1).map(Number);
+  var expectedMatrixArray = expected.match(matrixRegExp).slice(1).map(Number);
+
+  assert_equals(actualMatrixArray.length, expectedMatrixArray.length,
+    'Array lengths should be equal (got \'' + expected + '\' and \'' + actual +
+    '\'): ' + description);
+  for (var i = 0; i < actualMatrixArray.length; i++) {
+    assert_approx_equals(actualMatrixArray[i], expectedMatrixArray[i], 0.01,
+      'Matrix array should be equal (got \'' + expected + '\' and \'' + actual +
+      '\'): ' + description);
+  }
+}
+
 /**
  * Appends a div to the document body and creates an animation on the div.
  * NOTE: This function asserts when trying to create animations with durations
@@ -173,7 +198,8 @@ if (opener) {
                         "assert_between_inclusive",
                         "assert_true", "assert_false",
                         "assert_class_string", "assert_throws",
-                        "assert_unreached", "promise_test", "test"]) {
+                        "assert_unreached", "assert_regexp_match",
+                        "promise_test", "test"]) {
     window[funcName] = opener[funcName].bind(opener);
   }
 
@@ -204,6 +230,29 @@ function setupSynchronousObserver(t, target, subtree) {
   });
   observer.observe(target, { animations: true, subtree: subtree });
   return observer;
+}
+
+/*
+ * Returns a promise that is resolved when the document has finished loading.
+ */
+function waitForDocumentLoad() {
+  return new Promise(function(resolve, reject) {
+    if (document.readyState === "complete") {
+      resolve();
+    } else {
+      window.addEventListener("load", resolve);
+    }
+  });
+}
+
+/*
+ * Enters test refresh mode, and restores the mode when |t| finishes.
+ */
+function useTestRefreshMode(t) {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+  t.add_cleanup(() => {
+    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+  });
 }
 
 /**

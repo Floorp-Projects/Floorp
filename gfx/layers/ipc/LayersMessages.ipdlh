@@ -160,11 +160,18 @@ union Animatable {
   TransformFunction[];
 };
 
+union BaseAnimationStyle {
+  null_t;
+  Animatable;
+};
+
 struct AnimationSegment {
   Animatable startState;
   Animatable endState;
   float startPortion;
   float endPortion;
+  uint8_t startComposite;
+  uint8_t endComposite;
   TimingFunction sampleFn;
 };
 
@@ -187,11 +194,17 @@ union AnimationData {
 struct Animation {
   TimeStamp startTime;
   TimeDuration delay;
-  // The value of the animation's current time at the moment it was created.
-  // For animations that are waiting to start, their startTime will be null.
-  // Once the animation is ready to start, we calculate an appropriate value
-  // of startTime such that we begin playback from initialCurrentTime.
-  TimeDuration initialCurrentTime;
+  TimeDuration endDelay;
+  // The value of the animation's current time at the moment it was sent to the
+  // compositor.  This value will be used for below cases:
+  // 1) Animations that are play-pending. Initially these animations will have a
+  //    null |startTime|. Once the animation is read to start (i.e. painting has
+  //    finished), we calculate an appropriate value of |startTime| such that
+  //    playback begins from |holdTime|.
+  // 2) Not playing animations (e.g. paused and finished animations). In this
+  //   case the |holdTime| represents the current time the animation will
+  //   maintain.
+  TimeDuration holdTime;
   TimeDuration duration;
   // For each frame, the interpolation point is computed based on the
   // startTime, the direction, the duration, and the current time.
@@ -212,6 +225,14 @@ struct Animation {
   // This is used in the transformed progress calculation.
   TimingFunction easingFunction;
   uint8_t iterationComposite;
+  // True if the animation has a fixed current time (e.g. paused and
+  // forward-filling animations).
+  bool isNotPlaying;
+  // The base style that animations should composite with. This is only set for
+  // animations with a composite mode of additive or accumulate, and only for
+  // the first animation in the set (i.e. the animation that is lowest in the
+  // stack). In all other cases the value is null_t.
+  BaseAnimationStyle baseStyle;
 };
 
 // Change a layer's attributes
