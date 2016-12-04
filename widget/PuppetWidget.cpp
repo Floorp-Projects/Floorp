@@ -583,7 +583,11 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
 {
   if (!mLayerManager) {
 #ifdef MOZ_ENABLE_WEBRENDER
+  if (gfxPrefs::WebRenderEnabled()) {
     mLayerManager = new WebRenderLayerManager(this);
+  } else {
+    mLayerManager = new ClientLayerManager(this);
+  }
 #else
     mLayerManager = new ClientLayerManager(this);
 #endif
@@ -599,7 +603,11 @@ LayerManager*
 PuppetWidget::RecreateLayerManager(PLayerTransactionChild* aShadowManager)
 {
 #ifdef MOZ_ENABLE_WEBRENDER
-  mLayerManager = new WebRenderLayerManager(this);
+  if (gfxPrefs::WebRenderEnabled()) {
+    mLayerManager = new WebRenderLayerManager(this);
+  } else {
+    mLayerManager = new ClientLayerManager(this);
+  }
 #else
   mLayerManager = new ClientLayerManager(this);
 #endif
