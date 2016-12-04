@@ -142,6 +142,12 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
 {
 }
 
+KnowsCompositor*
+WebRenderLayerManager::AsKnowsCompositor()
+{
+  return mWRChild;
+}
+  
 void
 WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
                                   uint64_t aLayersId,

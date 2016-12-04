@@ -17,6 +17,7 @@ namespace mozilla {
 namespace layers {
 
 class CompositorBridgeChild;
+class KnowsCompositor;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
 
@@ -85,6 +86,7 @@ protected:
   virtual ~WebRenderLayerManager();
 
 public:
+  virtual KnowsCompositor* AsKnowsCompositor() override;
   WebRenderLayerManager* AsWebRenderLayerManager() override { return this; }
   CompositorBridgeChild* GetCompositorBridgeChild();
 
