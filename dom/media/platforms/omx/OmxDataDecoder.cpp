@@ -259,7 +259,7 @@ OmxDataDecoder::DoAsyncShutdown()
   // Flush to all ports, so all buffers can be returned from component.
   RefPtr<OmxDataDecoder> self = this;
   mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
-    ->ThenPromise(mOmxTaskQueue, __func__,
+    ->Then(mOmxTaskQueue, __func__,
            [self] () -> RefPtr<OmxCommandPromise> {
              LOGL("DoAsyncShutdown: flush complete");
              return self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateIdle, nullptr);
@@ -267,7 +267,7 @@ OmxDataDecoder::DoAsyncShutdown()
            [self] () {
              self->mOmxLayer->Shutdown();
            })
-    ->ThenPromise(mOmxTaskQueue, __func__,
+    ->Then(mOmxTaskQueue, __func__,
            [self] () -> RefPtr<OmxCommandPromise> {
              RefPtr<OmxCommandPromise> p =
                self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateLoaded, nullptr);
@@ -796,7 +796,7 @@ OmxDataDecoder::PortSettingsChanged()
     // 1. disable port.
     LOG("PortSettingsChanged: disable port %d", def.nPortIndex);
     mOmxLayer->SendCommand(OMX_CommandPortDisable, mPortSettingsChanged, nullptr)
-      ->ThenPromise(mOmxTaskQueue, __func__,
+      ->Then(mOmxTaskQueue, __func__,
              [self, def] () -> RefPtr<OmxCommandPromise> {
                // 3. enable port.
                // Send enable port command.
