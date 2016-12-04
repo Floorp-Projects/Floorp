@@ -118,6 +118,7 @@ public:
     , mImage(nullptr)
     , mObservers(new ObserverTable)
     , mProgress(NoProgress)
+    , mIsMultipart(false)
   { }
 
   bool HasImage() const { MutexAutoLock lock(mImageMutex); return mImage; }
@@ -195,6 +196,9 @@ public:
   // in their destructor.
   void ResetImage();
 
+  // Tell this progress tracker that it is for a multipart image.
+  void SetIsMultipart() { mIsMultipart = true; }
+
 private:
   friend class AsyncNotifyRunnable;
   friend class AsyncNotifyCurrentStateRunnable;
@@ -226,6 +230,9 @@ private:
   CopyOnWrite<ObserverTable> mObservers;
 
   Progress mProgress;
+
+  // Whether this is a progress tracker for a multipart image.
+  bool mIsMultipart;
 };
 
 } // namespace image
