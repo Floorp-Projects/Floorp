@@ -143,6 +143,7 @@ Script.prototype = {
 
   matches(window) {
     let uri = window.document.documentURIObject;
+    let principal = window.document.nodePrincipal;
 
     // If mozAddonManager is present on this page, don't allow
     // content scripts.
@@ -153,7 +154,15 @@ Script.prototype = {
     if (this.match_about_blank && ["about:blank", "about:srcdoc"].includes(uri.spec)) {
       // When matching about:blank/srcdoc documents, the checks below
       // need to be performed against the "owner" document's URI.
-      uri = window.document.nodePrincipal.URI;
+      uri = principal.URI;
+    }
+
+    // Documents from data: URIs also inherit the principal.
+    if (Services.netUtils.URIChainHasFlags(uri, Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT)) {
+      if (!this.match_about_blank) {
+        return false;
+      }
+      uri = principal.URI;
     }
 
     if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
