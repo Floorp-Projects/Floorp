@@ -49,27 +49,27 @@ function lookupError(code) {
  * @throws {UnknownError}
  *     If there is a problem installing the addon.
  */
-addon.install = function(path, temporary = false) {
+addon.install = function (path, temporary = false) {
   return new Promise((resolve, reject) => {
     let file = new FileUtils.File(path);
 
     let listener = {
-      onInstallEnded: function(install, addon) {
+      onInstallEnded: function (install, addon) {
         resolve(addon.id);
       },
 
-      onInstallFailed: function(install) {
+      onInstallFailed: function (install) {
         reject(lookupError(install.error));
       },
 
-      onInstalled: function(addon) {
+      onInstalled: function (addon) {
         AddonManager.removeAddonListener(listener);
         resolve(addon.id);
       }
     };
 
     if (!temporary) {
-      AddonManager.getInstallForFile(file, function(aInstall) {
+      AddonManager.getInstallForFile(file, function (aInstall) {
         if (aInstall.error !== 0) {
           reject(lookupError(aInstall.error));
         }
@@ -94,9 +94,9 @@ addon.install = function(path, temporary = false) {
  *
  * @return {Promise}
  */
-addon.uninstall = function(id) {
+addon.uninstall = function (id) {
   return new Promise(resolve => {
-    AddonManager.getAddonByID(id, function(addon) {
+    AddonManager.getAddonByID(id, function (addon) {
       addon.uninstall();
       resolve();
     });

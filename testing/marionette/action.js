@@ -59,7 +59,7 @@ action.PointerType = {
  * @throws InvalidArgumentError
  *     If |str| is not a valid pointer type.
  */
-action.PointerType.get = function(str) {
+action.PointerType.get = function (str) {
   let name = capitalize(str);
   if (!(name in this)) {
     throw new InvalidArgumentError(`Unknown pointerType: ${str}`);

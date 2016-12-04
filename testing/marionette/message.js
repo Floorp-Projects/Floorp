@@ -41,7 +41,7 @@ this.Message = {};
  * @throws {TypeError}
  *     If the message type is not recognised.
  */
-Message.fromMsg = function(data) {
+Message.fromMsg = function (data) {
   switch (data[0]) {
     case Command.TYPE:
       return Command.fromMsg(data);
@@ -152,7 +152,7 @@ const validator = {
     "value": ["error", "sessionId", "capabilities"],
   },
 
-  set: function(obj, prop, val) {
+  set: function (obj, prop, val) {
     let tests = this.exclusionary[prop];
     if (tests) {
       for (let t of tests) {
