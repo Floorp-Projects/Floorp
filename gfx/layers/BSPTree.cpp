@@ -20,7 +20,7 @@ void
 BSPTree::BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
                         nsTArray<LayerPolygon>& aLayers) const
 {
-  const gfx::Point3D& normal = aNode->First().GetNormal();
+  const gfx::Point4D& normal = aNode->First().GetNormal();
 
   UniquePtr<BSPTreeNode> *front = &aNode->front;
   UniquePtr<BSPTreeNode> *back = &aNode->back;
@@ -58,11 +58,11 @@ BSPTree::BuildTree(UniquePtr<BSPTreeNode>& aRoot,
     return;
   }
 
-  const gfx::Polygon3D& plane = aRoot->First();
+  const gfx::Polygon& plane = aRoot->First();
   std::deque<LayerPolygon> backLayers, frontLayers;
 
   for (LayerPolygon& layerPolygon : aLayers) {
-    const Maybe<gfx::Polygon3D>& geometry = layerPolygon.geometry;
+    const Maybe<gfx::Polygon>& geometry = layerPolygon.geometry;
 
     size_t pos = 0, neg = 0;
     nsTArray<float> dots = geometry->CalculateDotProducts(plane, pos, neg);
@@ -81,14 +81,19 @@ BSPTree::BuildTree(UniquePtr<BSPTreeNode>& aRoot,
     }
     // Polygon intersects with the splitting plane.
     else if (pos > 0 && neg > 0) {
-      nsTArray<gfx::Point3D> backPoints, frontPoints;
-      geometry->SplitPolygon(plane, dots, backPoints, frontPoints);
+      nsTArray<gfx::Point4D> backPoints, frontPoints;
+      geometry->SplitPolygon(plane.GetNormal(), dots, backPoints, frontPoints);
 
-      const gfx::Point3D& normal = geometry->GetNormal();
+      const gfx::Point4D& normal = geometry->GetNormal();
       Layer *layer = layerPolygon.layer;
 
-      backLayers.push_back(LayerPolygon(layer, Move(backPoints), normal));
-      frontLayers.push_back(LayerPolygon(layer, Move(frontPoints), normal));
+      if (backPoints.Length() >= 3) {
+        backLayers.push_back(LayerPolygon(layer, Move(backPoints), normal));
+      }
+
+      if (frontPoints.Length() >= 3) {
+        frontLayers.push_back(LayerPolygon(layer, Move(frontPoints), normal));
+      }
     }
   }
 
