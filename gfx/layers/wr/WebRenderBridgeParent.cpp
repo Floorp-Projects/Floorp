@@ -166,9 +166,13 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                 InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aTransactionId)
 {
   if (mDestroyed) {
+    for (const auto& op : aToDestroy) {
+      DestroyActor(op);
+    }
     return IPC_OK();
   }
   ProcessWebrenderCommands(aCommands);
@@ -179,14 +183,21 @@ WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
   MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
   mPendingTransactionId = aTransactionId;
 
+  for (const auto& op : aToDestroy) {
+    DestroyActor(op);
+  }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                     InfallibleTArray<OpDestroy>&& aToDestroy,
                                      const uint64_t& aTransactionId)
 {
   if (mDestroyed) {
+    for (const auto& op : aToDestroy) {
+      DestroyActor(op);
+    }
     return IPC_OK();
   }
   ProcessWebrenderCommands(aCommands);
@@ -197,6 +208,9 @@ WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aComma
   MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
   mPendingTransactionId = aTransactionId;
 
+  for (const auto& op : aToDestroy) {
+    DestroyActor(op);
+  }
   return IPC_OK();
 }
 
@@ -204,6 +218,9 @@ void
 WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands)
 {
   MOZ_ASSERT(mWRState);
+  // XXX remove it when external image key is used.
+  std::vector<WRImageKey> keysToDelete;
+
   for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderCommand& cmd = aCommands[i];
 
@@ -227,9 +244,38 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.key());
         break;
       }
+      case WebRenderCommand::TOpDPPushCompositable: {
+        const OpDPPushCompositable& op = cmd.get_OpDPPushCompositable();
+        CompositableHost* compositable = CompositableHost::FromIPDLActor(op.compositableParent());
+        if (!compositable) {
+          break;
+        }
+        RefPtr<DataSourceSurface> dSurf = compositable->GetAsSurface();
+        if (!dSurf) {
+          break;
+        }
+        DataSourceSurface::MappedSurface map;
+        if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
+          break;
+        }
+        gfx::IntSize size = dSurf->GetSize();
+        WRImageKey key = wr_add_image(mWRWindowState, size.width, size.height, map.mStride, RGBA8, map.mData, size.height * map.mStride);
+        wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), key);
+        keysToDelete.push_back(key);
+        dSurf->Unmap();
+        break;
+      }
       case WebRenderCommand::TOpDPPushIframe: {
         const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
         wr_dp_push_iframe(mWRState, op.bounds(), op.clip(), op.layersid());
+        break;
+      }
+      case WebRenderCommand::TCompositableOperation: {
+        EditReplyVector replyv;
+        if (!ReceiveCompositableUpdate(cmd.get_CompositableOperation(),
+                                       replyv)) {
+          NS_ERROR("ReceiveCompositableUpdate failed");
+        }
         break;
       }
       default:
@@ -239,6 +285,11 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
   wr_dp_end(mWRWindowState, mWRState, mWREpoch++);
   ScheduleComposition();
   DeleteOldImages();
+
+  // XXX remove it when external image key is used.
+  if (!keysToDelete.empty()) {
+    mKeysToDelete.swap(keysToDelete);
+  }
 
   if (ShouldParentObserveEpoch()) {
     mCompositorBridge->ObserveLayerUpdate(mPipelineId, GetChildLayerObserverEpoch(), true);
@@ -468,13 +519,17 @@ WebRenderBridgeParent::IsSameProcess() const
 PCompositableParent*
 WebRenderBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo)
 {
-  return nullptr;
+  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo, 0);
+  CompositableHost* compositable = CompositableHost::FromIPDLActor(actor);
+  MOZ_ASSERT(compositable);
+  compositable->SetCompositor(mCompositor);
+  return actor;
 }
 
 bool
 WebRenderBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
-  return true;
+  return CompositableHost::DestroyIPDLActor(aActor);
 }
 
 void
