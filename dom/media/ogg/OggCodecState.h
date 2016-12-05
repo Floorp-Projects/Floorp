@@ -405,16 +405,10 @@ public:
   int mRate;        // Sample rate the decoder uses (always 48 kHz).
   int mChannels;    // Number of channels the stream encodes.
   uint16_t mPreSkip; // Number of samples to strip after decoder reset.
-#ifdef MOZ_SAMPLE_TYPE_FLOAT32
-  float mGain;      // Gain to apply to decoder output.
-#else
-  int32_t mGain_Q16; // Gain to apply to the decoder output.
-#endif
 
   nsAutoPtr<OpusParser> mParser;
   OpusMSDecoder* mDecoder;
 
-  int mSkip;        // Number of samples left to trim before playback.
   // Granule position (end sample) of the last decoded Opus packet. This is
   // used to calculate the amount we should trim from the last packet.
   int64_t mPrevPacketGranulepos;
