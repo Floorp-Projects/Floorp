@@ -151,6 +151,16 @@ implementations.  Those well-commented source files are the canonical
 documentation for what constitutes a job description, and should be considered
 part of the documentation.
 
+following ``run-using`` are available
+
+  ``hazard``
+  ``mach``
+  ``mozharness``
+  ``run-task``
+  ``spidermonkey`` or ``spidermonkey-package`` or ``spidermonkey-mozjs-crate``
+  ``toolchain-script``
+
+
 Task Descriptions
 -----------------
 
