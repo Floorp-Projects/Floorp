@@ -12,15 +12,12 @@
 namespace mozilla {
 namespace layers {
 
+class ImageClient;
+
 class WebRenderImageLayer : public WebRenderLayer,
                             public ImageLayer {
 public:
-  explicit WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
-    : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-    , mImageId(0)
-  {
-    MOZ_COUNT_CTOR(WebRenderImageLayer);
-  }
+  explicit WebRenderImageLayer(WebRenderLayerManager* aLayerManager);
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 protected:
@@ -37,6 +34,9 @@ public:
 
 protected:
   uint64_t mImageId;
+  // XXX remove it when external image id is used.
+  RefPtr<ImageContainer> mImageContainerForWR;
+  RefPtr<ImageClient> mImageClient;
 };
 
 } // namespace layers
