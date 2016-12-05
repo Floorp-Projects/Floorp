@@ -77,6 +77,10 @@ GetPropIRGenerator::tryAttachStub()
 
     if (tryAttachPrimitive(valId))
         return true;
+    if (tryAttachStringLength(valId))
+        return true;
+    if (tryAttachMagicArguments(valId))
+        return true;
 
     return false;
 }
@@ -721,5 +725,41 @@ GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId)
     writer.guardShape(protoId, proto->lastProperty());
     EmitLoadSlotResult(writer, protoId, proto, shape);
     writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachStringLength(ValOperandId valId)
+{
+    if (!val_.isString() || name_ != cx_->names().length)
+        return false;
+
+    StringOperandId strId = writer.guardIsString(valId);
+    writer.loadStringLengthResult(strId);
+    writer.returnFromIC();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId)
+{
+    if (!val_.isMagic(JS_OPTIMIZED_ARGUMENTS))
+        return false;
+
+    if (name_ != cx_->names().length && name_ != cx_->names().callee)
+        return false;
+
+    writer.guardMagicValue(valId, JS_OPTIMIZED_ARGUMENTS);
+    writer.guardFrameHasNoArgumentsObject();
+
+    if (name_ == cx_->names().length) {
+        writer.loadFrameNumActualArgsResult();
+        writer.returnFromIC();
+    } else {
+        MOZ_ASSERT(name_ == cx_->names().callee);
+        writer.loadFrameCalleeResult();
+        writer.typeMonitorResult();
+    }
+
     return true;
 }
