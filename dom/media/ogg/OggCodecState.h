@@ -398,25 +398,21 @@ public:
   bool IsHeader(ogg_packet* aPacket) override;
   nsresult PageIn(ogg_page* aPage) override;
   already_AddRefed<MediaRawData> PacketOutAsMediaRawData() override;
+  const TrackInfo* GetInfo() const override { return &mInfo; }
+
   // Returns the end time that a granulepos represents.
   static int64_t Time(int aPreSkip, int64_t aGranulepos);
 
-  // Various fields from the Ogg Opus header.
-  int mRate;        // Sample rate the decoder uses (always 48 kHz).
-  int mChannels;    // Number of channels the stream encodes.
-  uint16_t mPreSkip; // Number of samples to strip after decoder reset.
+  // Construct and return a table of tags from the metadata header.
+  MetadataTags* GetTags() override;
 
+private:
   nsAutoPtr<OpusParser> mParser;
   OpusMSDecoder* mDecoder;
 
   // Granule position (end sample) of the last decoded Opus packet. This is
   // used to calculate the amount we should trim from the last packet.
   int64_t mPrevPacketGranulepos;
-
-  // Construct and return a table of tags from the metadata header.
-  MetadataTags* GetTags() override;
-
-private:
 
   // Reconstructs the granulepos of Opus packets stored in the
   // mUnstamped array. mUnstamped must be filled with consecutive packets from
@@ -429,7 +425,8 @@ private:
   // used to calculate the Opus per-packet granule positions on the last page,
   // where we may need to trim some samples from the end.
   int64_t mPrevPageGranulepos;
-
+  AudioInfo mInfo;
+  OggPacketQueue mHeaders;
 };
 
 // Constructs a 32bit version number out of two 16 bit major,minor
