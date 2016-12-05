@@ -309,7 +309,6 @@ private:
   uint32_t mFlacSerial;
 
   vorbis_info mVorbisInfo;
-  int mOpusPreSkip;
   th_info mTheoraInfo;
 
   Maybe<int64_t> mStartTime;
