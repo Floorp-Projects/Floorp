@@ -228,10 +228,10 @@ class MOZ_RAII CacheRegisterAllocator
     // Returns the register for the given operand. If the operand is currently
     // not in a register, it will load it into one.
     ValueOperand useValueRegister(MacroAssembler& masm, ValOperandId val);
-    Register useRegister(MacroAssembler& masm, ObjOperandId obj);
+    Register useRegister(MacroAssembler& masm, TypedOperandId typedId);
 
     // Allocates an output register for the given operand.
-    Register defineRegister(MacroAssembler& masm, ObjOperandId obj);
+    Register defineRegister(MacroAssembler& masm, TypedOperandId typedId);
     ValueOperand defineValueRegister(MacroAssembler& masm, ValOperandId val);
 };
 
@@ -681,9 +681,9 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
 }
 
 Register
-CacheRegisterAllocator::useRegister(MacroAssembler& masm, ObjOperandId op)
+CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId)
 {
-    OperandLocation& loc = operandLocations_[op.id()];
+    OperandLocation& loc = operandLocations_[typedId.id()];
     switch (loc.kind()) {
       case OperandLocation::PayloadReg:
         currentOpRegs_.add(loc.payloadReg());
@@ -697,7 +697,7 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, ObjOperandId op)
         Register reg = val.scratchReg();
         availableRegs_.take(reg);
         masm.unboxObject(val, reg);
-        loc.setPayloadReg(reg, JSVAL_TYPE_OBJECT);
+        loc.setPayloadReg(reg, typedId.type());
         currentOpRegs_.add(reg);
         return reg;
       }
@@ -732,7 +732,7 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, ObjOperandId op)
             masm.unboxObject(Address(masm.getStackPointer(), stackPushed_ - loc.valueStack()),
                              reg);
         }
-        loc.setPayloadReg(reg, JSVAL_TYPE_OBJECT);
+        loc.setPayloadReg(reg, typedId.type());
         return reg;
       }
 
@@ -744,13 +744,13 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, ObjOperandId op)
 }
 
 Register
-CacheRegisterAllocator::defineRegister(MacroAssembler& masm, ObjOperandId op)
+CacheRegisterAllocator::defineRegister(MacroAssembler& masm, TypedOperandId typedId)
 {
-    OperandLocation& loc = operandLocations_[op.id()];
+    OperandLocation& loc = operandLocations_[typedId.id()];
     MOZ_ASSERT(loc.kind() == OperandLocation::Uninitialized);
 
     Register reg = allocateRegister(masm);
-    loc.setPayloadReg(reg, JSVAL_TYPE_OBJECT);
+    loc.setPayloadReg(reg, typedId.type());
     return reg;
 }
 
@@ -923,6 +923,17 @@ BaselineCacheIRCompiler::emitGuardIsObject()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardIsString()
+{
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+    masm.branchTestString(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardType()
 {
     ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
@@ -1077,6 +1088,20 @@ BaselineCacheIRCompiler::emitGuardSpecificObject()
 
     Address addr(stubAddress(reader.stubOffset()));
     masm.branchPtr(Assembler::NotEqual, addr, obj, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardMagicValue()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    JSWhyMagic magic = reader.whyMagic();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestMagicValue(Assembler::NotEqual, val, magic, failure->label());
     return true;
 }
 
@@ -1286,6 +1311,38 @@ BaselineCacheIRCompiler::emitGuardNoDetachedTypedObjects()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardFrameHasNoArgumentsObject()
+{
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTest32(Assembler::NonZero,
+                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
+                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
+                      failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadFrameCalleeResult()
+{
+    Address callee(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+    masm.loadFunctionFromCalleeToken(callee, R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadFrameNumActualArgsResult()
+{
+    Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
+    masm.loadPtr(actualArgs, R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitLoadTypedObjectResult()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1397,6 +1454,17 @@ BaselineCacheIRCompiler::emitLoadArgumentsObjectLengthResult()
     // because this stub always returns int32.
     masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadStringLengthResult()
+{
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    masm.loadStringLength(str, R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
     return true;
 }
 

@@ -2062,73 +2062,6 @@ ICCompare_Int32WithBoolean::Compiler::generateStubCode(MacroAssembler& masm)
 // GetProp_Fallback
 //
 
-static bool
-TryAttachMagicArgumentsGetPropStub(JSContext* cx, SharedStubInfo* info,
-                                   ICGetProp_Fallback* stub, HandlePropertyName name,
-                                   HandleValue val, HandleValue res, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (!val.isMagic(JS_OPTIMIZED_ARGUMENTS))
-        return true;
-
-    // Try handling arguments.callee on optimized arguments.
-    if (name == cx->names().callee) {
-        MOZ_ASSERT(info->script()->hasMappedArgsObj());
-
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(MagicArgs.callee) stub");
-
-        // Unlike ICGetProp_ArgumentsLength, only magic argument stubs are
-        // supported at the moment.
-        ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-        ICGetProp_ArgumentsCallee::Compiler compiler(cx, info->engine(), monitorStub);
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-        if (!newStub)
-            return false;
-        stub->addNewStub(newStub);
-
-        *attached = true;
-        return true;
-    }
-
-    return true;
-}
-
-static bool
-TryAttachLengthStub(JSContext* cx, SharedStubInfo* info,
-                    ICGetProp_Fallback* stub, HandleValue val,
-                    HandleValue res, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (val.isString()) {
-        MOZ_ASSERT(res.isInt32());
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(String.length) stub");
-        ICGetProp_StringLength::Compiler compiler(cx, info->engine());
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-        if (!newStub)
-            return false;
-
-        *attached = true;
-        stub->addNewStub(newStub);
-        return true;
-    }
-
-    if (val.isMagic(JS_OPTIMIZED_ARGUMENTS) && res.isInt32()) {
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(MagicArgs.length) stub");
-        ICGetProp_ArgumentsLength::Compiler compiler(cx, info->engine(), ICGetProp_ArgumentsLength::Magic);
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-        if (!newStub)
-            return false;
-
-        *attached = true;
-        stub->addNewStub(newStub);
-        return true;
-    }
-
-    return true;
-}
-
 // Return whether obj is in some PreliminaryObjectArray and has a structure
 // that might change in the future.
 bool
@@ -2502,20 +2435,6 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
     if (attached)
         return true;
 
-    if (op == JSOP_LENGTH) {
-        if (!TryAttachLengthStub(cx, &info, stub, val, res, &attached))
-            return false;
-        if (attached)
-            return true;
-    }
-
-    if (!TryAttachMagicArgumentsGetPropStub(cx, &info, stub, name, val,
-                                            res, &attached))
-        return false;
-    if (attached)
-        return true;
-
-
     MOZ_ASSERT(!attached);
     if (!isTemporarilyUnoptimizable)
         stub->noteUnoptimizableAccess();
@@ -2579,25 +2498,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
         void* address = code->raw() + returnOffset_;
         cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(address);
     }
-}
-
-bool
-ICGetProp_StringLength::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-    masm.branchTestString(Assembler::NotEqual, R0, &failure);
-
-    // Unbox string and load its length.
-    Register string = masm.extractString(R0, ExtractTemp0);
-    masm.loadStringLength(string, string);
-
-    masm.tagValue(JSVAL_TYPE_INT32, string, R0);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 ICGetPropNativeStub*
@@ -2875,61 +2775,6 @@ ICGetPropCallNativeCompiler::getStub(ICStubSpace* space)
       default:
         MOZ_CRASH("Bad stub kind");
     }
-}
-
-bool
-ICGetProp_ArgumentsLength::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(which_ == ICGetProp_ArgumentsLength::Magic);
-
-    Label failure;
-
-    // Ensure that this is lazy arguments.
-    masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
-
-    // Ensure that frame has not loaded different arguments object since.
-    masm.branchTest32(Assembler::NonZero,
-                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
-                      &failure);
-
-    Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
-    masm.loadPtr(actualArgs, R0.scratchReg());
-    masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
-    EmitReturnFromIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-ICGetProp_ArgumentsCallee::ICGetProp_ArgumentsCallee(JitCode* stubCode, ICStub* firstMonitorStub)
-  : ICMonitoredStub(GetProp_ArgumentsCallee, stubCode, firstMonitorStub)
-{ }
-
-bool
-ICGetProp_ArgumentsCallee::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-
-    // Ensure that this is lazy arguments.
-    masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
-
-    // Ensure that frame has not loaded different arguments object since.
-    masm.branchTest32(Assembler::NonZero,
-                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
-                      &failure);
-
-    Address callee(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
-    masm.loadFunctionFromCalleeToken(callee, R0.scratchReg());
-    masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
-
-    EmitEnterTypeMonitorIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 /* static */ ICGetProp_Generic*
