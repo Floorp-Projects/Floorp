@@ -2101,19 +2101,6 @@ TryAttachLengthStub(JSContext* cx, SharedStubInfo* info,
 {
     MOZ_ASSERT(!*attached);
 
-    if (val.isString()) {
-        MOZ_ASSERT(res.isInt32());
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(String.length) stub");
-        ICGetProp_StringLength::Compiler compiler(cx, info->engine());
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-        if (!newStub)
-            return false;
-
-        *attached = true;
-        stub->addNewStub(newStub);
-        return true;
-    }
-
     if (val.isMagic(JS_OPTIMIZED_ARGUMENTS) && res.isInt32()) {
         JitSpew(JitSpew_BaselineIC, "  Generating GetProp(MagicArgs.length) stub");
         ICGetProp_ArgumentsLength::Compiler compiler(cx, info->engine(), ICGetProp_ArgumentsLength::Magic);
@@ -2579,25 +2566,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
         void* address = code->raw() + returnOffset_;
         cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(address);
     }
-}
-
-bool
-ICGetProp_StringLength::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-    masm.branchTestString(Assembler::NotEqual, R0, &failure);
-
-    // Unbox string and load its length.
-    Register string = masm.extractString(R0, ExtractTemp0);
-    masm.loadStringLength(string, string);
-
-    masm.tagValue(JSVAL_TYPE_INT32, string, R0);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 ICGetPropNativeStub*

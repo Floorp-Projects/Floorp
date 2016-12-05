@@ -79,8 +79,31 @@ class ObjOperandId : public OperandId
     bool operator!=(const ObjOperandId& other) const { return id_ != other.id_; }
 };
 
+class StringOperandId : public OperandId
+{
+  public:
+    StringOperandId() = default;
+    explicit StringOperandId(uint16_t id) : OperandId(id) {}
+};
+
+class TypedOperandId : public OperandId
+{
+    JSValueType type_;
+
+  public:
+    MOZ_IMPLICIT TypedOperandId(ObjOperandId id)
+      : OperandId(id.id()), type_(JSVAL_TYPE_OBJECT)
+    {}
+    MOZ_IMPLICIT TypedOperandId(StringOperandId id)
+      : OperandId(id.id()), type_(JSVAL_TYPE_STRING)
+    {}
+
+    JSValueType type() const { return type_; }
+};
+
 #define CACHE_IR_OPS(_)                   \
     _(GuardIsObject)                      \
+    _(GuardIsString)                      \
     _(GuardType)                          \
     _(GuardShape)                         \
     _(GuardGroup)                         \
@@ -107,6 +130,7 @@ class ObjOperandId : public OperandId
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectLengthResult)    \
+    _(LoadStringLengthResult)             \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -310,6 +334,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardIsObject, val);
         return ObjOperandId(val.id());
     }
+    StringOperandId guardIsString(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsString, val);
+        return StringOperandId(val.id());
+    }
     void guardType(ValOperandId val, JSValueType type) {
         writeOpWithOperandId(CacheOp::GuardType, val);
         static_assert(sizeof(type) == sizeof(uint8_t), "JSValueType should fit in a byte");
@@ -425,6 +453,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadArgumentsObjectLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
     }
+    void loadStringLengthResult(StringOperandId str) {
+        writeOpWithOperandId(CacheOp::LoadStringLengthResult, str);
+    }
     void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
         addStubField(uintptr_t(getter), StubField::Type::JSObject);
@@ -471,12 +502,9 @@ class MOZ_RAII CacheIRReader
         return CacheOp(buffer_.readByte());
     }
 
-    ValOperandId valOperandId() {
-        return ValOperandId(buffer_.readByte());
-    }
-    ObjOperandId objOperandId() {
-        return ObjOperandId(buffer_.readByte());
-    }
+    ValOperandId valOperandId() { return ValOperandId(buffer_.readByte()); }
+    ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
+    StringOperandId stringOperandId() { return StringOperandId(buffer_.readByte()); }
 
     uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
     GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
@@ -537,6 +565,7 @@ class MOZ_RAII GetPropIRGenerator
     bool tryAttachProxy(HandleObject obj, ObjOperandId objId);
 
     bool tryAttachPrimitive(ValOperandId valId);
+    bool tryAttachStringLength(ValOperandId valId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
