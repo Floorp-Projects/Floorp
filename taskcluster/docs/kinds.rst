@@ -11,6 +11,10 @@ users or automated tests.  This is more restrictive than most definitions of
 "build" in a Mozilla context: it does not include tasks that run build-like
 actions for static analysis or to produce instrumented artifacts.
 
+build-signing
+--------------
+
+
 artifact-build
 --------------
 
@@ -142,3 +146,6 @@ Docker repository
 The task definition used to create the image-building tasks is given in
 ``image.yml`` in the kind directory, and is interpreted as a :doc:`YAML
 Template <yaml-templates>`.
+
+android-stuff
+--------------
