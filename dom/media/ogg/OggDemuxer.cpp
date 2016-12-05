@@ -578,11 +578,12 @@ OggDemuxer::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
         continue;
       }
 
+      mInfo.mAudio = *flacState->GetInfo()->GetAsAudioInfo();
+
       if (msgInfo) {
         InitTrack(msgInfo, &mInfo.mAudio, mFlacState == flacState);
       }
 
-      mInfo.mAudio = *flacState->GetInfo()->GetAsAudioInfo();
       FillTags(&mInfo.mAudio, flacState->GetTags());
     }
   }
@@ -875,7 +876,6 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
       InitTrack(msgInfo, &mInfo.mAudio, true);
     }
 
-    mInfo.mAudio = *newFlacState->GetInfo()->GetAsAudioInfo();
     chained = true;
     tags = newFlacState->GetTags();
   }
