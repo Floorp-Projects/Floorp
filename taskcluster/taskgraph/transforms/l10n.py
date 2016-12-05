@@ -298,6 +298,17 @@ def mh_options_replace_project(config, jobs):
 
 
 @transforms.add
+def chain_of_trust(config, jobs):
+    for job in jobs:
+        job.setdefault('chainOfTrust', {})
+        job['chainOfTrust'].setdefault('inputs', {})
+        job['chainOfTrust']['inputs']['docker-image'] = {
+            "task-reference": "<docker-image>"
+        }
+        yield job
+
+
+@transforms.add
 def validate_again(config, jobs):
     for job in jobs:
         yield validate_schema(l10n_description_schema, job,
@@ -314,6 +325,9 @@ def make_job_description(config, jobs):
                 'docker-image': {'in-tree': 'desktop-build'},
                 'max-run-time': job['run-time'],
                 'chain-of-trust': True,
+            },
+            'extra': {
+                'chainOfTrust': job['chainOfTrust'],
             },
             'worker-type': job['worker-type'],
             'description': job['description'],
