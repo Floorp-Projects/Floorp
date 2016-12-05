@@ -195,7 +195,7 @@ public:
   // if there are no more packets buffered in the packet queue. More packets
   // can be buffered by inserting one or more pages into the stream by calling
   // PageIn(). The packet will have a valid granulepos.
-  virtual RefPtr<MediaRawData> PacketOutAsMediaRawData();
+  virtual already_AddRefed<MediaRawData> PacketOutAsMediaRawData();
 
   // Extracts all packets from the page, and inserts them into the packet
   // queue. They can be extracted by calling PacketOut(). Packets from an
@@ -391,7 +391,7 @@ public:
   nsresult Reset(bool aStart);
   bool IsHeader(ogg_packet* aPacket) override;
   nsresult PageIn(ogg_page* aPage) override;
-
+  already_AddRefed<MediaRawData> PacketOutAsMediaRawData() override;
   // Returns the end time that a granulepos represents.
   static int64_t Time(int aPreSkip, int64_t aGranulepos);
 
