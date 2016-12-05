@@ -45,6 +45,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mParentLayerObserverEpoch(0)
   , mPendingTransactionId(0)
   , mDestroyed(false)
+  , mWREpoch(0)
 {
   MOZ_ASSERT(mGLContext);
   MOZ_ASSERT(mCompositor);
@@ -469,7 +470,7 @@ WebRenderBridgeParent::ClearResources()
   mExternalImageIds.Clear();
 
   if (mWRState) {
-    wr_destroy(mWRWindowState, mWRState);
+    wr_destroy(mWRState);
     mWRState = nullptr;
   }
   if (mCompositorScheduler) {

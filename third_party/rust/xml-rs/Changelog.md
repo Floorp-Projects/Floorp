@@ -3,11 +3,6 @@
 * Added `Debug` implementation for `XmlVersion`
 * Fixed some failing tests
 
-## Version 0.3.5
-
-* Added `Debug` implementation for `XmlVersion`
-* Fixed some failing tests
-
 ## Version 0.3.3
 
 * Updated `bitflags` to 0.7.
