@@ -47,9 +47,15 @@ public:
    * Clean this up, finishing with SendShutDown() which will cause __delete__
    * to be sent from the parent side.
    */
+  using CompositableForwarder::Destroy;
   void Destroy();
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
   bool IsDestroyed() const { return mDestroyed; }
+
+  void MarkSyncTransaction()
+  {
+    mSyncTransaction = true;
+  }
 
 private:
   friend class CompositorBridgeChild;
@@ -68,9 +74,8 @@ private:
   void UpdateTextureRegion(CompositableClient* aCompositable,
                            const ThebesBufferData& aThebesBufferData,
                            const nsIntRegion& aUpdatedRegion) override;
-  void Destroy(CompositableChild* aCompositable) override;
-  bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
-  bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
+  bool DestroyInTransaction(PTextureChild* aTexture, bool aSynchronously) override;
+  bool DestroyInTransaction(PCompositableChild* aCompositable, bool aSynchronously) override;
   void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                      TextureClient* aTexture) override;
   void UseTextures(CompositableClient* aCompositable,
@@ -95,8 +100,13 @@ private:
     Release();
   }
 
+  bool AddOpDestroy(const OpDestroy& aOp, bool aSynchronously);
+
   nsTArray<WebRenderCommand> mCommands;
+  nsTArray<OpDestroy> mDestroyedActors;
   bool mIsInTransaction;
+  bool mSyncTransaction;
+
   bool mIPCOpen;
   bool mDestroyed;
 };

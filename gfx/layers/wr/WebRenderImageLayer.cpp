@@ -6,12 +6,21 @@
 #include "WebRenderImageLayer.h"
 
 #include "LayersLogging.h"
+#include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 namespace mozilla {
 namespace layers {
 
 using namespace gfx;
+
+WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
+  : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
+  , mImageId(0)
+{
+  MOZ_COUNT_CTOR(WebRenderImageLayer);
+}
 
 WebRenderImageLayer::~WebRenderImageLayer()
 {
@@ -46,22 +55,65 @@ WebRenderImageLayer::RenderLayer()
   }
 
   RefPtr<gfx::SourceSurface> surface = GetAsSourceSurface();
-  if (!surface)
+  if (!surface) {
     return;
-
-  WRScrollFrameStackingContextGenerator scrollFrames(this);
-
-  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
-  DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::MapType::READ);
-  //XXX
-  MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-                     surface->GetFormat() == SurfaceFormat::B8G8R8A8, "bad format");
+  }
 
   gfx::IntSize size = surface->GetSize();
 
-  WRImageKey key;
-  gfx::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
-  WRBridge()->SendAddImage(size.width, size.height, map.GetStride(), RGBA8, buf, &key);
+  // XXX Add external image id handling
+
+  // XXX Add texure recycling
+
+  // XXX Add other TextureData supports.
+  // Only BufferTexture is supported now.
+  RefPtr<TextureClient> texture =
+    TextureClient::CreateForRawBufferAccess(WRBridge(),
+                                            surface->GetFormat(),
+                                            size,
+                                            BackendType::SKIA,
+                                            TextureFlags::DEFAULT);
+  if (!texture) {
+    return;
+  }
+  MOZ_ASSERT(texture->CanExposeDrawTarget());
+
+  TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
+  if (!autoLock.Succeeded()) {
+    return;
+  }
+  RefPtr<DrawTarget> drawTarget = texture->BorrowDrawTarget();
+  if (!drawTarget || !drawTarget->IsValid()) {
+    return;
+  }
+  drawTarget->CopySurface(surface, IntRect(IntPoint(), size), IntPoint());
+
+  if (!mImageContainerForWR) {
+    mImageContainerForWR = LayerManager::CreateImageContainer();
+  }
+  RefPtr<TextureWrapperImage> image =
+    new TextureWrapperImage(texture, IntRect(IntPoint(0, 0), size));
+  mImageContainerForWR->SetCurrentImageInTransaction(image);
+
+  if (!mImageClient) {
+    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
+                                                  WRBridge(),
+                                                  TextureFlags::DEFAULT);
+    if (!mImageClient) {
+      return;
+    }
+    mImageClient->Connect();
+  }
+
+  if (!mImageClient->UpdateImage(mImageContainerForWR, /* unused */0)) {
+    return;
+  }
+
+  WRScrollFrameStackingContextGenerator scrollFrames(this);
+
+  //XXX
+  MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
+                     surface->GetFormat() == SurfaceFormat::B8G8R8A8, "bad format");
 
   Rect rect(0, 0, size.width, size.height);
 
@@ -73,8 +125,8 @@ WebRenderImageLayer::RenderLayer()
   }
   if (gfxPrefs::LayersDump()) printf_stderr("ImageLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
   WRBridge()->AddWebRenderCommand(OpPushDLBuilder());
-  WRBridge()->AddWebRenderCommand(OpDPPushImage(toWrRect(rect), toWrRect(clip), Nothing(), key));
-  Manager()->AddImageKeyForDiscard(key);
+
+  WRBridge()->AddWebRenderCommand(OpDPPushCompositable(toWrRect(rect), toWrRect(clip), Nothing(), nullptr, mImageClient->GetIPDLActor()));
 
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   Rect overflow(0, 0, relBounds.width, relBounds.height);

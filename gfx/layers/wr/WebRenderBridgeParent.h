@@ -65,8 +65,10 @@ public:
                                       const uint32_t& aHeight,
                                       bool* aOutSuccess) override;
   mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                    InfallibleTArray<OpDestroy>&& aToDestroy,
                                     const uint64_t& aTransactionId) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                        InfallibleTArray<OpDestroy>&& aToDestroy,
                                         const uint64_t& aTransactionId) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture,
                                             const gfx::IntRect& aRect) override;
