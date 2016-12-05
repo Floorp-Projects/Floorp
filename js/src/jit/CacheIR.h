@@ -113,6 +113,8 @@ class TypedOperandId : public OperandId
     _(GuardNotDOMProxy)                   \
     _(GuardSpecificObject)                \
     _(GuardNoDetachedTypedObjects)        \
+    _(GuardMagicValue)                    \
+    _(GuardFrameHasNoArgumentsObject)     \
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
@@ -131,6 +133,8 @@ class TypedOperandId : public OperandId
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectLengthResult)    \
     _(LoadStringLengthResult)             \
+    _(LoadFrameCalleeResult)              \
+    _(LoadFrameNumActualArgsResult)       \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -371,8 +375,21 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
         addStubField(uintptr_t(expected), StubField::Type::JSObject);
     }
+    void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
+        writeOpWithOperandId(CacheOp::GuardMagicValue, val);
+        buffer_.writeByte(uint32_t(magic));
+    }
     void guardNoDetachedTypedObjects() {
         writeOp(CacheOp::GuardNoDetachedTypedObjects);
+    }
+    void guardFrameHasNoArgumentsObject() {
+        writeOp(CacheOp::GuardFrameHasNoArgumentsObject);
+    }
+    void loadFrameCalleeResult() {
+        writeOp(CacheOp::LoadFrameCalleeResult);
+    }
+    void loadFrameNumActualArgsResult() {
+        writeOp(CacheOp::LoadFrameNumActualArgsResult);
     }
     void guardNoUnboxedExpando(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardNoUnboxedExpando, obj);
@@ -511,6 +528,7 @@ class MOZ_RAII CacheIRReader
     JSValueType valueType() { return JSValueType(buffer_.readByte()); }
     TypedThingLayout typedThingLayout() { return TypedThingLayout(buffer_.readByte()); }
     uint32_t typeDescrKey() { return buffer_.readByte(); }
+    JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
 
     bool matchOp(CacheOp op) {
         const uint8_t* pos = buffer_.currentPosition();
@@ -566,6 +584,7 @@ class MOZ_RAII GetPropIRGenerator
 
     bool tryAttachPrimitive(ValOperandId valId);
     bool tryAttachStringLength(ValOperandId valId);
+    bool tryAttachMagicArguments(ValOperandId valId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;

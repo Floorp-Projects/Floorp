@@ -79,6 +79,8 @@ GetPropIRGenerator::tryAttachStub()
         return true;
     if (tryAttachStringLength(valId))
         return true;
+    if (tryAttachMagicArguments(valId))
+        return true;
 
     return false;
 }
@@ -735,5 +737,29 @@ GetPropIRGenerator::tryAttachStringLength(ValOperandId valId)
     StringOperandId strId = writer.guardIsString(valId);
     writer.loadStringLengthResult(strId);
     writer.returnFromIC();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId)
+{
+    if (!val_.isMagic(JS_OPTIMIZED_ARGUMENTS))
+        return false;
+
+    if (name_ != cx_->names().length && name_ != cx_->names().callee)
+        return false;
+
+    writer.guardMagicValue(valId, JS_OPTIMIZED_ARGUMENTS);
+    writer.guardFrameHasNoArgumentsObject();
+
+    if (name_ == cx_->names().length) {
+        writer.loadFrameNumActualArgsResult();
+        writer.returnFromIC();
+    } else {
+        MOZ_ASSERT(name_ == cx_->names().callee);
+        writer.loadFrameCalleeResult();
+        writer.typeMonitorResult();
+    }
+
     return true;
 }
