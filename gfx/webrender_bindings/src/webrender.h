@@ -107,7 +107,7 @@ wr_create(wrwindowstate* wrWindow, uint32_t width, uint32_t height, uint64_t lay
 WR_FUNC;
 
 WR_INLINE void
-wr_destroy(wrstate* wrstate)
+wr_destroy(wrwindowstate* wrWindow, wrstate* wrstate)
 WR_FUNC;
 
 WR_INLINE WRImageKey
@@ -151,7 +151,7 @@ wr_dp_begin(wrwindowstate* wrWindow, wrstate* wrState, uint32_t width, uint32_t 
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_end(wrwindowstate* wrWindow, wrstate* wrState, uint32_t epoch)
+wr_dp_end(wrwindowstate* wrWindow, wrstate* wrState)
 WR_FUNC;
 
 WR_INLINE void
