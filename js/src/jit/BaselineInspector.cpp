@@ -1016,7 +1016,6 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
           case ICStub::GetProp_Generic:
             return MIRType::Value;
 
-          case ICStub::GetProp_ArgumentsLength:
           case ICStub::GetElem_Arguments:
             // Either an object or magic arguments.
             return MIRType::Value;

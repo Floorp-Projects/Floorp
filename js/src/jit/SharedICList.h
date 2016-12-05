@@ -36,8 +36,6 @@ namespace jit {
                                                  \
     _(GetProp_Fallback)                          \
     _(GetProp_CallNativeGlobal)                  \
-    _(GetProp_ArgumentsLength)                   \
-    _(GetProp_ArgumentsCallee)                   \
     _(GetProp_Generic)                           \
                                                  \
     _(CacheIR_Monitored)                         \

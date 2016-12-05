@@ -1092,6 +1092,20 @@ BaselineCacheIRCompiler::emitGuardSpecificObject()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardMagicValue()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    JSWhyMagic magic = reader.whyMagic();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestMagicValue(Assembler::NotEqual, val, magic, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardNoUnboxedExpando()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1293,6 +1307,38 @@ BaselineCacheIRCompiler::emitGuardNoDetachedTypedObjects()
         return false;
 
     CheckForTypedObjectWithDetachedStorage(cx_, masm, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardFrameHasNoArgumentsObject()
+{
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTest32(Assembler::NonZero,
+                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
+                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
+                      failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadFrameCalleeResult()
+{
+    Address callee(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+    masm.loadFunctionFromCalleeToken(callee, R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadFrameNumActualArgsResult()
+{
+    Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
+    masm.loadPtr(actualArgs, R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
     return true;
 }
 
