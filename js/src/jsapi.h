@@ -14,6 +14,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Variant.h"
 
@@ -33,7 +34,6 @@
 #include "js/Id.h"
 #include "js/Principals.h"
 #include "js/Realm.h"
-#include "js/RefCounted.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"
@@ -6087,7 +6087,7 @@ SetBuildIdOp(JSContext* cx, BuildIdOp buildIdOp);
  * by calling createObject().
  */
 
-struct WasmModule : js::AtomicRefCounted<WasmModule>
+struct WasmModule : mozilla::external::AtomicRefCounted<WasmModule>
 {
     MOZ_DECLARE_REFCOUNTED_TYPENAME(WasmModule)
     virtual ~WasmModule() {}
