@@ -3958,7 +3958,7 @@ STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, width);
 STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, height);
 
 /**
- * <div rustbindgen="true" replaces="UniquePtr">
+ * <div rustbindgen="true" replaces="mozilla_UniquePtr">
  *
  * TODO(Emilio): This is a workaround and we should be able to get rid of this
  * one.

@@ -8,7 +8,6 @@ the in-tree tooltool manifests.
 from __future__ import print_function
 
 import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
 
 import argparse
 import datetime
@@ -170,7 +169,7 @@ def upload_to_tooltool(tooltool_auth, task_id, artifact):
         os.chdir(oldcwd)
 
 def update_manifest(artifact, manifest, local_gecko_clone):
-    platform = linux
+    platform = 'linux'
     manifest_dir = os.path.join(local_gecko_clone,
                                 'testing', 'config', 'tooltool-manifests')
     platform_dir = [p for p in os.listdir(manifest_dir)
