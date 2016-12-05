@@ -135,7 +135,6 @@ private:
   uint64_t mPendingTransactionId;
 
   bool mDestroyed;
-  uint32_t mWREpoch;
 };
 
 } // namespace layers
