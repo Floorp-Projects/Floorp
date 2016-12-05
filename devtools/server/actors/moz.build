@@ -59,6 +59,7 @@ DevToolsModules(
     'styleeditor.js',
     'styles.js',
     'stylesheets.js',
+    'tab.js',
     'timeline.js',
     'webaudio.js',
     'webbrowser.js',

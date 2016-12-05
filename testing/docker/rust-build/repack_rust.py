@@ -33,10 +33,11 @@ def fetch(url):
   subprocess.check_call(['shasum', '-c', base + '.sha256'])
   subprocess.check_call(['shasum', '-c', base + '.asc.sha256'])
   subprocess.check_call(['gpg', '--verify', base + '.asc', base])
-  subprocess.check_call(['keybase', 'pgp', 'verify',
-      '-d', base + '.asc',
-      '-i', base,
-  ])
+  if False:
+      subprocess.check_call(['keybase', 'pgp', 'verify',
+          '-d', base + '.asc',
+          '-i', base,
+      ])
 
 def install(filename, target):
   '''Run a package's installer script against the given target directory.'''
@@ -157,6 +158,7 @@ def repack_cargo(host, channel='nightly'):
 
 # rust platform triples
 android="armv7-linux-androideabi"
+android_x86="i686-linux-android"
 linux64="x86_64-unknown-linux-gnu"
 linux32="i686-unknown-linux-gnu"
 mac64="x86_64-apple-darwin"
@@ -170,8 +172,4 @@ if __name__ == '__main__':
   repack(win64, [win64])
   repack(linux64, [linux64, linux32])
   repack(linux64, [linux64, mac64, mac32], suffix='mac-cross')
-  repack(linux64, [linux64, android], suffix='android-cross')
-  repack_cargo(mac64)
-  repack_cargo(win32)
-  repack_cargo(win64)
-  repack_cargo(linux64)
+  repack(linux64, [linux64, android, android_x86], suffix='android-cross')
