@@ -13,7 +13,7 @@
 
 namespace js {
 
-// Replacement for mozilla::UniquePtr that defaults to js::DefaultDelete.
+// Replacement for mozilla::UniquePtr that defaults to JS::DeletePolicy.
 template <typename T, typename D = JS::DeletePolicy<T>>
 using UniquePtr = mozilla::UniquePtr<T, D>;
 
