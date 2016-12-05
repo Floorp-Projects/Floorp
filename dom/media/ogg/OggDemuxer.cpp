@@ -471,7 +471,7 @@ OggDemuxer::SetupTargetFlac(FlacState* aFlacState, OggHeaders& aHeaders)
     mFlacState->Reset();
   }
 
-  mInfo.mAudio = aFlacState->Info();
+  mInfo.mAudio = *aFlacState->GetInfo()->GetAsAudioInfo();
   mFlacState = aFlacState;
   mFlacSerial = aFlacState->mSerial;
 }
@@ -582,7 +582,7 @@ OggDemuxer::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
         InitTrack(msgInfo, &mInfo.mAudio, mFlacState == flacState);
       }
 
-      mInfo.mAudio = flacState->Info();
+      mInfo.mAudio = *flacState->GetInfo()->GetAsAudioInfo();
       FillTags(&mInfo.mAudio, flacState->GetTags());
     }
   }
@@ -863,8 +863,10 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
   OggHeaders flacHeaders;
   if ((newFlacState &&
        ReadHeaders(TrackInfo::kAudioTrack, newFlacState, flacHeaders)) &&
-      (mFlacState->Info().mRate == newFlacState->Info().mRate) &&
-      (mFlacState->Info().mChannels == newFlacState->Info().mChannels)) {
+      (mFlacState->GetInfo()->GetAsAudioInfo()->mRate ==
+       newFlacState->GetInfo()->GetAsAudioInfo()->mRate) &&
+      (mFlacState->GetInfo()->GetAsAudioInfo()->mChannels ==
+       newFlacState->GetInfo()->GetAsAudioInfo()->mChannels)) {
 
     SetupTargetFlac(newFlacState, flacHeaders);
     LOG(LogLevel::Debug, ("New flac ogg link, serial=%d\n", mFlacSerial));
@@ -873,7 +875,7 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
       InitTrack(msgInfo, &mInfo.mAudio, true);
     }
 
-    mInfo.mAudio = newFlacState->Info();
+    mInfo.mAudio = *newFlacState->GetInfo()->GetAsAudioInfo();
     chained = true;
     tags = newFlacState->GetTags();
   }

@@ -224,6 +224,12 @@ public:
   // True when all headers packets have been read.
   bool mDoneReadingHeaders;
 
+  virtual const TrackInfo* GetInfo() const
+  {
+    MOZ_RELEASE_ASSERT(false, "Can't be called directly");
+    return nullptr;
+  }
+
   // Validation utility for vorbis-style tag names.
   static bool IsValidVorbisTagName(nsCString& aName);
 
@@ -618,7 +624,7 @@ public:
   // Return a hash table with tag metadata.
   MetadataTags* GetTags() override;
 
-  const AudioInfo& Info();
+  const TrackInfo* GetInfo() const override;
 
 private:
   bool ReconstructFlacGranulepos(void);
