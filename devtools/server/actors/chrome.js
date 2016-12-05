@@ -7,7 +7,7 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 const { DebuggerServer } = require("../main");
-const { getChildDocShells, TabActor } = require("./webbrowser");
+const { getChildDocShells, TabActor } = require("./tab");
 const makeDebugger = require("./utils/make-debugger");
 
 /**
