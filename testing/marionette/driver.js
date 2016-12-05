@@ -2413,7 +2413,11 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
       }
 
       let canvas = capture.viewport(this.getCurrentWindow(), highlightEls);
-      return capture.toBase64(canvas);
+      if (hash) {
+        return capture.toHash(canvas);
+      } else {
+        return capture.toBase64(canvas);
+      }
 
     case Context.CONTENT:
       if (hash) {
