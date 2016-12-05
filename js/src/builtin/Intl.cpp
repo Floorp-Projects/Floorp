@@ -21,6 +21,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsobj.h"
+#include "jsstr.h"
 
 #include "builtin/IntlTimeZoneData.h"
 #if ENABLE_INTL_API
@@ -1117,10 +1118,10 @@ NewUCollator(JSContext* cx, HandleObject collator)
 
     if (!GetProperty(cx, internals, internals, cx->names().usage, &value))
         return nullptr;
-    JSAutoByteString usage(cx, value.toString());
+    JSLinearString* usage = value.toString()->ensureLinear(cx);
     if (!usage)
         return nullptr;
-    if (equal(usage, "search")) {
+    if (StringEqualsAscii(usage, "search")) {
         // ICU expects search as a Unicode locale extension on locale.
         // Unicode locale extensions must occur before private use extensions.
         const char* oldLocale = locale.ptr();
@@ -1148,6 +1149,8 @@ NewUCollator(JSContext* cx, HandleObject collator)
         memcpy(newLocale + index + insertLen, oldLocale + index, localeLen - index + 1); // '\0'
         locale.clear();
         locale.initBytes(newLocale);
+    } else {
+        MOZ_ASSERT(StringEqualsAscii(usage, "sort"));
     }
 
     // We don't need to look at the collation property - it can only be set
@@ -1156,18 +1159,18 @@ NewUCollator(JSContext* cx, HandleObject collator)
 
     if (!GetProperty(cx, internals, internals, cx->names().sensitivity, &value))
         return nullptr;
-    JSAutoByteString sensitivity(cx, value.toString());
+    JSLinearString* sensitivity = value.toString()->ensureLinear(cx);
     if (!sensitivity)
         return nullptr;
-    if (equal(sensitivity, "base")) {
+    if (StringEqualsAscii(sensitivity, "base")) {
         uStrength = UCOL_PRIMARY;
-    } else if (equal(sensitivity, "accent")) {
+    } else if (StringEqualsAscii(sensitivity, "accent")) {
         uStrength = UCOL_SECONDARY;
-    } else if (equal(sensitivity, "case")) {
+    } else if (StringEqualsAscii(sensitivity, "case")) {
         uStrength = UCOL_PRIMARY;
         uCaseLevel = UCOL_ON;
     } else {
-        MOZ_ASSERT(equal(sensitivity, "variant"));
+        MOZ_ASSERT(StringEqualsAscii(sensitivity, "variant"));
         uStrength = UCOL_TERTIARY;
     }
 
@@ -1189,15 +1192,15 @@ NewUCollator(JSContext* cx, HandleObject collator)
     if (!GetProperty(cx, internals, internals, cx->names().caseFirst, &value))
         return nullptr;
     if (!value.isUndefined()) {
-        JSAutoByteString caseFirst(cx, value.toString());
+        JSLinearString* caseFirst = value.toString()->ensureLinear(cx);
         if (!caseFirst)
             return nullptr;
-        if (equal(caseFirst, "upper"))
+        if (StringEqualsAscii(caseFirst, "upper"))
             uCaseFirst = UCOL_UPPER_FIRST;
-        else if (equal(caseFirst, "lower"))
+        else if (StringEqualsAscii(caseFirst, "lower"))
             uCaseFirst = UCOL_LOWER_FIRST;
         else
-            MOZ_ASSERT(equal(caseFirst, "false"));
+            MOZ_ASSERT(StringEqualsAscii(caseFirst, "false"));
     }
 
     UErrorCode status = U_ZERO_ERROR;
@@ -1599,11 +1602,11 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
 
     if (!GetProperty(cx, internals, internals, cx->names().style, &value))
         return nullptr;
-    JSAutoByteString style(cx, value.toString());
+    JSLinearString* style = value.toString()->ensureLinear(cx);
     if (!style)
         return nullptr;
 
-    if (equal(style, "currency")) {
+    if (StringEqualsAscii(style, "currency")) {
         if (!GetProperty(cx, internals, internals, cx->names().currency, &value))
             return nullptr;
         currency = value.toString();
@@ -1616,21 +1619,21 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
 
         if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay, &value))
             return nullptr;
-        JSAutoByteString currencyDisplay(cx, value.toString());
+        JSLinearString* currencyDisplay = value.toString()->ensureLinear(cx);
         if (!currencyDisplay)
             return nullptr;
-        if (equal(currencyDisplay, "code")) {
+        if (StringEqualsAscii(currencyDisplay, "code")) {
             uStyle = UNUM_CURRENCY_ISO;
-        } else if (equal(currencyDisplay, "symbol")) {
+        } else if (StringEqualsAscii(currencyDisplay, "symbol")) {
             uStyle = UNUM_CURRENCY;
         } else {
-            MOZ_ASSERT(equal(currencyDisplay, "name"));
+            MOZ_ASSERT(StringEqualsAscii(currencyDisplay, "name"));
             uStyle = UNUM_CURRENCY_PLURAL;
         }
-    } else if (equal(style, "percent")) {
+    } else if (StringEqualsAscii(style, "percent")) {
         uStyle = UNUM_PERCENT;
     } else {
-        MOZ_ASSERT(equal(style, "decimal"));
+        MOZ_ASSERT(StringEqualsAscii(style, "decimal"));
         uStyle = UNUM_DECIMAL;
     }
 
