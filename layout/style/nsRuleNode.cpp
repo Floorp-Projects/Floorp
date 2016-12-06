@@ -289,11 +289,11 @@ nsRuleNode::EnsureInlineDisplay(StyleDisplay& display)
     case StyleDisplay::Grid:
       display = StyleDisplay::InlineGrid;
       break;
-    case StyleDisplay::Box:
-      display = StyleDisplay::InlineBox;
+    case StyleDisplay::MozBox:
+      display = StyleDisplay::MozInlineBox;
       break;
-    case StyleDisplay::Stack:
-      display = StyleDisplay::InlineStack;
+    case StyleDisplay::MozStack:
+      display = StyleDisplay::MozInlineStack;
       break;
     default:
       break; // Do nothing
@@ -1445,7 +1445,7 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleWindowDragging, Default, NoDrag)
   DEFINE_ENUM_CLASS_SETTER(StyleOrient, Inline, Vertical)
 #ifdef MOZ_XUL
-  DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, Popup)
+  DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, MozPopup)
 #else
   DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, InlineBox)
 #endif
