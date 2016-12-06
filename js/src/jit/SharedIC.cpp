@@ -2281,7 +2281,7 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
 }
 
 bool
-CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
+CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                        JSObject** lastProto, size_t* protoChainDepthOut)
 {
     size_t depth = 0;
@@ -2289,9 +2289,9 @@ CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
     while (curObj) {
         if (curObj->isNative()) {
             // Don't handle proto chains with resolve hooks.
-            if (ClassMayResolveId(cx->names(), curObj->getClass(), NameToId(name), curObj))
+            if (ClassMayResolveId(cx->names(), curObj->getClass(), id, curObj))
                 return false;
-            if (curObj->as<NativeObject>().contains(cx, NameToId(name)))
+            if (curObj->as<NativeObject>().contains(cx, id))
                 return false;
             if (curObj->getClass()->getGetProperty())
                 return false;
@@ -2299,13 +2299,13 @@ CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
             // Non-native objects are only handled as the original receiver.
             return false;
         } else if (curObj->is<UnboxedPlainObject>()) {
-            if (curObj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, NameToId(name)))
+            if (curObj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
                 return false;
         } else if (curObj->is<UnboxedArrayObject>()) {
-            if (name == cx->names().length)
+            if (JSID_IS_ATOM(id, cx->names().length))
                 return false;
         } else if (curObj->is<TypedObject>()) {
-            if (curObj->as<TypedObject>().typeDescr().hasProperty(cx->names(), NameToId(name)))
+            if (curObj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
                 return false;
         } else {
             return false;
@@ -2404,7 +2404,8 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
     }
 
     if (!attached && !JitOptions.disableCacheIR) {
-        GetPropIRGenerator gen(cx, pc, engine, &isTemporarilyUnoptimizable, val, name, res);
+        RootedValue idVal(cx, StringValue(name));
+        GetPropIRGenerator gen(cx, pc, engine, &isTemporarilyUnoptimizable, val, idVal, res);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), CacheKind::GetProp,
                                                         engine, info.outerScript(cx), stub);
