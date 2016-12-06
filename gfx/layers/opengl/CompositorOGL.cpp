@@ -1819,5 +1819,11 @@ PerUnitTexturePoolOGL::DestroyTextures()
   mTextures.SetLength(0);
 }
 
+bool
+CompositorOGL::SupportsLayerGeometry() const
+{
+  return gfxPrefs::OGLLayerGeometry();
+}
+
 } // namespace layers
 } // namespace mozilla

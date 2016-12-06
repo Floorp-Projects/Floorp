@@ -359,6 +359,11 @@ public:
     MOZ_CRASH("Compositor::DrawTriangle is not implemented for the current platform!");
   }
 
+  virtual bool SupportsLayerGeometry() const
+  {
+    return false;
+  }
+
   /**
    * Draw an unfilled solid color rect. Typically used for debugging overlays.
    */

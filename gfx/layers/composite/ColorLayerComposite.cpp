@@ -20,16 +20,19 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-ColorLayerComposite::RenderLayer(const IntRect& aClipRect)
+ColorLayerComposite::RenderLayer(const gfx::IntRect& aClipRect,
+                                 const Maybe<gfx::Polygon>& aGeometry)
 {
   Rect rect(GetBounds());
+
   const Matrix4x4& transform = GetEffectiveTransform();
 
   RenderWithAllMasks(this, mCompositor, aClipRect,
                      [&](EffectChain& effectChain, const IntRect& clipRect) {
     GenEffectChain(effectChain);
-    mCompositor->DrawQuad(rect, clipRect, effectChain, GetEffectiveOpacity(),
-                          transform);
+
+    mCompositor->DrawGeometry(rect, clipRect, effectChain,
+                              GetEffectiveOpacity(), transform, aGeometry);
   });
 
   mCompositor->DrawDiagnostics(DiagnosticFlags::COLOR, rect, aClipRect,
