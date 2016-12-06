@@ -561,7 +561,7 @@ class MOZ_RAII GetPropIRGenerator
     JSContext* cx_;
     jsbytecode* pc_;
     HandleValue val_;
-    HandlePropertyName name_;
+    HandleValue idVal_;
     MutableHandleValue res_;
     ICStubEngine engine_;
     bool* isTemporarilyUnoptimizable_;
@@ -569,22 +569,22 @@ class MOZ_RAII GetPropIRGenerator
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
     PreliminaryObjectAction preliminaryObjectAction_;
 
-    bool tryAttachNative(HandleObject obj, ObjOperandId objId);
-    bool tryAttachUnboxed(HandleObject obj, ObjOperandId objId);
-    bool tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId);
-    bool tryAttachTypedObject(HandleObject obj, ObjOperandId objId);
-    bool tryAttachObjectLength(HandleObject obj, ObjOperandId objId);
-    bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId);
-    bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId);
+    bool tryAttachNative(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachUnboxed(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachTypedObject(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachObjectLength(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
-    bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId);
-    bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId);
-    bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId);
-    bool tryAttachProxy(HandleObject obj, ObjOperandId objId);
+    bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
-    bool tryAttachPrimitive(ValOperandId valId);
-    bool tryAttachStringLength(ValOperandId valId);
-    bool tryAttachMagicArguments(ValOperandId valId);
+    bool tryAttachPrimitive(ValOperandId valId, HandleId id);
+    bool tryAttachStringLength(ValOperandId valId, HandleId id);
+    bool tryAttachMagicArguments(ValOperandId valId, HandleId id);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
@@ -592,7 +592,7 @@ class MOZ_RAII GetPropIRGenerator
   public:
     GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine,
                        bool* isTemporarilyUnoptimizable,
-                       HandleValue val, HandlePropertyName name, MutableHandleValue res);
+                       HandleValue val, HandleValue idVal, MutableHandleValue res);
 
     bool tryAttachStub();
 
