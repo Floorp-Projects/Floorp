@@ -692,7 +692,7 @@ CodeGeneratorARM::modICommon(MMod* mir, Register lhs, Register rhs, Register out
     // 0/X (with X < 0) is bad because both of these values *should* be doubles,
     // and the result should be -0.0, which cannot be represented in integers.
     // X/0 is bad because it will give garbage (or abort), when it should give
-    // either \infty, -\infty or NAN.
+    // either \infty, -\infty or NaN.
 
     // Prevent 0 / X (with X < 0) and X / 0
     // testing X / Y. Compare Y with 0.
@@ -704,19 +704,23 @@ CodeGeneratorARM::modICommon(MMod* mir, Register lhs, Register rhs, Register out
     // If (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take
     // the bailout.
     if (mir->canBeDivideByZero() || mir->canBeNegativeDividend()) {
+        if (mir->trapOnError()) {
+            // wasm allows negative lhs and return 0 in this case.
+            MOZ_ASSERT(mir->isTruncated());
+            masm.as_cmp(rhs, Imm8(0));
+            masm.ma_b(trap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
+            return;
+        }
+
         masm.as_cmp(rhs, Imm8(0));
         masm.as_cmp(lhs, Imm8(0), Assembler::LessThan);
         if (mir->isTruncated()) {
-            if (mir->trapOnError()) {
-                masm.ma_b(trap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
-            } else {
-                // NaN|0 == 0 and (0 % -X)|0 == 0
-                Label skip;
-                masm.ma_b(&skip, Assembler::NotEqual);
-                masm.ma_mov(Imm32(0), output);
-                masm.ma_b(&done);
-                masm.bind(&skip);
-            }
+            // NaN|0 == 0 and (0 % -X)|0 == 0
+            Label skip;
+            masm.ma_b(&skip, Assembler::NotEqual);
+            masm.ma_mov(Imm32(0), output);
+            masm.ma_b(&done);
+            masm.bind(&skip);
         } else {
             MOZ_ASSERT(mir->fallible());
             bailoutIf(Assembler::Equal, snapshot);
