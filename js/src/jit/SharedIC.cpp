@@ -175,15 +175,6 @@ ICStub::NonCacheIRStubMakesGCCalls(Kind kind)
       case Call_ScriptedFunCall:
       case Call_StringSplit:
       case WarmUpCounter_Fallback:
-      case GetElem_NativeSlotName:
-      case GetElem_NativeSlotSymbol:
-      case GetElem_NativePrototypeSlotName:
-      case GetElem_NativePrototypeSlotSymbol:
-      case GetElem_NativePrototypeCallNativeName:
-      case GetElem_NativePrototypeCallNativeSymbol:
-      case GetElem_NativePrototypeCallScriptedName:
-      case GetElem_NativePrototypeCallScriptedSymbol:
-      case GetElem_UnboxedPropertyName:
       case GetProp_CallNativeGlobal:
       case GetProp_Generic:
       case SetProp_CallScripted:
@@ -270,63 +261,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &callStub->templateObject(), "baseline-callstringsplit-template");
         TraceEdge(trc, &callStub->expectedSep(), "baseline-callstringsplit-sep");
         TraceEdge(trc, &callStub->expectedStr(), "baseline-callstringsplit-str");
-        break;
-      }
-      case ICStub::GetElem_NativeSlotName:
-      case ICStub::GetElem_NativeSlotSymbol:
-      case ICStub::GetElem_UnboxedPropertyName: {
-        ICGetElemNativeStub* getElemStub = static_cast<ICGetElemNativeStub*>(this);
-        getElemStub->receiverGuard().trace(trc);
-        if (getElemStub->isSymbol()) {
-            ICGetElem_NativeSlot<JS::Symbol*>* typedGetElemStub = toGetElem_NativeSlotSymbol();
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-native-key");
-        } else {
-            ICGetElemNativeSlotStub<PropertyName*>* typedGetElemStub =
-                reinterpret_cast<ICGetElemNativeSlotStub<PropertyName*>*>(this);
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-native-key");
-        }
-        break;
-      }
-      case ICStub::GetElem_NativePrototypeSlotName:
-      case ICStub::GetElem_NativePrototypeSlotSymbol: {
-        ICGetElemNativeStub* getElemStub = static_cast<ICGetElemNativeStub*>(this);
-        getElemStub->receiverGuard().trace(trc);
-        if (getElemStub->isSymbol()) {
-            ICGetElem_NativePrototypeSlot<JS::Symbol*>* typedGetElemStub
-                = toGetElem_NativePrototypeSlotSymbol();
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-nativeproto-key");
-            TraceEdge(trc, &typedGetElemStub->holder(), "baseline-getelem-nativeproto-holder");
-            TraceEdge(trc, &typedGetElemStub->holderShape(), "baseline-getelem-nativeproto-holdershape");
-        } else {
-            ICGetElem_NativePrototypeSlot<PropertyName*>* typedGetElemStub
-                = toGetElem_NativePrototypeSlotName();
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-nativeproto-key");
-            TraceEdge(trc, &typedGetElemStub->holder(), "baseline-getelem-nativeproto-holder");
-            TraceEdge(trc, &typedGetElemStub->holderShape(), "baseline-getelem-nativeproto-holdershape");
-        }
-        break;
-      }
-      case ICStub::GetElem_NativePrototypeCallNativeName:
-      case ICStub::GetElem_NativePrototypeCallNativeSymbol:
-      case ICStub::GetElem_NativePrototypeCallScriptedName:
-      case ICStub::GetElem_NativePrototypeCallScriptedSymbol: {
-        ICGetElemNativeStub* getElemStub = static_cast<ICGetElemNativeStub*>(this);
-        getElemStub->receiverGuard().trace(trc);
-        if (getElemStub->isSymbol()) {
-            ICGetElemNativePrototypeCallStub<JS::Symbol*>* callStub =
-                reinterpret_cast<ICGetElemNativePrototypeCallStub<JS::Symbol*>*>(this);
-            TraceEdge(trc, &callStub->key(), "baseline-getelem-nativeprotocall-key");
-            TraceEdge(trc, &callStub->getter(), "baseline-getelem-nativeprotocall-getter");
-            TraceEdge(trc, &callStub->holder(), "baseline-getelem-nativeprotocall-holder");
-            TraceEdge(trc, &callStub->holderShape(), "baseline-getelem-nativeprotocall-holdershape");
-        } else {
-            ICGetElemNativePrototypeCallStub<PropertyName*>* callStub =
-                reinterpret_cast<ICGetElemNativePrototypeCallStub<PropertyName*>*>(this);
-            TraceEdge(trc, &callStub->key(), "baseline-getelem-nativeprotocall-key");
-            TraceEdge(trc, &callStub->getter(), "baseline-getelem-nativeprotocall-getter");
-            TraceEdge(trc, &callStub->holder(), "baseline-getelem-nativeprotocall-holder");
-            TraceEdge(trc, &callStub->holderShape(), "baseline-getelem-nativeprotocall-holdershape");
-        }
         break;
       }
       case ICStub::GetElem_Dense: {
@@ -2405,9 +2339,10 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
 
     if (!attached && !JitOptions.disableCacheIR) {
         RootedValue idVal(cx, StringValue(name));
-        GetPropIRGenerator gen(cx, pc, engine, &isTemporarilyUnoptimizable, val, idVal, res);
+        GetPropIRGenerator gen(cx, pc, engine, CacheKind::GetProp, &isTemporarilyUnoptimizable,
+                               val, idVal, res);
         if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), CacheKind::GetProp,
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         engine, info.outerScript(cx), stub);
             if (newStub) {
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");

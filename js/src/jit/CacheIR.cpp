@@ -19,6 +19,7 @@ using namespace js::jit;
 using mozilla::Maybe;
 
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine,
+                                       CacheKind cacheKind,
                                        bool* isTemporarilyUnoptimizable,
                                        HandleValue val, HandleValue idVal,
                                        MutableHandleValue res)
@@ -29,6 +30,7 @@ GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngi
     idVal_(idVal),
     res_(res),
     engine_(engine),
+    cacheKind_(cacheKind),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
     preliminaryObjectAction_(PreliminaryObjectAction::None)
 {}
@@ -51,38 +53,50 @@ GetPropIRGenerator::tryAttachStub()
     AutoAssertNoPendingException aanpe(cx_);
 
     ValOperandId valId(writer.setInputOperandId(0));
+    if (cacheKind_ == CacheKind::GetElem) {
+        MOZ_ASSERT(getElemKeyValueId().id() == 1);
+        writer.setInputOperandId(1);
+    }
 
-    RootedId id(cx_, INTERNED_STRING_TO_JSID(cx_, idVal_.toString())); //XXX
+    RootedId id(cx_);
+    bool nameOrSymbol;
+    if (!ValueToNameOrSymbolId(cx_, idVal_, &id, &nameOrSymbol)) {
+        cx_->clearPendingException();
+        return false;
+    }
 
     if (val_.isObject()) {
         RootedObject obj(cx_, &val_.toObject());
         ObjOperandId objId = writer.guardIsObject(valId);
-
-        if (tryAttachObjectLength(obj, objId, id))
-            return true;
-        if (tryAttachNative(obj, objId, id))
-            return true;
-        if (tryAttachUnboxed(obj, objId, id))
-            return true;
-        if (tryAttachUnboxedExpando(obj, objId, id))
-            return true;
-        if (tryAttachTypedObject(obj, objId, id))
-            return true;
-        if (tryAttachModuleNamespace(obj, objId, id))
-            return true;
-        if (tryAttachWindowProxy(obj, objId, id))
-            return true;
-        if (tryAttachProxy(obj, objId, id))
-            return true;
+        if (nameOrSymbol) {
+            if (tryAttachObjectLength(obj, objId, id))
+                return true;
+            if (tryAttachNative(obj, objId, id))
+                return true;
+            if (tryAttachUnboxed(obj, objId, id))
+                return true;
+            if (tryAttachUnboxedExpando(obj, objId, id))
+                return true;
+            if (tryAttachTypedObject(obj, objId, id))
+                return true;
+            if (tryAttachModuleNamespace(obj, objId, id))
+                return true;
+            if (tryAttachWindowProxy(obj, objId, id))
+                return true;
+            if (tryAttachProxy(obj, objId, id))
+                return true;
+        }
         return false;
     }
 
-    if (tryAttachPrimitive(valId, id))
-        return true;
-    if (tryAttachStringLength(valId, id))
-        return true;
-    if (tryAttachMagicArguments(valId, id))
-        return true;
+    if (nameOrSymbol) {
+        if (tryAttachPrimitive(valId, id))
+            return true;
+        if (tryAttachStringLength(valId, id))
+            return true;
+        if (tryAttachMagicArguments(valId, id))
+            return true;
+    }
 
     return false;
 }
@@ -314,6 +328,7 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
       case CanAttachNone:
         return false;
       case CanAttachReadSlot:
+        maybeEmitIdGuard(id);
         if (holder) {
             EnsureTrackPropertyTypes(cx_, holder, id);
             if (obj == holder) {
@@ -328,6 +343,7 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
         EmitReadSlotReturn(writer, obj, holder, shape);
         return true;
       case CanAttachCallGetter:
+        maybeEmitIdGuard(id);
         EmitCallGetterResult(writer, obj, holder, shape, objId);
         return true;
     }
@@ -372,6 +388,7 @@ GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
 
     // Guard the incoming object is a WindowProxy and inline a getter call based
     // on the Window object.
+    maybeEmitIdGuard(id);
     writer.guardClass(objId, GuardClassKind::WindowProxy);
     ObjOperandId windowObjId = writer.loadObject(windowObj);
     EmitCallGetterResult(writer, windowObj, holder, shape, windowObjId);
@@ -389,7 +406,16 @@ GetPropIRGenerator::tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, 
     // the specialized stubs
     writer.guardNotDOMProxy(objId);
 
-    writer.callProxyGetResult(objId, id);
+    if (cacheKind_ == CacheKind::GetProp) {
+        writer.callProxyGetResult(objId, id);
+    } else {
+        // We could call maybeEmitIdGuard here and then emit CallProxyGetResult,
+        // but for GetElem we prefer to attach a stub that can handle any Value
+        // so we don't attach a new stub for every id.
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
+        writer.callProxyGetByValueResult(objId, getElemKeyValueId());
+    }
+
     writer.typeMonitorResult();
     return true;
 }
@@ -399,6 +425,7 @@ GetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId obj
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
+    maybeEmitIdGuard(id);
     writer.guardShape(objId, obj->maybeShape());
 
     // No need for more guards: we know this is a DOM proxy, since the shape
@@ -458,6 +485,7 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
     if (canCache == CanAttachNone)
         return false;
 
+    maybeEmitIdGuard(id);
     writer.guardShape(objId, obj->maybeShape());
 
     // Guard that our expando object hasn't started shadowing this property.
@@ -529,6 +557,7 @@ GetPropIRGenerator::tryAttachUnboxed(HandleObject obj, ObjOperandId objId, Handl
     if (!cx_->runtime()->jitSupportsFloatingPoint)
         return false;
 
+    maybeEmitIdGuard(id);
     writer.guardGroup(objId, obj->group());
     writer.loadUnboxedPropertyResult(objId, property->type,
                                      UnboxedPlainObject::offsetOfData() + property->offset);
@@ -555,6 +584,7 @@ GetPropIRGenerator::tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId
     if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
         return false;
 
+    maybeEmitIdGuard(id);
     EmitReadSlotResult(writer, obj, obj, shape, objId);
     EmitReadSlotReturn(writer, obj, obj, shape);
     return true;
@@ -589,6 +619,7 @@ GetPropIRGenerator::tryAttachTypedObject(HandleObject obj, ObjOperandId objId, H
     uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
     uint32_t typeDescr = SimpleTypeDescrKey(&fieldDescr->as<SimpleTypeDescr>());
 
+    maybeEmitIdGuard(id);
     writer.guardNoDetachedTypedObjects();
     writer.guardShape(objId, shape);
     writer.loadTypedObjectResult(objId, fieldOffset, layout, typeDescr);
@@ -623,6 +654,7 @@ GetPropIRGenerator::tryAttachObjectLength(HandleObject obj, ObjOperandId objId, 
         if (obj->as<ArrayObject>().length() > INT32_MAX)
             return false;
 
+        maybeEmitIdGuard(id);
         writer.guardClass(objId, GuardClassKind::Array);
         writer.loadInt32ArrayLengthResult(objId);
         writer.returnFromIC();
@@ -630,6 +662,7 @@ GetPropIRGenerator::tryAttachObjectLength(HandleObject obj, ObjOperandId objId, 
     }
 
     if (obj->is<UnboxedArrayObject>()) {
+        maybeEmitIdGuard(id);
         writer.guardClass(objId, GuardClassKind::UnboxedArray);
         writer.loadUnboxedArrayLengthResult(objId);
         writer.returnFromIC();
@@ -637,6 +670,7 @@ GetPropIRGenerator::tryAttachObjectLength(HandleObject obj, ObjOperandId objId, 
     }
 
     if (obj->is<ArgumentsObject>() && !obj->as<ArgumentsObject>().hasOverriddenLength()) {
+        maybeEmitIdGuard(id);
         if (obj->is<MappedArgumentsObject>()) {
             writer.guardClass(objId, GuardClassKind::MappedArguments);
         } else {
@@ -671,6 +705,7 @@ GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj, ObjOperandId objI
         EnsureTrackPropertyTypes(cx_, env, shape->propid());
 
     // Check for the specific namespace object.
+    maybeEmitIdGuard(id);
     writer.guardSpecificObject(objId, ns);
 
     ObjOperandId envId = writer.loadObject(env);
@@ -717,6 +752,7 @@ GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id)
         return false;
 
     writer.guardType(valId, primitiveType);
+    maybeEmitIdGuard(id);
 
     ObjOperandId protoId = writer.loadObject(proto);
     writer.guardShape(protoId, proto->lastProperty());
@@ -732,6 +768,7 @@ GetPropIRGenerator::tryAttachStringLength(ValOperandId valId, HandleId id)
         return false;
 
     StringOperandId strId = writer.guardIsString(valId);
+    maybeEmitIdGuard(id);
     writer.loadStringLengthResult(strId);
     writer.returnFromIC();
     return true;
@@ -746,6 +783,7 @@ GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId, HandleId id)
     if (!JSID_IS_ATOM(id, cx_->names().length) && !JSID_IS_ATOM(id, cx_->names().callee))
         return false;
 
+    maybeEmitIdGuard(id);
     writer.guardMagicValue(valId, JS_OPTIMIZED_ARGUMENTS);
     writer.guardFrameHasNoArgumentsObject();
 
@@ -759,4 +797,26 @@ GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId, HandleId id)
     }
 
     return true;
+}
+
+void
+GetPropIRGenerator::maybeEmitIdGuard(jsid id)
+{
+    if (cacheKind_ == CacheKind::GetProp) {
+        // Constant PropertyName, no guards necessary.
+        MOZ_ASSERT(&idVal_.toString()->asAtom() == JSID_TO_ATOM(id));
+        return;
+    }
+
+    MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
+
+    ValOperandId valId = getElemKeyValueId();
+    if (JSID_IS_SYMBOL(id)) {
+        SymbolOperandId symId = writer.guardIsSymbol(valId);
+        writer.guardSpecificSymbol(symId, JSID_TO_SYMBOL(id));
+    } else {
+        MOZ_ASSERT(JSID_IS_ATOM(id));
+        StringOperandId strId = writer.guardIsString(valId);
+        writer.guardSpecificAtom(strId, JSID_TO_ATOM(id));
+    }
 }
