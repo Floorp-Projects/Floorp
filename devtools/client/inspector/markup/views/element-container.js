@@ -14,9 +14,12 @@ const nodeConstants = require("devtools/shared/dom-node-constants");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const {setImageTooltip, setBrokenImageTooltip} =
       require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
-const {setEventTooltip} = require("devtools/client/shared/widgets/tooltip/EventTooltipHelper");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
 const ElementEditor = require("devtools/client/inspector/markup/views/element-editor");
+
+// Lazy load this module as _buildEventTooltipContent is only called on click
+loader.lazyRequireGetter(this, "setEventTooltip",
+  "devtools/client/shared/widgets/tooltip/EventTooltipHelper", true);
 
 /**
  * An implementation of MarkupContainer for Elements that can contain
@@ -49,6 +52,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
       let listenerInfo = yield this.node.getEventListenerInfo();
 
       let toolbox = this.markup.toolbox;
+
       setEventTooltip(tooltip, listenerInfo, toolbox);
       // Disable the image preview tooltip while we display the event details
       this.markup._disableImagePreviewTooltip();
