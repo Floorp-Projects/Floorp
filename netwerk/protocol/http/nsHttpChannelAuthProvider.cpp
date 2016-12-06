@@ -800,6 +800,19 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
         // The mConnectionBased flag is set later for the newly received challenge,
         // so here it reflects the previous 401/7 response schema.
         mAuthChannel->CloseStickyConnection();
+        if (!proxyAuth) {
+          // We must clear proxy ident in the following scenario + explanation:
+          // - we are authenticating to an NTLM proxy and an NTLM server
+          // - we successfully authenticated to the proxy, mProxyIdent keeps
+          //   the user name/domain and password, the identity has also been cached
+          // - we just threw away the connection because we are now asking for
+          //   creds for the server (WWW auth)
+          // - hence, we will have to auth to the proxy again as well
+          // - if we didn't clear the proxy identity, it would be considered
+          //   as non-valid and we would ask the user again ; clearing it forces
+          //   use of the cached identity and not asking the user again
+          mProxyIdent.Clear();
+        }
         mConnectionBased = false;
     }
 

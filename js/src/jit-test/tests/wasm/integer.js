@@ -109,6 +109,7 @@ testBinary32('mul', 40, 2, 80);
 testBinary32('div_s', -40, 2, -20);
 testBinary32('div_u', -40, 2, 2147483628);
 testBinary32('rem_s', 40, -3, 1);
+testBinary32('rem_s', 0, -3, 0);
 testBinary32('rem_u', 40, -3, 40);
 testBinary32('and', 42, 6, 2);
 testBinary32('or', 42, 6, 46);
