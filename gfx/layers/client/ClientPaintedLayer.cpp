@@ -30,7 +30,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-ClientPaintedLayer::PaintThebes()
+ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
   PROFILER_LABEL("ClientPaintedLayer", "PaintThebes",
     js::ProfileEntry::Category::GRAPHICS);
@@ -38,6 +38,8 @@ ClientPaintedLayer::PaintThebes()
   NS_ASSERTION(ClientManager()->InDrawing(),
                "Can only draw in drawing phase");
   
+  mContentClient->BeginPaint();
+
   uint32_t flags = RotatedContentBuffer::PAINT_CAN_DRAW_ROTATED;
 #ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
   if (ClientManager()->CompositorMightResample()) {
@@ -93,6 +95,8 @@ ClientPaintedLayer::PaintThebes()
     didUpdate = true;
   }
 
+  mContentClient->EndPaint(aReadbackUpdates);
+
   if (didUpdate) {
     Mutated();
 
@@ -132,10 +136,7 @@ ClientPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
     aReadback->GetPaintedLayerUpdates(this, &readbackUpdates);
   }
 
-  IntPoint origin(mVisibleRegion.GetBounds().x, mVisibleRegion.GetBounds().y);
-  mContentClient->BeginPaint();
-  PaintThebes();
-  mContentClient->EndPaint(&readbackUpdates);
+  PaintThebes(&readbackUpdates);
 }
 
 already_AddRefed<PaintedLayer>

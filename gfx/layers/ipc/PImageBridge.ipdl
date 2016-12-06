@@ -38,8 +38,7 @@ child:
 parent:
   async ImageBridgeThreadId(PlatformThreadId aTreahdId);
 
-  sync Update(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId)
-    returns (EditReply[] reply);
+  sync Update(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId);
 
   async UpdateNoSwap(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId);
 

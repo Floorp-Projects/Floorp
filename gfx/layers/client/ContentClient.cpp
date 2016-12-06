@@ -410,10 +410,14 @@ ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
     t->mPictureRect = nsIntRect(0, 0, size.width, size.height);
     GetForwarder()->UseTextures(this, textures);
   }
+  // This forces a synchronous transaction, so we can swap buffers now
+  // and know that we'll have sole ownership of the old front buffer
+  // by the time we paint next.
   mForwarder->UpdateTextureRegion(this,
                                   ThebesBufferData(BufferRect(),
                                                    BufferRotation()),
                                   updatedRegion);
+  SwapBuffers(updatedRegion);
 }
 
 void
