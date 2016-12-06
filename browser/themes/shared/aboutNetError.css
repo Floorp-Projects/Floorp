@@ -39,15 +39,15 @@ button:disabled {
   display: none;
 }
 
-#certErrorButtonContainer {
+#certErrorAndCaptivePortalButtonContainer {
   display: none;
 }
 
-body.certerror #certErrorButtonContainer {
+body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
   display: flex;
 }
 
-body.certerror #netErrorButtonContainer {
+body:not(.neterror) #netErrorButtonContainer {
   display: none;
 }
 
@@ -64,7 +64,19 @@ body.certerror #netErrorButtonContainer {
   display: none;
 }
 
-body.certerror #advancedButton {
+body.captiveportal #returnButton {
+  display: none;
+}
+
+body:not(.captiveportal) #openPortalLoginPageButton {
+  display: none;
+}
+
+#openPortalLoginPageButton {
+  margin-inline-start: 0;
+}
+
+body:not(.neterror) #advancedButton {
   display: block;
 }
 
