@@ -163,6 +163,15 @@ function waitForFrame() {
 }
 
 /**
+ * Promise wrapper for requestIdleCallback.
+ */
+function waitForIdleCallback() {
+  return new Promise(function(resolve, reject) {
+    window.requestIdleCallback(resolve);
+  });
+}
+
+/**
  * Returns a Promise that is resolved after the given number of consecutive
  * animation frames have occured (using requestAnimationFrame callbacks).
  *

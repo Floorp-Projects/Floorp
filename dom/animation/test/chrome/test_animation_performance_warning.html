@@ -885,6 +885,269 @@ function testSmallElements() {
   });
 }
 
+function testSynchronizedAnimations() {
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+    const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+
+    return Promise.all([animA.ready, animB.ready])
+      .then(() => {
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: false,
+              warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          } ]);
+      });
+  }, 'Animations created within the same tick are synchronized'
+     + ' (compositor animation created first)');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+    const animB = elemB.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+
+    return Promise.all([animA.ready, animB.ready])
+      .then(() => {
+        assert_animation_property_state_equals(
+          animB.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: false,
+              warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          } ]);
+      });
+  }, 'Animations created within the same tick are synchronized'
+     + ' (compositor animation created second)');
+
+  promise_test(function(t) {
+    const attrs = { class: 'compositable',
+                    style: 'transition: all 100s' };
+    const elemA = addDiv(t, attrs);
+    const elemB = addDiv(t, attrs);
+    elemA.style.transform = 'translate(0px)';
+    elemB.style.marginLeft = '0px';
+    getComputedStyle(elemA).transform;
+    getComputedStyle(elemB).marginLeft;
+
+    // Generally the sequence of steps is as follows:
+    //
+    //   Tick -> requestAnimationFrame -> Style -> Paint -> Events (-> Tick...)
+    //
+    // In this test we want to set up two transitions during the "Events"
+    // stage but only flush style for one such that the second one is actually
+    // generated during the "Style" stage of the *next* tick.
+    //
+    // Web content often generates transitions in this way (that is, it doesn't
+    // pay regard to when style is flushed and nor should it). However, we
+    // still want transitions generated in this way to be synchronized.
+    let timeForFirstFrame;
+    return waitForIdleCallback()
+      .then(() => {
+        timeForFirstFrame = document.timeline.currentTime;
+        elemA.style.transform = 'translate(100px)';
+        // Flush style to trigger first transition
+        getComputedStyle(elemA).transform;
+        elemB.style.marginLeft = '100px';
+        // DON'T flush style here (this includes calling getAnimations!)
+        return waitForFrame();
+      }).then(() => {
+        assert_not_equals(timeForFirstFrame, document.timeline.currentTime,
+                          'Should be on the other side of a tick');
+        // Wait another tick so we can let the transition be started
+        // by regular style resolution.
+        return waitForFrame();
+      }).then(() => {
+        const transitionA = elemA.getAnimations()[0];
+        assert_animation_property_state_equals(
+          transitionA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: false,
+              warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          } ]);
+      });
+  }, 'Transitions created before and after a tick are synchronized');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ],
+                                  opacity: [ 0, 1 ] },
+                                100 * MS_PER_SEC);
+    const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+
+    return Promise.all([animA.ready, animB.ready])
+      .then(() => {
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: false,
+              warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+            },
+            { property: 'opacity',
+              runningOnCompositor: true
+            } ]);
+      });
+  }, 'Opacity animations on the same element continue running on the'
+     + ' compositor when transform animations are synchronized with geometric'
+     + ' animations');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+    let animB;
+
+    return waitForFrame()
+      .then(() => {
+        animB = elemB.animate({ transform: [ 'translate(0px)',
+                                             'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+        return animB.ready;
+      }).then(() => {
+        assert_animation_property_state_equals(
+          animB.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: true } ]);
+      });
+  }, 'Transform animations are NOT synchronized with geometric animations'
+     + ' started in the previous frame');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+    let animB;
+
+    return waitForFrame()
+      .then(() => {
+        animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
+                              100 * MS_PER_SEC);
+        return animB.ready;
+      }).then(() => {
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: true } ]);
+      });
+  }, 'Transform animations are NOT synchronized with geometric animations'
+     + ' started in the next frame');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+    const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+    animB.pause();
+
+    return Promise.all([animA.ready, animB.ready])
+      .then(() => {
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform', runningOnCompositor: true } ]);
+      });
+  }, 'Paused animations are not synchronized');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+    const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+
+    // Seek one of the animations so that their start times will differ
+    animA.currentTime = 5000;
+
+    return Promise.all([animA.ready, animB.ready])
+      .then(() => {
+        assert_not_equals(animA.startTime, animB.startTime,
+                          'Animations should have different start times');
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: false,
+              warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          } ]);
+      });
+  }, 'Animations are synchronized based on when they are started'
+     + ' and NOT their start time');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+    const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+
+    return Promise.all([animA.ready, animB.ready])
+      .then(() => {
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: false } ]);
+        // Restart animation
+        animA.pause();
+        animA.play();
+        return animA.ready;
+      }).then(() => {
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: true } ]);
+      });
+  }, 'An initially synchronized animation may be unsynchronized if restarted');
+
+  promise_test(function(t) {
+    const elemA = addDiv(t, { class: 'compositable' });
+    const elemB = addDiv(t, { class: 'compositable' });
+
+    const animA = elemA.animate({ transform: [ 'translate(0px)',
+                                               'translate(100px)' ] },
+                                100 * MS_PER_SEC);
+    const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+
+    // Clear target effect
+    animB.effect.target = null;
+
+    return Promise.all([animA.ready, animB.ready])
+      .then(() => {
+        assert_animation_property_state_equals(
+          animA.effect.getProperties(),
+          [ { property: 'transform',
+              runningOnCompositor: true } ]);
+      });
+  }, 'A geometric animation with no target element is not synchronized');
+}
+
 function start() {
   var bundleService = SpecialPowers.Cc['@mozilla.org/intl/stringbundle;1']
     .getService(SpecialPowers.Ci.nsIStringBundleService);
@@ -900,6 +1163,7 @@ function start() {
   testMultipleAnimationsWithGeometricKeyframes();
   testMultipleAnimationsWithGeometricAnimations();
   testSmallElements();
+  testSynchronizedAnimations();
 
   promise_test(function(t) {
     var animation = addDivAndAnimate(t,
