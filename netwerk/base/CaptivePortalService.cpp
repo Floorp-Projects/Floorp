@@ -201,11 +201,6 @@ CaptivePortalService::SetStateInChild(int32_t aState)
 NS_IMETHODIMP
 CaptivePortalService::GetState(int32_t *aState)
 {
-  *aState = UNKNOWN;
-  if (!mInitialized) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   *aState = mState;
   return NS_OK;
 }

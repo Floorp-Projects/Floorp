@@ -151,7 +151,6 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   return null;
 });
 
-
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
 var gLastBrowserCharset = null;
@@ -2743,6 +2742,7 @@ var BrowserOnClick = {
   init: function () {
     let mm = window.messageManager;
     mm.addMessageListener("Browser:CertExceptionError", this);
+    mm.addMessageListener("Browser:OpenCaptivePortalPage", this);
     mm.addMessageListener("Browser:SiteBlockedError", this);
     mm.addMessageListener("Browser:EnableOnlineMode", this);
     mm.addMessageListener("Browser:SendSSLErrorReport", this);
@@ -2751,6 +2751,9 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
     mm.addMessageListener("Browser:OverrideWeakCrypto", this);
     mm.addMessageListener("Browser:SSLErrorGoBack", this);
+
+    Services.obs.addObserver(this, "captive-portal-login-abort", false);
+    Services.obs.addObserver(this, "captive-portal-login-success", false);
   },
 
   uninit: function () {
@@ -2764,6 +2767,20 @@ var BrowserOnClick = {
     mm.removeMessageListener("Browser:SSLErrorReportTelemetry", this);
     mm.removeMessageListener("Browser:OverrideWeakCrypto", this);
     mm.removeMessageListener("Browser:SSLErrorGoBack", this);
+
+    Services.obs.removeObserver(this, "captive-portal-login-abort");
+    Services.obs.removeObserver(this, "captive-portal-login-success");
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "captive-portal-login-abort":
+      case "captive-portal-login-success":
+        // Broadcast when a captive portal is freed so that error pages
+        // can refresh themselves.
+        window.messageManager.broadcastAsyncMessage("Browser:CaptivePortalFreed");
+      break;
+    }
   },
 
   handleEvent: function (event) {
@@ -2790,6 +2807,9 @@ var BrowserOnClick = {
         this.onCertError(msg.target, msg.data.elementId,
                          msg.data.isTopFrame, msg.data.location,
                          msg.data.securityInfoAsString);
+      break;
+      case "Browser:OpenCaptivePortalPage":
+        this.onOpenCaptivePortalPage();
       break;
       case "Browser:SiteBlockedError":
         this.onAboutBlocked(msg.data.elementId, msg.data.reason,
@@ -2923,6 +2943,28 @@ var BrowserOnClick = {
         break;
 
     }
+  },
+
+  onOpenCaptivePortalPage: function() {
+    // Open a new tab with the canonical URL that we use to check for a captive portal.
+    // It will be redirected to the login page.
+    let canonicalURL = Services.prefs.getCharPref("captivedetect.canonicalURL");
+    let tab = gBrowser.addTab(canonicalURL);
+    let canonicalURI = makeURI(canonicalURL);
+    gBrowser.selectedTab = tab;
+
+    // When we are no longer captive, close the tab if it's at the canonical URL.
+    let tabCloser = () => {
+      Services.obs.removeObserver(tabCloser, "captive-portal-login-abort");
+      Services.obs.removeObserver(tabCloser, "captive-portal-login-success");
+      if (!tab || tab.closing || !tab.parentNode || !tab.linkedBrowser ||
+          !tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI)) {
+        return;
+      }
+      gBrowser.removeTab(tab);
+    }
+    Services.obs.addObserver(tabCloser, "captive-portal-login-abort", false);
+    Services.obs.addObserver(tabCloser, "captive-portal-login-success", false);
   },
 
   onAboutBlocked: function (elementId, reason, isTopFrame, location) {
