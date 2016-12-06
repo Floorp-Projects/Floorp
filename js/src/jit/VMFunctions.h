@@ -812,6 +812,13 @@ BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame, MutableHandleValue 
 MOZ_MUST_USE bool
 ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp);
 
+MOZ_MUST_USE bool
+ProxyGetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal,
+                        MutableHandleValue vp);
+
+MOZ_MUST_USE bool
+EqualStringsHelper(JSString* str1, JSString* str2);
+
 } // namespace jit
 } // namespace js
 

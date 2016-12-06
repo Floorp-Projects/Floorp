@@ -509,7 +509,7 @@ nsFrameIterator::IsPopupFrame(nsIFrame* aFrame)
   }
 
   return (aFrame &&
-          aFrame->StyleDisplay()->mDisplay == StyleDisplay::Popup);
+          aFrame->StyleDisplay()->mDisplay == StyleDisplay::MozPopup);
 }
 
 // nsVisualIterator implementation

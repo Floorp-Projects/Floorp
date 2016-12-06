@@ -934,6 +934,17 @@ BaselineCacheIRCompiler::emitGuardIsString()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardIsSymbol()
+{
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+    masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardType()
 {
     ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
@@ -1088,6 +1099,67 @@ BaselineCacheIRCompiler::emitGuardSpecificObject()
 
     Address addr(stubAddress(reader.stubOffset()));
     masm.branchPtr(Assembler::NotEqual, addr, obj, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardSpecificAtom()
+{
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address atomAddr(stubAddress(reader.stubOffset()));
+
+    Label done;
+    masm.branchPtr(Assembler::Equal, atomAddr, str, &done);
+
+    // The pointers are not equal, so if the input string is also an atom it
+    // must be a different string.
+    masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                      Imm32(JSString::ATOM_BIT), failure->label());
+
+    // Check the length.
+    masm.loadPtr(atomAddr, scratch);
+    masm.loadStringLength(scratch, scratch);
+    masm.branch32(Assembler::NotEqual, Address(str, JSString::offsetOfLength()),
+                  scratch, failure->label());
+
+    // We have a non-atomized string with the same length. Call a helper
+    // function to do the comparison.
+    LiveRegisterSet volatileRegs(RegisterSet::Volatile());
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadPtr(atomAddr, scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(str);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, EqualStringsHelper));
+    masm.mov(ReturnReg, scratch);
+
+    LiveRegisterSet ignore;
+    ignore.add(scratch);
+    masm.PopRegsInMaskIgnore(volatileRegs, ignore);
+    masm.branchIfFalseBool(scratch, failure->label());
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardSpecificSymbol()
+{
+    Register sym = allocator.useRegister(masm, reader.symbolOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address addr(stubAddress(reader.stubOffset()));
+    masm.branchPtr(Assembler::NotEqual, addr, sym, failure->label());
     return true;
 }
 
@@ -1280,6 +1352,34 @@ BaselineCacheIRCompiler::emitCallProxyGetResult()
     masm.Push(obj);
 
     if (!callVM(masm, ProxyGetPropertyInfo))
+        return false;
+
+    stubFrame.leave(masm);
+    return true;
+}
+
+typedef bool (*ProxyGetPropertyByValueFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
+static const VMFunction ProxyGetPropertyByValueInfo =
+    FunctionInfo<ProxyGetPropertyByValueFn>(ProxyGetPropertyByValue, "ProxyGetPropertyByValue");
+
+bool
+BaselineCacheIRCompiler::emitCallProxyGetByValueResult()
+{
+    AutoStubFrame stubFrame(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(idVal);
+    masm.Push(obj);
+
+    if (!callVM(masm, ProxyGetPropertyByValueInfo))
         return false;
 
     stubFrame.leave(masm);
@@ -1577,8 +1677,11 @@ BaselineCacheIRCompiler::init(CacheKind kind)
     if (!allocator.init(ICStubCompiler::availableGeneralRegs(numInputs)))
         return false;
 
-    MOZ_ASSERT(numInputs == 1);
-    allocator.initInputLocation(0, R0);
+    if (numInputs >= 1) {
+        allocator.initInputLocation(0, R0);
+        if (numInputs >= 2)
+            allocator.initInputLocation(1, R1);
+    }
 
     return true;
 }
@@ -1630,6 +1733,12 @@ CacheIRWriter::copyStubData(uint8_t* dest) const
             break;
           case StubField::Type::ObjectGroup:
             InitGCPtr<ObjectGroup*>(destWords, stubFields_[i].asWord());
+            break;
+          case StubField::Type::Symbol:
+            InitGCPtr<JS::Symbol*>(destWords, stubFields_[i].asWord());
+            break;
+          case StubField::Type::String:
+            InitGCPtr<JSString*>(destWords, stubFields_[i].asWord());
             break;
           case StubField::Type::Id:
             InitGCPtr<jsid>(destWords, stubFields_[i].asWord());
@@ -1725,7 +1834,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     // unlimited number of stubs.
     MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
 
-    MOZ_ASSERT(kind == CacheKind::GetProp);
+    MOZ_ASSERT(kind == CacheKind::GetProp || kind == CacheKind::GetElem);
     uint32_t stubDataOffset = sizeof(ICCacheIR_Monitored);
 
     JitCompartment* jitCompartment = cx->compartment()->jitCompartment();
@@ -1805,6 +1914,14 @@ jit::TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo
             TraceNullableEdge(trc, &stubInfo->getStubField<JSObject*>(stub, offset),
                               "baseline-cacheir-object");
             break;
+          case StubField::Type::Symbol:
+            TraceNullableEdge(trc, &stubInfo->getStubField<JS::Symbol*>(stub, offset),
+                              "baseline-cacheir-symbol");
+            break;
+          case StubField::Type::String:
+            TraceNullableEdge(trc, &stubInfo->getStubField<JSString*>(stub, offset),
+                              "baseline-cacheir-string");
+            break;
           case StubField::Type::Id:
             TraceEdge(trc, &stubInfo->getStubField<jsid>(stub, offset), "baseline-cacheir-id");
             break;
@@ -1860,6 +1977,12 @@ CacheIRStubInfo::copyStubData(ICStub* src, ICStub* dest) const
             break;
           case StubField::Type::ObjectGroup:
             getStubField<ObjectGroup*>(dest, offset).init(getStubField<ObjectGroup*>(src, offset));
+            break;
+          case StubField::Type::Symbol:
+            getStubField<JS::Symbol*>(dest, offset).init(getStubField<JS::Symbol*>(src, offset));
+            break;
+          case StubField::Type::String:
+            getStubField<JSString*>(dest, offset).init(getStubField<JSString*>(src, offset));
             break;
           case StubField::Type::Id:
             getStubField<jsid>(dest, offset).init(getStubField<jsid>(src, offset));

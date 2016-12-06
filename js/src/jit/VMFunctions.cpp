@@ -1362,5 +1362,31 @@ ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleVa
     return Proxy::get(cx, proxy, receiver, id, vp);
 }
 
+bool
+ProxyGetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal,
+                        MutableHandleValue vp)
+{
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, idVal, &id))
+        return false;
+
+    RootedValue receiver(cx, ObjectValue(*proxy));
+    return Proxy::get(cx, proxy, receiver, id, vp);
+}
+
+bool
+EqualStringsHelper(JSString* str1, JSString* str2)
+{
+    MOZ_ASSERT(str1->isAtom());
+    MOZ_ASSERT(!str2->isAtom());
+    MOZ_ASSERT(str1->length() == str2->length());
+
+    JSLinearString* str2Linear = str2->ensureLinear(nullptr);
+    if (!str2Linear)
+        return false;
+
+    return EqualChars(&str1->asLinear(), str2Linear);
+}
+
 } // namespace jit
 } // namespace js

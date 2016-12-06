@@ -4293,20 +4293,20 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
 static
 bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
 {
-  return (aDisplay->mDisplay == StyleDisplay::InlineBox ||
+  return (aDisplay->mDisplay == StyleDisplay::MozInlineBox ||
 #ifdef MOZ_XUL
-          aDisplay->mDisplay == StyleDisplay::InlineXulGrid ||
-          aDisplay->mDisplay == StyleDisplay::InlineStack ||
+          aDisplay->mDisplay == StyleDisplay::MozInlineGrid ||
+          aDisplay->mDisplay == StyleDisplay::MozInlineStack ||
 #endif
-          aDisplay->mDisplay == StyleDisplay::Box
+          aDisplay->mDisplay == StyleDisplay::MozBox
 #ifdef MOZ_XUL
-          || aDisplay->mDisplay == StyleDisplay::XulGrid ||
-          aDisplay->mDisplay == StyleDisplay::Stack ||
-          aDisplay->mDisplay == StyleDisplay::XulGridGroup ||
-          aDisplay->mDisplay == StyleDisplay::XulGridLine ||
-          aDisplay->mDisplay == StyleDisplay::Deck ||
-          aDisplay->mDisplay == StyleDisplay::Popup ||
-          aDisplay->mDisplay == StyleDisplay::Groupbox
+          || aDisplay->mDisplay == StyleDisplay::MozGrid ||
+          aDisplay->mDisplay == StyleDisplay::MozStack ||
+          aDisplay->mDisplay == StyleDisplay::MozGridGroup ||
+          aDisplay->mDisplay == StyleDisplay::MozGridLine ||
+          aDisplay->mDisplay == StyleDisplay::MozDeck ||
+          aDisplay->mDisplay == StyleDisplay::MozPopup ||
+          aDisplay->mDisplay == StyleDisplay::MozGroupbox
 #endif
           );
 }
@@ -4485,7 +4485,7 @@ nsCSSFrameConstructor::FindXULListBoxBodyData(Element* aElement,
                                               nsStyleContext* aStyleContext)
 {
   if (aStyleContext->StyleDisplay()->mDisplay !=
-        StyleDisplay::XulGridGroup) {
+        StyleDisplay::MozGridGroup) {
     return nullptr;
   }
 
@@ -4499,7 +4499,7 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULListItemData(Element* aElement,
                                            nsStyleContext* aStyleContext)
 {
-  if (aStyleContext->StyleDisplay()->mDisplay != StyleDisplay::XulGridLine) {
+  if (aStyleContext->StyleDisplay()->mDisplay != StyleDisplay::MozGridLine) {
     return nullptr;
   }
 
@@ -4517,36 +4517,36 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
                                           nsStyleContext* aStyleContext)
 {
   static const FrameConstructionDataByDisplay sXULDisplayData[] = {
-    SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::Box,
+    SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::MozBox,
                                                    NS_NewBoxFrame),
-    SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::InlineBox,
+    SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineBox,
                                                    NS_NewBoxFrame),
 #ifdef MOZ_XUL
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::XulGrid, NS_NewGridBoxFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::InlineXulGrid, NS_NewGridBoxFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::XulGridGroup,
+    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGrid, NS_NewGridBoxFrame),
+    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineGrid, NS_NewGridBoxFrame),
+    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGridGroup,
                                   NS_NewGridRowGroupFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::XulGridLine,
+    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGridLine,
                                   NS_NewGridRowLeafFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::Stack, NS_NewStackFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::InlineStack, NS_NewStackFrame),
-    SIMPLE_XUL_DISPLAY_CREATE(StyleDisplay::Deck, NS_NewDeckFrame),
-    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::Groupbox, NS_NewGroupBoxFrame),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Popup,
+    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozStack, NS_NewStackFrame),
+    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozInlineStack, NS_NewStackFrame),
+    SIMPLE_XUL_DISPLAY_CREATE(StyleDisplay::MozDeck, NS_NewDeckFrame),
+    SCROLLABLE_XUL_DISPLAY_CREATE(StyleDisplay::MozGroupbox, NS_NewGroupBoxFrame),
+    FCDATA_FOR_DISPLAY(StyleDisplay::MozPopup,
       FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_IS_POPUP |
                   FCDATA_SKIP_ABSPOS_PUSH, NS_NewMenuPopupFrame))
 #endif /* MOZ_XUL */
   };
 
-  if (aDisplay->mDisplay < StyleDisplay::Box) {
+  if (aDisplay->mDisplay < StyleDisplay::MozBox) {
     return nullptr;
   }
 
-  MOZ_ASSERT(aDisplay->mDisplay <= StyleDisplay::Popup,
+  MOZ_ASSERT(aDisplay->mDisplay <= StyleDisplay::MozPopup,
              "Someone added a new display value?");
 
   const FrameConstructionDataByDisplay& data =
-    sXULDisplayData[size_t(aDisplay->mDisplay) - size_t(StyleDisplay::Box)];
+    sXULDisplayData[size_t(aDisplay->mDisplay) - size_t(StyleDisplay::MozBox)];
   MOZ_ASSERT(aDisplay->mDisplay == data.mDisplay,
              "Did someone mess with the order?");
 
@@ -4576,8 +4576,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
     const nsStyleDisplay* displayStyle = aContentStyle->StyleDisplay();
     if (IsXULDisplayType(displayStyle)) {
       gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot,
-          displayStyle->mDisplay == StyleDisplay::Stack ||
-          displayStyle->mDisplay == StyleDisplay::InlineStack);
+          displayStyle->mDisplay == StyleDisplay::MozStack ||
+          displayStyle->mDisplay == StyleDisplay::MozInlineStack);
     } else {
       gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, contentStyle, aIsRoot);
     }
@@ -6613,8 +6613,8 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
     }
     if (nsGkAtoms::menuFrame == parentType) {
       return
-        (StyleDisplay::Popup == aDisplay) ==
-        (StyleDisplay::Popup == siblingDisplay);
+        (StyleDisplay::MozPopup == aDisplay) ==
+        (StyleDisplay::MozPopup == siblingDisplay);
     }
     // To have decent performance we want to return false in cases in which
     // reordering the two siblings has no effect on display.  To ensure
@@ -10902,7 +10902,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       const char16_t* params[] = { parentTag.get(), kidTag.get() };
       const nsStyleDisplay *display = frameStyleContext->StyleDisplay();
       const char *message =
-        (display->mDisplay == StyleDisplay::InlineBox)
+        (display->mDisplay == StyleDisplay::MozInlineBox)
           ? "NeededToWrapXULInlineBox" : "NeededToWrapXUL";
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                       NS_LITERAL_CSTRING("Layout: FrameConstructor"),
