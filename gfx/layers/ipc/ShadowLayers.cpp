@@ -735,15 +735,13 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   profiler_tracing("Paint", "Rasterize", TRACING_INTERVAL_END);
 
-  AutoTArray<EditReply, 10> replies;
   if (mTxn->mSwapRequired) {
     MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
-    if (!mShadowManager->SendUpdate(info, &replies)) {
+    if (!mShadowManager->SendUpdate(info)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
-    ProcessReplies(replies);
   } else {
     // If we don't require a swap we can call SendUpdateNoSwap which
     // assumes that aReplies is empty (DEBUG assertion)
@@ -760,29 +758,6 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   mPaintSyncId = 0;
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return true;
-}
-
-void
-ShadowLayerForwarder::ProcessReplies(const nsTArray<EditReply>& aReplies)
-{
-  for (const auto& reply : aReplies) {
-    switch (reply.type()) {
-    case EditReply::TOpContentBufferSwap: {
-      MOZ_LAYERS_LOG(("[LayersForwarder] DoubleBufferSwap"));
-
-      const OpContentBufferSwap& obs = reply.get_OpContentBufferSwap();
-
-      RefPtr<CompositableClient> compositable = FindCompositable(obs.compositable());
-      ContentClientRemote* contentClient = compositable->AsContentClientRemote();
-      MOZ_ASSERT(contentClient);
-
-      contentClient->SwapBuffers(obs.frontUpdatedRegion());
-      break;
-    }
-    default:
-      MOZ_CRASH("not reached");
-    }
-  }
 }
 
 RefPtr<CompositableClient>

@@ -33,7 +33,6 @@ namespace layers {
 
 class ClientLayerManager;
 class CompositorBridgeChild;
-class EditReply;
 class FixedSizeSmallShmemSectionAllocator;
 class ImageContainer;
 class Layer;
@@ -419,8 +418,6 @@ protected:
 #else
   void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
 #endif
-
-  void ProcessReplies(const nsTArray<EditReply>& aReplies);
 
   RefPtr<CompositableClient> FindCompositable(const CompositableHandle& aHandle);
 

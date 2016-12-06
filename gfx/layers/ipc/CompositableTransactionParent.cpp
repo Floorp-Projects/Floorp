@@ -61,8 +61,7 @@ ScheduleComposition(CompositableHost* aCompositable)
 }
 
 bool
-CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation& aEdit,
-                                                     EditReplyVector& replyv)
+CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation& aEdit)
 {
   // Ignore all operations on compositables created on stale compositors. We
   // return true because the child is unable to handle errors.
@@ -89,16 +88,12 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       RenderTraceInvalidateStart(thebes, "FF00FF", op.updatedRegion().GetBounds());
 
-      nsIntRegion frontUpdatedRegion;
       if (!compositable->UpdateThebes(bufferData,
                                       op.updatedRegion(),
-                                      thebes->GetValidRegion(),
-                                      &frontUpdatedRegion))
+                                      thebes->GetValidRegion()))
       {
         return false;
       }
-      replyv.push_back(
-        OpContentBufferSwap(aEdit.compositable(), frontUpdatedRegion));
 
       RenderTraceInvalidateEnd(thebes, "FF00FF");
       break;
