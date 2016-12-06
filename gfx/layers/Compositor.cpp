@@ -270,7 +270,7 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
                          const gfx::Rect& aVisibleRect,
                          const Maybe<gfx::Polygon>& aGeometry)
 {
-  if (!aGeometry) {
+  if (!aGeometry || !SupportsLayerGeometry()) {
     DrawQuad(aRect, aClipRect, aEffectChain,
              aOpacity, aTransform, aVisibleRect);
     return;
