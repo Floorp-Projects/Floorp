@@ -38,6 +38,7 @@ var gMenuBuilder = {
   // to be displayed. We always clear all the items again when
   // popuphidden fires.
   build(contextData) {
+    let firstItem = true;
     let xulMenu = contextData.menu;
     xulMenu.addEventListener("popuphidden", this);
     this.xulMenu = xulMenu;
@@ -70,6 +71,13 @@ var gMenuBuilder = {
           rootElement.setAttribute("class", "menuitem-iconic");
         }
         rootElement.setAttribute("image", resolvedURL);
+      }
+
+      if (firstItem) {
+        firstItem = false;
+        const separator = xulMenu.ownerDocument.createElement("menuseparator");
+        this.itemsToCleanUp.add(separator);
+        xulMenu.append(separator);
       }
 
       xulMenu.appendChild(rootElement);
