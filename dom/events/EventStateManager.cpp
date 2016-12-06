@@ -3022,7 +3022,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // If the mousedown happened inside a popup, don't
           // try to set focus on one of its containing elements
           const nsStyleDisplay* display = currFrame->StyleDisplay();
-          if (display->mDisplay == StyleDisplay::Popup) {
+          if (display->mDisplay == StyleDisplay::MozPopup) {
             newFocus = nullptr;
             break;
           }
