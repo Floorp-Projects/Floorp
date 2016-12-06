@@ -394,7 +394,8 @@ TiledContentHost::Composite(LayerComposite* aLayer,
                             const gfx::Matrix4x4& aTransform,
                             const gfx::SamplingFilter aSamplingFilter,
                             const gfx::IntRect& aClipRect,
-                            const nsIntRegion* aVisibleRegion /* = nullptr */)
+                            const nsIntRegion* aVisibleRegion /* = nullptr */,
+                            const Maybe<gfx::Polygon>& aGeometry)
 {
   MOZ_ASSERT(mCompositor);
   // Reduce the opacity of the low-precision buffer to make it a
@@ -439,9 +440,10 @@ TiledContentHost::Composite(LayerComposite* aLayer,
   RenderLayerBuffer(mLowPrecisionTiledBuffer,
                     lowPrecisionOpacityReduction < 1.0f ? &backgroundColor : nullptr,
                     aEffectChain, lowPrecisionOpacityReduction * aOpacity,
-                    aSamplingFilter, aClipRect, *renderRegion, aTransform);
+                    aSamplingFilter, aClipRect, *renderRegion, aTransform, aGeometry);
+
   RenderLayerBuffer(mTiledBuffer, nullptr, aEffectChain, aOpacity, aSamplingFilter,
-                    aClipRect, *renderRegion, aTransform);
+                    aClipRect, *renderRegion, aTransform, aGeometry);
 }
 
 
@@ -455,7 +457,8 @@ TiledContentHost::RenderTile(TileHost& aTile,
                              const nsIntRegion& aScreenRegion,
                              const IntPoint& aTextureOffset,
                              const IntSize& aTextureBounds,
-                             const gfx::Rect& aVisibleRect)
+                             const gfx::Rect& aVisibleRect,
+                             const Maybe<gfx::Polygon>& aGeometry)
 {
   MOZ_ASSERT(!aTile.IsPlaceholderTile());
 
@@ -498,8 +501,11 @@ TiledContentHost::RenderTile(TileHost& aTile,
                                   textureRect.y / aTextureBounds.height,
                                   textureRect.width / aTextureBounds.width,
                                   textureRect.height / aTextureBounds.height);
-    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, opacity, aTransform, aVisibleRect);
+
+    mCompositor->DrawGeometry(graphicsRect, aClipRect, aEffectChain, opacity,
+                              aTransform, aVisibleRect, aGeometry);
   }
+
   DiagnosticFlags flags = DiagnosticFlags::CONTENT | DiagnosticFlags::TILE;
   if (aTile.mTextureHostOnWhite) {
     flags |= DiagnosticFlags::COMPONENT_ALPHA;
@@ -516,7 +522,8 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                                     const gfx::SamplingFilter aSamplingFilter,
                                     const gfx::IntRect& aClipRect,
                                     nsIntRegion aVisibleRegion,
-                                    gfx::Matrix4x4 aTransform)
+                                    gfx::Matrix4x4 aTransform,
+                                    const Maybe<Polygon>& aGeometry)
 {
   if (!mCompositor) {
     NS_WARNING("Can't render tiled content host - no compositor");
@@ -572,7 +579,8 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     for (auto iter = backgroundRegion.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
       Rect graphicsRect(rect.x, rect.y, rect.width, rect.height);
-      mCompositor->DrawQuad(graphicsRect, aClipRect, effect, 1.0, aTransform);
+      mCompositor->DrawGeometry(graphicsRect, aClipRect, effect,
+                                1.0, aTransform, aGeometry);
     }
   }
 
@@ -599,7 +607,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                aTransform, aSamplingFilter, aClipRect, tileDrawRegion,
                tileOffset * resolution, aLayerBuffer.GetTileSize(),
                gfx::Rect(visibleRect.x, visibleRect.y,
-                         visibleRect.width, visibleRect.height));
+                         visibleRect.width, visibleRect.height),
+               aGeometry);
+
     if (tile.mTextureHostOnWhite) {
       componentAlphaDiagnostic = DiagnosticFlags::COMPONENT_ALPHA;
     }

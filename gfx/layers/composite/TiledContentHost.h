@@ -236,7 +236,8 @@ public:
                          const gfx::Matrix4x4& aTransform,
                          const gfx::SamplingFilter aSamplingFilter,
                          const gfx::IntRect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr) override;
+                         const nsIntRegion* aVisibleRegion = nullptr,
+                         const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
 
   virtual CompositableType GetType() override { return CompositableType::CONTENT_TILED; }
 
@@ -266,7 +267,8 @@ private:
                          const gfx::SamplingFilter aSamplingFilter,
                          const gfx::IntRect& aClipRect,
                          nsIntRegion aMaskRegion,
-                         gfx::Matrix4x4 aTransform);
+                         gfx::Matrix4x4 aTransform,
+                         const Maybe<gfx::Polygon>& aGeometry);
 
   // Renders a single given tile.
   void RenderTile(TileHost& aTile,
@@ -278,7 +280,8 @@ private:
                   const nsIntRegion& aScreenRegion,
                   const gfx::IntPoint& aTextureOffset,
                   const gfx::IntSize& aTextureBounds,
-                  const gfx::Rect& aVisibleRect);
+                  const gfx::Rect& aVisibleRect,
+                  const Maybe<gfx::Polygon>& aGeometry);
 
   void EnsureTileStore() {}
 
