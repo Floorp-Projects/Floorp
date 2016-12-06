@@ -2904,12 +2904,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
     return mozilla::StyleDisplay::Inline == aDisplay ||
            mozilla::StyleDisplay::InlineBlock == aDisplay ||
            mozilla::StyleDisplay::InlineTable == aDisplay ||
-           mozilla::StyleDisplay::InlineBox == aDisplay ||
+           mozilla::StyleDisplay::MozInlineBox == aDisplay ||
            mozilla::StyleDisplay::InlineFlex == aDisplay ||
            mozilla::StyleDisplay::WebkitInlineBox == aDisplay ||
            mozilla::StyleDisplay::InlineGrid == aDisplay ||
-           mozilla::StyleDisplay::InlineXulGrid == aDisplay ||
-           mozilla::StyleDisplay::InlineStack == aDisplay ||
+           mozilla::StyleDisplay::MozInlineGrid == aDisplay ||
+           mozilla::StyleDisplay::MozInlineStack == aDisplay ||
            mozilla::StyleDisplay::Ruby == aDisplay ||
            mozilla::StyleDisplay::RubyBase == aDisplay ||
            mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
