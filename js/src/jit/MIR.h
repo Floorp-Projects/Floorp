@@ -5439,8 +5439,7 @@ class MWasmTruncateToInt64
         trapOffset_(trapOffset)
     {
         setResultType(MIRType::Int64);
-        setGuard(); // not removable because of possible side-effects.
-        setMovable();
+        setGuard(); // neither removable nor movable because of possible side-effects.
     }
 
   public:
@@ -5472,8 +5471,7 @@ class MWasmTruncateToInt32
       : MUnaryInstruction(def), isUnsigned_(isUnsigned), trapOffset_(trapOffset)
     {
         setResultType(MIRType::Int32);
-        setGuard(); // not removable because of possible side-effects.
-        setMovable();
+        setGuard(); // neither removable nor movable because of possible side-effects.
     }
 
   public:
@@ -7032,8 +7030,10 @@ class MDiv : public MBinaryArithInstruction
         div->unsigned_ = unsignd;
         div->trapOnError_ = trapOnError;
         div->trapOffset_ = trapOffset;
-        if (trapOnError)
+        if (trapOnError) {
             div->setGuard(); // not removable because of possible side-effects.
+            div->setNotMovable();
+        }
         div->setMustPreserveNaN(mustPreserveNaN);
         if (type == MIRType::Int32)
             div->setTruncateKind(Truncate);
@@ -7166,8 +7166,10 @@ class MMod : public MBinaryArithInstruction
         mod->unsigned_ = unsignd;
         mod->trapOnError_ = trapOnError;
         mod->trapOffset_ = trapOffset;
-        if (trapOnError)
+        if (trapOnError) {
             mod->setGuard(); // not removable because of possible side-effects.
+            mod->setNotMovable();
+        }
         if (type == MIRType::Int32)
             mod->setTruncateKind(Truncate);
         return mod;

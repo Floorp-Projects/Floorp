@@ -16,6 +16,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/RefCountType.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/UniquePtr.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 #include "nsXPCOM.h"
@@ -86,7 +87,7 @@ enum RefCountAtomicity
   NonAtomicRefCount
 };
 
-template<typename T, RefCountAtomicity Atomicity>
+template<typename T, RefCountAtomicity Atomicity, typename D>
 class RefCounted
 {
 protected:
@@ -132,7 +133,7 @@ public:
 #ifdef DEBUG
       mRefCnt = detail::DEAD;
 #endif
-      delete static_cast<const T*>(this);
+      D()(const_cast<T*>(static_cast<const T*>(this)));
     }
   }
 
@@ -171,8 +172,8 @@ private:
 
 } // namespace detail
 
-template<typename T>
-class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount>
+template<typename T, class D = DefaultDelete<T>>
+class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount, D>
 {
 public:
   ~RefCounted()
@@ -191,9 +192,9 @@ namespace external {
  * NOTE: Please do not use this class, use NS_INLINE_DECL_THREADSAFE_REFCOUNTING
  * instead.
  */
-template<typename T>
+template<typename T, typename D = DefaultDelete<T>>
 class AtomicRefCounted :
-  public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount>
+  public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount, D>
 {
 public:
   ~AtomicRefCounted()
