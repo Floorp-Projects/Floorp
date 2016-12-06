@@ -270,6 +270,12 @@ WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenu
         return;
     }
 
+    if (!ValidateNonNegative(funcName, "width", width) ||
+        !ValidateNonNegative(funcName, "height", height))
+    {
+        return;
+    }
+
     ////
 
     // Some drivers (like OSX 10.9 GL) just don't support invalidate_framebuffer.
