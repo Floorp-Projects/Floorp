@@ -2800,7 +2800,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding; // [reset]
-  mozilla::StyleDisplay mDisplay;          // [reset] see nsStyleConsts.h SyleDisplay
+  mozilla::StyleDisplay mDisplay;          // [reset] see nsStyleConsts.h StyleDisplay
   mozilla::StyleDisplay mOriginalDisplay;  // [reset] saved mDisplay for
                                            //         position:absolute/fixed
                                            //         and float:left/right;
