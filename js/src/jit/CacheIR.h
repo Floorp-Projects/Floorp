@@ -86,6 +86,13 @@ class StringOperandId : public OperandId
     explicit StringOperandId(uint16_t id) : OperandId(id) {}
 };
 
+class SymbolOperandId : public OperandId
+{
+  public:
+    SymbolOperandId() = default;
+    explicit SymbolOperandId(uint16_t id) : OperandId(id) {}
+};
+
 class TypedOperandId : public OperandId
 {
     JSValueType type_;
@@ -97,13 +104,23 @@ class TypedOperandId : public OperandId
     MOZ_IMPLICIT TypedOperandId(StringOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_STRING)
     {}
+    MOZ_IMPLICIT TypedOperandId(SymbolOperandId id)
+      : OperandId(id.id()), type_(JSVAL_TYPE_SYMBOL)
+    {}
 
     JSValueType type() const { return type_; }
+};
+
+enum class CacheKind : uint8_t
+{
+    GetProp,
+    GetElem,
 };
 
 #define CACHE_IR_OPS(_)                   \
     _(GuardIsObject)                      \
     _(GuardIsString)                      \
+    _(GuardIsSymbol)                      \
     _(GuardType)                          \
     _(GuardShape)                         \
     _(GuardGroup)                         \
@@ -112,6 +129,8 @@ class TypedOperandId : public OperandId
     _(GuardIsProxy)                       \
     _(GuardNotDOMProxy)                   \
     _(GuardSpecificObject)                \
+    _(GuardSpecificAtom)                  \
+    _(GuardSpecificSymbol)                \
     _(GuardNoDetachedTypedObjects)        \
     _(GuardMagicValue)                    \
     _(GuardFrameHasNoArgumentsObject)     \
@@ -138,6 +157,7 @@ class TypedOperandId : public OperandId
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
+    _(CallProxyGetByValueResult)          \
     _(LoadUndefinedResult)                \
                                           \
     _(TypeMonitorResult)                  \
@@ -158,6 +178,8 @@ class StubField
         Shape,
         ObjectGroup,
         JSObject,
+        Symbol,
+        String,
         Id,
 
         // These fields take up 64 bits on all platforms.
@@ -342,6 +364,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardIsString, val);
         return StringOperandId(val.id());
     }
+    SymbolOperandId guardIsSymbol(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
+        return SymbolOperandId(val.id());
+    }
     void guardType(ValOperandId val, JSValueType type) {
         writeOpWithOperandId(CacheOp::GuardType, val);
         static_assert(sizeof(type) == sizeof(uint8_t), "JSValueType should fit in a byte");
@@ -374,6 +400,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardSpecificObject(ObjOperandId obj, JSObject* expected) {
         writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
         addStubField(uintptr_t(expected), StubField::Type::JSObject);
+    }
+    void guardSpecificAtom(StringOperandId str, JSAtom* expected) {
+        writeOpWithOperandId(CacheOp::GuardSpecificAtom, str);
+        addStubField(uintptr_t(expected), StubField::Type::String);
+    }
+    void guardSpecificSymbol(SymbolOperandId sym, JS::Symbol* expected) {
+        writeOpWithOperandId(CacheOp::GuardSpecificSymbol, sym);
+        addStubField(uintptr_t(expected), StubField::Type::Symbol);
     }
     void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
         writeOpWithOperandId(CacheOp::GuardMagicValue, val);
@@ -485,6 +519,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallProxyGetResult, obj);
         addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
     }
+    void callProxyGetByValueResult(ObjOperandId obj, ValOperandId idVal) {
+        writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
+        writeOperandId(idVal);
+    }
 
     void typeMonitorResult() {
         writeOp(CacheOp::TypeMonitorResult);
@@ -522,6 +560,7 @@ class MOZ_RAII CacheIRReader
     ValOperandId valOperandId() { return ValOperandId(buffer_.readByte()); }
     ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
     StringOperandId stringOperandId() { return StringOperandId(buffer_.readByte()); }
+    SymbolOperandId symbolOperandId() { return SymbolOperandId(buffer_.readByte()); }
 
     uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
     GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
@@ -561,38 +600,48 @@ class MOZ_RAII GetPropIRGenerator
     JSContext* cx_;
     jsbytecode* pc_;
     HandleValue val_;
-    HandlePropertyName name_;
+    HandleValue idVal_;
     MutableHandleValue res_;
     ICStubEngine engine_;
+    CacheKind cacheKind_;
     bool* isTemporarilyUnoptimizable_;
 
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
     PreliminaryObjectAction preliminaryObjectAction_;
 
-    bool tryAttachNative(HandleObject obj, ObjOperandId objId);
-    bool tryAttachUnboxed(HandleObject obj, ObjOperandId objId);
-    bool tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId);
-    bool tryAttachTypedObject(HandleObject obj, ObjOperandId objId);
-    bool tryAttachObjectLength(HandleObject obj, ObjOperandId objId);
-    bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId);
-    bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId);
+    bool tryAttachNative(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachUnboxed(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachTypedObject(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachObjectLength(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
-    bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId);
-    bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId);
-    bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId);
-    bool tryAttachProxy(HandleObject obj, ObjOperandId objId);
+    bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
-    bool tryAttachPrimitive(ValOperandId valId);
-    bool tryAttachStringLength(ValOperandId valId);
-    bool tryAttachMagicArguments(ValOperandId valId);
+    bool tryAttachPrimitive(ValOperandId valId, HandleId id);
+    bool tryAttachStringLength(ValOperandId valId, HandleId id);
+    bool tryAttachMagicArguments(ValOperandId valId, HandleId id);
+
+    ValOperandId getElemKeyValueId() const {
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
+        return ValOperandId(1);
+    }
+
+    // If this is a GetElem cache, emit instructions to guard the incoming Value
+    // matches |id|.
+    void maybeEmitIdGuard(jsid id);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
 
   public:
-    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine,
+    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine, CacheKind cacheKind,
                        bool* isTemporarilyUnoptimizable,
-                       HandleValue val, HandlePropertyName name, MutableHandleValue res);
+                       HandleValue val, HandleValue idVal, MutableHandleValue res);
 
     bool tryAttachStub();
 
@@ -602,14 +651,9 @@ class MOZ_RAII GetPropIRGenerator
     bool shouldNotePreliminaryObjectStub() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
     }
-    const CacheIRWriter& writerRef() const {
-        return writer;
-    }
-};
 
-enum class CacheKind : uint8_t
-{
-    GetProp
+    const CacheIRWriter& writerRef() const { return writer; }
+    CacheKind cacheKind() const { return cacheKind_; }
 };
 
 } // namespace jit

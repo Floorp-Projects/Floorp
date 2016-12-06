@@ -133,6 +133,7 @@ EXPORTS.js += [
     '../public/ProfilingStack.h',
     '../public/Proxy.h',
     '../public/Realm.h',
+    '../public/RefCounted.h',
     '../public/RequiredDefines.h',
     '../public/Result.h',
     '../public/RootingAPI.h',
