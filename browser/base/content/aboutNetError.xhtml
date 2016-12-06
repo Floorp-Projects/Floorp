@@ -26,13 +26,10 @@
     <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/warning-16.png"/>
 
     <script type="application/javascript"><![CDATA[
-      // Error url MUST be formatted like this:
-      //   moz-neterror:page?e=error&u=url&d=desc
-      //
-      // or optionally, to specify an alternate CSS class to allow for
-      // custom styling and favicon:
-      //
-      //   moz-neterror:page?e=error&u=url&s=classname&d=desc
+      // The following parameters are parsed from the error URL:
+      //   e - the error code
+      //   s - custom CSS class to allow alternate styling/favicons
+      //   d - error description
 
       // Note that this file uses document.documentURI to get
       // the URL (with the format from above). This is because
@@ -40,40 +37,24 @@
       // which is the URL displayed in the location bar, i.e.
       // the URI that the user attempted to load.
 
-      function getErrorCode()
-      {
-        var url = document.documentURI;
-        var error = url.search(/e\=/);
-        var duffUrl = url.search(/\&u\=/);
-        return decodeURIComponent(url.slice(error + 2, duffUrl));
-      }
+      let searchParams = new URLSearchParams(document.documentURI.split("?")[1]);
 
       // Set to true on init if the error code is nssBadCert.
-      var gIsCertError;
+      let gIsCertError;
+
+      function getErrorCode()
+      {
+        return searchParams.get("e");
+      }
 
       function getCSSClass()
       {
-        var url = document.documentURI;
-        var matches = url.match(/s\=([^&]+)\&/);
-        // s is optional, if no match just return nothing
-        if (!matches || matches.length < 2)
-          return "";
-
-        // parenthetical match is the second entry
-        return decodeURIComponent(matches[1]);
+        return searchParams.get("s");
       }
 
       function getDescription()
       {
-        var url = document.documentURI;
-        var desc = url.search(/d\=/);
-
-        // desc == -1 if not found; if so, return an empty string
-        // instead of what would turn out to be portions of the URI
-        if (desc == -1)
-          return "";
-
-        return decodeURIComponent(url.slice(desc + 2));
+        return searchParams.get("d");
       }
 
       function retryThis(buttonEl)
