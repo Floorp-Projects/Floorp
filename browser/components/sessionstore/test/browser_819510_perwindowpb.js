@@ -8,16 +8,16 @@ requestLongerTimeout(2);
 
 add_task(function* test_1() {
   let win = yield promiseNewWindowLoaded();
-  win.gBrowser.addTab("http://www.example.com/1");
+  yield promiseTabLoad(win, "http://www.example.com/#1");
 
   win = yield promiseNewWindowLoaded({private: true});
-  win.gBrowser.addTab("http://www.example.com/2");
+  yield promiseTabLoad(win, "http://www.example.com/#2");
 
   win = yield promiseNewWindowLoaded();
-  win.gBrowser.addTab("http://www.example.com/3");
+  yield promiseTabLoad(win, "http://www.example.com/#3");
 
   win = yield promiseNewWindowLoaded({private: true});
-  win.gBrowser.addTab("http://www.example.com/4");
+  yield promiseTabLoad(win, "http://www.example.com/#4");
 
   let curState = JSON.parse(ss.getBrowserState());
   is(curState.windows.length, 5, "Browser has opened 5 windows");
@@ -27,9 +27,9 @@ add_task(function* test_1() {
 
   let state = JSON.parse(yield promiseRecoveryFileContents());
 
-  is(state.windows.length, 3,
-     "sessionstore state: 3 windows in data being written to disk");
-  is(state.selectedWindow, 3,
+  is(state.windows.length, 2,
+     "sessionstore state: 2 windows in data being written to disk");
+  is(state.selectedWindow, 2,
      "Selected window is updated to match one of the saved windows");
   ok(state.windows.every(win => !win.isPrivate),
     "Saved windows are not private");
@@ -44,10 +44,10 @@ add_task(function* test_1() {
 // Test opening default mochitest window + 2 private windows
 add_task(function* test_2() {
   let win = yield promiseNewWindowLoaded({private: true});
-  win.gBrowser.addTab("http://www.example.com/1");
+  yield promiseTabLoad(win, "http://www.example.com/#1");
 
   win = yield promiseNewWindowLoaded({private: true});
-  win.gBrowser.addTab("http://www.example.com/2");
+  yield promiseTabLoad(win, "http://www.example.com/#2");
 
   let curState = JSON.parse(ss.getBrowserState());
   is(curState.windows.length, 3, "Browser has opened 3 windows");
@@ -57,10 +57,10 @@ add_task(function* test_2() {
 
   let state = JSON.parse(yield promiseRecoveryFileContents());
 
-  is(state.windows.length, 1,
-     "sessionstore state: 1 windows in data being written to disk");
-  is(state.selectedWindow, 1,
-     "Selected window is updated to match one of the saved windows");
+  is(state.windows.length, 0,
+     "sessionstore state: no window in data being written to disk");
+  is(state.selectedWindow, 0,
+     "Selected window updated to 0 given there are no saved windows");
   is(state._closedWindows.length, 0,
      "sessionstore state: no closed windows in data being written to disk");
 
@@ -72,13 +72,13 @@ add_task(function* test_2() {
 // Test opening default-normal-private-normal windows and closing a normal window
 add_task(function* test_3() {
   let normalWindow = yield promiseNewWindowLoaded();
-  yield promiseTabLoad(normalWindow, "http://www.example.com/");
+  yield promiseTabLoad(normalWindow, "http://www.example.com/#1");
 
   let win = yield promiseNewWindowLoaded({private: true});
-  yield promiseTabLoad(win, "http://www.example.com/");
+  yield promiseTabLoad(win, "http://www.example.com/#2");
 
   win = yield promiseNewWindowLoaded();
-  yield promiseTabLoad(win, "http://www.example.com/");
+  yield promiseTabLoad(win, "http://www.example.com/#3");
 
   let curState = JSON.parse(ss.getBrowserState());
   is(curState.windows.length, 4, "Browser has opened 4 windows");
@@ -96,9 +96,9 @@ add_task(function* test_3() {
 
   let state = JSON.parse(yield promiseRecoveryFileContents());
 
-  is(state.windows.length, 2,
-     "sessionstore state: 2 windows in data being written to disk");
-  is(state.selectedWindow, 2,
+  is(state.windows.length, 1,
+     "sessionstore state: 1 window in data being written to disk");
+  is(state.selectedWindow, 1,
      "Selected window is updated to match one of the saved windows");
   ok(state.windows.every(win => !win.isPrivate),
     "Saved windows are not private");
@@ -113,8 +113,7 @@ add_task(function* test_3() {
 });
 
 function* promiseTabLoad(win, url) {
-  let browser = win.gBrowser.selectedBrowser;
-  browser.loadURI(url);
-  yield promiseBrowserLoaded(browser);
-  yield TabStateFlusher.flush(browser);
+  let tab = win.gBrowser.addTab(url);
+  yield promiseBrowserLoaded(tab.linkedBrowser);
+  yield TabStateFlusher.flush(tab.linkedBrowser);
 }
