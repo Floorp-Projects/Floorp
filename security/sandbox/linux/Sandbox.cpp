@@ -212,7 +212,9 @@ InstallSigSysHandler(void)
  * program).  The kernel won't allow seccomp-bpf without doing this,
  * because otherwise it could be used for privilege escalation attacks.
  *
- * Returns false (and sets errno) on failure.
+ * Returns false if the filter was already installed (see the
+ * PR_SET_NO_NEW_PRIVS rule in SandboxFilter.cpp).  Crashes on any
+ * other error condition.
  *
  * @see SandboxInfo
  * @see BroadcastSetThreadSandbox
@@ -221,6 +223,9 @@ static bool MOZ_MUST_USE
 InstallSyscallFilter(const sock_fprog *aProg, bool aUseTSync)
 {
   if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
+    if (!aUseTSync && errno == ETXTBSY) {
+      return false;
+    }
     SANDBOX_LOG_ERROR("prctl(PR_SET_NO_NEW_PRIVS) failed: %s", strerror(errno));
     MOZ_CRASH("prctl(PR_SET_NO_NEW_PRIVS)");
   }
@@ -230,13 +235,13 @@ InstallSyscallFilter(const sock_fprog *aProg, bool aUseTSync)
                 SECCOMP_FILTER_FLAG_TSYNC, aProg) != 0) {
       SANDBOX_LOG_ERROR("thread-synchronized seccomp failed: %s",
                         strerror(errno));
-      return false;
+      MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER)");
     }
   } else {
     if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, (unsigned long)aProg, 0, 0)) {
       SANDBOX_LOG_ERROR("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER) failed: %s",
                         strerror(errno));
-      return false;
+      MOZ_CRASH("seccomp+tsync failed, but kernel supports tsync");
     }
   }
   return true;
@@ -246,7 +251,7 @@ InstallSyscallFilter(const sock_fprog *aProg, bool aUseTSync)
 // The communication channel from the signal handler back to the main thread.
 static mozilla::Atomic<int> gSetSandboxDone;
 // Pass the filter itself through a global.
-static const sock_fprog* gSetSandboxFilter;
+const sock_fprog* gSetSandboxFilter;
 
 // We have to dynamically allocate the signal number; see bug 1038900.
 // This function returns the first realtime signal currently set to
@@ -275,13 +280,7 @@ FindFreeSignalNumber()
 static bool
 SetThreadSandbox()
 {
-  if (prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == 0) {
-    if (!InstallSyscallFilter(gSetSandboxFilter, false)) {
-      MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER)");
-    }
-    return true;
-  }
-  return false;
+  return InstallSyscallFilter(gSetSandboxFilter, false);
 }
 
 static void
@@ -451,7 +450,7 @@ ApplySandboxWithTSync(sock_fprog* aFilter)
   // isn't used... but this failure shouldn't happen in the first
   // place, so let's not make extra special cases for it.)
   if (!InstallSyscallFilter(aFilter, true)) {
-    MOZ_CRASH("seccomp+tsync failed, but kernel supports tsync");
+    MOZ_CRASH();
   }
 }
 
