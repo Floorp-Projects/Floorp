@@ -193,6 +193,8 @@ _ContextualIdentityService.prototype = {
       identity.icon = icon;
       delete identity.l10nID;
       delete identity.accessKey;
+
+      Services.obs.notifyObservers(null, "contextual-identity-updated", userContextId);
       this.saveSoon();
     }
 
