@@ -84,7 +84,7 @@ function runTests()
 
     is(gKeyPressCount, 1, "keypresses with ignorekeys='true'");
 
-    popup.setAttribute("ignorekeys", "handled");
+    popup.setAttribute("ignorekeys", "shortcuts");
     // clear this first to avoid confusion
     gIgnoreAttrChange = true;
     $("i1").removeAttribute("_moz-menuactive")
@@ -94,13 +94,12 @@ function runTests()
     popup.openPopup(null, "after_start");
     yield popupShownPromise;
 
-    // When ignorekeys="handled", T should be handled but accel+T should propagate. 
+    // When ignorekeys="shortcuts", T should be handled but accel+T should propagate. 
     synthesizeKey("t", { });
-    is(gKeyPressCount, 1, "keypresses after t pressed with ignorekeys='handled'");
+    is(gKeyPressCount, 1, "keypresses after t pressed with ignorekeys='shortcuts'");
 
-    let isWindows = navigator.platform.indexOf("Win") >= 0;
     synthesizeKey("t", { accelKey: true });
-    is(gKeyPressCount, isWindows ? 2 : 1, "keypresses after accel+t pressed with ignorekeys='handled'");
+    is(gKeyPressCount, 2, "keypresses after accel+t pressed with ignorekeys='shortcuts'");
 
     popupHiddenPromise = waitForEvent(popup, "popuphidden");
     popup.hidePopup();
