@@ -55,6 +55,7 @@ WebRenderBridgeChild::DPBegin(uint32_t aWidth, uint32_t aHeight)
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(!mIsInTransaction);
   bool success = false;
+  UpdateFwdTransactionId();
   this->SendDPBegin(aWidth, aHeight, &success);
   if (!success) {
     return false;
@@ -70,9 +71,9 @@ WebRenderBridgeChild::DPEnd(bool aIsSync, uint64_t aTransactionId)
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
   if (aIsSync) {
-    this->SendDPSyncEnd(mCommands, mDestroyedActors, aTransactionId);
+    this->SendDPSyncEnd(mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId);
   } else {
-    this->SendDPEnd(mCommands, mDestroyedActors, aTransactionId);
+    this->SendDPEnd(mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId);
   }
 
   mCommands.Clear();
@@ -248,8 +249,7 @@ WebRenderBridgeChild::UseTextures(CompositableClient* aCompositable,
 
       MarkSyncTransaction();
     }
-    // XXX Enable recycle
-    //mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
+    GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
   }
   AddWebRenderCommand(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
                                             OpUseTexture(textures)));
@@ -266,13 +266,13 @@ WebRenderBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositabl
 void
 WebRenderBridgeChild::UpdateFwdTransactionId()
 {
-
+  GetCompositorBridgeChild()->UpdateFwdTransactionId();
 }
 
 uint64_t
 WebRenderBridgeChild::GetFwdTransactionId()
 {
-  return 0;
+  return GetCompositorBridgeChild()->GetFwdTransactionId();
 }
 
 bool
