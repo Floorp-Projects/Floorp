@@ -1159,6 +1159,9 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
             if (mConnectionFlags & nsISocketTransport::MITM_OK)
                 controlFlags |= nsISocketProvider::MITM_OK;
 
+            if (mConnectionFlags & nsISocketTransport::BE_CONSERVATIVE)
+                controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
+
             nsCOMPtr<nsISupports> secinfo;
             if (i == 0) {
                 // if this is the first type, we'll want the 

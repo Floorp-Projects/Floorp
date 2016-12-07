@@ -31,10 +31,12 @@ public:
     MOZ_ASSERT(!IsWaitingToPause(aAnimation),
                "Animation is already waiting to pause");
     AddPending(aAnimation, mPlayPendingSet);
+    mHasPlayPendingGeometricAnimations = CheckState::Indeterminate;
   }
   void RemovePlayPending(dom::Animation& aAnimation)
   {
     RemovePending(aAnimation, mPlayPendingSet);
+    mHasPlayPendingGeometricAnimations = CheckState::Indeterminate;
   }
   bool IsWaitingToPlay(const dom::Animation& aAnimation) const
   {
@@ -62,9 +64,17 @@ public:
     return mPlayPendingSet.Count() > 0 || mPausePendingSet.Count() > 0;
   }
 
+  /**
+   * Looks amongst the set of play-pending animations, and, if there are
+   * animations that affect geometric properties, notifies all play-pending
+   * animations so that they can be synchronized, if needed.
+   */
+  void MarkAnimationsThatMightNeedSynchronization();
+
 private:
   ~PendingAnimationTracker() { }
 
+  bool HasPlayPendingGeometricAnimations();
   void EnsurePaintIsScheduled();
 
   typedef nsTHashtable<nsRefPtrHashKey<dom::Animation>> AnimationSet;
@@ -77,6 +87,13 @@ private:
   AnimationSet mPlayPendingSet;
   AnimationSet mPausePendingSet;
   nsCOMPtr<nsIDocument> mDocument;
+
+  enum class CheckState {
+    Indeterminate,
+    Absent,
+    Present
+  };
+  CheckState mHasPlayPendingGeometricAnimations = CheckState::Indeterminate;
 };
 
 } // namespace mozilla

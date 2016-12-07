@@ -138,11 +138,36 @@ function addStyle(t, rules) {
 }
 
 /**
+ * Takes a CSS property (e.g. margin-left) and returns the equivalent IDL
+ * name (e.g. marginLeft).
+ */
+function propertyToIDL(property) {
+  var prefixMatch = property.match(/^-(\w+)-/);
+  if (prefixMatch) {
+    var prefix = prefixMatch[1] === 'moz' ? 'Moz' : prefixMatch[1];
+    property = prefix + property.substring(prefixMatch[0].length - 1);
+  }
+  // https://drafts.csswg.org/cssom/#css-property-to-idl-attribute
+  return property.replace(/-([a-z])/gi, function(str, group) {
+    return group.toUpperCase();
+  });
+}
+
+/**
  * Promise wrapper for requestAnimationFrame.
  */
 function waitForFrame() {
   return new Promise(function(resolve, reject) {
     window.requestAnimationFrame(resolve);
+  });
+}
+
+/**
+ * Promise wrapper for requestIdleCallback.
+ */
+function waitForIdleCallback() {
+  return new Promise(function(resolve, reject) {
+    window.requestIdleCallback(resolve);
   });
 }
 
@@ -214,7 +239,7 @@ if (opener) {
 }
 
 /**
- * Return a new MutaionObserver which started observing |target| element
+ * Return a new MutationObserver which started observing |target| element
  * with { animations: true, subtree: |subtree| } option.
  * NOTE: This observer should be used only with takeRecords(). If any of
  * MutationRecords are observed in the callback of the MutationObserver,
