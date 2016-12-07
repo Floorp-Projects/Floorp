@@ -4,12 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global window */
+/* global window, BrowserLoader */
 
 "use strict";
 
-var Cu = Components.utils;
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
@@ -1354,15 +1352,15 @@ Inspector.prototype = {
     // create tool iframe
     this._markupFrame = doc.createElement("iframe");
     this._markupFrame.setAttribute("flex", "1");
+    // This is needed to enable tooltips inside the iframe document.
     this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
     this._markupFrame.addEventListener("contextmenu", this._onContextMenu);
 
-    // This is needed to enable tooltips inside the iframe document.
-    this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
-
     this._markupBox.setAttribute("collapsed", true);
     this._markupBox.appendChild(this._markupFrame);
-    this._markupFrame.setAttribute("src", "chrome://devtools/content/inspector/markup/markup.xhtml");
+
+    this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
+    this._markupFrame.setAttribute("src", "markup/markup.xhtml");
     this._markupFrame.setAttribute("aria-label",
       INSPECTOR_L10N.getStr("inspector.panelLabel.markupView"));
   },
@@ -1891,89 +1889,111 @@ Inspector.prototype = {
   }
 };
 
+/**
+ * Create a fake toolbox when running the inspector standalone, either in a chrome tab or
+ * in a content tab.
+ *
+ * @param {Target} target to debug
+ * @param {Function} createThreadClient
+ *        When supported the thread client needs a reference to the toolbox.
+ *        This callback will be called right after the toolbox object is created.
+ * @param {Object} dependencies
+ *        - react
+ *        - reactDOM
+ *        - browserRequire
+ */
+const buildFakeToolbox = Task.async(function* (
+  target, createThreadClient, {
+    React,
+    ReactDOM,
+    browserRequire
+  }) {
+  const { InspectorFront } = require("devtools/shared/fronts/inspector");
+  const { Selection } = require("devtools/client/framework/selection");
+  const { getHighlighterUtils } = require("devtools/client/framework/toolbox-highlighter-utils");
+
+  let notImplemented = function () {
+    throw new Error("Not implemented in a tab");
+  };
+  let fakeToolbox = {
+    target,
+    hostType: "bottom",
+    doc: window.document,
+    win: window,
+    on() {}, emit() {}, off() {},
+    initInspector() {},
+    browserRequire,
+    React,
+    ReactDOM,
+    isToolRegistered() {
+      return false;
+    },
+    currentToolId: "inspector",
+    getCurrentPanel() {
+      return "inspector";
+    },
+    get textboxContextMenuPopup() {
+      notImplemented();
+    },
+    getPanel: notImplemented,
+    openSplitConsole: notImplemented,
+    viewCssSourceInStyleEditor: notImplemented,
+    viewJsSourceInDebugger: notImplemented,
+    viewSource: notImplemented,
+    viewSourceInDebugger: notImplemented,
+    viewSourceInStyleEditor: notImplemented,
+
+    // For attachThread:
+    highlightTool() {},
+    unhighlightTool() {},
+    selectTool() {},
+    raise() {},
+    getNotificationBox() {}
+  };
+
+  fakeToolbox.threadClient = yield createThreadClient(fakeToolbox);
+
+  let inspector = InspectorFront(target.client, target.form);
+  let showAllAnonymousContent =
+    Services.prefs.getBoolPref("devtools.inspector.showAllAnonymousContent");
+  let walker = yield inspector.getWalker({ showAllAnonymousContent });
+  let selection = new Selection(walker);
+  let highlighter = yield inspector.getHighlighter(false);
+  fakeToolbox.highlighterUtils = getHighlighterUtils(fakeToolbox);
+
+  fakeToolbox.inspector = inspector;
+  fakeToolbox.walker = walker;
+  fakeToolbox.selection = selection;
+  fakeToolbox.highlighter = highlighter;
+  return fakeToolbox;
+});
+
 // URL constructor doesn't support chrome: scheme
 let href = window.location.href.replace(/chrome:/, "http://");
 let url = new window.URL(href);
 
-// Only use this method to attach the toolbox if some query parameters are given
-if (url.search.length > 1) {
+// If query parameters are given in a chrome tab, the inspector is running in standalone.
+if (window.location.protocol === "chrome:" && url.search.length > 1) {
   const { targetFromURL } = require("devtools/client/framework/target-from-url");
   const { attachThread } = require("devtools/client/framework/attach-thread");
-  const { BrowserLoader } =
-    Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 
-  const { Selection } = require("devtools/client/framework/selection");
-  const { InspectorFront } = require("devtools/shared/fronts/inspector");
-  const { getHighlighterUtils } = require("devtools/client/framework/toolbox-highlighter-utils");
+  const browserRequire = BrowserLoader({ window, useOnlyShared: true }).require;
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 
   Task.spawn(function* () {
     let target = yield targetFromURL(url);
-
-    let notImplemented = function () {
-      throw new Error("Not implemented in a tab");
-    };
-    let fakeToolbox = {
+    let fakeToolbox = yield buildFakeToolbox(
       target,
-      hostType: "bottom",
-      doc: window.document,
-      win: window,
-      on() {}, emit() {}, off() {},
-      initInspector() {},
-      browserRequire: BrowserLoader({
-        window: window,
-        useOnlyShared: true
-      }).require,
-      get React() {
-        return this.browserRequire("devtools/client/shared/vendor/react");
-      },
-      get ReactDOM() {
-        return this.browserRequire("devtools/client/shared/vendor/react-dom");
-      },
-      isToolRegistered() {
-        return false;
-      },
-      currentToolId: "inspector",
-      getCurrentPanel() {
-        return "inspector";
-      },
-      get textboxContextMenuPopup() {
-        notImplemented();
-      },
-      getPanel: notImplemented,
-      openSplitConsole: notImplemented,
-      viewCssSourceInStyleEditor: notImplemented,
-      viewJsSourceInDebugger: notImplemented,
-      viewSource: notImplemented,
-      viewSourceInDebugger: notImplemented,
-      viewSourceInStyleEditor: notImplemented,
-
-      // For attachThread:
-      highlightTool() {},
-      unhighlightTool() {},
-      selectTool() {},
-      raise() {},
-      getNotificationBox() {}
-    };
-
-    // attachThread also expect a toolbox as argument
-    fakeToolbox.threadClient = yield attachThread(fakeToolbox);
-
-    let inspector = InspectorFront(target.client, target.form);
-    let showAllAnonymousContent =
-      Services.prefs.getBoolPref("devtools.inspector.showAllAnonymousContent");
-    let walker = yield inspector.getWalker({ showAllAnonymousContent });
-    let selection = new Selection(walker);
-    let highlighter = yield inspector.getHighlighter(false);
-
-    fakeToolbox.inspector = inspector;
-    fakeToolbox.walker = walker;
-    fakeToolbox.selection = selection;
-    fakeToolbox.highlighter = highlighter;
-    fakeToolbox.highlighterUtils = getHighlighterUtils(fakeToolbox);
-
+      (toolbox) => attachThread(toolbox),
+      { React, ReactDOM, browserRequire }
+    );
     let inspectorUI = new Inspector(fakeToolbox);
     inspectorUI.init();
   }).then(null, e => {
     window.alert("Unable to start the inspector:" + e.message + "\n" + e.stack);
   });
 }
+
+exports.Inspector = Inspector;
+exports.buildFakeToolbox = buildFakeToolbox;
