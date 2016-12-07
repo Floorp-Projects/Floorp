@@ -9,6 +9,7 @@
 
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
@@ -35,7 +36,7 @@
 struct JSContext;
 class nsCSSPropertyIDSet;
 class nsIDocument;
-class nsPresContext;
+class nsIFrame;
 
 namespace mozilla {
 
@@ -62,6 +63,7 @@ public:
     , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
     , mFinishedIsResolved(false)
+    , mSyncWithGeometricAnimations(false)
   {
   }
 
@@ -281,6 +283,11 @@ public:
             mPendingState == PendingState::PlayPending);
   }
 
+  bool ShouldBeSynchronizedWithMainThread(
+    nsCSSPropertyID aProperty,
+    const nsIFrame* aFrame,
+    AnimationPerformanceWarning::Type& aPerformanceWarning) const;
+
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();
 
@@ -314,6 +321,7 @@ public:
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();
+  void NotifyGeometricAnimationsStartingThisFrame();
 
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
@@ -374,6 +382,18 @@ protected:
    */
   void ResetPendingTasks();
 
+  /**
+   * Returns true if this animation is not only play-pending, but has
+   * yet to be given a pending ready time. This roughly corresponds to
+   * animations that are waiting to be painted (since we set the pending
+   * ready time at the end of painting). Identifying such animations is
+   * useful because in some cases animations that are painted together
+   * may need to be synchronized.
+   */
+  bool IsNewlyStarted() const {
+    return mPendingState == PendingState::PlayPending &&
+           mPendingReadyTime.IsNull();
+  }
   bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
 
@@ -432,6 +452,11 @@ protected:
   // in that case mFinished is immediately reset to represent a new current
   // finished promise.
   bool mFinishedIsResolved;
+
+  // True if this animation was triggered at the same time as one or more
+  // geometric animations and hence we should run any transform animations on
+  // the main thread.
+  bool mSyncWithGeometricAnimations;
 
   nsString mId;
 };

@@ -76,12 +76,11 @@ public:
 
   void Unbind()
   {
-    mParent = nullptr;
     if (DocAccessibleParent* parent = ParentDoc()) {
-      parent->mChildDocs.RemoveElement(this);
+      parent->RemoveChildDoc(this);
     }
 
-    mParentDoc = nullptr;
+    mParent = nullptr;
   }
 
   virtual mozilla::ipc::IPCResult RecvShutdown() override;

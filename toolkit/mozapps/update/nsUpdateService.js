@@ -3260,6 +3260,8 @@ Checker.prototype = {
     this._request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to the cache.
     this._request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+    // Disable cutting edge features, like TLS 1.3, where middleboxes might brick us
+    this._request.channel.QueryInterface(Ci.nsIHttpChannelInternal).beConservative = true;
 
     this._request.overrideMimeType("text/xml");
     // The Cache-Control header is only interpreted by proxies and the

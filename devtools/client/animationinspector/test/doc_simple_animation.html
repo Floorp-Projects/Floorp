@@ -82,6 +82,10 @@
       animation: no-compositor 10s cubic-bezier(.57,-0.02,1,.31) forwards;
     }
 
+    .compositor-all {
+      animation: compositor-all 2s infinite;
+    }
+
     .compositor-notall {
       animation: compositor-notall 2s infinite;
     }
@@ -102,6 +106,10 @@
       100% {
         margin-right: 600px;
       }
+    }
+
+    @keyframes compositor-all {
+      to { opacity: 0.5 }
     }
 
     @keyframes compositor-notall {
@@ -130,6 +138,7 @@
   <div class="ball negative-delay"></div>
   <div class="ball no-compositor"></div>
   <div class="ball" id="endDelayed"></div>
+  <div class="ball compositor-all"></div>
   <div class="ball compositor-notall"></div>
   <script>
     /* globals KeyframeEffect, Animation */
