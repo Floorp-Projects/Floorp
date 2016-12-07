@@ -707,8 +707,6 @@ ChannelMediaResource::MediaReadAt(int64_t aOffset, uint32_t aCount)
 
 int64_t ChannelMediaResource::Tell()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
   return mCacheStream.Tell();
 }
 
@@ -1476,8 +1474,6 @@ nsresult FileMediaResource::UnsafeSeek(int32_t aWhence, int64_t aOffset)
 
 int64_t FileMediaResource::Tell()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
   MutexAutoLock lock(mLock);
   EnsureSizeInitialized();
 
