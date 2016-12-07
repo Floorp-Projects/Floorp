@@ -6128,8 +6128,10 @@
         ${LogMsg} "OS Name    : Windows 8"
       ${ElseIf} ${IsWin8.1}
         ${LogMsg} "OS Name    : Windows 8.1"
-      ${ElseIf} ${AtLeastWin8.1}
-        ${LogMsg} "OS Name    : Above Windows 8.1"
+      ${ElseIf} ${IsWin10}
+        ${LogMsg} "OS Name    : Windows 10"
+      ${ElseIf} ${AtLeastWin10}
+        ${LogMsg} "OS Name    : Above Windows 10"
       ${Else}
         ${LogMsg} "OS Name    : Unable to detect"
       ${EndIf}
