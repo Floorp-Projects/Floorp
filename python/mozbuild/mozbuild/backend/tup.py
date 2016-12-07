@@ -245,6 +245,7 @@ class TupOnly(CommonBackend, PartialBackend):
             ])
             full_inputs = [f.full_path for f in obj.inputs]
             cmd.extend(full_inputs)
+            cmd.extend(shell_quote(f) for f in obj.flags)
 
             outputs = []
             outputs.extend(obj.outputs)
