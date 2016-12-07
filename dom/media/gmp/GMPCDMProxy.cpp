@@ -54,16 +54,14 @@ void
 GMPCDMProxy::Init(PromiseId aPromiseId,
                   const nsAString& aOrigin,
                   const nsAString& aTopLevelOrigin,
-                  const nsAString& aGMPName,
-                  bool aInPrivateBrowsing)
+                  const nsAString& aGMPName)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  EME_LOG("GMPCDMProxy::Init (%s, %s) %s",
+  EME_LOG("GMPCDMProxy::Init (%s, %s)",
           NS_ConvertUTF16toUTF8(aOrigin).get(),
-          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
-          (aInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"));
+          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get());
 
   nsCString pluginVersion;
   if (!mOwnerThread) {
@@ -93,7 +91,6 @@ GMPCDMProxy::Init(PromiseId aPromiseId,
   data->mOrigin = aOrigin;
   data->mTopLevelOrigin = aTopLevelOrigin;
   data->mGMPName = aGMPName;
-  data->mInPrivateBrowsing = aInPrivateBrowsing;
   data->mCrashHelper = mCrashHelper;
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<UniquePtr<InitData>&&>(this,
@@ -210,7 +207,6 @@ GMPCDMProxy::gmp_Init(UniquePtr<InitData>&& aData)
   nsresult rv = mps->GetNodeId(data.mOrigin,
                                data.mTopLevelOrigin,
                                data.mGMPName,
-                               data.mInPrivateBrowsing,
                                Move(callback));
   if (NS_FAILED(rv)) {
     RejectPromise(data.mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
@@ -241,10 +237,9 @@ GMPCDMProxy::gmp_InitGetGMPDecryptor(nsresult aResult,
     return;
   }
 
-  EME_LOG("GMPCDMProxy::gmp_Init (%s, %s) %s NodeId=%s",
+  EME_LOG("GMPCDMProxy::gmp_Init (%s, %s) NodeId=%s",
           NS_ConvertUTF16toUTF8(aData->mOrigin).get(),
           NS_ConvertUTF16toUTF8(aData->mTopLevelOrigin).get(),
-          (aData->mInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"),
           GetNodeId().get());
 
   nsTArray<nsCString> tags;
