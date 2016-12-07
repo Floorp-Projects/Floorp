@@ -405,7 +405,9 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
 
     if (IsRootWrapper()) {
         MOZ_ASSERT(!IsMultiCompartment(), "mNext is always nullptr here");
-        xpc::CompartmentPrivate::Get(mJSObj)->GetWrappedJSMap()->Add(cx, this);
+        if (!xpc::CompartmentPrivate::Get(mJSObj)->GetWrappedJSMap()->Add(cx, this)) {
+            *rv = NS_ERROR_OUT_OF_MEMORY;
+        }
     } else {
         NS_ADDREF(mRoot);
         mNext = mRoot->mNext;
@@ -416,8 +418,10 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
         // to migrate the chain to the global table on the XPCJSContext.
         if (mRoot->IsMultiCompartment()) {
             xpc::CompartmentPrivate::Get(mRoot->mJSObj)->GetWrappedJSMap()->Remove(mRoot);
-            MOZ_RELEASE_ASSERT(nsXPConnect::GetContextInstance()->
-                    GetMultiCompartmentWrappedJSMap()->Add(cx, mRoot));
+            auto destMap = nsXPConnect::GetContextInstance()->GetMultiCompartmentWrappedJSMap();
+            if (!destMap->Add(cx, mRoot)) {
+                *rv = NS_ERROR_OUT_OF_MEMORY;
+            }
         }
     }
 }

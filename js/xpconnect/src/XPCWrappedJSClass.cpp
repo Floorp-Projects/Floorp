@@ -554,7 +554,9 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         nsresult rv = nsXPCWrappedJS::GetNewOrUsed(obj, aIID, getter_AddRefs(wrapper));
 
         // Do the same thing we do for the "check for any existing wrapper" case above.
-        *aInstancePtr = wrapper.forget().take()->GetXPTCStub();
+        if (NS_SUCCEEDED(rv) && wrapper) {
+            *aInstancePtr = wrapper.forget().take()->GetXPTCStub();
+        }
         return rv;
     }
 
