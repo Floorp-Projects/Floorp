@@ -7275,7 +7275,8 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
 
-  if (effectProperties.HasInvalidClipPath()) {
+  if (effectProperties.HasInvalidClipPath() ||
+      effectProperties.HasInvalidMask()) {
     return nullptr;
   }
 
