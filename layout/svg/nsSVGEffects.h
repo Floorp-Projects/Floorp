@@ -511,6 +511,19 @@ public:
       return !HasNoOrValidClipPath();
     }
 
+    /*
+     * @return true if we either do not have mask or all masks we have
+     * are valid.
+     */
+    bool HasNoOrValidMask();
+
+    /*
+     * @return true if we have an invalid mask.
+     */
+    bool HasInvalidMask() {
+      return !HasNoOrValidMask();
+    }
+
     bool HasValidFilter() {
       return mFilter && mFilter->ReferencesValidResources();
     }
