@@ -7462,7 +7462,8 @@ nsDisplayMask::PrintEffects(nsACString& aTo)
     first = false;
   }
 
-  if (effectProperties.GetFirstMaskFrame()) {
+  nsTArray<nsSVGMaskFrame*> masks = effectProperties.GetMaskFrames();
+  if (!masks.IsEmpty() && masks[0]) {
     if (!first) {
       aTo += ", ";
     }
