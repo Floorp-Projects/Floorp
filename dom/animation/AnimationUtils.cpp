@@ -6,7 +6,6 @@
 
 #include "AnimationUtils.h"
 
-#include "nsContentUtils.h" // For nsContentUtils::IsCallerChrome
 #include "nsDebug.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
@@ -79,9 +78,9 @@ AnimationUtils::IsCoreAPIEnabled()
 }
 
 /* static */ bool
-AnimationUtils::IsCoreAPIEnabledForCaller()
+AnimationUtils::IsCoreAPIEnabledForCaller(dom::CallerType aCallerType)
 {
-  return IsCoreAPIEnabled() || nsContentUtils::IsCallerChrome();
+  return IsCoreAPIEnabled() || aCallerType == dom::CallerType::System;
 }
 
 } // namespace mozilla
