@@ -313,6 +313,12 @@ struct Statistics
     SliceRange sliceRange() const { return slices.all(); }
     size_t slicesLength() const { return slices.length(); }
 
+    /* Occasionally print header lines for profiling information. */
+    void maybePrintProfileHeaders();
+
+    /* Print header line for profile times. */
+    void printProfileHeader();
+
     /* Print total profile times on shutdown. */
     void printTotalProfileTimes();
 
@@ -429,7 +435,6 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     double computeMMU(int64_t resolution) const;
 
     void printSliceProfile();
-    static void printProfileHeader();
     static void printProfileTimes(const ProfileTimes& times);
 };
 

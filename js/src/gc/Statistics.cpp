@@ -1326,9 +1326,23 @@ Statistics::computeMMU(int64_t window) const
     return double(window - gcMax) / window;
 }
 
-/* static */ void
+void
+Statistics::maybePrintProfileHeaders()
+{
+    static int printedHeader = 0;
+    if ((printedHeader++ % 200) == 0) {
+        printProfileHeader();
+        runtime->gc.nursery.printProfileHeader();
+    }
+}
+
+void
 Statistics::printProfileHeader()
 {
+    if (!enableProfiling_)
+        return;
+
+    fprintf(stderr, "MajorGC:               Reason States      ");
     fprintf(stderr, " %6s", "total");
 #define PRINT_PROFILE_HEADER(name, text, phase)                               \
     fprintf(stderr, " %6s", text);
@@ -1350,11 +1364,7 @@ Statistics::printSliceProfile()
 {
     const SliceData& slice = slices.back();
 
-    static int printedHeader = 0;
-    if ((printedHeader++ % 200) == 0) {
-        fprintf(stderr, "MajorGC:               Reason States      ");
-        printProfileHeader();
-    }
+    maybePrintProfileHeaders();
 
     fprintf(stderr, "MajorGC: %20s %1d -> %1d      ",
             ExplainReason(slice.reason), int(slice.initialState), int(slice.finalState));
