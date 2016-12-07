@@ -7,6 +7,7 @@
 
 #include "LayersLogging.h"
 #include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
@@ -59,41 +60,9 @@ WebRenderImageLayer::RenderLayer()
     return;
   }
 
-  gfx::IntSize size = surface->GetSize();
-
-  // XXX Add external image id handling
-
-  // XXX Add texure recycling
-
-  // XXX Add other TextureData supports.
-  // Only BufferTexture is supported now.
-  RefPtr<TextureClient> texture =
-    TextureClient::CreateForRawBufferAccess(WRBridge(),
-                                            surface->GetFormat(),
-                                            size,
-                                            BackendType::SKIA,
-                                            TextureFlags::DEFAULT);
-  if (!texture) {
-    return;
-  }
-  MOZ_ASSERT(texture->CanExposeDrawTarget());
-
-  TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
-  if (!autoLock.Succeeded()) {
-    return;
-  }
-  RefPtr<DrawTarget> drawTarget = texture->BorrowDrawTarget();
-  if (!drawTarget || !drawTarget->IsValid()) {
-    return;
-  }
-  drawTarget->CopySurface(surface, IntRect(IntPoint(), size), IntPoint());
-
   if (!mImageContainerForWR) {
     mImageContainerForWR = LayerManager::CreateImageContainer();
   }
-  RefPtr<TextureWrapperImage> image =
-    new TextureWrapperImage(texture, IntRect(IntPoint(0, 0), size));
-  mImageContainerForWR->SetCurrentImageInTransaction(image);
 
   if (!mImageClient) {
     mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
@@ -104,6 +73,36 @@ WebRenderImageLayer::RenderLayer()
     }
     mImageClient->Connect();
   }
+
+  gfx::IntSize size = surface->GetSize();
+
+  // XXX Add external image id handling
+
+  RefPtr<TextureClient> texture = mImageClient->GetTextureClientRecycler()
+    ->CreateOrRecycle(surface->GetFormat(),
+                      size,
+                      BackendSelector::Content,
+                      TextureFlags::DEFAULT);
+  if (!texture) {
+    return;
+  }
+
+
+  MOZ_ASSERT(texture->CanExposeDrawTarget());
+  {
+    TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
+    if (!autoLock.Succeeded()) {
+      return;
+    }
+    RefPtr<DrawTarget> drawTarget = texture->BorrowDrawTarget();
+    if (!drawTarget || !drawTarget->IsValid()) {
+      return;
+    }
+    drawTarget->CopySurface(surface, IntRect(IntPoint(), size), IntPoint());
+  }
+  RefPtr<TextureWrapperImage> image =
+    new TextureWrapperImage(texture, IntRect(IntPoint(0, 0), size));
+  mImageContainerForWR->SetCurrentImageInTransaction(image);
 
   if (!mImageClient->UpdateImage(mImageContainerForWR, /* unused */0)) {
     return;
