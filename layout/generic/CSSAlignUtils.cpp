@@ -6,6 +6,7 @@
 /* Utility code for performing CSS Box Alignment */
 
 #include "CSSAlignUtils.h"
+#include "ReflowInput.h"
 
 namespace mozilla {
 

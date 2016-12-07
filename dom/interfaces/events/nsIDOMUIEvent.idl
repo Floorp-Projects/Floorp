@@ -49,8 +49,6 @@ interface nsIDOMUIEvent : nsISupports
   readonly attribute nsIDOMNode         rangeParent;
   readonly attribute long               rangeOffset;
 
-           attribute boolean            cancelBubble;
-
   readonly attribute boolean            isChar;
 
   [notxpcom, nostdcall] EventPtr AsEvent();

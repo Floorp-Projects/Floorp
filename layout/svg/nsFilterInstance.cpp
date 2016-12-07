@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 
 // Keep others in (case-insensitive) order:
+#include "DrawResult.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -28,6 +29,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 FilterDescription
 nsFilterInstance::GetFilterDescription(nsIContent* aFilteredElement,

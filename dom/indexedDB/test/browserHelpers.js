@@ -16,7 +16,7 @@ function runTest()
 function finishTestNow()
 {
   if (testGenerator) {
-    testGenerator.close();
+    testGenerator.return();
     testGenerator = undefined;
   }
 }
@@ -40,7 +40,7 @@ function finishTest()
 
 function grabEventAndContinueHandler(event)
 {
-  testGenerator.send(event);
+  testGenerator.next(event);
 }
 
 function errorHandler(event)

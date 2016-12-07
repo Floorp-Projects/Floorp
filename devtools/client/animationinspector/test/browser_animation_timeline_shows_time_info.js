@@ -23,26 +23,33 @@ add_task(function* () {
     ok(el.hasAttribute("title"), "The tooltip is defined for animation " + i);
 
     let title = el.getAttribute("title");
-    if (controller.animationPlayers[i].state.delay) {
+    let state = controller.animationPlayers[i].state;
+
+    if (state.delay) {
       ok(title.match(/Delay: [\d.-]+s/), "The tooltip shows the delay");
     }
     ok(title.match(/Duration: [\d.]+s/), "The tooltip shows the duration");
-    if (controller.animationPlayers[i].state.endDelay) {
+    if (state.endDelay) {
       ok(title.match(/End delay: [\d.-]+s/), "The tooltip shows the endDelay");
     }
-    if (controller.animationPlayers[i].state.iterationCount !== 1) {
+    if (state.iterationCount !== 1) {
       ok(title.match(/Repeats: /), "The tooltip shows the iterations");
     } else {
       ok(!title.match(/Repeats: /), "The tooltip doesn't show the iterations");
     }
-    if (controller.animationPlayers[i].state.easing) {
+    if (state.easing) {
       ok(title.match(/Easing: /), "The tooltip shows the easing");
     }
-    if (controller.animationPlayers[i].state.fill) {
+    if (state.fill) {
       ok(title.match(/Fill: /), "The tooltip shows the fill");
     }
-    if (controller.animationPlayers[i].state.direction) {
-      ok(title.match(/Direction: /), "The tooltip shows the direction");
+    if (state.direction) {
+      if (state.direction === "normal") {
+        ok(!title.match(/Direction: /),
+          "The tooltip doesn't show the direction if it is 'normal'");
+      } else {
+        ok(title.match(/Direction: /), "The tooltip shows the direction");
+      }
     }
     ok(!title.match(/Iteration start:/),
       "The tooltip doesn't show the iteration start");

@@ -4,8 +4,8 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT kern table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2004-2007, 2013                                              */
-/*  by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                      */
+/*  Copyright 2004-2016 by                                                 */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -549,7 +549,7 @@
       }
     }
 
-    gxvalid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
 
     GXV_EXIT;
   }
@@ -693,7 +693,7 @@
 
     GXV_NAME_ENTER( "validating coverage" );
 
-    GXV_TRACE(( "interprete coverage 0x%04x by Apple style\n", coverage ));
+    GXV_TRACE(( "interpret coverage 0x%04x by Apple style\n", coverage ));
 
     if ( KERN_IS_NEW( gxvalid ) )
     {
@@ -728,7 +728,7 @@
       }
     }
 
-    GXV_TRACE(( "cannot interprete coverage, broken kern subtable\n" ));
+    GXV_TRACE(( "cannot interpret coverage, broken kern subtable\n" ));
 
   Exit:
     GXV_EXIT;
@@ -779,7 +779,7 @@
 #ifdef GXV_LOAD_TRACE_VARS
       version    = 0;
 #endif
-      length     = ( u16[0] << 16 ) + u16[1];
+      length     = ( (FT_ULong)u16[0] << 16 ) + u16[1];
 #ifdef GXV_LOAD_TRACE_VARS
       tupleIndex = 0;
 #endif

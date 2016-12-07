@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.prompts;
 
-import org.json.JSONObject;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.widget.BasicColorPicker;
 
 import android.content.Context;
@@ -21,9 +21,9 @@ public class ColorPickerInput extends PromptInput {
     private final boolean mShowAdvancedButton = true;
     private final int mInitialColor;
 
-    public ColorPickerInput(JSONObject obj) {
+    public ColorPickerInput(GeckoBundle obj) {
         super(obj);
-        String init = obj.optString("value");
+        String init = obj.getString("value");
         mInitialColor = Color.rgb(Integer.parseInt(init.substring(1, 3), 16),
                                   Integer.parseInt(init.substring(3, 5), 16),
                                   Integer.parseInt(init.substring(5, 7), 16));

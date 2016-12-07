@@ -4,8 +4,8 @@
 
 # Build without any warning flags, and with clang verify flag for a
 # syntax-only build (no codegen), without a limit on the number of errors.
-OS_CFLAGS := $(filter-out -W%,$(OS_CFLAGS)) -fsyntax-only -Xclang -verify -ferror-limit=0 -std=c11
-OS_CXXFLAGS := $(filter-out -W%,$(OS_CXXFLAGS)) -fsyntax-only -Xclang -verify -ferror-limit=0
+OS_CFLAGS := $(filter-out -W%,$(OS_CFLAGS)) -fsyntax-only -Xclang -verify -ferror-limit=0 -std=c11 -Wno-invalid-noreturn
+OS_CXXFLAGS := $(filter-out -W%,$(OS_CXXFLAGS)) -fsyntax-only -Xclang -verify -ferror-limit=0 -Wno-invalid-noreturn
 
 include $(topsrcdir)/config/rules.mk
 

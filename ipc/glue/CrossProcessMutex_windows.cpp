@@ -24,7 +24,7 @@ CrossProcessMutex::CrossProcessMutex(const char*)
   // given.
   mMutex = ::CreateMutexA(nullptr, FALSE, nullptr);
   if (!mMutex) {
-    NS_RUNTIMEABORT("This shouldn't happen - failed to create mutex!");
+    MOZ_CRASH("This shouldn't happen - failed to create mutex!");
   }
   MOZ_COUNT_CTOR(CrossProcessMutex);
 }
@@ -33,7 +33,7 @@ CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
 {
   DWORD flags;
   if (!::GetHandleInformation(aHandle, &flags)) {
-    NS_RUNTIMEABORT("Attempt to construct a mutex from an invalid handle!");
+    MOZ_CRASH("Attempt to construct a mutex from an invalid handle!");
   }
   mMutex = aHandle;
   MOZ_COUNT_CTOR(CrossProcessMutex);

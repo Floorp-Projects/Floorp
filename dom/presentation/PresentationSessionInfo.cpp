@@ -7,7 +7,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/Function.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"

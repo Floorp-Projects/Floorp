@@ -28,13 +28,13 @@ add_task(function* () {
 
   info("Faking a mousemove on a non-transform property");
   let {valueSpan} = getRuleViewProperty(view, "body", "color");
-  hs._onMouseMove({target: valueSpan});
+  hs.onMouseMove({target: valueSpan});
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (2)");
 
   info("Faking a mousemove on a transform property");
   ({valueSpan} = getRuleViewProperty(view, "body", "transform"));
   let onHighlighterShown = hs.once("highlighter-shown");
-  hs._onMouseMove({target: valueSpan});
+  hs.onMouseMove({target: valueSpan});
   yield onHighlighterShown;
 
   let onComputedViewReady = inspector.once("computed-view-refreshed");
@@ -42,16 +42,21 @@ add_task(function* () {
   yield onComputedViewReady;
   hs = cView.highlighters;
 
-  ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (1)");
+  info("Remove the created transform highlighter");
+  hs.highlighters[TYPE].finalize();
+  hs.highlighters[TYPE] = null;
 
   info("Faking a mousemove on a non-transform property");
   ({valueSpan} = getComputedViewProperty(cView, "color"));
-  hs._onMouseMove({target: valueSpan});
-  ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (2)");
+  hs.onMouseMove({target: valueSpan});
+  ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (3)");
 
   info("Faking a mousemove on a transform property");
   ({valueSpan} = getComputedViewProperty(cView, "transform"));
   onHighlighterShown = hs.once("highlighter-shown");
-  hs._onMouseMove({target: valueSpan});
+  hs.onMouseMove({target: valueSpan});
   yield onHighlighterShown;
+
+  ok(hs.highlighters[TYPE],
+    "The highlighter has been created in the computed-view");
 });

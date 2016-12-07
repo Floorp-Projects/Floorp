@@ -323,12 +323,15 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
-    public static void openWindowForNotification() {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+    public static void launchOrBringToFront() {
+        GeckoInterface gi = getGeckoInterface();
+        if (gi == null || !gi.isForegrounded()) {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
 
-        getApplicationContext().startActivity(intent);
+            getApplicationContext().startActivity(intent);
+        }
     }
 
     private static float getLocationAccuracy(Location location) {
@@ -1736,6 +1739,7 @@ public class GeckoAppShell
         public AbsoluteLayout getPluginContainer();
         public void notifyCheckUpdateResult(String result);
         public void invalidateOptionsMenu();
+        public boolean isForegrounded();
 
         /**
          * Create a shortcut -- generally a home-screen icon -- linking the given title to the given URI.

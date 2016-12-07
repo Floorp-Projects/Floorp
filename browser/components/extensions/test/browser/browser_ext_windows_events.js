@@ -104,6 +104,8 @@ add_task(function* testWindowsEvents() {
   info(`Close browser window 1`);
   yield BrowserTestUtils.closeWindow(win1);
 
+  currentWindow.focus();
+
   winId = yield extension.awaitMessage(`window-removed`);
   is(winId, win1Id, "Got removed event for the correct window ID.");
 

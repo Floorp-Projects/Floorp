@@ -42,12 +42,32 @@ IdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(Runnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(Runnable, nsIRunnable, nsINamed)
 
 NS_IMETHODIMP
 Runnable::Run()
 {
   // Do nothing
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Runnable::GetName(nsACString& aName)
+{
+#ifdef RELEASE_OR_BETA
+  aName.Truncate();
+#else
+  aName.AssignASCII(mName);
+#endif
+  return NS_OK;
+}
+
+nsresult
+Runnable::SetName(const char* aName)
+{
+#ifndef RELEASE_OR_BETA
+  mName = aName;
+#endif
   return NS_OK;
 }
 

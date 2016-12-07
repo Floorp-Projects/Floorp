@@ -32,7 +32,7 @@ const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
 const Services = require("Services");
 const promise = require("promise");
 const events = require("devtools/shared/event-emitter");
-const { PrefObserver } = require("devtools/client/styleeditor/utils");
+const { PrefObserver } = require("devtools/client/shared/prefs");
 const { getClientCssProperties } = require("devtools/shared/fronts/css-properties");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
@@ -62,8 +62,7 @@ const CM_IFRAME =
   "    <style>" +
   "      html, body { height: 100%; }" +
   "      body { margin: 0; overflow: hidden; }" +
-  "      .CodeMirror { width: 100%; height: 100% !important; " +
-  "line-height: 1.25 !important;}" +
+  "      .CodeMirror { width: 100% !important; line-height: 1.25 !important; }" +
   "    </style>" +
   CM_STYLES.map(style => "<link rel='stylesheet' href='" + style + "'>").join("\n") +
   "  </head>" +

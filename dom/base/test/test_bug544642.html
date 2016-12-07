@@ -17,10 +17,10 @@ var gen = runTest();
 
 addLoadEvent(function() { gen.next(); });
 
-function runTest() {
+function* runTest() {
   var iframe = $('iframe');
-  iframe.onerror = function() { gen.send("error"); };
-  iframe.onload = function() { gen.send("load"); };
+  iframe.onerror = function() { gen.next("error"); };
+  iframe.onload = function() { gen.next("load"); };
 
   iframe.src = "data:text/plain,hello";
   is((yield), "load", "plaintext data");
@@ -34,8 +34,6 @@ function runTest() {
   //is((yield), "error", "invalid http");
 
   SimpleTest.finish();
-  
-  yield undefined;
 }
 
 </script>

@@ -13,7 +13,6 @@
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsICookiePermission.h"
-#include "nsPIDOMWindow.h"
 
 #include "mozilla/dom/StorageBinding.h"
 #include "mozilla/dom/StorageEvent.h"
@@ -179,8 +178,9 @@ namespace {
 class StorageNotifierRunnable : public Runnable
 {
 public:
-  StorageNotifierRunnable(nsISupports* aSubject, const char16_t* aType)
-    : mSubject(aSubject), mType(aType)
+  StorageNotifierRunnable(nsISupports* aSubject, const char16_t* aType,
+                          bool aPrivateBrowsing)
+    : mSubject(aSubject), mType(aType), mPrivateBrowsing(aPrivateBrowsing)
   { }
 
   NS_DECL_NSIRUNNABLE
@@ -188,6 +188,7 @@ public:
 private:
   nsCOMPtr<nsISupports> mSubject;
   const char16_t* mType;
+  const bool mPrivateBrowsing;
 };
 
 NS_IMETHODIMP
@@ -196,7 +197,11 @@ StorageNotifierRunnable::Run()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->NotifyObservers(mSubject, "dom-storage2-changed", mType);
+    observerService->NotifyObservers(mSubject,
+                                     mPrivateBrowsing
+                                       ? "dom-private-storage2-changed"
+                                       : "dom-storage2-changed",
+                                     mType);
   }
   return NS_OK;
 }
@@ -226,7 +231,8 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
     new StorageNotifierRunnable(event,
                                 GetType() == LocalStorage
                                   ? u"localStorage"
-                                  : u"sessionStorage");
+                                  : u"sessionStorage",
+                                IsPrivate());
   NS_DispatchToMainThread(r);
 }
 

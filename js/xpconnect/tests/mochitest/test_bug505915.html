@@ -18,7 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=505915
 <script type="application/javascript;version=1.7">
 
 /** Test for Bug 505915 **/
-window.addEventListener("message", function () { gen.next() }, false);
+window.addEventListener("message", function () {
+  ok(false, "should not receive message");
+}, false);
 
 function go() {
     var ifr = $('ifr');
@@ -36,7 +38,6 @@ function go() {
     }
 
     SimpleTest.finish();
-    yield;
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -44,7 +45,7 @@ SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 
-<iframe id="ifr" onload="gen = go(); gen.next();" src="http://example.org/"></iframe>
+<iframe id="ifr" onload="go();" src="http://example.org/"></iframe>
 
 </body>
 </html>

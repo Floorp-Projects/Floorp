@@ -719,6 +719,10 @@ TableWidget.prototype = {
       if (hiddenColumns.includes(id) || privateColumns.includes(id)) {
         // Hide the column.
         this.columns.get(id).toggleColumn();
+
+        if (privateColumns.includes(id)) {
+          this.columns.get(id).private = true;
+        }
       }
     }
     this.sortedOn = sortOn;
@@ -978,6 +982,9 @@ module.exports.TableWidget = TableWidget;
  *        The displayed string on the column's header.
  */
 function Column(table, id, header) {
+  // By default cells are visible in the UI.
+  this._private = false;
+
   this.tbody = table.tbody;
   this.document = table.document;
   this.window = table.window;
@@ -1058,6 +1065,23 @@ Column.prototype = {
    */
   get sorted() {
     return this._sortState || 0;
+  },
+
+  /**
+   * Get the private state of the column (visibility in the UI).
+   */
+  get private() {
+    return this._private;
+  },
+
+  /**
+   * Set the private state of the column (visibility in the UI).
+   *
+   * @param  {Boolean} state
+   *         Private (true or false)
+   */
+  set private(state) {
+    this._private = state;
   },
 
   /**

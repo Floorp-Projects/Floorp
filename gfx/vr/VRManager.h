@@ -38,7 +38,8 @@ public:
   void NotifyVsync(const TimeStamp& aVsyncTimestamp);
   void NotifyVRVsync(const uint32_t& aDisplayID);
   void RefreshVRDisplays(bool aMustDispatch = false);
-  void ScanForDevices();
+  void ScanForControllers();
+  void RemoveControllers();
   template<class T> void NotifyGamepadChange(const T& aInfo);
   RefPtr<gfx::VRDisplayHost> GetDisplay(const uint32_t& aDisplayID);
   void GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo);

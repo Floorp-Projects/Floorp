@@ -9,8 +9,6 @@ browser.jar:
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutSyncTabs.css
 * skin/classic/browser/syncedtabs/sidebar.css          (syncedtabs/sidebar.css)
-  skin/classic/browser/actionicon-tab.png
-  skin/classic/browser/actionicon-tab@2x.png
 * skin/classic/browser/browser.css
 * skin/classic/browser/devedition.css
 * skin/classic/browser/browser-lightweightTheme.css
@@ -76,7 +74,6 @@ browser.jar:
   skin/classic/browser/downloads/download-notification-start@2x.png  (downloads/download-notification-start@2x.png)
 * skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
-  skin/classic/browser/feeds/subscribe-ui.css               (feeds/subscribe-ui.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png                 (feeds/feedIcon16.png)
 * skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
@@ -84,8 +81,6 @@ browser.jar:
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
-  skin/classic/browser/places/autocomplete-star.png         (places/autocomplete-star.png)
-  skin/classic/browser/places/autocomplete-star@2x.png      (places/autocomplete-star@2x.png)
 * skin/classic/browser/places/places.css                    (places/places.css)
   skin/classic/browser/places/organizer.css                 (places/organizer.css)
   skin/classic/browser/places/query.png                     (places/query.png)
@@ -104,10 +99,6 @@ browser.jar:
   skin/classic/browser/places/folderDropArrow.png           (places/folderDropArrow.png)
   skin/classic/browser/places/folderDropArrow@2x.png        (places/folderDropArrow@2x.png)
   skin/classic/browser/places/editBookmarkOverlay.css       (places/editBookmarkOverlay.css)
-  skin/classic/browser/places/minus.png                     (places/minus.png)
-  skin/classic/browser/places/minus-active.png              (places/minus-active.png)
-  skin/classic/browser/places/plus.png                      (places/plus.png)
-  skin/classic/browser/places/plus-active.png               (places/plus-active.png)
   skin/classic/browser/places/starred48.png                 (places/starred48.png)
   skin/classic/browser/places/starred48@2x.png              (places/starred48@2x.png)
   skin/classic/browser/places/unstarred48.png               (places/unstarred48.png)

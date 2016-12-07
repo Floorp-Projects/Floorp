@@ -650,7 +650,9 @@ int nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx,FILE *out)
 
 void nr_ice_peer_ctx_disconnected(nr_ice_peer_ctx *pctx)
   {
-    if (pctx->handler && pctx->handler->vtbl->ice_disconnected) {
+    if (pctx->reported_connected &&
+        pctx->handler &&
+        pctx->handler->vtbl->ice_disconnected) {
       pctx->handler->vtbl->ice_disconnected(pctx->handler->obj, pctx);
     }
   }
@@ -658,7 +660,9 @@ void nr_ice_peer_ctx_disconnected(nr_ice_peer_ctx *pctx)
 void nr_ice_peer_ctx_connected(nr_ice_peer_ctx *pctx)
   {
     /* Fire the handler callback to say we're done */
-    if (pctx->handler) {
+    if (pctx->reported_connected &&
+        pctx->handler &&
+        pctx->handler->vtbl->ice_connected) {
       pctx->handler->vtbl->ice_connected(pctx->handler->obj, pctx);
     }
   }

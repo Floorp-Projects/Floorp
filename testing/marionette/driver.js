@@ -160,7 +160,8 @@ this.GeckoDriver = function(appName, server) {
 
     // proprietary extensions
     "specificationLevel": 0,
-    "processId" : Services.appinfo.processID,
+    "moz:processID": Services.appinfo.processID,
+    "moz:profile": Services.dirsvc.get("ProfD", Ci.nsIFile).path,
   };
 
   this.mm = globalMessageManager;
@@ -2871,21 +2872,15 @@ GeckoDriver.prototype.commands = {
   "getWindowType": GeckoDriver.prototype.getWindowType,
   "getPageSource": GeckoDriver.prototype.getPageSource,
   "get": GeckoDriver.prototype.get,
-  "goUrl": GeckoDriver.prototype.get,  // deprecated
   "getCurrentUrl": GeckoDriver.prototype.getCurrentUrl,
-  "getUrl": GeckoDriver.prototype.getCurrentUrl,  // deprecated
   "goBack": GeckoDriver.prototype.goBack,
   "goForward": GeckoDriver.prototype.goForward,
   "refresh":  GeckoDriver.prototype.refresh,
   "getWindowHandle": GeckoDriver.prototype.getWindowHandle,
-  "getCurrentWindowHandle":  GeckoDriver.prototype.getWindowHandle,  // Selenium 2 compat
   "getChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "getCurrentChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
-  "getWindow":  GeckoDriver.prototype.getWindowHandle,  // deprecated
   "getWindowHandles": GeckoDriver.prototype.getWindowHandles,
   "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
-  "getCurrentWindowHandles": GeckoDriver.prototype.getWindowHandles,  // Selenium 2 compat
-  "getWindows":  GeckoDriver.prototype.getWindowHandles,  // deprecated
   "getWindowPosition": GeckoDriver.prototype.getWindowPosition,
   "setWindowPosition": GeckoDriver.prototype.setWindowPosition,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
@@ -2898,15 +2893,11 @@ GeckoDriver.prototype.commands = {
   "clearImportedScripts": GeckoDriver.prototype.clearImportedScripts,
   "getAppCacheStatus": GeckoDriver.prototype.getAppCacheStatus,
   "close": GeckoDriver.prototype.close,
-  "closeWindow": GeckoDriver.prototype.close,  // deprecated
   "closeChromeWindow": GeckoDriver.prototype.closeChromeWindow,
   "setTestName": GeckoDriver.prototype.setTestName,
   "takeScreenshot": GeckoDriver.prototype.takeScreenshot,
-  "screenShot": GeckoDriver.prototype.takeScreenshot,  // deprecated
-  "screenshot": GeckoDriver.prototype.takeScreenshot,  // Selenium 2 compat
   "addCookie": GeckoDriver.prototype.addCookie,
   "getCookies": GeckoDriver.prototype.getCookies,
-  "getAllCookies": GeckoDriver.prototype.getCookies,  // deprecated
   "deleteAllCookies": GeckoDriver.prototype.deleteAllCookies,
   "deleteCookie": GeckoDriver.prototype.deleteCookie,
   "getActiveElement": GeckoDriver.prototype.getActiveElement,

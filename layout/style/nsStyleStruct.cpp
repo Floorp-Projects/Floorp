@@ -40,6 +40,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static_assert((((1 << nsStyleStructID_Length) - 1) &
                ~(NS_STYLE_INHERIT_MASK)) == 0,
@@ -237,22 +238,6 @@ nsStyleFont::GetLanguage(StyleStructContext aContext)
     language = aContext.GetLanguageFromCharset();
   }
   return language.forget();
-}
-
-static nscoord
-CalcCoord(const nsStyleCoord& aCoord, const nscoord* aEnumTable, int32_t aNumEnums)
-{
-  if (aCoord.GetUnit() == eStyleUnit_Enumerated) {
-    MOZ_ASSERT(aEnumTable, "must have enum table");
-    int32_t value = aCoord.GetIntValue();
-    if (0 <= value && value < aNumEnums) {
-      return aEnumTable[aCoord.GetIntValue()];
-    }
-    NS_NOTREACHED("unexpected enum value");
-    return 0;
-  }
-  MOZ_ASSERT(aCoord.ConvertsToLength(), "unexpected unit");
-  return nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
 }
 
 nsStyleMargin::nsStyleMargin(StyleStructContext aContext)
@@ -547,7 +532,8 @@ nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
 }
 
 nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
-  : mOutlineWidth(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated)
+  : mOutlineWidth((StaticPresData::Get()
+                     ->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM])
   , mOutlineOffset(0)
   , mOutlineColor(StyleComplexColor::CurrentColor())
   , mOutlineStyle(NS_STYLE_BORDER_STYLE_NONE)
@@ -580,14 +566,8 @@ nsStyleOutline::RecalcData()
   if (NS_STYLE_BORDER_STYLE_NONE == mOutlineStyle) {
     mActualOutlineWidth = 0;
   } else {
-    MOZ_ASSERT(mOutlineWidth.ConvertsToLength() ||
-               mOutlineWidth.GetUnit() == eStyleUnit_Enumerated);
-    // Clamp negative calc() to 0.
     mActualOutlineWidth =
-      std::max(CalcCoord(mOutlineWidth,
-                         StaticPresData::Get()->GetBorderWidthTable(), 3), 0);
-    mActualOutlineWidth =
-      NS_ROUND_BORDER_TO_PIXELS(mActualOutlineWidth, mTwipsPerPixel);
+      NS_ROUND_BORDER_TO_PIXELS(mOutlineWidth, mTwipsPerPixel);
   }
 }
 
@@ -3783,15 +3763,15 @@ nsStyleText::nsStyleText(StyleStructContext aContext)
   , mControlCharacterVisibility(nsCSSParser::ControlCharVisibilityDefault())
   , mTextEmphasisStyle(NS_STYLE_TEXT_EMPHASIS_STYLE_NONE)
   , mTextRendering(NS_STYLE_TEXT_RENDERING_AUTO)
-  , mTabSize(NS_STYLE_TABSIZE_INITIAL)
   , mTextEmphasisColor(StyleComplexColor::CurrentColor())
   , mWebkitTextFillColor(StyleComplexColor::CurrentColor())
   , mWebkitTextStrokeColor(StyleComplexColor::CurrentColor())
+  , mTabSize(float(NS_STYLE_TABSIZE_INITIAL), eStyleUnit_Factor)
   , mWordSpacing(0, nsStyleCoord::CoordConstructor)
   , mLetterSpacing(eStyleUnit_Normal)
   , mLineHeight(eStyleUnit_Normal)
   , mTextIndent(0, nsStyleCoord::CoordConstructor)
-  , mWebkitTextStrokeWidth(0, nsStyleCoord::CoordConstructor)
+  , mWebkitTextStrokeWidth(0)
   , mTextShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleText);
@@ -3820,10 +3800,10 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
   , mTextEmphasisPosition(aSource.mTextEmphasisPosition)
   , mTextEmphasisStyle(aSource.mTextEmphasisStyle)
   , mTextRendering(aSource.mTextRendering)
-  , mTabSize(aSource.mTabSize)
   , mTextEmphasisColor(aSource.mTextEmphasisColor)
   , mWebkitTextFillColor(aSource.mWebkitTextFillColor)
   , mWebkitTextStrokeColor(aSource.mWebkitTextStrokeColor)
+  , mTabSize(aSource.mTabSize)
   , mWordSpacing(aSource.mWordSpacing)
   , mLetterSpacing(aSource.mLetterSpacing)
   , mLineHeight(aSource.mLineHeight)

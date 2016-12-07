@@ -473,7 +473,7 @@ MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
     attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
     RootedFunction callee(cx, &argsobj->callee());
-    RootedScript script(cx, callee->getOrCreateScript(cx));
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
     if (!script)
         return false;
 
@@ -628,7 +628,7 @@ MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj, Handl
         } else {
             if (desc.hasValue()) {
                 RootedFunction callee(cx, &argsobj->callee());
-                RootedScript script(cx, callee->getOrCreateScript(cx));
+                RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
                 if (!script)
                     return false;
                 argsobj->setElement(cx, arg, desc.value());

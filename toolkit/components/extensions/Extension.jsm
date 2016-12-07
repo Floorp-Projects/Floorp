@@ -474,7 +474,7 @@ this.ExtensionData = class {
   // Gecko-compatible variant. Currently, this means simply
   // replacing underscores with hyphens.
   normalizeLocaleCode(locale) {
-    return String.replace(locale, /_/g, "-");
+    return locale.replace(/_/g, "-");
   }
 
   // Reads the locale file for the given Gecko-compatible locale code, and

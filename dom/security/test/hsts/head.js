@@ -272,10 +272,7 @@ function SetupPrefTestEnvironment(which, additional_prefs) {
                ["security.mixed_content.use_hsts",
                 settings.use_hsts],
                ["security.mixed_content.send_hsts_priming",
-                settings.send_hsts_priming],
-               ["security.mixed_content.hsts_priming_request_timeout",
-                30000],
-  ];
+                settings.send_hsts_priming]];
 
   if (additional_prefs) {
     for (let idx in additional_prefs) {

@@ -229,7 +229,7 @@ NSSDialogs.prototype = {
     for (let i = 0; i < certList.length; i++) {
       let cert = certList.queryElementAt(i, Ci.nsIX509Cert);
       certNickList.push(this.formatString("clientAuthAsk.nickAndSerial",
-                                          [cert.nickname, cert.serialNumber]));
+                                          [cert.displayName, cert.serialNumber]));
       certDetailsList.push(this.getCertDetails(cert));
     }
 

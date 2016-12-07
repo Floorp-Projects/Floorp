@@ -88,6 +88,10 @@ public:
 
   static bool ChildProcessHasCompositorBridge();
 
+  // Returns whether the compositor is in the GPU process (false if in the UI
+  // process). This may only be called on the main thread.
+  static bool CompositorIsInGPUProcess();
+
   void AddOverfillObserver(ClientLayerManager* aLayerManager);
 
   virtual mozilla::ipc::IPCResult

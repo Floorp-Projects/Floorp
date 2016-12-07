@@ -1,4 +1,4 @@
 protocol noProtocolInHeader {
 child:
-    __delete__();
+    async __delete__();
 };

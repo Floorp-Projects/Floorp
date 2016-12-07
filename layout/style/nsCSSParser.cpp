@@ -1028,6 +1028,9 @@ protected:
   bool ParseAlignJustifySelf(nsCSSPropertyID aPropID);
   // parsing 'align/justify-content' from the css-align spec
   bool ParseAlignJustifyContent(nsCSSPropertyID aPropID);
+  bool ParsePlaceContent();
+  bool ParsePlaceItems();
+  bool ParsePlaceSelf();
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSPropertyID aPropID);
@@ -1053,6 +1056,7 @@ protected:
   bool ParseOneFamily(nsAString& aFamily, bool& aOneKeyword, bool& aQuoted);
   bool ParseFamily(nsCSSValue& aValue);
   bool ParseFontFeatureSettings(nsCSSValue& aValue);
+  bool ParseFontVariationSettings(nsCSSValue& aValue);
   bool ParseFontSrc(nsCSSValue& aValue);
   bool ParseFontSrcFormat(InfallibleTArray<nsCSSValue>& values);
   bool ParseFontRanges(nsCSSValue& aValue);
@@ -4397,11 +4401,27 @@ CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
     return false;
   }
 
-  if (mToken.mType != eCSSToken_Ident) {
+  if (mToken.mType != eCSSToken_Ident && mToken.mType != eCSSToken_String) {
     REPORT_UNEXPECTED_TOKEN(PEKeyframeBadName);
     UngetToken();
     return false;
   }
+
+  if (mToken.mType == eCSSToken_Ident) {
+    // Check for keywords that are not allowed as custom-ident for the
+    // keyframes-name: standard CSS-wide keywords, plus 'none'.
+    static const nsCSSKeyword excludedKeywords[] = {
+      eCSSKeyword_none,
+      eCSSKeyword_UNKNOWN
+    };
+    nsCSSValue value;
+    if (!ParseCustomIdent(value, mToken.mIdent, excludedKeywords)) {
+      REPORT_UNEXPECTED_TOKEN(PEKeyframeBadName);
+      UngetToken();
+      return false;
+    }
+  }
+
   nsString name(mToken.mIdent);
 
   if (!ExpectSymbol('{', true)) {
@@ -10205,6 +10225,87 @@ CSSParserImpl::ParseAlignJustifyContent(nsCSSPropertyID aPropID)
   return true;
 }
 
+// place-content: [ normal | <baseline-position> | <content-distribution> |
+//                  <content-position> ]{1,2}
+bool
+CSSParserImpl::ParsePlaceContent()
+{
+  nsCSSValue first;
+  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_align_content, first);
+    AppendValue(eCSSProperty_justify_content, first);
+    return true;
+  }
+  if (!ParseAlignEnum(first, nsCSSProps::kAlignNormalBaseline) &&
+      !ParseEnum(first, nsCSSProps::kAlignContentDistribution) &&
+      !ParseEnum(first, nsCSSProps::kAlignContentPosition)) {
+    return false;
+  }
+  AppendValue(eCSSProperty_align_content, first);
+  nsCSSValue second;
+  if (!ParseAlignEnum(second, nsCSSProps::kAlignNormalBaseline) &&
+      !ParseEnum(second, nsCSSProps::kAlignContentDistribution) &&
+      !ParseEnum(second, nsCSSProps::kAlignContentPosition)) {
+    AppendValue(eCSSProperty_justify_content, first);
+  } else {
+    AppendValue(eCSSProperty_justify_content, second);
+  }
+  return true;
+}
+
+// place-items:  <x> [ auto | <x> ]?
+// <x> = [ normal | stretch | <baseline-position> | <self-position> ]
+bool
+CSSParserImpl::ParsePlaceItems()
+{
+  nsCSSValue first;
+  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_align_items, first);
+    AppendValue(eCSSProperty_justify_items, first);
+    return true;
+  }
+  if (!ParseAlignEnum(first, nsCSSProps::kAlignNormalStretchBaseline) &&
+      !ParseEnum(first, nsCSSProps::kAlignSelfPosition)) {
+    return false;
+  }
+  AppendValue(eCSSProperty_align_items, first);
+  nsCSSValue second;
+  // Note: 'auto' is valid for justify-items, but not align-items.
+  if (!ParseAlignEnum(second, nsCSSProps::kAlignAutoNormalStretchBaseline) &&
+      !ParseEnum(second, nsCSSProps::kAlignSelfPosition)) {
+    AppendValue(eCSSProperty_justify_items, first);
+  } else {
+    AppendValue(eCSSProperty_justify_items, second);
+  }
+  return true;
+}
+
+// place-self: [ auto | normal | stretch | <baseline-position> |
+//               <self-position> ]{1,2}
+bool
+CSSParserImpl::ParsePlaceSelf()
+{
+  nsCSSValue first;
+  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_align_self, first);
+    AppendValue(eCSSProperty_justify_self, first);
+    return true;
+  }
+  if (!ParseAlignEnum(first, nsCSSProps::kAlignAutoNormalStretchBaseline) &&
+      !ParseEnum(first, nsCSSProps::kAlignSelfPosition)) {
+    return false;
+  }
+  AppendValue(eCSSProperty_align_self, first);
+  nsCSSValue second;
+  if (!ParseAlignEnum(second, nsCSSProps::kAlignAutoNormalStretchBaseline) &&
+      !ParseEnum(second, nsCSSProps::kAlignSelfPosition)) {
+    AppendValue(eCSSProperty_justify_self, first);
+  } else {
+    AppendValue(eCSSProperty_justify_self, second);
+  }
+  return true;
+}
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -11721,6 +11822,12 @@ bool
 CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
 {
   switch (aPropID) {  // handle shorthand or multiple properties
+  case eCSSProperty_place_content:
+    return ParsePlaceContent();
+  case eCSSProperty_place_items:
+    return ParsePlaceItems();
+  case eCSSProperty_place_self:
+    return ParsePlaceSelf();
   case eCSSProperty_background:
     return ParseImageLayers(nsStyleImageLayers::kBackgroundLayerTable);
   case eCSSProperty_background_repeat:
@@ -11993,6 +12100,8 @@ CSSParserImpl::ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
       return ParseFontVariantNumeric(aValue);
     case eCSSProperty_font_feature_settings:
       return ParseFontFeatureSettings(aValue);
+    case eCSSProperty_font_variation_settings:
+      return ParseFontVariationSettings(aValue);
     case eCSSProperty_font_weight:
       return ParseFontWeight(aValue);
     case eCSSProperty_image_orientation:
@@ -15202,7 +15311,9 @@ CSSParserImpl::ParseFontFeatureSettings(nsCSSValue& aValue)
     return true;
   }
 
-  nsCSSValuePairList *cur = aValue.SetPairListValue();
+  auto resultHead = MakeUnique<nsCSSValuePairList>();
+  nsCSSValuePairList* cur = resultHead.get();
+
   for (;;) {
     // feature tag
     if (!GetToken(true)) {
@@ -15244,6 +15355,57 @@ CSSParserImpl::ParseFontFeatureSettings(nsCSSValue& aValue)
     cur->mNext = new nsCSSValuePairList;
     cur = cur->mNext;
   }
+
+  aValue.AdoptPairListValue(Move(resultHead));
+
+  return true;
+}
+
+bool
+CSSParserImpl::ParseFontVariationSettings(nsCSSValue& aValue)
+{
+  if (ParseSingleTokenVariant(aValue, VARIANT_INHERIT | VARIANT_NORMAL,
+                              nullptr)) {
+    return true;
+  }
+
+  auto resultHead = MakeUnique<nsCSSValuePairList>();
+  nsCSSValuePairList* cur = resultHead.get();
+
+  for (;;) {
+    // variation tag
+    if (!GetToken(true)) {
+      return false;
+    }
+
+    // variation tags are subject to the same validation as feature tags
+    if (mToken.mType != eCSSToken_String ||
+        !ValidFontFeatureTag(mToken.mIdent)) {
+      UngetToken();
+      return false;
+    }
+    cur->mXValue.SetStringValue(mToken.mIdent, eCSSUnit_String);
+
+    if (!GetToken(true)) {
+      return false;
+    }
+
+    if (mToken.mType == eCSSToken_Number) {
+      cur->mYValue.SetFloatValue(mToken.mNumber, eCSSUnit_Number);
+    } else {
+      UngetToken();
+      return false;
+    }
+
+    if (!ExpectSymbol(',', true)) {
+      break;
+    }
+
+    cur->mNext = new nsCSSValuePairList;
+    cur = cur->mNext;
+  }
+
+  aValue.AdoptPairListValue(Move(resultHead));
 
   return true;
 }

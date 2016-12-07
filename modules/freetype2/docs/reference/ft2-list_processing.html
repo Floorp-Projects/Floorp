@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>List Processing</h1>
+<h1 id="list_processing">List Processing</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_List">FT_List</a></td><td><a href="#FT_List_Add">FT_List_Add</a></td><td><a href="#FT_List_Iterate">FT_List_Iterate</a></td></tr>
@@ -117,7 +117,7 @@
 
 <div class="section">
 <h3 id="FT_List">FT_List</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_ListRec_*  <b>FT_List</b>;
 </pre>
@@ -129,7 +129,7 @@
 
 <div class="section">
 <h3 id="FT_ListNode">FT_ListNode</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_ListNodeRec_*  <b>FT_ListNode</b>;
 </pre>
@@ -141,7 +141,7 @@
 
 <div class="section">
 <h3 id="FT_ListRec">FT_ListRec</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_ListRec_
   {
@@ -168,7 +168,7 @@
 
 <div class="section">
 <h3 id="FT_ListNodeRec">FT_ListNodeRec</h3>
-<p>Defined in FT_TYPES_H (fttypes.h).</p>
+<p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_ListNodeRec_
   {
@@ -199,7 +199,7 @@
 
 <div class="section">
 <h3 id="FT_List_Add">FT_List_Add</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_List_Add</b>( <a href="ft2-list_processing.html#FT_List">FT_List</a>      list,
@@ -223,7 +223,7 @@
 
 <div class="section">
 <h3 id="FT_List_Insert">FT_List_Insert</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_List_Insert</b>( <a href="ft2-list_processing.html#FT_List">FT_List</a>      list,
@@ -247,7 +247,7 @@
 
 <div class="section">
 <h3 id="FT_List_Find">FT_List_Find</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-list_processing.html#FT_ListNode">FT_ListNode</a> )
   <b>FT_List_Find</b>( <a href="ft2-list_processing.html#FT_List">FT_List</a>  list,
@@ -274,7 +274,7 @@
 
 <div class="section">
 <h3 id="FT_List_Remove">FT_List_Remove</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_List_Remove</b>( <a href="ft2-list_processing.html#FT_List">FT_List</a>      list,
@@ -302,7 +302,7 @@
 
 <div class="section">
 <h3 id="FT_List_Up">FT_List_Up</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_List_Up</b>( <a href="ft2-list_processing.html#FT_List">FT_List</a>      list,
@@ -326,7 +326,7 @@
 
 <div class="section">
 <h3 id="FT_List_Iterate">FT_List_Iterate</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_List_Iterate</b>( <a href="ft2-list_processing.html#FT_List">FT_List</a>           list,
@@ -357,7 +357,7 @@
 
 <div class="section">
 <h3 id="FT_List_Iterator">FT_List_Iterator</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_Error">FT_Error</a>
   (*<b>FT_List_Iterator</b>)( <a href="ft2-list_processing.html#FT_ListNode">FT_ListNode</a>  node,
@@ -381,7 +381,7 @@
 
 <div class="section">
 <h3 id="FT_List_Finalize">FT_List_Finalize</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_List_Finalize</b>( <a href="ft2-list_processing.html#FT_List">FT_List</a>             list,
@@ -416,7 +416,7 @@
 
 <div class="section">
 <h3 id="FT_List_Destructor">FT_List_Destructor</h3>
-<p>Defined in FT_LIST_H (ftlist.h).</p>
+<p>Defined in FT_LIST_H (freetype/ftlist.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>
   (*<b>FT_List_Destructor</b>)( <a href="ft2-system_interface.html#FT_Memory">FT_Memory</a>  memory,

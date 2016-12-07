@@ -9,4 +9,5 @@
 interface mozIMozIntl : nsISupports
 {
   [implicit_jscontext] void addGetCalendarInfo(in jsval intlObject);
+  [implicit_jscontext] void addGetDisplayNames(in jsval intlObject);
 };

@@ -66,7 +66,9 @@ public:
    * Appends "native" anonymous children created by CreateAnonymousContent()
    * to the given content list depending on the filter.
    *
-   * @see nsIContent::GetChildren for set of values used for filter.
+   * @see nsIContent::GetChildren for set of values used for filter.  Currently,
+   *   eSkipPlaceholderContent is the only flag that any implementation of
+   *   this method heeds.
    */
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) = 0;

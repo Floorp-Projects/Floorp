@@ -312,7 +312,7 @@ ExecutableAllocator::initStatic()
         // AllocateExecutableMemory prepends an extra page for structured
         // exception handling data (see comments in function) onto whatever
         // is passed in, so subtract one page here.
-#if defined(JS_CPU_X64) && defined(XP_WIN)
+#if defined(XP_WIN) && (defined(_M_X64) || defined(__x86_64__))
         largeAllocSize = pageSize * 15;
 #else
         largeAllocSize = pageSize * 16;

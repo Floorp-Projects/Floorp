@@ -52,6 +52,8 @@
 
 #include "mp4_demuxer/H264.h"
 
+#include <functional>
+
 namespace mozilla {
 
 extern already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule();
@@ -155,7 +157,7 @@ public:
   void Clear() { mCheckerList.Clear(); }
 
 private:
-  nsTArray<mozilla::function<CheckResult()>> mCheckerList;
+  nsTArray<std::function<CheckResult()>> mCheckerList;
 }; // SupportChecker
 
 PDMFactory::PDMFactory()

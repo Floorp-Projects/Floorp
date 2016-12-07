@@ -5,3 +5,4 @@
 == inline-block-padding.html inline-block-width.html
 == inline-block-margin.html inline-block-width.html
 != inline-block-width.html inline-block-zero.html
+== inline-block-baseline.html inline-block-baseline-ref.html

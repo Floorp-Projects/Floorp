@@ -87,13 +87,24 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "ready: function(a) {\n" +
+        handler: "function(a) {\n" +
                  "  if (a === !0 && !--e.readyWait || a !== !0 && !e.isReady) {\n" +
                  "    if (!c.body) return setTimeout(e.ready, 1);\n" +
                  "    e.isReady = !0;\n" +
                  "    if (a !== !0 && --e.readyWait > 0) return;\n" +
                  "    B.fireWith(c, [e]), e.fn.trigger && e(c).trigger(\"ready\").unbind(\"ready\")\n" +
                  "  }\n" +
+                 "}"
+      },
+      {
+        type: "DOMContentLoaded",
+        filename: URL_ROOT + TEST_LIB + ":2",
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: "function() {\n" +
+                 "  c.removeEventListener(\"DOMContentLoaded\", C, !1), e.ready()\n" +
                  "}"
       }
     ]
@@ -107,7 +118,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler7 = function divClick1() {\n" +
+        handler: "function divClick1() {\n" +
                  "  alert(7);\n" +
                  "}"
       },
@@ -117,19 +128,8 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler8 = function divClick2() {\n" +
+        handler: "function divClick2() {\n" +
                  "  alert(8);\n" +
-                 "}"
-      },
-      {
-        type: "click",
-        filename: URL_ROOT + TEST_LIB + ":3",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "h.handle = i = function(a) {\n" +
-                 "  return typeof f != \"undefined\" && (!a || f.event.triggered !== a.type) ? f.event.dispatch.apply(i.elem, arguments) : b\n" +
                  "}"
       },
       {
@@ -138,19 +138,8 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler9 = function divKeyDown() {\n" +
+        handler: "function divKeyDown() {\n" +
                  "  alert(9);\n" +
-                 "}"
-      },
-      {
-        type: "keydown",
-        filename: URL_ROOT + TEST_LIB + ":3",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "h.handle = i = function(a) {\n" +
-                 "  return typeof f != \"undefined\" && (!a || f.event.triggered !== a.type) ? f.event.dispatch.apply(i.elem, arguments) : b\n" +
                  "}"
       }
     ]
@@ -165,7 +154,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler1 = function liveDivDblClick() {\n" +
+        handler: "function liveDivDblClick() {\n" +
                  "  alert(1);\n" +
                  "}"
       },
@@ -176,7 +165,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler4 = function liveDivDragEnd() {\n" +
+        handler: "function liveDivDragEnd() {\n" +
                  "  alert(4);\n" +
                  "}"
       },
@@ -187,7 +176,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler3 = function liveDivDragLeave() {\n" +
+        handler: "function liveDivDragLeave() {\n" +
                  "  alert(3);\n" +
                  "}"
       },
@@ -198,7 +187,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler6 = function liveDivDragOver() {\n" +
+        handler: "function liveDivDragOver() {\n" +
                  "  alert(6);\n" +
                  "}"
       },
@@ -209,7 +198,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler2 = function liveDivDragStart() {\n" +
+        handler: "function liveDivDragStart() {\n" +
                  "  alert(2);\n" +
                  "}"
       },
@@ -220,7 +209,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler5 = function liveDivDrop() {\n" +
+        handler: "function liveDivDrop() {\n" +
                  "  alert(5);\n" +
                  "}"
       }

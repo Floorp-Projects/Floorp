@@ -85,7 +85,7 @@ InterpreterFrame::isNonGlobalEvalFrame() const
 JSObject*
 InterpreterFrame::createRestParameter(JSContext* cx)
 {
-    MOZ_ASSERT(callee().hasRest());
+    MOZ_ASSERT(script()->hasRest());
     unsigned nformal = callee().nargs() - 1, nactual = numActualArgs();
     unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
     Value* restvp = argv() + nformal;

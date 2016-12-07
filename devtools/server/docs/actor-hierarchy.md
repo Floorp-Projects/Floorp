@@ -83,7 +83,7 @@ Those are the actors exposed by the root actors which are meant to track the
 lifetime of a given context: tab, app, process, add-on, or worker. It also
 allows to fetch the tab-scoped actors connected to this context. Actors like
 console, inspector, thread (for debugger), styleinspector, etc. Most of them
-inherit from TabActor (defined in webbrowser.js) which is document centric. It
+inherit from TabActor (defined in tab.js) which is document centric. It
 automatically tracks the lifetime of the targeted document, but it also tracks
 its iframes and allows switching the context to one of its iframes. For
 historical reasons, these actors also handle creating the ThreadActor, used to

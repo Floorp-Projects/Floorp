@@ -185,7 +185,7 @@ MP3TrackDemuxer::GetInfo() const {
 }
 
 RefPtr<MP3TrackDemuxer::SeekPromise>
-MP3TrackDemuxer::Seek(TimeUnit aTime) {
+MP3TrackDemuxer::Seek(const TimeUnit& aTime) {
   // Efficiently seek to the position.
   FastSeek(aTime);
   // Correct seek position by scanning the next frames.
@@ -314,7 +314,7 @@ MP3TrackDemuxer::Reset() {
 }
 
 RefPtr<MP3TrackDemuxer::SkipAccessPointPromise>
-MP3TrackDemuxer::SkipToNextRandomAccessPoint(TimeUnit aTimeThreshold) {
+MP3TrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold) {
   // Will not be called for audio-only resources.
   return SkipAccessPointPromise::CreateAndReject(
     SkipFailureHolder(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, 0), __func__);

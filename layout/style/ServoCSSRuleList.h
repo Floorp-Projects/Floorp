@@ -19,7 +19,7 @@ namespace css {
 class Rule;
 } // namespace css
 
-class ServoCSSRuleList final : public CSSRuleList
+class ServoCSSRuleList final : public dom::CSSRuleList
 {
 public:
   ServoCSSRuleList(ServoStyleSheet* aStyleSheet,
@@ -31,6 +31,10 @@ public:
   uint32_t Length() final { return mRules.Length(); }
 
   void DropReference();
+
+  css::Rule* GetRule(uint32_t aIndex);
+  nsresult InsertRule(const nsAString& aRule, uint32_t aIndex);
+  nsresult DeleteRule(uint32_t aIndex);
 
 private:
   virtual ~ServoCSSRuleList();

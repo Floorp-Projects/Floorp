@@ -329,7 +329,10 @@ JSObject*
 Wrapper::wrappedObject(JSObject* wrapper)
 {
     MOZ_ASSERT(wrapper->is<WrapperObject>());
-    return wrapper->as<ProxyObject>().target();
+    JSObject* target = wrapper->as<ProxyObject>().target();
+    if (target)
+        JS::ExposeObjectToActiveJS(target);
+    return target;
 }
 
 JS_FRIEND_API(JSObject*)
@@ -377,6 +380,12 @@ js::UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy)
 
     const Wrapper* handler = Wrapper::wrapperHandler(obj);
     return handler->hasSecurityPolicy() ? nullptr : Wrapper::wrappedObject(obj);
+}
+
+void
+js::ReportAccessDenied(JSContext* cx)
+{
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_ACCESS_DENIED);
 }
 
 const char Wrapper::family = 0;

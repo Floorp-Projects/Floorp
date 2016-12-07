@@ -274,24 +274,13 @@ public:
     return GetEffect() && GetEffect()->IsInEffect();
   }
 
-  /**
-   * Returns true if this animation's playback state makes it a candidate for
-   * running on the compositor.
-   * We send animations to the compositor when their target effect is 'current'
-   * (a definition that is roughly equivalent to when they are in their before
-   * or active phase). However, we don't send animations to the compositor when
-   * they are paused/pausing (including being effectively paused due to
-   * having a zero playback rate), have a zero-duration active interval, or have
-   * no target effect at all.
-   */
-  bool IsPlayableOnCompositor() const
+  bool IsPlaying() const
   {
-    return HasCurrentEffect() &&
-           mPlaybackRate != 0.0 &&
+    return mPlaybackRate != 0.0 &&
            (PlayState() == AnimationPlayState::Running ||
-            mPendingState == PendingState::PlayPending) &&
-           !GetEffect()->IsActiveDurationZero();
+            mPendingState == PendingState::PlayPending);
   }
+
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();
 

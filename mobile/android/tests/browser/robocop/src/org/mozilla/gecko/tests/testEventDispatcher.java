@@ -211,8 +211,32 @@ public class testEventDispatcher extends JavascriptBridgeTest
             checkBundle(message);
             checkBundle(message.getBundle("object"));
             fAssertSame("Bundle null object has correct value", null, message.getBundle("nullObject"));
+            fAssertSame("Bundle nonexistent object returns null",
+                    null, message.getBundle("nonexistentObject"));
 
-            // XXX add objectArray check when we remove NativeJSObject
+            final GeckoBundle[] objectArray = message.getBundleArray("objectArray");
+            fAssertNotNull("Bundle object array should exist", objectArray);
+            fAssertEquals("Bundle object array has correct length", 2, objectArray.length);
+            fAssertSame("Bundle object array index 0 has correct value", null, objectArray[0]);
+            checkBundle(objectArray[1]);
+
+            final GeckoBundle[] objectArrayOfNull = message.getBundleArray("objectArrayOfNull");
+            fAssertNotNull("Bundle object array of null should exist", objectArrayOfNull);
+            fAssertEquals("Bundle object array of null has correct length", 2, objectArrayOfNull.length);
+            fAssertSame("Bundle object array of null index 0 has correct value",
+                    null, objectArrayOfNull[0]);
+            fAssertSame("Bundle object array of null index 1 has correct value",
+                    null, objectArrayOfNull[1]);
+
+            final GeckoBundle[] emptyObjectArray = message.getBundleArray("emptyObjectArray");
+            fAssertNotNull("Bundle empty object array should exist", emptyObjectArray);
+            fAssertEquals("Bundle empty object array has correct length", 0, emptyObjectArray.length);
+
+            fAssertSame("Bundle null object array exists",
+                    null, message.getBundleArray("nullObjectArray"));
+
+            fAssertSame("Bundle nonexistent object array returns null",
+                    null, message.getBundleArray("nonexistentObjectArray"));
 
         } else if (UI_RESPONSE_EVENT.equals(event) || BACKGROUND_RESPONSE_EVENT.equals(event)) {
             final String response = message.getString("response");
@@ -390,6 +414,24 @@ public class testEventDispatcher extends JavascriptBridgeTest
         fAssertEquals("Bundle double has correct value", 0.5, bundle.getDouble("double"));
         fAssertEquals("Bundle string has correct value", "foo", bundle.getString("string"));
 
+        fAssertEquals("Bundle default boolean has correct value",
+                true, bundle.getBoolean("nonexistentBoolean", true));
+        fAssertEquals("Bundle default int has correct value",
+                1, bundle.getInt("nonexistentInt", 1));
+        fAssertEquals("Bundle default double has correct value",
+                0.5, bundle.getDouble("nonexistentDouble", 0.5));
+        fAssertEquals("Bundle default string has correct value",
+                "foo", bundle.getString("nonexistentString", "foo"));
+
+        fAssertEquals("Bundle nonexistent boolean returns false",
+                false, bundle.getBoolean("nonexistentBoolean"));
+        fAssertEquals("Bundle nonexistent int returns 0",
+                0, bundle.getInt("nonexistentInt"));
+        fAssertEquals("Bundle nonexistent double returns 0.0",
+                0.0, bundle.getDouble("nonexistentDouble"));
+        fAssertSame("Bundle nonexistent string returns null",
+                null, bundle.getString("nonexistentString"));
+
         fAssertSame("Bundle null string has correct value", null, bundle.getString("nullString"));
         fAssertEquals("Bundle empty string has correct value", "", bundle.getString("emptyString"));
         fAssertEquals("Bundle default null string is correct", "foo",
@@ -421,6 +463,14 @@ public class testEventDispatcher extends JavascriptBridgeTest
         fAssertEquals("Bundle string array index 0 has correct value", "bar", stringArray[0]);
         fAssertEquals("Bundle string array index 1 has correct value", "baz", stringArray[1]);
 
+        final String[] stringArrayOfNull = bundle.getStringArray("stringArrayOfNull");
+        fAssertNotNull("Bundle string array of null should exist", stringArrayOfNull);
+        fAssertEquals("Bundle string array of null has correct length", 2, stringArrayOfNull.length);
+        fAssertSame("Bundle string array of null index 0 has correct value",
+                null, stringArrayOfNull[0]);
+        fAssertSame("Bundle string array of null index 1 has correct value",
+                null, stringArrayOfNull[1]);
+
         final boolean[] emptyBooleanArray = bundle.getBooleanArray("emptyBooleanArray");
         fAssertNotNull("Bundle empty boolean array should exist", emptyBooleanArray);
         fAssertEquals("Bundle empty boolean array has correct length", 0, emptyBooleanArray.length);
@@ -436,6 +486,24 @@ public class testEventDispatcher extends JavascriptBridgeTest
         final String[] emptyStringArray = bundle.getStringArray("emptyStringArray");
         fAssertNotNull("Bundle empty String array should exist", emptyStringArray);
         fAssertEquals("Bundle empty String array has correct length", 0, emptyStringArray.length);
+
+        fAssertSame("Bundle null boolean array exists",
+                null, bundle.getBooleanArray("nullBooleanArray"));
+        fAssertSame("Bundle null int array exists",
+                null, bundle.getIntArray("nullIntArray"));
+        fAssertSame("Bundle null double array exists",
+                null, bundle.getDoubleArray("nullDoubleArray"));
+        fAssertSame("Bundle null string array exists",
+                null, bundle.getStringArray("nullStringArray"));
+
+        fAssertSame("Bundle nonexistent boolean array returns null",
+                null, bundle.getBooleanArray("nonexistentBooleanArray"));
+        fAssertSame("Bundle nonexistent int array returns null",
+                null, bundle.getIntArray("nonexistentIntArray"));
+        fAssertSame("Bundle nonexistent double array returns null",
+                null, bundle.getDoubleArray("nonexistentDoubleArray"));
+        fAssertSame("Bundle nonexistent string array returns null",
+                null, bundle.getStringArray("nonexistentStringArray"));
 
         // XXX add mixedArray check when we remove NativeJSObject
     }
@@ -580,11 +648,17 @@ public class testEventDispatcher extends JavascriptBridgeTest
         bundle.putString("nullString", null);
         bundle.putString("emptyString", "");
         bundle.putStringArray("stringArray", new String[] {"bar", "baz"});
+        bundle.putStringArray("stringArrayOfNull", new String[2]);
 
         bundle.putBooleanArray("emptyBooleanArray", new boolean[0]);
         bundle.putIntArray("emptyIntArray", new int[0]);
         bundle.putDoubleArray("emptyDoubleArray", new double[0]);
         bundle.putStringArray("emptyStringArray", new String[0]);
+
+        bundle.putBooleanArray("nullBooleanArray", (boolean[]) null);
+        bundle.putIntArray("nullIntArray", (int[]) null);
+        bundle.putDoubleArray("nullDoubleArray", (double[]) null);
+        bundle.putStringArray("nullStringArray", (String[]) null);
 
         return bundle;
     }
@@ -596,7 +670,9 @@ public class testEventDispatcher extends JavascriptBridgeTest
         outer.putBundle("object", inner);
         outer.putBundle("nullObject", null);
         outer.putBundleArray("objectArray", new GeckoBundle[] {null, inner});
+        outer.putBundleArray("objectArrayOfNull", new GeckoBundle[2]);
         outer.putBundleArray("emptyObjectArray", new GeckoBundle[0]);
+        outer.putBundleArray("nullObjectArray", (GeckoBundle[]) null);
 
         return outer;
     }

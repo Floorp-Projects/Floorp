@@ -4,6 +4,6 @@ protocol managerNoDtor {
     manages managedNoDtor;
 
 parent:
-    managedNoDtor();
+    async managedNoDtor();
     // error: no ctor defined
 };

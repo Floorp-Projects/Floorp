@@ -108,6 +108,7 @@ nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
+  , mUsePlaceholder(false)
 #ifdef DEBUG
   , mInEditorInitialization(false)
 #endif

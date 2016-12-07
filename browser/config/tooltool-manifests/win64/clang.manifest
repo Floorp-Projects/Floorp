@@ -24,11 +24,19 @@
 "size": 1179901
 },
 {
-"version": "clang 3.9.0/r262971",
-"size": 173306045,
-"digest": "806413640a964dad44c0c6055d2a89a1075730fb6f659ff37341378a14a7dc032e672941765225608b71f6b385ac721ed36bfa04eb38c211b07e2776cb72a0ee",
+"version": "Visual Studio 2015 Update 3 14.0.25425.01 / SDK 10.0.14393.0",
+"size": 326656969,
+"digest": "babc414ffc0457d27f5a1ed24a8e4873afbe2f1c1a4075469a27c005e1babc3b2a788f643f825efedff95b79686664c67ec4340ed535487168a3482e68559bc7",
 "algorithm": "sha512",
-"filename": "clang64.tar.bz2",
+"filename": "vs2015u3.zip",
+"unpack": true
+},
+{
+"version": "clang 4.0pre/r286542",
+"size": 210049255,
+"digest": "8da8c653ea1948c13aa152cf0b1b0fa94e9619c49006ec80cc625d33cbf2dafa3533764f38fc0213e469cc786a738e5099f0e39d52e30f9a711718e8a3124311",
+"algorithm": "sha512",
+"filename": "clang.tar.bz2",
 "unpack": true
 }
 ]

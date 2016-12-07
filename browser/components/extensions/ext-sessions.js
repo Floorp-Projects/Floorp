@@ -5,10 +5,13 @@
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   promiseObserved,
+  SingletonEventManager,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
+
+const ssOnChangedTopic = "sessionstore-closed-objects-changed";
 
 function getRecentlyClosed(maxResults, extension) {
   let recentlyClosed = [];
@@ -87,6 +90,33 @@ extensions.registerSchemaAPI("sessions", "addon_parent", context => {
         }
         return createSession(session, extension, closedId);
       },
+      onChanged: new SingletonEventManager(context, "sessions.onChanged", fire => {
+        let listenerCount = 0;
+
+        let observer = {
+          observe: function() {
+            this.emit("changed");
+          },
+        };
+        EventEmitter.decorate(observer);
+
+        let listener = (event) => {
+          context.runSafe(fire);
+        };
+
+        observer.on("changed", listener);
+        listenerCount++;
+        if (listenerCount == 1) {
+          Services.obs.addObserver(observer, ssOnChangedTopic, false);
+        }
+        return () => {
+          observer.off("changed", listener);
+          listenerCount -= 1;
+          if (!listenerCount) {
+            Services.obs.removeObserver(observer, ssOnChangedTopic);
+          }
+        };
+      }).api(),
     },
   };
 });

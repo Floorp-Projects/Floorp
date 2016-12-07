@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Amiga-specific FreeType module selection.                            */
 /*                                                                         */
-/*  Copyright 2005 by                                                      */
+/*  Copyright 2005-2016 by                                                 */
 /*  Werner Lemberg and Detlef Würkner.                                     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

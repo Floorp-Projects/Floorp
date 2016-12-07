@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Logging.h"
-#include "mozilla/Function.h"
+
+#include <functional>
 
 namespace mozilla {
 
@@ -17,6 +18,6 @@ namespace mozilla {
  * @param aCallback The callback to invoke for each log module config entry.
  */
 void NSPRLogModulesParser(const char* aLogModules,
-                          function<void(const char*, LogLevel, int32_t)> aCallback);
+                          std::function<void(const char*, LogLevel, int32_t)> aCallback);
 
 } // namespace mozilla

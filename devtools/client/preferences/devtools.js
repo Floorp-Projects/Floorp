@@ -30,7 +30,7 @@ pref("devtools.toolbox.sidebar.width", 500);
 pref("devtools.toolbox.host", "bottom");
 pref("devtools.toolbox.previousHost", "side");
 pref("devtools.toolbox.selectedTool", "webconsole");
-pref("devtools.toolbox.toolbarSpec", '["splitconsole", "paintflashing toggle","scratchpad","resize toggle","screenshot --fullpage", "rulers", "measure"]');
+pref("devtools.toolbox.toolbarSpec", '["splitconsole", "paintflashing toggle","scratchpad","resize toggle","screenshot --fullpage --file", "rulers", "measure"]');
 pref("devtools.toolbox.sideEnabled", true);
 pref("devtools.toolbox.zoomValue", "1");
 pref("devtools.toolbox.splitconsoleEnabled", false);
@@ -71,6 +71,7 @@ pref("devtools.fontinspector.enabled", true);
 pref("devtools.layoutview.enabled", false);
 
 // Grid highlighter preferences
+pref("devtools.gridinspector.showGridLineNumbers", false);
 pref("devtools.gridinspector.showInfiniteLines", false);
 
 // By how many times eyedropper will magnify pixels
@@ -212,6 +213,10 @@ pref("devtools.styleeditor.showMediaSidebar", true);
 pref("devtools.styleeditor.mediaSidebarWidth", 238);
 pref("devtools.styleeditor.navSidebarWidth", 245);
 pref("devtools.styleeditor.transitions", true);
+
+// Screenshot Option Settings.
+pref("devtools.screenshot.clipboard.enabled", false);
+pref("devtools.screenshot.audio.enabled", true);
 
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);

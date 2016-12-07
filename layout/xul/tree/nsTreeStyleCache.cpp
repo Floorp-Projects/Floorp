@@ -79,12 +79,16 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
     // XXXheycam ServoStyleSets do not support XUL tree styles.
+    RefPtr<nsStyleContext> newResult;
     if (aPresContext->StyleSet()->IsServo()) {
-      MOZ_CRASH("stylo: ServoStyleSets should not support XUL tree styles yet");
+      NS_ERROR("stylo: ServoStyleSets should not support XUL tree styles yet");
+      newResult = aPresContext->StyleSet()->
+        ResolveStyleForOtherNonElement(aContext);
+    } else {
+      newResult = aPresContext->StyleSet()->AsGecko()->
+        ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
+                                  aContext, aComparator);
     }
-    RefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->AsGecko()->
-      ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
-                                aContext, aComparator);
 
     // Put the style context in our table, transferring the owning reference to the table.
     if (!mCache) {

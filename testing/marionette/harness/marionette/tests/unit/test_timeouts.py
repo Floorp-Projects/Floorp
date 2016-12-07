@@ -53,6 +53,25 @@ class TestTimeouts(MarionetteTestCase):
         button.click()
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "newDiv")
 
+    def test_reset_timeout(self):
+        timeouts = [getattr(self.marionette.timeout, f) for f in (
+            'implicit', 'page_load', 'script',)]
+
+        def do_check(callback):
+            for timeout in timeouts:
+                timeout = 10000
+                self.assertEqual(timeout, 10000)
+            callback()
+            for timeout in timeouts:
+                self.assertNotEqual(timeout, 10000)
+
+        def callback_quit():
+            self.marionette.quit()
+            self.marionette.start_session()
+
+        do_check(self.marionette.restart)
+        do_check(callback_quit)
+
     def test_execute_async_timeout_settimeout(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)

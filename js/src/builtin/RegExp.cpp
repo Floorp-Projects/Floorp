@@ -1759,7 +1759,7 @@ js::intrinsic_GetElemBaseForLambda(JSContext* cx, unsigned argc, Value* vp)
     if (!fun->isInterpreted() || fun->isClassConstructor())
         return true;
 
-    JSScript* script = fun->getOrCreateScript(cx);
+    JSScript* script = JSFunction::getOrCreateScript(cx, fun);
     if (!script)
         return false;
 

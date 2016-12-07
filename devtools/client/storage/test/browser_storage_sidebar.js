@@ -72,17 +72,17 @@ const testCases = [
     sidebarHidden: true
   },
   {
-    location: "idb2",
+    location: "idb2 (default)",
     sidebarHidden: false
   },
 
   {
-    location: ["indexedDB", "http://test1.example.org", "idb2", "obj3"],
+    location: ["indexedDB", "http://test1.example.org", "idb2 (default)", "obj3"],
     sidebarHidden: true
   },
 
   {
-    location: ["indexedDB", "https://sectest1.example.org", "idb-s2"],
+    location: ["indexedDB", "https://sectest1.example.org", "idb-s2 (default)"],
     sidebarHidden: true
   },
   {

@@ -182,9 +182,12 @@ DevToolsLoader.prototype = {
     // Register custom pseudo modules to the current loader instance
     let loader = this._provider.loader;
     for (let id in modules) {
-      let exports = modules[id];
       let uri = resolveURI(id, loader.mapping);
-      loader.modules[uri] = { exports };
+      loader.modules[uri] = {
+        get exports() {
+          return modules[id];
+        }
+      };
     }
 
     // Register custom globals to the current loader instance

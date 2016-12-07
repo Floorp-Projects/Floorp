@@ -138,7 +138,7 @@ function testService() {
       let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-track-simple,test-block-simple";
       let uri = ios.newURI(test.url, null, null);
       let prin = ssm.createCodebasePrincipal(uri, {});
-      is(service.classifyLocalWithTables(uri, tables), test.table,
+      is(service.classifyLocal(uri, tables), test.table,
          `Successful synchronous classification of ${test.url} with TP=${test.trackingProtection}`);
       let result = service.classify(prin, test.trackingProtection, function(errorCode) {
         is(errorCode, test.result,

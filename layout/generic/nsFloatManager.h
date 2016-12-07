@@ -45,6 +45,26 @@ struct nsFlowAreaRect {
 
 #define NS_FLOAT_MANAGER_CACHE_SIZE 4
 
+/**
+ * nsFloatManager is responsible for implementing CSS's rules for
+ * positioning floats. An nsFloatManager object is created during reflow for
+ * any block with NS_BLOCK_FLOAT_MGR. During reflow, the float manager for
+ * the nearest such ancestor block is found in ReflowInput::mFloatManager.
+ *
+ * According to the line-relative mappings in CSS Writing Modes spec [1],
+ * line-right and line-left are calculated with respect to the writing mode
+ * of the containing block of the floats. All the writing modes passed to
+ * nsFloatManager methods should be the containing block's writing mode.
+ *
+ * However, according to the abstract-to-physical mappings table [2], the
+ * 'direction' property of the containing block doesn't affect the
+ * interpretation of line-right and line-left. We actually implement this by
+ * passing in the writing mode of the block formatting context (BFC), i.e.
+ * the of BlockReflowInput's writing mode.
+ *
+ * [1] https://drafts.csswg.org/css-writing-modes/#line-mappings
+ * [2] https://drafts.csswg.org/css-writing-modes/#logical-to-physical
+ */
 class nsFloatManager {
 public:
   explicit nsFloatManager(nsIPresShell* aPresShell, mozilla::WritingMode aWM);
@@ -385,6 +405,8 @@ private:
   };
 
 #ifdef DEBUG
+  // Store the writing mode from the block frame which establishes the block
+  // formatting context (BFC) when the nsFloatManager is created.
   mozilla::WritingMode mWritingMode;
 #endif
 

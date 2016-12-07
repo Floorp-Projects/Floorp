@@ -225,7 +225,7 @@ FTPChannelChild::OpenContentStream(bool async,
                                    nsIInputStream** stream,
                                    nsIChannel** channel)
 {
-  NS_RUNTIMEABORT("FTPChannel*Child* should never have OpenContentStream called!");
+  MOZ_CRASH("FTPChannel*Child* should never have OpenContentStream called!");
   return NS_OK;
 }
   

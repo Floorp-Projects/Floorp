@@ -1450,6 +1450,11 @@ public:
 
   bool HasTransformAnimation() const;
 
+  StyleAnimationValue GetBaseAnimationStyle() const
+  {
+    return mBaseAnimationStyle;
+  }
+
   /**
    * Returns the local transform for this layer: either mTransform or,
    * for shadow layers, GetShadowBaseTransform(), in either case with the
@@ -1970,6 +1975,8 @@ protected:
 #endif
   // Store display list log.
   nsCString mDisplayListLog;
+
+  StyleAnimationValue mBaseAnimationStyle;
 };
 
 /**

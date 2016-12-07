@@ -305,6 +305,10 @@ if (SupportsMaskShorthand()) {
                                      /* test_length_percent_pair_clamped */ ];
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
+  supported_properties["font-variation-settings"] = [ test_font_variations_transition ];
+}
+
 var div = document.getElementById("display");
 var OMTAdiv = document.getElementById("transformTest");
 var cs = getComputedStyle(div, "");
@@ -2450,6 +2454,30 @@ function test_transform_transition(prop) {
   // FIXME: should perhaps test that no clamping occurs
 
   runOMTATest(runAsyncTests, SimpleTest.finish);
+}
+
+function test_font_variations_transition(prop) {
+  is(prop, "font-variation-settings", "only designed for one property");
+
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "\"wght\" 0, \"wdth\" 1.5", "");
+  is(cs.getPropertyValue(prop), "\"wght\" 0, \"wdth\" 1.5",
+     "font-variation-settings property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "\"wght\" 2, \"wdth\" 0.5", "");
+  is(cs.getPropertyValue(prop), "\"wght\" 0.5, \"wdth\" 1.25",
+     "font-variation-settings property " + prop + ": interpolation of font-variation-settings");
+  check_distance(prop, "\"wght\" 0, \"wdth\" 1.5", "\"wght\" 0.5, \"wdth\" 1.25", "\"wght\" 2, \"wdth\" 0.5");
+
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "\"wght\" 2, \"wdth\" 0.5", "");
+  is(cs.getPropertyValue(prop), "\"wght\" 2, \"wdth\" 0.5",
+     "font-variation-settings property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "\"wght\" 0, \"wdth\" 1.5", "");
+  is(cs.getPropertyValue(prop), "\"wght\" 1.5, \"wdth\" 0.75",
+     "font-variation-settings property " + prop + ": interpolation of font-variation-settings");
+  check_distance(prop, "\"wght\" 2, \"wdth\" 0.5", "\"wght\" 1.5, \"wdth\" 0.75", "\"wght\" 0, \"wdth\" 1.5");
 }
 
 function runAsyncTests() {

@@ -11,7 +11,9 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+class nsIFile;
 class nsIPrintSession;
+class nsIUUIDGenerator;
 
 namespace mozilla {
 namespace gfx {
@@ -39,6 +41,7 @@ public:
 
   float GetPrintingScale() final;
 
+
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage) final;
@@ -54,12 +57,16 @@ public:
 private:
   ~nsDeviceContextSpecProxy() {}
 
+  nsresult CreateUniqueTempPath(nsACString& aFilePath);
+
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintSession> mPrintSession;
   nsCOMPtr<nsIDeviceContextSpec> mRealDeviceContextSpec;
   RefPtr<mozilla::layout::RemotePrintJobChild> mRemotePrintJob;
   RefPtr<mozilla::gfx::DrawEventRecorderFile> mRecorder;
-  nsCString mRecorderFile;
+  nsCOMPtr<nsIFile> mRecordingDir;
+  nsCOMPtr<nsIUUIDGenerator> mUuidGenerator;
+  nsCString mRecordingFileName;
 };
 
 #endif // nsDeviceContextSpecProxy_h

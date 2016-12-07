@@ -1731,7 +1731,7 @@ public:
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
   virtual already_AddRefed<nsIEventTarget>
-  CreateEventTarget(const char* aName, mozilla::dom::TaskCategory aCategory) override;
+  EventTargetFor(mozilla::dom::TaskCategory aCategory) const override;
 
 protected:
   // These members are only used on outer window objects. Make sure

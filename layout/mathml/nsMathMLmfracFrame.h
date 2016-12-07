@@ -95,7 +95,13 @@ public:
   ScriptIncrement(nsIFrame* aFrame) override;
 
 protected:
-  explicit nsMathMLmfracFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLmfracFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext)
+    , mLineRect()
+    , mSlashChar(nullptr)
+    , mLineThickness(0)
+    , mIsBevelled(false)
+  {}
   virtual ~nsMathMLmfracFrame();
 
   nsresult PlaceInternal(DrawTarget*          aDrawTarget,

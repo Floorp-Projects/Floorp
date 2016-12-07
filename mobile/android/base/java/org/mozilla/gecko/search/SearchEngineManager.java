@@ -586,7 +586,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
                   }
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.e(LOG_TAG, "Error creating shipped search engine from name: " + name, e);
         } finally {
             try {

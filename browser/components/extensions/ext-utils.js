@@ -320,7 +320,9 @@ class BasePopup {
       this.viewNode.style.maxHeight = `${height}px`;
     } else {
       this.browser.style.width = `${width}px`;
+      this.browser.style.minWidth = `${width}px`;
       this.browser.style.height = `${height}px`;
+      this.browser.style.minHeight = `${height}px`;
     }
 
     let event = new this.window.CustomEvent("WebExtPopupResized", {detail});
@@ -488,11 +490,12 @@ class ViewPopup extends BasePopup {
       let browser = this.browser;
       yield this.createBrowser(this.viewNode);
 
+      this.ignoreResizes = false;
+
       this.browser.swapDocShells(browser);
       this.destroyBrowser(browser);
 
-      this.ignoreResizes = false;
-      if (this.dimensions) {
+      if (this.dimensions && !this.fixedWidth) {
         this.resizeBrowser(this.dimensions);
       }
 

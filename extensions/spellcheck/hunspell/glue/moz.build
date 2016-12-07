@@ -4,19 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'mozHunspell.cpp',
     'mozHunspellDirProvider.cpp',
     'RemoteSpellCheckEngineChild.cpp',
     'RemoteSpellCheckEngineParent.cpp',
 ]
 
-CXXFLAGS += CONFIG['MOZ_HUNSPELL_CFLAGS']
-
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['MOZ_SYSTEM_HUNSPELL']:
+    CXXFLAGS += CONFIG['MOZ_HUNSPELL_CFLAGS']
+else:
+    LOCAL_INCLUDES += ['../src']
+
 LOCAL_INCLUDES += [
-    '../src',
     '/dom/base',
     '/extensions/spellcheck/src',
 ]

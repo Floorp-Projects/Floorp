@@ -133,6 +133,17 @@ def read_derived_core_properties(derived_core_properties):
             for char in range(int(start, 16), int(end, 16) + 1):
                 yield (char, char_property)
 
+def int_ranges(ints):
+    """ Yields consecutive ranges (inclusive) from integer values. """
+    from itertools import tee, izip_longest
+
+    (a, b) = tee(sorted(ints))
+    start = next(b)
+    for (curr, succ) in izip_longest(a, b):
+        if curr + 1 != succ:
+            yield (start, curr)
+            start = succ
+
 def utf16_encode(code):
     NonBMPMin = 0x10000
     LeadSurrogateMin = 0xD800
@@ -858,6 +869,204 @@ def splitbins(t):
         assert t[i] == t2[(t1[i >> shift] << shift) + (i & mask)]
     return best
 
+def make_irregexp_tables(version,
+                         table, index,
+                         folding_table, folding_index,
+                         test_table):
+    import string
+    from functools import partial
+    from itertools import chain, ifilter, imap
+
+    MAX_ASCII = 0x7F
+    MAX_LATIN1 = 0xFF
+    LEAD_SURROGATE_MIN = 0xD800
+    TRAIL_SURROGATE_MAX = 0xDFFF
+
+    def hex2(n):
+        assert 0 <= n and n < 16**2
+        return '0x{:02X}'.format(n)
+
+    def hex4(n):
+        assert 0 <= n and n < 16**4
+        return '0x{:04X}'.format(n)
+
+    def uhex4(n):
+        assert 0 <= n and n < 16**4
+        return 'U+{:04X}'.format(n)
+
+    def case_info(code):
+        assert 0 <= code and code <= MAX_BMP
+        (upper, lower, flags) = table[index[code]]
+        return ((code + upper) & 0xffff, (code + lower) & 0xffff, flags)
+
+    def is_space(code):
+        (_, _, flags) = case_info(code)
+        return bool(flags & FLAG_SPACE)
+
+    def to_upper(code):
+        (upper, _, _) = case_info(code)
+        return upper
+
+    def casefold(code):
+        assert 0 <= code and code <= MAX_BMP
+        (folding, _, _, _) = folding_table[folding_index[code]]
+        return (code + folding) & 0xffff
+
+    def casefolds_to_ascii(code):
+        return casefold(code) <= MAX_ASCII
+
+    def casefolds_to_latin1(code):
+        return casefold(code) <= MAX_LATIN1
+
+    def casemaps_to_nonlatin1(code):
+        upper = to_upper(code)
+        return upper > MAX_LATIN1
+
+    def char_name(code):
+        assert 0 <= code and code <= MAX_BMP
+        if code not in test_table:
+            return '<Unused>'
+        if code == LEAD_SURROGATE_MIN:
+            return '<Lead Surrogate Min>'
+        if code == TRAIL_SURROGATE_MAX:
+            return '<Trail Surrogate Max>'
+        (_, _, name, alias) = test_table[code]
+        return name if not name.startswith('<') else alias
+
+    def write_character_range(println, name, characters):
+        char_ranges = list(int_ranges(characters))
+        println('')
+        println('const int js::irregexp::k{}Ranges[] = {{'.format(name))
+        for (start, end) in char_ranges:
+            s_name = char_name(start)
+            e_name = char_name(end)
+            println('    {}, {} + 1, // {}'.format(hex4(start), hex4(end),
+                                                               '{}..{}'.format(s_name, e_name)
+                                                               if start != end else s_name))
+        println('    {} + 1'.format(hex4(MAX_BMP)))
+        println('};')
+        println('const int js::irregexp::k{}RangeCount = {};'.format(name,
+                                                                     len(char_ranges) * 2 + 1))
+
+    def write_character_test(println, test, consequent, default):
+        # Latin1 characters which, when case-mapped through
+        # String.prototype.toUpperCase(), canonicalize to a non-Latin1 character.
+        # ES2017, §21.2.2.8.2 Runtime Semantics: Canonicalize
+        casemapped_to_nonlatin1 = ifilter(casemaps_to_nonlatin1, xrange(0, MAX_LATIN1 + 1))
+
+        def casemap_closure(ch):
+            upper = to_upper(ch)
+            return (ch, [c for c in xrange(MAX_LATIN1 + 1, MAX_BMP + 1) if upper == to_upper(c)])
+
+        # Mapping from Latin1 characters to the list of case map equivalent
+        # non-Latin1 characters.
+        casemap_for_latin1 = dict(chain(imap(casemap_closure, casemapped_to_nonlatin1)))
+
+        # Non-latin1 characters which, when Unicode case-folded, canonicalize to
+        # a Latin1 character.
+        # ES2017, §21.2.2.8.2 Runtime Semantics: Canonicalize
+        casefolded_to_latin1 = ifilter(casefolds_to_latin1, xrange(MAX_LATIN1 + 1, MAX_BMP + 1))
+
+        println('    if (unicode) {')
+        for ch in casefolded_to_latin1:
+            casefolded = casefold(ch)
+            # Skip if also handled below for case mapping.
+            if casefolded in casemap_for_latin1 and ch in casemap_for_latin1[casefolded]:
+                continue
+            println('        // "{}" case folds to "{}".'.format(char_name(ch),
+                                                                 char_name(casefolded)))
+            println('        if ({})'.format(test(ch)))
+            println('            return {};'.format(consequent(casefolded)))
+        println('    }')
+        println('')
+        for (ch, casemapped_chars) in casemap_for_latin1.iteritems():
+            for casemapped in casemapped_chars:
+                println('    // "{}" case maps to "{}".'.format(char_name(casemapped),
+                                                                char_name(ch)))
+            println('    if ({})'.format(' || '.join(imap(test, casemapped_chars))))
+            println('        return {};'.format(consequent(ch)))
+        println('    return {};'.format(default))
+
+    with io.open('../irregexp/RegExpCharacters-inl.h', 'wb') as chars_file:
+        write = partial(print, file=chars_file, sep='', end='')
+        println = partial(write, end='\n')
+
+        write(warning_message)
+        write(unicode_version_message.format(version))
+
+        println('#ifndef V8_JSREGEXPCHARACTERS_INL_H_')
+        println('#define V8_JSREGEXPCHARACTERS_INL_H_')
+        println('')
+        println('namespace js {')
+        println('')
+        println('namespace irregexp {')
+        println('')
+
+        println('static inline bool')
+        println('RangeContainsLatin1Equivalents(CharacterRange range, bool unicode)')
+        println('{')
+        write_character_test(println, lambda ch: 'range.Contains({})'.format(hex4(ch)),
+                             lambda _: 'true', 'false')
+        println('}')
+
+        println('')
+        println('} } // namespace js::irregexp')
+        println('')
+        println('#endif // V8_JSREGEXPCHARACTERS_INL_H_')
+
+    with io.open('../irregexp/RegExpCharacters.cpp', 'wb') as chars_file:
+        write = partial(print, file=chars_file, sep='', end='')
+        println = partial(write, end='\n')
+        character_range = partial(write_character_range, println)
+
+        # Characters in \s, 21.2.2.12 CharacterClassEscape.
+        space_chars = filter(is_space, xrange(0, MAX_BMP + 1))
+
+        # Characters in \d, 21.2.2.12 CharacterClassEscape.
+        digit_chars = map(ord, string.digits)
+        assert all(ch <= MAX_ASCII for ch in digit_chars)
+
+        # Characters in \w, 21.2.2.12 CharacterClassEscape.
+        word_chars = map(ord, string.digits + string.ascii_letters + '_')
+        assert all(ch <= MAX_ASCII for ch in word_chars)
+
+        # Characters which case-fold to characters in \w.
+        ignorecase_word_chars = (word_chars +
+                                filter(casefolds_to_ascii, xrange(MAX_ASCII + 1, MAX_BMP + 1)))
+
+        # Surrogate characters.
+        surrogate_chars = range(LEAD_SURROGATE_MIN, TRAIL_SURROGATE_MAX + 1)
+
+        write(warning_message)
+        write(unicode_version_message.format(version))
+        println('#include "irregexp/RegExpCharacters.h"')
+        println('')
+        println('#include "mozilla/Assertions.h"')
+        println('')
+
+        println('char16_t')
+        println('js::irregexp::ConvertNonLatin1ToLatin1(char16_t c, bool unicode)')
+        println('{')
+        println('    MOZ_ASSERT(c > {}, "Character mustn\'t be Latin1");'.format(hex2(MAX_LATIN1)))
+        write_character_test(println, lambda ch: 'c == {}'.format(hex4(ch)), hex2, '0')
+        println('}')
+
+        character_range('Space', space_chars)
+        character_range('SpaceAndSurrogate', space_chars + surrogate_chars)
+
+        character_range('Word', word_chars)
+        character_range('IgnoreCaseWord', ignorecase_word_chars)
+        character_range('WordAndSurrogate', word_chars + surrogate_chars)
+        character_range('NegatedIgnoreCaseWordAndSurrogate',
+                        set(xrange(0, MAX_BMP + 1)) - set(ignorecase_word_chars + surrogate_chars))
+
+        character_range('Digit', digit_chars)
+        character_range('DigitAndSurrogate', digit_chars + surrogate_chars)
+
+        character_range('Surrogate', surrogate_chars)
+
+        character_range('LineTerminator', line_terminator)
+
 def update_unicode(args):
     import urllib2
 
@@ -929,6 +1138,10 @@ def update_unicode(args):
     make_non_bmp_file(unicode_version,
                       non_bmp_lower_map, non_bmp_upper_map,
                       non_bmp_folding_map, non_bmp_rev_folding_map)
+    make_irregexp_tables(unicode_version,
+                         table, index,
+                         folding_table, folding_index,
+                         test_table)
 
     make_bmp_mapping_test(unicode_version, test_table)
     make_non_bmp_mapping_test(unicode_version, non_bmp_upper_map, non_bmp_lower_map)

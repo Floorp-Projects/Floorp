@@ -15,7 +15,7 @@
    * contents of the Blob from the worker using an XHR.  Ideally, we don't
    * deadlock the main thread.
    */
-  function testSteps()
+  function* testSteps()
   {
     const BLOB_DATA = ["Green"];
     const BLOB_TYPE = "text/plain";
@@ -102,7 +102,6 @@
     URL.revokeObjectURL(workerScriptUrl);
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

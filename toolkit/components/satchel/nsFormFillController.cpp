@@ -40,6 +40,7 @@
 #include "nsILoadContext.h"
 #include "nsIFrame.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsFocusManager.h"
 
 using namespace mozilla::dom;
 
@@ -274,6 +275,18 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
   NS_ENSURE_STATE(node);
   mPwmgrInputs.Put(node, true);
   node->AddMutationObserverUnlessExists(this);
+
+  nsFocusManager *fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+    if (SameCOMIdentity(focusedContent, node)) {
+      nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(node);
+      if (!mFocusedInput) {
+        MaybeStartControllingInput(input);
+      }
+      ShowPopup();
+    }
+  }
 
   if (!mLoginManager)
     mLoginManager = do_GetService("@mozilla.org/login-manager;1");

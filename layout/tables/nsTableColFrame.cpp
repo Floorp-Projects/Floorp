@@ -23,8 +23,22 @@ using namespace mozilla;
 
 using namespace mozilla;
 
-nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) :
-  nsSplittableFrame(aContext)
+nsTableColFrame::nsTableColFrame(nsStyleContext* aContext)
+  : nsSplittableFrame(aContext)
+  , mMinCoord(0)
+  , mPrefCoord(0)
+  , mSpanMinCoord(0)
+  , mSpanPrefCoord(0)
+  , mPrefPercent(0.0f)
+  , mSpanPrefPercent(0.0f)
+  , mFinalISize(0)
+  , mColIndex(0)
+  , mIStartBorderWidth(0)
+  , mIEndBorderWidth(0)
+  , mBStartContBorderWidth(0)
+  , mIEndContBorderWidth(0)
+  , mBEndContBorderWidth(0)
+  , mHasSpecifiedCoord(false)
 {
   SetColType(eColContent);
   ResetIntrinsics();

@@ -2237,7 +2237,3 @@ public:
 
 static FrontendPluginRegistry::Add<MozCheckAction> X("moz-check",
                                                      "check moz action");
-// Export the registry on Windows.
-#ifdef LLVM_EXPORT_REGISTRY
-LLVM_EXPORT_REGISTRY(FrontendPluginRegistry)
-#endif

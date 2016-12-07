@@ -29,7 +29,7 @@ ParamTraits<Principal>::Write(Message* aMsg, const paramType& aParam) {
   }
 
   if (!isSerialized) {
-    NS_RUNTIMEABORT("Unable to serialize principal.");
+    MOZ_CRASH("Unable to serialize principal.");
     return;
   }
 

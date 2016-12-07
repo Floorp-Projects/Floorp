@@ -1272,6 +1272,10 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  if (!mRemoteBrowser || !aOther->mRemoteBrowser) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   if (mRemoteBrowser->IsIsolatedMozBrowserElement() !=
       aOther->mRemoteBrowser->IsIsolatedMozBrowserElement()) {
     return NS_ERROR_NOT_IMPLEMENTED;

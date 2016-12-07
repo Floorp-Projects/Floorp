@@ -2084,7 +2084,7 @@ DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
         getter != JS_PropertyStub && setter != JS_StrictPropertyStub)
     {
         if (getter && !(attrs & JSPROP_GETTER)) {
-            RootedAtom atom(cx, IdToFunctionName(cx, id, "get"));
+            RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Get));
             if (!atom)
                 return false;
             JSFunction* getobj = NewNativeFunction(cx, (Native) getter, 0, atom);
@@ -2100,7 +2100,7 @@ DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
         if (setter && !(attrs & JSPROP_SETTER)) {
             // Root just the getter, since the setter is not yet a JSObject.
             AutoRooterGetterSetter getRoot(cx, JSPROP_GETTER, &getter, nullptr);
-            RootedAtom atom(cx, IdToFunctionName(cx, id, "set"));
+            RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Set));
             if (!atom)
                 return false;
             JSFunction* setobj = NewNativeFunction(cx, (Native) setter, 1, atom);
@@ -3424,10 +3424,7 @@ JS::NewFunctionFromSpec(JSContext* cx, const JSFunctionSpec* fs, HandleId id)
         {
             return nullptr;
         }
-        JSFunction* fun = &funVal.toObject().as<JSFunction>();
-        if (fs->flags & JSFUN_HAS_REST)
-            fun->setHasRest();
-        return fun;
+        return &funVal.toObject().as<JSFunction>();
     }
 
     RootedAtom atom(cx, IdToFunctionName(cx, id));
@@ -3529,7 +3526,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
     RootedFunction fun(cx, &funobj->as<JSFunction>());
     if (fun->isInterpretedLazy()) {
         AutoCompartment ac(cx, funobj);
-        if (!fun->getOrCreateScript(cx))
+        if (!JSFunction::getOrCreateScript(cx, fun))
             return nullptr;
     }
 
@@ -3561,7 +3558,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
         // Fail here if we OOM during debug asserting.
         // CloneFunctionReuseScript will delazify the script anyways, so we
         // are not creating an extra failure condition for DEBUG builds.
-        if (!fun->getOrCreateScript(cx))
+        if (!JSFunction::getOrCreateScript(cx, fun))
             return nullptr;
         MOZ_ASSERT(scope->as<GlobalScope>().isSyntactic() ||
                    fun->nonLazyScript()->hasNonSyntacticScope());
@@ -3607,7 +3604,7 @@ JS_GetFunctionObject(JSFunction* fun)
 JS_PUBLIC_API(JSString*)
 JS_GetFunctionId(JSFunction* fun)
 {
-    return fun->name();
+    return fun->explicitName();
 }
 
 JS_PUBLIC_API(JSString*)
@@ -4216,7 +4213,7 @@ JS_GetFunctionScript(JSContext* cx, HandleFunction fun)
         return nullptr;
     if (fun->isInterpretedLazy()) {
         AutoCompartment funCompartment(cx, fun);
-        JSScript* script = fun->getOrCreateScript(cx);
+        JSScript* script = JSFunction::getOrCreateScript(cx, fun);
         if (!script)
             MOZ_CRASH();
         return script;

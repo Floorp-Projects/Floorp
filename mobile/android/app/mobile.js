@@ -615,6 +615,11 @@ pref("media.cache_readahead_limit", 30);
 // of at least 4.
 pref("media.video-queue.default-size", 3);
 
+#ifdef NIGHTLY_BUILD
+// Allow to check if the decoder supports recycling only on Fennec nightly build.
+pref("media.decoder.recycle.enabled", true);
+#endif
+
 // Enable the MediaCodec PlatformDecoderModule by default.
 pref("media.android-media-codec.enabled", true);
 pref("media.android-media-codec.preferred", true);
@@ -838,9 +843,6 @@ pref("reader.toolbar.vertical", false);
 // Telemetry settings.
 // Whether to use the unified telemetry behavior, requires a restart.
 pref("toolkit.telemetry.unified", false);
-
-// Unified AccessibleCarets (touch-caret and selection-carets).
-pref("layout.accessiblecaret.enabled", true);
 
 // AccessibleCaret CSS for the Android L style assets.
 pref("layout.accessiblecaret.width", "22.0");

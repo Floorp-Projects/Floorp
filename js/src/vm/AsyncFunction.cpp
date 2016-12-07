@@ -119,9 +119,9 @@ js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleOb
     // Create a new function with AsyncFunctionPrototype, reusing the name and
     // the length of `unwrapped`.
 
-    RootedAtom funName(cx, unwrapped->name());
+    RootedAtom funName(cx, unwrapped->explicitName());
     uint16_t length;
-    if (!unwrapped->getLength(cx, &length))
+    if (!JSFunction::getLength(cx, unwrapped, &length))
         return nullptr;
 
     // Steps 3 (partially).
@@ -132,6 +132,9 @@ js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleOb
                                                     TenuredObject));
     if (!wrapped)
         return nullptr;
+
+    if (unwrapped->hasCompileTimeName())
+        wrapped->setCompileTimeName(unwrapped->compileTimeName());
 
     // Link them to each other to make GetWrappedAsyncFunction and
     // GetUnwrappedAsyncFunction work.

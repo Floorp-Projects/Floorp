@@ -907,6 +907,7 @@ AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
 
     static const JSFunctionSpec funcs[] = {
         JS_SELF_HOSTED_FN("getCalendarInfo", "Intl_getCalendarInfo", 1, 0),
+        JS_SELF_HOSTED_FN("getDisplayNames", "Intl_getDisplayNames", 2, 0),
         JS_FS_END
     };
 
@@ -1446,7 +1447,6 @@ my_LargeAllocFailCallback(void* data)
     MOZ_ASSERT(!rt->isHeapBusy());
 
     JS::PrepareForFullGC(cx);
-    AutoKeepAtoms keepAtoms(cx->perThreadData);
     rt->gc.gc(GC_NORMAL, JS::gcreason::SHARED_MEMORY_LIMIT);
 }
 
@@ -2313,7 +2313,7 @@ ValueToScript(JSContext* cx, HandleValue v, JSFunction** funp = nullptr)
         return nullptr;
     }
 
-    JSScript* script = fun->getOrCreateScript(cx);
+    JSScript* script = JSFunction::getOrCreateScript(cx, fun);
     if (!script)
         return nullptr;
 
@@ -2676,7 +2676,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
             if (sp->put(" CONSTRUCTOR") < 0)
                 return false;
         }
-        if (fun->isExprBody()) {
+        if (script->isExprBody()) {
             if (sp->put(" EXPRESSION_CLOSURE") < 0)
                 return false;
         }
@@ -2713,7 +2713,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
 
                 RootedFunction fun(cx, &obj->as<JSFunction>());
                 if (fun->isInterpreted()) {
-                    RootedScript script(cx, fun->getOrCreateScript(cx));
+                    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
                     if (script) {
                         if (!DisassembleScript(cx, script, fun, lines, recursive, sourceNotes, sp))
                             return false;
@@ -5367,7 +5367,7 @@ DumpScopeChain(JSContext* cx, unsigned argc, Value* vp)
             ReportUsageErrorASCII(cx, callee, "Argument must be an interpreted function");
             return false;
         }
-        script = fun->getOrCreateScript(cx);
+        script = JSFunction::getOrCreateScript(cx, fun);
     } else {
         script = obj->as<ModuleObject>().script();
     }

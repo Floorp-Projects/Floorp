@@ -9,4 +9,6 @@ DevToolsModules(
     'Accordion.js',
     'App.js',
     'Grid.js',
+    'GridDisplaySettings.js',
+    'GridList.js',
 )

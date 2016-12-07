@@ -290,9 +290,7 @@ window.onload = Task.async(function* () {
     function* checkFrameComponent(input, expected) {
       let props = Object.assign({ onClick: () => {} }, input);
       let frame = ReactDOM.render(Frame(props), window.document.body);
-      yield forceRender(frame);
-
-      let el = frame.getDOMNode();
+      let el = ReactDOM.findDOMNode(frame);
       let { source } = input.frame;
       checkFrameString(Object.assign({ el, source }, expected));
     }

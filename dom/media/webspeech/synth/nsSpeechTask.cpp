@@ -378,8 +378,8 @@ nsSpeechTask::DispatchStartImpl(const nsAString& aUri)
 
   mUtterance->mState = SpeechSynthesisUtterance::STATE_SPEAKING;
   mUtterance->mChosenVoiceURI = aUri;
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("start"), 0, 0,
-                                           EmptyString());
+  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("start"), 0,
+                                           nullptr, 0, EmptyString());
 
   return NS_OK;
 }
@@ -433,7 +433,7 @@ nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
   } else {
     utterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
     utterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"),
-                                            aCharIndex, aElapsedTime,
+                                            aCharIndex, nullptr, aElapsedTime,
                                             EmptyString());
   }
 
@@ -466,7 +466,7 @@ nsSpeechTask::DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex)
   mUtterance->mPaused = true;
   if (mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING) {
     mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("pause"),
-                                             aCharIndex, aElapsedTime,
+                                             aCharIndex, nullptr, aElapsedTime,
                                              EmptyString());
   }
   return NS_OK;
@@ -498,7 +498,7 @@ nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
   mUtterance->mPaused = false;
   if (mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING) {
     mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("resume"),
-                                             aCharIndex, aElapsedTime,
+                                             aCharIndex, nullptr, aElapsedTime,
                                              EmptyString());
   }
 
@@ -536,35 +536,38 @@ nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
 
   mUtterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
   mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("error"),
-                                           aCharIndex, aElapsedTime,
+                                           aCharIndex, nullptr, aElapsedTime,
                                            EmptyString());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSpeechTask::DispatchBoundary(const nsAString& aName,
-                               float aElapsedTime, uint32_t aCharIndex)
+                               float aElapsedTime, uint32_t aCharIndex,
+                               uint32_t aCharLength, uint8_t argc)
 {
   if (!mIndirectAudio) {
     NS_WARNING("Can't call DispatchBoundary() from a direct audio speech service");
     return NS_ERROR_FAILURE;
   }
 
-  return DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex);
+  return DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex, aCharLength, argc);
 }
 
 nsresult
 nsSpeechTask::DispatchBoundaryImpl(const nsAString& aName,
-                                   float aElapsedTime, uint32_t aCharIndex)
+                                   float aElapsedTime, uint32_t aCharIndex,
+                                   uint32_t aCharLength, uint8_t argc)
 {
   MOZ_ASSERT(mUtterance);
   if(NS_WARN_IF(!(mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
   mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("boundary"),
-                                           aCharIndex, aElapsedTime,
-                                           aName);
+                                           aCharIndex,
+                                           argc ? static_cast<Nullable<uint32_t> >(aCharLength) : nullptr,
+                                           aElapsedTime, aName);
+
   return NS_OK;
 }
 
@@ -590,7 +593,7 @@ nsSpeechTask::DispatchMarkImpl(const nsAString& aName,
   }
 
   mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("mark"),
-                                           aCharIndex, aElapsedTime,
+                                           aCharIndex, nullptr, aElapsedTime,
                                            aName);
   return NS_OK;
 }

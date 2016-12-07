@@ -45,7 +45,7 @@ add_task(function* () {
 
   info("Toggling ON the CSS grid highlighter for the first grid container from the " +
     "rule-view.");
-  let onHighlighterShown = highlighters.once("highlighter-shown");
+  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
   yield onHighlighterShown;
 
@@ -72,7 +72,7 @@ add_task(function* () {
 
   info("Toggling ON the CSS grid highlighter for the second grid container from the " +
     "rule-view.");
-  onHighlighterShown = highlighters.once("highlighter-shown");
+  onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
   yield onHighlighterShown;
 

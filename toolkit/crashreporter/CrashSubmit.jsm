@@ -308,31 +308,38 @@ Submitter.prototype = {
         let ret =
           xhr.status == 200 ? parseKeyValuePairs(xhr.responseText) : {};
         let submitted = !!ret.CrashID;
+        let p = Promise.resolve();
 
         if (this.recordSubmission) {
           let result = submitted ? manager.SUBMISSION_RESULT_OK :
                                    manager.SUBMISSION_RESULT_FAILED;
-          manager.addSubmissionResult(this.id, submissionID, new Date(),
-                                      result);
+          p = manager.addSubmissionResult(this.id, submissionID, new Date(),
+                                          result);
           if (submitted) {
             manager.setRemoteCrashID(this.id, ret.CrashID);
           }
         }
 
-        if (submitted) {
-          this.submitSuccess(ret);
-        }
-        else {
-           this.notifyStatus(FAILED);
-           this.cleanup();
-        }
+        p.then(() => {
+          if (submitted) {
+            this.submitSuccess(ret);
+          } else {
+            this.notifyStatus(FAILED);
+            this.cleanup();
+          }
+        });
       }
     }, false);
 
+    let p = Promise.resolve();
+    let id = this.id;
+
     if (this.recordSubmission) {
-      manager.addSubmissionAttempt(this.id, submissionID, new Date());
+      p = manager.ensureCrashIsPresent(id).then(() => {
+        return manager.addSubmissionAttempt(id, submissionID, new Date());
+      });
     }
-    xhr.send(formData);
+    p.then(() => { xhr.send(formData); });
     return true;
   },
 

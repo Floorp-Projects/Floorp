@@ -7,7 +7,7 @@ var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name =
     this.window ? window.location.pathname : "test_view_put_get_values.js";
@@ -98,5 +98,4 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }

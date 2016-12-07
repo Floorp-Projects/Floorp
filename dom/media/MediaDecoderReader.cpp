@@ -80,14 +80,18 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());
+}
 
+nsresult
+MediaDecoderReader::Init()
+{
   if (mDecoder && mDecoder->DataArrivedEvent()) {
     mDataArrivedListener = mDecoder->DataArrivedEvent()->Connect(
       mTaskQueue, this, &MediaDecoderReader::NotifyDataArrived);
   }
-
   // Dispatch initialization that needs to happen on that task queue.
   mTaskQueue->Dispatch(NewRunnableMethod(this, &MediaDecoderReader::InitializationTask));
+  return InitInternal();
 }
 
 void
@@ -194,9 +198,7 @@ media::TimeIntervals
 MediaDecoderReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
-  if (!HaveStartTime()) {
-    return media::TimeIntervals();
-  }
+
   AutoPinned<MediaResource> stream(mDecoder->GetResource());
 
   if (!mDuration.Ref().isSome()) {
@@ -216,6 +218,9 @@ MediaDecoderReader::AsyncReadMetadata()
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   nsresult rv = ReadMetadata(&metadata->mInfo, getter_Transfers(metadata->mTags));
   metadata->mInfo.AssertValid();
+
+  // Update the buffer ranges before resolving the metadata promise. Bug 1320258.
+  UpdateBuffered();
 
   // We're not waiting for anything. If we didn't get the metadata, that's an
   // error.

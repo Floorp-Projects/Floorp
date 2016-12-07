@@ -2,5 +2,5 @@ protocol undeclProtocol {
     manages undeclared;
 
 child:
-    undeclared();
+    async undeclared();
 };

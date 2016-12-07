@@ -73,7 +73,12 @@ interface nsISHistory: nsISupports
    readonly attribute long index;
 
   /**
-   * A readonly property of the interface that returns 
+   * A readonly property which equals index + globalIndexOffset.
+   */
+   readonly attribute long globalIndex;
+
+  /**
+   * A readonly property of the interface that returns
    * the index of the last document that started to load and
    * didn't finished yet. When document finishes the loading
    * value -1 is returned.
@@ -104,6 +109,13 @@ interface nsISHistory: nsISupports
    */
    nsISHEntry getEntryAtIndex(in long index, in boolean modifyIndex);
 
+  /**
+   * Load the entry at given index to root docshell directly in order to
+   * restore to an entry in grouped session history navigation or session
+   * restore case. This function will not notify nsISHistoryListener, as it's
+   * not considered a normal history navigation.
+   */
+   void restoreToEntryAtIndex(in long index);
 
   /**
    * Called to purge older documents from history.

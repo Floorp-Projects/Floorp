@@ -63,7 +63,7 @@ public:
 
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override
   {
-    NS_RUNTIMEABORT("PaintedLayerComposites can't fill invalidated regions");
+    MOZ_CRASH("PaintedLayerComposites can't fill invalidated regions");
   }
 
   const virtual gfx::TiledIntRegion& GetInvalidRegion() override;

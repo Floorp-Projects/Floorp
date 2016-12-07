@@ -24,7 +24,7 @@ var {DebuggerServer} = require("devtools/server/main");
 var {DebuggerClient, ObjectClient} = require("devtools/shared/client/main");
 
 var {ConsoleServiceListener, ConsoleAPIListener} =
-  require("devtools/server/actors/utils/webconsole-utils");
+  require("devtools/server/actors/utils/webconsole-listeners");
 
 function initCommon()
 {

@@ -288,21 +288,6 @@ UIEvent::RangeOffset() const
   return targetFrame->GetContentOffsetsFromPoint(pt).offset;
 }
 
-NS_IMETHODIMP
-UIEvent::GetCancelBubble(bool* aCancelBubble)
-{
-  NS_ENSURE_ARG_POINTER(aCancelBubble);
-  *aCancelBubble = CancelBubble();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-UIEvent::SetCancelBubble(bool aCancelBubble)
-{
-  mEvent->mFlags.mPropagationStopped = aCancelBubble;
-  return NS_OK;
-}
-
 nsIntPoint
 UIEvent::GetLayerPoint() const
 {

@@ -340,6 +340,13 @@ private:
   TimedMetadataEventProducer* mTimedMetadataEvent;
   MediaEventProducer<void>* mOnSeekableEvent;
 
+  // This will be populated only if a content change occurs, otherwise it
+  // will be left as null so the original metadata is used.
+  // It is updated once a chained ogg is encountered.
+  // As Ogg chaining is only supported for audio, we only need an audio track
+  // info.
+  RefPtr<SharedTrackInfo> mSharedAudioTrackInfo;
+
   friend class OggTrackDemuxer;
 };
 
@@ -352,13 +359,13 @@ public:
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
-  RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  RefPtr<SeekPromise> Seek(const media::TimeUnit& aTime) override;
 
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
 
   void Reset() override;
 
-  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
+  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold) override;
 
   media::TimeIntervals GetBuffered() override;
 

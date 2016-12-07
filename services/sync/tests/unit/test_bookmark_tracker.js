@@ -1561,6 +1561,11 @@ add_task(async function test_onItemDeleted_tree() {
   }
 });
 
+async function ensureMobileQuery() {
+  tracker._ensureMobileQuery();
+  await PlacesTestUtils.promiseAsyncUpdates();
+}
+
 add_task(async function test_mobile_query() {
   _("Ensure we correctly create the mobile query");
 
@@ -1570,6 +1575,7 @@ add_task(async function test_mobile_query() {
     // Creates the organizer queries as a side effect.
     let leftPaneId = PlacesUIUtils.leftPaneFolderId;
     _(`Left pane root ID: ${leftPaneId}`);
+    await PlacesTestUtils.promiseAsyncUpdates();
 
     let allBookmarksGuids = await fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
                                                      "AllBookmarks");
@@ -1577,7 +1583,7 @@ add_task(async function test_mobile_query() {
     let allBookmarkGuid = allBookmarksGuids[0];
 
     _("Try creating query after organizer is ready");
-    tracker._ensureMobileQuery();
+    await ensureMobileQuery();
     let queryGuids = await fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
                                               "MobileBookmarks");
     equal(queryGuids.length, 0, "Should not create query without any mobile bookmarks");
@@ -1587,7 +1593,7 @@ add_task(async function test_mobile_query() {
       parentGuid: PlacesUtils.bookmarks.mobileGuid,
       url: "https://mozilla.org",
     });
-    tracker._ensureMobileQuery();
+    await ensureMobileQuery();
     queryGuids = await fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
                                           "MobileBookmarks");
     equal(queryGuids.length, 1, "Should create query once mobile bookmarks exist");
@@ -1608,7 +1614,7 @@ add_task(async function test_mobile_query() {
       guid: queryGuid,
       title: "renamed query",
     });
-    tracker._ensureMobileQuery();
+    await ensureMobileQuery();
     let rootInfo = await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.mobileGuid);
     equal(rootInfo.title, "Mobile Bookmarks", "Should fix root title");
     queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
@@ -1619,7 +1625,7 @@ add_task(async function test_mobile_query() {
       guid: queryGuid,
       url: "place:folder=BOOKMARKS_MENU",
     });
-    tracker._ensureMobileQuery();
+    await ensureMobileQuery();
     queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
     equal(queryInfo.url.href, `place:folder=${PlacesUtils.mobileFolderId}`,
       "Should fix query URL to point to mobile root");
@@ -1799,14 +1805,3 @@ add_task(async function test_migrate_existing_tracker() {
 
   await cleanup();
 });
-
-function run_test() {
-  initTestLogging("Trace");
-
-  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Store.Bookmarks").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Tracker.Bookmarks").level = Log.Level.Trace;
-
-  run_next_test();
-}
-

@@ -1486,7 +1486,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   // value used by layout.  (We must store mOutlineWidth for the same
   // style struct resolution reasons that we do nsStyleBorder::mBorder;
   // see that field's comment.)
-  nsStyleCoord  mOutlineWidth;    // [reset] coord, enum (see nsStyleConsts.h)
+  nscoord       mOutlineWidth;    // [reset] coord, enum (see nsStyleConsts.h)
   nscoord       mOutlineOffset;   // [reset]
   mozilla::StyleComplexColor mOutlineColor; // [reset]
   uint8_t       mOutlineStyle;    // [reset] See nsStyleConsts.h
@@ -2083,16 +2083,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
   uint8_t mTextEmphasisPosition;        // [inherited] see nsStyleConsts.h
   uint8_t mTextEmphasisStyle;           // [inherited] see nsStyleConsts.h
   uint8_t mTextRendering;               // [inherited] see nsStyleConsts.h
-  int32_t mTabSize;                     // [inherited] see nsStyleConsts.h
   mozilla::StyleComplexColor mTextEmphasisColor;      // [inherited]
   mozilla::StyleComplexColor mWebkitTextFillColor;    // [inherited]
   mozilla::StyleComplexColor mWebkitTextStrokeColor;  // [inherited]
 
+  nsStyleCoord mTabSize;                // [inherited] coord, factor, calc
   nsStyleCoord mWordSpacing;            // [inherited] coord, percent, calc
   nsStyleCoord mLetterSpacing;          // [inherited] coord, normal
   nsStyleCoord mLineHeight;             // [inherited] coord, factor, normal
   nsStyleCoord mTextIndent;             // [inherited] coord, percent, calc
-  nsStyleCoord mWebkitTextStrokeWidth;  // [inherited] coord
+  nscoord mWebkitTextStrokeWidth;       // [inherited] coord
 
   RefPtr<nsCSSShadowArray> mTextShadow; // [inherited] nullptr in case of a zero-length
 
@@ -2138,7 +2138,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
   }
 
   bool HasWebkitTextStroke() const {
-    return mWebkitTextStrokeWidth.GetCoordValue() > 0;
+    return mWebkitTextStrokeWidth > 0;
   }
 
   // These are defined in nsStyleStructInlines.h.
@@ -2800,7 +2800,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding; // [reset]
-  mozilla::StyleDisplay mDisplay;          // [reset] see nsStyleConsts.h SyleDisplay
+  mozilla::StyleDisplay mDisplay;          // [reset] see nsStyleConsts.h StyleDisplay
   mozilla::StyleDisplay mOriginalDisplay;  // [reset] saved mDisplay for
                                            //         position:absolute/fixed
                                            //         and float:left/right;
@@ -2904,12 +2904,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
     return mozilla::StyleDisplay::Inline == aDisplay ||
            mozilla::StyleDisplay::InlineBlock == aDisplay ||
            mozilla::StyleDisplay::InlineTable == aDisplay ||
-           mozilla::StyleDisplay::InlineBox == aDisplay ||
+           mozilla::StyleDisplay::MozInlineBox == aDisplay ||
            mozilla::StyleDisplay::InlineFlex == aDisplay ||
            mozilla::StyleDisplay::WebkitInlineBox == aDisplay ||
            mozilla::StyleDisplay::InlineGrid == aDisplay ||
-           mozilla::StyleDisplay::InlineXulGrid == aDisplay ||
-           mozilla::StyleDisplay::InlineStack == aDisplay ||
+           mozilla::StyleDisplay::MozInlineGrid == aDisplay ||
+           mozilla::StyleDisplay::MozInlineStack == aDisplay ||
            mozilla::StyleDisplay::Ruby == aDisplay ||
            mozilla::StyleDisplay::RubyBase == aDisplay ||
            mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
@@ -3190,12 +3190,12 @@ struct nsStyleContentData
   void TrackImage(mozilla::dom::ImageTracker* aImageTracker);
   void UntrackImage(mozilla::dom::ImageTracker* aImageTracker);
 
-  void SetImage(imgRequestProxy* aRequest)
+  void SetImage(already_AddRefed<imgRequestProxy> aRequest)
   {
     MOZ_ASSERT(!mImageTracked,
                "Setting a new image without untracking the old one!");
     MOZ_ASSERT(mType == eStyleContentType_Image, "Wrong type!");
-    NS_IF_ADDREF(mContent.mImage = aRequest);
+    mContent.mImage = aRequest.take();
   }
 };
 
@@ -3958,7 +3958,7 @@ STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, width);
 STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, height);
 
 /**
- * <div rustbindgen="true" replaces="UniquePtr">
+ * <div rustbindgen="true" replaces="mozilla_UniquePtr">
  *
  * TODO(Emilio): This is a workaround and we should be able to get rid of this
  * one.

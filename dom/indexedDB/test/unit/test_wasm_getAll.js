@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name =
     this.window ? window.location.pathname : "test_wasm_getAll.js";
@@ -16,7 +16,7 @@ function testSteps()
 
   if (!isWasmSupported()) {
     finishTest();
-    yield undefined;
+    return;
   }
 
   getWasmBinary('(module (func (result i32) (i32.const 1)))');
@@ -119,5 +119,4 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }

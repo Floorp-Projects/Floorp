@@ -62,6 +62,25 @@ HTMLWin32ObjectAccessible::HTMLWin32ObjectAccessible(void* aHwnd,
 {
   mHwnd = aHwnd;
   if (mHwnd) {
+#if defined(MOZ_CONTENT_SANDBOX)
+    if (XRE_IsContentProcess()) {
+      DocAccessibleChild* ipcDoc = aDoc->IPCDoc();
+      MOZ_ASSERT(ipcDoc);
+      if (!ipcDoc) {
+        return;
+      }
+
+      IAccessibleHolder proxyHolder;
+      if (!ipcDoc->SendGetWindowedPluginIAccessible(
+              reinterpret_cast<uintptr_t>(mHwnd), &proxyHolder)) {
+        return;
+      }
+
+      mCOMProxy.reset(proxyHolder.Release());
+      return;
+    }
+#endif
+
     // The plugin is not windowless. In this situation we use 
     // use its inner child owned by the plugin so that we don't get
     // in an infinite loop, where the WM_GETOBJECT's get forwarded
@@ -76,6 +95,14 @@ HTMLWin32ObjectAccessible::HTMLWin32ObjectAccessible(void* aHwnd,
 void
 HTMLWin32ObjectAccessible::GetNativeInterface(void** aNativeAccessible)
 {
+#if defined(MOZ_CONTENT_SANDBOX)
+  if (XRE_IsContentProcess()) {
+    RefPtr<IAccessible> addRefed = mCOMProxy.get();
+    addRefed.forget(aNativeAccessible);
+    return;
+  }
+#endif
+
   if (mHwnd) {
     ::AccessibleObjectFromWindow(static_cast<HWND>(mHwnd),
                                  OBJID_WINDOW, IID_IAccessible,

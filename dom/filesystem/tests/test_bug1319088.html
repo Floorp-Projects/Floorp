@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1319088</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="input" type="file"></input>
+
+<script type="application/javascript;version=1.7">
+
+function testSetup() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
+                                     ["dom.webkitBlink.dirPicker.enabled", true]]}, next);
+}
+
+function populateInputFile() {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var input = document.getElementById("input");
+    SpecialPowers.wrap(input).mozSetFileArray([message.file]);
+
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("file.opened", onOpened);
+  script.sendAsyncMessage("file.open");
+}
+
+function checkBug() {
+  var input = document.getElementById("input");
+  is(input.files[0].webkitRelativePath, "", "No relative path!");
+
+  let form = document.createElement('form');
+  form.appendChild(input);
+
+  is(input.files[0].webkitRelativePath, "", "No relative path!");
+  SimpleTest.finish();
+}
+
+var tests = [
+  testSetup,
+  populateInputFile,
+  checkBug,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>

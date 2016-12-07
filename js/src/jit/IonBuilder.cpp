@@ -467,7 +467,8 @@ IonBuilder::canInlineTarget(JSFunction* target, CallInfo& callInfo)
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
     if (target->isInterpreted() && info().analysisMode() == Analysis_DefiniteProperties) {
-        RootedScript script(analysisContext, target->getOrCreateScript(analysisContext));
+        RootedFunction fun(analysisContext, target);
+        RootedScript script(analysisContext, JSFunction::getOrCreateScript(analysisContext, fun));
         if (!script)
             return InliningDecision_Error;
 
@@ -2114,6 +2115,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_LAMBDA_ARROW:
         return jsop_lambda_arrow(info().getFunction(pc));
+
+      case JSOP_SETFUNNAME:
+        return jsop_setfunname(GET_UINT8(pc));
 
       case JSOP_ITER:
         return jsop_iter(GET_INT8(pc));
@@ -13361,6 +13365,21 @@ IonBuilder::jsop_lambda_arrow(JSFunction* fun)
                                           newTargetDef, fun);
     current->add(ins);
     current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_setfunname(uint8_t prefixKind)
+{
+    MDefinition* name = current->pop();
+    MDefinition* fun = current->pop();
+    MOZ_ASSERT(fun->type() == MIRType::Object);
+
+    MSetFunName* ins = MSetFunName::New(alloc(), fun, name, prefixKind);
+
+    current->add(ins);
+    current->push(fun);
 
     return resumeAfter(ins);
 }

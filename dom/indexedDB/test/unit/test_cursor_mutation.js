@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const objectStoreData = [
     // This one will be removed.
@@ -113,6 +113,4 @@ function testSteps()
   finishTest();
 
   objectStore = null; // Bug 943409 workaround.
-
-  yield undefined;
 }

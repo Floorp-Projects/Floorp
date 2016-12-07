@@ -8,7 +8,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 const {PushDB, PushService, PushServiceHttp2} = serviceExports;
 
 var prefs;
-var tlsProfile;
 var serverURL;
 
 var serverPort = -1;
@@ -18,8 +17,6 @@ function run_test() {
 
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-
-  tlsProfile = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");
 
   serverURL = "https://localhost:" + serverPort;
 
@@ -57,7 +54,6 @@ add_task(function* test_TLS() {
     // Set to allow the cert presented by our H2 server
   var oldPref = prefs.getIntPref("network.http.speculative-parallel-limit");
   prefs.setIntPref("network.http.speculative-parallel-limit", 0);
-  prefs.setBoolPref("network.http.spdy.enforce-tls-profile", false);
 
   addCertOverride("localhost", serverPort,
                   Ci.nsICertOverrideService.ERROR_UNTRUSTED |
@@ -194,8 +190,4 @@ add_task(function* test_pushSubscriptionNot2xxCode() {
 
   let record = yield db.getAllKeyIDs();
   ok(record.length === 0, 'Should not store records when respons code is not 201.');
-});
-
-add_task(function* test_complete() {
-  prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlsProfile);
 });

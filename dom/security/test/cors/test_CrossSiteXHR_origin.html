@@ -51,12 +51,12 @@ var origins =
    //['https://sub1.test1.example.com:443'],
 
 window.addEventListener("message", function(e) {
-  gen.send(e.data);
+  gen.next(e.data);
 }, false);
 
 gen = runTest();
 
-function runTest() {
+function* runTest() {
   var loader = document.getElementById('loader');
   var loaderWindow = loader.contentWindow;
   loader.onload = function () { gen.next() };
@@ -159,8 +159,6 @@ function runTest() {
   }
 
   SimpleTest.finish();
-
-  yield undefined;
 }
 
 addLoadEvent(function() {

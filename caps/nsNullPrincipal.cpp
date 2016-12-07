@@ -58,22 +58,35 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell)
 }
 
 /* static */ already_AddRefed<nsNullPrincipal>
-nsNullPrincipal::Create(const PrincipalOriginAttributes& aOriginAttributes)
+nsNullPrincipal::Create(const PrincipalOriginAttributes& aOriginAttributes,
+                        nsIURI* aURI)
 {
   RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-  nsresult rv = nullPrin->Init(aOriginAttributes);
+  nsresult rv = nullPrin->Init(aOriginAttributes, aURI);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
   return nullPrin.forget();
 }
 
 nsresult
-nsNullPrincipal::Init(const PrincipalOriginAttributes& aOriginAttributes)
+nsNullPrincipal::Init(const PrincipalOriginAttributes& aOriginAttributes,
+                      nsIURI* aURI)
 {
   mOriginAttributes = aOriginAttributes;
 
-  mURI = nsNullPrincipalURI::Create();
-  NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
+  if (aURI) {
+    nsAutoCString scheme;
+    nsresult rv = aURI->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ENSURE_TRUE(scheme.EqualsLiteral(NS_NULLPRINCIPAL_SCHEME),
+                   NS_ERROR_NOT_AVAILABLE);
+
+    mURI = aURI;
+  } else {
+    mURI = nsNullPrincipalURI::Create();
+    NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
+  }
 
   return NS_OK;
 }

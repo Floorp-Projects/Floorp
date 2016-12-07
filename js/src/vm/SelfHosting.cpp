@@ -461,7 +461,7 @@ intrinsic_FinishBoundFunctionInit(JSContext* cx, unsigned argc, Value* vp)
     // Try to avoid invoking the resolve hook.
     if (targetObj->is<JSFunction>() && !targetObj->as<JSFunction>().hasResolvedLength()) {
         RootedValue targetLength(cx);
-        if (!targetObj->as<JSFunction>().getUnresolvedLength(cx, &targetLength))
+        if (!JSFunction::getUnresolvedLength(cx, targetObj.as<JSFunction>(), &targetLength))
             return false;
 
         length = Max(0.0, targetLength.toNumber() - argCount);
@@ -996,7 +996,7 @@ intrinsic_IsWrappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
 
     JSObject* unwrapped = CheckedUnwrap(obj);
     if (!unwrapped) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -1027,7 +1027,7 @@ intrinsic_PossiblyWrappedArrayBufferByteLength(JSContext* cx, unsigned argc, Val
 
     JSObject* obj = CheckedUnwrap(&args[0].toObject());
     if (!obj) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -1052,7 +1052,7 @@ intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
         MOZ_ASSERT(wrapped->is<WrapperObject>());
         RootedObject toBufferObj(cx, CheckedUnwrap(wrapped));
         if (!toBufferObj) {
-            JS_ReportErrorASCII(cx, "Permission denied to access object");
+            ReportAccessDenied(cx);
             return false;
         }
         toBuffer = toBufferObj.as<T>();
@@ -1135,7 +1135,7 @@ intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp)
     if (args[0].isObject()) {
         JSObject* obj = CheckedUnwrap(&args[0].toObject());
         if (!obj) {
-            JS_ReportErrorASCII(cx, "Permission denied to access object");
+            ReportAccessDenied(cx);
             return false;
         }
 
@@ -1208,7 +1208,7 @@ intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx, unsigned argc, Value* v
 
     JSObject* obj = CheckedUnwrap(&args[0].toObject());
     if (!obj) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -1227,7 +1227,7 @@ intrinsic_PossiblyWrappedTypedArrayHasDetachedBuffer(JSContext* cx, unsigned arg
 
     JSObject* obj = CheckedUnwrap(&args[0].toObject());
     if (!obj) {
-        JS_ReportErrorASCII(cx, "Permission denied to access object");
+        ReportAccessDenied(cx);
         return false;
     }
 
@@ -2477,6 +2477,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_FormatDateTime", intl_FormatDateTime, 2,0),
     JS_FN("intl_FormatNumber", intl_FormatNumber, 2,0),
     JS_FN("intl_GetCalendarInfo", intl_GetCalendarInfo, 1,0),
+    JS_FN("intl_ComputeDisplayNames", intl_ComputeDisplayNames, 3,0),
     JS_FN("intl_IsValidTimeZoneName", intl_IsValidTimeZoneName, 1,0),
     JS_FN("intl_NumberFormat", intl_NumberFormat, 2,0),
     JS_FN("intl_NumberFormat_availableLocales", intl_NumberFormat_availableLocales, 0,0),
@@ -2878,7 +2879,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
     RootedObject clone(cx);
     if (selfHostedObject->is<JSFunction>()) {
         RootedFunction selfHostedFunction(cx, &selfHostedObject->as<JSFunction>());
-        bool hasName = selfHostedFunction->name() != nullptr;
+        bool hasName = selfHostedFunction->explicitName() != nullptr;
 
         // Arrow functions use the first extended slot for their lexical |this| value.
         MOZ_ASSERT(!selfHostedFunction->isArrow());
@@ -2894,7 +2895,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
         // self-hosting compartment has to be stored on the clone.
         if (clone && hasName) {
             clone->as<JSFunction>().setExtendedSlot(LAZY_FUNCTION_NAME_SLOT,
-                                                    StringValue(selfHostedFunction->name()));
+                                                    StringValue(selfHostedFunction->explicitName()));
         }
     } else if (selfHostedObject->is<RegExpObject>()) {
         RegExpObject& reobj = selfHostedObject->as<RegExpObject>();
@@ -2977,10 +2978,10 @@ JSRuntime::createLazySelfHostedFunctionClone(JSContext* cx, HandlePropertyName s
         return false;
 
     if (!selfHostedFun->isClassConstructor() && !selfHostedFun->hasGuessedAtom() &&
-        selfHostedFun->name() != selfHostedName)
+        selfHostedFun->explicitName() != selfHostedName)
     {
         MOZ_ASSERT(selfHostedFun->getExtendedSlot(HAS_SELFHOSTED_CANONICAL_NAME_SLOT).toBoolean());
-        funName = selfHostedFun->name();
+        funName = selfHostedFun->explicitName();
     }
 
     fun.set(NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY,
@@ -3006,7 +3007,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     MOZ_ASSERT(targetFun->isInterpretedLazy());
     MOZ_ASSERT(targetFun->isSelfHostedBuiltin());
 
-    RootedScript sourceScript(cx, sourceFun->getOrCreateScript(cx));
+    RootedScript sourceScript(cx, JSFunction::getOrCreateScript(cx, sourceFun));
     if (!sourceScript)
         return false;
 
@@ -3022,7 +3023,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     MOZ_ASSERT(!targetFun->isInterpretedLazy());
 
     MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
-    MOZ_ASSERT(sourceFun->hasRest() == targetFun->hasRest());
+    MOZ_ASSERT(sourceScript->hasRest() == targetFun->nonLazyScript()->hasRest());
 
     // The target function might have been relazified after its flags changed.
     targetFun->setFlags(targetFun->flags() | sourceFun->flags());

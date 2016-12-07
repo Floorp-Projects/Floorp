@@ -5,7 +5,7 @@
   <script type="application/javascript;version=1.7"
           src="postMessage_structured_clone_helper.js"></script>
   <script type="application/javascript;version=1.7">
-    var generator = new getTestContent()
+    var generator = getTestContent()
 
     function isClone(a, b) {
         window.dump("Object a: " + a + "\n");
@@ -93,7 +93,7 @@
 
     function receiveMessage(evt)
     {
-      if (isClone(evt.data, generator.next()))
+      if (isClone(evt.data, generator.next().value))
         window.parent.postMessage("TEST-PASS", "*");
       else
         window.parent.postMessage("TEST-FAIL", "*");

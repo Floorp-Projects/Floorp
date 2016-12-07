@@ -528,7 +528,9 @@ ExtractFromBlob(const Blob& aBlob,
 
   nsAutoString type;
   impl->GetType(type);
-  aContentType = NS_ConvertUTF16toUTF8(type);
+  if (!type.IsEmpty()) {
+    CopyUTF16toUTF8(type, aContentType);
+  }
   return NS_OK;
 }
 
@@ -603,6 +605,7 @@ ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDa
                           uint64_t& aContentLength)
 {
   MOZ_ASSERT(aStream);
+  aContentType.SetIsVoid(true);
 
   if (aBodyInit.IsArrayBuffer()) {
     const ArrayBuffer& buf = aBodyInit.GetAsArrayBuffer();
@@ -642,6 +645,7 @@ ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUS
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(!*aStream);
+  aContentType.SetIsVoid(true);
 
   if (aBodyInit.IsArrayBuffer()) {
     const ArrayBuffer& buf = aBodyInit.GetAsArrayBuffer();

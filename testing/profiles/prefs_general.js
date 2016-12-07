@@ -161,8 +161,7 @@ user_pref("datareporting.healthreport.about.reportUrl", "http://%(server)s/about
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
 
-// Enable CSS Grid for testing
-user_pref("layout.css.grid.enabled", true);
+// Enable CSS Grid 'subgrid' feature for testing
 user_pref("layout.css.grid-template-subgrid-value.enabled", true);
 
 // Enable CSS 'contain' for testing
@@ -233,10 +232,6 @@ user_pref("general.useragent.updates.enabled", false);
 // Disable webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
 
-// Enable debug logging in the tcp presentation server.
-user_pref("dom.presentation.tcp_server.debug", true);
-// Enable debug logging in the presentation core service.
-user_pref("logging.Presentation", "debug");
 user_pref("dom.presentation.testing.simulate-receiver", false);
 
 // Don't connect to Yahoo! for RSS feed tests.

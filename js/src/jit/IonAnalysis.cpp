@@ -551,7 +551,7 @@ SplitCriticalEdgesForBlock(MIRGraph& graph, MBasicBlock* block)
 
         // Create a simple new block which contains a goto and which split the
         // edge between block and target.
-        MBasicBlock* split = MBasicBlock::NewSplitEdge(graph, block->info(), block, i, target);
+        MBasicBlock* split = MBasicBlock::NewSplitEdge(graph, block, i, target);
         if (!split)
             return false;
     }
@@ -4115,7 +4115,7 @@ CmpInstructions(const void* a, const void* b)
 }
 
 bool
-jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, JSFunction* fun,
+jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
                                         ObjectGroup* group, HandlePlainObject baseobj,
                                         Vector<TypeNewScript::Initializer>* initializerList)
 {
@@ -4125,7 +4125,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, JSFunction* fun,
     // which will definitely be added to the created object before it has a
     // chance to escape and be accessed elsewhere.
 
-    RootedScript script(cx, fun->getOrCreateScript(cx));
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
     if (!script)
         return false;
 

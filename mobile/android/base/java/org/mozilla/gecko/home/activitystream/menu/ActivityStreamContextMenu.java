@@ -142,7 +142,8 @@ public abstract class ActivityStreamContextMenu
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.share:
-                Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "menu");
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "as_contextmenu");
+
                 IntentHelper.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, title, false);
                 break;
 
@@ -172,10 +173,14 @@ public abstract class ActivityStreamContextMenu
 
             case R.id.open_new_tab:
                 onUrlOpenInBackgroundListener.onUrlOpenInBackground(url, EnumSet.noneOf(HomePager.OnUrlOpenInBackgroundListener.Flags.class));
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.CONTEXT_MENU, "as_new_tab");
                 break;
 
             case R.id.open_new_private_tab:
                 onUrlOpenInBackgroundListener.onUrlOpenInBackground(url, EnumSet.of(HomePager.OnUrlOpenInBackgroundListener.Flags.PRIVATE));
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.CONTEXT_MENU, "as_private_tab");
                 break;
 
             case R.id.dismiss:

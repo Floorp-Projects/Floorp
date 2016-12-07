@@ -273,6 +273,7 @@ class WebGLContext
     friend class ScopedFBRebinder;
     friend class WebGL2Context;
     friend class WebGLContextUserData;
+    friend class WebGLExtensionCompressedTextureASTC;
     friend class WebGLExtensionCompressedTextureATC;
     friend class WebGLExtensionCompressedTextureES3;
     friend class WebGLExtensionCompressedTextureETC1;
@@ -2022,7 +2023,6 @@ template<class ObjectType>
 inline bool
 WebGLContext::ValidateObjectRef(const char* info, const ObjectType& object)
 {
-    MOZ_ASSERT(bool(&object));
     return ValidateObjectAssumeNonNull(info, &object);
 }
 

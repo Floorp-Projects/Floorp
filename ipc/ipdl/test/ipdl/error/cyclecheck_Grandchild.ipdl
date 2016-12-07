@@ -6,7 +6,7 @@ protocol cyclecheck_Grandchild {
     manages cyclecheck_Parent;
 
 child:
-    cyclecheck_Parent();
+    async cyclecheck_Parent();
     async __delete__();
 };
 

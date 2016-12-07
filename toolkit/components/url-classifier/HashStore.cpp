@@ -39,6 +39,7 @@
 #include "mozilla/Logging.h"
 #include "zlib.h"
 #include "Classifier.h"
+#include "nsUrlClassifierDBService.h"
 
 // Main store for SafeBrowsing protocol data. We store
 // known add/sub chunks, prefixes and completions in memory
@@ -951,6 +952,9 @@ nsresult
 HashStore::WriteFile()
 {
   NS_ASSERTION(mInUpdate, "Must be in update to write database.");
+  if (nsUrlClassifierDBService::ShutdownHasStarted()) {
+    return NS_ERROR_ABORT;
+  }
 
   nsCOMPtr<nsIFile> storeFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));

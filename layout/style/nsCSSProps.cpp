@@ -1302,18 +1302,18 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
   { eCSSKeyword_table_caption,       StyleDisplay::TableCaption },
   // Make sure this is kept in sync with the code in
   // nsCSSFrameConstructor::ConstructXULFrame
-  { eCSSKeyword__moz_box,            StyleDisplay::Box },
-  { eCSSKeyword__moz_inline_box,     StyleDisplay::InlineBox },
+  { eCSSKeyword__moz_box,            StyleDisplay::MozBox },
+  { eCSSKeyword__moz_inline_box,     StyleDisplay::MozInlineBox },
 #ifdef MOZ_XUL
-  { eCSSKeyword__moz_grid,           StyleDisplay::XulGrid },
-  { eCSSKeyword__moz_inline_grid,    StyleDisplay::InlineXulGrid },
-  { eCSSKeyword__moz_grid_group,     StyleDisplay::XulGridGroup },
-  { eCSSKeyword__moz_grid_line,      StyleDisplay::XulGridLine },
-  { eCSSKeyword__moz_stack,          StyleDisplay::Stack },
-  { eCSSKeyword__moz_inline_stack,   StyleDisplay::InlineStack },
-  { eCSSKeyword__moz_deck,           StyleDisplay::Deck },
-  { eCSSKeyword__moz_popup,          StyleDisplay::Popup },
-  { eCSSKeyword__moz_groupbox,       StyleDisplay::Groupbox },
+  { eCSSKeyword__moz_grid,           StyleDisplay::MozGrid },
+  { eCSSKeyword__moz_inline_grid,    StyleDisplay::MozInlineGrid },
+  { eCSSKeyword__moz_grid_group,     StyleDisplay::MozGridGroup },
+  { eCSSKeyword__moz_grid_line,      StyleDisplay::MozGridLine },
+  { eCSSKeyword__moz_stack,          StyleDisplay::MozStack },
+  { eCSSKeyword__moz_inline_stack,   StyleDisplay::MozInlineStack },
+  { eCSSKeyword__moz_deck,           StyleDisplay::MozDeck },
+  { eCSSKeyword__moz_popup,          StyleDisplay::MozPopup },
+  { eCSSKeyword__moz_groupbox,       StyleDisplay::MozGroupbox },
 #endif
   { eCSSKeyword_flex,                StyleDisplay::Flex },
   { eCSSKeyword_inline_flex,         StyleDisplay::InlineFlex },
@@ -3003,6 +3003,24 @@ static const nsCSSPropertyID gMarkerSubpropTable[] = {
   eCSSProperty_marker_start,
   eCSSProperty_marker_mid,
   eCSSProperty_marker_end,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSPropertyID gPlaceContentSubpropTable[] = {
+  eCSSProperty_align_content,
+  eCSSProperty_justify_content,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSPropertyID gPlaceItemsSubpropTable[] = {
+  eCSSProperty_align_items,
+  eCSSProperty_justify_items,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSPropertyID gPlaceSelfSubpropTable[] = {
+  eCSSProperty_align_self,
+  eCSSProperty_justify_self,
   eCSSProperty_UNKNOWN
 };
 

@@ -1159,7 +1159,7 @@ bool
 ModuleBuilder::processExport(frontend::ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_EXPORT) || pn->isKind(PNK_EXPORT_DEFAULT));
-    MOZ_ASSERT(pn->getArity() == pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY);
+    MOZ_ASSERT(pn->getArity() == (pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY));
 
     bool isDefault = pn->getKind() == PNK_EXPORT_DEFAULT;
     ParseNode* kid = isDefault ? pn->pn_left : pn->pn_kid;
@@ -1205,7 +1205,7 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
       case PNK_FUNCTION: {
           RootedFunction func(cx_, kid->pn_funbox->function());
           if (!func->isArrow()) {
-              RootedAtom localName(cx_, func->name());
+              RootedAtom localName(cx_, func->explicitName());
               RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
               MOZ_ASSERT_IF(isDefault, localName);
               if (!appendExportEntry(exportName, localName))

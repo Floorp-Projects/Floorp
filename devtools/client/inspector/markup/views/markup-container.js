@@ -673,6 +673,12 @@ MarkupContainer.prototype = {
   },
 
   _onToggle: function (event) {
+    // Prevent the html tree from expanding when an event bubble is clicked.
+    if (event.target.dataset.event) {
+      event.stopPropagation();
+      return;
+    }
+
     this.markup.navigate(this);
     if (this.hasChildren) {
       this.markup.setNodeExpanded(this.node, !this.expanded, event.altKey);

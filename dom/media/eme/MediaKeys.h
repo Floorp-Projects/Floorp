@@ -83,8 +83,7 @@ public:
   already_AddRefed<MediaKeySession> GetPendingSession(uint32_t aToken);
 
   // Called once a Init() operation succeeds.
-  void OnCDMCreated(PromiseId aId,
-                    const nsACString& aNodeId, const uint32_t aPluginId);
+  void OnCDMCreated(PromiseId aId, const uint32_t aPluginId);
 
   // Called once the CDM generates a sessionId while servicing a
   // MediaKeySession.generateRequest() or MediaKeySession.load() call,
@@ -120,8 +119,6 @@ public:
   // Resolves promise with "undefined".
   void ResolvePromise(PromiseId aId);
 
-  const nsCString& GetNodeId() const;
-
   void Shutdown();
 
   // Called by CDMProxy when CDM crashes or shuts down. It is different from
@@ -148,7 +145,6 @@ private:
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
-  nsCString mNodeId;
   KeySessionHashMap mKeySessions;
   PromiseHashMap mPromises;
   PendingKeySessionsHashMap mPendingSessions;

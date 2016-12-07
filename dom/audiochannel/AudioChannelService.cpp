@@ -613,7 +613,7 @@ AudioChannelService::RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
 
 void
 AudioChannelService::RefreshAgents(nsPIDOMWindowOuter* aWindow,
-                                   mozilla::function<void(AudioChannelAgent*)> aFunc)
+                                   std::function<void(AudioChannelAgent*)> aFunc)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());

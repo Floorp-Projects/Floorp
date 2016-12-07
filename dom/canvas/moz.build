@@ -108,6 +108,7 @@ UNIFIED_SOURCES += [
     'WebGLExtensionBlendMinMax.cpp',
     'WebGLExtensionColorBufferFloat.cpp',
     'WebGLExtensionColorBufferHalfFloat.cpp',
+    'WebGLExtensionCompressedTextureASTC.cpp',
     'WebGLExtensionCompressedTextureATC.cpp',
     'WebGLExtensionCompressedTextureES3.cpp',
     'WebGLExtensionCompressedTextureETC1.cpp',

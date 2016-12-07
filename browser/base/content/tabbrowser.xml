@@ -4612,7 +4612,11 @@
           } else {
             label = tab.getAttribute("label") +
                       (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : "");
+            if (tab.userContextId) {
+              label = this.mStringBundle.getFormattedString("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)]);
+            }
           }
+
           event.target.setAttribute("label", label);
         ]]></body>
       </method>
@@ -5397,7 +5401,8 @@
           switch (aTopic) {
             case "nsPref:changed":
               // This is the only pref observed.
-              let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
+              let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled")
+                                        && !PrivateBrowsingUtils.isWindowPrivate(window);
 
               const newTab = document.getElementById("new-tab-button");
               const newTab2 = document.getAnonymousElementByAttribute(this, "anonid", "tabs-newtab-button")
@@ -7142,7 +7147,7 @@
       <handler event="popupshowing">
       <![CDATA[
         if (event.target.getAttribute("id") == "alltabs_containersMenuTab") {
-          createUserContextMenu(event);
+          createUserContextMenu(event, {useAccessKeys: false});
           return;
         }
 
@@ -7150,7 +7155,7 @@
 
         if (event.target.getAttribute("anonid") == "newtab-popup" ||
             event.target.id == "newtab-popup") {
-          createUserContextMenu(event);
+          createUserContextMenu(event, {useAccessKeys: false});
         } else {
           document.getElementById("alltabs-popup-separator-1").hidden = !containersEnabled;
           let containersTab = document.getElementById("alltabs_containersTab");

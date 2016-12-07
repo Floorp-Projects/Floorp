@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "CTKnownLogs.h"
+#include "CTLogVerifier.h"
 #include "ExtendedValidation.h"
 #include "MultiLogCTVerifier.h"
 #include "NSSCertDBTrustDomain.h"
@@ -159,14 +160,25 @@ CertVerifier::LoadKnownCTLogs()
   for (const CTLogInfo& log : kCTLogList) {
     Input publicKey;
     Result rv = publicKey.Init(
-      BitwiseCast<const uint8_t*, const char*>(log.logKey), log.logKeyLength);
+      BitwiseCast<const uint8_t*, const char*>(log.key), log.keyLength);
     if (rv != Success) {
       MOZ_ASSERT_UNREACHABLE("Failed reading a log key for a known CT Log");
       continue;
     }
-    rv = mCTVerifier->AddLog(publicKey);
+
+    CTLogVerifier logVerifier;
+    const CTLogOperatorInfo& logOperator =
+      kCTLogOperatorList[log.operatorIndex];
+    rv = logVerifier.Init(publicKey, logOperator.id, log.status,
+                          log.disqualificationTime);
     if (rv != Success) {
       MOZ_ASSERT_UNREACHABLE("Failed initializing a known CT Log");
+      continue;
+    }
+
+    rv = mCTVerifier->AddLog(Move(logVerifier));
+    if (rv != Success) {
+      MOZ_ASSERT_UNREACHABLE("Failed activating a known CT Log");
       continue;
     }
   }
@@ -258,35 +270,39 @@ CertVerifier::VerifySignedCertificateTimestamps(
   }
 
   if (MOZ_LOG_TEST(gCertVerifierLog, LogLevel::Debug)) {
-    size_t verifiedCount = 0;
+    size_t validCount = 0;
     size_t unknownLogCount = 0;
+    size_t disqualifiedLogCount = 0;
     size_t invalidSignatureCount = 0;
     size_t invalidTimestampCount = 0;
-    for (const SignedCertificateTimestamp& sct : result.scts) {
-      switch (sct.verificationStatus) {
-        case SignedCertificateTimestamp::VerificationStatus::OK:
-          verifiedCount++;
+    for (const VerifiedSCT& verifiedSct : result.verifiedScts) {
+      switch (verifiedSct.status) {
+        case VerifiedSCT::Status::Valid:
+          validCount++;
           break;
-        case SignedCertificateTimestamp::VerificationStatus::UnknownLog:
+        case VerifiedSCT::Status::ValidFromDisqualifiedLog:
+          disqualifiedLogCount++;
+          break;
+        case VerifiedSCT::Status::UnknownLog:
           unknownLogCount++;
           break;
-        case SignedCertificateTimestamp::VerificationStatus::InvalidSignature:
+        case VerifiedSCT::Status::InvalidSignature:
           invalidSignatureCount++;
           break;
-        case SignedCertificateTimestamp::VerificationStatus::InvalidTimestamp:
+        case VerifiedSCT::Status::InvalidTimestamp:
           invalidTimestampCount++;
           break;
-        case SignedCertificateTimestamp::VerificationStatus::None:
+        case VerifiedSCT::Status::None:
         default:
-          MOZ_ASSERT_UNREACHABLE("Unexpected SCT verificationStatus");
+          MOZ_ASSERT_UNREACHABLE("Unexpected SCT verification status");
       }
     }
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
             ("SCT verification result: "
-             "verified=%zu unknownLog=%zu "
+             "valid=%zu unknownLog=%zu disqualifiedLog=%zu "
              "invalidSignature=%zu invalidTimestamp=%zu "
              "decodingErrors=%zu\n",
-             verifiedCount, unknownLogCount,
+             validCount, unknownLogCount, disqualifiedLogCount,
              invalidSignatureCount, invalidTimestampCount,
              result.decodingErrors));
   }

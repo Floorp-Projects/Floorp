@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const dataCount = 30;
 
@@ -188,5 +188,4 @@ function testSteps()
   is(count, dataCount - 1, "Saw all data");
 
   finishTest();
-  yield undefined;
 }

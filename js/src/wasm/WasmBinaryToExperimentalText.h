@@ -23,7 +23,7 @@
 
 #include "gc/Rooting.h"
 #include "js/Class.h"
-#include "wasm/WasmGeneratedSourceMap.h"
+#include "wasm/WasmCode.h"
 
 namespace js {
 

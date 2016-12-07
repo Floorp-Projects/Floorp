@@ -33,10 +33,9 @@ MediaDecoderReaderWrapper::ReadMetadata()
   MOZ_ASSERT(!mShutdown);
   return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                      &MediaDecoderReader::AsyncReadMetadata)
-         ->Then(mOwnerThread, __func__, this,
-                &MediaDecoderReaderWrapper::OnMetadataRead,
-                &MediaDecoderReaderWrapper::OnMetadataNotRead)
-         ->CompletionPromise();
+         ->ThenPromise(mOwnerThread, __func__, this,
+                       &MediaDecoderReaderWrapper::OnMetadataRead,
+                       &MediaDecoderReaderWrapper::OnMetadataNotRead);
 }
 
 void
@@ -122,13 +121,16 @@ MediaDecoderReaderWrapper::IsWaitingVideoData() const
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-MediaDecoderReaderWrapper::Seek(SeekTarget aTarget, media::TimeUnit aEndTime)
+MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget,
+                                const media::TimeUnit& aEndTime)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  aTarget.SetTime(aTarget.GetTime() + StartTime());
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::Seek, aTarget,
-                     aEndTime.ToMicroseconds());
+  SeekTarget adjustedTarget = aTarget;
+  adjustedTarget.SetTime(adjustedTarget.GetTime() + StartTime());
+  return InvokeAsync<SeekTarget&&, int64_t>(
+           mReader->OwnerThread(), mReader.get(), __func__,
+           &MediaDecoderReader::Seek,
+           Move(adjustedTarget), aEndTime.ToMicroseconds());
 }
 
 void
@@ -163,14 +165,6 @@ MediaDecoderReaderWrapper::WaitRequestRef(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   return aType == MediaData::AUDIO_DATA ? mAudioWaitRequest : mVideoWaitRequest;
-}
-
-RefPtr<MediaDecoderReaderWrapper::BufferedUpdatePromise>
-MediaDecoderReaderWrapper::UpdateBufferedWithPromise()
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::UpdateBufferedWithPromise);
 }
 
 void
@@ -226,10 +220,6 @@ MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder* aMetadata)
 
   if (mStartTime.isNothing()) {
     mStartTime.emplace(aMetadata->mInfo.mStartTime);
-    // Note: MFR should be able to setup its start time by itself without going
-    // through here. MediaDecoderReader::DispatchSetStartTime() will be removed
-    // once we remove all the legacy readers' code in the following bugs.
-    mReader->DispatchSetStartTime(StartTime().ToMicroseconds());
   }
 }
 

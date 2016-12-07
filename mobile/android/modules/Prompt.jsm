@@ -8,7 +8,6 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Messaging.jsm");
 
 this.EXPORTED_SYMBOLS = ["Prompt"];
 
@@ -176,7 +175,8 @@ Prompt.prototype = {
   },
 
   _innerShow: function() {
-    Messaging.sendRequestForResult(this.msg).then((data) => {
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    window.WindowEventDispatcher.sendRequestForResult(this.msg).then((data) => {
       if (this.callback)
         this.callback(data);
     });

@@ -80,6 +80,8 @@ public:
 
   static nsIThread* BackgroundThread();
 
+  static bool ShutdownHasStarted();
+
 private:
   // No subclassing
   ~nsUrlClassifierDBService();
@@ -117,10 +119,6 @@ private:
   // TRUE if the nsURIClassifier implementation should check for phishing
   // uris on document loads.
   bool mCheckPhishing;
-
-  // TRUE if the nsURIClassifier implementation should check for tracking
-  // uris on document loads.
-  bool mCheckTracking;
 
   // TRUE if the nsURIClassifier implementation should check for blocked
   // uris on document loads.

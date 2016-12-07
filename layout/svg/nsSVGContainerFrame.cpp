@@ -7,6 +7,7 @@
 #include "nsSVGContainerFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "DrawResult.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
 #include "nsCSSFrameConstructor.h"
@@ -17,6 +18,7 @@
 #include "SVGTextFrame.h"
 
 using namespace mozilla;
+using namespace mozilla::image;
 
 NS_QUERYFRAME_HEAD(nsSVGContainerFrame)
   NS_QUERYFRAME_ENTRY(nsSVGContainerFrame)

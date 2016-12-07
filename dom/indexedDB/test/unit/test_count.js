@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "People";
@@ -350,5 +350,4 @@ function testSteps()
      "Correct number of index entries for bound keyRange");
 
   finishTest();
-  yield undefined;
 }

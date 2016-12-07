@@ -336,7 +336,7 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
                                            HandleObject envChain)
 {
     MOZ_ASSERT(callee->isGenerator());
-    RootedScript script(cx, callee->getOrCreateScript(cx));
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
     InterpreterFrame* prev = regs.fp();
     jsbytecode* prevpc = regs.pc;
     Value* prevsp = regs.sp;

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const keys = [1, -1, 0, 10, 2000, "q", "z", "two", "b", "a"];
@@ -379,5 +379,4 @@ function testSteps()
   db.close();
 
   finishTest();
-  yield undefined;
 }

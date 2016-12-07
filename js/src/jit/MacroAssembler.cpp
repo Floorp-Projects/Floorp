@@ -6,6 +6,8 @@
 
 #include "jit/MacroAssembler-inl.h"
 
+#include "mozilla/CheckedInt.h"
+
 #include "jsfriendapi.h"
 #include "jsprf.h"
 
@@ -33,6 +35,8 @@ using namespace js::jit;
 
 using JS::GenericNaN;
 using JS::ToInt32;
+
+using mozilla::CheckedUint32;
 
 template <typename Source> void
 MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, BarrierKind kind,
@@ -1059,6 +1063,9 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
       default:
         MOZ_CRASH("Unsupported TypedArray type");
     }
+
+    if (!(CheckedUint32(nbytes) + sizeof(Value)).isValid())
+        return;
 
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
     Nursery& nursery = cx->runtime()->gc.nursery;

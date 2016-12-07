@@ -25,7 +25,6 @@
 
 #include "mozilla/a11y/PDocAccessible.h"
 #include "AudioChannelService.h"
-#include "BlobParent.h"
 #include "CrashReporterParent.h"
 #include "DeviceStorageStatics.h"
 #include "GMPServiceParent.h"
@@ -64,6 +63,7 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/dom/URLClassifierParent.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -3824,7 +3824,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 {
 #ifndef MOZ_X11
-  NS_RUNTIMEABORT("This message only makes sense on X11 platforms");
+  MOZ_CRASH("This message only makes sense on X11 platforms");
 #else
   MOZ_ASSERT(0 > mChildXSocketFdDup.get(),
              "Already backed up X resources??");
@@ -4811,7 +4811,7 @@ ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor)
 
 mozilla::ipc::IPCResult
 ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables,
-                                 nsCString* aResults)
+                                 nsresult *aRv, nsTArray<nsCString>* aResults)
 {
   MOZ_ASSERT(aResults);
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
@@ -4823,9 +4823,6 @@ ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables
   if (!uriClassifier) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsresult rv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL(this, "ClassifyLocalWithTables error");
-  }
+  *aRv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
   return IPC_OK();
 }

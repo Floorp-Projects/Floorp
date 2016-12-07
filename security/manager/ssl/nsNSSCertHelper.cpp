@@ -1967,13 +1967,16 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
   nsCOMPtr<nsIMutableArray> asn1Objects;
   sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
 
-  nsAutoString title;
-  nsresult rv = GetWindowTitle(title);
+  nsAutoString displayName;
+  nsresult rv = GetDisplayName(displayName);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  sequence->SetDisplayName(title);
+  rv = sequence->SetDisplayName(displayName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   sequence.forget(aRetVal);
 
   // This sequence will be contain the tbsCertificate, signatureAlgorithm,

@@ -47,6 +47,7 @@ from .data import (
     HostDefines,
     HostLibrary,
     HostProgram,
+    HostRustProgram,
     HostSimpleProgram,
     HostSources,
     InstallationTarget,
@@ -62,6 +63,7 @@ from .data import (
     PreprocessedWebIDLFile,
     Program,
     RustLibrary,
+    RustProgram,
     SdkFiles,
     SharedLibrary,
     SimpleProgram,
@@ -102,23 +104,6 @@ from mozbuild.base import ExecutionSummary
 
 
 ALLOWED_XPCOM_GLUE = {
-    ('TestStreamConv', 'netwerk/streamconv/test'),
-    ('PropertiesTest', 'netwerk/test'),
-    ('ReadNTLM', 'netwerk/test'),
-    ('TestBlockingSocket', 'netwerk/test'),
-    ('TestDNS', 'netwerk/test'),
-    ('TestIncrementalDownload', 'netwerk/test'),
-    ('TestNamedPipeService', 'netwerk/test'),
-    ('TestOpen', 'netwerk/test'),
-    ('TestProtocols', 'netwerk/test'),
-    ('TestServ', 'netwerk/test'),
-    ('TestStreamLoader', 'netwerk/test'),
-    ('TestUpload', 'netwerk/test'),
-    ('TestURLParser', 'netwerk/test'),
-    ('urltest', 'netwerk/test'),
-    ('TestBind', 'netwerk/test'),
-    ('TestCookie', 'netwerk/test'),
-    ('TestUDPSocket', 'netwerk/test'),
     ('xpcshell', 'js/xpconnect/shell'),
     ('testcrasher', 'toolkit/crashreporter/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
@@ -438,10 +423,16 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             return ExternalSharedLibrary(context, name)
 
-    def _parse_cargo_file(self, toml_file):
-        """Parse toml_file and return a Python object representation of it."""
-        with open(toml_file, 'r') as f:
-            return pytoml.load(f)
+    def _parse_cargo_file(self, context):
+        """Parse the Cargo.toml file in context and return a Python object
+        representation of it.  Raise a SandboxValidationError if the Cargo.toml
+        file does not exist.  Return a tuple of (config, cargo_file)."""
+        cargo_file = mozpath.join(context.srcdir, 'Cargo.toml')
+        if not os.path.exists(cargo_file):
+            raise SandboxValidationError(
+                'No Cargo.toml file found in %s' % cargo_file, context)
+        with open(cargo_file, 'r') as f:
+            return pytoml.load(f), cargo_file
 
     def _verify_deps(self, context, crate_dir, crate_name, dependencies, description='Dependency'):
         """Verify that a crate's dependencies all specify local paths."""
@@ -472,12 +463,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
     def _rust_library(self, context, libname, static_args):
         # We need to note any Rust library for linking purposes.
-        cargo_file = mozpath.join(context.srcdir, 'Cargo.toml')
-        if not os.path.exists(cargo_file):
-            raise SandboxValidationError(
-                'No Cargo.toml file found in %s' % cargo_file, context)
-
-        config = self._parse_cargo_file(cargo_file)
+        config, cargo_file = self._parse_cargo_file(context)
         crate_name = config['package']['name']
 
         if crate_name != libname:
@@ -527,8 +513,15 @@ class TreeMetadataEmitter(LoggingMixin):
 
         dependencies = set(config.get('dependencies', {}).iterkeys())
 
+        features = context.get('RUST_LIBRARY_FEATURES', [])
+        unique_features = set(features)
+        if len(features) != len(unique_features):
+            raise SandboxValidationError(
+                'features for %s should not contain duplicates: %s' % (libname, features),
+                context)
+
         return RustLibrary(context, libname, cargo_file, crate_type,
-                           dependencies, **static_args)
+                           dependencies, features, **static_args)
 
     def _handle_linkables(self, context, passthru, generated_files):
         linkables = []
@@ -539,18 +532,50 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 linkables.append(prog)
 
+        def check_unique_binary(program, kind):
+            if program in self._binaries:
+                raise SandboxValidationError(
+                    'Cannot use "%s" as %s name, '
+                    'because it is already used in %s' % (program, kind,
+                    self._binaries[program].relativedir), context)
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
             program = context.get(kind)
             if program:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" as %s name, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
+                check_unique_binary(program, kind)
                 self._binaries[program] = cls(context, program)
                 self._linkage.append((context, self._binaries[program],
                     kind.replace('PROGRAM', 'USE_LIBS')))
                 add_program(self._binaries[program], kind)
+
+        all_rust_programs = []
+        for kind, cls in [('RUST_PROGRAMS', RustProgram),
+                          ('HOST_RUST_PROGRAMS', HostRustProgram)]:
+            programs = context[kind]
+            if not programs:
+                continue
+
+            all_rust_programs.append((programs, kind, cls))
+
+        # Verify Rust program definitions.
+        if all_rust_programs:
+            config, cargo_file = self._parse_cargo_file(context);
+            bin_section = config.get('bin', None)
+            if not bin_section:
+                raise SandboxValidationError(
+                    'Cargo.toml in %s has no [bin] section' % context.srcdir,
+                    context)
+
+            defined_binaries = {b['name'] for b in bin_section}
+
+            for programs, kind, cls in all_rust_programs:
+                for program in programs:
+                    if program not in defined_binaries:
+                        raise SandboxValidationError(
+                            'Cannot find Cargo.toml definition for %s' % program,
+                            context)
+
+                    check_unique_binary(program, kind)
+                    self._binaries[program] = cls(context, program, cargo_file)
 
         for kind, cls in [
                 ('SIMPLE_PROGRAMS', SimpleProgram),

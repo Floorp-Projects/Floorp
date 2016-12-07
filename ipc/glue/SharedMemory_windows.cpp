@@ -24,7 +24,7 @@ SharedMemory::SystemProtect(char* aAddr, size_t aSize, int aRights)
 
   DWORD oldflags;
   if (!VirtualProtect(aAddr, aSize, flags, &oldflags))
-    NS_RUNTIMEABORT("can't VirtualProtect()");
+    MOZ_CRASH("can't VirtualProtect()");
 }
 
 size_t

@@ -7,6 +7,7 @@
 EXPORTS += [
     'BRNameMatchingPolicy.h',
     'CertVerifier.h',
+    'CTLog.h',
     'CTVerifyResult.h',
     'OCSPCache.h',
     'SignedCertificateTimestamp.h',

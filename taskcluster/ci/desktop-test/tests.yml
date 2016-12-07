@@ -157,6 +157,11 @@ jsreftest:
         by-test-platform:
             win.*: 1
             default: 2
+    e10s:
+        by-test-platform:
+            # Bug 1321782
+            win.*: false
+            default: both
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -389,6 +394,8 @@ mochitest-devtools-chrome:
             linux64/debug: false
             linux64-ccov/opt: false
             linux64-jsdcov/opt: false
+            # Bug 1304433: mochitest-devtools-chrome (e10s) not greened on windows
+            win.*: false
             default: both
     mozharness:
         script: desktop_unittest.py
@@ -666,6 +673,11 @@ web-platform-tests-reftests:
     treeherder-symbol: tc-W(Wr)
     max-run-time: 5400
     instance-size: xlarge
+    e10s:
+        by-test-platform:
+            # Bug 1304438
+            win.*: false
+            default: both
     docker-image: {"in-tree": "desktop1604-test"}
     checkout: true
     mozharness:

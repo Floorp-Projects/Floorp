@@ -33,11 +33,23 @@ using namespace mozilla;
 
 nsLineBox::nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock)
   : mFirstChild(aFrame)
+  , mWritingMode()
   , mContainerSize(-1, -1)
   , mBounds(WritingMode()) // mBounds will be initialized with the correct
                            // writing mode when it is set
-// NOTE: memory is already zeroed since we allocate with AllocateByObjectID.
+  , mFrames()
+  , mAscent()
+  , mAllFlags(0)
+  , mData(nullptr)
 {
+  // Assert that the union elements chosen for initialisation are at
+  // least as large as all other elements in their respective unions, so
+  // as to ensure that no parts are missed.
+  static_assert(sizeof(mFrames) >= sizeof(mChildCount), "nsLineBox init #1");
+  static_assert(sizeof(mAllFlags) >= sizeof(mFlags), "nsLineBox init #2");
+  static_assert(sizeof(mData) >= sizeof(mBlockData), "nsLineBox init #3");
+  static_assert(sizeof(mData) >= sizeof(mInlineData), "nsLineBox init #4");
+
   MOZ_COUNT_CTOR(nsLineBox);
 #ifdef DEBUG
   ++ctorCount;

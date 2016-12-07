@@ -132,7 +132,7 @@ public:
 
   // Seeks to aTime. Upon success, SeekPromise will be resolved with the
   // actual time seeked to. Typically the random access point time
-  virtual RefPtr<SeekPromise> Seek(media::TimeUnit aTime) = 0;
+  virtual RefPtr<SeekPromise> Seek(const media::TimeUnit& aTime) = 0;
 
   // Returns the next aNumSamples sample(s) available.
   // If only a lesser amount of samples is available, only those will be
@@ -176,7 +176,8 @@ public:
   // The first frame returned by the next call to GetSamples() will be the
   // first random access point found after aTimeThreshold.
   // Upon success, returns the number of frames skipped.
-  virtual RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) = 0;
+  virtual RefPtr<SkipAccessPointPromise>
+  SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold) = 0;
 
   // Gets the resource's offset used for the last Seek() or GetSample().
   // A negative value indicates that this functionality isn't supported.

@@ -9,8 +9,9 @@
 #include "ImageContainer.h"
 #include "libyuv.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
-#include "mozilla/Function.h"
 #include "mozilla/gfx/2D.h"
+
+#include <functional>
 
 using namespace libyuv;
 using namespace mozilla::gfx;
@@ -325,7 +326,7 @@ static UniquePtr<ImagePixelLayout>
 CvtSimpleImgToSimpleImg(Utils* aSrcUtils, const SrcType* aSrcBuffer,
                         const ImagePixelLayout* aSrcLayout, DstType* aDstBuffer,
                         ImageBitmapFormat aDstFormat, int aDstChannelCount,
-                        mozilla::function<int (const SrcType*, int, DstType*, int, int, int)> converter)
+                        std::function<int (const SrcType*, int, DstType*, int, int, int)> converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -353,7 +354,7 @@ static UniquePtr<ImagePixelLayout>
 CvtYUVImgToSimpleImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                      const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                      ImageBitmapFormat aDstFormat, int aDstChannelCount,
-                     mozilla::function<int (const uint8_t*, int, const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)> converter)
+                     std::function<int (const uint8_t*, int, const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)> converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -383,7 +384,7 @@ static UniquePtr<ImagePixelLayout>
 CvtNVImgToSimpleImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                     const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                     ImageBitmapFormat aDstFormat, int aDstChannelCount,
-                    mozilla::function<int (const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)> converter)
+                    std::function<int (const uint8_t*, int, const uint8_t*, int, uint8_t*, int, int, int)> converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -412,7 +413,7 @@ static UniquePtr<ImagePixelLayout>
 CvtSimpleImgToYUVImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                      const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                      ImageBitmapFormat aDstFormat,
-                     mozilla::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)> converter)
+                     std::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)> converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");
@@ -444,7 +445,7 @@ static UniquePtr<ImagePixelLayout>
 CvtSimpleImgToNVImg(Utils* aSrcUtils, const uint8_t* aSrcBuffer,
                     const ImagePixelLayout* aSrcLayout, uint8_t* aDstBuffer,
                     ImageBitmapFormat aDstFormat,
-                    mozilla::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)> converter)
+                    std::function<int (const uint8_t*, int, uint8_t*, int, uint8_t*, int, int, int)> converter)
 {
   MOZ_ASSERT(aSrcUtils, "Convert color from a null utility object.");
   MOZ_ASSERT(aSrcBuffer, "Convert color from a null buffer.");

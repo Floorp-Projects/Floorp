@@ -82,7 +82,7 @@ function resetState() {
 /**
  * testing if img referrer attribute is honoured (1165501)
  */
-var tests = (function() {
+var tests = (function*() {
 
   // enable referrer attribute
   yield SpecialPowers.pushPrefEnv({"set": [['network.http.enablePerElementReferrer', true]]}, advance);
@@ -174,8 +174,8 @@ var tests = (function() {
   yield iframe.src = sjs + "&imgPolicy=" + escape('default') + "&policy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("unsafe-url in meta, default in img", ["full"], [name]);
 
-  // complete.  Be sure to yield so we don't call this twice.
-  yield SimpleTest.finish();
+  // complete.
+  SimpleTest.finish();
 })();
 
 </script>

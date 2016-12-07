@@ -344,7 +344,7 @@ public:
     if (mFrame->IsSVGText()) {
       return 0.0f;
     }
-    nscoord coord = mFrame->StyleText()->mWebkitTextStrokeWidth.GetCoordValue();
+    nscoord coord = mFrame->StyleText()->mWebkitTextStrokeWidth;
     return mFrame->PresContext()->AppUnitsToFloatDevPixels(coord);
   }
 
@@ -3163,7 +3163,7 @@ public:
     return mFontMetrics;
   }
 
-  void CalcTabWidths(Range aTransformedRange);
+  void CalcTabWidths(Range aTransformedRange, gfxFloat aTabWidth);
 
   const gfxSkipCharsIterator& GetEndHint() { return mTempIterator; }
 
@@ -3349,6 +3349,28 @@ CanAddSpacingAfter(const gfxTextRun* aTextRun, uint32_t aOffset)
     aTextRun->IsLigatureGroupStart(aOffset + 1);
 }
 
+static gfxFloat
+ComputeTabWidthAppUnits(nsIFrame* aFrame, gfxTextRun* aTextRun)
+{
+  const nsStyleText* textStyle = aFrame->StyleText();
+  if (textStyle->mTabSize.GetUnit() != eStyleUnit_Factor) {
+    nscoord w = textStyle->mTabSize.GetCoordValue();
+    MOZ_ASSERT(w >= 0);
+    return w;
+  }
+
+  gfxFloat spaces = textStyle->mTabSize.GetFactorValue();
+  MOZ_ASSERT(spaces >= 0);
+
+  // Round the space width when converting to appunits the same way
+  // textruns do.
+  gfxFloat spaceWidthAppUnits =
+    NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup(),
+                                 aTextRun->IsVertical()).spaceWidth *
+             aTextRun->GetAppUnitsPerDevUnit());
+  return spaces * spaceWidthAppUnits;
+}
+
 void
 PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
                                      bool aIgnoreTabs)
@@ -3396,17 +3418,16 @@ PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
     }
   }
 
-  // Ignore tab spacing rather than computing it, if the tab size is 0
-  if (!aIgnoreTabs)
-    aIgnoreTabs = mFrame->StyleText()->mTabSize == 0;
-
   // Now add tab spacing, if there is any
   if (!aIgnoreTabs) {
-    CalcTabWidths(aRange);
-    if (mTabWidths) {
-      mTabWidths->ApplySpacing(aSpacing,
-                               aRange.start - mStart.GetSkippedOffset(),
-                               aRange.Length());
+    gfxFloat tabWidth = ComputeTabWidthAppUnits(mFrame, mTextRun);
+    if (tabWidth > 0) {
+      CalcTabWidths(aRange, tabWidth);
+      if (mTabWidths) {
+        mTabWidths->ApplySpacing(aSpacing,
+                                 aRange.start - mStart.GetSkippedOffset(),
+                                 aRange.Length());
+      }
     }
   }
 
@@ -3429,33 +3450,23 @@ PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
   }
 }
 
-static gfxFloat
-ComputeTabWidthAppUnits(nsIFrame* aFrame, const gfxTextRun* aTextRun)
-{
-  // Get the number of spaces from CSS -moz-tab-size
-  const nsStyleText* textStyle = aFrame->StyleText();
-
-  return textStyle->mTabSize * GetSpaceWidthAppUnits(aTextRun);
-}
-
 // aX and the result are in whole appunits.
 static gfxFloat
 AdvanceToNextTab(gfxFloat aX, nsIFrame* aFrame,
-                 const gfxTextRun* aTextRun, gfxFloat* aCachedTabWidth)
+                 gfxTextRun* aTextRun, gfxFloat aTabWidth)
 {
-  if (*aCachedTabWidth < 0) {
-    *aCachedTabWidth = ComputeTabWidthAppUnits(aFrame, aTextRun);
-  }
 
   // Advance aX to the next multiple of *aCachedTabWidth. We must advance
   // by at least 1 appunit.
   // XXX should we make this 1 CSS pixel?
-  return ceil((aX + 1)/(*aCachedTabWidth))*(*aCachedTabWidth);
+  return ceil((aX + 1) / aTabWidth) * aTabWidth;
 }
 
 void
-PropertyProvider::CalcTabWidths(Range aRange)
+PropertyProvider::CalcTabWidths(Range aRange, gfxFloat aTabWidth)
 {
+  MOZ_ASSERT(aTabWidth > 0);
+
   if (!mTabWidths) {
     if (mReflowing && !mLineContainer) {
       // Intrinsic width computation does its own tab processing. We
@@ -3490,7 +3501,6 @@ PropertyProvider::CalcTabWidths(Range aRange)
     NS_ASSERTION(mReflowing,
                  "We need precomputed tab widths, but don't have enough.");
 
-    gfxFloat tabWidth = -1;
     for (uint32_t i = tabsEnd; i < aRange.end; ++i) {
       Spacing spacing;
       GetSpacingInternal(Range(i, i + 1), &spacing, true);
@@ -3512,7 +3522,7 @@ PropertyProvider::CalcTabWidths(Range aRange)
           mFrame->Properties().Set(TabWidthProperty(), mTabWidths);
         }
         double nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
-                mFrame, mTextRun, &tabWidth);
+                mFrame, mTextRun, aTabWidth);
         mTabWidths->mWidths.AppendElement(TabWidth(i - startOffset, 
                 NSToIntRound(nextTab - mOffsetFromBlockOriginForTabs)));
         mOffsetFromBlockOriginForTabs = nextTab;
@@ -4525,29 +4535,11 @@ nsTextFrame::GetCursor(const nsPoint& aPoint,
 {
   FillCursorInformationFromStyle(StyleUserInterface(), aCursor);
   if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
-    aCursor.mCursor = GetWritingMode().IsVertical()
-                      ? NS_STYLE_CURSOR_VERTICAL_TEXT : NS_STYLE_CURSOR_TEXT;
-    // If this is editable, we should ignore tabindex value.
-    if (mContent->IsEditable()) {
-      return NS_OK;
-    }
-
-    // If tabindex >= 0, use default cursor to indicate it's not selectable
-    nsIFrame *ancestorFrame = this;
-    while ((ancestorFrame = ancestorFrame->GetParent()) != nullptr) {
-      nsIContent *ancestorContent = ancestorFrame->GetContent();
-      if (ancestorContent && ancestorContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
-        nsAutoString tabIndexStr;
-        ancestorContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
-        if (!tabIndexStr.IsEmpty()) {
-          nsresult rv;
-          int32_t tabIndexVal = tabIndexStr.ToInteger(&rv);
-          if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
-            aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
-            break;
-          }
-        }
-      }
+    if (!IsSelectable(nullptr)) {
+      aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
+    } else {
+      aCursor.mCursor = GetWritingMode().IsVertical()
+        ? NS_STYLE_CURSOR_VERTICAL_TEXT : NS_STYLE_CURSOR_TEXT;
     }
     return NS_OK;
   } else {
@@ -5709,7 +5701,7 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
   }
 
   // text-stroke overflows
-  nscoord textStrokeWidth = StyleText()->mWebkitTextStrokeWidth.GetCoordValue();
+  nscoord textStrokeWidth = StyleText()->mWebkitTextStrokeWidth;
   if (textStrokeWidth > 0) {
     nsRect strokeRect = *aVisualOverflowRect;
     strokeRect.x -= textStrokeWidth;
@@ -7869,9 +7861,8 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
   int32_t contentLength = GetContentLength();
   NS_ASSERTION(aOffset && *aOffset <= contentLength, "aOffset out of range");
 
-  bool selectable;
   StyleUserSelect selectStyle;
-  IsSelectable(&selectable, &selectStyle);
+  IsSelectable(&selectStyle);
   if (selectStyle == StyleUserSelect::All)
     return CONTINUE_UNSELECTABLE;
 
@@ -8058,9 +8049,8 @@ nsTextFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKey
   int32_t contentLength = GetContentLength();
   NS_ASSERTION (aOffset && *aOffset <= contentLength, "aOffset out of range");
 
-  bool selectable;
   StyleUserSelect selectStyle;
-  IsSelectable(&selectable, &selectStyle);
+  IsSelectable(&selectStyle);
   if (selectStyle == StyleUserSelect::All)
     return CONTINUE_UNSELECTABLE;
 
@@ -8434,9 +8424,11 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
       PropertyProvider::Spacing spacing;
       provider.GetSpacing(Range(i, i + 1), &spacing);
       aData->mCurrentLine += nscoord(spacing.mBefore);
+      if (tabWidth < 0) {
+        tabWidth = ComputeTabWidthAppUnits(this, textRun);
+      }
       gfxFloat afterTab =
-        AdvanceToNextTab(aData->mCurrentLine, this,
-                         textRun, &tabWidth);
+        AdvanceToNextTab(aData->mCurrentLine, this, textRun, tabWidth);
       aData->mCurrentLine = nscoord(afterTab + spacing.mAfter);
       wordStart = i + 1;
     } else if (i < flowEndInTextRun ||
@@ -8595,9 +8587,11 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
       PropertyProvider::Spacing spacing;
       provider.GetSpacing(Range(i, i + 1), &spacing);
       aData->mCurrentLine += nscoord(spacing.mBefore);
+      if (tabWidth < 0) {
+        tabWidth = ComputeTabWidthAppUnits(this, textRun);
+      }
       gfxFloat afterTab =
-        AdvanceToNextTab(aData->mCurrentLine, this,
-                         textRun, &tabWidth);
+        AdvanceToNextTab(aData->mCurrentLine, this, textRun, tabWidth);
       aData->mCurrentLine = nscoord(afterTab + spacing.mAfter);
       aData->mLineIsEmpty = false;
       lineStart = i + 1;

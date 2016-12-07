@@ -18,9 +18,7 @@ WebBrowserPersistResourcesChild::WebBrowserPersistResourcesChild()
 {
 }
 
-WebBrowserPersistResourcesChild::~WebBrowserPersistResourcesChild()
-{
-}
+WebBrowserPersistResourcesChild::~WebBrowserPersistResourcesChild() = default;
 
 NS_IMETHODIMP
 WebBrowserPersistResourcesChild::VisitResource(nsIWebBrowserPersistDocument *aDocument,

@@ -200,10 +200,10 @@ EncodeInputStream(nsIInputStream* aInputStream,
                                     &read);
     if (NS_FAILED(rv)) {
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-        NS_RUNTIMEABORT("Not implemented for async streams!");
+        MOZ_CRASH("Not implemented for async streams!");
       }
       if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-        NS_RUNTIMEABORT("Requires a stream that implements ReadSegments!");
+        MOZ_CRASH("Requires a stream that implements ReadSegments!");
       }
       return rv;
     }

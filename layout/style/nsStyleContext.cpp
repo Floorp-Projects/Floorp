@@ -11,7 +11,10 @@
 
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
+#include "nsFontMetrics.h"
 #include "nsStyleConsts.h"
+#include "nsStyleStruct.h"
+#include "nsStyleStructInlines.h"
 #include "nsString.h"
 #include "nsPresContext.h"
 #include "nsIStyleRule.h"

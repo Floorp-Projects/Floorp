@@ -243,6 +243,7 @@
     _(Lambda)                       \
     _(LambdaArrow)                  \
     _(LambdaForSingleton)           \
+    _(SetFunName)                   \
     _(KeepAliveObject)              \
     _(Slots)                        \
     _(Elements)                     \

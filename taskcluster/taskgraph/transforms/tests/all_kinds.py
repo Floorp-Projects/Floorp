@@ -47,6 +47,8 @@ def set_tier(config, tests):
                                          'android-4.3-arm7-api-15/debug',
                                          'android-x86/opt']:
                 test['tier'] = 1
+            elif test['test-platform'].startswith('win'):
+                test['tier'] = 3
             else:
                 test['tier'] = 2
         yield test
@@ -91,6 +93,7 @@ def resolve_keyed_by(config, tests):
         'e10s',
         'suite',
         'run-on-projects',
+        'tier',
     ]
     for test in tests:
         for field in fields:
