@@ -46,9 +46,15 @@
                              min="0"
                              max="100"
                              xbl:inherits="mode=progressmode,value=progress,paused=progresspaused"/>
-          <xul:description class="downloadDetails"
+          <xul:description class="downloadDetails downloadDetailsNormal"
                            crop="end"
-                           xbl:inherits="value=status,tooltiptext=statusTip"/>
+                           xbl:inherits="value=status"/>
+          <xul:description class="downloadDetails downloadDetailsHover"
+                           crop="end"
+                           xbl:inherits="value=hoverStatus"/>
+          <xul:description class="downloadDetails downloadDetailsFull"
+                           crop="end"
+                           xbl:inherits="value=fullStatus,tooltiptext=fullStatus"/>
         </xul:vbox>
       </xul:hbox>
       <xul:toolbarseparator />

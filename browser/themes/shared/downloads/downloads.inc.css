@@ -232,6 +232,12 @@ richlistitem[type="download"]:last-child {
   margin: 4px 0 calc(1em / var(--downloads-item-font-size-factor) - 1em);
 }
 
+@item@:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
+@item@:not(:hover) > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+.downloadDetailsFull {
+  display: none;
+}
+
 @item@[verdict] > toolbarseparator {
   visibility: hidden;
 }
