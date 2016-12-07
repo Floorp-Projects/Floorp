@@ -81,3 +81,4 @@ load 1282985-1.svg
 # Disabled for now due to it taking a very long time to run - bug 1259356
 #load long-clipPath-reference-chain.svg
 load zero-size-image.svg
+load 1322286.html
