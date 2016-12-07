@@ -66,9 +66,11 @@ public:
                                       bool* aOutSuccess) override;
   mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
+                                    const uint64_t& aFwdTransactionId,
                                     const uint64_t& aTransactionId) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
+                                        const uint64_t& aFwdTransactionId,
                                         const uint64_t& aTransactionId) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture,
                                             const gfx::IntRect& aRect) override;
@@ -94,17 +96,19 @@ public:
   void FinishPendingComposite() override { }
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
 
-private:
-  virtual ~WebRenderBridgeParent();
-
-  virtual PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo) override;
-  bool DeallocPCompositableParent(PCompositableParent* aActor) override;
-
   // CompositableParentManager
   bool IsSameProcess() const override;
   base::ProcessId GetChildProcessId() override;
   void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
   void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+  void SendPendingAsyncMessages() override;
+  void SetAboutToSendAsyncMessages() override;
+
+private:
+  virtual ~WebRenderBridgeParent();
+
+  virtual PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo) override;
+  bool DeallocPCompositableParent(PCompositableParent* aActor) override;
 
   void DeleteOldImages();
   void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands);

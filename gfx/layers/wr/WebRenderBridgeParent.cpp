@@ -28,6 +28,33 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
+class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender
+{
+public:
+  explicit AutoWebRenderBridgeParentAsyncMessageSender(WebRenderBridgeParent* aWebRenderBridgeParent,
+                                                       InfallibleTArray<OpDestroy>* aDestroyActors = nullptr)
+    : mWebRenderBridgeParent(aWebRenderBridgeParent)
+    , mActorsToDestroy(aDestroyActors)
+  {
+    mWebRenderBridgeParent->SetAboutToSendAsyncMessages();
+  }
+
+  ~AutoWebRenderBridgeParentAsyncMessageSender()
+  {
+    mWebRenderBridgeParent->SendPendingAsyncMessages();
+    if (mActorsToDestroy) {
+      // Destroy the actors after sending the async messages because the latter may contain
+      // references to some actors.
+      for (const auto& op : *mActorsToDestroy) {
+        mWebRenderBridgeParent->DestroyActor(op);
+      }
+    }
+  }
+private:
+  WebRenderBridgeParent* mWebRenderBridgeParent;
+  InfallibleTArray<OpDestroy>* mActorsToDestroy;
+};
+
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                                              const uint64_t& aPipelineId,
                                              widget::CompositorWidget* aWidget,
@@ -167,14 +194,21 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
+                                 const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId)
 {
+  UpdateFwdTransactionId(aFwdTransactionId);
+
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
     }
     return IPC_OK();
   }
+  // This ensures that destroy operations are always processed. It is not safe
+  // to early-return from RecvDPEnd without doing so.
+  AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
+
   ProcessWebrenderCommands(aCommands);
 
   // The transaction ID might get reset to 1 if the page gets reloaded, see
@@ -182,24 +216,27 @@ WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
   // Otherwise, it should be continually increasing.
   MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
   mPendingTransactionId = aTransactionId;
-
-  for (const auto& op : aToDestroy) {
-    DestroyActor(op);
-  }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
                                      InfallibleTArray<OpDestroy>&& aToDestroy,
+                                     const uint64_t& aFwdTransactionId,
                                      const uint64_t& aTransactionId)
 {
+  UpdateFwdTransactionId(aFwdTransactionId);
+
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
     }
     return IPC_OK();
   }
+  // This ensures that destroy operations are always processed. It is not safe
+  // to early-return from RecvDPEnd without doing so.
+  AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
+
   ProcessWebrenderCommands(aCommands);
 
   // The transaction ID might get reset to 1 if the page gets reloaded, see
@@ -207,10 +244,6 @@ WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aComma
   // Otherwise, it should be continually increasing.
   MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
   mPendingTransactionId = aTransactionId;
-
-  for (const auto& op : aToDestroy) {
-    DestroyActor(op);
-  }
   return IPC_OK();
 }
 
@@ -496,6 +529,20 @@ void
 WebRenderBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
+void
+WebRenderBridgeParent::SendPendingAsyncMessages()
+{
+  MOZ_ASSERT(mCompositorBridge);
+  mCompositorBridge->SendPendingAsyncMessages();
+}
+
+void
+WebRenderBridgeParent::SetAboutToSendAsyncMessages()
+{
+  MOZ_ASSERT(mCompositorBridge);
+  mCompositorBridge->SetAboutToSendAsyncMessages();
 }
 
 void
