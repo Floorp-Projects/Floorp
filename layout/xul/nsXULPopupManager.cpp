@@ -910,8 +910,8 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, ignorekeys);
   if (ignorekeys.EqualsLiteral("true")) {
     item->SetIgnoreKeys(eIgnoreKeys_True);
-  } else if (ignorekeys.EqualsLiteral("handled")) {
-    item->SetIgnoreKeys(eIgnoreKeys_Handled);
+  } else if (ignorekeys.EqualsLiteral("shortcuts")) {
+    item->SetIgnoreKeys(eIgnoreKeys_Shortcuts);
   }
 
   if (ismenu) {
@@ -2596,7 +2596,7 @@ nsXULPopupManager::KeyUp(nsIDOMKeyEvent* aKeyEvent)
     if (!item || item->PopupType() != ePopupTypeMenu)
       return NS_OK;
 
-    if (item->IgnoreKeys() == eIgnoreKeys_Handled) {
+    if (item->IgnoreKeys() == eIgnoreKeys_Shortcuts) {
       aKeyEvent->AsEvent()->StopCrossProcessForwarding();
       return NS_OK;
     }
@@ -2626,7 +2626,7 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
 
   // Since a menu was open, stop propagation of the event to keep other event
   // listeners from becoming confused.
-  if (!item || item->IgnoreKeys() != eIgnoreKeys_Handled) {
+  if (!item || item->IgnoreKeys() != eIgnoreKeys_Shortcuts) {
     aKeyEvent->AsEvent()->StopPropagation();
   }
 
@@ -2691,15 +2691,21 @@ nsXULPopupManager::KeyPress(nsIDOMKeyEvent* aKeyEvent)
   // if a menu is open or a menubar is active, it consumes the key event
   bool consume = (mPopups || mActiveMenuBar);
 
-  // When ignorekeys="handled" is used, we don't call preventDefault on the key
-  // event, which allows another listener to handle keys that the popup hasn't
-  // already handled. For instance, this allows global shortcuts to still apply
-  // while a menu is open.
-  bool onlyHandled = item && item->IgnoreKeys() == eIgnoreKeys_Handled;
-  bool handled = HandleShortcutNavigation(keyEvent, nullptr);
+  WidgetInputEvent* evt = aKeyEvent->AsEvent()->WidgetEventPtr()->AsInputEvent();
+  bool isAccel = evt && evt->IsAccel();
+
+  // When ignorekeys="shortcuts" is used, we don't call preventDefault on the
+  // key event when the accelerator key is pressed. This allows another
+  // listener to handle keys. For instance, this allows global shortcuts to
+  // still apply while a menu is open.
+  if (item && item->IgnoreKeys() == eIgnoreKeys_Shortcuts && isAccel) {
+    consume = false;
+  }
+
+  HandleShortcutNavigation(keyEvent, nullptr);
 
   aKeyEvent->AsEvent()->StopCrossProcessForwarding();
-  if (handled || (consume && !onlyHandled)) {
+  if (consume) {
     aKeyEvent->AsEvent()->StopPropagation();
     aKeyEvent->AsEvent()->PreventDefault();
   }
