@@ -134,6 +134,83 @@ add_task(function* test_error_resume() {
   chromeScript.destroy();
 });
 
+
+// Test that response header modifications take effect before onStartRequest fires.
+add_task(function* test_set_responseHeaders() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "http://example.com/",
+      ],
+    },
+
+    background() {
+      browser.webRequest.onHeadersReceived.addListener(
+        details => {
+          browser.test.log(`onHeadersReceived({url: ${details.url}})`);
+
+          details.responseHeaders.push({name: "foo", value: "bar"});
+
+          return {responseHeaders: details.responseHeaders};
+        },
+        {urls: ["http://example.com/?modify_headers"]},
+        ["blocking", "responseHeaders"]);
+    },
+  });
+
+  yield extension.startup();
+
+  yield new Promise(resolve => setTimeout(resolve, 0));
+
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+    Cu.import("resource://gre/modules/NetUtil.jsm");
+    Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    let ssm = Services.scriptSecurityManager;
+
+    let channel = NetUtil.newChannel({
+      uri: "http://example.com/?modify_headers",
+      loadingPrincipal: ssm.createCodebasePrincipalFromOrigin("http://example.com"),
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    });
+
+    channel.asyncOpen2({
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener]),
+
+      onStartRequest(request, context) {
+        request.QueryInterface(Ci.nsIHttpChannel);
+
+        try {
+          sendAsyncMessage("response-header-foo", request.getResponseHeader("foo"));
+        } catch (e) {
+          sendAsyncMessage("response-header-foo", null);
+        }
+        request.cancel(Cr.NS_BINDING_ABORTED);
+      },
+
+      onStopRequest() {
+      },
+
+      onDataAvailable() {
+        throw new Components.Exception("", Cr.NS_ERROR_FAILURE);
+      },
+    });
+  });
+
+  let headerValue = yield chromeScript.promiseOneMessage("response-header-foo");
+  is(headerValue, "bar", "Expected Foo header value");
+
+  yield extension.unload();
+  chromeScript.destroy();
+});
+
+
 </script>
 </body>
 </html>
