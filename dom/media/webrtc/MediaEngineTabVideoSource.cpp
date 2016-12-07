@@ -329,20 +329,22 @@ MediaEngineTabVideoSource::Draw() {
   RefPtr<layers::ImageContainer> container =
     layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
+    Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                      mData.get(),
                                      size,
                                      stride,
-                                     SurfaceFormat::B8G8R8X8);
+                                     SurfaceFormat::B8G8R8X8,
+                                     true);
   if (!dt || !dt->IsValid()) {
     return;
   }
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-  MOZ_ASSERT(context); // already checked the draw target above
-  context->SetMatrix(context->CurrentMatrix().Scale((((float) size.width)/mViewportWidth),
-                                                    (((float) size.height)/mViewportHeight)));
 
   if (mWindow) {
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+    MOZ_ASSERT(context); // already checked the draw target above
+    context->SetMatrix(context->CurrentMatrix().Scale((((float) size.width)/mViewportWidth),
+                                                      (((float) size.height)/mViewportHeight)));
+
     nscolor bgColor = NS_RGB(255, 255, 255);
     uint32_t renderDocFlags = mScrollWithPage? 0 :
       (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
@@ -352,6 +354,8 @@ MediaEngineTabVideoSource::Draw() {
              nsPresContext::CSSPixelsToAppUnits((float)mViewportWidth),
              nsPresContext::CSSPixelsToAppUnits((float)mViewportHeight));
     NS_ENSURE_SUCCESS_VOID(presShell->RenderDocument(r, renderDocFlags, bgColor, context));
+  } else {
+    dt->ClearRect(Rect(0, 0, size.width, size.height));
   }
 
   RefPtr<SourceSurface> surface = dt->Snapshot();
