@@ -1,4 +1,7 @@
+use fnv::FnvHasher;
+use std::collections::HashMap;
 use std::ffi::CStr;
+use std::hash::BuildHasherDefault;
 use std::{mem, slice};
 use std::os::raw::c_void;
 use gleam::gl;
@@ -212,8 +215,8 @@ pub struct WrWindowState {
     _gl_library: GlLibrary,
     root_pipeline_id: PipelineId,
     size: Size2D<u32>,
-    epoch: Epoch,
     render_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
+    pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
 }
 
 pub struct WrState {
@@ -338,8 +341,8 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
         _gl_library: library,
         root_pipeline_id: pipeline_id,
         size: Size2D::new(0, 0),
-        epoch: Epoch(0),
         render_notifier_lock: notification_lock_clone,
+        pipeline_epoch_map: HashMap::with_hasher(Default::default()),
     });
     Box::into_raw(state)
 }
@@ -362,6 +365,7 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
         window.size = Size2D::new(width, height);
     }
 
+    window.pipeline_epoch_map.insert(pipeline_id, Epoch(0));
     Box::into_raw(state)
 }
 
@@ -433,28 +437,34 @@ pub fn wr_composite_window(window: &mut WrWindowState) {
 
 #[no_mangle]
 pub extern fn wr_dp_end(window: &mut WrWindowState,
-                        state: &mut WrState,
-                        epoch: Epoch) {
+                        state: &mut WrState) {
     assert!( unsafe { is_in_compositor_thread() });
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let pipeline_id = state.pipeline_id;
     let (width, height) = state.size;
-    window.epoch = epoch;
 
-    // Should be the root one
-    assert!(state.frame_builder.dl_builder.len() == 1);
-    let mut dl = state.frame_builder.dl_builder.pop().unwrap();
-    state.frame_builder.root_dl_builder.list.append(&mut dl.list);
+    if let Some(epoch) = window.pipeline_epoch_map.get_mut(&pipeline_id) {
+        (*epoch).0 += 1;
 
-    state.frame_builder.root_dl_builder.pop_stacking_context();
+        // Should be the root one
+        assert!(state.frame_builder.dl_builder.len() == 1);
+        let mut dl = state.frame_builder.dl_builder.pop().unwrap();
+        state.frame_builder.root_dl_builder.list.append(&mut dl.list);
 
-    let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
+        state.frame_builder.root_dl_builder.pop_stacking_context();
 
-    //let (dl_builder, aux_builder) = fb.root_dl_builder.finalize();
-    window.api.set_root_display_list(root_background_color,
-                                     epoch,
-                                     Size2D::new(width as f32, height as f32),
-                                     fb.root_dl_builder);
+        let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
+
+        //let (dl_builder, aux_builder) = fb.root_dl_builder.finalize();
+        window.api.set_root_display_list(root_background_color,
+                                         *epoch,
+                                         Size2D::new(width as f32, height as f32),
+                                         fb.root_dl_builder);
+
+        return;
+    }
+
+    panic!("Could not find epoch for pipeline_id:({},{})", pipeline_id.0, pipeline_id.1);
 }
 
 #[no_mangle]
@@ -562,9 +572,11 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
 }
 
 #[no_mangle]
-pub extern fn wr_destroy(state:*mut WrState) {
+pub extern fn wr_destroy(window: &mut WrWindowState, state:*mut WrState) {
     assert!( unsafe { is_in_compositor_thread() });
+
     unsafe {
+        window.pipeline_epoch_map.remove(&((*state).pipeline_id));
         Box::from_raw(state);
     }
 }
@@ -579,33 +591,12 @@ fn wait_for_render_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
     *finished = false;
 }
 
-fn force_sync_composite(window: &mut WrWindowState) {
-    assert!( unsafe { is_in_compositor_thread() });
-    let last_frame_epoch = window.epoch;
-
-    loop {
-        wait_for_render_notification(&window.render_notifier_lock);
-        wr_composite_window(window);
-
-        let rendered_epoch = window.renderer.current_epoch(window.root_pipeline_id);
-        match rendered_epoch {
-            Some(epoch) => {
-                if epoch == last_frame_epoch {
-                    break;
-                }
-            },
-            None => panic!("Could not get an epoch from the renderer"),
-        }
-    }
-
-    gl::flush();
-}
-
 #[no_mangle]
 pub extern fn wr_readback_into_buffer(window: &mut WrWindowState, width: u32, height: u32,
                                       dst_buffer: *mut u8, buffer_size: usize) {
     assert!( unsafe { is_in_compositor_thread() });
-    force_sync_composite(window);
+    wr_composite_window(window);
+    gl::flush();
 
     unsafe {
         let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
