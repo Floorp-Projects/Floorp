@@ -2315,6 +2315,13 @@ GlobalObject::GetSubjectPrincipal() const
   return nsJSPrincipals::get(principals);
 }
 
+CallerType
+GlobalObject::CallerType() const
+{
+  return nsContentUtils::ThreadsafeIsSystemCaller(mCx) ?
+    dom::CallerType::System : dom::CallerType::NonSystem;
+}
+
 static bool
 CallOrdinaryHasInstance(JSContext* cx, JS::CallArgs& args)
 {
