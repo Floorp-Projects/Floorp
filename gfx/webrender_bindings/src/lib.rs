@@ -7,6 +7,7 @@ extern crate webrender_traits;
 extern crate euclid;
 extern crate app_units;
 extern crate gleam;
+extern crate fnv;
 
 #[cfg(target_os="macos")]
 extern crate core_foundation;
