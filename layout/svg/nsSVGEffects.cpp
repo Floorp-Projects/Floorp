@@ -669,22 +669,8 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
 bool
 nsSVGEffects::EffectProperties::HasNoOrValidEffects()
 {
-  if (HasInvalidClipPath()) {
-    return false;
-  }
-
-  if (mMask) {
-    bool ok = true;
-    const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
-    for (size_t i = 0; i < props.Length(); i++) {
-      props[i]->GetReferencedFrame(nsGkAtoms::svgMaskFrame, &ok);
-      if (!ok) {
-        return false;
-      }
-    }
-  }
-
-  return HasNoFilterOrHasValidFilter();
+  return HasNoOrValidClipPath() && HasNoOrValidMask() &&
+         HasNoFilterOrHasValidFilter();
 }
 
 bool
@@ -714,6 +700,23 @@ nsSVGEffects::EffectProperties::HasNoOrValidClipPath()
       (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, &ok));
     if (!ok || (frame && !frame->IsValid())) {
       return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+nsSVGEffects::EffectProperties::HasNoOrValidMask()
+{
+  if (mMask) {
+    bool ok = true;
+    const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
+    for (size_t i = 0; i < props.Length(); i++) {
+      props[i]->GetReferencedFrame(nsGkAtoms::svgMaskFrame, &ok);
+      if (!ok) {
+        return false;
+      }
     }
   }
 
