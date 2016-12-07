@@ -85,10 +85,7 @@ HTMLWin32ObjectAccessible::HTMLWin32ObjectAccessible(void* aHwnd,
     // use its inner child owned by the plugin so that we don't get
     // in an infinite loop, where the WM_GETOBJECT's get forwarded
     // back to us and create another HTMLWin32ObjectAccessible
-    HWND childWnd = ::GetWindow((HWND)aHwnd, GW_CHILD);
-    if (childWnd) {
-      mHwnd = childWnd;
-    }
+    mHwnd = ::GetWindow((HWND)aHwnd, GW_CHILD);
   }
 }
 
