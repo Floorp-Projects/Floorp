@@ -59,6 +59,9 @@ AnimationPerformanceWarning::ToLocalizedString(
     case Type::TransformWithGeometricProperties:
       key = "CompositorAnimationWarningTransformWithGeometricProperties";
       break;
+    case Type::TransformWithSyncGeometricAnimations:
+      key = "CompositorAnimationWarningTransformWithSyncGeometricAnimations";
+      break;
     case Type::TransformFrameInactive:
       key = "CompositorAnimationWarningTransformFrameInactive";
       break;

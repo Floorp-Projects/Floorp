@@ -316,6 +316,11 @@ public:
   bool ShouldBlockAsyncTransformAnimations(
     const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aPerformanceWarning) const;
+  bool HasGeometricProperties() const;
+  bool AffectsGeometry() const override
+  {
+    return GetTarget() && HasGeometricProperties();
+  }
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
