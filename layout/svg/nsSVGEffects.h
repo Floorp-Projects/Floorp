@@ -475,11 +475,8 @@ public:
 
     /**
      * @return the clip-path frame, or null if there is no clip-path frame
-     * @param aOK if a clip-path was specified and the designated element
-     * exists but is an element of the wrong type, *aOK is set to false.
-     * Otherwise *aOK is untouched.
      */
-    nsSVGClipPathFrame *GetClipPathFrame(bool* aOK);
+    nsSVGClipPathFrame* GetClipPathFrame();
 
     /**
      * @return an array which contains all SVG mask frames.
@@ -499,6 +496,19 @@ public:
      */
     bool HasInvalidEffects() {
       return !HasNoOrValidEffects();
+    }
+
+    /*
+     * @return true if we either do not have clip-path or have a valid
+     * clip-path.
+     */
+    bool HasNoOrValidClipPath();
+
+    /*
+     * @return true if we have an invalid clip-path.
+     */
+    bool HasInvalidClipPath() {
+      return !HasNoOrValidClipPath();
     }
 
     bool HasValidFilter() {
