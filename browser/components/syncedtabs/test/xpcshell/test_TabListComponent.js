@@ -68,6 +68,13 @@ add_task(function* testInitUninit() {
 
 add_task(function* testActions() {
   let store = new SyncedTabsListStore();
+  let chromeWindowMock = {
+    gBrowser: {
+      loadTabs() {},
+    },
+  };
+  let getChromeWindowMock = sinon.stub();
+  getChromeWindowMock.returns(chromeWindowMock);
   let clipboardHelperMock = {
     copyString() {},
   };
@@ -84,7 +91,8 @@ add_task(function* testActions() {
   };
   let component = new TabListComponent({
     window: windowMock, store, View: null, SyncedTabs,
-    clipboardHelper: clipboardHelperMock});
+    clipboardHelper: clipboardHelperMock,
+    getChromeWindow: getChromeWindowMock });
 
   sinon.stub(store, "getData");
   component.onFilter("query");
@@ -127,12 +135,13 @@ add_task(function* testActions() {
   component.onOpenTab("uri", "where", "params");
   Assert.ok(windowMock.openUILinkIn.calledWith("uri", "where", "params"));
 
-  component.onOpenTabs(["uri1", "uri2"], "where", "params");
-  Assert.ok(windowMock.openUILinkIn.calledWith("uri1", "where", "params"));
-  Assert.ok(windowMock.openUILinkIn.calledWith("uri2", "where", "params"));
-  sinon.spy(windowMock, "openDialog");
-  component.onOpenTabs(["uri1", "uri2"], "window", "params");
-  Assert.deepEqual(windowMock.openDialog.args[0][3], ["uri1", "uri2"].join("|"));
+  sinon.spy(chromeWindowMock.gBrowser, "loadTabs");
+  let tabsToOpen = ["uri1", "uri2"];
+  component.onOpenTabs(tabsToOpen, "where");
+  Assert.ok(getChromeWindowMock.calledWith(windowMock));
+  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, false, false));
+  component.onOpenTabs(tabsToOpen, "tabshifted");
+  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, true, false));
 
   sinon.spy(clipboardHelperMock, "copyString");
   component.onCopyTabLocation("uri");
