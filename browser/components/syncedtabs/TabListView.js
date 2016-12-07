@@ -289,7 +289,7 @@ TabListView.prototype = {
       if (where != "current") {
         const tabs = itemNode.querySelector(".item-tabs-list").childNodes;
         const urls = [...tabs].map(tab => tab.dataset.url);
-        this.props.onOpenTabs(urls, where, {});
+        this.props.onOpenTabs(urls, where);
       }
     }
 

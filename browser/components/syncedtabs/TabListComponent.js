@@ -29,11 +29,13 @@ this.EXPORTED_SYMBOLS = [
  * to state changes so it can rerender.
  */
 
-function TabListComponent({window, store, View, SyncedTabs, clipboardHelper}) {
+function TabListComponent({window, store, View, SyncedTabs, clipboardHelper,
+                           getChromeWindow}) {
   this._window = window;
   this._store = store;
   this._View = View;
   this._clipboardHelper = clipboardHelper;
+  this._getChromeWindow = getChromeWindow;
   // used to trigger Sync from context menu
   this._SyncedTabs = SyncedTabs;
 }
@@ -116,7 +118,7 @@ TabListComponent.prototype = {
     BrowserUITelemetry.countSyncedTabEvent("open", "sidebar");
   },
 
-  onOpenTabs(urls, where, params) {
+  onOpenTabs(urls, where) {
     if (!PlacesUIUtils.confirmOpenInTabs(urls.length, this._window)) {
       return;
     }
@@ -124,9 +126,8 @@ TabListComponent.prototype = {
       this._window.openDialog(this._window.getBrowserURL(), "_blank",
                               "chrome,dialog=no,all", urls.join("|"));
     } else {
-      for (let url of urls) {
-        this._window.openUILinkIn(url, where, params);
-      }
+      let loadInBackground = where == "tabshifted" ? true : false;
+      this._getChromeWindow(this._window).gBrowser.loadTabs(urls, loadInBackground, false);
     }
     BrowserUITelemetry.countSyncedTabEvent("openmultiple", "sidebar");
   },
