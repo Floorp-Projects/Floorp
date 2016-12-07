@@ -2,8 +2,7 @@ win32/debug:
     description: "Win32 Debug"
     index:
         product: firefox
-        job-name:
-            gecko-v2: win32-debug
+        job-name: win32-debug
     treeherder:
         platform: windows2012-32/debug
         symbol: tc(B)
@@ -22,8 +21,7 @@ win32/opt:
     description: "Win32 Opt"
     index:
         product: firefox
-        job-name:
-            gecko-v2: win32-opt
+        job-name: win32-opt
     treeherder:
         platform: windows2012-32/opt
         symbol: tc(B)
@@ -42,8 +40,7 @@ win32/pgo:
     description: "Win32 Opt PGO"
     index:
         product: firefox
-        job-name:
-            gecko-v2: win32-pgo
+        job-name: win32-pgo
     treeherder:
         platform: windows2012-32/pgo
         symbol: tc(B)
@@ -63,8 +60,7 @@ win64/debug:
     description: "Win64 Debug"
     index:
         product: firefox
-        job-name:
-            gecko-v2: win64-debug
+        job-name: win64-debug
     treeherder:
         platform: windows2012-64/debug
         symbol: tc(B)
@@ -83,8 +79,7 @@ win64/opt:
     description: "Win64 Opt"
     index:
         product: firefox
-        job-name:
-            gecko-v2: win64-opt
+        job-name: win64-opt
     treeherder:
         platform: windows2012-64/opt
         symbol: tc(B)
@@ -103,8 +98,7 @@ win64/pgo:
     description: "Win64 Opt PGO"
     index:
         product: firefox
-        job-name:
-            gecko-v2: win64-pgo
+        job-name: win64-pgo
     treeherder:
         platform: windows2012-64/pgo
         symbol: tc(B)

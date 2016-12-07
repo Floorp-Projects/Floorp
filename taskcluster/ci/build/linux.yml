@@ -26,9 +26,7 @@ linux64/pgo:
     description: "Linux64 PGO"
     index:
         product: firefox
-        job-name:
-            buildbot: linux64-pgo
-            gecko-v2: linux64-pgo
+        job-name: linux64-pgo
     treeherder:
         platform: linux64/pgo
         symbol: tc(B)
@@ -54,9 +52,7 @@ linux64/debug:
     description: "Linux64 Debug"
     index:
         product: firefox
-        job-name:
-            buildbot: linux64-debug
-            gecko-v2: linux64-debug
+        job-name: linux64-debug
     treeherder:
         platform: linux64/debug
         symbol: tc(B)
@@ -131,8 +127,7 @@ linux/pgo:
     description: "Linux32 PGO"
     index:
         product: firefox
-        job-name:
-            gecko-v2: linux-pgo
+        job-name: linux-pgo
     treeherder:
         platform: linux32/pgo
         symbol: tc(B)
