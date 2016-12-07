@@ -20,7 +20,7 @@ namespace mozilla {
 namespace media {
 
 already_AddRefed<Pledge<nsCString>>
-GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing, bool aPersist)
+GetOriginKey(const nsCString& aOrigin, bool aPersist)
 {
   RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   MOZ_ASSERT(mgr);
@@ -29,10 +29,9 @@ GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing, bool aPersist)
   uint32_t id = mgr->mGetOriginKeyPledges.Append(*p);
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    mgr->GetNonE10sParent()->RecvGetOriginKey(id, aOrigin, aPrivateBrowsing,
-                                              aPersist);
+    mgr->GetNonE10sParent()->RecvGetOriginKey(id, aOrigin, aPersist);
   } else {
-    Child::Get()->SendGetOriginKey(id, aOrigin, aPrivateBrowsing, aPersist);
+    Child::Get()->SendGetOriginKey(id, aOrigin, aPersist);
   }
   return p.forget();
 }
