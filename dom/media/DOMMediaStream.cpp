@@ -200,7 +200,8 @@ public:
     if (track) {
       LOG(LogLevel::Debug, ("DOMMediaStream %p MediaStreamTrack %p ended at the source. Marking it ended.",
                             mStream, track.get()));
-      track->OverrideEnded();
+      NS_DispatchToMainThread(NewRunnableMethod(
+        track, &MediaStreamTrack::OverrideEnded));
     }
   }
 
@@ -270,7 +271,8 @@ public:
       return;
     }
 
-    mStream->NotifyFinished();
+    NS_DispatchToMainThread(NewRunnableMethod(
+      mStream, &DOMMediaStream::NotifyFinished));
   }
 
   // The methods below are called on the MediaStreamGraph thread.
