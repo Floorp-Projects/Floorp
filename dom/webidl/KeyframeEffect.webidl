@@ -68,10 +68,11 @@ partial interface KeyframeEffectReadOnly {
  Constructor (KeyframeEffectReadOnly source)]
 interface KeyframeEffect : KeyframeEffectReadOnly {
   inherit attribute (Element or CSSPseudoElement)? target;
+  [NeedsCallerType]
   inherit attribute IterationCompositeOperation    iterationComposite;
   // Bug 1216844 - implement additive animation
   // inherit attribute CompositeOperation          composite;
-  [SetterThrows]
+  [SetterThrows, NeedsCallerType]
   inherit attribute DOMString                   spacing;
   [Throws]
   void setKeyframes (object? keyframes);
