@@ -7275,10 +7275,7 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
 
-  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
-  effectProperties.GetClipPathFrame(&isOK);
-
-  if (!isOK) {
+  if (effectProperties.HasInvalidClipPath()) {
     return nullptr;
   }
 
@@ -7438,8 +7435,7 @@ nsDisplayMask::PrintEffects(nsACString& aTo)
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
-  bool isOK = true;
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
   bool first = true;
   aTo += " effects=(";
   if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {
