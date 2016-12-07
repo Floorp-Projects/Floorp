@@ -366,6 +366,8 @@ function RTCPeerConnection() {
 
   // States
   this._iceGatheringState = this._iceConnectionState = "new";
+
+  this._hasStunServer = this._hasTurnServer = false;
 }
 RTCPeerConnection.prototype = {
   classDescription: "RTCPeerConnection",
@@ -612,6 +614,10 @@ RTCPeerConnection.prototype = {
                             "\" is not yet implemented. Treating as password."+
                             " https://bugzil.la/1247616");
           }
+          this._hasTurnServer = true;
+        }
+        else if (url.scheme in { stun:1, stuns:1 }) {
+          this._hasStunServer = true;
         }
         else if (!(url.scheme in { stun:1, stuns:1 })) {
           throw new this._win.DOMException(msg + " - improper scheme: " + url.scheme,
@@ -1380,7 +1386,15 @@ PeerConnectionObserver.prototype = {
     }
 
     if (iceConnectionState === 'failed') {
-      pc.logError("ICE failed, see about:webrtc for more details");
+      if (!pc._hasStunServer) {
+        pc.logError("ICE failed, add a STUN server and see about:webrtc for more details");
+      }
+      else if (!pc._hasTurnServer) {
+        pc.logError("ICE failed, add a TURN server and see about:webrtc for more details");
+      }
+      else {
+        pc.logError("ICE failed, see about:webrtc for more details");
+      }
     }
 
     pc.changeIceConnectionState(iceConnectionState);
