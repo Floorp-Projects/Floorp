@@ -69,15 +69,39 @@ cleanup() {
 }
 trap cleanup EXIT INT
 
+# Download mozharness with exponential backoff
+# curl already applies exponential backoff, but not for all
+# failed cases, apparently, as we keep getting failed downloads
+# with 404 code.
+download_mozharness() {
+    local max_attempts=10
+    local timeout=1
+    local attempt=0
+
+    echo "Downloading mozharness"
+
+    while [[ $attempt < $max_attempts ]]; do
+        if curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
+            rm -rf mozharness
+            if unzip -q mozharness.zip; then
+                return 0
+            fi
+            echo "error unzipping mozharness.zip" >&2
+        else
+            echo "failed to download mozharness zip" >&2
+        fi
+        echo "Download failed, retrying in $timeout seconds..." >&2
+        sleep $timeout
+        timeout=$((timeout*2))
+        attempt=$((attempt+1))
+    done
+
+    fail "Failed to download and unzip mozharness"
+}
+
 # Download mozharness if we're told to.
 if [ ${MOZHARNESS_URL} ]; then
-    if ! curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
-        fail "failed to download mozharness zip"
-    fi
-    rm -rf mozharness
-    if !  unzip -q mozharness.zip; then
-        fail "error unzipping mozharness.zip"
-    fi
+    download_mozharness
     rm mozharness.zip
 
     if ! [ -d mozharness ]; then
