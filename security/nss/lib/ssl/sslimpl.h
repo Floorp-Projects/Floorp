@@ -34,7 +34,7 @@
 #include "sslt.h" /* for some formerly private types, now public */
 
 typedef struct sslSocketStr sslSocket;
-
+typedef struct ssl3CipherSpecStr ssl3CipherSpec;
 #include "ssl3ext.h"
 
 /* to make some of these old enums public without namespace pollution,
@@ -200,6 +200,9 @@ typedef sslSessionID *(*sslSessionIDLookupFunc)(const PRIPv6Addr *addr,
                                                 unsigned char *sid,
                                                 unsigned int sidLen,
                                                 CERTCertDBHandle *dbHandle);
+typedef void (*sslCipherSpecChangedFunc)(void *arg,
+                                         PRBool sending,
+                                         ssl3CipherSpec *newSpec);
 
 /* Socket ops */
 struct sslSocketOpsStr {
@@ -468,7 +471,7 @@ typedef struct DTLSRecvdRecordsStr {
 ** Access to the pointers to these specs, and all the specs' contents
 ** (direct and indirect) is protected by the reader/writer lock ss->specLock.
 */
-typedef struct {
+struct ssl3CipherSpecStr {
     PRCList link;
     const ssl3BulkCipherDef *cipher_def;
     const ssl3MACDef *mac_def;
@@ -498,7 +501,7 @@ typedef struct {
 
     PRUint8 refCt;
     const char *phase;
-} ssl3CipherSpec;
+};
 
 typedef enum { never_cached,
                in_client_cache,
@@ -891,6 +894,11 @@ struct ssl3StateStr {
     ssl3CipherSpec *prSpec; /* pending read spec. */
     ssl3CipherSpec *cwSpec; /* current write spec. */
     ssl3CipherSpec *pwSpec; /* pending write spec. */
+
+    /* Internal callback for when we do a cipher suite change. Used for
+     * debugging in TLS 1.3. This can only be set by non-public functions. */
+    sslCipherSpecChangedFunc changedCipherSpecFunc;
+    void *changedCipherSpecArg;
 
     CERTCertificate *clientCertificate;   /* used by client */
     SECKEYPrivateKey *clientPrivateKey;   /* used by client */
@@ -1645,12 +1653,13 @@ extern SECStatus ssl3_AppendHandshakeVariable(sslSocket *ss,
                                               const SSL3Opaque *src, PRInt32 bytes, PRInt32 lenSize);
 extern SECStatus ssl3_AppendSignatureAndHashAlgorithm(
     sslSocket *ss, const SSLSignatureAndHashAlg *sigAndHash);
-extern SECStatus ssl3_ConsumeHandshake(sslSocket *ss, void *v, PRInt32 bytes,
+extern SECStatus ssl3_ConsumeHandshake(sslSocket *ss, void *v, PRUint32 bytes,
                                        SSL3Opaque **b, PRUint32 *length);
-extern PRInt32 ssl3_ConsumeHandshakeNumber(sslSocket *ss, PRInt32 bytes,
-                                           SSL3Opaque **b, PRUint32 *length);
+extern SECStatus ssl3_ConsumeHandshakeNumber(sslSocket *ss, PRUint32 *num,
+                                             PRUint32 bytes, SSL3Opaque **b,
+                                             PRUint32 *length);
 extern SECStatus ssl3_ConsumeHandshakeVariable(sslSocket *ss, SECItem *i,
-                                               PRInt32 bytes, SSL3Opaque **b,
+                                               PRUint32 bytes, SSL3Opaque **b,
                                                PRUint32 *length);
 extern PRUint8 *ssl_EncodeUintX(PRUint64 value, unsigned int bytes,
                                 PRUint8 *to);

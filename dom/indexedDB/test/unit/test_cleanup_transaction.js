@@ -77,11 +77,11 @@ function testSteps()
       trans.oncomplete = function(event) {
         i++;
         j++;
-        testGenerator.send(true);
+        testGenerator.next(true);
       }
       trans.onabort = function(event) {
         is(trans.error.name, "QuotaExceededError", "Reached quota limit");
-        testGenerator.send(false);
+        testGenerator.next(false);
       }
 
       let completeFired = yield undefined;

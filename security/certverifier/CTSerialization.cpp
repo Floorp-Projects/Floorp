@@ -511,10 +511,6 @@ DecodeSignedCertificateTimestamp(Reader& reader,
   }
   result.timestamp = timestamp;
 
-  result.origin = SignedCertificateTimestamp::Origin::Unknown;
-  result.verificationStatus =
-    SignedCertificateTimestamp::VerificationStatus::None;
-
   output = Move(result);
   return Success;
 }

@@ -34,6 +34,7 @@ exports.getCSSStyleRules = (...args) =>
   lazyContainer.DOMUtils.getCSSStyleRules(...args);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STYLESHEET_URI = "resource://devtools/server/actors/" +
                        "highlighters.css";
@@ -181,8 +182,7 @@ exports.createSVGNode = createSVGNode;
  * @param {Window} This window's document will be used to create the element
  * @param {Object} Options for the node include:
  * - nodeType: the type of node, defaults to "div".
- * - namespace: if passed, doc.createElementNS will be used instead of
- *   doc.creatElement.
+ * - namespace: the namespace to use to create the node, defaults to XHTML namespace.
  * - attributes: a {name:value} object to be used as attributes for the node.
  * - prefix: a string that will be used to prefix the values of the id and class
  *   attributes.
@@ -191,13 +191,9 @@ exports.createSVGNode = createSVGNode;
  */
 function createNode(win, options) {
   let type = options.nodeType || "div";
+  let namespace = options.namespace || XHTML_NS;
 
-  let node;
-  if (options.namespace) {
-    node = win.document.createElementNS(options.namespace, type);
-  } else {
-    node = win.document.createElement(type);
-  }
+  let node = win.document.createElementNS(namespace, type);
 
   for (let name in options.attributes || {}) {
     let value = options.attributes[name];
@@ -243,14 +239,14 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
                                 this.anonymousContentDocument);
 
   // Only try to create the highlighter when the document is loaded,
-  // otherwise, wait for the navigate event to fire.
+  // otherwise, wait for the window-ready event to fire.
   let doc = this.highlighterEnv.document;
   if (doc.documentElement && doc.readyState != "uninitialized") {
     this._insert();
   }
 
-  this._onNavigate = this._onNavigate.bind(this);
-  this.highlighterEnv.on("navigate", this._onNavigate);
+  this._onWindowReady= this._onWindowReady.bind(this);
+  this.highlighterEnv.on("window-ready", this._onWindowReady);
 
   this.listeners = new Map();
 }
@@ -264,7 +260,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       // If the current window isn't the one the content was inserted into, this
       // will fail, but that's fine.
     }
-    this.highlighterEnv.off("navigate", this._onNavigate);
+    this.highlighterEnv.off("window-ready", this._onWindowReady);
     this.highlighterEnv = this.nodeBuilder = this._content = null;
     this.anonymousContentDocument = null;
     this.anonymousContentGlobal = null;
@@ -274,13 +270,15 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
   _insert: function () {
     let doc = this.highlighterEnv.document;
-    // Insert the content node only if the document:
-    // * is loaded (navigate event will fire once it is),
-    // * still exists,
-    // * isn't in XUL.
-    if (doc.readyState == "uninitialized" ||
-        !doc.documentElement ||
-        isXUL(this.highlighterEnv.window)) {
+    // Wait for DOMContentLoaded before injecting the anonymous content.
+    if (doc.readyState != "interactive" && doc.readyState != "complete") {
+      doc.addEventListener("DOMContentLoaded", this._insert.bind(this),
+                           { once: true });
+      return;
+    }
+    // Reject XUL documents. Check that after DOMContentLoaded as we query
+    // documentElement which is only available after this event.
+    if (isXUL(this.highlighterEnv.window)) {
       return;
     }
 
@@ -300,7 +298,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     this._content = doc.insertAnonymousContent(node);
   },
 
-  _onNavigate: function (e, {isTopLevel}) {
+  _onWindowReady: function (e, {isTopLevel}) {
     if (isTopLevel) {
       this._removeAllListeners();
       this._insert();

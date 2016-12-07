@@ -58,6 +58,10 @@ public:
   struct StrutInfo;
 
   // nsIFrame overrides
+  void Init(nsIContent*       aContent,
+            nsContainerFrame* aParent,
+            nsIFrame*         aPrevInFlow) override;
+
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
@@ -106,12 +110,6 @@ public:
                                     nscoord* aFirstSubjectOffset,
                                     uint32_t* aNumPackingSpacesRemaining,
                                     nscoord* aPackingSpaceRemaining);
-
-  /**
-   * Returns true if aFrame is the frame for an element with
-   * "display:-webkit-box" or "display:-webkit-inline-box".
-   */
-  static bool IsLegacyBox(const nsIFrame* aFrame);
 
 protected:
   // Protected constructor & destructor

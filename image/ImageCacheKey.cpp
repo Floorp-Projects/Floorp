@@ -6,10 +6,10 @@
 #include "ImageCacheKey.h"
 
 #include "mozilla/Move.h"
-#include "File.h"
 #include "ImageURL.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsString.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"

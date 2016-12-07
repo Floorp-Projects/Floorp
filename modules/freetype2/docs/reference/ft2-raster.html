@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Scanline Converter</h1>
+<h1 id="raster">Scanline Converter</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Raster">FT_Raster</a></td><td>&nbsp;</td><td><a href="#FT_Raster_Funcs">FT_Raster_Funcs</a></td></tr>
@@ -118,7 +118,7 @@
 
 <div class="section">
 <h3 id="FT_Raster">FT_Raster</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_RasterRec_*  <b>FT_Raster</b>;
 </pre>
@@ -130,7 +130,7 @@
 
 <div class="section">
 <h3 id="FT_Span">FT_Span</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Span_
   {
@@ -165,7 +165,7 @@
 
 <div class="section">
 <h3 id="FT_SpanFunc">FT_SpanFunc</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>
   (*<b>FT_SpanFunc</b>)( <span class="keyword">int</span>             y,
@@ -197,15 +197,13 @@
 <h4>note</h4>
 <p>This callback allows client applications to directly render the gray spans of the anti-aliased bitmap to any kind of surfaces.</p>
 <p>This can be used to write anti-aliased outlines directly to a given background bitmap, and even perform translucency.</p>
-<p>Note that the &lsquo;count&rsquo; field cannot be greater than a fixed value defined by the &lsquo;FT_MAX_GRAY_SPANS&rsquo; configuration macro in &lsquo;ftoption.h&rsquo;. By default, this value is set to&nbsp;32, which means that if there are more than 32&nbsp;spans on a given scanline, the callback is called several times with the same &lsquo;y&rsquo; parameter in order to draw all callbacks.</p>
-<p>Otherwise, the callback is only called once per scan-line, and only for those scanlines that do have &lsquo;gray&rsquo; pixels on them.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
 <h3 id="FT_Raster_Params">FT_Raster_Params</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Raster_Params_
   {
@@ -264,7 +262,7 @@
 
 <div class="section">
 <h3 id="FT_RASTER_FLAG_XXX">FT_RASTER_FLAG_XXX</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
 #define <a href="ft2-raster.html#FT_RASTER_FLAG_DEFAULT">FT_RASTER_FLAG_DEFAULT</a>  0x0
 #define <a href="ft2-raster.html#FT_RASTER_FLAG_AA">FT_RASTER_FLAG_AA</a>       0x1
@@ -304,7 +302,7 @@
 
 <div class="section">
 <h3 id="FT_Raster_NewFunc">FT_Raster_NewFunc</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">int</span>
   (*<b>FT_Raster_NewFunc</b>)( <span class="keyword">void</span>*       memory,
@@ -340,7 +338,7 @@
 
 <div class="section">
 <h3 id="FT_Raster_DoneFunc">FT_Raster_DoneFunc</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>
   (*<b>FT_Raster_DoneFunc</b>)( <a href="ft2-raster.html#FT_Raster">FT_Raster</a>  raster );
@@ -362,7 +360,7 @@
 
 <div class="section">
 <h3 id="FT_Raster_ResetFunc">FT_Raster_ResetFunc</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>
   (*<b>FT_Raster_ResetFunc</b>)( <a href="ft2-raster.html#FT_Raster">FT_Raster</a>       raster,
@@ -372,7 +370,7 @@
 #define FT_Raster_Reset_Func  <b>FT_Raster_ResetFunc</b>
 </pre>
 
-<p>FreeType provides an area of memory called the &lsquo;render pool&rsquo;, available to all registered rasters. This pool can be freely used during a given scan-conversion but is shared by all rasters. Its content is thus transient.</p>
+<p>FreeType used to provide an area of memory called the &lsquo;render pool&rsquo; available to all registered rasters. This was not thread safe however and now FreeType never allocates this pool. NULL is always passed in as pool_base.</p>
 <p>This function is called each time the render pool changes, or just after a new raster object is created.</p>
 
 <h4>input</h4>
@@ -389,14 +387,14 @@
 </table>
 
 <h4>note</h4>
-<p>Rasters can ignore the render pool and rely on dynamic memory allocation if they want to (a handle to the memory allocator is passed to the raster constructor). However, this is not recommended for efficiency purposes.</p>
+<p>Rasters should ignore the render pool and rely on dynamic or stack allocation if they want to (a handle to the memory allocator is passed to the raster constructor).</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
 <h3 id="FT_Raster_SetModeFunc">FT_Raster_SetModeFunc</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">int</span>
   (*<b>FT_Raster_SetModeFunc</b>)( <a href="ft2-raster.html#FT_Raster">FT_Raster</a>      raster,
@@ -426,7 +424,7 @@
 
 <div class="section">
 <h3 id="FT_Raster_RenderFunc">FT_Raster_RenderFunc</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">int</span>
   (*<b>FT_Raster_RenderFunc</b>)( <a href="ft2-raster.html#FT_Raster">FT_Raster</a>                raster,
@@ -460,7 +458,7 @@
 
 <div class="section">
 <h3 id="FT_Raster_Funcs">FT_Raster_Funcs</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Raster_Funcs_
   {
@@ -500,7 +498,7 @@
 
 <div class="section">
 <h3 id="FT_Raster_BitTest_Func">FT_Raster_BitTest_Func</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">int</span>
   (*<b>FT_Raster_BitTest_Func</b>)( <span class="keyword">int</span>    y,
@@ -515,7 +513,7 @@
 
 <div class="section">
 <h3 id="FT_Raster_BitSet_Func">FT_Raster_BitSet_Func</h3>
-<p>Defined in FT_IMAGE_H (ftimage.h).</p>
+<p>Defined in FT_IMAGE_H (freetype/ftimage.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">void</span>
   (*<b>FT_Raster_BitSet_Func</b>)( <span class="keyword">int</span>    y,

@@ -552,12 +552,8 @@ public:
   dom::AudioChannel AudioChannelType() const { return mAudioChannelType; }
 
   bool IsSuspended() { return mSuspendedCount > 0; }
-  void IncrementSuspendCount() { ++mSuspendedCount; }
-  void DecrementSuspendCount()
-  {
-    NS_ASSERTION(mSuspendedCount > 0, "Suspend count underrun");
-    --mSuspendedCount;
-  }
+  void IncrementSuspendCount();
+  void DecrementSuspendCount();
 
 protected:
   // |AdvanceTimeVaryingValuesToCurrentTime| will be override in SourceMediaStream.
@@ -1080,10 +1076,21 @@ public:
    */
   MediaStreamGraphImpl* GraphImpl();
   MediaStreamGraph* Graph();
+
   /**
    * Sets the graph that owns this stream.  Should only be called once.
    */
   void SetGraphImpl(MediaStreamGraphImpl* aGraph);
+
+  /**
+   * Notify the port that the source MediaStream has been suspended.
+  */
+  void Suspended();
+
+  /**
+   * Notify the port that the source MediaStream has been resumed.
+  */
+  void Resumed();
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
@@ -1182,16 +1189,18 @@ public:
   virtual void AddInput(MediaInputPort* aPort);
   virtual void RemoveInput(MediaInputPort* aPort)
   {
-    mInputs.RemoveElement(aPort);
+    mInputs.RemoveElement(aPort) || mSuspendedInputs.RemoveElement(aPort);
   }
   bool HasInputPort(MediaInputPort* aPort)
   {
-    return mInputs.Contains(aPort);
+    return mInputs.Contains(aPort) || mSuspendedInputs.Contains(aPort);
   }
   uint32_t InputPortCount()
   {
-    return mInputs.Length();
+    return mInputs.Length() + mSuspendedInputs.Length();
   }
+  void InputSuspended(MediaInputPort* aPort);
+  void InputResumed(MediaInputPort* aPort);
   virtual MediaStream* GetInputStreamFor(TrackID aTrackID) { return nullptr; }
   virtual TrackID GetInputTrackIDFor(TrackID aTrackID) { return TRACK_NONE; }
   void DestroyImpl() override;
@@ -1227,7 +1236,9 @@ public:
     size_t amount = MediaStream::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
     // - mInputs elements
+    // - mSuspendedInputs elements
     amount += mInputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    amount += mSuspendedInputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 
@@ -1239,8 +1250,10 @@ public:
 protected:
   // This state is all accessed only on the media graph thread.
 
-  // The list of all inputs that are currently enabled or waiting to be enabled.
+  // The list of all inputs that are not currently suspended.
   nsTArray<MediaInputPort*> mInputs;
+  // The list of all inputs that are currently suspended.
+  nsTArray<MediaInputPort*> mSuspendedInputs;
   bool mAutofinish;
   // After UpdateStreamOrder(), mCycleMarker is either 0 or 1 to indicate
   // whether this stream is in a muted cycle.  During ordering it can contain

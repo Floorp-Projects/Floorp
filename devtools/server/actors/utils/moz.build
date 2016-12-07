@@ -14,6 +14,7 @@ DevToolsModules(
     'stack.js',
     'TabSources.js',
     'walker-search.js',
+    'webconsole-listeners.js',
     'webconsole-utils.js',
-    'webconsole-worker-utils.js',
+    'webconsole-worker-listeners.js',
 )

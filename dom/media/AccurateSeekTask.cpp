@@ -40,13 +40,6 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   , mDoneVideoSeeking(!aInfo.HasVideo())
 {
   AssertOwnerThread();
-
-  // Bound the seek time to be inside the media range.
-  NS_ASSERTION(aEnd.ToMicroseconds() != -1, "Should know end time by now");
-  mTarget.SetTime(std::max(media::TimeUnit(), std::min(mTarget.GetTime(), aEnd)));
-
-  // Configure MediaDecoderReaderWrapper.
-  SetCallbacks();
 }
 
 AccurateSeekTask::~AccurateSeekTask()
@@ -65,7 +58,6 @@ AccurateSeekTask::Discard()
 
   // Disconnect MediaDecoderReaderWrapper.
   mSeekRequest.DisconnectIfExists();
-  CancelCallbacks();
 
   mIsDiscarded = true;
 }
@@ -110,6 +102,159 @@ AccurateSeekTask::CalculateNewCurrentTime() const
 
   MOZ_ASSERT(false, "AccurateSeekTask doesn't handle other seek types.");
   return 0;
+}
+
+void
+AccurateSeekTask::HandleAudioDecoded(MediaData* aAudio)
+{
+  AssertOwnerThread();
+  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
+
+  RefPtr<MediaData> audio(aAudio);
+  MOZ_ASSERT(audio);
+
+  // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
+  // resolved.
+
+  SAMPLE_LOG("OnAudioDecoded [%lld,%lld]", audio->mTime, audio->GetEndTime());
+
+  // Video-only seek doesn't reset audio decoder. There might be pending audio
+  // requests when AccurateSeekTask::Seek() begins. We will just store the data
+  // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
+  if (mTarget.IsVideoOnly()) {
+    mSeekedAudioData = audio.forget();
+    return;
+  }
+
+  AdjustFastSeekIfNeeded(audio);
+
+  if (mTarget.IsFast()) {
+    // Non-precise seek; we can stop the seek at the first sample.
+    mSeekedAudioData = audio;
+    mDoneAudioSeeking = true;
+  } else {
+    nsresult rv = DropAudioUpToSeekTarget(audio);
+    if (NS_FAILED(rv)) {
+      RejectIfExist(rv, __func__);
+      return;
+    }
+  }
+
+  if (!mDoneAudioSeeking) {
+    RequestAudioData();
+    return;
+  }
+  MaybeFinishSeek();
+}
+
+void
+AccurateSeekTask::HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart)
+{
+  AssertOwnerThread();
+  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
+
+  RefPtr<MediaData> video(aVideo);
+  MOZ_ASSERT(video);
+
+  // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
+  // resolved.
+
+  SAMPLE_LOG("OnVideoDecoded [%lld,%lld]", video->mTime, video->GetEndTime());
+
+  AdjustFastSeekIfNeeded(video);
+
+  if (mTarget.IsFast()) {
+    // Non-precise seek. We can stop the seek at the first sample.
+    mSeekedVideoData = video;
+    mDoneVideoSeeking = true;
+  } else {
+    nsresult rv = DropVideoUpToSeekTarget(video.get());
+    if (NS_FAILED(rv)) {
+      RejectIfExist(rv, __func__);
+      return;
+    }
+  }
+
+  if (!mDoneVideoSeeking) {
+    RequestVideoData();
+    return;
+  }
+  MaybeFinishSeek();
+}
+
+void
+AccurateSeekTask::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
+{
+  AssertOwnerThread();
+  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
+
+  SAMPLE_LOG("OnNotDecoded type=%d reason=%u", aType, aError.Code());
+
+  // Ignore pending requests from video-only seek.
+  if (aType == MediaData::AUDIO_DATA && mTarget.IsVideoOnly()) {
+    return;
+  }
+
+  // If the decoder is waiting for data, we tell it to call us back when the
+  // data arrives.
+  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
+    mReader->WaitForData(aType);
+    return;
+  }
+
+  if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
+    if (aType == MediaData::AUDIO_DATA) {
+      RequestAudioData();
+    } else {
+      RequestVideoData();
+    }
+    return;
+  }
+
+  if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    if (aType == MediaData::AUDIO_DATA) {
+      mIsAudioQueueFinished = true;
+      mDoneAudioSeeking = true;
+    } else {
+      mIsVideoQueueFinished = true;
+      mDoneVideoSeeking = true;
+      if (mFirstVideoFrameAfterSeek) {
+        // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
+        // mSeekedVideoData so we have something to display after seeking.
+        mSeekedVideoData = mFirstVideoFrameAfterSeek.forget();
+      }
+    }
+    MaybeFinishSeek();
+    return;
+  }
+
+  // This is a decode error, delegate to the generic error path.
+  RejectIfExist(aError, __func__);
+}
+
+void
+AccurateSeekTask::HandleAudioWaited(MediaData::Type aType)
+{
+  AssertOwnerThread();
+
+  // Ignore pending requests from video-only seek.
+  if (mTarget.IsVideoOnly()) {
+    return;
+  }
+  RequestAudioData();
+}
+
+void
+AccurateSeekTask::HandleVideoWaited(MediaData::Type aType)
+{
+  AssertOwnerThread();
+  RequestVideoData();
+}
+
+void
+AccurateSeekTask::HandleNotWaited(const WaitForDataRejectValue& aRejection)
+{
+  AssertOwnerThread();
 }
 
 RefPtr<AccurateSeekTask::SeekTaskPromise>
@@ -315,190 +460,4 @@ AccurateSeekTask::AdjustFastSeekIfNeeded(MediaData* aSample)
   }
 }
 
-void
-AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
-{
-  AssertOwnerThread();
-  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
-
-  RefPtr<MediaData> audio(aAudioSample);
-  MOZ_ASSERT(audio);
-
-  // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
-  // resolved.
-
-  SAMPLE_LOG("OnAudioDecoded [%lld,%lld]", audio->mTime, audio->GetEndTime());
-
-  // Video-only seek doesn't reset audio decoder. There might be pending audio
-  // requests when AccurateSeekTask::Seek() begins. We will just store the data
-  // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
-  if (mTarget.IsVideoOnly()) {
-    mSeekedAudioData = audio.forget();
-    return;
-  }
-
-  AdjustFastSeekIfNeeded(audio);
-
-  if (mTarget.IsFast()) {
-    // Non-precise seek; we can stop the seek at the first sample.
-    mSeekedAudioData = audio;
-    mDoneAudioSeeking = true;
-  } else {
-    nsresult rv = DropAudioUpToSeekTarget(audio);
-    if (NS_FAILED(rv)) {
-      CancelCallbacks();
-      RejectIfExist(rv, __func__);
-      return;
-    }
-  }
-
-  if (!mDoneAudioSeeking) {
-    RequestAudioData();
-    return;
-  }
-  MaybeFinishSeek();
-}
-
-void
-AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
-                               const MediaResult& aError)
-{
-  AssertOwnerThread();
-  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
-
-  SAMPLE_LOG("OnNotDecoded type=%d reason=%u", aType, aError.Code());
-
-  // Ignore pending requests from video-only seek.
-  if (aType == MediaData::AUDIO_DATA && mTarget.IsVideoOnly()) {
-    return;
-  }
-
-  // If the decoder is waiting for data, we tell it to call us back when the
-  // data arrives.
-  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
-    mReader->WaitForData(aType);
-    return;
-  }
-
-  if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
-    if (aType == MediaData::AUDIO_DATA) {
-      RequestAudioData();
-    } else {
-      RequestVideoData();
-    }
-    return;
-  }
-
-  if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-    if (aType == MediaData::AUDIO_DATA) {
-      mIsAudioQueueFinished = true;
-      mDoneAudioSeeking = true;
-    } else {
-      mIsVideoQueueFinished = true;
-      mDoneVideoSeeking = true;
-      if (mFirstVideoFrameAfterSeek) {
-        // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
-        // mSeekedVideoData so we have something to display after seeking.
-        mSeekedVideoData = mFirstVideoFrameAfterSeek.forget();
-      }
-    }
-    MaybeFinishSeek();
-    return;
-  }
-
-  // This is a decode error, delegate to the generic error path.
-  CancelCallbacks();
-  RejectIfExist(aError, __func__);
-}
-
-void
-AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
-{
-  AssertOwnerThread();
-  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
-
-  RefPtr<MediaData> video(aVideoSample);
-  MOZ_ASSERT(video);
-
-  // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
-  // resolved.
-
-  SAMPLE_LOG("OnVideoDecoded [%lld,%lld]", video->mTime, video->GetEndTime());
-
-  AdjustFastSeekIfNeeded(video);
-
-  if (mTarget.IsFast()) {
-    // Non-precise seek. We can stop the seek at the first sample.
-    mSeekedVideoData = video;
-    mDoneVideoSeeking = true;
-  } else {
-    nsresult rv = DropVideoUpToSeekTarget(video.get());
-    if (NS_FAILED(rv)) {
-      CancelCallbacks();
-      RejectIfExist(rv, __func__);
-      return;
-    }
-  }
-
-  if (!mDoneVideoSeeking) {
-    RequestVideoData();
-    return;
-  }
-  MaybeFinishSeek();
-}
-
-void
-AccurateSeekTask::SetCallbacks()
-{
-  AssertOwnerThread();
-
-  mAudioCallback = mReader->AudioCallback().Connect(
-    OwnerThread(), [this] (AudioCallbackData aData) {
-    if (aData.is<MediaData*>()) {
-      OnAudioDecoded(aData.as<MediaData*>());
-    } else {
-      OnNotDecoded(MediaData::AUDIO_DATA,
-        aData.as<MediaResult>());
-    }
-  });
-
-  mVideoCallback = mReader->VideoCallback().Connect(
-    OwnerThread(), [this] (VideoCallbackData aData) {
-    typedef Tuple<MediaData*, TimeStamp> Type;
-    if (aData.is<Type>()) {
-      OnVideoDecoded(Get<0>(aData.as<Type>()));
-    } else {
-      OnNotDecoded(MediaData::VIDEO_DATA,
-        aData.as<MediaResult>());
-    }
-  });
-
-  mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
-    OwnerThread(), [this] (WaitCallbackData aData) {
-    // Ignore pending requests from video-only seek.
-    if (mTarget.IsVideoOnly()) {
-      return;
-    }
-    if (aData.is<MediaData::Type>()) {
-      RequestAudioData();
-    }
-  });
-
-  mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
-    OwnerThread(), [this] (WaitCallbackData aData) {
-    if (aData.is<MediaData::Type>()) {
-      RequestVideoData();
-    }
-  });
-}
-
-void
-AccurateSeekTask::CancelCallbacks()
-{
-  AssertOwnerThread();
-  mAudioCallback.DisconnectIfExists();
-  mVideoCallback.DisconnectIfExists();
-  mAudioWaitCallback.DisconnectIfExists();
-  mVideoWaitCallback.DisconnectIfExists();
-}
 } // namespace mozilla

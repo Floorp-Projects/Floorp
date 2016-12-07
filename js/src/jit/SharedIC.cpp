@@ -175,15 +175,6 @@ ICStub::NonCacheIRStubMakesGCCalls(Kind kind)
       case Call_ScriptedFunCall:
       case Call_StringSplit:
       case WarmUpCounter_Fallback:
-      case GetElem_NativeSlotName:
-      case GetElem_NativeSlotSymbol:
-      case GetElem_NativePrototypeSlotName:
-      case GetElem_NativePrototypeSlotSymbol:
-      case GetElem_NativePrototypeCallNativeName:
-      case GetElem_NativePrototypeCallNativeSymbol:
-      case GetElem_NativePrototypeCallScriptedName:
-      case GetElem_NativePrototypeCallScriptedSymbol:
-      case GetElem_UnboxedPropertyName:
       case GetProp_CallNativeGlobal:
       case GetProp_Generic:
       case SetProp_CallScripted:
@@ -270,63 +261,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &callStub->templateObject(), "baseline-callstringsplit-template");
         TraceEdge(trc, &callStub->expectedSep(), "baseline-callstringsplit-sep");
         TraceEdge(trc, &callStub->expectedStr(), "baseline-callstringsplit-str");
-        break;
-      }
-      case ICStub::GetElem_NativeSlotName:
-      case ICStub::GetElem_NativeSlotSymbol:
-      case ICStub::GetElem_UnboxedPropertyName: {
-        ICGetElemNativeStub* getElemStub = static_cast<ICGetElemNativeStub*>(this);
-        getElemStub->receiverGuard().trace(trc);
-        if (getElemStub->isSymbol()) {
-            ICGetElem_NativeSlot<JS::Symbol*>* typedGetElemStub = toGetElem_NativeSlotSymbol();
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-native-key");
-        } else {
-            ICGetElemNativeSlotStub<PropertyName*>* typedGetElemStub =
-                reinterpret_cast<ICGetElemNativeSlotStub<PropertyName*>*>(this);
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-native-key");
-        }
-        break;
-      }
-      case ICStub::GetElem_NativePrototypeSlotName:
-      case ICStub::GetElem_NativePrototypeSlotSymbol: {
-        ICGetElemNativeStub* getElemStub = static_cast<ICGetElemNativeStub*>(this);
-        getElemStub->receiverGuard().trace(trc);
-        if (getElemStub->isSymbol()) {
-            ICGetElem_NativePrototypeSlot<JS::Symbol*>* typedGetElemStub
-                = toGetElem_NativePrototypeSlotSymbol();
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-nativeproto-key");
-            TraceEdge(trc, &typedGetElemStub->holder(), "baseline-getelem-nativeproto-holder");
-            TraceEdge(trc, &typedGetElemStub->holderShape(), "baseline-getelem-nativeproto-holdershape");
-        } else {
-            ICGetElem_NativePrototypeSlot<PropertyName*>* typedGetElemStub
-                = toGetElem_NativePrototypeSlotName();
-            TraceEdge(trc, &typedGetElemStub->key(), "baseline-getelem-nativeproto-key");
-            TraceEdge(trc, &typedGetElemStub->holder(), "baseline-getelem-nativeproto-holder");
-            TraceEdge(trc, &typedGetElemStub->holderShape(), "baseline-getelem-nativeproto-holdershape");
-        }
-        break;
-      }
-      case ICStub::GetElem_NativePrototypeCallNativeName:
-      case ICStub::GetElem_NativePrototypeCallNativeSymbol:
-      case ICStub::GetElem_NativePrototypeCallScriptedName:
-      case ICStub::GetElem_NativePrototypeCallScriptedSymbol: {
-        ICGetElemNativeStub* getElemStub = static_cast<ICGetElemNativeStub*>(this);
-        getElemStub->receiverGuard().trace(trc);
-        if (getElemStub->isSymbol()) {
-            ICGetElemNativePrototypeCallStub<JS::Symbol*>* callStub =
-                reinterpret_cast<ICGetElemNativePrototypeCallStub<JS::Symbol*>*>(this);
-            TraceEdge(trc, &callStub->key(), "baseline-getelem-nativeprotocall-key");
-            TraceEdge(trc, &callStub->getter(), "baseline-getelem-nativeprotocall-getter");
-            TraceEdge(trc, &callStub->holder(), "baseline-getelem-nativeprotocall-holder");
-            TraceEdge(trc, &callStub->holderShape(), "baseline-getelem-nativeprotocall-holdershape");
-        } else {
-            ICGetElemNativePrototypeCallStub<PropertyName*>* callStub =
-                reinterpret_cast<ICGetElemNativePrototypeCallStub<PropertyName*>*>(this);
-            TraceEdge(trc, &callStub->key(), "baseline-getelem-nativeprotocall-key");
-            TraceEdge(trc, &callStub->getter(), "baseline-getelem-nativeprotocall-getter");
-            TraceEdge(trc, &callStub->holder(), "baseline-getelem-nativeprotocall-holder");
-            TraceEdge(trc, &callStub->holderShape(), "baseline-getelem-nativeprotocall-holdershape");
-        }
         break;
       }
       case ICStub::GetElem_Dense: {
@@ -2062,73 +1996,6 @@ ICCompare_Int32WithBoolean::Compiler::generateStubCode(MacroAssembler& masm)
 // GetProp_Fallback
 //
 
-static bool
-TryAttachMagicArgumentsGetPropStub(JSContext* cx, SharedStubInfo* info,
-                                   ICGetProp_Fallback* stub, HandlePropertyName name,
-                                   HandleValue val, HandleValue res, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (!val.isMagic(JS_OPTIMIZED_ARGUMENTS))
-        return true;
-
-    // Try handling arguments.callee on optimized arguments.
-    if (name == cx->names().callee) {
-        MOZ_ASSERT(info->script()->hasMappedArgsObj());
-
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(MagicArgs.callee) stub");
-
-        // Unlike ICGetProp_ArgumentsLength, only magic argument stubs are
-        // supported at the moment.
-        ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-        ICGetProp_ArgumentsCallee::Compiler compiler(cx, info->engine(), monitorStub);
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-        if (!newStub)
-            return false;
-        stub->addNewStub(newStub);
-
-        *attached = true;
-        return true;
-    }
-
-    return true;
-}
-
-static bool
-TryAttachLengthStub(JSContext* cx, SharedStubInfo* info,
-                    ICGetProp_Fallback* stub, HandleValue val,
-                    HandleValue res, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (val.isString()) {
-        MOZ_ASSERT(res.isInt32());
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(String.length) stub");
-        ICGetProp_StringLength::Compiler compiler(cx, info->engine());
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-        if (!newStub)
-            return false;
-
-        *attached = true;
-        stub->addNewStub(newStub);
-        return true;
-    }
-
-    if (val.isMagic(JS_OPTIMIZED_ARGUMENTS) && res.isInt32()) {
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(MagicArgs.length) stub");
-        ICGetProp_ArgumentsLength::Compiler compiler(cx, info->engine(), ICGetProp_ArgumentsLength::Magic);
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-        if (!newStub)
-            return false;
-
-        *attached = true;
-        stub->addNewStub(newStub);
-        return true;
-    }
-
-    return true;
-}
-
 // Return whether obj is in some PreliminaryObjectArray and has a structure
 // that might change in the future.
 bool
@@ -2348,7 +2215,7 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
 }
 
 bool
-CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
+CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                        JSObject** lastProto, size_t* protoChainDepthOut)
 {
     size_t depth = 0;
@@ -2356,9 +2223,9 @@ CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
     while (curObj) {
         if (curObj->isNative()) {
             // Don't handle proto chains with resolve hooks.
-            if (ClassMayResolveId(cx->names(), curObj->getClass(), NameToId(name), curObj))
+            if (ClassMayResolveId(cx->names(), curObj->getClass(), id, curObj))
                 return false;
-            if (curObj->as<NativeObject>().contains(cx, NameToId(name)))
+            if (curObj->as<NativeObject>().contains(cx, id))
                 return false;
             if (curObj->getClass()->getGetProperty())
                 return false;
@@ -2366,13 +2233,13 @@ CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
             // Non-native objects are only handled as the original receiver.
             return false;
         } else if (curObj->is<UnboxedPlainObject>()) {
-            if (curObj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, NameToId(name)))
+            if (curObj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
                 return false;
         } else if (curObj->is<UnboxedArrayObject>()) {
-            if (name == cx->names().length)
+            if (JSID_IS_ATOM(id, cx->names().length))
                 return false;
         } else if (curObj->is<TypedObject>()) {
-            if (curObj->as<TypedObject>().typeDescr().hasProperty(cx->names(), NameToId(name)))
+            if (curObj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
                 return false;
         } else {
             return false;
@@ -2471,11 +2338,11 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
     }
 
     if (!attached && !JitOptions.disableCacheIR) {
-        GetPropIRGenerator gen(cx, pc, engine, &isTemporarilyUnoptimizable, val, name, res);
-        if (!gen.tryAttachStub())
-            return false;
-        if (gen.emitted()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), CacheKind::GetProp,
+        RootedValue idVal(cx, StringValue(name));
+        GetPropIRGenerator gen(cx, pc, engine, CacheKind::GetProp, &isTemporarilyUnoptimizable,
+                               val, idVal, res);
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         engine, info.outerScript(cx), stub);
             if (newStub) {
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
@@ -2503,20 +2370,6 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
 
     if (attached)
         return true;
-
-    if (op == JSOP_LENGTH) {
-        if (!TryAttachLengthStub(cx, &info, stub, val, res, &attached))
-            return false;
-        if (attached)
-            return true;
-    }
-
-    if (!TryAttachMagicArgumentsGetPropStub(cx, &info, stub, name, val,
-                                            res, &attached))
-        return false;
-    if (attached)
-        return true;
-
 
     MOZ_ASSERT(!attached);
     if (!isTemporarilyUnoptimizable)
@@ -2581,25 +2434,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
         void* address = code->raw() + returnOffset_;
         cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(address);
     }
-}
-
-bool
-ICGetProp_StringLength::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-    masm.branchTestString(Assembler::NotEqual, R0, &failure);
-
-    // Unbox string and load its length.
-    Register string = masm.extractString(R0, ExtractTemp0);
-    masm.loadStringLength(string, string);
-
-    masm.tagValue(JSVAL_TYPE_INT32, string, R0);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 ICGetPropNativeStub*
@@ -2877,61 +2711,6 @@ ICGetPropCallNativeCompiler::getStub(ICStubSpace* space)
       default:
         MOZ_CRASH("Bad stub kind");
     }
-}
-
-bool
-ICGetProp_ArgumentsLength::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(which_ == ICGetProp_ArgumentsLength::Magic);
-
-    Label failure;
-
-    // Ensure that this is lazy arguments.
-    masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
-
-    // Ensure that frame has not loaded different arguments object since.
-    masm.branchTest32(Assembler::NonZero,
-                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
-                      &failure);
-
-    Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
-    masm.loadPtr(actualArgs, R0.scratchReg());
-    masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
-    EmitReturnFromIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-ICGetProp_ArgumentsCallee::ICGetProp_ArgumentsCallee(JitCode* stubCode, ICStub* firstMonitorStub)
-  : ICMonitoredStub(GetProp_ArgumentsCallee, stubCode, firstMonitorStub)
-{ }
-
-bool
-ICGetProp_ArgumentsCallee::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-
-    // Ensure that this is lazy arguments.
-    masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
-
-    // Ensure that frame has not loaded different arguments object since.
-    masm.branchTest32(Assembler::NonZero,
-                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
-                      &failure);
-
-    Address callee(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
-    masm.loadFunctionFromCalleeToken(callee, R0.scratchReg());
-    masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
-
-    EmitEnterTypeMonitorIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 /* static */ ICGetProp_Generic*

@@ -256,18 +256,22 @@ private:
 /**
  * StyleChildrenIterator traverses the children of the element from the
  * perspective of the style system, particularly the children we need to traverse
- * during restyle. This is identical to AllChildrenIterator with eAllChildren,
- * _except_ that we detect and skip any native anonymous children that are used
- * to implement pseudo-elements (since the style system needs to cascade those
- * using different algorithms).
+ * during restyle. This is identical to AllChildrenIterator with
+ * (eAllChildren | eSkipDocumentLevelNativeAnonymousContent), _except_ that we
+ * detect and skip any native anonymous children that are used to implement
+ * pseudo-elements (since the style system needs to cascade those using
+ * different algorithms).
  *
  * Note: it assumes that no mutation of the DOM or frame tree takes place during
  * iteration, and will break horribly if that is not true.
  */
-class StyleChildrenIterator : private AllChildrenIterator {
+class StyleChildrenIterator : private AllChildrenIterator
+{
 public:
   explicit StyleChildrenIterator(const nsIContent* aContent)
-    : AllChildrenIterator(aContent, nsIContent::eAllChildren)
+    : AllChildrenIterator(aContent,
+                          nsIContent::eAllChildren |
+                          nsIContent::eSkipDocumentLevelNativeAnonymousContent)
   {
     MOZ_COUNT_CTOR(StyleChildrenIterator);
   }

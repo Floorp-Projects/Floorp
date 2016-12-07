@@ -124,7 +124,7 @@ CreateDrawTargetForSurface(gfxASurface *aSurface)
                                              aSurface->GetSize(),
                                              &format);
   if (!drawTarget) {
-    NS_RUNTIMEABORT("CreateDrawTargetForSurface failed in plugin");
+    MOZ_CRASH("CreateDrawTargetForSurface failed in plugin");
   }
   return drawTarget;
 }
@@ -163,8 +163,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mWinlessPopupSurrogateHWND(0)
     , mWinlessThrottleOldWndProc(0)
     , mWinlessHiddenMsgHWND(0)
-    , mUnityGetMessageHook(NULL)
-    , mUnitySendMessageHook(NULL)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(MOZ_WIDGET_COCOA)
@@ -210,9 +208,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     InitPopupMenuHook();
-    if (GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE) {
-        SetUnityHooks();
-    }
     InitImm32Hook();
 #endif // OS_WIN
 }
@@ -221,9 +216,6 @@ PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
     NS_ASSERTION(!mPluginWindowHWND, "Destroying PluginInstanceChild without NPP_Destroy?");
-    if (GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE) {
-        ClearUnityHooks();
-    }
     // In the event that we registered for audio device changes, stop.
     PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
     if (chromeInstance) {
@@ -1045,7 +1037,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
                                                  int16_t* handled,
                                                  Shmem* rtnmem)
 {
-    NS_RUNTIMEABORT("not reached.");
+    MOZ_CRASH("not reached.");
     *rtnmem = mem;
     return IPC_OK();
 }
@@ -2095,139 +2087,6 @@ PluginInstanceChild::HookSetWindowLongPtr()
 #endif
 }
 
-class SetCaptureHookData
-{
-public:
-    explicit SetCaptureHookData(HWND aHwnd)
-        : mHwnd(aHwnd)
-        , mHaveRect(false)
-    {
-        MOZ_ASSERT(aHwnd);
-        mHaveRect = !!GetClientRect(aHwnd, &mCaptureRect);
-    }
-
-    /**
-     * @return true if capture was released
-     */
-    bool HandleMouseMsg(const MSG& aMsg)
-    {
-        // If the window belongs to Unity, the mouse button is up, and the mouse
-        // has moved outside the client rect of the Unity window, release capture.
-        if (aMsg.hwnd != mHwnd || !mHaveRect) {
-            return false;
-        }
-        if (aMsg.message != WM_MOUSEMOVE && aMsg.message != WM_LBUTTONUP) {
-            return false;
-        }
-        if ((aMsg.message == WM_MOUSEMOVE && (aMsg.wParam & MK_LBUTTON))) {
-            return false;
-        }
-        POINT pt = { GET_X_LPARAM(aMsg.lParam), GET_Y_LPARAM(aMsg.lParam) };
-        if (PtInRect(&mCaptureRect, pt)) {
-            return false;
-        }
-        return !!ReleaseCapture();
-    }
-
-    bool IsUnityLosingCapture(const CWPSTRUCT& aInfo) const
-    {
-        return aInfo.message == WM_CAPTURECHANGED &&
-               aInfo.hwnd == mHwnd;
-    }
-
-private:
-    HWND mHwnd;
-    bool mHaveRect;
-    RECT mCaptureRect;
-};
-
-static StaticAutoPtr<SetCaptureHookData> sSetCaptureHookData;
-typedef HWND (WINAPI* User32SetCapture)(HWND);
-static User32SetCapture sUser32SetCaptureHookStub = nullptr;
-
-HWND WINAPI
-PluginInstanceChild::SetCaptureHook(HWND aHwnd)
-{
-    // Don't do anything unless aHwnd belongs to Unity
-    wchar_t className[256] = {0};
-    int numChars = GetClassNameW(aHwnd, className, ArrayLength(className));
-    NS_NAMED_LITERAL_STRING(unityClassName, "Unity.WebPlayer");
-    if (numChars == unityClassName.Length() && unityClassName == wwc(className)) {
-        sSetCaptureHookData = new SetCaptureHookData(aHwnd);
-    }
-    return sUser32SetCaptureHookStub(aHwnd);
-}
-
-void
-PluginInstanceChild::SetUnityHooks()
-{
-    if (!(GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE)) {
-        return;
-    }
-
-    sUser32Intercept.Init("user32.dll");
-    if (!sUser32SetCaptureHookStub) {
-        sUser32Intercept.AddHook("SetCapture",
-                                 reinterpret_cast<intptr_t>(SetCaptureHook),
-                                 (void**) &sUser32SetCaptureHookStub);
-    }
-    if (!mUnityGetMessageHook) {
-        mUnityGetMessageHook = SetWindowsHookEx(WH_GETMESSAGE,
-                                                &UnityGetMessageHookProc, NULL,
-                                                GetCurrentThreadId());
-    }
-    if (!mUnitySendMessageHook) {
-        mUnitySendMessageHook = SetWindowsHookEx(WH_CALLWNDPROC,
-                                                 &UnitySendMessageHookProc,
-                                                 NULL, GetCurrentThreadId());
-    }
-}
-
-void
-PluginInstanceChild::ClearUnityHooks()
-{
-    if (mUnityGetMessageHook) {
-        UnhookWindowsHookEx(mUnityGetMessageHook);
-        mUnityGetMessageHook = NULL;
-    }
-    if (mUnitySendMessageHook) {
-        UnhookWindowsHookEx(mUnitySendMessageHook);
-        mUnitySendMessageHook = NULL;
-    }
-    sSetCaptureHookData = nullptr;
-}
-
-LRESULT CALLBACK
-PluginInstanceChild::UnityGetMessageHookProc(int aCode, WPARAM aWparam,
-                                             LPARAM aLParam)
-{
-    if (aCode >= 0) {
-        MSG* info = reinterpret_cast<MSG*>(aLParam);
-        MOZ_ASSERT(info);
-        if (sSetCaptureHookData && sSetCaptureHookData->HandleMouseMsg(*info)) {
-            sSetCaptureHookData = nullptr;
-        }
-    }
-
-    return CallNextHookEx(0, aCode, aWparam, aLParam);
-}
-
-LRESULT CALLBACK
-PluginInstanceChild::UnitySendMessageHookProc(int aCode, WPARAM aWparam,
-                                              LPARAM aLParam)
-{
-    if (aCode >= 0) {
-        CWPSTRUCT* info = reinterpret_cast<CWPSTRUCT*>(aLParam);
-        MOZ_ASSERT(info);
-        if (sSetCaptureHookData &&
-            sSetCaptureHookData->IsUnityLosingCapture(*info)) {
-            sSetCaptureHookData = nullptr;
-        }
-    }
-
-    return CallNextHookEx(0, aCode, aWparam, aLParam);
-}
-
 /* windowless track popup menu helpers */
 
 BOOL
@@ -2696,9 +2555,7 @@ PluginInstanceChild::AnswerSetPluginFocus()
     // when a button click brings up a full screen window. Since we send
     // this in response to a WM_SETFOCUS event on our parent, the parent
     // should have focus when we receive this. If not, ignore the call.
-    if (::GetFocus() == mPluginWindowHWND ||
-        ((GetQuirks() & QUIRK_SILVERLIGHT_FOCUS_CHECK_PARENT) &&
-         (::GetFocus() != mPluginParentHWND)))
+    if (::GetFocus() == mPluginWindowHWND)
         return IPC_OK();
     ::SetFocus(mPluginWindowHWND);
     return IPC_OK();
@@ -2880,7 +2737,7 @@ PluginInstanceChild::AllocPPluginStreamChild(const nsCString& mimeType,
                                              const nsCString& target,
                                              NPError* result)
 {
-    NS_RUNTIMEABORT("not callable");
+    MOZ_CRASH("not callable");
     return nullptr;
 }
 
@@ -2901,7 +2758,7 @@ PluginInstanceChild::AllocPStreamNotifyChild(const nsCString& url,
                                              NPError* result)
 {
     AssertPluginThread();
-    NS_RUNTIMEABORT("not reached");
+    MOZ_CRASH("not reached");
     return nullptr;
 }
 
@@ -3370,9 +3227,6 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     mContentsScaleFactor = aWindow.contentsScaleFactor;
 #endif
 
-    if (GetQuirks() & QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT)
-        mIsTransparent = true;
-
     mLayersRendering = true;
     mSurfaceType = aSurfaceType;
     UpdateWindowAttributes(true);
@@ -3443,7 +3297,7 @@ PluginInstanceChild::CreateOptSurface(void)
         return true;
     }
 
-    NS_RUNTIMEABORT("Shared-memory drawing not expected on Windows.");
+    MOZ_CRASH("Shared-memory drawing not expected on Windows.");
 #endif
 
     // Make common shmem implementation working for any platform
@@ -3641,7 +3495,7 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
 
     if (curSurface) {
         if (!SharedDIBSurface::IsSharedDIBSurface(curSurface))
-            NS_RUNTIMEABORT("Expected SharedDIBSurface!");
+            MOZ_CRASH("Expected SharedDIBSurface!");
 
         SharedDIBSurface* dibsurf = static_cast<SharedDIBSurface*>(curSurface.get());
         dc = dibsurf->GetHDC();
@@ -3764,7 +3618,7 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     ::IntersectClipRect((HDC) mWindow.window, rect.left, rect.top, rect.right, rect.bottom);
     mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
 #else
-    NS_RUNTIMEABORT("Surface type not implemented.");
+    MOZ_CRASH("Surface type not implemented.");
 #endif
 }
 
@@ -3880,7 +3734,7 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     // vanilla image surfaces.  Bifurcate this painting code so that
     // we don't accidentally attempt that.
     if (!SharedDIBSurface::IsSharedDIBSurface(aSurface))
-        NS_RUNTIMEABORT("Expected SharedDIBSurface!");
+        MOZ_CRASH("Expected SharedDIBSurface!");
 
     // Paint the plugin directly onto the target, with a white
     // background and copy the result
@@ -4153,7 +4007,7 @@ PluginInstanceChild::ShowPluginFrame()
     if (gfxSharedImageSurface::IsSharedImage(mCurrentSurface)) {
         currSurf = static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->GetShmem();
     } else {
-        NS_RUNTIMEABORT("Surface type is not remotable");
+        MOZ_CRASH("Surface type is not remotable");
         return false;
     }
 
@@ -4315,7 +4169,7 @@ PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
             break;
         }
         default:
-            NS_RUNTIMEABORT("Unexpected background surface descriptor");
+            MOZ_CRASH("Unexpected background surface descriptor");
         }
 
         if (!mBackground) {
@@ -4575,7 +4429,7 @@ PluginInstanceChild::Destroy()
         return;
     }
     if (mStackDepth != 0) {
-        NS_RUNTIMEABORT("Destroying plugin instance on the stack.");
+        MOZ_CRASH("Destroying plugin instance on the stack.");
     }
     mDestroyed = true;
 

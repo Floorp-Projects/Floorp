@@ -23,7 +23,7 @@ function log(s) {
 
 function getEvent(e) {
   log("got event: " + e.type + " (" + e.target.readyState + ")");
-  gen.send(e);
+  gen.next(e);
 }
 
 function startsWith(a, b) {
@@ -126,7 +126,7 @@ function bufferToString(buffer) {
   return String.fromCharCode.apply(String, new Uint8Array(buffer));
 }
 
-function runTests() {
+function* runTests() {
   var xhr = new XMLHttpRequest();
   xhr.onprogress = xhr.onload = xhr.onerror = xhr.onreadystatechange = xhr.onloadend = getEvent;
 
@@ -324,7 +324,6 @@ function runTests() {
   }
 
   SimpleTest.finish();
-  yield undefined;
 }
 
 </script>

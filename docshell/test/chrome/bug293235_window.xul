@@ -42,7 +42,7 @@
     // to it when displayed on a page which was fetched from
     // the bfcache.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Register our observer to know when the link lookup is complete.
       let testURI = NetUtil.newURI(getHttpUrl("bug293235_p2.html"));
@@ -150,10 +150,8 @@
       ok(snapshotsEqual(refVisited, snapshotWindow(TestWindow.getWindow())),
          "visited link should be purple");
 
-      // Tell the framework the test is finished.  Include the final 'yield'
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
 
   ]]></script>

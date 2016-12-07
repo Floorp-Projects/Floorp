@@ -92,13 +92,15 @@ class PendingDBLookup;
 // created by ApplicationReputationService, it is guaranteed to call mCallback.
 // This class is private to ApplicationReputationService.
 class PendingLookup final : public nsIStreamListener,
-                            public nsITimerCallback
+                            public nsITimerCallback,
+                            public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSIOBSERVER
 
   // Constructor and destructor.
   PendingLookup(nsIApplicationReputationQuery* aQuery,
@@ -370,7 +372,8 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
 
 NS_IMPL_ISUPPORTS(PendingLookup,
                   nsIStreamListener,
-                  nsIRequestObserver)
+                  nsIRequestObserver,
+                  nsIObserver)
 
 PendingLookup::PendingLookup(nsIApplicationReputationQuery* aQuery,
                              nsIApplicationReputationCallback* aCallback) :
@@ -1322,6 +1325,24 @@ PendingLookup::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// nsIObserver implementation
+NS_IMETHODIMP
+PendingLookup::Observe(nsISupports *aSubject, const char *aTopic,
+                       const char16_t *aData)
+{
+  if (!strcmp(aTopic, "quit-application")) {
+    if (mTimeoutTimer) {
+      mTimeoutTimer->Cancel();
+      mTimeoutTimer = nullptr;
+    }
+    if (mChannel) {
+      mChannel->Cancel(NS_ERROR_ABORT);
+    }
+  }
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIStreamListener
 static nsresult
@@ -1519,5 +1540,13 @@ nsresult ApplicationReputationService::QueryReputationInternal(
   RefPtr<PendingLookup> lookup(new PendingLookup(aQuery, aCallback));
   NS_ENSURE_STATE(lookup);
 
+  // Add an observer for shutdown
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (!observerService) {
+    return NS_ERROR_FAILURE;
+  }
+
+  observerService->AddObserver(lookup, "quit-application", false);
   return lookup->StartLookup();
 }

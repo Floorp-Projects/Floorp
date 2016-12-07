@@ -611,3 +611,22 @@ STUB(gdk_x11_window_get_drawable_impl)
 STUB(gdkx_visual_get)
 STUB(gtk_object_get_type)
 #endif
+
+#ifndef GTK3_SYMBOLS
+// Only define the following workaround when using GTK3, which we detect
+// by checking if GTK3 stubs are not provided.
+#include <X11/Xlib.h>
+// Bug 1271100
+// We need to trick system Cairo into not using the XShm extension due to
+// a race condition in it that results in frequent BadAccess errors. Cairo
+// relies upon XShmQueryExtension to initially detect if XShm is available.
+// So we define our own stub that always indicates XShm not being present.
+// mozgtk loads before libXext/libcairo and so this stub will take priority.
+// Our tree usage goes through xcb and remains unaffected by this.
+MOZ_EXPORT Bool
+XShmQueryExtension(Display* aDisplay)
+{
+  return False;
+}
+#endif
+

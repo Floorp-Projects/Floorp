@@ -931,6 +931,16 @@ ValidateCompressedTexImageRestrictions(const char* funcName, WebGLContext* webgl
     };
 
     switch (format->compression->family) {
+    case webgl::CompressionFamily::ASTC:
+        if (target == LOCAL_GL_TEXTURE_3D &&
+            !webgl->gl->IsExtensionSupported(gl::GLContext::KHR_texture_compression_astc_hdr))
+        {
+            webgl->ErrorInvalidOperation("%s: TEXTURE_3D requires ASTC's hdr profile.",
+                                         funcName);
+            return false;
+        }
+        break;
+
     case webgl::CompressionFamily::PVRTC:
         if (!IsPowerOfTwo(width) || !IsPowerOfTwo(height)) {
             webgl->ErrorInvalidValue("%s: %s requires power-of-two width and height.",

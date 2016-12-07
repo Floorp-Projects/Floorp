@@ -182,7 +182,7 @@ var gPropertyIndexedKeyframesTests = [
 var gKeyframeSequenceTests = [
   { desc:   "a one property one keyframe sequence",
     input:  [{ offset: 1, left: "10px" }],
-    output: [{ offset: null, computedOffset: 1, easing: "linear",
+    output: [{ offset: 1, computedOffset: 1, easing: "linear",
                left: "10px" }] },
   { desc:   "a one property two keyframe sequence",
     input:  [{ offset: 0, left: "10px" },

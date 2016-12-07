@@ -7,6 +7,7 @@
 #ifndef CTLogVerifier_h
 #define CTLogVerifier_h
 
+#include "CTLog.h"
 #include "pkix/Input.h"
 #include "pkix/pkix.h"
 #include "SignedCertificateTimestamp.h"
@@ -26,15 +27,27 @@ class CTLogVerifier
 public:
   CTLogVerifier();
 
-  // Initializes the verifier with log-specific information.
+  // Initializes the verifier with log-specific information. Only the public
+  // key is used for verification, other parameters are purely informational.
   // |subjectPublicKeyInfo| is a DER-encoded SubjectPublicKeyInfo.
+  // |operatorId| The numeric ID of the log operator as assigned at
+  // https://www.certificate-transparency.org/known-logs .
+  // |logStatus| Either "Included" or "Disqualified".
+  // |disqualificationTime| Disqualification timestamp (for disqualified logs).
   // An error is returned if |subjectPublicKeyInfo| refers to an unsupported
   // public key.
-  pkix::Result Init(pkix::Input subjectPublicKeyInfo);
+  pkix::Result Init(pkix::Input subjectPublicKeyInfo,
+                    CTLogOperatorId operatorId,
+                    CTLogStatus logStatus,
+                    uint64_t disqualificationTime);
 
   // Returns the log's key ID, which is a SHA256 hash of its public key.
   // See RFC 6962, Section 3.2.
   const Buffer& keyId() const { return mKeyId; }
+
+  CTLogOperatorId operatorId() const { return mOperatorId; }
+  bool isDisqualified() const { return mDisqualified; }
+  uint64_t disqualificationTime() const { return mDisqualificationTime; }
 
   // Verifies that |sct| contains a valid signature for |entry|.
   // |sct| must be signed by the verifier's log.
@@ -61,6 +74,9 @@ private:
   Buffer mSubjectPublicKeyInfo;
   Buffer mKeyId;
   DigitallySigned::SignatureAlgorithm mSignatureAlgorithm;
+  CTLogOperatorId mOperatorId;
+  bool mDisqualified;
+  uint64_t mDisqualificationTime;
 };
 
 } } // namespace mozilla::ct

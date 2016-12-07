@@ -20,7 +20,7 @@ import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
 import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 
 public class SyncStorageRequest implements Resource {
-  public static HashMap<String, String> SERVER_ERROR_MESSAGES;
+  public static final HashMap<String, String> SERVER_ERROR_MESSAGES;
   static {
     HashMap<String, String> errors = new HashMap<String, String>();
 

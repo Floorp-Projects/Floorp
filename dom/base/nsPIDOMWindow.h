@@ -195,8 +195,6 @@ protected:
   void MaybeCreateDoc();
 
 public:
-  inline bool IsLoadingOrRunningTimeout() const;
-
   // Check whether a document is currently loading
   inline bool IsLoading() const;
   inline bool IsHandlingResizeEvent() const;
@@ -580,7 +578,7 @@ public:
 
   mozilla::dom::TabGroup* TabGroup();
 
-  mozilla::dom::DocGroup* GetDocGroup();
+  mozilla::dom::DocGroup* GetDocGroup() const;
 
   virtual mozilla::ThrottledEventQueue* GetThrottledEventQueue() = 0;
 

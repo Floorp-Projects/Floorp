@@ -362,13 +362,18 @@ class BuildOptionParser(object):
         'stylo-debug': 'builds/releng_sub_%s_configs/%s_stylo_debug.py',
         'api-15-gradle-dependencies': 'builds/releng_sub_%s_configs/%s_api_15_gradle_dependencies.py',
         'api-15': 'builds/releng_sub_%s_configs/%s_api_15.py',
+        'api-15-artifact': 'builds/releng_sub_%s_configs/%s_api_15_artifact.py',
         'api-15-debug': 'builds/releng_sub_%s_configs/%s_api_15_debug.py',
+        'api-15-debug-artifact': 'builds/releng_sub_%s_configs/%s_api_15_debug_artifact.py',
         'api-15-gradle': 'builds/releng_sub_%s_configs/%s_api_15_gradle.py',
+        'api-15-gradle-artifact': 'builds/releng_sub_%s_configs/%s_api_15_gradle_artifact.py',
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
+        'x86-artifact': 'builds/releng_sub_%s_configs/%s_x86_artifact.py',
         'api-15-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_15_partner_sample1.py',
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
+        'android-findbugs': 'builds/releng_sub_%s_configs/%s_findbugs.py',
         'valgrind' : 'builds/releng_sub_%s_configs/%s_valgrind.py',
         'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
         'debug-artifact': 'builds/releng_sub_%s_configs/%s_debug_artifact.py',
@@ -1887,6 +1892,12 @@ or run without that action (ie: --no-{action})"
 
         return data
 
+    def get_firefox_version(self):
+        versionFilePath = os.path.join(
+            self.query_abs_dirs()['abs_src_dir'], 'browser/config/version.txt')
+        with open(versionFilePath, 'r') as versionFile:
+            return versionFile.readline().strip()
+
     def generate_build_stats(self):
         """grab build stats following a compile.
 
@@ -1917,9 +1928,17 @@ or run without that action (ie: --no-{action})"
         # then assume we are using MOZ_SIMPLE_PACKAGE_NAME, which means the
         # package is named one of target.{tar.bz2,zip,dmg}.
         if not packageName:
+            firefox_version = self.get_firefox_version()
             dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
             for ext in ['apk', 'dmg', 'tar.bz2', 'zip']:
                 name = 'target.' + ext
+                if os.path.exists(os.path.join(dist_dir, name)):
+                    packageName = name
+                    break
+                # if we are not using MOZ_SIMPLE_PACKAGE_NAME, check for the
+                # default package naming convention
+                name = 'firefox-{}.en-US.{}.{}'.format(
+                    firefox_version, c.get('platform'), ext)
                 if os.path.exists(os.path.join(dist_dir, name)):
                     packageName = name
                     break

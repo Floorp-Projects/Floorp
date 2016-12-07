@@ -17,6 +17,7 @@ Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderMo
 const promise = require("promise");
 const Services = require("Services");
 const Telemetry = require("devtools/client/shared/telemetry");
+const {PrefObserver} = require("devtools/client/shared/prefs");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
@@ -636,11 +637,9 @@ WebConsoleFrame.prototype = {
     });
 
     // Toggle the timestamp on preference change
-    gDevTools.on("pref-changed", this._onToolboxPrefChanged);
-    this._onToolboxPrefChanged("pref-changed", {
-      pref: PREF_MESSAGE_TIMESTAMP,
-      newValue: Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP),
-    });
+    this._prefObserver = new PrefObserver("");
+    this._prefObserver.on(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
+    this._onToolboxPrefChanged();
 
     this._initShortcuts();
 
@@ -2691,25 +2690,16 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Handler for the pref-changed event coming from the toolbox.
-   * Currently this function only handles the timestamps preferences.
-   *
-   * @private
-   * @param object event
-   *        This parameter is a string that holds the event name
-   *        pref-changed in this case.
-   * @param object data
-   *        This is the pref-changed data object.
-  */
-  _onToolboxPrefChanged: function (event, data) {
-    if (data.pref == PREF_MESSAGE_TIMESTAMP) {
-      if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.newConsoleOutput.dispatchTimestampsToggle(data.newValue);
-      } else if (data.newValue) {
-        this.outputNode.classList.remove("hideTimestamps");
-      } else {
-        this.outputNode.classList.add("hideTimestamps");
-      }
+   * Called when the message timestamp pref changes.
+   */
+  _onToolboxPrefChanged: function () {
+    let newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
+    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.newConsoleOutput.dispatchTimestampsToggle(newValue);
+    } else if (newValue) {
+      this.outputNode.classList.remove("hideTimestamps");
+    } else {
+      this.outputNode.classList.add("hideTimestamps");
     }
   },
 
@@ -2818,7 +2808,8 @@ WebConsoleFrame.prototype = {
       toolbox.off("webconsole-selected", this._onPanelSelected);
     }
 
-    gDevTools.off("pref-changed", this._onToolboxPrefChanged);
+    this._prefObserver.off(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
+    this._prefObserver.destroy();
     this.window.removeEventListener("resize", this.resize, true);
 
     this._repeatNodes = {};

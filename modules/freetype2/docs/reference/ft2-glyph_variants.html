@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Glyph Variants</h1>
+<h1 id="glyph_variants">Glyph Variants</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Face_GetCharVariantIndex">FT_Face_GetCharVariantIndex</a></td><td><a href="#FT_Face_GetVariantsOfChar">FT_Face_GetVariantsOfChar</a></td></tr>
@@ -120,7 +120,7 @@
 
 <div class="section">
 <h3 id="FT_Face_GetCharVariantIndex">FT_Face_GetCharVariantIndex</h3>
-<p>Defined in FT_FREETYPE_H (freetype.h).</p>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a> )
   <b>FT_Face_GetCharVariantIndex</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
@@ -158,7 +158,7 @@
 
 <div class="section">
 <h3 id="FT_Face_GetCharVariantIsDefault">FT_Face_GetCharVariantIsDefault</h3>
-<p>Defined in FT_FREETYPE_H (freetype.h).</p>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Int">FT_Int</a> )
   <b>FT_Face_GetCharVariantIsDefault</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
@@ -195,7 +195,7 @@
 
 <div class="section">
 <h3 id="FT_Face_GetVariantSelectors">FT_Face_GetVariantSelectors</h3>
-<p>Defined in FT_FREETYPE_H (freetype.h).</p>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_UInt32">FT_UInt32</a>* )
   <b>FT_Face_GetVariantSelectors</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>  face );
@@ -224,7 +224,7 @@
 
 <div class="section">
 <h3 id="FT_Face_GetVariantsOfChar">FT_Face_GetVariantsOfChar</h3>
-<p>Defined in FT_FREETYPE_H (freetype.h).</p>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_UInt32">FT_UInt32</a>* )
   <b>FT_Face_GetVariantsOfChar</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
@@ -257,7 +257,7 @@
 
 <div class="section">
 <h3 id="FT_Face_GetCharsOfVariant">FT_Face_GetCharsOfVariant</h3>
-<p>Defined in FT_FREETYPE_H (freetype.h).</p>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_UInt32">FT_UInt32</a>* )
   <b>FT_Face_GetCharsOfVariant</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,

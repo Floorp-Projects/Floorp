@@ -18,10 +18,10 @@ SimpleTest.waitForExplicitFinish();
 
 gen = runTest();
 
-function runTest() {
+function* runTest() {
   let iframe = $('iframe');
   window.addEventListener("message", function(e) {
-    gen.send(JSON.parse(e.data));
+    gen.next(JSON.parse(e.data));
   }, false);
   
   iframe.src = "file_bug591198_inner.html";
@@ -37,7 +37,6 @@ function runTest() {
   is("anonChildCount" in res, false, "no anon children");
 
   SimpleTest.finish();
-  yield undefined;
 }
 
 </script>

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "Objects";
@@ -85,7 +85,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
     is(event.target.result, null, "ObjectStore shouldn't have any items");
-    testGenerator.send(event);
+    testGenerator.next(event);
   }
   event = yield undefined;
 
@@ -125,5 +125,4 @@ function testSteps()
   event = yield undefined;
 
   finishTest();
-  yield undefined;
 }

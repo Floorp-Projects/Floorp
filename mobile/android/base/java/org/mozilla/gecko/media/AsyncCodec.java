@@ -25,6 +25,7 @@ public interface AsyncCodec {
 
     public abstract void setCallbacks(Callbacks callbacks, Handler handler);
     public abstract void configure(MediaFormat format, Surface surface, MediaCrypto crypto, int flags);
+    public abstract boolean isAdaptivePlaybackSupported(String mimeType);
     public abstract void start();
     public abstract void stop();
     public abstract void flush();

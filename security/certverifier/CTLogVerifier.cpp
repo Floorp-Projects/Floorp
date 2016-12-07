@@ -6,6 +6,8 @@
 
 #include "CTLogVerifier.h"
 
+#include <stdint.h>
+
 #include "CTSerialization.h"
 #include "hasht.h"
 #include "mozilla/ArrayUtils.h"
@@ -120,12 +122,33 @@ public:
 
 CTLogVerifier::CTLogVerifier()
   : mSignatureAlgorithm(DigitallySigned::SignatureAlgorithm::Anonymous)
+  , mOperatorId(-1)
+  , mDisqualified(false)
+  , mDisqualificationTime(UINT64_MAX)
 {
 }
 
 Result
-CTLogVerifier::Init(Input subjectPublicKeyInfo)
+CTLogVerifier::Init(Input subjectPublicKeyInfo,
+                    CTLogOperatorId operatorId,
+                    CTLogStatus logStatus,
+                    uint64_t disqualificationTime)
 {
+  switch (logStatus) {
+    case CTLogStatus::Included:
+      mDisqualified = false;
+      mDisqualificationTime = UINT64_MAX;
+      break;
+    case CTLogStatus::Disqualified:
+      mDisqualified = true;
+      mDisqualificationTime = disqualificationTime;
+      break;
+    case CTLogStatus::Unknown:
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported CTLogStatus");
+      return Result::FATAL_ERROR_INVALID_ARGS;
+  }
+
   SignatureParamsTrustDomain trustDomain;
   Result rv = CheckSubjectPublicKeyInfo(subjectPublicKeyInfo, trustDomain,
                                         EndEntityOrCA::MustBeEndEntity);
@@ -148,6 +171,7 @@ CTLogVerifier::Init(Input subjectPublicKeyInfo)
     return rv;
   }
 
+  mOperatorId = operatorId;
   return Success;
 }
 

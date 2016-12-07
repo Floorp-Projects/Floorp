@@ -643,7 +643,7 @@ ImageBridgeChild::EndTransaction()
     }
   }
   for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
-    NS_RUNTIMEABORT("not reached");
+    MOZ_CRASH("not reached");
   }
 }
 
@@ -1097,7 +1097,7 @@ PImageContainerChild*
 ImageBridgeChild::AllocPImageContainerChild()
 {
   // we always use the "power-user" ctor
-  NS_RUNTIMEABORT("not reached");
+  MOZ_CRASH("not reached");
   return nullptr;
 }
 

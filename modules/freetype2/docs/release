@@ -1,7 +1,7 @@
 How to prepare a new release
 ----------------------------
 
-. include/freetype.h:  Update FREETYPE_MAJOR, FREETYPE_MINOR,
+. include/freetype/freetype.h:  Update FREETYPE_MAJOR, FREETYPE_MINOR,
   and FREETYPE_PATCH.
 
 . Update version numbers in all files where necessary (for example, do
@@ -13,7 +13,7 @@ How to prepare a new release
 
 . README: Update.
 
-. docs/VERSION.DLL: Document changed `version_info'.
+. docs/VERSIONS.TXT: Document changed `version_info'.
 
 . ChangeLog:   Announce  new  release   (both  in  the  freetype2  and
   freetype2-demos modules).
@@ -189,7 +189,7 @@ How to prepare a new release
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2005-2007, 2009, 2011-2014 by
+Copyright 2003-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

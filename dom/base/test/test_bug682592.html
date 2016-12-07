@@ -51,14 +51,14 @@ var testFrame = document.getElementById("iframe-test");
 
 refFrame.addEventListener("load", function() {
   testFrame.addEventListener("load", function() {
-    try {
-      tests.next();
+    let {done} = tests.next();
+    if (!done) {
       ok(compareSnapshots(snapshotWindow(testFrame.contentWindow), 
                           snapshotWindow(refFrame.contentWindow), true)[0], 
          "bidi is not detected correctly");
 
       testFrame.contentWindow.location.reload();
-    } catch (err if err instanceof StopIteration) {
+    } else {
       SimpleTest.finish();
     }
   }, false);
@@ -78,7 +78,7 @@ function strMult(aStr, aNumber) {
   return strMult(aStr, aNumber - 1) + aStr;
 }
 
-function runTests () {
+function* runTests () {
   var ltr = "", prefix = null;
   var refContainer = refFrame.contentDocument.getElementById('content');
   var testContainer, textNode;

@@ -2238,7 +2238,7 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
                                HandleObject receiver,
                                HandleFunction getter);
 MOZ_MUST_USE bool
-CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
+CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                        JSObject** lastProto = nullptr, size_t* protoChainDepthOut = nullptr);
 
 void
@@ -2336,30 +2336,6 @@ class ICGetProp_Generic : public ICMonitoredStub
 
         ICStub* getStub(ICStubSpace* space) {
             return newStub<ICGetProp_Generic>(space, getStubCode(), firstMonitorStub_);
-        }
-    };
-};
-
-// Stub for accessing a string's length.
-class ICGetProp_StringLength : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICGetProp_StringLength(JitCode* stubCode)
-      : ICStub(GetProp_StringLength, stubCode)
-    {}
-
-  public:
-    class Compiler : public ICStubCompiler {
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        explicit Compiler(JSContext* cx, Engine engine)
-          : ICStubCompiler(cx, ICStub::GetProp_StringLength, engine)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetProp_StringLength>(space, getStubCode());
         }
     };
 };
@@ -2672,67 +2648,6 @@ class ICGetPropCallNativeCompiler : public ICGetPropCallGetter::Compiler
     {}
 
     ICStub* getStub(ICStubSpace* space);
-};
-
-class ICGetProp_ArgumentsLength : public ICStub
-{
-  friend class ICStubSpace;
-  public:
-    enum Which { Magic };
-
-  protected:
-    explicit ICGetProp_ArgumentsLength(JitCode* stubCode)
-      : ICStub(ICStub::GetProp_ArgumentsLength, stubCode)
-    { }
-
-  public:
-    class Compiler : public ICStubCompiler {
-      protected:
-        Which which_;
-
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(which_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, Engine engine, Which which)
-          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsLength, engine),
-            which_(which)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetProp_ArgumentsLength>(space, getStubCode());
-        }
-    };
-};
-
-class ICGetProp_ArgumentsCallee : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-  protected:
-    ICGetProp_ArgumentsCallee(JitCode* stubCode, ICStub* firstMonitorStub);
-
-  public:
-    class Compiler : public ICStubCompiler {
-      protected:
-        ICStub* firstMonitorStub_;
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub)
-          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsCallee, engine),
-            firstMonitorStub_(firstMonitorStub)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetProp_ArgumentsCallee>(space, getStubCode(), firstMonitorStub_);
-        }
-    };
 };
 
 // JSOP_NEWARRAY

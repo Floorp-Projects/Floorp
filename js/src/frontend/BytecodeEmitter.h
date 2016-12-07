@@ -435,7 +435,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
 
     // Emit code for the tree rooted at pn with its own TDZ cache.
-    MOZ_MUST_USE bool emitConditionallyExecutedTree(ParseNode* pn);
+    MOZ_MUST_USE bool emitTreeInBranch(ParseNode* pn);
 
     // Emit global, eval, or module code for tree rooted at body. Always
     // encompasses the entire source.
@@ -648,8 +648,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // the stack and emits code to destructure a single lhs expression (either a
     // name or a compound []/{} expression).
     MOZ_MUST_USE bool emitDestructuringLHS(ParseNode* target, DestructuringFlavor flav);
-    MOZ_MUST_USE bool emitConditionallyExecutedDestructuringLHS(ParseNode* target,
-                                                                DestructuringFlavor flav);
+    MOZ_MUST_USE bool emitDestructuringLHSInBranch(ParseNode* target, DestructuringFlavor flav);
 
     // emitDestructuringOps assumes the to-be-destructured value has been
     // pushed on the stack and emits code to destructure each part of a [] or
@@ -678,7 +677,16 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     // Check if the value on top of the stack is "undefined". If so, replace
     // that value on the stack with the value defined by |defaultExpr|.
-    MOZ_MUST_USE bool emitDefault(ParseNode* defaultExpr);
+    // |pattern| is a lhs node of the default expression.  If it's an
+    // identifier and |defaultExpr| is an anonymous function, |SetFunctionName|
+    // is called at compile time.
+    MOZ_MUST_USE bool emitDefault(ParseNode* defaultExpr, ParseNode* pattern);
+
+    MOZ_MUST_USE bool setOrEmitSetFunName(ParseNode* maybeFun, HandleAtom name,
+                                          FunctionPrefixKind prefixKind);
+
+    MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
+    MOZ_MUST_USE bool emitInitializerInBranch(ParseNode* initializer, ParseNode* pattern);
 
     MOZ_MUST_USE bool emitCallSiteObject(ParseNode* pn);
     MOZ_MUST_USE bool emitTemplateString(ParseNode* pn);

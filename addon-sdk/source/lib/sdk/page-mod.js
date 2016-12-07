@@ -118,7 +118,7 @@ const PageMod = Class({
     pagemods.set(model.id, this);
     workers.set(this, []);
 
-    function serializeRules(rules) {
+    function* serializeRules(rules) {
       for (let rule of rules) {
         yield isRegExp(rule) ? { type: "regexp", pattern: rule.source, flags: rule.flags }
                              : { type: "string", value: rule };

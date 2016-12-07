@@ -27,7 +27,7 @@ class VRManagerParent final : public PVRManagerParent
                             , public ShmemAllocator
 {
 public:
-  explicit VRManagerParent(ProcessId aChildProcessId);
+  explicit VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild);
 
   static VRManagerParent* CreateSameProcess();
   static bool CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint);
@@ -54,6 +54,7 @@ public:
 
   virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+  bool SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent);
 
 protected:
   ~VRManagerParent();
@@ -108,6 +109,7 @@ private:
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;
   bool mHaveEventListener;
+  bool mIsContentChild;
 };
 
 } // namespace mozilla

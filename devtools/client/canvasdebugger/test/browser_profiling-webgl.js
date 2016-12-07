@@ -77,7 +77,6 @@ function* ifTestingSupported() {
 }
 
 function testFunctionCallTimestamp(functionCalls, currentTime) {
-
   info("Check the timestamps of function calls");
 
   for ( let i = 0; i < functionCalls.length-1; i += 2 ) {
@@ -85,7 +84,4 @@ function testFunctionCallTimestamp(functionCalls, currentTime) {
     ok( functionCalls[i].timestamp < currentTime, "The timestamp has been minus the frame start time." );
     ok( functionCalls[i+1].timestamp > functionCalls[i].timestamp, "The timestamp of the called function is correct." );
   }
-
-  yield removeTab(target.tab);
-  finish();
 }

@@ -432,7 +432,7 @@ function testComplete(iframe, data) {
   }
 }
 
-function runTest() {
+function* runTest() {
   while (gData.length > 0) {
     var iframe = document.createElement('iframe');
     var data = gData.pop();

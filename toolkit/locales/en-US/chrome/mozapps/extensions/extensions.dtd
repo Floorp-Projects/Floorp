@@ -246,3 +246,6 @@
 <!ENTITY disabledUnsigned.devInfo.start "Developers interested in getting their add-ons verified can continue by reading our ">
 <!ENTITY disabledUnsigned.devInfo.linkToManual "manual">
 <!ENTITY disabledUnsigned.devInfo.end ".">
+
+<!ENTITY pluginDeprecation.description "Missing something? Some plugins are no longer supported by &brandShortName;.">
+<!ENTITY pluginDeprecation.learnMore "Learn More.">

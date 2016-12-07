@@ -7,7 +7,10 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
+
+// eslint-disable-next-line
+const JQUERY_LIVE_REGEX = /return typeof \w+.*.event\.triggered[\s\S]*\.event\.(dispatch|handle).*arguments/;
 
 loader.lazyGetter(this, "eventListenerService", () => {
   return Cc["@mozilla.org/eventlistenerservice;1"]
@@ -22,7 +25,7 @@ var parsers = [
       let hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
 
       if (!hasJQuery) {
-        return;
+        return undefined;
       }
 
       let jQuery = global.jQuery;
@@ -36,6 +39,11 @@ var parsers = [
           let events = eventsObj[type];
           for (let key in events) {
             let event = events[key];
+
+            if (node.wrappedJSObject == global.document && event.selector) {
+              continue;
+            }
+
             if (typeof event === "object" || typeof event === "function") {
               let eventInfo = {
                 type: type,
@@ -63,6 +71,12 @@ var parsers = [
       for (let type in entry.events) {
         let events = entry.events[type];
         for (let key in events) {
+          let event = events[key];
+
+          if (node.wrappedJSObject == global.document && event.selector) {
+            continue;
+          }
+
           if (typeof events[key] === "function") {
             let eventInfo = {
               type: type,
@@ -90,45 +104,59 @@ var parsers = [
     getListeners: function (node) {
       return jQueryLiveGetListeners(node, false);
     },
-    normalizeHandler: function (handlerDO) {
-      let paths = [
-        [".event.proxy/", ".event.proxy/", "*"],
-        [".proxy/", "*"]
-      ];
+    normalizeListener: function (handlerDO) {
+      function isFunctionInProxy(funcDO) {
+        // If the anonymous function is inside the |proxy| function and the
+        // function only has guessed atom, the guessed atom should starts with
+        // "proxy/".
+        let displayName = funcDO.displayName;
+        if (displayName && displayName.startsWith("proxy/")) {
+          return true;
+        }
 
-      let name = handlerDO.displayName;
+        // If the anonymous function is inside the |proxy| function and the
+        // function gets name at compile time by SetFunctionName, its guessed
+        // atom doesn't contain "proxy/".  In that case, check if the caller is
+        // "proxy" function, as a fallback.
+        let calleeDO = funcDO.environment.callee;
+        if (!calleeDO) {
+          return false;
+        }
+        let calleeName = calleeDO.displayName;
+        return calleeName == "proxy";
+      }
 
-      if (!name) {
+      function getFirstFunctionVariable(funcDO) {
+        // The handler function inside the |proxy| function should point the
+        // unwrapped function via environment variable.
+        let names = funcDO.environment.names();
+        for (let varName of names) {
+          let varDO = handlerDO.environment.getVariable(varName);
+          if (!varDO) {
+            continue;
+          }
+          if (varDO.class == "Function") {
+            return varDO;
+          }
+        }
+        return null;
+      }
+
+      if (!isFunctionInProxy(handlerDO)) {
         return handlerDO;
       }
 
-      for (let path of paths) {
-        if (name.includes(path[0])) {
-          path.splice(0, 1);
+      const MAX_NESTED_HANDLER_COUNT = 2;
+      for (let i = 0; i < MAX_NESTED_HANDLER_COUNT; i++) {
+        let funcDO = getFirstFunctionVariable(handlerDO);
+        if (!funcDO)
+          return handlerDO;
 
-          for (let point of path) {
-            let names = handlerDO.environment.names();
-
-            for (let varName of names) {
-              let temp = handlerDO.environment.getVariable(varName);
-              if (!temp) {
-                continue;
-              }
-
-              let displayName = temp.displayName;
-              if (!displayName) {
-                continue;
-              }
-
-              if (temp.class === "Function" &&
-                  (displayName.includes(point) || point === "*")) {
-                handlerDO = temp;
-                break;
-              }
-            }
-          }
-          break;
+        handlerDO = funcDO;
+        if (isFunctionInProxy(handlerDO)) {
+          continue;
         }
+        break;
       }
 
       return handlerDO;
@@ -140,7 +168,14 @@ var parsers = [
       let listeners;
 
       if (node.nodeName.toLowerCase() === "html") {
-        listeners = eventListenerService.getListenerInfoFor(node.ownerGlobal) || [];
+        let winListeners =
+          eventListenerService.getListenerInfoFor(node.ownerGlobal) || [];
+        let docElementListeners =
+          eventListenerService.getListenerInfoFor(node) || [];
+        let docListeners =
+          eventListenerService.getListenerInfoFor(node.parentNode) || [];
+
+        listeners = [...winListeners, ...docElementListeners, ...docListeners];
       } else {
         listeners = eventListenerService.getListenerInfoFor(node) || [];
       }
@@ -165,7 +200,7 @@ var parsers = [
         let listener = listenerObj.listenerObject;
 
         // If there is no JS event listener skip this.
-        if (!listener) {
+        if (!listener || JQUERY_LIVE_REGEX.test(listener.toString())) {
           continue;
         }
 
@@ -188,7 +223,7 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
   let hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
 
   if (!hasJQuery) {
-    return;
+    return undefined;
   }
 
   let jQuery = global.jQuery;
@@ -235,7 +270,8 @@ function jQueryLiveGetListeners(node, boolOnEventFound) {
           continue;
         }
 
-        if (!boolOnEventFound && (typeof event === "object" || typeof event === "function")) {
+        if (!boolOnEventFound &&
+            (typeof event === "object" || typeof event === "function")) {
           let eventInfo = {
             type: event.origType || event.type.substr(selector.length + 1),
             handler: event.handler || event,
@@ -273,7 +309,8 @@ this.EventParsers = function EventParsers() {
 exports.EventParsers = EventParsers;
 
 EventParsers.prototype = {
-  _eventParsers: new Map(), // NOTE: This is shared amongst all instances.
+  // NOTE: This is shared amongst all instances.
+  _eventParsers: new Map(),
 
   get parsers() {
     return this._eventParsers;
@@ -286,26 +323,27 @@ EventParsers.prototype = {
    *        Each parser must contain the following properties:
    *        - parser, which must take the following form:
    *   {
-   *     id {String}: "jQuery events",         // Unique id.
-   *     getListeners: function(node) { },     // Function that takes a node and
-   *                                           // returns an array of eventInfo
-   *                                           // objects (see below).
+   *     id {String}: "jQuery events",          // Unique id.
+   *     getListeners: function(node) { },      // Function that takes a node
+   *                                            // and returns an array of
+   *                                            // eventInfo objects (see
+   *                                            // below).
    *
-   *     hasListeners: function(node) { },     // Optional function that takes a
-   *                                           // node and returns a boolean
-   *                                           // indicating whether a node has
-   *                                           // listeners attached.
+   *     hasListeners: function(node) { },      // Optional function that takes
+   *                                            // a node and returns a boolean
+   *                                            // indicating whether a node has
+   *                                            // listeners attached.
    *
-   *     normalizeHandler: function(fnDO) { }, // Optional function that takes a
-   *                                           // Debugger.Object instance and
-   *                                           // climbs the scope chain to get
-   *                                           // the function that should be
-   *                                           // displayed in the event bubble
-   *                                           // see the following url for
-   *                                           // details:
-   *                                           //   https://developer.mozilla.org/
-   *                                           //   docs/Tools/Debugger-API/
-   *                                           //   Debugger.Object
+   *     normalizeListener: function(fnDO) { }, // Optional function that takes a
+   *                                            // Debugger.Object instance and
+   *                                            // climbs the scope chain to get
+   *                                            // the function that should be
+   *                                            // displayed in the event bubble
+   *                                            // see the following url for
+   *                                            // details:
+   *                                            //   https://developer.mozilla.org/
+   *                                            //   docs/Tools/Debugger-API/
+   *                                            //   Debugger.Object
    *   }
    *
    * An eventInfo object should take the following form:
@@ -326,7 +364,7 @@ EventParsers.prototype = {
    *       type: "click",
    *       origin: "http://www.mozilla.com",
    *       searchString: 'onclick="doSomething()"',
-   *       DOM0: true,
+   *       dom0: true,
    *       capturing: true
    *     }
    *   }
@@ -344,7 +382,7 @@ EventParsers.prototype = {
     this._eventParsers.set(parserId, {
       getListeners: parserObj.getListeners,
       hasListeners: parserObj.hasListeners,
-      normalizeHandler: parserObj.normalizeHandler
+      normalizeListener: parserObj.normalizeListener
     });
   },
 

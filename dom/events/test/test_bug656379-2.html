@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=656379
 
 /** Test for Bug 656379 **/
 SimpleTest.waitForExplicitFinish();
-function tests() {
+function* tests() {
   synthesizeMouseAtCenter($("label1"), { type: "mousemove" });
   yield undefined;
   is($("button1").matches(":hover"), true,
@@ -67,10 +67,11 @@ function tests() {
 function executeTests() {
   var testYielder = tests();
   function execNext() {
-    try {
-      testYielder.next();
-      SimpleTest.executeSoon(execNext);
-    } catch(e) {}
+    let {done} = testYielder.next();
+    if (done) {
+      return;
+    }
+    SimpleTest.executeSoon(execNext);
   }
   execNext();
 }

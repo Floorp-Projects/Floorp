@@ -19,11 +19,11 @@ const TEST_DATA = [
     expected: [
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB,
+        filename: URL_ROOT + TEST_LIB + ":1387",
         attributes: [
           "jQuery"
         ],
-        handler: "ready: function() {\n" +
+        handler: "function() {\n" +
                  "  // Make sure that the DOM is not already loaded\n" +
                  "  if (!jQuery.isReady) {\n" +
                  "    // Remember that the DOM is ready\n" +
@@ -47,10 +47,10 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: TEST_URL,
+        filename: TEST_URL + ":27",
         attributes: [
           "Bubbling",
-          "DOM0"
+          "DOM2"
         ],
         handler: "() => {\n" +
                  "  var handler1 = function liveDivDblClick() {\n" +
@@ -108,12 +108,12 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB,
+        filename: URL_ROOT + TEST_LIB + ":1224",
         attributes: [
           "Bubbling",
-          "DOM0"
+          "DOM2"
         ],
-        handler: "handle: function(event) {\n" +
+        handler: "function(event) {\n" +
                  "  if (typeof jQuery == \"undefined\") return false;\n" +
                  "\n" +
                  "  // Empty object is for triggered events with no data\n" +
@@ -157,7 +157,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler7 = function divClick1() {\n" +
+        handler: "function divClick1() {\n" +
                  "  alert(7);\n" +
                  "}"
       },
@@ -167,7 +167,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler8 = function divClick2() {\n" +
+        handler: "function divClick2() {\n" +
                  "  alert(8);\n" +
                  "}"
       },
@@ -178,7 +178,7 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "handle: function(event) {\n" +
+        handler: "function(event) {\n" +
                  "  if (typeof jQuery == \"undefined\") return false;\n" +
                  "\n" +
                  "  // Empty object is for triggered events with no data\n" +
@@ -217,7 +217,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler9 = function divKeyDown() {\n" +
+        handler: "function divKeyDown() {\n" +
                  "  alert(9);\n" +
                  "}"
       },
@@ -228,7 +228,7 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: "handle: function(event) {\n" +
+        handler: "function(event) {\n" +
                  "  if (typeof jQuery == \"undefined\") return false;\n" +
                  "\n" +
                  "  // Empty object is for triggered events with no data\n" +

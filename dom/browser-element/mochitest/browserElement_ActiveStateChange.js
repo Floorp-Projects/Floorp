@@ -4,7 +4,6 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 
 var fileURL = 'chrome://mochitests/content/chrome/dom/browser-element/mochitest/file_browserElement_ActiveStateChange.html';
-var generator = runTests();
 var testFrame;
 var ac;
 
@@ -17,55 +16,46 @@ function error(aMessage) {
   finish();
 }
 
-function continueTest() {
-  try {
-    generator.next();
-  } catch (e if e instanceof StopIteration) {
-    error("Stop test because of exception!");
-  }
-}
-
 function finish() {
   document.body.removeChild(testFrame);
   SimpleTest.finish();
 }
 
 function setCommand(aArg) {
-  assert(!!ac, "Audio channel doesn't exist!");
-  info("# Command = " + aArg);
+  return new Promise(resolve => {
+    assert(!!ac, "Audio channel doesn't exist!");
+    info("# Command = " + aArg);
 
-  testFrame.src = fileURL + '#' + aArg;
-  var expectedActive = false;
-  switch (aArg) {
-    case 'play':
-      expectedActive = true;
-      break;
-    case 'pause':
-      expectedActive = false;
-      break;
-    default :
-      error("Undefined command!");
-  }
-
-  ac.onactivestatechanged = () => {
-    ac.onactivestatechanged = null;
-    ac.isActive().onsuccess = (e) => {
-      is(expectedActive, e.target.result,
-         "Correct active state = " + expectedActive);
-      continueTest();
+    testFrame.src = fileURL + '#' + aArg;
+    var expectedActive = false;
+    switch (aArg) {
+      case 'play':
+        expectedActive = true;
+        break;
+      case 'pause':
+        expectedActive = false;
+        break;
+      default :
+        error("Undefined command!");
     }
-  };
+
+    ac.onactivestatechanged = () => {
+      ac.onactivestatechanged = null;
+      ac.isActive().onsuccess = (e) => {
+        is(expectedActive, e.target.result,
+           "Correct active state = " + expectedActive);
+        resolve();
+      };
+    };
+  });
 }
 
-function runTests() {
-  setCommand('play');
-  yield undefined;
+async function runTests() {
+  await setCommand('play');
 
-  setCommand('pause');
-  yield undefined;
+  await setCommand('pause');
 
   finish();
-  yield undefined;
 }
 
 function setupTestFrame() {
@@ -74,7 +64,6 @@ function setupTestFrame() {
   testFrame.src = fileURL;
 
   function loadend() {
-    testFrame.removeEventListener('mozbrowserloadend', loadend);
     ok("allowedAudioChannels" in testFrame, "allowedAudioChannels exist");
     var channels = testFrame.allowedAudioChannels;
     is(channels.length, 9, "9 audio channel by default");
@@ -85,7 +74,7 @@ function setupTestFrame() {
     ok("isActive" in ac, "isActive exists");
     ok("onactivestatechanged" in ac, "onactivestatechanged exists");
 
-    generator.next();
+    runTests();
   }
 
   function alertError(e) {
@@ -94,7 +83,7 @@ function setupTestFrame() {
     error(message);
   }
 
-  testFrame.addEventListener('mozbrowserloadend', loadend);
+  testFrame.addEventListener('mozbrowserloadend', loadend, {once: true});
   testFrame.addEventListener('mozbrowsershowmodalprompt', alertError);
   document.body.appendChild(testFrame);
 }

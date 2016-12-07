@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Amiga-specific configuration file (specification only).              */
 /*                                                                         */
-/*  Copyright 2005-2007, 2013 by                                           */
+/*  Copyright 2005-2016 by                                                 */
 /*  Werner Lemberg and Detlef Würkner.                                     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,9 +34,9 @@
 /* Now include the original file */
 #ifndef __MORPHOS__
 #ifdef __SASC
-#include "FT:include/config/ftconfig.h"
+#include "FT:include/freetype/config/ftconfig.h"
 #else
-#include "/FT/include/config/ftconfig.h"
+#include "/FT/include/freetype/config/ftconfig.h"
 #endif
 #else
 /* We must define that, it seems that
@@ -45,7 +45,7 @@
  * binaries from http://www.morphos.de)
  */
 #define _LIBC_LIMITS_H_
-#include "/FT/include/config/ftconfig.h"
+#include "/FT/include/freetype/config/ftconfig.h"
 #endif
 
 /*

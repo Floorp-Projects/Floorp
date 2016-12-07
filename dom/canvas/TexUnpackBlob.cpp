@@ -650,7 +650,7 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         webgl->ErrorOutOfMemory("%s: GetAsSourceSurface or GetDataSurface failed after"
                                 " blit failed for TexUnpackImage.",
                                 funcName);
-        return true;
+        return false;
     }
 
     const TexUnpackSurface surfBlob(webgl, target, mWidth, mHeight, mDepth, dataSurf,

@@ -697,7 +697,7 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit)
 PluginModuleParent::~PluginModuleParent()
 {
     if (!OkToCleanup()) {
-        NS_RUNTIMEABORT("unsafe destruction");
+        MOZ_CRASH("unsafe destruction");
     }
 
     if (!mShutdown) {
@@ -764,7 +764,7 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
 PluginModuleChromeParent::~PluginModuleChromeParent()
 {
     if (!OkToCleanup()) {
-        NS_RUNTIMEABORT("unsafe destruction");
+        MOZ_CRASH("unsafe destruction");
     }
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -1603,7 +1603,7 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
         break;
 
     default:
-        NS_RUNTIMEABORT("Unexpected shutdown reason for toplevel actor.");
+        MOZ_CRASH("Unexpected shutdown reason for toplevel actor.");
     }
 }
 
@@ -1896,7 +1896,7 @@ mozilla::ipc::IPCResult
 PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 {
 #ifndef MOZ_X11
-    NS_RUNTIMEABORT("This message only makes sense on X11 platforms");
+    MOZ_CRASH("This message only makes sense on X11 platforms");
 #else
     MOZ_ASSERT(0 > mPluginXSocketFdDup.get(),
                "Already backed up X resources??");
@@ -1931,7 +1931,7 @@ PluginModuleParent::StreamCast(NPP instance, NPStream* s,
     BrowserStreamParent* sp =
         static_cast<BrowserStreamParent*>(static_cast<AStream*>(s->pdata));
     if (sp && (sp->mNPP != ip || s != sp->mStream)) {
-        NS_RUNTIMEABORT("Corrupted plugin stream data.");
+        MOZ_CRASH("Corrupted plugin stream data.");
     }
     return sp;
 }
@@ -2755,6 +2755,19 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         dont_AddRef(PluginAsyncSurrogate::Cast(instance)));
     // Now replace it with the instance
     instance->pdata = static_cast<PluginDataResolver*>(parentInstance);
+
+    // Any IPC messages for the PluginInstance actor should be dispatched to the
+    // DocGroup for the plugin's document.
+    RefPtr<nsPluginInstanceOwner> owner = parentInstance->GetOwner();
+    nsCOMPtr<nsIDOMElement> elt;
+    owner->GetDOMElement(getter_AddRefs(elt));
+    if (nsCOMPtr<nsINode> node = do_QueryInterface(elt)) {
+        nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
+        if (doc) {
+            nsCOMPtr<nsIEventTarget> eventTarget = doc->EventTargetFor(dom::TaskCategory::Other);
+            SetEventTargetForActor(parentInstance, eventTarget);
+        }
+    }
 
     if (!SendPPluginInstanceConstructor(parentInstance,
                                         nsDependentCString(pluginType), mode,

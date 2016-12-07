@@ -52,12 +52,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
     }
 
     function nextTest() {
-      try {
-        gTestsIterator.next();
-      } catch (err) {
-          ok(err instanceof StopIteration,
-             "Some other exception was thrown than what we expected!");
-
+      let {done} = gTestsIterator.next();
+      if (done) {
         if (gConsole && gConsoleListener) {
           gConsole.unregisterListener(gConsoleListener);
         }
@@ -65,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
       }
     }
 
-    function testsIterator() {
+    function* testsIterator() {
 
       var browser = $("browser");
       browser.addEventListener("load", function() {

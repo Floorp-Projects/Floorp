@@ -13,6 +13,8 @@
 #include "nsUnicharUtils.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 static bool IsDiscardable(char16_t ch, uint32_t* aFlags)
 {
   // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by gfxTextRun

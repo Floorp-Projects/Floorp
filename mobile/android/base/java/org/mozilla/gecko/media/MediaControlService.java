@@ -3,21 +3,25 @@ package org.mozilla.gecko.media;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.AudioManager;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.CheckResult;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -46,6 +50,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     private MediaSession mSession;
     private MediaController mController;
+    private HeadSetStateReceiver mHeadSetStateReceiver;
 
     private PrefsHelper.PrefHandler mPrefsObserver;
     private final String[] mPrefs = { MEDIA_CONTROL_PREF };
@@ -61,10 +66,12 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     @Override
     public void onCreate() {
         initialize();
+        mHeadSetStateReceiver = new HeadSetStateReceiver().registerReceiver(getApplicationContext());
     }
 
     @Override
     public void onDestroy() {
+        mHeadSetStateReceiver.unregisterReceiver(getApplicationContext());
         shutdown();
     }
 
@@ -277,6 +284,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 mTabReference = new WeakReference<>(null);
             }
         });
+
     }
 
     private void notifyObservers(String topic, String data) {
@@ -428,4 +436,29 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
         return coverArt;
     }
+
+    private class HeadSetStateReceiver extends BroadcastReceiver {
+
+        @CheckResult(suggest = "new HeadSetStateReceiver().registerReceiver(Context)")
+        HeadSetStateReceiver registerReceiver(Context context) {
+            IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+            context.registerReceiver(this, intentFilter);
+            return this;
+        }
+
+        void unregisterReceiver(Context context) {
+            context.unregisterReceiver(HeadSetStateReceiver.this);
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (isMediaPlaying()) {
+                Intent pauseIntent = new Intent(getApplicationContext(), MediaControlService.class);
+                pauseIntent.setAction(ACTION_PAUSE);
+                handleIntent(pauseIntent);
+            }
+        }
+
+    }
+
 }

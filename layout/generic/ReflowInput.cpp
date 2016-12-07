@@ -838,7 +838,7 @@ ReflowInput::InitFrameType(nsIAtom* aFrameType)
     else if (disp->IsFloating(mFrame)) {
       frameType = NS_CSS_FRAME_TYPE_FLOATING;
     } else {
-      NS_ASSERTION(disp->mDisplay == StyleDisplay::Popup,
+      NS_ASSERTION(disp->mDisplay == StyleDisplay::MozPopup,
                    "unknown out of flow frame type");
       frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
     }
@@ -859,9 +859,9 @@ ReflowInput::InitFrameType(nsIAtom* aFrameType)
     case StyleDisplay::Inline:
     case StyleDisplay::InlineBlock:
     case StyleDisplay::InlineTable:
-    case StyleDisplay::InlineBox:
-    case StyleDisplay::InlineXulGrid:
-    case StyleDisplay::InlineStack:
+    case StyleDisplay::MozInlineBox:
+    case StyleDisplay::MozInlineGrid:
+    case StyleDisplay::MozInlineStack:
     case StyleDisplay::InlineFlex:
     case StyleDisplay::WebkitInlineBox:
     case StyleDisplay::InlineGrid:

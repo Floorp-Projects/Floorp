@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const storeName1 = "test store 1";
@@ -123,5 +123,4 @@ function testSteps()
   db.close();
 
   finishTest();
-  yield undefined;
 }

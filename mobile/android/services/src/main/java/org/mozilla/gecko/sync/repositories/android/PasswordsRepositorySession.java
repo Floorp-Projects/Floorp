@@ -316,10 +316,7 @@ public class PasswordsRepositorySession extends
           }
 
           trace("Remote is older, local is not deleted. Ignoring.");
-          if (!locallyModified) {
-            Logger.warn(LOG_TAG, "Inconsistency: old remote record is deleted, but local record not modified!");
-            // Ensure that this is tracked for upload.
-          }
+
           return;
         }
         // End deletion logic.

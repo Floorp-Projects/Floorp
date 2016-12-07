@@ -24,14 +24,15 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
+const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
 const {ComputedViewTool} = require("devtools/client/inspector/computed/computed");
 const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
-const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
-const MarkupView = require("devtools/client/inspector/markup/markup");
 const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
+const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
+const MarkupView = require("devtools/client/inspector/markup/markup");
+const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
@@ -92,6 +93,7 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
 
+  this.highlighters = new HighlightersOverlay(this);
   this.telemetry = new Telemetry();
 
   this.nodeMenuTriggerInfo = null;
@@ -612,7 +614,38 @@ Inspector.prototype = {
     this.sidebar.addTab(id, title, panel, selected);
   },
 
-  setupToolbar: function () {
+  /**
+   * Method to check whether the document is a HTML document and
+   * pickColorFromPage method is available or not.
+   *
+   * @return {Boolean} true if the eyedropper highlighter is supported by the current
+   *         document.
+   */
+  supportsEyeDropper: Task.async(function* () {
+    try {
+      let hasSupportsHighlighters =
+        yield this.target.actorHasMethod("inspector", "supportsHighlighters");
+      let hasPickColorFromPage =
+        yield this.target.actorHasMethod("inspector", "pickColorFromPage");
+
+      let supportsHighlighters;
+      if (hasSupportsHighlighters) {
+        supportsHighlighters = yield this.inspector.supportsHighlighters();
+      } else {
+        // If the actor does not provide the supportsHighlighter method, fallback to
+        // check if the selected node's document is a HTML document.
+        let { nodeFront } = this.selection;
+        supportsHighlighters = nodeFront && nodeFront.isInHTMLDocument;
+      }
+
+      return supportsHighlighters && hasPickColorFromPage;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  }),
+
+  setupToolbar: Task.async(function* () {
     this.teardownToolbar();
 
     // Setup the sidebar toggle button.
@@ -635,26 +668,28 @@ Inspector.prototype = {
     this.addNodeButton.addEventListener("click", this.addNode);
 
     // Setup the eye-dropper icon if we're in an HTML document and we have actor support.
-    if (this.selection.nodeFront && this.selection.nodeFront.isInHTMLDocument) {
-      this.target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
-        if (!value) {
-          return;
-        }
+    let canShowEyeDropper = yield this.supportsEyeDropper();
 
-        this.onEyeDropperDone = this.onEyeDropperDone.bind(this);
-        this.onEyeDropperButtonClicked = this.onEyeDropperButtonClicked.bind(this);
-        this.eyeDropperButton = this.panelDoc
+    // Bail out if the inspector was destroyed in the meantime and panelDoc is no longer
+    // available.
+    if (!this.panelDoc) {
+      return;
+    }
+
+    if (canShowEyeDropper) {
+      this.onEyeDropperDone = this.onEyeDropperDone.bind(this);
+      this.onEyeDropperButtonClicked = this.onEyeDropperButtonClicked.bind(this);
+      this.eyeDropperButton = this.panelDoc
                                     .getElementById("inspector-eyedropper-toggle");
-        this.eyeDropperButton.disabled = false;
-        this.eyeDropperButton.title = INSPECTOR_L10N.getStr("inspector.eyedropper.label");
-        this.eyeDropperButton.addEventListener("click", this.onEyeDropperButtonClicked);
-      }, e => console.error(e));
+      this.eyeDropperButton.disabled = false;
+      this.eyeDropperButton.title = INSPECTOR_L10N.getStr("inspector.eyedropper.label");
+      this.eyeDropperButton.addEventListener("click", this.onEyeDropperButtonClicked);
     } else {
       let eyeDropperButton = this.panelDoc.getElementById("inspector-eyedropper-toggle");
       eyeDropperButton.disabled = true;
       eyeDropperButton.title = INSPECTOR_L10N.getStr("eyedropper.disabled.title");
     }
-  },
+  }),
 
   teardownToolbar: function () {
     this._sidebarToggle = null;
@@ -911,13 +946,19 @@ Inspector.prototype = {
     this.breadcrumbs.destroy();
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("detached-front", this.onDetached);
+
     let markupDestroyer = this._destroyMarkup();
+
     this.panelWin.inspector = null;
     this.target = null;
     this.panelDoc = null;
     this.panelWin = null;
     this.breadcrumbs = null;
     this._toolbox = null;
+
+    this.highlighters.destroy();
+    this.highlighters = null;
+
     this.search.destroy();
     this.search = null;
     this.searchBox = null;
@@ -1682,16 +1723,19 @@ Inspector.prototype = {
   },
 
   /**
-   * Initiate gcli screenshot command on selected node
+   * Initiate gcli screenshot command on selected node.
    */
   screenshotNode: function () {
+    const command = Services.prefs.getBoolPref("devtools.screenshot.clipboard.enabled") ?
+      "screenshot --file --clipboard --selector" :
+      "screenshot --file --selector";
     CommandUtils.createRequisition(this._target, {
       environment: CommandUtils.createEnvironment(this, "_target")
     }).then(requisition => {
       // Bug 1180314 -  CssSelector might contain white space so need to make sure it is
       // passed to screenshot as a single parameter.  More work *might* be needed if
       // CssSelector could contain escaped single- or double-quotes, backslashes, etc.
-      requisition.updateExec("screenshot --selector '" + this.selectionCssSelector + "'");
+      requisition.updateExec(`${command} '${this.selectionCssSelector}'`);
     });
   },
 

@@ -293,10 +293,11 @@ FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
 }
 
 LookupResult
-FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
+FrameAnimator::GetCompositedFrame(AnimationState& aState)
 {
   // If we have a composited version of this frame, return that.
-  if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
+  if (mLastCompositedFrameIndex >= 0 &&
+      (uint32_t(mLastCompositedFrameIndex) == aState.mCurrentAnimationFrameIndex)) {
     return LookupResult(DrawableSurface(mCompositingFrame->DrawableRef()),
                         MatchType::EXACT);
   }
@@ -314,7 +315,7 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 
   // Seek to the appropriate frame. If seeking fails, it means that we couldn't
   // get the frame we're looking for; treat this as if the lookup failed.
-  if (NS_FAILED(result.Surface().Seek(aFrameNum))) {
+  if (NS_FAILED(result.Surface().Seek(aState.mCurrentAnimationFrameIndex))) {
     return LookupResult(MatchType::NOT_FOUND);
   }
 

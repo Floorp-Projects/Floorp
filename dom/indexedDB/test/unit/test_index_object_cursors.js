@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const objectStoreData = [
     { name: "", options: { keyPath: "id", autoIncrement: true } },
@@ -143,5 +143,4 @@ function testSteps()
   }
 
   finishTest();
-  yield undefined;
 }

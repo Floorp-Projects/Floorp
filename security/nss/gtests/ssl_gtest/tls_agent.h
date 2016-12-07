@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include "test_io.h"
+#include "tls_filter.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -85,9 +86,16 @@ class TlsAgent : public PollTarget {
 
   void SetPeer(TlsAgent* peer) { adapter_->SetPeer(peer->adapter_); }
 
+  void SetPacketFilter(TlsRecordFilter* filter) {
+    filter->SetAgent(this);
+    adapter_->SetPacketFilter(filter);
+  }
+
   void SetPacketFilter(PacketFilter* filter) {
     adapter_->SetPacketFilter(filter);
   }
+
+  void DeletePacketFilter() { adapter_->SetPacketFilter(nullptr); }
 
   void StartConnect(PRFileDesc* model = nullptr);
   void CheckKEA(SSLKEAType kea_type, SSLNamedGroup group,
@@ -171,7 +179,7 @@ class TlsAgent : public PollTarget {
 
   static const char* state_str(State state) { return states[state]; }
 
-  PRFileDesc* ssl_fd() { return ssl_fd_; }
+  PRFileDesc* ssl_fd() const { return ssl_fd_; }
   DummyPrSocket* adapter() { return adapter_; }
 
   bool is_compressed() const {

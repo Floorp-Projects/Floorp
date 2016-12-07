@@ -716,6 +716,18 @@ public:
     CASES_FOR_getresgid:
       return Allow();
 
+    case __NR_prlimit64: {
+      // Allow only the getrlimit() use case.  (glibc seems to use
+      // only pid 0 to indicate the current process; pid == getpid()
+      // is equivalent and could also be allowed if needed.)
+      Arg<pid_t> pid(0);
+      // This is really a const struct ::rlimit*, but Arg<> doesn't
+      // work with pointers, only integer types.
+      Arg<uintptr_t> new_limit(2);
+      return If(AllOf(pid == 0, new_limit == 0), Allow())
+        .Else(InvalidSyscall());
+    }
+
     case __NR_umask:
     case __NR_kill:
     case __NR_wait4:

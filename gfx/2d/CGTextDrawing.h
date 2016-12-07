@@ -9,7 +9,6 @@
 #include "nsDebug.h"
 #include "mozilla/Vector.h"
 #include "ScaledFontMac.h"
-#include "PathCG.h"
 #include <dlfcn.h>
 
 // This is used when we explicitly need CG to draw text to support things such

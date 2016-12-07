@@ -9,8 +9,8 @@
 
 #include "base/process.h"  // for base::ProcessId
 #include "mozilla/Mutex.h" // for mozilla::Mutex
-#include "mozilla/Function.h"
 
+#include <functional>
 #include <map>
 
 namespace mozilla {
@@ -56,7 +56,7 @@ public:
    */
   bool IsMapped(uint64_t aLayersId, base::ProcessId aProcessId);
 
-  void Iterate(function<void(uint64_t aLayersId, base::ProcessId aProcessId)> aCallback);
+  void Iterate(std::function<void(uint64_t aLayersId, base::ProcessId aProcessId)> aCallback);
 
 private:
   LayerTreeOwnerTracker();

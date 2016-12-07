@@ -170,7 +170,7 @@ private:
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIFile> mDataPath;
 
-    virtual ~OnWalk() { }
+    virtual ~OnWalk() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsWebBrowserPersist::OnWalk,
@@ -195,7 +195,7 @@ private:
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIFile> mLocalFile;
 
-    virtual ~OnWrite() { }
+    virtual ~OnWrite() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsWebBrowserPersist::OnWrite,
@@ -221,7 +221,7 @@ private:
     nsTArray<nsCString> mMapTo;
     nsCString mTargetBase;
 
-    virtual ~FlatURIMap() { }
+    virtual ~FlatURIMap() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsWebBrowserPersist::FlatURIMap, nsIWebBrowserPersistURIMap)
@@ -1673,7 +1673,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // filenames of saved URIs are known, the documents can be fixed up and
         // saved
 
-        DocData *docData = new DocData;
+        auto *docData = new DocData;
         docData->mBaseURI = mCurrentBaseURI;
         docData->mCharset = mCurrentCharset;
         docData->mDocument = aDocument;
@@ -1687,7 +1687,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
     }
     else
     {
-        DocData *docData = new DocData;
+        auto *docData = new DocData;
         docData->mBaseURI = mCurrentBaseURI;
         docData->mCharset = mCurrentCharset;
         docData->mDocument = aDocument;
@@ -1768,7 +1768,7 @@ nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
             }
             if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE) {
                 // Add to list of things to delete later if all goes wrong
-                CleanupData *cleanupData = new CleanupData;
+                auto *cleanupData = new CleanupData;
                 cleanupData->mFile = aDataPath;
                 cleanupData->mIsDirectory = true;
                 mCleanupList.AppendElement(cleanupData);
@@ -2013,7 +2013,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
         nsAutoCString tmpPath;
         nsAutoCString tmpBase;
         uint32_t duplicateCounter = 1;
-        while (1)
+        while (true)
         {
             // Make a file name,
             // Foo become foo_001, foo_002, etc.
@@ -2308,7 +2308,7 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
     {
         // Add to cleanup list in event of failure
-        CleanupData *cleanupData = new CleanupData;
+        auto *cleanupData = new CleanupData;
         if (!cleanupData) {
           NS_RELEASE(*aOutputStream);
           return NS_ERROR_OUT_OF_MEMORY;

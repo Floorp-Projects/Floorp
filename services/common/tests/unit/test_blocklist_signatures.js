@@ -16,6 +16,7 @@ const PREF_BLOCKLIST_ONECRL_COLLECTION = "services.blocklist.onecrl.collection";
 const PREF_SETTINGS_SERVER             = "services.settings.server";
 const PREF_SIGNATURE_ROOT              = "security.content.signature.root_hash";
 
+const kintoFilename = "kinto.sqlite";
 
 const CERT_DIR = "test_blocklist_signatures/";
 const CHAIN_FILES =
@@ -61,23 +62,23 @@ function* checkRecordCount(count) {
   const collectionName =
       Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION);
 
+  const sqliteHandle = yield FirefoxAdapter.openConnection({path: kintoFilename});
   const config = {
     remote: base,
     bucket: bucket,
     adapter: FirefoxAdapter,
+    adapterOptions: {sqliteHandle},
   };
 
   const db = new Kinto(config);
   const collection = db.collection(collectionName);
-
-  yield collection.db.open();
 
   // Check we have the expected number of records
   let records = yield collection.list();
   do_check_eq(count, records.data.length);
 
   // Close the collection so the test can exit cleanly
-  yield collection.db.close();
+  yield sqliteHandle.close();
 }
 
 // Check to ensure maybeSync is called with correct values when a changes

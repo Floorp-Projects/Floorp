@@ -1843,16 +1843,6 @@ nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
     return eSpecialType_Flash;
   }
 
-  if (aMIMEType.LowerCaseEqualsASCII("application/x-silverlight") ||
-      aMIMEType.LowerCaseEqualsASCII("application/x-silverlight-2") ||
-      aMIMEType.LowerCaseEqualsASCII("application/x-silverlight-test")) {
-    return eSpecialType_Silverlight;
-  }
-
-  if (aMIMEType.LowerCaseEqualsASCII("application/vnd.unity")) {
-    return eSpecialType_Unity;
-  }
-
   // Java registers variants of its MIME with parameters, e.g.
   // application/x-java-vm;version=1.3
   const nsACString &noParam = Substring(aMIMEType, 0, aMIMEType.FindChar(';'));
@@ -2017,19 +2007,14 @@ bool
 nsPluginHost::ShouldAddPlugin(nsPluginTag* aPluginTag)
 {
 #if defined(XP_WIN) && (defined(__x86_64__) || defined(_M_X64))
-  // On 64-bit windows, the only plugins we should load are flash and
-  // silverlight. Use library filename and MIME type to check.
+  // On 64-bit Windows, the only plugin we should load is Flash. Use library
+  // filename and MIME type to check.
   if (StringBeginsWith(aPluginTag->FileName(), NS_LITERAL_CSTRING("NPSWF"), nsCaseInsensitiveCStringComparator()) &&
       (aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-shockwave-flash")) ||
        aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-shockwave-flash-test")))) {
     return true;
   }
-  if (StringBeginsWith(aPluginTag->FileName(), NS_LITERAL_CSTRING("npctrl"), nsCaseInsensitiveCStringComparator()) &&
-      (aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-silverlight-test")) ||
-       aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-silverlight-2")) ||
-       aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-silverlight")))) {
-    return true;
-  }
+
   // Accept the test plugin MIME types, so mochitests still work.
   if (aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-test")) ||
       aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-Second-Test")) ||

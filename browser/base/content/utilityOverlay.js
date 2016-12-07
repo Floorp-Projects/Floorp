@@ -449,7 +449,11 @@ function checkForMiddleClick(node, event) {
 
 // Populate a menu with user-context menu items. This method should be called
 // by onpopupshowing passing the event as first argument.
-function createUserContextMenu(event, isContextMenu = false, excludeUserContextId = 0) {
+function createUserContextMenu(event, {
+                                        isContextMenu = false,
+                                        excludeUserContextId = 0,
+                                        useAccessKeys = true
+                                      } = {}) {
   while (event.target.hasChildNodes()) {
     event.target.removeChild(event.target.firstChild);
   }
@@ -483,7 +487,7 @@ function createUserContextMenu(event, isContextMenu = false, excludeUserContextI
     menuitem.setAttribute("data-usercontextid", identity.userContextId);
     menuitem.setAttribute("label", ContextualIdentityService.getUserContextLabel(identity.userContextId));
 
-    if (identity.accessKey) {
+    if (identity.accessKey && useAccessKeys) {
       menuitem.setAttribute("accesskey", bundle.getString(identity.accessKey));
     }
 
@@ -505,8 +509,10 @@ function createUserContextMenu(event, isContextMenu = false, excludeUserContextI
     let menuitem = document.createElement("menuitem");
     menuitem.setAttribute("label",
                           bundle.getString("userContext.aboutPage.label"));
-    menuitem.setAttribute("accesskey",
-                          bundle.getString("userContext.aboutPage.accesskey"));
+    if (useAccessKeys) {
+      menuitem.setAttribute("accesskey",
+                            bundle.getString("userContext.aboutPage.accesskey"));
+    }
     menuitem.setAttribute("command", "Browser:OpenAboutContainers");
     docfrag.appendChild(menuitem);
   }

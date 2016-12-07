@@ -151,8 +151,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             throw new RemoteException("Error, unsupported version!");
         }
         try {
-            if (AppConstants.Versions.feature21Plus &&
-                AppConstants.Versions.preMarshmallow) {
+            if (AppConstants.Versions.preMarshmallow) {
                 mBridge = new GeckoMediaDrmBridgeV21(keySystem);
             } else {
                 mBridge = new GeckoMediaDrmBridgeV23(keySystem);

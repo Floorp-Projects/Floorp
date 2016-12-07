@@ -5,4 +5,5 @@ config = {
     'src_mozconfig': 'mobile/android/config/mozconfigs/android-api-15/nightly',
     'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/android/releng.manifest',
     'multi_locale_config_platform': 'android',
+    'artifact_flag_build_variant_in_try': 'api-15-artifact',
 }

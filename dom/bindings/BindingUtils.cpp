@@ -2431,7 +2431,7 @@ GetContentGlobalForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
   // Be very careful to not get tricked here.
   MOZ_ASSERT(NS_IsMainThread());
   if (!xpc::AccessCheck::isChrome(js::GetObjectCompartment(obj))) {
-    NS_RUNTIMEABORT("Should have a chrome object here");
+    MOZ_CRASH("Should have a chrome object here");
   }
 
   // Look up the content-side object.

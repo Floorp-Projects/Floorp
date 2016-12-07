@@ -24,7 +24,7 @@ SharedMemory::SystemProtect(char* aAddr, size_t aSize, int aRights)
     flags = PROT_NONE;
 
   if (0 < mprotect(aAddr, aSize, flags))
-    NS_RUNTIMEABORT("can't mprotect()");
+    MOZ_CRASH("can't mprotect()");
 }
 
 size_t

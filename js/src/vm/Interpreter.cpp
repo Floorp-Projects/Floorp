@@ -282,8 +282,6 @@ MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom, HandleObject proto)
 
     ctor->setIsConstructor();
     ctor->setIsClassConstructor();
-    if (derived)
-        ctor->setHasRest();
 
     MOZ_ASSERT(ctor->infallibleIsDefaultClassConstructor(cx));
 
@@ -448,7 +446,7 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
     }
 
     /* Invoke native functions. */
-    JSFunction* fun = &args.callee().as<JSFunction>();
+    RootedFunction fun(cx, &args.callee().as<JSFunction>());
     if (construct != CONSTRUCT && fun->isClassConstructor()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
         return false;
@@ -459,7 +457,7 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
         return CallJSNative(cx, fun->native(), args);
     }
 
-    if (!fun->getOrCreateScript(cx))
+    if (!JSFunction::getOrCreateScript(cx, fun))
         return false;
 
     /* Run function until JSOP_RETRVAL, JSOP_RETURN or error. */
@@ -1870,7 +1868,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
-CASE(JSOP_UNUSED182)
 CASE(JSOP_UNUSED183)
 CASE(JSOP_UNUSED187)
 CASE(JSOP_UNUSED192)
@@ -2931,7 +2928,7 @@ CASE(JSOP_FUNCALL)
     {
         MOZ_ASSERT(maybeFun);
         ReservedRooted<JSFunction*> fun(&rootFunction0, maybeFun);
-        ReservedRooted<JSScript*> funScript(&rootScript0, fun->getOrCreateScript(cx));
+        ReservedRooted<JSScript*> funScript(&rootScript0, JSFunction::getOrCreateScript(cx, fun));
         if (!funScript)
             goto error;
 
@@ -3491,6 +3488,19 @@ CASE(JSOP_TOASYNC)
     REGS.sp[-1].setObject(*wrapped);
 }
 END_CASE(JSOP_TOASYNC)
+
+CASE(JSOP_SETFUNNAME)
+{
+    MOZ_ASSERT(REGS.stackDepth() >= 2);
+    FunctionPrefixKind prefixKind = FunctionPrefixKind(GET_UINT8(REGS.pc));
+    ReservedRooted<Value> name(&rootValue0, REGS.sp[-1]);
+    ReservedRooted<JSFunction*> fun(&rootFunction0, &REGS.sp[-2].toObject().as<JSFunction>());
+    if (!SetFunctionNameIfNoOwnName(cx, fun, name, prefixKind))
+        goto error;
+
+    REGS.sp--;
+}
+END_CASE(JSOP_SETFUNNAME)
 
 CASE(JSOP_CALLEE)
     MOZ_ASSERT(REGS.fp()->isFunctionFrame());
@@ -4355,7 +4365,7 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
         parent = parent->enclosingEnvironment();
 
     /* ES5 10.5 (NB: with subsequent errata). */
-    RootedPropertyName name(cx, fun->name()->asPropertyName());
+    RootedPropertyName name(cx, fun->explicitName()->asPropertyName());
 
     RootedShape shape(cx);
     RootedObject pobj(cx);
@@ -5003,7 +5013,7 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
     RootedPropertyName name(cx);
 
     if (op == JSOP_THROWSETCALLEE) {
-        name = script->functionNonDelazifying()->name()->asPropertyName();
+        name = script->functionNonDelazifying()->explicitName()->asPropertyName();
     } else if (IsLocalOp(op)) {
         name = FrameSlotName(script, pc)->asPropertyName();
     } else if (IsAtomOp(op)) {
@@ -5071,8 +5081,8 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
     if (fun->isDerivedClassConstructor()) {
         const char* name = "anonymous";
         JSAutoByteString str;
-        if (fun->name()) {
-            if (!AtomToPrintableString(cx, fun->name(), &str))
+        if (fun->explicitName()) {
+            if (!AtomToPrintableString(cx, fun->explicitName(), &str))
                 return false;
             name = str.ptr();
         }

@@ -624,10 +624,16 @@ HttpObserverManager = {
         data.originUrl = originPrincipal.URI.spec;
       }
 
+      // If there is no loadingPrincipal, check that the request is not going to
+      // inherit a system principal.  triggeringPrincipal is the context that
+      // initiated the load, but is not necessarily the principal that the
+      // request results in, only rely on that if no other principal is available.
       let {isSystemPrincipal} = Services.scriptSecurityManager;
-
-      data.isSystemPrincipal = (isSystemPrincipal(loadInfo.triggeringPrincipal) ||
-                                isSystemPrincipal(loadInfo.loadingPrincipal));
+      let isTopLevel = !loadInfo.loadingPrincipal && !!data.browser;
+      data.isSystemPrincipal = !isTopLevel &&
+                               isSystemPrincipal(loadInfo.loadingPrincipal ||
+                                                 loadInfo.principalToInherit ||
+                                                 loadInfo.triggeringPrincipal);
 
       if (loadInfo.frameOuterWindowID) {
         Object.assign(data, {
@@ -714,7 +720,11 @@ HttpObserverManager = {
         try {
           let result = callback(data);
 
-          if (result && typeof result === "object" && opts.blocking) {
+          if (result && typeof result === "object" && opts.blocking
+              && !AddonManagerPermissions.isHostPermitted(uri.host)
+              && (!loadInfo || !loadInfo.loadingPrincipal
+                  || !loadInfo.loadingPrincipal.URI
+                  || !AddonManagerPermissions.isHostPermitted(loadInfo.loadingPrincipal.URI.host))) {
             handlerResults.push({opts, result});
           }
         } catch (e) {
@@ -790,7 +800,7 @@ HttpObserverManager = {
       Cu.reportError(e);
     }
 
-    // Only resume the channel if either it was suspended by this call.
+    // Only resume the channel if it was suspended by this call.
     if (shouldResume) {
       this.maybeResume(channel);
     }

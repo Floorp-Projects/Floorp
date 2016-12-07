@@ -17,7 +17,7 @@ public class SyncStorageResponse extends SyncResponse {
   // Responses that are actionable get constant status codes.
   public static final String RESPONSE_CLIENT_UPGRADE_REQUIRED = "16";
 
-  public static HashMap<String, String> SERVER_ERROR_MESSAGES;
+  public static final HashMap<String, String> SERVER_ERROR_MESSAGES;
   static {
     HashMap<String, String> errors = new HashMap<String, String>();
 

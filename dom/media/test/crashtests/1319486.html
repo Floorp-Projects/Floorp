@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> Bug 1319486 : Crash if a texttrackcue added to different texttracks. </title>
+</head>
+<body>
+<video id=v1></video>
+<video id=v2></video>
+</body>
+<meta charset="utf-8">
+<script type="text/javascript">
+
+addEventListener('DOMContentLoaded', function(){
+  let cue,tt1,tt2;
+  v1.play();
+  tt1 = v1.addTextTrack('metadata', "", "");
+  v1.play();
+  v1.currentTime = 8;
+  cue = new VTTCue(0, 0.5, "");
+  tt1.addCue(cue);
+  tt2 = v2.addTextTrack('captions', "", "");
+  tt2.addCue(cue);
+  tt2.removeCue(cue);
+  tt1.addCue(new VTTCue(0.7, 2, ""));
+});
+</script>
+</html>

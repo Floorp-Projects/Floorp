@@ -2,9 +2,6 @@
 == first-letter-1.html first-letter-1.html
 == first-letter-1.html first-letter-1.html
 
-== focus-area-percent-units-1.html focus-area-percent-units-1.html
-== focus-area-percent-units-2.html focus-area-percent-units-2.html
-
 == max-height.html max-height.html
 == min-height.html min-height.html
 == overflow-areas-1.html overflow-areas-1.html
@@ -12,13 +9,9 @@
 # The buttons in these tests have some fancy shading applied to their corners
 # on B2G, despite their "-moz-appearance: none; background: gray", so they
 # don't quite match the reference case's normal <div>. That's why they're fuzzy.
-fuzzy-if(B2G||Mulet||Android,125,20) == percent-height-child-1.html percent-height-child-1.html
+fuzzy-if(B2G||Mulet||Android,125,20) == percent-height-child.html percent-height-child.html
 # Initial mulet triage: parity with B2G/B2G Desktop
-pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Mulet||Android,125,80) == percent-height-child-2.html percent-height-child-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(B2G||Mulet||Android,125,20) == percent-width-child-1.html percent-width-child-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Mulet||Android,125,80) == percent-width-child-2.html percent-width-child-2.html
+fuzzy-if(B2G||Mulet||Android,125,20) == percent-width-child.html percent-width-child.html
 # Initial mulet triage: parity with B2G/B2G Desktop
 
 == vertical-centering.html vertical-centering.html
@@ -46,9 +39,6 @@ fails-if(B2G||Mulet) == width-auto-size-ltr.html width-auto-size-ltr.html
 # Bug 1145672
 # Bug 1150486
 == width-exact-fit-ltr.html width-exact-fit-ltr.html
-== width-erode-part-focuspadding-ltr.html width-erode-part-focuspadding-ltr.html
-== width-erode-all-focuspadding-ltr.html width-erode-all-focuspadding-ltr.html
-== width-erode-overflow-focuspadding-ltr.html width-erode-overflow-focuspadding-ltr.html
 fails-if(B2G||Mulet) == width-auto-size-em-rtl.html width-auto-size-em-rtl.html
 # Bug 1145672
 # Bug 1150486
@@ -56,6 +46,3 @@ fails-if(B2G||Mulet) == width-auto-size-rtl.html width-auto-size-rtl.html
 # Bug 1145672
 # Bug 1150486
 == width-exact-fit-rtl.html width-exact-fit-rtl.html
-== width-erode-part-focuspadding-rtl.html width-erode-part-focuspadding-rtl.html
-== width-erode-all-focuspadding-rtl.html width-erode-all-focuspadding-rtl.html
-== width-erode-overflow-focuspadding-rtl.html width-erode-overflow-focuspadding-rtl.html

@@ -3888,13 +3888,13 @@ gfxFontStyle::gfxFontStyle() :
     size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(-1.0f), baselineOffset(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
-    systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
     style(NS_FONT_STYLE_NORMAL),
+    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
+    variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL),
+    systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
     allowSyntheticWeight(true), allowSyntheticStyle(true),
     noFallbackVariantFeatures(true),
-    explicitLanguage(false),
-    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
-    variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL)
+    explicitLanguage(false)
 {
 }
 
@@ -3910,15 +3910,15 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     size(aSize), sizeAdjust(aSizeAdjust), baselineOffset(0.0f),
     languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
     weight(aWeight), stretch(aStretch),
+    style(aStyle),
+    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
+    variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL),
     systemFont(aSystemFont), printerFont(aPrinterFont),
     useGrayscaleAntialiasing(false),
-    style(aStyle),
     allowSyntheticWeight(aAllowWeightSynthesis),
     allowSyntheticStyle(aAllowStyleSynthesis),
     noFallbackVariantFeatures(true),
-    explicitLanguage(aExplicitLanguage),
-    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
-    variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL)
+    explicitLanguage(aExplicitLanguage)
 {
     MOZ_ASSERT(!mozilla::IsNaN(size));
     MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
@@ -3940,27 +3940,6 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
         NS_WARNING("null language");
         language = nsGkAtoms::x_western;
     }
-}
-
-gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
-    language(aStyle.language),
-    featureValueLookup(aStyle.featureValueLookup),
-    size(aStyle.size), sizeAdjust(aStyle.sizeAdjust),
-    baselineOffset(aStyle.baselineOffset),
-    languageOverride(aStyle.languageOverride),
-    weight(aStyle.weight), stretch(aStyle.stretch),
-    systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
-    useGrayscaleAntialiasing(aStyle.useGrayscaleAntialiasing),
-    style(aStyle.style),
-    allowSyntheticWeight(aStyle.allowSyntheticWeight),
-    allowSyntheticStyle(aStyle.allowSyntheticStyle),
-    noFallbackVariantFeatures(aStyle.noFallbackVariantFeatures),
-    explicitLanguage(aStyle.explicitLanguage),
-    variantCaps(aStyle.variantCaps),
-    variantSubSuper(aStyle.variantSubSuper)
-{
-    featureSettings.AppendElements(aStyle.featureSettings);
-    alternateValues.AppendElements(aStyle.alternateValues);
 }
 
 int8_t

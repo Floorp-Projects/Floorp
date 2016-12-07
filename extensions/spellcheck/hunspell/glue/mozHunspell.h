@@ -99,7 +99,7 @@ public:
   void LoadDictionaryList(bool aNotifyChildProcesses);
 
   // helper method for converting a word to the charset of the dictionary
-  nsresult ConvertCharset(const char16_t* aStr, std::string* aDst);
+  nsresult ConvertCharset(const char16_t* aStr, char ** aDst);
 
   NS_DECL_NSIMEMORYREPORTER
 

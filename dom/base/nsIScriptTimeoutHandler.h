@@ -9,7 +9,6 @@
 #include "nsITimeoutHandler.h"
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
-#include "mozilla/Function.h"
 #include "mozilla/Maybe.h"
 
 namespace mozilla {

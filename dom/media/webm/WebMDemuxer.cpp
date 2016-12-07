@@ -361,6 +361,7 @@ WebMDemuxer::ReadMetadata()
       mInfo.mVideo.mDisplay = displaySize;
       mInfo.mVideo.mImage = frameSize;
       mInfo.mVideo.SetImageRect(pictureRect);
+      mInfo.mVideo.SetAlpha(params.alpha_mode);
 
       switch (params.stereo_mode) {
         case NESTEGG_VIDEO_MONO:
@@ -399,9 +400,9 @@ WebMDemuxer::ReadMetadata()
       mHasAudio = true;
       mAudioCodec = nestegg_track_codec_id(context, track);
       if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
-        mInfo.mAudio.mMimeType = "audio/webm; codecs=vorbis";
+        mInfo.mAudio.mMimeType = "audio/vorbis";
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
-        mInfo.mAudio.mMimeType = "audio/webm; codecs=opus";
+        mInfo.mAudio.mMimeType = "audio/opus";
         OpusDataDecoder::AppendCodecDelay(mInfo.mAudio.mCodecSpecificConfig,
             media::TimeUnit::FromNanoseconds(params.codec_delay).ToMicroseconds());
       }
@@ -614,7 +615,9 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
   }
 
   int64_t discardPadding = 0;
-  (void) nestegg_packet_discard_padding(holder->Packet(), &discardPadding);
+  if (aType == TrackInfo::kAudioTrack) {
+    (void) nestegg_packet_discard_padding(holder->Packet(), &discardPadding);
+  }
 
   int packetEncryption = nestegg_packet_encryption(holder->Packet());
 
@@ -625,6 +628,21 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     if (r == -1) {
       WEBM_DEBUG("nestegg_packet_data failed r=%d", r);
       return false;
+    }
+    unsigned char* alphaData;
+    size_t alphaLength = 0;
+    // Check packets for alpha information if file has declared alpha frames
+    // may be present.
+    if (mInfo.mVideo.HasAlpha()) {
+      r = nestegg_packet_additional_data(holder->Packet(),
+                                         1,
+                                         &alphaData,
+                                         &alphaLength);
+      if (r == -1) {
+        WEBM_DEBUG(
+          "nestegg_packet_additional_data failed to retrieve alpha data r=%d",
+          r);
+      }
     }
     bool isKeyframe = false;
     if (aType == TrackInfo::kAudioTrack) {
@@ -663,17 +681,32 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
 
     WEBM_DEBUG("push sample tstamp: %ld next_tstamp: %ld length: %ld kf: %d",
                tstamp, next_tstamp, length, isKeyframe);
-    RefPtr<MediaRawData> sample = new MediaRawData(data, length);
+    RefPtr<MediaRawData> sample;
+    if (mInfo.mVideo.HasAlpha() && alphaLength != 0) {
+      sample = new MediaRawData(data, length, alphaData, alphaLength);
+    } else {
+      sample = new MediaRawData(data, length);
+    }
     sample->mTimecode = tstamp;
     sample->mTime = tstamp;
     sample->mDuration = next_tstamp - tstamp;
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
     if (discardPadding && i == count - 1) {
-      uint8_t c[8];
-      BigEndian::writeInt64(&c[0], discardPadding);
-      sample->mExtraData = new MediaByteBuffer;
-      sample->mExtraData->AppendElements(&c[0], 8);
+      CheckedInt64 discardFrames;
+      if (discardPadding < 0) {
+        // This is an invalid value as discard padding should never be negative.
+        // Set to maximum value so that the decoder will reject it as it's
+        // greater than the number of frames available.
+        discardFrames = INT32_MAX;
+        WEBM_DEBUG("Invalid negative discard padding");
+      } else {
+        discardFrames = TimeUnitToFrames(
+          media::TimeUnit::FromNanoseconds(discardPadding), mInfo.mAudio.mRate);
+      }
+      if (discardFrames.isValid()) {
+        sample->mDiscardPadding = discardFrames.value();
+      }
     }
 
     if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED ||
@@ -919,7 +952,7 @@ WebMTrackDemuxer::GetInfo() const
 }
 
 RefPtr<WebMTrackDemuxer::SeekPromise>
-WebMTrackDemuxer::Seek(media::TimeUnit aTime)
+WebMTrackDemuxer::Seek(const media::TimeUnit& aTime)
 {
   // Seeks to aTime. Upon success, SeekPromise will be resolved with the
   // actual time seeked to. Typically the random access point time
@@ -1083,7 +1116,7 @@ WebMTrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 }
 
 RefPtr<WebMTrackDemuxer::SkipAccessPointPromise>
-WebMTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
+WebMTrackDemuxer::SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold)
 {
   uint32_t parsed = 0;
   bool found = false;

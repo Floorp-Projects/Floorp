@@ -2,7 +2,8 @@
       xmlns:xbl="http://www.mozilla.org/xbl">
 <head>
   <style>
-    .forced { display:block; }
+    .forced { display: block; }
+    .forced ~ p { display: none; }
   </style>
 </head>
 <body>
@@ -15,6 +16,8 @@
   </xbl:children>
 
   <xbl:children />
+
+  <p>FAIL</p>
 
   <script>
     var third = document.body.children[2];

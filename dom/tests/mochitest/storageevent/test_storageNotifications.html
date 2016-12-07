@@ -34,7 +34,7 @@ function setup() {
   });
 }
 
-function Tests()
+function* Tests()
 {
   // Initially check the both storages are empty
   is(sessionStorage.length, 0, "Session storage is empty [1]");
@@ -44,7 +44,7 @@ function Tests()
     observe: function(subject, topic, type) {
       if (topic == "dom-storage2-changed") {
         ok(expectedTypes.length > 0, "Not more then expected events encountered");
-        is(type, expectedTypes.shift(), "Expected type of the storage notificaiton");
+        is(type, expectedTypes.shift(), "Expected type of the storage notification");
         tests.next();
       }
     }

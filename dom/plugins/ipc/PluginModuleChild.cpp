@@ -559,7 +559,7 @@ bool
 PluginModuleChild::ShouldContinueFromReplyTimeout()
 {
 #ifdef XP_WIN
-    NS_RUNTIMEABORT("terminating child process");
+    MOZ_CRASH("terminating child process");
 #endif
     return true;
 }
@@ -2400,7 +2400,7 @@ PluginModuleChild::NPN_GetStringIdentifiers(const NPUTF8** aNames,
     AssertPluginThread();
 
     if (!(aNames && aNameCount > 0 && aIdentifiers)) {
-        NS_RUNTIMEABORT("Bad input! Headed for a crash!");
+        MOZ_CRASH("Bad input! Headed for a crash!");
     }
 
     for (int32_t index = 0; index < aNameCount; ++index) {

@@ -30,11 +30,7 @@ var observer = {
 };
 
 function continueTest() {
-  try {
-    generator.next();
-  } catch (e if e instanceof StopIteration) {
-    error("Stop test because of exception!");
-  }
+  generator.next();
 }
 
 function playOscillatorNode() {
@@ -86,14 +82,14 @@ function startAudioContext() {
   }
 }
 
-function runTest() {
+function* runTest() {
   yield startAudioContext();
 
   yield audioPlayingStart();
 
   yield audioBecomeSilentDuringPlaying();
 
-  yield finish();
+  finish();
 }
 
 continueTest();

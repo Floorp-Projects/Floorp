@@ -4,6 +4,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsTArrayForwardDeclare.h"
+class nsCString;
+%}
+[ref] native StringArrayRef(nsTArray<nsCString>);
+
 interface nsIChannel;
 interface nsIPrincipal;
 interface nsIURI;
@@ -59,7 +65,12 @@ interface nsIURIClassifier : nsISupports
   /**
    * Synchronously classify a URI with a comma-separated string
    * containing the given tables. This does not make network requests.
-   * The result is a comma-separated string of tables that match.
+   * The result is an array of table names that match.
    */
-  ACString classifyLocalWithTables(in nsIURI aURI, in ACString aTables);
+  [noscript] StringArrayRef classifyLocalWithTables(in nsIURI aURI, in ACString aTables);
+  /**
+   * Same as above, but returns a comma separated list of table names.
+   * This is an internal interface used only for testing purposes.
+   */
+  ACString classifyLocal(in nsIURI aURI, in ACString aTables);
 };

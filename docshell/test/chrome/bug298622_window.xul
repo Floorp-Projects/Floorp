@@ -29,7 +29,7 @@
     // Find should work correctly on a page loaded from the
     // bfcache.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Make sure bfcache is on.
       enableBFCache(true);
@@ -131,10 +131,8 @@
          "find this",
          "find failed on page loaded from bfcache");
       
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
     
   ]]></script>

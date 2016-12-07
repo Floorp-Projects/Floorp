@@ -34,7 +34,7 @@ function test() {
         // the epoch.
         // This is not the correct value of the timestamp, but good enough for
         // comparison.
-        return Date.parse("T" + String.trim(value.textContent));
+        return Date.parse("T" + String(value.textContent).trim());
       });
 
     let minTimestamp = Math.min.apply(null, aTimestampMilliseconds);

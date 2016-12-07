@@ -47,6 +47,118 @@ class TextMetrics;
 class CanvasFilterChainObserver;
 class CanvasPath;
 
+template<class T>
+struct MaybeNotNull
+{
+  MOZ_IMPLICIT MaybeNotNull() : mWrapped(nullptr), mEnsure(false) {}
+  MOZ_IMPLICIT MaybeNotNull(T&& aValue) : mWrapped(aValue), mEnsure(false) {}
+  ~MaybeNotNull() {}
+
+  void BeginNotNull() {
+    mEnsure = true;
+  }
+
+  void EndNotNull() {
+    mEnsure = false;
+  }
+
+  void MaybeCheckWrapped() {
+    if (mEnsure && !mWrapped) {
+      MOZ_CRASH("GFX: Setting mTarget to nullptr?");
+    }
+  }
+
+  typename T::element_type* operator->() const {
+    return mWrapped.get();
+  }
+
+  already_AddRefed<typename T::element_type> forget() {
+    already_AddRefed<typename T::element_type>&& ret = mWrapped.forget();
+    MaybeCheckWrapped();
+    return Move(ret);
+  }
+
+  MOZ_IMPLICIT operator bool () {
+    return mWrapped;
+  }
+
+  operator T&() {
+    return mWrapped;
+  }
+
+  operator typename T::element_type*() {
+    return mWrapped.get();
+  }
+
+  bool operator!() const {
+    return !mWrapped;
+  }
+
+  MaybeNotNull& operator=(decltype(nullptr)) {
+    mWrapped = nullptr;
+    MaybeCheckWrapped();
+    return *this;
+  }
+
+  template<class U>
+  MaybeNotNull& operator=(U& aOther){
+    mWrapped = aOther;
+    MaybeCheckWrapped();
+    return *this;
+  }
+
+  template<class U>
+  MaybeNotNull& operator=(U&& aOther){
+    mWrapped = aOther;
+    MaybeCheckWrapped();
+    return *this;
+  }
+
+  struct AutoNotNull
+  {
+    MOZ_IMPLICIT AutoNotNull(MaybeNotNull* aMaybe) : mMaybe(aMaybe)
+    {
+      mMaybe->BeginNotNull();
+    }
+
+    ~AutoNotNull()
+    {
+      mMaybe->EndNotNull();
+    }
+
+    MaybeNotNull* mMaybe;
+  };
+
+  AutoNotNull MakeAuto()
+  {
+    return AutoNotNull(this);
+  }
+
+  T mWrapped;
+
+  bool mEnsure;
+};
+
+template<class T, class U>
+  bool operator!=(const MaybeNotNull<T>& aT, const U& aU) {
+  return aT.mWrapped != aU;
+}
+
+template<class T, class U>
+  bool operator==(const MaybeNotNull<T>& aT, const U& aU) {
+  return aT.mWrapped == aU;
+}
+
+template<class T, class U>
+  bool operator||(const MaybeNotNull<T>& aT, const U& aU) {
+  return aT.mWrapped || aU;
+}
+
+template<class T, class U>
+  bool operator||(const T& aT, const MaybeNotNull<U>& aU) {
+  return aT || aU.mWrapped;
+}
+
 extern const mozilla::gfx::Float SIGMA_MAX;
 
 template<typename T> class Optional;
@@ -686,7 +798,7 @@ protected:
    * Check if the target is valid after calling EnsureTarget.
    */
   bool IsTargetValid() const {
-    return mTarget && mTarget != sErrorTarget;
+    return !!mTarget && mTarget != sErrorTarget;
   }
 
   /**
@@ -771,7 +883,7 @@ protected:
   // This is created lazily so it is necessary to call EnsureTarget before
   // accessing it. In the event of an error it will be equal to
   // sErrorTarget.
-  RefPtr<mozilla::gfx::DrawTarget> mTarget;
+  MaybeNotNull<RefPtr<mozilla::gfx::DrawTarget>> mTarget;
 
   RefPtr<mozilla::layers::PersistentBufferProvider> mBufferProvider;
 

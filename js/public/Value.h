@@ -445,7 +445,7 @@ class MOZ_NON_PARAM alignas(8) Value
     /*** JIT-only interfaces to interact with and create raw Values ***/
 #if defined(JS_NUNBOX32)
     PayloadType toNunboxPayload() const {
-        return data.s.payload.i32;
+        return static_cast<PayloadType>(data.s.payload.i32);
     }
 
     JSValueTag toNunboxTag() const {

@@ -28,7 +28,7 @@
     // Generator function for test steps for bug 662200:  
     // Description goes here.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Load the first test page
       var navData = {
@@ -117,10 +117,8 @@
       is(TestWindow.getBrowser().canGoForward, true, "Should be able to go forward!");
       is(shistory.requestedIndex, -1, "Requested index should be cleared!");
 
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
     
   ]]></script>

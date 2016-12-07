@@ -57,7 +57,7 @@ FileSystemRequestParent::Initialize(const FileSystemParams& aParams)
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(Remove)
 
     default: {
-      NS_RUNTIMEABORT("not reached");
+      MOZ_CRASH("not reached");
       break;
     }
   }

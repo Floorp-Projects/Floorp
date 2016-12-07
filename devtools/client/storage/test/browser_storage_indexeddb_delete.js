@@ -16,11 +16,11 @@ add_task(function* () {
 
   info("test state before delete");
   yield checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb1", "idb2"]],
+    [["indexedDB", "http://test1.example.org"], ["idb1 (default)", "idb2 (default)"]],
   ]);
 
   info("do the delete");
-  const deletedDb = ["indexedDB", "http://test1.example.org", "idb1"];
+  const deletedDb = ["indexedDB", "http://test1.example.org", "idb1 (default)"];
 
   yield selectTreeItem(deletedDb);
 
@@ -40,7 +40,7 @@ add_task(function* () {
 
   info("test state after delete");
   yield checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb2"]],
+    [["indexedDB", "http://test1.example.org"], ["idb2 (default)"]],
   ]);
 
   yield finishTests();

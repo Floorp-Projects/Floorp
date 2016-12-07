@@ -2,6 +2,6 @@ protocol conflictProtocolMsg {
 
     // it's an error to re-use the protocol name as a message ID; these
     // are reserved
-child:  conflictProtocolMsg();
+child: async conflictProtocolMsg();
 
 };

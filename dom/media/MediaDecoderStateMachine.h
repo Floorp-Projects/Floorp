@@ -172,7 +172,7 @@ public:
   void RemoveOutputStream(MediaStream* aStream);
 
   // Seeks to the decoder to aTarget asynchronously.
-  RefPtr<MediaDecoder::SeekPromise> InvokeSeek(SeekTarget aTarget);
+  RefPtr<MediaDecoder::SeekPromise> InvokeSeek(const SeekTarget& aTarget);
 
   void DispatchSetPlaybackRate(double aPlaybackRate)
   {
@@ -284,7 +284,7 @@ private:
 
   void SetAudioCaptured(bool aCaptured);
 
-  RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
+  RefPtr<MediaDecoder::SeekPromise> Seek(const SeekTarget& aTarget);
 
   RefPtr<ShutdownPromise> Shutdown();
 
@@ -329,6 +329,9 @@ private:
   void OnAudioDecoded(MediaData* aAudio);
   void OnVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStartTime);
   void OnNotDecoded(MediaData::Type aType, const MediaResult& aError);
+  void OnAudioWaited(MediaData::Type aType);
+  void OnVideoWaited(MediaData::Type aType);
+  void OnNotWaited(const WaitForDataRejectValue& aRejection);
 
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
@@ -690,9 +693,6 @@ private:
   nsAutoPtr<MetadataTags> mMetadataTags;
 
   mozilla::MediaMetadataManager mMetadataManager;
-
-  // Track our request to update the buffered ranges
-  MozPromiseRequestHolder<MediaDecoderReader::BufferedUpdatePromise> mBufferedUpdateRequest;
 
   // True if we are back from DECODER_STATE_DORMANT state and
   // LoadedMetadataEvent was already sent.

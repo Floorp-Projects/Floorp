@@ -52,16 +52,14 @@ class TestCompareMozconfigs(unittest.TestCase):
                                         whitelist_path, '--no-download',
                                         platform + ',' + beta_mozconfig_path +
                                         ',' + nightly_mozconfig_path])
+            self.assertEqual(0, ret_code)
 
-            if ret_code > 0:
-                return ret_code
 
             log.info("Comparing release against nightly mozconfigs")
             ret_code = subprocess.call([python_exe, script_path, '--whitelist',
                                         whitelist_path, '--no-download',
                                         platform + ',' + release_mozconfig_path +
                                         ',' + nightly_mozconfig_path])
-
             self.assertEqual(0, ret_code)
 
 if __name__ == '__main__':

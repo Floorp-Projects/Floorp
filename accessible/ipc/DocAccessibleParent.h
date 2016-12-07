@@ -146,6 +146,9 @@ public:
 #if defined(XP_WIN)
   virtual mozilla::ipc::IPCResult RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
                                                IAccessibleHolder* aParentCOMProxy) override;
+
+  virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(
+      const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;
 #endif
 
 private:

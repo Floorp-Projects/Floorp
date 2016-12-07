@@ -6,6 +6,9 @@
 #ifndef mozilla_layout_ScrollSnap_h_
 #define mozilla_layout_ScrollSnap_h_
 
+#include "mozilla/Maybe.h"
+#include "nsIScrollableFrame.h"
+
 namespace mozilla {
 
 namespace layers {
@@ -27,7 +30,7 @@ struct ScrollSnapUtils {
    *                 not to touch main-thread-only data structures without
    *                 appropriate locking.
    */
-  static Maybe<nsPoint> GetSnapPointForDestination(
+  static mozilla::Maybe<nsPoint> GetSnapPointForDestination(
       const layers::ScrollSnapInfo& aSnapInfo,
       nsIScrollableFrame::ScrollUnit aUnit,
       const nsSize& aScrollPortSize,

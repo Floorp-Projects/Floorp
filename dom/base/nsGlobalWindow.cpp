@@ -1308,9 +1308,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
         os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                         false);
 
-        // Watch for dom-storage2-changed so we can fire storage
-        // events. Use a strong reference.
+        // Watch for dom-storage2-changed and dom-private-storage2-changed so we
+        // can fire storage events. Use a strong reference.
         os->AddObserver(mObserver, "dom-storage2-changed", false);
+        os->AddObserver(mObserver, "dom-private-storage2-changed", false);
       }
 
       Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
@@ -1611,6 +1612,7 @@ nsGlobalWindow::CleanUp()
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, "dom-storage2-changed");
+      os->RemoveObserver(mObserver, "dom-private-storage2-changed");
     }
 
 #ifdef MOZ_B2G
@@ -3030,7 +3032,11 @@ nsGlobalWindow::PreloadLocalStorage()
     return;
   }
 
-  storageManager->PrecacheStorage(principal);
+  // private browsing windows do not persist local storage to disk so we should
+  // only try to precache storage when we're not a private browsing window.
+  if (principal->GetPrivateBrowsingId() == 0) {
+    storageManager->PrecacheStorage(principal);
+  }
 }
 
 void
@@ -8666,7 +8672,7 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
     return;
   }
 
-  aError = NS_DispatchToCurrentThread(event);
+  aError = Dispatch("PostMessage", TaskCategory::Other, event.forget());
 }
 
 void
@@ -10788,6 +10794,8 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
       return nullptr;
     }
 
+    MOZ_DIAGNOSTIC_ASSERT((principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
+
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
                                            getter_AddRefs(storage));
@@ -10851,6 +10859,8 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
         return nullptr;
       }
     }
+
+    MOZ_DIAGNOSTIC_ASSERT((principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
 
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
@@ -11675,7 +11685,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
+  bool isPrivateBrowsing = IsPrivateBrowsing();
+  if ((!nsCRT::strcmp(aTopic, "dom-storage2-changed") && !isPrivateBrowsing) ||
+      (!nsCRT::strcmp(aTopic, "dom-private-storage2-changed") && isPrivateBrowsing)) {
     if (!IsInnerWindow() || !AsInner()->IsCurrentInnerWindow()) {
       return NS_OK;
     }
@@ -11710,9 +11722,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return rv;
     }
 
-    if ((privateBrowsingId > 0) != IsPrivateBrowsing()) {
-      return NS_OK;
-    }
+    MOZ_ASSERT((privateBrowsingId > 0) == isPrivateBrowsing);
 
     switch (changingStorage->GetType())
     {
@@ -12279,6 +12289,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 
   for (uint32_t i = 0, len = mPendingStorageEvents.Length(); i < len; ++i) {
     Observe(mPendingStorageEvents[i], "dom-storage2-changed", nullptr);
+    Observe(mPendingStorageEvents[i], "dom-private-storage2-changed", nullptr);
   }
 
   if (mApplicationCache) {
@@ -14995,7 +15006,7 @@ nsPIDOMWindow<T>::TabGroup()
 
 template<typename T>
 mozilla::dom::DocGroup*
-nsPIDOMWindow<T>::GetDocGroup()
+nsPIDOMWindow<T>::GetDocGroup() const
 {
   nsIDocument* doc = GetExtantDoc();
   if (doc) {
@@ -15017,14 +15028,13 @@ nsGlobalWindow::Dispatch(const char* aName,
 }
 
 already_AddRefed<nsIEventTarget>
-nsGlobalWindow::CreateEventTarget(const char* aName,
-                                  TaskCategory aCategory)
+nsGlobalWindow::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (GetDocGroup()) {
-    return GetDocGroup()->CreateEventTarget(aName, aCategory);
+    return GetDocGroup()->EventTargetFor(aCategory);
   }
-  return DispatcherTrait::CreateEventTarget(aName, aCategory);
+  return DispatcherTrait::EventTargetFor(aCategory);
 }
 
 nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(

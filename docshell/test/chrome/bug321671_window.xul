@@ -34,7 +34,7 @@
     // should be retained when moving backwards and forwards through pages 
     // when bfcache is enabled.
     //
-    function testIterator()
+    function* testIterator()
     {
       // Variable to hold the scroll positions of the test pages.
       var scrollPositions = [];
@@ -121,10 +121,8 @@
           "Scroll position not restored while going forward!");
       }
       
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
+      // Tell the framework the test is finished.
       finish();
-      yield undefined;
     }
     
   ]]></script>

@@ -4,5 +4,5 @@ protocol multiManager1 {
     manages multiManaged;
 
 child:
-    multiManaged();
+    async multiManaged();
 };

@@ -195,7 +195,13 @@ public class TelemetryJSONFilePingStore extends TelemetryPingStore {
         try {
             inputStream = new FileInputStream(file);
         } catch (final FileNotFoundException e) {
-            throw new IllegalStateException("Expected file to exist");
+            // permission problem might also cause same exception. To get more debug information.
+            String fileInfo = String.format("existence: %b, can write: %b, size: %l.",
+                    file.exists(), file.canWrite(), file.length());
+            String msg = String.format(
+                    "Expected file to exist but got exception in thread: %s. File info - %s",
+                    Thread.currentThread().getName(), fileInfo);
+            throw new IllegalStateException(msg);
         }
 
         final JSONObject obj;

@@ -14,7 +14,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Variant.h"
 
@@ -34,6 +33,7 @@
 #include "js/Id.h"
 #include "js/Principals.h"
 #include "js/Realm.h"
+#include "js/RefCounted.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"
@@ -875,11 +875,7 @@ class MOZ_STACK_CLASS SourceBufferHolder final
 
 #define JSFUN_CONSTRUCTOR      0x400    /* native that can be called as a ctor */
 
-//                             0x800    /* Unused */
-
-#define JSFUN_HAS_REST        0x1000    /* function has ...rest parameter. */
-
-#define JSFUN_FLAGS_MASK      0x1e00    /* | of all the JSFUN_* flags */
+#define JSFUN_FLAGS_MASK       0x600    /* | of all the JSFUN_* flags */
 
 /*
  * If set, will allow redefining a non-configurable property, but only on a
@@ -6091,7 +6087,7 @@ SetBuildIdOp(JSContext* cx, BuildIdOp buildIdOp);
  * by calling createObject().
  */
 
-struct WasmModule : mozilla::external::AtomicRefCounted<WasmModule>
+struct WasmModule : js::AtomicRefCounted<WasmModule>
 {
     MOZ_DECLARE_REFCOUNTED_TYPENAME(WasmModule)
     virtual ~WasmModule() {}

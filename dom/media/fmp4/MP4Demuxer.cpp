@@ -41,7 +41,7 @@ public:
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
-  RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  RefPtr<SeekPromise> Seek(const media::TimeUnit& aTime) override;
 
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
 
@@ -49,7 +49,8 @@ public:
 
   nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
 
-  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
+  RefPtr<SkipAccessPointPromise>
+  SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold) override;
 
   media::TimeIntervals GetBuffered() override;
 
@@ -286,7 +287,7 @@ MP4TrackDemuxer::EnsureUpToDateIndex()
 }
 
 RefPtr<MP4TrackDemuxer::SeekPromise>
-MP4TrackDemuxer::Seek(media::TimeUnit aTime)
+MP4TrackDemuxer::Seek(const media::TimeUnit& aTime)
 {
   int64_t seekTime = aTime.ToMicroseconds();
   mQueuedSample = nullptr;
@@ -443,7 +444,7 @@ MP4TrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 }
 
 RefPtr<MP4TrackDemuxer::SkipAccessPointPromise>
-MP4TrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
+MP4TrackDemuxer::SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold)
 {
   mQueuedSample = nullptr;
   // Loop until we reach the next keyframe after the threshold.

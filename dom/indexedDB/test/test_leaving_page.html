@@ -19,7 +19,7 @@
       ok(false, "gotmessage: " + e.data);
     }
 
-    function testSteps()
+    function* testSteps()
     {
       var iframe = $("inner");
       iframe.src = "leaving_page_iframe.html";
@@ -42,7 +42,6 @@
       is(event.target.result.hello, "world", "second modification rolled back");
 
       finishTest();
-      yield undefined;
     }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

@@ -345,6 +345,8 @@ class SyntaxParseHandler
 
     MOZ_MUST_USE bool setLastFunctionFormalParameterDefault(Node funcpn, Node pn) { return true; }
 
+    void checkAndSetIsDirectRHSAnonFunction(Node pn) {}
+
     Node newFunctionStatement() { return NodeFunctionDefinition; }
     Node newFunctionExpression() { return NodeFunctionDefinition; }
     Node newArrowFunction() { return NodeFunctionDefinition; }

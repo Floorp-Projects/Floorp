@@ -66,7 +66,10 @@ test_description_schema = Schema({
     ),
 
     # the sheriffing tier for this task (default: set based on test platform)
-    Optional('tier'): int,
+    Optional('tier'): Any(
+        int,
+        {'by-test-platform': {basestring: int}},
+    ),
 
     # number of chunks to create for this task.  This can be keyed by test
     # platform by passing a dictionary in the `by-test-platform` key.  If the

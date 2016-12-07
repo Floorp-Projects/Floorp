@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Dispatcher.h"
 #include "mozilla/Move.h"
+#include "nsINamed.h"
 
 using namespace mozilla;
 
@@ -14,12 +15,21 @@ DispatcherTrait::Dispatch(const char* aName,
                           TaskCategory aCategory,
                           already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return NS_DispatchToMainThread(Move(aRunnable));
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  if (aName) {
+    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
+      named->SetName(aName);
+    }
+  }
+  if (NS_IsMainThread()) {
+    return NS_DispatchToCurrentThread(runnable.forget());
+  } else {
+    return NS_DispatchToMainThread(runnable.forget());
+  }
 }
 
 already_AddRefed<nsIEventTarget>
-DispatcherTrait::CreateEventTarget(const char* aName,
-                                   TaskCategory aCategory)
+DispatcherTrait::EventTargetFor(TaskCategory aCategory) const
 {
   nsCOMPtr<nsIEventTarget> main = do_GetMainThread();
   return main.forget();
@@ -30,15 +40,11 @@ namespace {
 class DispatcherEventTarget final : public nsIEventTarget
 {
   RefPtr<dom::Dispatcher> mDispatcher;
-  const char* mName;
   TaskCategory mCategory;
 
 public:
-  DispatcherEventTarget(dom::Dispatcher* aDispatcher,
-                        const char* aName,
-                        TaskCategory aCategory)
+  DispatcherEventTarget(dom::Dispatcher* aDispatcher, TaskCategory aCategory)
    : mDispatcher(aDispatcher)
-   , mName(aName)
    , mCategory(aCategory)
   {}
 
@@ -67,7 +73,7 @@ DispatcherEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_
   if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
     return NS_ERROR_UNEXPECTED;
   }
-  return mDispatcher->Dispatch(mName, mCategory, Move(aRunnable));
+  return mDispatcher->Dispatch(nullptr, mCategory, Move(aRunnable));
 }
 
 NS_IMETHODIMP
@@ -84,9 +90,9 @@ DispatcherEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 }
 
 already_AddRefed<nsIEventTarget>
-Dispatcher::CreateEventTarget(const char* aName, TaskCategory aCategory)
+Dispatcher::CreateEventTargetFor(TaskCategory aCategory)
 {
   RefPtr<DispatcherEventTarget> target =
-    new DispatcherEventTarget(this, aName, aCategory);
+    new DispatcherEventTarget(this, aCategory);
   return target.forget();
 }

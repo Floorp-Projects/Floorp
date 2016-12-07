@@ -93,7 +93,8 @@ public:
   nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex);
 
   nsresult DispatchBoundaryImpl(const nsAString& aName,
-                                float aElapsedTime, uint32_t aCharIndex);
+                                float aElapsedTime, uint32_t aCharIndex,
+                                uint32_t aCharLength, uint8_t argc);
 
   nsresult DispatchMarkImpl(const nsAString& aName,
                             float aElapsedTime, uint32_t aCharIndex);

@@ -17,8 +17,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "NarrateControls", "resource://gre/modul
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector", "resource:///modules/translation/LanguageDetector.jsm");
 
 var gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
+
+const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
 var AboutReader = function(mm, win, articlePromise) {
   let url = this._getOriginalUrl(win);
@@ -45,6 +48,9 @@ var AboutReader = function(mm, win, articlePromise) {
     .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
   this._article = null;
+  this._languagePromise = new Promise(resolve => {
+    this._foundLanguage = resolve;
+  });
 
   if (articlePromise) {
     this._articlePromise = articlePromise;
@@ -73,7 +79,6 @@ var AboutReader = function(mm, win, articlePromise) {
   this._setupStyleDropdown();
   this._setupButton("close-button", this._onReaderClose.bind(this), "aboutReader.toolbar.close");
 
-  const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
   if (gIsFirefoxDesktop) {
     // we're ready for any external setup, send a signal for that.
     this._mm.sendAsyncMessage("Reader:OnSetup");
@@ -114,7 +119,7 @@ var AboutReader = function(mm, win, articlePromise) {
   this._setupLineHeightButtons();
 
   if (win.speechSynthesis && Services.prefs.getBoolPref("narrate.enabled")) {
-    new NarrateControls(mm, win);
+    new NarrateControls(mm, win, this._languagePromise);
   }
 
   this._loadArticle();
@@ -713,12 +718,19 @@ AboutReader.prototype = {
   },
 
   _maybeSetTextDirection: function Read_maybeSetTextDirection(article) {
-    if (!article.dir)
-      return;
-
-    // Set "dir" attribute on content
-    this._contentElement.setAttribute("dir", article.dir);
-    this._headerElement.setAttribute("dir", article.dir);
+    if (article.dir) {
+      // Set "dir" attribute on content
+      this._contentElement.setAttribute("dir", article.dir);
+      this._headerElement.setAttribute("dir", article.dir);
+    } else {
+      this._languagePromise.then(language => {
+        // TODO: Remove the hardcoded language codes below once bug 1320265 is resolved.
+        if (["ar", "fa", "he", "ug", "ur"].includes(language)) {
+          this._contentElement.setAttribute("dir", "rtl");
+          this._headerElement.setAttribute("dir", "rtl");
+        }
+      });
+    }
   },
 
   _fixLocalLinks() {
@@ -788,6 +800,7 @@ AboutReader.prototype = {
     this._contentElement.innerHTML = "";
     this._contentElement.appendChild(contentFragment);
     this._fixLocalLinks();
+    this._findLanguage(article.textContent);
     this._maybeSetTextDirection(article);
 
     this._contentElement.style.display = "block";
@@ -802,6 +815,14 @@ AboutReader.prototype = {
 
     this._doc.dispatchEvent(
       new this._win.CustomEvent("AboutReaderContentReady", { bubbles: true, cancelable: false }));
+  },
+
+  _findLanguage: function(textContent) {
+    if (gIsFirefoxDesktop) {
+      LanguageDetector.detectLanguage(textContent).then(result => {
+        this._foundLanguage(result.confident ? result.language : null);
+      });
+    }
   },
 
   _hideContent: function() {

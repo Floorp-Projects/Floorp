@@ -2,8 +2,8 @@ add_task(function* test() {
   const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
   const uris = [undefined, "about:blank"];
 
-  function checkContentProcess(uri) {
-    yield ContentTask.spawn(newBrowser, uri, function* (uri) {
+  function checkContentProcess(newBrowser, uri) {
+    return ContentTask.spawn(newBrowser, uri, function* (uri) {
       var prin = content.document.nodePrincipal;
       Assert.notEqual(prin, null, "Loaded principal must not be null when adding " + uri);
       Assert.notEqual(prin, undefined, "Loaded principal must not be undefined when loading " + uri);
@@ -28,7 +28,7 @@ add_task(function* test() {
 
       // Belt-and-suspenders e10s check: make sure that the same checks hold
       // true in the content process.
-      checkContentProcess(uri);
+      yield checkContentProcess(newBrowser, uri);
 
       yield BrowserTestUtils.browserLoaded(newBrowser);
 
@@ -40,7 +40,7 @@ add_task(function* test() {
 
       // Belt-and-suspenders e10s check: make sure that the same checks hold
       // true in the content process.
-      checkContentProcess(uri);
+      yield checkContentProcess(newBrowser, uri);
     });
   }
 });

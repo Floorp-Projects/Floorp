@@ -264,6 +264,10 @@ public:
   {
     mDecoder->SetSeekThreshold(aTime);
   }
+  bool SupportDecoderRecycling() const override
+  {
+    return mDecoder->SupportDecoderRecycling();
+  }
   void Shutdown() override
   {
     mDecoder->Shutdown();
@@ -558,7 +562,7 @@ MediaFormatReader::InitLayersBackendType()
 }
 
 nsresult
-MediaFormatReader::Init()
+MediaFormatReader::InitInternal()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 
@@ -790,6 +794,9 @@ MediaFormatReader::MaybeResolveMetadataPromise()
     mInfo.mStartTime = startTime; // mInfo.mStartTime is initialized to 0.
   }
 
+  mHasStartTime = true;
+  UpdateBuffered();
+
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   metadata->mInfo = mInfo;
   metadata->mTags = mTags->Count() ? mTags.release() : nullptr;
@@ -924,13 +931,13 @@ MediaFormatReader::DoDemuxVideo()
 
   if (mVideo.mFirstDemuxedSampleTime.isNothing()) {
     RefPtr<MediaFormatReader> self = this;
-    p = p->Then(OwnerThread(), __func__,
+    p = p->ThenPromise(OwnerThread(), __func__,
                 [self] (RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
                   self->OnFirstDemuxCompleted(TrackInfo::kVideoTrack, aSamples);
                 },
                 [self] (const MediaResult& aError) {
                   self->OnFirstDemuxFailed(TrackInfo::kVideoTrack, aError);
-                })->CompletionPromise();
+                });
   }
 
   mVideo.mDemuxRequest.Begin(p->Then(OwnerThread(), __func__, this,
@@ -990,13 +997,13 @@ MediaFormatReader::DoDemuxAudio()
 
   if (mAudio.mFirstDemuxedSampleTime.isNothing()) {
     RefPtr<MediaFormatReader> self = this;
-    p = p->Then(OwnerThread(), __func__,
+    p = p->ThenPromise(OwnerThread(), __func__,
                 [self] (RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
                   self->OnFirstDemuxCompleted(TrackInfo::kAudioTrack, aSamples);
                 },
                 [self] (const MediaResult& aError) {
                   self->OnFirstDemuxFailed(TrackInfo::kAudioTrack, aError);
-                })->CompletionPromise();
+                });
   }
 
   mAudio.mDemuxRequest.Begin(p->Then(OwnerThread(), __func__, this,
@@ -1299,29 +1306,39 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
         return;
       }
 
+      bool supportRecycling = MediaPrefs::MediaDecoderCheckRecycling() &&
+                              decoder.mDecoder->SupportDecoderRecycling();
       if (decoder.mNextStreamSourceID.isNothing() ||
           decoder.mNextStreamSourceID.ref() != info->GetID()) {
-        LOG("%s stream id has changed from:%d to:%d, draining decoder.",
+        if (!supportRecycling) {
+          LOG("%s stream id has changed from:%d to:%d, draining decoder.",
             TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
             info->GetID());
-        decoder.mNeedDraining = true;
-        decoder.mNextStreamSourceID = Some(info->GetID());
-        ScheduleUpdate(aTrack);
-        return;
+          decoder.mNeedDraining = true;
+          decoder.mNextStreamSourceID = Some(info->GetID());
+          ScheduleUpdate(aTrack);
+          return;
+        }
       }
 
-      LOG("%s stream id has changed from:%d to:%d, recreating decoder.",
+      LOG("%s stream id has changed from:%d to:%d.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
       decoder.mLastStreamSourceID = info->GetID();
       decoder.mNextStreamSourceID.reset();
-      // Reset will clear our array of queued samples. So make a copy now.
-      nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
-      Reset(aTrack);
-      decoder.ShutdownDecoder();
+      if (!supportRecycling) {
+        LOG("Decoder does not support recycling, recreate decoder.");
+        // Reset will clear our array of queued samples. So make a copy now.
+        nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
+        Reset(aTrack);
+        decoder.ShutdownDecoder();
+        if (sample->mKeyframe) {
+          decoder.mQueuedSamples.AppendElements(Move(samples));
+        }
+      }
+
       decoder.mInfo = info;
       if (sample->mKeyframe) {
-        decoder.mQueuedSamples.AppendElements(Move(samples));
         ScheduleUpdate(aTrack);
       } else {
         TimeInterval time =
@@ -1928,7 +1945,7 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
+MediaFormatReader::Seek(const SeekTarget& aTarget, int64_t aUnused)
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -1950,7 +1967,7 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  SetSeekTarget(Move(aTarget));
+  SetSeekTarget(aTarget);
 
   RefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
@@ -2177,16 +2194,10 @@ MediaFormatReader::GetBuffered()
   media::TimeIntervals audioti;
   media::TimeIntervals intervals;
 
-  if (!mInitDone) {
+  if (!mInitDone || !mHasStartTime) {
     return intervals;
   }
-  int64_t startTime = 0;
-  if (!ForceZeroStartTime()) {
-    if (!HaveStartTime()) {
-      return intervals;
-    }
-    startTime = StartTime();
-  }
+
   // Ensure we have up to date buffered time range.
   if (HasVideo()) {
     UpdateReceivedNewData(TrackType::kVideoTrack);
@@ -2213,21 +2224,7 @@ MediaFormatReader::GetBuffered()
     // IntervalSet already starts at 0 or is empty, nothing to shift.
     return intervals;
   }
-  return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
-}
-
-// For the MediaFormatReader override we need to force an update to the
-// buffered ranges, so we call NotifyDataArrive
-RefPtr<MediaDecoderReader::BufferedUpdatePromise>
-MediaFormatReader::UpdateBufferedWithPromise() {
-  MOZ_ASSERT(OnTaskQueue());
-  // Call NotifyDataArrive to force a recalculation of the buffered
-  // ranges. UpdateBuffered alone will not force a recalculation, so we
-  // use NotifyDataArrived which sets flags to force this recalculation.
-  // See MediaFormatReader::UpdateReceivedNewData for an example of where
-  // the new data flag is used.
-  NotifyDataArrived();
-  return BufferedUpdatePromise::CreateAndResolve(true, __func__);
+  return intervals.Shift(media::TimeUnit() - mInfo.mStartTime);
 }
 
 void MediaFormatReader::ReleaseResources()

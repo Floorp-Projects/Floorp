@@ -5,3 +5,4 @@
 "use strict";
 
 exports.grids = require("./grids");
+exports.highlighterSettings = require("./highlighter-settings");

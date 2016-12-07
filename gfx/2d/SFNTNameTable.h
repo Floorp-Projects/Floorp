@@ -7,10 +7,11 @@
 #ifndef mozilla_gfx_SFNTNameTable_h
 #define mozilla_gfx_SFNTNameTable_h
 
-#include "mozilla/Function.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "u16string.h"
+
+#include <functional>
 
 namespace mozilla {
 namespace gfx {
@@ -19,7 +20,7 @@ struct NameHeader;
 struct NameRecord;
 enum ENameDecoder : int;
 
-typedef Vector<function<ENameDecoder(const NameRecord*)>> NameRecordMatchers;
+typedef Vector<std::function<ENameDecoder(const NameRecord*)>> NameRecordMatchers;
 
 class SFNTNameTable final
 {

@@ -81,6 +81,7 @@ var testObserver = {
     // Check and cleanup CrashManager.
     Task.spawn(function* () {
       let cm = Services.crashmanager;
+      yield cm.ensureCrashIsPresent(crashID);
       let store = yield cm._getStore();
       is(store.crashesCount, 1, "Store should have only 1 item");
 

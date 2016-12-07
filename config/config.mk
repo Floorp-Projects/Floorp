@@ -354,8 +354,6 @@ color_flags_vars := \
   COMPILE_CXXFLAGS \
   COMPILE_CMFLAGS \
   COMPILE_CMMFLAGS \
-  HOST_CFLAGS \
-  HOST_CXXFLAGS \
   LDFLAGS \
   $(NULL)
 
@@ -548,7 +546,7 @@ EXPAND_LIBS_GEN = $(PYTHON) $(MOZILLA_DIR)/config/expandlibs_gen.py
 EXPAND_AR = $(EXPAND_LIBS_EXEC) --extract -- $(AR)
 EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
 EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
-EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist -- $(LD)
+EXPAND_LINK = $(EXPAND_LIBS_EXEC) --uselist -- $(LINK)
 EXPAND_MKSHLIB_ARGS = --uselist
 ifdef SYMBOL_ORDER
 EXPAND_MKSHLIB_ARGS += --symbol-order $(SYMBOL_ORDER)

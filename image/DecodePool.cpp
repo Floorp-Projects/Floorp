@@ -159,16 +159,27 @@ private:
 class DecodePoolWorker : public Runnable
 {
 public:
-  explicit DecodePoolWorker(DecodePoolImpl* aImpl) : mImpl(aImpl) { }
+  explicit DecodePoolWorker(DecodePoolImpl* aImpl)
+    : mImpl(aImpl)
+  { }
 
   NS_IMETHOD Run() override
   {
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    char stackBaseGuess; // Need to be the first variable of main loop function.
+#endif // MOZ_ENABLE_PROFILER_SPS
+
     MOZ_ASSERT(!NS_IsMainThread());
 
     mImpl->InitCurrentThread();
 
     nsCOMPtr<nsIThread> thisThread;
     nsThreadManager::get().GetCurrentThread(getter_AddRefs(thisThread));
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    // InitCurrentThread() has assigned the thread name.
+    profiler_register_thread(PR_GetThreadName(PR_GetCurrentThread()), &stackBaseGuess);
+#endif // MOZ_ENABLE_PROFILER_SPS
 
     do {
       Work work = mImpl->PopWork();
@@ -179,6 +190,11 @@ public:
 
         case Work::Type::SHUTDOWN:
           DecodePoolImpl::ShutdownThread(thisThread);
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+          profiler_unregister_thread();
+#endif // MOZ_ENABLE_PROFILER_SPS
+
           return NS_OK;
 
         default:

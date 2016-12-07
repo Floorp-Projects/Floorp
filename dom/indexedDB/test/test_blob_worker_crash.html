@@ -20,7 +20,7 @@
    * test.  Doing it out here is no good.
    */
 
-  function testSteps()
+  function* testSteps()
   {
     info("Open iframe, wait for it to do its IndexedDB stuff.");
 
@@ -49,7 +49,6 @@
     ok('Did not crash / trigger an assert!');
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

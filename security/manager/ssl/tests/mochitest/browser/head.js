@@ -51,7 +51,7 @@ function readCertificate(filename, trustString) {
     let certdb = Cc["@mozilla.org/security/x509certdb;1"]
                    .getService(Ci.nsIX509CertDB);
     let base64 = pemToBase64(pem);
-    certdb.addCertFromBase64(base64, trustString, "unused");
+    certdb.addCertFromBase64(base64, trustString);
     let cert = certdb.constructX509FromBase64(base64);
     gImportedCerts.push(cert);
     return cert;
