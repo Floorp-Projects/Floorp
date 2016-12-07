@@ -5323,9 +5323,13 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
-  if (mDownloadSuspendedByCache &&
-      mDecoder && !mDecoder->IsEnded() &&
-      mFirstFrameLoaded) {
+  if (!mFirstFrameLoaded) {
+    // We haven't yet loaded the first frame, making us unable to determine
+    // if we have enough valid data at the present stage.
+    return;
+  }
+
+  if (mDownloadSuspendedByCache && mDecoder && !mDecoder->IsEnded()) {
     // The decoder has signaled that the download has been suspended by the
     // media cache. So move readyState into HAVE_ENOUGH_DATA, in case there's
     // script waiting for a "canplaythrough" event; without this forced
@@ -5344,15 +5348,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
   if (nextFrameStatus != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Next frame not available", this));
-    if (mFirstFrameLoaded) {
-      ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
-    }
-    return;
-  }
-
-  if (!mFirstFrameLoaded) {
-    // We haven't yet loaded the first frame, making us unable to determine
-    // if we have enough valid data at the present stage.
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
     return;
   }
 
