@@ -72,7 +72,7 @@ JOB_NAME_WHITELIST = set([
 ])
 
 JOB_NAME_WHITELIST_ERROR = """\
-The gecko-v2 job name {} is not in the whitelist in __file__.
+The gecko-v2 job name {} is not in the whitelist in gecko_v2_whitelist.py.
 If this job runs on Buildbot, please ensure that the job names match between
 Buildbot and TaskCluster, then add the job name to the whitelist.  If this is a
 new job, there is nothing to check -- just add the job to the whitelist.
