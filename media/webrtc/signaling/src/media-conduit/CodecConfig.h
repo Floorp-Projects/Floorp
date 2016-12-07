@@ -90,6 +90,7 @@ public:
   bool mRembFbSet;
   bool mFECFbSet;
 
+  uint32_t mTias;
   EncodingConstraints mEncodingConstraints;
   struct SimulcastEncoding {
     std::string rid;
@@ -110,6 +111,7 @@ public:
     mType(type),
     mName(name),
     mFECFbSet(false),
+    mTias(0),
     mEncodingConstraints(constraints),
     mProfile(0x42),
     mConstraints(0xE0),

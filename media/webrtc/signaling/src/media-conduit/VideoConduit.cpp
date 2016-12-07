@@ -732,6 +732,10 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     CSFLogError(logTag, "%s Codec Mismatch ", __FUNCTION__);
     return kMediaConduitInvalidSendCodec;
   }
+
+  // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
+  mNegotiatedMaxBitrate = codecConfig->mTias / 1000;
+
   // Note: only for overriding parameters from GetCodec()!
   CodecConfigToWebRTCCodec(codecConfig, video_codec);
   if (mSendingWidth != 0) {
@@ -751,8 +755,6 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     mSendingHeight = 0;
     mSendingFramerate = video_codec.maxFramerate;
   }
-  // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
-  mNegotiatedMaxBitrate = MinIgnoreZero(mPrefMaxBitrate, video_codec.maxBitrate);
 
   video_codec.mode = mCodecMode;
 
