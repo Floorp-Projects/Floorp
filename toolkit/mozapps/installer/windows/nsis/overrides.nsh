@@ -48,6 +48,11 @@
   !insertmacro __MOZ__WinVer_DefineOSTests 2012R2
 !endif
 
+!ifndef WINVER_10
+  !define WINVER_10        0x0A000000 ;10.0.10240
+  !insertmacro __MOZ__WinVer_DefineOSTests 10
+!endif
+
 !verbose push
 !verbose 3
 !ifndef _OVERRIDE_VERBOSE
