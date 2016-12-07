@@ -299,7 +299,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpDPPushIframe: {
         const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
-        wr_dp_push_iframe(mWRState, op.bounds(), op.clip(), op.layersid());
+        wr_dp_push_iframe(mWRWindowState, mWRState, op.bounds(), op.clip(), op.layersid());
         break;
       }
       case WebRenderCommand::TCompositableOperation: {

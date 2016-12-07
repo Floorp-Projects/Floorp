@@ -217,6 +217,7 @@ pub struct WrWindowState {
     size: Size2D<u32>,
     render_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
     pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
+    pipeline_sync_list: Vec<PipelineId>,
 }
 
 pub struct WrState {
@@ -343,6 +344,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
         size: Size2D::new(0, 0),
         render_notifier_lock: notification_lock_clone,
         pipeline_epoch_map: HashMap::with_hasher(Default::default()),
+        pipeline_sync_list: Vec::new(),
     });
     Box::into_raw(state)
 }
@@ -427,11 +429,55 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, transform: 
     prev_dl.pop_stacking_context()
 }
 
+fn wait_for_epoch(window: &mut WrWindowState) {
+    let &(ref lock, ref cvar) = &*window.render_notifier_lock;
+    let mut finished = lock.lock().unwrap();
+
+    window.pipeline_sync_list.push(window.root_pipeline_id);
+
+    'outer: for pipeline_id in window.pipeline_sync_list.iter() {
+        let epoch = window.pipeline_epoch_map.get(pipeline_id);
+        if epoch.is_none() {
+            // We could only push a pipeline_id for iframe without setting its root_display_list data.
+            continue;
+        }
+
+        if epoch.unwrap().0 == 0 {
+            // This pipeline_id is not set the display_list yet, so skip the waiting.
+            continue;
+        }
+
+        loop {
+            // Update all epochs.
+            window.renderer.update();
+
+            if let Some(rendered_epoch) = window.renderer.current_epoch(*pipeline_id) {
+                if *(epoch.unwrap()) == rendered_epoch {
+                    continue 'outer;
+                }
+            }
+            else {
+                panic!("Could not get an epoch from the renderer");
+            }
+
+            // If the epoch is not matched, starts to wait for next frame updating.
+            while !*finished {
+                finished = cvar.wait(finished).unwrap();
+            }
+            // For the next sync one
+            *finished = false;
+        }
+    }
+    window.pipeline_sync_list.clear();
+}
+
 #[no_mangle]
 pub fn wr_composite_window(window: &mut WrWindowState) {
     assert!( unsafe { is_in_compositor_thread() });
+
     gl::clear(gl::COLOR_BUFFER_BIT);
-    window.renderer.update();
+
+    wait_for_epoch(window);
     window.renderer.render(window.size);
 }
 
@@ -511,7 +557,7 @@ pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
+pub extern fn wr_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
     assert!( unsafe { is_in_compositor_thread() });
     assert!(!state.frame_builder.dl_builder.is_empty());
 
@@ -519,6 +565,7 @@ pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect,
                                                                      Vec::new(),
                                                                      None);
     let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
+    window.pipeline_sync_list.push(pipeline_id);
     state.frame_builder.dl_builder.last_mut().unwrap().push_iframe(rect.to_rect(),
                                                                    clip_region,
                                                                    pipeline_id);
