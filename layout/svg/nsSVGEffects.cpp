@@ -635,15 +635,14 @@ nsSVGEffects::GetPaintServer(nsIFrame* aTargetFrame,
 }
 
 nsSVGClipPathFrame *
-nsSVGEffects::EffectProperties::GetClipPathFrame(bool* aOK)
+nsSVGEffects::EffectProperties::GetClipPathFrame()
 {
   if (!mClipPath)
     return nullptr;
-  nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame*>
-    (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, aOK));
-  if (frame && aOK && *aOK) {
-    *aOK = frame->IsValid();
-  }
+
+  nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
+    (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, nullptr));
+
   return frame;
 }
 
@@ -670,13 +669,8 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
 bool
 nsSVGEffects::EffectProperties::HasNoOrValidEffects()
 {
-  if (mClipPath) {
-    bool ok = true;
-    nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
-      (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, &ok));
-    if (!ok || (frame && !frame->IsValid())) {
-      return false;
-    }
+  if (HasInvalidClipPath()) {
+    return false;
   }
 
   if (mMask) {
@@ -709,6 +703,21 @@ nsSVGEffects::EffectProperties::MightHaveNoneSVGMask() const
   }
 
   return false;
+}
+
+bool
+nsSVGEffects::EffectProperties::HasNoOrValidClipPath()
+{
+  if (mClipPath) {
+    bool ok = true;
+    nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
+      (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, &ok));
+    if (!ok || (frame && !frame->IsValid())) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void
