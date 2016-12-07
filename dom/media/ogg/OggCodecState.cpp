@@ -18,6 +18,7 @@
 
 #include <opus/opus.h>
 #include "opus/opus_multistream.h"
+#include "XiphExtradata.h"
 
 // On Android JellyBean, the hardware.h header redefines version_major and
 // version_minor, which breaks our build.  See:
@@ -626,6 +627,7 @@ VorbisState::Reset()
   if (mActive && vorbis_synthesis_restart(&mDsp) != 0) {
     res = NS_ERROR_FAILURE;
   }
+  mHeaders.Erase();
   if (NS_FAILED(OggCodecState::Reset())) {
     return NS_ERROR_FAILURE;
   }
@@ -642,7 +644,7 @@ VorbisState::VorbisState(ogg_page* aBosPage)
   , mGranulepos(0)
 {
   MOZ_COUNT_CTOR(VorbisState);
-  vorbis_info_init(&mInfo);
+  vorbis_info_init(&mVorbisInfo);
   vorbis_comment_init(&mComment);
   memset(&mDsp, 0, sizeof(vorbis_dsp_state));
   memset(&mBlock, 0, sizeof(vorbis_block));
@@ -654,16 +656,16 @@ VorbisState::~VorbisState()
   Reset();
   vorbis_block_clear(&mBlock);
   vorbis_dsp_clear(&mDsp);
-  vorbis_info_clear(&mInfo);
+  vorbis_info_clear(&mVorbisInfo);
   vorbis_comment_clear(&mComment);
 }
 
 bool
 VorbisState::DecodeHeader(ogg_packet* aPacket)
 {
-  nsAutoRef<ogg_packet> autoRelease(aPacket);
+  mHeaders.Append(aPacket);
   mPacketCount++;
-  int ret = vorbis_synthesis_headerin(&mInfo,
+  int ret = vorbis_synthesis_headerin(&mVorbisInfo,
                                       &mComment,
                                       aPacket);
   // We must determine when we've read the last header packet.
@@ -689,11 +691,12 @@ VorbisState::DecodeHeader(ogg_packet* aPacket)
     // header packets. Assume bad input. Our caller will deactivate the
     // bitstream.
     return false;
-  } else if (ret == 0 && isSetupHeader && mPacketCount == 3) {
+  } else if (!ret && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     // The bitstream remains active.
     mDoneReadingHeaders = true;
   }
+
   return true;
 }
 
@@ -704,7 +707,7 @@ VorbisState::Init()
     return false;
   }
 
-  int ret = vorbis_synthesis_init(&mDsp, &mInfo);
+  int ret = vorbis_synthesis_init(&mDsp, &mVorbisInfo);
   if (ret != 0) {
     NS_WARNING("vorbis_synthesis_init() failed initializing vorbis bitstream");
     return mActive = false;
@@ -717,6 +720,24 @@ VorbisState::Init()
     }
     return mActive = false;
   }
+
+  nsTArray<const unsigned char*> headers;
+  nsTArray<size_t> headerLens;
+  for (size_t i = 0; i < mHeaders.Length(); i++) {
+    headers.AppendElement(mHeaders[i]->packet);
+    headerLens.AppendElement(mHeaders[i]->bytes);
+  }
+  // Save header packets for the decoder
+  if (!XiphHeadersToExtradata(mInfo.mCodecSpecificConfig,
+                              headers, headerLens)) {
+    return mActive = false;
+  }
+  mHeaders.Erase();
+  mInfo.mMimeType = NS_LITERAL_CSTRING("audio/vorbis");
+  mInfo.mRate = mVorbisInfo.rate;
+  mInfo.mChannels = mVorbisInfo.channels;
+  mInfo.mBitDepth = 16;
+
   return true;
 }
 
@@ -727,7 +748,7 @@ VorbisState::Time(int64_t granulepos)
     return -1;
   }
 
-  return VorbisState::Time(&mInfo, granulepos);
+  return VorbisState::Time(&mVorbisInfo, granulepos);
 }
 
 int64_t
@@ -838,7 +859,7 @@ VorbisState::ReconstructVorbisGranulepos()
     "Must know last granulepos!");
   if (mUnstamped.Length() == 1) {
     ogg_packet* packet = mUnstamped[0];
-    long blockSize = vorbis_packet_blocksize(&mInfo, packet);
+    long blockSize = vorbis_packet_blocksize(&mVorbisInfo, packet);
     if (blockSize < 0) {
       // On failure vorbis_packet_blocksize returns < 0. If we've got
       // a bad packet, we just assume that decode will have to skip this
@@ -869,8 +890,8 @@ VorbisState::ReconstructVorbisGranulepos()
     ogg_packet* prev = mUnstamped[i-1];
     ogg_int64_t granulepos = packet->granulepos;
     NS_ASSERTION(granulepos != -1, "Must know granulepos!");
-    long prevBlockSize = vorbis_packet_blocksize(&mInfo, prev);
-    long blockSize = vorbis_packet_blocksize(&mInfo, packet);
+    long prevBlockSize = vorbis_packet_blocksize(&mVorbisInfo, prev);
+    long blockSize = vorbis_packet_blocksize(&mVorbisInfo, packet);
 
     if (blockSize < 0 || prevBlockSize < 0) {
       // On failure vorbis_packet_blocksize returns < 0. If we've got
@@ -894,7 +915,7 @@ VorbisState::ReconstructVorbisGranulepos()
   }
 
   ogg_packet* first = mUnstamped[0];
-  long blockSize = vorbis_packet_blocksize(&mInfo, first);
+  long blockSize = vorbis_packet_blocksize(&mVorbisInfo, first);
   if (blockSize < 0) {
     mPrevVorbisBlockSize = 0;
     blockSize = 0;
@@ -920,7 +941,7 @@ VorbisState::ReconstructVorbisGranulepos()
 #endif
   }
 
-  mPrevVorbisBlockSize = vorbis_packet_blocksize(&mInfo, last);
+  mPrevVorbisBlockSize = vorbis_packet_blocksize(&mVorbisInfo, last);
   mPrevVorbisBlockSize = std::max(static_cast<long>(0), mPrevVorbisBlockSize);
   mGranulepos = last->granulepos;
 

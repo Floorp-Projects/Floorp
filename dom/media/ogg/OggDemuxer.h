@@ -308,7 +308,6 @@ private:
   uint32_t mTheoraSerial;
   uint32_t mFlacSerial;
 
-  vorbis_info mVorbisInfo;
   th_info mTheoraInfo;
 
   Maybe<int64_t> mStartTime;

@@ -421,20 +421,7 @@ OggDemuxer::SetupTargetVorbis(VorbisState* aVorbisState, OggHeaders& aHeaders)
     mVorbisState->Reset();
   }
 
-  // Copy Vorbis info data for time computations on other threads.
-  memcpy(&mVorbisInfo, &aVorbisState->mInfo, sizeof(mVorbisInfo));
-  mVorbisInfo.codec_setup = nullptr;
-
-  mInfo.mAudio.mMimeType = "audio/vorbis";
-  mInfo.mAudio.mRate = aVorbisState->mInfo.rate;
-  mInfo.mAudio.mChannels = aVorbisState->mInfo.channels;
-
-  // Save header packets for the decoder
-  if (!XiphHeadersToExtradata(mInfo.mAudio.mCodecSpecificConfig,
-                              aHeaders.mHeaders, aHeaders.mHeaderLens)) {
-    return;
-  }
-
+  mInfo.mAudio = *aVorbisState->GetInfo()->GetAsAudioInfo();
   mVorbisState = aVorbisState;
   mVorbisSerial = aVorbisState->mSerial;
 }
@@ -537,14 +524,12 @@ OggDemuxer::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
         continue;
       }
 
+      mInfo.mAudio = *vorbisState->GetInfo()->GetAsAudioInfo();
+
       if (msgInfo) {
-        InitTrack(msgInfo,
-                  &mInfo.mAudio,
-                  mVorbisState == vorbisState);
+        InitTrack(msgInfo, &mInfo.mAudio, mVorbisState == vorbisState);
       }
 
-      mInfo.mAudio.mRate = vorbisState->mInfo.rate;
-      mInfo.mAudio.mChannels = vorbisState->mInfo.channels;
       FillTags(&mInfo.mAudio, vorbisState->GetTags());
     } else if (codecState->GetType() == OggCodecState::TYPE_OPUS) {
       OpusState* opusState = static_cast<OpusState*>(codecState);
@@ -812,8 +797,10 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
   OggHeaders vorbisHeaders;
   if ((newVorbisState &&
        ReadHeaders(TrackInfo::kAudioTrack, newVorbisState, vorbisHeaders)) &&
-      (mVorbisState->mInfo.rate == newVorbisState->mInfo.rate) &&
-      (mVorbisState->mInfo.channels == newVorbisState->mInfo.channels)) {
+      (mVorbisState->GetInfo()->GetAsAudioInfo()->mRate ==
+       newVorbisState->GetInfo()->GetAsAudioInfo()->mRate) &&
+      (mVorbisState->GetInfo()->GetAsAudioInfo()->mChannels ==
+       newVorbisState->GetInfo()->GetAsAudioInfo()->mChannels)) {
 
     SetupTargetVorbis(newVorbisState, vorbisHeaders);
     LOG(LogLevel::Debug, ("New vorbis ogg link, serial=%d\n", mVorbisSerial));
@@ -821,9 +808,6 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     if (msgInfo) {
       InitTrack(msgInfo, &mInfo.mAudio, true);
     }
-    mInfo.mAudio.mMimeType = NS_LITERAL_CSTRING("audio/vorbis");
-    mInfo.mAudio.mRate = newVorbisState->mInfo.rate;
-    mInfo.mAudio.mChannels = newVorbisState->mInfo.channels;
 
     chained = true;
     tags = newVorbisState->GetTags();
@@ -1099,7 +1083,7 @@ OggDemuxer::GetBuffered(TrackInfo::TrackType aType)
       uint32_t serial = ogg_page_serialno(&page);
       if (aType == TrackInfo::kAudioTrack && mVorbisState &&
           serial == mVorbisSerial) {
-        startTime = VorbisState::Time(&mVorbisInfo, granulepos);
+        startTime = mVorbisState->Time(granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       } else if (aType == TrackInfo::kAudioTrack && mOpusState &&
                  serial == mOpusSerial) {
