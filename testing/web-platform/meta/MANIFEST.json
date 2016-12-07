@@ -39516,6 +39516,13 @@
             "url": "/fetch/api/redirect/redirect-count-worker.html"
           }
         ],
+        "fetch/api/redirect/redirect-count.html": [
+          {
+            "path": "fetch/api/redirect/redirect-count.html",
+            "timeout": "long",
+            "url": "/fetch/api/redirect/redirect-count.html"
+          }
+        ],
         "fetch/api/redirect/redirect-referrer-worker.html": [
           {
             "path": "fetch/api/redirect/redirect-referrer-worker.html",
@@ -39540,6 +39547,12 @@
             "url": "/html/semantics/embedded-content/the-img-element/update-src-complete.html"
           }
         ],
+        "html/semantics/forms/the-select-element/select-validity.html": [
+          {
+            "path": "html/semantics/forms/the-select-element/select-validity.html",
+            "url": "/html/semantics/forms/the-select-element/select-validity.html"
+          }
+        ],
         "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html": [
           {
             "path": "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html",
@@ -39562,6 +39575,12 @@
           {
             "path": "web-animations/animation-model/animation-types/spacing-keyframes-transform.html",
             "url": "/web-animations/animation-model/animation-types/spacing-keyframes-transform.html"
+          }
+        ],
+        "web-animations/animation-model/combining-effects/effect-composition.html": [
+          {
+            "path": "web-animations/animation-model/combining-effects/effect-composition.html",
+            "url": "/web-animations/animation-model/combining-effects/effect-composition.html"
           }
         ],
         "web-animations/interfaces/KeyframeEffect/copy-contructor.html": [

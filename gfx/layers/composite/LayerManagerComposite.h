@@ -170,7 +170,6 @@ protected:
   mozilla::TimeStamp mWarnTime;
 
   bool mWindowOverlayChanged;
-  RefPtr<PaintCounter> mPaintCounter;
   TimeDuration mLastPaintTime;
   TimeStamp mRenderStartTime;
 };
@@ -385,11 +384,6 @@ private:
 #endif
 
   /**
-   * Render paint and composite times above the frame.
-   */
-  void DrawPaintTimes(Compositor* aCompositor);
-
-  /**
    * We need to know our invalid region before we're ready to render.
    */
   void InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const gfx::IntRect& aBounds);
@@ -434,6 +428,14 @@ private:
   RefPtr<CompositingRenderTarget> mTwoPassTmpTarget;
   RefPtr<TextRenderer> mTextRenderer;
   bool mGeometryChanged;
+
+#ifdef USE_SKIA
+  /**
+   * Render paint and composite times above the frame.
+   */
+  void DrawPaintTimes(Compositor* aCompositor);
+  RefPtr<PaintCounter> mPaintCounter;
+#endif
 };
 
 /**

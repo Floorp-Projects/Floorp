@@ -4,8 +4,8 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002-2009, 2011, 2013                                        */
-/*  by Roberto Alameda.                                                    */
+/*  Copyright 2002-2016 by                                                 */
+/*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -92,8 +92,8 @@
     /* the `lengths' field must be released later             */
     type1->glyph_names_block    = loader.glyph_names.block;
     type1->glyph_names          = (FT_String**)loader.glyph_names.elements;
-    loader.glyph_names.block    = 0;
-    loader.glyph_names.elements = 0;
+    loader.glyph_names.block    = NULL;
+    loader.glyph_names.elements = NULL;
 
     /* we must now build type1.encoding when we have a custom array */
     if ( type1->encoding_type == T1_ENCODING_TYPE_ARRAY )
@@ -208,7 +208,7 @@
       goto Exit;
 
     /* check the face index */
-    if ( face_index > 0 )
+    if ( ( face_index & 0xFFFF ) > 0 )
     {
       FT_ERROR(( "T42_Face_Init: invalid face index\n" ));
       error = FT_THROW( Invalid_Argument );
@@ -231,9 +231,6 @@
     if ( info->is_fixed_pitch )
       root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
-    /* We only set this flag if we have the patented bytecode interpreter. */
-    /* There are no known `tricky' Type42 fonts that could be loaded with  */
-    /* the unpatented interpreter.                                         */
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
     root->face_flags |= FT_FACE_FLAG_HINTER;
 #endif
@@ -285,7 +282,7 @@
 
     /* no embedded bitmap support */
     root->num_fixed_sizes = 0;
-    root->available_sizes = 0;
+    root->available_sizes = NULL;
 
     /* Load the TTF font embedded in the T42 font */
     {
@@ -461,8 +458,8 @@
     FT_FREE( face->unicode_map.maps );
     face->unicode_map.num_maps = 0;
 
-    face->root.family_name = 0;
-    face->root.style_name  = 0;
+    face->root.family_name = NULL;
+    face->root.style_name  = NULL;
   }
 
 
@@ -632,10 +629,10 @@
     slot->bitmap_left   = 0;
     slot->bitmap_top    = 0;
     slot->num_subglyphs = 0;
-    slot->subglyphs     = 0;
-    slot->control_data  = 0;
+    slot->subglyphs     = NULL;
+    slot->control_data  = NULL;
     slot->control_len   = 0;
-    slot->other         = 0;
+    slot->other         = NULL;
     slot->format        = FT_GLYPH_FORMAT_NONE;
 
     slot->linearHoriAdvance = 0;
@@ -652,10 +649,16 @@
     FT_Error         error;
     T42_GlyphSlot    t42slot = (T42_GlyphSlot)glyph;
     T42_Size         t42size = (T42_Size)size;
+    T42_Face         t42face = (T42_Face)size->face;
     FT_Driver_Class  ttclazz = ((T42_Driver)glyph->face->driver)->ttclazz;
 
 
     FT_TRACE1(( "T42_GlyphSlot_Load: glyph index %d\n", glyph_index ));
+
+    /* map T42 glyph index to embedded TTF's glyph index */
+    glyph_index = (FT_UInt)ft_strtol(
+                    (const char *)t42face->type1.charstrings[glyph_index],
+                    NULL, 10 );
 
     t42_glyphslot_clear( t42slot->ttslot );
     error = ttclazz->load_glyph( t42slot->ttslot,

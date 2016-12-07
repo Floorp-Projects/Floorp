@@ -13,7 +13,7 @@ function test() {
   let engine = Services.search.getEngineByName("Amazon.com");
   ok(engine, "Amazon.com");
 
-  let base = "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
+  let base = "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
   let url;
 
   // Test search URLs (including purposes).
@@ -29,7 +29,7 @@ function test() {
     name: "Amazon.com",
     alias: null,
     description: "Amazon.com Search",
-    searchForm: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
+    searchForm: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
     hidden: false,
     wrappedJSObject: {
       queryCharset: "UTF-8",
@@ -49,6 +49,11 @@ function test() {
             {
               name: "field-keywords",
               value: "{searchTerms}",
+              purpose: undefined,
+            },
+            {
+              name: "ie",
+              value: "{inputEncoding}",
               purpose: undefined,
             },
             {

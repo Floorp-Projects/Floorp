@@ -84,13 +84,13 @@ class TestParent final : public mozilla::ipc::PBackgroundTestParent
   }
 
 protected:
-  ~TestParent()
+  ~TestParent() override
   {
     MOZ_COUNT_DTOR(TestParent);
   }
 
 public:
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
@@ -399,7 +399,7 @@ public:
   }
 
 private:
-  ~InitUDPSocketParentCallback() {};
+  ~InitUDPSocketParentCallback() override = default;
 
   RefPtr<UDPSocketParent> mActor;
   nsCString mFilter;
@@ -521,11 +521,6 @@ public:
 
     nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
 
-    if (principal->GetIsNullPrincipal()) {
-      mContentParent->KillHard("BroadcastChannel killed: no null principal.");
-      return NS_OK;
-    }
-
     nsAutoCString origin;
     nsresult rv = principal->GetOrigin(origin);
     if (NS_FAILED(rv)) {
@@ -596,7 +591,7 @@ public:
   }
 
 private:
-  ~CheckPermissionRunnable()
+  ~CheckPermissionRunnable() override
   {
      NS_ProxyRelease(mBackgroundEventTarget, mActor.forget());
   }
@@ -638,7 +633,6 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
 
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {
-    MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
     return IPC_OK();
   }
 

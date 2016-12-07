@@ -43,7 +43,7 @@ PLayerChild*
 LayerTransactionChild::AllocPLayerChild()
 {
   // we always use the "power-user" ctor
-  NS_RUNTIMEABORT("not reached");
+  MOZ_CRASH("not reached");
   return nullptr;
 }
 

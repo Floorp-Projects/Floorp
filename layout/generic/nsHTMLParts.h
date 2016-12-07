@@ -23,6 +23,9 @@ class nsIURI;
 class nsIPresShell;
 class nsIChannel;
 class nsTableColFrame;
+namespace mozilla {
+class ViewportFrame;
+} // namespace mozilla
 
 // These are all the block specific frame bits, they are copied from
 // the prev-in-flow to a newly created next-in-flow, except for the
@@ -81,8 +84,7 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class ViewportFrame;
-ViewportFrame*
+mozilla::ViewportFrame*
 NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 class nsCanvasFrame;
 nsCanvasFrame*

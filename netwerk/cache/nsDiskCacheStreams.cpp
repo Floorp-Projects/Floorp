@@ -573,7 +573,7 @@ nsDiskCacheStreamIO::FlushBufferToFile()
     // write buffer to the file when there is data in it
     if (mStreamEnd > 0) {
         if (!mBuffer) {
-            NS_RUNTIMEABORT("Fix me!");
+            MOZ_CRASH("Fix me!");
         }
         if (PR_Write(mFD, mBuffer, mStreamEnd) != (int32_t)mStreamEnd) {
             NS_WARNING("failed to flush all data");

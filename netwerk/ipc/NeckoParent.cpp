@@ -7,6 +7,7 @@
 
 #include "necko-config.h"
 #include "nsHttp.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/CookieServiceParent.h"

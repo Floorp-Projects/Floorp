@@ -1,0 +1,10 @@
+[package]
+authors = ["nobody <nobody@mozilla.org>"]
+name = "testing"
+version = "0.0.1"
+
+[[bin]]
+name = "target"
+
+[[bin]]
+name = "host"

@@ -36,6 +36,8 @@ nsOverflowAreas::SetAllTo(const nsRect& aRect)
   }
 }
 
+namespace mozilla {
+
 ReflowOutput::ReflowOutput(const ReflowInput& aState,
                                          uint32_t aFlags)
   : mISize(0)
@@ -65,3 +67,5 @@ ReflowOutput::UnionOverflowAreasWithDesiredBounds()
     o.UnionRect(o, rect);
   }
 }
+
+} // namespace mozilla

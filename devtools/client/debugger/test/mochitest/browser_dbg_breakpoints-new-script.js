@@ -73,20 +73,20 @@ function test() {
       return deferred.promise;
     }
 
-    Task.spawn(function(){
+    (async function(){
       let onCaretUpdated = waitForCaretAndScopes(gPanel, 16);
       callInTab(gTab, "runDebuggerStatement");
-      yield onCaretUpdated;
+      await onCaretUpdated;
 
       is(gDebugger.gThreadClient.state, "paused",
          "The debugger statement was reached.");
       ok(isCaretPos(gPanel, 16),
          "The source editor caret position is incorrect (1).");
 
-      yield actions.addBreakpoint({ actor: getSourceActor(gSources, TAB_URL), line: 20 });
-      yield testResume();
-      yield testBreakpointHit();
+      await actions.addBreakpoint({ actor: getSourceActor(gSources, TAB_URL), line: 20 });
+      await testResume();
+      await testBreakpointHit();
       resumeDebuggerThenCloseAndFinish(gPanel);
-    });
+    })();
   });
 }

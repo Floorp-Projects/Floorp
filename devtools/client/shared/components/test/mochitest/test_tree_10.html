@@ -24,13 +24,16 @@ window.onload = Task.async(function* () {
     const { Simulate } = React.addons.TestUtils;
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
 
-    const tree = ReactDOM.render(Tree(Object.assign({
-      autoExpandDepth: 1
-    }, TEST_TREE_INTERFACE)), window.document.body);
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        { autoExpandDepth: 1 },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
 
-    yield setProps(tree, {
-      focused: "A"
-    });
+    const tree = renderTree({ focused: "A" });
 
     isRenderedTree(document.body.textContent, [
       "A:true",

@@ -29,7 +29,10 @@ public:
     mCaCertSPKI = ExtractCertSPKI(mCaCert);
 
     Buffer logPublicKey = GetTestPublicKey();
-    ASSERT_EQ(Success, mLog.Init(InputForBuffer(logPublicKey)));
+    ASSERT_EQ(Success, mLog.Init(InputForBuffer(logPublicKey),
+                                 -1 /*operator id*/,
+                                 CTLogStatus::Included,
+                                 0 /*disqualification time*/));
   }
 
 protected:

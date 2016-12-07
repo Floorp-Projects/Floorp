@@ -233,7 +233,7 @@ TheoraDecoder::Drain()
 bool
 TheoraDecoder::IsTheora(const nsACString& aMimeType)
 {
-  return aMimeType.EqualsLiteral("video/ogg; codecs=theora");
+  return aMimeType.EqualsLiteral("video/theora");
 }
 
 } // namespace mozilla

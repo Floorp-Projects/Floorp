@@ -42,7 +42,10 @@ add_task(function* () {
 
     is(submenu.tagName, "menu", "Correct submenu type");
     is(submenu.label, "parent", "Correct submenu title");
-    is(submenu.firstChild.children.length, 2, "Correct number of submenu items");
+
+    const popup = yield openActionSubmenu(submenu);
+    is(popup, submenu.firstChild, "Correct submenu opened");
+    is(popup.children.length, 2, "Correct number of submenu items");
 
     is(second.tagName, "menuitem", "Second menu item type is correct");
     is(second.label, "click 1", "Second menu item title is correct");
@@ -50,7 +53,7 @@ add_task(function* () {
     is(last.label, "click 5", "Last menu item title is correct");
     is(separator.tagName, "menuseparator", "Separator after last menu item");
 
-    yield closeActionContextMenu(last);
+    yield closeActionContextMenu(popup.firstChild);
     const {info, tab} = yield extension.awaitMessage("click");
     is(info.pageUrl, "http://example.com/", "Click info pageUrl is correct");
     is(tab.id, tabId, "Click event tab ID is correct");

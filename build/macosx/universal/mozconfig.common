@@ -41,7 +41,6 @@ if test "$MOZ_BUILD_APP" = "i386" -o "$MOZ_BUILD_APP" = "x86_64"; then
   RANLIB="${TOOLCHAIN_PREFIX}ranlib"
   AR="${TOOLCHAIN_PREFIX}ar"
   AS=$CC
-  LD=ld
   STRIP="strip"
   OTOOL="${TOOLCHAIN_PREFIX}otool"
 
@@ -50,6 +49,6 @@ if test "$MOZ_BUILD_APP" = "i386" -o "$MOZ_BUILD_APP" = "x86_64"; then
   # needs to know to look for universal bits when building the .dmg.
   UNIVERSAL_BINARY=1
 
-  export CC CXX HOST_CC HOST_CXX RANLIB AR AS LD STRIP OTOOL
+  export CC CXX HOST_CC HOST_CXX RANLIB AR AS STRIP OTOOL
 fi
 fi

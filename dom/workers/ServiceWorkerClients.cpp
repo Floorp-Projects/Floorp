@@ -505,7 +505,7 @@ public:
 #ifdef MOZ_WIDGET_ANDROID
     // This fires an intent that will start launching Fennec and foreground it,
     // if necessary.
-    java::GeckoAppShell::OpenWindowForNotification();
+    java::GeckoAppShell::LaunchOrBringToFront();
 #endif
 
     nsCOMPtr<nsPIDOMWindowOuter> window;

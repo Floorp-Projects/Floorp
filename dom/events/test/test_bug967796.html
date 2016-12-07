@@ -19,11 +19,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=967796
 <script type="application/javascript">
 
 /** Test for Bug 967796 **/
-
-SpecialPowers.setBoolPref("dom.w3c_pointer_events.enabled", true);      // Enable Pointer Events
-
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTests);
+SimpleTest.waitForFocus(() => {
+  // Enable Pointer Events
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.w3c_pointer_events.enabled", true]
+    ]
+  }, runTests);
+});
 var outer;
 var middle;
 var inner;
@@ -54,7 +58,14 @@ function runTests() {
   outside = document.getElementById("outside");
   container = document.getElementById("container");
   file = document.getElementById("file");
-  iframe = document.getElementById("iframe");
+  iframe = document.createElement('iframe');
+  iframe.width=50;
+  iframe.height=50;
+  container.appendChild(iframe);
+  iframe.addEventListener("pointerenter", penter, false);
+  iframe.addEventListener("pointerleave", pleave, false);
+  iframe.addEventListener("pointerout", pout, false);
+  iframe.addEventListener("pointerover", pover, false);
 
   // Make sure ESM thinks pointer is outside the test elements.
   sendPointerEvent("pointermove", outside);
@@ -126,12 +137,16 @@ function runTests() {
   // Move pointer inside the iframe.
   synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "pointermove"},
                     iframe.contentWindow);
+  is(pointerentercount, 6, "Unexpected pointerenter event count!");
+  is(pointerleavecount, 4, "Unexpected pointerleave event count!");
   synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "pointermove"},
                     iframe.contentWindow);
   is(pointerentercount, 7, "Unexpected pointerenter event count!");
+  is(pointerleavecount, 5, "Unexpected pointerleave event count!");
   expectedRelatedEnter = iframe;
   expectedRelatedLeave = outside;
   sendPointerEvent("pointermove", outside);
+  is(pointerentercount, 7, "Unexpected pointerenter event count!");
   is(pointerleavecount, 7, "Unexpected pointerleave event count!");
 
   // pointerdown must produce pointerenter event
@@ -161,8 +176,6 @@ function runTests() {
       elt.onpointerenter = null;
       elt.onpointerleave = null;
     });
-  SpecialPowers.clearUserPref("dom.w3c_pointer_events.enabled");      // Disable Pointer Events
-
   SimpleTest.finish();
 }
 
@@ -227,9 +240,6 @@ function pout(evt) {
          onpointerenter="penter(event)" onpointerleave="pleave(event)"
          onpointerout="pout(event)" onpointerover="pover(event)">
   <br>
-  <iframe id="iframe" width="50px" height="50px"
-          onpointerenter="penter(event)" onpointerleave="pleave(event)"
-          onpointerout="pout(event)" onpointerover="pover(event)"></iframe>
 </div>
 </body>
 </html>

@@ -1,5 +1,5 @@
 using class mozilla::ipc::Shmem from "mozilla/ipc/Shmem.h";      // redeclaration
 
 protocol shmem {
-child: Msg(Shmem s);
+child: async Msg(Shmem s);
 };

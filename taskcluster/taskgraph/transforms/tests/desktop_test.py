@@ -73,8 +73,7 @@ def split_e10s(config, tests):
         test['attributes']['e10s'] = False
 
         if e10s == 'both':
-            yield test
-            test = copy.deepcopy(test)
+            yield copy.deepcopy(test)
             e10s = True
         if e10s:
             test['test-name'] += '-e10s'
@@ -84,7 +83,11 @@ def split_e10s(config, tests):
             if group != '?':
                 group += '-e10s'
             test['treeherder-symbol'] = join_symbol(group, symbol)
-            test['mozharness'].setdefault('extra-options', []).append('--e10s')
+            test['mozharness']['extra-options'] = get_keyed_by(item=test,
+                                                               field='mozharness',
+                                                               subfield='extra-options',
+                                                               item_name=test['test-name'])
+            test['mozharness']['extra-options'].append('--e10s')
         yield test
 
 

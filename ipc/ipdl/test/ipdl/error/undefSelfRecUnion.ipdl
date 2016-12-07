@@ -1,5 +1,5 @@
 union X { X; };
 
 protocol undefSelfRecUnion {
-child: __delete__(X x);
+child: async __delete__(X x);
 };

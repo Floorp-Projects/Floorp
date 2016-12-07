@@ -45,8 +45,6 @@ function run_test() {
     "hD/h2nawrCFwc5gJW10aLJGFL/mcS7ViAIT9HCVk23j4TuBjsVmnZ0VKxB5edux+" +
     "LIEqtU428UVHZWU/I5ngLw==");
 
-  equal(cert.nickname, "(no nickname)",
-        "Actual and expected nickname should match");
   equal(cert.emailAddress, "ludek.rasek@centrum.cz",
         "Actual and expected emailAddress should match");
   equal(cert.subjectName, "serialNumber=ICA - 10003769,SN=Rašek,name=Luděk Rašek,initials=LR,givenName=Luděk,E=ludek.rasek@centrum.cz,L=\"Pacov, Nádražní 769\",ST=Vysočina,CN=Luděk Rašek,C=CZ",
@@ -57,8 +55,8 @@ function run_test() {
         "Actual and expected organization should match");
   equal(cert.organizationalUnit, "",
         "Actual and expected organizationalUnit should match");
-  equal(cert.windowTitle, "Luděk Rašek",
-        "Actual and expected windowTitle should match");
+  equal(cert.displayName, "Luděk Rašek",
+        "Actual and expected displayName should match");
   equal(cert.issuerName, "OU=Akreditovaný poskytovatel certifikačních služeb,O=První certifikační autorita a.s.,L=\"Podvinný mlýn 2178/6, 190 00 Praha 9\",C=CZ,CN=I.CA - Qualified root certificate (kvalifikovaný certifikát poskytovatele) - PSEUDONYM",
         "Actual and expected issuerName should match");
   equal(cert.issuerCommonName, "I.CA - Qualified root certificate (kvalifikovaný certifikát poskytovatele) - PSEUDONYM",

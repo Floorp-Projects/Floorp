@@ -1,5 +1,6 @@
 # currently a copy of mobile/android/config/mozconfigs/android-api-15/nightly
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
+. "$topsrcdir/build/mozconfig.rust"
 
 ac_add_options --enable-profiling
 

@@ -16,6 +16,9 @@
 // the use of Components, and for which the worker debugger doesn't provide an
 // alternative API, will be replaced by vacuous objects. Consequently, they can
 // still be required, but any attempts to use them will lead to an exception.
+//
+// Note: to see dump output when running inside the worker thread, you might
+// need to enable the browser.dom.window.dump.enabled pref.
 
 this.EXPORTED_SYMBOLS = ["WorkerDebuggerLoader", "worker"];
 
@@ -367,7 +370,7 @@ var {
   loadSubScript,
   reportError,
   setImmediate,
-  xpcInspector
+  xpcInspector,
 } = (function () {
   if (typeof Components === "object") { // Main thread
     let {
@@ -484,8 +487,10 @@ this.worker = new WorkerDebuggerLoader({
     "loader": loader,
     "reportError": reportError,
     "rpc": rpc,
-    "setImmediate": setImmediate,
     "URL": URL,
+    "setImmediate": setImmediate,
+    "retrieveConsoleEvents": this.retrieveConsoleEvents,
+    "setConsoleEventHandler": this.setConsoleEventHandler,
   },
   loadSubScript: loadSubScript,
   modules: {

@@ -263,7 +263,7 @@ exports['test listen to all events'] = function(assert) {
     'wildcard listener called for unbound event name');
 };
 
-exports['test once'] = function(assert, done) {
+exports['test once'] = function*(assert, done) {
   let target = {};
   let called = false;
   let { resolve, promise } = defer();

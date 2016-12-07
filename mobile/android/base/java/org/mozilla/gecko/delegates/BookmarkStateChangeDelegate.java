@@ -35,6 +35,7 @@ import org.mozilla.gecko.promotion.SimpleHelperUI;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;
@@ -162,19 +163,14 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
         final Resources res = browserApp.getResources();
         final Tab tab = Tabs.getInstance().getSelectedTab();
 
+        if (tab == null) {
+            return;
+        }
+
         final Prompt ps = new Prompt(browserApp, new Prompt.PromptCallback() {
             @Override
-            public void onPromptFinished(String result) {
-                int itemId = -1;
-                try {
-                    itemId = new JSONObject(result).getInt("button");
-                } catch (JSONException ex) {
-                    Log.e(LOGTAG, "Exception reading bookmark prompt result", ex);
-                }
-
-                if (tab == null) {
-                    return;
-                }
+            public void onPromptFinished(final GeckoBundle result) {
+                final int itemId = result.getInt("button", -1);
 
                 if (itemId == 0) {
                     final String extrasId = res.getResourceEntryName(R.string.contextmenu_edit_bookmark);
@@ -182,6 +178,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
                             TelemetryContract.Method.DIALOG, extrasId);
 
                     new EditBookmarkDialog(browserApp).show(tab.getURL());
+
                 } else if (itemId == 1) {
                     final String extrasId = res.getResourceEntryName(R.string.contextmenu_add_to_launcher);
                     Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,

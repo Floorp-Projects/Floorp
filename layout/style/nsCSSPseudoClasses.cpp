@@ -8,6 +8,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCSSPseudoClasses.h"
+#include "nsCSSPseudoElements.h"
 #include "nsStaticAtom.h"
 #include "mozilla/Preferences.h"
 #include "nsString.h"

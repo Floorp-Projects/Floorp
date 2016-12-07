@@ -570,9 +570,12 @@ class Marionette(object):
         self.host = host
         self.port = self.local_port = int(port)
         self.bin = bin
+        self.client = None
         self.instance = None
         self.session = None
         self.session_id = None
+        self.process_id = None
+        self.profile = None
         self.window = None
         self.chrome_window = None
         self.baseurl = baseurl
@@ -761,17 +764,25 @@ class Marionette(object):
 
         return crash_count > 0
 
-    def handle_socket_failure(self):
-        """Handle socket failures for the currently running application instance.
+    def _handle_socket_failure(self):
+        """Handle socket failures for the currently connected application.
 
         If the application crashed then clean-up internal states, or in case of a content
         crash also kill the process. If there are other reasons for a socket failure,
         wait for the process to shutdown itself, or force kill it.
 
-        """
-        if self.instance:
-            exc, val, tb = sys.exc_info()
+        Please note that the method expects an exception to be handled on the current stack
+        frame, and is only called via the `@do_process_check` decorator.
 
+        """
+        exc, val, tb = sys.exc_info()
+
+        # If the application hasn't been launched by Marionette no further action can be done.
+        # In such cases we simply re-throw the exception.
+        if not self.instance:
+            raise exc, val, tb
+
+        else:
             # Somehow the socket disconnected. Give the application some time to shutdown
             # itself before killing the process.
             returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
@@ -795,8 +806,7 @@ class Marionette(object):
 
                 self.delete_session(send_request=False, reset_session_id=True)
 
-            if exc:
-                message += ' (Reason: {reason})'
+            message += ' (Reason: {reason})'
 
             raise IOError, message.format(returncode=returncode, reason=val), tb
 
@@ -1095,7 +1105,6 @@ class Marionette(object):
             self.instance.restart(prefs)
             self.raise_for_port()
             self.start_session()
-            self.timeout.reset()
 
             # Restore the context as used before the restart
             self.set_context(context)
@@ -1143,8 +1152,6 @@ class Marionette(object):
         if not self.instance:
             raise errors.MarionetteException("quit() can only be called "
                                              "on Gecko instances launched by Marionette")
-
-        self.timeout.reset()
 
         if in_app:
             if callable(callback):
@@ -1211,16 +1218,15 @@ class Marionette(object):
             self.raise_for_port()
 
         self.start_session(session_id=session_id)
-        self.timeout.reset()
 
         # Restore the context as used before the restart
         self.set_context(context)
 
-        if in_app and self.session.get("processId"):
+        if in_app and self.process_id:
             # In some cases Firefox restarts itself by spawning into a new process group.
             # As long as mozprocess cannot track that behavior (bug 1284864) we assist by
             # informing about the new process id.
-            self.instance.runner.process_handler.check_for_detached(self.session["processId"])
+            self.instance.runner.process_handler.check_for_detached(self.process_id)
 
     def absolute_url(self, relative_url):
         '''
@@ -1268,6 +1274,9 @@ class Marionette(object):
 
         self.session_id = resp["sessionId"]
         self.session = resp["value"] if self.protocol == 1 else resp["capabilities"]
+        # fallback to processId can be removed in Firefox 55
+        self.process_id = self.session.get("moz:processID", self.session.get("processId"))
+        self.profile = self.session.get("moz:profile")
 
         return self.session
 
@@ -1297,8 +1306,12 @@ class Marionette(object):
             if reset_session_id:
                 self.session_id = None
             self.session = None
+            self.process_id = None
+            self.profile = None
             self.window = None
-            self.client.close()
+
+            if self.client is not None:
+                self.client.close()
 
     @property
     def session_capabilities(self):

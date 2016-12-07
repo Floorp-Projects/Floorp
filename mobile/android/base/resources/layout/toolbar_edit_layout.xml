@@ -30,7 +30,7 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:layout_weight="1.0"
-          android:inputType="textUri|textNoSuggestions"
+          android:inputType="textUri"
           android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
           android:selectAllOnFocus="true"
           android:contentDescription="@string/url_bar_default_text"

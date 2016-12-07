@@ -698,7 +698,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
         break;
       }
       default:
-        NS_RUNTIMEABORT("not reached");
+        MOZ_CRASH("not reached");
       }
     }
 
@@ -830,7 +830,7 @@ ClientLayerManager::GetBackendName(nsAString& aName)
 #endif
       return;
     }
-    default: NS_RUNTIMEABORT("Invalid backend");
+    default: MOZ_CRASH("Invalid backend");
   }
 }
 

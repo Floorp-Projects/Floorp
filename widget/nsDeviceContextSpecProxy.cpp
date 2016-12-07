@@ -65,6 +65,17 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
     return NS_ERROR_FAILURE;
   }
 
+  rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                              getter_AddRefs(mRecordingDir));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mUuidGenerator = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -132,40 +143,46 @@ nsDeviceContextSpecProxy::GetPrintingScale()
   return mRealDeviceContextSpec->GetPrintingScale();
 }
 
-NS_IMETHODIMP
-nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
-                                        const nsAString& aPrintToFileName,
-                                        int32_t aStartPage, int32_t aEndPage)
+nsresult
+nsDeviceContextSpecProxy::CreateUniqueTempPath(nsACString& aFilePath)
 {
-  nsCOMPtr<nsIFile> recordingFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                       getter_AddRefs(recordingFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_ASSERT(mRecordingDir);
+  MOZ_ASSERT(mUuidGenerator);
 
   nsID uuid;
-  rv = uuidgen->GenerateUUIDInPlace(&uuid);
+  nsresult rv = mUuidGenerator->GenerateUUIDInPlace(&uuid);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   char uuidChars[NSID_LENGTH];
   uuid.ToProvidedString(uuidChars);
-  mRecorderFile.AssignASCII(uuidChars);
-  rv = recordingFile->AppendNative(mRecorderFile);
+  mRecordingFileName.AssignASCII(uuidChars);
+
+  nsCOMPtr<nsIFile> recordingFile;
+  rv = mRecordingDir->Clone(getter_AddRefs(recordingFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
+  rv = recordingFile->AppendNative(mRecordingFileName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return recordingFile->GetNativePath(aFilePath);
+}
+
+NS_IMETHODIMP
+nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
+                                        const nsAString& aPrintToFileName,
+                                        int32_t aStartPage, int32_t aEndPage)
+{
   nsAutoCString recordingPath;
-  rv = recordingFile->GetNativePath(recordingPath);
+  nsresult rv = CreateUniqueTempPath(recordingPath);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   mRecorder = new mozilla::gfx::DrawEventRecorderFile(recordingPath.get());
   return mRemotePrintJob->InitializePrint(nsString(aTitle),
@@ -191,7 +208,15 @@ NS_IMETHODIMP
 nsDeviceContextSpecProxy::BeginPage()
 {
   // Reopen the file, if necessary, ready for the next page.
-  mRecorder->OpenAndTruncate();
+  if (!mRecorder->IsOpen()) {
+    nsAutoCString recordingPath;
+    nsresult rv = CreateUniqueTempPath(recordingPath);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    mRecorder->OpenNew(recordingPath.get());
+  }
 
   return NS_OK;
 }
@@ -201,7 +226,7 @@ nsDeviceContextSpecProxy::EndPage()
 {
   // Send the page recording to the parent.
   mRecorder->Close();
-  mRemotePrintJob->ProcessPage(mRecorderFile);
+  mRemotePrintJob->ProcessPage(mRecordingFileName);
 
   return NS_OK;
 }

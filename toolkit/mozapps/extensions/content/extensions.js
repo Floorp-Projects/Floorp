@@ -1894,7 +1894,7 @@ var gCategories = {
         continue;
       // If the priorities are equal and the new type's name is earlier
       // alphabetically then this is the insertion point
-      if (String.localeCompare(aName, node.getAttribute("name")) < 0)
+      if (String(aName).localeCompare(node.getAttribute("name")) < 0)
         break;
     }
 
@@ -2756,6 +2756,13 @@ var gListView = {
         Services.prefs.getCharPref("xpinstall.signatures.devInfoURL"));
     } catch (e) {
       document.getElementById("signing-dev-info").hidden = true;
+    }
+
+    if (Preferences.get("plugin.load_flash_only", true)) {
+      document.getElementById("plugindeprecation-learnmore-link")
+        .setAttribute("href", Services.urlFormatter.formatURLPref("app.support.baseURL") + "npapi");
+    } else {
+      document.getElementById("plugindeprecation-notice").hidden = true;
     }
   },
 

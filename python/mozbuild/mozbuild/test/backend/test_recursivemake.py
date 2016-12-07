@@ -735,6 +735,52 @@ class TestRecursiveMakeBackend(BackendTester):
         found = [str for str in lines if str.startswith('LOCAL_INCLUDES')]
         self.assertEqual(found, expected)
 
+    def test_rust_library(self):
+        """Test that a Rust library is written to backend.mk correctly."""
+        env = self._consume('rust-library', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
+            'CARGO_FILE := $(srcdir)/Cargo.toml',
+        ]
+
+        self.assertEqual(lines, expected)
+
+    def test_rust_library_with_features(self):
+        """Test that a Rust library with features is written to backend.mk correctly."""
+        env = self._consume('rust-library-features', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
+            'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'RUST_LIBRARY_FEATURES := musthave cantlivewithout',
+        ]
+
+        self.assertEqual(lines, expected)
+
+    def test_rust_programs(self):
+        """Test that {HOST_,}RUST_PROGRAMS are written to backend.mk correctly."""
+        env = self._consume('rust-programs', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'CARGO_FILE := %s/Cargo.toml' % env.topsrcdir,
+            'RUST_PROGRAMS += i686-pc-windows-msvc/release/target.exe',
+            'RUST_CARGO_PROGRAMS += target',
+            'HOST_RUST_PROGRAMS += i686-pc-windows-msvc/release/host.exe',
+            'HOST_RUST_CARGO_PROGRAMS += host',
+        ]
+
+        self.assertEqual(lines, expected)
+
     def test_final_target(self):
         """Test that FINAL_TARGET is written to backend.mk correctly."""
         env = self._consume('final_target', RecursiveMakeBackend)

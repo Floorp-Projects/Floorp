@@ -70,12 +70,12 @@ ModuleGenerator::~ModuleGenerator()
         if (outstanding_) {
             AutoLockHelperThreadState lock;
             while (true) {
-                IonCompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock);
+                CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock);
                 MOZ_ASSERT(outstanding_ >= worklist.length());
                 outstanding_ -= worklist.length();
                 worklist.clear();
 
-                IonCompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock);
+                CompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock);
                 MOZ_ASSERT(outstanding_ >= finished.length());
                 outstanding_ -= finished.length();
                 finished.clear();
@@ -224,7 +224,7 @@ ModuleGenerator::finishOutstandingTask()
 {
     MOZ_ASSERT(parallel_);
 
-    IonCompileTask* task = nullptr;
+    CompileTask* task = nullptr;
     {
         AutoLockHelperThreadState lock;
         while (true) {
@@ -385,7 +385,7 @@ ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits)
 }
 
 bool
-ModuleGenerator::finishTask(IonCompileTask* task)
+ModuleGenerator::finishTask(CompileTask* task)
 {
     const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
@@ -419,8 +419,10 @@ ModuleGenerator::finishTask(IonCompileTask* task)
         return false;
     MOZ_ASSERT(masm_.size() == offsetInWhole + results.masm().size());
 
+    UniqueBytes recycled;
+    task->reset(&recycled);
     freeTasks_.infallibleAppend(task);
-    return true;
+    return freeBytes_.emplaceBack(Move(recycled));
 }
 
 bool
@@ -802,15 +804,6 @@ ModuleGenerator::numFuncImports() const
     return metadata_->funcImports.length();
 }
 
-uint32_t
-ModuleGenerator::numFuncDefs() const
-{
-    // asm.js overallocates the length of funcSigs and in general does not know
-    // the number of function definitions until it's done compiling.
-    MOZ_ASSERT(!isAsmJS());
-    return env_->funcSigs.length() - numFuncImports();
-}
-
 const SigWithId&
 ModuleGenerator::funcSig(uint32_t funcIndex) const
 {
@@ -864,6 +857,15 @@ ModuleGenerator::startFuncDefs()
     for (size_t i = 0; i < numTasks; i++)
         freeTasks_.infallibleAppend(&tasks_[i]);
 
+    if (!freeBytes_.reserve(numTasks))
+        return false;
+    for (size_t i = 0; i < numTasks; i++) {
+        auto bytes = js::MakeUnique<Bytes>();
+        if (!bytes)
+            return false;
+        freeBytes_.infallibleAppend(Move(bytes));
+    }
+
     startedFuncDefs_ = true;
     MOZ_ASSERT(!finishedFuncDefs_);
     return true;
@@ -876,16 +878,17 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
     MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
-    if (freeTasks_.empty() && !finishOutstandingTask())
-        return false;
+    if (!freeBytes_.empty()) {
+        fg->bytes_ = Move(freeBytes_.back());
+        freeBytes_.popBack();
+    } else {
+        fg->bytes_ = js::MakeUnique<Bytes>();
+        if (!fg->bytes_)
+            return false;
+    }
 
-    IonCompileTask* task = freeTasks_.popCopy();
-
-    task->reset(&fg->bytes_);
-    fg->bytes_.clear();
     fg->lineOrBytecode_ = lineOrBytecode;
     fg->m_ = this;
-    fg->task_ = task;
     activeFuncDef_ = fg;
     return true;
 }
@@ -904,24 +907,27 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
         return false;
 
     auto mode = alwaysBaseline_ && BaselineCanCompile(fg)
-                ? IonCompileTask::CompileMode::Baseline
-                : IonCompileTask::CompileMode::Ion;
+                ? CompileTask::CompileMode::Baseline
+                : CompileTask::CompileMode::Ion;
 
-    fg->task_->init(Move(func), mode);
+    if (freeTasks_.empty() && !finishOutstandingTask())
+        return false;
+
+    CompileTask* task = freeTasks_.popCopy();
+    task->init(Move(func), mode);
 
     if (parallel_) {
-        if (!StartOffThreadWasmCompile(fg->task_))
+        if (!StartOffThreadWasmCompile(task))
             return false;
         outstanding_++;
     } else {
-        if (!CompileFunction(fg->task_))
+        if (!CompileFunction(task))
             return false;
-        if (!finishTask(fg->task_))
+        if (!finishTask(task))
             return false;
     }
 
     fg->m_ = nullptr;
-    fg->task_ = nullptr;
     activeFuncDef_ = nullptr;
     numFinishedFuncDefs_++;
     return true;
@@ -975,7 +981,7 @@ ModuleGenerator::finishFuncDefs()
         for (uint32_t i = AsmJSFirstDefFuncIndex; i < numFinishedFuncDefs_; i++)
             MOZ_ASSERT(funcCodeRange(i).funcIndex() == i);
     } else {
-        MOZ_ASSERT(numFinishedFuncDefs_ == numFuncDefs());
+        MOZ_ASSERT(numFinishedFuncDefs_ == env_->numFuncDefs());
         for (uint32_t i = 0; i < env_->numFuncs(); i++)
             MOZ_ASSERT(funcCodeRange(i).funcIndex() == i);
     }
@@ -1126,4 +1132,22 @@ ModuleGenerator::finish(const ShareableBytes& bytecode, DataSegmentVector&& data
                                        Move(env_->elemSegments),
                                        *metadata_,
                                        bytecode));
+}
+
+bool
+wasm::CompileFunction(CompileTask* task)
+{
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
+
+    switch (task->mode()) {
+      case wasm::CompileTask::CompileMode::Ion:
+        return wasm::IonCompileFunction(task);
+      case wasm::CompileTask::CompileMode::Baseline:
+        return wasm::BaselineCompileFunction(task);
+      case wasm::CompileTask::CompileMode::None:
+        break;
+    }
+
+    MOZ_CRASH("Uninitialized task");
 }

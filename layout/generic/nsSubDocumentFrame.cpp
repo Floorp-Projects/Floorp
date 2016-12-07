@@ -60,6 +60,7 @@ GetDocumentFromView(nsView* aView)
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
   : nsAtomicContainerFrame(aContext)
+  , mInnerView(nullptr)
   , mIsInline(false)
   , mPostedReflowCallback(false)
   , mDidCreateDoc(false)

@@ -266,6 +266,11 @@ protected:
   bool mNeedsRewind; // Backwards seek performed
   bool mIsSeeking; // Currently in the middle of a seek operation
 
+#ifdef DEBUG
+  bool mHoldingEntries; // True if there's a raw pointer to mMilestoneEntries
+                        // on the stack.
+#endif
+
   // A bitfield of the pause state for all pause requests
   uint32_t mPauseState;
 

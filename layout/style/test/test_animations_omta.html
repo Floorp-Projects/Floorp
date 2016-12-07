@@ -1899,7 +1899,7 @@ addAsyncAnimTest(function *() {
   listen();
   yield waitForPaintsFlushed();
   advance_clock(0);
-  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
           "transform during backwards fill of zero-duration animation");
   advance_clock(2000); // Skip over animation
   yield waitForPaints();
@@ -1954,7 +1954,7 @@ addAsyncAnimTest(function *() {
   listen();
   yield waitForPaintsFlushed();
   advance_clock(0);
-  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
           "transform during backwards fill of infinitely repeating " +
           "zero-duration animation");
   advance_clock(2000);
@@ -2236,6 +2236,12 @@ addAsyncAnimTest(function *() {
           "opacity animation overriding transition at 0.5s");
   done_div();
 });
+
+// Bug 1320474 - keyframes-name may be a string, allows names that would
+// otherwise be excluded.
+// These tests don't need to be duplicated here as they relate purely to
+// the animation setup which is common to both main-thread and compositor
+// animations.
 
 // Bug 847287 - Test that changes of when an animation is dynamically
 // overridden work correctly.

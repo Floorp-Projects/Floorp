@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const dbname = this.window ? window.location.pathname : "Splendid Test";
   const RW = "readwrite"
@@ -265,5 +265,4 @@ function testSteps()
   yield undefined;
 
   finishTest();
-  yield undefined;
 }

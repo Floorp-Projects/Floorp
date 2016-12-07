@@ -1,5 +1,5 @@
 protocol undeclParamType {
 
-child:  Msg(FARGLEGARGLE p);
+child: async Msg(FARGLEGARGLE p);
 
 };

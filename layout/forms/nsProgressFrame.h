@@ -86,11 +86,11 @@ public:
   virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;
 
 protected:
-  // Helper function which reflow the anonymous div frame.
-  void ReflowBarFrame(nsIFrame*                aBarFrame,
-                      nsPresContext*           aPresContext,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus);
+  // Helper function to reflow a child frame.
+  void ReflowChildFrame(nsIFrame*          aChild,
+                        nsPresContext*     aPresContext,
+                        const ReflowInput& aReflowInput,
+                        nsReflowStatus&    aStatus);
 
   /**
    * The div used to show the progress bar.
@@ -100,4 +100,3 @@ protected:
 };
 
 #endif
-

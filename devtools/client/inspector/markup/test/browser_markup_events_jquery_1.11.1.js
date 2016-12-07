@@ -90,7 +90,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler7 = function divClick1() {\n" +
+        handler: "function divClick1() {\n" +
                  "  alert(7);\n" +
                  "}"
       },
@@ -100,19 +100,8 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler8 = function divClick2() {\n" +
+        handler: "function divClick2() {\n" +
                  "  alert(8);\n" +
-                 "}"
-      },
-      {
-        type: "click",
-        filename: URL_ROOT + TEST_LIB + ":3",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "k = r.handle = function(a) {\n" +
-                 "  return typeof m === K || a && m.event.triggered === a.type ? void 0 : m.event.dispatch.apply(k.elem, arguments)\n" +
                  "}"
       },
       {
@@ -121,19 +110,8 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler9 = function divKeyDown() {\n" +
+        handler: "function divKeyDown() {\n" +
                  "  alert(9);\n" +
-                 "}"
-      },
-      {
-        type: "keydown",
-        filename: URL_ROOT + TEST_LIB + ":3",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "k = r.handle = function(a) {\n" +
-                 "  return typeof m === K || a && m.event.triggered === a.type ? void 0 : m.event.dispatch.apply(k.elem, arguments)\n" +
                  "}"
       }
     ]
@@ -149,7 +127,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler4 = function liveDivDragEnd() {\n" +
+        handler: "function liveDivDragEnd() {\n" +
                  "  alert(4);\n" +
                  "}"
       },
@@ -160,7 +138,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler3 = function liveDivDragLeave() {\n" +
+        handler: "function liveDivDragLeave() {\n" +
                  "  alert(3);\n" +
                  "}"
       },
@@ -171,7 +149,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler6 = function liveDivDragOver() {\n" +
+        handler: "function liveDivDragOver() {\n" +
                  "  alert(6);\n" +
                  "}"
       },
@@ -182,7 +160,7 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler5 = function liveDivDrop() {\n" +
+        handler: "function liveDivDrop() {\n" +
                  "  alert(5);\n" +
                  "}"
       }

@@ -1067,14 +1067,7 @@ public:
             return; // Already shut down.
         }
 
-        const auto& layerClient = GeckoLayerClient::Ref::From(aClient);
-
-        // If resetting is true, Android destroyed our GeckoApp activity and we
-        // had to recreate it, but all the Gecko-side things were not
-        // destroyed.  We therefore need to link up the new java objects to
-        // Gecko, and that's what we do here.
-        const bool resetting = !!mLayerClient;
-        mLayerClient = layerClient;
+        mLayerClient = GeckoLayerClient::Ref::From(aClient);
 
         MOZ_ASSERT(aNPZC);
         auto npzc = NativePanZoomController::LocalRef(
@@ -1082,15 +1075,12 @@ public:
                 NativePanZoomController::Ref::From(aNPZC));
         mWindow->mNPZCSupport.Attach(npzc, mWindow, npzc);
 
-        layerClient->OnGeckoReady();
+        mLayerClient->OnGeckoReady();
 
-        if (resetting) {
-            // Since we are re-linking the new java objects to Gecko, we need
-            // to get the viewport from the compositor (since the Java copy was
-            // thrown away) and we do that by setting the first-paint flag.
-            if (RefPtr<CompositorBridgeParent> bridge = mWindow->GetCompositorBridgeParent()) {
-                bridge->ForceIsFirstPaint();
-            }
+        // Set the first-paint flag so that we (re-)link any new Java objects
+        // to Gecko, co-ordinate viewports, etc.
+        if (RefPtr<CompositorBridgeParent> bridge = mWindow->GetCompositorBridgeParent()) {
+            bridge->ForceIsFirstPaint();
         }
     }
 
@@ -2335,10 +2325,7 @@ ConvertAndroidKeyCodeToKeyNameIndex(int keyCode, int action,
         case AKEYCODE_RO:                 // Japanese Ro key
             return KEY_NAME_INDEX_USE_STRING;
 
-        case AKEYCODE_ENDCALL:
         case AKEYCODE_NUM:                // XXX Not sure
-        case AKEYCODE_HEADSETHOOK:
-        case AKEYCODE_NOTIFICATION:       // XXX Not sure
         case AKEYCODE_PICTSYMBOLS:
 
         case AKEYCODE_BUTTON_A:
@@ -2357,10 +2344,7 @@ ConvertAndroidKeyCodeToKeyNameIndex(int keyCode, int action,
         case AKEYCODE_BUTTON_SELECT:
         case AKEYCODE_BUTTON_MODE:
 
-        case AKEYCODE_MUTE: // mutes the microphone
         case AKEYCODE_MEDIA_CLOSE:
-
-        case AKEYCODE_DVR:
 
         case AKEYCODE_BUTTON_1:
         case AKEYCODE_BUTTON_2:
@@ -2378,10 +2362,6 @@ ConvertAndroidKeyCodeToKeyNameIndex(int keyCode, int action,
         case AKEYCODE_BUTTON_14:
         case AKEYCODE_BUTTON_15:
         case AKEYCODE_BUTTON_16:
-
-        case AKEYCODE_MANNER_MODE:
-        case AKEYCODE_3D_MODE:
-        case AKEYCODE_CONTACTS:
             return KEY_NAME_INDEX_Unidentified;
 
         case AKEYCODE_UNKNOWN:

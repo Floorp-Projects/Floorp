@@ -26,7 +26,10 @@ fieldset { border-right:7px solid blue; font-size: 16px; }
 
 #test5 { position:fixed; top:12em; width:200px; }
 #test5 fieldset { background:lime;}
-#test5 .legend  { margin-left: 193px; background:pink; }
+/* Percentage margins don't get counted in intrinsic width, so make sure that
+   our fixed-size margins sum to 0, so they also do not affect intrinsic width
+   either. */
+#test5 .legend  { margin-left: 193px; background:pink; margin-right: -193px; }
 
 #test6 { position:fixed; left:20px; top:15em; width:400px; }
 #test6 fieldset { width:300px; }

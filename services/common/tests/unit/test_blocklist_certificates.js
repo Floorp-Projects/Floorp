@@ -14,21 +14,17 @@ let server;
 // set up what we need to make storage adapters
 const kintoFilename = "kinto.sqlite";
 
-let kintoClient;
-
-function do_get_kinto_collection(collectionName) {
-  if (!kintoClient) {
-    let config = {
-      // Set the remote to be some server that will cause test failure when
-      // hit since we should never hit the server directly, only via maybeSync()
-      remote: "https://firefox.settings.services.mozilla.com/v1/",
-      // Set up the adapter and bucket as normal
-      adapter: FirefoxAdapter,
-      bucket: "blocklists"
-    };
-    kintoClient = new Kinto(config);
-  }
-  return kintoClient.collection(collectionName);
+function do_get_kinto_collection(collectionName, sqliteHandle) {
+  let config = {
+    // Set the remote to be some server that will cause test failure when
+    // hit since we should never hit the server directly, only via maybeSync()
+    remote: "https://firefox.settings.services.mozilla.com/v1/",
+    // Set up the adapter and bucket as normal
+    adapter: FirefoxAdapter,
+    adapterOptions: {sqliteHandle},
+    bucket: "blocklists"
+  };
+  return new Kinto(config).collection(collectionName);
 }
 
 // Some simple tests to demonstrate that the logic inside maybeSync works
@@ -72,22 +68,22 @@ add_task(function* test_something(){
 
   // Open the collection, verify it's been populated:
   // Our test data has a single record; it should be in the local collection
-  let collection = do_get_kinto_collection("certificates");
-  yield collection.db.open();
+  let sqliteHandle = yield FirefoxAdapter.openConnection({path: kintoFilename});
+  let collection = do_get_kinto_collection("certificates", sqliteHandle);
   let list = yield collection.list();
   do_check_eq(list.data.length, 1);
-  yield collection.db.close();
+  yield sqliteHandle.close();
 
   // Test the db is updated when we call again with a later lastModified value
   result = yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
 
   // Open the collection, verify it's been updated:
   // Our test data now has two records; both should be in the local collection
-  collection = do_get_kinto_collection("certificates");
-  yield collection.db.open();
+  sqliteHandle = yield FirefoxAdapter.openConnection({path: kintoFilename});
+  collection = do_get_kinto_collection("certificates", sqliteHandle);
   list = yield collection.list();
   do_check_eq(list.data.length, 3);
-  yield collection.db.close();
+  yield sqliteHandle.close();
 
   // Try to maybeSync with the current lastModified value - no connection
   // should be attempted.

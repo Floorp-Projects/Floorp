@@ -75,7 +75,12 @@ nsDataDocumentContentPolicy::ShouldLoad(uint32_t aContentType,
     }
   }
 
-  if (doc->IsBeingUsedAsImage()) {
+  nsIDocument* docToCheckForImage = doc->GetDisplayDocument();
+  if (!docToCheckForImage) {
+    docToCheckForImage = doc;
+  }
+
+  if (docToCheckForImage->IsBeingUsedAsImage()) {
     // We only allow SVG images to load content from URIs that are local and
     // also satisfy one of the following conditions:
     //  - URI inherits security context, e.g. data URIs

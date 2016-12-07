@@ -157,6 +157,7 @@ enum class WebGLExtensionID : uint8_t {
     OES_texture_half_float_linear,
     OES_vertex_array_object,
     WEBGL_color_buffer_float,
+    WEBGL_compressed_texture_astc,
     WEBGL_compressed_texture_atc,
     WEBGL_compressed_texture_etc,
     WEBGL_compressed_texture_etc1,

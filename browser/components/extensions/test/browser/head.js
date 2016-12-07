@@ -10,7 +10,7 @@
  *          promisePopupShown promisePopupHidden
  *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
- *          openActionContextMenu closeActionContextMenu
+ *          openActionContextMenu openActionSubmenu closeActionContextMenu
  *          imageBuffer getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
@@ -97,7 +97,7 @@ function promisePopupHidden(popup) {
   });
 }
 
-function promiseContentDimensions(browser) {
+function promisePossiblyInaccurateContentDimensions(browser) {
   return ContentTask.spawn(browser, null, function* () {
     function copyProps(obj, props) {
       let res = {};
@@ -121,18 +121,39 @@ function promiseContentDimensions(browser) {
   });
 }
 
-function* awaitPopupResize(browser) {
-  return BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized",
-                                       event => event.detail === "delayed");
+function delay(ms = 0) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function promiseContentDimensions(browser) {
+  // For remote browsers, each resize operation requires an asynchronous
+  // round-trip to resize the content window. Since there's a certain amount of
+  // unpredictability in the timing, mainly due to the unpredictability of
+  // reflows, we need to wait until the content window dimensions match the
+  // <browser> dimensions before returning data.
+
+  let dims = await promisePossiblyInaccurateContentDimensions(browser);
+  while (browser.clientWidth !== dims.window.innerWidth ||
+         browser.clientHeight !== dims.window.innerHeight) {
+    await delay(50);
+    dims = await promisePossiblyInaccurateContentDimensions(browser);
+  }
+
+  return dims;
+}
+
+async function awaitPopupResize(browser) {
+  await BrowserTestUtils.waitForEvent(browser, "WebExtPopupResized",
+                                      event => event.detail === "delayed");
+
+  return promiseContentDimensions(browser);
 }
 
 function alterContent(browser, task, arg = null) {
   return Promise.all([
     ContentTask.spawn(browser, arg, task),
     awaitPopupResize(browser),
-  ]).then(() => {
-    return promiseContentDimensions(browser);
-  });
+  ]).then(([, dims]) => dims);
 }
 
 function getPanelForNode(node) {
@@ -252,6 +273,14 @@ function* openActionContextMenu(extension, kind, win = window) {
   yield shown;
 
   return menu;
+}
+
+function* openActionSubmenu(submenuItem, win = window) {
+  const submenu = submenuItem.firstChild;
+  const shown = BrowserTestUtils.waitForEvent(submenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(submenuItem, {}, win);
+  yield shown;
+  return submenu;
 }
 
 function closeActionContextMenu(itemToSelect, win = window) {

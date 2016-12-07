@@ -209,6 +209,16 @@
 #define TLS_AES_256_GCM_SHA384                0x1302
 #define TLS_CHACHA20_POLY1305_SHA256          0x1303
 
+/* PSK cipher suites. NSS doesn't actually support these, but we
+ * exposed them when TLS 1.3 used them so we need to keep them
+ * in the API. */
+#define TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256   0xCCAC
+#define TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256     0xCCAD
+#define TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256   0xD001
+#define TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384   0xD002
+#define TLS_DHE_PSK_WITH_AES_128_GCM_SHA256     0x00AA /* RFC 5487 */
+#define TLS_DHE_PSK_WITH_AES_256_GCM_SHA384     0x00AB /* RFC 5487 */
+
 /* DTLS-SRTP cipher suites from RFC 5764 */
 /* If you modify this, also modify MAX_DTLS_SRTP_CIPHER_SUITES in sslimpl.h */
 #define SRTP_AES128_CM_HMAC_SHA1_80             0x0001

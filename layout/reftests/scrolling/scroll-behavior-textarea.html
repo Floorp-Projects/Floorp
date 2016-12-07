@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1320200, smooth scrolling in textarea</title>
+    <style type="text/css">
+
+        html,body {
+            color: black;
+            background-color: white;
+            font-size: 16px;
+            padding: 0;
+            margin: 0;
+        }
+
+        #text {
+            width: 50px;
+            height: 50px;
+            overflow: scroll;
+            will-change: scroll-position;
+            scroll-behavior: smooth;
+        }
+
+    </style>
+</head>
+<body>
+  <textarea id="text">
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis odio est, cursus non adipiscing at, fringilla quis eros. Sed volutpat nibh sit amet ante molestie a vehicula nulla gravida. Mauris elementum cursus urna id vestibulum. Etiam volutpat odio tincidunt libero ullamcorper elementum. Suspendisse potenti. Ut ut arcu lorem. Integer mi sapien, porta a pharetra et, varius laoreet eros. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed ut mi at elit consequat aliquam id eu lectus. Etiam tincidunt diam et ante ullamcorper a convallis erat lobortis. Sed blandit ultrices dui et bibendum. Sed condimentum velit eget nibh rutrum cursus. Quisque pretium iaculis gravida.
+  </textarea>
+<script>
+  function doTest() {
+    if (document.location.search != '?ref') {
+      var e = document.getElementById("text");
+      e.scrollTop = e.scrollHeight;
+
+      // Interrupt any smooth scrolling
+      e.scrollLeft = e.scrollLeft;
+      e.scrollTop = e.scrollTop;
+    }
+    document.documentElement.removeAttribute("class");
+  }
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

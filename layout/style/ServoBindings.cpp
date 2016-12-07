@@ -32,25 +32,20 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#define IMPL_STRONG_REF_TYPE_FOR(type_) \
-  already_AddRefed<type_>               \
-  type_##Strong::Consume() {            \
-    RefPtr<type_> result;               \
-    result.swap(mPtr);                  \
-    return result.forget();             \
+#define SERVO_ARC_TYPE(name_, type_) \
+  already_AddRefed<type_>            \
+  type_##Strong::Consume() {         \
+    RefPtr<type_> result;            \
+    result.swap(mPtr);               \
+    return result.forget();          \
   }
-
-IMPL_STRONG_REF_TYPE_FOR(ServoComputedValues)
-IMPL_STRONG_REF_TYPE_FOR(ServoCssRules)
-IMPL_STRONG_REF_TYPE_FOR(RawServoStyleSheet)
-IMPL_STRONG_REF_TYPE_FOR(RawServoDeclarationBlock)
-IMPL_STRONG_REF_TYPE_FOR(RawServoStyleRule)
-
-#undef IMPL_STRONG_REF_TYPE_FOR
+#include "mozilla/ServoArcTypeList.h"
+#undef SERVO_ARC_TYPE
 
 uint32_t
 Gecko_ChildrenCount(RawGeckoNodeBorrowed aNode)
@@ -67,7 +62,7 @@ Gecko_NodeIsElement(RawGeckoNodeBorrowed aNode)
 RawGeckoNodeBorrowedOrNull
 Gecko_GetParentNode(RawGeckoNodeBorrowed aNode)
 {
-  return aNode->GetFlattenedTreeParentNode();
+  return aNode->GetFlattenedTreeParentNodeForStyle();
 }
 
 RawGeckoNodeBorrowedOrNull
@@ -97,7 +92,7 @@ Gecko_GetNextSibling(RawGeckoNodeBorrowed aNode)
 RawGeckoElementBorrowedOrNull
 Gecko_GetParentElement(RawGeckoElementBorrowed aElement)
 {
-  return aElement->GetFlattenedTreeParentElement();
+  return aElement->GetFlattenedTreeParentElementForStyle();
 }
 
 RawGeckoElementBorrowedOrNull
@@ -605,19 +600,6 @@ Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLe
   nsDependentAtomString atomStr(aAtom);
   NS_ConvertUTF8toUTF16 inStr(nsDependentCSubstring(aString, aLength));
   return nsContentUtils::EqualsIgnoreASCIICase(atomStr, inStr);
-}
-
-void
-Gecko_Utf8SliceToString(nsString* aString,
-                        const uint8_t* aBuffer,
-                        size_t aBufferLen)
-{
-  MOZ_ASSERT(aString);
-  MOZ_ASSERT(aBuffer);
-
-  aString->Truncate();
-  AppendUTF8toUTF16(Substring(reinterpret_cast<const char*>(aBuffer),
-                              aBufferLen), *aString);
 }
 
 void

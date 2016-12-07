@@ -50,7 +50,7 @@ function testSteps()
            gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
            "Reached quota limit");
         event.preventDefault();
-        testGenerator.send(false);
+        testGenerator.next(false);
       }
       request.onupgradeneeded = function(event) {
         event.target.transaction.onabort = function(e) {
@@ -65,7 +65,7 @@ function testSteps()
         let db = event.target.result;
         is(db.version, finalVersion, "Correct version " + finalVersion);
         databases.push(db);
-        testGenerator.send(true);
+        testGenerator.next(true);
       }
 
       let shouldContinue = yield undefined;
@@ -97,7 +97,7 @@ function testSteps()
            gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
            "Reached quota limit");
         event.preventDefault();
-        testGenerator.send(false);
+        testGenerator.next(false);
       }
       request.onupgradeneeded = function(event) {
         event.target.transaction.onabort = function(e) {
@@ -112,7 +112,7 @@ function testSteps()
         let db = event.target.result;
         is(db.version, finalVersion, "Correct version " + finalVersion);
         databases.push(db);
-        testGenerator.send(true);
+        testGenerator.next(true);
       }
 
       let shouldContinue = yield undefined;

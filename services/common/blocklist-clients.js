@@ -38,6 +38,11 @@ const PREF_BLOCKLIST_ENFORCE_SIGNING         = "services.blocklist.signing.enfor
 
 const INVALID_SIGNATURE = "Invalid content/signature";
 
+// FIXME: this was the default path in earlier versions of
+// FirefoxAdapter, so for backwards compatibility we maintain this
+// filename, even though it isn't descriptive of who is using it.
+this.KINTO_STORAGE_PATH    = "kinto.sqlite";
+
 this.FILENAME_ADDONS_JSON  = "blocklist-addons.json";
 this.FILENAME_GFX_JSON     = "blocklist-gfx.json";
 this.FILENAME_PLUGINS_JSON = "blocklist-plugins.json";
@@ -77,7 +82,7 @@ function fetchRemoteCollection(collection) {
  * URL and bucket name. It uses the `FirefoxAdapter` which relies on SQLite to
  * persist the local DB.
  */
-function kintoClient() {
+function kintoClient(connection) {
   let base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
   let bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
 
@@ -85,6 +90,7 @@ function kintoClient() {
     remote: base,
     bucket: bucket,
     adapter: FirefoxAdapter,
+    adapterOptions: {sqliteHandle: connection},
   };
 
   return new Kinto(config);
@@ -145,7 +151,6 @@ class BlocklistClient {
    * @return {Promise}          which rejects on sync or process failure.
    */
   maybeSync(lastModified, serverTime) {
-    let db = kintoClient();
     let opts = {};
     let enforceCollectionSigning =
       Services.prefs.getBoolPref(PREF_BLOCKLIST_ENFORCE_SIGNING);
@@ -158,11 +163,13 @@ class BlocklistClient {
       }
     }
 
-    let collection = db.collection(this.collectionName, opts);
 
     return Task.spawn((function* syncCollection() {
+      let connection;
       try {
-        yield collection.db.open();
+        connection = yield FirefoxAdapter.openConnection({path: KINTO_STORAGE_PATH});
+        let db = kintoClient(connection);
+        let collection = db.collection(this.collectionName, opts);
 
         let collectionLastModified = yield collection.db.getLastModified();
         // If the data is up to date, there's no need to sync. We still need
@@ -205,7 +212,7 @@ class BlocklistClient {
         // Track last update.
         this.updateLastCheck(serverTime);
       } finally {
-        collection.db.close();
+        yield connection.close();
       }
     }).bind(this));
   }

@@ -906,7 +906,7 @@ Proxy::Teardown(bool aSendUnpin)
         RefPtr<XHRUnpinRunnable> runnable =
           new XHRUnpinRunnable(mWorkerPrivate, mXMLHttpRequestPrivate);
         if (!runnable->Dispatch()) {
-          NS_RUNTIMEABORT("We're going to hang at shutdown anyways.");
+          MOZ_CRASH("We're going to hang at shutdown anyways.");
         }
       }
 
@@ -917,7 +917,7 @@ Proxy::Teardown(bool aSendUnpin)
                                              mSyncLoopTarget.forget(),
                                              false);
         if (!runnable->Dispatch()) {
-          NS_RUNTIMEABORT("We're going to hang at shutdown anyways.");
+          MOZ_CRASH("We're going to hang at shutdown anyways.");
         }
       }
 

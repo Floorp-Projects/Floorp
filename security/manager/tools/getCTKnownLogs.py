@@ -5,14 +5,20 @@
 
 """
 Parses a JSON file listing the known Certificate Transparency logs
-(as downloaded from https://www.certificate-transparency.org/known-logs)
-and generates a C++ header file to be included in Firefox.
+(log_list.json) and generates a C++ header file to be included in Firefox.
+
+The current log_list.json file available under security/manager/tools
+was originally downloaded from
+https://www.certificate-transparency.org/known-logs
+and edited to include the disqualification time for the disqualified logs using
+https://cs.chromium.org/chromium/src/net/cert/ct_known_logs_static-inc.h
 """
 
 from __future__ import print_function
 from string import Template
 import argparse
 import base64
+import datetime
 import json
 import os.path
 import sys
@@ -32,21 +38,51 @@ OUTPUT_TEMPLATE = """\
 #ifndef $include_guard
 #define $include_guard
 
+#include "CTLog.h"
+
 #include <stddef.h>
 
-struct CTLogInfo {
-  const char* const logName;
-  const char* const logUrl;
-  const char* const logKey;
-  const size_t logKeyLength;
+struct CTLogInfo
+{
+  const char* const name;
+  // Index within kCTLogOperatorList.
+  const mozilla::ct::CTLogStatus status;
+  // 0 for qualified logs, disqualification time for disqualified logs
+  // (in milliseconds, measured since the epoch, ignoring leap seconds).
+  const uint64_t disqualificationTime;
+  const size_t operatorIndex;
+  const char* const key;
+  const size_t keyLength;
+};
+
+struct CTLogOperatorInfo
+{
+  const char* const name;
+  const mozilla::ct::CTLogOperatorId id;
 };
 
 const CTLogInfo kCTLogList[] = {
 $logs
 };
 
+const CTLogOperatorInfo kCTLogOperatorList[] = {
+$operators
+};
+
 #endif // $include_guard
 """
+
+
+def get_disqualification_time(time_str):
+    """
+    Convert a time string such as "2017-01-01T00:00:00Z" to an integer
+    representing milliseconds since the epoch.
+    Timezones in the string are not supported and will result in an exception.
+    """
+    t = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%SZ")
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    seconds_since_epoch = (t - epoch).total_seconds()
+    return int(seconds_since_epoch * 1000)
 
 
 def get_hex_lines(blob, width):
@@ -57,25 +93,70 @@ def get_hex_lines(blob, width):
     return textwrap.wrap(text, width - width % 4)
 
 
+def get_operator_and_index(json_data, operator_id):
+    """ Return operator's entry from the JSON along with its array index. """
+    matches = [(operator, index) for (index, operator) in enumerate(
+        json_data["operators"]) if operator["id"] == operator_id]
+    assert len(matches) != 0, "No operators with id {0} defined.".format(
+        operator_id)
+    assert len(matches) == 1, "Found multiple operators with id {0}.".format(
+        operator_id)
+    return matches[0]
+
+
 def get_log_info_structs(json_data):
     """ Return array of CTLogInfo initializers for the known logs. """
     tmpl = Template(textwrap.dedent("""\
           { $description,
-            $url,
+            $status,
+            $disqualification_time, // $disqualification_time_comment
+            $operator_index, // $operator_comment
         $indented_log_key,
             $log_key_len }"""))
     initializers = []
     for log in json_data["logs"]:
         log_key = base64.decodestring(log["key"])
+        # "operated_by" is a list, we assume here it always contains one item.
+        operated_by = log["operated_by"]
+        assert len(operated_by) == 1, "operated_by must contain one item."
+        operator, operator_index = get_operator_and_index(json_data,
+                                                          operated_by[0])
+        if "disqualification_time" in log:
+            status = "mozilla::ct::CTLogStatus::Disqualified"
+            disqualification_time = get_disqualification_time(
+                log["disqualification_time"])
+            disqualification_time_comment = 'Date.parse("{0}")'.format(
+                log["disqualification_time"])
+        else:
+            status = "mozilla::ct::CTLogStatus::Included"
+            disqualification_time = 0
+            disqualification_time_comment = "no disqualification time"
         initializers.append(tmpl.substitute(
             # Use json.dumps for C-escaping strings.
             # Not perfect but close enough.
             description=json.dumps(log["description"]),
-            url=json.dumps("https://{0}/".format(log["url"])),
+            operator_index=operator_index,
+            operator_comment="operated by {0}".
+            # The comment must not contain "/".
+            format(operator["name"]).replace("/", "|"),
+            status=status,
+            disqualification_time=disqualification_time,
+            disqualification_time_comment=disqualification_time_comment,
             # Maximum line width is 80.
             indented_log_key="\n".
             join(['    "{0}"'.format(l) for l in get_hex_lines(log_key, 74)]),
             log_key_len=len(log_key)))
+    return initializers
+
+
+def get_log_operator_structs(json_data):
+    """ Return array of CTLogOperatorInfo initializers. """
+    tmpl = Template("  { $name, $id }")
+    initializers = []
+    for operator in json_data["operators"]:
+        initializers.append(tmpl.substitute(
+            name=json.dumps(operator["name"]),
+            id=operator["id"]))
     return initializers
 
 
@@ -84,10 +165,12 @@ def generate_cpp_header_file(json_data, out_file):
     filename = os.path.basename(out_file.name)
     include_guard = filename.replace(".", "_").replace("/", "_")
     log_info_initializers = get_log_info_structs(json_data)
+    operator_info_initializers = get_log_operator_structs(json_data)
     out_file.write(Template(OUTPUT_TEMPLATE).substitute(
         prog=os.path.basename(sys.argv[0]),
         include_guard=include_guard,
-        logs=",\n".join(log_info_initializers)))
+        logs=",\n".join(log_info_initializers),
+        operators=",\n".join(operator_info_initializers)))
 
 
 def run(args):
@@ -126,16 +209,13 @@ def parse_arguments_and_run():
         epilog="Example: python %s --url" % os.path.basename(sys.argv[0]))
 
     source_group = arg_parser.add_mutually_exclusive_group(required=True)
-    source_group.add_argument("--file",
-                              help="Read the known CT logs JSON file from the "
-                              "specified location on the filesystem.")
-    source_group.add_argument("--url", nargs="?",
-                              const="https://www.certificate-transparency.org/"
-                              "known-logs/log_list.json",
+    source_group.add_argument("--file", nargs="?",
+                              const="log_list.json",
+                              help="Read the known CT logs JSON data from the "
+                              "specified local file (%(const)s by default).")
+    source_group.add_argument("--url",
                               help="Download the known CT logs JSON file "
-                              "from the specified URL. "
-                              "If no URL is given, download the file "
-                              "from %(const)s.")
+                              "from the specified URL.")
 
     arg_parser.add_argument("--out",
                             default="../../certverifier/CTKnownLogs.h",

@@ -3007,29 +3007,6 @@ nsDocShell::TopSessionStorageManager()
   return mSessionStorageManager;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
-                                          const nsAString& aDocumentURI,
-                                          bool aCreate,
-                                          nsIDOMStorage** aStorage)
-{
-  nsCOMPtr<nsIDOMStorageManager> manager = TopSessionStorageManager();
-  if (!manager) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> domWin = GetWindow();
-
-  AssertOriginAttributesMatchPrivateBrowsing();
-  if (aCreate) {
-    return manager->CreateStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
-                                  aDocumentURI, aStorage);
-  }
-
-  return manager->GetStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
-                             aStorage);
-}
-
 nsresult
 nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal, nsIDOMStorage* aStorage)
 {
@@ -8917,6 +8894,8 @@ nsDocShell::RestoreFromHistory()
     nsSubDocumentFrame* subDocFrame =
       do_QueryFrame(container->GetPrimaryFrame());
     rootViewParent = subDocFrame ? subDocFrame->EnsureInnerView() : nullptr;
+  } else {
+    rootViewParent = nullptr;
   }
   if (sibling &&
       sibling->GetShell() &&
@@ -9585,7 +9564,7 @@ public:
   InternalLoadEvent(nsDocShell* aDocShell, nsIURI* aURI,
                     nsIURI* aOriginalURI, bool aLoadReplace,
                     nsIURI* aReferrer, uint32_t aReferrerPolicy,
-                    nsIPrincipal* aTriggeringPrincipal, 
+                    nsIPrincipal* aTriggeringPrincipal,
                     nsIPrincipal* aPrincipalToInherit, uint32_t aFlags,
                     const char* aTypeHint, nsIInputStream* aPostData,
                     nsIInputStream* aHeadersData, uint32_t aLoadType,
@@ -9920,7 +9899,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     bool inherits;
     // One more twist: Don't inherit the principal for external loads.
     if (aLoadType != LOAD_NORMAL_EXTERNAL && !principalToInherit &&
-        (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL) &&   
+        (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL) &&
          NS_SUCCEEDED(nsContentUtils::URIInheritsSecurityContext(aURI,
                                                                  &inherits)) &&
          inherits) {
@@ -10327,7 +10306,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       nsCOMPtr<nsIPrincipal> triggeringPrincipal, principalToInherit;
       if (mOSHE) {
         mOSHE->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
-        mOSHE->GetPrincipalToInherit(getter_AddRefs(principalToInherit)); 
+        mOSHE->GetPrincipalToInherit(getter_AddRefs(principalToInherit));
       }
       // Pass true for aCloneSHChildren, since we're not
       // changing documents here, so all of our subframes are
@@ -11597,6 +11576,10 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
           shAvailable, updateSHistory, updateGHistory, equalUri));
 
   if (shAvailable && mCurrentURI && !mOSHE && aLoadType != LOAD_ERROR_PAGE) {
+    // XXX mCurrentURI can be changed from any caller regardless what actual
+    // loaded document is, so testing mCurrentURI isn't really a reliable way.
+    // Session restore is one example which changes current URI in order to
+    // show address before loading. See bug 1301399.
     NS_ASSERTION(NS_IsAboutBlank(mCurrentURI),
                  "no SHEntry for a non-transient viewer?");
   }

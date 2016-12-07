@@ -55,7 +55,7 @@ GetContentChild()
   if (XRE_IsContentProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
     if (!cpc) {
-      NS_RUNTIMEABORT("Content Protocol is NULL!  We're going to crash!");
+      MOZ_CRASH("Content Protocol is NULL!  We're going to crash!");
     }
     return cpc;
   }
@@ -345,7 +345,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
                                 std::min(0x1000U, utf8String.Length()));
         }
 #endif
-        NS_RUNTIMEABORT("bug836263");
+        MOZ_CRASH("bug836263");
       }
       theString->SetData(wdata);
       theString.forget(reinterpret_cast<nsISupportsString**>(_retval));

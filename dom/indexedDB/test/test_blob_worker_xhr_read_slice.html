@@ -16,7 +16,7 @@
    * (as of the time of writing this) basically the same as
    * test_blob_worker_xhr_read.html but with slicing added.
    */
-  function testSteps()
+  function* testSteps()
   {
     const BLOB_DATA = ["Green"];
     const BLOB_TYPE = "text/plain";
@@ -104,7 +104,6 @@
     URL.revokeObjectURL(workerScriptUrl);
 
     finishTest();
-    yield undefined;
   }
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>

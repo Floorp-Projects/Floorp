@@ -78,7 +78,8 @@ inline JSFunction*
 LazyScript::functionDelazifying(JSContext* cx) const
 {
     Rooted<const LazyScript*> self(cx, this);
-    if (self->function_ && !self->function_->getOrCreateScript(cx))
+    RootedFunction fun(cx, self->function_);
+    if (self->function_ && !JSFunction::getOrCreateScript(cx, fun))
         return nullptr;
     return self->function_;
 }

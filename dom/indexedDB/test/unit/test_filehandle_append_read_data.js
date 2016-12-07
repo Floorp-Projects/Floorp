@@ -7,7 +7,7 @@ var disableWorkerTest = "FileHandle doesn't work in workers yet";
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
@@ -94,5 +94,4 @@ function testSteps()
   is(result.size, location, "Correct size");
 
   finishTest();
-  yield undefined;
 }

@@ -73,6 +73,8 @@ function* testExecuteBrowserActionWithOptions(options = {}) {
 
   yield extension.startup();
 
+  yield SimpleTest.promiseFocus(window);
+
   if (options.inArea) {
     let widget = getBrowserActionWidget(extension);
     CustomizableUI.addWidgetToArea(widget.id, options.inArea);

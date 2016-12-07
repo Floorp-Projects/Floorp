@@ -131,7 +131,6 @@
     "events": [
       {
         "name": "onChanged",
-        "unsupported": true,
         "description": "Fired when recently closed tabs and/or windows are changed. This event does not monitor synced sessions changes.",
         "type": "function"
       }

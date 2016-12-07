@@ -49,11 +49,15 @@ add_task(function* () {
   ok(!certService.loginPromptRequired);
 
   let certA = yield getOrCreateCert(gNickname);
-  equal(certA.nickname, gNickname);
+  // The local cert service implementation takes the given nickname and uses it
+  // as the common name for the certificate it creates. nsIX509Cert.displayName
+  // uses the common name if it is present, so these should match. Should either
+  // implementation change to do something else, this won't necessarily work.
+  equal(certA.displayName, gNickname);
 
   // Getting again should give the same cert
   let certB = yield getOrCreateCert(gNickname);
-  equal(certB.nickname, gNickname);
+  equal(certB.displayName, gNickname);
 
   // Should be matching instances
   ok(certA.equals(certB));

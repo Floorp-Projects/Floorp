@@ -23,10 +23,14 @@ expected_output.log: $(srcdir)/replay.log
 
 check:: $(srcdir)/replay.log expected_output.log
 # Test with MALLOC_LOG as a file descriptor number
-	MALLOC_LOG=1 $(LOGALLOC) ./$(PROGRAM) < $< | $(PYTHON) $(srcdir)/logalloc_munge.py | diff -w - expected_output.log
+# We filter out anything happening before the first jemalloc_stats (first
+# command in replay.log) because starting with libstdc++ 5, a static
+# initializer in the STL allocates memory, which we obviously don't have
+# in expected_output.log.
+	MALLOC_LOG=1 $(LOGALLOC) ./$(PROGRAM) < $< | sed -n '/jemalloc_stats/,$$p' | $(PYTHON) $(srcdir)/logalloc_munge.py | diff -w - expected_output.log
 # Test with MALLOC_LOG as a file name
 	$(RM) test_output.log
 	MALLOC_LOG=test_output.log $(LOGALLOC) ./$(PROGRAM) < $<
-	$(PYTHON) $(srcdir)/logalloc_munge.py < test_output.log | diff -w - expected_output.log
+	sed -n '/jemalloc_stats/,$$p' test_output.log | $(PYTHON) $(srcdir)/logalloc_munge.py | diff -w - expected_output.log
 
 endif

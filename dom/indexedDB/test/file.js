@@ -90,7 +90,7 @@ function getWasmBinary(text)
 {
   let binary = getWasmBinarySync(text);
   SimpleTest.executeSoon(function() {
-    testGenerator.send(binary);
+    testGenerator.next(binary);
   });
 }
 
@@ -220,7 +220,7 @@ function verifyWasmModule(module1, module2)
 
 function grabFileUsageAndContinueHandler(request)
 {
-  testGenerator.send(request.fileUsage);
+  testGenerator.next(request.fileUsage);
 }
 
 function getUsage(usageHandler)

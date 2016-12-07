@@ -115,6 +115,7 @@ public:
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
                               aControllerResult) override;
   virtual void ScanForDevices() override;
+  virtual void RemoveDevices() override;
 
 private:
   VRControllerManagerOpenVR();

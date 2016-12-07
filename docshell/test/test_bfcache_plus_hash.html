@@ -47,9 +47,6 @@ function childLoad(n) {
     // Spin the event loop before calling gGen.next() so the generator runs
     // outside the onload handler.  This prevents us from encountering all
     // sorts of docshell quirks.
-    //
-    // (I don't know why I need to wrap gGen.next() in a function, but it
-    // throws an error otherwise.)
     setTimeout(function() { gGen.next() }, 0);
   }
   else {
@@ -84,7 +81,7 @@ function waitForShow(n) {
   expectedPageshowNum = n;
 }
 
-function test() {
+function* test() {
   var popup = window.open('data:text/html,' +
                           '<html><body onload="opener.childLoad(1)" ' +
                                       'onpageshow="opener.childPageshow(1)">' +
@@ -106,9 +103,6 @@ function test() {
 
   popup.close();
   SimpleTest.finish();
-  
-  // Yield once more so we don't throw a StopIteration exception.
-  yield undefined;
 }
 
 var gGen = test();

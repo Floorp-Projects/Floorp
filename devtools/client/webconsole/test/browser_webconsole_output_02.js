@@ -36,10 +36,10 @@ var inputTests = [
     suppressClick: true
   },
 
-  // 3 - anonymous function, but spidermonkey gives us an inferred name.
+  // 3 - anonymous function, but gets name.
   {
     input: "testobj1.testfn2",
-    output: "function testobj1.testfn2()",
+    output: "function testfn2()",
     printOutput: "function () { return 42; }",
     suppressClick: true
   },

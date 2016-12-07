@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from head.js */
+/* import-globals-from helper_diff.js */
 "use strict";
+
+loadHelperScript("helper_diff.js");
 
 /**
  * Generator function that runs checkEventsForNode() for each object in the
@@ -83,6 +86,8 @@ function* checkEventsForNode(test, inspector, testActor) {
     let attributes = header.querySelectorAll(".event-tooltip-attributes");
     let contentBox = header.nextElementSibling;
 
+    info("Looking for " + type.textContent);
+
     is(type.textContent, expected[i].type,
        "type matches for " + cssSelector);
     is(filename.textContent, expected[i].filename,
@@ -103,9 +108,47 @@ function* checkEventsForNode(test, inspector, testActor) {
     yield tooltip.once("event-tooltip-ready");
 
     let editor = tooltip.eventTooltip._eventEditors.get(contentBox).editor;
-    is(editor.getText(), expected[i].handler,
-       "handler matches for " + cssSelector);
+    testDiff(editor.getText(), expected[i].handler,
+       "handler matches for " + cssSelector, ok);
   }
 
   tooltip.hide();
+}
+
+/**
+ * Create diff of two strings.
+ *
+ * @param  {String} text1
+ *         String to compare with text2.
+ * @param  {String} text2 [description]
+ *         String to compare with text1.
+ * @param  {String} msg
+ *         Message to display on failure. A diff will be displayed after this
+ *         message.
+ */
+function testDiff(text1, text2, msg) {
+  let out = "";
+
+  if (text1 === text2) {
+    ok(true, msg);
+    return;
+  }
+
+  let result = textDiff(text1, text2);
+
+  for (let {atom, operation} of result) {
+    switch (operation) {
+      case "add":
+        out += "+ " + atom + "\n";
+        break;
+      case "delete":
+        out += "- " + atom + "\n";
+        break;
+      case "none":
+        out += "  " + atom + "\n";
+        break;
+    }
+  }
+
+  ok(false, msg + "\nDIFF:\n==========\n" + out + "==========\n");
 }

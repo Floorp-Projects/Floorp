@@ -35,7 +35,7 @@ import java.util.List;
 
 public class CellScannerImplementation implements CellScanner.CellScannerImpl {
 
-    protected static String LOG_TAG = AppGlobals.makeLogTag(CellScannerImplementation.class.getSimpleName());
+    protected static final String LOG_TAG = AppGlobals.makeLogTag(CellScannerImplementation.class.getSimpleName());
     protected GetAllCellInfoScannerImpl mGetAllInfoCellScanner;
     protected TelephonyManager mTelephonyManager;
     protected boolean mIsStarted;

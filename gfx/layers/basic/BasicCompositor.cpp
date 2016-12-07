@@ -684,7 +684,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       break;
     }
     case EffectTypes::YCBCR: {
-      NS_RUNTIMEABORT("Can't (easily) support component alpha with BasicCompositor!");
+      MOZ_CRASH("Can't (easily) support component alpha with BasicCompositor!");
       break;
     }
     case EffectTypes::RENDER_TARGET: {
@@ -703,11 +703,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       break;
     }
     case EffectTypes::COMPONENT_ALPHA: {
-      NS_RUNTIMEABORT("Can't (easily) support component alpha with BasicCompositor!");
+      MOZ_CRASH("Can't (easily) support component alpha with BasicCompositor!");
       break;
     }
     default: {
-      NS_RUNTIMEABORT("Invalid effect type!");
+      MOZ_CRASH("Invalid effect type!");
       break;
     }
   }

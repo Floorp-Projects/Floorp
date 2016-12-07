@@ -22,9 +22,8 @@ window.onload = Task.async(function* () {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
-    yield setProps(tree, {
+    const treeProps = Object.assign({}, TEST_TREE_INTERFACE, {
       renderItem: (item, depth, focused, arrow) => {
         return React.DOM.div(
           {
@@ -36,6 +35,7 @@ window.onload = Task.async(function* () {
         );
       }
     });
+    const tree = ReactDOM.render(Tree(treeProps), window.document.body);
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
     yield forceRender(tree);

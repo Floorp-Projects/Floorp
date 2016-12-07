@@ -95,7 +95,8 @@ VRManager::VRManager()
   }
 #endif
   // Enable gamepad extensions while VR is enabled.
-  if (gfxPrefs::VREnabled()) {
+  // Preference only can be set at the Parent process.
+  if (XRE_IsParentProcess() && gfxPrefs::VREnabled()) {
     Preferences::SetBool("dom.gamepad.extensions.enabled", true);
   }
 }
@@ -180,9 +181,6 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   }
 
   if (bHaveEventListener) {
-    for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
-      mControllerManagers[i]->HandleInput();
-    }
     // If content has set an EventHandler to be notified of VR display events
     // we must continually refresh the VR display enumeration to check
     // for events that we must fire such as Window.onvrdisplayconnect
@@ -210,6 +208,9 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 void
 VRManager::NotifyVRVsync(const uint32_t& aDisplayID)
 {
+  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+    mControllerManagers[i]->HandleInput();
+  }
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     Unused << iter.Get()->GetKey()->SendNotifyVRVSync(aDisplayID);
   }
@@ -339,6 +340,8 @@ VRManager::RefreshVRControllers()
 {
   nsTArray<RefPtr<gfx::VRControllerHost>> controllers;
 
+  ScanForControllers();
+
   for (uint32_t i = 0; i < mControllerManagers.Length()
       && controllers.Length() == 0; ++i) {
     mControllerManagers[i]->GetControllers(controllers);
@@ -369,11 +372,20 @@ VRManager::RefreshVRControllers()
 }
 
 void
-VRManager::ScanForDevices()
+VRManager::ScanForControllers()
 {
   for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
     mControllerManagers[i]->ScanForDevices();
   }
+}
+
+void
+VRManager::RemoveControllers()
+{
+  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+    mControllerManagers[i]->RemoveDevices();
+  }
+  mVRControllers.Clear();
 }
 
 template<class T>

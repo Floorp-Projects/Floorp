@@ -2,10 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-let delay = ms => new Promise(resolve => {
-  setTimeout(resolve, ms);
-});
-
 add_task(function* testPageActionPopupResize() {
   let browser;
 
@@ -39,17 +35,8 @@ add_task(function* testPageActionPopupResize() {
 
   browser = yield awaitExtensionPanel(extension);
 
-  function* waitForSize(size) {
-    let dims = yield promiseContentDimensions(browser);
-    for (let i = 0; i < 100 && dims.window.innerWidth != size; i++) {
-      yield delay(50);
-      dims = yield promiseContentDimensions(browser);
-    }
-    return dims;
-  }
-
   function* checkSize(expected) {
-    let dims = yield waitForSize(expected);
+    let dims = yield promiseContentDimensions(browser);
     let {body, root} = dims;
 
     is(dims.window.innerHeight, expected, `Panel window should be ${expected}px tall`);
@@ -83,9 +70,7 @@ add_task(function* testPageActionPopupResize() {
     yield checkSize(size);
   }
 
-  yield alterContent(browser, setSize, 1400);
-
-  let dims = yield waitForSize(800);
+  let dims = yield alterContent(browser, setSize, 1400);
   let {body, root} = dims;
 
   is(dims.window.innerWidth, 800, "Panel window width");
@@ -146,13 +131,6 @@ add_task(function* testPageActionPopupReflow() {
   /* eslint-enable mozilla/no-cpows-in-tests */
 
   let dims = yield alterContent(browser, setSize, 18);
-
-  if (AppConstants.platform == "win") {
-    while (dims.window.innerWidth < 800) {
-      yield delay(50);
-      dims = yield promiseContentDimensions(browser);
-    }
-  }
 
   is(dims.window.innerWidth, 800, "Panel window should be 800px wide");
   is(dims.body.clientWidth, 800, "Panel body should be 800px wide");

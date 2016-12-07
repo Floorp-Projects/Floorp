@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Function.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/ScopeExit.h"
 #include "nsCOMPtr.h"

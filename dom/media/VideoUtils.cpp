@@ -7,7 +7,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Function.h"
 
 #include "MediaContentType.h"
 #include "MediaPrefs.h"
@@ -26,6 +25,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentTypeParser.h"
 
+#include <functional>
 #include <stdint.h>
 
 namespace mozilla {

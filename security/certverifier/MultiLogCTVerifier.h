@@ -23,7 +23,7 @@ class MultiLogCTVerifier
 {
 public:
   // Adds a new log to the list of known logs to verify against.
-  pkix::Result AddLog(pkix::Input publicKey);
+  pkix::Result AddLog(CTLogVerifier&& log);
 
   // Verifies SCTs embedded in the certificate itself, SCTs embedded in a
   // stapled OCSP response, and SCTs obtained via the
@@ -66,7 +66,7 @@ private:
   // come from |origin| (as will be reflected in the origin field of each SCT).
   pkix::Result VerifySCTs(pkix::Input encodedSctList,
                           const LogEntry& expectedEntry,
-                          SignedCertificateTimestamp::Origin origin,
+                          VerifiedSCT::Origin origin,
                           pkix::Time time,
                           CTVerifyResult& result);
 
@@ -74,6 +74,7 @@ private:
   // Note: moves |sct| to the target list in |result|, invalidating |sct|.
   pkix::Result VerifySingleSCT(SignedCertificateTimestamp&& sct,
                                const ct::LogEntry& expectedEntry,
+                               VerifiedSCT::Origin origin,
                                pkix::Time time,
                                CTVerifyResult& result);
 

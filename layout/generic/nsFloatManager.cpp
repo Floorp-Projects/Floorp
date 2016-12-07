@@ -116,9 +116,10 @@ void nsFloatManager::Shutdown()
   sCachedFloatManagerCount = -1;
 }
 
-#define CHECK_BLOCK_DIR(aWM) \
-  NS_ASSERTION((aWM).GetBlockDir() == mWritingMode.GetBlockDir(), \
-  "incompatible writing modes")
+#define CHECK_BLOCK_AND_LINE_DIR(aWM) \
+  NS_ASSERTION((aWM).GetBlockDir() == mWritingMode.GetBlockDir() &&     \
+               (aWM).IsLineInverted() == mWritingMode.IsLineInverted(), \
+               "incompatible writing modes")
 
 nsFlowAreaRect
 nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
@@ -126,7 +127,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
                             LogicalRect aContentArea, SavedState* aState,
                             const nsSize& aContainerSize) const
 {
-  CHECK_BLOCK_DIR(aWM);
+  CHECK_BLOCK_AND_LINE_DIR(aWM);
   NS_ASSERTION(aBSize >= 0, "unexpected max block size");
   NS_ASSERTION(aContentArea.ISize(aWM) >= 0,
                "unexpected content area inline size");
@@ -264,7 +265,7 @@ nsresult
 nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
                          WritingMode aWM, const nsSize& aContainerSize)
 {
-  CHECK_BLOCK_DIR(aWM);
+  CHECK_BLOCK_AND_LINE_DIR(aWM);
   NS_ASSERTION(aMarginRect.ISize(aWM) >= 0, "negative inline size!");
   NS_ASSERTION(aMarginRect.BSize(aWM) >= 0, "negative block size!");
 

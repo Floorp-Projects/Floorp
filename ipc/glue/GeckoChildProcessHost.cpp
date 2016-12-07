@@ -968,12 +968,12 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (child_message.GetTranslatedPort(2) == MACH_PORT_NULL) {
     CHROMIUM_LOG(ERROR) << "parent GetTranslatedPort(2) failed.";
   }
-  MachPortSender* parent_recv_port_memory_ack = new MachPortSender(child_message.GetTranslatedPort(2));
+  auto* parent_recv_port_memory_ack = new MachPortSender(child_message.GetTranslatedPort(2));
 
   if (child_message.GetTranslatedPort(3) == MACH_PORT_NULL) {
     CHROMIUM_LOG(ERROR) << "parent GetTranslatedPort(3) failed.";
   }
-  MachPortSender* parent_send_port_memory = new MachPortSender(child_message.GetTranslatedPort(3));
+  auto* parent_send_port_memory = new MachPortSender(child_message.GetTranslatedPort(3));
 
   MachSendMessage parent_message(/* id= */0);
   if (!parent_message.AddDescriptor(MachMsgPortDescriptor(bootstrap_port))) {
@@ -981,13 +981,13 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     return false;
   }
 
-  ReceivePort* parent_recv_port_memory = new ReceivePort();
+  auto* parent_recv_port_memory = new ReceivePort();
   if (!parent_message.AddDescriptor(MachMsgPortDescriptor(parent_recv_port_memory->GetPort()))) {
     CHROMIUM_LOG(ERROR) << "parent AddDescriptor(" << parent_recv_port_memory->GetPort() << ") failed.";
     return false;
   }
 
-  ReceivePort* parent_send_port_memory_ack = new ReceivePort();
+  auto* parent_send_port_memory_ack = new ReceivePort();
   if (!parent_message.AddDescriptor(MachMsgPortDescriptor(parent_send_port_memory_ack->GetPort()))) {
     CHROMIUM_LOG(ERROR) << "parent AddDescriptor(" << parent_send_port_memory_ack->GetPort() << ") failed.";
     return false;
@@ -1197,7 +1197,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
                             FALSE, 0)
 #endif
      ) {
-    NS_RUNTIMEABORT("cannot open handle to child process");
+    MOZ_CRASH("cannot open handle to child process");
   }
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CREATED;
@@ -1221,7 +1221,7 @@ void
 GeckoChildProcessHost::OnChannelConnected(int32_t peer_pid)
 {
   if (!OpenPrivilegedHandle(peer_pid)) {
-    NS_RUNTIMEABORT("can't open handle to child process");
+    MOZ_CRASH("can't open handle to child process");
   }
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CONNECTED;

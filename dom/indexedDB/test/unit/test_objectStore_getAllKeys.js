@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps() {
+function* testSteps() {
   const dbName = this.window ?
                  window.location.pathname :
                  "test_objectStore_getAllKeys";
@@ -119,5 +119,4 @@ function testSteps() {
   is(event.target.result.length, 0, "Got correct array length");
 
   finishTest();
-  yield undefined;
 }

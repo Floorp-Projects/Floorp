@@ -617,15 +617,22 @@ private:
 class MediaRawData : public MediaData {
 public:
   MediaRawData();
-  MediaRawData(const uint8_t* aData, size_t mSize);
+  MediaRawData(const uint8_t* aData, size_t aSize);
+  MediaRawData(const uint8_t* aData, size_t aSize,
+               const uint8_t* aAlphaData, size_t aAlphaSize);
 
   // Pointer to data or null if not-yet allocated
   const uint8_t* Data() const { return mBuffer.Data(); }
+  // Pointer to alpha data or null if not-yet allocated
+  const uint8_t* AlphaData() const { return mAlphaBuffer.Data(); }
   // Size of buffer.
   size_t Size() const { return mBuffer.Length(); }
+  size_t AlphaSize() const { return mAlphaBuffer.Length(); }
   size_t ComputedSizeOfIncludingThis() const
   {
-    return sizeof(*this) + mBuffer.ComputedSizeOfExcludingThis();
+    return sizeof(*this)
+           + mBuffer.ComputedSizeOfExcludingThis()
+           + mAlphaBuffer.ComputedSizeOfExcludingThis();
   }
 
   const CryptoSample& mCrypto;
@@ -634,6 +641,10 @@ public:
   // Used by the Vorbis decoder and Ogg demuxer.
   // Indicates that this is the last packet of the stream.
   bool mEOS = false;
+
+  // Indicate to the audio decoder that mDiscardPadding frames should be
+  // trimmed.
+  uint32_t mDiscardPadding = 0;
 
   RefPtr<SharedTrackInfo> mTrackInfo;
 
@@ -650,6 +661,7 @@ protected:
 private:
   friend class MediaRawDataWriter;
   AlignedByteBuffer mBuffer;
+  AlignedByteBuffer mAlphaBuffer;
   CryptoSample mCryptoInternal;
   MediaRawData(const MediaRawData&); // Not implemented
 };

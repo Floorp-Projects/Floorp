@@ -191,11 +191,13 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "-moz-gtk-info-bar",
+      "-moz-mac-active-source-list-selection",
       "-moz-mac-disclosure-button-closed",
       "-moz-mac-disclosure-button-open",
       "-moz-mac-fullscreen-button",
       "-moz-mac-help-button",
       "-moz-mac-source-list",
+      "-moz-mac-source-list-selection",
       "-moz-mac-vibrancy-dark",
       "-moz-mac-vibrancy-light",
       "-moz-win-borderless-glass",
@@ -1235,30 +1237,14 @@ exports.CSS_PROPERTIES = {
       "-moz-tab-size"
     ],
     "supports": [
+      6,
       7
     ],
     "values": [
+      "-moz-calc",
+      "calc",
       "inherit",
       "initial",
-      "unset"
-    ]
-  },
-  "-moz-text-align-last": {
-    "isInherited": true,
-    "subproperties": [
-      "text-align-last"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "center",
-      "end",
-      "inherit",
-      "initial",
-      "justify",
-      "left",
-      "right",
-      "start",
       "unset"
     ]
   },
@@ -2923,6 +2909,7 @@ exports.CSS_PROPERTIES = {
       "font-variant-ligatures",
       "font-variant-numeric",
       "font-variant-position",
+      "font-variation-settings",
       "font-weight",
       "-moz-force-broken-image-icon",
       "grid-auto-columns",
@@ -3137,11 +3124,13 @@ exports.CSS_PROPERTIES = {
       "-moz-inline-stack",
       "-moz-left",
       "-moz-linear-gradient",
+      "-moz-mac-active-source-list-selection",
       "-moz-mac-disclosure-button-closed",
       "-moz-mac-disclosure-button-open",
       "-moz-mac-fullscreen-button",
       "-moz-mac-help-button",
       "-moz-mac-source-list",
+      "-moz-mac-source-list-selection",
       "-moz-mac-vibrancy-dark",
       "-moz-mac-vibrancy-light",
       "-moz-max-content",
@@ -8135,6 +8124,87 @@ exports.CSS_PROPERTIES = {
     "values": [
       "inherit",
       "initial",
+      "unset"
+    ]
+  },
+  "place-content": {
+    "isInherited": false,
+    "subproperties": [
+      "align-content",
+      "justify-content"
+    ],
+    "supports": [],
+    "values": [
+      "baseline",
+      "center",
+      "end",
+      "flex-end",
+      "flex-start",
+      "inherit",
+      "initial",
+      "last baseline",
+      "left",
+      "normal",
+      "right",
+      "space-around",
+      "space-between",
+      "space-evenly",
+      "start",
+      "stretch",
+      "unset"
+    ]
+  },
+  "place-items": {
+    "isInherited": false,
+    "subproperties": [
+      "align-items",
+      "justify-items"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "baseline",
+      "center",
+      "end",
+      "flex-end",
+      "flex-start",
+      "inherit",
+      "initial",
+      "last baseline",
+      "left",
+      "normal",
+      "right",
+      "self-end",
+      "self-start",
+      "start",
+      "stretch",
+      "unset"
+    ]
+  },
+  "place-self": {
+    "isInherited": false,
+    "subproperties": [
+      "align-self",
+      "justify-self"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "baseline",
+      "center",
+      "end",
+      "flex-end",
+      "flex-start",
+      "inherit",
+      "initial",
+      "last baseline",
+      "left",
+      "normal",
+      "right",
+      "self-end",
+      "self-start",
+      "start",
+      "stretch",
       "unset"
     ]
   },

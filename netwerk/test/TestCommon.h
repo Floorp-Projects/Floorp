@@ -9,43 +9,42 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 
-inline int test_common_init(int *argc, char ***argv)
-{
-  return 0;
-}
-
 //-----------------------------------------------------------------------------
 
-static bool gKeepPumpingEvents = false;
-
-class nsQuitPumpingEvent final : public nsIRunnable {
-  ~nsQuitPumpingEvent() {}
+class WaitForCondition : public nsIRunnable
+{
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
+
+  void Wait(int pending)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mPending == 0);
+
+    mPending = pending;
+    while (mPending) {
+      NS_ProcessNextEvent();
+    }
+    NS_ProcessPendingEvents(nullptr);
+  }
+
+  void Notify() {
+    NS_DispatchToMainThread(this);
+  }
+
+private:
+  virtual ~WaitForCondition() { }
+
   NS_IMETHOD Run() override {
-    gKeepPumpingEvents = false;
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mPending);
+
+    --mPending;
     return NS_OK;
   }
+
+  uint32_t mPending = 0;
 };
-NS_IMPL_ISUPPORTS(nsQuitPumpingEvent, nsIRunnable)
-
-static inline void PumpEvents()
-{
-  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-
-  gKeepPumpingEvents = true;
-  while (gKeepPumpingEvents)
-    NS_ProcessNextEvent(thread);
-
-  NS_ProcessPendingEvents(thread);
-}
-
-static inline void QuitPumpingEvents()
-{
-  // Dispatch a task that toggles gKeepPumpingEvents so that we flush all
-  // of the pending tasks before exiting from PumpEvents.
-  nsCOMPtr<nsIRunnable> event = new nsQuitPumpingEvent();
-  NS_DispatchToMainThread(event);
-}
+NS_IMPL_ISUPPORTS(WaitForCondition, nsIRunnable)
 
 #endif

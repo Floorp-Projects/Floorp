@@ -2,7 +2,7 @@ protocol builtins {
 
     // sanity-check that "essential" builtins are being declared
 
-child: Msg(bool b,
+child: async Msg(bool b,
            char c,
            int i,
            long l,

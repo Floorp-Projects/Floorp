@@ -96,7 +96,6 @@ if test -n "$ios_sdk"; then
    MOZ_IOS_PATH_PROG(CC, clang, $ARGS)
    MOZ_IOS_PATH_PROG(CXX, clang++, $ARGS)
    export CPP="$CC -E"
-   export LD="$CXX"
    MOZ_IOS_PATH_PROG(AR)
    MOZ_IOS_PATH_PROG(AS, as, $ARGS)
    MOZ_IOS_PATH_PROG(OTOOL)

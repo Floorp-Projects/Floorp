@@ -52,6 +52,7 @@
 @media (max-width: 700px) {
   #toolbar-spacer,
   #details-pane-toggle,
+  #details-pane.pane-collapsed,
   .requests-menu-waterfall,
   #requests-menu-network-summary-button > .summary-info-text {
     display: none;

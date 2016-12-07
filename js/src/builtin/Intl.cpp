@@ -21,6 +21,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsobj.h"
+#include "jsstr.h"
 
 #include "builtin/IntlTimeZoneData.h"
 #if ENABLE_INTL_API
@@ -102,6 +103,18 @@ inline UChar*
 Char16ToUChar(char16_t* chars)
 {
     MOZ_CRASH("Char16ToUChar: Intl API disabled");
+}
+
+inline char16_t*
+UCharToChar16(UChar* chars)
+{
+    MOZ_CRASH("UCharToChar16: Intl API disabled");
+}
+
+inline const char16_t*
+UCharToChar16(const UChar* chars)
+{
+    MOZ_CRASH("UCharToChar16: Intl API disabled");
 }
 
 struct UEnumeration;
@@ -352,6 +365,27 @@ enum UCalendarDateFields {
     UCAL_DAY_OF_MONTH = UCAL_DATE
 };
 
+enum UCalendarMonths {
+  UCAL_JANUARY,
+  UCAL_FEBRUARY,
+  UCAL_MARCH,
+  UCAL_APRIL,
+  UCAL_MAY,
+  UCAL_JUNE,
+  UCAL_JULY,
+  UCAL_AUGUST,
+  UCAL_SEPTEMBER,
+  UCAL_OCTOBER,
+  UCAL_NOVEMBER,
+  UCAL_DECEMBER,
+  UCAL_UNDECIMBER
+};
+
+enum UCalendarAMPMs {
+  UCAL_AM,
+  UCAL_PM
+};
+
 UCalendar*
 ucal_open(const UChar* zoneID, int32_t len, const char* locale,
           UCalendarType type, UErrorCode* status)
@@ -416,6 +450,13 @@ ucal_getDefaultTimeZone(UChar* result, int32_t resultCapacity, UErrorCode* statu
     MOZ_CRASH("ucal_getDefaultTimeZone: Intl API disabled");
 }
 
+enum UDateTimePatternField {
+    UDATPG_YEAR_FIELD,
+    UDATPG_MONTH_FIELD,
+    UDATPG_WEEK_OF_YEAR_FIELD,
+    UDATPG_DAY_FIELD,
+};
+
 typedef void* UDateTimePatternGenerator;
 
 UDateTimePatternGenerator*
@@ -430,6 +471,14 @@ udatpg_getBestPattern(UDateTimePatternGenerator* dtpg, const UChar* skeleton,
                       UErrorCode* pErrorCode)
 {
     MOZ_CRASH("udatpg_getBestPattern: Intl API disabled");
+}
+
+static const UChar *
+udatpg_getAppendItemName(const UDateTimePatternGenerator *dtpg,
+                         UDateTimePatternField field,
+                         int32_t *pLength)
+{
+    MOZ_CRASH("udatpg_getAppendItemName: Intl API disabled");
 }
 
 void
@@ -484,8 +533,44 @@ enum UDateFormatField {
 };
 
 enum UDateFormatStyle {
+    UDAT_FULL,
+    UDAT_LONG,
+    UDAT_MEDIUM,
+    UDAT_SHORT,
+    UDAT_DEFAULT = UDAT_MEDIUM,
     UDAT_PATTERN = -2,
     UDAT_IGNORE = UDAT_PATTERN
+};
+
+enum UDateFormatSymbolType {
+    UDAT_ERAS,
+    UDAT_MONTHS,
+    UDAT_SHORT_MONTHS,
+    UDAT_WEEKDAYS,
+    UDAT_SHORT_WEEKDAYS,
+    UDAT_AM_PMS,
+    UDAT_LOCALIZED_CHARS,
+    UDAT_ERA_NAMES,
+    UDAT_NARROW_MONTHS,
+    UDAT_NARROW_WEEKDAYS,
+    UDAT_STANDALONE_MONTHS,
+    UDAT_STANDALONE_SHORT_MONTHS,
+    UDAT_STANDALONE_NARROW_MONTHS,
+    UDAT_STANDALONE_WEEKDAYS,
+    UDAT_STANDALONE_SHORT_WEEKDAYS,
+    UDAT_STANDALONE_NARROW_WEEKDAYS,
+    UDAT_QUARTERS,
+    UDAT_SHORT_QUARTERS,
+    UDAT_STANDALONE_QUARTERS,
+    UDAT_STANDALONE_SHORT_QUARTERS,
+    UDAT_SHORTER_WEEKDAYS,
+    UDAT_STANDALONE_SHORTER_WEEKDAYS,
+    UDAT_CYCLIC_YEARS_WIDE,
+    UDAT_CYCLIC_YEARS_ABBREVIATED,
+    UDAT_CYCLIC_YEARS_NARROW,
+    UDAT_ZODIAC_NAMES_WIDE,
+    UDAT_ZODIAC_NAMES_ABBREVIATED,
+    UDAT_ZODIAC_NAMES_NARROW
 };
 
 int32_t
@@ -560,6 +645,13 @@ udat_close(UDateFormat* format)
 }
 
 } // anonymous namespace
+
+static int32_t
+udat_getSymbols(const UDateFormat *fmt, UDateFormatSymbolType type, int32_t symbolIndex,
+                UChar *result, int32_t resultLength, UErrorCode *status)
+{
+    MOZ_CRASH("udat_getSymbols: Intl API disabled");
+}
 
 #endif
 
@@ -1026,10 +1118,10 @@ NewUCollator(JSContext* cx, HandleObject collator)
 
     if (!GetProperty(cx, internals, internals, cx->names().usage, &value))
         return nullptr;
-    JSAutoByteString usage(cx, value.toString());
+    JSLinearString* usage = value.toString()->ensureLinear(cx);
     if (!usage)
         return nullptr;
-    if (equal(usage, "search")) {
+    if (StringEqualsAscii(usage, "search")) {
         // ICU expects search as a Unicode locale extension on locale.
         // Unicode locale extensions must occur before private use extensions.
         const char* oldLocale = locale.ptr();
@@ -1057,6 +1149,8 @@ NewUCollator(JSContext* cx, HandleObject collator)
         memcpy(newLocale + index + insertLen, oldLocale + index, localeLen - index + 1); // '\0'
         locale.clear();
         locale.initBytes(newLocale);
+    } else {
+        MOZ_ASSERT(StringEqualsAscii(usage, "sort"));
     }
 
     // We don't need to look at the collation property - it can only be set
@@ -1065,18 +1159,18 @@ NewUCollator(JSContext* cx, HandleObject collator)
 
     if (!GetProperty(cx, internals, internals, cx->names().sensitivity, &value))
         return nullptr;
-    JSAutoByteString sensitivity(cx, value.toString());
+    JSLinearString* sensitivity = value.toString()->ensureLinear(cx);
     if (!sensitivity)
         return nullptr;
-    if (equal(sensitivity, "base")) {
+    if (StringEqualsAscii(sensitivity, "base")) {
         uStrength = UCOL_PRIMARY;
-    } else if (equal(sensitivity, "accent")) {
+    } else if (StringEqualsAscii(sensitivity, "accent")) {
         uStrength = UCOL_SECONDARY;
-    } else if (equal(sensitivity, "case")) {
+    } else if (StringEqualsAscii(sensitivity, "case")) {
         uStrength = UCOL_PRIMARY;
         uCaseLevel = UCOL_ON;
     } else {
-        MOZ_ASSERT(equal(sensitivity, "variant"));
+        MOZ_ASSERT(StringEqualsAscii(sensitivity, "variant"));
         uStrength = UCOL_TERTIARY;
     }
 
@@ -1098,15 +1192,15 @@ NewUCollator(JSContext* cx, HandleObject collator)
     if (!GetProperty(cx, internals, internals, cx->names().caseFirst, &value))
         return nullptr;
     if (!value.isUndefined()) {
-        JSAutoByteString caseFirst(cx, value.toString());
+        JSLinearString* caseFirst = value.toString()->ensureLinear(cx);
         if (!caseFirst)
             return nullptr;
-        if (equal(caseFirst, "upper"))
+        if (StringEqualsAscii(caseFirst, "upper"))
             uCaseFirst = UCOL_UPPER_FIRST;
-        else if (equal(caseFirst, "lower"))
+        else if (StringEqualsAscii(caseFirst, "lower"))
             uCaseFirst = UCOL_LOWER_FIRST;
         else
-            MOZ_ASSERT(equal(caseFirst, "false"));
+            MOZ_ASSERT(StringEqualsAscii(caseFirst, "false"));
     }
 
     UErrorCode status = U_ZERO_ERROR;
@@ -1508,11 +1602,11 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
 
     if (!GetProperty(cx, internals, internals, cx->names().style, &value))
         return nullptr;
-    JSAutoByteString style(cx, value.toString());
+    JSLinearString* style = value.toString()->ensureLinear(cx);
     if (!style)
         return nullptr;
 
-    if (equal(style, "currency")) {
+    if (StringEqualsAscii(style, "currency")) {
         if (!GetProperty(cx, internals, internals, cx->names().currency, &value))
             return nullptr;
         currency = value.toString();
@@ -1525,21 +1619,21 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
 
         if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay, &value))
             return nullptr;
-        JSAutoByteString currencyDisplay(cx, value.toString());
+        JSLinearString* currencyDisplay = value.toString()->ensureLinear(cx);
         if (!currencyDisplay)
             return nullptr;
-        if (equal(currencyDisplay, "code")) {
+        if (StringEqualsAscii(currencyDisplay, "code")) {
             uStyle = UNUM_CURRENCY_ISO;
-        } else if (equal(currencyDisplay, "symbol")) {
+        } else if (StringEqualsAscii(currencyDisplay, "symbol")) {
             uStyle = UNUM_CURRENCY;
         } else {
-            MOZ_ASSERT(equal(currencyDisplay, "name"));
+            MOZ_ASSERT(StringEqualsAscii(currencyDisplay, "name"));
             uStyle = UNUM_CURRENCY_PLURAL;
         }
-    } else if (equal(style, "percent")) {
+    } else if (StringEqualsAscii(style, "percent")) {
         uStyle = UNUM_PERCENT;
     } else {
-        MOZ_ASSERT(equal(style, "decimal"));
+        MOZ_ASSERT(StringEqualsAscii(style, "decimal"));
         uStyle = UNUM_DECIMAL;
     }
 
@@ -2077,7 +2171,7 @@ js::SharedIntlData::TimeZoneHasher::match(TimeZoneName key, const Lookup& lookup
 static bool
 IsLegacyICUTimeZone(const char* timeZone)
 {
-    for (const auto& legacyTimeZone : timezone::legacyICUTimeZones) {
+    for (const auto& legacyTimeZone : js::timezone::legacyICUTimeZones) {
         if (equal(timeZone, legacyTimeZone))
             return true;
     }
@@ -2919,6 +3013,296 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setObject(*info);
+    return true;
+}
+
+template<size_t N>
+inline bool
+MatchPart(const char** pattern, const char (&part)[N])
+{
+    if (strncmp(*pattern, part, N - 1))
+        return false;
+
+    *pattern += N - 1;
+    return true;
+}
+
+bool
+js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 3);
+    // 1. Assert: locale is a string.
+    MOZ_ASSERT(args[0].isString());
+    // 2. Assert: style is a string.
+    MOZ_ASSERT(args[1].isString());
+    // 3. Assert: keys is an Array.
+    MOZ_ASSERT(args[2].isObject());
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+
+    JSAutoByteString style(cx, args[1].toString());
+    if (!style)
+        return false;
+
+    RootedArrayObject keys(cx, &args[2].toObject().as<ArrayObject>());
+    if (!keys)
+        return false;
+
+    // 4. Let result be ArrayCreate(0).
+    RootedArrayObject result(cx, NewDenseUnallocatedArray(cx, keys->length()));
+    if (!result)
+        return false;
+
+    UErrorCode status = U_ZERO_ERROR;
+
+    UDateFormat* fmt =
+        udat_open(UDAT_DEFAULT, UDAT_DEFAULT, icuLocale(locale.ptr()),
+        nullptr, 0, nullptr, 0, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedICUObject<UDateFormat, udat_close> datToClose(fmt);
+
+    // UDateTimePatternGenerator will be needed for translations of date and
+    // time fields like "month", "week", "day" etc.
+    UDateTimePatternGenerator* dtpg = udatpg_open(icuLocale(locale.ptr()), &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedICUObject<UDateTimePatternGenerator, udatpg_close> datPgToClose(dtpg);
+
+    RootedValue keyValue(cx);
+    RootedString keyValStr(cx);
+    RootedValue wordVal(cx);
+    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
+        return false;
+
+    // 5. For each element of keys,
+    for (uint32_t i = 0; i < keys->length(); i++) {
+        /**
+         * We iterate over keys array looking for paths that we have code
+         * branches for.
+         *
+         * For any unknown path branch, the wordVal will keep NullValue and
+         * we'll throw at the end.
+         */
+
+        if (!GetElement(cx, keys, keys, i, &keyValue))
+            return false;
+
+        JSAutoByteString pattern;
+        keyValStr = keyValue.toString();
+        if (!pattern.encodeUtf8(cx, keyValStr))
+            return false;
+
+        wordVal.setNull();
+
+        // 5.a. Perform an implementation dependent algorithm to map a key to a
+        //      corresponding display name.
+        const char* pat = pattern.ptr();
+
+        if (!MatchPart(&pat, "dates")) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            return false;
+        }
+
+        if (!MatchPart(&pat, "/")) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            return false;
+        }
+
+        if (MatchPart(&pat, "fields")) {
+            if (!MatchPart(&pat, "/")) {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return false;
+            }
+
+            UDateTimePatternField fieldType;
+
+            if (MatchPart(&pat, "year")) {
+                fieldType = UDATPG_YEAR_FIELD;
+            } else if (MatchPart(&pat, "month")) {
+                fieldType = UDATPG_MONTH_FIELD;
+            } else if (MatchPart(&pat, "week")) {
+                fieldType = UDATPG_WEEK_OF_YEAR_FIELD;
+            } else if (MatchPart(&pat, "day")) {
+                fieldType = UDATPG_DAY_FIELD;
+            } else {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return false;
+            }
+
+            // This part must be the final part with no trailing data.
+            if (*pat != '\0') {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return false;
+            }
+
+            int32_t resultSize;
+
+            const UChar* value = udatpg_getAppendItemName(dtpg, fieldType, &resultSize);
+            if (U_FAILURE(status)) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+                return false;
+            }
+
+            JSString* word = NewStringCopyN<CanGC>(cx, UCharToChar16(value), resultSize);
+            if (!word)
+                return false;
+
+            wordVal.setString(word);
+        } else if (MatchPart(&pat, "gregorian")) {
+            if (!MatchPart(&pat, "/")) {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return false;
+            }
+
+            UDateFormatSymbolType symbolType;
+            int32_t index;
+
+            if (MatchPart(&pat, "months")) {
+                if (!MatchPart(&pat, "/")) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                    return false;
+                }
+
+                if (equal(style, "narrow")) {
+                    symbolType = UDAT_STANDALONE_NARROW_MONTHS;
+                } else if (equal(style, "short")) {
+                    symbolType = UDAT_STANDALONE_SHORT_MONTHS;
+                } else {
+                    MOZ_ASSERT(equal(style, "long"));
+                    symbolType = UDAT_STANDALONE_MONTHS;
+                }
+
+                if (MatchPart(&pat, "january")) {
+                    index = UCAL_JANUARY;
+                } else if (MatchPart(&pat, "february")) {
+                    index = UCAL_FEBRUARY;
+                } else if (MatchPart(&pat, "march")) {
+                    index = UCAL_MARCH;
+                } else if (MatchPart(&pat, "april")) {
+                    index = UCAL_APRIL;
+                } else if (MatchPart(&pat, "may")) {
+                    index = UCAL_MAY;
+                } else if (MatchPart(&pat, "june")) {
+                    index = UCAL_JUNE;
+                } else if (MatchPart(&pat, "july")) {
+                    index = UCAL_JULY;
+                } else if (MatchPart(&pat, "august")) {
+                    index = UCAL_AUGUST;
+                } else if (MatchPart(&pat, "september")) {
+                    index = UCAL_SEPTEMBER;
+                } else if (MatchPart(&pat, "october")) {
+                    index = UCAL_OCTOBER;
+                } else if (MatchPart(&pat, "november")) {
+                    index = UCAL_NOVEMBER;
+                } else if (MatchPart(&pat, "december")) {
+                    index = UCAL_DECEMBER;
+                } else {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                    return false;
+                }
+            } else if (MatchPart(&pat, "weekdays")) {
+                if (!MatchPart(&pat, "/")) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                    return false;
+                }
+
+                if (equal(style, "narrow")) {
+                    symbolType = UDAT_STANDALONE_NARROW_WEEKDAYS;
+                } else if (equal(style, "short")) {
+                    symbolType = UDAT_STANDALONE_SHORT_WEEKDAYS;
+                } else {
+                    MOZ_ASSERT(equal(style, "long"));
+                    symbolType = UDAT_STANDALONE_WEEKDAYS;
+                }
+
+                if (MatchPart(&pat, "monday")) {
+                    index = UCAL_MONDAY;
+                } else if (MatchPart(&pat, "tuesday")) {
+                    index = UCAL_TUESDAY;
+                } else if (MatchPart(&pat, "wednesday")) {
+                    index = UCAL_WEDNESDAY;
+                } else if (MatchPart(&pat, "thursday")) {
+                    index = UCAL_THURSDAY;
+                } else if (MatchPart(&pat, "friday")) {
+                    index = UCAL_FRIDAY;
+                } else if (MatchPart(&pat, "saturday")) {
+                    index = UCAL_SATURDAY;
+                } else if (MatchPart(&pat, "sunday")) {
+                    index = UCAL_SUNDAY;
+                } else {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                    return false;
+                }
+            } else if (MatchPart(&pat, "dayperiods")) {
+                if (!MatchPart(&pat, "/")) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                    return false;
+                }
+
+                symbolType = UDAT_AM_PMS;
+
+                if (MatchPart(&pat, "am")) {
+                    index = UCAL_AM;
+                } else if (MatchPart(&pat, "pm")) {
+                    index = UCAL_PM;
+                } else {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                    return false;
+                }
+            } else {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return false;
+            }
+
+            // This part must be the final part with no trailing data.
+            if (*pat != '\0') {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+                return false;
+            }
+
+            int32_t resultSize =
+                udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
+                                INITIAL_CHAR_BUFFER_SIZE, &status);
+            if (status == U_BUFFER_OVERFLOW_ERROR) {
+                if (!chars.resize(resultSize))
+                    return false;
+                status = U_ZERO_ERROR;
+                udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
+                                resultSize, &status);
+            }
+            if (U_FAILURE(status)) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+                return false;
+            }
+
+            JSString* word = NewStringCopyN<CanGC>(cx, chars.begin(), resultSize);
+            if (!word)
+                return false;
+
+            wordVal.setString(word);
+        } else {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY, pattern.ptr());
+            return false;
+        }
+
+        MOZ_ASSERT(wordVal.isString());
+
+        // 5.b. Append the result string to result.
+        if (!DefineElement(cx, result, i, wordVal))
+            return false;
+    }
+
+    // 6. Return result.
+    args.rval().setObject(*result);
     return true;
 }
 

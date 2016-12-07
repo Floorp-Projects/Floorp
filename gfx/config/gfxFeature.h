@@ -6,10 +6,10 @@
 #ifndef mozilla_gfx_config_gfxFeature_h
 #define mozilla_gfx_config_gfxFeature_h
 
+#include <functional>
 #include <stdint.h>
 #include "gfxTelemetry.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Function.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -64,9 +64,9 @@ class FeatureState
 
   // aType is "base", "user", "env", or "runtime".
   // aMessage may be null.
-  typedef mozilla::function<void(const char* aType,
-                                 FeatureStatus aStatus,
-                                 const char* aMessage)> StatusIterCallback;
+  typedef std::function<void(const char* aType,
+                             FeatureStatus aStatus,
+                             const char* aMessage)> StatusIterCallback;
   void ForEachStatusChange(const StatusIterCallback& aCallback) const;
 
   const char* GetFailureMessage() const;

@@ -59,7 +59,7 @@ function startTest()
   runNextTest.next();
 }
 
-function nextTest()
+function* nextTest()
 {
   var panel = $("panel");
 
@@ -211,7 +211,6 @@ function nextTest()
   }
 
   SimpleTest.finish()
-  yield;
 }
 
 function setScale(win, scale)

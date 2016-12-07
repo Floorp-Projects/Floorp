@@ -918,7 +918,7 @@ nsTSubstring_CharT::AppendPrintf(const char* aFormat, ...)
   va_start(ap, aFormat);
   uint32_t r = PR_vsxprintf(AppendFunc, this, aFormat, ap);
   if (r == (uint32_t)-1) {
-    NS_RUNTIMEABORT("Allocation or other failure in PR_vsxprintf");
+    MOZ_CRASH("Allocation or other failure in PR_vsxprintf");
   }
   va_end(ap);
 }
@@ -928,7 +928,7 @@ nsTSubstring_CharT::AppendPrintf(const char* aFormat, va_list aAp)
 {
   uint32_t r = PR_vsxprintf(AppendFunc, this, aFormat, aAp);
   if (r == (uint32_t)-1) {
-    NS_RUNTIMEABORT("Allocation or other failure in PR_vsxprintf");
+    MOZ_CRASH("Allocation or other failure in PR_vsxprintf");
   }
 }
 

@@ -207,6 +207,8 @@ public abstract class GeckoApp
 
     private int lastSelectedTabId = -1;
 
+    private boolean foregrounded = false;
+
     private static final class LastSessionParser extends SessionParser {
         private JSONArray tabs;
         private JSONObject windowObject;
@@ -1488,10 +1490,11 @@ public abstract class GeckoApp
      * If we've temporarily disabled restoring to break out of a crash loop, we'll show
      * the Recent Tabs folder of the Combined History panel, so the user can manually
      * restore tabs as needed.
-     * If we restore tabs, we don't need to create a new tab.
+     * If we restore tabs, we don't need to create a new tab, unless launch intent specify action
+     * to be #android.Intent.ACTION_VIEW, which is launched from widget to create a new tab.
      */
-    protected void loadStartupTab(final int flags) {
-        if (!mShouldRestore) {
+    protected void loadStartupTab(final int flags, String action) {
+        if (!mShouldRestore || Intent.ACTION_VIEW.equals(action)) {
             if (mLastSessionCrashed) {
                 // The Recent Tabs panel no longer exists, but BrowserApp will redirect us
                 // to the Recent Tabs folder of the Combined History panel.
@@ -1514,7 +1517,7 @@ public abstract class GeckoApp
     protected void loadStartupTab(final String url, final SafeIntent intent, final int flags) {
         // Invalid url
         if (url == null) {
-            loadStartupTab(flags);
+            loadStartupTab(flags, intent.getAction());
             return;
         }
 
@@ -1596,7 +1599,7 @@ public abstract class GeckoApp
             });
         } else {
             if (!mIsRestoringActivity) {
-                loadStartupTab(Tabs.LOADURL_NEW_TAB);
+                loadStartupTab(Tabs.LOADURL_NEW_TAB, action);
             }
 
             Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
@@ -2070,6 +2073,11 @@ public abstract class GeckoApp
     }
 
     @Override
+    public boolean isForegrounded() {
+        return foregrounded;
+    }
+
+    @Override
     public void onResume()
     {
         // After an onPause, the activity is back in the foreground.
@@ -2078,6 +2086,8 @@ public abstract class GeckoApp
         if (mIsAbortingAppLaunch) {
             return;
         }
+
+        foregrounded = true;
 
         GeckoAppShell.setGeckoInterface(this);
 
@@ -2158,6 +2168,8 @@ public abstract class GeckoApp
             super.onPause();
             return;
         }
+
+        foregrounded = false;
 
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         if (selectedTab != null) {

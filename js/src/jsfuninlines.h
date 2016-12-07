@@ -16,7 +16,7 @@ namespace js {
 inline const char*
 GetFunctionNameBytes(JSContext* cx, JSFunction* fun, JSAutoByteString* bytes)
 {
-    if (JSAtom* name = fun->name())
+    if (JSAtom* name = fun->explicitName())
         return bytes->encodeLatin1(cx, name);
     return js_anonymous_str;
 }
@@ -88,7 +88,7 @@ CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObjec
     if (CanReuseScriptForClone(cx->compartment(), fun, parent))
         return CloneFunctionReuseScript(cx, fun, parent, kind, newKind, proto);
 
-    RootedScript script(cx, fun->getOrCreateScript(cx));
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
     if (!script)
         return nullptr;
     RootedScope enclosingScope(cx, script->enclosingScope());

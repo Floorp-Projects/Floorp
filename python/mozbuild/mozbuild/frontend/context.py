@@ -952,6 +952,13 @@ VARIABLES = {
         a Cargo.toml file that exists in this moz.build's directory.
         """),
 
+    'RUST_LIBRARY_FEATURES': (List, list,
+        """Cargo features to activate for this library.
+
+        This variable should not be used directly; you should be using the
+        RustLibrary template instead.
+        """),
+
     'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files that can be compiled together.
 
@@ -1341,6 +1348,20 @@ VARIABLES = {
         If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will
         be automatically appended to each name. If a name already ends with
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
+        """),
+
+    'RUST_PROGRAMS': (StrictOrderingOnAppendList, list,
+        """Compile a list of Rust host executable names.
+
+        Each name in this variable corresponds to an executable built from
+        the Cargo.toml in the same directory.
+        """),
+
+    'HOST_RUST_PROGRAMS': (StrictOrderingOnAppendList, list,
+        """Compile a list of Rust executable names.
+
+        Each name in this variable corresponds to an executable built from
+        the Cargo.toml in the same directory.
         """),
 
     'CONFIGURE_SUBST_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,

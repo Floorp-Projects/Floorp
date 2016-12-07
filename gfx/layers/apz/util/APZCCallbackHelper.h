@@ -9,9 +9,10 @@
 #include "FrameMetrics.h"
 #include "InputData.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/Function.h"
 #include "mozilla/layers/APZUtils.h"
 #include "nsIDOMWindowUtils.h"
+
+#include <functional>
 
 class nsIContent;
 class nsIDocument;
@@ -24,7 +25,7 @@ template<class T> class nsCOMPtr;
 namespace mozilla {
 namespace layers {
 
-typedef function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
+typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
         SetAllowedTouchBehaviorCallback;
 
 /* This class contains some helper methods that facilitate implementing the

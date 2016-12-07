@@ -1250,27 +1250,29 @@ var BrowserApp = {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
       let closedTabData = ss.getClosedTabs(window)[0];
 
-      let message;
-      let title = closedTabData.entries[closedTabData.index - 1].title;
-      let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aTab.browser);
+      if (closedTabData) {
+        let message;
+        let title = closedTabData.entries[closedTabData.index - 1].title;
+        let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aTab.browser);
 
-      if (isPrivate) {
-        message = Strings.browser.GetStringFromName("privateClosedMessage.message");
-      } else if (title) {
-        message = Strings.browser.formatStringFromName("undoCloseToast.message", [title], 1);
-      } else {
-        message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
-      }
-
-      Snackbars.show(message, Snackbars.LENGTH_LONG, {
-        action: {
-          label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
-          callback: function() {
-            UITelemetry.addEvent("undo.1", "toast", null, "closetab");
-            ss.undoCloseTab(window, closedTabData);
-          }
+        if (isPrivate) {
+          message = Strings.browser.GetStringFromName("privateClosedMessage.message");
+        } else if (title) {
+          message = Strings.browser.formatStringFromName("undoCloseToast.message", [title], 1);
+        } else {
+          message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
         }
-      });
+
+        Snackbars.show(message, Snackbars.LENGTH_LONG, {
+          action: {
+            label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
+            callback: function() {
+              UITelemetry.addEvent("undo.1", "toast", null, "closetab");
+              ss.undoCloseTab(window, closedTabData);
+            }
+          }
+        });
+      }
     }
 
     aTab.destroy();
@@ -2038,7 +2040,7 @@ var BrowserApp = {
       // intl.accept_languages is a comma-separated list, with no q-value params. Those
       // are added when the header is generated.
       chosen = defaultAccept.split(",")
-                            .map(String.trim)
+                            .map((x) => x.trim())
                             .filter((x) => (x != appLocale && x != osLocale));
     } else {
       chosen = [];
@@ -3493,7 +3495,8 @@ Tab.prototype = {
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
         tabIndex: ("tabIndex" in aParams) ? aParams.tabIndex : -1,
         external: ("external" in aParams) ? aParams.external : false,
-        selected: ("selected" in aParams || aParams.cancelEditMode === true) ? aParams.selected : true,
+        selected: ("selected" in aParams || aParams.cancelEditMode === true)
+                  ? aParams.selected !== false || aParams.cancelEditMode === true : true,
         cancelEditMode: aParams.cancelEditMode === true,
         title: truncate(title, MAX_TITLE_LENGTH),
         delayLoad: aParams.delayLoad || false,
@@ -3528,6 +3531,7 @@ Tab.prototype = {
     this.browser.addEventListener("pageshow", this, true);
     this.browser.addEventListener("MozApplicationManifest", this, true);
     this.browser.addEventListener("TabPreZombify", this, true);
+    this.browser.addEventListener("DOMServiceWorkerFocusClient", this, true);
 
     // Note that the XBL binding is untrusted
     this.browser.addEventListener("PluginBindingAttached", this, true, true);
@@ -3640,6 +3644,7 @@ Tab.prototype = {
     this.browser.removeEventListener("pageshow", this, true);
     this.browser.removeEventListener("MozApplicationManifest", this, true);
     this.browser.removeEventListener("TabPreZombify", this, true);
+    this.browser.removeEventListener("DOMServiceWorkerFocusClient", this, true);
 
     this.browser.removeEventListener("PluginBindingAttached", this, true, true);
     this.browser.removeEventListener("VideoBindingAttached", this, true, true);
@@ -4074,6 +4079,14 @@ Tab.prototype = {
 
       case "MozApplicationManifest": {
         OfflineApps.offlineAppRequested(aEvent.originalTarget.defaultView);
+        break;
+      }
+
+      case "DOMServiceWorkerFocusClient": {
+        Messaging.sendRequest({
+          type: "Tab:SelectAndForeground",
+          tabID: this.id
+        });
         break;
       }
 
@@ -6884,9 +6897,14 @@ var Tabs = {
 };
 
 function ContextMenuItem(args) {
-  this.id = uuidgen.generateUUID().toString();
+  this.id = ContextMenuItem._nextId;
   this.args = args;
+
+  // Limit to Java int range.
+  ContextMenuItem._nextId = (ContextMenuItem._nextId + 1) & 0x7fffffff;
 }
+
+ContextMenuItem._nextId = 1;
 
 ContextMenuItem.prototype = {
   get order() {

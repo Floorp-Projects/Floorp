@@ -2856,7 +2856,7 @@ public:
     return mHasScrollLinkedEffect;
   }
 
-  mozilla::dom::DocGroup* GetDocGroup();
+  mozilla::dom::DocGroup* GetDocGroup() const;
 
   virtual void AddIntersectionObserver(
     mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
@@ -2873,8 +2873,13 @@ public:
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
   virtual already_AddRefed<nsIEventTarget>
-  CreateEventTarget(const char* aName,
-                    mozilla::dom::TaskCategory aCategory) override;
+  EventTargetFor(mozilla::dom::TaskCategory aCategory) const override;
+
+  // The URLs passed to these functions should match what
+  // JS::DescribeScriptedCaller() returns, since these APIs are used to
+  // determine whether some code is being called from a tracking script.
+  void NoteScriptTrackingStatus(const nsACString& aURL, bool isTracking);
+  bool IsScriptTracking(const nsACString& aURL) const;
 
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
@@ -3023,6 +3028,10 @@ protected:
   // Our readyState
   ReadyState mReadyState;
 
+  // Whether this document has (or will have, once we have a pres shell) a
+  // Gecko- or Servo-backed style system.
+  mozilla::StyleBackendType mStyleBackendType;
+
 #ifdef MOZILLA_INTERNAL_API
   // Our visibility state
   mozilla::dom::VisibilityState mVisibilityState;
@@ -3030,10 +3039,6 @@ protected:
 #else
   uint32_t mDummy;
 #endif
-
-  // Whether this document has (or will have, once we have a pres shell) a
-  // Gecko- or Servo-backed style system.
-  mozilla::StyleBackendType mStyleBackendType;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
@@ -3334,6 +3339,11 @@ protected:
   mozilla::TimeStamp mPageUnloadingEventTimeStamp;
 
   RefPtr<mozilla::dom::DocGroup> mDocGroup;
+
+  // The set of all the tracking script URLs.  URLs are added to this set by
+  // calling NoteScriptTrackingStatus().  Currently we assume that a URL not
+  // existing in the set means the corresponding script isn't a tracking script.
+  nsTHashtable<nsCStringHashKey> mTrackingScripts;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

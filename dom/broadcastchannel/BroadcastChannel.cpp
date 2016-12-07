@@ -93,11 +93,6 @@ public:
       return true;
     }
 
-    if (NS_WARN_IF(principal->GetIsNullPrincipal())) {
-      mRv.Throw(NS_ERROR_FAILURE);
-      return true;
-    }
-
     mRv = PrincipalToPrincipalInfo(principal, &mPrincipalInfo);
     if (NS_WARN_IF(mRv.Failed())) {
       return true;
@@ -320,11 +315,6 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     nsIPrincipal* principal = incumbent->PrincipalOrNull();
     if (!principal) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-
-    if (NS_WARN_IF(principal->GetIsNullPrincipal())) {
-      aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 

@@ -9,7 +9,8 @@
          JSMSG_INVALID_OPTION_VALUE: false, JSMSG_INVALID_DIGITS_VALUE: false,
          JSMSG_INTL_OBJECT_REINITED: false, JSMSG_INVALID_CURRENCY_CODE: false,
          JSMSG_UNDEFINED_CURRENCY: false, JSMSG_INVALID_TIME_ZONE: false,
-         JSMSG_DATE_NOT_FINITE: false,
+         JSMSG_DATE_NOT_FINITE: false, JSMSG_INVALID_KEYS_TYPE: false,
+         JSMSG_INVALID_KEY: false,
          intl_Collator_availableLocales: false,
          intl_availableCollations: false,
          intl_CompareStrings: false,
@@ -3004,3 +3005,126 @@ function Intl_getCalendarInfo(locales) {
 
   return result;
 }
+
+/**
+ * This function is a custom method designed after Intl API, but currently
+ * not part of the spec or spec proposal.
+ * We want to use it internally to retrieve translated values from CLDR in
+ * order to ensure they're aligned with what Intl API returns.
+ *
+ * This API may one day be a foundation for an ECMA402 API spec proposal.
+ *
+ * The function takes two arguments - locales which is a list of locale strings
+ * and options which is an object with two optional properties:
+ *
+ *   keys:
+ *     an Array of string values that are paths to individual terms
+ *
+ *   style:
+ *     a String with a value "long", "short" or "narrow"
+ *
+ * It returns an object with properties:
+ *
+ *   locale:
+ *     a negotiated locale string
+ *
+ *   style:
+ *     negotiated style
+ *
+ *   values:
+ *     A key-value pair list of requested keys and corresponding
+ *     translated values
+ *
+ */
+function Intl_getDisplayNames(locales, options) {
+    // 1. Let requestLocales be ? CanonicalizeLocaleList(locales).
+    const requestedLocales = CanonicalizeLocaleList(locales);
+
+    // 2. If options is undefined, then
+    if (options === undefined)
+        // a. Let options be ObjectCreate(%ObjectPrototype%).
+        options = {};
+    // 3. Else,
+    else
+        // a. Let options be ? ToObject(options).
+        options = ToObject(options);
+
+    const DateTimeFormat = dateTimeFormatInternalProperties;
+
+    // 4. Let localeData be %DateTimeFormat%.[[localeData]].
+    const localeData = DateTimeFormat.localeData;
+
+    // 5. Let opt be a new Record.
+    const localeOpt = new Record();
+    // 6. Set localeOpt.[[localeMatcher]] to "best fit".
+    localeOpt.localeMatcher = "best fit";
+
+    // 7. Let r be ResolveLocale(%DateTimeFormat%.[[availableLocales]], requestedLocales, localeOpt,
+    //    %DateTimeFormat%.[[relevantExtensionKeys]], localeData).
+    const r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
+                          requestedLocales,
+                          localeOpt,
+                          DateTimeFormat.relevantExtensionKeys,
+                          localeData);
+
+    // 8. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
+    const style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
+    // 9. Let keys be ? Get(options, "keys").
+    let keys = options.keys;
+
+    // 10. If keys is undefined,
+    if (keys === undefined) {
+        // a. Let keys be ArrayCreate(0).
+        keys = [];
+    } else if (!IsObject(keys)) {
+        // 11. Else,
+        //   a. If Type(keys) is not Object, throw a TypeError exception.
+        ThrowTypeError(JSMSG_INVALID_KEYS_TYPE);
+    }
+
+    // 12. Let processedKeys be ArrayCreate(0).
+    // (This really should be a List, but we use an Array here in order that
+    // |intl_ComputeDisplayNames| may infallibly access the list's length via
+    // |ArrayObject::length|.)
+    let processedKeys = [];
+    // 13. Let len be ? ToLength(? Get(keys, "length")).
+    let len = ToLength(keys.length);
+    // 14. Let i be 0.
+    // 15. Repeat, while i < len
+    for (let i = 0; i < len; i++) {
+        // a. Let processedKey be ? ToString(? Get(keys, i)).
+        // b. Perform ? CreateDataPropertyOrThrow(processedKeys, i, processedKey).
+        callFunction(std_Array_push, processedKeys, ToString(keys[i]));
+    }
+
+    // 16. Let names be ? ComputeDisplayNames(r.[[locale]], style, processedKeys).
+    const names = intl_ComputeDisplayNames(r.locale, style, processedKeys);
+
+    // 17. Let values be ObjectCreate(%ObjectPrototype%).
+    const values = {};
+
+    // 18. Set i to 0.
+    // 19. Repeat, while i < len
+    for (let i = 0; i < len; i++) {
+        // a. Let key be ? Get(processedKeys, i).
+        const key = processedKeys[i];
+        // b. Let name be ? Get(names, i).
+        const name = names[i];
+        // c. Assert: Type(name) is string.
+        assert(typeof name === "string", "unexpected non-string value");
+        // d. Assert: the length of name is greater than zero.
+        assert(name.length > 0, "empty string value");
+        // e. Perform ? DefinePropertyOrThrow(values, key, name).
+        _DefineDataProperty(values, key, name);
+    }
+
+    // 20. Let options be ObjectCreate(%ObjectPrototype%).
+    // 21. Perform ! DefinePropertyOrThrow(result, "locale", r.[[locale]]).
+    // 22. Perform ! DefinePropertyOrThrow(result, "style", style).
+    // 23. Perform ! DefinePropertyOrThrow(result, "values", values).
+    const result = { locale: r.locale, style, values };
+
+    // 24. Return result.
+    return result;
+}
+

@@ -17,7 +17,7 @@
     }
 
     function grabEventAndContinueHandler(event) {
-      testGenerator.send(event);
+      testGenerator.next(event);
     }
 
     function errorHandler(event) {
@@ -29,7 +29,7 @@
       // Let window.onerror have a chance to fire
       setTimeout(function() {
         setTimeout(function() {
-          testGenerator.close();
+          testGenerator.return();
           ok(windowErrorCount == 1, "Good window.onerror count");
           window.parent.postMessage("SimpleTest.finish();", "*");
         }, 0);
@@ -86,7 +86,7 @@
       }
     }
 
-    function testSteps() {
+    function* testSteps() {
       window.parent.SpecialPowers.addPermission("indexedDB", true, document);
 
       let request = indexedDB.open(window.location.pathname, 1);

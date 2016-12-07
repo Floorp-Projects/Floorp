@@ -167,7 +167,7 @@ PageAction.prototype = {
         const menu = event.target;
         const trigger = menu.triggerNode;
 
-        if (menu.localName === "menupopup" && trigger && trigger.id === this.id) {
+        if (menu.id === "toolbar-context-menu" && trigger && trigger.id === this.id) {
           global.actionContextMenu({
             extension: this.extension,
             onPageAction: true,

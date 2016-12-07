@@ -6,7 +6,7 @@ protocol managerProtocol {
     manages managedProtocol;
 
 parent:
-    managedProtocol(int i);
+    async managedProtocol(int i);
 
 state CREATING:
     recv managedProtocol goto CREATING;

@@ -303,13 +303,13 @@ public:
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override
   {
-    NS_RUNTIMEABORT("should not be called");
+    MOZ_CRASH("should not be called");
   }
 
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
                                    const nsIntRegion& aUpdatedRegion) override {
-    NS_RUNTIMEABORT("should not be called");
+    MOZ_CRASH("should not be called");
   }
 
   // ISurfaceAllocator

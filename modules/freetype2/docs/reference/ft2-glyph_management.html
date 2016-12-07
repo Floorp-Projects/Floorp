@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Glyph Management</h1>
+<h1 id="glyph_management">Glyph Management</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Glyph">FT_Glyph</a></td><td><a href="#FT_OutlineGlyphRec">FT_OutlineGlyphRec</a></td><td><a href="#FT_Glyph_Get_CBox">FT_Glyph_Get_CBox</a></td></tr>
@@ -117,7 +117,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph">FT_Glyph</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_GlyphRec_*  <b>FT_Glyph</b>;
 </pre>
@@ -132,7 +132,7 @@
 
 <div class="section">
 <h3 id="FT_GlyphRec">FT_GlyphRec</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_GlyphRec_
   {
@@ -167,7 +167,7 @@
 
 <div class="section">
 <h3 id="FT_BitmapGlyph">FT_BitmapGlyph</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_BitmapGlyphRec_*  <b>FT_BitmapGlyph</b>;
 </pre>
@@ -179,7 +179,7 @@
 
 <div class="section">
 <h3 id="FT_BitmapGlyphRec">FT_BitmapGlyphRec</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_BitmapGlyphRec_
   {
@@ -218,7 +218,7 @@
 
 <div class="section">
 <h3 id="FT_OutlineGlyph">FT_OutlineGlyph</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_OutlineGlyphRec_*  <b>FT_OutlineGlyph</b>;
 </pre>
@@ -230,7 +230,7 @@
 
 <div class="section">
 <h3 id="FT_OutlineGlyphRec">FT_OutlineGlyphRec</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_OutlineGlyphRec_
   {
@@ -262,7 +262,7 @@
 
 <div class="section">
 <h3 id="FT_Get_Glyph">FT_Get_Glyph</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_Glyph</b>( <a href="ft2-base_interface.html#FT_GlyphSlot">FT_GlyphSlot</a>  slot,
@@ -293,7 +293,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_Copy">FT_Glyph_Copy</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Glyph_Copy</b>( <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>   source,
@@ -324,7 +324,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_Transform">FT_Glyph_Transform</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Glyph_Transform</b>( <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>    glyph,
@@ -362,7 +362,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_BBox_Mode">FT_Glyph_BBox_Mode</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Glyph_BBox_Mode_
   {
@@ -410,7 +410,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_Get_CBox">FT_Glyph_Get_CBox</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_Glyph_Get_CBox</b>( <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>  glyph,
@@ -444,15 +444,15 @@
 <p>If the font is tricky and the glyph has been loaded with <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_SCALE</a>, the resulting CBox is meaningless. To get reasonable values for the CBox it is necessary to load the glyph at a large ppem value (so that the hinting instructions can properly shift and scale the subglyphs), then extracting the CBox, which can be eventually converted back to font units.</p>
 <p>Note that the maximum coordinates are exclusive, which means that one can compute the width and height of the glyph image (be it in integer or 26.6 pixels) as:</p>
 <pre class="colored">
-  width  = bbox.xMax - bbox.xMin;                                  
-  height = bbox.yMax - bbox.yMin;                                  
+  width  = bbox.xMax - bbox.xMin;
+  height = bbox.yMax - bbox.yMin;
 </pre>
 <p>Note also that for 26.6 coordinates, if &lsquo;bbox_mode&rsquo; is set to <a href="ft2-glyph_management.html#FT_Glyph_BBox_Mode">FT_GLYPH_BBOX_GRIDFIT</a>, the coordinates will also be grid-fitted, which corresponds to:</p>
 <pre class="colored">
-  bbox.xMin = FLOOR(bbox.xMin);                                    
-  bbox.yMin = FLOOR(bbox.yMin);                                    
-  bbox.xMax = CEILING(bbox.xMax);                                  
-  bbox.yMax = CEILING(bbox.yMax);                                  
+  bbox.xMin = FLOOR(bbox.xMin);
+  bbox.yMin = FLOOR(bbox.yMin);
+  bbox.xMax = CEILING(bbox.xMax);
+  bbox.yMax = CEILING(bbox.yMax);
 </pre>
 <p>To get the bbox in pixel coordinates, set &lsquo;bbox_mode&rsquo; to <a href="ft2-glyph_management.html#FT_Glyph_BBox_Mode">FT_GLYPH_BBOX_TRUNCATE</a>.</p>
 <p>To get the bbox in grid-fitted pixel coordinates, set &lsquo;bbox_mode&rsquo; to <a href="ft2-glyph_management.html#FT_Glyph_BBox_Mode">FT_GLYPH_BBOX_PIXELS</a>.</p>
@@ -462,7 +462,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_To_Bitmap">FT_Glyph_To_Bitmap</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Glyph_To_Bitmap</b>( <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>*       the_glyph,
@@ -502,69 +502,69 @@
 <p>The first parameter is a pointer to an <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> handle, that will be <i>replaced</i> by this function (with newly allocated data). Typically, you would use (omitting error handling):</p>
 <p></p>
 <pre class="colored">
-  FT_Glyph        glyph;                                         
-  FT_BitmapGlyph  glyph_bitmap;                                  
-                                                                 
-                                                                 
-  // load glyph                                                  
-  error = FT_Load_Char( face, glyph_index, FT_LOAD_DEFAUT );     
-                                                                 
-  // extract glyph image                                         
-  error = FT_Get_Glyph( face-&gt;glyph, &amp;glyph );                   
-                                                                 
-  // convert to a bitmap (default render mode + destroying old)  
-  if ( glyph-&gt;format != FT_GLYPH_FORMAT_BITMAP )                 
-  {                                                              
-    error = FT_Glyph_To_Bitmap( &amp;glyph, FT_RENDER_MODE_NORMAL,   
-                                0, 1 );                          
-    if ( error ) // `glyph' unchanged                            
-      ...                                                        
-  }                                                              
-                                                                 
-  // access bitmap content by typecasting                        
-  glyph_bitmap = (FT_BitmapGlyph)glyph;                          
-                                                                 
-  // do funny stuff with it, like blitting/drawing               
-  ...                                                            
-                                                                 
-  // discard glyph image (bitmap or not)                         
-  FT_Done_Glyph( glyph );                                        
+  FT_Glyph        glyph;
+  FT_BitmapGlyph  glyph_bitmap;
+
+
+  // load glyph
+  error = FT_Load_Char( face, glyph_index, FT_LOAD_DEFAUT );
+
+  // extract glyph image
+  error = FT_Get_Glyph( face-&gt;glyph, &amp;glyph );
+
+  // convert to a bitmap (default render mode + destroying old)
+  if ( glyph-&gt;format != FT_GLYPH_FORMAT_BITMAP )
+  {
+    error = FT_Glyph_To_Bitmap( &amp;glyph, FT_RENDER_MODE_NORMAL,
+                                0, 1 );
+    if ( error ) // `glyph' unchanged
+      ...
+  }
+
+  // access bitmap content by typecasting
+  glyph_bitmap = (FT_BitmapGlyph)glyph;
+
+  // do funny stuff with it, like blitting/drawing
+  ...
+
+  // discard glyph image (bitmap or not)
+  FT_Done_Glyph( glyph );
 </pre>
 <p></p>
 <p>Here another example, again without error handling:</p>
 <p></p>
 <pre class="colored">
-  FT_Glyph  glyphs[MAX_GLYPHS]                                   
-                                                                 
-                                                                 
-  ...                                                            
-                                                                 
-  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )                           
-    error = FT_Load_Glyph( face, idx, FT_LOAD_DEFAULT ) ||       
-            FT_Get_Glyph ( face-&gt;glyph, &amp;glyph[idx] );           
-                                                                 
-  ...                                                            
-                                                                 
-  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )                           
-  {                                                              
-    FT_Glyph  bitmap = glyphs[idx];                              
-                                                                 
-                                                                 
-    ...                                                          
-                                                                 
-    // after this call, `bitmap' no longer points into           
-    // the `glyphs' array (and the old value isn't destroyed)    
-    FT_Glyph_To_Bitmap( &amp;bitmap, FT_RENDER_MODE_MONO, 0, 0 );    
-                                                                 
-    ...                                                          
-                                                                 
-    FT_Done_Glyph( bitmap );                                     
-  }                                                              
-                                                                 
-  ...                                                            
-                                                                 
-  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )                           
-    FT_Done_Glyph( glyphs[idx] );                                
+  FT_Glyph  glyphs[MAX_GLYPHS]
+
+
+  ...
+
+  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )
+    error = FT_Load_Glyph( face, idx, FT_LOAD_DEFAULT ) ||
+            FT_Get_Glyph ( face-&gt;glyph, &amp;glyph[idx] );
+
+  ...
+
+  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )
+  {
+    FT_Glyph  bitmap = glyphs[idx];
+
+
+    ...
+
+    // after this call, `bitmap' no longer points into
+    // the `glyphs' array (and the old value isn't destroyed)
+    FT_Glyph_To_Bitmap( &amp;bitmap, FT_RENDER_MODE_MONO, 0, 0 );
+
+    ...
+
+    FT_Done_Glyph( bitmap );
+  }
+
+  ...
+
+  for ( idx = 0; i &lt; MAX_GLYPHS; i++ )
+    FT_Done_Glyph( glyphs[idx] );
 </pre>
 
 <hr>
@@ -572,7 +572,7 @@
 
 <div class="section">
 <h3 id="FT_Done_Glyph">FT_Done_Glyph</h3>
-<p>Defined in FT_GLYPH_H (ftglyph.h).</p>
+<p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_Done_Glyph</b>( <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>  glyph );

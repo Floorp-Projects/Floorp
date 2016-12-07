@@ -1,4 +1,4 @@
-function getTestContent()
+function* getTestContent()
 {
   yield "hello";
   yield 2+3;

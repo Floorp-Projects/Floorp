@@ -56,7 +56,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
         dnl due to undefined symbols (which will be provided by clang).
         CLANG_LDFLAGS="-Wl,-flat_namespace -Wl,-undefined,suppress -lclangASTMatchers"
     elif test "${HOST_OS_ARCH}" = "WINNT"; then
-        CLANG_LDFLAGS="clangASTMatchers.lib"
+        CLANG_LDFLAGS="clang.lib"
     else
         CLANG_LDFLAGS="-lclangASTMatchers"
     fi

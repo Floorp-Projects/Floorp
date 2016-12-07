@@ -7,9 +7,9 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const Services = require("Services");
-const {gDevTools} = require("devtools/client/framework/devtools");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
+const {PrefObserver} = require("devtools/client/shared/prefs");
 
 let itemIdCounter = 0;
 /**
@@ -47,7 +47,9 @@ function AutocompletePopup(toolboxDoc, options = {}) {
     this.autoThemeEnabled = true;
     // Setup theme change listener.
     this._handleThemeChange = this._handleThemeChange.bind(this);
-    gDevTools.on("pref-changed", this._handleThemeChange);
+    this._prefObserver = new PrefObserver("devtools.");
+    this._prefObserver.on("devtools.theme", this._handleThemeChange);
+    this._currentTheme = theme;
   }
 
   // Create HTMLTooltip instance
@@ -194,7 +196,8 @@ AutocompletePopup.prototype = {
     this._list.removeEventListener("click", this.onClick, false);
 
     if (this.autoThemeEnabled) {
-      gDevTools.off("pref-changed", this._handleThemeChange);
+      this._prefObserver.off("devtools.theme", this._handleThemeChange);
+      this._prefObserver.destroy();
     }
 
     this._list.remove();
@@ -562,25 +565,17 @@ AutocompletePopup.prototype = {
 
   /**
    * Manages theme switching for the popup based on the devtools.theme pref.
-   *
-   * @private
-   *
-   * @param {String} event
-   *        The name of the event. In this case, "pref-changed".
-   * @param {Object} data
-   *        An object passed by the emitter of the event. In this case, the
-   *        object consists of three properties:
-   *        - pref {String} The name of the preference that was modified.
-   *        - newValue {Object} The new value of the preference.
-   *        - oldValue {Object} The old value of the preference.
    */
-  _handleThemeChange: function (event, data) {
-    if (data.pref === "devtools.theme") {
-      this._tooltip.panel.classList.toggle(data.oldValue + "-theme", false);
-      this._tooltip.panel.classList.toggle(data.newValue + "-theme", true);
-      this._list.classList.toggle(data.oldValue + "-theme", false);
-      this._list.classList.toggle(data.newValue + "-theme", true);
-    }
+  _handleThemeChange: function () {
+    const oldValue = this._currentTheme;
+    const newValue = Services.prefs.getCharPref("devtools.theme");
+
+    this._tooltip.panel.classList.toggle(oldValue + "-theme", false);
+    this._tooltip.panel.classList.toggle(newValue + "-theme", true);
+    this._list.classList.toggle(oldValue + "-theme", false);
+    this._list.classList.toggle(newValue + "-theme", true);
+
+    this._currentTheme = newValue;
   },
 
   /**

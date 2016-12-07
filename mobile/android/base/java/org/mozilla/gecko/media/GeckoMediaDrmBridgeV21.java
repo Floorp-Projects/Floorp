@@ -55,9 +55,9 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     private MediaCrypto mCrypto;
     protected MediaDrm mDrm;
 
-    public static int LICENSE_REQUEST_INITIAL = 0; /*MediaKeyMessageType::License_request*/
-    public static int LICENSE_REQUEST_RENEWAL = 1; /*MediaKeyMessageType::License_renewal*/
-    public static int LICENSE_REQUEST_RELEASE = 2; /*MediaKeyMessageType::License_release*/
+    public static final int LICENSE_REQUEST_INITIAL = 0; /*MediaKeyMessageType::License_request*/
+    public static final int LICENSE_REQUEST_RENEWAL = 1; /*MediaKeyMessageType::License_renewal*/
+    public static final int LICENSE_REQUEST_RELEASE = 2; /*MediaKeyMessageType::License_release*/
 
     // Store session data while provisioning
     private static class PendingCreateSessionData {
@@ -212,11 +212,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                     Log.d(LOGTAG, "InfoMap : key(" + strKey + ")/value(" + strValue + ")");
                 }
             }
-            SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
-            keyInfos[0] = new SessionKeyInfo(DUMMY_KEY_ID,
-                                             MediaDrm.KeyStatus.STATUS_USABLE);
-            onSessionBatchedKeyChanged(session.array(), keyInfos);
-            if (DEBUG) Log.d(LOGTAG, "Key successfully added for session " + sessionId);
+            HandleKeyStatusChangeByDummyKey(sessionId);
             onSessionUpdated(promiseId, session.array());
             return;
         } catch (final NotProvisionedException | DeniedByServerException | IllegalStateException e) {
@@ -283,6 +279,15 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     public MediaCrypto getMediaCrypto() {
         if (DEBUG) Log.d(LOGTAG, "getMediaCrypto()");
         return mCrypto;
+    }
+
+    protected void HandleKeyStatusChangeByDummyKey(String sessionId)
+    {
+        SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
+        keyInfos[0] = new SessionKeyInfo(DUMMY_KEY_ID,
+                                         MediaDrm.KeyStatus.STATUS_USABLE);
+        onSessionBatchedKeyChanged(sessionId.getBytes(), keyInfos);
+        if (DEBUG) Log.d(LOGTAG, "Key successfully added for session " + sessionId);
     }
 
     protected void onSessionCreated(int createSessionToken,

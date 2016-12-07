@@ -982,6 +982,8 @@ GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub)
 
     if (reader.matchOp(CacheOp::GuardIsObject, ValOperandId(0)))
         return MIRType::Object;
+    if (reader.matchOp(CacheOp::GuardIsString, ValOperandId(0)))
+        return MIRType::String;
     if (reader.matchOp(CacheOp::GuardType, ValOperandId(0))) {
         JSValueType type = reader.valueType();
         return MIRTypeFromValueType(type);
@@ -1014,29 +1016,15 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
           case ICStub::GetProp_Generic:
             return MIRType::Value;
 
-          case ICStub::GetProp_ArgumentsLength:
           case ICStub::GetElem_Arguments:
             // Either an object or magic arguments.
             return MIRType::Value;
 
-          case ICStub::GetElem_NativeSlotName:
-          case ICStub::GetElem_NativeSlotSymbol:
-          case ICStub::GetElem_NativePrototypeSlotName:
-          case ICStub::GetElem_NativePrototypeSlotSymbol:
-          case ICStub::GetElem_NativePrototypeCallNativeName:
-          case ICStub::GetElem_NativePrototypeCallNativeSymbol:
-          case ICStub::GetElem_NativePrototypeCallScriptedName:
-          case ICStub::GetElem_NativePrototypeCallScriptedSymbol:
-          case ICStub::GetElem_UnboxedPropertyName:
           case ICStub::GetElem_String:
           case ICStub::GetElem_Dense:
           case ICStub::GetElem_TypedArray:
           case ICStub::GetElem_UnboxedArray:
             stubType = MIRType::Object;
-            break;
-
-          case ICStub::GetProp_StringLength:
-            stubType = MIRType::String;
             break;
 
           case ICStub::CacheIR_Monitored:

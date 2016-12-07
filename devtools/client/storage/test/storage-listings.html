@@ -28,12 +28,12 @@ localStorage.setItem("ls2", "foobar-2");
 sessionStorage.setItem("ss1", "foobar-3");
 dump("added cookies and storage from main page\n");
 
-let idbGenerator = function*() {
+let idbGenerator = async function() {
   let request = indexedDB.open("idb1", 1);
   request.onerror = function() {
     throw new Error("error opening db connection");
   };
-  let db = yield new Promise(done => {
+  let db = await new Promise(done => {
     request.onupgradeneeded = event => {
       let db = event.target.result;
       let store1 = db.createObjectStore("obj1", { keyPath: "id" });
@@ -47,7 +47,7 @@ let idbGenerator = function*() {
   });
 
   // Prevents AbortError
-  yield new Promise(done => {
+  await new Promise(done => {
     request.onsuccess = done;
   });
 
@@ -64,14 +64,14 @@ let idbGenerator = function*() {
     extra: "baz"
   });
   // Prevents AbortError during close()
-  yield new Promise(success => {
+  await new Promise(success => {
     transaction.oncomplete = success;
   });
 
   db.close();
 
   request = indexedDB.open("idb2", 1);
-  let db2 = yield new Promise(done => {
+  let db2 = await new Promise(done => {
     request.onupgradeneeded = event => {
       let db2 = event.target.result;
       let store3 = db2.createObjectStore("obj3", { keyPath: "id3" });
@@ -82,7 +82,7 @@ let idbGenerator = function*() {
     };
   });
   // Prevents AbortError during close()
-  yield new Promise(done => {
+  await new Promise(done => {
     request.onsuccess = done;
   });
   db2.close();
@@ -97,15 +97,15 @@ function deleteDB(dbName) {
   });
 }
 
-function fetchPut(cache, url) {
-  let response = yield fetch(url);
-  yield cache.put(url, response);
+async function fetchPut(cache, url) {
+  let response = await fetch(url);
+  await cache.put(url, response);
 }
 
-let cacheGenerator = function*() {
-  let cache = yield caches.open("plop");
-  yield fetchPut(cache, "404_cached_file.js");
-  yield fetchPut(cache, "browser_storage_basic.js");
+let cacheGenerator = async function() {
+  let cache = await caches.open("plop");
+  await fetchPut(cache, "404_cached_file.js");
+  await fetchPut(cache, "browser_storage_basic.js");
 };
 
 window.setup = function*() {

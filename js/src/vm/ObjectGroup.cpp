@@ -310,7 +310,7 @@ JSObject::makeLazyGroup(JSContext* cx, HandleObject obj)
     /* De-lazification of functions can GC, so we need to do it up here. */
     if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpretedLazy()) {
         RootedFunction fun(cx, &obj->as<JSFunction>());
-        if (!fun->getOrCreateScript(cx))
+        if (!JSFunction::getOrCreateScript(cx, fun))
             return nullptr;
     }
 
@@ -556,38 +556,32 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
         return nullptr;
     }
 
-    if (proto.isObject()) {
-        RootedObject obj(cx, proto.toObject());
-
-        if (associated) {
-            if (associated->is<JSFunction>()) {
-                if (!TypeNewScript::make(cx->asJSContext(), group, &associated->as<JSFunction>()))
-                    return nullptr;
-            } else {
-                group->setTypeDescr(&associated->as<TypeDescr>());
-            }
+    if (associated) {
+        if (associated->is<JSFunction>()) {
+            if (!TypeNewScript::make(cx->asJSContext(), group, &associated->as<JSFunction>()))
+                return nullptr;
+        } else {
+            group->setTypeDescr(&associated->as<TypeDescr>());
         }
+    }
 
-        /*
-         * Some builtin objects have slotful native properties baked in at
-         * creation via the Shape::{insert,get}initialShape mechanism. Since
-         * these properties are never explicitly defined on new objects, update
-         * the type information for them here.
-         */
+    /*
+     * Some builtin objects have slotful native properties baked in at
+     * creation via the Shape::{insert,get}initialShape mechanism. Since
+     * these properties are never explicitly defined on new objects, update
+     * the type information for them here.
+     */
 
-        const JSAtomState& names = cx->names();
+    const JSAtomState& names = cx->names();
 
-        if (StandardProtoKeyOrNull(obj) == JSProto_RegExp)
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.lastIndex), TypeSet::Int32Type());
-
-        if (obj->is<StringObject>())
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.length), TypeSet::Int32Type());
-
-        if (IsErrorProtoKey(StandardProtoKeyOrNull(obj))) {
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.fileName), TypeSet::StringType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.lineNumber), TypeSet::Int32Type());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.columnNumber), TypeSet::Int32Type());
-        }
+    if (clasp == &RegExpObject::class_) {
+        AddTypePropertyId(cx, group, nullptr, NameToId(names.lastIndex), TypeSet::Int32Type());
+    } else if (clasp == &StringObject::class_) {
+        AddTypePropertyId(cx, group, nullptr, NameToId(names.length), TypeSet::Int32Type());
+    } else if (ErrorObject::isErrorClass(clasp)) {
+        AddTypePropertyId(cx, group, nullptr, NameToId(names.fileName), TypeSet::StringType());
+        AddTypePropertyId(cx, group, nullptr, NameToId(names.lineNumber), TypeSet::Int32Type());
+        AddTypePropertyId(cx, group, nullptr, NameToId(names.columnNumber), TypeSet::Int32Type());
     }
 
     return group;
