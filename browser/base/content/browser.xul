@@ -178,7 +178,7 @@
       <menupopup rolluponmousewheel="true"
                  activateontab="true" position="after_start"
 #ifdef XP_WIN
-                 consumeoutsideclicks="false" ignorekeys="handled"
+                 consumeoutsideclicks="false" ignorekeys="shortcuts"
 #endif
         />
     </menulist>
