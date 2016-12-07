@@ -90,6 +90,7 @@ public:
   bool mRembFbSet;
   bool mFECFbSet;
 
+  uint32_t mTias;
   EncodingConstraints mEncodingConstraints;
   struct SimulcastEncoding {
     std::string rid;
@@ -115,6 +116,7 @@ public:
         mCcmFbTypes != aRhs.mCcmFbTypes ||
         mRembFbSet != aRhs.mRembFbSet ||
         mFECFbSet != aRhs.mFECFbSet ||
+        mTias != aRhs.mTias ||
         !(mEncodingConstraints == aRhs.mEncodingConstraints) ||
         !(mSimulcastEncodings == aRhs.mSimulcastEncodings) ||
         mSpropParameterSets != aRhs.mSpropParameterSets ||
@@ -135,6 +137,7 @@ public:
     mType(type),
     mName(name),
     mFECFbSet(false),
+    mTias(0),
     mEncodingConstraints(constraints),
     mProfile(0x42),
     mConstraints(0xE0),
