@@ -1381,11 +1381,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
 
   gpu->MapLayerTreeId(*aId, aContent->OtherPid());
 
-  if (!gfxPlatform::AsyncPanZoomEnabled()) {
-    return true;
-  }
-
-  return aContent->SendNotifyLayerAllocated(aTabId, *aId);
+  return true;
 }
 
 mozilla::ipc::IPCResult

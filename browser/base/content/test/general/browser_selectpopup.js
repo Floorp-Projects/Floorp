@@ -164,6 +164,14 @@ function* doSelectTests(contentType, dtd)
       "Select all while popup is open");
   });
 
+  // Backspace should not go back
+  let handleKeyPress = function(event) {
+    ok(false, "Should not get keypress event");
+  }
+  window.addEventListener("keypress", handleKeyPress);
+  EventUtils.synthesizeKey("VK_BACK_SPACE", { });
+  window.removeEventListener("keypress", handleKeyPress);
+
   yield hideSelectPopup(selectPopup);
 
   is(menulist.selectedIndex, 3, "Item 3 still selected");

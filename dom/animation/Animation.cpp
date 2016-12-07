@@ -726,7 +726,6 @@ Animation::ElapsedTimeToTimeStamp(
                                   mEffect->SpecifiedTiming().mDelay);
 }
 
-
 // https://w3c.github.io/web-animations/#silently-set-the-current-time
 void
 Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
@@ -779,6 +778,44 @@ Animation::CancelNoUpdate()
   if (mTimeline) {
     mTimeline->RemoveAnimation(this);
   }
+}
+
+bool
+Animation::ShouldBeSynchronizedWithMainThread(
+  nsCSSPropertyID aProperty,
+  const nsIFrame* aFrame,
+  AnimationPerformanceWarning::Type& aPerformanceWarning) const
+{
+  // Only synchronize playing animations
+  if (!IsPlaying()) {
+    return false;
+  }
+
+  // Currently only transform animations need to be synchronized
+  if (aProperty != eCSSProperty_transform) {
+    return false;
+  }
+
+  KeyframeEffectReadOnly* keyframeEffect = mEffect
+                                           ? mEffect->AsKeyframeEffect()
+                                           : nullptr;
+  if (!keyframeEffect) {
+    return false;
+  }
+
+  // Are we starting at the same time as other geometric animations?
+  // We check this before calling ShouldBlockAsyncTransformAnimations, partly
+  // because it's cheaper, but also because it's often the most useful thing
+  // to know when you're debugging performance.
+  if (mSyncWithGeometricAnimations &&
+      keyframeEffect->HasAnimationOfProperty(eCSSProperty_transform)) {
+    aPerformanceWarning = AnimationPerformanceWarning::Type::
+                          TransformWithSyncGeometricAnimations;
+    return true;
+  }
+
+  return keyframeEffect->
+           ShouldBlockAsyncTransformAnimations(aFrame, aPerformanceWarning);
 }
 
 void
@@ -939,6 +976,16 @@ Animation::NotifyEffectTimingUpdated()
                Animation::SyncNotifyFlag::Async);
 }
 
+void
+Animation::NotifyGeometricAnimationsStartingThisFrame()
+{
+  if (!IsNewlyStarted() || !mEffect) {
+    return;
+  }
+
+  mSyncWithGeometricAnimations = true;
+}
+
 // https://w3c.github.io/web-animations/#play-an-animation
 void
 Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
@@ -1003,6 +1050,11 @@ Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
   }
 
   mPendingState = PendingState::PlayPending;
+
+  // Clear flag that causes us to sync transform animations with the main
+  // thread for now. We'll set this when we go to set up compositor
+  // animations if it applies.
+  mSyncWithGeometricAnimations = false;
 
   nsIDocument* doc = GetRenderedDocument();
   if (doc) {
