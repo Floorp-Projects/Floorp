@@ -480,13 +480,6 @@ public:
      * Otherwise *aOK is untouched.
      */
     nsSVGClipPathFrame *GetClipPathFrame(bool* aOK);
-    /**
-     * @return the first mask frame, or null if there is no mask frame
-     * @param aOK if a mask was specified and the designated element
-     * exists but is an element of the wrong type, *aOK is set to false.
-     * Otherwise *aOK is untouched.
-     */
-    nsSVGMaskFrame *GetFirstMaskFrame(bool* aOK = nullptr);
 
     /**
      * @return an array which contains all SVG mask frames.
@@ -494,6 +487,20 @@ public:
     nsTArray<nsSVGMaskFrame*> GetMaskFrames();
 
     bool MightHaveNoneSVGMask() const;
+
+    /*
+     * @return true if all effects we have are valid or we have no effect
+     * at all.
+     */
+    bool HasNoOrValidEffects();
+
+    /*
+     * @return true if we have any invalid effect.
+     */
+    bool HasInvalidEffects() {
+      return !HasNoOrValidEffects();
+    }
+
     bool HasValidFilter() {
       return mFilter && mFilter->ReferencesValidResources();
     }

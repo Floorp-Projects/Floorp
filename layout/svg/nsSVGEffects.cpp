@@ -639,29 +639,12 @@ nsSVGEffects::EffectProperties::GetClipPathFrame(bool* aOK)
 {
   if (!mClipPath)
     return nullptr;
-  nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
+  nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame*>
     (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, aOK));
   if (frame && aOK && *aOK) {
     *aOK = frame->IsValid();
   }
   return frame;
-}
-
-nsSVGMaskFrame *
-nsSVGEffects::EffectProperties::GetFirstMaskFrame(bool* aOK)
-{
-  if (!mMask) {
-    return nullptr;
-  }
-
-  const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
-
-  if (props.IsEmpty()) {
-    return nullptr;
-  }
-
-  return static_cast<nsSVGMaskFrame *>
-    (props[0]->GetReferencedFrame(nsGkAtoms::svgMaskFrame, aOK));
 }
 
 nsTArray<nsSVGMaskFrame *>
@@ -671,16 +654,43 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
   if (!mMask)
     return result;
 
-  bool ok = false;
+  bool ok = true;
   const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
   for (size_t i = 0; i < props.Length(); i++) {
     nsSVGMaskFrame* maskFrame =
       static_cast<nsSVGMaskFrame *>(props[i]->GetReferencedFrame(
                                                 nsGkAtoms::svgMaskFrame, &ok));
+    MOZ_ASSERT_IF(maskFrame, ok);
     result.AppendElement(maskFrame);
   }
 
   return result;
+}
+
+bool
+nsSVGEffects::EffectProperties::HasNoOrValidEffects()
+{
+  if (mClipPath) {
+    bool ok = true;
+    nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
+      (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, &ok));
+    if (!ok || (frame && !frame->IsValid())) {
+      return false;
+    }
+  }
+
+  if (mMask) {
+    bool ok = true;
+    const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
+    for (size_t i = 0; i < props.Length(); i++) {
+      props[i]->GetReferencedFrame(nsGkAtoms::svgMaskFrame, &ok);
+      if (!ok) {
+        return false;
+      }
+    }
+  }
+
+  return HasNoFilterOrHasValidFilter();
 }
 
 bool
