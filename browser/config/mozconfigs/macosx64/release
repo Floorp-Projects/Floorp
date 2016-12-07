@@ -1,0 +1,21 @@
+# This make file should be identical to the beta mozconfig, apart from the
+# safeguard below
+MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}
+
+if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then
+  MOZ_AUTOMATION_UPLOAD_SYMBOLS=1
+  MOZ_AUTOMATION_UPDATE_PACKAGING=1
+fi
+
+. "$topsrcdir/browser/config/mozconfigs/macosx64/common-opt"
+
+ac_add_options --enable-official-branding
+ac_add_options --enable-verify-mar
+
+# safeguard against someone forgetting to re-set EARLY_BETA_OR_EARLIER in
+# defines.sh during the beta cycle
+export BUILDING_RELEASE=1
+
+. "$topsrcdir/build/mozconfig.rust"
+. "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"
