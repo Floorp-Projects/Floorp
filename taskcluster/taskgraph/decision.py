@@ -179,6 +179,7 @@ def get_action_yml(parameters):
     templates = Templates(os.path.join(GECKO, "taskcluster/taskgraph"))
     action_parameters = parameters.copy()
     action_parameters.update({
+        "action": "{{action}}",
         "action_args": "{{action_args}}",
         "from_now": json_time_from_now,
         "now": current_json_time()
