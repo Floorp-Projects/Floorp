@@ -60,6 +60,11 @@
   margin: 4px 0 calc(1em / 0.95 - 1em);
 }
 
+.downloadDetailsNormal,
+.downloadDetailsHover {
+  display: none;
+}
+
 .downloadButton {
   -moz-appearance: none;
   -moz-box-align: center;
