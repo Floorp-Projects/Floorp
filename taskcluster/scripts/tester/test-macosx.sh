@@ -25,12 +25,38 @@ if [[ -z ${MOZHARNESS_URL} ]]; then fail "MOZHARNESS_URL is not set"; fi
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
-# Unzip the mozharness ZIP file created by the build task
-if ! curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
-    fail "failed to download mozharness zip"
-fi
-rm -rf mozharness
-unzip -q mozharness.zip
+# Download mozharness with exponential backoff
+# curl already applies exponential backoff, but not for all
+# failed cases, apparently, as we keep getting failed downloads
+# with 404 code.
+download_mozharness() {
+    local max_attempts=10
+    local timeout=1
+    local attempt=0
+
+    echo "Downloading mozharness"
+
+    while [[ $attempt < $max_attempts ]]; do
+        if curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
+            rm -rf mozharness
+            if unzip -q mozharness.zip; then
+                break
+            else
+                echo "error unzipping mozharness.zip" >&2
+            fi
+        else
+            echo "failed to download mozharness zip" >&2
+        fi
+        echo "Download failed, retrying in $timeout seconds..." >&2
+        sleep $timeout
+        timeout=$((timeout*2))
+        attempt=$((attempt+1))
+    done
+
+    fail "Failed to download and unzip mozharness"
+}
+
+download_mozharness
 rm mozharness.zip
 
 # For telemetry purposes, the build process wants information about the
