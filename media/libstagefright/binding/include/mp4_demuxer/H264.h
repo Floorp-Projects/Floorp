@@ -13,6 +13,27 @@ namespace mp4_demuxer {
 #define MAX_SPS_COUNT 32
 #define MAX_PPS_COUNT 256
 
+// NAL unit types
+enum NAL_TYPES {
+    H264_NAL_SLICE           = 1,
+    H264_NAL_DPA             = 2,
+    H264_NAL_DPB             = 3,
+    H264_NAL_DPC             = 4,
+    H264_NAL_IDR_SLICE       = 5,
+    H264_NAL_SEI             = 6,
+    H264_NAL_SPS             = 7,
+    H264_NAL_PPS             = 8,
+    H264_NAL_AUD             = 9,
+    H264_NAL_END_SEQUENCE    = 10,
+    H264_NAL_END_STREAM      = 11,
+    H264_NAL_FILLER_DATA     = 12,
+    H264_NAL_SPS_EXT         = 13,
+    H264_NAL_PREFIX          = 14,
+    H264_NAL_AUXILIARY_SLICE = 19,
+    H264_NAL_SLICE_EXT       = 20,
+    H264_NAL_SLICE_EXT_DVC   = 21,
+};
+
 class BitReader;
 
 struct SPSData
