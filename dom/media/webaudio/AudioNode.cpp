@@ -54,6 +54,7 @@ AudioNode::AudioNode(AudioContext* aContext,
   , mChannelInterpretation(aChannelInterpretation)
   , mId(gId++)
   , mPassThrough(false)
+  , mAbstractMainThread(aContext->GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other))
 {
   MOZ_ASSERT(aContext);
   DOMEventTargetHelper::BindToOwner(aContext->GetParentObject());

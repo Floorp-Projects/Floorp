@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioNodeEngine.h"
+
+#include "mozilla/AbstractThread.h"
 #ifdef BUILD_ARM_NEON
 #include "mozilla/arm.h"
 #include "AudioNodeEngineNEON.h"
@@ -373,6 +375,18 @@ AudioBufferSumOfSquares(const float* aInput, uint32_t aLength)
     ++aInput;
   }
   return sum;
+}
+
+AudioNodeEngine::AudioNodeEngine(dom::AudioNode* aNode)
+  : mNode(aNode)
+  , mNodeType(aNode ? aNode->NodeType() : nullptr)
+  , mInputCount(aNode ? aNode->NumberOfInputs() : 1)
+  , mOutputCount(aNode ? aNode->NumberOfOutputs() : 0)
+  , mAbstractMainThread(
+      aNode ? aNode->AbstractMainThread() : AbstractThread::MainThread())
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_COUNT_CTOR(AudioNodeEngine);
 }
 
 void

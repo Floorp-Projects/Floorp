@@ -20,6 +20,8 @@
 
 namespace mozilla {
 
+class AbstractThread;
+
 namespace dom {
 
 class AudioContext;
@@ -225,6 +227,8 @@ public:
   // type.
   virtual const char* NodeType() const = 0;
 
+  AbstractThread* AbstractMainThread() const { return mAbstractMainThread; }
+
 private:
   // Given:
   //
@@ -289,6 +293,8 @@ private:
   // Whether the node just passes through its input.  This is a devtools API that
   // only works for some node types.
   bool mPassThrough;
+  // DocGroup-specifc AbstractThread::MainThread() for MediaStreamGraph operations.
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 } // namespace dom
