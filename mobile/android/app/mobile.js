@@ -614,6 +614,10 @@ pref("media.cache_readahead_limit", 30);
 // chronically starved of video frames. All decoders seen so far have a value
 // of at least 4.
 pref("media.video-queue.default-size", 3);
+// The maximum number of queued frames to send to the compositor.
+// On Android, it needs to be throttled because SurfaceTexture contains only one
+// (the most recent) image data.
+pref("media.video-queue.send-to-compositor-size", 1);
 
 #ifdef NIGHTLY_BUILD
 // Allow to check if the decoder supports recycling only on Fennec nightly build.
