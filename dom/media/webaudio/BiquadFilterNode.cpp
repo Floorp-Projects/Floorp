@@ -160,7 +160,8 @@ public:
           RefPtr<PlayingRefChangeHandler> refchanged =
             new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::RELEASE);
           aStream->Graph()->
-            DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+            DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                       refchanged.forget());
         }
 
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -174,7 +175,8 @@ public:
         RefPtr<PlayingRefChangeHandler> refchanged =
           new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::ADDREF);
         aStream->Graph()->
-          DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+          DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                     refchanged.forget());
       } else { // Help people diagnose bug 924718
         WebAudioUtils::LogToDeveloperConsole(mWindowID,
                                              "BiquadFilterChannelCountChangeWarning");

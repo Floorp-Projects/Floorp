@@ -20,6 +20,7 @@ class DelayNodeEngine;
 struct AudioTimelineEvent;
 } // namespace dom
 
+class AbstractThread;
 class AudioBlock;
 class AudioNodeStream;
 
@@ -255,15 +256,8 @@ public:
   // This should be compatible with AudioNodeStream::OutputChunks.
   typedef AutoTArray<AudioBlock, 1> OutputChunks;
 
-  explicit AudioNodeEngine(dom::AudioNode* aNode)
-    : mNode(aNode)
-    , mNodeType(aNode ? aNode->NodeType() : nullptr)
-    , mInputCount(aNode ? aNode->NumberOfInputs() : 1)
-    , mOutputCount(aNode ? aNode->NumberOfOutputs() : 0)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_COUNT_CTOR(AudioNodeEngine);
-  }
+  explicit AudioNodeEngine(dom::AudioNode* aNode);
+
   virtual ~AudioNodeEngine()
   {
     MOZ_ASSERT(!mNode, "The node reference must be already cleared");
@@ -403,6 +397,9 @@ private:
   const char* const mNodeType;
   const uint16_t mInputCount;
   const uint16_t mOutputCount;
+
+protected:
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 } // namespace mozilla

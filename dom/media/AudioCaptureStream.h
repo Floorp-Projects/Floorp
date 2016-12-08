@@ -14,6 +14,7 @@
 namespace mozilla
 {
 
+class AbstractThread;
 class DOMMediaStream;
 
 /**
@@ -23,7 +24,7 @@ class AudioCaptureStream : public ProcessedMediaStream,
                            public MixerCallbackReceiver
 {
 public:
-  explicit AudioCaptureStream(TrackID aTrackId);
+  AudioCaptureStream(TrackID aTrackId, AbstractThread* aMainThread);
   virtual ~AudioCaptureStream();
 
   void Start();
