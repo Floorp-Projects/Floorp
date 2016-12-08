@@ -105,7 +105,6 @@ nsXULWindow::nsXULWindow(uint32_t aChromeFlags)
     mIgnoreXULSizeMode(false),
     mDestroying(false),
     mRegistered(false),
-    mContextFlags(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
     mChromeFlags(aChromeFlags)
@@ -251,19 +250,6 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
       }
     }
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULWindow::GetContextFlags(uint32_t *aContextFlags)
-{
-  NS_ENSURE_ARG_POINTER(aContextFlags);
-  *aContextFlags = mContextFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULWindow::SetContextFlags(uint32_t aContextFlags)
-{
-  mContextFlags = aContextFlags;
   return NS_OK;
 }
 
