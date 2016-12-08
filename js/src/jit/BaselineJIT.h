@@ -24,6 +24,7 @@ namespace jit {
 class StackValue;
 class BaselineICEntry;
 class ICStub;
+class ControlFlowGraph;
 
 class PCMappingSlotInfo
 {
@@ -238,6 +239,8 @@ struct BaselineScript
 
     // An ion compilation that is ready, but isn't linked yet.
     IonBuilder *pendingBuilder_;
+
+    ControlFlowGraph* controlFlowGraph_;
 
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
@@ -511,6 +514,14 @@ struct BaselineScript
         setPendingIonBuilder(nullptr, script, nullptr);
         if (script->maybeIonScript() == ION_PENDING_SCRIPT)
             script->setIonScript(nullptr, nullptr);
+    }
+
+    const ControlFlowGraph* controlFlowGraph() const {
+        return controlFlowGraph_;
+    }
+
+    void setControlFlowGraph(ControlFlowGraph* controlFlowGraph) {
+        controlFlowGraph_ = controlFlowGraph;
     }
 
 };
