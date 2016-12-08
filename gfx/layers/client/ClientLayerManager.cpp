@@ -795,7 +795,7 @@ ClientLayerManager::HandleMemoryPressure()
 void
 ClientLayerManager::ClearLayer(Layer* aLayer)
 {
-  ClientLayer::ToClientLayer(aLayer)->ClearCachedResources();
+  aLayer->ClearCachedResources();
   for (Layer* child = aLayer->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     ClearLayer(child);

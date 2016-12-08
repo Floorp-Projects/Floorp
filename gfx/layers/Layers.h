@@ -1807,6 +1807,8 @@ public:
   AsyncPanZoomController* GetAsyncPanZoomController(uint32_t aIndex) const;
   // The ScrollMetadataChanged function is used internally to ensure the APZC array length
   // matches the frame metrics array length.
+
+  virtual void ClearCachedResources() {}
 private:
   void ScrollMetadataChanged();
 public:
