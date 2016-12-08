@@ -517,27 +517,44 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   } else {
     max_framerate = DEFAULT_VIDEO_MAX_FRAMERATE;
   }
+  // apply restrictions from maxMbps/etc
+  mSendingFramerate = SelectSendFrameRate(codecConfig,
+                                          max_framerate,
+                                          mSendingWidth,
+                                          mSendingHeight);
+
+  // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
+  mNegotiatedMaxBitrate = codecConfig->mTias / 1000;
 
   // width/height will be overridden on the first frame; they must be 'sane' for
   // SetSendCodec()
 
   if (mSendingWidth != 0) {
     // We're already in a call and are reconfiguring (perhaps due to
-    // ReplaceTrack).  Set to match the last frame we sent.
+    // ReplaceTrack).
+    bool resolutionChanged;
+    {
+      MutexAutoLock lock(mCodecMutex);
+      resolutionChanged = !mCurSendCodecConfig->ResolutionEquals(*codecConfig);
+    }
 
-    // We could also set mLastWidth to 0, to force immediate reconfig -
-    // more expensive, but perhaps less risk of missing something.  Really
-    // on ReplaceTrack we should just call ConfigureCodecMode(), and if the
-    // mode changed, we re-configure.
-    width = mSendingWidth;
-    height = mSendingHeight;
-    // max framerate remains the same
+    if (resolutionChanged) {
+      // We're already in a call and due to renegotiation an encoder parameter
+      // that requires reconfiguration has changed. Resetting these members
+      // triggers reconfig on the next frame.
+      mLastWidth = 0;
+      mLastHeight = 0;
+      mSendingWidth = 0;
+      mSendingHeight = 0;
+    } else {
+      // We're already in a call but changes don't require a reconfiguration.
+      // We update the resolutions in the send codec to match the current
+      // settings.  Framerate is already set.
+      width = mSendingWidth;
+      height = mSendingHeight;
+      // Bitrates are set in the loop below
+    }
   }
-  mSendingFramerate = std::max(mSendingFramerate,
-                               static_cast<unsigned int>(max_framerate));
-
-  // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
-  mNegotiatedMaxBitrate = codecConfig->mTias / 1000;
 
   for (size_t idx = streamCount - 1; streamCount > 0; idx--, streamCount--) {
     webrtc::VideoStream video_stream;
@@ -550,10 +567,11 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     // SetSendCodec()
     video_stream.width = width >> idx;
     video_stream.height = height >> idx;
-    video_stream.max_framerate = max_framerate;
+    video_stream.max_framerate = mSendingFramerate;
     auto& simulcastEncoding = codecConfig->mSimulcastEncodings[idx];
     // leave vector temporal_layer_thresholds_bps empty
     video_stream.temporal_layer_thresholds_bps.clear();
+    // Calculate these first
     video_stream.max_bitrate_bps = MinIgnoreZero(simulcastEncoding.constraints.maxBr,
                                                  kDefaultMaxBitrate_bps);
     video_stream.max_bitrate_bps = MinIgnoreZero((int) mPrefMaxBitrate*1000,
@@ -569,11 +587,18 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     if (video_stream.target_bitrate_bps < video_stream.min_bitrate_bps) {
       video_stream.target_bitrate_bps = video_stream.min_bitrate_bps;
     }
+    // We should use SelectBitrates here for the case of already-sending and no reconfig needed;
+    // overrides the calculations above
+    if (mSendingWidth) { // cleared if we need a reconfig
+      SelectBitrates(video_stream.width, video_stream.height,
+                     simulcastEncoding.constraints.maxBr,
+                     mLastFramerateTenths, video_stream);
+    }
 
     video_stream.max_qp = kQpMax;
     video_stream.SetRid(simulcastEncoding.rid);
     simulcast_config.jsScaleDownBy = simulcastEncoding.constraints.scaleDownBy;
-    simulcast_config.jsMaxBitrate = simulcastEncoding.constraints.maxBr;
+    simulcast_config.jsMaxBitrate = simulcastEncoding.constraints.maxBr; // bps
 
     if (codecConfig->mName == "H264") {
       if (codecConfig->mEncodingConstraints.maxMbps > 0) {
@@ -844,7 +869,6 @@ WebrtcVideoConduit::InitMain()
       {
         if (temp >= 0) {
           mPrefMaxBitrate = temp;
-          mNegotiatedMaxBitrate = temp; // simplifies logic in SelectBitrate (don't have to do two limit tests)
         }
       }
       if (mMinBitrate != 0 && mMinBitrate < kViEMinCodecBitrate) {
@@ -1452,8 +1476,10 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
     changed = true;
   }
 
-  // uses mSendingWidth/Height
-  unsigned int framerate = SelectSendFrameRate(mSendingFramerate);
+  unsigned int framerate = SelectSendFrameRate(mCurSendCodecConfig,
+                                               mSendingFramerate,
+                                               mSendingWidth,
+                                               mSendingHeight);
   if (mSendingFramerate != framerate) {
     CSFLogDebug(logTag, "%s: framerate changing to %u (from %u)",
                 __FUNCTION__, framerate, mSendingFramerate);
@@ -1535,9 +1561,12 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
     uint32_t new_height = (height / simStream.jsScaleDownBy);
     video_stream.width = width;
     video_stream.height = height;
+    // XXX this should depend on the final values (below) of video_stream.width/height, not
+    // the current value calculated on the incoming framesize (largest simulcast layer)
     video_stream.max_framerate = mSendingFramerate;
     SelectBitrates(video_stream.width, video_stream.height,
-                   MinIgnoreZero(mNegotiatedMaxBitrate, simStream.jsMaxBitrate),
+                   // XXX formerly was MinIgnoreZero(mNegotiatedMaxBitrate, simStream.jsMaxBitrate),
+                   simStream.jsMaxBitrate,
                    mLastFramerateTenths, video_stream);
     CSFLogVerbose(logTag, "%s: new_width=%" PRIu32 " new_height=%" PRIu32,
                   __FUNCTION__, new_width, new_height);
@@ -1574,32 +1603,27 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
   return NS_OK;
 }
 
-// Invoked under lock of mCodecMutex!
 unsigned int
-WebrtcVideoConduit::SelectSendFrameRate(unsigned int framerate) const
+WebrtcVideoConduit::SelectSendFrameRate(const VideoCodecConfig* codecConfig,
+                                        unsigned int old_framerate,
+                                        unsigned short sending_width,
+                                        unsigned short sending_height) const
 {
-  mCodecMutex.AssertCurrentThreadOwns();
-  unsigned int new_framerate = framerate;
+  unsigned int new_framerate = old_framerate;
 
   // Limit frame rate based on max-mbps
-  if (mCurSendCodecConfig && mCurSendCodecConfig->mEncodingConstraints.maxMbps)
+  if (codecConfig && codecConfig->mEncodingConstraints.maxMbps)
   {
-    unsigned int cur_fs, mb_width, mb_height, max_fps;
+    unsigned int cur_fs, mb_width, mb_height;
 
-    mb_width = (mSendingWidth + 15) >> 4;
-    mb_height = (mSendingHeight + 15) >> 4;
+    mb_width = (sending_width + 15) >> 4;
+    mb_height = (sending_height + 15) >> 4;
 
     cur_fs = mb_width * mb_height;
     if (cur_fs > 0) { // in case no frames have been sent
-      max_fps = mCurSendCodecConfig->mEncodingConstraints.maxMbps / cur_fs;
-      if (max_fps < mSendingFramerate) {
-        new_framerate = max_fps;
-      }
+      new_framerate = codecConfig->mEncodingConstraints.maxMbps / cur_fs;
 
-      if (mCurSendCodecConfig->mEncodingConstraints.maxFps != 0 &&
-          mCurSendCodecConfig->mEncodingConstraints.maxFps < mSendingFramerate) {
-        new_framerate = mCurSendCodecConfig->mEncodingConstraints.maxFps;
-      }
+      new_framerate = MinIgnoreZero(new_framerate, codecConfig->mEncodingConstraints.maxFps);
     }
   }
   return new_framerate;
