@@ -140,7 +140,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CustomElementsRegistry)
 
 public:
-  static bool IsCustomElementsEnabled(JSContext* aCx, JSObject* aObject);
+  static bool IsCustomElementsEnabled(JSContext* aCx = nullptr,
+                                      JSObject* aObject = nullptr);
   static already_AddRefed<CustomElementsRegistry> Create(nsPIDOMWindowInner* aWindow);
   static void ProcessTopElementQueue();
 
