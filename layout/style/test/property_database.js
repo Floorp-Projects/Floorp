@@ -2965,6 +2965,7 @@ var gCSSProperties = {
       "ruby-base-container",
       "ruby-text",
       "ruby-text-container",
+      "contents",
       "none"
     ],
     invalid_values: []
@@ -6724,8 +6725,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
                       "1px auto" ]
   };
 }
-
-gCSSProperties["display"].other_values.push("contents");
 
 if (IsCSSPropertyPrefEnabled("layout.css.contain.enabled")) {
   gCSSProperties["contain"] = {
