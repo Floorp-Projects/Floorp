@@ -22,6 +22,18 @@ namespace mozilla {
 class CSSStyleSheet;
 } // namespace mozilla
 
+namespace mozilla {
+namespace css {
+
+// Enum defining how error should be handled.
+enum FailureAction {
+  eCrash = 0,
+  eLogToConsole
+};
+
+}
+}
+
 class nsLayoutStylesheetCache final
  : public nsIObserver
  , public nsIMemoryReporter
@@ -78,12 +90,15 @@ private:
   void InitMemoryReporter();
   void LoadSheetURL(const char* aURL,
                     RefPtr<mozilla::StyleSheet>* aSheet,
-                    mozilla::css::SheetParsingMode aParsingMode);
+                    mozilla::css::SheetParsingMode aParsingMode,
+                    mozilla::css::FailureAction aFailureAction);
   void LoadSheetFile(nsIFile* aFile,
                      RefPtr<mozilla::StyleSheet>* aSheet,
-                     mozilla::css::SheetParsingMode aParsingMode);
+                     mozilla::css::SheetParsingMode aParsingMode,
+                     mozilla::css::FailureAction aFailureAction);
   void LoadSheet(nsIURI* aURI, RefPtr<mozilla::StyleSheet>* aSheet,
-                 mozilla::css::SheetParsingMode aParsingMode);
+                 mozilla::css::SheetParsingMode aParsingMode,
+                 mozilla::css::FailureAction aFailureAction);
   static void InvalidateSheet(RefPtr<mozilla::StyleSheet>* aGeckoSheet,
                               RefPtr<mozilla::StyleSheet>* aServoSheet);
   static void DependentPrefChanged(const char* aPref, void* aData);

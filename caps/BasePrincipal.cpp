@@ -351,6 +351,19 @@ OriginAttributes::IsFirstPartyEnabled()
   return sFirstPartyIsolation;
 }
 
+/* static */
+bool
+OriginAttributes::IsPrivateBrowsing(const nsACString& aOrigin)
+{
+  nsAutoCString dummy;
+  PrincipalOriginAttributes attrs;
+  if (NS_WARN_IF(!attrs.PopulateFromOrigin(aOrigin, dummy))) {
+    return false;
+  }
+
+  return !!attrs.mPrivateBrowsingId;
+}
+
 BasePrincipal::BasePrincipal()
 {}
 

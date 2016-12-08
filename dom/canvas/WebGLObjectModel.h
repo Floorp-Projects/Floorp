@@ -12,7 +12,54 @@
 
 namespace mozilla {
 
+template<typename> class LinkedList;
 class WebGLContext;
+
+////
+
+// This class is a mixin for objects that are tied to a specific
+// context (which is to say, all of them).  They provide initialization
+// as well as comparison with the current context.
+class WebGLContextBoundObject
+{
+public:
+    WebGLContext* const mContext;
+private:
+    const uint32_t mContextGeneration;
+
+public:
+    explicit WebGLContextBoundObject(WebGLContext* webgl);
+
+    bool IsCompatibleWithContext(const WebGLContext* other) const;
+};
+
+////
+
+class WebGLDeletableObject : public WebGLContextBoundObject
+{
+    template<typename> friend class WebGLRefCountedObject;
+
+private:
+    enum DeletionStatus { Default, DeleteRequested, Deleted };
+
+    DeletionStatus mDeletionStatus;
+
+    ////
+
+    explicit WebGLDeletableObject(WebGLContext* webgl)
+      : WebGLContextBoundObject(webgl)
+      , mDeletionStatus(Default)
+    { }
+
+    ~WebGLDeletableObject() {
+        MOZ_ASSERT(mDeletionStatus == Deleted,
+                   "Derived class destructor must call DeleteOnce().");
+    }
+
+public:
+    bool IsDeleted() const { return mDeletionStatus == Deleted; }
+    bool IsDeleteRequested() const { return mDeletionStatus != Default; }
+};
 
 /* Each WebGL object class WebGLFoo wants to:
  *  - inherit WebGLRefCountedObject<WebGLFoo>
@@ -91,22 +138,25 @@ class WebGLContext;
  * class, without either method being virtual. This is a common C++ pattern
  * known as the "curiously recursive template pattern (CRTP)".
  */
-template<typename Derived>
-class WebGLRefCountedObject
-{
-public:
-    enum DeletionStatus { Default, DeleteRequested, Deleted };
 
-    WebGLRefCountedObject()
-      : mDeletionStatus(Default)
-    {}
+template<typename Derived>
+class WebGLRefCountedObject : public WebGLDeletableObject
+{
+    friend class WebGLContext;
+    template<typename T> friend void ClearLinkedList(LinkedList<T>& list);
+
+private:
+    nsAutoRefCnt mWebGLRefCnt;
+
+public:
+    explicit WebGLRefCountedObject(WebGLContext* webgl)
+        : WebGLDeletableObject(webgl)
+    { }
 
     ~WebGLRefCountedObject() {
         MOZ_ASSERT(mWebGLRefCnt == 0,
                    "Destroying WebGL object still referenced by other WebGL"
                    " objects.");
-        MOZ_ASSERT(mDeletionStatus == Deleted,
-                   "Derived class destructor must call DeleteOnce().");
     }
 
     // called by WebGLRefPtr
@@ -129,14 +179,7 @@ public:
         MaybeDelete();
     }
 
-    bool IsDeleted() const {
-        return mDeletionStatus == Deleted;
-    }
-
-    bool IsDeleteRequested() const {
-        return mDeletionStatus != Default;
-    }
-
+protected:
     void DeleteOnce() {
         if (mDeletionStatus != Deleted) {
             static_cast<Derived*>(this)->Delete();
@@ -152,10 +195,6 @@ private:
             DeleteOnce();
         }
     }
-
-protected:
-    nsAutoRefCnt mWebGLRefCnt;
-    DeletionStatus mDeletionStatus;
 };
 
 /* This WebGLRefPtr class is meant to be used for references between WebGL
@@ -257,21 +296,6 @@ private:
 
 protected:
     T* mRawPtr;
-};
-
-// This class is a mixin for objects that are tied to a specific
-// context (which is to say, all of them).  They provide initialization
-// as well as comparison with the current context.
-class WebGLContextBoundObject
-{
-public:
-    explicit WebGLContextBoundObject(WebGLContext* webgl);
-
-    bool IsCompatibleWithContext(const WebGLContext* other) const;
-
-    WebGLContext* const mContext;
-protected:
-    const uint32_t mContextGeneration;
 };
 
 // this class is a mixin for GL objects that have dimensions

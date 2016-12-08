@@ -31,8 +31,7 @@ public:
   void Init(PromiseId aPromiseId,
             const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
-            const nsAString& aGMPName,
-            bool aInPrivateBrowsing) override;
+            const nsAString& aGMPName) override;
 
   void OnSetDecryptorId(uint32_t aId) override;
 
@@ -123,7 +122,6 @@ private:
     nsString mTopLevelOrigin;
     nsString mGMPName;
     RefPtr<GMPCrashHelper> mCrashHelper;
-    bool mInPrivateBrowsing;
   };
 
   // GMP thread only.
