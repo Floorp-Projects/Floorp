@@ -34,6 +34,8 @@ public:
 
   // Return the number of bits parsed so far;
   size_t BitCount() const;
+  // Return the number of bits left.
+  size_t BitsLeft() const;
 
 private:
   nsAutoPtr<stagefright::ABitReader> mBitReader;

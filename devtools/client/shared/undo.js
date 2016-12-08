@@ -153,8 +153,14 @@ UndoStack.prototype = {
    * Install this object as a command controller.
    */
   installController: function (controllerWindow) {
+    let controllers = controllerWindow.controllers;
+    // Only available when running in a Firefox panel.
+    if (!controllers || !controllers.appendController) {
+      return;
+    }
+
     this._controllerWindow = controllerWindow;
-    controllerWindow.controllers.appendController(this);
+    controllers.appendController(this);
   },
 
   /**
