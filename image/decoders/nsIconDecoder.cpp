@@ -94,7 +94,8 @@ nsIconDecoder::ReadRowOfPixels(const char* aData, size_t aLength)
       return AsVariant(WriteState::NEED_MORE_DATA);  // Done with this row.
     }
 
-    uint32_t pixel = *reinterpret_cast<const uint32_t*>(aData);
+    uint32_t pixel;
+    memcpy(&pixel, aData, 4);
     aData += 4;
     aLength -= 4;
 
