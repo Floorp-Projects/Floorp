@@ -78,7 +78,7 @@ ControlFlowGraph::dump(GenericPrinter& print, JSScript* script)
 }
 
 bool
-ControlFlowGraph::init(const CFGBlockVector& blocks)
+ControlFlowGraph::init(TempAllocator& alloc, const CFGBlockVector& blocks)
 {
     if (!blocks_.reserve(blocks.length()))
         return false;
@@ -93,7 +93,7 @@ ControlFlowGraph::init(const CFGBlockVector& blocks)
     }
 
     for (size_t i = 0; i < blocks.length(); i++) {
-        if (!alloc().ensureBallast())
+        if (!alloc.ensureBallast())
             return false;
 
         CFGControlInstruction* copy = nullptr;
@@ -101,45 +101,45 @@ ControlFlowGraph::init(const CFGBlockVector& blocks)
         switch (ins->type()) {
           case CFGControlInstruction::Type_Goto: {
             CFGBlock* successor = &blocks_[ins->getSuccessor(0)->id()];
-            copy = CFGGoto::New(alloc(), successor, ins->toGoto()->popAmount());
+            copy = CFGGoto::New(alloc, successor, ins->toGoto()->popAmount());
             break;
           }
           case CFGControlInstruction::Type_BackEdge: {
             CFGBlock* successor = &blocks_[ins->getSuccessor(0)->id()];
-            copy = CFGBackEdge::New(alloc(), successor);
+            copy = CFGBackEdge::New(alloc, successor);
             break;
           }
           case CFGControlInstruction::Type_LoopEntry: {
             CFGLoopEntry* old = ins->toLoopEntry();
             CFGBlock* successor = &blocks_[ins->getSuccessor(0)->id()];
-            copy = CFGLoopEntry::New(alloc(), successor, old->canOsr(), old->stackPhiCount(),
+            copy = CFGLoopEntry::New(alloc, successor, old->canOsr(), old->stackPhiCount(),
                                      old->loopStopPc());
             break;
           }
           case CFGControlInstruction::Type_Throw: {
-            copy = CFGThrow::New(alloc());
+            copy = CFGThrow::New(alloc);
             break;
           }
           case CFGControlInstruction::Type_Test: {
             CFGTest* old = ins->toTest();
             CFGBlock* trueBranch = &blocks_[old->trueBranch()->id()];
             CFGBlock* falseBranch = &blocks_[old->falseBranch()->id()];
-            copy = CFGTest::New(alloc(), trueBranch, falseBranch, old->mustKeepCondition());
+            copy = CFGTest::New(alloc, trueBranch, falseBranch, old->mustKeepCondition());
             break;
           }
           case CFGControlInstruction::Type_Compare: {
             CFGCompare* old = ins->toCompare();
             CFGBlock* trueBranch = &blocks_[old->trueBranch()->id()];
             CFGBlock* falseBranch = &blocks_[old->falseBranch()->id()];
-            copy = CFGCompare::New(alloc(), trueBranch, falseBranch);
+            copy = CFGCompare::New(alloc, trueBranch, falseBranch);
             break;
           }
           case CFGControlInstruction::Type_Return: {
-            copy = CFGReturn::New(alloc());
+            copy = CFGReturn::New(alloc);
             break;
           }
           case CFGControlInstruction::Type_RetRVal: {
-            copy = CFGRetRVal::New(alloc());
+            copy = CFGRetRVal::New(alloc);
             break;
           }
           case CFGControlInstruction::Type_Try: {
@@ -148,13 +148,13 @@ ControlFlowGraph::init(const CFGBlockVector& blocks)
             CFGBlock* merge = nullptr;
             if (old->numSuccessors() == 2)
                 merge = &blocks_[old->afterTryCatchBlock()->id()];
-            copy = CFGTry::New(alloc(), tryBlock, old->catchStartPc(), merge);
+            copy = CFGTry::New(alloc, tryBlock, old->catchStartPc(), merge);
             break;
           }
           case CFGControlInstruction::Type_TableSwitch: {
             CFGTableSwitch* old = ins->toTableSwitch();
             CFGTableSwitch* tableSwitch =
-                CFGTableSwitch::New(alloc(), old->low(), old->high());
+                CFGTableSwitch::New(alloc, old->low(), old->high());
             if (!tableSwitch->addDefault(&blocks_[old->defaultCase()->id()]))
                 return false;
             for (size_t i = 0; i < ins->numSuccessors() - 1; i++) {

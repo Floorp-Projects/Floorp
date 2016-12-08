@@ -501,8 +501,6 @@ BaselineScript::Destroy(FreeOp* fop, BaselineScript* script)
 {
 
     MOZ_ASSERT(!script->hasPendingIonBuilder());
-    fop->delete_(script->controlFlowGraph_);
-    script->controlFlowGraph_ = nullptr;
 
     script->unlinkDependentWasmImports(fop);
 
