@@ -47,6 +47,14 @@ WebRenderImageLayer::GetAsSourceSurface()
 }
 
 void
+WebRenderImageLayer::ClearCachedResources()
+{
+  if (mImageClient) {
+    mImageClient->ClearCachedResources();
+  }
+}
+
+void
 WebRenderImageLayer::RenderLayer()
 {
   RefPtr<gfx::SourceSurface> surface = GetAsSourceSurface();

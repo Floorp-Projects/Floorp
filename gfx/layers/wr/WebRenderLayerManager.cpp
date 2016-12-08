@@ -370,9 +370,24 @@ WebRenderLayerManager::DidComposite(uint64_t aTransactionId,
 }
 
 void
+WebRenderLayerManager::ClearLayer(Layer* aLayer)
+{
+  aLayer->ClearCachedResources();
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    ClearLayer(child);
+  }
+}
+
+void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   WRBridge()->SendClearCachedResources();
+  if (aSubtree) {
+    ClearLayer(aSubtree);
+  } else if (mRoot) {
+    ClearLayer(mRoot);
+  }
 }
 
 void

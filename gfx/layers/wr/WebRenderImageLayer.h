@@ -20,6 +20,8 @@ public:
   explicit WebRenderImageLayer(WebRenderLayerManager* aLayerManager);
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+
+  virtual void ClearCachedResources() override;
 protected:
   virtual ~WebRenderImageLayer();
 

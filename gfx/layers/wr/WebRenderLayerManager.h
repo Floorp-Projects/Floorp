@@ -146,11 +146,13 @@ public:
   WebRenderBridgeChild* WRBridge() const { return mWRChild; }
 
 private:
- /**
-  * Take a snapshot of the parent context, and copy
-  * it into mTarget.
-  */
- void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
+  /**
+   * Take a snapshot of the parent context, and copy
+   * it into mTarget.
+   */
+  void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
+
+  void ClearLayer(Layer* aLayer);
 
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
