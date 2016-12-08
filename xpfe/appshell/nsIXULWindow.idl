@@ -52,16 +52,6 @@ interface nsIXULWindow : nsISupports
   void tabParentRemoved(in nsITabParent aTab);
 
   /**
-   * The content shell specified by the supplied id.
-   *
-   * Note that this is a docshell tree item and therefore can not be assured of
-   * what object it is.  It could be an editor, a docshell, or a browser object.
-   * Or down the road any other object that supports being a DocShellTreeItem
-   * Query accordingly to determine the capabilities.
-   */
-  nsIDocShellTreeItem getContentShellById(in wstring ID);
-
-  /**
    * Tell this window that it has picked up a child XUL window
    * @param aChild the child window being added
    */
