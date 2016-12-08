@@ -376,7 +376,7 @@ protected:
       mResponseTarget->Dispatch(runnable.forget(), AbstractThread::DontAssertDispatchSuccess);
     }
 
-    virtual void Disconnect() override
+    void Disconnect() override
     {
       MOZ_ASSERT(ThenValueBase::mResponseTarget->IsCurrentThreadIn());
       MOZ_DIAGNOSTIC_ASSERT(!Request::mComplete);
@@ -486,18 +486,18 @@ protected:
       , mResolveMethod(aResolveMethod)
       , mRejectMethod(aRejectMethod) {}
 
-  virtual void Disconnect() override
-  {
-    ThenValueBase::Disconnect();
+    void Disconnect() override
+    {
+      ThenValueBase::Disconnect();
 
-    // If a Request has been disconnected, we don't guarantee that the
-    // resolve/reject runnable will be dispatched. Null out our refcounted
-    // this-value now so that it's released predictably on the dispatch thread.
-    mThisVal = nullptr;
-  }
+      // If a Request has been disconnected, we don't guarantee that the
+      // resolve/reject runnable will be dispatched. Null out our refcounted
+      // this-value now so that it's released predictably on the dispatch thread.
+      mThisVal = nullptr;
+    }
 
   protected:
-    virtual already_AddRefed<MozPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
+    already_AddRefed<MozPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
     {
       RefPtr<MozPromise> completion;
       if (aValue.IsResolve()) {
@@ -536,20 +536,20 @@ protected:
       mRejectFunction.emplace(Move(aRejectFunction));
     }
 
-  virtual void Disconnect() override
-  {
-    ThenValueBase::Disconnect();
+    void Disconnect() override
+    {
+      ThenValueBase::Disconnect();
 
-    // If a Request has been disconnected, we don't guarantee that the
-    // resolve/reject runnable will be dispatched. Destroy our callbacks
-    // now so that any references in closures are released predictable on
-    // the dispatch thread.
-    mResolveFunction.reset();
-    mRejectFunction.reset();
-  }
+      // If a Request has been disconnected, we don't guarantee that the
+      // resolve/reject runnable will be dispatched. Destroy our callbacks
+      // now so that any references in closures are released predictable on
+      // the dispatch thread.
+      mResolveFunction.reset();
+      mRejectFunction.reset();
+    }
 
   protected:
-    virtual already_AddRefed<MozPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
+    already_AddRefed<MozPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
     {
       // Note: The usage of InvokeCallbackMethod here requires that
       // ResolveFunction/RejectFunction are capture-lambdas (i.e. anonymous
@@ -667,7 +667,7 @@ private:
     MozPromise* mReceiver;
   };
 
-  public:
+public:
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
   ThenCommand Then(AbstractThread* aResponseThread, const char* aCallSite,
     ThisType* aThisVal, ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
