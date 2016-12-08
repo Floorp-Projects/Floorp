@@ -15,7 +15,6 @@
 namespace mozilla {
 
 class OggTrackDemuxer;
-class OggHeaders;
 
 class OggDemuxer : public MediaDataDemuxer
 {
@@ -203,7 +202,7 @@ private:
   // fails, or is complete. Initializes the codec state before returning.
   // Returns true if reading headers and initializtion of the stream
   // succeeds.
-  bool ReadHeaders(TrackInfo::TrackType aType, OggCodecState* aState, OggHeaders& aHeaders);
+  bool ReadHeaders(TrackInfo::TrackType aType, OggCodecState* aState);
 
   // Reads the next link in the chain.
   bool ReadOggChain(const media::TimeUnit& aLastEndTime);
@@ -217,10 +216,7 @@ private:
   void BuildSerialList(nsTArray<uint32_t>& aTracks);
 
   // Setup target bitstreams for decoding.
-  void SetupTargetTheora(TheoraState* aTheoraState, OggHeaders& aHeaders);
-  void SetupTargetVorbis(VorbisState* aVorbisState, OggHeaders& aHeaders);
-  void SetupTargetOpus(OpusState* aOpusState, OggHeaders& aHeaders);
-  void SetupTargetFlac(FlacState* aFlacState, OggHeaders& aHeaders);
+  void SetupTarget(OggCodecState** aSavedState, OggCodecState* aNewState);
   void SetupTargetSkeleton();
   void SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials);
   void FillTags(TrackInfo* aInfo, MetadataTags* aTags);
@@ -256,17 +252,17 @@ private:
   OggCodecStore mCodecStore;
 
   // Decode state of the Theora bitstream we're decoding, if we have video.
-  TheoraState* mTheoraState;
+  OggCodecState* mTheoraState;
 
   // Decode state of the Vorbis bitstream we're decoding, if we have audio.
-  VorbisState* mVorbisState;
+  OggCodecState* mVorbisState;
 
   // Decode state of the Opus bitstream we're decoding, if we have one.
-  OpusState* mOpusState;
+  OggCodecState* mOpusState;
 
   // Get the bitstream decode state for the given track type
   // Decode state of the Flac bitstream we're decoding, if we have one.
-  FlacState* mFlacState;
+  OggCodecState* mFlacState;
 
   OggCodecState* GetTrackCodecState(TrackInfo::TrackType aType) const;
   TrackInfo::TrackType GetCodecStateType(OggCodecState* aState) const;
@@ -296,17 +292,6 @@ private:
   MediaResourceIndex* CommonResource();
   OggStateContext mAudioOggState;
   OggStateContext mVideoOggState;
-
-  // Vorbis/Opus/Theora data used to compute timestamps. This is written on the
-  // decoder thread and read on the main thread. All reading on the main
-  // thread must be done after metadataloaded. We can't use the existing
-  // data in the codec states due to threading issues. You must check the
-  // associated mTheoraState or mVorbisState pointer is non-null before
-  // using this codec data.
-  uint32_t mVorbisSerial;
-  uint32_t mOpusSerial;
-  uint32_t mTheoraSerial;
-  uint32_t mFlacSerial;
 
   Maybe<int64_t> mStartTime;
 
