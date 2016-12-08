@@ -90,6 +90,15 @@ impl<T: ToJson> Into<Option<T>> for Nullable<T> {
     }
 }
 
+impl<T: ToJson> From<Option<T>> for Nullable<T> {
+    fn from(option: Option<T>) -> Nullable<T> {
+        match option {
+            Some(val) => Nullable::Value(val),
+            None => Nullable::Null,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct WebElement {
     pub id: String
