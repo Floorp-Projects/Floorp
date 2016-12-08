@@ -616,11 +616,11 @@ public:
     GetUniformLocation(const WebGLProgram& prog, const nsAString& name);
 
     void Hint(GLenum target, GLenum mode);
-    bool IsFramebuffer(WebGLFramebuffer* fb);
-    bool IsProgram(WebGLProgram* prog);
-    bool IsRenderbuffer(WebGLRenderbuffer* rb);
-    bool IsShader(WebGLShader* shader);
-    bool IsVertexArray(WebGLVertexArray* vao);
+    bool IsFramebuffer(const WebGLFramebuffer* fb);
+    bool IsProgram(const WebGLProgram* prog);
+    bool IsRenderbuffer(const WebGLRenderbuffer* rb);
+    bool IsShader(const WebGLShader* shader);
+    bool IsVertexArray(const WebGLVertexArray* vao);
     void LineWidth(GLfloat width);
     void LinkProgram(WebGLProgram& prog);
     void PixelStorei(GLenum pname, GLint param);
@@ -1628,33 +1628,95 @@ protected:
 
     //////
 public:
-    // Returns false if `object` is null or not valid.
-    template<class ObjectType>
-    bool ValidateObject(const char* info, const ObjectType* object);
+    bool ValidateObjectAllowDeleted(const char* funcName,
+                                    const WebGLContextBoundObject& object)
+    {
+        if (!object.IsCompatibleWithContext(this)) {
+            ErrorInvalidOperation("%s: Object from different WebGL context (or older"
+                                  " generation of this one) passed as argument.",
+                                  funcName);
+            return false;
+        }
 
-    // Returns false if `object` is not valid.
-    template<class ObjectType>
-    bool ValidateObjectRef(const char* info, const ObjectType& object);
+        return true;
+    }
 
-    // Returns false if `object` is not valid.  Considers null to be valid.
-    template<class ObjectType>
-    bool ValidateObjectAllowNull(const char* info, const ObjectType* object);
+    bool ValidateObject(const char* funcName, const WebGLDeletableObject& object,
+                        bool isShaderOrProgram = false)
+    {
+        if (!ValidateObjectAllowDeleted(funcName, object))
+            return false;
 
-    // Returns false if `object` is not valid, but considers deleted objects and
-    // null objects valid.
-    template<class ObjectType>
-    bool ValidateObjectAllowDeletedOrNull(const char* info, const ObjectType* object);
+        if (isShaderOrProgram) {
+            /* GLES 3.0.5 p45:
+             * "Commands that accept shader or program object names will generate the
+             *  error INVALID_VALUE if the provided name is not the name of either a
+             *  shader or program object[.]"
+             * Further, shaders and programs appear to be different from other objects,
+             * in that their lifetimes are better defined. However, they also appear to
+             * allow use of objects marked for deletion, and only reject
+             * actually-destroyed objects.
+             */
+            if (object.IsDeleted()) {
+                ErrorInvalidValue("%s: Shader or program object argument cannot have been"
+                                  " deleted.",
+                                  funcName);
+                return false;
+            }
+        } else {
+            if (object.IsDeleteRequested()) {
+                ErrorInvalidOperation("%s: Object argument cannot have been marked for"
+                                      " deletion.",
+                                      funcName);
+                return false;
+            }
+        }
 
-    // Returns false if `object` is null or not valid, but considers deleted
-    // objects valid.
-    template<class ObjectType>
-    bool ValidateObjectAllowDeleted(const char* info, const ObjectType* object);
+        return true;
+    }
 
-private:
-    // Like ValidateObject, but only for cases when `object` is known to not be
-    // null already.
-    template<class ObjectType>
-    bool ValidateObjectAssumeNonNull(const char* info, const ObjectType* object);
+    ////
+
+    bool ValidateObject(const char* funcName, const WebGLProgram& object);
+    bool ValidateObject(const char* funcName, const WebGLShader& object);
+
+    ////
+
+    bool ValidateIsObject(const char* funcName,
+                          const WebGLDeletableObject* object) const
+    {
+        if (IsContextLost())
+            return false;
+
+        if (!object)
+            return false;
+
+        if (!object->IsCompatibleWithContext(this))
+            return false;
+
+        if (object->IsDeleted())
+            return false;
+
+        return true;
+    }
+
+    bool ValidateDeleteObject(const char* funcName, const WebGLDeletableObject* object) {
+        if (IsContextLost())
+            return false;
+
+        if (!object)
+            return false;
+
+        if (!ValidateObjectAllowDeleted(funcName, *object))
+            return false;
+
+        if (object->IsDeleteRequested())
+            return false;
+
+        return true;
+    }
+
+    ////
 
 private:
     // -------------------------------------------------------------------------
@@ -1951,82 +2013,6 @@ inline nsISupports*
 ToSupports(WebGLContext* webgl)
 {
     return static_cast<nsIDOMWebGLRenderingContext*>(webgl);
-}
-
-/**
- ** Template implementations
- **/
-
-template<class ObjectType>
-inline bool
-WebGLContext::ValidateObjectAllowDeletedOrNull(const char* info, const ObjectType* object)
-{
-    if (object && !object->IsCompatibleWithContext(this)) {
-        ErrorInvalidOperation("%s: object from different WebGL context "
-                              "(or older generation of this one) "
-                              "passed as argument", info);
-        return false;
-    }
-
-    return true;
-}
-
-template<class ObjectType>
-inline bool
-WebGLContext::ValidateObjectAssumeNonNull(const char* info, const ObjectType* object)
-{
-    MOZ_ASSERT(object);
-
-    if (!ValidateObjectAllowDeletedOrNull(info, object))
-        return false;
-
-    if (object->IsDeleted()) {
-        ErrorInvalidValue("%s: Deleted object passed as argument.", info);
-        return false;
-    }
-
-    return true;
-}
-
-template<class ObjectType>
-inline bool
-WebGLContext::ValidateObjectAllowNull(const char* info, const ObjectType* object)
-{
-    if (!object)
-        return true;
-
-    return ValidateObjectAssumeNonNull(info, object);
-}
-
-template<class ObjectType>
-inline bool
-WebGLContext::ValidateObjectAllowDeleted(const char* info, const ObjectType* object)
-{
-    if (!object) {
-        ErrorInvalidValue("%s: null object passed as argument", info);
-        return false;
-    }
-
-    return ValidateObjectAllowDeletedOrNull(info, object);
-}
-
-template<class ObjectType>
-inline bool
-WebGLContext::ValidateObject(const char* info, const ObjectType* object)
-{
-    if (!object) {
-        ErrorInvalidValue("%s: null object passed as argument", info);
-        return false;
-    }
-
-    return ValidateObjectAssumeNonNull(info, object);
-}
-
-template<class ObjectType>
-inline bool
-WebGLContext::ValidateObjectRef(const char* info, const ObjectType& object)
-{
-    return ValidateObjectAssumeNonNull(info, &object);
 }
 
 // Returns `value` rounded to the next highest multiple of `multiple`.
