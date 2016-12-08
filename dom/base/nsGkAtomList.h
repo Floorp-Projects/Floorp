@@ -2127,13 +2127,11 @@ GK_ATOM(onstart, "onstart")
 GK_ATOM(onstop, "onstop")
 GK_ATOM(onphoto, "onphoto")
 GK_ATOM(onactivestatechanged, "onactivestatechanged")
-#ifdef MOZ_GAMEPAD
 GK_ATOM(ongamepadbuttondown, "ongamepadbuttondown")
 GK_ATOM(ongamepadbuttonup, "ongamepadbuttonup")
 GK_ATOM(ongamepadaxismove, "ongamepadaxismove")
 GK_ATOM(ongamepadconnected, "ongamepadconnected")
 GK_ATOM(ongamepaddisconnected, "ongamepaddisconnected")
-#endif
 
 // Content property names
 GK_ATOM(animationsProperty, "AnimationsProperty")        // FrameAnimations*
