@@ -127,6 +127,20 @@ public:
     }
   }
 
+  bool ResolutionEquals(const VideoCodecConfig& aConfig) const
+  {
+    if (mSimulcastEncodings.size() != aConfig.mSimulcastEncodings.size()) {
+      return false;
+    }
+    for (size_t i = 0; i < mSimulcastEncodings.size(); ++i) {
+      if (!mSimulcastEncodings[i].constraints.ResolutionEquals(
+            aConfig.mSimulcastEncodings[i].constraints)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // Nothing seems to use this right now. Do we intend to support this
   // someday?
   bool RtcpFbAckIsSet(const std::string& type) const

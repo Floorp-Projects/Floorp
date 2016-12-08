@@ -303,7 +303,6 @@ WebrtcVideoConduit::InitMain()
       {
         if (temp >= 0) {
           mPrefMaxBitrate = temp;
-          mNegotiatedMaxBitrate = temp; // simplifies logic in SelectBitrate (don't have to do two limit tests)
         }
       }
       if (mMinBitrate != 0 && mMinBitrate < webrtc::kViEMinCodecBitrate) {
@@ -727,7 +726,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     }//for
   }
 
-  if(codecFound == false)
+  if(!codecFound)
   {
     CSFLogError(logTag, "%s Codec Mismatch ", __FUNCTION__);
     return kMediaConduitInvalidSendCodec;
@@ -738,25 +737,62 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 
   // Note: only for overriding parameters from GetCodec()!
   CodecConfigToWebRTCCodec(codecConfig, video_codec);
-  if (mSendingWidth != 0) {
-    // We're already in a call and are reconfiguring (perhaps due to
-    // ReplaceTrack).  Set to match the last frame we sent.
-
-    // We could also set mLastWidth to 0, to force immediate reconfig -
-    // more expensive, but perhaps less risk of missing something.  Really
-    // on ReplaceTrack we should just call ConfigureCodecMode(), and if the
-    // mode changed, we re-configure.
-    // Do this after CodecConfigToWebRTCCodec() to avoid messing up simulcast
-    video_codec.width = mSendingWidth;
-    video_codec.height = mSendingHeight;
-    video_codec.maxFramerate = mSendingFramerate;
-  } else {
-    mSendingWidth = 0;
-    mSendingHeight = 0;
-    mSendingFramerate = video_codec.maxFramerate;
-  }
 
   video_codec.mode = mCodecMode;
+
+  if (mSendingWidth != 0) {
+    bool resolutionChanged;
+    {
+      MutexAutoLock lock(mCodecMutex);
+      resolutionChanged = !mCurSendCodecConfig->ResolutionEquals(*codecConfig);
+    }
+
+    if (resolutionChanged) {
+      // We're already in a call and due to renegotiation an encoder parameter
+      // that requires reconfiguration has changed. Resetting these members
+      // triggers reconfig on the next frame.
+      mLastWidth = 0;
+      mLastHeight = 0;
+      mSendingWidth = 0;
+      mSendingHeight = 0;
+    } else {
+      // We're already in a call but changes don't require a reconfiguration.
+      // We update the resolutions in the send codec to match the current
+      // settings.
+      webrtc::VideoCodec oldSendCodec;
+      if ((error = mPtrViECodec->GetSendCodec(mChannel, oldSendCodec)) != 0) {
+        CSFLogError(logTag, "%s: GetSendCodec failed, err %d", __FUNCTION__, error);
+        return kMediaConduitInvalidSendCodec;
+      }
+
+      if (video_codec.numberOfSimulcastStreams !=
+          oldSendCodec.numberOfSimulcastStreams) {
+        MOZ_ASSERT(false);
+        return kMediaConduitInvalidSendCodec;
+      }
+
+      video_codec.width = oldSendCodec.width;
+      video_codec.height = oldSendCodec.height;
+      SelectBitrates(video_codec.width, video_codec.height,
+                     video_codec.maxBitrate,
+                     mLastFramerateTenths,
+                     video_codec.minBitrate,
+                     video_codec.targetBitrate,
+                     video_codec.maxBitrate);
+      for (size_t i = 0; i < video_codec.numberOfSimulcastStreams; ++i) {
+        webrtc::SimulcastStream& stream(video_codec.simulcastStream[i]);
+        stream.width = oldSendCodec.simulcastStream[i].width;
+        stream.height = oldSendCodec.simulcastStream[i].height;
+        SelectBitrates(stream.width,
+                       stream.height,
+                       MinIgnoreZero(stream.jsMaxBitrate, video_codec.maxBitrate),
+                       mLastFramerateTenths,
+                       stream.minBitrate,
+                       stream.targetBitrate,
+                       stream.maxBitrate);
+      }
+    }
+  }
 
   if(mPtrViECodec->SetSendCodec(mChannel, video_codec) == -1)
   {
