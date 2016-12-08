@@ -1,12 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* exported Task, browserRequire */
 
 "use strict";
 
 var { utils: Cu } = Components;
 
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var { Assert } = require("resource://testing-common/Assert.jsm");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var { Task } = require("devtools/shared/task");
 
