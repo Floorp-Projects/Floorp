@@ -8,6 +8,7 @@
 
 #include "gfxPlatform.h"
 #include "mozilla/layers/CompositableChild.h"
+#include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/PTextureChild.h"
@@ -83,10 +84,8 @@ WebRenderBridgeChild::DPEnd(bool aIsSync, uint64_t aTransactionId)
 }
 
 uint64_t
-WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
+WebRenderBridgeChild::GetNextExternalImageId()
 {
-  MOZ_ASSERT(!mDestroyed);
-
   static uint32_t sNextID = 1;
   ++sNextID;
   MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
@@ -96,8 +95,31 @@ WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
   uint32_t procId = static_cast<uint32_t>(base::GetCurrentProcId());
   uint64_t imageId = procId;
   imageId = imageId << 32 | sNextID;
+  return imageId;
+}
 
+uint64_t
+WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
+{
+  MOZ_ASSERT(!mDestroyed);
+
+  uint64_t imageId = GetNextExternalImageId();
   SendAddExternalImageId(imageId, aAsyncContainerID);
+  return imageId;
+}
+
+uint64_t
+WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable)
+{
+  MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
+
+  if (!aCompositable->GetIPDLActor()) {
+    return 0;
+  }
+
+  uint64_t imageId = GetNextExternalImageId();
+  SendAddExternalImageIdForCompositable(imageId, aCompositable->GetIPDLActor());
   return imageId;
 }
 
