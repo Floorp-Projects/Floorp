@@ -1362,69 +1362,56 @@ enum class CFGState : uint32_t {
     Success = 2
 };
 
-// Keeps track of the lifetime of the created CFG.
-// If possible it will forward the lifetime to the baselineScript,
-// which will take care of removing the memory if needed.
-// Else this class will remove it at destruction.
-class AutoControlFlowGraph
+static CFGState
+GetOrCreateControlFlowGraph(TempAllocator& tempAlloc, JSScript* script,
+                            const ControlFlowGraph** cfgOut)
 {
-    TempAllocator& alloc;
-    JSScript* script;
-    ControlFlowGraph* cfg_;
-
-  public:
-    AutoControlFlowGraph(TempAllocator& alloc, JSScript* script)
-      : alloc(alloc),
-        script(script),
-        cfg_(nullptr)
-    { }
-
-    CFGState getOrCreate(const ControlFlowGraph** cfg_out) {
-        if (script->hasBaselineScript() && script->baselineScript()->controlFlowGraph()) {
-            *cfg_out = script->baselineScript()->controlFlowGraph();
-            return CFGState::Success;
-        }
-
-        ControlFlowGenerator cfgenerator(alloc, script);
-        if (!cfgenerator.init())
-            return CFGState::Alloc;
-
-        if (!cfgenerator.traverseBytecode()) {
-            if (cfgenerator.aborted())
-                return CFGState::Abort;
-            return CFGState::Alloc;
-        }
-
-        cfg_ = cfgenerator.getGraph();
-        if (!cfg_)
-            return CFGState::Alloc;
-
-        if (script->hasBaselineScript())
-            script->baselineScript()->setControlFlowGraph(cfg_);
-
-        if (JitSpewEnabled(JitSpew_CFG)) {
-            JitSpew(JitSpew_CFG, "Generating graph for %s:%" PRIuSIZE,
-                                 script->filename(), script->lineno());
-            Fprinter& print = JitSpewPrinter();
-            cfg_->dump(print, script);
-        }
-
-        *cfg_out = cfg_;
+    if (script->hasBaselineScript() && script->baselineScript()->controlFlowGraph()) {
+        *cfgOut = script->baselineScript()->controlFlowGraph();
         return CFGState::Success;
     }
 
-    ~AutoControlFlowGraph() {
-        if (!cfg_)
-            return;
+    ControlFlowGenerator cfgenerator(tempAlloc, script);
+    if (!cfgenerator.init())
+        return CFGState::Alloc;
 
-        if (script->hasBaselineScript()) {
-            MOZ_ASSERT(script->baselineScript()->controlFlowGraph() == cfg_);
-            return;
-        }
-
-        js_delete(cfg_);
+    if (!cfgenerator.traverseBytecode()) {
+        if (cfgenerator.aborted())
+            return CFGState::Abort;
+        return CFGState::Alloc;
     }
-};
+
+    // If possible cache the control flow graph on the baseline script.
+    TempAllocator* graphAlloc = nullptr;
+    if (script->hasBaselineScript()) {
+        LifoAlloc& lifoAlloc = script->zone()->jitZone()->cfgSpace()->lifoAlloc();
+        LifoAlloc::AutoFallibleScope fallibleAllocator(&lifoAlloc);
+        graphAlloc = lifoAlloc.new_<TempAllocator>(&lifoAlloc);
+        if (!graphAlloc)
+            return CFGState::Alloc;
+    } else {
+        graphAlloc = &tempAlloc;
+    }
+
+    ControlFlowGraph* cfg = cfgenerator.getGraph(*graphAlloc);
+    if (!cfg)
+        return CFGState::Alloc;
+
+    if (script->hasBaselineScript()) {
+        MOZ_ASSERT(!script->baselineScript()->controlFlowGraph());
+        script->baselineScript()->setControlFlowGraph(cfg);
+    }
+
+    if (JitSpewEnabled(JitSpew_CFG)) {
+        JitSpew(JitSpew_CFG, "Generating graph for %s:%" PRIuSIZE,
+                             script->filename(), script->lineno());
+        Fprinter& print = JitSpewPrinter();
+        cfg->dump(print, script);
+    }
+
+    *cfgOut = cfg;
+    return CFGState::Success;
+}
 
 // We traverse the bytecode using the control flow graph. This structure contains
 // a graph of CFGBlocks in RPO order.
@@ -1445,8 +1432,9 @@ class AutoControlFlowGraph
 bool
 IonBuilder::traverseBytecode()
 {
-    AutoControlFlowGraph autoCFG(alloc(), info().script());
-    CFGState state = autoCFG.getOrCreate(&cfg);
+    CFGState state = GetOrCreateControlFlowGraph(alloc(), info().script(), &cfg);
+    MOZ_ASSERT_IF(cfg && info().script()->hasBaselineScript(),
+                  info().script()->baselineScript()->controlFlowGraph() == cfg);
     if (state == CFGState::Alloc) {
         abortReason_ = AbortReason_Alloc;
         return false;

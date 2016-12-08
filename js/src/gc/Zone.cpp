@@ -243,6 +243,13 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
              * opcodes are setting array holes or accessing getter properties.
              */
             script->resetWarmUpCounter();
+
+            /*
+             * Make it impossible to use the control flow graphs cached on the
+             * BaselineScript. They get deleted.
+             */
+            if (script->hasBaselineScript())
+                script->baselineScript()->setControlFlowGraph(nullptr);
         }
 
         /*
@@ -255,6 +262,13 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
          */
         if (discardBaselineCode)
             jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(fop->runtime());
+
+        /*
+         * Free all control flow graphs that are cached on BaselineScripts.
+         * Assuming this happens on the mainthread and all control flow
+         * graph reads happen on the mainthread, this is save.
+         */
+        jitZone()->cfgSpace()->lifoAlloc().freeAll();
     }
 }
 

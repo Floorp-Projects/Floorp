@@ -35,6 +35,27 @@ class CFGControlInstruction;
         return new(alloc) CFGThisOpcode(mozilla::Forward<Args>(args)...);     \
     }
 
+class CFGSpace
+{
+    static const size_t DEFAULT_CHUNK_SIZE = 4096;
+
+  protected:
+    LifoAlloc allocator_;
+  public:
+
+    explicit CFGSpace()
+      : allocator_(DEFAULT_CHUNK_SIZE)
+    {}
+
+    LifoAlloc& lifoAlloc() {
+        return allocator_;
+    }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return allocator_.sizeOfExcludingThis(mallocSizeOf);
+    }
+};
+
 class CFGBlock : public TempObject
 {
     size_t id_;
@@ -518,32 +539,26 @@ class CFGLoopEntry : public CFGUnaryControlInstruction
 
 typedef Vector<CFGBlock*, 4, JitAllocPolicy> CFGBlockVector;
 
-class ControlFlowGraph
+class ControlFlowGraph : public TempObject
 {
-    // Keeps the data alive until destruction.
-    LifoAlloc lifoAlloc_;
-    TempAllocator alloc_;
-
     // A list of blocks in RPO, containing per block a pc-range and
     // a control instruction.
     Vector<CFGBlock, 4, JitAllocPolicy> blocks_;
 
-  public:
-    ControlFlowGraph()
-      : lifoAlloc_(TempAllocator::PreferredLifoChunkSize),
-        alloc_(&lifoAlloc_),
-        blocks_(alloc_)
+    explicit ControlFlowGraph(TempAllocator& alloc)
+      : blocks_(alloc)
     {}
+
+  public:
+    static ControlFlowGraph* New(TempAllocator& alloc) {
+        return new(alloc) ControlFlowGraph(alloc);
+    }
 
     ControlFlowGraph(const ControlFlowGraph&) = delete;
     void operator=(const ControlFlowGraph&) = delete;
 
     void dump(GenericPrinter& print, JSScript* script);
-    bool init(const CFGBlockVector& blocks);
-
-    TempAllocator& alloc() {
-        return alloc_;
-    }
+    bool init(TempAllocator& alloc, const CFGBlockVector& blocks);
 
     const CFGBlock* block(size_t i) const {
         return &blocks_[i];
@@ -735,14 +750,12 @@ class ControlFlowGenerator
 
     MOZ_MUST_USE bool traverseBytecode();
     MOZ_MUST_USE bool addBlock(CFGBlock* block);
-    ControlFlowGraph* getGraph() {
-        ControlFlowGraph* cfg = js_new<ControlFlowGraph>();
+    ControlFlowGraph* getGraph(TempAllocator& alloc) {
+        ControlFlowGraph* cfg = ControlFlowGraph::New(alloc);
         if (!cfg)
             return nullptr;
-        if (!cfg->init(blocks_)) {
-            js_delete(cfg);
+        if (!cfg->init(alloc, blocks_))
             return nullptr;
-        }
         return cfg;
     }
 
