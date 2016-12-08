@@ -315,6 +315,11 @@ PerformanceTiming::ResponseStartHighRes()
      (!mCacheReadStart.IsNull() && mCacheReadStart < mResponseStart)) {
     mResponseStart = mCacheReadStart;
   }
+
+  if (mResponseStart.IsNull() ||
+      (!mRequestStart.IsNull() && mResponseStart < mRequestStart)) {
+    mResponseStart = mRequestStart;
+  }
   return TimeStampToDOMHighResOrFetchStart(mResponseStart);
 }
 
