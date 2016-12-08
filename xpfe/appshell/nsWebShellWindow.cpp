@@ -622,7 +622,6 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
 #endif // USE_NATIVE_MENUS
 
   OnChromeLoaded();
-  LoadContentAreas();
 
   return NS_OK;
 }
@@ -656,81 +655,6 @@ nsWebShellWindow::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-
-//----------------------------------------
-
-// if the main document URL specified URLs for any content areas, start them loading
-void nsWebShellWindow::LoadContentAreas() {
-
-  nsAutoString searchSpec;
-
-  // fetch the chrome document URL
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  // yes, it's possible for the docshell to be null even this early
-  // see bug 57514.
-  if (mDocShell)
-    mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (contentViewer) {
-    nsIDocument* doc = contentViewer->GetDocument();
-    if (doc) {
-      nsIURI* mainURL = doc->GetDocumentURI();
-
-      nsCOMPtr<nsIURL> url = do_QueryInterface(mainURL);
-      if (url) {
-        nsAutoCString search;
-        url->GetQuery(search);
-
-        AppendUTF8toUTF16(search, searchSpec);
-      }
-    }
-  }
-
-  // content URLs are specified in the search part of the URL
-  // as <contentareaID>=<escapedURL>[;(repeat)]
-  if (!searchSpec.IsEmpty()) {
-    int32_t     begPos,
-                eqPos,
-                endPos;
-    nsString    contentAreaID,
-                contentURL;
-    char        *urlChar;
-    nsresult rv;
-    for (endPos = 0; endPos < (int32_t)searchSpec.Length(); ) {
-      // extract contentAreaID and URL substrings
-      begPos = endPos;
-      eqPos = searchSpec.FindChar('=', begPos);
-      if (eqPos < 0)
-        break;
-
-      endPos = searchSpec.FindChar(';', eqPos);
-      if (endPos < 0)
-        endPos = searchSpec.Length();
-      searchSpec.Mid(contentAreaID, begPos, eqPos-begPos);
-      searchSpec.Mid(contentURL, eqPos+1, endPos-eqPos-1);
-      endPos++;
-
-      // see if we have a docshell with a matching contentAreaID
-      nsCOMPtr<nsIDocShellTreeItem> content;
-      rv = GetContentShellById(contentAreaID.get(), getter_AddRefs(content));
-      if (NS_SUCCEEDED(rv) && content) {
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(content));
-        if (webNav) {
-          urlChar = ToNewCString(contentURL);
-          if (urlChar) {
-            nsUnescape(urlChar);
-            contentURL.AssignWithConversion(urlChar);
-            webNav->LoadURI(contentURL.get(),
-                          nsIWebNavigation::LOAD_FLAGS_NONE,
-                          nullptr,
-                          nullptr,
-                          nullptr);
-            free(urlChar);
-          }
-        }
-      }
-    }
-  }
-}
 
 /**
  * ExecuteCloseHandler - Run the close handler, if any.
