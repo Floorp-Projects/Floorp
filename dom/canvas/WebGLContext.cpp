@@ -2221,25 +2221,14 @@ Intersect(uint32_t srcSize, int32_t dstStartInSrc, uint32_t dstSize,
     *out_intSize = std::max<int32_t>(0, intEndInSrc - *out_intStartInSrc);
 }
 
-static bool
-ZeroTexImageWithClear(WebGLContext* webgl, GLContext* gl, TexImageTarget target,
-                      GLuint tex, uint32_t level, const webgl::FormatUsageInfo* usage,
-                      uint32_t width, uint32_t height)
+static void
+ZeroANGLEDepthTexture(WebGLContext* webgl, GLuint tex,
+                      const webgl::FormatUsageInfo* usage, uint32_t width,
+                      uint32_t height)
 {
-    MOZ_ASSERT(gl->IsCurrent());
-
-    ScopedFramebuffer scopedFB(gl);
-    ScopedBindFramebuffer scopedBindFB(gl, scopedFB.FB());
-
-    const auto format = usage->format;
-
+    const auto& format = usage->format;
     GLenum attachPoint = 0;
     GLbitfield clearBits = 0;
-
-    if (format->IsColorFormat()) {
-        attachPoint = LOCAL_GL_COLOR_ATTACHMENT0;
-        clearBits = LOCAL_GL_COLOR_BUFFER_BIT;
-    }
 
     if (format->d) {
         attachPoint = LOCAL_GL_DEPTH_ATTACHMENT;
@@ -2254,34 +2243,23 @@ ZeroTexImageWithClear(WebGLContext* webgl, GLContext* gl, TexImageTarget target,
 
     MOZ_RELEASE_ASSERT(attachPoint && clearBits, "GFX: No bits cleared.");
 
-    {
-        gl::GLContext::LocalErrorScope errorScope(*gl);
-        MOZ_ASSERT(target != LOCAL_GL_TEXTURE_2D_ARRAY &&
-                   target != LOCAL_GL_TEXTURE_3D);
-        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachPoint, target.get(), tex,
-                                  level);
-        if (errorScope.GetError()) {
-            MOZ_ASSERT(false);
-            return false;
-        }
-    }
+    ////
+    const auto& gl = webgl->gl;
+    MOZ_ASSERT(gl->IsCurrent());
 
-    auto status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-    if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
-        return false;
+    ScopedFramebuffer scopedFB(gl);
+    ScopedBindFramebuffer scopedBindFB(gl, scopedFB.FB());
 
-    {
-        gl::GLContext::LocalErrorScope errorScope(*gl);
+    gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachPoint, LOCAL_GL_TEXTURE_2D,
+                              tex, 0);
 
-        const bool fakeNoAlpha = false;
-        webgl->ForceClearFramebufferWithDefaultValues(clearBits, fakeNoAlpha);
-        if (errorScope.GetError()) {
-            MOZ_ASSERT(false);
-            return false;
-        }
-    }
+    const auto& status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    MOZ_RELEASE_ASSERT(status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
 
-    return true;
+    ////
+
+    const bool fakeNoAlpha = false;
+    webgl->ForceClearFramebufferWithDefaultValues(clearBits, fakeNoAlpha);
 }
 
 bool
@@ -2360,12 +2338,16 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
     const auto driverUnpackInfo = usage->idealUnpack;
     MOZ_RELEASE_ASSERT(driverUnpackInfo, "GFX: ideal unpack info not set.");
 
-    if (!webgl->IsWebGL2() && usage->format->d) {
+    if (webgl->IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture) &&
+        gl->IsANGLE() &&
+        usage->format->d)
+    {
         // ANGLE_depth_texture does not allow uploads, so we have to clear.
-        const bool success = ZeroTexImageWithClear(webgl, gl, target, tex, level, usage,
-                                                   width, height);
-        MOZ_ASSERT(success);
-        return success;
+        // (Restriction because of D3D9)
+        MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D);
+        MOZ_ASSERT(level == 0);
+        ZeroANGLEDepthTexture(webgl, tex, usage, width, height);
+        return true;
     }
 
     const webgl::PackingInfo packing = driverUnpackInfo->ToPacking();
