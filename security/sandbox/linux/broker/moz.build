@@ -20,6 +20,9 @@ if CONFIG['OS_TARGET'] == 'Android':
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         DEFINES['HAVE_ANDROID_OS'] = True
 
+if CONFIG['MOZ_ALSA']:
+    DEFINES['MOZ_ALSA'] = True
+
 LOCAL_INCLUDES += [
     '/security/sandbox/linux', # SandboxLogging.h, SandboxInfo.h
 ]

@@ -139,6 +139,28 @@ VideoData::~VideoData()
 {
 }
 
+void
+VideoData::SetListener(UniquePtr<Listener> aListener)
+{
+  MOZ_ASSERT(!mSentToCompositor, "Listener should be registered before sending data");
+
+  mListener = Move(aListener);
+}
+
+void
+VideoData::MarkSentToCompositor()
+{
+  if (mSentToCompositor) {
+    return;
+  }
+
+  mSentToCompositor = true;
+  if (mListener != nullptr) {
+    mListener->OnSentToCompositor();
+    mListener = nullptr;
+  }
+}
+
 size_t
 VideoData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
