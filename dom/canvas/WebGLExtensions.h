@@ -344,7 +344,7 @@ public:
 
     already_AddRefed<WebGLVertexArray> CreateVertexArrayOES();
     void DeleteVertexArrayOES(WebGLVertexArray* array);
-    bool IsVertexArrayOES(WebGLVertexArray* array);
+    bool IsVertexArrayOES(const WebGLVertexArray* array);
     void BindVertexArrayOES(WebGLVertexArray* array);
 
     DECL_WEBGL_EXTENSION_GOOP

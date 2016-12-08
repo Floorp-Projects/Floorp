@@ -114,3 +114,78 @@ win64/pgo:
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
 
+win32-clang/debug:
+    description: "Win32 Clang-cl Debug"
+    index:
+        product: firefox
+        job-name: win32-clang-debug
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: tc(Bcl)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win32_clang_debug.py
+
+win32-clang/opt:
+    description: "Win32 Clang-cl Opt"
+    index:
+        product: firefox
+        job-name: win32-clang-opt
+    treeherder:
+        platform: windows2012-32/opt
+        symbol: tc(Bcl)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win32_clang.py
+
+win64-clang/debug:
+    description: "Win64 Clang-cl Debug"
+    index:
+        product: firefox
+        job-name: win64-clang-debug
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: tc(Bcl)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_clang_debug.py
+
+win64-clang/opt:
+    description: "Win64 Clang-cl Opt"
+    index:
+        product: firefox
+        job-name: win64-clang-opt
+    treeherder:
+        platform: windows2012-64/opt
+        symbol: tc(Bcl)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_clang.py

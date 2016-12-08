@@ -23,7 +23,6 @@ class WebGLRenderbuffer final
     , public WebGLRefCountedObject<WebGLRenderbuffer>
     , public LinkedListElement<WebGLRenderbuffer>
     , public WebGLRectangleObject
-    , public WebGLContextBoundObject
     , public WebGLFramebufferAttachable
 {
     friend class WebGLContext;

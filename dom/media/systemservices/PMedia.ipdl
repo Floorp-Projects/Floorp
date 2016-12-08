@@ -18,18 +18,19 @@ parent:
    * This is needed by mediaDevices.enumerateDevices() to produce persistent
    * deviceIds that wont work cross-origin.
    *
-   * If aPrivateBrowsing is false, a key for this origin is returned from a
-   * primary pool of temporal in-memory keys and persistent keys read from disk.
-   * If no key exists, a temporal one is created.
+   * The origin string must contain the OriginAttributes suffix.
+   * If this OriginAttributes dictionary has the privateBrowsing flag set to
+   * false, a key for this origin is returned from a primary pool of temporal
+   * in-memory keys and persistent keys read from disk. If no key exists, a
+   * temporal one is created.
    * If aPersist is true and key is temporal, the key is promoted to persistent.
    * Once persistent, a key cannot become temporal again.
    *
-   * If aPrivateBrowsing is true, a different key for this origin is returned
-   * from a secondary pool that is never persisted to disk, and aPersist is
-   * ignored.
+   * If the OriginAttributes dictionary has the privateBrowsing flag set to
+   * true, a different key for this origin is returned from a secondary pool
+   * that is never persisted to disk, and aPersist is ignored.
    */
-  async GetOriginKey(uint32_t aRequestId, nsCString aOrigin, bool aPrivateBrowsing,
-                     bool aPersist);
+  async GetOriginKey(uint32_t aRequestId, nsCString aOrigin, bool aPersist);
 
   /**
    * Clear per-orgin list of persistent deviceIds stored for enumerateDevices

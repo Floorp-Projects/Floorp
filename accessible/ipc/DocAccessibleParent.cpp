@@ -496,7 +496,9 @@ DocAccessibleParent::RecvGetWindowedPluginIAccessible(
   // one that belongs to its child (see HTMLWin32ObjectAccessible).
   HWND childWnd = ::GetWindow(reinterpret_cast<HWND>(aHwnd), GW_CHILD);
   if (!childWnd) {
-    return IPC_FAIL(this, "GetWindow failed");
+    // We're seeing this in the wild - the plugin is windowed but we no longer
+    // have a window.
+    return IPC_OK();
   }
 
   IAccessible* rawAccPlugin = nullptr;

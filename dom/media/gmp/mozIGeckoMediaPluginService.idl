@@ -161,12 +161,11 @@ interface mozIGeckoMediaPluginService : nsISupports
                        in GetGMPDecryptorCallback callback);
 
   /**
-   * Gets the NodeId for a (origin, urlbarOrigin, isInprivateBrowsing) tuple.
+   * Gets the NodeId for a (origin, urlbarOrigin) pair.
    */
   [noscript]
   void getNodeId(in AString origin,
                  in AString topLevelOrigin,
                  in AString gmpName,
-                 in bool inPrivateBrowsingMode,
                  in GetNodeIdCallback callback);
 };
