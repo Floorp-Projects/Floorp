@@ -370,8 +370,6 @@ public:
     mShadow = nullptr;
   }
 
-  virtual void ClearCachedResources() { }
-
   // Shrink memory usage.
   // Called when "memory-pressure" is observed.
   virtual void HandleMemoryPressure() { }
