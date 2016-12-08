@@ -368,6 +368,7 @@ function RTCPeerConnection() {
   this._iceGatheringState = this._iceConnectionState = "new";
 
   this._hasStunServer = this._hasTurnServer = false;
+  this._iceGatheredRelayCandidates = false;
 }
 RTCPeerConnection.prototype = {
   classDescription: "RTCPeerConnection",
@@ -1313,6 +1314,9 @@ PeerConnectionObserver.prototype = {
     if (candidate == "") {
       this.foundIceCandidate(null);
     } else {
+      if (candidate.includes(" typ relay ")) {
+        this._dompc._iceGatheredRelayCandidates = true;
+      }
       this.foundIceCandidate(new this._dompc._win.RTCIceCandidate(
           {
               candidate: candidate,
@@ -1391,6 +1395,9 @@ PeerConnectionObserver.prototype = {
       }
       else if (!pc._hasTurnServer) {
         pc.logError("ICE failed, add a TURN server and see about:webrtc for more details");
+      }
+      else if (pc._hasTurnServer && !pc._iceGatheredRelayCandidates) {
+        pc.logError("ICE failed, your TURN server appears to be broken, see about:webrtc for more details");
       }
       else {
         pc.logError("ICE failed, see about:webrtc for more details");
