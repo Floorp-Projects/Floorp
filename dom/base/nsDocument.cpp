@@ -12793,7 +12793,7 @@ nsDocument::CheckCustomElementName(const ElementCreationOptions& aOptions,
   // only check aOptions if 'is' is passed and the webcomponents preference
   // is enabled
   if (!aOptions.mIs.WasPassed() ||
-      !Preferences::GetBool("dom.webcomponents.enabled")) {
+      !CustomElementRegistry::IsCustomElementEnabled()) {
       return nullptr;
   }
 
