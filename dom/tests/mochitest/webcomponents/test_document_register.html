@@ -101,6 +101,7 @@ function startTest() {
   is(extendedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
   is(extendedButton.__proto__, extendedProto, "Created element should have the prototype of the extended type.");
   is(extendedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
+  is(extendedButton.type, "submit", "Created element should be a button with type of \"submit\"");
 
   // document.createElementNS with different namespace than definition.
   try {
