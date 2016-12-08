@@ -162,13 +162,8 @@ NS_INTERFACE_MAP_END
 /* static */ bool
 CustomElementsRegistry::IsCustomElementsEnabled(JSContext* aCx, JSObject* aObject)
 {
-  JS::Rooted<JSObject*> obj(aCx, aObject);
-  if (Preferences::GetBool("dom.webcomponents.customelements.enabled") ||
-      Preferences::GetBool("dom.webcomponents.enabled")) {
-    return true;
-  }
-
-  return false;
+  return Preferences::GetBool("dom.webcomponents.customelements.enabled") ||
+         Preferences::GetBool("dom.webcomponents.enabled");
 }
 
 /* static */ already_AddRefed<CustomElementsRegistry>
@@ -181,8 +176,7 @@ CustomElementsRegistry::Create(nsPIDOMWindowInner* aWindow)
     return nullptr;
   }
 
-  if (!Preferences::GetBool("dom.webcomponents.customelements.enabled") &&
-      !Preferences::GetBool("dom.webcomponents.enabled")) {
+  if (!IsCustomElementsEnabled()) {
     return nullptr;
   }
 
