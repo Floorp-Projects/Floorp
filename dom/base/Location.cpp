@@ -581,7 +581,7 @@ Location::GetPathname(nsAString& aPathname)
 
   result = GetURI(getter_AddRefs(uri));
 
-  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  nsCOMPtr<nsIURIWithQuery> url(do_QueryInterface(uri));
   if (url) {
     nsAutoCString file;
 
@@ -604,12 +604,12 @@ Location::SetPathname(const nsAString& aPathname)
     return rv;
   }
 
-  rv = uri->SetPath(NS_ConvertUTF16toUTF8(aPathname));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsCOMPtr<nsIURIWithQuery> url(do_QueryInterface(uri));
+  if (url && NS_SUCCEEDED(url->SetFilePath(NS_ConvertUTF16toUTF8(aPathname)))) {
+    return SetURI(uri);
   }
 
-  return SetURI(uri);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
