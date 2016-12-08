@@ -1,23 +1,16 @@
-If you are having an issue with GeckoDriver starting up, please make sure that your client bindings support using it.
+In order to help us efficiently investigate your issue, please provide the following information:
 
-## Meta -
-OS:  
-e.g.: Windows 10? OSX?
+## Firefox Version
+From the "About" dialog.
 
-Browser Version:  
-e.g.: 50.0.2623.87 (64-bit)
-
-## Expected Behavior -
-
-## Actual Behavior -
+## Platform
+e.g. Windows/OSX/Linux
 
 ## Steps to reproduce -
-_Note:_ Please be sure to include an SSCCE (Short, Self Contained, Correct [compilable] example) http://sscce.org/
-If you can't provide a link to the page, consider creating a reproducible page on https://jsfiddle.net/
+Please provide a description of how to reproduce the problem, including the following essential elements:
 
+ - [ ] A *minimal* HTML file (or files) that can be used to reproduce the issue (this should not be your production site, unless you are unable to isolate the problem, but a page containing only the elements required to observe the problem).
 
- - [ ] A [trace level log](https://github.com/mozilla/geckodriver#firefox-capabilities) from geckodriver showing the issue
- - [ ] A minimal HTML file (or files) that can be used to reproduce the issue
- - [ ] A Selenium code snippet that can be run as is to reproduce the issues
+ - [ ] A [trace level log](https://github.com/mozilla/geckodriver#firefox-capabilities) from a geckodriver session that demonstrates the problem using the minimal example file. Note: this is *not* the same as a selenium log.
 
 ** If any of the above are missing we will have to unforunately close your issue. We will gladly reopen the issue once all the information requested has been added **
