@@ -22,5 +22,5 @@ function dump(msg) {
 }
 
 function startup() {
-    dump("zerdatime " + Date.now() + " - geckoivew chrome startup finished.");
+    dump("zerdatime " + Date.now() + " - geckoview chrome startup finished.");
 }
