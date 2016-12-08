@@ -34,12 +34,12 @@ use webdriver::command::WebDriverCommand::{
     ExecuteScript, ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
     DeleteCookies, DeleteCookie, GetTimeouts, SetTimeouts, DismissAlert,
     AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, TakeElementScreenshot,
-    Extension, SetWindowPosition, GetWindowPosition};
+    Extension, SetWindowPosition, GetWindowPosition, PerformActions, ReleaseActions};
 use webdriver::command::{
     NewSessionParameters, GetParameters, WindowSizeParameters, SwitchToWindowParameters,
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetCookieParameters, AddCookieParameters, TimeoutsParameters,
-    TakeScreenshotParameters, WindowPositionParameters};
+    ActionsParameters, TakeScreenshotParameters, WindowPositionParameters};
 use webdriver::response::{
     WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
     WindowPositionResponse, ElementRectResponse, CookieResponse, Cookie};
@@ -576,7 +576,8 @@ impl MarionetteSession {
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
             DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
-            ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) => {
+            ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) |
+            PerformActions(_) | ReleaseActions => {
                 WebDriverResponse::Void
             },
             //Things that simply return the contents of the marionette "value" property
@@ -917,6 +918,8 @@ impl MarionetteCommand {
             GetElementTagName(ref x) => (Some("getElementTagName"), Some(x.to_marionette())),
             GetElementRect(ref x) => (Some("getElementRect"), Some(x.to_marionette())),
             IsEnabled(ref x) => (Some("isElementEnabled"), Some(x.to_marionette())),
+            PerformActions(ref x) => (Some("performActions"), Some(x.to_marionette())),
+            ReleaseActions => (Some("releaseActions"), None),
             ElementClick(ref x) => (Some("clickElement"), Some(x.to_marionette())),
             ElementTap(ref x) => (Some("singleTap"), Some(x.to_marionette())),
             ElementClear(ref x) => (Some("clearElement"), Some(x.to_marionette())),
@@ -1354,6 +1357,14 @@ impl ToMarionette for JavascriptCommandParameters {
         data.insert("specialPowers".to_string(), false.to_json());
         data.insert("scriptTimeout".to_string(), Json::Null);
         Ok(data)
+    }
+}
+
+impl ToMarionette for ActionsParameters {
+    fn to_marionette(&self) -> WebDriverResult<BTreeMap<String, Json>> {
+        Ok(try_opt!(self.to_json().as_object(),
+                    ErrorStatus::UnknownError,
+                    "Expected an object").clone())
     }
 }
 
