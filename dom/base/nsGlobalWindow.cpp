@@ -197,10 +197,8 @@
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/Promise.h"
 
-#ifdef MOZ_GAMEPAD
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/GamepadManager.h"
-#endif
 
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/VREventObserver.h"
@@ -1239,9 +1237,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mFocusByKeyOccurred(false),
     mHasGamepad(false),
     mHasVREvents(false),
-#ifdef MOZ_GAMEPAD
     mHasSeenGamepadInput(false),
-#endif
     mNotifiedIDDestroyed(false),
     mAllowScriptsToClose(false),
     mSuspendDepth(0),
@@ -1810,11 +1806,9 @@ nsGlobalWindow::FreeInnerObjects()
   }
   mAudioContexts.Clear();
 
-#ifdef MOZ_GAMEPAD
   DisableGamepadUpdates();
   mHasGamepad = false;
   mGamepads.Clear();
-#endif
   DisableVRUpdates();
   mHasVREvents = false;
   mVRDisplays.Clear();
@@ -1972,9 +1966,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleObservers)
 
-#ifdef MOZ_GAMEPAD
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepads)
-#endif
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRDisplays)
@@ -2051,9 +2043,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingStorageEvents)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleObservers)
 
-#ifdef MOZ_GAMEPAD
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGamepads)
-#endif
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVRDisplays)
@@ -10024,10 +10014,7 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
   }
 
   inner->UnthrottleIdleCallbackRequests();
-
-#ifdef MOZ_GAMEPAD
   inner->SyncGamepadState();
-#endif
 }
 
 void nsGlobalWindow::MaybeUpdateTouchState()
@@ -10052,12 +10039,10 @@ nsGlobalWindow::EnableGamepadUpdates()
   MOZ_ASSERT(IsInnerWindow());
 
   if (mHasGamepad) {
-#ifdef MOZ_GAMEPAD
     RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
     if (gamepadManager) {
       gamepadManager->AddListener(this);
     }
-#endif
   }
 }
 
@@ -10067,12 +10052,10 @@ nsGlobalWindow::DisableGamepadUpdates()
   MOZ_ASSERT(IsInnerWindow());
 
   if (mHasGamepad) {
-#ifdef MOZ_GAMEPAD
     RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
     if (gamepadManager) {
       gamepadManager->RemoveListener(this);
     }
-#endif
   }
 }
 
@@ -13004,8 +12987,6 @@ nsGlobalWindow::AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
   }
 }
 
-
-#ifdef MOZ_GAMEPAD
 void
 nsGlobalWindow::AddGamepad(uint32_t aIndex, Gamepad* aGamepad)
 {
@@ -13087,7 +13068,6 @@ nsGlobalWindow::SyncGamepadState()
     }
   }
 }
-#endif // MOZ_GAMEPAD
 
 bool
 nsGlobalWindow::UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDevices)
