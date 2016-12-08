@@ -18,7 +18,7 @@ using namespace gfx;
 
 WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
   : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-  , mImageId(0)
+  , mExternalImageId(0)
 {
   MOZ_COUNT_CTOR(WebRenderImageLayer);
 }
@@ -26,8 +26,8 @@ WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
 WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
-  if (mImageId) {
-    WRBridge()->DeallocExternalImageId(mImageId);
+  if (mExternalImageId) {
+    WRBridge()->DeallocExternalImageId(mExternalImageId);
   }
 }
 
@@ -49,12 +49,6 @@ WebRenderImageLayer::GetAsSourceSurface()
 void
 WebRenderImageLayer::RenderLayer()
 {
-  // XXX update async ImageContainer rendering path
-  if (mContainer->IsAsync() && !mImageId) {
-    mImageId = WRBridge()->AllocExternalImageId(mContainer->GetAsyncContainerID());
-    MOZ_ASSERT(mImageId);
-  }
-
   RefPtr<gfx::SourceSurface> surface = GetAsSourceSurface();
   if (!surface) {
     return;
@@ -74,9 +68,20 @@ WebRenderImageLayer::RenderLayer()
     mImageClient->Connect();
   }
 
-  gfx::IntSize size = surface->GetSize();
+  // XXX Enable external image id for async image container.
 
-  // XXX Add external image id handling
+  // XXX update async ImageContainer rendering path
+  //if (mContainer->IsAsync() && !mImageId) {
+  //  mExternalImageId = WRBridge()->AllocExternalImageId(mContainer->GetAsyncContainerID());
+  //  MOZ_ASSERT(mImageId);
+  //}
+
+  if (!mExternalImageId) {
+    mExternalImageId = WRBridge()->AllocExternalImageIdForCompositable(mImageClient);
+    MOZ_ASSERT(mExternalImageId);
+  }
+
+  gfx::IntSize size = surface->GetSize();
 
   RefPtr<TextureClient> texture = mImageClient->GetTextureClientRecycler()
     ->CreateOrRecycle(surface->GetFormat(),
@@ -86,7 +91,6 @@ WebRenderImageLayer::RenderLayer()
   if (!texture) {
     return;
   }
-
 
   MOZ_ASSERT(texture->CanExposeDrawTarget());
   {
@@ -125,7 +129,7 @@ WebRenderImageLayer::RenderLayer()
   if (gfxPrefs::LayersDump()) printf_stderr("ImageLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
   WRBridge()->AddWebRenderCommand(OpPushDLBuilder());
 
-  WRBridge()->AddWebRenderCommand(OpDPPushCompositable(toWrRect(rect), toWrRect(clip), Nothing(), nullptr, mImageClient->GetIPDLActor()));
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(toWrRect(rect), toWrRect(clip), Nothing(), mExternalImageId));
 
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
