@@ -209,7 +209,8 @@ public:
           RefPtr<PlayingRefChangeHandler> refchanged =
             new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::RELEASE);
           aStream->Graph()->
-            DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+          DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                     refchanged.forget());
         }
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
@@ -219,7 +220,8 @@ public:
         RefPtr<PlayingRefChangeHandler> refchanged =
           new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::ADDREF);
         aStream->Graph()->
-          DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+          DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                     refchanged.forget());
       }
       mLeftOverData = mHRTFPanner->maxTailFrames();
     }

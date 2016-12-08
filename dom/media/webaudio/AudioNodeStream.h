@@ -21,6 +21,7 @@ struct AudioTimelineEvent;
 class AudioContext;
 } // namespace dom
 
+class AbstractThread;
 class ThreadSharedFloatArrayBufferList;
 class AudioNodeEngine;
 
@@ -75,7 +76,8 @@ protected:
    */
   AudioNodeStream(AudioNodeEngine* aEngine,
                   Flags aFlags,
-                  TrackRate aSampleRate);
+                  TrackRate aSampleRate,
+                  AbstractThread* aMainThread);
 
   ~AudioNodeStream();
 
