@@ -50,7 +50,7 @@ add_task(function* test() {
 
   info("Checking if the image thumbnail is hidden when mouse leaves the menu widget");
   let requestsListContents = document.querySelector(".requests-list-contents");
-  EventUtils.synthesizeMouse(requestsListContents, 0, 0, { type: "mouseout" },
+  EventUtils.synthesizeMouse(requestsListContents, 0, 0, { type: "mousemove" },
                              monitor.panelWin);
   yield waitUntil(() => !toolboxDoc.querySelector(".tooltip-container.tooltip-visible"));
 
