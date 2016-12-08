@@ -47,6 +47,7 @@ struct TileClient;
 
 namespace mozilla {
 struct SerializedStructuredCloneBuffer;
+class SourceBufferTask;
 } // namespace mozilla
 
 namespace mozilla {
@@ -855,6 +856,7 @@ DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::ObjectStoreCursorResponse
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo);
 DECLARE_USE_COPY_CONSTRUCTORS(JSStructuredCloneData)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::MessagePortMessage)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::SourceBufferTask)
 
 template<typename T>
 struct nsTArray_CopyChooser<std::function<T>>
