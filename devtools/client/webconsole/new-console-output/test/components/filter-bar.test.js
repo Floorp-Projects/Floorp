@@ -40,7 +40,8 @@ describe("FilterBar component:", () => {
     expect(toolbar.children().eq(1).attr("title")).toBe("Toggle filter bar");
 
     // Text filter
-    expect(toolbar.children().eq(2).attr("class")).toBe("devtools-plaininput text-filter");
+    expect(toolbar.children().eq(2).attr("class"))
+      .toBe("devtools-plaininput text-filter");
     expect(toolbar.children().eq(2).attr("placeholder")).toBe("Filter output");
     expect(toolbar.children().eq(2).attr("type")).toBe("search");
     expect(toolbar.children().eq(2).attr("value")).toBe("");
@@ -71,7 +72,8 @@ describe("FilterBar component:", () => {
       { label: "Warnings", filterKey: MESSAGE_LEVEL.WARN }));
     const errorButton = FilterButton(Object.assign({}, buttonProps,
       { label: "Errors", filterKey: MESSAGE_LEVEL.ERROR }));
-    expect(wrapper.contains([errorButton, warnButton, logButton, infoButton, debugButton])).toBe(true);
+    let buttons = [errorButton, warnButton, logButton, infoButton, debugButton];
+    expect(wrapper.contains(buttons)).toBe(true);
   });
 
   it("fires MESSAGES_CLEAR action when clear button is clicked", () => {
