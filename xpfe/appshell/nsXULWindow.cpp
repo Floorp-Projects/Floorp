@@ -344,25 +344,6 @@ nsXULWindow::GetPrimaryTabParent(nsITabParent** aTab)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetContentShellById(const char16_t* aID, 
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-  NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
-  *aDocShellTreeItem = nullptr;
-
-  uint32_t count = mContentShells.Length();
-  for (uint32_t i = 0; i < count; i++) {
-    nsContentShellInfo* shellInfo = mContentShells.ElementAt(i);
-    if (shellInfo->id.Equals(aID)) {
-      *aDocShellTreeItem = nullptr;
-      if (shellInfo->child)
-        CallQueryReferent(shellInfo->child.get(), aDocShellTreeItem);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsXULWindow::AddChildWindow(nsIXULWindow *aChild)
 {
   // we're not really keeping track of this right now
@@ -510,13 +491,6 @@ NS_IMETHODIMP nsXULWindow::Destroy()
     mDocShell = nullptr; // this can cause reentrancy of this function
   }
 
-  // Remove our ref on the content shells
-  uint32_t count = mContentShells.Length();
-  for (uint32_t i = 0; i < count; i++) {
-    nsContentShellInfo* shellInfo = mContentShells.ElementAt(i);
-    delete shellInfo;
-  }
-  mContentShells.Clear();
   mPrimaryContentShell = nullptr;
 
   if (mContentTreeOwner) {
@@ -1685,28 +1659,8 @@ nsXULWindow::GetWindowDOMElement() const
 }
 
 nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-   bool aPrimary, const nsAString& aID)
+   bool aPrimary)
 {
-  nsContentShellInfo* shellInfo = nullptr;
-
-  uint32_t i, count = mContentShells.Length();
-  nsWeakPtr contentShellWeak = do_GetWeakReference(aContentShell);
-  for (i = 0; i < count; i++) {
-    nsContentShellInfo* info = mContentShells.ElementAt(i);
-    if (info->id.Equals(aID)) {
-      // We already exist. Do a replace.
-      info->child = contentShellWeak;
-      shellInfo = info;
-    }
-    else if (info->child == contentShellWeak)
-      info->child = nullptr;
-  }
-
-  if (!shellInfo) {
-    shellInfo = new nsContentShellInfo(aID, contentShellWeak);
-    mContentShells.AppendElement(shellInfo);
-  }
-    
   // Set the default content tree owner
   if (aPrimary) {
     NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
@@ -1729,17 +1683,6 @@ nsresult nsXULWindow::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
   if (mPrimaryContentShell == aContentShell) {
     mPrimaryContentShell = nullptr;
   }
-
-  int32_t i, count = mContentShells.Length();
-  for (i = count - 1; i >= 0; --i) {
-    nsContentShellInfo* info = mContentShells.ElementAt(i);
-    nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryReferent(info->child);
-    if (!curItem || SameCOMIdentity(curItem, aContentShell)) {
-      mContentShells.RemoveElementAt(i);
-      delete info;
-    }
-  }
-
   return NS_OK;
 }
 
@@ -2271,20 +2214,3 @@ nsXULWindow::GetTabCount(uint32_t* aResult)
   return NS_OK;
 }
 
-//*****************************************************************************
-//*** nsContentShellInfo: Object Management
-//*****************************************************************************   
-
-nsContentShellInfo::nsContentShellInfo(const nsAString& aID,
-                                       nsIWeakReference* aContentShell)
-  : id(aID),
-    child(aContentShell)
-{
-  MOZ_COUNT_CTOR(nsContentShellInfo);
-}
-
-nsContentShellInfo::~nsContentShellInfo()
-{
-  MOZ_COUNT_DTOR(nsContentShellInfo);
-   //XXX Set Tree Owner to null if the tree owner is nsXULWindow->mContentTreeOwner
-} 
