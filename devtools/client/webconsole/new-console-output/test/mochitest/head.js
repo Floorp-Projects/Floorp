@@ -3,6 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../framework/test/shared-head.js */
+/* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitFor, findMessage */
 
 "use strict";
 
@@ -50,34 +51,38 @@ var openNewTabAndConsole = Task.async(function* (url) {
  *
  * @param object options
  *        - hud: the webconsole
- *        - messages: Array[Object]. An array of messages to match. Current supported options:
+ *        - messages: Array[Object]. An array of messages to match.
+            Current supported options:
  *            - text: Exact text match in .message-body
  */
 function waitForMessages({ hud, messages }) {
   return new Promise(resolve => {
     let numMatched = 0;
-    let receivedLog = hud.ui.on("new-messages", function messagesReceieved(e, newMessages) {
-      for (let message of messages) {
-        if (message.matched) {
-          continue;
-        }
+    let receivedLog = hud.ui.on("new-messages",
+      function messagesReceieved(e, newMessages) {
+        for (let message of messages) {
+          if (message.matched) {
+            continue;
+          }
 
-        for (let newMessage of newMessages) {
-          if (newMessage.node.querySelector(".message-body").textContent == message.text) {
-            numMatched++;
-            message.matched = true;
-            info("Matched a message with text: " + message.text + ", still waiting for " + (messages.length - numMatched) + " messages");
-            break;
+          for (let newMessage of newMessages) {
+            let messageBody = newMessage.node.querySelector(".message-body");
+            if (messageBody.textContent == message.text) {
+              numMatched++;
+              message.matched = true;
+              info("Matched a message with text: " + message.text +
+                ", still waiting for " + (messages.length - numMatched) + " messages");
+              break;
+            }
+          }
+
+          if (numMatched === messages.length) {
+            hud.ui.off("new-messages", messagesReceieved);
+            resolve(receivedLog);
+            return;
           }
         }
-
-        if (numMatched === messages.length) {
-          hud.ui.off("new-messages", messagesReceieved);
-          resolve(receivedLog);
-          return;
-        }
-      }
-    });
+      });
   });
 }
 

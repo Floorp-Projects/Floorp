@@ -63,7 +63,8 @@ const Message = createClass({
       // Event used in tests. Some message types don't pass it in because existing tests
       // did not emit for them.
       if (this.props.serviceContainer) {
-        this.props.serviceContainer.emitNewMessage(this.messageNode, this.props.messageId);
+        this.props.serviceContainer.emitNewMessage(
+          this.messageNode, this.props.messageId);
       }
     }
   },

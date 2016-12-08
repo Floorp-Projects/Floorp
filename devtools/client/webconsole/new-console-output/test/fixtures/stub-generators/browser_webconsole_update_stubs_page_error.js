@@ -5,7 +5,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/osfile.jsm", {});
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
 
 const { pageError: snippets} = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
@@ -19,7 +19,7 @@ add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
   ok(true, "make the test not fail");
 
-  for (var [key,code] of snippets) {
+  for (let [key, code] of snippets) {
     OS.File.writeAtomic(TEMP_FILE_PATH, `${code}`);
     let received = new Promise(resolve => {
       toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
@@ -33,9 +33,9 @@ add_task(function* () {
       });
     });
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, key, function(key) {
-      var script = content.document.createElement("script");
-      script.src = "test-tempfile.js?key=" + encodeURIComponent(key);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, key, function (subKey) {
+      let script = content.document.createElement("script");
+      script.src = "test-tempfile.js?key=" + encodeURIComponent(subKey);
       content.document.body.appendChild(script);
     });
 
@@ -43,6 +43,6 @@ add_task(function* () {
   }
 
   let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "pageError.js");
-  OS.File.writeAtomic(filePath, formatFile(stubs));
+  OS.File.writeAtomic(filePath, formatFile(stubs, "ConsoleMessage"));
   OS.File.writeAtomic(TEMP_FILE_PATH, "");
 });

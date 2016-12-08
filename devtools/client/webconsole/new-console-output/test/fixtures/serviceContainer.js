@@ -13,5 +13,6 @@ module.exports = {
     subscribe: () => {},
   },
   openLink: () => {},
+  // eslint-disable-next-line react/display-name
   createElement: tagName => document.createElement(tagName)
 };

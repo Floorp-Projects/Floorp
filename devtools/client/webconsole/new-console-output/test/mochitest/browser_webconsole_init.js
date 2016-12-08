@@ -19,15 +19,15 @@ add_task(function* () {
   let receievedMessages = waitForMessages({
     hud,
     messages: [{
-      text: '0',
+      text: "0",
     }, {
-      text: '1',
+      text: "1",
     }, {
-      text: '2',
+      text: "2",
     }],
   });
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     content.wrappedJSObject.doLogs(3);
   });
 

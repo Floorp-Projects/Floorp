@@ -9,7 +9,6 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const {
