@@ -29,7 +29,6 @@ public:
 protected:
   virtual mozilla::ipc::IPCResult RecvGetOriginKey(const uint32_t& aRequestId,
                                                    const nsCString& aOrigin,
-                                                   const bool& aPrivateBrowsing,
                                                    const bool& aPersist) = 0;
   virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
                                                          const bool& aOnlyPrivateBrowsing) = 0;
@@ -52,7 +51,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvGetOriginKey(const uint32_t& aRequestId,
                                                    const nsCString& aOrigin,
-                                                   const bool& aPrivateBrowsing,
                                                    const bool& aPersist) override;
   virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
                                                          const bool& aOnlyPrivateBrowsing) override;

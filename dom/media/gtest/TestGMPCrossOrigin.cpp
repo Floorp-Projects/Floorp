@@ -473,12 +473,26 @@ GetNodeId(const nsAString& aOrigin,
   nsresult result;
   UniquePtr<GetNodeIdCallback> callback(new TestGetNodeIdCallback(nodeId,
                                                                   result));
+
+  PrincipalOriginAttributes attrs;
+  attrs.mPrivateBrowsingId = aInPBMode ? 1 : 0;
+
+  nsAutoCString suffix;
+  attrs.CreateSuffix(suffix);
+
+  nsAutoString origin;
+  origin.Assign(aOrigin);
+  origin.Append(NS_ConvertUTF8toUTF16(suffix));
+
+  nsAutoString topLevelOrigin;
+  topLevelOrigin.Assign(aTopLevelOrigin);
+  topLevelOrigin.Append(NS_ConvertUTF8toUTF16(suffix));
+
   // We rely on the fact that the GetNodeId implementation for
   // GeckoMediaPluginServiceParent is synchronous.
-  nsresult rv = service->GetNodeId(aOrigin,
-                                   aTopLevelOrigin,
+  nsresult rv = service->GetNodeId(origin,
+                                   topLevelOrigin,
                                    NS_LITERAL_STRING("gmp-fake"),
-                                   aInPBMode,
                                    Move(callback));
   EXPECT_TRUE(NS_SUCCEEDED(rv) && NS_SUCCEEDED(result));
   return nodeId;

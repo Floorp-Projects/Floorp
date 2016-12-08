@@ -409,14 +409,10 @@ MediaKeys::Init(ErrorResult& aRv)
     return promise.forget();
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
-  const bool inPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
-
-  EME_LOG("MediaKeys[%p]::Create() (%s, %s), %s",
+  EME_LOG("MediaKeys[%p]::Create() (%s, %s)",
           this,
           origin.get(),
-          topLevelOrigin.get(),
-          (inPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"));
+          topLevelOrigin.get());
 
   // The CDMProxy's initialization is asynchronous. The MediaKeys is
   // refcounted, and its instance is returned to JS by promise once
@@ -432,8 +428,7 @@ MediaKeys::Init(ErrorResult& aRv)
   mProxy->Init(mCreatePromiseId,
                NS_ConvertUTF8toUTF16(origin),
                NS_ConvertUTF8toUTF16(topLevelOrigin),
-               KeySystemToGMPName(mKeySystem),
-               inPrivateBrowsing);
+               KeySystemToGMPName(mKeySystem));
 
   return promise.forget();
 }

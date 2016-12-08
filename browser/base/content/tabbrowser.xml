@@ -4810,6 +4810,14 @@
               }
               break;
             }
+            case "contextual-identity-updated": {
+              for (let tab of this.tabs) {
+                if (tab.getAttribute("usercontextid") == aData) {
+                  ContextualIdentityService.setTabStyle(tab);
+                }
+              }
+              break;
+            }
             case "nsPref:changed": {
               // This is the only pref observed.
               this._findAsYouType = Services.prefs.getBoolPref("accessibility.typeaheadfind");
@@ -4826,6 +4834,7 @@
 
           Services.obs.addObserver(this, "live-resize-start", false);
           Services.obs.addObserver(this, "live-resize-end", false);
+          Services.obs.addObserver(this, "contextual-identity-updated", false);
 
           this.mCurrentTab = this.tabContainer.firstChild;
           const nsIEventListenerService =
@@ -4925,6 +4934,7 @@
         <![CDATA[
           Services.obs.removeObserver(this, "live-resize-start", false);
           Services.obs.removeObserver(this, "live-resize-end", false);
+          Services.obs.removeObserver(this, "contextual-identity-updated", false);
 
           for (let tab of this.tabs) {
             let browser = tab.linkedBrowser;

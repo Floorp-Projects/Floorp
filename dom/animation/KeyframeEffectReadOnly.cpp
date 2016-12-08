@@ -568,6 +568,7 @@ template <class OptionsType>
 static KeyframeEffectParams
 KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
                               nsAString& aInvalidPacedProperty,
+                              CallerType aCallerType,
                               ErrorResult& aRv)
 {
   KeyframeEffectParams result;
@@ -578,10 +579,11 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
                                        result.mSpacingMode,
                                        result.mPacedProperty,
                                        aInvalidPacedProperty,
+                                       aCallerType,
                                        aRv);
     // Ignore iterationComposite if the Web Animations API is not enabled,
     // then the default value 'Replace' will be used.
-    if (AnimationUtils::IsCoreAPIEnabledForCaller()) {
+    if (AnimationUtils::IsCoreAPIEnabledForCaller(aCallerType)) {
       result.mIterationComposite = options.mIterationComposite;
       // FIXME: Bug 1311620: We don't support additive animation yet.
       if (options.mComposite != dom::CompositeOperation::Add) {
@@ -639,7 +641,8 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
 
   nsAutoString invalidPacedProperty;
   KeyframeEffectParams effectOptions =
-    KeyframeEffectParamsFromUnion(aOptions, invalidPacedProperty, aRv);
+    KeyframeEffectParamsFromUnion(aOptions, invalidPacedProperty,
+                                  aGlobal.CallerType(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

@@ -32,10 +32,7 @@ void
 WebGL2Context::DeleteTransformFeedback(WebGLTransformFeedback* tf)
 {
     const char funcName[] = "deleteTransformFeedback";
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObject(funcName, tf))
+    if (!ValidateDeleteObject(funcName, tf))
         return;
 
     if (tf->mIsActive) {
@@ -51,15 +48,9 @@ WebGL2Context::DeleteTransformFeedback(WebGLTransformFeedback* tf)
 }
 
 bool
-WebGL2Context::IsTransformFeedback(WebGLTransformFeedback* tf)
+WebGL2Context::IsTransformFeedback(const WebGLTransformFeedback* tf)
 {
-    if (IsContextLost())
-        return false;
-
-    if (!ValidateObjectAllowDeletedOrNull("isTransformFeedback", tf))
-        return false;
-
-    if (!tf || tf->IsDeleted())
+    if (!ValidateIsObject("isTransformFeedback", tf))
         return false;
 
     MakeContextCurrent();
@@ -76,11 +67,8 @@ WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
     if (target != LOCAL_GL_TRANSFORM_FEEDBACK)
         return ErrorInvalidEnum("%s: `target` must be TRANSFORM_FEEDBACK.", funcName);
 
-    if (!ValidateObjectAllowDeletedOrNull(funcName, tf))
+    if (tf && !ValidateObject(funcName, *tf))
         return;
-
-    if (tf && tf->IsDeleted())
-        return ErrorInvalidOperation("%s: TFO already deleted.", funcName);
 
     if (mBoundTransformFeedback->mIsActive &&
         !mBoundTransformFeedback->mIsPaused)
@@ -143,7 +131,7 @@ WebGL2Context::TransformFeedbackVaryings(WebGLProgram& program,
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef("transformFeedbackVaryings: program", program))
+    if (!ValidateObject("transformFeedbackVaryings: program", program))
         return;
 
     program.TransformFeedbackVaryings(varyings, bufferMode);
@@ -155,7 +143,7 @@ WebGL2Context::GetTransformFeedbackVarying(const WebGLProgram& program, GLuint i
     if (IsContextLost())
         return nullptr;
 
-    if (!ValidateObjectRef("getTransformFeedbackVarying: program", program))
+    if (!ValidateObject("getTransformFeedbackVarying: program", program))
         return nullptr;
 
     return program.GetTransformFeedbackVarying(index);
