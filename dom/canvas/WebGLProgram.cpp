@@ -443,7 +443,7 @@ CreateProgram(gl::GLContext* gl)
 }
 
 WebGLProgram::WebGLProgram(WebGLContext* webgl)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mGLName(CreateProgram(webgl->GL()))
     , mNumActiveTFOs(0)
     , mNextLink_TransformFeedbackBufferMode(LOCAL_GL_SEPARATE_ATTRIBS)

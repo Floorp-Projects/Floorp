@@ -68,6 +68,10 @@ public:
   // check if "privacy.firstparty.isolate" is enabled.
   static bool IsFirstPartyEnabled();
 
+  // returns true if the originAttributes suffix has mPrivateBrowsingId value
+  // different than 0.
+  static bool IsPrivateBrowsing(const nsACString& aOrigin);
+
 protected:
   OriginAttributes() {}
   explicit OriginAttributes(const OriginAttributesDictionary& aOther)

@@ -44,7 +44,6 @@ public:
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
                        const nsAString& aGMPName,
-                       bool aInPrivateBrowsingMode,
                        UniquePtr<GetNodeIdCallback>&& aCallback) override;
 
   NS_DECL_MOZIGECKOMEDIAPLUGINCHROMESERVICE
@@ -90,8 +89,7 @@ private:
                                                    size_t* aOutPluginIndex);
 
   nsresult GetNodeId(const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
-                     const nsAString& aGMPName,
-                     bool aInPrivateBrowsing, nsACString& aOutId);
+                     const nsAString& aGMPName, nsACString& aOutId);
 
   void UnloadPlugins();
   void CrashPlugins();
@@ -250,7 +248,6 @@ public:
   mozilla::ipc::IPCResult RecvGetGMPNodeId(const nsString& aOrigin,
                                            const nsString& aTopLevelOrigin,
                                            const nsString& aGMPName,
-                                           const bool& aInPrivateBrowsing,
                                            nsCString* aID) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
