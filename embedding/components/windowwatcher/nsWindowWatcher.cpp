@@ -971,6 +971,18 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     if (mWindowCreator) {
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
 
+      nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
+      if (parentWindow) {
+        nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow = parentWindow->GetTop();
+        if (parentTopWindow) {
+          parentTopInnerWindow = parentTopWindow->GetCurrentInnerWindow();
+        }
+      }
+
+      if (parentTopInnerWindow) {
+        parentTopInnerWindow->Suspend();
+      }
+
       /* If the window creator is an nsIWindowCreator2, we can give it
          some hints. The only hint at this time is whether the opening window
          is in a situation that's likely to mean this is an unrequested
@@ -1006,6 +1018,10 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       } else {
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
                                                 getter_AddRefs(newChrome));
+      }
+
+      if (parentTopInnerWindow) {
+        parentTopInnerWindow->Resume();
       }
 
       if (newChrome) {
