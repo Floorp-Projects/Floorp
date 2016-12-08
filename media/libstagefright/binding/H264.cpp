@@ -151,10 +151,12 @@ H264::DecodeNALUnit(const mozilla::MediaByteBuffer* aNAL)
   ByteReader reader(aNAL);
   uint8_t nal_unit_type = reader.ReadU8() & 0x1f;
   uint32_t nalUnitHeaderBytes = 1;
-  if (nal_unit_type == 14 || nal_unit_type == 20 || nal_unit_type == 21) {
+  if (nal_unit_type == H264_NAL_PREFIX ||
+      nal_unit_type == H264_NAL_SLICE_EXT ||
+      nal_unit_type == H264_NAL_SLICE_EXT_DVC) {
     bool svc_extension_flag = false;
     bool avc_3d_extension_flag = false;
-    if (nal_unit_type != 21) {
+    if (nal_unit_type != H264_NAL_SLICE_EXT_DVC) {
       svc_extension_flag = reader.PeekU8() & 0x80;
     } else {
       avc_3d_extension_flag = reader.PeekU8() & 0x80;
@@ -576,7 +578,7 @@ H264::DecodeSPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
   for (uint32_t idx = 0; idx < numSps; idx++) {
     uint16_t length = reader.ReadU16();
 
-    if ((reader.PeekU8() & 0x1f) != 7) {
+    if ((reader.PeekU8() & 0x1f) != H264_NAL_SPS) {
       // Not a SPS NAL type.
       return false;
     }
@@ -647,7 +649,7 @@ H264::DecodePPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
   for (uint8_t i = 0; i < numSps; i++) {
     uint16_t length = reader.ReadU16();
 
-    if ((reader.PeekU8() & 0x1f) != 7) {
+    if ((reader.PeekU8() & 0x1f) != H264_NAL_SPS) {
       // Not a SPS NAL type.
       return false;
     }
@@ -666,7 +668,7 @@ H264::DecodePPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
   for (uint32_t idx = 0; idx < numPps; idx++) {
     uint16_t length = reader.ReadU16();
 
-    if ((reader.PeekU8() & 0x1f) != 8) {
+    if ((reader.PeekU8() & 0x1f) != H264_NAL_PPS) {
       // Not a PPS NAL type.
       return false;
     }
@@ -881,7 +883,7 @@ H264::GetFrameType(const mozilla::MediaRawData* aSample)
     if (!p) {
       return FrameType::INVALID;
     }
-    if ((p[0] & 0x1f) == 5) {
+    if ((p[0] & 0x1f) == H264_NAL_IDR_SLICE) {
       // IDR NAL.
       return FrameType::I_FRAME;
     }
