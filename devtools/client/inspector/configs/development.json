@@ -1,0 +1,22 @@
+{
+  "title": "Inspector",
+  "environment": "development",
+  "baseWorkerURL": "public/build/",
+  "theme": "light",
+  "host": "",
+  "logging": {
+    "client": false,
+    "firefoxProxy": false
+  },
+  "features": {
+  },
+  "firefox": {
+    "proxyHost": "localhost:9000",
+    "webSocketConnection": false,
+    "webSocketHost": "localhost:6080"
+  },
+  "development": {
+    "serverPort": 8000,
+    "customIndex": true
+  }
+}
