@@ -210,6 +210,12 @@ public:
   // captured.
   virtual nsresult PageIn(ogg_page* aPage);
 
+  // Returns the maximum number of microseconds which a keyframe can be offset
+  // from any given interframe.b
+  virtual int64_t MaxKeyframeOffset() { return 0; }
+  // Public access for mTheoraInfo.keyframe_granule_shift
+  virtual int32_t KeyFrameGranuleJobs() { return 0; }
+
   // Number of packets read.
   uint64_t mPacketCount;
 
@@ -367,12 +373,11 @@ public:
   bool IsKeyframe(ogg_packet* aPacket) override;
   nsresult PageIn(ogg_page* aPage) override;
   const TrackInfo* GetInfo() const override { return &mInfo; }
-
-  // Returns the maximum number of microseconds which a keyframe can be offset
-  // from any given interframe.
-  int64_t MaxKeyframeOffset();
-  // Public access for mTheoraInfo.keyframe_granule_shift
-  int32_t mKeyframe_granule_shift;
+  int64_t MaxKeyframeOffset() override;
+  int32_t KeyFrameGranuleJobs() override
+  {
+    return mTheoraInfo.keyframe_granule_shift;
+  }
 
 private:
   // Returns the end time that a granulepos represents.
