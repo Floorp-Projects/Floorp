@@ -1957,16 +1957,29 @@ DoCopyTexOrSubImage(WebGLContext* webgl, const char* funcName, bool isSubImage,
     do {
         const auto& idealUnpack = dstUsage->idealUnpack;
         if (!isSubImage) {
-            const auto& pi = idealUnpack->ToPacking();
-            const auto& bpp = BytesPerPixel(pi);
-            const UniqueBuffer zeros(calloc(1, dstWidth * dstHeight * bpp));
-            if (!zeros.get()) {
-                webgl->ErrorOutOfMemory("%s: Ran out of memory allocating zeros.",
-                                        funcName);
-                return false;
+            UniqueBuffer buffer;
+
+            if (rwWidth != dstWidth || rwHeight != dstHeight) {
+                const auto& pi = idealUnpack->ToPacking();
+                CheckedUint32 byteCount = BytesPerPixel(pi);
+                byteCount *= dstWidth;
+                byteCount *= dstHeight;
+
+                if (byteCount.isValid()) {
+                    buffer = calloc(1, byteCount.value());
+                }
+
+                if (!buffer.get()) {
+                    webgl->ErrorOutOfMemory("%s: Ran out of memory allocating zeros.",
+                                            funcName);
+                    return false;
+                }
             }
+
+            const ScopedUnpackReset unpackReset(webgl);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
             error = DoTexImage(gl, target, level, idealUnpack, dstWidth, dstHeight, 1,
-                               zeros.get());
+                               buffer.get());
             if (error)
                 break;
         }
