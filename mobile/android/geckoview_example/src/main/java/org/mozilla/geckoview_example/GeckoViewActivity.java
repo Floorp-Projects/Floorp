@@ -29,7 +29,7 @@ public class GeckoViewActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setGeckoInterface(new BaseGeckoInterface(getApplicationContext()));
+        setGeckoInterface(new BaseGeckoInterface(this));
 
         setContentView(R.layout.geckoview_activity);
 
