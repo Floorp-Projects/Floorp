@@ -251,25 +251,27 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
   NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
                "Trying to HTML elements that don't have the XHTML namespace");
 
+  int32_t tag = parserService->HTMLCaseSensitiveAtomTagToId(name);
+
   // Per the Custom Element specification, unknown tags that are valid custom
   // element names should be HTMLElement instead of HTMLUnknownElement.
-  int32_t tag = parserService->HTMLCaseSensitiveAtomTagToId(name);
-  if ((tag == eHTMLTag_userdefined &&
-      nsContentUtils::IsCustomElementName(name)) ||
-      aIs) {
+  bool isCustomElementName = (tag == eHTMLTag_userdefined &&
+                              nsContentUtils::IsCustomElementName(name));
+  if (isCustomElementName) {
     NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
-    if (!*aResult) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsContentUtils::SetupCustomElement(*aResult, aIs);
-
-    return NS_OK;
+  } else {
+    *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
   }
 
-  *aResult = CreateHTMLElement(tag,
-                               nodeInfo.forget(), aFromParser).take();
-  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  if (!*aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (isCustomElementName || aIs) {
+    nsContentUtils::SetupCustomElement(*aResult, aIs);
+  }
+
+  return NS_OK;
 }
 
 already_AddRefed<nsGenericHTMLElement>
