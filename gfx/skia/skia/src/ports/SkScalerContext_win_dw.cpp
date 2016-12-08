@@ -219,13 +219,7 @@ SkScalerContext_DW::SkScalerContext_DW(DWriteFontTypeface* typeface,
     fIsColorFont = fFactory2.get() && fontFace2.get() && fontFace2->IsColorFont();
 #endif
 
-    IDWriteFactory* factory = sk_get_dwrite_factory();
-    if (factory != nullptr) {
-        HRVM(factory->CreateRenderingParams(&fDefaultRenderingParams),
-        "Could not create default rendering params");
-    }
-
-    // In general, all glyphs should DWriteFontFace::GetRecommendedRenderingMode
+    // In general, all glyphs should use CLEARTYPE_NATURAL_SYMMETRIC
     // except when bi-level rendering is requested or there are embedded
     // bi-level bitmaps (and the embedded bitmap flag is set and no rotation).
     //
@@ -321,21 +315,13 @@ SkScalerContext_DW::SkScalerContext_DW(DWriteFontTypeface* typeface,
         fTextSizeMeasure = realTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
 
-    // The normal case is to use the recommended rendering mode
+    // The normal case is to use natural symmetric rendering and linear metrics.
     } else {
         fTextSizeRender = realTextSize;
+        fRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
         fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
         fTextSizeMeasure = realTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
-
-        if (!SUCCEEDED(fTypeface->fDWriteFontFace->GetRecommendedRenderingMode(
-                fTextSizeRender,
-                1.0f,
-                fMeasuringMode,
-                fDefaultRenderingParams.get(),
-                &fRenderingMode))) {
-            fRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
-        }
     }
 
     if (this->isSubpixel()) {
