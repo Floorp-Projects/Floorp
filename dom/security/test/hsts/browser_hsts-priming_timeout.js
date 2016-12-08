@@ -11,15 +11,11 @@ add_task(function*() {
   Observer.add_observers(Services);
   registerCleanupFunction(do_cleanup);
 
-  let which = "block_display";
+  let which = "timeout";
 
-  SetupPrefTestEnvironment(which);
+  SetupPrefTestEnvironment(which, [["security.mixed_content.hsts_priming_request_timeout",
+                1000]]);
 
-  for (let server of Object.keys(test_servers)) {
-    yield execute_test(server, test_settings[which].mimetype);
-  }
-
-  // run the tests twice to validate the cache is being used
   for (let server of Object.keys(test_servers)) {
     yield execute_test(server, test_settings[which].mimetype);
   }
