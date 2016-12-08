@@ -386,7 +386,6 @@ TheoraState::Init()
   mInfo.mDisplay = display;
   mInfo.mImage = frame;
   mInfo.SetImageRect(picture);
-  mKeyframe_granule_shift = mTheoraInfo.keyframe_granule_shift;
 
   return mActive = SetCodecSpecificConfig(mInfo.mCodecSpecificConfig, mHeaders);
 }
