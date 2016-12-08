@@ -15,6 +15,7 @@ from argparse import ArgumentParser
 from copy import deepcopy
 
 import mozinfo
+import moznetwork
 import mozprofile
 from marionette_driver.marionette import Marionette
 
@@ -900,7 +901,10 @@ class BaseMarionetteTestRunner(object):
 
     def start_fixture_servers(self):
         root = self.server_root or os.path.join(os.path.dirname(here), "www")
-        return serve.start(root)
+        if self.appName == "fennec":
+            return serve.start(root, host=moznetwork.get_ip())
+        else:
+            return serve.start(root)
 
     def add_test(self, test, expected='pass'):
         filepath = os.path.abspath(test)

@@ -114,6 +114,40 @@ struct SampleTime final
 class RemoteVideoDecoder final : public RemoteDataDecoder
 {
 public:
+  // Hold an output buffer and render it to the surface when the frame is sent to compositor, or
+  // release it if not presented.
+  class RenderOrReleaseOutput : public VideoData::Listener
+  {
+  public:
+    RenderOrReleaseOutput(java::CodecProxy::Param aCodec, java::Sample::Param aSample)
+      : mCodec(aCodec),
+        mSample(aSample)
+    {}
+
+    ~RenderOrReleaseOutput()
+    {
+      ReleaseOutput(false);
+    }
+
+    void OnSentToCompositor() override
+    {
+      ReleaseOutput(true);
+      mCodec = nullptr;
+      mSample = nullptr;
+    }
+
+  private:
+    void ReleaseOutput(bool aToRender)
+    {
+      if (mCodec && mSample) {
+        mCodec->ReleaseOutput(mSample, aToRender);
+      }
+    }
+
+    java::CodecProxy::GlobalRef mCodec;
+    java::Sample::GlobalRef mSample;
+  };
+
   class CallbacksSupport final : public JavaCallbacksSupport
   {
   public:
@@ -167,6 +201,9 @@ public:
                                     gfx::IntRect(0, 0,
                                                   mDecoder->mConfig.mDisplay.width,
                                                   mDecoder->mConfig.mDisplay.height));
+
+        UniquePtr<VideoData::Listener> listener(new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
+        v->SetListener(Move(listener));
 
         mDecoderCallback->Output(v);
       }
