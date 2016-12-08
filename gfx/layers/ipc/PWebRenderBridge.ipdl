@@ -42,6 +42,7 @@ parent:
   sync DPSyncEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
   sync DPGetSnapshot(PTexture texture, IntRect dirtyRect);
   async AddExternalImageId(uint64_t aImageId, uint64_t aAsyncContainerId);
+  async AddExternalImageIdForCompositable(uint64_t aImageId, PCompositable aCompositable);
   async RemoveExternalImageId(uint64_t aImageId);
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
   async ClearCachedResources();

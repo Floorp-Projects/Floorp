@@ -26,6 +26,7 @@ class CompositorWidget;
 
 namespace layers {
 
+class CompositableHost;
 class Compositor;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
@@ -77,8 +78,9 @@ public:
 
   mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
                                                  const uint64_t& aAsyncContainerId) override;
+  mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const uint64_t& aImageId,
+                                                                PCompositableParent* aCompositable) override;
   mozilla::ipc::IPCResult RecvRemoveExternalImageId(const uint64_t& aImageId) override;
-
   mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
 
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
@@ -127,7 +129,7 @@ private:
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<WRImageKey> mKeysToDelete;
-  nsDataHashtable<nsUint64HashKey, uint64_t> mExternalImageIds;
+  nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
 
   // These fields keep track of the latest layer observer epoch values in the child and the
   // parent. mChildLayerObserverEpoch is the latest epoch value received from the child.
