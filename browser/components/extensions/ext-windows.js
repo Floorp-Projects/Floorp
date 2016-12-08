@@ -60,6 +60,9 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
 
       get: function(windowId, getInfo) {
         let window = WindowManager.getWindow(windowId, context);
+        if (!window) {
+          return Promise.reject({message: `Invalid window ID: ${windowId}`});
+        }
         return Promise.resolve(WindowManager.convert(extension, window, getInfo));
       },
 
