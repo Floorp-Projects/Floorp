@@ -3,10 +3,25 @@
 #define mozilla_dom_gamepad_GamepadMessageUtils_h
 
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/dom/GamepadServiceType.h"
+#include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadPoseState.h"
+#include "mozilla/dom/GamepadServiceType.h"
 
 namespace IPC {
+
+template<>
+struct ParamTraits<mozilla::dom::GamepadMappingType> :
+  public ContiguousEnumSerializer<mozilla::dom::GamepadMappingType,
+                                  mozilla::dom::GamepadMappingType(0),
+                                  mozilla::dom::GamepadMappingType(
+                                  mozilla::dom::GamepadMappingType::EndGuard_)> {};
+
+template<>
+struct ParamTraits<mozilla::dom::GamepadHand> :
+  public ContiguousEnumSerializer<mozilla::dom::GamepadHand,
+                                  mozilla::dom::GamepadHand(0),
+                                  mozilla::dom::GamepadHand(
+                                  mozilla::dom::GamepadHand::EndGuard_)> {};
 
 template<>
 struct ParamTraits<mozilla::dom::GamepadServiceType> :
