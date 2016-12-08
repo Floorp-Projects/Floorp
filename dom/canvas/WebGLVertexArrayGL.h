@@ -19,7 +19,7 @@ public:
     virtual void DeleteImpl() override;
     virtual void BindVertexArrayImpl() override;
     virtual void GenVertexArray() override;
-    virtual bool IsVertexArrayImpl() override;
+    virtual bool IsVertexArrayImpl() const override;
 
 protected:
     explicit WebGLVertexArrayGL(WebGLContext* webgl);

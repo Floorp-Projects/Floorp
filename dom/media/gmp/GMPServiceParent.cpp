@@ -1388,14 +1388,12 @@ nsresult
 GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
                                          const nsAString& aTopLevelOrigin,
                                          const nsAString& aGMPName,
-                                         bool aInPrivateBrowsing,
                                          nsACString& aOutId)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  LOGD(("%s::%s: (%s, %s), %s", __CLASS__, __FUNCTION__,
+  LOGD(("%s::%s: (%s, %s)", __CLASS__, __FUNCTION__,
        NS_ConvertUTF16toUTF8(aOrigin).get(),
-       NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
-       (aInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing")));
+       NS_ConvertUTF16toUTF8(aTopLevelOrigin).get()));
 
   nsresult rv;
 
@@ -1421,7 +1419,7 @@ GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
   const uint32_t hash = AddToHash(HashString(aOrigin),
                                   HashString(aTopLevelOrigin));
 
-  if (aInPrivateBrowsing) {
+  if (OriginAttributes::IsPrivateBrowsing(NS_ConvertUTF16toUTF8(aOrigin))) {
     // For PB mode, we store the node id, indexed by the origin pair and GMP name,
     // so that if the same origin pair is opened for the same GMP in this session,
     // it gets the same node id.
@@ -1551,11 +1549,10 @@ NS_IMETHODIMP
 GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
                                          const nsAString& aTopLevelOrigin,
                                          const nsAString& aGMPName,
-                                         bool aInPrivateBrowsing,
                                          UniquePtr<GetNodeIdCallback>&& aCallback)
 {
   nsCString nodeId;
-  nsresult rv = GetNodeId(aOrigin, aTopLevelOrigin, aGMPName, aInPrivateBrowsing, nodeId);
+  nsresult rv = GetNodeId(aOrigin, aTopLevelOrigin, aGMPName, nodeId);
   aCallback->Done(rv, nodeId);
   return rv;
 }
@@ -2010,11 +2007,9 @@ mozilla::ipc::IPCResult
 GMPServiceParent::RecvGetGMPNodeId(const nsString& aOrigin,
                                    const nsString& aTopLevelOrigin,
                                    const nsString& aGMPName,
-                                   const bool& aInPrivateBrowsing,
                                    nsCString* aID)
 {
-  nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin, aGMPName,
-                                    aInPrivateBrowsing, *aID);
+  nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin, aGMPName, *aID);
   if (!NS_SUCCEEDED(rv)) {
     return IPC_FAIL_NO_REASON(this);
   }

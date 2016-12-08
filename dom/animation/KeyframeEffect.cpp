@@ -133,11 +133,12 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 
 void
 KeyframeEffect::SetIterationComposite(
-  const IterationCompositeOperation& aIterationComposite)
+  const IterationCompositeOperation& aIterationComposite,
+  CallerType aCallerType)
 {
   // Ignore iterationComposite if the Web Animations API is not enabled,
   // then the default value 'Replace' will be used.
-  if (!AnimationUtils::IsCoreAPIEnabledForCaller()) {
+  if (!AnimationUtils::IsCoreAPIEnabledForCaller(aCallerType)) {
     return;
   }
 
@@ -156,6 +157,7 @@ KeyframeEffect::SetIterationComposite(
 void
 KeyframeEffect::SetSpacing(JSContext* aCx,
                            const nsAString& aSpacing,
+                           CallerType aCallerType,
                            ErrorResult& aRv)
 {
   SpacingMode spacingMode = SpacingMode::distribute;
@@ -165,6 +167,7 @@ KeyframeEffect::SetSpacing(JSContext* aCx,
                                      spacingMode,
                                      pacedProperty,
                                      invalidPacedProperty,
+                                     aCallerType,
                                      aRv);
   if (aRv.Failed()) {
     return;
