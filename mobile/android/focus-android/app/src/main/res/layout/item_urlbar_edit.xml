@@ -15,7 +15,7 @@
         android:layout_margin="8dp"
         android:layout_weight="1"
         android:background="@drawable/urlbar_background"
-        android:hint="Search or enter address"
+        android:hint="@string/urlbar_hint"
         android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
         android:inputType="textUri"
         android:lines="1"
@@ -29,6 +29,6 @@
         android:id="@+id/cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Cancel" />
+        android:text="@string/action_cancel" />
 
 </LinearLayout>

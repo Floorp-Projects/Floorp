@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:paddingBottom="20dp"
-            android:text="Firefox Focus"
+            android:text="@string/teaser_title"
             android:textColor="#ffffff"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -32,7 +32,7 @@
             android:background="@drawable/urlbar_background"
             android:gravity="center"
             android:padding="8dp"
-            android:text="Search or enter address"
+            android:text="@string/urlbar_hint"
             android:textColor="#dddddd"
             android:transitionName="urlbar" />
 
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:paddingTop="20dp"
-            android:text="Automatic private browsing.\nBrowse. Erase. Repeat."
+            android:text="@string/teaser"
             android:textColor="#eeeeee" />
 
     </LinearLayout>
