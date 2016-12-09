@@ -83,9 +83,11 @@ protected:
   // notification about this change
   virtual nsresult UpdateSelectedLocale() = 0;
 
-  static void LogMessage(const char* aMsg, ...);
+  static void LogMessage(const char* aMsg, ...)
+    MOZ_FORMAT_PRINTF(1, 2);
   static void LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber, uint32_t flags,
-                                    const char* aMsg, ...);
+                                    const char* aMsg, ...)
+    MOZ_FORMAT_PRINTF(4, 5);
 
   virtual nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
                                         const nsCString& aProvider,
