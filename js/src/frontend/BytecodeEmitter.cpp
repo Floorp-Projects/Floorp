@@ -2902,13 +2902,13 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 }
 
 bool
-BytecodeEmitter::reportStrictWarning(ParseNode* pn, unsigned errorNumber, ...)
+BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 {
     TokenPos pos = pn ? pn->pn_pos : tokenStream()->currentToken().pos;
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportStrictWarningErrorNumberVA(pos.begin, errorNumber, args);
+    bool result = tokenStream()->reportExtraWarningErrorNumberVA(pos.begin, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -7918,13 +7918,13 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
             }
 
             if (directive) {
-                if (!reportStrictWarning(pn2, JSMSG_CONTRARY_NONDIRECTIVE, directive))
+                if (!reportExtraWarning(pn2, JSMSG_CONTRARY_NONDIRECTIVE, directive))
                     return false;
             }
         } else {
             current->currentLine = parser->tokenStream.srcCoords.lineNum(pn2->pn_pos.begin);
             current->lastColumn = 0;
-            if (!reportStrictWarning(pn2, JSMSG_USELESS_EXPR))
+            if (!reportExtraWarning(pn2, JSMSG_USELESS_EXPR))
                 return false;
         }
     }
