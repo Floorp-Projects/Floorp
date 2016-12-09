@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals setImmediate, rpc */
+
 "use strict";
 
 /* General utilities used throughout devtools. */
 
-var { Ci, Cu, Cc, components } = require("chrome");
+var { Ci, Cu, components } = require("chrome");
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
@@ -15,6 +17,10 @@ var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/s
 
 loader.lazyRequireGetter(this, "FileUtils",
                          "resource://gre/modules/FileUtils.jsm", true);
+
+// Using this name lets the eslint plugin know about lazy defines in
+// this file.
+var DevToolsUtils = exports;
 
 // Re-export the thread-safe utils.
 const ThreadSafeDevToolsUtils = require("./ThreadSafeDevToolsUtils.js");
@@ -25,9 +31,9 @@ for (let key of Object.keys(ThreadSafeDevToolsUtils)) {
 /**
  * Waits for the next tick in the event loop to execute a callback.
  */
-exports.executeSoon = function executeSoon(aFn) {
+exports.executeSoon = function (fn) {
   if (isWorker) {
-    setImmediate(aFn);
+    setImmediate(fn);
   } else {
     let executor;
     // Only enable async stack reporting when DEBUG_JS_MODULES is set
@@ -35,10 +41,10 @@ exports.executeSoon = function executeSoon(aFn) {
     if (AppConstants.DEBUG_JS_MODULES || flags.testing) {
       let stack = getStack();
       executor = () => {
-        callFunctionWithAsyncStack(aFn, stack, "DevToolsUtils.executeSoon");
+        callFunctionWithAsyncStack(fn, stack, "DevToolsUtils.executeSoon");
       };
     } else {
-      executor = aFn;
+      executor = fn;
     }
     Services.tm.mainThread.dispatch({
       run: exports.makeInfallible(executor)
@@ -52,7 +58,7 @@ exports.executeSoon = function executeSoon(aFn) {
  * @return Promise
  *         A promise that is resolved after the next tick in the event loop.
  */
-exports.waitForTick = function waitForTick() {
+exports.waitForTick = function () {
   let deferred = defer();
   exports.executeSoon(deferred.resolve);
   return deferred.promise;
@@ -61,14 +67,14 @@ exports.waitForTick = function waitForTick() {
 /**
  * Waits for the specified amount of time to pass.
  *
- * @param number aDelay
+ * @param number delay
  *        The amount of time to wait, in milliseconds.
  * @return Promise
  *         A promise that is resolved after the specified amount of time passes.
  */
-exports.waitForTime = function waitForTime(aDelay) {
+exports.waitForTime = function (delay) {
   let deferred = defer();
-  setTimeout(deferred.resolve, aDelay);
+  setTimeout(deferred.resolve, delay);
   return deferred.promise;
 };
 
@@ -77,21 +83,21 @@ exports.waitForTime = function waitForTime(aDelay) {
  * very large arrays by yielding to the browser and continuing execution on the
  * next tick.
  *
- * @param Array aArray
+ * @param Array array
  *        The array being iterated over.
- * @param Function aFn
+ * @param Function fn
  *        The function called on each item in the array. If a promise is
  *        returned by this function, iterating over the array will be paused
  *        until the respective promise is resolved.
  * @returns Promise
  *          A promise that is resolved once the whole array has been iterated
- *          over, and all promises returned by the aFn callback are resolved.
+ *          over, and all promises returned by the fn callback are resolved.
  */
-exports.yieldingEach = function yieldingEach(aArray, aFn) {
+exports.yieldingEach = function (array, fn) {
   const deferred = defer();
 
   let i = 0;
-  let len = aArray.length;
+  let len = array.length;
   let outstanding = [deferred.promise];
 
   (function loop() {
@@ -108,7 +114,7 @@ exports.yieldingEach = function yieldingEach(aArray, aFn) {
       }
 
       try {
-        outstanding.push(aFn(aArray[i], i++));
+        outstanding.push(fn(array[i], i++));
       } catch (e) {
         deferred.reject(e);
         return;
@@ -126,22 +132,21 @@ exports.yieldingEach = function yieldingEach(aArray, aFn) {
  * allows the lazy getter to be defined on a prototype and work correctly with
  * instances.
  *
- * @param Object aObject
+ * @param Object object
  *        The prototype object to define the lazy getter on.
- * @param String aKey
+ * @param String key
  *        The key to define the lazy getter on.
- * @param Function aCallback
+ * @param Function callback
  *        The callback that will be called to determine the value. Will be
  *        called with the |this| value of the current instance.
  */
-exports.defineLazyPrototypeGetter =
-function defineLazyPrototypeGetter(aObject, aKey, aCallback) {
-  Object.defineProperty(aObject, aKey, {
+exports.defineLazyPrototypeGetter = function (object, key, callback) {
+  Object.defineProperty(object, key, {
     configurable: true,
     get: function () {
-      const value = aCallback.call(this);
+      const value = callback.call(this);
 
-      Object.defineProperty(this, aKey, {
+      Object.defineProperty(this, key, {
         configurable: true,
         writable: true,
         value: value
@@ -156,17 +161,17 @@ function defineLazyPrototypeGetter(aObject, aKey, aCallback) {
  * Safely get the property value from a Debugger.Object for a given key. Walks
  * the prototype chain until the property is found.
  *
- * @param Debugger.Object aObject
+ * @param Debugger.Object object
  *        The Debugger.Object to get the value from.
- * @param String aKey
+ * @param String key
  *        The key to look for.
  * @return Any
  */
-exports.getProperty = function getProperty(aObj, aKey) {
-  let root = aObj;
+exports.getProperty = function (object, key) {
+  let root = object;
   try {
     do {
-      const desc = aObj.getOwnPropertyDescriptor(aKey);
+      const desc = object.getOwnPropertyDescriptor(key);
       if (desc) {
         if ("value" in desc) {
           return desc.value;
@@ -174,8 +179,8 @@ exports.getProperty = function getProperty(aObj, aKey) {
         // Call the getter if it's safe.
         return exports.hasSafeGetter(desc) ? desc.get.call(root).return : undefined;
       }
-      aObj = aObj.proto;
-    } while (aObj);
+      object = object.proto;
+    } while (object);
   } catch (e) {
     // If anything goes wrong report the error and return undefined.
     exports.reportException("getProperty", e);
@@ -186,16 +191,16 @@ exports.getProperty = function getProperty(aObj, aKey) {
 /**
  * Determines if a descriptor has a getter which doesn't call into JavaScript.
  *
- * @param Object aDesc
+ * @param Object desc
  *        The descriptor to check for a safe getter.
  * @return Boolean
  *         Whether a safe getter was found.
  */
-exports.hasSafeGetter = function hasSafeGetter(aDesc) {
+exports.hasSafeGetter = function (desc) {
   // Scripted functions that are CCWs will not appear scripted until after
   // unwrapping.
   try {
-    let fn = aDesc.get.unwrap();
+    let fn = desc.get.unwrap();
     return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
   } catch (e) {
     // Avoid exception 'Object in compartment marked as invisible to Debugger'
@@ -210,32 +215,34 @@ exports.hasSafeGetter = function hasSafeGetter(aDesc) {
  *
  * See bugs 945920 and 946752 for discussion.
  *
- * @type Object aObj
+ * @type Object obj
  *       The object to check.
  * @return Boolean
- *         True if it is safe to read properties from aObj, or false otherwise.
+ *         True if it is safe to read properties from obj, or false otherwise.
  */
-exports.isSafeJSObject = function isSafeJSObject(aObj) {
+exports.isSafeJSObject = function (obj) {
   // If we are running on a worker thread, Cu is not available. In this case,
   // we always return false, just to be on the safe side.
   if (isWorker) {
     return false;
   }
 
-  if (Cu.getGlobalForObject(aObj) ==
+  if (Cu.getGlobalForObject(obj) ==
       Cu.getGlobalForObject(exports.isSafeJSObject)) {
-    return true; // aObj is not a cross-compartment wrapper.
+    // obj is not a cross-compartment wrapper.
+    return true;
   }
 
-  let principal = Cu.getObjectPrincipal(aObj);
+  let principal = Cu.getObjectPrincipal(obj);
   if (Services.scriptSecurityManager.isSystemPrincipal(principal)) {
-    return true; // allow chrome objects
+    // allow chrome objects
+    return true;
   }
 
-  return Cu.isXrayWrapper(aObj);
+  return Cu.isXrayWrapper(obj);
 };
 
-exports.dumpn = function dumpn(str) {
+exports.dumpn = function (str) {
   if (flags.wantLogging) {
     dump("DBG-SERVER: " + str + "\n");
   }
@@ -253,26 +260,27 @@ exports.dumpv = function (msg) {
 /**
  * Defines a getter on a specified object that will be created upon first use.
  *
- * @param aObject
+ * @param object
  *        The object to define the lazy getter on.
- * @param aName
- *        The name of the getter to define on aObject.
- * @param aLambda
+ * @param name
+ *        The name of the getter to define on object.
+ * @param lambda
  *        A function that returns what the getter should return.  This will
  *        only ever be called once.
  */
-exports.defineLazyGetter = function defineLazyGetter(aObject, aName, aLambda) {
-  Object.defineProperty(aObject, aName, {
+exports.defineLazyGetter = function (object, name, lambda) {
+  Object.defineProperty(object, name, {
     get: function () {
-      delete aObject[aName];
-      return aObject[aName] = aLambda.apply(aObject);
+      delete object[name];
+      object[name] = lambda.apply(object);
+      return object[name];
     },
     configurable: true,
     enumerable: true
   });
 };
 
-exports.defineLazyGetter(this, "AppConstants", () => {
+DevToolsUtils.defineLazyGetter(this, "AppConstants", () => {
   if (isWorker) {
     return {};
   }
@@ -329,47 +337,44 @@ Object.defineProperty(exports, "assert", {
  * Defines a getter on a specified object for a module.  The module will not
  * be imported until first use.
  *
- * @param aObject
+ * @param object
  *        The object to define the lazy getter on.
- * @param aName
- *        The name of the getter to define on aObject for the module.
- * @param aResource
+ * @param name
+ *        The name of the getter to define on object for the module.
+ * @param resource
  *        The URL used to obtain the module.
- * @param aSymbol
+ * @param symbol
  *        The name of the symbol exported by the module.
- *        This parameter is optional and defaults to aName.
+ *        This parameter is optional and defaults to name.
  */
-exports.defineLazyModuleGetter = function defineLazyModuleGetter(aObject, aName,
-                                                                 aResource,
-                                                                 aSymbol)
-{
-  this.defineLazyGetter(aObject, aName, function XPCU_moduleLambda() {
-    var temp = {};
-    Cu.import(aResource, temp);
-    return temp[aSymbol || aName];
+exports.defineLazyModuleGetter = function (object, name, resource, symbol) {
+  this.defineLazyGetter(object, name, function () {
+    let temp = {};
+    Cu.import(resource, temp);
+    return temp[symbol || name];
   });
 };
 
-exports.defineLazyGetter(this, "NetUtil", () => {
+DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
   return Cu.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
 });
 
-exports.defineLazyGetter(this, "OS", () => {
+DevToolsUtils.defineLazyGetter(this, "OS", () => {
   return Cu.import("resource://gre/modules/osfile.jsm", {}).OS;
 });
 
-exports.defineLazyGetter(this, "TextDecoder", () => {
+DevToolsUtils.defineLazyGetter(this, "TextDecoder", () => {
   return Cu.import("resource://gre/modules/osfile.jsm", {}).TextDecoder;
 });
 
-exports.defineLazyGetter(this, "NetworkHelper", () => {
+DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {
   return require("devtools/shared/webconsole/network-helper");
 });
 
 /**
  * Performs a request to load the desired URL and returns a promise.
  *
- * @param aURL String
+ * @param urlIn String
  *        The URL we will request.
  * @param aOptions Object
  *        An object with the following optional properties:
@@ -396,14 +401,14 @@ exports.defineLazyGetter(this, "NetworkHelper", () => {
  * without relying on caching when we can (not for eval, etc.):
  * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
  */
-function mainThreadFetch(aURL, aOptions = { loadFromCache: true,
+function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
                                           policy: Ci.nsIContentPolicy.TYPE_OTHER,
                                           window: null,
                                           charset: null,
                                           principal: null,
                                           cacheKey: null }) {
   // Create a channel.
-  let url = aURL.split(" -> ").pop();
+  let url = urlIn.split(" -> ").pop();
   let channel;
   try {
     channel = newChannelForURL(url, aOptions);
@@ -526,7 +531,7 @@ function mainThreadFetch(aURL, aOptions = { loadFromCache: true,
  * @return {nsIChannel} - The newly created channel. Throws on failure.
  */
 function newChannelForURL(url, { policy, window, principal }) {
-  var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+  let securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
 
   let uri;
   try {
@@ -570,15 +575,15 @@ function newChannelForURL(url, { policy, window, principal }) {
 
 // Fetch is defined differently depending on whether we are on the main thread
 // or a worker thread.
-if (!this.isWorker) {
-  exports.fetch = mainThreadFetch;
-} else {
+if (this.isWorker) {
   // Services is not available in worker threads, nor is there any other way
   // to fetch a URL. We need to enlist the help from the main thread here, by
   // issuing an rpc request, to fetch the URL on our behalf.
   exports.fetch = function (url, options) {
     return rpc("fetch", url, options);
   };
+} else {
+  exports.fetch = mainThreadFetch;
 }
 
 /**
@@ -633,7 +638,7 @@ errorOnFlag(exports, "wantVerbose");
 
 // Calls the property with the given `name` on the given `object`, where
 // `name` is a string, and `object` a Debugger.Object instance.
-///
+//
 // This function uses only the Debugger.Object API to call the property. It
 // avoids the use of unsafeDeference. This is useful for example in workers,
 // where unsafeDereference will return an opaque security wrapper to the
@@ -667,6 +672,5 @@ function callPropertyOnObject(object, name) {
   }
   return result.return;
 }
-
 
 exports.callPropertyOnObject = callPropertyOnObject;

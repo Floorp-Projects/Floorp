@@ -1,3 +1,4 @@
+"use strict";
 
 /*
  * Create a writable property by tracking it with a private variable.
@@ -7,8 +8,12 @@
 function makeWritableFlag(exports, name) {
   let flag = false;
   Object.defineProperty(exports, name, {
-    get: function () { return flag; },
-    set: function (state) { flag = state; }
+    get: function () {
+      return flag;
+    },
+    set: function (state) {
+      flag = state;
+    }
   });
 }
 

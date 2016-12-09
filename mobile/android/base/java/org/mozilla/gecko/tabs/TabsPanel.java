@@ -9,6 +9,7 @@ import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -16,6 +17,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -23,8 +25,11 @@ import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.support.annotation.UiThread;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,7 +46,8 @@ import org.mozilla.gecko.widget.themed.ThemedImageButton;
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
                                   LightweightTheme.OnChangeListener,
-                                  IconTabWidget.OnTabChangedListener {
+                                  IconTabWidget.OnTabChangedListener,
+                                  SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOGTAG = "Gecko" + TabsPanel.class.getSimpleName();
 
     public enum Panel {
@@ -68,13 +74,21 @@ public class TabsPanel extends LinearLayout
         void onTabsLayoutChange(int width, int height);
     }
 
-    public static View createTabsLayout(final Context context, final AttributeSet attrs) {
-        final boolean isLandscape = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+    private static boolean tabletOrLandscapeMode(Context context) {
+        return HardwareUtils.isTablet() ||
+                context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+    }
 
-        if (HardwareUtils.isTablet() || isLandscape) {
-            return new TabsGridLayout(context, attrs);
+    public static View createTabsLayout(final Context context, final AttributeSet attrs) {
+        if (tabletOrLandscapeMode(context)) {
+            return new AutoFitTabsGridLayout(context, attrs);
         } else {
-            return new TabsListLayout(context, attrs);
+            // Phone in portrait mode.
+            if (GeckoSharedPrefs.forApp(context).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS, false)) {
+                return new CompactTabsGridLayout(context, attrs);
+            } else {
+                return new TabsListLayout(context, attrs);
+            }
         }
     }
 
@@ -252,12 +266,18 @@ public class TabsPanel extends LinearLayout
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
         mTheme.addListener(this);
+        if (!HardwareUtils.isTablet()) {
+            GeckoSharedPrefs.forApp(getContext()).registerOnSharedPreferenceChangeListener(this);
+        }
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mTheme.removeListener(this);
+        if (!HardwareUtils.isTablet()) {
+            GeckoSharedPrefs.forApp(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+        }
     }
 
     @Override
@@ -452,5 +472,15 @@ public class TabsPanel extends LinearLayout
     private void dispatchLayoutChange(int width, int height) {
         if (mLayoutChangeListener != null)
             mLayoutChangeListener.onTabsLayoutChange(width, height);
+    }
+
+    @UiThread // according to the docs.
+    @Override
+    public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+        if (!TextUtils.equals(GeckoPreferences.PREFS_COMPACT_TABS, key)) {
+            return;
+        }
+
+        refresh();
     }
 }

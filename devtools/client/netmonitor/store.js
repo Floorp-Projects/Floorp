@@ -4,11 +4,19 @@
 
 "use strict";
 
-const createStore = require("devtools/client/shared/redux/create-store");
-const reducers = require("./reducers/index");
+const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/redux");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
+const batching = require("./middleware/batching");
+const rootReducer = require("./reducers/index");
 
 function configureStore() {
-  return createStore()(reducers);
+  return createStore(
+    rootReducer,
+    applyMiddleware(
+      thunk,
+      batching
+    )
+  );
 }
 
 exports.configureStore = configureStore;
