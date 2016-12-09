@@ -15,13 +15,10 @@ class TestGeckoInstance(MarionetteTestCase):
             self.assertEqual(type(GeckoInstance.create(app=app, bin="n/a")),
                              apps[app])
 
-        # When using mozversion to detect the instance class, it should never return the
-        # base GeckoInstance class.
-        self.assertNotEqual(GeckoInstance.create(bin=self.marionette.bin),
-                            GeckoInstance)
-
         # Unknown applications and binaries should fail
         self.assertRaises(NotImplementedError, GeckoInstance.create,
-                          app="n/a", binary=self.marionette.bin)
-        self.assertRaises(IOError, GeckoInstance.create,
+                          app="n/a", bin=self.marionette.bin)
+        self.assertRaises(NotImplementedError, GeckoInstance.create,
                           bin="n/a")
+        self.assertRaises(NotImplementedError, GeckoInstance.create,
+                          bin=None)
