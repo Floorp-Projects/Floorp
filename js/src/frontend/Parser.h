@@ -903,9 +903,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
     void freeTree(Node node) { handler.freeTree(node); }
 
-  private:
-    bool reportHelper(ParseReportKind kind, bool strict, uint32_t offset,
-                      unsigned errorNumber, va_list args);
   public:
     bool reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...);
 
