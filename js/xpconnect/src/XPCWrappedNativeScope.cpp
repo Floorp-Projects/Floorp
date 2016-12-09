@@ -859,7 +859,7 @@ XPCWrappedNativeScope::DebugDumpAllScopes(int16_t depth)
 
     XPC_LOG_ALWAYS(("chain of %d XPCWrappedNativeScope(s)", count));
     XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("gDyingScopes @ %x", gDyingScopes));
+        XPC_LOG_ALWAYS(("gDyingScopes @ %p", gDyingScopes));
         if (depth)
             for (cur = gScopes; cur; cur = cur->mNext)
                 cur->DebugDump(depth);
@@ -872,13 +872,13 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth-- ;
-    XPC_LOG_ALWAYS(("XPCWrappedNativeScope @ %x", this));
+    XPC_LOG_ALWAYS(("XPCWrappedNativeScope @ %p", this));
     XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mNext @ %x", mNext));
-        XPC_LOG_ALWAYS(("mComponents @ %x", mComponents.get()));
-        XPC_LOG_ALWAYS(("mGlobalJSObject @ %x", mGlobalJSObject.get()));
+        XPC_LOG_ALWAYS(("mNext @ %p", mNext));
+        XPC_LOG_ALWAYS(("mComponents @ %p", mComponents.get()));
+        XPC_LOG_ALWAYS(("mGlobalJSObject @ %p", mGlobalJSObject.get()));
 
-        XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers(s)",
+        XPC_LOG_ALWAYS(("mWrappedNativeMap @ %p with %d wrappers(s)",
                         mWrappedNativeMap, mWrappedNativeMap->Count()));
         // iterate contexts...
         if (depth && mWrappedNativeMap->Count()) {
@@ -890,7 +890,7 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
             XPC_LOG_OUTDENT();
         }
 
-        XPC_LOG_ALWAYS(("mWrappedNativeProtoMap @ %x with %d protos(s)",
+        XPC_LOG_ALWAYS(("mWrappedNativeProtoMap @ %p with %d protos(s)",
                         mWrappedNativeProtoMap,
                         mWrappedNativeProtoMap->Count()));
         // iterate contexts...

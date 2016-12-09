@@ -2094,7 +2094,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth-- ;
-    XPC_LOG_ALWAYS(("XPCWrappedNative @ %x with mRefCnt = %d", this, mRefCnt.get()));
+    XPC_LOG_ALWAYS(("XPCWrappedNative @ %p with mRefCnt = %" PRIuPTR, this, mRefCnt.get()));
     XPC_LOG_INDENT();
 
         if (HasProto()) {
@@ -2102,23 +2102,23 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
             if (depth && proto)
                 proto->DebugDump(depth);
             else
-                XPC_LOG_ALWAYS(("mMaybeProto @ %x", proto));
+                XPC_LOG_ALWAYS(("mMaybeProto @ %p", proto));
         } else
-            XPC_LOG_ALWAYS(("Scope @ %x", GetScope()));
+            XPC_LOG_ALWAYS(("Scope @ %p", GetScope()));
 
         if (depth && mSet)
             mSet->DebugDump(depth);
         else
-            XPC_LOG_ALWAYS(("mSet @ %x", mSet.get()));
+            XPC_LOG_ALWAYS(("mSet @ %p", mSet.get()));
 
-        XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject.unbarrieredGetPtr()));
-        XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity.get()));
-        XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptable.get()));
+        XPC_LOG_ALWAYS(("mFlatJSObject of %p", mFlatJSObject.unbarrieredGetPtr()));
+        XPC_LOG_ALWAYS(("mIdentity of %p", mIdentity.get()));
+        XPC_LOG_ALWAYS(("mScriptable @ %p", mScriptable.get()));
 
         if (depth && mScriptable) {
             XPC_LOG_INDENT();
             XPC_LOG_ALWAYS(("mFlags of %x", mScriptable->GetScriptableFlags()));
-            XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptable->GetJSClass()));
+            XPC_LOG_ALWAYS(("mJSClass @ %p", mScriptable->GetJSClass()));
             XPC_LOG_OUTDENT();
         }
     XPC_LOG_OUTDENT();
