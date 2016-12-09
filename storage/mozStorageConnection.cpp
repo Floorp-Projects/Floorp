@@ -41,7 +41,7 @@
 #include "GeckoProfiler.h"
 
 #include "mozilla/Logging.h"
-#include "prprf.h"
+#include "mozilla/Printf.h"
 #include "nsProxyRelease.h"
 #include <algorithm>
 
@@ -1001,16 +1001,16 @@ Connection::internalClose(sqlite3 *aNativeConnection)
     sqlite3_stmt *stmt = nullptr;
     while ((stmt = ::sqlite3_next_stmt(aNativeConnection, stmt))) {
       MOZ_LOG(gStorageLog, LogLevel::Debug,
-             ("Auto-finalizing SQL statement '%s' (%x)",
+             ("Auto-finalizing SQL statement '%s' (%p)",
               ::sqlite3_sql(stmt),
               stmt));
 
 #ifdef DEBUG
-      char *msg = ::PR_smprintf("SQL statement '%s' (%x) should have been finalized before closing the connection",
-                                ::sqlite3_sql(stmt),
-                                stmt);
+      char *msg = ::mozilla::Smprintf("SQL statement '%s' (%p) should have been finalized before closing the connection",
+                               ::sqlite3_sql(stmt),
+                               stmt);
       NS_WARNING(msg);
-      ::PR_smprintf_free(msg);
+      ::mozilla::SmprintfFree(msg);
       msg = nullptr;
 #endif // DEBUG
 
@@ -1018,11 +1018,11 @@ Connection::internalClose(sqlite3 *aNativeConnection)
 
 #ifdef DEBUG
       if (srv != SQLITE_OK) {
-        msg = ::PR_smprintf("Could not finalize SQL statement '%s' (%x)",
-                            ::sqlite3_sql(stmt),
-                            stmt);
+        msg = ::mozilla::Smprintf("Could not finalize SQL statement '%s' (%p)",
+                           ::sqlite3_sql(stmt),
+                           stmt);
         NS_WARNING(msg);
-        ::PR_smprintf_free(msg);
+        ::mozilla::SmprintfFree(msg);
         msg = nullptr;
       }
 #endif // DEBUG
@@ -1816,12 +1816,12 @@ Connection::CreateTable(const char *aTableName,
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  char *buf = ::PR_smprintf("CREATE TABLE %s (%s)", aTableName, aTableSchema);
+  char *buf = ::mozilla::Smprintf("CREATE TABLE %s (%s)", aTableName, aTableSchema);
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;
 
   int srv = executeSql(mDBConn, buf);
-  ::PR_smprintf_free(buf);
+  ::mozilla::SmprintfFree(buf);
 
   return convertResultCode(srv);
 }
