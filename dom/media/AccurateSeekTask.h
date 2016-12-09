@@ -49,8 +49,6 @@ public:
 
   void MaybeFinishSeek();
 
-  void AdjustFastSeekIfNeeded(MediaData* aSample);
-
   /*
    * Internal state.
    */
