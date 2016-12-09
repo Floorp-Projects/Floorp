@@ -26,6 +26,18 @@
 
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"></script>
+  <script type="text/javascript">
+    /* eslint-disable */
+    var isInChrome = window.location.href.includes("chrome:");
+    if (isInChrome) {
+      var exports = {};
+      var Cu = Components.utils;
+      var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+      var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+    }
+  </script>
+
+  <!-- in content, inspector.js is mapped to the dynamically generated webpack bundle -->
   <script type="application/javascript;version=1.8" src="inspector.js" defer="true"></script>
 </head>
 <body class="theme-body" role="application">

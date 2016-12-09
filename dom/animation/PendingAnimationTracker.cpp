@@ -85,6 +85,10 @@ PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(const TimeStamp&
 
   triggerAnimationsAtReadyTime(mPlayPendingSet);
   triggerAnimationsAtReadyTime(mPausePendingSet);
+
+  mHasPlayPendingGeometricAnimations = mPlayPendingSet.Count()
+                                       ? CheckState::Indeterminate
+                                       : CheckState::Absent;
 }
 
 void
@@ -99,6 +103,57 @@ PendingAnimationTracker::TriggerPendingAnimationsNow()
 
   triggerAndClearAnimations(mPlayPendingSet);
   triggerAndClearAnimations(mPausePendingSet);
+
+  mHasPlayPendingGeometricAnimations = CheckState::Absent;
+}
+
+void
+PendingAnimationTracker::MarkAnimationsThatMightNeedSynchronization()
+{
+  // We only ever set mHasPlayPendingGeometricAnimations to 'present' in
+  // HasPlayPendingGeometricAnimations(). So, if it is 'present' already,
+  // (i.e. before calling HasPlayPendingGeometricAnimations()) we can assume
+  // that this method has already been called for the current set of
+  // play-pending animations and it is not necessary to run again.
+  //
+  // We can't make the same assumption about 'absent', but if this method
+  // was already called and the result was 'absent', then this method is
+  // a no-op anyway so it's ok to run again.
+  //
+  // Note that *without* this optimization, starting animations would become
+  // O(n^2) in that case where each animation is on a different element and
+  // contains a compositor-animatable property since we would end up iterating
+  // over all animations in the play-pending set for each target element.
+  if (mHasPlayPendingGeometricAnimations == CheckState::Present) {
+    return;
+  }
+
+  if (!HasPlayPendingGeometricAnimations()) {
+    return;
+  }
+
+  for (auto iter = mPlayPendingSet.Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->NotifyGeometricAnimationsStartingThisFrame();
+  }
+}
+
+bool
+PendingAnimationTracker::HasPlayPendingGeometricAnimations()
+{
+  if (mHasPlayPendingGeometricAnimations != CheckState::Indeterminate) {
+    return mHasPlayPendingGeometricAnimations == CheckState::Present;
+  }
+
+  mHasPlayPendingGeometricAnimations = CheckState::Absent;
+  for (auto iter = mPlayPendingSet.ConstIter(); !iter.Done(); iter.Next()) {
+    auto animation = iter.Get()->GetKey();
+    if (animation->GetEffect() && animation->GetEffect()->AffectsGeometry()) {
+      mHasPlayPendingGeometricAnimations = CheckState::Present;
+      break;
+    }
+  }
+
+  return mHasPlayPendingGeometricAnimations == CheckState::Present;
 }
 
 void

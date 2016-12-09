@@ -52,7 +52,7 @@ config = {
                 'force_clobber': True,
             },
             'macosx64': {
-                'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/release',
+                'src_mozconfig': 'browser/config/mozconfigs/macosx64/release',
                 'force_clobber': True,
             },
             'win32': {
@@ -126,7 +126,7 @@ config = {
                 'force_clobber': True,
             },
             'macosx64': {
-                'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/beta',
+                'src_mozconfig': 'browser/config/mozconfigs/macosx64/beta',
                 'force_clobber': True,
             },
             'win32': {

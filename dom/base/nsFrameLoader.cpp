@@ -959,11 +959,9 @@ nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
     bool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
     if (aOwner) {
-      bool is_targetable = is_primary ||
-        value.LowerCaseEqualsLiteral("content-targetable");
       mOwnerContent->AddMutationObserver(this);
       mObservingOwnerContent = true;
-      aOwner->ContentShellAdded(aItem, is_primary, is_targetable, value);
+      aOwner->ContentShellAdded(aItem, is_primary, value);
     }
   }
 
@@ -3285,11 +3283,8 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
   if (value.LowerCaseEqualsLiteral("content") ||
       StringBeginsWith(value, NS_LITERAL_STRING("content-"),
                        nsCaseInsensitiveStringComparator())) {
-    bool is_targetable = is_primary ||
-      value.LowerCaseEqualsLiteral("content-targetable");
 
-    parentTreeOwner->ContentShellAdded(mDocShell, is_primary,
-                                       is_targetable, value);
+    parentTreeOwner->ContentShellAdded(mDocShell, is_primary, value);
   }
 }
 

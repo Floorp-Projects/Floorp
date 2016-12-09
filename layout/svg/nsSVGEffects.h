@@ -493,6 +493,7 @@ public:
      */
     nsTArray<nsSVGMaskFrame*> GetMaskFrames();
 
+    bool MightHaveNoneSVGMask() const;
     bool HasValidFilter() {
       return mFilter && mFilter->ReferencesValidResources();
     }

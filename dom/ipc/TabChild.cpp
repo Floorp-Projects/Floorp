@@ -27,10 +27,12 @@
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/DoubleTapToZoom.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ShadowLayers.h"
@@ -2542,7 +2544,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       mLayersId = aLayersId;
     }
 
-    mApzcTreeManager = CompositorBridgeChild::Get()->GetAPZCTreeManager(mLayersId);
+    InitAPZState();
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
@@ -2552,6 +2554,28 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
                                      BEFORE_FIRST_PAINT,
                                      false);
     }
+}
+
+void
+TabChild::InitAPZState()
+{
+  auto cbc = CompositorBridgeChild::Get();
+
+  if (!cbc->GetAPZEnabled(mLayersId)) {
+    return;
+  }
+
+  // Initialize the ApzcTreeManager. This takes multiple casts because of ugly multiple inheritance.
+  PAPZCTreeManagerChild* baseProtocol = cbc->SendPAPZCTreeManagerConstructor(mLayersId);
+  APZCTreeManagerChild* derivedProtocol = static_cast<APZCTreeManagerChild*>(baseProtocol);
+
+  mApzcTreeManager = RefPtr<IAPZCTreeManager>(derivedProtocol);
+
+  // Initialize the GeckoContentController for this tab. We don't hold a reference because we don't need it.
+  // The ContentProcessController will hold a reference to the tab, and will be destroyed by the compositor or ipdl
+  // during destruction.
+  RefPtr<GeckoContentController> contentController = new ContentProcessController(this);
+  cbc->SendPAPZConstructor(new APZChild(contentController), mLayersId);
 }
 
 void
@@ -2894,11 +2918,7 @@ TabChild::ReinitRendering()
   ShadowLayerForwarder* lf = lm->AsShadowForwarder();
   lf->IdentifyTextureHost(mTextureFactoryIdentifier);
 
-  mApzcTreeManager = CompositorBridgeChild::Get()->GetAPZCTreeManager(mLayersId);
-  if (mApzcTreeManager) {
-    APZChild* apz = ContentProcessController::Create(mUniqueId);
-    CompositorBridgeChild::Get()->SendPAPZConstructor(apz, mLayersId);
-  }
+  InitAPZState();
 
   nsCOMPtr<nsIDocument> doc(GetDocument());
   doc->NotifyLayerManagerRecreated();

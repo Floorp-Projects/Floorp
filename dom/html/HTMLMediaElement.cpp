@@ -792,7 +792,7 @@ private:
   void
   Resume()
   {
-    if (!IsSuspended() && mOwner->Paused()) {
+    if (!IsSuspended()) {
       MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
              ("HTMLMediaElement::AudioChannelAgentCallback, ResumeFromAudioChannel, "
               "this = %p, Error : resume without suspended!\n", this));
@@ -5323,9 +5323,19 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
-  if (mDownloadSuspendedByCache &&
-      mDecoder && !mDecoder->IsEnded() &&
-      mFirstFrameLoaded) {
+  if (!mFirstFrameLoaded) {
+    // We haven't yet loaded the first frame, making us unable to determine
+    // if we have enough valid data at the present stage.
+    return;
+  }
+
+  if (nextFrameStatus == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
+    // Force HAVE_CURRENT_DATA when buffering.
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+    return;
+  }
+
+  if (mDownloadSuspendedByCache && mDecoder && !mDecoder->IsEnded()) {
     // The decoder has signaled that the download has been suspended by the
     // media cache. So move readyState into HAVE_ENOUGH_DATA, in case there's
     // script waiting for a "canplaythrough" event; without this forced
@@ -5341,18 +5351,18 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
-  if (nextFrameStatus != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
+  if (mDecoder && !mDecoder->IsEnded() &&
+      !mDecoder->GetResource()->IsExpectingMoreData()) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
-                          "Next frame not available", this));
-    if (mFirstFrameLoaded) {
-      ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
-    }
+                          "Decoder fetched all data for media resource", this));
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
 
-  if (!mFirstFrameLoaded) {
-    // We haven't yet loaded the first frame, making us unable to determine
-    // if we have enough valid data at the present stage.
+  if (nextFrameStatus != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Next frame not available", this));
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
     return;
   }
 

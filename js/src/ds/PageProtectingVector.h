@@ -73,8 +73,10 @@ class PageProtectingVector final
         unprotectedBytes += offsetToPage;
         offsetToPage = (pageSize - (uintptr_t(vector.begin()) & pageMask)) & pageMask;
         unprotectedBytes -= offsetToPage;
+#ifndef RELEASE_OR_BETA
         protectionEnabled = vector.capacity() >= protectionLowerBound &&
                             vector.capacity() >= pageSize + offsetToPage;
+#endif
     }
 
     void protect() {

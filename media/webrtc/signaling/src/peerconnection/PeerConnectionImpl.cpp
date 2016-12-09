@@ -1337,7 +1337,7 @@ already_AddRefed<nsDOMDataChannel>
 PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
                                       const nsAString& aProtocol,
                                       uint16_t aType,
-                                      bool outOfOrderAllowed,
+                                      bool ordered,
                                       uint16_t aMaxTime,
                                       uint16_t aMaxNum,
                                       bool aExternalNegotiated,
@@ -1346,7 +1346,7 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   RefPtr<nsDOMDataChannel> result;
-  rv = CreateDataChannel(aLabel, aProtocol, aType, outOfOrderAllowed,
+  rv = CreateDataChannel(aLabel, aProtocol, aType, ordered,
                          aMaxTime, aMaxNum, aExternalNegotiated,
                          aStream, getter_AddRefs(result));
   return result.forget();
@@ -1359,7 +1359,7 @@ NS_IMETHODIMP
 PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
                                       const nsAString& aProtocol,
                                       uint16_t aType,
-                                      bool outOfOrderAllowed,
+                                      bool ordered,
                                       uint16_t aMaxTime,
                                       uint16_t aMaxNum,
                                       bool aExternalNegotiated,
@@ -1380,7 +1380,7 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
   }
   dataChannel = mDataConnection->Open(
     NS_ConvertUTF16toUTF8(aLabel), NS_ConvertUTF16toUTF8(aProtocol), theType,
-    !outOfOrderAllowed,
+    ordered,
     aType == DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? aMaxNum :
     (aType == DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime : 0),
     nullptr, nullptr, aExternalNegotiated, aStream

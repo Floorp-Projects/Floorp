@@ -722,6 +722,7 @@ private:
   void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const uint64_t& aLayersId,
                           PRenderFrameChild* aRenderFrame);
+  void InitAPZState();
 
   void DestroyWindow();
 
@@ -786,9 +787,6 @@ private:
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 
   RefPtr<layers::IAPZCTreeManager> mApzcTreeManager;
-  // APZChild clears this pointer from its destructor, so it shouldn't be a
-  // dangling pointer.
-  layers::APZChild* mAPZChild;
 
   // The most recently seen layer observer epoch in RecvSetDocShellIsActive.
   uint64_t mLayerObserverEpoch;

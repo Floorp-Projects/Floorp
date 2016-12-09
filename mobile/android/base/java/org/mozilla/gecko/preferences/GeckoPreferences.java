@@ -166,6 +166,7 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_CUSTOM_TABS = NON_PREF_PREFIX + "customtabs";
     public static final String PREFS_ACTIVITY_STREAM = NON_PREF_PREFIX + "activitystream";
     public static final String PREFS_CATEGORY_EXPERIMENTAL_FEATURES = NON_PREF_PREFIX + "category_experimental";
+    public static final String PREFS_COMPACT_TABS = NON_PREF_PREFIX + "compact_tabs";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = "STUMBLER_PREF";
 

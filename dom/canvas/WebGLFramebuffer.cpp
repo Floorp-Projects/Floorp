@@ -604,7 +604,7 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
 // WebGLFramebuffer
 
 WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mGLName(fbo)
 #ifdef ANDROID
     , mIsFB(false)
@@ -1288,7 +1288,7 @@ WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnu
 
     // `attachment`
     const auto maybeAttach = GetAttachPoint(attachEnum);
-    if (!maybeAttach) {
+    if (!maybeAttach || !maybeAttach.value()) {
         mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
         return;
     }
@@ -1301,7 +1301,7 @@ WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnu
     }
 
     // `rb`
-    if (!mContext->ValidateObjectAllowNull("framebufferRenderbuffer: rb", rb))
+    if (rb && !mContext->ValidateObject("framebufferRenderbuffer: rb", *rb))
         return;
 
     // End of validation.
@@ -1326,7 +1326,7 @@ WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
 
     // `attachment`
     const auto maybeAttach = GetAttachPoint(attachEnum);
-    if (!maybeAttach) {
+    if (!maybeAttach || !maybeAttach.value()) {
         mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
         return;
     }
@@ -1343,10 +1343,10 @@ WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
     }
 
     // `texture`
-    if (!mContext->ValidateObjectAllowNull("framebufferTexture2D: texture", tex))
-        return;
-
     if (tex) {
+        if (!mContext->ValidateObject("framebufferTexture2D: texture", *tex))
+            return;
+
         if (!tex->HasEverBeenBound()) {
             mContext->ErrorInvalidOperation("%s: `texture` has never been bound.",
                                             funcName);
@@ -1413,20 +1413,11 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
 
     // `attachment`
     const auto maybeAttach = GetAttachPoint(attachEnum);
-    if (!maybeAttach) {
+    if (!maybeAttach || !maybeAttach.value()) {
         mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
         return;
     }
     const auto& attach = maybeAttach.value();
-
-    // `texture`
-    if (!mContext->ValidateObjectAllowNull("framebufferTextureLayer: texture", tex))
-        return;
-
-    if (tex && !tex->HasEverBeenBound()) {
-        mContext->ErrorInvalidOperation("%s: `texture` has never been bound.", funcName);
-        return;
-    }
 
     // `level`, `layer`
     if (layer < 0)
@@ -1435,8 +1426,18 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
     if (level < 0)
         return mContext->ErrorInvalidValue("%s: `level` must be >= 0.", funcName);
 
+    // `texture`
     TexImageTarget texImageTarget = LOCAL_GL_TEXTURE_3D;
     if (tex) {
+        if (!mContext->ValidateObject("framebufferTextureLayer: texture", *tex))
+            return;
+
+        if (!tex->HasEverBeenBound()) {
+            mContext->ErrorInvalidOperation("%s: `texture` has never been bound.",
+                                            funcName);
+            return;
+        }
+
         texImageTarget = tex->Target().get();
         switch (texImageTarget.get()) {
         case LOCAL_GL_TEXTURE_3D:

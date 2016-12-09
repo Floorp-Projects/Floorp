@@ -1837,7 +1837,9 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
              bool multiline, bool match_only, bool unicode, bool ignore_case,
              bool global, bool sticky, RegExpCompileData* data)
 {
-    if (match_only) {
+    // We shouldn't strip pattern for exec, or test with global/sticky,
+    // to reflect correct match position and lastIndex.
+    if (match_only && !global && !sticky) {
         // Try to strip a leading '.*' from the RegExp, but only if it is not
         // followed by a '?' (which will affect how the .* is parsed). This
         // pattern will affect the captures produced by the RegExp, but not
@@ -1849,13 +1851,9 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
 
         // Try to strip a trailing '.*' from the RegExp, which as above will
         // affect the captures but not whether there is a match. Only do this
-        // when the following conditions are met:
-        //   1. there are no other meta characters in the RegExp, so that we
-        //      are sure this will not affect how the RegExp is parsed
-        //   2. global and sticky flags are not set, as lastIndex needs to be
-        //      set properly on global or sticky match
+        // when there are no other meta characters in the RegExp, so that we
+        // are sure this will not affect how the RegExp is parsed.
         if (length >= 3 && !HasRegExpMetaChars(chars, length - 2) &&
-            !global && !sticky &&
             chars[length - 2] == '.' && chars[length - 1] == '*')
         {
             length -= 2;

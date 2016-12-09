@@ -58,7 +58,9 @@ TrackUnionStream::TrackUnionStream() :
       if (mTrackMap[i].mInputPort == aPort) {
         STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p removing trackmap entry %d", this, i));
         EndTrack(i);
-        for (auto listener : mTrackMap[i].mOwnedDirectListeners) {
+        nsTArray<RefPtr<DirectMediaStreamTrackListener>> listeners(
+          mTrackMap[i].mOwnedDirectListeners);
+        for (auto listener : listeners) {
           // Remove listeners while the entry still exists.
           RemoveDirectTrackListenerImpl(listener, mTrackMap[i].mOutputTrackID);
         }

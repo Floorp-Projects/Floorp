@@ -16,7 +16,6 @@ class WebGLTransformFeedback final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLTransformFeedback>
     , public LinkedListElement<WebGLTransformFeedback>
-    , public WebGLContextBoundObject
 {
     friend class ScopedDrawWithTransformFeedback;
     friend class WebGLContext;

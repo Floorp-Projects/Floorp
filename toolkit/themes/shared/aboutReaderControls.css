@@ -134,7 +134,7 @@
   border-radius: 4px;
   border: 1px solid #b5b5b5;
   border-bottom-width: 0;
-  box-shadow: 0 1px 12px #666;
+  box-shadow: 0 1px 3px #c1c1c1;
 }
 
 .keep-open .dropdown-popup {
@@ -153,7 +153,7 @@
   position: absolute;
   top: 30px; /* offset arrow from top of popup */
   left: -16px;
-  width: 24px;
+  width: 16px;
   height: 24px;
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-Arrow.svg");
   display: block;

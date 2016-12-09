@@ -23,5 +23,5 @@ interface ICodec {
     Sample dequeueInput(int size);
     oneway void queueInput(in Sample sample);
 
-    oneway void releaseOutput(in Sample sample);
+    oneway void releaseOutput(in Sample sample, in boolean render);
 }

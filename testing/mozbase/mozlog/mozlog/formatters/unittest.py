@@ -40,6 +40,21 @@ class UnittestFormatter(base.BaseFormatter):
             char = "S"
         return char
 
+    def assertion_count(self, data):
+        if data["count"] < data["min_expected"]:
+            char = "X"
+        elif data["count"] > data["max_expected"]:
+            char = "F"
+            self.fails.append({"test": data["test"],
+                               "message": ("assertion count %i is greated than %i" %
+                                           (data["count"], data["max_expected"]))})
+        elif data["count"] > 0:
+            char = "."
+        else:
+            char = "."
+
+        return char
+
     def suite_end(self, data):
         self.end_time = data["time"]
         summary = "\n".join([self.output_fails(),

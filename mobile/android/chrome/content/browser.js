@@ -3418,7 +3418,7 @@ Tab.prototype = {
     aParams = aParams || {};
 
     this.browser = document.createElement("browser");
-    this.browser.setAttribute("type", "content-targetable");
+    this.browser.setAttribute("type", "content");
     this.browser.setAttribute("messagemanagergroup", "browsers");
 
     if (Preferences.get("browser.tabs.remote.force-enable", false)) {
@@ -3677,7 +3677,7 @@ Tab.prototype = {
       Reader.updatePageAction(this);
       ExternalApps.updatePageAction(this.browser.currentURI, this.browser.contentDocument);
     } else {
-      this.browser.setAttribute("type", "content-targetable");
+      this.browser.setAttribute("type", "content");
       this.browser.docShellIsActive = false;
       this.browser.blur();
     }

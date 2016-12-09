@@ -2,9 +2,7 @@ android-api-15/debug:
     description: "Android 4.0 API15+ Debug"
     index:
         product: mobile
-        job-name:
-            buildbot: android-api-15-debug
-            gecko-v2: android-api-15-debug
+        job-name: android-api-15-debug
     treeherder:
         platform: android-4-0-armv7-api15/debug
         symbol: tc(B)

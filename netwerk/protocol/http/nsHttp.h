@@ -88,6 +88,11 @@ typedef uint8_t nsHttpVersion;
 // First user is to prevent clearing of alt-svc cache on failed probe
 #define NS_HTTP_ERROR_SOFTLY         (1<<10)
 
+// This corresponds to nsIHttpChannelInternal.beConservative
+// it disables any cutting edge features that we are worried might result in
+// interop problems with critical infrastructure
+#define NS_HTTP_BE_CONSERVATIVE      (1<<11)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------

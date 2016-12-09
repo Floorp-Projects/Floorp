@@ -1105,23 +1105,12 @@ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aAc
 #endif
 }
 
-RefPtr<IAPZCTreeManager>
-CompositorBridgeChild::GetAPZCTreeManager(uint64_t aLayerTreeId)
+bool
+CompositorBridgeChild::GetAPZEnabled(uint64_t aLayerTreeId)
 {
-  bool apzEnabled = false;
-  Unused << SendAsyncPanZoomEnabled(aLayerTreeId, &apzEnabled);
-
-  if (!apzEnabled) {
-    return nullptr;
-  }
-
-  PAPZCTreeManagerChild* child = SendPAPZCTreeManagerConstructor(aLayerTreeId);
-  if (!child) {
-    return nullptr;
-  }
-  APZCTreeManagerChild* parent = static_cast<APZCTreeManagerChild*>(child);
-
-  return RefPtr<IAPZCTreeManager>(parent);
+  bool result = false;
+  Unused << SendAsyncPanZoomEnabled(aLayerTreeId, &result);
+  return result;
 }
 
 PAPZCTreeManagerChild*

@@ -1,5 +1,8 @@
 load(libdir + 'bytecode-cache.js');
 
+// Prevent relazification triggered by some zeal modes.
+gczeal(0);
+
 async function f1(a, b) {
   let x = await 10;
   return x;

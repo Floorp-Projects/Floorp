@@ -69,6 +69,7 @@ class SharedMem
     }
 
     // Reinterpret-cast the pointer to type U, preserving sharedness.
+    // Eg, "obj->dataPointerEither().cast<uint8_t*>()" yields a SharedMem<uint8_t*>.
     template<typename U>
     inline SharedMem<U> cast() const {
 #ifdef DEBUG

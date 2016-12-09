@@ -11,6 +11,10 @@ config = {
     # - taskcluster_firefox_win32_opt
     # - taskcluster_firefox_win64_debug
     # - taskcluster_firefox_win64_opt
+    # - taskcluster_firefox_win32_clang
+    # - taskcluster_firefox_win32_clang_debug
+    # - taskcluster_firefox_win64_clang
+    # - taskcluster_firefox_win64_clang_debug
 
     'default_actions': [
         'clone-tools',

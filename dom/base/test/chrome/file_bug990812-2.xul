@@ -54,6 +54,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
 
   ]]></script>
 
-  <browser messagemanagergroup="test" type="content-targetable" src="about:mozilla" />
+  <browser messagemanagergroup="test" type="content" src="about:mozilla" />
 
 </window>

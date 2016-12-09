@@ -8,6 +8,7 @@
 #include "SandboxFilterUtil.h"
 
 #include "SandboxBrokerClient.h"
+#include "SandboxInfo.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
 
@@ -91,6 +92,16 @@ private:
     return syscall(__NR_tgkill, getpid(), aArgs.args[0], aArgs.args[1]);
   }
 #endif
+
+  static intptr_t SetNoNewPrivsTrap(ArgsRef& aArgs, void* aux) {
+    if (gSetSandboxFilter == nullptr) {
+      // Called after BroadcastSetThreadSandbox finished, therefore
+      // not our doing and not expected.
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    // Signal that the filter is already in place.
+    return -ETXTBSY;
+  }
 
 public:
   virtual ResultExpr InvalidSyscall() const override {
@@ -249,8 +260,16 @@ public:
 #endif
 
       // prctl
-    case __NR_prctl:
-      return PrctlPolicy();
+    case __NR_prctl: {
+      if (SandboxInfo::Get().Test(SandboxInfo::kHasSeccompTSync)) {
+        return PrctlPolicy();
+      }
+
+      Arg<int> option(0);
+      return If(option == PR_SET_NO_NEW_PRIVS,
+                Trap(SetNoNewPrivsTrap, nullptr))
+        .Else(PrctlPolicy());
+    }
 
       // NSPR can call this when creating a thread, but it will accept a
       // polite "no".

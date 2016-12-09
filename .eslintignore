@@ -125,14 +125,6 @@ devtools/server/tests/browser/**
 !devtools/server/tests/browser/browser_webextension_inspected_window.js
 devtools/server/tests/mochitest/**
 devtools/server/tests/unit/**
-devtools/shared/*.js
-!devtools/shared/async-storage.js
-!devtools/shared/async-utils.js
-!devtools/shared/defer.js
-!devtools/shared/event-emitter.js
-!devtools/shared/indentation.js
-!devtools/shared/loader-plugin-raw.jsm
-!devtools/shared/task.js
 devtools/shared/apps/**
 devtools/shared/client/**
 devtools/shared/discovery/**

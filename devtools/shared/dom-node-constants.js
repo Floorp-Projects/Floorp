@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* globals define */
+
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
   module.exports = {

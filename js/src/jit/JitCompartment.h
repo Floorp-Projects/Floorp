@@ -15,6 +15,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/ICStubSpace.h"
 #include "jit/IonCode.h"
+#include "jit/IonControlFlow.h"
 #include "jit/JitFrames.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/GCHashTable.h"
@@ -384,10 +385,15 @@ class JitZone
 {
     // Allocated space for optimized baseline stubs.
     OptimizedICStubSpace optimizedStubSpace_;
+    // Allocated space for cached cfg.
+    CFGSpace cfgSpace_;
 
   public:
     OptimizedICStubSpace* optimizedStubSpace() {
         return &optimizedStubSpace_;
+    }
+    CFGSpace* cfgSpace() {
+        return &cfgSpace_;
     }
 };
 

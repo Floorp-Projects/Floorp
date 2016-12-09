@@ -102,7 +102,7 @@ enum nsNavigationDirection {
 enum nsIgnoreKeys {
   eIgnoreKeys_False,
   eIgnoreKeys_True,
-  eIgnoreKeys_Handled,
+  eIgnoreKeys_Shortcuts,
 };
 
 #define NS_DIRECTION_IS_INLINE(dir) (dir == eNavigationDirection_Start ||     \
@@ -632,13 +632,12 @@ public:
   void CancelMenuTimer(nsMenuParent* aMenuParent);
 
   /**
-   * Handles navigation for menu accelkeys. Returns true if the key has
-   * been handled. If aFrame is specified, then the key is handled by that
-   * popup, otherwise if aFrame is null, the key is handled by the active
-   * popup or menubar.
+   * Handles navigation for menu accelkeys. If aFrame is specified, then the
+   * key is handled by that popup, otherwise if aFrame is null, the key is
+   * handled by the active popup or menubar.
    */
   bool HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
-                                  nsMenuPopupFrame* aFrame);
+                                nsMenuPopupFrame* aFrame);
 
   /**
    * Handles cursor navigation within a menu. Returns true if the key has

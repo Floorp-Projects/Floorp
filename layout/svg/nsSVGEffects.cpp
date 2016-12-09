@@ -683,6 +683,24 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
   return result;
 }
 
+bool
+nsSVGEffects::EffectProperties::MightHaveNoneSVGMask() const
+{
+  if (!mMask) {
+    return false;
+  }
+
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
+  for (size_t i = 0; i < props.Length(); i++) {
+    if (!props[i] ||
+        !props[i]->GetReferencedFrame(nsGkAtoms::svgMaskFrame, nullptr)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 nsSVGEffects::UpdateEffects(nsIFrame* aFrame)
 {

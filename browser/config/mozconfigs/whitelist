@@ -5,7 +5,7 @@ whitelist = {
     'nightly': {},
     }
 
-all_platforms = ['win64', 'win32', 'linux32', 'linux64', 'macosx-universal']
+all_platforms = ['win64', 'win32', 'linux32', 'linux64', 'macosx64']
 
 for platform in all_platforms:
     whitelist['nightly'][platform] = [
@@ -15,7 +15,7 @@ for platform in all_platforms:
         'mk_add_options CLIENT_PY_ARGS="--hg-options=\'--verbose --time\' --hgtool=../tools/buildfarm/utils/hgtool.py --skip-chatzilla --skip-comm --skip-inspector --tinderbox-print"'
     ]
 
-for platform in ['linux32', 'linux64', 'macosx-universal']:
+for platform in ['linux32', 'linux64', 'macosx64']:
     whitelist['nightly'][platform] += [
         'mk_add_options MOZ_MAKE_FLAGS="-j4"',
     ]
@@ -42,7 +42,7 @@ whitelist['nightly']['linux64'] += [
     '. "$topsrcdir/build/mozconfig.cache"',
 ]
 
-whitelist['nightly']['macosx-universal'] += [
+whitelist['nightly']['macosx64'] += [
     'if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then',
     'ac_add_options --with-macbundlename-prefix=Firefox',
     'fi',

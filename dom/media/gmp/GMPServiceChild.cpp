@@ -235,7 +235,6 @@ NS_IMETHODIMP
 GeckoMediaPluginServiceChild::GetNodeId(const nsAString& aOrigin,
                                         const nsAString& aTopLevelOrigin,
                                         const nsAString& aGMPName,
-                                        bool aInPrivateBrowsing,
                                         UniquePtr<GetNodeIdCallback>&& aCallback)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
@@ -245,14 +244,12 @@ GeckoMediaPluginServiceChild::GetNodeId(const nsAString& aOrigin,
   nsString origin(aOrigin);
   nsString topLevelOrigin(aTopLevelOrigin);
   nsString gmpName(aGMPName);
-  bool pb = aInPrivateBrowsing;
   GetServiceChild()->Then(thread, __func__,
-    [rawCallback, origin, topLevelOrigin, gmpName, pb](GMPServiceChild* child) {
+    [rawCallback, origin, topLevelOrigin, gmpName](GMPServiceChild* child) {
       UniquePtr<GetNodeIdCallback> callback(rawCallback);
       nsCString outId;
       if (!child->SendGetGMPNodeId(origin, topLevelOrigin,
-                                   gmpName,
-                                   pb, &outId)) {
+                                   gmpName, &outId)) {
         callback->Done(NS_ERROR_FAILURE, EmptyCString());
         return;
       }

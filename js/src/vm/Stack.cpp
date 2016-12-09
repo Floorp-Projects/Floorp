@@ -397,9 +397,6 @@ InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc)
 
     if (script->compartment()->debugEnvs)
         script->compartment()->debugEnvs->traceLiveFrame(trc, this);
-
-    if (trc->isMarkingTracer())
-        script->compartment()->zone()->active = true;
 }
 
 void
@@ -1723,8 +1720,7 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const Register
   : rt_(cx),
     sampleBufferGen_(sampleBufferGen),
     activation_(nullptr),
-    savedPrevJitTop_(nullptr),
-    nogc_(cx)
+    savedPrevJitTop_(nullptr)
 {
     if (!cx->spsProfiler.enabled())
         MOZ_CRASH("ProfilingFrameIterator called when spsProfiler not enabled for runtime.");

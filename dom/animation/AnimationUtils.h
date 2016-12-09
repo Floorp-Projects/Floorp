@@ -8,6 +8,7 @@
 #define mozilla_dom_AnimationUtils_h
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsStringFwd.h"
 
@@ -71,7 +72,7 @@ public:
    * Returns true if the preference to enable the core Web Animations API is
    * true or the caller is chrome.
    */
-  static bool IsCoreAPIEnabledForCaller();
+  static bool IsCoreAPIEnabledForCaller(dom::CallerType aCallerType);
 };
 
 } // namespace mozilla

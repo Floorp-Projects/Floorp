@@ -19,8 +19,7 @@ log = logging.getLogger(__name__)
 def determine_platform():
     platform_mapping = {'WINNT': {'x86_64': 'win64',
                                   'i686': 'win32'},
-                        'Darwin': {'x86_64': 'macosx-universal',
-                                   'i386':'macosx-universal'},
+                        'Darwin': {'x86_64': 'macosx64'},
                         'Linux': {'x86_64': 'linux64',
                                   'i686': 'linux32'}}
 

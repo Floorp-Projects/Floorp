@@ -18,6 +18,8 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 // Proxy class of ICodec binder.
 public final class CodecProxy {
@@ -29,6 +31,7 @@ public final class CodecProxy {
     private Surface mOutputSurface;
     private CallbacksForwarder mCallbacks;
     private String mRemoteDrmStubId;
+    private Queue<Sample> mSurfaceOutputs = new ConcurrentLinkedQueue<>();
 
     public interface Callbacks {
         void onInputExhausted();
@@ -67,9 +70,18 @@ public final class CodecProxy {
 
         @Override
         public void onOutput(Sample sample) throws RemoteException {
-            mCallbacks.onOutput(sample);
-            mRemote.releaseOutput(sample);
-            sample.dispose();
+            if (mOutputSurface != null) {
+                // Don't render to surface just yet. Callback will make that happen when it's time.
+                if (!sample.isEOS() || sample.info.size > 0) {
+                    mSurfaceOutputs.offer(sample);
+                }
+                mCallbacks.onOutput(sample);
+            } else {
+                // Non-surface output needs no rendering.
+                mCallbacks.onOutput(sample);
+                mRemote.releaseOutput(sample, false);
+                sample.dispose();
+            }
         }
 
         @Override
@@ -77,7 +89,7 @@ public final class CodecProxy {
             reportError(fatal);
         }
 
-        public void reportError(boolean fatal) {
+        private void reportError(boolean fatal) {
             mCallbacks.onError(fatal);
         }
     }
@@ -196,6 +208,21 @@ public final class CodecProxy {
             return true;
         }
         if (DEBUG) Log.d(LOGTAG, "release " + this);
+
+        if (!mSurfaceOutputs.isEmpty()) {
+            // Flushing output buffers to surface may cause some frames to be skipped and
+            // should not happen unless caller release codec before processing all buffers.
+            Log.w(LOGTAG, "release codec when " + mSurfaceOutputs.size() + " output buffers unhandled");
+            try {
+                for (Sample s : mSurfaceOutputs) {
+                    mRemote.releaseOutput(s, true);
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            mSurfaceOutputs.clear();
+        }
+
         try {
             RemoteManager.getInstance().releaseCodec(this);
         } catch (DeadObjectException e) {
@@ -207,7 +234,32 @@ public final class CodecProxy {
         return true;
     }
 
-    public synchronized void reportError(boolean fatal) {
+    @WrapForJNI
+    public synchronized boolean releaseOutput(Sample sample, boolean render) {
+        if (!mSurfaceOutputs.remove(sample)) {
+            if (mRemote != null) Log.w(LOGTAG, "already released: " + sample);
+            return true;
+        }
+
+        if (mRemote == null) {
+            Log.w(LOGTAG, "codec already ended");
+            sample.dispose();
+            return true;
+        }
+
+        if (DEBUG && !render) Log.d(LOGTAG, "drop output:" + sample.info.presentationTimeUs);
+
+        try {
+            mRemote.releaseOutput(sample, render);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        sample.dispose();
+
+        return true;
+    }
+
+    /* package */ synchronized void reportError(boolean fatal) {
         mCallbacks.reportError(fatal);
     }
 }

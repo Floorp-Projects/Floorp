@@ -2064,19 +2064,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     (mLineContainer->StyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
      mLineContainer->StyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY);
 
-  // for word-break style
-  switch (mLineContainer->StyleText()->mWordBreak) {
-    case NS_STYLE_WORDBREAK_BREAK_ALL:
-      mLineBreaker.SetWordBreak(nsILineBreaker::kWordBreak_BreakAll);
-      break;
-    case NS_STYLE_WORDBREAK_KEEP_ALL:
-      mLineBreaker.SetWordBreak(nsILineBreaker::kWordBreak_KeepAll);
-      break;
-    default:
-      mLineBreaker.SetWordBreak(nsILineBreaker::kWordBreak_Normal);
-      break;
-  }
-
   const nsStyleText* textStyle = nullptr;
   const nsStyleFont* fontStyle = nullptr;
   nsStyleContext* lastStyleContext = nullptr;
@@ -2555,6 +2542,19 @@ void
 BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
                                                 const void* aTextPtr)
 {
+  // for word-break style
+  switch (mLineContainer->StyleText()->mWordBreak) {
+    case NS_STYLE_WORDBREAK_BREAK_ALL:
+      mLineBreaker.SetWordBreak(nsILineBreaker::kWordBreak_BreakAll);
+      break;
+    case NS_STYLE_WORDBREAK_KEEP_ALL:
+      mLineBreaker.SetWordBreak(nsILineBreaker::kWordBreak_KeepAll);
+      break;
+    default:
+      mLineBreaker.SetWordBreak(nsILineBreaker::kWordBreak_Normal);
+      break;
+  }
+
   // textruns have uniform language
   const nsStyleFont *styleFont = mMappedFlows[0].mStartFrame->StyleFont();
   // We should only use a language for hyphenation if it was specified
@@ -5001,7 +5001,7 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
       mGlyphs.Clear();
     } else {
       g->glyphs().SetLength(glyphs.size());
-      PodCopy(g->glyphs().begin(), glyphs.data(), glyphs.size());
+      PodCopy(g->glyphs().Elements(), glyphs.data(), glyphs.size());
       g->color() = color;
     }
   }
