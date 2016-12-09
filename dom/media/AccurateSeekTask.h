@@ -72,11 +72,6 @@ public:
   // the seek target, we will still have a frame that we can display as the
   // last frame in the media.
   RefPtr<MediaData> mFirstVideoFrameAfterSeek;
-
-  /*
-   * Track the current seek promise made by the reader.
-   */
-  MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
 };
 
 } // namespace mozilla
