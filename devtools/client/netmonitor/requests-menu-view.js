@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals window, dumpn, $, gNetwork, NetMonitorController, NetMonitorView */
+/* eslint-disable mozilla/reject-some-requires */
+/* globals window, dumpn, $, gNetwork, EVENTS, Prefs,
+           NetMonitorController, NetMonitorView */
 
 "use strict";
 
@@ -18,7 +20,6 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const RequestList = createFactory(require("./components/request-list"));
 const RequestListContextMenu = require("./request-list-context-menu");
 const Actions = require("./actions/index");
-const { Prefs } = require("./prefs");
 
 const {
   formDataURI,

@@ -2,20 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-disable mozilla/reject-some-requires */
-/* globals $, window, document, NetMonitorView */
+/* import-globals-from ./netmonitor-controller.js */
+/* globals $ */
 
 "use strict";
 
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {Filters} = require("./filter-predicates");
 const {L10N} = require("./l10n");
-const {EVENTS} = require("./events");
 const Actions = require("./actions/index");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Chart",
-  "resource://devtools/client/shared/widgets/Chart.jsm");
 
 const REQUEST_TIME_DECIMALS = 2;
 const CONTENT_SIZE_DECIMALS = 2;
