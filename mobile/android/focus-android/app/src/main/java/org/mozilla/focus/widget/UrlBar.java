@@ -5,14 +5,11 @@
 
 package org.mozilla.focus.widget;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
@@ -26,10 +23,14 @@ public class UrlBar extends ViewFlipper {
         void onUrlEntered(String url);
 
         void onErase();
+
+        void onEnteredEditMode();
+
+        void onEditCancelled(boolean hasLoadedPage);
     }
 
     private OnUrlAction listener;
-
+    private boolean hasLoadedPage;
     private EditText urlEditView;
     private TextView urlDisplayView;
 
@@ -57,6 +58,8 @@ public class UrlBar extends ViewFlipper {
     }
 
     public void onPageStarted(String url) {
+        hasLoadedPage = true;
+
         setBackgroundColor(0xFF444444);
 
         urlDisplayView.setText(url);
@@ -67,7 +70,7 @@ public class UrlBar extends ViewFlipper {
         setBackgroundResource(R.drawable.gradient_background);
     }
 
-    public void setOnUrlEnteredListener(OnUrlAction listener) {
+    public void setOnUrlActionListener(OnUrlAction listener) {
         this.listener = listener;
     }
 
@@ -109,11 +112,30 @@ public class UrlBar extends ViewFlipper {
         urlDisplayView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (listener != null) {
+                    listener.onEnteredEditMode();
+                }
+
                 setBackgroundColor(0xFF444444);
 
                 showPrevious();
 
                 urlEditView.requestFocus();
+            }
+        });
+
+        findViewById(R.id.cancel).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (listener != null) {
+                    listener.onEditCancelled(hasLoadedPage);
+                }
+
+                if (hasLoadedPage) {
+                    showNext();
+
+                    setBackgroundResource(R.drawable.gradient_background);
+                }
             }
         });
 

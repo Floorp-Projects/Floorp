@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -50,7 +49,7 @@ public class BrowserActivity extends Activity {
 
         });
 
-        urlBar.setOnUrlEnteredListener(new UrlBar.OnUrlAction() {
+        urlBar.setOnUrlActionListener(new UrlBar.OnUrlAction() {
             @Override
             public void onUrlEntered(String url) {
                 webView.loadUrl(url);
@@ -59,6 +58,20 @@ public class BrowserActivity extends Activity {
             @Override
             public void onErase() {
                 finish();
+            }
+
+            @Override
+            public void onEnteredEditMode() {
+                webView.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onEditCancelled(boolean hasLoadedPage) {
+                if (hasLoadedPage) {
+                    webView.setVisibility(View.VISIBLE);
+                } else {
+                    finish();
+                }
             }
         });
     }
