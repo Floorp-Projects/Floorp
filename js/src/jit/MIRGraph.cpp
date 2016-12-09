@@ -141,20 +141,77 @@ MIRGraph::renumberBlocksAfter(MBasicBlock* at)
         iter->setId(++id);
 }
 
-void
-MIRGraph::removeBlocksAfter(MBasicBlock* start)
+bool
+MIRGraph::removeSuccessorBlocks(MBasicBlock* start)
 {
-    MBasicBlockIterator iter(begin());
-    iter++;
-    while (iter != end()) {
-        MBasicBlock* block = *iter;
-        iter++;
+    if (!start->hasLastIns())
+        return true;
 
-        if (block->id() <= start->id())
+    start->mark();
+
+    // Mark all successors.
+    Vector<MBasicBlock*, 4, SystemAllocPolicy> blocks;
+    for (size_t i = 0; i < start->numSuccessors(); i++) {
+        if (start->getSuccessor(i)->isMarked())
+            continue;
+        if (!blocks.append(start->getSuccessor(i)))
+            return false;
+        start->getSuccessor(i)->mark();
+    }
+    for (size_t i = 0; i < blocks.length(); i++) {
+        MBasicBlock* block = blocks[i];
+        if (!block->hasLastIns())
             continue;
 
-        removeBlock(block);
+        for (size_t j = 0; j < block->numSuccessors(); j++) {
+            if (block->getSuccessor(j)->isMarked())
+                continue;
+            if (!blocks.append(block->getSuccessor(j)))
+                return false;
+            block->getSuccessor(j)->mark();
+        }
     }
+
+    if (osrBlock()) {
+        if (osrBlock()->getSuccessor(0)->isMarked())
+            osrBlock()->mark();
+    }
+
+    // Remove blocks.
+    // If they don't have any predecessor
+    for (size_t i = 0; i < blocks.length(); i++) {
+        MBasicBlock* block = blocks[i];
+        bool allMarked = true;
+        for (size_t i = 0; i < block->numPredecessors(); i++) {
+            if (block->getPredecessor(i)->isMarked())
+                continue;
+            allMarked = false;
+            break;
+        }
+        if (allMarked) {
+            removeBlock(block);
+        } else {
+            MOZ_ASSERT(block != osrBlock());
+            for (size_t j = 0; j < block->numPredecessors(); j++) {
+                if (!block->getPredecessor(j)->isMarked())
+                    continue;
+                block->removePredecessor(block->getPredecessor(j));
+            }
+            // This shouldn't have any instructions yet.
+            MOZ_ASSERT(block->begin() == block->end());
+        }
+    }
+
+    if (osrBlock()) {
+        if (osrBlock()->getSuccessor(0)->isDead())
+            removeBlock(osrBlock());
+    }
+
+    for (size_t i = 0; i < blocks.length(); i++)
+        blocks[i]->unmark();
+    start->unmark();
+
+    return true;
 }
 
 void
@@ -175,18 +232,13 @@ MIRGraph::removeBlock(MBasicBlock* block)
         }
     }
 
-    block->discardAllInstructions();
-    block->discardAllResumePoints();
-
-    // Note: phis are disconnected from the rest of the graph, but are not
-    // removed entirely. If the block being removed is a loop header then
-    // IonBuilder may need to access these phis to more quickly converge on the
-    // possible types in the graph. See IonBuilder::analyzeNewLoopTypes.
-    block->discardAllPhiOperands();
-
+    block->clear();
     block->markAsDead();
-    blocks_.remove(block);
-    numBlocks_--;
+
+    if (block->isInList()) {
+        blocks_.remove(block);
+        numBlocks_--;
+    }
 }
 
 void
@@ -403,6 +455,7 @@ MBasicBlock::New(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, Ki
 
 MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info, BytecodeSite* site, Kind kind)
   : unreachable_(false),
+    specialized_(false),
     graph_(graph),
     info_(info),
     predecessors_(graph.alloc()),
@@ -1006,6 +1059,19 @@ MBasicBlock::discardAllResumePoints(bool discardEntry)
 }
 
 void
+MBasicBlock::clear()
+{
+    discardAllInstructions();
+    discardAllResumePoints();
+
+    // Note: phis are disconnected from the rest of the graph, but are not
+    // removed entirely. If the block being removed is a loop header then
+    // IonBuilder may need to access these phis to more quickly converge on the
+    // possible types in the graph. See IonBuilder::analyzeNewLoopTypes.
+    discardAllPhiOperands();
+}
+
+void
 MBasicBlock::insertBefore(MInstruction* at, MInstruction* ins)
 {
     MOZ_ASSERT(at->block() == this);
@@ -1552,6 +1618,10 @@ MBasicBlock::inheritPhisFromBackedge(TempAllocator& alloc, MBasicBlock* backedge
 bool
 MBasicBlock::specializePhis(TempAllocator& alloc)
 {
+    if (specialized_)
+        return true;
+
+    specialized_ = true;
     for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++) {
         MPhi* phi = *iter;
         if (!phi->specializeType(alloc))
@@ -1590,7 +1660,6 @@ MBasicBlock::immediateDominatorBranch(BranchDirection* pdirection)
 
 MBasicBlock::BackupPoint::BackupPoint(MBasicBlock* current)
   : current_(current),
-    lastBlock_(nullptr),
     lastIns_(current->hasAnyIns() ? *current->rbegin() : nullptr),
     stackPosition_(current->stackDepth()),
     slots_()
@@ -1605,17 +1674,6 @@ MBasicBlock::BackupPoint::BackupPoint(MBasicBlock* current)
 {
     // The block is not yet jumping into a block of an inlined function yet.
     MOZ_ASSERT(current->outerResumePoint_ == nullptr);
-
-    // The CFG reconstruction might add blocks and move them around.
-    uint32_t lastBlockId = 0;
-    PostorderIterator e = current->graph().poEnd();
-    for (PostorderIterator b = current->graph().poBegin(); b != e; ++b) {
-        if (lastBlockId <= b->id()) {
-            lastBlock_ = *b;
-            lastBlockId = b->id();
-        }
-    }
-    MOZ_ASSERT(lastBlock_);
 }
 
 bool
@@ -1663,6 +1721,10 @@ MBasicBlock::BackupPoint::restore()
 
     MOZ_ASSERT_IF(lastIns_, lastIns_->block() == current_);
     MOZ_ASSERT_IF(lastIns_, !lastIns_->isDiscarded());
+
+    if (!current_->graph().removeSuccessorBlocks(current_))
+        return nullptr;
+
     MInstructionIterator lastIns(lastIns_ ? ++(current_->begin(lastIns_)) : current_->begin());
     current_->discardAllInstructionsStartingAt(lastIns);
     current_->clearOuterResumePoint();
@@ -1678,8 +1740,6 @@ MBasicBlock::BackupPoint::restore()
     MOZ_ASSERT(instructionsCheckSum_ == computeInstructionsCheckSum(current_));
     MOZ_ASSERT(current_->callerResumePoint() == callerResumePoint_);
     MOZ_ASSERT(current_->entryResumePoint() == entryResumePoint_);
-
-    current_->graph().removeBlocksAfter(lastBlock_);
 
     return current_;
 }

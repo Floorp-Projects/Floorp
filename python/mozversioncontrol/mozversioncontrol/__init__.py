@@ -99,7 +99,7 @@ def get_repository_object(path):
     '''
     if os.path.isdir(os.path.join(path, '.hg')):
         return HgRepository(path)
-    elif os.path.isdir(os.path.join(path, '.git')):
+    elif os.path.exists(os.path.join(path, '.git')):
         return GitRepository(path)
     else:
         raise Exception('Unknown VCS, or not a source checkout: %s' % path)

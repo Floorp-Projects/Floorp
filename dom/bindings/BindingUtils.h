@@ -897,6 +897,7 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
                           JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(value);
+  MOZ_ASSERT_IF(givenProto, js::IsObjectInContextCompartment(givenProto, cx));
   // We can get rid of this when we remove support for hasXPConnectImpls.
   bool couldBeDOMBinding = CouldBeDOMBinding(value);
   JSObject* obj = value->GetWrapper();

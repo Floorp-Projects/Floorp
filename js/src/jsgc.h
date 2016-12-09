@@ -836,9 +836,6 @@ const size_t MAX_EMPTY_CHUNK_AGE = 4;
 class InterpreterFrame;
 
 extern void
-MarkCompartmentActive(js::InterpreterFrame* fp);
-
-extern void
 TraceRuntime(JSTracer* trc);
 
 extern void

@@ -172,12 +172,10 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 
 NS_IMETHODIMP
 nsContentTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                      bool aPrimary, bool aTargetable,
-                                      const nsAString& aID)
+                                      bool aPrimary, const nsAString& aID)
 {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->ContentShellAdded(aContentShell, aPrimary, aTargetable,
-                                       aID);
+  return mXULWindow->ContentShellAdded(aContentShell, aPrimary, aID);
 }
 
 NS_IMETHODIMP
@@ -350,10 +348,13 @@ nsContentTreeOwner::GetPersistence(bool* aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::GetTargetableShellCount(uint32_t* aResult)
+nsContentTreeOwner::GetTabCount(uint32_t* aResult)
 {
-  NS_ENSURE_STATE(mXULWindow);
-  *aResult = mXULWindow->mTargetableShells.Count();
+  if (mXULWindow) {
+    return mXULWindow->GetTabCount(aResult);
+  }
+
+  *aResult = 0;
   return NS_OK;
 }
 

@@ -1850,28 +1850,7 @@ function DoAssertionCheck(numAsserts)
         var minAsserts = gURLs[0].minAsserts;
         var maxAsserts = gURLs[0].maxAsserts;
 
-        var expectedAssertions = "expected " + minAsserts;
-        if (minAsserts != maxAsserts) {
-            expectedAssertions += " to " + maxAsserts;
-        }
-        expectedAssertions += " assertions";
-
-        if (numAsserts < minAsserts) {
-            ++gTestResults.AssertionUnexpectedFixed;
-            gDumpFn("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
-                    " | assertion count " + numAsserts + " is less than " +
-                       expectedAssertions + "\n");
-        } else if (numAsserts > maxAsserts) {
-            ++gTestResults.AssertionUnexpected;
-            gDumpFn("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath +
-                    " | assertion count " + numAsserts + " is more than " +
-                       expectedAssertions + "\n");
-        } else if (numAsserts != 0) {
-            ++gTestResults.AssertionKnown;
-            gDumpFn("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].prettyPath +
-                    "assertion count " + numAsserts + " matches " +
-                    expectedAssertions + "\n");
-        }
+        logger.assertionCount(gCurrentURL, numAsserts, minAsserts, maxAsserts);
     }
 
     if (gURLs[0].chaosMode) {

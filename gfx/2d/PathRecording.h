@@ -133,7 +133,7 @@ private:
   FillRule mFillRule;
 
   // Event recorders that have this path in their event stream.
-  std::vector<DrawEventRecorderPrivate*> mStoredRecorders;
+  std::vector<RefPtr<DrawEventRecorderPrivate>> mStoredRecorders;
 };
 
 } // namespace gfx
