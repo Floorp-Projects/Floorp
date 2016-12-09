@@ -26,7 +26,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
 // -----------------------------------------------------------------------
@@ -239,7 +239,7 @@ HelperAppLauncherDialog.prototype = {
       mimeType = ContentAreaUtils.getMIMETypeForURI(aLauncher.source) || "";
     }
 
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       'type': 'Download:AndroidDownloadManager',
       'uri': aLauncher.source.spec,
       'mimeType': mimeType,

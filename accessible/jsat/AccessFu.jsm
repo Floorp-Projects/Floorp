@@ -33,8 +33,7 @@ this.AccessFu = { // jshint ignore:line
     Utils.init(aWindow);
 
     try {
-      Services.androidBridge.handleGeckoMessage(
-          { type: 'Accessibility:Ready' });
+      Services.androidBridge.dispatch('Accessibility:Ready');
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
     } catch (x) {
       // Not on Android
@@ -602,7 +601,6 @@ var Output = {
     }
 
     for (let androidEvent of aDetails) {
-      androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds) {
         androidEvent.bounds = AccessFu.adjustContentBounds(
           androidEvent.bounds, aBrowser);
@@ -622,7 +620,9 @@ var Output = {
             androidEvent.brailleOutput);
           break;
       }
-      this.androidBridge.handleGeckoMessage(androidEvent);
+      let win = Utils.win;
+      let view = win && win.QueryInterface(Ci.nsIAndroidView);
+      view.dispatch('Accessibility:Event', androidEvent);
     }
   },
 
@@ -818,8 +818,9 @@ var Input = {
 
         if (Utils.MozBuildApp == 'mobile/android') {
           // Return focus to native Android browser chrome.
-          Services.androidBridge.handleGeckoMessage(
-              { type: 'ToggleChrome:Focus' });
+          let win = Utils.win;
+          let view = win && win.QueryInterface(Ci.nsIAndroidView);
+          view.dispatch('ToggleChrome:Focus');
         }
         break;
       case aEvent.DOM_VK_RETURN:

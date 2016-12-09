@@ -7,10 +7,8 @@ package org.mozilla.gecko.tests;
 import android.widget.CheckBox;
 import android.view.View;
 import com.robotium.solo.Condition;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.util.GeckoBundle;
 
 /* This test will test if doorhangers are displayed and dismissed
    The test will test:
@@ -133,7 +131,7 @@ public class testDoorHanger extends BaseTest {
         mAsserter.is(mSolo.searchText(mStringHelper.POPUP_MESSAGE), true, "Popup blocker is displayed");
 
         // Wait for the popup to be shown.
-        Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+        Actions.EventExpecter tabEventExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Tab:Added");
 
         waitForCheckBox();
         mSolo.clickOnCheckBox(0);
@@ -141,18 +139,14 @@ public class testDoorHanger extends BaseTest {
         waitForTextDismissed(mStringHelper.POPUP_MESSAGE);
         mAsserter.is(mSolo.searchText(mStringHelper.POPUP_MESSAGE), false, "Popup blocker is hidden when popup allowed");
 
-        try {
-            final JSONObject data = new JSONObject(tabEventExpecter.blockForEventData());
+        final GeckoBundle data = tabEventExpecter.blockForBundle();
 
-            // Check to make sure the popup window was opened.
-            mAsserter.is("data:text/plain;charset=utf-8,a", data.getString("uri"), "Checking popup URL");
+        // Check to make sure the popup window was opened.
+        mAsserter.is("data:text/plain;charset=utf-8,a", data.getString("uri"), "Checking popup URL");
 
-            // Close the popup window.
-            closeTab(data.getInt("tabID"));
+        // Close the popup window.
+        closeTab(data.getInt("tabID"));
 
-        } catch (JSONException e) {
-            mAsserter.ok(false, "exception getting event data", e.toString());
-        }
         tabEventExpecter.unregisterListener();
 
         // Load page with popup

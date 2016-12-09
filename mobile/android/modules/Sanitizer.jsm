@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/LoadContextInfo.jsm");
 Cu.import("resource://gre/modules/FormHistory.jsm");
-Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Downloads.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
@@ -21,6 +20,8 @@ Cu.import("resource://gre/modules/Accounts.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
                                   "resource://gre/modules/DownloadIntegration.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
+                                  "resource://gre/modules/Messaging.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -144,7 +145,7 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
-        return Messaging.sendRequestForResult({ type: "Sanitize:ClearHistory" })
+        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory" })
           .catch(e => Cu.reportError("Java-side history clearing failed: " + e))
           .then(function() {
             try {
@@ -170,7 +171,7 @@ Sanitizer.prototype = {
     searchHistory: {
       clear: function ()
       {
-        return Messaging.sendRequestForResult({ type: "Sanitize:ClearHistory", clearSearchHistory: true })
+        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory", clearSearchHistory: true })
           .catch(e => Cu.reportError("Java-side search history clearing failed: " + e))
       },
 
@@ -283,7 +284,7 @@ Sanitizer.prototype = {
     syncedTabs: {
       clear: function ()
       {
-        return Messaging.sendRequestForResult({ type: "Sanitize:ClearSyncedTabs" })
+        return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearSyncedTabs" })
           .catch(e => Cu.reportError("Java-side synced tabs clearing failed: " + e));
       },
 

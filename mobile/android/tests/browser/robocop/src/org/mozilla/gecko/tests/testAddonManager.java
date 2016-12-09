@@ -29,7 +29,7 @@ public class testAddonManager extends PixelTest  {
         selectMenuItem(mStringHelper.ADDONS_LABEL);
 
         // Set up listeners to catch the page load we're about to do
-        tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+        tabEventExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Tab:Added");
         contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
         // Wait for the new tab and page to load
@@ -50,7 +50,7 @@ public class testAddonManager extends PixelTest  {
         verifyUrlBarTitle(aboutAddonsURL);
 
         // Setup wait for tab to spawn and load
-        tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+        tabEventExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Tab:Added");
         contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
         // Open a new tab

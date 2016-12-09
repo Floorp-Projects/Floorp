@@ -234,7 +234,7 @@ var Settings = {
       el.addEventListener("click", function() {
         if (AppConstants.platform == "android") {
           Cu.import("resource://gre/modules/Messaging.jsm");
-          Messaging.sendRequest({
+          EventDispatcher.instance.sendRequest({
             type: "Settings:Show",
             resource: "preferences_privacy",
           });

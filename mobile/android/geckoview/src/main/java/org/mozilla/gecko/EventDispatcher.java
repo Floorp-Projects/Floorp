@@ -106,6 +106,9 @@ public final class EventDispatcher extends JNIObject {
         try {
             synchronized (listenersMap) {
                 for (final String event : events) {
+                    if (event == null) {
+                        continue;
+                    }
                     List<T> listeners = listenersMap.get(event);
                     if (listeners == null) {
                         // Java doesn't let us put Class<? extends List<T>> as the type for listType.
@@ -156,6 +159,9 @@ public final class EventDispatcher extends JNIObject {
                                         final String[] events) {
         synchronized (listenersMap) {
             for (final String event : events) {
+                if (event == null) {
+                    continue;
+                }
                 List<T> listeners = listenersMap.get(event);
                 if ((listeners == null ||
                      !listeners.remove(listener)) && !AppConstants.RELEASE_OR_BETA) {
