@@ -20,6 +20,8 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.widget.UrlBar;
 
 public class BrowserActivity extends Activity {
+    private WebView webView;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +34,7 @@ public class BrowserActivity extends Activity {
 
         final UrlBar urlBar = (UrlBar) findViewById(R.id.urlbar);
 
-        final WebView webView = (WebView) findViewById(R.id.webview);
+        webView = (WebView) findViewById(R.id.webview);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -83,5 +85,15 @@ public class BrowserActivity extends Activity {
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             urlBar.enterUrl(intent.getDataString());
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+            return;
+        }
+
+        super.onBackPressed();
     }
 }
