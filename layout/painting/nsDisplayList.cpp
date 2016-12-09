@@ -6292,9 +6292,6 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     return PartialPrerender;
   }
 
-  nsRect visual = aFrame->GetVisualOverflowRect();
-
-
   EffectCompositor::SetPerformanceWarning(
     aFrame, eCSSProperty_transform,
     AnimationPerformanceWarning(
