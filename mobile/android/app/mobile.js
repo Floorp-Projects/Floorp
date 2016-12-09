@@ -917,9 +917,6 @@ pref("dom.presentation.controller.enabled", true); // enable 1-UA mode
 pref("dom.presentation.receiver.enabled", true); // enable 1-UA mode
 #endif
 
-pref("dom.presentation.discovery.enabled", true);
-pref("dom.presentation.discovery.legacy.enabled", true); // for TV 2.5 backward capability
-
 pref("dom.audiochannel.audioCompeting", true);
 pref("dom.audiochannel.mediaControl", true);
 
