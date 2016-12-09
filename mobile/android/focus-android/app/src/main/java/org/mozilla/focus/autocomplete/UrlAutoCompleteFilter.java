@@ -5,7 +5,6 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.widget.AutocompleteHandler;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 
 import java.io.BufferedReader;
@@ -22,14 +21,14 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
     }
 
     @Override
-    public void onFilter(String searchText, AutocompleteHandler handler) {
-        if (domains == null || handler == null) {
+    public void onFilter(String searchText, InlineAutocompleteEditText view) {
+        if (domains == null || view == null) {
             return;
         }
 
         for (String domain : domains) {
             if (domain.startsWith(searchText)) {
-                handler.onAutocomplete(domain);
+                view.onAutocomplete(domain);
                 return;
             }
         }

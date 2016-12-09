@@ -23,7 +23,7 @@
         android:selectAllOnFocus="true"
         android:textColor="#ffffff"
         android:textColorHint="#dddddd"
-        android:textColorHighlight="#ffff0000"
+        android:textColorHighlight="@color/colorAutocompleteHighlight"
         android:transitionName="urlbar" />
 
     <Button

@@ -30,7 +30,7 @@ import android.widget.TextView;
 import org.mozilla.focus.R;
 import org.mozilla.focus.utils.UrlUtils;
 
-public class InlineAutocompleteEditText extends CustomEditText implements AutocompleteHandler {
+public class InlineAutocompleteEditText extends android.support.v7.widget.AppCompatEditText {
     public interface OnCommitListener {
         void onCommit();
     }
@@ -40,7 +40,7 @@ public class InlineAutocompleteEditText extends CustomEditText implements Autoco
     }
 
     public interface OnFilterListener {
-        void onFilter(String searchText, AutocompleteHandler handler);
+        void onFilter(String searchText, InlineAutocompleteEditText view);
     }
 
     public interface OnSearchStateChangeListener {
@@ -278,7 +278,6 @@ public class InlineAutocompleteEditText extends CustomEditText implements Autoco
      *
      * @param result Result URI to be turned into autocomplete text
      */
-    @Override
     public final void onAutocomplete(final String result) {
         // If mDiscardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
@@ -608,5 +607,56 @@ public class InlineAutocompleteEditText extends CustomEditText implements Autoco
 
             return false;
         }
+    }
+
+    private OnKeyPreImeListener mOnKeyPreImeListener;
+    private OnSelectionChangedListener mOnSelectionChangedListener;
+    private OnWindowFocusChangeListener mOnWindowFocusChangeListener;
+
+    public interface OnKeyPreImeListener {
+        public boolean onKeyPreIme(View v, int keyCode, KeyEvent event);
+    }
+
+    public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
+        mOnKeyPreImeListener = listener;
+    }
+
+    @Override
+    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        if (mOnKeyPreImeListener != null)
+            return mOnKeyPreImeListener.onKeyPreIme(this, keyCode, event);
+
+        return false;
+    }
+
+    public interface OnSelectionChangedListener {
+        public void onSelectionChanged(int selStart, int selEnd);
+    }
+
+    public void setOnSelectionChangedListener(OnSelectionChangedListener listener) {
+        mOnSelectionChangedListener = listener;
+    }
+
+    @Override
+    protected void onSelectionChanged(int selStart, int selEnd) {
+        if (mOnSelectionChangedListener != null)
+            mOnSelectionChangedListener.onSelectionChanged(selStart, selEnd);
+
+        super.onSelectionChanged(selStart, selEnd);
+    }
+
+    public interface OnWindowFocusChangeListener {
+        public void onWindowFocusChanged(boolean hasFocus);
+    }
+
+    public void setOnWindowFocusChangeListener(OnWindowFocusChangeListener listener) {
+        mOnWindowFocusChangeListener = listener;
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (mOnWindowFocusChangeListener != null)
+            mOnWindowFocusChangeListener.onWindowFocusChanged(hasFocus);
     }
 }
