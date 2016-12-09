@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/HTMLSourceElement.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -153,6 +154,22 @@ static const unsigned short MEDIA_ERR_NETWORK = 2;
 static const unsigned short MEDIA_ERR_DECODE = 3;
 static const unsigned short MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
 
+static void
+ResolvePromisesWithUndefined(const nsTArray<RefPtr<Promise>>& aPromises)
+{
+  for (auto& promise : aPromises) {
+    promise->MaybeResolveWithUndefined();
+  }
+}
+
+static void
+RejectPromises(const nsTArray<RefPtr<Promise>>& aPromises, nsresult aError)
+{
+  for (auto& promise : aPromises) {
+    promise->MaybeReject(aError);
+  }
+}
+
 // Under certain conditions there may be no-one holding references to
 // a media element from script, DOM parent, etc, but the element may still
 // fire meaningful events in the future so we can't destroy it yet:
@@ -240,6 +257,74 @@ public:
       return NS_OK;
 
     return mElement->DispatchEvent(mName);
+  }
+};
+
+/*
+ * If no error is passed while constructing an instance, the instance will
+ * resolve the passed promises with undefined; otherwise, the instance will
+ * reject the passed promises with the passed error.
+ *
+ * The constructor appends the constructed instance into the passed media
+ * element's mPendingPlayPromisesRunners member and once the the runner is run
+ * (whether fulfilled or canceled), it removes itself from
+ * mPendingPlayPromisesRunners.
+ */
+class HTMLMediaElement::nsResolveOrRejectPendingPlayPromisesRunner : public nsMediaEvent
+{
+  nsTArray<RefPtr<Promise>> mPromises;
+  nsresult mError;
+
+public:
+  nsResolveOrRejectPendingPlayPromisesRunner(HTMLMediaElement* aElement,
+                                             nsTArray<RefPtr<Promise>>&& aPromises,
+                                             nsresult aError = NS_OK)
+  : nsMediaEvent(aElement)
+  , mPromises(Move(aPromises))
+  , mError(aError)
+  {
+    mElement->mPendingPlayPromisesRunners.AppendElement(this);
+  }
+
+  void ResolveOrReject()
+  {
+    if (NS_SUCCEEDED(mError)) {
+      ResolvePromisesWithUndefined(mPromises);
+    } else {
+      RejectPromises(mPromises, mError);
+    }
+  }
+
+  NS_IMETHOD Run() override
+  {
+    if (!IsCancelled()) {
+      ResolveOrReject();
+    }
+
+    mElement->mPendingPlayPromisesRunners.RemoveElement(this);
+    return NS_OK;
+  }
+};
+
+class HTMLMediaElement::nsNotifyAboutPlayingRunner : public nsResolveOrRejectPendingPlayPromisesRunner
+{
+public:
+  nsNotifyAboutPlayingRunner(HTMLMediaElement* aElement,
+                             nsTArray<RefPtr<Promise>>&& aPendingPlayPromises)
+  : nsResolveOrRejectPendingPlayPromisesRunner(aElement,
+                                               Move(aPendingPlayPromises))
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    if (IsCancelled()) {
+      mElement->mPendingPlayPromisesRunners.RemoveElement(this);
+      return NS_OK;
+    }
+
+    mElement->DispatchEvent(NS_LITERAL_STRING("playing"));
+    return nsResolveOrRejectPendingPlayPromisesRunner::Run();
   }
 };
 
@@ -1281,6 +1366,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVideoTrackList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeys)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectedVideoStreamTrack)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingPlayPromises)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
@@ -1309,6 +1395,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVideoTrackList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaKeys)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectedVideoStreamTrack)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingPlayPromises)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLMediaElement)
@@ -5698,7 +5785,14 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this);
+  nsCOMPtr<nsIRunnable> event;
+
+  if (aName.EqualsLiteral("playing")) {
+    event = new nsNotifyAboutPlayingRunner(this, TakePendingPlayPromises());
+  } else {
+    event = new nsAsyncEventRunner(aName, this);
+  }
+
   OwnerDoc()->Dispatch("HTMLMediaElement::DispatchAsyncEvent",
                        TaskCategory::Other,
                        event.forget());
@@ -6924,6 +7018,54 @@ HTMLMediaElement::UpdateCustomPolicyAfterPlayed()
     mAudioChannelWrapper->NotifyPlayStarted();
   }
 }
+
+nsTArray<RefPtr<Promise>>
+HTMLMediaElement::TakePendingPlayPromises()
+{
+  return Move(mPendingPlayPromises);
+}
+
+void
+HTMLMediaElement::NotifyAboutPlaying()
+{
+  // Stick to the DispatchAsyncEvent() call path for now because we want to
+  // trigger some telemetry-related codes in the DispatchAsyncEvent() method.
+  DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
+}
+
+void
+HTMLMediaElement::AsyncResolvePendingPlayPromises()
+{
+  if (mShuttingDown) {
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> event
+    = new nsResolveOrRejectPendingPlayPromisesRunner(this,
+                                                     TakePendingPlayPromises());
+
+  OwnerDoc()->Dispatch("HTMLMediaElement::AsyncResolvePendingPlayPromises",
+                       TaskCategory::Other,
+                       event.forget());
+}
+
+void
+HTMLMediaElement::AsyncRejectPendingPlayPromises(nsresult aError)
+{
+  if (mShuttingDown) {
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> event
+    = new nsResolveOrRejectPendingPlayPromisesRunner(this,
+                                                     TakePendingPlayPromises(),
+                                                     aError);
+
+  OwnerDoc()->Dispatch("HTMLMediaElement::AsyncRejectPendingPlayPromises",
+                       TaskCategory::Other,
+                       event.forget());
+}
+
 
 } // namespace dom
 } // namespace mozilla
