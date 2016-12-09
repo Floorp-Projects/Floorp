@@ -262,8 +262,56 @@
               </tabpanel>
               <tabpanel id="timings-tabpanel"
                         class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                          id="react-timings-tabpanel-hook"/>
+                <vbox flex="1">
+                  <hbox id="timings-summary-blocked"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           data-localization="content=netmonitor.timings.blocked"/>
+                    <hbox class="requests-menu-timings-box blocked"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-dns"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           data-localization="content=netmonitor.timings.dns"/>
+                    <hbox class="requests-menu-timings-box dns"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-connect"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           data-localization="content=netmonitor.timings.connect"/>
+                    <hbox class="requests-menu-timings-box connect"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-send"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           data-localization="content=netmonitor.timings.send"/>
+                    <hbox class="requests-menu-timings-box send"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-wait"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           data-localization="content=netmonitor.timings.wait"/>
+                    <hbox class="requests-menu-timings-box wait"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-receive"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           data-localization="content=netmonitor.timings.receive"/>
+                    <hbox class="requests-menu-timings-box receive"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                </vbox>
               </tabpanel>
               <tabpanel id="security-tabpanel"
                         class="tabpanel-content">
