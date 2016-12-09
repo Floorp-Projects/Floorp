@@ -1625,6 +1625,49 @@ BaselineCacheIRCompiler::emitLoadFrameArgumentResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitLoadArgumentsObjectArgResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Get initial length value.
+    masm.unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), scratch);
+
+    // Ensure no overridden length/element.
+    masm.branchTest32(Assembler::NonZero,
+                      scratch,
+                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT |
+                            ArgumentsObject::ELEMENT_OVERRIDDEN_BIT),
+                      failure->label());
+
+    // Bounds check.
+    masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
+    masm.branch32(Assembler::AboveOrEqual, index, scratch, failure->label());
+
+    // Load ArgumentsData.
+    masm.loadPrivate(Address(obj, ArgumentsObject::getDataSlotOffset()), scratch);
+
+    // Fail if we have a RareArgumentsData (elements were deleted).
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(scratch, offsetof(ArgumentsData, rareData)),
+                   ImmWord(0),
+                   failure->label());
+
+    // Guard the argument is not a FORWARD_TO_CALL_SLOT MagicValue. Note that
+    // the order here matters: we should only clobber R0 after emitting the last
+    // guard.
+    BaseValueIndex argValue(scratch, index, ArgumentsData::offsetOfArgs());
+    masm.branchTestMagic(Assembler::Equal, argValue, failure->label());
+    masm.loadValue(argValue, R0);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
     allocator.discardStack(masm);
