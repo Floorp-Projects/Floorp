@@ -48,7 +48,8 @@
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"
-#include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
 
@@ -77,7 +78,7 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
 {
   NS_ENSURE_ARG_POINTER(aDocument);
 
-  nsTArray<RefPtr<CSSStyleSheet>> sheets;
+  nsTArray<RefPtr<StyleSheet>> sheets;
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
   MOZ_ASSERT(document);
@@ -85,15 +86,8 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
   // Get the agent, then user and finally xbl sheets in the style set.
   nsIPresShell* presShell = document->GetShell();
 
-  if (presShell && presShell->StyleSet()->IsServo()) {
-    // XXXheycam ServoStyleSets don't have the ability to expose their
-    // sheets in a script-accessible way yet.
-    NS_ERROR("stylo: ServoStyleSets cannot expose their sheets to script yet");
-    return NS_ERROR_FAILURE;
-  }
-
   if (presShell) {
-    nsStyleSet* styleSet = presShell->StyleSet()->AsGecko();
+    StyleSetHandle styleSet = presShell->StyleSet();
     SheetType sheetType = SheetType::Agent;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
@@ -102,24 +96,26 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
     }
-    AutoTArray<CSSStyleSheet*, 32> xblSheetArray;
-    styleSet->AppendAllXBLStyleSheets(xblSheetArray);
+    if (styleSet->IsGecko()) {
+      AutoTArray<CSSStyleSheet*, 32> xblSheetArray;
+      styleSet->AsGecko()->AppendAllXBLStyleSheets(xblSheetArray);
 
-    // The XBL stylesheet array will quite often be full of duplicates. Cope:
-    nsTHashtable<nsPtrHashKey<CSSStyleSheet>> sheetSet;
-    for (CSSStyleSheet* sheet : xblSheetArray) {
-      if (!sheetSet.Contains(sheet)) {
-        sheetSet.PutEntry(sheet);
-        sheets.AppendElement(sheet);
+      // The XBL stylesheet array will quite often be full of duplicates. Cope:
+      nsTHashtable<nsPtrHashKey<CSSStyleSheet>> sheetSet;
+      for (CSSStyleSheet* sheet : xblSheetArray) {
+        if (!sheetSet.Contains(sheet)) {
+          sheetSet.PutEntry(sheet);
+          sheets.AppendElement(sheet);
+        }
       }
+    } else {
+      NS_WARNING("stylo: XBL style sheets not supported yet");
     }
   }
 
   // Get the document sheets.
   for (int32_t i = 0; i < document->GetNumberOfStyleSheets(); i++) {
-    // XXXheycam ServoStyleSets don't have the ability to expose their
-    // sheets in a script-accessible way yet.
-    sheets.AppendElement(document->GetStyleSheetAt(i)->AsGecko());
+    sheets.AppendElement(document->GetStyleSheetAt(i));
   }
 
   nsISupports** ret = static_cast<nsISupports**>(moz_xmalloc(sheets.Length() *
