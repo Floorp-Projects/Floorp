@@ -403,10 +403,10 @@ private:
         }
         if (!mValid) {
           // No point continuing.
-          mLastInvalidBox[0] = typec[3];
-          mLastInvalidBox[1] = typec[2];
-          mLastInvalidBox[2] = typec[1];
-          mLastInvalidBox[3] = typec[0];
+          mLastInvalidBox[0] = typec[0];
+          mLastInvalidBox[1] = typec[1];
+          mLastInvalidBox[2] = typec[2];
+          mLastInvalidBox[3] = typec[3];
           mLastInvalidBox[4] = '\0';
           break;
         }
