@@ -41,7 +41,6 @@ public:
 
   void HandleNotWaited(const WaitForDataRejectValue& aRejection) override;
 
-private:
   ~AccurateSeekTask();
 
   void RequestVideoData();
