@@ -296,14 +296,17 @@ add_task(function* test_favicon_cache_firstParty() {
                         .getService(Ci.nsICacheStorageService);
   networkCache.clear();
 
-  // Open the tab for the first site.
-  let tabInfoA = yield openTab(TEST_SITE_ONE + TEST_CACHE_PAGE);
-
   // Start to observer the event of that favicon has been fully loaded and cached.
   let promiseForFaviconLoaded = waitOnFaviconLoaded(THIRD_PARTY_SITE + TEST_FAVICON_CACHE_URI);
 
-  // Wait for the favicon response of the first tab.
-  let response = yield waitOnFaviconResponse(THIRD_PARTY_SITE + TEST_FAVICON_CACHE_URI);
+  // Start to observer for the favicon response of the first tab.
+  let responsePromise = waitOnFaviconResponse(THIRD_PARTY_SITE + TEST_FAVICON_CACHE_URI);
+
+  // Open the tab for the first site.
+  let tabInfoA = yield openTab(TEST_SITE_ONE + TEST_CACHE_PAGE);
+
+  // Waiting for the favicon response.
+  let response = yield responsePromise;
 
   // Make sure the favicon is loaded through the network and its first party domain is correct.
   is(response.topic, "http-on-examine-response", "The favicon image should be loaded through network.");
