@@ -26,10 +26,6 @@ interface mozIDOMWindowProxy;
 
 interface nsIWindowCreator2 : nsIWindowCreator {
 
-  /**
-   * Definitions for contextFlags
-   */
-
   /** Create a new window. Gecko will/may call this method, if made
       available to it, to create new windows.
       @param parent Parent window, if any. Null if not. The newly created
@@ -37,7 +33,6 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                     the parent, if any (and if the concept applies
                     to the underlying OS).
       @param chromeFlags Chrome features from nsIWebBrowserChrome
-      @param contextFlags Flags about the context of the window being created.
       @param aOpeningTab The TabParent that is trying to open this new chrome
                          window. Can be nullptr.
       @param aOpener The window which is trying to open this new chrome window.
@@ -50,7 +45,6 @@ interface nsIWindowCreator2 : nsIWindowCreator {
   */
   nsIWebBrowserChrome createChromeWindow2(in nsIWebBrowserChrome parent,
                                           in uint32_t chromeFlags,
-                                          in uint32_t contextFlags,
                                           in nsITabParent aOpeningTab,
                                           in mozIDOMWindowProxy aOpener,
                                           out boolean cancel);

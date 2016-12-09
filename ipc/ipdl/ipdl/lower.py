@@ -4150,12 +4150,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         msgvar, stmts = self.makeMessage(md, errfnSendDtor, actorvar)
         sendok, sendstmts = self.sendAsync(md, msgvar, actorvar)
+        failif = StmtIf(ExprNot(sendok))
+        failif.addifstmt(StmtReturn.FALSE)
+
         method.addstmts(
             stmts
             + self.genVerifyMessage(md.decl.type.verify, md.params,
                                     errfnSendDtor, ExprVar('msg__'))
             + sendstmts
-            + [ Whitespace.NL ]
+            + [ failif, Whitespace.NL ]
             + self.dtorEpilogue(md, actor.var())
             + [ StmtReturn(sendok) ])
 

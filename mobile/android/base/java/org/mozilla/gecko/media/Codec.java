@@ -18,7 +18,6 @@ import android.view.Surface;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -28,33 +27,17 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     public enum Error {
         DECODE, FATAL
-    };
+    }
 
     private final class Callbacks implements AsyncCodec.Callbacks {
-        private ICodecCallbacks mRemote;
-        private boolean mHasInputCapacitySet;
-        private boolean mHasOutputCapacitySet;
-
-        public Callbacks(ICodecCallbacks remote) {
-            mRemote = remote;
-        }
-
         @Override
         public void onInputBufferAvailable(AsyncCodec codec, int index) {
             if (mFlushing) {
                 // Flush invalidates all buffers.
                 return;
             }
-            if (!mHasInputCapacitySet) {
-                int capacity = codec.getInputBuffer(index).capacity();
-                if (capacity > 0) {
-                    mSamplePool.setInputBufferSize(capacity);
-                    mHasInputCapacitySet = true;
-                }
-            }
-            if (!mInputProcessor.onBuffer(index)) {
-                reportError(Error.FATAL, new Exception("FAIL: input buffer queue is full"));
-            }
+
+            mInputProcessor.onBuffer(index);
         }
 
         @Override
@@ -63,47 +46,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 // Flush invalidates all buffers.
                 return;
             }
-            ByteBuffer output = codec.getOutputBuffer(index);
-            if (!mHasOutputCapacitySet) {
-                int capacity = output.capacity();
-                if (capacity > 0) {
-                    mSamplePool.setOutputBufferSize(capacity);
-                    mHasOutputCapacitySet = true;
-                }
-            }
-            Sample copy = mSamplePool.obtainOutput(info);
-            try {
-                if (info.size > 0) {
-                    copy.buffer.readFromByteBuffer(output, info.offset, info.size);
-                }
-                mSentOutputs.add(copy);
-                mRemote.onOutput(copy);
-            } catch (IOException e) {
-                Log.e(LOGTAG, "Fail to read output buffer:" + e.getMessage());
-                outputDummy(info);
-            } catch (TransactionTooLargeException ttle) {
-                Log.e(LOGTAG, "Output is too large:" + ttle.getMessage());
-                outputDummy(info);
-            } catch (RemoteException e) {
-                // Dead recipient.
-                e.printStackTrace();
-            }
 
-            mCodec.releaseOutputBuffer(index, true);
-            boolean eos = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
-            if (DEBUG && eos) {
-                Log.d(LOGTAG, "output EOS");
-            }
-        }
-
-        private void outputDummy(MediaCodec.BufferInfo info) {
-            try {
-                if (DEBUG) Log.d(LOGTAG, "return dummy sample");
-                mRemote.onOutput(Sample.create(null, info, null));
-            } catch (RemoteException e) {
-                // Dead recipient.
-                e.printStackTrace();
-            }
+            mOutputProcessor.onBuffer(index, info);
         }
 
         @Override
@@ -113,19 +57,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         @Override
         public void onOutputFormatChanged(AsyncCodec codec, MediaFormat format) {
-            try {
-                mRemote.onOutputFormatChanged(new FormatParam(format));
-            } catch (RemoteException re) {
-                // Dead recipient.
-                re.printStackTrace();
-            }
+            mOutputProcessor.onFormatChanged(format);
         }
     }
 
     private final class InputProcessor {
-        private Queue<Sample> mInputSamples = new LinkedList<>();
+        private boolean mHasInputCapacitySet;
         private Queue<Integer> mAvailableInputBuffers = new LinkedList<>();
         private Queue<Sample> mDequeuedSamples = new LinkedList<>();
+        private Queue<Sample> mInputSamples = new LinkedList<>();
 
         private synchronized Sample onAllocate(int size) {
             Sample sample = mSamplePool.obtainInput(size);
@@ -133,9 +73,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             return sample;
         }
 
-        private synchronized boolean onSample(Sample sample) {
+        private synchronized void onSample(Sample sample) {
             if (sample == null) {
-                return false;
+                Log.w(LOGTAG, "WARN: null input sample");
+                return;
             }
 
             if (!sample.isEOS()) {
@@ -146,19 +87,28 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 temp.dispose();
             }
 
-            if (!mInputSamples.offer(sample)) {
-                return false;
+            if (mInputSamples.offer(sample)) {
+                feedSampleToBuffer();
+            } else {
+                reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
             }
-            feedSampleToBuffer();
-            return true;
         }
 
-        private synchronized boolean onBuffer(int index) {
-            if (!mAvailableInputBuffers.offer(index)) {
-                return false;
+        private synchronized void onBuffer(int index) {
+            if (!mHasInputCapacitySet) {
+                int capacity = mCodec.getInputBuffer(index).capacity();
+                if (capacity > 0) {
+                    mSamplePool.setInputBufferSize(capacity);
+                    mHasInputCapacitySet = true;
+                }
             }
-            feedSampleToBuffer();
-            return true;
+
+            if (mAvailableInputBuffers.offer(index)) {
+                feedSampleToBuffer();
+            } else {
+                reportError(Error.FATAL, new Exception("FAIL: input buffer queue is full"));
+            }
+
         }
 
         private void feedSampleToBuffer() {
@@ -192,14 +142,108 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private synchronized void reset() {
+            for (Sample s : mInputSamples) {
+                mSamplePool.recycleInput(s);
+            }
             mInputSamples.clear();
+
+            for (Sample s : mDequeuedSamples) {
+                mSamplePool.recycleInput(s);
+            }
+            mDequeuedSamples.clear();
+
             mAvailableInputBuffers.clear();
         }
-   }
+    }
+
+    private class OutputProcessor {
+        private boolean mHasOutputCapacitySet;
+        private Queue<Integer> mSentIndices = new LinkedList<>();
+        private Queue<Sample> mSentOutputs = new LinkedList<>();
+
+
+        private synchronized void onBuffer(int index, MediaCodec.BufferInfo info) {
+            ByteBuffer output = mCodec.getOutputBuffer(index);
+            if (!mHasOutputCapacitySet) {
+                int capacity = output.capacity();
+                if (capacity > 0) {
+                    mSamplePool.setOutputBufferSize(capacity);
+                    mHasOutputCapacitySet = true;
+                }
+            }
+            Sample copy = mSamplePool.obtainOutput(info);
+            try {
+                if (info.size > 0) {
+                    copy.buffer.readFromByteBuffer(output, info.offset, info.size);
+                }
+                mSentIndices.add(index);
+                mSentOutputs.add(copy);
+                mCallbacks.onOutput(copy);
+            } catch (IOException e) {
+                Log.e(LOGTAG, "Fail to read output buffer:" + e.getMessage());
+                outputDummy(info);
+            } catch (TransactionTooLargeException ttle) {
+                Log.e(LOGTAG, "Output is too large:" + ttle.getMessage());
+                outputDummy(info);
+            } catch (RemoteException e) {
+                // Dead recipient.
+                e.printStackTrace();
+            }
+
+            boolean eos = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+            if (DEBUG && eos) {
+                Log.d(LOGTAG, "output EOS");
+            }
+       }
+
+        private void outputDummy(MediaCodec.BufferInfo info) {
+            try {
+                if (DEBUG) Log.d(LOGTAG, "return dummy sample");
+                mCallbacks.onOutput(Sample.create(null, info, null));
+            } catch (RemoteException e) {
+                // Dead recipient.
+                e.printStackTrace();
+            }
+        }
+
+        private synchronized void onRelease(Sample sample, boolean render) {
+            Integer i = mSentIndices.poll();
+            Sample output = mSentOutputs.poll();
+            if (i == null || output == null) {
+                Log.d(LOGTAG, "output buffer#" + i + "(" + output + ")" + ": " + sample + " already released");
+                return;
+            }
+            mCodec.releaseOutputBuffer(i, render);
+            mSamplePool.recycleOutput(output);
+
+            sample.dispose();
+        }
+
+        private void onFormatChanged(MediaFormat format) {
+            try {
+                mCallbacks.onOutputFormatChanged(new FormatParam(format));
+            } catch (RemoteException re) {
+                // Dead recipient.
+                re.printStackTrace();
+            }
+        }
+
+        private synchronized void reset() {
+            for (int i : mSentIndices) {
+                mCodec.releaseOutputBuffer(i, false);
+            }
+            mSentIndices.clear();
+            for (Sample s : mSentOutputs) {
+                mSamplePool.recycleOutput(s);
+            }
+            mSentOutputs.clear();
+        }
+    }
 
     private volatile ICodecCallbacks mCallbacks;
     private AsyncCodec mCodec;
     private InputProcessor mInputProcessor;
+    private OutputProcessor mOutputProcessor;
     private volatile boolean mFlushing = false;
     private SamplePool mSamplePool;
     private Queue<Sample> mSentOutputs = new ConcurrentLinkedQueue<>();
@@ -255,7 +299,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 Log.d(LOGTAG, "configure mediacodec with crypto(" + hasCrypto + ") / Id :" + drmStubId);
             }
 
-            codec.setCallbacks(new Callbacks(mCallbacks), null);
+            codec.setCallbacks(new Callbacks(), null);
 
             // Video decoder should config with adaptive playback capability.
             if (surface != null) {
@@ -272,6 +316,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             codec.configure(fmt, surface, crypto, flags);
             mCodec = codec;
             mInputProcessor = new InputProcessor();
+            mOutputProcessor = new OutputProcessor();
             mSamplePool = new SamplePool(codecName);
             if (DEBUG) Log.d(LOGTAG, codec.toString() + " created");
             return true;
@@ -289,6 +334,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     private void releaseCodec() {
         mInputProcessor.reset();
+        mOutputProcessor.reset();
         try {
             mCodec.release();
         } catch (Exception e) {
@@ -358,6 +404,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         mFlushing = true;
         if (DEBUG) Log.d(LOGTAG, "flush " + this);
         mInputProcessor.reset();
+        mOutputProcessor.reset();
         try {
             mCodec.flush();
         } catch (Exception e) {
@@ -375,20 +422,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void queueInput(Sample sample) throws RemoteException {
-        if (!mInputProcessor.onSample(sample)) {
-            reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
-        }
+        mInputProcessor.onSample(sample);
     }
 
     @Override
-    public synchronized void releaseOutput(Sample sample) {
-        try {
-            mSamplePool.recycleOutput(mSentOutputs.remove());
-        } catch (Exception e) {
-            Log.e(LOGTAG, "failed to release output:" + sample);
-            e.printStackTrace();
-        }
-        sample.dispose();
+    public synchronized void releaseOutput(Sample sample, boolean render) {
+        mOutputProcessor.onRelease(sample, render);
     }
 
     @Override

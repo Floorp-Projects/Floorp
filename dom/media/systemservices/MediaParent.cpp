@@ -369,7 +369,6 @@ bool NonE10s::SendGetOriginKeyResponse(const uint32_t& aRequestId,
 template<class Super> mozilla::ipc::IPCResult
 Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
                                 const nsCString& aOrigin,
-                                const bool& aPrivateBrowsing,
                                 const bool& aPersist)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -395,11 +394,12 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
   RefPtr<Parent<Super>> that(this);
 
   rv = sts->Dispatch(NewRunnableFrom([this, that, id, profileDir, aOrigin,
-                                      aPrivateBrowsing, aPersist]() -> nsresult {
+                                      aPersist]() -> nsresult {
     MOZ_ASSERT(!NS_IsMainThread());
     mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
-    nsCString result;
-    if (aPrivateBrowsing) {
+
+    nsAutoCString result;
+    if (OriginAttributes::IsPrivateBrowsing(aOrigin)) {
       mOriginKeyStore->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, result);
     } else {
       mOriginKeyStore->mOriginKeys.GetOriginKey(aOrigin, result, aPersist);

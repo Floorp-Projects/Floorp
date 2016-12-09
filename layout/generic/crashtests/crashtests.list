@@ -12,7 +12,7 @@ load 265867-1.html
 load 265867-2.html
 load 286491.html
 load 289864-1.html
-load 295292-1.html
+asserts(0-1) load 295292-1.html # Bug 1315855
 load 295292-2.html
 load 302260-1.html
 load 307979-1.html
@@ -629,7 +629,7 @@ load text-overflow-form-elements.html
 load text-overflow-iframe.html
 asserts-if(Android,2-4) asserts-if(!Android,4) load 1225005.html # bug 682647 and bug 448083
 load 1233191.html
-skip-if(Android) load 1271765.html
+asserts(3) load 1271765.html # bug 1319318
 asserts(2) load 1272983-1.html # bug 586628
 asserts(2) load 1272983-2.html # bug 586628
 load 1275059.html

@@ -103,11 +103,6 @@ interface nsIXULWindow : nsISupports
 
   attribute unsigned long zLevel;
 
-  /**
-   * contextFlags are from nsIWindowCreator2
-   */
-  attribute uint32_t contextFlags;
-
   attribute uint32_t chromeFlags;
 
   /**

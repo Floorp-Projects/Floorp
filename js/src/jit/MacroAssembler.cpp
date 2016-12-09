@@ -1193,7 +1193,8 @@ MacroAssembler::initGCSlots(Register obj, Register temp, NativeObject* templateO
         if (startOfUndefined > nfixed) {
             MOZ_ASSERT(startOfUninitialized != startOfUndefined);
             fillSlotsWithUninitialized(Address(obj, 0), temp, 0, startOfUndefined - nfixed);
-            fillSlotsWithUndefined(Address(obj, 0), temp, startOfUndefined - nfixed, ndynamic);
+            size_t offset = (startOfUndefined - nfixed) * sizeof(Value);
+            fillSlotsWithUndefined(Address(obj, offset), temp, startOfUndefined - nfixed, ndynamic);
         } else {
             fillSlotsWithUndefined(Address(obj, 0), temp, 0, ndynamic);
         }

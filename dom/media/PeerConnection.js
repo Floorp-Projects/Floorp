@@ -1190,59 +1190,36 @@ RTCPeerConnection.prototype = {
     });
   },
 
-  createDataChannel: function(label, dict) {
+  createDataChannel: function(label, {
+                                maxRetransmits, ordered, negotiated,
+                                id = 0xFFFF,
+                                maxRetransmitTime,
+                                maxPacketLifeTime = maxRetransmitTime,
+                                protocol,
+                              } = {}) {
     this._checkClosed();
-    if (dict == undefined) {
-      dict = {};
-    }
-    if (dict.maxRetransmitNum != undefined) {
-      dict.maxRetransmits = dict.maxRetransmitNum;
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry maxRetransmitNum used!");
-    }
-    if (dict.outOfOrderAllowed != undefined) {
-      dict.ordered = !dict.outOfOrderAllowed; // the meaning is swapped with
-                                              // the name change
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry outOfOrderAllowed used!");
-    }
 
-    if (dict.preset != undefined) {
-      dict.negotiated = dict.preset;
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry preset used!");
+    if (maxRetransmitTime !== undefined) {
+      this.logWarning("Use maxPacketLifeTime instead of deprecated maxRetransmitTime which will stop working soon in createDataChannel!");
     }
-    if (dict.stream != undefined) {
-      dict.id = dict.stream;
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry stream used!");
-    }
-
-    if (dict.maxRetransmitTime !== null && dict.maxRetransmits !== null) {
+    if (maxPacketLifeTime !== undefined && maxRetransmits !== undefined) {
       throw new this._win.DOMException(
-          "Both maxRetransmitTime and maxRetransmits cannot be provided",
+          "Both maxPacketLifeTime and maxRetransmits cannot be provided",
           "InvalidParameterError");
     }
-    let protocol;
-    if (dict.protocol == undefined) {
-      protocol = "";
-    } else {
-      protocol = dict.protocol;
-    }
-
     // Must determine the type where we still know if entries are undefined.
     let type;
-    if (dict.maxRetransmitTime != undefined) {
+    if (maxPacketLifeTime) {
       type = Ci.IPeerConnection.kDataChannelPartialReliableTimed;
-    } else if (dict.maxRetransmits != undefined) {
+    } else if (maxRetransmits) {
       type = Ci.IPeerConnection.kDataChannelPartialReliableRexmit;
     } else {
       type = Ci.IPeerConnection.kDataChannelReliable;
     }
-
     // Synchronous since it doesn't block.
-    let channel = this._impl.createDataChannel(
-      label, protocol, type, !dict.ordered, dict.maxRetransmitTime,
-      dict.maxRetransmits, dict.negotiated ? true : false,
-      dict.id != undefined ? dict.id : 0xFFFF
-    );
-    return channel;
+    return this._impl.createDataChannel(label, protocol, type, ordered,
+                                        maxPacketLifeTime, maxRetransmits,
+                                        negotiated, id);
   }
 };
 

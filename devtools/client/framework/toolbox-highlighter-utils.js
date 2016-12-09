@@ -240,7 +240,7 @@ exports.getHighlighterUtils = function (toolbox) {
       yield toolbox.walker.highlight(nodeFront);
     }
 
-    toolbox.emit("node-highlight", nodeFront, options.toSource());
+    toolbox.emit("node-highlight", nodeFront);
   });
 
   /**

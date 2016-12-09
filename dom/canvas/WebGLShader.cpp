@@ -141,7 +141,7 @@ CreateShader(gl::GLContext* gl, GLenum type)
 }
 
 WebGLShader::WebGLShader(WebGLContext* webgl, GLenum type)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mGLName(CreateShader(webgl->GL(), type))
     , mType(type)
     , mTranslationSuccessful(false)

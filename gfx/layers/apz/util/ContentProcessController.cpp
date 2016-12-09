@@ -15,112 +15,12 @@
 namespace mozilla {
 namespace layers {
 
-/**
- * There are cases where we try to create the APZChild before the corresponding
- * TabChild has been created, we use an observer for the "tab-child-created"
- * topic to set the TabChild in the APZChild when it has been created.
- */
-class TabChildCreatedObserver : public nsIObserver
+ContentProcessController::ContentProcessController(const RefPtr<dom::TabChild>& aBrowser)
+    : mBrowser(aBrowser)
 {
-public:
-  TabChildCreatedObserver(ContentProcessController* aController, const dom::TabId& aTabId)
-    : mController(aController),
-      mTabId(aTabId)
-  {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-private:
-  virtual ~TabChildCreatedObserver()
-  {}
-
-  // TabChildCreatedObserver is owned by mController, and mController outlives its
-  // TabChildCreatedObserver, so the raw pointer is fine.
-  ContentProcessController* mController;
-  dom::TabId mTabId;
-};
-
-NS_IMPL_ISUPPORTS(TabChildCreatedObserver, nsIObserver)
-
-NS_IMETHODIMP
-TabChildCreatedObserver::Observe(nsISupports* aSubject,
-                                 const char* aTopic,
-                                 const char16_t* aData)
-{
-  MOZ_ASSERT(strcmp(aTopic, "tab-child-created") == 0);
-
-  nsCOMPtr<nsITabChild> tabChild(do_QueryInterface(aSubject));
-  NS_ENSURE_TRUE(tabChild, NS_ERROR_FAILURE);
-
-  dom::TabChild* browser = static_cast<dom::TabChild*>(tabChild.get());
-
-  if (browser->GetTabId() == mTabId) {
-    mController->SetBrowser(browser);
-  }
-  return NS_OK;
+  MOZ_ASSERT(mBrowser);
 }
 
-APZChild*
-ContentProcessController::Create(const dom::TabId& aTabId)
-{
-  RefPtr<dom::TabChild> browser = dom::TabChild::FindTabChild(aTabId);
-
-  ContentProcessController* controller = new ContentProcessController();
-
-  nsAutoPtr<APZChild> apz(new APZChild(controller));
-
-  if (browser) {
-
-    controller->SetBrowser(browser);
-
-  } else {
-
-    RefPtr<TabChildCreatedObserver> observer =
-      new TabChildCreatedObserver(controller, aTabId);
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (!os ||
-        NS_FAILED(os->AddObserver(observer, "tab-child-created", false))) {
-      return nullptr;
-    }
-    controller->SetObserver(observer);
-
-  }
-
-  return apz.forget();
-}
-
-ContentProcessController::ContentProcessController()
-    : mBrowser(nullptr)
-{
-}
-ContentProcessController::~ContentProcessController()
-{
-  if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    os->RemoveObserver(mObserver, "tab-child-created");
-  }
-}
-
-void
-ContentProcessController::SetObserver(nsIObserver* aObserver)
-{
-  MOZ_ASSERT(!mBrowser);
-  mObserver = aObserver;
-}
-
-void
-ContentProcessController::SetBrowser(dom::TabChild* aBrowser)
-{
-  MOZ_ASSERT(!mBrowser);
-  mBrowser = aBrowser;
-
-  if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    os->RemoveObserver(mObserver, "tab-child-created");
-    mObserver = nullptr;
-  }
-}
 void
 ContentProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 {

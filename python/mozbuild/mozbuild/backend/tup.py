@@ -20,7 +20,7 @@ from ..frontend.data import (
     FinalTargetPreprocessedFiles,
     GeneratedFile,
     HostDefines,
-    ObjdirPreprocessedFiles,
+    ObjdirFiles,
 )
 from ..util import (
     FileAvoidWrite,
@@ -187,8 +187,6 @@ class TupOnly(CommonBackend, PartialBackend):
             self._process_final_target_files(obj)
         elif isinstance(obj, FinalTargetPreprocessedFiles):
             self._process_final_target_pp_files(obj, backend_file)
-        elif isinstance(obj, ObjdirPreprocessedFiles):
-            self._process_final_target_pp_files(obj, backend_file)
 
         return True
 
@@ -245,6 +243,7 @@ class TupOnly(CommonBackend, PartialBackend):
             ])
             full_inputs = [f.full_path for f in obj.inputs]
             cmd.extend(full_inputs)
+            cmd.extend(shell_quote(f) for f in obj.flags)
 
             outputs = []
             outputs.extend(obj.outputs)
@@ -267,24 +266,22 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def _process_final_target_files(self, obj):
         target = obj.install_target
-        path = mozpath.basedir(target, (
-            'dist/bin',
-            'dist/xpi-stage',
-            '_tests',
-            'dist/include',
-            'dist/branding',
-            'dist/sdk',
-        ))
-        if not path:
-            raise Exception("Cannot install to " + target)
-
-        reltarget = mozpath.relpath(target, path)
+        if not isinstance(obj, ObjdirFiles):
+            path = mozpath.basedir(target, (
+                'dist/bin',
+                'dist/xpi-stage',
+                '_tests',
+                'dist/include',
+                'dist/branding',
+                'dist/sdk',
+            ))
+            if not path:
+                raise Exception("Cannot install to " + target)
 
         for path, files in obj.files.walk():
             backend_file = self._get_backend_file(mozpath.join(target, path))
             for f in files:
                 assert not isinstance(f, RenamedSourcePath)
-                dest = mozpath.join(reltarget, path, f.target_basename)
                 if not isinstance(f, ObjDirPath):
                     if '*' in f:
                         if f.startswith('/') or isinstance(f, AbsolutePath):

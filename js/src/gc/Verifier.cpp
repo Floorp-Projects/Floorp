@@ -175,7 +175,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (verifyPreData || isIncrementalGCInProgress())
         return;
 
-    if (IsIncrementalGCUnsafe(rt) != AbortReason::None)
+    if (IsIncrementalGCUnsafe(rt) != AbortReason::None || rt->keepAtoms())
         return;
 
     number++;
@@ -342,7 +342,7 @@ gc::GCRuntime::endVerifyPreBarriers()
     verifyPreData = nullptr;
     incrementalState = State::NotActive;
 
-    if (!compartmentCreated && IsIncrementalGCUnsafe(rt) == AbortReason::None) {
+    if (!compartmentCreated && IsIncrementalGCUnsafe(rt) == AbortReason::None && !rt->keepAtoms()) {
         CheckEdgeTracer cetrc(rt);
 
         /* Start after the roots. */

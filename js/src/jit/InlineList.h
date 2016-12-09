@@ -254,6 +254,10 @@ class InlineListNode : public InlineForwardListNode<T>
     InlineListNode(const InlineListNode<T>&) = delete;
     void operator=(const InlineListNode<T>&) = delete;
 
+    bool isInList() {
+        return prev != nullptr && this->next != nullptr;
+    }
+
   protected:
     friend class InlineList<T>;
     friend class InlineListIterator<T>;

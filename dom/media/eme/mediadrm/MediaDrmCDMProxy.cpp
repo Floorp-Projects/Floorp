@@ -46,16 +46,14 @@ void
 MediaDrmCDMProxy::Init(PromiseId aPromiseId,
                        const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
-                       const nsAString& aName,
-                       bool aInPrivateBrowsing)
+                       const nsAString& aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
   EME_LOG("MediaDrmCDMProxy::Init (%s, %s) %s",
           NS_ConvertUTF16toUTF8(aOrigin).get(),
-          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
-          (aInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"));
+          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get());
 
   // Create a thread to work with cdm.
   if (!mOwnerThread) {

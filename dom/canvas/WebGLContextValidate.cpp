@@ -197,50 +197,6 @@ WebGLContext::ValidateDrawModeEnum(GLenum mode, const char* info)
 }
 
 bool
-WebGLContext::ValidateFramebufferAttachment(const WebGLFramebuffer* fb, GLenum attachment,
-                                            const char* funcName,
-                                            bool badColorAttachmentIsInvalidOp)
-{
-    if (!fb) {
-        switch (attachment) {
-        case LOCAL_GL_COLOR:
-        case LOCAL_GL_DEPTH:
-        case LOCAL_GL_STENCIL:
-            return true;
-
-        default:
-            ErrorInvalidEnum("%s: attachment: invalid enum value 0x%x.",
-                             funcName, attachment);
-            return false;
-        }
-    }
-
-    if (attachment == LOCAL_GL_DEPTH_ATTACHMENT ||
-        attachment == LOCAL_GL_STENCIL_ATTACHMENT ||
-        attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
-    {
-        return true;
-    }
-
-    if (attachment >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-        attachment <= LastColorAttachmentEnum())
-    {
-        return true;
-    }
-
-    if (badColorAttachmentIsInvalidOp &&
-        attachment >= LOCAL_GL_COLOR_ATTACHMENT0)
-    {
-        const uint32_t offset = attachment - LOCAL_GL_COLOR_ATTACHMENT0;
-        ErrorInvalidOperation("%s: Bad color attachment: COLOR_ATTACHMENT%u. (0x%04x)",
-                              funcName, offset, attachment);
-    } else {
-        ErrorInvalidEnum("%s: attachment: Bad attachment 0x%x.", funcName, attachment);
-    }
-    return false;
-}
-
-bool
 WebGLContext::ValidateUniformLocation(WebGLUniformLocation* loc, const char* funcName)
 {
     /* GLES 2.0.25, p38:
@@ -251,7 +207,7 @@ WebGLContext::ValidateUniformLocation(WebGLUniformLocation* loc, const char* fun
     if (!loc)
         return false;
 
-    if (!ValidateObject(funcName, loc))
+    if (!ValidateObjectAllowDeleted(funcName, *loc))
         return false;
 
     if (!mCurrentProgram) {

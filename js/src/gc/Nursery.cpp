@@ -488,9 +488,13 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
 {
 }
 
-/* static */ void
+void
 js::Nursery::printProfileHeader()
 {
+    if (!enableProfiling_)
+        return;
+
+    fprintf(stderr, "MinorGC:               Reason  PRate Size ");
 #define PRINT_HEADER(name, text)                                              \
     fprintf(stderr, " %6s", text);
 FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
@@ -630,11 +634,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
     TraceMinorGCEnd();
 
     if (enableProfiling_ && totalTime >= profileThreshold_) {
-        static int printedHeader = 0;
-        if ((printedHeader++ % 200) == 0) {
-            fprintf(stderr, "MinorGC:               Reason  PRate Size ");
-            printProfileHeader();
-        }
+        rt->gc.stats.maybePrintProfileHeaders();
 
         fprintf(stderr, "MinorGC: %20s %5.1f%% %4u ",
                 JS::gcreason::ExplainReason(reason),

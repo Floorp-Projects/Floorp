@@ -147,10 +147,10 @@ public:
               StyleAnimationValue& aResultValue);
 
   /**
-   * Accumulates |aA| onto |aA| |aCount| times then accumulates |aB| onto the
-   * result.
+   * Accumulates |aA| onto |aA| (|aCount| - 1) times then accumulates |aB| onto
+   * the result.
    * If |aCount| is zero or no accumulation or addition procedure is defined
-   * for |aProperty| the result will be |aB|.
+   * for |aProperty|, the result will be |aB|.
    */
   static StyleAnimationValue
   Accumulate(nsCSSPropertyID aProperty,

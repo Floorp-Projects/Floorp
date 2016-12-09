@@ -38,18 +38,15 @@ enum RTCIceConnectionState {
 };
 
 dictionary RTCDataChannelInit {
-  boolean         ordered = true;
-  unsigned short? maxRetransmitTime = null;
-  unsigned short? maxRetransmits = null;
-  DOMString       protocol = "";
-  boolean         negotiated = false; // spec currently says 'true'; we disagree
-  unsigned short? id = null;
+  boolean        ordered = true;
+  unsigned short maxPacketLifeTime;
+  unsigned short maxRetransmits;
+  DOMString      protocol = "";
+  boolean        negotiated = false;
+  unsigned short id;
 
-  // these are deprecated due to renaming in the spec, but still supported for Fx22
-  boolean outOfOrderAllowed; // now ordered, and the default changes to keep behavior the same
-  unsigned short maxRetransmitNum; // now maxRetransmits
-  boolean preset; // now negotiated
-  unsigned short stream; // now id
+  // These are deprecated due to renaming in the spec, but still supported for Fx53
+  unsigned short maxRetransmitTime;
 };
 
 dictionary RTCOfferAnswerOptions {

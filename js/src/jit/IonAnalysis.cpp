@@ -2610,11 +2610,12 @@ CheckOperand(const MNode* consumer, const MUse* use, int32_t* usesBalance)
     MOZ_ASSERT(producer->block() != nullptr);
     MOZ_ASSERT(use->consumer() == consumer);
 #ifdef _DEBUG_CHECK_OPERANDS_USES_BALANCE
-    fprintf(stderr, "==Check Operand\n");
-    use->producer()->dump(stderr);
-    fprintf(stderr, "  index: %" PRIuSIZE "\n", use->consumer()->indexOf(use));
-    use->consumer()->dump(stderr);
-    fprintf(stderr, "==End\n");
+    Fprinter print(stderr);
+    print.printf("==Check Operand\n");
+    use->producer()->dump(print);
+    print.printf("  index: %" PRIuSIZE "\n", use->consumer()->indexOf(use));
+    use->consumer()->dump(print);
+    print.printf("==End\n");
 #endif
     --*usesBalance;
 }
@@ -2628,11 +2629,12 @@ CheckUse(const MDefinition* producer, const MUse* use, int32_t* usesBalance)
     MOZ_ASSERT(use->consumer()->block() != nullptr);
     MOZ_ASSERT(use->consumer()->getOperand(use->index()) == producer);
 #ifdef _DEBUG_CHECK_OPERANDS_USES_BALANCE
-    fprintf(stderr, "==Check Use\n");
-    use->producer()->dump(stderr);
-    fprintf(stderr, "  index: %" PRIuSIZE "\n", use->consumer()->indexOf(use));
-    use->consumer()->dump(stderr);
-    fprintf(stderr, "==End\n");
+    Fprinter print(stderr);
+    print.printf("==Check Use\n");
+    use->producer()->dump(print);
+    print.printf("  index: %" PRIuSIZE "\n", use->consumer()->indexOf(use));
+    use->consumer()->dump(print);
+    print.printf("==End\n");
 #endif
     ++*usesBalance;
 }
@@ -4186,10 +4188,10 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
                        &inspector, &info, optimizationInfo, /* baselineFrame = */ nullptr);
 
     if (!builder.build()) {
-        if (cx->isThrowingOverRecursed() ||
-            cx->isThrowingOutOfMemory() ||
-            builder.abortReason() == AbortReason_Alloc)
-        {
+        if (cx->isThrowingOverRecursed() || cx->isThrowingOutOfMemory())
+            return false;
+        if (builder.abortReason() == AbortReason_Alloc) {
+            ReportOutOfMemory(cx);
             return false;
         }
         MOZ_ASSERT(!cx->isExceptionPending());
@@ -4421,8 +4423,12 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
                        &inspector, &info, optimizationInfo, /* baselineFrame = */ nullptr);
 
     if (!builder.build()) {
-        if (cx->isThrowingOverRecursed() || builder.abortReason() == AbortReason_Alloc)
+        if (cx->isThrowingOverRecursed() || cx->isThrowingOutOfMemory())
             return false;
+        if (builder.abortReason() == AbortReason_Alloc) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
         MOZ_ASSERT(!cx->isExceptionPending());
         return true;
     }

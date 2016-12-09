@@ -82,7 +82,7 @@ function hasExpectedWarnings(containerEl) {
   let warnings = [...containerEl.querySelectorAll(".warning")];
   for (let warning of warnings) {
     let warningID =
-      "CompositorAnimationWarningTransformWithGeometricProperties";
+      "CompositorAnimationWarningTransformWithSyncGeometricAnimations";
     if (warning.getAttribute("title") == LAYOUT_ERRORS_L10N.getStr(warningID)) {
       return true;
     }
