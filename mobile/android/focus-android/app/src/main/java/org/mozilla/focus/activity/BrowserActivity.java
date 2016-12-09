@@ -36,6 +36,9 @@ public class BrowserActivity extends Activity {
         final UrlBar urlBar = (UrlBar) findViewById(R.id.urlbar);
 
         webView = (WebView) findViewById(R.id.webview);
+
+        webView.getSettings().setJavaScriptEnabled(true);
+
         final TrackingProtectionWebViewClient webViewClient = new TrackingProtectionWebViewClient(getApplicationContext()) {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
