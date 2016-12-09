@@ -6,7 +6,7 @@ package org.mozilla.focus.webkit.matcher;
 
 import android.util.SparseArray;
 
-public class Trie {
+/* package-private */ class Trie {
 
     /**
      * Trie that adds storage for a whitelist (itself another trie) on each node.
@@ -25,6 +25,11 @@ public class Trie {
 
         public static WhiteListTrie createRootNode() {
             return new WhiteListTrie(Character.MIN_VALUE, null);
+        }
+
+        /* Convenience method so that clients aren't forced to do their own casting. */
+        public WhiteListTrie put(final String string) {
+            return (WhiteListTrie) super.put(string);
         }
     }
 
