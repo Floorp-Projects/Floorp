@@ -134,6 +134,10 @@ extern nsresult
 NS_DelayedDispatchToCurrentThread(
   already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs);
 
+extern nsresult
+NS_DelayedDispatchToCurrentThread(
+  already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs);
+
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
  * Process all pending events for the given thread before returning.  This
