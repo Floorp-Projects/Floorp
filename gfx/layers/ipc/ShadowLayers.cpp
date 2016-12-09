@@ -397,7 +397,7 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
     return;
   }
 
-  mTxn->AddPaint(
+  mTxn->AddNoSwapPaint(
     CompositableOperation(
       aCompositable->GetIPCHandle(),
       OpPaintTextureRegion(aThebesBufferData, aUpdatedRegion)));
@@ -425,14 +425,6 @@ ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
                                         readLock,
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID));
-    if ((t.mTextureClient->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD)
-        && t.mTextureClient->HasIntermediateBuffer()) {
-
-      // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
-      // race with updates on the main thread. In this case we want the transaction
-      // to be synchronous.
-      mTxn->MarkSyncTransaction();
-    }
     mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
   }
   mTxn->AddEdit(CompositableOperation(aCompositable->GetIPCHandle(),
