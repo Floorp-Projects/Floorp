@@ -2,20 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals NetMonitorView */
+
 "use strict";
 
 const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../l10n");
 const Actions = require("../actions/index");
-const { isSidebarToggleButtonDisabled } = require("../selectors/index");
 
 const { button } = DOM;
 
 function ToggleButton({
   disabled,
   open,
-  onToggle,
+  triggerSidebar,
 }) {
   let className = ["devtools-button"];
   if (!open) {
@@ -31,21 +32,34 @@ function ToggleButton({
     title,
     disabled,
     tabIndex: "0",
-    onMouseDown: onToggle,
+    onMouseDown: triggerSidebar,
   });
 }
 
 ToggleButton.propTypes = {
   disabled: PropTypes.bool.isRequired,
-  onToggle: PropTypes.func.isRequired,
+  triggerSidebar: PropTypes.func.isRequired,
 };
 
 module.exports = connect(
   (state) => ({
-    disabled: isSidebarToggleButtonDisabled(state),
-    open: state.ui.sidebarOpen,
+    disabled: state.requests.items.length === 0,
+    open: state.ui.sidebar.open,
   }),
   (dispatch) => ({
-    onToggle: () => dispatch(Actions.toggleSidebar())
+    triggerSidebar: () => {
+      dispatch(Actions.toggleSidebar());
+
+      let requestsMenu = NetMonitorView.RequestsMenu;
+      let selectedIndex = requestsMenu.selectedIndex;
+
+      // Make sure there's a selection if the button is pressed, to avoid
+      // showing an empty network details pane.
+      if (selectedIndex == -1 && requestsMenu.itemCount) {
+        requestsMenu.selectedIndex = 0;
+      } else {
+        requestsMenu.selectedIndex = -1;
+      }
+    },
   })
 )(ToggleButton);

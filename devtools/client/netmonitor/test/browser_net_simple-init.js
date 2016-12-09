@@ -22,50 +22,50 @@ function test() {
     function checkIfInitialized(tag) {
       info(`Checking if initialization is ok (${tag}).`);
 
-      ok(monitor.panelWin.NetMonitorView,
+      ok(monitor._view,
         `The network monitor view object exists (${tag}).`);
-      ok(monitor.panelWin.NetMonitorController,
+      ok(monitor._controller,
         `The network monitor controller object exists (${tag}).`);
-      ok(monitor.panelWin.NetMonitorController._startup,
+      ok(monitor._controller._startup,
         `The network monitor controller object exists and is initialized (${tag}).`);
 
       ok(monitor.isReady,
         `The network monitor panel appears to be ready (${tag}).`);
 
-      ok(monitor.panelWin.NetMonitorController.tabClient,
+      ok(monitor._controller.tabClient,
         `There should be a tabClient available at this point (${tag}).`);
-      ok(monitor.panelWin.NetMonitorController.webConsoleClient,
+      ok(monitor._controller.webConsoleClient,
         `There should be a webConsoleClient available at this point (${tag}).`);
-      ok(monitor.panelWin.NetMonitorController.timelineFront,
+      ok(monitor._controller.timelineFront,
         `There should be a timelineFront available at this point (${tag}).`);
     }
 
     function checkIfDestroyed(tag) {
       gInfo("Checking if destruction is ok.");
 
-      gOk(monitor.panelWin.NetMonitorView,
+      gOk(monitor._view,
         `The network monitor view object still exists (${tag}).`);
-      gOk(monitor.panelWin.NetMonitorController,
+      gOk(monitor._controller,
         `The network monitor controller object still exists (${tag}).`);
-      gOk(monitor.panelWin.NetMonitorController._shutdown,
+      gOk(monitor._controller._shutdown,
         `The network monitor controller object still exists and is destroyed (${tag}).`);
 
-      gOk(!monitor.panelWin.NetMonitorController.tabClient,
+      gOk(!monitor._controller.tabClient,
         `There shouldn't be a tabClient available after destruction (${tag}).`);
-      gOk(!monitor.panelWin.NetMonitorController.webConsoleClient,
+      gOk(!monitor._controller.webConsoleClient,
         `There shouldn't be a webConsoleClient available after destruction (${tag}).`);
-      gOk(!monitor.panelWin.NetMonitorController.timelineFront,
+      gOk(!monitor._controller.timelineFront,
         `There shouldn't be a timelineFront available after destruction (${tag}).`);
     }
 
     executeSoon(() => {
       checkIfInitialized(1);
 
-      monitor.panelWin.NetMonitorController.startupNetMonitor()
+      monitor._controller.startupNetMonitor()
         .then(() => {
           info("Starting up again shouldn't do anything special.");
           checkIfInitialized(2);
-          return monitor.panelWin.NetMonitorController.connect();
+          return monitor._controller.connect();
         })
         .then(() => {
           info("Connecting again shouldn't do anything special.");
@@ -78,11 +78,11 @@ function test() {
     registerCleanupFunction(() => {
       checkIfDestroyed(1);
 
-      monitor.panelWin.NetMonitorController.shutdownNetMonitor()
+      monitor._controller.shutdownNetMonitor()
         .then(() => {
           gInfo("Shutting down again shouldn't do anything special.");
           checkIfDestroyed(2);
-          return monitor.panelWin.NetMonitorController.disconnect();
+          return monitor._controller.disconnect();
         })
         .then(() => {
           gInfo("Disconnecting again shouldn't do anything special.");
