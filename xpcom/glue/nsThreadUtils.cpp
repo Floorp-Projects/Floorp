@@ -202,6 +202,27 @@ NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
   return NS_DispatchToMainThread(event.forget(), aDispatchFlags);
 }
 
+nsresult
+NS_DelayedDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+#ifdef MOZILLA_INTERNAL_API
+  nsIThread* thread = NS_GetCurrentThread();
+  if (!thread) {
+    return NS_ERROR_UNEXPECTED;
+  }
+#else
+  nsresult rv;
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+#endif
+
+  return thread->DelayedDispatch(event.forget(), aDelayMs);
+}
+
 #ifndef XPCOM_GLUE_AVOID_NSPR
 nsresult
 NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout)
