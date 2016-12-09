@@ -7,7 +7,7 @@
     android:layout_height="48dp"
     android:orientation="horizontal">
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/url_edit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
