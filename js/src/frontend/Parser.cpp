@@ -568,30 +568,6 @@ FunctionBox::initWithEnclosingScope(Scope* enclosingScope)
 }
 
 template <typename ParseHandler>
-bool
-Parser<ParseHandler>::reportHelper(ParseReportKind kind, bool strict, uint32_t offset,
-                                   unsigned errorNumber, va_list args)
-{
-    bool result = false;
-    switch (kind) {
-      case ParseError:
-        result = tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
-        break;
-      case ParseWarning:
-        result =
-            tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
-        break;
-      case ParseExtraWarning:
-        result = tokenStream.reportStrictWarningErrorNumberVA(offset, errorNumber, args);
-        break;
-      case ParseStrictError:
-        result = tokenStream.reportStrictModeErrorNumberVA(offset, strict, errorNumber, args);
-        break;
-    }
-    return result;
-}
-
-template <typename ParseHandler>
 void
 Parser<ParseHandler>::error(unsigned errorNumber, ...)
 {
