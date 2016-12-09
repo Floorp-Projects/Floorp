@@ -23,9 +23,9 @@ add_task(function* () {
 
   is(RequestsMenu.itemCount, 1, "The beacon should be recorded.");
   let request = RequestsMenu.getItemAtIndex(0);
-  is(request.method, "POST", "The method is correct.");
-  ok(request.url.endsWith("beacon_request"), "The URL is correct.");
-  is(request.status, "404", "The status is correct.");
+  is(request.attachment.method, "POST", "The method is correct.");
+  ok(request.attachment.url.endsWith("beacon_request"), "The URL is correct.");
+  is(request.attachment.status, "404", "The status is correct.");
 
   return teardown(monitor);
 });

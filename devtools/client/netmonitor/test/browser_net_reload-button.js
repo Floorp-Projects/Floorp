@@ -8,18 +8,18 @@
  */
 
 add_task(function* () {
-  let { monitor } = yield initNetMonitor(SIMPLE_URL);
+  let { monitor } = yield initNetMonitor(SINGLE_GET_URL);
   info("Starting test... ");
 
   let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
-  let wait = waitForNetworkEvents(monitor, 1);
+  let wait = waitForNetworkEvents(monitor, 2);
   let button = document.querySelector("#requests-menu-reload-notice-button");
   button.click();
   yield wait;
 
-  is(RequestsMenu.itemCount, 1, "The request menu should have one item after reloading");
+  is(RequestsMenu.itemCount, 2, "The request menu should have two items after reloading");
 
   return teardown(monitor);
 });

@@ -4,12 +4,60 @@
 
 "use strict";
 
-const filters = require("./filters");
-const requests = require("./requests");
-const ui = require("./ui");
+const { createSelector } = require("devtools/client/shared/vendor/reselect");
 
-Object.assign(exports,
-  filters,
-  requests,
-  ui
+/**
+ * Gets the total number of bytes representing the cumulated content size of
+ * a set of requests. Returns 0 for an empty set.
+ *
+ * @param {array} items - an array of request items
+ * @return {number} total bytes of requests
+ */
+function getTotalBytesOfRequests(items) {
+  if (!items.length) {
+    return 0;
+  }
+
+  let result = 0;
+  items.forEach((item) => {
+    let size = item.attachment.contentSize;
+    result += (typeof size == "number") ? size : 0;
+  });
+
+  return result;
+}
+
+/**
+ * Gets the total milliseconds for all requests. Returns null for an
+ * empty set.
+ *
+ * @param {array} items - an array of request items
+ * @return {object} total milliseconds for all requests
+ */
+function getTotalMillisOfRequests(items) {
+  if (!items.length) {
+    return null;
+  }
+
+  const oldest = items.reduce((prev, curr) =>
+    prev.attachment.startedMillis < curr.attachment.startedMillis ?
+      prev : curr);
+  const newest = items.reduce((prev, curr) =>
+    prev.attachment.startedMillis > curr.attachment.startedMillis ?
+      prev : curr);
+
+  return newest.attachment.endedMillis - oldest.attachment.startedMillis;
+}
+
+const getSummary = createSelector(
+  (state) => state.requests.items,
+  (requests) => ({
+    count: requests.length,
+    totalBytes: getTotalBytesOfRequests(requests),
+    totalMillis: getTotalMillisOfRequests(requests),
+  })
 );
+
+module.exports = {
+  getSummary,
+};
