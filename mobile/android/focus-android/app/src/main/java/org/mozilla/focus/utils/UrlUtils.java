@@ -38,6 +38,10 @@ public class UrlUtils {
         return url.contains(".");
     }
 
+    public static boolean isSearchQuery(String text) {
+        return text.contains(" ");
+    }
+
     public static String createSearchUrl(String rawUrl) {
         return Uri.parse("https://duckduckgo.com/").buildUpon()
                 .appendQueryParameter("q", rawUrl)

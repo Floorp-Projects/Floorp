@@ -5,4 +5,6 @@
     <color name="colorPrimary">#b961cf</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorAccent">#d64648</color>
+
+    <color name="colorAutocompleteHighlight">#6c3b6e</color>
 </resources>

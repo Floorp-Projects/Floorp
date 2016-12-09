@@ -7,7 +7,7 @@
     android:layout_height="48dp"
     android:orientation="horizontal">
 
-    <AutoCompleteTextView
+    <org.mozilla.focus.widget.InlineAutocompleteEditText
         android:id="@+id/url_edit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -23,6 +23,7 @@
         android:selectAllOnFocus="true"
         android:textColor="#ffffff"
         android:textColorHint="#dddddd"
+        android:textColorHighlight="#ffff0000"
         android:transitionName="urlbar" />
 
     <Button
