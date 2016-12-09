@@ -2196,8 +2196,6 @@ MediaCacheStream::Seek(int32_t aWhence, int64_t aOffset)
 int64_t
 MediaCacheStream::Tell()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   return mStreamOffset;
 }
