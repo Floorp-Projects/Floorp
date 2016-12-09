@@ -2423,7 +2423,13 @@ class BaseCompiler
         MOZ_RELEASE_ASSERT(HaveSignalHandlers());
     }
 
-    void jumpTable(LabelVector& labels) {
+    void jumpTable(LabelVector& labels, Label* theTable) {
+        // Flush constant pools to ensure that the table is never interrupted by
+        // constant pool entries.
+        masm.flush();
+
+        masm.bind(theTable);
+
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
         for (uint32_t i = 0; i < labels.length(); i++) {
             CodeLabel cl;
@@ -2436,7 +2442,9 @@ class BaseCompiler
 #endif
     }
 
-    void tableSwitch(Label* theTable, RegI32 switchValue) {
+    void tableSwitch(Label* theTable, RegI32 switchValue, Label* dispatchCode) {
+        masm.bind(dispatchCode);
+
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         ScratchI32 scratch(*this);
         CodeLabel tableCl;
@@ -2448,9 +2456,14 @@ class BaseCompiler
 
         masm.jmp(Operand(scratch, switchValue, ScalePointer));
 #elif defined(JS_CODEGEN_ARM)
+        // Flush constant pools: offset must reflect the distance from the MOV
+        // to the start of the table; as the address of the MOV is given by the
+        // label, nothing must come between the bind() and the ma_mov().
+        masm.flush();
+
         ScratchI32 scratch(*this);
 
-        // Compute the offset from the next instruction to the jump table
+        // Compute the offset from the ma_mov instruction to the jump table.
         Label here;
         masm.bind(&here);
         uint32_t offset = here.offset() - theTable->offset();
@@ -2458,13 +2471,14 @@ class BaseCompiler
         // Read PC+8
         masm.ma_mov(pc, scratch);
 
-        // Required by ma_sub.
+        // ARM scratch register is required by ma_sub.
         ScratchRegisterScope arm_scratch(*this);
 
-        // Compute the table base pointer
+        // Compute the absolute table base pointer into `scratch`, offset by 8
+        // to account for the fact that ma_mov read PC+8.
         masm.ma_sub(Imm32(offset + 8), scratch, arm_scratch);
 
-        // Jump indirect via table element
+        // Jump indirect via table element.
         masm.ma_ldr(DTRAddr(scratch, DtrRegImmShift(switchValue, LSL, 2)), pc, Offset,
                     Assembler::Always);
 #else
@@ -5535,13 +5549,11 @@ BaseCompiler::emitBrTable()
     // Emit table.
 
     Label theTable;
-    masm.bind(&theTable);
-    jumpTable(stubs);
+    jumpTable(stubs, &theTable);
 
     // Emit indirect jump.  rc is live here.
 
-    masm.bind(&dispatchCode);
-    tableSwitch(&theTable, rc);
+    tableSwitch(&theTable, rc, &dispatchCode);
 
     deadCode_ = true;
 

@@ -3631,6 +3631,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         return fill(
             """
             $*{assertInheritance}
+            MOZ_ASSERT_IF(aGivenProto, js::IsObjectInContextCompartment(aGivenProto, aCx));
             MOZ_ASSERT(!aCache->GetWrapper(),
                        "You should probably not be using Wrap() directly; use "
                        "GetOrCreateDOMReflector instead");
@@ -3731,6 +3732,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         return fill(
             """
             $*{assertions}
+            MOZ_ASSERT_IF(aGivenProto, js::IsObjectInContextCompartment(aGivenProto, aCx));
 
             JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
             $*{declareProto}

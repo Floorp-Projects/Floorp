@@ -254,12 +254,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     // initialize()d to become a real, content-visible ArrayBufferObject.
     static ArrayBufferObject* createEmpty(JSContext* cx);
 
+    // Also valid when the buffer is a SharedArrayBuffer.
     static bool createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
     static bool createDataViewForThis(JSContext* cx, unsigned argc, Value* vp);
 
     template<typename T>
     static bool createTypedArrayFromBufferImpl(JSContext* cx, const CallArgs& args);
-
     template<typename T>
     static bool createTypedArrayFromBuffer(JSContext* cx, unsigned argc, Value* vp);
 
@@ -451,6 +451,15 @@ bool IsArrayBuffer(HandleObject obj);
 bool IsArrayBuffer(JSObject* obj);
 ArrayBufferObject& AsArrayBuffer(HandleObject obj);
 ArrayBufferObject& AsArrayBuffer(JSObject* obj);
+
+/*
+ * Ditto for ArrayBufferObjectMaybeShared.
+ */
+bool IsArrayBufferMaybeShared(HandleValue v);
+bool IsArrayBufferMaybeShared(HandleObject obj);
+bool IsArrayBufferMaybeShared(JSObject* obj);
+ArrayBufferObjectMaybeShared& AsArrayBufferMaybeShared(HandleObject obj);
+ArrayBufferObjectMaybeShared& AsArrayBufferMaybeShared(JSObject* obj);
 
 extern uint32_t JS_FASTCALL
 ClampDoubleToUint8(const double x);
