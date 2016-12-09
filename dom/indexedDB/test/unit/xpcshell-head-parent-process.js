@@ -347,6 +347,31 @@ function installPackagedProfile(packageName)
   zipReader.close();
 }
 
+function getChromeFilesDir()
+{
+  let dirService = Cc["@mozilla.org/file/directory_service;1"]
+                   .getService(Ci.nsIProperties);
+
+  let profileDir = dirService.get("ProfD", Ci.nsIFile);
+
+  let idbDir = profileDir.clone();
+  idbDir.append("storage");
+  idbDir.append("permanent");
+  idbDir.append("chrome");
+  idbDir.append("idb");
+
+  let idbEntries = idbDir.directoryEntries;
+  while (idbEntries.hasMoreElements()) {
+    let entry = idbEntries.getNext();
+    let file = entry.QueryInterface(Ci.nsIFile);
+    if (file.isDirectory()) {
+      return file;
+    }
+  }
+
+  throw new Error("files directory doesn't exist!");
+}
+
 function getView(size)
 {
   let buffer = new ArrayBuffer(size);

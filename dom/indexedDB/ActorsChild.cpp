@@ -689,7 +689,8 @@ DeserializeStructuredCloneFiles(
           break;
         }
 
-        case StructuredCloneFile::eWasmBytecode: {
+        case StructuredCloneFile::eWasmBytecode:
+        case StructuredCloneFile::eWasmCompiled: {
           if (aModuleSet) {
             MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
@@ -700,6 +701,10 @@ DeserializeStructuredCloneFiles(
 
             MOZ_ASSERT(moduleIndex < aModuleSet->Length());
             file->mWasmModule = aModuleSet->ElementAt(moduleIndex);
+
+            if (serializedFile.type() == StructuredCloneFile::eWasmCompiled) {
+              moduleIndex++;
+            }
 
             break;
           }
@@ -720,64 +725,8 @@ DeserializeStructuredCloneFiles(
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
 
-          file->mType = StructuredCloneFile::eWasmBytecode;
+          file->mType = serializedFile.type();
           file->mBlob.swap(blob);
-
-          break;
-        }
-
-        case StructuredCloneFile::eWasmCompiled: {
-          if (aModuleSet) {
-            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
-
-            StructuredCloneFile* file = aFiles.AppendElement();
-            MOZ_ASSERT(file);
-
-            file->mType = serializedFile.type();
-
-            MOZ_ASSERT(moduleIndex < aModuleSet->Length());
-            file->mWasmModule = aModuleSet->ElementAt(moduleIndex++);
-
-            break;
-          }
-
-          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
-                     blobOrMutableFile.type() ==
-                       BlobOrMutableFile::TPBlobChild);
-
-          switch (blobOrMutableFile.type()) {
-            case BlobOrMutableFile::Tnull_t: {
-              StructuredCloneFile* file = aFiles.AppendElement();
-              MOZ_ASSERT(file);
-
-              file->mType = StructuredCloneFile::eWasmCompiled;
-
-              break;
-            }
-
-            case BlobOrMutableFile::TPBlobChild: {
-              auto* actor =
-                static_cast<BlobChild*>(blobOrMutableFile.get_PBlobChild());
-
-              RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
-              MOZ_ASSERT(blobImpl);
-
-              RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
-
-              aDatabase->NoteReceivedBlob(blob);
-
-              StructuredCloneFile* file = aFiles.AppendElement();
-              MOZ_ASSERT(file);
-
-              file->mType = StructuredCloneFile::eWasmCompiled;
-              file->mBlob.swap(blob);
-
-              break;
-            }
-
-            default:
-              MOZ_CRASH("Should never get here!");
-          }
 
           break;
         }
@@ -3015,6 +2964,7 @@ PreprocessHelper::Init(const nsTArray<StructuredCloneFile>& aFiles)
     MOZ_ASSERT(bytecodeFile.mType == StructuredCloneFile::eWasmBytecode);
     MOZ_ASSERT(bytecodeFile.mBlob);
     MOZ_ASSERT(compiledFile.mType == StructuredCloneFile::eWasmCompiled);
+    MOZ_ASSERT(compiledFile.mBlob);
 
     ErrorResult errorResult;
 
@@ -3026,12 +2976,10 @@ PreprocessHelper::Init(const nsTArray<StructuredCloneFile>& aFiles)
     }
 
     nsCOMPtr<nsIInputStream> compiledStream;
-    if (compiledFile.mBlob) {
-      compiledFile.mBlob->GetInternalStream(getter_AddRefs(compiledStream),
-                                            errorResult);
-      if (NS_WARN_IF(errorResult.Failed())) {
-        return errorResult.StealNSResult();
-      }
+    compiledFile.mBlob->GetInternalStream(getter_AddRefs(compiledStream),
+                                          errorResult);
+    if (NS_WARN_IF(errorResult.Failed())) {
+      return errorResult.StealNSResult();
     }
 
     streamPairs.AppendElement(StreamPair(bytecodeStream, compiledStream));
@@ -3104,14 +3052,11 @@ PreprocessHelper::RunOnStreamTransportThread()
 
     const nsCOMPtr<nsIInputStream>& compiledStream = streamPair.second;
 
-    PRFileDesc* compiledFileDesc;
-    if (compiledStream) {
-      compiledFileDesc = GetFileDescriptorFromStream(compiledStream);
-      if (NS_WARN_IF(!bytecodeFileDesc)) {
-        return NS_ERROR_FAILURE;
-      }
-    } else {
-      compiledFileDesc = nullptr;
+    MOZ_ASSERT(compiledStream);
+
+    PRFileDesc* compiledFileDesc = GetFileDescriptorFromStream(compiledStream);
+    if (NS_WARN_IF(!compiledFileDesc)) {
+      return NS_ERROR_FAILURE;
     }
 
     JS::BuildIdCharVector buildId;
