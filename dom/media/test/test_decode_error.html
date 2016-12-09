@@ -55,7 +55,6 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   "set": [
     ["media.cache_size", 40000],
-    ["dom.MediaError.message.enabled", true]
   ]
 }, beginTest);
 function beginTest() {
