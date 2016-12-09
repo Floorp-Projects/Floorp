@@ -255,26 +255,6 @@ AccurateSeekTask::Seek(const media::TimeUnit& aDuration)
   return mSeekTaskPromise.Ensure(__func__);
 }
 
-void
-AccurateSeekTask::RequestAudioData()
-{
-  AssertOwnerThread();
-  MOZ_ASSERT(!mDoneAudioSeeking);
-  MOZ_ASSERT(!mReader->IsRequestingAudioData());
-  MOZ_ASSERT(!mReader->IsWaitingAudioData());
-  mReader->RequestAudioData();
-}
-
-void
-AccurateSeekTask::RequestVideoData()
-{
-  AssertOwnerThread();
-  MOZ_ASSERT(!mDoneVideoSeeking);
-  MOZ_ASSERT(!mReader->IsRequestingVideoData());
-  MOZ_ASSERT(!mReader->IsWaitingVideoData());
-  mReader->RequestVideoData(false, media::TimeUnit());
-}
-
 nsresult
 AccurateSeekTask::DropAudioUpToSeekTarget(MediaData* aSample)
 {

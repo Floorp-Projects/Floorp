@@ -942,10 +942,10 @@ private:
     // We must decode the first samples of active streams, so we can determine
     // the new stream time. So dispatch tasks to do that.
     if (!mTask->mDoneVideoSeeking) {
-      mTask->RequestVideoData();
+      RequestVideoData();
     }
     if (!mTask->mDoneAudioSeeking) {
-      mTask->RequestAudioData();
+      RequestAudioData();
     }
   }
 
@@ -954,6 +954,22 @@ private:
 
     MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
     mTask->RejectIfExist(aResult, __func__);
+  }
+
+  void RequestAudioData()
+  {
+    MOZ_ASSERT(!mTask->mDoneAudioSeeking);
+    MOZ_ASSERT(!Reader()->IsRequestingAudioData());
+    MOZ_ASSERT(!Reader()->IsWaitingAudioData());
+    Reader()->RequestAudioData();
+  }
+
+  void RequestVideoData()
+  {
+    MOZ_ASSERT(!mTask->mDoneVideoSeeking);
+    MOZ_ASSERT(!Reader()->IsRequestingVideoData());
+    MOZ_ASSERT(!Reader()->IsWaitingVideoData());
+    Reader()->RequestVideoData(false, media::TimeUnit());
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)

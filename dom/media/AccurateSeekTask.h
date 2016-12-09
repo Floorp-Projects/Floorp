@@ -43,10 +43,6 @@ public:
 
   ~AccurateSeekTask();
 
-  void RequestVideoData();
-
-  void RequestAudioData();
-
   nsresult DropAudioUpToSeekTarget(MediaData* aSample);
 
   nsresult DropVideoUpToSeekTarget(MediaData* aSample);
