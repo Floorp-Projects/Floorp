@@ -862,6 +862,8 @@ private:
   virtual void ResetMDSM() = 0;
 
   virtual void DoSeek() = 0;
+
+  virtual int64_t CalculateNewCurrentTime() const = 0;
 };
 
 class MediaDecoderStateMachine::AccurateSeekingState
@@ -906,6 +908,11 @@ private:
              [this] (const SeekTaskRejectValue& aValue) {
                OnSeekTaskRejected(aValue);
              }));
+  }
+
+  int64_t CalculateNewCurrentTime() const override
+  {
+    return mSeekTask->CalculateNewCurrentTime();
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
@@ -991,6 +998,11 @@ private:
              [this] (const SeekTaskRejectValue& aValue) {
                OnSeekTaskRejected(aValue);
              }));
+  }
+
+  int64_t CalculateNewCurrentTime() const override
+  {
+    return mSeekTask->CalculateNewCurrentTime();
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
@@ -1624,7 +1636,7 @@ void
 MediaDecoderStateMachine::
 SeekingState::SeekCompleted()
 {
-  const int64_t newCurrentTime = mSeekTask->CalculateNewCurrentTime();
+  const int64_t newCurrentTime = CalculateNewCurrentTime();
 
   bool isLiveStream = Resource()->IsLiveStream();
   if (newCurrentTime == mMaster->Duration().ToMicroseconds() && !isLiveStream) {
