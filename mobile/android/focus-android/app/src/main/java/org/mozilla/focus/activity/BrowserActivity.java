@@ -14,14 +14,15 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
+import org.mozilla.focus.widget.NavigationBar;
 import org.mozilla.focus.widget.UrlBar;
 
 public class BrowserActivity extends Activity {
     private WebView webView;
+    private NavigationBar navigationBar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,12 +55,16 @@ public class BrowserActivity extends Activity {
 
                 urlBar.onPageStarted(url);
 
+                navigationBar.updateState(webView);
+
                 super.onPageStarted(view, url, favicon);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 urlBar.onPageFinished();
+
+                navigationBar.updateState(webView);
 
                 super.onPageFinished(view, url);
             }
@@ -99,6 +104,29 @@ public class BrowserActivity extends Activity {
                 } else {
                     finish();
                 }
+            }
+        });
+
+        navigationBar = ((NavigationBar) findViewById(R.id.navbar));
+        navigationBar.setNavigationListener(new NavigationBar.NavigationListener() {
+            @Override
+            public void onBack() {
+                webView.goBack();
+            }
+
+            @Override
+            public void onForward() {
+                webView.goForward();
+            }
+
+            @Override
+            public void onRefresh() {
+                webView.reload();
+            }
+
+            @Override
+            public void onOpen() {
+                // TODO: Open in external browser (or share?)
             }
         });
 

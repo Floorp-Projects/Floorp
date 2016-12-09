@@ -24,4 +24,10 @@
         android:layout_weight="1"
         android:visibility="invisible"/>
 
+    <org.mozilla.focus.widget.NavigationBar
+        android:id="@+id/navbar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/navbar_background" />
+
 </LinearLayout>
