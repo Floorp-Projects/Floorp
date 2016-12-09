@@ -55,25 +55,24 @@ body {
   -moz-appearance: none;
   border: none;
   background: none;
+  background-color: var(--button-font-color);
   height: var(--spinner-button-height);
-  filter: url("chrome://global/skin/filters.svg#fill");
-  fill: var(--button-font-color);
 }
 
 .spinner-container > button:hover {
-  fill: var(--button-font-color-hover);
+  background-color: var(--button-font-color-hover);
 }
 
 .spinner-container > button.active {
-  fill: var(--button-font-color-active);
+  background-color: var(--button-font-color-active);
 }
 
 .spinner-container > button.up {
-  background: url("chrome://global/skin/icons/spinner-arrows.svg#up") no-repeat 50% 50%;
+  mask: url("chrome://global/skin/icons/find-arrows.svg#glyph-find-previous") no-repeat 50% 50%;
 }
 
 .spinner-container > button.down {
-  background: url("chrome://global/skin/icons/spinner-arrows.svg#down") no-repeat 50% 50%;
+  mask: url("chrome://global/skin/icons/find-arrows.svg#glyph-find-next") no-repeat 50% 50%;
 }
 
 .spinner-container.hide-buttons > button {
