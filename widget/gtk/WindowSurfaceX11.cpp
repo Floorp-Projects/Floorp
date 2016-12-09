@@ -20,7 +20,40 @@ WindowSurfaceX11::WindowSurfaceX11(Display* aDisplay,
   , mVisual(aVisual)
   , mDepth(aDepth)
   , mFormat(GetVisualFormat(aVisual, aDepth))
+  , mGC(X11None)
 {
+  MOZ_ASSERT(mFormat != gfx::SurfaceFormat::UNKNOWN,
+             "Could not find SurfaceFormat for visual!");
+}
+
+WindowSurfaceX11::~WindowSurfaceX11()
+{
+  if (mGC != X11None)
+    XFreeGC(mDisplay, mGC);
+}
+
+void
+WindowSurfaceX11::Commit(const LayoutDeviceIntRegion& aInvalidRegion)
+{
+  AutoTArray<XRectangle, 32> xrects;
+  xrects.SetCapacity(aInvalidRegion.GetNumRects());
+
+  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const mozilla::LayoutDeviceIntRect &r = iter.Get();
+    XRectangle xrect = { (short)r.x, (short)r.y, (unsigned short)r.width, (unsigned short)r.height };
+    xrects.AppendElement(xrect);
+  }
+
+  if (!mGC) {
+    mGC = XCreateGC(mDisplay, mWindow, 0, nullptr);
+    if (!mGC) {
+      NS_WARNING("Couldn't create X11 graphics context for window!");
+      return;
+    }
+  }
+
+  XSetClipRectangles(mDisplay, mGC, 0, 0, xrects.Elements(), xrects.Length(), YXBanded);
+  CommitToDrawable(mWindow, mGC, aInvalidRegion);
 }
 
 /* static */
