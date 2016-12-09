@@ -20,8 +20,7 @@
  * sends.
  *
  * This also means that <xul:browser>'s that hope to use PrintUtils must have
- * their type attribute set to either "content", "content-targetable", or
- * "content-primary".
+ * their type attribute set to either "content" or "content-primary".
  *
  * PrintUtils sends messages at different points in its implementation, but
  * their documentation is consolidated here for ease-of-access.
@@ -166,13 +165,13 @@ var PrintUtils = {
    *
    *        getPrintPreviewBrowser:
    *          Returns the <xul:browser> to display the print preview in. This
-   *          <xul:browser> must have its type attribute set to "content",
-   *          "content-targetable", or "content-primary".
+   *          <xul:browser> must have its type attribute set to "content" or
+   *          "content-primary".
    *
    *        getSourceBrowser:
    *          Returns the <xul:browser> that contains the document being
    *          printed. This <xul:browser> must have its type attribute set to
-   *          "content", "content-targetable", or "content-primary".
+   *          "content" or "content-primary".
    *
    *        getNavToolbox:
    *          Returns the primary toolbox for this window.
