@@ -6260,6 +6260,13 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     return NoPrerender;
   }
 
+  // If the incoming dirty rect already contains the entire overflow area,
+  // we are already rendering the entire content.
+  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+  if (aDirtyRect->Contains(overflow)) {
+    return FullPrerender;
+  }
+
   float viewportRatioX = gfxPrefs::AnimationPrerenderViewportRatioLimitX();
   float viewportRatioY = gfxPrefs::AnimationPrerenderViewportRatioLimitY();
   uint32_t absoluteLimitX = gfxPrefs::AnimationPrerenderAbsoluteLimitX();
@@ -6274,7 +6281,6 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
                        aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitY));
   nsSize maxSize = Min(relativeLimit, absoluteLimit);
   gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(aFrame);
-  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
   nsSize frameSize = nsSize(overflow.Size().width * scale.width,
                             overflow.Size().height * scale.height);
   if (frameSize <= maxSize) {
