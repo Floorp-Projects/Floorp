@@ -16,6 +16,7 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
@@ -84,7 +85,6 @@ using mozilla::InjectCrashRunnable;
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include "prprf.h"
 #include <map>
 #include <vector>
 
@@ -3517,8 +3517,8 @@ OOPInit()
 
 #if defined(XP_WIN)
   childCrashNotifyPipe =
-    PR_smprintf("\\\\.\\pipe\\gecko-crash-server-pipe.%i",
-                static_cast<int>(::GetCurrentProcessId()));
+    mozilla::Smprintf("\\\\.\\pipe\\gecko-crash-server-pipe.%i",
+               static_cast<int>(::GetCurrentProcessId()));
 
   const std::wstring dumpPath = gExceptionHandler->dump_path();
   crashServer = new CrashGenerationServer(
@@ -3547,8 +3547,8 @@ OOPInit()
 
 #elif defined(XP_MACOSX)
   childCrashNotifyPipe =
-    PR_smprintf("gecko-crash-server-pipe.%i",
-                static_cast<int>(getpid()));
+    mozilla::Smprintf("gecko-crash-server-pipe.%i",
+               static_cast<int>(getpid()));
   const std::string dumpPath = gExceptionHandler->dump_path();
 
   crashServer = new CrashGenerationServer(
@@ -3597,7 +3597,7 @@ OOPDeinit()
   pidToMinidump = nullptr;
 
 #if defined(XP_WIN)
-  PR_Free(childCrashNotifyPipe);
+  mozilla::SmprintfFree(childCrashNotifyPipe);
   childCrashNotifyPipe = nullptr;
 #endif
 }
