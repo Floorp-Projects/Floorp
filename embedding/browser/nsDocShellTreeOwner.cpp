@@ -274,12 +274,10 @@ nsDocShellTreeOwner::EnsureContentTreeOwner()
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                       bool aPrimary, bool aTargetable,
-                                       const nsAString& aID)
+                                       bool aPrimary, const nsAString& aID)
 {
   if (mTreeOwner)
-    return mTreeOwner->ContentShellAdded(aContentShell, aPrimary, aTargetable,
-                                         aID);
+    return mTreeOwner->ContentShellAdded(aContentShell, aPrimary, aID);
 
   EnsureContentTreeOwner();
   aContentShell->SetTreeOwner(mContentTreeOwner);
@@ -478,14 +476,13 @@ nsDocShellTreeOwner::GetPersistence(bool* aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::GetTargetableShellCount(uint32_t* aResult)
+nsDocShellTreeOwner::GetTabCount(uint32_t* aResult)
 {
   if (mTreeOwner) {
-    mTreeOwner->GetTargetableShellCount(aResult);
-  } else {
-    *aResult = 0;
+    return mTreeOwner->GetTabCount(aResult);
   }
 
+  *aResult = 0;
   return NS_OK;
 }
 

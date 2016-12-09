@@ -14,15 +14,15 @@ nsresult
 ChunkSet::Serialize(nsACString& aChunkStr)
 {
   aChunkStr.Truncate();
-  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
-    if (range != mRanges.begin()) {
+  for (const Range& range : mRanges) {
+    if (&range != &mRanges[0]) {
       aChunkStr.Append(',');
     }
 
-    aChunkStr.AppendInt((int32_t)range->Begin());
-    if (range->Begin() != range->End()) {
+    aChunkStr.AppendInt((int32_t)range.Begin());
+    if (range.Begin() != range.End()) {
       aChunkStr.Append('-');
-      aChunkStr.AppendInt((int32_t)range->End());
+      aChunkStr.AppendInt((int32_t)range.End());
     }
   }
 
@@ -75,10 +75,9 @@ ChunkSet::Merge(const ChunkSet& aOther)
 {
   size_t oldLen = mRanges.Length();
 
-  for (const Range* mergeRange = aOther.mRanges.begin();
-       mergeRange != aOther.mRanges.end(); mergeRange++) {
-    if (!HasSubrange(*mergeRange)) {
-      if (!mRanges.InsertElementSorted(*mergeRange, fallible)) {
+  for (const Range& mergeRange : aOther.mRanges) {
+    if (!HasSubrange(mergeRange)) {
+      if (!mRanges.InsertElementSorted(mergeRange, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -103,8 +102,8 @@ uint32_t
 ChunkSet::Length() const
 {
   uint32_t len = 0;
-  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
-    len += range->Length();
+  for (const Range& range : mRanges) {
+    len += range.Length();
   }
 
   return len;
@@ -113,24 +112,23 @@ ChunkSet::Length() const
 nsresult
 ChunkSet::Remove(const ChunkSet& aOther)
 {
-  for (const Range* removalRange = aOther.mRanges.begin();
-       removalRange != aOther.mRanges.end(); removalRange++) {
+  for (const Range& removalRange : aOther.mRanges) {
 
     if (mRanges.Length() == 0) {
       return NS_OK;
     }
 
-    if (mRanges.LastElement().End() < removalRange->Begin() ||
+    if (mRanges.LastElement().End() < removalRange.Begin() ||
         aOther.mRanges.LastElement().End() < mRanges[0].Begin()) {
       return NS_OK;
     }
 
     size_t intersectionIdx;
     while (BinarySearchIf(mRanges, 0, mRanges.Length(),
-           Range::IntersectionComparator(*removalRange), &intersectionIdx)) {
+           Range::IntersectionComparator(removalRange), &intersectionIdx)) {
 
       ChunkSet remains;
-      nsresult rv = mRanges[intersectionIdx].Remove(*removalRange, remains);
+      nsresult rv = mRanges[intersectionIdx].Remove(removalRange, remains);
 
       if (NS_FAILED(rv)) {
         return rv;
@@ -158,8 +156,8 @@ ChunkSet::Write(nsIOutputStream* aOut)
 {
   nsTArray<uint32_t> chunks(IO_BUFFER_SIZE);
 
-  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
-    for (uint32_t chunk = range->Begin(); chunk <= range->End(); chunk++) {
+  for (const Range& range : mRanges) {
+    for (uint32_t chunk = range.Begin(); chunk <= range.End(); chunk++) {
       chunks.AppendElement(chunk);
 
       if (chunks.Length() == chunks.Capacity()) {
@@ -201,8 +199,8 @@ ChunkSet::Read(nsIInputStream* aIn, uint32_t aNumElements)
 
     aNumElements -= numToRead;
 
-    for (const uint32_t* c = chunks.begin(); c != chunks.end(); c++) {
-      rv = Set(*c);
+    for (uint32_t c : chunks) {
+      rv = Set(c);
 
       if (NS_FAILED(rv)) {
         return rv;
@@ -216,11 +214,11 @@ ChunkSet::Read(nsIInputStream* aIn, uint32_t aNumElements)
 bool
 ChunkSet::HasSubrange(const Range& aSubrange) const
 {
-  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
-    if (range->Contains(aSubrange)) {
+  for (const Range& range : mRanges) {
+    if (range.Contains(aSubrange)) {
       return true;
-    } else if (!(aSubrange.Begin() > range->End() ||
-                 range->Begin() > aSubrange.End())) {
+    } else if (!(aSubrange.Begin() > range.End() ||
+                 range.Begin() > aSubrange.End())) {
       // In this case, aSubrange overlaps this range but is not a subrange.
       // because the ChunkSet implementation ensures that there are no
       // overlapping ranges, this means that aSubrange cannot be a subrange of

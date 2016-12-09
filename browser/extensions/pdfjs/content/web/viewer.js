@@ -1307,7 +1307,7 @@ var pdfjsWebLibs;
    });
    var localized = new Promise(function (resolve, reject) {
     if (!mozL10n) {
-     reject(new Error('mozL10n service is not available.'));
+     resolve();
      return;
     }
     if (mozL10n.getReadyState() !== 'loading') {
@@ -6717,7 +6717,7 @@ var pdfjsWebLibs;
     if (OverlayManager.active) {
      return;
     }
-    var handled = false;
+    var handled = false, ensureViewerFocused = false;
     var cmd = (evt.ctrlKey ? 1 : 0) | (evt.altKey ? 2 : 0) | (evt.shiftKey ? 4 : 0) | (evt.metaKey ? 8 : 0);
     var pdfViewer = PDFViewerApplication.pdfViewer;
     var isViewerInPresentationMode = pdfViewer && pdfViewer.isInPresentationMode;
@@ -6770,6 +6770,20 @@ var pdfjsWebLibs;
        handled = false;
       }
       break;
+     case 38:
+      if (isViewerInPresentationMode || PDFViewerApplication.page > 1) {
+       PDFViewerApplication.page = 1;
+       handled = true;
+       ensureViewerFocused = true;
+      }
+      break;
+     case 40:
+      if (isViewerInPresentationMode || PDFViewerApplication.page < PDFViewerApplication.pagesCount) {
+       PDFViewerApplication.page = PDFViewerApplication.pagesCount;
+       handled = true;
+       ensureViewerFocused = true;
+      }
+      break;
      }
     }
     if (cmd === 3 || cmd === 10) {
@@ -6785,6 +6799,9 @@ var pdfjsWebLibs;
      }
     }
     if (handled) {
+     if (ensureViewerFocused && !isViewerInPresentationMode) {
+      pdfViewer.focus();
+     }
      evt.preventDefault();
      return;
     }
@@ -6795,7 +6812,6 @@ var pdfjsWebLibs;
       return;
      }
     }
-    var ensureViewerFocused = false;
     if (cmd === 0) {
      switch (evt.keyCode) {
      case 38:

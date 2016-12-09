@@ -105,13 +105,12 @@ public:
 
   // About shared memory:
   //
-  // Any DOM TypedArray as well as any DOM ArrayBufferView that does
-  // not represent a JS DataView can map the memory of either a JS
-  // ArrayBuffer or a JS SharedArrayBuffer.  (DataView cannot view
-  // shared memory.)  If the TypedArray maps a SharedArrayBuffer the
-  // Length() and Data() accessors on the DOM view will return zero
-  // and nullptr; to get the actual length and data, call the
-  // LengthAllowShared() and DataAllowShared() accessors instead.
+  // Any DOM TypedArray as well as any DOM ArrayBufferView can map the
+  // memory of either a JS ArrayBuffer or a JS SharedArrayBuffer.  If
+  // the TypedArray maps a SharedArrayBuffer the Length() and Data()
+  // accessors on the DOM view will return zero and nullptr; to get
+  // the actual length and data, call the LengthAllowShared() and
+  // DataAllowShared() accessors instead.
   //
   // Two methods are available for determining if a DOM view maps
   // shared memory.  The IsShared() method is cheap and can be called

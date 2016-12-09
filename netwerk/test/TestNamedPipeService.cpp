@@ -18,6 +18,41 @@
 
 using namespace mozilla;
 
+namespace {
+
+/**
+ * Unlike a monitor, an event allows a thread to wait on another thread
+ * completing an action without regard to ordering of the wait and the notify.
+ */
+class Event
+{
+public:
+  explicit Event(const char* aName)
+    : mMonitor(aName) { }
+
+  ~Event() = default;
+
+  void Set() {
+    MonitorAutoLock lock(mMonitor);
+    MOZ_ASSERT(!mSignaled);
+    mSignaled = true;
+    mMonitor.Notify();
+  }
+  void Wait() {
+    MonitorAutoLock lock(mMonitor);
+    while (!mSignaled) {
+      lock.Wait();
+    }
+    mSignaled = false;
+  }
+
+private:
+  Monitor mMonitor;
+  bool mSignaled = false;
+};
+
+} // anonymous namespace
+
 class nsNamedPipeDataObserver : public nsINamedPipeDataObserver
 {
 public:
@@ -37,7 +72,7 @@ private:
   HANDLE mPipe;
   OVERLAPPED mOverlapped;
   Atomic<uint32_t> mBytesTransferred;
-  Monitor mMonitor;
+  Event mEvent;
 };
 
 NS_IMPL_ISUPPORTS(nsNamedPipeDataObserver, nsINamedPipeDataObserver)
@@ -46,7 +81,7 @@ nsNamedPipeDataObserver::nsNamedPipeDataObserver(HANDLE aPipe)
   : mPipe(aPipe)
   , mOverlapped()
   , mBytesTransferred(0)
-  , mMonitor("named-pipe")
+  , mEvent("named-pipe")
 {
   mOverlapped.hEvent = CreateEventA(nullptr, TRUE, TRUE, "named-pipe");
 }
@@ -59,8 +94,7 @@ nsNamedPipeDataObserver::Read(void* aBuffer, uint32_t aSize)
     switch(GetLastError()) {
       case ERROR_IO_PENDING:
         {
-          MonitorAutoLock lock(mMonitor);
-          mMonitor.Wait();
+          mEvent.Wait();
         }
         if (!GetOverlappedResult(mPipe, &mOverlapped, &bytesRead, FALSE)) {
           ADD_FAILURE() << "GetOverlappedResult failed";
@@ -77,8 +111,7 @@ nsNamedPipeDataObserver::Read(void* aBuffer, uint32_t aSize)
         return -1;
     }
   } else {
-    MonitorAutoLock lock(mMonitor);
-    mMonitor.Wait();
+    mEvent.Wait();
 
     if (mBytesTransferred != bytesRead) {
       ADD_FAILURE() << "GetOverlappedResult mismatch";
@@ -98,8 +131,7 @@ nsNamedPipeDataObserver::Write(const void* aBuffer, uint32_t aSize)
     switch(GetLastError()) {
       case ERROR_IO_PENDING:
         {
-          MonitorAutoLock lock(mMonitor);
-          mMonitor.Wait();
+          mEvent.Wait();
         }
         if (!GetOverlappedResult(mPipe, &mOverlapped, &bytesWritten, FALSE)) {
           ADD_FAILURE() << "GetOverlappedResult failed";
@@ -116,8 +148,7 @@ nsNamedPipeDataObserver::Write(const void* aBuffer, uint32_t aSize)
         return -1;
     }
   } else {
-    MonitorAutoLock lock(mMonitor);
-    mMonitor.Wait();
+    mEvent.Wait();
 
     if (mBytesTransferred != bytesWritten) {
       ADD_FAILURE() << "GetOverlappedResult mismatch";
@@ -155,8 +186,7 @@ nsNamedPipeDataObserver::OnDataAvailable(uint32_t aBytesTransferred,
   }
 
   mBytesTransferred += aBytesTransferred;
-  MonitorAutoLock lock(mMonitor);
-  mMonitor.Notify();
+  mEvent.Set();
 
   return NS_OK;
 }
