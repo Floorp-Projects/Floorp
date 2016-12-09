@@ -24,7 +24,8 @@
             <xul:hbox flex="1" class="browserSidebarContainer">
               <xul:vbox flex="1" class="browserContainer">
                 <xul:stack flex="1" class="browserStack" anonid="browserStack">
-                  <xul:browser anonid="initialBrowser" type="content-primary" message="true" messagemanagergroup="browsers"
+                  <xul:browser anonid="initialBrowser" type="content" message="true" messagemanagergroup="browsers"
+                               primary="true"
                                xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup,selectmenulist,datetimepicker"/>
                 </xul:stack>
               </xul:vbox>
@@ -1092,9 +1093,9 @@
             var oldBrowser = this.mCurrentBrowser;
 
             if (!gMultiProcessBrowser) {
-              oldBrowser.setAttribute("type", "content");
+              oldBrowser.removeAttribute("primary");
               oldBrowser.docShellIsActive = false;
-              newBrowser.setAttribute("type", "content-primary");
+              newBrowser.setAttribute("primary", "true");
               newBrowser.docShellIsActive =
                 (window.windowState != window.STATE_MINIMIZED);
             }
@@ -2622,7 +2623,7 @@
             }
 
             // We are no longer the primary content area.
-            browser.setAttribute("type", "content");
+            browser.removeAttribute("primary");
 
             // Remove this tab as the owner of any other tabs, since it's going away.
             for (let tab of this.tabs) {
@@ -3757,7 +3758,7 @@
               this.destroy();
 
               let toBrowser = this.requestedTab.linkedBrowser;
-              toBrowser.setAttribute("type", "content-primary");
+              toBrowser.setAttribute("primary", "true");
 
               this.tabbrowser._adjustFocusAfterTabSwitch(this.requestedTab);
 
@@ -3766,7 +3767,7 @@
               // before we were able to finalize, in which case, fromBrowser
               // doesn't exist.
               if (fromBrowser) {
-                fromBrowser.setAttribute("type", "content");
+                fromBrowser.removeAttribute("primary");
               }
 
               let event = new CustomEvent("TabSwitchDone", {

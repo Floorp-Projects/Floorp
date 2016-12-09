@@ -155,7 +155,7 @@
   </toolbox>
 
   <vbox id="appcontent" flex="1">
-    <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
+    <browser id="content" type="content" primary="true" name="content" src="about:blank" flex="1"
              disablehistory="true" context="viewSourceContextMenu" />
     <findbar id="FindToolbar" browserid="content"/>
   </vbox>
