@@ -1,11 +1,8 @@
 import gzip as gzip_module
 from cStringIO import StringIO
-import os
 
 def main(request, response):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(dir_path, 'resource_timing_test0.xml')
-    f = open(file_path, 'r')
+    f = open('resource-timing/resources/resource_timing_test0.xml', 'r')
     output = f.read()
 
     out = StringIO()
