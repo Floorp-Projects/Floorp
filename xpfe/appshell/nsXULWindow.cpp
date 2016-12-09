@@ -1685,7 +1685,7 @@ nsXULWindow::GetWindowDOMElement() const
 }
 
 nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-   bool aPrimary, bool aTargetable, const nsAString& aID)
+   bool aPrimary, const nsAString& aID)
 {
   nsContentShellInfo* shellInfo = nullptr;
 
@@ -1721,37 +1721,6 @@ nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
       mPrimaryContentShell = nullptr;
   }
 
-  if (aTargetable) {
-#ifdef DEBUG
-    int32_t debugCount = mTargetableShells.Count();
-    int32_t debugCounter;
-    for (debugCounter = debugCount - 1; debugCounter >= 0; --debugCounter) {
-      nsCOMPtr<nsIDocShellTreeItem> curItem =
-        do_QueryReferent(mTargetableShells[debugCounter]);
-      NS_ASSERTION(!SameCOMIdentity(curItem, aContentShell),
-                   "Adding already existing item to mTargetableShells");
-    }
-#endif
-    
-    // put the new shell at the start of the targetable shells list if either
-    // it's the new primary shell or there is no existing primary shell (which
-    // means that chances are this one just stopped being primary).  If we
-    // really cared, we could keep track of the "last no longer primary shell"
-    // explicitly, but it probably doesn't matter enough: the difference would
-    // only be felt in a situation where all shells were non-primary, which
-    // doesn't happen much.  In a situation where there is one and only one
-    // primary shell, and in which shells get unmarked as primary before some
-    // other shell gets marked as primary, this effectively stores the list of
-    // targetable shells in "most recently primary first" order.
-    bool inserted;
-    if (aPrimary || !mPrimaryContentShell) {
-      inserted = mTargetableShells.InsertObjectAt(contentShellWeak, 0);
-    } else {
-      inserted = mTargetableShells.AppendObject(contentShellWeak);
-    }
-    NS_ENSURE_TRUE(inserted, NS_ERROR_OUT_OF_MEMORY);
-  }
-
   return NS_OK;
 }
 
@@ -1771,15 +1740,6 @@ nsresult nsXULWindow::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
     }
   }
 
-  count = mTargetableShells.Count();
-  for (i = count - 1; i >= 0; --i) {
-    nsCOMPtr<nsIDocShellTreeItem> curItem =
-      do_QueryReferent(mTargetableShells[i]);
-    if (!curItem || SameCOMIdentity(curItem, aContentShell)) {
-      mTargetableShells.RemoveObjectAt(i);
-    }
-  }
-  
   return NS_OK;
 }
 
@@ -2298,6 +2258,17 @@ void nsXULWindow::SizeShellToWithLimit(int32_t aDesiredWidth,
     winHeight = std::max(winHeight + heightDelta, aDesiredHeight);
     SetSize(winWidth, winHeight, true);
   }
+}
+
+nsresult
+nsXULWindow::GetTabCount(uint32_t* aResult)
+{
+  if (mXULBrowserWindow) {
+    return mXULBrowserWindow->GetTabCount(aResult);
+  }
+
+  *aResult = 0;
+  return NS_OK;
 }
 
 //*****************************************************************************

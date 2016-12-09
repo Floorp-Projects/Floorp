@@ -87,6 +87,15 @@ StructuredLogger.prototype = {
     this._logData("test_end", data);
   },
 
+  assertionCount: function (test, count, minExpected=0, maxExpected=0) {
+      var data = {test: test,
+                  min_expected: minExpected,
+                  max_expected: maxExpected,
+                  count: count};
+
+    this._logData("assertion_count", data);
+  },
+
   suiteStart: function (tests, runinfo=null, versioninfo=null, deviceinfo=null, extra=null) {
     var data = {tests: tests.map(x => this._testId(x))};
     if (runinfo !== null) {

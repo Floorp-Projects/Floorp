@@ -319,8 +319,7 @@ nsGlobalWindow::DOMMinTimeoutValue() const {
   int32_t value = std::max(mBackPressureDelayMS, 0);
   // Don't use the background timeout value when there are audio contexts
   // present, so that baackground audio can keep running smoothly. (bug 1181073)
-  bool isBackground = mAudioContexts.IsEmpty() &&
-    (!mOuterWindow || mOuterWindow->IsBackground());
+  bool isBackground = mAudioContexts.IsEmpty() && IsBackgroundInternal();
   return
     std::max(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, value);
 }
@@ -654,6 +653,11 @@ void nsGlobalWindow::UnthrottleIdleCallbackRequests()
   }
 }
 
+bool
+nsGlobalWindow::IsBackgroundInternal() const
+{
+  return !mOuterWindow || mOuterWindow->IsBackground();
+}
 
 namespace mozilla {
 namespace dom {
@@ -7020,8 +7024,8 @@ nsGlobalWindow::CanMoveResizeWindows(bool aCallerIsChrome)
       }
     } else {
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
-      if (treeOwner) {
-        treeOwner->GetTargetableShellCount(&itemCount);
+      if (!treeOwner || NS_FAILED(treeOwner->GetTabCount(&itemCount))) {
+        itemCount = 0;
       }
     }
     if (itemCount > 1) {
@@ -12741,7 +12745,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
   uint32_t nestingLevel = sNestingLevel + 1;
   uint32_t realInterval = interval;
   if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL ||
-      mBackPressureDelayMS > 0) {
+      mBackPressureDelayMS > 0 || IsBackgroundInternal()) {
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
     realInterval = std::max(realInterval, uint32_t(DOMMinTimeoutValue()));

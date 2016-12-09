@@ -46,6 +46,11 @@ Allowed actions, and subfields:
       command - Command line of the process
       data - Output data from the process
 
+  assertion_count
+      count - Number of assertions produced
+      min_expected - Minimum expected number of assertions
+      max_expected - Maximum expected number of assertions
+
   log
       level [CRITICAL | ERROR | WARNING |
              INFO | DEBUG] - level of the logging message
@@ -421,6 +426,19 @@ class StructuredLogger(object):
                         start the process.
         """
         self._log_data("process_exit", data)
+
+    @log_action(TestId("test"),
+                Int("count"),
+                Int("min_expected"),
+                Int("max_expected"))
+    def assertion_count(self, data):
+        """Log count of assertions produced when running a test.
+
+        :param count: - Number of assertions produced
+        :param min_expected: - Minimum expected number of assertions
+        :param max_expected: - Maximum expected number of assertions
+        """
+        self._log_data("assertion_count", data)
 
 
 def _log_func(level_name):
