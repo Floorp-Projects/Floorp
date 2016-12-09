@@ -4283,11 +4283,9 @@ public:
   /**
    * Return FullPrerender when we should try to prerender the entire contents of the
    * transformed frame even when it's not completely visible (yet).
-   * |aDirtyRect| is updated to the area that should be prerendered.
    */
   static PrerenderDecision ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                             nsIFrame* aFrame,
-                                                             nsRect* aDirtyRect);
+                                                             nsIFrame* aFrame);
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
   bool MayBeAnimated(nsDisplayListBuilder* aBuilder);
