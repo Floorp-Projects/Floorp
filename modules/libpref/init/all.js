@@ -5553,3 +5553,4 @@ pref("dom.storageManager.enabled", false);
 // To enable the DOM implementation, turn on "dom.storageManager.enabled"
 pref("browser.storageManager.enabled", false);
 
+pref("dom.IntersectionObserver.enabled", true);
