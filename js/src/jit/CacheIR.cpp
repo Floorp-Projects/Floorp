@@ -85,6 +85,13 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachProxy(obj, objId, id))
                 return true;
+            return false;
+        }
+        if (idVal_.isInt32()) {
+            ValOperandId indexId = getElemKeyValueId();
+            if (tryAttachArgumentsObjectArg(obj, objId, indexId))
+                return true;
+            return false;
         }
         return false;
     }
@@ -846,6 +853,28 @@ GetPropIRGenerator::tryAttachMagicArgument(ValOperandId valId, ValOperandId inde
 
     Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
     writer.loadFrameArgumentResult(int32IndexId);
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
+                                                ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->is<ArgumentsObject>() || obj->as<ArgumentsObject>().hasOverriddenElement())
+        return false;
+
+    if (obj->is<MappedArgumentsObject>()) {
+        writer.guardClass(objId, GuardClassKind::MappedArguments);
+    } else {
+        MOZ_ASSERT(obj->is<UnmappedArgumentsObject>());
+        writer.guardClass(objId, GuardClassKind::UnmappedArguments);
+    }
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadArgumentsObjectArgResult(objId, int32IndexId);
     writer.typeMonitorResult();
     return true;
 }

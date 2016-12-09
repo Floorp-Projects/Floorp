@@ -52,7 +52,6 @@ namespace jit {
     _(GetElem_Dense)                             \
     _(GetElem_UnboxedArray)                      \
     _(GetElem_TypedArray)                        \
-    _(GetElem_Arguments)                         \
                                                  \
     _(SetElem_Fallback)                          \
     _(SetElem_DenseOrUnboxedArray)               \

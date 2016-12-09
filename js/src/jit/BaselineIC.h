@@ -560,53 +560,6 @@ class ICGetElem_TypedArray : public ICStub
     };
 };
 
-class ICGetElem_Arguments : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-  public:
-    enum Which { Mapped, Unmapped };
-
-  private:
-    ICGetElem_Arguments(JitCode* stubCode, ICStub* firstMonitorStub, Which which)
-      : ICMonitoredStub(ICStub::GetElem_Arguments, stubCode, firstMonitorStub)
-    {
-        extra_ = static_cast<uint16_t>(which);
-    }
-
-  public:
-    static ICGetElem_Arguments* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                                      ICGetElem_Arguments& other);
-
-    Which which() const {
-        return static_cast<Which>(extra_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      ICStub* firstMonitorStub_;
-      Which which_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(which_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, Which which)
-          : ICStubCompiler(cx, ICStub::GetElem_Arguments, Engine::Baseline),
-            firstMonitorStub_(firstMonitorStub),
-            which_(which)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetElem_Arguments>(space, getStubCode(), firstMonitorStub_, which_);
-        }
-    };
-};
-
 // SetElem
 //      JSOP_SETELEM
 //      JSOP_INITELEM
