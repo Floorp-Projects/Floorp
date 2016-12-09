@@ -243,6 +243,39 @@ test_jss()
     return ${RET}
 }
 
+create_objdir_dist_link()
+{
+    # compute relevant 'dist' OBJDIR_NAME subdirectory names for JSS and NSS
+    OS_TARGET=`uname -s`
+    OS_RELEASE=`uname -r | sed 's/-.*//' | sed 's/-.*//' | cut -d . -f1,2`
+    CPU_TAG=_`uname -m`
+    # OBJDIR_NAME_COMPILER appears to be defined for NSS but not JSS
+    OBJDIR_NAME_COMPILER=_cc
+    LIBC_TAG=_glibc
+    IMPL_STRATEGY=_PTH
+    if [ "${RUN_BITS}" = "64" ]; then
+        OBJDIR_TAG=_${RUN_BITS}_${RUN_OPT}.OBJ
+    else
+        OBJDIR_TAG=_${RUN_OPT}.OBJ
+    fi
+
+    # define NSS_OBJDIR_NAME
+    NSS_OBJDIR_NAME=${OS_TARGET}${OS_RELEASE}${CPU_TAG}${OBJDIR_NAME_COMPILER}
+    NSS_OBJDIR_NAME=${NSS_OBJDIR_NAME}${LIBC_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}
+    print_log "create_objdir_dist_link(): NSS_OBJDIR_NAME='${NSS_OBJDIR_NAME}'"
+
+    # define JSS_OBJDIR_NAME
+    JSS_OBJDIR_NAME=${OS_TARGET}${OS_RELEASE}${CPU_TAG}
+    JSS_OBJDIR_NAME=${JSS_OBJDIR_NAME}${LIBC_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}
+    print_log "create_objdir_dist_link(): JSS_OBJDIR_NAME='${JSS_OBJDIR_NAME}'"
+
+    if [ -e "${HGDIR}/dist/${NSS_OBJDIR_NAME}" ]; then
+        SOURCE=${HGDIR}/dist/${NSS_OBJDIR_NAME}
+        TARGET=${HGDIR}/dist/${JSS_OBJDIR_NAME}
+        ln -s ${SOURCE} ${TARGET} >/dev/null 2>&1
+    fi
+}
+
 build_and_test()
 {
     if [ -n "${BUILD_NSS}" ]; then
@@ -256,6 +289,7 @@ build_and_test()
     fi
 
     if [ -n "${BUILD_JSS}" ]; then
+        create_objdir_dist_link
         build_jss
         [ $? -eq 0 ] || return 1
     fi
