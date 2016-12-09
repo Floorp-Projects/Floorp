@@ -1606,6 +1606,25 @@ BaselineCacheIRCompiler::emitLoadStringCharResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitLoadFrameArgumentResult()
+{
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Bounds check.
+    masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs()), scratch);
+    masm.branch32(Assembler::AboveOrEqual, index, scratch, failure->label());
+
+    // Load the argument.
+    masm.loadValue(BaseValueIndex(BaselineFrameReg, index, BaselineFrame::offsetOfArg(0)), R0);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
     allocator.discardStack(masm);

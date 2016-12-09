@@ -951,22 +951,6 @@ static bool
 TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_Fallback* stub,
                      HandleValue lhs, HandleValue rhs, HandleValue res, bool* attached)
 {
-    if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS) && rhs.isInt32() &&
-        !ArgumentsGetElemStubExists(stub, ICGetElem_Arguments::Magic))
-    {
-        JitSpew(JitSpew_BaselineIC, "  Generating GetElem(MagicArgs[Int32]) stub");
-        ICGetElem_Arguments::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                               ICGetElem_Arguments::Magic);
-        ICStub* argsStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!argsStub)
-            return false;
-
-        stub->addNewStub(argsStub);
-        *attached = true;
-        return true;
-    }
-
-    // Otherwise, GetElem is only optimized on objects.
     if (!lhs.isObject())
         return true;
     RootedObject obj(cx, &lhs.toObject());
@@ -1364,44 +1348,6 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler& masm)
     MOZ_ASSERT(engine_ == Engine::Baseline);
 
     Label failure;
-    if (which_ == ICGetElem_Arguments::Magic) {
-        // Ensure that this is a magic arguments value.
-        masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
-
-        // Ensure that frame has not loaded different arguments object since.
-        masm.branchTest32(Assembler::NonZero,
-                          Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-                          Imm32(BaselineFrame::HAS_ARGS_OBJ),
-                          &failure);
-
-        // Ensure that index is an integer.
-        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
-        Register idx = masm.extractInt32(R1, ExtractTemp1);
-
-        AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-        Register scratch = regs.takeAny();
-
-        // Load num actual arguments
-        Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
-        masm.loadPtr(actualArgs, scratch);
-
-        // Ensure idx < argc
-        masm.branch32(Assembler::AboveOrEqual, idx, scratch, &failure);
-
-        // Load argval
-        masm.movePtr(BaselineFrameReg, scratch);
-        masm.addPtr(Imm32(BaselineFrame::offsetOfArg(0)), scratch);
-        BaseValueIndex element(scratch, idx);
-        masm.loadValue(element, R0);
-
-        // Enter type monitor IC to type-check result.
-        EmitEnterTypeMonitorIC(masm);
-
-        masm.bind(&failure);
-        EmitStubGuardFailure(masm);
-        return true;
-    }
-
     MOZ_ASSERT(which_ == ICGetElem_Arguments::Mapped ||
                which_ == ICGetElem_Arguments::Unmapped);
 

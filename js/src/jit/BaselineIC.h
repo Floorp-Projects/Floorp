@@ -564,7 +564,7 @@ class ICGetElem_Arguments : public ICMonitoredStub
 {
     friend class ICStubSpace;
   public:
-    enum Which { Mapped, Unmapped, Magic };
+    enum Which { Mapped, Unmapped };
 
   private:
     ICGetElem_Arguments(JitCode* stubCode, ICStub* firstMonitorStub, Which which)
