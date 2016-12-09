@@ -945,6 +945,17 @@ BaselineCacheIRCompiler::emitGuardIsSymbol()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardIsInt32()
+{
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+    masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardType()
 {
     ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
@@ -1561,10 +1572,36 @@ bool
 BaselineCacheIRCompiler::emitLoadStringLengthResult()
 {
     Register str = allocator.useRegister(masm, reader.stringOperandId());
-    AutoScratchRegister scratch(allocator, masm);
-
     masm.loadStringLength(str, R0.scratchReg());
     masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadStringCharResult()
+{
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchIfRope(str, failure->label());
+
+    // Bounds check, load string char.
+    masm.branch32(Assembler::BelowOrEqual, Address(str, JSString::offsetOfLength()),
+                  index, failure->label());
+    masm.loadStringChar(str, index, scratch);
+
+    // Load StaticString for this char.
+    masm.branch32(Assembler::AboveOrEqual, scratch, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
+                  failure->label());
+    masm.movePtr(ImmPtr(&cx_->staticStrings().unitStaticTable), R0.scratchReg());
+    masm.loadPtr(BaseIndex(R0.scratchReg(), scratch, ScalePointer), R0.scratchReg());
+
+    masm.tagValue(JSVAL_TYPE_STRING, R0.scratchReg(), R0);
     return true;
 }
 
