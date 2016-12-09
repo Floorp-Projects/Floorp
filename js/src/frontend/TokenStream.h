@@ -375,8 +375,7 @@ class MOZ_STACK_CLASS TokenStream
                                     va_list args);
     bool reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, unsigned errorNumber,
                                        va_list args);
-    bool reportStrictWarningErrorNumberVA(uint32_t offset, unsigned errorNumber,
-                                          va_list args);
+    bool reportExtraWarningErrorNumberVA(uint32_t offset, unsigned errorNumber, va_list args);
 
     // asm.js reporter
     void reportAsmJSError(uint32_t offset, unsigned errorNumber, ...);
