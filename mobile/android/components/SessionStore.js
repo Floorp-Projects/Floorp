@@ -311,7 +311,8 @@ SessionStore.prototype = {
         this._openTabs(data);
 
         if (data.shouldNotifyTabsOpenedToJava) {
-          Messaging.sendRequest({
+          let window = Services.wm.getMostRecentWindow("navigator:browser");
+          window.WindowEventDispatcher.sendRequest({
             type: "Tabs:TabsOpened"
           });
         }
@@ -979,7 +980,8 @@ SessionStore.prototype = {
 
     // If we have private data, send it to Java; otherwise, send null to
     // indicate that there is no private data
-    Messaging.sendRequest({
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    window.WindowEventDispatcher.sendRequest({
       type: "PrivateBrowsing:Data",
       session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
     });

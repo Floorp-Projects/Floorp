@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 
 add_task(function* test_snackbar_api() {
   Snackbars.show("This is a Snackbar", Snackbars.LENGTH_INDEFINITE, {
@@ -15,6 +16,10 @@ add_task(function* test_snackbar_api() {
       label: "Click me",
       callback: function () {}
     }
+  });
+
+  yield EventDispatcher.instance.sendRequestForResult({
+    type: "Robocop:WaitOnUI"
   });
 });
 

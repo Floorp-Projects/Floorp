@@ -14,9 +14,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
  "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
- "resource://gre/modules/Messaging.jsm", "Messaging");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
  "resource://gre/modules/Services.jsm", "Services");
 
@@ -26,7 +23,4 @@ function dump(msg) {
 
 function startup() {
     dump("zerdatime " + Date.now() + " - geckoivew chrome startup finished.");
-
-    // Notify Java that Gecko has loaded.
-    Messaging.sendRequest({ type: "Gecko:Ready" });
 }

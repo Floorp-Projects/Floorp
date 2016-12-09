@@ -7,11 +7,11 @@ package org.mozilla.gecko.tests;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
-public class testSnackbarAPI extends JavascriptTest implements NativeEventListener {
+public class testSnackbarAPI extends JavascriptTest implements BundleEventListener {
     // Snackbar.LENGTH_INDEFINITE: To avoid tests depending on the android design support library
     private static final int  SNACKBAR_LENGTH_INDEFINITE = -2;
 
@@ -20,14 +20,19 @@ public class testSnackbarAPI extends JavascriptTest implements NativeEventListen
     }
 
     @Override
-    public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
+    public void handleMessage(String event, GeckoBundle message, EventCallback callback) {
+        if ("Robocop:WaitOnUI".equals(event)) {
+            callback.sendSuccess(null);
+            return;
+        }
+
         mAsserter.is(event, "Snackbar:Show", "Received Snackbar:Show event");
 
         try {
             mAsserter.is(message.getString("message"), "This is a Snackbar", "Snackbar message");
             mAsserter.is(message.getInt("duration"), SNACKBAR_LENGTH_INDEFINITE, "Snackbar duration");
 
-            NativeJSObject action = message.getObject("action");
+            GeckoBundle action = message.getBundle("action");
 
             mAsserter.is(action.getString("label"), "Click me", "Snackbar action label");
 
@@ -40,13 +45,15 @@ public class testSnackbarAPI extends JavascriptTest implements NativeEventListen
     public void setUp() throws Exception {
         super.setUp();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Snackbar:Show");
+        EventDispatcher.getInstance().registerUiThreadListener(this, "Snackbar:Show");
+        EventDispatcher.getInstance().registerUiThreadListener(this, "Robocop:WaitOnUI");
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Snackbar:Show");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this, "Snackbar:Show");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this, "Robocop:WaitOnUI");
     }
 }
