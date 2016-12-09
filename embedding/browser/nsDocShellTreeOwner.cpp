@@ -478,14 +478,13 @@ nsDocShellTreeOwner::GetPersistence(bool* aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::GetTargetableShellCount(uint32_t* aResult)
+nsDocShellTreeOwner::GetTabCount(uint32_t* aResult)
 {
   if (mTreeOwner) {
-    mTreeOwner->GetTargetableShellCount(aResult);
-  } else {
-    *aResult = 0;
+    return mTreeOwner->GetTabCount(aResult);
   }
 
+  *aResult = 0;
   return NS_OK;
 }
 

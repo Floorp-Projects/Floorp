@@ -7020,8 +7020,8 @@ nsGlobalWindow::CanMoveResizeWindows(bool aCallerIsChrome)
       }
     } else {
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
-      if (treeOwner) {
-        treeOwner->GetTargetableShellCount(&itemCount);
+      if (!treeOwner || NS_FAILED(treeOwner->GetTabCount(&itemCount))) {
+        itemCount = 0;
       }
     }
     if (itemCount > 1) {

@@ -350,10 +350,13 @@ nsContentTreeOwner::GetPersistence(bool* aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::GetTargetableShellCount(uint32_t* aResult)
+nsContentTreeOwner::GetTabCount(uint32_t* aResult)
 {
-  NS_ENSURE_STATE(mXULWindow);
-  *aResult = mXULWindow->mTargetableShells.Count();
+  if (mXULWindow) {
+    return mXULWindow->GetTabCount(aResult);
+  }
+
+  *aResult = 0;
   return NS_OK;
 }
 

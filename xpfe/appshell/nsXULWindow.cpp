@@ -2300,6 +2300,17 @@ void nsXULWindow::SizeShellToWithLimit(int32_t aDesiredWidth,
   }
 }
 
+nsresult
+nsXULWindow::GetTabCount(uint32_t* aResult)
+{
+  if (mXULBrowserWindow) {
+    return mXULBrowserWindow->GetTabCount(aResult);
+  }
+
+  *aResult = 0;
+  return NS_OK;
+}
+
 //*****************************************************************************
 //*** nsContentShellInfo: Object Management
 //*****************************************************************************   
