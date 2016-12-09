@@ -39,6 +39,14 @@ public class BrowserActivity extends Activity {
 
         webView.getSettings().setJavaScriptEnabled(true);
 
+        // Enabling built in zooming shows the controls by default
+        webView.getSettings().setBuiltInZoomControls(true);
+        // So we hide the controls after enabling zooming
+        webView.getSettings().setDisplayZoomControls(false);
+
+        webView.setVerticalScrollBarEnabled(true);
+        webView.setHorizontalScrollBarEnabled(true);
+
         final TrackingProtectionWebViewClient webViewClient = new TrackingProtectionWebViewClient(getApplicationContext()) {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
