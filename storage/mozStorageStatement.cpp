@@ -26,6 +26,7 @@
 #include "nsDOMClassInfo.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/Printf.h"
 
 
 extern mozilla::LazyLogModule gStorageLog;
@@ -381,7 +382,7 @@ Statement::internalFinalize(bool aDestructing)
     // Finalizing it here would be useless and segfaultish.
     //
 
-    char *msg = ::PR_smprintf("SQL statement (%x) should have been finalized"
+    char *msg = ::mozilla::Smprintf("SQL statement (%p) should have been finalized"
       " before garbage-collection. For more details on this statement, set"
       " NSPR_LOG_MESSAGES=mozStorage:5 .",
       mDBStatement);
@@ -401,7 +402,7 @@ Statement::internalFinalize(bool aDestructing)
 
     MOZ_LOG(gStorageLog, LogLevel::Warning, (msg));
 
-    ::PR_smprintf_free(msg);
+    ::mozilla::SmprintfFree(msg);
   }
 
 #endif
