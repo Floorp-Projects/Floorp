@@ -27,7 +27,7 @@ const FilterTypes = I.Record({
 
 const Filters = I.Record({
   types: new FilterTypes({ all: true }),
-  text: "",
+  url: "",
 });
 
 function toggleFilterType(state, action) {
@@ -72,7 +72,7 @@ function filters(state = new Filters(), action) {
     case ENABLE_FILTER_TYPE_ONLY:
       return state.set("types", enableFilterTypeOnly(state.types, action));
     case SET_FILTER_TEXT:
-      return state.set("text", action.text);
+      return state.set("url", action.url);
     default:
       return state;
   }

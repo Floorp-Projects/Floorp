@@ -30,9 +30,9 @@ add_task(function* () {
 
   // Check the requests that were sent
   for (let [i, method] of METHODS.entries()) {
-    let item = RequestsMenu.getItemAtIndex(i);
-    is(item.method, method, `The ${method} request has the right method`);
-    is(item.url, requestUrl, `The ${method} request has the right URL`);
+    let { attachment } = RequestsMenu.getItemAtIndex(i);
+    is(attachment.method, method, `The ${method} request has the right method`);
+    is(attachment.url, requestUrl, `The ${method} request has the right URL`);
   }
 
   // Resend both requests without modification. Wait for resent OPTIONS, then POST.
@@ -61,7 +61,7 @@ add_task(function* () {
   // Check the resent requests
   for (let [i, method] of METHODS.entries()) {
     let index = i + 2;
-    let item = RequestsMenu.getItemAtIndex(index);
+    let item = RequestsMenu.getItemAtIndex(index).attachment;
     is(item.method, method, `The ${method} request has the right method`);
     is(item.url, requestUrl, `The ${method} request has the right URL`);
     is(item.status, 200, `The ${method} response has the right status`);

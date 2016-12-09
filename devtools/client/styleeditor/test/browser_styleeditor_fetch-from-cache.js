@@ -26,15 +26,15 @@ add_task(function* () {
   yield styleeditor.UI.editors[0].getSourceEditor();
 
   info("Checking Netmonitor contents.");
-  let items = [];
-  for (let item of netmonitor._view.RequestsMenu.items) {
-    if (item.url.endsWith("doc_uncached.css")) {
-      items.push(item);
+  let attachments = [];
+  for (let item of netmonitor._view.RequestsMenu) {
+    if (item.attachment.url.endsWith("doc_uncached.css")) {
+      attachments.push(item.attachment);
     }
   }
 
-  is(items.length, 2,
+  is(attachments.length, 2,
      "Got two requests for doc_uncached.css after Style Editor was loaded.");
-  ok(items[1].fromCache,
+  ok(attachments[1].fromCache,
      "Second request was loaded from browser cache");
 });

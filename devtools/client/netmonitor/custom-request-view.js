@@ -7,11 +7,12 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
-const { writeHeaderText,
-        getKeyWithEvent,
-        getUrlQuery,
-        parseQueryString } = require("./request-utils");
-const Actions = require("./actions/index");
+const {
+  writeHeaderText,
+  getKeyWithEvent,
+  getUrlQuery,
+  parseQueryString,
+} = require("./request-utils");
 
 /**
  * Functions handling the custom request view.
@@ -75,41 +76,37 @@ CustomRequestView.prototype = {
    */
   onUpdate: function (field) {
     let selectedItem = NetMonitorView.RequestsMenu.selectedItem;
-    let store = NetMonitorView.RequestsMenu.store;
     let value;
 
     switch (field) {
       case "method":
         value = $("#custom-method-value").value.trim();
-        store.dispatch(Actions.updateRequest(selectedItem.id, { method: value }));
+        selectedItem.attachment.method = value;
         break;
       case "url":
         value = $("#custom-url-value").value;
         this.updateCustomQuery(value);
-        store.dispatch(Actions.updateRequest(selectedItem.id, { url: value }));
+        selectedItem.attachment.url = value;
         break;
       case "query":
         let query = $("#custom-query-value").value;
         this.updateCustomUrl(query);
+        field = "url";
         value = $("#custom-url-value").value;
-        store.dispatch(Actions.updateRequest(selectedItem.id, { url: value }));
+        selectedItem.attachment.url = value;
         break;
       case "body":
         value = $("#custom-postdata-value").value;
-        store.dispatch(Actions.updateRequest(selectedItem.id, {
-          requestPostData: {
-            postData: { text: value }
-          }
-        }));
+        selectedItem.attachment.requestPostData = { postData: { text: value } };
         break;
       case "headers":
         let headersText = $("#custom-headers-value").value;
         value = parseHeadersText(headersText);
-        store.dispatch(Actions.updateRequest(selectedItem.id, {
-          requestHeaders: { headers: value }
-        }));
+        selectedItem.attachment.requestHeaders = { headers: value };
         break;
     }
+
+    NetMonitorView.RequestsMenu.updateMenuView(selectedItem, field, value);
   },
 
   /**
@@ -164,7 +161,7 @@ function parseHeadersText(text) {
  * Parse readable text list of a query string.
  *
  * @param string text
- *        Text of query string representation
+ *        Text of query string represetation
  * @return array
  *         Array of query params {name, value}
  */
