@@ -594,6 +594,8 @@ RTCPeerConnection.prototype = {
       }
     };
 
+    var stunServers = 0;
+
     rtcConfig.iceServers.forEach(server => {
       if (!server.urls) {
         throw new this._win.DOMException(msg + " - missing urls", "InvalidAccessError");
@@ -616,9 +618,11 @@ RTCPeerConnection.prototype = {
                             " https://bugzil.la/1247616");
           }
           this._hasTurnServer = true;
+          stunServers += 1;
         }
         else if (url.scheme in { stun:1, stuns:1 }) {
           this._hasStunServer = true;
+          stunServers += 1;
         }
         else if (!(url.scheme in { stun:1, stuns:1 })) {
           throw new this._win.DOMException(msg + " - improper scheme: " + url.scheme,
@@ -626,6 +630,11 @@ RTCPeerConnection.prototype = {
         }
         if (url.scheme in { stuns:1, turns:1 }) {
           this.logWarning(url.scheme.toUpperCase() + " is not yet supported.");
+        }
+        if (stunServers >= 5) {
+          this.logError("Using five or more STUN/TURN servers causes problems");
+        } else if (stunServers > 2) {
+          this.logWarning("Using more than two STUN/TURN servers slows down discovery");
         }
       });
     });
