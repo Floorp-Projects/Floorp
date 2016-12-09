@@ -43,10 +43,6 @@ public:
 
   ~AccurateSeekTask();
 
-  nsresult DropAudioUpToSeekTarget(MediaData* aSample);
-
-  nsresult DropVideoUpToSeekTarget(MediaData* aSample);
-
   void MaybeFinishSeek();
 
   /*
