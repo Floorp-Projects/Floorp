@@ -32,7 +32,7 @@ function* throttleTest(actuallyThrottle) {
       uploadBPSMax: 10000,
     },
   };
-  let client = NetMonitorController.webConsoleClient;
+  let client = monitor._controller.webConsoleClient;
 
   info("sending throttle request");
   let deferred = promise.defer();
