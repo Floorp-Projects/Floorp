@@ -8,7 +8,7 @@
 <item>this is a really really really really long test sentence</item>
 </richlistbox>
 <splitter/>
-<browser flex="1" src="" type="content-primary"/>
+<browser flex="1" src="" type="content" primary="true"/>
 </hbox>
 
 </window>
