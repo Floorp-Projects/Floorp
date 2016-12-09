@@ -46,7 +46,10 @@ public class BrowserActivity extends Activity {
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
-
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                urlBar.onProgressUpdate(newProgress);
+            }
         });
 
         urlBar.setOnUrlActionListener(new UrlBar.OnUrlAction() {

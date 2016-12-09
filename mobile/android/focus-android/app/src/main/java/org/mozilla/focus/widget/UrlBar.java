@@ -11,6 +11,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -34,6 +35,7 @@ public class UrlBar extends ViewFlipper {
     private EditText urlEditView;
     private TextView urlDisplayView;
     private View lockView;
+    private ProgressBar progressView;
 
     public UrlBar(Context context) {
         super(context);
@@ -71,14 +73,22 @@ public class UrlBar extends ViewFlipper {
         } else {
             lockView.setVisibility(View.GONE);
         }
+
+        progressView.setVisibility(View.VISIBLE);
     }
 
     public void onPageFinished() {
         setBackgroundResource(R.drawable.gradient_background);
+
+        progressView.setVisibility(View.INVISIBLE);
     }
 
     public void setOnUrlActionListener(OnUrlAction listener) {
         this.listener = listener;
+    }
+
+    public void onProgressUpdate(int progress) {
+        progressView.setProgress(progress);
     }
 
     @Override
@@ -86,6 +96,8 @@ public class UrlBar extends ViewFlipper {
         super.onFinishInflate();
 
         lockView = findViewById(R.id.lock);
+
+        progressView = (ProgressBar) findViewById(R.id.progress);
 
         urlEditView = (EditText) findViewById(R.id.url_edit);
         urlEditView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
