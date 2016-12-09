@@ -229,7 +229,9 @@ GlobalPCList.prototype = {
 };
 var _globalPCList = new GlobalPCList();
 
-function RTCIceCandidate() {}
+function RTCIceCandidate() {
+  this.candidate = this.sdpMid = this.sdpMLineIndex = null;
+}
 RTCIceCandidate.prototype = {
   classDescription: "RTCIceCandidate",
   classID: PC_ICE_CID,
@@ -240,7 +242,9 @@ RTCIceCandidate.prototype = {
   init: function(win) { this._win = win; },
 
   __init: function(dict) {
-    Object.assign(this, dict);
+    this.candidate = dict.candidate;
+    this.sdpMid = dict.sdpMid;
+    this.sdpMLineIndex = ("sdpMLineIndex" in dict)? dict.sdpMLineIndex : null;
   }
 };
 
@@ -730,7 +734,8 @@ RTCPeerConnection.prototype = {
             this._impl.createOffer(options);
           }));
         p = this._addIdentityAssertion(p, origin);
-        return p.then(sdp => Cu.cloneInto({ type: "offer", sdp: sdp }, this._win));
+        return p.then(
+          sdp => new this._win.RTCSessionDescription({ type: "offer", sdp: sdp }));
       });
     });
   },
@@ -764,7 +769,9 @@ RTCPeerConnection.prototype = {
             this._impl.createAnswer();
           }));
         p = this._addIdentityAssertion(p, origin);
-        return p.then(sdp => Cu.cloneInto({ type: "answer", sdp: sdp }, this._win));
+        return p.then(sdp => {
+          return new this._win.RTCSessionDescription({ type: "answer", sdp: sdp });
+        });
       });
     });
   },
@@ -974,15 +981,12 @@ RTCPeerConnection.prototype = {
       containsTrickle(topSection) || sections.every(containsTrickle);
   },
 
+
   addIceCandidate: function(c, onSuccess, onError) {
     return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
-      if (!c) {
-        // TODO: Implement processing for end-of-candidates (bug 1318167)
-        return Promise.resolve();
-      }
-      if (c.sdpMid === null && c.sdpMLineIndex === null) {
-        throw new this._win.DOMException("Invalid candidate (both sdpMid and sdpMLineIndex are null).",
-                                         "TypeError");
+      if (!c.candidate && !c.sdpMLineIndex) {
+        throw new this._win.DOMException("Invalid candidate passed to addIceCandidate!",
+                                         "InvalidParameterError");
       }
       return this._chain(() => new this._win.Promise((resolve, reject) => {
         this._onAddIceCandidateSuccess = resolve;
@@ -1126,7 +1130,8 @@ RTCPeerConnection.prototype = {
       return null;
     }
 
-    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
+    return new this._win.RTCSessionDescription({ type: this._localType,
+                                                    sdp: sdp });
   },
 
   get remoteDescription() {
@@ -1135,7 +1140,8 @@ RTCPeerConnection.prototype = {
     if (sdp.length == 0) {
       return null;
     }
-    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
+    return new this._win.RTCSessionDescription({ type: this._remoteType,
+                                                    sdp: sdp });
   },
 
   get peerIdentity() { return this._peerIdentity; },
