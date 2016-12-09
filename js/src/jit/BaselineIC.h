@@ -419,29 +419,6 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     };
 };
 
-class ICGetElem_String : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICGetElem_String(JitCode* stubCode)
-      : ICStub(ICStub::GetElem_String, stubCode) {}
-
-  public:
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetElem_String, Engine::Baseline) {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetElem_String>(space, getStubCode());
-        }
-    };
-};
-
 class ICGetElem_Dense : public ICMonitoredStub
 {
     friend class ICStubSpace;
