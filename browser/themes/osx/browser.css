@@ -177,7 +177,6 @@
 
 #nav-bar {
   -moz-appearance: none;
-  padding: 4px;
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
               linear-gradient(hsl(0,0%,93%), hsl(0,0%,83%));
   background-clip: border-box;
@@ -238,6 +237,10 @@
   #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-window-inactive:not(:-moz-lwtheme) {
     border-top-color: hsla(0,0%,0%,.05);
   }
+}
+
+#nav-bar-customization-target {
+  padding: 4px;
 }
 
 #PersonalToolbar {
@@ -674,13 +677,21 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover {
   padding: 0;
 }
 
+toolbar .toolbarbutton-1[type="menu-button"] {
+  margin: 0;
+}
+
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
 }
 
 .toolbarbutton-1 {
-  margin: 4px 2px;
+  margin: 0 4px;
+}
+
+toolbar .toolbarbutton-1:not([type="menu-button"]) {
+  margin: 0 2px;
 }
 
 /**
@@ -715,13 +726,22 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   margin: 0 4px;
 }
 
-#PanelUI-button {
-  margin-top: -4px;
-  margin-bottom: -4px;
-  margin-inline-start: 5px;
-  margin-inline-end: 1px;
-  padding-inline-start: 5px;
+#nav-bar .toolbarbutton-1:not(#back-button):not(#forward-button) {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+#nav-bar #PanelUI-button {
   -moz-box-align: center;
+}
+
+#nav-bar #PanelUI-menu-button {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin-inline-start: 7px;
+  margin-inline-end: 7px;
 }
 
 %include ../shared/toolbarbuttons.inc.css
@@ -1128,8 +1148,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
                               rgba(255,255,255,0.2) 50%,
                               rgba(255,255,255,0.1) 50%,
                               rgba(255,255,255,0.2)) repeat-x;
-  margin-top: 0;
-  margin-bottom: 0;
 }
 
 #back-button:-moz-lwtheme,
