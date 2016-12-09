@@ -274,12 +274,10 @@ nsDocShellTreeOwner::EnsureContentTreeOwner()
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                       bool aPrimary, bool aTargetable,
-                                       const nsAString& aID)
+                                       bool aPrimary, const nsAString& aID)
 {
   if (mTreeOwner)
-    return mTreeOwner->ContentShellAdded(aContentShell, aPrimary, aTargetable,
-                                         aID);
+    return mTreeOwner->ContentShellAdded(aContentShell, aPrimary, aID);
 
   EnsureContentTreeOwner();
   aContentShell->SetTreeOwner(mContentTreeOwner);
