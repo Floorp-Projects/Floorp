@@ -403,30 +403,6 @@ AccurateSeekTask::MaybeFinishSeek()
 }
 
 void
-AccurateSeekTask::OnSeekResolved(media::TimeUnit)
-{
-  AssertOwnerThread();
-
-  // We must decode the first samples of active streams, so we can determine
-  // the new stream time. So dispatch tasks to do that.
-  if (!mDoneVideoSeeking) {
-    RequestVideoData();
-  }
-  if (!mDoneAudioSeeking) {
-    RequestAudioData();
-  }
-}
-
-void
-AccurateSeekTask::OnSeekRejected(nsresult aResult)
-{
-  AssertOwnerThread();
-
-  MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
-  RejectIfExist(aResult, __func__);
-}
-
-void
 AccurateSeekTask::AdjustFastSeekIfNeeded(MediaData* aSample)
 {
   AssertOwnerThread();

@@ -914,12 +914,10 @@ private:
     mSeekRequest.Begin(Reader()->Seek(mTask->mTarget, mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (media::TimeUnit aUnit) {
-               mSeekRequest.Complete();
-               mTask->OnSeekResolved(aUnit);
+               OnSeekResolved(aUnit);
              },
              [this] (nsresult aResult) {
-               mSeekRequest.Complete();
-               mTask->OnSeekRejected(aResult);
+               OnSeekRejected(aResult);
              }));
 
     // Let SeekTask handle the following operations once the demuxer seeking is done.
@@ -936,6 +934,26 @@ private:
   int64_t CalculateNewCurrentTime() const override
   {
     return mSeekTask->CalculateNewCurrentTime();
+  }
+
+  void OnSeekResolved(media::TimeUnit) {
+    mSeekRequest.Complete();
+
+    // We must decode the first samples of active streams, so we can determine
+    // the new stream time. So dispatch tasks to do that.
+    if (!mTask->mDoneVideoSeeking) {
+      mTask->RequestVideoData();
+    }
+    if (!mTask->mDoneAudioSeeking) {
+      mTask->RequestAudioData();
+    }
+  }
+
+  void OnSeekRejected(nsresult aResult) {
+    mSeekRequest.Complete();
+
+    MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
+    mTask->RejectIfExist(aResult, __func__);
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)

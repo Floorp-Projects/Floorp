@@ -53,10 +53,6 @@ public:
 
   void MaybeFinishSeek();
 
-  void OnSeekResolved(media::TimeUnit);
-
-  void OnSeekRejected(nsresult aResult);
-
   void AdjustFastSeekIfNeeded(MediaData* aSample);
 
   /*
