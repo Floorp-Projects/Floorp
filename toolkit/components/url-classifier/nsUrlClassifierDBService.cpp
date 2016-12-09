@@ -39,7 +39,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
-#include "prprf.h"
 #include "prnetdb.h"
 #include "Entries.h"
 #include "HashStore.h"

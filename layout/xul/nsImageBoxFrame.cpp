@@ -30,7 +30,6 @@
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
 #include "nsContainerFrame.h"
-#include "prprf.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsNameSpaceManager.h"

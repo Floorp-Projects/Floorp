@@ -29,7 +29,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIConsoleService.h"
 #include "nsXPIDLString.h"
-#include "prprf.h"
 #include "nsEscape.h"
 #include "nsIWebNavigation.h"
 #include "nsIDocShell.h"

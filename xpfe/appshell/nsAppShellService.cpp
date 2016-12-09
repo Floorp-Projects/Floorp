@@ -21,8 +21,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsWebShellWindow.h"
 
-#include "prprf.h"
-
 #include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"

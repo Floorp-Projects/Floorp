@@ -8,7 +8,6 @@
 #include "GLContextProvider.h"
 #include "nsUnicharUtils.h"
 #include "prenv.h"
-#include "prprf.h"
 #include "nsHashKeys.h"
 #include "nsVersionComparator.h"
 #include "AndroidBridge.h"

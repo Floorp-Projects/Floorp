@@ -26,7 +26,6 @@
 #include "PLDHashTable.h"
 #include "plbase64.h"
 #include "mozilla/Logging.h"
-#include "prprf.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ContentPrefs.h"

@@ -19,7 +19,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
-#include "prprf.h"
 #include "rdf.h"
 #include "rdfutil.h"
 
