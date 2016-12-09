@@ -377,9 +377,7 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
                   borderPadding.left, borderPadding.top, 0, aStatus);
 
       if (child->GetContent() == mVideoControls && isBSizeShrinkWrapping) {
-        // Resolve our own BSize based on the controls' size in the same axis.
-        contentBoxBSize = myWM.IsOrthogonalTo(wm) ?
-          kidDesiredSize.ISize(wm) : kidDesiredSize.BSize(wm);
+        contentBoxBSize = kidDesiredSize.BSize(myWM);
       }
 
       FinishReflowChild(child, aPresContext,
