@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 #include "Helpers.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Printf.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIAsyncInputStream.h"
@@ -24,7 +25,6 @@
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "prprf.h"
 #include "prinrval.h"
 
 using namespace mozilla;
@@ -114,7 +114,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     PRIntervalTime start = PR_IntervalNow();
     for (uint32_t i = 0; i < ITERATIONS; i++) {
         uint32_t writeCount;
-        char *buf = PR_smprintf("%d %s", i, kTestPattern);
+        char *buf = mozilla::Smprintf("%d %s", i, kTestPattern);
         uint32_t len = strlen(buf);
         rv = WriteAll(out, buf, len, &writeCount);
         if (gTrace) {
@@ -124,7 +124,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
             }
             printf("\n");
         }
-        PR_smprintf_free(buf);
+        mozilla::SmprintfFree(buf);
         if (NS_FAILED(rv)) return rv;
         total += writeCount;
     }
@@ -232,7 +232,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     uint32_t total = 0;
     for (uint32_t i = 0; i < ITERATIONS; i++) {
         uint32_t writeCount;
-        char* buf = PR_smprintf("%d %s", i, kTestPattern);
+        char* buf = mozilla::Smprintf("%d %s", i, kTestPattern);
         uint32_t len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = std::min(1u, len);
@@ -243,7 +243,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
 
         if (gTrace)
             printf("wrote %d bytes: %s\n", writeCount, buf);
-        PR_smprintf_free(buf);
+        mozilla::SmprintfFree(buf);
         //printf("calling Flush\n");
         out->Flush();
         //printf("calling WaitForReceipt\n");
@@ -345,7 +345,7 @@ TEST(Pipes, ChainedPipes)
     uint32_t total = 0;
     for (uint32_t i = 0; i < ITERATIONS; i++) {
         uint32_t writeCount;
-        char* buf = PR_smprintf("%d %s", i, kTestPattern);
+        char* buf = mozilla::Smprintf("%d %s", i, kTestPattern);
         uint32_t len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = std::max(1u, len);
@@ -357,7 +357,7 @@ TEST(Pipes, ChainedPipes)
         if (gTrace)
             printf("wrote %d bytes: %s\n", writeCount, buf);
 
-        PR_smprintf_free(buf);
+        mozilla::SmprintfFree(buf);
     }
     if (gTrace) {
         printf("wrote total of %d bytes\n", total);
