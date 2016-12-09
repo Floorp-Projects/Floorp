@@ -30,7 +30,6 @@
 #include "pkix/pkixnss.h"
 #include "prerror.h"
 #include "prmem.h"
-#include "prprf.h"
 #include "secerr.h"
 
 #include "CNNICHashWhitelist.inc"

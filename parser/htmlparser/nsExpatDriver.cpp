@@ -15,7 +15,6 @@
 #include "nsIUnicharInputStream.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
-#include "prprf.h"
 #include "prmem.h"
 #include "nsTextFormatter.h"
 #include "nsDirectoryServiceDefs.h"

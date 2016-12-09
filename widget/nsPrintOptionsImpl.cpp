@@ -21,7 +21,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
-#include "prprf.h"
 
 #include "nsIStringEnumerator.h"
 #include "nsISupportsPrimitives.h"

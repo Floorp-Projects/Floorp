@@ -22,7 +22,6 @@
 #include "nsILineInputStream.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
-#include "prprf.h"
 #include "mozilla/storage.h"
 #include "mozilla/Attributes.h"
 #include "nsXULAppAPI.h"
