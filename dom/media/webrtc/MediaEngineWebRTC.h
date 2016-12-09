@@ -7,7 +7,6 @@
 
 #include "prcvar.h"
 #include "prthread.h"
-#include "prprf.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 
@@ -15,6 +14,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -150,7 +150,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioInput)
 
   virtual int GetNumOfRecordingDevices(int& aDevices) = 0;
-  virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+  virtual int GetRecordingDeviceName(int aIndex, char (&aStrNameUTF8)[128],
                                      char aStrGuidUTF8[128]) = 0;
   virtual int GetRecordingDeviceStatus(bool& aIsAvailable) = 0;
   virtual void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener) = 0;
@@ -241,7 +241,7 @@ public:
 #endif
   }
 
-  int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+  int GetRecordingDeviceName(int aIndex, char (&aStrNameUTF8)[128],
                              char aStrGuidUTF8[128])
   {
 #ifdef MOZ_WIDGET_ANDROID
@@ -252,8 +252,8 @@ public:
     if (!mDevices || devindex < 0) {
       return 1;
     }
-    PR_snprintf(aStrNameUTF8, 128, "%s%s", aIndex == -1 ? "default: " : "",
-                mDevices->device[devindex]->friendly_name);
+    SprintfLiteral(aStrNameUTF8, "%s%s", aIndex == -1 ? "default: " : "",
+		   mDevices->device[devindex]->friendly_name);
     aStrGuidUTF8[0] = '\0';
 #endif
     return 0;
@@ -345,7 +345,7 @@ public:
     return ptrVoEHw->GetNumOfRecordingDevices(aDevices);
   }
 
-  int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+  int GetRecordingDeviceName(int aIndex, char (&aStrNameUTF8)[128],
                              char aStrGuidUTF8[128])
   {
     ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
