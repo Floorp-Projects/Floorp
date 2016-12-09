@@ -181,7 +181,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
           nsresult rv = secMan->IsSystemPrincipal(originPrincipal,            \
                                                   &isSystem);                 \
           NS_ENSURE_SUCCESS(rv, rv);                                          \
-          if (isSystem) {                                                     \
+          if (isSystem && contentType != nsIContentPolicy::TYPE_DOCUMENT) {   \
               *decision = nsIContentPolicy::ACCEPT;                           \
               nsCOMPtr<nsINode> n = do_QueryInterface(context);               \
               if (!n) {                                                       \
