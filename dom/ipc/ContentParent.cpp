@@ -1791,6 +1791,7 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
 ContentParent::ContentParent(ContentParent* aOpener,
                              const nsAString& aRemoteType)
   : nsIContentParent()
+  , mLaunchTS(TimeStamp::Now())
   , mOpener(aOpener)
   , mRemoteType(aRemoteType)
   , mIsForBrowser(!mRemoteType.IsEmpty())
@@ -2505,6 +2506,10 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              OptionalURIParams* aUserContentCSSURL,
                                              nsTArray<LookAndFeelInt>* aLookAndFeelIntCache)
 {
+  Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_TIME_MS,
+                        static_cast<uint32_t>((TimeStamp::Now() - mLaunchTS)
+                                              .ToMilliseconds()));
+
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
   DebugOnly<nsresult> rv = io->GetOffline(aIsOffline);
