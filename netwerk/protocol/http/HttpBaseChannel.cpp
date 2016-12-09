@@ -2707,9 +2707,13 @@ void HttpBaseChannel::AssertPrivateBrowsingId()
 NS_IMETHODIMP
 HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener **_retval)
 {
+  LOG(("HttpBaseChannel::SetNewListener [this=%p, mListener=%p, newListener=%p]",
+       this, mListener.get(), aListener));
+
   if (!mTracingEnabled)
     return NS_ERROR_FAILURE;
 
+  NS_ENSURE_STATE(mListener);
   NS_ENSURE_ARG_POINTER(aListener);
 
   nsCOMPtr<nsIStreamListener> wrapper = new nsStreamListenerWrapper(mListener);
