@@ -101,9 +101,7 @@ protected:
 class DOMIntersectionObserver final : public nsISupports,
                                       public nsWrapperCache
 {
-  virtual ~DOMIntersectionObserver() {
-    Disconnect();
-  }
+  virtual ~DOMIntersectionObserver() { }
 
 public:
   DOMIntersectionObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
