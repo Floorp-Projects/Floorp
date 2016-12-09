@@ -731,13 +731,18 @@ class GCRuntime
 #endif // DEBUG
 
     bool isInsideUnsafeRegion() { return inUnsafeRegion != 0; }
-    void enterUnsafeRegion() { ++inUnsafeRegion; }
+    void enterUnsafeRegion() {
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+        ++inUnsafeRegion;
+    }
     void leaveUnsafeRegion() {
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
         MOZ_ASSERT(inUnsafeRegion > 0);
         --inUnsafeRegion;
     }
 
     void verifyIsSafeToGC() {
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
         MOZ_DIAGNOSTIC_ASSERT(!isInsideUnsafeRegion(),
                               "[AutoAssertNoGC] possible GC in GC-unsafe region");
     }

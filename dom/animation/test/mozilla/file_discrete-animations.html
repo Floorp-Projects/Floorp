@@ -143,18 +143,6 @@ for (let property in gMozillaSpecificProperties) {
    + from + "' and '" + to + "' with keyframe easing");
 }
 
-function propertyToIDL(property) {
-  var prefixMatch = property.match(/^-(\w+)-/);
-  if (prefixMatch) {
-    var prefix = prefixMatch[1] === "moz" ? "Moz" : prefixMatch[1];
-    property = prefix + property.substring(prefixMatch[0].length - 1);
-  }
-  // https://drafts.csswg.org/cssom/#css-property-to-idl-attribute
-  return property.replace(/-([a-z])/gi, function(str, group) {
-    return group.toUpperCase();
-  });
-}
-
 function testAnimationSamples(animation, idlName, testSamples) {
   const target = animation.effect.target;
   testSamples.forEach(testSample => {

@@ -568,6 +568,7 @@ template <class OptionsType>
 static KeyframeEffectParams
 KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
                               nsAString& aInvalidPacedProperty,
+                              CallerType aCallerType,
                               ErrorResult& aRv)
 {
   KeyframeEffectParams result;
@@ -578,10 +579,11 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
                                        result.mSpacingMode,
                                        result.mPacedProperty,
                                        aInvalidPacedProperty,
+                                       aCallerType,
                                        aRv);
     // Ignore iterationComposite if the Web Animations API is not enabled,
     // then the default value 'Replace' will be used.
-    if (AnimationUtils::IsCoreAPIEnabledForCaller()) {
+    if (AnimationUtils::IsCoreAPIEnabledForCaller(aCallerType)) {
       result.mIterationComposite = options.mIterationComposite;
       // FIXME: Bug 1311620: We don't support additive animation yet.
       if (options.mComposite != dom::CompositeOperation::Add) {
@@ -639,7 +641,8 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
 
   nsAutoString invalidPacedProperty;
   KeyframeEffectParams effectOptions =
-    KeyframeEffectParamsFromUnion(aOptions, invalidPacedProperty, aRv);
+    KeyframeEffectParamsFromUnion(aOptions, invalidPacedProperty,
+                                  aGlobal.CallerType(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -1255,10 +1258,21 @@ KeyframeEffectReadOnly::GetPresContext() const
 KeyframeEffectReadOnly::IsGeometricProperty(
   const nsCSSPropertyID aProperty)
 {
+  MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
+             "Property should be a longhand property");
+
   switch (aProperty) {
     case eCSSProperty_bottom:
     case eCSSProperty_height:
     case eCSSProperty_left:
+    case eCSSProperty_margin_bottom:
+    case eCSSProperty_margin_left:
+    case eCSSProperty_margin_right:
+    case eCSSProperty_margin_top:
+    case eCSSProperty_padding_bottom:
+    case eCSSProperty_padding_left:
+    case eCSSProperty_padding_right:
+    case eCSSProperty_padding_top:
     case eCSSProperty_right:
     case eCSSProperty_top:
     case eCSSProperty_width:
@@ -1305,12 +1319,6 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
   const nsIFrame* aFrame,
   AnimationPerformanceWarning::Type& aPerformanceWarning) const
 {
-  // We currently only expect this method to be called for effects whose
-  // animations are eligible for the compositor since, Animations that are
-  // paused, zero-duration, finished etc. should not block other animations from
-  // running on the compositor.
-  MOZ_ASSERT(mAnimation && mAnimation->IsPlaying());
-
   EffectSet* effectSet =
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
   for (const AnimationProperty& property : mProperties) {
@@ -1341,6 +1349,18 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
                                            aPerformanceWarning)) {
         return true;
       }
+    }
+  }
+
+  return false;
+}
+
+bool
+KeyframeEffectReadOnly::HasGeometricProperties() const
+{
+  for (const AnimationProperty& property : mProperties) {
+    if (IsGeometricProperty(property.mProperty)) {
+      return true;
     }
   }
 

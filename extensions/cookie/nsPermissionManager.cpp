@@ -604,9 +604,17 @@ IsExpandedPrincipal(nsIPrincipal* aPrincipal)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsPermissionManager::PermissionKey::PermissionKey(nsIPrincipal* aPrincipal)
+nsPermissionManager::PermissionKey*
+nsPermissionManager::PermissionKey::CreateFromPrincipal(nsIPrincipal* aPrincipal,
+                                                        nsresult& aResult)
 {
-  MOZ_ALWAYS_SUCCEEDS(GetOriginFromPrincipal(aPrincipal, mOrigin));
+  nsAutoCString origin;
+  aResult = GetOriginFromPrincipal(aPrincipal, origin);
+  if (NS_WARN_IF(NS_FAILED(aResult))) {
+    return nullptr;
+  }
+
+  return new PermissionKey(origin);
 }
 
 /**
@@ -1584,7 +1592,13 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
   // When an entry already exists, PutEntry will return that, instead
   // of adding a new one
-  RefPtr<PermissionKey> key = new PermissionKey(aPrincipal);
+  RefPtr<PermissionKey> key =
+    PermissionKey::CreateFromPrincipal(aPrincipal, rv);
+  if (!key) {
+    MOZ_ASSERT(NS_FAILED(rv));
+    return rv;
+  }
+
   PermissionHashKey* entry = mPermissionTable.PutEntry(key);
   if (!entry) return NS_ERROR_FAILURE;
   if (!entry->GetKey()) {
@@ -2133,10 +2147,14 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType,
                                           bool aExactHostMatch)
 {
-  PermissionHashKey* entry = nullptr;
+  nsresult rv;
+  RefPtr<PermissionKey> key =
+    PermissionKey::CreateFromPrincipal(aPrincipal, rv);
+  if (!key) {
+    return nullptr;
+  }
 
-  RefPtr<PermissionKey> key = new PermissionKey(aPrincipal);
-  entry = mPermissionTable.GetEntry(key);
+  PermissionHashKey* entry = mPermissionTable.GetEntry(key);
 
   if (entry) {
     PermissionEntry permEntry = entry->GetPermission(aType);
@@ -2252,7 +2270,12 @@ NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI, nsISimpleEnumerato
   nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<PermissionKey> key = new PermissionKey(principal);
+  RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(principal, rv);
+  if (!key) {
+    MOZ_ASSERT(NS_FAILED(rv));
+    return rv;
+  }
+
   PermissionHashKey* entry = mPermissionTable.GetEntry(key);
 
   if (entry) {

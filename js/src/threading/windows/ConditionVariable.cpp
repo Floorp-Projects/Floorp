@@ -268,7 +268,7 @@ public:
       // A race condition similar to the case described above could
       // occur, so waitResult could be WAIT_TIMEOUT, but that doesn't
       // matter for the actions that need to be taken.
-      MOZ_RELEASE_ASSERT(waitResult = WAIT_OBJECT_0 + 1 ||
+      MOZ_RELEASE_ASSERT(waitResult == WAIT_OBJECT_0 + 1 ||
                          waitResult == WAIT_TIMEOUT);
 
       BOOL success = ResetEvent(wakeAllEvent_);

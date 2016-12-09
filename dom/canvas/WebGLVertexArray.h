@@ -23,7 +23,6 @@ class WebGLVertexArray
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLVertexArray>
     , public LinkedListElement<WebGLVertexArray>
-    , public WebGLContextBoundObject
 {
 public:
     static WebGLVertexArray* Create(WebGLContext* webgl);
@@ -44,7 +43,7 @@ public:
 
     // Implement parent classes:
     void Delete();
-    bool IsVertexArray();
+    bool IsVertexArray() const;
 
     WebGLContext* GetParentObject() const {
         return mContext;
@@ -67,7 +66,7 @@ protected:
     virtual void GenVertexArray() = 0;
     virtual void BindVertexArrayImpl() = 0;
     virtual void DeleteImpl() = 0;
-    virtual bool IsVertexArrayImpl() = 0;
+    virtual bool IsVertexArrayImpl() const = 0;
 
     GLuint mGLName;
     nsTArray<WebGLVertexAttribData> mAttribs;

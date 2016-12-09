@@ -9,7 +9,7 @@
 var BUGNUMBER = 575688;
 var summary = 'DataView tests';
 
-function test() {
+function test(sharedMem) {
     function die(message, uplevel) {
         var e = new Error(message);
         var frame = e.stack.split("\n")[uplevel];
@@ -50,12 +50,27 @@ function test() {
         }
     }
 
+    function bufferize(u8array) {
+	if (!sharedMem)
+	    return u8array.buffer;
+
+	let v = new Uint8Array(new SharedArrayBuffer(u8array.buffer.byteLength));
+	v.set(u8array);
+
+	// Sanity checking
+	assertEq(v.buffer instanceof SharedArrayBuffer, true);
+	assertEq(v.buffer.byteLength, u8array.buffer.byteLength);
+	assertEq(u8array[0], v[0]);
+
+	return v.buffer;
+    }
+
     enterFunc ('test');
     printBugNumber(BUGNUMBER);
     printStatus(summary);
 
     // testConstructor
-    buffer = (new Uint8Array([1, 2])).buffer;
+    buffer = bufferize(new Uint8Array([1, 2]));
     checkThrow(() => new DataView(buffer, 0, 3), RangeError);
     checkThrow(() => new DataView(buffer, 1, 2), RangeError);
     checkThrow(() => new DataView(buffer, 2, 1), RangeError);
@@ -69,7 +84,7 @@ function test() {
     // testIntegerGets(start=0, length=16)
     var data1 = [0,1,2,3,0x64,0x65,0x66,0x67,0x80,0x81,0x82,0x83,252,253,254,255];
     var data1_r = data1.slice().reverse();
-    var buffer1 = new Uint8Array(data1).buffer;
+    var buffer1 = bufferize(new Uint8Array(data1));
     var view1 = new DataView(buffer1, 0, 16);
     view = view1;
     assertEq(view.getInt8(0), 0);
@@ -129,29 +144,29 @@ function test() {
     //   Little endian
     var data2 = [0,0,32,65];
     var data2_r = data2.slice().reverse();
-    var buffer2 = new Uint8Array(data2).buffer;
+    var buffer2 = bufferize(new Uint8Array(data2));
     view = new DataView(buffer2, 0, 4);
     assertEq(view.getFloat32(0, true), 10);
-    var buffer2_pad3 = new Uint8Array(Array(3).concat(data2)).buffer;
+    var buffer2_pad3 = bufferize(new Uint8Array(Array(3).concat(data2)));
     view = new DataView(buffer2_pad3, 0, 7);
     assertEq(view.getFloat32(3, true), 10);
-    var buffer2_pad7 = new Uint8Array(Array(7).concat(data2)).buffer;
+    var buffer2_pad7 = bufferize(new Uint8Array(Array(7).concat(data2)));
     view = new DataView(buffer2_pad7, 0, 11);
     assertEq(view.getFloat32(7, true), 10);
-    var buffer2_pad10 = new Uint8Array(Array(10).concat(data2)).buffer;
+    var buffer2_pad10 = bufferize(new Uint8Array(Array(10).concat(data2)));
     view = new DataView(buffer2_pad10, 0, 14);
     assertEq(view.getFloat32(10, true), 10);
     //   Big endian.
-    var buffer2_r = new Uint8Array(data2_r).buffer;
+    var buffer2_r = bufferize(new Uint8Array(data2_r));
     view = new DataView(buffer2_r, 0, 4);
     assertEq(view.getFloat32(0, false), 10);
-    var buffer2_r_pad3 = new Uint8Array(Array(3).concat(data2_r)).buffer;
+    var buffer2_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data2_r)));
     view = new DataView(buffer2_r_pad3, 0, 7);
     assertEq(view.getFloat32(3, false), 10);
-    var buffer2_r_pad7 = new Uint8Array(Array(7).concat(data2_r)).buffer;
+    var buffer2_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data2_r)));
     view = new DataView(buffer2_r_pad7, 0, 11);
     assertEq(view.getFloat32(7, false), 10);
-    var buffer2_r_pad10 = new Uint8Array(Array(10).concat(data2_r)).buffer;
+    var buffer2_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data2_r)));
     view = new DataView(buffer2_r_pad10, 0, 14);
     assertEq(view.getFloat32(10, false), 10);
 
@@ -159,29 +174,29 @@ function test() {
     //   Little endian
     var data3 = [164,112,157,63];
     var data3_r = data3.slice().reverse();
-    var buffer3 = new Uint8Array(data3).buffer;
+    var buffer3 = bufferize(new Uint8Array(data3));
     view = new DataView(buffer3, 0, 4);
     assertEq(view.getFloat32(0, true), 1.2300000190734863);
-    var buffer3_pad3 = new Uint8Array(Array(3).concat(data3)).buffer;
+    var buffer3_pad3 = bufferize(new Uint8Array(Array(3).concat(data3)));
     view = new DataView(buffer3_pad3, 0, 7);
     assertEq(view.getFloat32(3, true), 1.2300000190734863);
-    var buffer3_pad7 = new Uint8Array(Array(7).concat(data3)).buffer;
+    var buffer3_pad7 = bufferize(new Uint8Array(Array(7).concat(data3)));
     view = new DataView(buffer3_pad7, 0, 11);
     assertEq(view.getFloat32(7, true), 1.2300000190734863);
-    var buffer3_pad10 = new Uint8Array(Array(10).concat(data3)).buffer;
+    var buffer3_pad10 = bufferize(new Uint8Array(Array(10).concat(data3)));
     view = new DataView(buffer3_pad10, 0, 14);
     assertEq(view.getFloat32(10, true), 1.2300000190734863);
     //   Big endian.
-    var buffer3_r = new Uint8Array(data3_r).buffer;
+    var buffer3_r = bufferize(new Uint8Array(data3_r));
     view = new DataView(buffer3_r, 0, 4);
     assertEq(view.getFloat32(0, false), 1.2300000190734863);
-    var buffer3_r_pad3 = new Uint8Array(Array(3).concat(data3_r)).buffer;
+    var buffer3_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data3_r)));
     view = new DataView(buffer3_r_pad3, 0, 7);
     assertEq(view.getFloat32(3, false), 1.2300000190734863);
-    var buffer3_r_pad7 = new Uint8Array(Array(7).concat(data3_r)).buffer;
+    var buffer3_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data3_r)));
     view = new DataView(buffer3_r_pad7, 0, 11);
     assertEq(view.getFloat32(7, false), 1.2300000190734863);
-    var buffer3_r_pad10 = new Uint8Array(Array(10).concat(data3_r)).buffer;
+    var buffer3_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data3_r)));
     view = new DataView(buffer3_r_pad10, 0, 14);
     assertEq(view.getFloat32(10, false), 1.2300000190734863);
 
@@ -189,29 +204,29 @@ function test() {
     //   Little endian
     var data4 = [95,53,50,199];
     var data4_r = data4.slice().reverse();
-    var buffer4 = new Uint8Array(data4).buffer;
+    var buffer4 = bufferize(new Uint8Array(data4));
     view = new DataView(buffer4, 0, 4);
     assertEq(view.getFloat32(0, true), -45621.37109375);
-    var buffer4_pad3 = new Uint8Array(Array(3).concat(data4)).buffer;
+    var buffer4_pad3 = bufferize(new Uint8Array(Array(3).concat(data4)));
     view = new DataView(buffer4_pad3, 0, 7);
     assertEq(view.getFloat32(3, true), -45621.37109375);
-    var buffer4_pad7 = new Uint8Array(Array(7).concat(data4)).buffer;
+    var buffer4_pad7 = bufferize(new Uint8Array(Array(7).concat(data4)));
     view = new DataView(buffer4_pad7, 0, 11);
     assertEq(view.getFloat32(7, true), -45621.37109375);
-    var buffer4_pad10 = new Uint8Array(Array(10).concat(data4)).buffer;
+    var buffer4_pad10 = bufferize(new Uint8Array(Array(10).concat(data4)));
     view = new DataView(buffer4_pad10, 0, 14);
     assertEq(view.getFloat32(10, true), -45621.37109375);
     //   Big endian.
-    var buffer4_r = new Uint8Array(data4_r).buffer;
+    var buffer4_r = bufferize(new Uint8Array(data4_r));
     view = new DataView(buffer4_r, 0, 4);
     assertEq(view.getFloat32(0, false), -45621.37109375);
-    var buffer4_r_pad3 = new Uint8Array(Array(3).concat(data4_r)).buffer;
+    var buffer4_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data4_r)));
     view = new DataView(buffer4_r_pad3, 0, 7);
     assertEq(view.getFloat32(3, false), -45621.37109375);
-    var buffer4_r_pad7 = new Uint8Array(Array(7).concat(data4_r)).buffer;
+    var buffer4_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data4_r)));
     view = new DataView(buffer4_r_pad7, 0, 11);
     assertEq(view.getFloat32(7, false), -45621.37109375);
-    var buffer4_r_pad10 = new Uint8Array(Array(10).concat(data4_r)).buffer;
+    var buffer4_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data4_r)));
     view = new DataView(buffer4_r_pad10, 0, 14);
     assertEq(view.getFloat32(10, false), -45621.37109375);
 
@@ -219,29 +234,29 @@ function test() {
     //   Little endian
     var data5 = [255,255,255,127];
     var data5_r = data5.slice().reverse();
-    var buffer5 = new Uint8Array(data5).buffer;
+    var buffer5 = bufferize(new Uint8Array(data5));
     view = new DataView(buffer5, 0, 4);
     assertEq(view.getFloat32(0, true), NaN);
-    var buffer5_pad3 = new Uint8Array(Array(3).concat(data5)).buffer;
+    var buffer5_pad3 = bufferize(new Uint8Array(Array(3).concat(data5)));
     view = new DataView(buffer5_pad3, 0, 7);
     assertEq(view.getFloat32(3, true), NaN);
-    var buffer5_pad7 = new Uint8Array(Array(7).concat(data5)).buffer;
+    var buffer5_pad7 = bufferize(new Uint8Array(Array(7).concat(data5)));
     view = new DataView(buffer5_pad7, 0, 11);
     assertEq(view.getFloat32(7, true), NaN);
-    var buffer5_pad10 = new Uint8Array(Array(10).concat(data5)).buffer;
+    var buffer5_pad10 = bufferize(new Uint8Array(Array(10).concat(data5)));
     view = new DataView(buffer5_pad10, 0, 14);
     assertEq(view.getFloat32(10, true), NaN);
     //   Big endian.
-    var buffer5_r = new Uint8Array(data5_r).buffer;
+    var buffer5_r = bufferize(new Uint8Array(data5_r));
     view = new DataView(buffer5_r, 0, 4);
     assertEq(view.getFloat32(0, false), NaN);
-    var buffer5_r_pad3 = new Uint8Array(Array(3).concat(data5_r)).buffer;
+    var buffer5_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data5_r)));
     view = new DataView(buffer5_r_pad3, 0, 7);
     assertEq(view.getFloat32(3, false), NaN);
-    var buffer5_r_pad7 = new Uint8Array(Array(7).concat(data5_r)).buffer;
+    var buffer5_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data5_r)));
     view = new DataView(buffer5_r_pad7, 0, 11);
     assertEq(view.getFloat32(7, false), NaN);
-    var buffer5_r_pad10 = new Uint8Array(Array(10).concat(data5_r)).buffer;
+    var buffer5_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data5_r)));
     view = new DataView(buffer5_r_pad10, 0, 14);
     assertEq(view.getFloat32(10, false), NaN);
 
@@ -249,29 +264,29 @@ function test() {
     //   Little endian
     var data6 = [255,255,255,255];
     var data6_r = data6.slice().reverse();
-    var buffer6 = new Uint8Array(data6).buffer;
+    var buffer6 = bufferize(new Uint8Array(data6));
     view = new DataView(buffer6, 0, 4);
     assertEq(view.getFloat32(0, true), NaN);
-    var buffer6_pad3 = new Uint8Array(Array(3).concat(data6)).buffer;
+    var buffer6_pad3 = bufferize(new Uint8Array(Array(3).concat(data6)));
     view = new DataView(buffer6_pad3, 0, 7);
     assertEq(view.getFloat32(3, true), NaN);
-    var buffer6_pad7 = new Uint8Array(Array(7).concat(data6)).buffer;
+    var buffer6_pad7 = bufferize(new Uint8Array(Array(7).concat(data6)));
     view = new DataView(buffer6_pad7, 0, 11);
     assertEq(view.getFloat32(7, true), NaN);
-    var buffer6_pad10 = new Uint8Array(Array(10).concat(data6)).buffer;
+    var buffer6_pad10 = bufferize(new Uint8Array(Array(10).concat(data6)));
     view = new DataView(buffer6_pad10, 0, 14);
     assertEq(view.getFloat32(10, true), NaN);
     //   Big endian.
-    var buffer6_r = new Uint8Array(data6_r).buffer;
+    var buffer6_r = bufferize(new Uint8Array(data6_r));
     view = new DataView(buffer6_r, 0, 4);
     assertEq(view.getFloat32(0, false), NaN);
-    var buffer6_r_pad3 = new Uint8Array(Array(3).concat(data6_r)).buffer;
+    var buffer6_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data6_r)));
     view = new DataView(buffer6_r_pad3, 0, 7);
     assertEq(view.getFloat32(3, false), NaN);
-    var buffer6_r_pad7 = new Uint8Array(Array(7).concat(data6_r)).buffer;
+    var buffer6_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data6_r)));
     view = new DataView(buffer6_r_pad7, 0, 11);
     assertEq(view.getFloat32(7, false), NaN);
-    var buffer6_r_pad10 = new Uint8Array(Array(10).concat(data6_r)).buffer;
+    var buffer6_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data6_r)));
     view = new DataView(buffer6_r_pad10, 0, 14);
     assertEq(view.getFloat32(10, false), NaN);
 
@@ -279,29 +294,29 @@ function test() {
     //   Little endian
     var data7 = [0,0,0,0,0,0,36,64];
     var data7_r = data7.slice().reverse();
-    var buffer7 = new Uint8Array(data7).buffer;
+    var buffer7 = bufferize(new Uint8Array(data7));
     view = new DataView(buffer7, 0, 8);
     assertEq(view.getFloat64(0, true), 10);
-    var buffer7_pad3 = new Uint8Array(Array(3).concat(data7)).buffer;
+    var buffer7_pad3 = bufferize(new Uint8Array(Array(3).concat(data7)));
     view = new DataView(buffer7_pad3, 0, 11);
     assertEq(view.getFloat64(3, true), 10);
-    var buffer7_pad7 = new Uint8Array(Array(7).concat(data7)).buffer;
+    var buffer7_pad7 = bufferize(new Uint8Array(Array(7).concat(data7)));
     view = new DataView(buffer7_pad7, 0, 15);
     assertEq(view.getFloat64(7, true), 10);
-    var buffer7_pad10 = new Uint8Array(Array(10).concat(data7)).buffer;
+    var buffer7_pad10 = bufferize(new Uint8Array(Array(10).concat(data7)));
     view = new DataView(buffer7_pad10, 0, 18);
     assertEq(view.getFloat64(10, true), 10);
     //   Big endian.
-    var buffer7_r = new Uint8Array(data7_r).buffer;
+    var buffer7_r = bufferize(new Uint8Array(data7_r));
     view = new DataView(buffer7_r, 0, 8);
     assertEq(view.getFloat64(0, false), 10);
-    var buffer7_r_pad3 = new Uint8Array(Array(3).concat(data7_r)).buffer;
+    var buffer7_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data7_r)));
     view = new DataView(buffer7_r_pad3, 0, 11);
     assertEq(view.getFloat64(3, false), 10);
-    var buffer7_r_pad7 = new Uint8Array(Array(7).concat(data7_r)).buffer;
+    var buffer7_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data7_r)));
     view = new DataView(buffer7_r_pad7, 0, 15);
     assertEq(view.getFloat64(7, false), 10);
-    var buffer7_r_pad10 = new Uint8Array(Array(10).concat(data7_r)).buffer;
+    var buffer7_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data7_r)));
     view = new DataView(buffer7_r_pad10, 0, 18);
     assertEq(view.getFloat64(10, false), 10);
 
@@ -309,29 +324,29 @@ function test() {
     //   Little endian
     var data8 = [174,71,225,122,20,174,243,63];
     var data8_r = data8.slice().reverse();
-    var buffer8 = new Uint8Array(data8).buffer;
+    var buffer8 = bufferize(new Uint8Array(data8));
     view = new DataView(buffer8, 0, 8);
     assertEq(view.getFloat64(0, true), 1.23);
-    var buffer8_pad3 = new Uint8Array(Array(3).concat(data8)).buffer;
+    var buffer8_pad3 = bufferize(new Uint8Array(Array(3).concat(data8)));
     view = new DataView(buffer8_pad3, 0, 11);
     assertEq(view.getFloat64(3, true), 1.23);
-    var buffer8_pad7 = new Uint8Array(Array(7).concat(data8)).buffer;
+    var buffer8_pad7 = bufferize(new Uint8Array(Array(7).concat(data8)));
     view = new DataView(buffer8_pad7, 0, 15);
     assertEq(view.getFloat64(7, true), 1.23);
-    var buffer8_pad10 = new Uint8Array(Array(10).concat(data8)).buffer;
+    var buffer8_pad10 = bufferize(new Uint8Array(Array(10).concat(data8)));
     view = new DataView(buffer8_pad10, 0, 18);
     assertEq(view.getFloat64(10, true), 1.23);
     //   Big endian.
-    var buffer8_r = new Uint8Array(data8_r).buffer;
+    var buffer8_r = bufferize(new Uint8Array(data8_r));
     view = new DataView(buffer8_r, 0, 8);
     assertEq(view.getFloat64(0, false), 1.23);
-    var buffer8_r_pad3 = new Uint8Array(Array(3).concat(data8_r)).buffer;
+    var buffer8_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data8_r)));
     view = new DataView(buffer8_r_pad3, 0, 11);
     assertEq(view.getFloat64(3, false), 1.23);
-    var buffer8_r_pad7 = new Uint8Array(Array(7).concat(data8_r)).buffer;
+    var buffer8_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data8_r)));
     view = new DataView(buffer8_r_pad7, 0, 15);
     assertEq(view.getFloat64(7, false), 1.23);
-    var buffer8_r_pad10 = new Uint8Array(Array(10).concat(data8_r)).buffer;
+    var buffer8_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data8_r)));
     view = new DataView(buffer8_r_pad10, 0, 18);
     assertEq(view.getFloat64(10, false), 1.23);
 
@@ -339,29 +354,29 @@ function test() {
     //   Little endian
     var data9 = [181,55,248,30,242,179,87,193];
     var data9_r = data9.slice().reverse();
-    var buffer9 = new Uint8Array(data9).buffer;
+    var buffer9 = bufferize(new Uint8Array(data9));
     view = new DataView(buffer9, 0, 8);
     assertEq(view.getFloat64(0, true), -6213576.4839);
-    var buffer9_pad3 = new Uint8Array(Array(3).concat(data9)).buffer;
+    var buffer9_pad3 = bufferize(new Uint8Array(Array(3).concat(data9)));
     view = new DataView(buffer9_pad3, 0, 11);
     assertEq(view.getFloat64(3, true), -6213576.4839);
-    var buffer9_pad7 = new Uint8Array(Array(7).concat(data9)).buffer;
+    var buffer9_pad7 = bufferize(new Uint8Array(Array(7).concat(data9)));
     view = new DataView(buffer9_pad7, 0, 15);
     assertEq(view.getFloat64(7, true), -6213576.4839);
-    var buffer9_pad10 = new Uint8Array(Array(10).concat(data9)).buffer;
+    var buffer9_pad10 = bufferize(new Uint8Array(Array(10).concat(data9)));
     view = new DataView(buffer9_pad10, 0, 18);
     assertEq(view.getFloat64(10, true), -6213576.4839);
     //   Big endian.
-    var buffer9_r = new Uint8Array(data9_r).buffer;
+    var buffer9_r = bufferize(new Uint8Array(data9_r));
     view = new DataView(buffer9_r, 0, 8);
     assertEq(view.getFloat64(0, false), -6213576.4839);
-    var buffer9_r_pad3 = new Uint8Array(Array(3).concat(data9_r)).buffer;
+    var buffer9_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data9_r)));
     view = new DataView(buffer9_r_pad3, 0, 11);
     assertEq(view.getFloat64(3, false), -6213576.4839);
-    var buffer9_r_pad7 = new Uint8Array(Array(7).concat(data9_r)).buffer;
+    var buffer9_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data9_r)));
     view = new DataView(buffer9_r_pad7, 0, 15);
     assertEq(view.getFloat64(7, false), -6213576.4839);
-    var buffer9_r_pad10 = new Uint8Array(Array(10).concat(data9_r)).buffer;
+    var buffer9_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data9_r)));
     view = new DataView(buffer9_r_pad10, 0, 18);
     assertEq(view.getFloat64(10, false), -6213576.4839);
 
@@ -369,29 +384,29 @@ function test() {
     //   Little endian
     var data10 = [255,255,255,255,255,255,255,127];
     var data10_r = data10.slice().reverse();
-    var buffer10 = new Uint8Array(data10).buffer;
+    var buffer10 = bufferize(new Uint8Array(data10));
     view = new DataView(buffer10, 0, 8);
     assertEq(view.getFloat64(0, true), NaN);
-    var buffer10_pad3 = new Uint8Array(Array(3).concat(data10)).buffer;
+    var buffer10_pad3 = bufferize(new Uint8Array(Array(3).concat(data10)));
     view = new DataView(buffer10_pad3, 0, 11);
     assertEq(view.getFloat64(3, true), NaN);
-    var buffer10_pad7 = new Uint8Array(Array(7).concat(data10)).buffer;
+    var buffer10_pad7 = bufferize(new Uint8Array(Array(7).concat(data10)));
     view = new DataView(buffer10_pad7, 0, 15);
     assertEq(view.getFloat64(7, true), NaN);
-    var buffer10_pad10 = new Uint8Array(Array(10).concat(data10)).buffer;
+    var buffer10_pad10 = bufferize(new Uint8Array(Array(10).concat(data10)));
     view = new DataView(buffer10_pad10, 0, 18);
     assertEq(view.getFloat64(10, true), NaN);
     //   Big endian.
-    var buffer10_r = new Uint8Array(data10_r).buffer;
+    var buffer10_r = bufferize(new Uint8Array(data10_r));
     view = new DataView(buffer10_r, 0, 8);
     assertEq(view.getFloat64(0, false), NaN);
-    var buffer10_r_pad3 = new Uint8Array(Array(3).concat(data10_r)).buffer;
+    var buffer10_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data10_r)));
     view = new DataView(buffer10_r_pad3, 0, 11);
     assertEq(view.getFloat64(3, false), NaN);
-    var buffer10_r_pad7 = new Uint8Array(Array(7).concat(data10_r)).buffer;
+    var buffer10_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data10_r)));
     view = new DataView(buffer10_r_pad7, 0, 15);
     assertEq(view.getFloat64(7, false), NaN);
-    var buffer10_r_pad10 = new Uint8Array(Array(10).concat(data10_r)).buffer;
+    var buffer10_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data10_r)));
     view = new DataView(buffer10_r_pad10, 0, 18);
     assertEq(view.getFloat64(10, false), NaN);
 
@@ -399,36 +414,36 @@ function test() {
     //   Little endian
     var data11 = [255,255,255,255,255,255,255,255];
     var data11_r = data11.slice().reverse();
-    var buffer11 = new Uint8Array(data11).buffer;
+    var buffer11 = bufferize(new Uint8Array(data11));
     view = new DataView(buffer11, 0, 8);
     assertEq(view.getFloat64(0, true), NaN);
-    var buffer11_pad3 = new Uint8Array(Array(3).concat(data11)).buffer;
+    var buffer11_pad3 = bufferize(new Uint8Array(Array(3).concat(data11)));
     view = new DataView(buffer11_pad3, 0, 11);
     assertEq(view.getFloat64(3, true), NaN);
-    var buffer11_pad7 = new Uint8Array(Array(7).concat(data11)).buffer;
+    var buffer11_pad7 = bufferize(new Uint8Array(Array(7).concat(data11)));
     view = new DataView(buffer11_pad7, 0, 15);
     assertEq(view.getFloat64(7, true), NaN);
-    var buffer11_pad10 = new Uint8Array(Array(10).concat(data11)).buffer;
+    var buffer11_pad10 = bufferize(new Uint8Array(Array(10).concat(data11)));
     view = new DataView(buffer11_pad10, 0, 18);
     assertEq(view.getFloat64(10, true), NaN);
     //   Big endian.
-    var buffer11_r = new Uint8Array(data11_r).buffer;
+    var buffer11_r = bufferize(new Uint8Array(data11_r));
     view = new DataView(buffer11_r, 0, 8);
     assertEq(view.getFloat64(0, false), NaN);
-    var buffer11_r_pad3 = new Uint8Array(Array(3).concat(data11_r)).buffer;
+    var buffer11_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data11_r)));
     view = new DataView(buffer11_r_pad3, 0, 11);
     assertEq(view.getFloat64(3, false), NaN);
-    var buffer11_r_pad7 = new Uint8Array(Array(7).concat(data11_r)).buffer;
+    var buffer11_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data11_r)));
     view = new DataView(buffer11_r_pad7, 0, 15);
     assertEq(view.getFloat64(7, false), NaN);
-    var buffer11_r_pad10 = new Uint8Array(Array(10).concat(data11_r)).buffer;
+    var buffer11_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data11_r)));
     view = new DataView(buffer11_r_pad10, 0, 18);
     assertEq(view.getFloat64(10, false), NaN);
 
     // testIntegerGets(start=3, length=2)
     var data12 = [31,32,33,0,1,2,3,100,101,102,103,128,129,130,131,252,253,254,255];
     var data12_r = data12.slice().reverse();
-    var buffer12 = new Uint8Array(data12).buffer;
+    var buffer12 = bufferize(new Uint8Array(data12));
     view = new DataView(buffer12, 3, 2);
     assertEq(view.getInt8(0), 0);
     checkThrow(() => view.getInt8(8), RangeError);
@@ -752,7 +767,7 @@ function test() {
     // testIntegerSets(start=0, length=16)
     var data13 = [204,204,204,204,204,204,204,204,204,204,204,204,204,204,204,204];
     var data13_r = data13.slice().reverse();
-    var buffer13 = new Uint8Array(data13).buffer;
+    var buffer13 = bufferize(new Uint8Array(data13));
     view = new DataView(buffer13, 0, 16);
     view.setInt8(0, 0);
     assertEq(view.getInt8(0), 0);
@@ -846,32 +861,32 @@ function test() {
     view = new DataView(buffer13, 0, 16);
     view.setFloat32(0, 10, true);
     assertEq(view.getFloat32(0, true), 10);
-    var buffer13_pad3 = new Uint8Array(Array(3).concat(data13)).buffer;
+    var buffer13_pad3 = bufferize(new Uint8Array(Array(3).concat(data13)));
     view = new DataView(buffer13_pad3, 0, 19);
     view.setFloat32(3, 10, true);
     assertEq(view.getFloat32(3, true), 10);
-    var buffer13_pad7 = new Uint8Array(Array(7).concat(data13)).buffer;
+    var buffer13_pad7 = bufferize(new Uint8Array(Array(7).concat(data13)));
     view = new DataView(buffer13_pad7, 0, 23);
     view.setFloat32(7, 10, true);
     assertEq(view.getFloat32(7, true), 10);
-    var buffer13_pad10 = new Uint8Array(Array(10).concat(data13)).buffer;
+    var buffer13_pad10 = bufferize(new Uint8Array(Array(10).concat(data13)));
     view = new DataView(buffer13_pad10, 0, 26);
     view.setFloat32(10, 10, true);
     assertEq(view.getFloat32(10, true), 10);
     //   Big endian.
-    var buffer13_r = new Uint8Array(data13_r).buffer;
+    var buffer13_r = bufferize(new Uint8Array(data13_r));
     view = new DataView(buffer13_r, 0, 16);
     view.setFloat32(0, 10, false);
     assertEq(view.getFloat32(0, false), 10);
-    var buffer13_r_pad3 = new Uint8Array(Array(3).concat(data13_r)).buffer;
+    var buffer13_r_pad3 = bufferize(new Uint8Array(Array(3).concat(data13_r)));
     view = new DataView(buffer13_r_pad3, 0, 19);
     view.setFloat32(3, 10, false);
     assertEq(view.getFloat32(3, false), 10);
-    var buffer13_r_pad7 = new Uint8Array(Array(7).concat(data13_r)).buffer;
+    var buffer13_r_pad7 = bufferize(new Uint8Array(Array(7).concat(data13_r)));
     view = new DataView(buffer13_r_pad7, 0, 23);
     view.setFloat32(7, 10, false);
     assertEq(view.getFloat32(7, false), 10);
-    var buffer13_r_pad10 = new Uint8Array(Array(10).concat(data13_r)).buffer;
+    var buffer13_r_pad10 = bufferize(new Uint8Array(Array(10).concat(data13_r)));
     view = new DataView(buffer13_r_pad10, 0, 26);
     view.setFloat32(10, 10, false);
     assertEq(view.getFloat32(10, false), 10);
@@ -1503,25 +1518,25 @@ function test() {
 
     // testAlignment
     var intArray1 = [0, 1, 2, 3, 100, 101, 102, 103, 128, 129, 130, 131, 252, 253, 254, 255];
-    view = new DataView((new Uint8Array(intArray1)).buffer, 0);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 0);
     assertEq(view.getUint32(0, false), 0x00010203);
-    view = new DataView((new Uint8Array(intArray1)).buffer, 1);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 1);
     assertEq(view.getUint32(0, false), 0x01020364);
-    view = new DataView((new Uint8Array(intArray1)).buffer, 2);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 2);
     assertEq(view.getUint32(0, false), 0x02036465);
-    view = new DataView((new Uint8Array(intArray1)).buffer, 3);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 3);
     assertEq(view.getUint32(0, false), 0x03646566);
-    view = new DataView((new Uint8Array(intArray1)).buffer, 4);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 4);
     assertEq(view.getUint32(0, false), 0x64656667);
-    view = new DataView((new Uint8Array(intArray1)).buffer, 5);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 5);
     assertEq(view.getUint32(0, false), 0x65666780);
-    view = new DataView((new Uint8Array(intArray1)).buffer, 6);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 6);
     assertEq(view.getUint32(0, false), 0x66678081);
-    view = new DataView((new Uint8Array(intArray1)).buffer, 7);
+    view = new DataView(bufferize(new Uint8Array(intArray1)), 7);
     assertEq(view.getUint32(0, false), 0x67808182);
 
     // Test for indexing into a DataView, which should not use the ArrayBuffer storage
-    view = new DataView((new Uint8Array([1, 2])).buffer);
+    view = new DataView(bufferize(new Uint8Array([1, 2])));
     assertEq(view[0], undefined);
     view[0] = 3;
     assertEq(view[0], 3);
@@ -1559,7 +1574,8 @@ function test() {
     // Protos and proxies, oh my!
     var alien = newGlobal();
     var alien_data = alien.eval('data = ' + data1.toSource());
-    var alien_buffer = alien.eval('buffer = new Uint8Array(data).buffer');
+    var alien_buffer = alien.eval(`buffer = new ${sharedMem ? 'Shared' : ''}ArrayBuffer(data.length)`);
+    alien.eval('new Uint8Array(buffer).set(data)');
     var alien_view = alien.eval('view = new DataView(buffer, 0, 16)');
 
     // proto is view of buffer: should throw
@@ -1632,4 +1648,5 @@ function test() {
     exitFunc ('test');
 }
 
-test();
+test(false);
+test(true);

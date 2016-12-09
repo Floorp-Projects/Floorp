@@ -167,6 +167,8 @@ NegotiatedDetailsToVideoCodecConfigs(const JsepTrackNegotiatedDetails& aDetails,
       return NS_ERROR_INVALID_ARG;
     }
 
+    config->mTias = aDetails.GetTias();
+
     for (size_t i = 0; i < aDetails.GetEncodingCount(); ++i) {
       const JsepTrackEncoding& jsepEncoding(aDetails.GetEncoding(i));
       if (jsepEncoding.HasFormat(codec->mDefaultPt)) {
@@ -176,6 +178,7 @@ NegotiatedDetailsToVideoCodecConfigs(const JsepTrackNegotiatedDetails& aDetails,
         config->mSimulcastEncodings.push_back(encoding);
       }
     }
+
     aConfigs->values.push_back(config);
   }
 

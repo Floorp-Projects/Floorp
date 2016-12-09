@@ -24,6 +24,7 @@
                                        // associated RefPtrTraits
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 
 struct JSContext;
@@ -316,6 +317,11 @@ public:
   bool ShouldBlockAsyncTransformAnimations(
     const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aPerformanceWarning) const;
+  bool HasGeometricProperties() const;
+  bool AffectsGeometry() const override
+  {
+    return GetTarget() && HasGeometricProperties();
+  }
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;

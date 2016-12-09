@@ -110,9 +110,18 @@ private:
     // property set, that would be bad, since then our GetVisualOverflowRect()
     // call would give us the post-effects, and post-transform, overflow rect.
     //
-    NS_ASSERTION(aFrame->GetParent()->StyleContext()->GetPseudo() ==
+    // With image masks, there is one more exception.
+    //
+    // In nsStyleImageLayers::Layer::CalcDifference, we do not add
+    // nsChangeHint_UpdateOverflow hint when image mask(not SVG mask) property
+    // value changed, since replace image mask does not cause layout change.
+    // So even if we apply a new mask image to this frame,
+    // PreEffectsBBoxProperty might still left empty.
+    NS_ASSERTION(nsSVGEffects::GetEffectProperties(aFrame).MightHaveNoneSVGMask() ||
+                 aFrame->GetParent()->StyleContext()->GetPseudo() ==
                    nsCSSAnonBoxes::mozAnonymousBlock,
                  "How did we getting here, then?");
+
     NS_ASSERTION(!aFrame->Properties().Get(
                    aFrame->PreTransformOverflowAreasProperty()),
                  "GetVisualOverflowRect() won't return the pre-effects rect!");

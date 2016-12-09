@@ -15,7 +15,7 @@ add_task(function* () {
   let timeline = panel.animationsTimelineComponent;
 
   info("Select a test node we know has an animation running on the compositor");
-  yield selectNodeAndWaitForAnimations(".animated", inspector);
+  yield selectNodeAndWaitForAnimations(".compositor-all", inspector);
 
   let animationEl = timeline.animationsEl.querySelector(".animation");
   ok(animationEl.classList.contains("fast-track"),

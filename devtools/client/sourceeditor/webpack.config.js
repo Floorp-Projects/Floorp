@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+module.exports = [{
+  bail: true,
+  entry: [
+    "./codemirror/addon/dialog/dialog.js",
+    "./codemirror/addon/search/searchcursor.js",
+    "./codemirror/addon/search/search.js",
+    "./codemirror/addon/edit/matchbrackets.js",
+    "./codemirror/addon/edit/closebrackets.js",
+    "./codemirror/addon/comment/comment.js",
+    "./codemirror/mode/javascript/javascript.js",
+    "./codemirror/mode/xml/xml.js",
+    "./codemirror/mode/css/css.js",
+    "./codemirror/mode/htmlmixed/htmlmixed.js",
+    "./codemirror/mode/clike/clike.js",
+    "./codemirror/mode/wasm/wasm.js",
+    "./codemirror/addon/selection/active-line.js",
+    "./codemirror/addon/edit/trailingspace.js",
+    "./codemirror/keymap/emacs.js",
+    "./codemirror/keymap/vim.js",
+    "./codemirror/keymap/sublime.js",
+    "./codemirror/addon/fold/foldcode.js",
+    "./codemirror/addon/fold/brace-fold.js",
+    "./codemirror/addon/fold/comment-fold.js",
+    "./codemirror/addon/fold/xml-fold.js",
+    "./codemirror/addon/fold/foldgutter.js",
+    "./codemirror/lib/codemirror.js",
+  ],
+  output: {
+    filename: "./codemirror/codemirror.bundle.js",
+    libraryTarget: "var",
+    library: "CodeMirror",
+  },
+}];

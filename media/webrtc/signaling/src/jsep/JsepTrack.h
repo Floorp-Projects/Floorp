@@ -28,6 +28,10 @@ namespace mozilla {
 class JsepTrackNegotiatedDetails
 {
 public:
+  JsepTrackNegotiatedDetails() :
+    mTias(0)
+  {}
+
   size_t
   GetEncodingCount() const
   {
@@ -56,12 +60,18 @@ public:
     return mUniquePayloadTypes;
   }
 
+  uint32_t GetTias() const
+  {
+    return mTias;
+  }
+
 private:
   friend class JsepTrack;
 
   std::map<std::string, SdpExtmapAttributeList::Extmap> mExtmap;
   std::vector<uint8_t> mUniquePayloadTypes;
   PtrVector<JsepTrackEncoding> mEncodings;
+  uint32_t mTias; // bits per second
 };
 
 class JsepTrack

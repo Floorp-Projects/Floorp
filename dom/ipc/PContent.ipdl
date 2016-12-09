@@ -442,11 +442,6 @@ child:
                                bool minimizeMemoryUsage, MaybeFileDesc DMDFile);
 
     /**
-     * Sent to notify that aTabId has been allocated aLayersId
-     */
-    async NotifyLayerAllocated(TabId aTabId, uint64_t aLayersId);
-
-    /**
      * Communication between the PuppetBidiKeyboard and the actual
      * BidiKeyboard hosted by the parent
      */

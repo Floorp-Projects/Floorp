@@ -512,8 +512,8 @@ KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
   }
 
   // Fill in remaining missing offsets.
-  const Keyframe* const last = aKeyframes.cend() - 1;
-  const RangedPtr<Keyframe> begin(aKeyframes.begin(), aKeyframes.Length());
+  const Keyframe* const last = &aKeyframes.LastElement();
+  const RangedPtr<Keyframe> begin(aKeyframes.Elements(), aKeyframes.Length());
   RangedPtr<Keyframe> keyframeA = begin;
   while (keyframeA != last) {
     // Find keyframe A and keyframe B *between* which we will apply spacing.

@@ -143,8 +143,8 @@ RuleProcessorCache::StopTracking(nsCSSRuleProcessor* aRuleProcessor)
 void
 RuleProcessorCache::DoRemoveSheet(CSSStyleSheet* aSheet)
 {
-  Entry* last = std::remove_if(mEntries.begin(), mEntries.end(),
-                               HasSheet_ThenRemoveRuleProcessors(this, aSheet));
+  auto last = std::remove_if(mEntries.begin(), mEntries.end(),
+                             HasSheet_ThenRemoveRuleProcessors(this, aSheet));
   mEntries.TruncateLength(last - mEntries.begin());
 }
 

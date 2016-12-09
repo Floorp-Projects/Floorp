@@ -41,7 +41,7 @@ config = {
          "mobile/android/config/mozconfigs/android-x86/nightly",
          "browser/config/mozconfigs/linux32/nightly",
          "browser/config/mozconfigs/linux64/nightly",
-         "browser/config/mozconfigs/macosx-universal/nightly",
+         "browser/config/mozconfigs/macosx64/nightly",
          "browser/config/mozconfigs/win32/nightly",
          "browser/config/mozconfigs/win64/nightly"]
     ] + [
@@ -52,10 +52,10 @@ config = {
         ("browser/confvars.sh",
          "MAR_CHANNEL_ID=firefox-mozilla-central",
          "MAR_CHANNEL_ID=firefox-mozilla-aurora"),
-        ("browser/config/mozconfigs/macosx-universal/nightly",
+        ("browser/config/mozconfigs/macosx64/nightly",
          "ac_add_options --with-branding=browser/branding/nightly",
          "ac_add_options --with-branding=browser/branding/aurora"),
-        ("browser/config/mozconfigs/macosx-universal/l10n-mozconfig",
+        ("browser/config/mozconfigs/macosx64/l10n-mozconfig",
          "ac_add_options --with-branding=browser/branding/nightly",
          "ac_add_options --with-branding=browser/branding/aurora"),
         ("browser/config/mozconfigs/whitelist",

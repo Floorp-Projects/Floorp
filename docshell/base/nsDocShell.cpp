@@ -12443,7 +12443,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
     // Don't cache the presentation if we're going to just reload the
     // current entry. Caching would lead to trying to save the different
     // content viewers in the same nsISHEntry object.
-    rv = CreateAboutBlankContentViewer(triggeringPrincipal, nullptr,
+    rv = CreateAboutBlankContentViewer(principalToInherit, nullptr,
                                        aEntry != mOSHE);
 
     if (NS_FAILED(rv)) {

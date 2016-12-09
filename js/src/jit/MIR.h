@@ -2841,12 +2841,10 @@ class MTableSwitch final
 {
     // The successors of the tableswitch
     // - First successor = the default case
-    // - Successor 2 and higher = the cases sorted on case index.
+    // - Successors 2 and higher = the cases
     Vector<MBasicBlock*, 0, JitAllocPolicy> successors_;
+    // Index into successors_ sorted on case index
     Vector<size_t, 0, JitAllocPolicy> cases_;
-
-    // Contains the blocks/cases that still need to get build
-    Vector<MBasicBlock*, 0, JitAllocPolicy> blocks_;
 
     MUse operand_;
     int32_t low_;
@@ -2861,7 +2859,6 @@ class MTableSwitch final
                  int32_t low, int32_t high)
       : successors_(alloc),
         cases_(alloc),
-        blocks_(alloc),
         low_(low),
         high_(high)
     {
@@ -2904,14 +2901,6 @@ class MTableSwitch final
         successors_[i] = successor;
     }
 
-    MBasicBlock** blocks() {
-        return &blocks_[0];
-    }
-
-    size_t numBlocks() const {
-        return blocks_.length();
-    }
-
     int32_t low() const {
         return low_;
     }
@@ -2928,10 +2917,6 @@ class MTableSwitch final
         return getSuccessor(cases_[i]);
     }
 
-    size_t numCases() const {
-        return high() - low() + 1;
-    }
-
     MOZ_MUST_USE bool addDefault(MBasicBlock* block, size_t* index = nullptr) {
         MOZ_ASSERT(successors_.empty());
         if (index)
@@ -2943,13 +2928,8 @@ class MTableSwitch final
         return cases_.append(successorIndex);
     }
 
-    MBasicBlock* getBlock(size_t i) const {
-        MOZ_ASSERT(i < numBlocks());
-        return blocks_[i];
-    }
-
-    MOZ_MUST_USE bool addBlock(MBasicBlock* block) {
-        return blocks_.append(block);
+    size_t numCases() const {
+        return high() - low() + 1;
     }
 
     MDefinition* getOperand(size_t index) const override {

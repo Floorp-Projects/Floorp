@@ -55,7 +55,7 @@ enum class State {
     D(None) \
     D(NonIncrementalRequested) \
     D(AbortRequested) \
-    D(KeepAtomsSet) \
+    D(Unused1) \
     D(IncrementalDisabled) \
     D(ModeChange) \
     D(MallocBytesTrigger) \
@@ -834,9 +834,6 @@ const size_t MAX_EMPTY_CHUNK_AGE = 4;
 } /* namespace gc */
 
 class InterpreterFrame;
-
-extern void
-MarkCompartmentActive(js::InterpreterFrame* fp);
 
 extern void
 TraceRuntime(JSTracer* trc);

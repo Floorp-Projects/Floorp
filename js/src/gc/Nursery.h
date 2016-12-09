@@ -257,6 +257,9 @@ class Nursery
     void leaveZealMode();
 #endif
 
+    /* Print header line for profile times. */
+    void printProfileHeader();
+
     /* Print total profile times on shutdown. */
     void printTotalProfileTimes();
 
@@ -458,7 +461,6 @@ class Nursery
     void endProfile(ProfileKey key);
     void maybeStartProfile(ProfileKey key);
     void maybeEndProfile(ProfileKey key);
-    static void printProfileHeader();
     static void printProfileTimes(const ProfileTimes& times);
 
     friend class TenuringTracer;

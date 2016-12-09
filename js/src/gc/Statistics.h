@@ -141,17 +141,17 @@ struct ZoneGCStats
 };
 
 #define FOR_EACH_GC_PROFILE_TIME(_)                                           \
-    _(BeginCallback, "beginCB",  PHASE_GC_BEGIN)                              \
-    _(WaitBgThread,  "waitBG",   PHASE_WAIT_BACKGROUND_THREAD)                \
-    _(DiscardCode,   "discard",  PHASE_MARK_DISCARD_CODE)                     \
-    _(RelazifyFunc,  "relazify", PHASE_RELAZIFY_FUNCTIONS)                    \
-    _(PurgeTables,   "purgeTables", PHASE_PURGE_SHAPE_TABLES)                 \
-    _(Purge,         "purge",    PHASE_PURGE)                                 \
-    _(Mark,          "mark",     PHASE_MARK)                                  \
-    _(Sweep,         "sweep",    PHASE_SWEEP)                                 \
-    _(Compact,       "compact",  PHASE_COMPACT)                               \
-    _(EndCallback,   "endCB",    PHASE_GC_END)                                \
-    _(Barriers,      "barriers", PHASE_BARRIER)
+    _(BeginCallback, "bgnCB",  PHASE_GC_BEGIN)                                \
+    _(WaitBgThread,  "waitBG", PHASE_WAIT_BACKGROUND_THREAD)                  \
+    _(DiscardCode,   "discrd", PHASE_MARK_DISCARD_CODE)                       \
+    _(RelazifyFunc,  "relzfy", PHASE_RELAZIFY_FUNCTIONS)                      \
+    _(PurgeTables,   "prgTbl", PHASE_PURGE_SHAPE_TABLES)                      \
+    _(Purge,         "purge",  PHASE_PURGE)                                   \
+    _(Mark,          "mark",   PHASE_MARK)                                    \
+    _(Sweep,         "sweep",  PHASE_SWEEP)                                   \
+    _(Compact,       "cmpct",  PHASE_COMPACT)                                 \
+    _(EndCallback,   "endCB",  PHASE_GC_END)                                  \
+    _(Barriers,      "brrier", PHASE_BARRIER)
 
 const char* ExplainAbortReason(gc::AbortReason reason);
 const char* ExplainInvocationKind(JSGCInvocationKind gckind);
@@ -313,6 +313,12 @@ struct Statistics
     SliceRange sliceRange() const { return slices.all(); }
     size_t slicesLength() const { return slices.length(); }
 
+    /* Occasionally print header lines for profiling information. */
+    void maybePrintProfileHeaders();
+
+    /* Print header line for profile times. */
+    void printProfileHeader();
+
     /* Print total profile times on shutdown. */
     void printTotalProfileTimes();
 
@@ -429,7 +435,6 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     double computeMMU(int64_t resolution) const;
 
     void printSliceProfile();
-    static void printProfileHeader();
     static void printProfileTimes(const ProfileTimes& times);
 };
 

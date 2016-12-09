@@ -47,8 +47,7 @@ jobs:
     linux-l10n/opt:
         description: "Localization"
         index:
-            job-name:
-                gecko-v2: linux32-l10n-opt
+            job-name: linux32-l10n-opt
         treeherder:
             platform: linux32/opt
             symbol: tc(L10n)
@@ -69,8 +68,7 @@ jobs:
     linux64-l10n/opt:
         description: "Localization"
         index:
-            job-name:
-                gecko-v2: linux64-l10n-opt
+            job-name: linux64-l10n-opt
         treeherder:
             platform: linux64/opt
             symbol: tc(L10n)
@@ -92,8 +90,7 @@ jobs:
         description: "Single Locale Repack"
         index:
             product: mobile
-            job-name:
-                gecko-v2: android-l10n-opt
+            job-name: android-l10n-opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             symbol: tc(L10n)
