@@ -47,6 +47,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMIntersectionObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mQueuedEntries)
+  tmp->Disconnect();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMIntersectionObserver)
@@ -185,9 +186,10 @@ DOMIntersectionObserver::Connect()
   if (mConnected) {
     return;
   }
+
+  mConnected = true;
   nsIDocument* document = mOwner->GetExtantDoc();
   document->AddIntersectionObserver(this);
-  mConnected = true;
 }
 
 void
