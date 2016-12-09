@@ -132,13 +132,4 @@ AccurateSeekTask::Seek(const media::TimeUnit& aDuration)
   return mSeekTaskPromise.Ensure(__func__);
 }
 
-void
-AccurateSeekTask::MaybeFinishSeek()
-{
-  AssertOwnerThread();
-  if (mDoneAudioSeeking && mDoneVideoSeeking) {
-    Resolve(__func__); // Call to MDSM::SeekCompleted();
-  }
-}
-
 } // namespace mozilla
