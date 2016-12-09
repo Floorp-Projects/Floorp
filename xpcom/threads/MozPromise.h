@@ -521,6 +521,50 @@ protected:
     RejectMethodType mRejectMethod;
   };
 
+  // Specialization of MethodThenValue (with 3rd template arg being 'void')
+  // that only takes one method, to be called with a ResolveOrRejectValue.
+  template<typename ThisType, typename ResolveRejectMethodType>
+  class MethodThenValue<ThisType, ResolveRejectMethodType, void> : public ThenValueBase
+  {
+  public:
+    MethodThenValue(AbstractThread* aResponseTarget, ThisType* aThisVal,
+                    ResolveRejectMethodType aResolveRejectMethod,
+                    const char* aCallSite)
+      : ThenValueBase(aResponseTarget, aCallSite)
+      , mThisVal(aThisVal)
+      , mResolveRejectMethod(aResolveRejectMethod)
+    {}
+
+    void Disconnect() override
+    {
+      ThenValueBase::Disconnect();
+
+      // If a Request has been disconnected, we don't guarantee that the
+      // resolve/reject runnable will be dispatched. Null out our refcounted
+      // this-value now so that it's released predictably on the dispatch thread.
+      mThisVal = nullptr;
+    }
+
+  protected:
+    already_AddRefed<MozPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
+    {
+      RefPtr<MozPromise> completion =
+        InvokeCallbackMethod(mThisVal.get(), mResolveRejectMethod, aValue);
+
+      // Null out mThisVal after invoking the callback so that any references are
+      // released predictably on the dispatch thread. Otherwise, it would be
+      // released on whatever thread last drops its reference to the ThenValue,
+      // which may or may not be ok.
+      mThisVal = nullptr;
+
+      return completion.forget();
+    }
+
+  private:
+    RefPtr<ThisType> mThisVal; // Only accessed and refcounted on dispatch thread.
+    ResolveRejectMethodType mResolveRejectMethod;
+  };
+
   // NB: We could use std::function here instead of a template if it were supported. :-(
   template<typename ResolveFunction, typename RejectFunction>
   class FunctionThenValue : public ThenValueBase
@@ -726,6 +770,16 @@ public:
     using ThenType = MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>;
     RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
        aThisVal, aResolveMethod, aRejectMethod, aCallSite);
+    return ThenCommand(aResponseThread, aCallSite, thenValue.forget(), this);
+  }
+
+  template<typename ThisType, typename ResolveRejectMethodType>
+  ThenCommand Then(AbstractThread* aResponseThread, const char* aCallSite,
+    ThisType* aThisVal, ResolveRejectMethodType aResolveRejectMethod)
+  {
+    using ThenType = MethodThenValue<ThisType, ResolveRejectMethodType, void>;
+    RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
+       aThisVal, aResolveRejectMethod, aCallSite);
     return ThenCommand(aResponseThread, aCallSite, thenValue.forget(), this);
   }
 
