@@ -166,6 +166,7 @@ enum class CacheKind : uint8_t
     _(LoadStringLengthResult)             \
     _(LoadFrameCalleeResult)              \
     _(LoadFrameNumActualArgsResult)       \
+    _(LoadFrameArgumentResult)            \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -441,6 +442,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadFrameNumActualArgsResult() {
         writeOp(CacheOp::LoadFrameNumActualArgsResult);
     }
+    void loadFrameArgumentResult(Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::LoadFrameArgumentResult, index);
+    }
     void guardNoUnboxedExpando(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardNoUnboxedExpando, obj);
     }
@@ -646,7 +650,8 @@ class MOZ_RAII GetPropIRGenerator
     bool tryAttachPrimitive(ValOperandId valId, HandleId id);
     bool tryAttachStringChar(ValOperandId valId, ValOperandId indexId);
     bool tryAttachStringLength(ValOperandId valId, HandleId id);
-    bool tryAttachMagicArguments(ValOperandId valId, HandleId id);
+    bool tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
+    bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
 
     ValOperandId getElemKeyValueId() const {
         MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
