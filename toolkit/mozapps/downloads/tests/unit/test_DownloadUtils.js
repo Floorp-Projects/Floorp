@@ -22,7 +22,7 @@ function testTransferTotal(aCurrBytes, aMaxBytes, aTransfer) {
 }
 
 // Get the em-dash character because typing it directly here doesn't work :(
-var gDash = DownloadUtils.getDownloadStatus(0)[0].match(/remaining (.) 0 bytes/)[1];
+var gDash = DownloadUtils.getDownloadStatus(0)[0].match(/left (.) 0 bytes/)[1];
 
 var gVals = [0, 100, 2345, 55555, 982341, 23194134, 1482, 58, 9921949201, 13498132, Infinity];
 
@@ -146,72 +146,72 @@ function run_test() {
   // First, test with rates, via getDownloadStatus...
   let statusFunc = DownloadUtils.getDownloadStatus.bind(DownloadUtils);
 
-  testStatus(statusFunc, 2, 1, 7, ["A few seconds remaining -- 2.3 of 2.4 KB (58 bytes/sec)", 1.724]);
-  testStatus(statusFunc, 1, 2, 6, ["A few seconds remaining -- 100 bytes of 2.4 KB (1.4 KB/sec)", 1.582]);
-  testStatus(statusFunc, 4, 3, 9, ["A few seconds remaining -- 959 KB of 1.0 MB (12.9 MB/sec)", 0.004]);
-  testStatus(statusFunc, 2, 3, 8, ["A few seconds remaining -- 2.3 of 56.5 KB (9.2 GB/sec)", 0.000]);
+  testStatus(statusFunc, 2, 1, 7, ["A few seconds left -- 2.3 of 2.4 KB (58 bytes/sec)", 1.724]);
+  testStatus(statusFunc, 1, 2, 6, ["A few seconds left -- 100 bytes of 2.4 KB (1.4 KB/sec)", 1.582]);
+  testStatus(statusFunc, 4, 3, 9, ["A few seconds left -- 959 KB of 1.0 MB (12.9 MB/sec)", 0.004]);
+  testStatus(statusFunc, 2, 3, 8, ["A few seconds left -- 2.3 of 56.5 KB (9.2 GB/sec)", 0.000]);
 
-  testStatus(statusFunc, 8, 4, 3, ["17 seconds remaining -- 9.2 of 9.2 GB (54.3 KB/sec)", 17.682]);
-  testStatus(statusFunc, 1, 3, 2, ["23 seconds remaining -- 100 bytes of 54.4 KB (2.3 KB/sec)", 23.691]);
-  testStatus(statusFunc, 9, 3, 2, ["23 seconds remaining -- 12.9 of 12.9 MB (2.3 KB/sec)", 23.691]);
-  testStatus(statusFunc, 5, 6, 7, ["25 seconds remaining -- 22.1 of 22.1 MB (58 bytes/sec)", 25.552]);
+  testStatus(statusFunc, 8, 4, 3, ["17s left -- 9.2 of 9.2 GB (54.3 KB/sec)", 17.682]);
+  testStatus(statusFunc, 1, 3, 2, ["23s left -- 100 bytes of 54.4 KB (2.3 KB/sec)", 23.691]);
+  testStatus(statusFunc, 9, 3, 2, ["23s left -- 12.9 of 12.9 MB (2.3 KB/sec)", 23.691]);
+  testStatus(statusFunc, 5, 6, 7, ["25s left -- 22.1 of 22.1 MB (58 bytes/sec)", 25.552]);
 
-  testStatus(statusFunc, 3, 9, 3, ["4 minutes remaining -- 54.3 KB of 12.9 MB (54.3 KB/sec)", 242.969]);
-  testStatus(statusFunc, 2, 3, 1, ["9 minutes remaining -- 2.3 of 56.5 KB (100 bytes/sec)", 555.550]);
-  testStatus(statusFunc, 4, 3, 7, ["15 minutes remaining -- 959 KB of 1.0 MB (58 bytes/sec)", 957.845]);
-  testStatus(statusFunc, 5, 3, 7, ["15 minutes remaining -- 22.1 of 22.2 MB (58 bytes/sec)", 957.845]);
+  testStatus(statusFunc, 3, 9, 3, ["4m left -- 54.3 KB of 12.9 MB (54.3 KB/sec)", 242.969]);
+  testStatus(statusFunc, 2, 3, 1, ["9m left -- 2.3 of 56.5 KB (100 bytes/sec)", 555.550]);
+  testStatus(statusFunc, 4, 3, 7, ["15m left -- 959 KB of 1.0 MB (58 bytes/sec)", 957.845]);
+  testStatus(statusFunc, 5, 3, 7, ["15m left -- 22.1 of 22.2 MB (58 bytes/sec)", 957.845]);
 
-  testStatus(statusFunc, 1, 9, 2, ["1 hour, 35 minutes remaining -- 100 bytes of 12.9 MB (2.3 KB/sec)", 5756.133]);
-  testStatus(statusFunc, 2, 9, 6, ["2 hours, 31 minutes remaining -- 2.3 KB of 12.9 MB (1.4 KB/sec)", 9108.051]);
-  testStatus(statusFunc, 2, 4, 1, ["2 hours, 43 minutes remaining -- 2.3 of 962 KB (100 bytes/sec)", 9823.410]);
-  testStatus(statusFunc, 6, 4, 7, ["4 hours, 42 minutes remaining -- 1.4 of 961 KB (58 bytes/sec)", 16936.914]);
+  testStatus(statusFunc, 1, 9, 2, ["1h 35m left -- 100 bytes of 12.9 MB (2.3 KB/sec)", 5756.133]);
+  testStatus(statusFunc, 2, 9, 6, ["2h 31m left -- 2.3 KB of 12.9 MB (1.4 KB/sec)", 9108.051]);
+  testStatus(statusFunc, 2, 4, 1, ["2h 43m left -- 2.3 of 962 KB (100 bytes/sec)", 9823.410]);
+  testStatus(statusFunc, 6, 4, 7, ["4h 42m left -- 1.4 of 961 KB (58 bytes/sec)", 16936.914]);
 
-  testStatus(statusFunc, 6, 9, 1, ["1 day, 13 hours remaining -- 1.4 KB of 12.9 MB (100 bytes/sec)", 134981.320]);
-  testStatus(statusFunc, 3, 8, 3, ["2 days, 1 hour remaining -- 54.3 KB of 9.2 GB (54.3 KB/sec)", 178596.872]);
-  testStatus(statusFunc, 1, 8, 6, ["77 days, 11 hours remaining -- 100 bytes of 9.2 GB (1.4 KB/sec)", 6694972.470]);
-  testStatus(statusFunc, 6, 8, 7, ["1979 days, 22 hours remaining -- 1.4 KB of 9.2 GB (58 bytes/sec)", 171068089.672]);
+  testStatus(statusFunc, 6, 9, 1, ["1d 13h left -- 1.4 KB of 12.9 MB (100 bytes/sec)", 134981.320]);
+  testStatus(statusFunc, 3, 8, 3, ["2d 1h left -- 54.3 KB of 9.2 GB (54.3 KB/sec)", 178596.872]);
+  testStatus(statusFunc, 1, 8, 6, ["77d 11h left -- 100 bytes of 9.2 GB (1.4 KB/sec)", 6694972.470]);
+  testStatus(statusFunc, 6, 8, 7, ["1979d 22h left -- 1.4 KB of 9.2 GB (58 bytes/sec)", 171068089.672]);
 
-  testStatus(statusFunc, 0, 0, 5, ["Unknown time remaining -- 0 of 0 bytes (22.1 MB/sec)", Infinity]);
-  testStatus(statusFunc, 0, 6, 0, ["Unknown time remaining -- 0 bytes of 1.4 KB (0 bytes/sec)", Infinity]);
-  testStatus(statusFunc, 6, 6, 0, ["Unknown time remaining -- 1.4 of 2.9 KB (0 bytes/sec)", Infinity]);
-  testStatus(statusFunc, 8, 5, 0, ["Unknown time remaining -- 9.2 of 9.3 GB (0 bytes/sec)", Infinity]);
+  testStatus(statusFunc, 0, 0, 5, ["Unknown time left -- 0 of 0 bytes (22.1 MB/sec)", Infinity]);
+  testStatus(statusFunc, 0, 6, 0, ["Unknown time left -- 0 bytes of 1.4 KB (0 bytes/sec)", Infinity]);
+  testStatus(statusFunc, 6, 6, 0, ["Unknown time left -- 1.4 of 2.9 KB (0 bytes/sec)", Infinity]);
+  testStatus(statusFunc, 8, 5, 0, ["Unknown time left -- 9.2 of 9.3 GB (0 bytes/sec)", Infinity]);
 
   // With rate equal to Infinity
-  testStatus(statusFunc, 0, 0, 10, ["Unknown time remaining -- 0 of 0 bytes (Really fast)", Infinity]);
-  testStatus(statusFunc, 1, 2, 10, ["A few seconds remaining -- 100 bytes of 2.4 KB (Really fast)", 0]);
+  testStatus(statusFunc, 0, 0, 10, ["Unknown time left -- 0 of 0 bytes (Really fast)", Infinity]);
+  testStatus(statusFunc, 1, 2, 10, ["A few seconds left -- 100 bytes of 2.4 KB (Really fast)", 0]);
 
   // Now test without rates, via getDownloadStatusNoRate.
   statusFunc = DownloadUtils.getDownloadStatusNoRate.bind(DownloadUtils);
 
-  testStatus(statusFunc, 2, 1, 7, ["A few seconds remaining -- 2.3 of 2.4 KB", 1.724]);
-  testStatus(statusFunc, 1, 2, 6, ["A few seconds remaining -- 100 bytes of 2.4 KB", 1.582]);
-  testStatus(statusFunc, 4, 3, 9, ["A few seconds remaining -- 959 KB of 1.0 MB", 0.004]);
-  testStatus(statusFunc, 2, 3, 8, ["A few seconds remaining -- 2.3 of 56.5 KB", 0.000]);
+  testStatus(statusFunc, 2, 1, 7, ["A few seconds left -- 2.3 of 2.4 KB", 1.724]);
+  testStatus(statusFunc, 1, 2, 6, ["A few seconds left -- 100 bytes of 2.4 KB", 1.582]);
+  testStatus(statusFunc, 4, 3, 9, ["A few seconds left -- 959 KB of 1.0 MB", 0.004]);
+  testStatus(statusFunc, 2, 3, 8, ["A few seconds left -- 2.3 of 56.5 KB", 0.000]);
 
-  testStatus(statusFunc, 8, 4, 3, ["17 seconds remaining -- 9.2 of 9.2 GB", 17.682]);
-  testStatus(statusFunc, 1, 3, 2, ["23 seconds remaining -- 100 bytes of 54.4 KB", 23.691]);
-  testStatus(statusFunc, 9, 3, 2, ["23 seconds remaining -- 12.9 of 12.9 MB", 23.691]);
-  testStatus(statusFunc, 5, 6, 7, ["25 seconds remaining -- 22.1 of 22.1 MB", 25.552]);
+  testStatus(statusFunc, 8, 4, 3, ["17s left -- 9.2 of 9.2 GB", 17.682]);
+  testStatus(statusFunc, 1, 3, 2, ["23s left -- 100 bytes of 54.4 KB", 23.691]);
+  testStatus(statusFunc, 9, 3, 2, ["23s left -- 12.9 of 12.9 MB", 23.691]);
+  testStatus(statusFunc, 5, 6, 7, ["25s left -- 22.1 of 22.1 MB", 25.552]);
 
-  testStatus(statusFunc, 3, 9, 3, ["4 minutes remaining -- 54.3 KB of 12.9 MB", 242.969]);
-  testStatus(statusFunc, 2, 3, 1, ["9 minutes remaining -- 2.3 of 56.5 KB", 555.550]);
-  testStatus(statusFunc, 4, 3, 7, ["15 minutes remaining -- 959 KB of 1.0 MB", 957.845]);
-  testStatus(statusFunc, 5, 3, 7, ["15 minutes remaining -- 22.1 of 22.2 MB", 957.845]);
+  testStatus(statusFunc, 3, 9, 3, ["4m left -- 54.3 KB of 12.9 MB", 242.969]);
+  testStatus(statusFunc, 2, 3, 1, ["9m left -- 2.3 of 56.5 KB", 555.550]);
+  testStatus(statusFunc, 4, 3, 7, ["15m left -- 959 KB of 1.0 MB", 957.845]);
+  testStatus(statusFunc, 5, 3, 7, ["15m left -- 22.1 of 22.2 MB", 957.845]);
 
-  testStatus(statusFunc, 1, 9, 2, ["1 hour, 35 minutes remaining -- 100 bytes of 12.9 MB", 5756.133]);
-  testStatus(statusFunc, 2, 9, 6, ["2 hours, 31 minutes remaining -- 2.3 KB of 12.9 MB", 9108.051]);
-  testStatus(statusFunc, 2, 4, 1, ["2 hours, 43 minutes remaining -- 2.3 of 962 KB", 9823.410]);
-  testStatus(statusFunc, 6, 4, 7, ["4 hours, 42 minutes remaining -- 1.4 of 961 KB", 16936.914]);
+  testStatus(statusFunc, 1, 9, 2, ["1h 35m left -- 100 bytes of 12.9 MB", 5756.133]);
+  testStatus(statusFunc, 2, 9, 6, ["2h 31m left -- 2.3 KB of 12.9 MB", 9108.051]);
+  testStatus(statusFunc, 2, 4, 1, ["2h 43m left -- 2.3 of 962 KB", 9823.410]);
+  testStatus(statusFunc, 6, 4, 7, ["4h 42m left -- 1.4 of 961 KB", 16936.914]);
 
-  testStatus(statusFunc, 6, 9, 1, ["1 day, 13 hours remaining -- 1.4 KB of 12.9 MB", 134981.320]);
-  testStatus(statusFunc, 3, 8, 3, ["2 days, 1 hour remaining -- 54.3 KB of 9.2 GB", 178596.872]);
-  testStatus(statusFunc, 1, 8, 6, ["77 days, 11 hours remaining -- 100 bytes of 9.2 GB", 6694972.470]);
-  testStatus(statusFunc, 6, 8, 7, ["1979 days, 22 hours remaining -- 1.4 KB of 9.2 GB", 171068089.672]);
+  testStatus(statusFunc, 6, 9, 1, ["1d 13h left -- 1.4 KB of 12.9 MB", 134981.320]);
+  testStatus(statusFunc, 3, 8, 3, ["2d 1h left -- 54.3 KB of 9.2 GB", 178596.872]);
+  testStatus(statusFunc, 1, 8, 6, ["77d 11h left -- 100 bytes of 9.2 GB", 6694972.470]);
+  testStatus(statusFunc, 6, 8, 7, ["1979d 22h left -- 1.4 KB of 9.2 GB", 171068089.672]);
 
-  testStatus(statusFunc, 0, 0, 5, ["Unknown time remaining -- 0 of 0 bytes", Infinity]);
-  testStatus(statusFunc, 0, 6, 0, ["Unknown time remaining -- 0 bytes of 1.4 KB", Infinity]);
-  testStatus(statusFunc, 6, 6, 0, ["Unknown time remaining -- 1.4 of 2.9 KB", Infinity]);
-  testStatus(statusFunc, 8, 5, 0, ["Unknown time remaining -- 9.2 of 9.3 GB", Infinity]);
+  testStatus(statusFunc, 0, 0, 5, ["Unknown time left -- 0 of 0 bytes", Infinity]);
+  testStatus(statusFunc, 0, 6, 0, ["Unknown time left -- 0 bytes of 1.4 KB", Infinity]);
+  testStatus(statusFunc, 6, 6, 0, ["Unknown time left -- 1.4 of 2.9 KB", Infinity]);
+  testStatus(statusFunc, 8, 5, 0, ["Unknown time left -- 9.2 of 9.3 GB", Infinity]);
 
   testURI("http://www.mozilla.org/", "mozilla.org", "www.mozilla.org");
   testURI("http://www.city.mikasa.hokkaido.jp/", "city.mikasa.hokkaido.jp", "www.city.mikasa.hokkaido.jp");
