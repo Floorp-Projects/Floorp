@@ -6,5 +6,9 @@
     <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorAccent">#d64648</color>
 
+    <color name="colorGradientStart">#ff8c3b3b</color>
+    <color name="colorGradientCenter">#ff7b3771</color>
+    <color name="colorGradientEnd">#ff205284</color>
+
     <color name="colorAutocompleteHighlight">#6c3b6e</color>
 </resources>
