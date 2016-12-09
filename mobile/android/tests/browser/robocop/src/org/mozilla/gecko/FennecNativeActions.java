@@ -15,6 +15,9 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.Activity;
@@ -46,35 +49,70 @@ public class FennecNativeActions implements Actions {
 
         private volatile boolean mIsRegistered;
 
+        private final EventDispatcher mDispatcher;
+        private final EventType mType;
         private final String mGeckoEvent;
+        private final BlockingQueue<Object> mEventDataQueue;
         private final GeckoEventListener mListener;
+        private final BundleEventListener mBundleListener;
 
         private volatile boolean mEventEverReceived;
-        private String mEventData;
-        private BlockingQueue<String> mEventDataQueue;
+        private Object mEventData;
 
-        GeckoEventExpecter(final String geckoEvent) {
+        GeckoEventExpecter(final EventDispatcher dispatcher, final EventType type,
+                           final String geckoEvent) {
             if (TextUtils.isEmpty(geckoEvent)) {
                 throw new IllegalArgumentException("geckoEvent must not be empty");
             }
 
+            mDispatcher = dispatcher;
+            mType = type;
             mGeckoEvent = geckoEvent;
-            mEventDataQueue = new LinkedBlockingQueue<String>();
+            mEventDataQueue = new LinkedBlockingQueue<>();
+            mIsRegistered = true;
 
-            final GeckoEventExpecter expecter = this;
-            mListener = new GeckoEventListener() {
+            if (type == EventType.JSON) {
+                mListener = new GeckoEventListener() {
+                    @Override
+                    public void handleMessage(final String event, final JSONObject message) {
+                        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                                "handleMessage called for: " + event + "; expecting: " + mGeckoEvent);
+                        mAsserter.is(event, mGeckoEvent,
+                                "Given message occurred for registered event: " + message);
+
+                        notifyOfEvent(message.toString());
+                    }
+                };
+                mBundleListener = null;
+                dispatcher.registerGeckoThreadListener(mListener, geckoEvent);
+                return;
+            }
+
+            mListener = null;
+            mBundleListener = new BundleEventListener() {
                 @Override
-                public void handleMessage(final String event, final JSONObject message) {
+                public void handleMessage(final String event, final GeckoBundle message,
+                                          final EventCallback callback) {
                     FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                             "handleMessage called for: " + event + "; expecting: " + mGeckoEvent);
-                    mAsserter.is(event, mGeckoEvent, "Given message occurred for registered event: " + message);
+                    mAsserter.is(event, mGeckoEvent,
+                            "Given message occurred for registered event: " + message);
 
-                    expecter.notifyOfEvent(message);
+                    // Because we cannot put null into the queue, we have to use an empty
+                    // bundle if we don't have a message.
+                    notifyOfEvent(message != null ? message : new GeckoBundle(0));
                 }
             };
 
-            EventDispatcher.getInstance().registerGeckoThreadListener(mListener, mGeckoEvent);
-            mIsRegistered = true;
+            if (type == EventType.GECKO) {
+                dispatcher.registerGeckoThreadListener(mBundleListener, geckoEvent);
+            } else if (type == EventType.UI) {
+                dispatcher.registerUiThreadListener(mBundleListener, geckoEvent);
+            } else if (type == EventType.BACKGROUND) {
+                dispatcher.registerBackgroundThreadListener(mBundleListener, geckoEvent);
+            } else {
+                throw new IllegalArgumentException("Unsupported thread type");
+            }
         }
 
         public void blockForEvent() {
@@ -143,12 +181,22 @@ public class FennecNativeActions implements Actions {
 
         public String blockForEventData() {
             blockForEvent();
-            return mEventData;
+            return (String) mEventData;
         }
 
         public String blockForEventDataWithTimeout(long millis) {
             blockForEvent(millis, false);
-            return mEventData;
+            return (String) mEventData;
+        }
+
+        public GeckoBundle blockForBundle() {
+            blockForEvent();
+            return (GeckoBundle) mEventData;
+        }
+
+        public GeckoBundle blockForBundleWithTimeout(long millis) {
+            blockForEvent(millis, false);
+            return (GeckoBundle) mEventData;
         }
 
         public void unregisterListener() {
@@ -159,7 +207,17 @@ public class FennecNativeActions implements Actions {
             FennecNativeDriver.log(LogLevel.INFO,
                     "EventExpecter: no longer listening for " + mGeckoEvent);
 
-            EventDispatcher.getInstance().unregisterGeckoThreadListener(mListener, mGeckoEvent);
+            if (mType == EventType.JSON) {
+                mDispatcher.unregisterGeckoThreadListener(mListener, mGeckoEvent);
+            } else if (mType == EventType.GECKO) {
+                mDispatcher.unregisterGeckoThreadListener(mBundleListener, mGeckoEvent);
+            } else if (mType == EventType.UI) {
+                mDispatcher.unregisterUiThreadListener(mBundleListener, mGeckoEvent);
+            } else if (mType == EventType.BACKGROUND) {
+                mDispatcher.unregisterBackgroundThreadListener(mBundleListener, mGeckoEvent);
+            } else {
+                throw new IllegalArgumentException("Unsupported thread type");
+            }
             mIsRegistered = false;
         }
 
@@ -167,28 +225,46 @@ public class FennecNativeActions implements Actions {
             return mEventEverReceived;
         }
 
-        void notifyOfEvent(final JSONObject message) {
+        /* package */ void notifyOfEvent(final Object data) {
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                     "received event " + mGeckoEvent);
 
             mEventEverReceived = true;
 
             try {
-                mEventDataQueue.put(message.toString());
+                mEventDataQueue.put(data);
             } catch (InterruptedException e) {
                 FennecNativeDriver.log(LogLevel.ERROR,
-                    "EventExpecter dropped event: " + message.toString(), e);
+                    "EventExpecter dropped event: " + data, e);
             }
         }
     }
 
     public RepeatedEventExpecter expectGeckoEvent(final String geckoEvent) {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
-        return new GeckoEventExpecter(geckoEvent);
+        return new GeckoEventExpecter(EventDispatcher.getInstance(), EventType.JSON, geckoEvent);
+    }
+
+    public RepeatedEventExpecter expectGlobalEvent(final EventType type, final String geckoEvent) {
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
+        return new GeckoEventExpecter(EventDispatcher.getInstance(), type, geckoEvent);
+    }
+
+    public RepeatedEventExpecter expectWindowEvent(final EventType type, final String geckoEvent) {
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
+        return new GeckoEventExpecter(GeckoApp.getEventDispatcher(), type, geckoEvent);
     }
 
     public void sendGeckoEvent(final String geckoEvent, final String data) {
         GeckoAppShell.notifyObservers(geckoEvent, data);
+    }
+
+    public void sendGlobalEvent(final String event, final GeckoBundle data) {
+        EventDispatcher.getInstance().dispatch(event, data);
+    }
+
+    public void sendWindowEvent(final String event, final GeckoBundle data) {
+        GeckoApp.getEventDispatcher().dispatch(event, data);
     }
 
     public static final class PrefProxy implements PrefsHelper.PrefHandler, PrefWaiter {
@@ -364,6 +440,14 @@ public class FennecNativeActions implements Actions {
         public synchronized String blockForEventDataWithTimeout(long millis) {
             blockForEvent(millis, false);
             return null;
+        }
+
+        public GeckoBundle blockForBundle() {
+            throw new UnsupportedOperationException();
+        }
+
+        public GeckoBundle blockForBundleWithTimeout(long millis) {
+            throw new UnsupportedOperationException();
         }
 
         public synchronized boolean eventReceived() {
