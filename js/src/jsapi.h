@@ -6088,9 +6088,9 @@ struct WasmModule : mozilla::external::AtomicRefCounted<WasmModule>
     MOZ_DECLARE_REFCOUNTED_TYPENAME(WasmModule)
     virtual ~WasmModule() {}
 
-    virtual void serializedSize(size_t* bytecodeSize, size_t* compiledSize) const = 0;
-    virtual void serialize(uint8_t* bytecodeBegin, size_t bytecodeSize,
-                           uint8_t* compiledBegin, size_t compiledSize) const = 0;
+    virtual void serializedSize(size_t* maybeBytecodeSize, size_t* maybeCompiledSize) const = 0;
+    virtual void serialize(uint8_t* maybeBytecodeBegin, size_t maybeBytecodeSize,
+                           uint8_t* maybeCompiledBegin, size_t maybeCompiledSize) const = 0;
 
     virtual JSObject* createObject(JSContext* cx) = 0;
 };
