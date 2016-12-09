@@ -6,7 +6,6 @@
 #ifndef MOZILLA_GFX_BASESIZE_H_
 #define MOZILLA_GFX_BASESIZE_H_
 
-#include <algorithm>
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
@@ -92,16 +91,6 @@ struct BaseSize {
   }
   Sub operator/(const Sub& aSize) const {
     return Sub(width / aSize.width, height / aSize.height);
-  }
-
-  friend Sub Min(const Sub& aA, const Sub& aB) {
-    return Sub(std::min(aA.width, aB.width),
-               std::min(aA.height, aB.height));
-  }
-
-  friend Sub Max(const Sub& aA, const Sub& aB) {
-    return Sub(std::max(aA.width, aB.width),
-               std::max(aA.height, aB.height));
   }
 };
 
