@@ -19,11 +19,6 @@
 
 /* Rule View Tabpanel */
 
-.theme-firebug .ruleview {
-  font-family: monospace;
-  font-size: 11px;
-}
-
 #sidebar-panel-ruleview {
   margin: 0;
   display: flex;
