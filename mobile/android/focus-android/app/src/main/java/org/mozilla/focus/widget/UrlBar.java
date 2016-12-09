@@ -6,6 +6,7 @@
 package org.mozilla.focus.widget;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.View;
@@ -104,21 +105,7 @@ public class UrlBar extends ViewFlipper {
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                 if (actionId == EditorInfo.IME_ACTION_GO) {
-                    ViewUtils.hideKeyboard(urlEditView);
-
-                    final String rawUrl = textView.getText().toString();
-
-                    final String url = UrlUtils.isUrl(rawUrl)
-                            ? UrlUtils.normalize(rawUrl)
-                            : UrlUtils.createSearchUrl(rawUrl);
-
-                    if (listener != null) {
-                        listener.onUrlEntered(url);
-                    }
-
-                    urlDisplayView.setText(url);
-
-                    showNext();
+                    onUrlEntered();
                     return true;
                 }
                 return false;
@@ -172,5 +159,27 @@ public class UrlBar extends ViewFlipper {
                 }
             }
         });
+    }
+
+    private void onUrlEntered() {
+        ViewUtils.hideKeyboard(urlEditView);
+
+        final String rawUrl = urlEditView.getText().toString();
+
+        final String url = UrlUtils.isUrl(rawUrl)
+                ? UrlUtils.normalize(rawUrl)
+                : UrlUtils.createSearchUrl(rawUrl);
+
+        if (listener != null) {
+            listener.onUrlEntered(url);
+        }
+
+        urlDisplayView.setText(url);
+
+        showNext();
+    }
+
+    public void enterUrl(String url) {
+        urlEditView.setText(url);
     }
 }

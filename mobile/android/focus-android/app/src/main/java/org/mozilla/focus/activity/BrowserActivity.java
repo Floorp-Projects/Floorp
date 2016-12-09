@@ -6,6 +6,7 @@
 package org.mozilla.focus.activity;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -77,5 +78,10 @@ public class BrowserActivity extends Activity {
                 }
             }
         });
+
+        final Intent intent = getIntent();
+        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+            urlBar.enterUrl(intent.getDataString());
+        }
     }
 }
