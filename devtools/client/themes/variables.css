@@ -135,7 +135,7 @@
 }
 
 :root.theme-firebug {
-  --theme-body-background: #fcfcfc;
+  --theme-body-background: #fff;
   --theme-sidebar-background: #fcfcfc;
   --theme-contrast-background: #e6b064;
 
@@ -145,7 +145,7 @@
   --theme-selection-background-semitransparent: rgba(128,128,128,0.2);
   --theme-selection-color: white;
   --theme-splitter-color: #aabccf;
-  --theme-comment: green;
+  --theme-comment: darkgreen;
 
   --theme-body-color: #000000;
   --theme-body-color-alt: #585959;
@@ -156,10 +156,10 @@
   --theme-highlight-green: #2cbb0f;
   --theme-highlight-blue: #3455db;
   --theme-highlight-bluegrey: #0072ab;
-  --theme-highlight-purple: #887ce6;
+  --theme-highlight-purple: #000080;
   --theme-highlight-lightorange: #d97e00;
   --theme-highlight-orange: #f13c00;
-  --theme-highlight-red: #e22f6f;
+  --theme-highlight-red: #f00;
   --theme-highlight-pink: #b82ee5;
   --theme-highlight-gray: #dde1e4;
 

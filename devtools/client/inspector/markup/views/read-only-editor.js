@@ -20,7 +20,7 @@ function ReadOnlyEditor(container, node) {
     this.tag.classList.add("theme-fg-color5");
     this.tag.textContent = node.isBeforePseudoElement ? "::before" : "::after";
   } else if (node.nodeType == nodeConstants.DOCUMENT_TYPE_NODE) {
-    this.elt.classList.add("comment");
+    this.elt.classList.add("comment", "doctype");
     this.tag.textContent = node.doctypeString;
   } else {
     this.tag.textContent = node.nodeName;
