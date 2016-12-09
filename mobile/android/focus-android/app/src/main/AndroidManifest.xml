@@ -41,6 +41,14 @@
             </intent-filter>
 
         </activity>
+
+        <service
+            android:name=".customtabs.CustomTabsService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
