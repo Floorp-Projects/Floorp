@@ -23,7 +23,7 @@ add_task(function* () {
   let requestItem = RequestsMenu.getItemAtIndex(0);
   RequestsMenu.selectedItem = requestItem;
 
-  let { method, httpVersion, status, statusText } = requestItem;
+  let { method, httpVersion, status, statusText } = requestItem.attachment;
 
   const EXPECTED_REQUEST_HEADERS = [
     `${method} ${SIMPLE_URL} ${httpVersion}`,

@@ -7,31 +7,31 @@
 const I = require("devtools/client/shared/vendor/immutable");
 const {
   OPEN_SIDEBAR,
-  WATERFALL_RESIZE,
+  TOGGLE_SIDEBAR,
 } = require("../constants");
 
+const Sidebar = I.Record({
+  open: false,
+});
+
 const UI = I.Record({
-  sidebarOpen: false,
-  waterfallWidth: 300,
+  sidebar: new Sidebar(),
 });
 
 function openSidebar(state, action) {
-  return state.set("sidebarOpen", action.open);
+  return state.setIn(["sidebar", "open"], action.open);
 }
 
-// Safe bounds for waterfall width (px)
-const REQUESTS_WATERFALL_SAFE_BOUNDS = 90;
-
-function resizeWaterfall(state, action) {
-  return state.set("waterfallWidth", action.width - REQUESTS_WATERFALL_SAFE_BOUNDS);
+function toggleSidebar(state, action) {
+  return state.setIn(["sidebar", "open"], !state.sidebar.open);
 }
 
 function ui(state = new UI(), action) {
   switch (action.type) {
     case OPEN_SIDEBAR:
       return openSidebar(state, action);
-    case WATERFALL_RESIZE:
-      return resizeWaterfall(state, action);
+    case TOGGLE_SIDEBAR:
+      return toggleSidebar(state, action);
     default:
       return state;
   }

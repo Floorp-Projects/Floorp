@@ -42,12 +42,12 @@ function enableFilterTypeOnly(filter) {
 /**
  * Set filter text.
  *
- * @param {string} text - A filter text is going to be set
+ * @param {string} url - A filter text is going to be set
  */
-function setFilterText(text) {
+function setFilterText(url) {
   return {
     type: SET_FILTER_TEXT,
-    text,
+    url,
   };
 }
 

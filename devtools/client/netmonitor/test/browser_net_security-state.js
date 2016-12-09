@@ -24,13 +24,12 @@ add_task(function* () {
   yield performRequests();
 
   for (let item of RequestsMenu.items) {
-    let target = getItemTarget(RequestsMenu, item);
-    let domain = $(".requests-menu-domain", target).textContent;
+    let domain = $(".requests-menu-domain", item.target).value;
 
     info("Found a request to " + domain);
     ok(domain in EXPECTED_SECURITY_STATES, "Domain " + domain + " was expected.");
 
-    let classes = $(".requests-security-state-icon", target).classList;
+    let classes = $(".requests-security-state-icon", item.target).classList;
     let expectedClass = EXPECTED_SECURITY_STATES[domain];
 
     info("Classes of security state icon are: " + classes);

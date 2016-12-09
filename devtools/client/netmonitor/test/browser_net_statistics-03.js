@@ -20,7 +20,7 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-js-button"));
   EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-ws-button"));
   EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-other-button"));
-  testFilterButtonsCustom(monitor, [0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1]);
+  testFilterButtonsCustom(monitor, [0, 1, 1, 1, 0, 0, 0, 0, 0, 1]);
   info("The correct filtering predicates are used before entering perf. analysis mode.");
 
   let onEvents = promise.all([
