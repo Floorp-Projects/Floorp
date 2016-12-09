@@ -928,7 +928,7 @@ public:
       RequestAudioData();
       return;
     }
-    mTask->MaybeFinishSeek();
+    MaybeFinishSeek();
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
@@ -961,7 +961,7 @@ public:
       RequestVideoData();
       return;
     }
-    mTask->MaybeFinishSeek();
+    MaybeFinishSeek();
   }
 
   void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
@@ -1004,7 +1004,7 @@ public:
           mTask->mSeekedVideoData = mTask->mFirstVideoFrameAfterSeek.forget();
         }
       }
-      mTask->MaybeFinishSeek();
+      MaybeFinishSeek();
       return;
     }
 
@@ -1243,6 +1243,13 @@ private:
     }
 
     return NS_OK;
+  }
+
+  void MaybeFinishSeek()
+  {
+    if (mTask->mDoneAudioSeeking && mTask->mDoneVideoSeeking) {
+      mTask->Resolve(__func__); // Call to MDSM::SeekCompleted();
+    }
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
