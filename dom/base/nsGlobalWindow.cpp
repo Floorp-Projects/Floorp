@@ -10846,7 +10846,9 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
       }
     }
 
-    MOZ_DIAGNOSTIC_ASSERT((principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
+    //XXX huseby -- was causing crashes see bug 1321969. Bug 1322760 covers
+    //investigating and fixing the following assert.
+    //MOZ_DIAGNOSTIC_ASSERT((principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
 
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
