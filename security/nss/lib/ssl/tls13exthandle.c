@@ -487,7 +487,7 @@ tls13_ClientSendPreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 
     if (append) {
         SECStatus rv;
-        PRUint32 age;
+        PRTime age;
         unsigned int prefixLength;
         PRUint8 binder[TLS13_MAX_FINISHED_SIZE];
         unsigned int binderLen;
@@ -508,7 +508,8 @@ tls13_ClientSendPreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData,
             goto loser;
 
         /* Obfuscated age. */
-        age = ssl_Time() - session_ticket->received_timestamp;
+        age = PR_Now() - session_ticket->received_timestamp;
+        age /= PR_USEC_PER_MSEC;
         age += session_ticket->ticket_age_add;
         rv = ssl3_ExtAppendHandshakeNumber(ss, age, 4);
         if (rv != SECSuccess)
@@ -747,10 +748,10 @@ tls13_ClientSendEarlyDataXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         rv = ssl3_ExtAppendHandshakeNumber(ss, 0, 2);
         if (rv != SECSuccess)
             return -1;
-    }
 
-    xtnData->advertised[xtnData->numAdvertised++] =
-        ssl_tls13_early_data_xtn;
+        xtnData->advertised[xtnData->numAdvertised++] =
+            ssl_tls13_early_data_xtn;
+    }
 
     return extension_length;
 }
