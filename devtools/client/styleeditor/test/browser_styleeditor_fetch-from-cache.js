@@ -14,8 +14,7 @@ add_task(function* () {
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
   let netmonitor = toolbox.getPanel("netmonitor");
-  let { RequestsMenu } = netmonitor.panelWin.NetMonitorView;
-  RequestsMenu.lazyUpdate = false;
+  netmonitor._view.RequestsMenu.lazyUpdate = false;
 
   info("Navigating to test page");
   yield navigateTo(TEST_URL);
@@ -28,7 +27,7 @@ add_task(function* () {
 
   info("Checking Netmonitor contents.");
   let items = [];
-  for (let item of RequestsMenu.items) {
+  for (let item of netmonitor._view.RequestsMenu.items) {
     if (item.url.endsWith("doc_uncached.css")) {
       items.push(item);
     }
