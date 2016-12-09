@@ -48,7 +48,7 @@ var Feedback = {
         break;
 
       case "FeedbackMaybeLater":
-        Messaging.sendRequest({ type: "Feedback:MaybeLater" });
+        GlobalEventDispatcher.sendRequest({ type: "Feedback:MaybeLater" });
         break;
     }
 

@@ -26,7 +26,7 @@ public final class GeckoHelper {
     }
 
     public static void blockForReady() {
-        blockForEvent("Gecko:Ready");
+        blockForEvent(Actions.EventType.GECKO, "Gecko:Ready");
     }
 
     /**
@@ -34,11 +34,11 @@ public final class GeckoHelper {
      * first page load.
      */
     public static void blockForDelayedStartup() {
-        blockForEvent("Gecko:DelayedStartup");
+        blockForEvent(Actions.EventType.UI, "Gecko:DelayedStartup");
     }
 
-    private static void blockForEvent(final String eventName) {
-        final EventExpecter eventExpecter = sActions.expectGeckoEvent(eventName);
+    private static void blockForEvent(final Actions.EventType type, final String eventName) {
+        final EventExpecter eventExpecter = sActions.expectGlobalEvent(type, eventName);
 
         if (!GeckoThread.isRunning()) {
             eventExpecter.blockForEvent();

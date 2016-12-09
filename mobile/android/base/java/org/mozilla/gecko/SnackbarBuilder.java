@@ -6,7 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.app.Activity;
 import android.graphics.Color;
@@ -173,11 +173,11 @@ public class SnackbarBuilder {
     /**
      * @param object Populate the builder with data from a Gecko Snackbar:Show event.
      */
-    public SnackbarBuilder fromEvent(final NativeJSObject object) {
+    public SnackbarBuilder fromEvent(final GeckoBundle object) {
         message = object.getString("message");
         duration = object.getInt("duration");
 
-        if (object.has("backgroundColor")) {
+        if (object.containsKey("backgroundColor")) {
             final String providedColor = object.getString("backgroundColor");
             try {
                 backgroundColor = Color.parseColor(providedColor);
@@ -186,9 +186,9 @@ public class SnackbarBuilder {
             }
         }
 
-        NativeJSObject actionObject = object.optObject("action", null);
+        GeckoBundle actionObject = object.getBundle("action");
         if (actionObject != null) {
-            action = actionObject.optString("label", null);
+            action = actionObject.getString("label", null);
         }
         return this;
     }

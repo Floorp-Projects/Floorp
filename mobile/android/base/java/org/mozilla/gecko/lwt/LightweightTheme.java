@@ -15,7 +15,9 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.WindowUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
@@ -37,7 +39,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewParent;
 
-public class LightweightTheme implements GeckoEventListener {
+public class LightweightTheme implements BundleEventListener {
     private static final String LOGTAG = "GeckoLightweightTheme";
 
     private static final String PREFS_URL = "lightweightTheme.headerURL";
@@ -163,7 +165,7 @@ public class LightweightTheme implements GeckoEventListener {
         mListeners = new ArrayList<OnChangeListener>();
 
         // unregister isn't needed as the lifetime is same as the application.
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerUiThreadListener(this,
             "LightweightTheme:Update",
             "LightweightTheme:Disable");
 
@@ -181,28 +183,19 @@ public class LightweightTheme implements GeckoEventListener {
     }
 
     @Override
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if (event.equals("LightweightTheme:Update")) {
-                JSONObject lightweightTheme = message.getJSONObject("data");
-                final String headerURL = lightweightTheme.getString("headerURL");
-                final String color = lightweightTheme.optString("accentcolor");
+    public void handleMessage(String event, GeckoBundle message, EventCallback callback) {
+        if (event.equals("LightweightTheme:Update")) {
+            GeckoBundle lightweightTheme = message.getBundle("data");
+            final String headerURL = lightweightTheme.getString("headerURL");
+            final String color = lightweightTheme.getString("accentcolor");
 
-                ThreadUtils.postToBackgroundThread(new LightweightThemeRunnable(headerURL, color));
-            } else if (event.equals("LightweightTheme:Disable")) {
-                // Clear the saved data when a theme is disabled.
-                // Called on the Gecko thread, but should be very lightweight.
-                clearPrefs();
+            ThreadUtils.postToBackgroundThread(new LightweightThemeRunnable(headerURL, color));
 
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        resetLightweightTheme();
-                    }
-                });
-            }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+        } else if (event.equals("LightweightTheme:Disable")) {
+            // Clear the saved data when a theme is disabled.
+            // Called on the Gecko thread, but should be very lightweight.
+            clearPrefs();
+            resetLightweightTheme();
         }
     }
 
