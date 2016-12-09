@@ -94,13 +94,16 @@ GetPropIRGenerator::tryAttachStub()
             return true;
         if (tryAttachStringLength(valId, id))
             return true;
-        if (tryAttachMagicArguments(valId, id))
+        if (tryAttachMagicArgumentsName(valId, id))
             return true;
         return false;
     }
 
     if (idVal_.isInt32()) {
-        if (tryAttachStringChar(valId, getElemKeyValueId()))
+        ValOperandId indexId = getElemKeyValueId();
+        if (tryAttachStringChar(valId, indexId))
+            return true;
+        if (tryAttachMagicArgument(valId, indexId))
             return true;
         return false;
     }
@@ -806,7 +809,7 @@ GetPropIRGenerator::tryAttachStringChar(ValOperandId valId, ValOperandId indexId
 }
 
 bool
-GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId, HandleId id)
+GetPropIRGenerator::tryAttachMagicArgumentsName(ValOperandId valId, HandleId id)
 {
     if (!val_.isMagic(JS_OPTIMIZED_ARGUMENTS))
         return false;
@@ -827,6 +830,23 @@ GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId, HandleId id)
         writer.typeMonitorResult();
     }
 
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!val_.isMagic(JS_OPTIMIZED_ARGUMENTS))
+        return false;
+
+    writer.guardMagicValue(valId, JS_OPTIMIZED_ARGUMENTS);
+    writer.guardFrameHasNoArgumentsObject();
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadFrameArgumentResult(int32IndexId);
+    writer.typeMonitorResult();
     return true;
 }
 
