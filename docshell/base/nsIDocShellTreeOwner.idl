@@ -97,9 +97,10 @@ interface nsIDocShellTreeOwner : nsISupports
                             out boolean aPersistSizeMode);
 
 	/*
-	Gets the number of targettable docshells.
+	Gets the number of tabs currently open in our window, assuming
+	this tree owner has such a concept.
 	*/
-	readonly attribute unsigned long targetableShellCount;
+	readonly attribute unsigned long tabCount;
 
 	/*
 	Returns true if there is a primary content shell or a primary

@@ -287,8 +287,12 @@ nsChromeTreeOwner::GetPersistence(bool* aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsChromeTreeOwner::GetTargetableShellCount(uint32_t* aResult)
+nsChromeTreeOwner::GetTabCount(uint32_t* aResult)
 {
+  if (mXULWindow) {
+    return mXULWindow->GetTabCount(aResult);
+  }
+
   *aResult = 0;
   return NS_OK;
 }
