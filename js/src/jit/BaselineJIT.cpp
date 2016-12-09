@@ -13,6 +13,7 @@
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
+#include "jit/IonControlFlow.h"
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
 #include "vm/Debugger.h"
@@ -76,7 +77,8 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
     flags_(0),
     inlinedBytecodeLength_(0),
     maxInliningDepth_(UINT8_MAX),
-    pendingBuilder_(nullptr)
+    pendingBuilder_(nullptr),
+    controlFlowGraph_(nullptr)
 { }
 
 static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;

@@ -43,6 +43,16 @@ class StatusHandler(object):
             else:
                 self.expected_statuses[status] += 1
 
+        if action == "assertion_count":
+            if data["count"] < data["min_expected"]:
+                self.unexpected_statuses["PASS"] += 1
+            elif data["count"] > data["max_expected"]:
+                self.unexpected_statuses["FAIL"] += 1
+            elif data["count"]:
+                self.expected_statuses["FAIL"] += 1
+            else:
+                self.expected_statuses["PASS"] += 1
+
     def summarize(self):
         return RunSummary(
             dict(self.unexpected_statuses),
