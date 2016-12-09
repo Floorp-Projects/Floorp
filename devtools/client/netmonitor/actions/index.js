@@ -4,20 +4,8 @@
 
 "use strict";
 
-const batching = require("./batching");
 const filters = require("./filters");
 const requests = require("./requests");
-const selection = require("./selection");
-const sort = require("./sort");
-const timingMarkers = require("./timing-markers");
 const ui = require("./ui");
 
-Object.assign(exports,
-  batching,
-  filters,
-  requests,
-  selection,
-  sort,
-  timingMarkers,
-  ui
-);
+module.exports = Object.assign({}, filters, requests, ui);
