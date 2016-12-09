@@ -1092,7 +1092,7 @@
             var oldBrowser = this.mCurrentBrowser;
 
             if (!gMultiProcessBrowser) {
-              oldBrowser.setAttribute("type", "content-targetable");
+              oldBrowser.setAttribute("type", "content");
               oldBrowser.docShellIsActive = false;
               newBrowser.setAttribute("type", "content-primary");
               newBrowser.docShellIsActive =
@@ -1940,7 +1940,7 @@
 
             let b = document.createElementNS(NS_XUL, "browser");
             b.permanentKey = aParams.permanentKey || {};
-            b.setAttribute("type", "content-targetable");
+            b.setAttribute("type", "content");
             b.setAttribute("message", "true");
             b.setAttribute("messagemanagergroup", "browsers");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
@@ -2622,7 +2622,7 @@
             }
 
             // We are no longer the primary content area.
-            browser.setAttribute("type", "content-targetable");
+            browser.setAttribute("type", "content");
 
             // Remove this tab as the owner of any other tabs, since it's going away.
             for (let tab of this.tabs) {
@@ -3766,7 +3766,7 @@
               // before we were able to finalize, in which case, fromBrowser
               // doesn't exist.
               if (fromBrowser) {
-                fromBrowser.setAttribute("type", "content-targetable");
+                fromBrowser.setAttribute("type", "content");
               }
 
               let event = new CustomEvent("TabSwitchDone", {
