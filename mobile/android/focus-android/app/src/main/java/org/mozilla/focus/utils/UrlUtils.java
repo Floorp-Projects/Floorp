@@ -18,4 +18,10 @@ public class UrlUtils {
 
         return uri.toString();
     }
+
+    public static boolean isHttps(String url) {
+        // TODO: This should actually check the certificate!
+
+        return url.startsWith("https:");
+    }
 }

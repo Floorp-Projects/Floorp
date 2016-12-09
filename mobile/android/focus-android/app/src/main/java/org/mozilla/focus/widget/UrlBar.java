@@ -33,6 +33,7 @@ public class UrlBar extends ViewFlipper {
     private boolean hasLoadedPage;
     private EditText urlEditView;
     private TextView urlDisplayView;
+    private View lockView;
 
     public UrlBar(Context context) {
         super(context);
@@ -64,6 +65,12 @@ public class UrlBar extends ViewFlipper {
 
         urlDisplayView.setText(url);
         urlEditView.setText(url);
+
+        if (UrlUtils.isHttps(url)) {
+            lockView.setVisibility(View.VISIBLE);
+        } else {
+            lockView.setVisibility(View.GONE);
+        }
     }
 
     public void onPageFinished() {
@@ -77,6 +84,8 @@ public class UrlBar extends ViewFlipper {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
+
+        lockView = findViewById(R.id.lock);
 
         urlEditView = (EditText) findViewById(R.id.url_edit);
         urlEditView.setOnEditorActionListener(new TextView.OnEditorActionListener() {

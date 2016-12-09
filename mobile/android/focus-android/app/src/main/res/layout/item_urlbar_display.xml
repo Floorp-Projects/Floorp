@@ -5,14 +5,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="48dp"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:animateLayoutChanges="true">
 
     <ImageView
+        android:id="@+id/lock"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center_vertical"
-        android:layout_margin="8dp"
-        android:background="#aaaaaa" />
+        android:layout_marginLeft="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_lock" />
 
     <TextView
         android:id="@+id/url"
