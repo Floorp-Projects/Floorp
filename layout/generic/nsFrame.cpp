@@ -2214,10 +2214,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     case nsDisplayTransform::FullPrerender:
       allowAsyncAnimation = true;
       break;
-    case nsDisplayTransform::PartialPrerender:
-      allowAsyncAnimation = true;
-      MOZ_FALLTHROUGH;
-      // fall through to the NoPrerender case
     case nsDisplayTransform::NoPrerender:
       if (overflow.IsEmpty() && !extend3DContext) {
         return;
