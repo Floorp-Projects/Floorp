@@ -35,6 +35,10 @@
   font-size: 80%;
 }
 
+:root[platform="linux"].theme-firebug .devtools-monospace {
+  font-size: 11px; /* Font becomes too small for linux with 80% */
+}
+
 /* Override wrong system font from forms.css */
 html|button, html|select {
   font: message-box;
