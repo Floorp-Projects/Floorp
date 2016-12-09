@@ -10,18 +10,31 @@ base_path = os.path.join(os.getcwd(), "taskcluster/docs/")
 
 
 def verify_docs(filename, identifiers, appearing_as):
+
+    # We ignore identifiers starting with '_' for the sake of tests.
+    # Strings starting with "_" are ignored for doc verification
+    # hence they can be used for faking test values
     with open(os.path.join(base_path, filename)) as fileObject:
         doctext = "".join(fileObject.readlines())
         if appearing_as == "inline-literal":
-            expression_list = ["``" + identifier + "``" for identifier in identifiers]
+            expression_list = [
+                "``" + identifier + "``"
+                for identifier in identifiers
+                if not identifier.startswith("_")
+            ]
         elif appearing_as == "heading":
-            expression_list = [identifier + "\n[-+\n*]+|[.+\n*]+" for identifier in identifiers]
+            expression_list = [
+                identifier + "\n(?:(?:(?:-+\n)+)|(?:(?:.+\n)+))"
+                for identifier in identifiers
+                if not identifier.startswith("_")
+            ]
         else:
-            raise Exception("appearing_as = {} not defined".format(appearing_as))
+            raise Exception("appearing_as = `{}` not defined".format(appearing_as))
 
         for expression, identifier in zip(expression_list, identifiers):
             match_group = re.search(expression, doctext)
             if not match_group:
                 raise Exception(
-                    "{}: {} missing from doc file: {}".format(appearing_as, identifier, filename)
+                    "{}: `{}` missing from doc file: `{}`"
+                    .format(appearing_as, identifier, filename)
                 )

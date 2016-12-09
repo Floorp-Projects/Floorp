@@ -62,6 +62,8 @@ class TaskGraphGenerator(object):
         self.root_dir = root_dir
         self.parameters = parameters
 
+        self.verify_parameters(self.parameters)
+
         filters = parameters.get('filters', [])
 
         # Always add legacy target tasks method until we deprecate that API.
@@ -236,6 +238,14 @@ class TaskGraphGenerator(object):
                 raise AttributeError("No such run result {}".format(name))
             self._run_results[k] = v
         return self._run_results[name]
+
+    def verify_parameters(self, parameters):
+        parameters_dict = dict(**parameters)
+        verify_docs(
+            filename="parameters.rst",
+            identifiers=parameters_dict.keys(),
+            appearing_as="inline-literal"
+         )
 
     def verify_kinds(self, kinds):
         verify_docs(

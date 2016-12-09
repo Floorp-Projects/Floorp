@@ -162,21 +162,10 @@ add_task(function* () {
       "There should be a total of 5 items in the requests menu.");
     is(RequestsMenu.visibleItems.length, 5,
       "There should be a total of 5 visbile items in the requests menu.");
-    is($all(".side-menu-widget-item").length, 5,
+    is($all(".request-list-item").length, 5,
       "The visible items in the requests menu are, in fact, visible!");
 
-    is(RequestsMenu.getItemAtIndex(0), RequestsMenu.items[0],
-      "The requests menu items aren't ordered correctly. First item is misplaced.");
-    is(RequestsMenu.getItemAtIndex(1), RequestsMenu.items[1],
-      "The requests menu items aren't ordered correctly. Second item is misplaced.");
-    is(RequestsMenu.getItemAtIndex(2), RequestsMenu.items[2],
-      "The requests menu items aren't ordered correctly. Third item is misplaced.");
-    is(RequestsMenu.getItemAtIndex(3), RequestsMenu.items[3],
-      "The requests menu items aren't ordered correctly. Fourth item is misplaced.");
-    is(RequestsMenu.getItemAtIndex(4), RequestsMenu.items[4],
-      "The requests menu items aren't ordered correctly. Fifth item is misplaced.");
-
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(a),
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(a),
       "GET", STATUS_CODES_SJS + "?sts=100", {
         status: 101,
         statusText: "Switching Protocols",
@@ -186,7 +175,7 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(b),
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(b),
       "GET", STATUS_CODES_SJS + "?sts=200", {
         status: 202,
         statusText: "Created",
@@ -196,7 +185,7 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(c),
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(c),
       "GET", STATUS_CODES_SJS + "?sts=300", {
         status: 303,
         statusText: "See Other",
@@ -206,7 +195,7 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(d),
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(d),
       "GET", STATUS_CODES_SJS + "?sts=400", {
         status: 404,
         statusText: "Not Found",
@@ -216,7 +205,7 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(e),
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(e),
       "GET", STATUS_CODES_SJS + "?sts=500", {
         status: 501,
         statusText: "Not Implemented",

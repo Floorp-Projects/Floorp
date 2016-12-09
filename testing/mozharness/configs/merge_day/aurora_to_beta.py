@@ -36,10 +36,9 @@ config = {
                   "browser/config/mozconfigs/linux64/l10n-mozconfig",
                   "browser/config/mozconfigs/win32/l10n-mozconfig",
                   "browser/config/mozconfigs/win64/l10n-mozconfig",
-                  "browser/config/mozconfigs/macosx-universal/l10n-mozconfig",
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
-        ("browser/config/mozconfigs/macosx-universal/nightly",
+        ("browser/config/mozconfigs/macosx64/nightly",
          "ac_add_options --with-branding=browser/branding/aurora",
          "ac_add_options --with-branding=browser/branding/nightly"),
         ("browser/confvars.sh",

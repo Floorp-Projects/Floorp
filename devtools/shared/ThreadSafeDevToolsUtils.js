@@ -96,7 +96,7 @@ exports.reportException = function reportException(who, exception) {
  * don't have a way to get at them from JavaScript at the moment.)
  */
 exports.makeInfallible = function (handler, name = handler.name) {
-  return function (/* arguments */) {
+  return function () {
     try {
       return handler.apply(this, arguments);
     } catch (ex) {
@@ -128,7 +128,9 @@ exports.safeErrorString = function (error) {
             errorString += "\nStack: " + stack;
           }
         }
-      } catch (ee) { }
+      } catch (ee) {
+        // Ignore.
+      }
 
       // Append additional line and column number information to the output,
       // since it might not be part of the stringified error.
@@ -138,7 +140,9 @@ exports.safeErrorString = function (error) {
 
       return errorString;
     }
-  } catch (ee) { }
+  } catch (ee) {
+    // Ignore.
+  }
 
   // We failed to find a good error description, so do the next best thing.
   return Object.prototype.toString.call(error);
@@ -294,7 +298,7 @@ exports.settleAll = values => {
 
     if (!countdown) {
       resolve(resolutionValues);
-      return deferred.promise;
+      return;
     }
 
     function checkForCompletion() {

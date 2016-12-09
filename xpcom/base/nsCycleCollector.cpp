@@ -2871,7 +2871,7 @@ nsCycleCollector::MarkRoots(SliceBudget& aBudget)
   JS::AutoAssertNoGC nogc;
   TimeLog timeLog;
   AutoRestore<bool> ar(mScanInProgress);
-  MOZ_ASSERT(!mScanInProgress);
+  MOZ_RELEASE_ASSERT(!mScanInProgress);
   mScanInProgress = true;
   MOZ_ASSERT(mIncrementalPhase == GraphBuildingPhase);
 
@@ -3192,7 +3192,7 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
 {
   JS::AutoAssertNoGC nogc;
   AutoRestore<bool> ar(mScanInProgress);
-  MOZ_ASSERT(!mScanInProgress);
+  MOZ_RELEASE_ASSERT(!mScanInProgress);
   mScanInProgress = true;
   mWhiteNodeCount = 0;
   MOZ_ASSERT(mIncrementalPhase == ScanAndCollectWhitePhase);
@@ -3855,7 +3855,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   }
 
   AutoRestore<bool> ar(mScanInProgress);
-  MOZ_ASSERT(!mScanInProgress);
+  MOZ_RELEASE_ASSERT(!mScanInProgress);
   mScanInProgress = true;
   mPurpleBuf.SelectPointers(*mBuilder);
   timeLog.Checkpoint("SelectPointers()");

@@ -32,7 +32,7 @@ add_task(function* () {
   yield wait;
 
   REQUEST_URIS.forEach(function (uri, index) {
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(index), "GET", uri);
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(index), "GET", uri);
   });
 
   yield teardown(monitor);
