@@ -42,7 +42,6 @@ JS::Zone::Zone(JSRuntime* rt)
     data(nullptr),
     isSystem(false),
     usedByExclusiveThread(false),
-    active(false),
     jitZone_(nullptr),
     gcState_(NoGC),
     gcScheduled_(false),
@@ -128,11 +127,6 @@ Zone::onTooMuchMalloc()
 void
 Zone::beginSweepTypes(FreeOp* fop, bool releaseTypes)
 {
-    // Periodically release observed types for all scripts. This is safe to
-    // do when there are no frames for the zone on the stack.
-    if (active)
-        releaseTypes = false;
-
     AutoClearTypeInferenceStateOnOOM oom(this);
     types.beginSweep(fop, releaseTypes, oom);
 }
