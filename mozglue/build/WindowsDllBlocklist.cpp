@@ -26,6 +26,7 @@
 #include "nsAutoPtr.h"
 
 #include "nsWindowsDllInterceptor.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
@@ -260,8 +261,7 @@ printf_stderr(const char *fmt, ...)
     char buf[2048];
     va_list args;
     va_start(args, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, args);
-    buf[sizeof(buf) - 1] = '\0';
+    VsprintfLiteral(buf, fmt, args);
     va_end(args);
     OutputDebugStringA(buf);
   }
