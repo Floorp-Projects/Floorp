@@ -26,12 +26,12 @@ add_task(function* test() {
   yield onThumbnail;
 
   info("Checking the image thumbnail after a few requests were made...");
-  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.getItemAtIndex(0));
+  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[0]);
 
   // Hide tooltip before next test, to avoid the situation that tooltip covers
   // the icon for the request of the next test.
   info("Checking the image thumbnail gets hidden...");
-  yield hideTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.getItemAtIndex(0));
+  yield hideTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[0]);
 
   // +1 extra document reload
   onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS + 1);
@@ -44,10 +44,10 @@ add_task(function* test() {
   yield onThumbnail;
 
   info("Checking the image thumbnail after a reload.");
-  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.getItemAtIndex(1));
+  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[1]);
 
   info("Checking if the image thumbnail is hidden when mouse leaves the menu widget");
-  let requestsMenuEl = $(".requests-menu-contents");
+  let requestsMenuEl = $("#requests-menu-contents");
   let onHidden = RequestsMenu.tooltip.once("hidden");
   EventUtils.synthesizeMouse(requestsMenuEl, 0, 0, {type: "mouseout"}, monitor.panelWin);
   yield onHidden;
@@ -65,7 +65,7 @@ add_task(function* test() {
    * with the expected content.
    */
   function* showTooltipAndVerify(tooltip, requestItem) {
-    let anchor = $(".requests-menu-file", getItemTarget(RequestsMenu, requestItem));
+    let anchor = $(".requests-menu-file", requestItem.target);
     yield showTooltipOn(tooltip, anchor);
 
     info("Tooltip was successfully opened for the image request.");
@@ -88,13 +88,13 @@ add_task(function* test() {
    * Hide a tooltip on the {requestItem} and verify that it was closed.
    */
   function* hideTooltipAndVerify(tooltip, requestItem) {
-    // Hovering over the "method" column hides the tooltip.
-    let anchor = $(".requests-menu-method", getItemTarget(RequestsMenu, requestItem));
+    // Hovering method hides tooltip.
+    let anchor = $(".requests-menu-method", requestItem.target);
 
-    let onTooltipHidden = tooltip.once("hidden");
+    let onHidden = tooltip.once("hidden");
     let win = anchor.ownerDocument.defaultView;
     EventUtils.synthesizeMouseAtCenter(anchor, {type: "mousemove"}, win);
-    yield onTooltipHidden;
+    yield onHidden;
 
     info("Tooltip was successfully closed.");
   }

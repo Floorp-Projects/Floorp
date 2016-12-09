@@ -25,7 +25,7 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
+  verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
     "GET", CONTENT_TYPE_SJS + "?fmt=jsonp&jsonp=$_0123Fun", {
       status: 200,
       statusText: "OK",
@@ -34,7 +34,7 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 41),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(1),
+  verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
     "GET", CONTENT_TYPE_SJS + "?fmt=jsonp2&jsonp=$_4567Sad", {
       status: 200,
       statusText: "OK",
