@@ -8,6 +8,7 @@ const {
   getAbbreviatedMimeType,
   getUrlBaseNameWithQuery,
   getUrlHost,
+  loadCauseString,
 } = require("./request-utils");
 
 /**
@@ -59,8 +60,8 @@ function domain(first, second) {
 }
 
 function cause(first, second) {
-  let firstCause = first.cause.type;
-  let secondCause = second.cause.type;
+  let firstCause = loadCauseString(first.cause.type);
+  let secondCause = loadCauseString(second.cause.type);
   if (firstCause == secondCause) {
     return first.startedMillis - second.startedMillis;
   }
