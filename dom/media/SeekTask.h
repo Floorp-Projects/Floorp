@@ -80,6 +80,7 @@ protected:
 
   virtual ~SeekTask();
 
+public:
   void Resolve(const char* aCallSite);
 
   void RejectIfExist(const MediaResult& aError, const char* aCallSite);
