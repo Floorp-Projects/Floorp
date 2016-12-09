@@ -31,7 +31,7 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.getElementById("toggle-raw-headers"));
 
-  testShowRawHeaders(origItem.attachment);
+  testShowRawHeaders(origItem);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.getElementById("toggle-raw-headers"));
@@ -46,12 +46,12 @@ add_task(function* () {
   function testShowRawHeaders(data) {
     let requestHeaders = document.getElementById("raw-request-headers-textarea").value;
     for (let header of data.requestHeaders.headers) {
-      ok(requestHeaders.indexOf(header.name + ": " + header.value) >= 0,
+      ok(requestHeaders.includes(header.name + ": " + header.value),
         "textarea contains request headers");
     }
     let responseHeaders = document.getElementById("raw-response-headers-textarea").value;
     for (let header of data.responseHeaders.headers) {
-      ok(responseHeaders.indexOf(header.name + ": " + header.value) >= 0,
+      ok(responseHeaders.includes(header.name + ": " + header.value),
         "textarea contains response headers");
     }
   }

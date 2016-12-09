@@ -677,6 +677,8 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'tabqueue/TabQueueService.java',
     'tabqueue/TabReceivedService.java',
     'Tabs.java',
+    'tabs/AutoFitTabsGridLayout.java',
+    'tabs/CompactTabsGridLayout.java',
     'tabs/PrivateTabsPanel.java',
     'tabs/TabCurve.java',
     'tabs/TabHistoryController.java',
