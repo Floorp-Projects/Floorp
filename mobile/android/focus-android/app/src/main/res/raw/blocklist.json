@@ -1,0 +1,14 @@
+{
+  "license": "...",
+  "categories": {
+    "ImaginaryCategory": [
+      {
+        "Mozilla": {
+          "http://www.mozilla.org/": [
+            "mozilla.org"
+          ]
+        }
+      }
+    ]
+  }
+}
