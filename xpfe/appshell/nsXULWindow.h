@@ -170,8 +170,6 @@ protected:
    nsString                mTitle;
    nsIntRect               mOpenerScreenRect; // the screen rect of the opener
 
-   nsCOMArray<nsIWeakReference> mTargetableShells; // targetable shells only
-
    nsCOMPtr<nsITabParent> mPrimaryTabParent;
 private:
    nsresult GetPrimaryTabParentSize(int32_t* aWidth, int32_t* aHeight);
