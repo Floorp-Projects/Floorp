@@ -1610,6 +1610,7 @@ main(int argc, char **argv)
                 if (SECU_ParseSSLVersionRangeString(optstate->value,
                                                     enabledVersions, &enabledVersions) !=
                     SECSuccess) {
+                    fprintf(stderr, "Bad version specified.\n");
                     Usage(progName);
                 }
                 break;
