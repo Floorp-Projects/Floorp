@@ -910,7 +910,7 @@ public:
       return;
     }
 
-    mTask->AdjustFastSeekIfNeeded(audio);
+    AdjustFastSeekIfNeeded(audio);
 
     if (mTask->mTarget.IsFast()) {
       // Non-precise seek; we can stop the seek at the first sample.
@@ -943,7 +943,7 @@ public:
 
     SSAMPLELOG("HandleVideoDecoded [%lld,%lld]", video->mTime, video->GetEndTime());
 
-    mTask->AdjustFastSeekIfNeeded(video);
+    AdjustFastSeekIfNeeded(video);
 
     if (mTask->mTarget.IsFast()) {
       // Non-precise seek. We can stop the seek at the first sample.
@@ -1116,6 +1116,21 @@ private:
     MOZ_ASSERT(!Reader()->IsRequestingVideoData());
     MOZ_ASSERT(!Reader()->IsWaitingVideoData());
     Reader()->RequestVideoData(false, media::TimeUnit());
+  }
+
+  void AdjustFastSeekIfNeeded(MediaData* aSample)
+  {
+    if (mTask->mTarget.IsFast() &&
+        mTask->mTarget.GetTime() > mTask->mCurrentTimeBeforeSeek &&
+        aSample->mTime < mTask->mCurrentTimeBeforeSeek.ToMicroseconds()) {
+      // We are doing a fastSeek, but we ended up *before* the previous
+      // playback position. This is surprising UX, so switch to an accurate
+      // seek and decode to the seek target. This is not conformant to the
+      // spec, fastSeek should always be fast, but until we get the time to
+      // change all Readers to seek to the keyframe after the currentTime
+      // in this case, we'll just decode forward. Bug 1026330.
+      mTask->mTarget.SetType(SeekTarget::Accurate);
+    }
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)

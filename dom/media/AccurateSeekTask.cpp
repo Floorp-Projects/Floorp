@@ -259,21 +259,4 @@ AccurateSeekTask::MaybeFinishSeek()
   }
 }
 
-void
-AccurateSeekTask::AdjustFastSeekIfNeeded(MediaData* aSample)
-{
-  AssertOwnerThread();
-  if (mTarget.IsFast() &&
-      mTarget.GetTime() > mCurrentTimeBeforeSeek &&
-      aSample->mTime < mCurrentTimeBeforeSeek.ToMicroseconds()) {
-    // We are doing a fastSeek, but we ended up *before* the previous
-    // playback position. This is surprising UX, so switch to an accurate
-    // seek and decode to the seek target. This is not conformant to the
-    // spec, fastSeek should always be fast, but until we get the time to
-    // change all Readers to seek to the keyframe after the currentTime
-    // in this case, we'll just decode forward. Bug 1026330.
-    mTarget.SetType(SeekTarget::Accurate);
-  }
-}
-
 } // namespace mozilla
