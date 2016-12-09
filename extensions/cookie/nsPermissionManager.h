@@ -71,7 +71,9 @@ public:
   class PermissionKey
   {
   public:
-    explicit PermissionKey(nsIPrincipal* aPrincipal);
+    static PermissionKey* CreateFromPrincipal(nsIPrincipal* aPrincipal,
+                                              nsresult& aResult);
+
     explicit PermissionKey(const nsACString& aOrigin)
       : mOrigin(aOrigin)
     {

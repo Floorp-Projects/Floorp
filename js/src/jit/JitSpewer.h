@@ -66,6 +66,8 @@ namespace jit {
     _(CacheFlush)                           \
     /* Output a list of MIR expressions */  \
     _(MIRExpressions)                       \
+    /* Print control flow graph */          \
+    _(CFG)                                  \
                                             \
     /* BASELINE COMPILER SPEW */            \
                                             \

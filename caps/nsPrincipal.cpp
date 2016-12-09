@@ -74,7 +74,7 @@ nsPrincipal::nsPrincipal()
 { }
 
 nsPrincipal::~nsPrincipal()
-{ 
+{
   // let's clear the principal within the csp to avoid a tangling pointer
   if (mCSP) {
     static_cast<nsCSPContext*>(mCSP.get())->clearLoadingPrincipal();
@@ -161,19 +161,30 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
     NS_ENSURE_SUCCESS(rv, rv);
     aOrigin.AppendLiteral("://");
     aOrigin.Append(hostPort);
+    return NS_OK;
   }
-  else {
-    // If we reached this branch, we can only create an origin if we have a nsIStandardURL.
-    // So, we query to a nsIStandardURL, and fail if we aren't an instance of an nsIStandardURL
-    // nsIStandardURLs have the good property of escaping the '^' character in their specs,
-    // which means that we can be sure that the caret character (which is reserved for delimiting
-    // the end of the spec, and the beginning of the origin attributes) is not present in the
-    // origin string
-    nsCOMPtr<nsIStandardURL> standardURL = do_QueryInterface(origin);
-    NS_ENSURE_TRUE(standardURL, NS_ERROR_FAILURE);
-    rv = origin->GetAsciiSpec(aOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
+
+  // This URL can be a blobURL. In this case, we should use the 'parent'
+  // principal instead.
+  nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(origin);
+  if (uriWithPrincipal) {
+    nsCOMPtr<nsIPrincipal> uriPrincipal;
+    if (uriWithPrincipal) {
+      return uriPrincipal->GetOriginNoSuffix(aOrigin);
+    }
   }
+
+  // If we reached this branch, we can only create an origin if we have a
+  // nsIStandardURL.  So, we query to a nsIStandardURL, and fail if we aren't
+  // an instance of an nsIStandardURL nsIStandardURLs have the good property
+  // of escaping the '^' character in their specs, which means that we can be
+  // sure that the caret character (which is reserved for delimiting the end
+  // of the spec, and the beginning of the origin attributes) is not present
+  // in the origin string
+  nsCOMPtr<nsIStandardURL> standardURL = do_QueryInterface(origin);
+  NS_ENSURE_TRUE(standardURL, NS_ERROR_FAILURE);
+  rv = origin->GetAsciiSpec(aOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

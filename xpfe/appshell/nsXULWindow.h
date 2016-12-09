@@ -106,8 +106,8 @@ protected:
 
    // See nsIDocShellTreeOwner for docs on next two methods
    nsresult ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                          bool aPrimary, bool aTargetable,
-                                          const nsAString& aID);
+                              bool aPrimary,
+                              const nsAString& aID);
    nsresult ContentShellRemoved(nsIDocShellTreeItem* aContentShell);
    NS_IMETHOD GetPrimaryContentSize(int32_t* aWidth,
                                     int32_t* aHeight);
@@ -133,6 +133,7 @@ protected:
    void       SetContentScrollbarVisibility(bool aVisible);
    bool       GetContentScrollbarVisibility();
    void       PersistentAttributesDirty(uint32_t aDirtyFlags);
+   nsresult   GetTabCount(uint32_t* aResult);
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
@@ -168,8 +169,6 @@ protected:
    uint32_t                mChromeFlags;
    nsString                mTitle;
    nsIntRect               mOpenerScreenRect; // the screen rect of the opener
-
-   nsCOMArray<nsIWeakReference> mTargetableShells; // targetable shells only
 
    nsCOMPtr<nsITabParent> mPrimaryTabParent;
 private:

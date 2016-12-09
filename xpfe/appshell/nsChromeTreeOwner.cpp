@@ -139,12 +139,10 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 
 NS_IMETHODIMP
 nsChromeTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                     bool aPrimary, bool aTargetable,
-                                     const nsAString& aID)
+                                     bool aPrimary, const nsAString& aID)
 {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->ContentShellAdded(aContentShell, aPrimary, aTargetable,
-                                       aID);
+  return mXULWindow->ContentShellAdded(aContentShell, aPrimary, aID);
 }
 
 NS_IMETHODIMP
@@ -287,8 +285,12 @@ nsChromeTreeOwner::GetPersistence(bool* aPersistPosition,
 }
 
 NS_IMETHODIMP
-nsChromeTreeOwner::GetTargetableShellCount(uint32_t* aResult)
+nsChromeTreeOwner::GetTabCount(uint32_t* aResult)
 {
+  if (mXULWindow) {
+    return mXULWindow->GetTabCount(aResult);
+  }
+
   *aResult = 0;
   return NS_OK;
 }

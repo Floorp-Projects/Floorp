@@ -1978,7 +1978,7 @@ JS_ArrayBufferHasData(JSObject* obj);
  * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
  * ArrayBuffer, and the unwrapping will succeed.
  *
- * *isSharedMemory will be set to false, the argument is present to simplify
+ * |*isSharedMemory| will be set to false, the argument is present to simplify
  * its use from code that also interacts with SharedArrayBuffer.
  */
 extern JS_FRIEND_API(uint8_t*)
@@ -2048,7 +2048,7 @@ JS_GetArrayBufferViewByteLength(JSObject* obj);
  * pass such a test: it is a typed array or a wrapper of a typed array, and the
  * unwrapping will succeed.
  *
- * *isSharedMemory will be set to true if the typed array maps a
+ * |*isSharedMemory| will be set to true if the typed array maps a
  * SharedArrayBuffer, otherwise to false.
  */
 
@@ -2110,14 +2110,14 @@ JS_FRIEND_API(bool)
 JS_IsDataViewObject(JSObject* obj);
 
 /**
- * Create a new DataView using the given ArrayBuffer for storage. The given
- * buffer must be an ArrayBuffer (or a cross-compartment wrapper of an
- * ArrayBuffer), and the offset and length must fit within the bounds of the
- * arrayBuffer. Currently, nullptr will be returned and an exception will be
- * thrown if these conditions do not hold, but do not depend on that behavior.
+ * Create a new DataView using the given buffer for storage. The given buffer
+ * must be an ArrayBuffer or SharedArrayBuffer (or a cross-compartment wrapper
+ * of either type), and the offset and length must fit within the bounds of the
+ * buffer. Currently, nullptr will be returned and an exception will be thrown
+ * if these conditions do not hold, but do not depend on that behavior.
  */
 JS_FRIEND_API(JSObject*)
-JS_NewDataView(JSContext* cx, JS::HandleObject arrayBuffer, uint32_t byteOffset, int32_t byteLength);
+JS_NewDataView(JSContext* cx, JS::HandleObject buffer, uint32_t byteOffset, int32_t byteLength);
 
 /**
  * Return the byte offset of a data view into its array buffer. |obj| must be a
@@ -2148,9 +2148,12 @@ JS_GetDataViewByteLength(JSObject* obj);
  * it would pass such a test: it is a data view or a wrapper of a data view,
  * and the unwrapping will succeed. If cx is nullptr, then DEBUG builds may be
  * unable to assert when unwrapping should be disallowed.
+ *
+ * |*isSharedMemory| will be set to true if the DataView maps a SharedArrayBuffer,
+ * otherwise to false.
  */
 JS_FRIEND_API(void*)
-JS_GetDataViewData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetDataViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 namespace js {
 
