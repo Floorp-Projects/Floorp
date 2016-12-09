@@ -69,6 +69,7 @@ public class UrlMatcher {
 
     public boolean matches(final String resourceURLString, final String pageURLString) {
         // TODO: metrics for lookup time?
+        // TODO: always whitelist current domain - decide on how to handle subdomains / TLDs correctly first though?
 
         // Cached whitelisted items can be permitted now (but blacklisted needs to wait for the override / entity list)
         if (previouslyUnmatched.contains(resourceURLString)) {
