@@ -352,7 +352,7 @@ public:
     if (!parser.IsValid()) {
       return MediaResult(
         NS_ERROR_FAILURE,
-        RESULT_DETAIL("Invalid Box:%s", parser.LastInvalidBox()));
+        RESULT_DETAIL("Invalid Top-Level Box:%s", parser.LastInvalidBox()));
     }
     return parser.StartWithInitSegment() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
@@ -385,6 +385,8 @@ private:
         "styp", "moof", "mdat", // media segment
         "mfra", "skip", "meta", "meco", "ssix", "prft" // others.
         "pssh", // optional with encrypted EME, though ignored.
+        "emsg", // ISO23009-1:2014 Section 5.10.3.3
+        "bloc", "uuid" // boxes accepted by chrome.
       };
 
       while (reader.Remaining() >= 8) {
