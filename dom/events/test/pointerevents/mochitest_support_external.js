@@ -35,6 +35,50 @@ function turnOnPointerEvents(callback) {
   }, callback);
 }
 
+// Mouse Event Helper Object
+var MouseEventHelper = (function() {
+  var utils = SpecialPowers.Ci.nsIDOMWindowUtils;
+
+  return {
+    // State
+    // TODO: Separate this to support mouse and pen simultaneously.
+    BUTTONS_STATE: utils.MOUSE_BUTTONS_NO_BUTTON,
+
+    // Button
+    BUTTON_NONE:   -1, // Used by test framework only. (replaced before sending)
+    BUTTON_LEFT:   utils.MOUSE_BUTTON_LEFT_BUTTON,
+    BUTTON_MIDDLE: utils.MOUSE_BUTTON_MIDDLE_BUTTON,
+    BUTTON_RIGHT:  utils.MOUSE_BUTTON_RIGHT_BUTTON,
+
+    // Buttons
+    BUTTONS_NONE:   utils.MOUSE_BUTTONS_NO_BUTTON,
+    BUTTONS_LEFT:   utils.MOUSE_BUTTONS_LEFT_BUTTON,
+    BUTTONS_MIDDLE: utils.MOUSE_BUTTONS_MIDDLE_BUTTON,
+    BUTTONS_RIGHT:  utils.MOUSE_BUTTONS_RIGHT_BUTTON,
+    BUTTONS_4TH:    utils.MOUSE_BUTTONS_4TH_BUTTON,
+    BUTTONS_5TH:    utils.MOUSE_BUTTONS_5TH_BUTTON,
+
+    // Utils
+    computeButtonsMaskFromButton: function(aButton) {
+      // Since the range of button values is 0 ~ 2 (see nsIDOMWindowUtils.idl),
+      // we can use an array to find out the desired mask.
+      var mask = [
+        this.BUTTONS_NONE,   // -1 (MouseEventHelper.BUTTON_NONE)
+        this.BUTTONS_LEFT,   // 0
+        this.BUTTONS_MIDDLE, // 1
+        this.BUTTONS_RIGHT   // 2
+      ][aButton + 1];
+
+      ok(mask !== undefined, "Unrecognized button value caught!");
+      return mask;
+    },
+
+    checkExitState: function() {
+      ok(!this.BUTTONS_STATE, "Mismatched mousedown/mouseup caught.");
+    }
+  };
+}) ();
+
 // Helper function to send MouseEvent with different parameters
 function sendMouseEvent(int_win, elemId, mouseEventType, params) {
   var elem = int_win.document.getElementById(elemId);
@@ -58,6 +102,18 @@ function sendMouseEvent(int_win, elemId, mouseEventType, params) {
 
   } else {
     is(!!elem, true, "Document should have element with id: " + elemId);
+  }
+}
+
+// Touch Event Helper Object
+var TouchEventHelper = {
+  // State
+  // TODO: Support multiple point scenarios.
+  TOUCH_STATE: false,
+
+  // Utils
+  checkExitState: function() {
+    ok(!this.TOUCH_STATE, "Mismatched touchstart/touchend caught.");
   }
 }
 
