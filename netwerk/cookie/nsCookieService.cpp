@@ -7,6 +7,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Printf.h"
 #include "mozilla/Unused.h"
 
 #include "mozilla/net/CookieServiceChild.h"
@@ -327,10 +328,10 @@ LogSuccess(bool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStrin
   PR_BEGIN_MACRO                                                             \
   nsresult __rv = res; /* Do not evaluate |res| more than once! */           \
   if (NS_FAILED(__rv)) {                                                     \
-    char *msg = PR_smprintf("NS_ASSERT_SUCCESS(%s) failed with result 0x%X", \
-                            #res, __rv);                                     \
+    char *msg = mozilla::Smprintf("NS_ASSERT_SUCCESS(%s) failed with result 0x%" PRIX32, \
+                           #res, static_cast<uint32_t>(__rv));               \
     NS_ASSERTION(NS_SUCCEEDED(__rv), msg);                                   \
-    PR_smprintf_free(msg);                                                   \
+    mozilla::SmprintfFree(msg);                                                    \
   }                                                                          \
   PR_END_MACRO
 #else
