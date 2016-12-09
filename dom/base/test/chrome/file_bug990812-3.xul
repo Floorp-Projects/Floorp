@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
 
   ]]></script>
 
-  <browser messagemanagergroup="test1" type="content-targetable" src="about:mozilla" />
-  <browser messagemanagergroup="test2" type="content-targetable" src="about:mozilla" />
+  <browser messagemanagergroup="test1" type="content" src="about:mozilla" />
+  <browser messagemanagergroup="test2" type="content" src="about:mozilla" />
 
 </window>
