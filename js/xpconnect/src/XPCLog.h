@@ -9,6 +9,7 @@
 #ifndef xpclog_h___
 #define xpclog_h___
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 
 /*
@@ -39,7 +40,7 @@
 
 extern "C" {
 
-void   XPC_Log_print(const char* fmt, ...);
+void   XPC_Log_print(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 bool   XPC_Log_Check(int i);
 void   XPC_Log_Indent();
 void   XPC_Log_Outdent();
