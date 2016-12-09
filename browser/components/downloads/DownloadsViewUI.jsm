@@ -197,16 +197,8 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     if (!this.download.stopped) {
       let totalBytes = this.download.hasProgress ? this.download.totalBytes
                                                  : -1;
-      // By default, extended status information including the individual
-      // download rate is displayed in the tooltip. The history view overrides
-      // the getter and displays the datails in the main area instead.
-      [text] = DownloadUtils.getDownloadStatusNoRate(
-                                          this.download.currentBytes,
-                                          totalBytes,
-                                          this.download.speed,
-                                          this.lastEstimatedSecondsLeft);
       let newEstimatedSecondsLeft;
-      [tip, newEstimatedSecondsLeft] = DownloadUtils.getDownloadStatus(
+      [text, newEstimatedSecondsLeft] = DownloadUtils.getDownloadStatus(
                                           this.download.currentBytes,
                                           totalBytes,
                                           this.download.speed,
