@@ -16,6 +16,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "prsystem.h"
+#include "nsIXULRuntime.h"
 
 #include "gfxPrefs.h"
 
@@ -260,6 +261,11 @@ DecodePool::DecodePool()
   }
   if (limit > 32) {
     limit = 32;
+  }
+  // The parent process where there are content processes doesn't need as many
+  // threads for decoding images.
+  if (limit > 4 && XRE_IsParentProcess() && BrowserTabsRemoteAutostart()) {
+    limit = 4;
   }
 
   // Initialize the thread pool.
