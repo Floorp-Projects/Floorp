@@ -5,17 +5,21 @@
 
 package org.mozilla.focus.widget;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.focus.utils.ViewUtils;
 
 public class UrlBar extends ViewFlipper {
     public interface OnUrlAction {
@@ -72,12 +76,12 @@ public class UrlBar extends ViewFlipper {
         super.onFinishInflate();
 
         urlEditView = (EditText) findViewById(R.id.url_edit);
-        urlDisplayView = (TextView) findViewById(R.id.url);
-
         urlEditView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                 if (actionId == EditorInfo.IME_ACTION_GO) {
+                    ViewUtils.hideKeyboard(urlEditView);
+
                     final String url = UrlUtils.normalize(textView.getText().toString());
 
                     if (listener != null) {
@@ -90,6 +94,26 @@ public class UrlBar extends ViewFlipper {
                     return true;
                 }
                 return false;
+            }
+        });
+        urlEditView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    ViewUtils.showKeyboard(urlEditView);
+                }
+            }
+        });
+
+        urlDisplayView = (TextView) findViewById(R.id.url);
+        urlDisplayView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setBackgroundColor(0xFF444444);
+
+                showPrevious();
+
+                urlEditView.requestFocus();
             }
         });
 

@@ -18,7 +18,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".activity.BrowserActivity" />
+        <activity android:name=".activity.BrowserActivity"
+            android:windowSoftInputMode="stateVisible" />
     </application>
 
 </manifest>
