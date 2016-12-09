@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
 import org.mozilla.focus.widget.UrlBar;
 
 public class BrowserActivity extends Activity {
@@ -35,19 +36,26 @@ public class BrowserActivity extends Activity {
         final UrlBar urlBar = (UrlBar) findViewById(R.id.urlbar);
 
         webView = (WebView) findViewById(R.id.webview);
-        webView.setWebViewClient(new WebViewClient() {
+        final TrackingProtectionWebViewClient webViewClient = new TrackingProtectionWebViewClient(getApplicationContext()) {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 webView.setVisibility(View.VISIBLE);
 
                 urlBar.onPageStarted(url);
+
+                super.onPageStarted(view, url, favicon);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 urlBar.onPageFinished();
+
+                super.onPageFinished(view, url);
             }
-        });
+        };
+
+        webView.setWebViewClient(webViewClient);
+
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
@@ -58,6 +66,8 @@ public class BrowserActivity extends Activity {
         urlBar.setOnUrlActionListener(new UrlBar.OnUrlAction() {
             @Override
             public void onUrlEntered(String url) {
+                webViewClient.notifyCurrentURL(url);
+
                 webView.loadUrl(url);
             }
 
