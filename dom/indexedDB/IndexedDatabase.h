@@ -43,8 +43,6 @@ struct StructuredCloneFile
   RefPtr<JS::WasmModule> mWasmModule;
   RefPtr<FileInfo> mFileInfo;
   FileType mType;
-  // This is currently specific to eWasmCompiled files.
-  bool mValid;
 
   // In IndexedDatabaseInlines.h
   inline
