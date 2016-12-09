@@ -106,7 +106,11 @@ public class UrlBar extends ViewFlipper {
                 if (actionId == EditorInfo.IME_ACTION_GO) {
                     ViewUtils.hideKeyboard(urlEditView);
 
-                    final String url = UrlUtils.normalize(textView.getText().toString());
+                    final String rawUrl = textView.getText().toString();
+
+                    final String url = UrlUtils.isUrl(rawUrl)
+                            ? UrlUtils.normalize(rawUrl)
+                            : UrlUtils.createSearchUrl(rawUrl);
 
                     if (listener != null) {
                         listener.onUrlEntered(url);
