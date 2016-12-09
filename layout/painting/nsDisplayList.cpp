@@ -6226,9 +6226,9 @@ nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
   return mAllowAsyncAnimation;
 }
 
-/* static */ auto
+/* static */ bool
 nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                      nsIFrame* aFrame) -> PrerenderDecision
+                                                      nsIFrame* aFrame)
 {
   // Elements whose transform has been modified recently, or which
   // have a compositor-animated transform, can be prerendered. An element
@@ -6242,7 +6242,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
       AnimationPerformanceWarning(
         AnimationPerformanceWarning::Type::TransformFrameInactive));
 
-    return NoPrerender;
+    return false;
   }
 
   nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
@@ -6258,7 +6258,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   if (frameSize <= refSize) {
     maxInAppUnits = aFrame->PresContext()->DevPixelsToAppUnits(4096);
     if (frameSize <= nsSize(maxInAppUnits, maxInAppUnits)) {
-      return FullPrerender;
+      return true;
     }
   }
 
@@ -6278,7 +6278,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
         nsPresContext::AppUnitsToIntCSSPixels(visual.height),
         nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits)
       }));
-  return NoPrerender;
+  return false;
 }
 
 /* If the matrix is singular, or a hidden backface is shown, the frame won't be visible or hit. */
