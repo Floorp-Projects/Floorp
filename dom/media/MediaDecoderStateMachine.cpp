@@ -796,7 +796,7 @@ public:
     return mSeekJob.mPromise.Ensure(__func__);
   }
 
-  void Exit() override
+  virtual void Exit() override
   {
     mSeekTaskRequest.DisconnectIfExists();
     mSeekJob.RejectIfExists(__func__);
@@ -881,12 +881,22 @@ public:
     return SeekingState::Enter(Move(aSeekJob), aVisibility);
   }
 
+  void Exit() override
+  {
+    SeekingState::Exit();
+
+    // Disconnect MediaDecoderReaderWrapper.
+    mSeekRequest.DisconnectIfExists();
+  }
+
 private:
   void CreateSeekTask() override
   {
     mSeekTask = new AccurateSeekTask(
       mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
       Info(), mMaster->Duration(), mMaster->GetMediaTime());
+
+    mTask = static_cast<AccurateSeekTask*>(mSeekTask.get());
   }
 
   void ResetMDSM() override
@@ -900,6 +910,19 @@ private:
 
   void DoSeek() override
   {
+    // Request the demuxer to perform seek.
+    mSeekRequest.Begin(Reader()->Seek(mTask->mTarget, mMaster->Duration())
+      ->Then(OwnerThread(), __func__,
+             [this] (media::TimeUnit aUnit) {
+               mSeekRequest.Complete();
+               mTask->OnSeekResolved(aUnit);
+             },
+             [this] (nsresult aResult) {
+               mSeekRequest.Complete();
+               mTask->OnSeekRejected(aResult);
+             }));
+
+    // Let SeekTask handle the following operations once the demuxer seeking is done.
     mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (const SeekTaskResolveValue& aValue) {
@@ -956,6 +979,14 @@ private:
 
     mMaster->DecodeError(aValue.mError);
   }
+
+  /*
+   * Track the current seek promise made by the reader.
+   */
+  MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
+
+  // For refactoring only, will be removed later.
+  RefPtr<AccurateSeekTask> mTask;
 
 };
 
