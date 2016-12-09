@@ -13,7 +13,7 @@ public class UrlUtils {
         Uri uri = Uri.parse(input);
 
         if (TextUtils.isEmpty(uri.getScheme())) {
-            uri = uri.buildUpon().scheme("http").build();
+            uri = Uri.parse("http://" + input);
         }
 
         return uri.toString();
