@@ -14,7 +14,6 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
-#include "prprf.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
 

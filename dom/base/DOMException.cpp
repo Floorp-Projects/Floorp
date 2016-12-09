@@ -18,7 +18,6 @@
 #include "nsIException.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsMemory.h"
-#include "prprf.h"
 #include "xpcprivate.h"
 
 #include "mozilla/dom/DOMExceptionBinding.h"
