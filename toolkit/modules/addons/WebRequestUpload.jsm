@@ -368,33 +368,11 @@ function parseFormData(stream, channel, lenient = false) {
   }
 
   try {
-    let headers;
     if (stream instanceof Ci.nsIMIMEInputStream && stream.data) {
-      if (channel instanceof Ci.nsIUploadChannel2 && channel.uploadStreamHasHeaders) {
-        // MIME input streams encode additional headers as a block at the
-        // beginning of their stream. The actual request data comes from a
-        // sub-stream, which is accessible via their `data` member. The
-        // difference in available bytes between the outer stream and the
-        // inner data stream tells us the size of that header block.
-        //
-        // Since we need to know at least the value of the Content-Type
-        // header to properly parse the request body, we need to read and
-        // parse the header block in order to extract it.
-
-        headers = readString(createTextStream(stream),
-                             stream.available() - stream.data.available());
-      }
-
-      rewind(stream);
       stream = stream.data;
     }
 
-    let contentType;
-    try {
-      contentType = channel.getRequestHeader("Content-Type");
-    } catch (e) {
-      contentType = new Headers(headers).get("content-type");
-    }
+    let contentType = channel.getRequestHeader("Content-Type");
 
     switch (Headers.getParam(contentType, "")) {
       case "multipart/form-data":
@@ -504,29 +482,33 @@ function* getRawDataChunked(outerStream, maxRead = WebRequestUpload.MAX_RAW_BYTE
 
 WebRequestUpload = {
   createRequestBody(channel) {
-    if (channel instanceof Ci.nsIUploadChannel && channel.uploadStream) {
-      try {
-        let stream = channel.uploadStream;
-
-        let formData = createFormData(stream, channel);
-        if (formData) {
-          return {formData};
-        }
-
-        // If we failed to parse the stream as form data, return it as a
-        // sequence of raw data chunks, along with a leniently-parsed form
-        // data object, which ignores encoding errors.
-        return {
-          raw: Array.from(getRawDataChunked(stream)),
-          lenientFormData: createFormData(stream, channel, true),
-        };
-      } catch (e) {
-        Cu.reportError(e);
-        return {error: e.message || String(e)};
-      }
+    if (!(channel instanceof Ci.nsIUploadChannel) || !channel.uploadStream) {
+      return null;
     }
 
-    return null;
+    if (channel instanceof Ci.nsIUploadChannel2 && channel.uploadStreamHasHeaders) {
+      return {error: "Upload streams with headers are unsupported"};
+    }
+
+    try {
+      let stream = channel.uploadStream;
+
+      let formData = createFormData(stream, channel);
+      if (formData) {
+        return {formData};
+      }
+
+      // If we failed to parse the stream as form data, return it as a
+      // sequence of raw data chunks, along with a leniently-parsed form
+      // data object, which ignores encoding errors.
+      return {
+        raw: Array.from(getRawDataChunked(stream)),
+        lenientFormData: createFormData(stream, channel, true),
+      };
+    } catch (e) {
+      Cu.reportError(e);
+      return {error: e.message || String(e)};
+    }
   },
 };
 
