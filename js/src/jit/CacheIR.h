@@ -93,6 +93,13 @@ class SymbolOperandId : public OperandId
     explicit SymbolOperandId(uint16_t id) : OperandId(id) {}
 };
 
+class Int32OperandId : public OperandId
+{
+  public:
+    Int32OperandId() = default;
+    explicit Int32OperandId(uint16_t id) : OperandId(id) {}
+};
+
 class TypedOperandId : public OperandId
 {
     JSValueType type_;
@@ -106,6 +113,9 @@ class TypedOperandId : public OperandId
     {}
     MOZ_IMPLICIT TypedOperandId(SymbolOperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_SYMBOL)
+    {}
+    MOZ_IMPLICIT TypedOperandId(Int32OperandId id)
+      : OperandId(id.id()), type_(JSVAL_TYPE_INT32)
     {}
 
     JSValueType type() const { return type_; }
@@ -121,6 +131,7 @@ enum class CacheKind : uint8_t
     _(GuardIsObject)                      \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
+    _(GuardIsInt32)                       \
     _(GuardType)                          \
     _(GuardShape)                         \
     _(GuardGroup)                         \
@@ -150,10 +161,13 @@ enum class CacheKind : uint8_t
     _(LoadTypedObjectResult)              \
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
+    _(LoadArgumentsObjectArgResult)       \
     _(LoadArgumentsObjectLengthResult)    \
+    _(LoadStringCharResult)               \
     _(LoadStringLengthResult)             \
     _(LoadFrameCalleeResult)              \
     _(LoadFrameNumActualArgsResult)       \
+    _(LoadFrameArgumentResult)            \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -368,6 +382,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
         return SymbolOperandId(val.id());
     }
+    Int32OperandId guardIsInt32(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::GuardIsInt32, val);
+        return Int32OperandId(val.id());
+    }
     void guardType(ValOperandId val, JSValueType type) {
         writeOpWithOperandId(CacheOp::GuardType, val);
         static_assert(sizeof(type) == sizeof(uint8_t), "JSValueType should fit in a byte");
@@ -424,6 +442,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void loadFrameNumActualArgsResult() {
         writeOp(CacheOp::LoadFrameNumActualArgsResult);
+    }
+    void loadFrameArgumentResult(Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::LoadFrameArgumentResult, index);
     }
     void guardNoUnboxedExpando(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardNoUnboxedExpando, obj);
@@ -501,11 +522,19 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadUnboxedArrayLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadUnboxedArrayLengthResult, obj);
     }
+    void loadArgumentsObjectArgResult(ObjOperandId obj, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::LoadArgumentsObjectArgResult, obj);
+        writeOperandId(index);
+    }
     void loadArgumentsObjectLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
     }
     void loadStringLengthResult(StringOperandId str) {
         writeOpWithOperandId(CacheOp::LoadStringLengthResult, str);
+    }
+    void loadStringCharResult(StringOperandId str, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::LoadStringCharResult, str);
+        writeOperandId(index);
     }
     void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
@@ -561,6 +590,7 @@ class MOZ_RAII CacheIRReader
     ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
     StringOperandId stringOperandId() { return StringOperandId(buffer_.readByte()); }
     SymbolOperandId symbolOperandId() { return SymbolOperandId(buffer_.readByte()); }
+    Int32OperandId int32OperandId() { return Int32OperandId(buffer_.readByte()); }
 
     uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
     GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
@@ -623,8 +653,12 @@ class MOZ_RAII GetPropIRGenerator
     bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
     bool tryAttachPrimitive(ValOperandId valId, HandleId id);
+    bool tryAttachStringChar(ValOperandId valId, ValOperandId indexId);
     bool tryAttachStringLength(ValOperandId valId, HandleId id);
-    bool tryAttachMagicArguments(ValOperandId valId, HandleId id);
+    bool tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
+
+    bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
+    bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
 
     ValOperandId getElemKeyValueId() const {
         MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);

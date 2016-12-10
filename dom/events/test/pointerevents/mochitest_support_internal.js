@@ -2,21 +2,34 @@
 // to tests on auto MochiTest system with minimum changes.
 // Author: Maksim Lebedev <alessarik@gmail.com>
 
-// Function allows to prepare our tests after load document
-addEventListener("load", function(event) {
+const PARENT_ORIGIN = "http://mochi.test:8888/";
+
+addEventListener("load", function() {
+  // Setup environment.
   console.log("OnLoad internal document");
   addListeners(document.getElementById("target0"));
   addListeners(document.getElementById("target1"));
-  preExecute();
-}, false);
 
-// Function allows to initialize prerequisites before testing
-// and adds some callbacks to support mochitest system.
-function preExecute() {
-  add_result_callback(testContext.result_callback);
-  add_completion_callback(testContext.completion_callback);
-  testContext.execute(window);
-}
+  // Setup communication between mochitest_support_external.js.
+  // Function allows to initialize prerequisites before testing
+  // and adds some callbacks to support mochitest system.
+  add_result_callback((aTestObj) => {
+    var message = aTestObj["name"] + " (";
+    message += "Get: " + JSON.stringify(aTestObj["status"]) + ", ";
+    message += "Expect: " + JSON.stringify(aTestObj["PASS"]) + ")";
+    window.opener.postMessage({type: "RESULT",
+                               message: message,
+                               result: aTestObj["status"] === aTestObj["PASS"]},
+                              PARENT_ORIGIN);
+  });
+
+  add_completion_callback(() => {
+    window.opener.postMessage({type: "FIN"}, PARENT_ORIGIN);
+  });
+
+  // Start testing.
+  window.opener.postMessage({type: "START"}, PARENT_ORIGIN);
+});
 
 function addListeners(elem) {
   if(!elem)

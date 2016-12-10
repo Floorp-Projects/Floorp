@@ -40,10 +40,9 @@ download_mozharness() {
         if curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
             rm -rf mozharness
             if unzip -q mozharness.zip; then
-                break
-            else
-                echo "error unzipping mozharness.zip" >&2
+                return 0
             fi
+            echo "error unzipping mozharness.zip" >&2
         else
             echo "failed to download mozharness zip" >&2
         fi

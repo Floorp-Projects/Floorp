@@ -23,6 +23,9 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -40,7 +43,7 @@ import android.provider.Browser;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-public class Tabs implements GeckoEventListener {
+public class Tabs implements BundleEventListener, GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
     // mOrder and mTabs are always of the same cardinality, and contain the same values.
@@ -104,8 +107,11 @@ public class Tabs implements GeckoEventListener {
     };
 
     private Tabs() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerUiThreadListener(this,
             "Tab:Added",
+            null);
+
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Tab:Close",
             "Tab:Select",
             "Tab:SelectAndForeground",
@@ -473,49 +479,55 @@ public class Tabs implements GeckoEventListener {
        return Tabs.TabsInstanceHolder.INSTANCE;
     }
 
+    @Override // BundleEventListener
+    public synchronized void handleMessage(final String event, final GeckoBundle message,
+                                           final EventCallback callback) {
+        // "Tab:Added" is a special case because tab will be null if the tab was just added
+        if ("Tab:Added".equals(event)) {
+            int id = message.getInt("tabID");
+            Tab tab = getTab(id);
+
+            String url = message.getString("uri");
+
+            if (message.getBoolean("cancelEditMode")) {
+                final Tab oldTab = getSelectedTab();
+                if (oldTab != null) {
+                    oldTab.setIsEditing(false);
+                }
+            }
+
+            if (message.getBoolean("stub")) {
+                if (tab == null) {
+                    // Tab was already closed; abort
+                    return;
+                }
+            } else {
+                tab = addTab(id, url, message.getBoolean("external"),
+                                      message.getInt("parentId"),
+                                      message.getString("title"),
+                                      message.getBoolean("isPrivate"),
+                                      message.getInt("tabIndex"));
+                // If we added the tab as a stub, we should have already
+                // selected it, so ignore this flag for stubbed tabs.
+                if (message.getBoolean("selected"))
+                    selectTab(id);
+            }
+
+            if (message.getBoolean("delayLoad"))
+                tab.setState(Tab.STATE_DELAYED);
+            if (message.getBoolean("desktopMode"))
+                tab.setDesktopMode(true);
+        }
+    }
+
     // GeckoEventListener implementation
     @Override
-    public void handleMessage(String event, JSONObject message) {
+    public synchronized void handleMessage(String event, JSONObject message) {
         Log.d(LOGTAG, "handleMessage: " + event);
         try {
             // All other events handled below should contain a tabID property
             int id = message.getInt("tabID");
             Tab tab = getTab(id);
-
-            // "Tab:Added" is a special case because tab will be null if the tab was just added
-            if (event.equals("Tab:Added")) {
-                String url = message.isNull("uri") ? null : message.getString("uri");
-
-                if (message.getBoolean("cancelEditMode")) {
-                    final Tab oldTab = getSelectedTab();
-                    if (oldTab != null) {
-                        oldTab.setIsEditing(false);
-                    }
-                }
-
-                if (message.getBoolean("stub")) {
-                    if (tab == null) {
-                        // Tab was already closed; abort
-                        return;
-                    }
-                } else {
-                    tab = addTab(id, url, message.getBoolean("external"),
-                                          message.getInt("parentId"),
-                                          message.getString("title"),
-                                          message.getBoolean("isPrivate"),
-                                          message.getInt("tabIndex"));
-                    // If we added the tab as a stub, we should have already
-                    // selected it, so ignore this flag for stubbed tabs.
-                    if (message.getBoolean("selected"))
-                        selectTab(id);
-                }
-
-                if (message.getBoolean("delayLoad"))
-                    tab.setState(Tab.STATE_DELAYED);
-                if (message.getBoolean("desktopMode"))
-                    tab.setDesktopMode(true);
-                return;
-            }
 
             // Tab was already closed; abort
             if (tab == null)

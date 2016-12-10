@@ -126,7 +126,7 @@ var Reader = {
       }
 
       case "Reader:SystemUIVisibility":
-        Messaging.sendRequest({
+        WindowEventDispatcher.sendRequest({
           type: "SystemUI:Visibility",
           visible: message.data.visible
         });

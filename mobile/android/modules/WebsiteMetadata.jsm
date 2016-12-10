@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = ["WebsiteMetadata"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 
 var WebsiteMetadata = {
@@ -32,10 +32,11 @@ var WebsiteMetadata = {
       let msg = {
         type: 'Website:Metadata',
         location: doc.location.href,
-        metadata: metadata,
+        hasImage: metadata.image_url && metadata.image_url !== "",
+        metadata: JSON.stringify(metadata),
       };
 
-      Messaging.sendRequest(msg);
+      EventDispatcher.instance.sendRequest(msg);
     });
   }
 };

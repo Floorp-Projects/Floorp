@@ -8,8 +8,11 @@
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/SharedPreferences.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
+                                  "resource://gre/modules/Messaging.jsm");
 
 // Name of Android SharedPreference controlling whether to upload
 // health reports.
@@ -119,7 +122,7 @@ var healthReportWrapper = {
 
   showSettings: function () {
     console.log("AboutHealthReport: showing settings.");
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "Settings:Show",
       resource: "preferences_vendor",
     });
@@ -127,7 +130,7 @@ var healthReportWrapper = {
 
   launchUpdater: function () {
     console.log("AboutHealthReport: launching updater.");
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "Updater:Launch",
     });
   },

@@ -361,6 +361,7 @@ struct JSCompartment
     bool                         marked;
     bool                         warnedAboutExprClosure;
     bool                         warnedAboutForEach;
+    uint32_t                     warnedAboutStringGenericsMethods;
 
 #ifdef DEBUG
     bool                         firedOnNewGlobalObject;
@@ -882,6 +883,7 @@ struct JSCompartment
         // NO LONGER USING 8
         // NO LONGER USING 9
         DeprecatedBlockScopeFunRedecl = 10,
+        DeprecatedStringGenerics = 11,
         DeprecatedLanguageExtensionCount
     };
 
