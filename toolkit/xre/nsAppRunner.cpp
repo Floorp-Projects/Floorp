@@ -2143,20 +2143,17 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
 }
 
 /**
- * Get the currently running profile using its root directory.
+ * Set the currently running profile as the default/selected one.
  *
- * @param aProfileSvc         The profile service
  * @param aCurrentProfileRoot The root directory of the current profile.
- * @param aProfile            Out-param that returns the profile object.
- * @return an error if aCurrentProfileRoot is not found
+ * @return an error if aCurrentProfileRoot is not found or the profile could not
+ * be set as the default.
  */
 static nsresult
-GetCurrentProfile(nsIToolkitProfileService* aProfileSvc,
-                  nsIFile* aCurrentProfileRoot,
-                  nsIToolkitProfile** aProfile)
+SetCurrentProfileAsDefault(nsIToolkitProfileService* aProfileSvc,
+                           nsIFile* aCurrentProfileRoot)
 {
   NS_ENSURE_ARG_POINTER(aProfileSvc);
-  NS_ENSURE_ARG_POINTER(aProfile);
 
   nsCOMPtr<nsISimpleEnumerator> profiles;
   nsresult rv = aProfileSvc->GetProfiles(getter_AddRefs(profiles));
@@ -2172,8 +2169,7 @@ GetCurrentProfile(nsIToolkitProfileService* aProfileSvc,
     profile->GetRootDir(getter_AddRefs(profileRoot));
     profileRoot->Equals(aCurrentProfileRoot, &foundMatchingProfile);
     if (foundMatchingProfile) {
-      profile.forget(aProfile);
-      return NS_OK;
+      return aProfileSvc->SetSelectedProfile(profile);
     }
     rv = profiles->GetNext(getter_AddRefs(supports));
   }
@@ -4295,22 +4291,15 @@ XREMain::XRE_mainRun()
       nsresult backupCreated = ProfileResetCleanup(profileBeingReset);
       if (NS_FAILED(backupCreated)) NS_WARNING("Could not cleanup the profile that was reset");
 
-      nsCOMPtr<nsIToolkitProfile> newProfile;
-      rv = GetCurrentProfile(mProfileSvc, mProfD, getter_AddRefs(newProfile));
-      if (NS_SUCCEEDED(rv)) {
-        newProfile->SetName(gResetOldProfileName);
-        // Set the new profile as the default after we're done cleaning up the old profile,
-        // iff that profile was already the default
-        if (profileWasSelected) {
-          rv = mProfileSvc->SetDefaultProfile(newProfile);
-          if (NS_FAILED(rv)) NS_WARNING("Could not set current profile as the default");
-        }
-      } else {
-        NS_WARNING("Could not find current profile to set as default / change name.");
+      // Set the new profile as the default after we're done cleaning up the old profile,
+      // iff that profile was already the default
+      if (profileWasSelected) {
+        // this is actually "broken" - see bug 1122124
+        rv = SetCurrentProfileAsDefault(mProfileSvc, mProfD);
+        if (NS_FAILED(rv)) NS_WARNING("Could not set current profile as the default");
       }
-
-      // Need to write out the fact that the profile has been removed, the new profile
-      // renamed, and potentially that the selected/default profile changed.
+      // Need to write out the fact that the profile has been removed and potentially
+      // that the selected/default profile changed.
       mProfileSvc->Flush();
     }
   }
