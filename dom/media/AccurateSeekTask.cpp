@@ -34,10 +34,6 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
                                    const media::TimeUnit& aEnd,
                                    int64_t aCurrentMediaTime)
   : SeekTask(aDecoderID, aThread, aReader, aTarget)
-  , mCurrentTimeBeforeSeek(media::TimeUnit::FromMicroseconds(aCurrentMediaTime))
-  , mAudioRate(aInfo.mAudio.mRate)
-  , mDoneAudioSeeking(!aInfo.HasAudio() || aTarget.IsVideoOnly())
-  , mDoneVideoSeeking(!aInfo.HasVideo())
 {
   AssertOwnerThread();
 }
