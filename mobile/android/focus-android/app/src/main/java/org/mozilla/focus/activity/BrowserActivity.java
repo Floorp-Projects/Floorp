@@ -9,22 +9,21 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
+import com.github.clans.fab.FloatingActionMenu;
+
 import org.mozilla.focus.R;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
-import org.mozilla.focus.widget.NavigationBar;
 import org.mozilla.focus.widget.UrlBar;
 
 public class BrowserActivity extends Activity {
+    private FloatingActionMenu menu;
     private WebView webView;
-    private NavigationBar navigationBar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,6 +49,8 @@ public class BrowserActivity extends Activity {
         webView.setVerticalScrollBarEnabled(true);
         webView.setHorizontalScrollBarEnabled(true);
 
+        menu = (FloatingActionMenu) findViewById(R.id.menu);
+
         final TrackingProtectionWebViewClient webViewClient = new TrackingProtectionWebViewClient(getApplicationContext()) {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -57,16 +58,12 @@ public class BrowserActivity extends Activity {
 
                 urlBar.onPageStarted(url);
 
-                navigationBar.updateState(webView);
-
                 super.onPageStarted(view, url, favicon);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 urlBar.onPageFinished();
-
-                navigationBar.updateState(webView);
 
                 super.onPageFinished(view, url);
             }
@@ -109,36 +106,29 @@ public class BrowserActivity extends Activity {
             }
         });
 
-        navigationBar = ((NavigationBar) findViewById(R.id.navbar));
-        navigationBar.setNavigationListener(new NavigationBar.NavigationListener() {
-            @Override
-            public void onBack() {
-                webView.goBack();
-            }
-
-            @Override
-            public void onForward() {
-                webView.goForward();
-            }
-
-            @Override
-            public void onRefresh() {
-                webView.reload();
-            }
-
-            @Override
-            public void onOpen() {
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
-                startActivity(intent);
-            }
-        });
-
         final Intent intent = getIntent();
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             urlBar.enterUrl(intent.getDataString());
         }
+
+        findViewById(R.id.refresh).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                webView.reload();
+                menu.close(true);
+            }
+        });
+
+        findViewById(R.id.open).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
+                startActivity(intent);
+                menu.close(true);
+            }
+        });
     }
 
     @Override
