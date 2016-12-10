@@ -419,29 +419,6 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     };
 };
 
-class ICGetElem_String : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICGetElem_String(JitCode* stubCode)
-      : ICStub(ICStub::GetElem_String, stubCode) {}
-
-  public:
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetElem_String, Engine::Baseline) {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetElem_String>(space, getStubCode());
-        }
-    };
-};
-
 class ICGetElem_Dense : public ICMonitoredStub
 {
     friend class ICStubSpace;
@@ -579,53 +556,6 @@ class ICGetElem_TypedArray : public ICStub
 
         ICStub* getStub(ICStubSpace* space) {
             return newStub<ICGetElem_TypedArray>(space, getStubCode(), shape_, type_);
-        }
-    };
-};
-
-class ICGetElem_Arguments : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-  public:
-    enum Which { Mapped, Unmapped, Magic };
-
-  private:
-    ICGetElem_Arguments(JitCode* stubCode, ICStub* firstMonitorStub, Which which)
-      : ICMonitoredStub(ICStub::GetElem_Arguments, stubCode, firstMonitorStub)
-    {
-        extra_ = static_cast<uint16_t>(which);
-    }
-
-  public:
-    static ICGetElem_Arguments* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                                      ICGetElem_Arguments& other);
-
-    Which which() const {
-        return static_cast<Which>(extra_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      ICStub* firstMonitorStub_;
-      Which which_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(which_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, Which which)
-          : ICStubCompiler(cx, ICStub::GetElem_Arguments, Engine::Baseline),
-            firstMonitorStub_(firstMonitorStub),
-            which_(which)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetElem_Arguments>(space, getStubCode(), firstMonitorStub_, which_);
         }
     };
 };

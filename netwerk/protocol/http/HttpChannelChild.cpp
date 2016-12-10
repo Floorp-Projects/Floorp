@@ -44,6 +44,10 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 #endif
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
@@ -1915,6 +1919,14 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
   mAsyncOpenTime = TimeStamp::Now();
+#ifdef MOZ_TASK_TRACER
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  nsAutoCString urispec;
+  uri->GetSpec(urispec);
+  tasktracer::AddLabel("HttpChannelChild::AsyncOpen %s", urispec.get());
+#endif
+  
 
   // Port checked in parent, but duplicate here so we can return with error
   // immediately

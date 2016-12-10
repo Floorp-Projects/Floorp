@@ -1505,6 +1505,11 @@ IonBuilder::visitBlock(const CFGBlock* cfgblock, MBasicBlock* mblock)
     if (mblock->pc() && script()->hasScriptCounts())
         mblock->setHitCount(script()->getHitCount(mblock->pc()));
 
+    // Optimization to move a predecessor that only has this block as successor
+    // just before this block.
+    if (mblock->numPredecessors() == 1 && mblock->getPredecessor(0)->numSuccessors() == 1)
+        graph().moveBlockToEnd(mblock->getPredecessor(0));
+
     if (!setCurrentAndSpecializePhis(mblock))
         return false;
     graph().addBlock(mblock);
@@ -2846,6 +2851,9 @@ IonBuilder::visitTest(CFGTest* test)
         return false;
     filterBlock->end(MGoto::New(alloc(), ifFalse));
 
+    if (filterBlock->pc() && script()->hasScriptCounts())
+        filterBlock->setHitCount(script()->getHitCount(filterBlock->pc()));
+
     blockWorklist[test->falseBranch()->id()] = ifFalse;
 
     current = nullptr;
@@ -3078,6 +3086,9 @@ IonBuilder::visitTableSwitch(CFGTableSwitch* cfgIns)
                 caseBlock->setSlot(j, constant);
             }
             graph().addBlock(caseBlock);
+
+            if (caseBlock->pc() && script()->hasScriptCounts())
+                caseBlock->setHitCount(script()->getHitCount(caseBlock->pc()));
 
             MBasicBlock* merge = newBlock(caseBlock, cfgblock->startPc());
             if (!merge)

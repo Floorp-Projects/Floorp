@@ -106,7 +106,6 @@ from mozbuild.base import ExecutionSummary
 ALLOWED_XPCOM_GLUE = {
     ('xpcshell', 'js/xpconnect/shell'),
     ('testcrasher', 'toolkit/crashreporter/test'),
-    ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
     ('mediapipeline_unittest', 'media/webrtc/signaling/test'),
     ('signaling_unittests', 'media/webrtc/signaling/test'),
     ('TestMailCookie', 'mailnews/base/test'),

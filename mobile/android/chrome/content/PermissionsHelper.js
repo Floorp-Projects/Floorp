@@ -106,7 +106,7 @@ var PermissionsHelper = {
         // Keep track of permissions, so we know which ones to clear
         this._currentPermissions = permissions;
 
-        Messaging.sendRequest({
+        WindowEventDispatcher.sendRequest({
           type: "Permissions:Data",
           permissions: permissions
         });

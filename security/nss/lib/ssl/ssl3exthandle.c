@@ -372,11 +372,7 @@ ssl3_SendSessionTicketXtn(
         if (session_ticket->ticket.data) {
             if (xtnData->ticketTimestampVerified) {
                 extension_length += session_ticket->ticket.len;
-            } else if (!append &&
-                       (session_ticket->ticket_lifetime_hint == 0 ||
-                        (session_ticket->ticket_lifetime_hint +
-                             session_ticket->received_timestamp >
-                         ssl_Time()))) {
+            } else if (!append && ssl_TicketTimeValid(session_ticket)) {
                 extension_length += session_ticket->ticket.len;
                 xtnData->ticketTimestampVerified = PR_TRUE;
             }

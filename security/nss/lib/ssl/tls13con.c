@@ -163,15 +163,21 @@ static char *
 tls13_HandshakeState(SSL3WaitState st)
 {
     switch (st) {
+        STATE_CASE(idle_handshake);
         STATE_CASE(wait_client_hello);
         STATE_CASE(wait_client_cert);
+        STATE_CASE(wait_client_key);
         STATE_CASE(wait_cert_verify);
+        STATE_CASE(wait_change_cipher);
         STATE_CASE(wait_finished);
         STATE_CASE(wait_server_hello);
+        STATE_CASE(wait_certificate_status);
         STATE_CASE(wait_server_cert);
+        STATE_CASE(wait_server_key);
         STATE_CASE(wait_cert_request);
+        STATE_CASE(wait_hello_done);
+        STATE_CASE(wait_new_session_ticket);
         STATE_CASE(wait_encrypted_extensions);
-        STATE_CASE(idle_handshake);
         default:
             break;
     }
@@ -426,10 +432,7 @@ tls13_SetupClientHello(sslSocket *ss)
     session_ticket = &sid->u.ssl3.locked.sessionTicket;
     PORT_Assert(session_ticket && session_ticket->ticket.data);
 
-    if (session_ticket->ticket_lifetime_hint == 0 ||
-        (session_ticket->ticket_lifetime_hint +
-             session_ticket->received_timestamp >
-         ssl_Time())) {
+    if (ssl_TicketTimeValid(session_ticket)) {
         ss->statelessResume = PR_TRUE;
     }
 
@@ -3620,11 +3623,71 @@ tls13_FinishHandshake(sslSocket *ss)
     return SECSuccess;
 }
 
+/* Do the parts of sending the client's second round that require
+ * the XmitBuf lock. */
+static SECStatus
+tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
+                             SSL3AlertDescription *sendAlert)
+{
+    SECStatus rv;
+
+    PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
+
+    *sendAlert = internal_error;
+
+    if (ss->ssl3.sendEmptyCert) {
+        ss->ssl3.sendEmptyCert = PR_FALSE;
+        rv = ssl3_SendEmptyCertificate(ss);
+        /* Don't send verify */
+        if (rv != SECSuccess) {
+            return SECFailure; /* error code is set. */
+        }
+    } else if (sendClientCert) {
+        rv = tls13_SendCertificate(ss);
+        if (rv != SECSuccess) {
+            return SECFailure; /* error code is set. */
+        }
+    }
+    if (ss->ssl3.hs.certificateRequest) {
+        PORT_FreeArena(ss->ssl3.hs.certificateRequest->arena, PR_FALSE);
+        ss->ssl3.hs.certificateRequest = NULL;
+    }
+
+    if (sendClientCert) {
+        rv = tls13_SendCertificateVerify(ss, ss->ssl3.clientPrivateKey);
+        SECKEY_DestroyPrivateKey(ss->ssl3.clientPrivateKey);
+        ss->ssl3.clientPrivateKey = NULL;
+        if (rv != SECSuccess) {
+            return SECFailure; /* err is set. */
+        }
+    }
+
+    rv = tls13_SendFinished(ss, ss->ssl3.hs.clientHsTrafficSecret);
+    if (rv != SECSuccess) {
+        return SECFailure; /* err code was set. */
+    }
+    rv = ssl3_FlushHandshake(ss, IS_DTLS(ss) ? ssl_SEND_FLAG_NO_RETRANSMIT : 0);
+    if (rv != SECSuccess) {
+        /* No point in sending an alert here because we're not going to
+         * be able to send it if we couldn't flush the handshake. */
+        *sendAlert = no_alert;
+        return SECFailure;
+    }
+
+    rv = dtls_StartHolddownTimer(ss);
+    if (rv != SECSuccess) {
+        return SECFailure; /* err code was set. */
+    }
+
+    return SECSuccess;
+}
+
 static SECStatus
 tls13_SendClientSecondRound(sslSocket *ss)
 {
     SECStatus rv;
     PRBool sendClientCert;
+    SSL3AlertDescription sendAlert = no_alert;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
@@ -3685,48 +3748,16 @@ tls13_SendClientSecondRound(sslSocket *ss)
     }
 
     ssl_GetXmitBufLock(ss); /*******************************/
-    if (ss->ssl3.sendEmptyCert) {
-        ss->ssl3.sendEmptyCert = PR_FALSE;
-        rv = ssl3_SendEmptyCertificate(ss);
-        /* Don't send verify */
-        if (rv != SECSuccess) {
-            goto loser; /* error code is set. */
-        }
-    } else if (sendClientCert) {
-        rv = tls13_SendCertificate(ss);
-        if (rv != SECSuccess) {
-            goto loser; /* error code is set. */
-        }
-    }
-    if (ss->ssl3.hs.certificateRequest) {
-        PORT_FreeArena(ss->ssl3.hs.certificateRequest->arena, PR_FALSE);
-        ss->ssl3.hs.certificateRequest = NULL;
-    }
-
-    if (sendClientCert) {
-        rv = tls13_SendCertificateVerify(ss, ss->ssl3.clientPrivateKey);
-        SECKEY_DestroyPrivateKey(ss->ssl3.clientPrivateKey);
-        ss->ssl3.clientPrivateKey = NULL;
-        if (rv != SECSuccess) {
-            goto loser; /* err is set. */
-        }
-    }
-
-    rv = tls13_SendFinished(ss, ss->ssl3.hs.clientHsTrafficSecret);
-    if (rv != SECSuccess) {
-        goto loser; /* err code was set. */
-    }
-    rv = ssl3_FlushHandshake(ss, IS_DTLS(ss) ? ssl_SEND_FLAG_NO_RETRANSMIT : 0);
-    if (rv != SECSuccess) {
-        goto loser;
-    }
-
-    rv = dtls_StartHolddownTimer(ss);
-    if (rv != SECSuccess) {
-        goto loser; /* err code was set. */
-    }
+    rv = tls13_SendClientSecondFlight(ss, sendClientCert, &sendAlert);
     ssl_ReleaseXmitBufLock(ss); /*******************************/
-
+    if (rv != SECSuccess) {
+        if (sendAlert != no_alert) {
+            FATAL_ERROR(ss, PORT_GetError(), sendAlert);
+        } else {
+            LOG_ERROR(ss, PORT_GetError());
+        }
+        return SECFailure;
+    }
     rv = tls13_SetCipherSpec(ss, TrafficKeyApplicationData,
                              CipherSpecWrite, PR_TRUE);
     if (rv != SECSuccess) {
@@ -3736,11 +3767,6 @@ tls13_SendClientSecondRound(sslSocket *ss)
 
     /* The handshake is now finished */
     return tls13_FinishHandshake(ss);
-
-loser:
-    ssl_ReleaseXmitBufLock(ss); /*******************************/
-    FATAL_ERROR(ss, PORT_GetError(), internal_error);
-    return SECFailure;
 }
 
 /*
@@ -3867,7 +3893,7 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         return SECFailure;
     }
 
-    ticket.received_timestamp = ssl_Time();
+    ticket.received_timestamp = PR_Now();
     rv = ssl3_ConsumeHandshakeNumber(ss, &ticket.ticket_lifetime_hint, 4, &b,
                                      &length);
     if (rv != SECSuccess) {

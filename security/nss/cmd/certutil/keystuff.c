@@ -52,9 +52,10 @@ static int
 UpdateRNG(void)
 {
     char randbuf[RAND_BUF_SIZE];
-    int fd, count;
+    int fd;
     int c;
     int rv = 0;
+    size_t count;
 #ifdef XP_UNIX
     cc_t orig_cc_min;
     cc_t orig_cc_time;
