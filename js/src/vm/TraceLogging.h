@@ -260,7 +260,14 @@ class TraceLoggerThread
         return true;
     }
 
-    const char* eventText(uint32_t id);
+  private:
+    const char* maybeEventText(uint32_t id);
+  public:
+    const char* eventText(uint32_t id) {
+        const char* text = maybeEventText(id);
+        MOZ_ASSERT(text);
+        return text;
+    };
     bool textIdIsScriptEvent(uint32_t id);
 
     // The createTextId functions map a unique input to a logger ID.
