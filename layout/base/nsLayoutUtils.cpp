@@ -554,9 +554,8 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
       // We need to factor in the scale of the base style if the base style
       // will be used on the compositor.
       if (effect->NeedsBaseStyle(prop.mProperty)) {
-        EffectSet* effects = EffectSet::GetEffectSet(aFrame);
         StyleAnimationValue baseStyle =
-          effects->GetBaseStyle(prop.mProperty);
+          EffectCompositor::GetBaseStyle(prop.mProperty, aFrame);
         MOZ_ASSERT(!baseStyle.IsNull(), "The base value should be set");
         UpdateMinMaxScale(aFrame, baseStyle, aMinScale, aMaxScale);
       }
