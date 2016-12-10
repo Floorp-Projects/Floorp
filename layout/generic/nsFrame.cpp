@@ -10349,7 +10349,7 @@ nsFrame::TraceMsg(const char* aFormatString, ...)
     char argbuf[200];
     va_list ap;
     va_start(ap, aFormatString);
-    PR_vsnprintf(argbuf, sizeof(argbuf), aFormatString, ap);
+    VsprintfLiteral(argbuf, aFormatString, ap);
     va_end(ap);
 
     char tagbuf[40];
