@@ -6246,26 +6246,27 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     return NoPrerender;
   }
 
+  float viewportRatioX = gfxPrefs::AnimationPrerenderViewportRatioLimitX();
+  float viewportRatioY = gfxPrefs::AnimationPrerenderViewportRatioLimitY();
+  uint32_t absoluteLimitX = gfxPrefs::AnimationPrerenderAbsoluteLimitX();
+  uint32_t absoluteLimitY = gfxPrefs::AnimationPrerenderAbsoluteLimitY();
   nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
-  // Only prerender if the transformed frame's size is <= the
-  // reference frame size (~viewport), allowing a 1/8th fuzz factor
-  // for shadows, borders, etc.
-  refSize += nsSize(refSize.width / 8, refSize.height / 8);
+  // Only prerender if the transformed frame's size is <= a multiple of the
+  // reference frame size (~viewport), and less than an absolute limit.
+  // Both the ratio and the absolute limit are configurable.
+  nsSize relativeLimit(nscoord(refSize.width * viewportRatioX),
+                       nscoord(refSize.height * viewportRatioY));
+  nsSize absoluteLimit(aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitX),
+                       aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitY));
+  nsSize maxSize = Min(relativeLimit, absoluteLimit);
   gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(aFrame);
   nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
   nsSize frameSize = nsSize(overflow.Size().width * scale.width,
                             overflow.Size().height * scale.height);
-  nscoord maxInAppUnits = nscoord_MAX;
-  if (frameSize <= refSize) {
-    maxInAppUnits = aFrame->PresContext()->DevPixelsToAppUnits(4096);
-    if (frameSize <= nsSize(maxInAppUnits, maxInAppUnits)) {
-      *aDirtyRect = overflow;
-      return FullPrerender;
-    }
+  if (frameSize <= maxSize) {
+    *aDirtyRect = overflow;
+    return FullPrerender;
   }
-
-  nsRect visual = aFrame->GetVisualOverflowRect();
-
 
   EffectCompositor::SetPerformanceWarning(
     aFrame, eCSSProperty_transform,
@@ -6274,11 +6275,10 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
       {
         nsPresContext::AppUnitsToIntCSSPixels(frameSize.width),
         nsPresContext::AppUnitsToIntCSSPixels(frameSize.height),
-        nsPresContext::AppUnitsToIntCSSPixels(refSize.width),
-        nsPresContext::AppUnitsToIntCSSPixels(refSize.height),
-        nsPresContext::AppUnitsToIntCSSPixels(visual.width),
-        nsPresContext::AppUnitsToIntCSSPixels(visual.height),
-        nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits)
+        nsPresContext::AppUnitsToIntCSSPixels(relativeLimit.width),
+        nsPresContext::AppUnitsToIntCSSPixels(relativeLimit.height),
+        nsPresContext::AppUnitsToIntCSSPixels(absoluteLimit.width),
+        nsPresContext::AppUnitsToIntCSSPixels(absoluteLimit.height),
       }));
   return NoPrerender;
 }
