@@ -458,3 +458,29 @@ add_task(function* testHideOnClear() {
     findbar.close(true);
   });
 });
+
+add_task(function* testRectsAndTexts() {
+  let url = "data:text/html;charset=utf-8," +
+    encodeURIComponent("<div style=\"width: 150px; border: 1px solid black\">" +
+    "Here are a lot of words Please use find to highlight some words that wrap" +
+    " across a line boundary and see what happens.</div>");
+  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+    let findbar = gBrowser.getFindBar();
+    yield promiseOpenFindbar(findbar);
+
+    let word = "words please use find to";
+    let expectedResult = {
+      rectCount: 2,
+      insertCalls: [2, 4],
+      removeCalls: [0, 2]
+    };
+    let promise = promiseTestHighlighterOutput(browser, word, expectedResult, (maskNode, outlineNode) => {
+      let boxes = outlineNode.getElementsByTagName("span");
+      Assert.equal(boxes.length, 2, "There should be two outline boxes containing text");
+      Assert.equal(boxes[0].textContent.trim(), "words", "First text should match");
+      Assert.equal(boxes[1].textContent.trim(), "Please use find to", "Second word should match");
+    });
+    yield promiseEnterStringIntoFindField(findbar, word);
+    yield promise;
+  });
+});

@@ -39,4 +39,5 @@ requireHacker.global_hook("default", path => {
     case "devtools/shared/client/main":
       return `module.exports = require("devtools/client/webconsole/new-console-output/test/fixtures/ObjectClient")`;
   }
+  return undefined;
 });

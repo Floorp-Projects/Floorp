@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: loadAlgorithmRejectPromisesWhenPausing
+// Case: step1: create an element with its paused member to be fause and networkState to be NETWORK_NO_SOURCE.
+//       stpe2: invoke load() on the element and the load() rejects the pending promise.
+// Expected result: reject the pending promise with AbortError DOM exception.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  // Invoke play() -> (1) the promise will be left pending.
+  //                  (2) invoke load() -> (1) set the networkState to be NETWORK_NO_SOURCE.
+  //                                       (2) queue a task to run resouce selection algorithm.
+  element.play().then(
+    (result) => {
+      ok(false, `${token} is resolved with ${result}.`);
+    },
+    (error) => {
+      if (error.name == "AbortError") {
+        ok(true, `${token} is rejected with ${error.name}.`);
+      } else {
+        ok(false, `${token} is rejected with ${error.name}.`);
+      }
+    }
+  ).then( () => { manager.finished(token); } );
+
+  ok(element.networkState == HTMLMediaElement.NETWORK_NO_SOURCE);
+
+  // Invoke load() again and since the networkState is NETWORK_NO_SOURCE, the load() rejects the pending promise.
+  element.src = test.name;
+
+  // Since the networkState is not NETWORK_EMPTY, the load() sets paused to be true.
+  ok(element.paused, `loadAlgorithmRejectPromisesWhenPausing(${token}).paused should be true.`);
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>

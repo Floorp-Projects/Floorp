@@ -231,12 +231,12 @@ struct VRControllerInfo
   uint32_t mNumAxes;
 
   bool operator==(const VRControllerInfo& other) const {
-  return mType == other.mType &&
-         mControllerID == other.mControllerID &&
-         mControllerName == other.mControllerName &&
-         mMappingType == other.mMappingType &&
-         mNumButtons == other.mNumButtons &&
-         mNumAxes == other.mNumAxes;
+    return mType == other.mType &&
+           mControllerID == other.mControllerID &&
+           mControllerName == other.mControllerName &&
+           mMappingType == other.mMappingType &&
+           mNumButtons == other.mNumButtons &&
+           mNumAxes == other.mNumAxes;
   }
 
   bool operator!=(const VRControllerInfo& other) const {
@@ -258,7 +258,7 @@ public:
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
   void NewPoseState(uint32_t aIndex, const dom::GamepadPoseState& aPose);
-  void AddGamepad(const char* aID, uint32_t aMapping,
+  void AddGamepad(const char* aID, uint32_t aMapping, uint32_t aHand,
                   uint32_t aNumButtons, uint32_t aNumAxes);
   void RemoveGamepad(uint32_t aIndex);
 

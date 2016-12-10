@@ -34,7 +34,9 @@ describe("ConsoleAPICall component:", () => {
 
       expect(wrapper.find(".message-body").text()).toBe("foobar test");
       expect(wrapper.find(".objectBox-string").length).toBe(2);
-      expect(wrapper.find("div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace").length).toBe(1);
+      let selector = "div.message.cm-s-mozilla span span.message-flex-body " +
+        "span.message-body.devtools-monospace";
+      expect(wrapper.find(selector).length).toBe(1);
 
       // There should be the location
       const locationLink = wrapper.find(`.message-location`);
@@ -75,7 +77,9 @@ describe("ConsoleAPICall component:", () => {
       expect(wrapper.find(".message-repeats").text()).toBe("107");
       expect(wrapper.find(".message-repeats").prop("title")).toBe("107 repeats");
 
-      expect(wrapper.find("span > span.message-flex-body > span.message-body.devtools-monospace + span.message-repeats").length).toBe(1);
+      let selector = "span > span.message-flex-body > " +
+        "span.message-body.devtools-monospace + span.message-repeats";
+      expect(wrapper.find(selector).length).toBe(1);
     });
 
     it("has the expected indent", () => {
@@ -111,10 +115,12 @@ describe("ConsoleAPICall component:", () => {
 
   describe("console.assert", () => {
     it("renders", () => {
-      const message = stubPreparedMessages.get("console.assert(false, {message: 'foobar'})");
+      const message = stubPreparedMessages.get(
+        "console.assert(false, {message: 'foobar'})");
       const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
 
-      expect(wrapper.find(".message-body").text()).toBe("Assertion failed: Object { message: \"foobar\" }");
+      expect(wrapper.find(".message-body").text())
+        .toBe("Assertion failed: Object { message: \"foobar\" }");
     });
   });
 
@@ -145,19 +151,26 @@ describe("ConsoleAPICall component:", () => {
 
       expect(wrapper.find(".message-body").text()).toBe("console.trace()");
 
-      const frameLinks = wrapper.find(`.stack-trace span.frame-link[data-url='${filepath}']`);
+      const frameLinks = wrapper.find(
+        `.stack-trace span.frame-link[data-url='${filepath}']`);
       expect(frameLinks.length).toBe(3);
 
-      expect(frameLinks.eq(0).find(".frame-link-function-display-name").text()).toBe("testStacktraceFiltering");
-      expect(frameLinks.eq(0).find(".frame-link-filename").text()).toBe(filepath);
+      expect(frameLinks.eq(0).find(".frame-link-function-display-name").text())
+        .toBe("testStacktraceFiltering");
+      expect(frameLinks.eq(0).find(".frame-link-filename").text())
+        .toBe(filepath);
 
-      expect(frameLinks.eq(1).find(".frame-link-function-display-name").text()).toBe("foo");
-      expect(frameLinks.eq(1).find(".frame-link-filename").text()).toBe(filepath);
+      expect(frameLinks.eq(1).find(".frame-link-function-display-name").text())
+        .toBe("foo");
+      expect(frameLinks.eq(1).find(".frame-link-filename").text())
+        .toBe(filepath);
 
-      expect(frameLinks.eq(2).find(".frame-link-function-display-name").text()).toBe("triggerPacket");
-      expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(filepath);
+      expect(frameLinks.eq(2).find(".frame-link-function-display-name").text())
+        .toBe("triggerPacket");
+      expect(frameLinks.eq(2).find(".frame-link-filename").text())
+        .toBe(filepath);
 
-      //it should not be collapsible.
+      // it should not be collapsible.
       expect(wrapper.find(`.theme-twisty`).length).toBe(0);
     });
   });
