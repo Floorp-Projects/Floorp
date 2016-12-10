@@ -204,6 +204,7 @@ class TestTLSNavigation(MarionetteTestCase):
         try:
             self.capabilities = self.marionette.start_session(
                 desired_capabilities=self.secure_tls)
+            self.assertFalse(self.capabilities["acceptInsecureCerts"])
             yield self.marionette
         finally:
             self.marionette.delete_session()
@@ -213,6 +214,7 @@ class TestTLSNavigation(MarionetteTestCase):
         try:
             self.capabilities = self.marionette.start_session(
                 desired_capabilities=self.insecure_tls)
+            self.assertTrue(self.capabilities["acceptInsecureCerts"])
             yield self.marionette
         finally:
             self.marionette.delete_session()
