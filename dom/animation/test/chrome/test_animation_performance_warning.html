@@ -1181,9 +1181,9 @@ function start() {
       // viewport depends on test environment.
       var expectedWarning = new RegExp(
         "Animation cannot be run on the compositor because the frame size " +
-        "\\(10000, 10000\\) is bigger than the viewport \\(\\d+, \\d+\\) " +
-        "or the visual rectangle \\(10000, 10000\\) is larger than the " +
-        "maximum allowed value \\(\\d+\\)");
+        "\\(10000, 10000\\) is too large relative to the viewport " + 
+        "\\(larger than \\(\\d+, \\d+\\)\\) or larger than the " +
+        "maximum allowed value \\(\\d+, \\d+\\)");
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ {
