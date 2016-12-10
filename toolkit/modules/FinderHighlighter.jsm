@@ -1137,6 +1137,9 @@ FinderHighlighter.prototype = {
 
       let DOMRect = window.DOMRect;
       for (let [range, rectsAndTexts] of dict.modalHighlightRectsMap) {
+        if (!this.finder._fastFind.isRangeVisible(range, false))
+          continue;
+
         if (dict.updateAllRanges)
           rectsAndTexts = this._updateRangeRects(range);
 

@@ -538,14 +538,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
             @Override
             public void onClick(View widget) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "hint_private_browsing");
-                try {
-                    final JSONObject json = new JSONObject();
-                    json.put("type", "Menu:Open");
-                    GeckoApp.getEventDispatcher().dispatchEvent(json, null);
-                    EventDispatcher.getInstance().dispatchEvent(json, null);
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error forming JSON for Private Browsing contextual hint", e);
-                }
+                EventDispatcher.getInstance().dispatch("Menu:Open", null);
             }
         };
 

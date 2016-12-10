@@ -591,7 +591,7 @@ var ActionBarHandler = {
       },
 
       action: function(element, win) {
-        Messaging.sendRequest({
+        WindowEventDispatcher.sendRequest({
           type: "Share:Text",
           text: ActionBarHandler._getSelectedText(),
         });

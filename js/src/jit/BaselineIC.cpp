@@ -866,18 +866,6 @@ TypedArrayGetElemStubExists(ICGetElem_Fallback* stub, HandleObject obj)
 }
 
 static bool
-ArgumentsGetElemStubExists(ICGetElem_Fallback* stub, ICGetElem_Arguments::Which which)
-{
-    for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
-        if (!iter->isGetElem_Arguments())
-            continue;
-        if (iter->toGetElem_Arguments()->which() == which)
-            return true;
-    }
-    return false;
-}
-
-static bool
 IsOptimizableElementPropertyName(JSContext* cx, HandleValue key, MutableHandleId idp)
 {
     if (!key.isString())
@@ -951,63 +939,9 @@ static bool
 TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_Fallback* stub,
                      HandleValue lhs, HandleValue rhs, HandleValue res, bool* attached)
 {
-    // Check for String[i] => Char accesses.
-    if (lhs.isString() && rhs.isInt32() && res.isString() &&
-        !stub->hasStub(ICStub::GetElem_String))
-    {
-        // NoSuchMethod handling doesn't apply to string targets.
-
-        JitSpew(JitSpew_BaselineIC, "  Generating GetElem(String[Int32]) stub");
-        ICGetElem_String::Compiler compiler(cx);
-        ICStub* stringStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!stringStub)
-            return false;
-
-        stub->addNewStub(stringStub);
-        *attached = true;
-        return true;
-    }
-
-    if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS) && rhs.isInt32() &&
-        !ArgumentsGetElemStubExists(stub, ICGetElem_Arguments::Magic))
-    {
-        JitSpew(JitSpew_BaselineIC, "  Generating GetElem(MagicArgs[Int32]) stub");
-        ICGetElem_Arguments::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                               ICGetElem_Arguments::Magic);
-        ICStub* argsStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!argsStub)
-            return false;
-
-        stub->addNewStub(argsStub);
-        *attached = true;
-        return true;
-    }
-
-    // Otherwise, GetElem is only optimized on objects.
     if (!lhs.isObject())
         return true;
     RootedObject obj(cx, &lhs.toObject());
-
-    // Check for ArgumentsObj[int] accesses
-    if (obj->is<ArgumentsObject>() && rhs.isInt32() &&
-        !obj->as<ArgumentsObject>().hasOverriddenElement())
-    {
-        ICGetElem_Arguments::Which which = ICGetElem_Arguments::Mapped;
-        if (obj->is<UnmappedArgumentsObject>())
-            which = ICGetElem_Arguments::Unmapped;
-        if (!ArgumentsGetElemStubExists(stub, which)) {
-            JitSpew(JitSpew_BaselineIC, "  Generating GetElem(ArgsObj[Int32]) stub");
-            ICGetElem_Arguments::Compiler compiler(
-                cx, stub->fallbackMonitorStub()->firstMonitorStub(), which);
-            ICStub* argsStub = compiler.getStub(compiler.getStubSpace(script));
-            if (!argsStub)
-                return false;
-
-            stub->addNewStub(argsStub);
-            *attached = true;
-            return true;
-        }
-    }
 
     // Check for NativeObject[int] dense accesses.
     if (IsNativeDenseElementAccess(obj, rhs)) {
@@ -1193,56 +1127,6 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 }
 
 //
-// GetElem_String
-//
-
-bool
-ICGetElem_String::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-    masm.branchTestString(Assembler::NotEqual, R0, &failure);
-    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratchReg = regs.takeAny();
-
-    // Unbox string in R0.
-    Register str = masm.extractString(R0, ExtractTemp0);
-
-    // Check for non-linear strings.
-    masm.branchIfRope(str, &failure);
-
-    // Unbox key.
-    Register key = masm.extractInt32(R1, ExtractTemp1);
-
-    // Bounds check.
-    masm.branch32(Assembler::BelowOrEqual, Address(str, JSString::offsetOfLength()),
-                  key, &failure);
-
-    // Get char code.
-    masm.loadStringChar(str, key, scratchReg);
-
-    // Check if char code >= UNIT_STATIC_LIMIT.
-    masm.branch32(Assembler::AboveOrEqual, scratchReg, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
-                  &failure);
-
-    // Load static string.
-    masm.movePtr(ImmPtr(&cx->staticStrings().unitStaticTable), str);
-    masm.loadPtr(BaseIndex(str, scratchReg, ScalePointer), str);
-
-    // Return.
-    masm.tagValue(JSVAL_TYPE_STRING, str, R0);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-//
 // GetElem_Dense
 //
 
@@ -1417,131 +1301,6 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler& masm)
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-//
-// GetElem_Arguments
-//
-bool
-ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-    if (which_ == ICGetElem_Arguments::Magic) {
-        // Ensure that this is a magic arguments value.
-        masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
-
-        // Ensure that frame has not loaded different arguments object since.
-        masm.branchTest32(Assembler::NonZero,
-                          Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-                          Imm32(BaselineFrame::HAS_ARGS_OBJ),
-                          &failure);
-
-        // Ensure that index is an integer.
-        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
-        Register idx = masm.extractInt32(R1, ExtractTemp1);
-
-        AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-        Register scratch = regs.takeAny();
-
-        // Load num actual arguments
-        Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
-        masm.loadPtr(actualArgs, scratch);
-
-        // Ensure idx < argc
-        masm.branch32(Assembler::AboveOrEqual, idx, scratch, &failure);
-
-        // Load argval
-        masm.movePtr(BaselineFrameReg, scratch);
-        masm.addPtr(Imm32(BaselineFrame::offsetOfArg(0)), scratch);
-        BaseValueIndex element(scratch, idx);
-        masm.loadValue(element, R0);
-
-        // Enter type monitor IC to type-check result.
-        EmitEnterTypeMonitorIC(masm);
-
-        masm.bind(&failure);
-        EmitStubGuardFailure(masm);
-        return true;
-    }
-
-    MOZ_ASSERT(which_ == ICGetElem_Arguments::Mapped ||
-               which_ == ICGetElem_Arguments::Unmapped);
-
-    const Class* clasp = (which_ == ICGetElem_Arguments::Mapped)
-                         ? &MappedArgumentsObject::class_
-                         : &UnmappedArgumentsObject::class_;
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratchReg = regs.takeAny();
-
-    // Guard on input being an arguments object.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    Register objReg = masm.extractObject(R0, ExtractTemp0);
-    masm.branchTestObjClass(Assembler::NotEqual, objReg, scratchReg, clasp, &failure);
-
-    // Guard on index being int32
-    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
-    Register idxReg = masm.extractInt32(R1, ExtractTemp1);
-
-    // Get initial ArgsObj length value.
-    masm.unboxInt32(Address(objReg, ArgumentsObject::getInitialLengthSlotOffset()), scratchReg);
-
-    // Test if length or any element have been overridden.
-    masm.branchTest32(Assembler::NonZero,
-                      scratchReg,
-                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT |
-                            ArgumentsObject::ELEMENT_OVERRIDDEN_BIT),
-                      &failure);
-
-    // Length has not been overridden, ensure that R1 is an integer and is <= length.
-    masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratchReg);
-    masm.branch32(Assembler::AboveOrEqual, idxReg, scratchReg, &failure);
-
-    // Length check succeeded, now check the correct bit.  We clobber potential type regs
-    // now.  Inputs will have to be reconstructed if we fail after this point, but that's
-    // unlikely.
-    Label failureReconstructInputs;
-    regs = availableGeneralRegs(0);
-    regs.takeUnchecked(objReg);
-    regs.takeUnchecked(idxReg);
-    regs.take(scratchReg);
-    Register argData = regs.takeAny();
-
-    // Load ArgumentsData
-    masm.loadPrivate(Address(objReg, ArgumentsObject::getDataSlotOffset()), argData);
-
-    // Fail if we have a RareArgumentsData (elements were deleted).
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(argData, offsetof(ArgumentsData, rareData)),
-                   ImmWord(0),
-                   &failureReconstructInputs);
-
-    // Load the value. Use scratchReg to form a ValueOperand to load into.
-    masm.addPtr(Imm32(ArgumentsData::offsetOfArgs()), argData);
-    regs.add(scratchReg);
-    ValueOperand tempVal = regs.takeAnyValue();
-    masm.loadValue(BaseValueIndex(argData, idxReg), tempVal);
-
-    // Makesure that this is not a FORWARD_TO_CALL_SLOT magic value.
-    masm.branchTestMagic(Assembler::Equal, tempVal, &failureReconstructInputs);
-
-    // Copy value from temp to R0.
-    masm.moveValue(tempVal, R0);
-
-    // Type-check result
-    EmitEnterTypeMonitorIC(masm);
-
-    // Failed, but inputs are deconstructed into object and int, and need to be
-    // reconstructed into values.
-    masm.bind(&failureReconstructInputs);
-    masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
-    masm.tagValue(JSVAL_TYPE_INT32, idxReg, R1);
-
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
@@ -7418,13 +7177,6 @@ ICGetElem_TypedArray::ICGetElem_TypedArray(JitCode* stubCode, Shape* shape, Scal
 {
     extra_ = uint16_t(type);
     MOZ_ASSERT(extra_ == type);
-}
-
-/* static */ ICGetElem_Arguments*
-ICGetElem_Arguments::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                           ICGetElem_Arguments& other)
-{
-    return New<ICGetElem_Arguments>(cx, space, other.jitCode(), firstMonitorStub, other.which());
 }
 
 ICSetElem_DenseOrUnboxedArray::ICSetElem_DenseOrUnboxedArray(JitCode* stubCode, Shape* shape, ObjectGroup* group)
