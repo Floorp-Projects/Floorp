@@ -35,6 +35,11 @@ linux64-stylo/opt:
     build-platform: linux64-stylo/opt
     test-set: stylo-tests
 
+# QR builds just run a subset right now
+linux64-qr/opt:
+    build-platform: linux64-qr/opt
+    test-set: qr-tests
+
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-set: ccov-code-coverage-tests
