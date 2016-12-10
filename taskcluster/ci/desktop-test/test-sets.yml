@@ -80,6 +80,9 @@ stylo-tests:
     - crashtest
     - reftest-stylo
 
+qr-tests:
+    - reftest
+
 asan-tests:
     - cppunit
     - crashtest
