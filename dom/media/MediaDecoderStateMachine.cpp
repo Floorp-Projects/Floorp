@@ -856,48 +856,6 @@ protected:
 
   void SeekCompleted();
 
-  void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
-  {
-    mSeekTaskRequest.Complete();
-
-    if (aValue.mSeekedAudioData) {
-      mMaster->Push(aValue.mSeekedAudioData);
-      mMaster->mDecodedAudioEndTime = std::max(
-        aValue.mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
-    }
-
-    if (aValue.mSeekedVideoData) {
-      mMaster->Push(aValue.mSeekedVideoData);
-      mMaster->mDecodedVideoEndTime = std::max(
-        aValue.mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
-    }
-
-    if (aValue.mIsAudioQueueFinished) {
-      AudioQueue().Finish();
-    }
-
-    if (aValue.mIsVideoQueueFinished) {
-      VideoQueue().Finish();
-    }
-
-    SeekCompleted();
-  }
-
-  void OnSeekTaskRejected(const SeekTaskRejectValue& aValue)
-  {
-    mSeekTaskRequest.Complete();
-
-    if (aValue.mIsAudioQueueFinished) {
-      AudioQueue().Finish();
-    }
-
-    if (aValue.mIsVideoQueueFinished) {
-      VideoQueue().Finish();
-    }
-
-    mMaster->DecodeError(aValue.mError);
-  }
-
 private:
   virtual void CreateSeekTask() = 0;
 
@@ -949,6 +907,49 @@ private:
                OnSeekTaskRejected(aValue);
              }));
   }
+
+  void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
+  {
+    mSeekTaskRequest.Complete();
+
+    if (aValue.mSeekedAudioData) {
+      mMaster->Push(aValue.mSeekedAudioData);
+      mMaster->mDecodedAudioEndTime = std::max(
+        aValue.mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
+    }
+
+    if (aValue.mSeekedVideoData) {
+      mMaster->Push(aValue.mSeekedVideoData);
+      mMaster->mDecodedVideoEndTime = std::max(
+        aValue.mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
+    }
+
+    if (aValue.mIsAudioQueueFinished) {
+      AudioQueue().Finish();
+    }
+
+    if (aValue.mIsVideoQueueFinished) {
+      VideoQueue().Finish();
+    }
+
+    SeekCompleted();
+  }
+
+  void OnSeekTaskRejected(const SeekTaskRejectValue& aValue)
+  {
+    mSeekTaskRequest.Complete();
+
+    if (aValue.mIsAudioQueueFinished) {
+      AudioQueue().Finish();
+    }
+
+    if (aValue.mIsVideoQueueFinished) {
+      VideoQueue().Finish();
+    }
+
+    mMaster->DecodeError(aValue.mError);
+  }
+
 };
 
 class MediaDecoderStateMachine::NextFrameSeekingState
@@ -991,6 +992,49 @@ private:
                OnSeekTaskRejected(aValue);
              }));
   }
+
+  void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
+  {
+    mSeekTaskRequest.Complete();
+
+    if (aValue.mSeekedAudioData) {
+      mMaster->Push(aValue.mSeekedAudioData);
+      mMaster->mDecodedAudioEndTime = std::max(
+        aValue.mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
+    }
+
+    if (aValue.mSeekedVideoData) {
+      mMaster->Push(aValue.mSeekedVideoData);
+      mMaster->mDecodedVideoEndTime = std::max(
+        aValue.mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
+    }
+
+    if (aValue.mIsAudioQueueFinished) {
+      AudioQueue().Finish();
+    }
+
+    if (aValue.mIsVideoQueueFinished) {
+      VideoQueue().Finish();
+    }
+
+    SeekCompleted();
+  }
+
+  void OnSeekTaskRejected(const SeekTaskRejectValue& aValue)
+  {
+    mSeekTaskRequest.Complete();
+
+    if (aValue.mIsAudioQueueFinished) {
+      AudioQueue().Finish();
+    }
+
+    if (aValue.mIsVideoQueueFinished) {
+      VideoQueue().Finish();
+    }
+
+    mMaster->DecodeError(aValue.mError);
+  }
+
 };
 
 /**
