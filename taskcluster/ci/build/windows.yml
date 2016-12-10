@@ -120,9 +120,9 @@ win64-qr/debug:
         product: firefox
         job-name: win64-qr-debug
     treeherder:
-        platform: windows2012-64/debug
-        symbol: tc(QR)
-        tier: 2
+        platform: windows2012-64-qr/debug
+        symbol: tc(B)
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         implementation: generic-worker
@@ -139,9 +139,9 @@ win64-qr/opt:
         product: firefox
         job-name: win64-qr-opt
     treeherder:
-        platform: windows2012-64/opt
-        symbol: tc(QR)
-        tier: 2
+        platform: windows2012-64-qr/opt
+        symbol: tc(B)
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         implementation: generic-worker

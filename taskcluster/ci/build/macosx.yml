@@ -51,9 +51,9 @@ macosx64-qr/debug:
         product: firefox
         job-name: macosx64-qr-debug
     treeherder:
-        platform: osx-10-7/debug
-        symbol: tc(QR)
-        tier: 2
+        platform: osx-10-7-qr/debug
+        symbol: tc(B)
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
         implementation: docker-worker
@@ -75,9 +75,9 @@ macosx64-qr/opt:
         product: firefox
         job-name: macosx64-qr-opt
     treeherder:
-        platform: osx-10-7/opt
-        symbol: tc(QR)
-        tier: 2
+        platform: osx-10-7-qr/opt
+        symbol: tc(B)
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
         implementation: docker-worker
