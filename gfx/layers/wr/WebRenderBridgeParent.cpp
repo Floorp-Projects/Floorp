@@ -366,13 +366,12 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture,
   MOZ_ASSERT(bufferTexture->GetFormat() == SurfaceFormat::B8G8R8A8);
   uint32_t buffer_size = size.width * size.height * 4;
 
-  // Assert the size and stride of the buffer is what webrender expects
-  MOZ_ASSERT(size == aRect.Size());
+  // Assert the stride of the buffer is what webrender expects
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
   MOZ_ASSERT(mWRState);
   mGLContext->MakeCurrent();
-  wr_readback_into_buffer(mWRWindowState, aRect.width, aRect.height, buffer, buffer_size);
+  wr_readback_into_buffer(mWRWindowState, size.width, size.height, buffer, buffer_size);
 
   return IPC_OK();
 }
