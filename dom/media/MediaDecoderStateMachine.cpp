@@ -884,7 +884,8 @@ public:
 
   void Exit() override
   {
-    SeekingState::Exit();
+    // Disconnect MediaDecoder.
+    mSeekJob.RejectIfExists(__func__);
 
     // Disconnect MediaDecoderReaderWrapper.
     mSeekRequest.DisconnectIfExists();
@@ -892,7 +893,7 @@ public:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
 
     RefPtr<MediaData> audio(aAudio);
     MOZ_ASSERT(audio);
@@ -919,7 +920,7 @@ public:
     } else {
       nsresult rv = DropAudioUpToSeekTarget(audio);
       if (NS_FAILED(rv)) {
-        mTask->RejectIfExist(rv, __func__);
+        OnSeekTaskRejected(rv);
         return;
       }
     }
@@ -933,7 +934,7 @@ public:
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
-    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
 
     RefPtr<MediaData> video(aVideo);
     MOZ_ASSERT(video);
@@ -952,7 +953,7 @@ public:
     } else {
       nsresult rv = DropVideoUpToSeekTarget(video.get());
       if (NS_FAILED(rv)) {
-        mTask->RejectIfExist(rv, __func__);
+        OnSeekTaskRejected(rv);
         return;
       }
     }
@@ -966,7 +967,7 @@ public:
 
   void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
   {
-    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
 
     SSAMPLELOG("OnNotDecoded type=%d reason=%u", aType, aError.Code());
 
@@ -1009,12 +1010,12 @@ public:
     }
 
     // This is a decode error, delegate to the generic error path.
-    mTask->RejectIfExist(aError, __func__);
+    OnSeekTaskRejected(aError);
   }
 
   void HandleAudioWaited(MediaData::Type aType) override
   {
-    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
 
     // Ignore pending requests from video-only seek.
     if (mSeekJob.mTarget.IsVideoOnly()) {
@@ -1025,14 +1026,14 @@ public:
 
   void HandleVideoWaited(MediaData::Type aType) override
   {
-    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
 
     RequestVideoData();
   }
 
   void HandleNotWaited(const WaitForDataRejectValue& aRejection) override
   {
-    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
   }
 
 private:
@@ -1041,12 +1042,6 @@ private:
     mCurrentTimeBeforeSeek = TimeUnit::FromMicroseconds(mMaster->GetMediaTime());
     mDoneAudioSeeking = !Info().HasAudio() || mSeekJob.mTarget.IsVideoOnly();
     mDoneVideoSeeking = !Info().HasVideo();
-
-    mSeekTask = new AccurateSeekTask(
-      mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
-      Info(), mMaster->Duration(), mMaster->GetMediaTime());
-
-    mTask = static_cast<AccurateSeekTask*>(mSeekTask.get());
   }
 
   void ResetMDSM() override
@@ -1068,16 +1063,6 @@ private:
              },
              [this] (nsresult aResult) {
                OnSeekRejected(aResult);
-             }));
-
-    // Let SeekTask handle the following operations once the demuxer seeking is done.
-    mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
-      ->Then(OwnerThread(), __func__,
-             [this] (const SeekTaskResolveValue& aValue) {
-               OnSeekTaskResolved(aValue);
-             },
-             [this] (const SeekTaskRejectValue& aValue) {
-               OnSeekTaskRejected(aValue);
              }));
   }
 
@@ -1130,7 +1115,7 @@ private:
     mSeekRequest.Complete();
 
     MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
-    mTask->RejectIfExist(aResult, __func__);
+    OnSeekTaskRejected(aResult);
   }
 
   void RequestAudioData()
@@ -1279,50 +1264,46 @@ private:
   void MaybeFinishSeek()
   {
     if (mDoneAudioSeeking && mDoneVideoSeeking) {
-      mTask->Resolve(__func__); // Call to MDSM::SeekCompleted();
+      OnSeekTaskResolved();
     }
   }
 
-  void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
+  void OnSeekTaskResolved()
   {
-    mSeekTaskRequest.Complete();
-
-    if (aValue.mSeekedAudioData) {
-      mMaster->Push(aValue.mSeekedAudioData);
+    if (mSeekedAudioData) {
+      mMaster->Push(mSeekedAudioData);
       mMaster->mDecodedAudioEndTime = std::max(
-        aValue.mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
+        mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
     }
 
-    if (aValue.mSeekedVideoData) {
-      mMaster->Push(aValue.mSeekedVideoData);
+    if (mSeekedVideoData) {
+      mMaster->Push(mSeekedVideoData);
       mMaster->mDecodedVideoEndTime = std::max(
-        aValue.mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
+        mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
     }
 
-    if (aValue.mIsAudioQueueFinished) {
+    if (mIsAudioQueueFinished) {
       AudioQueue().Finish();
     }
 
-    if (aValue.mIsVideoQueueFinished) {
+    if (mIsVideoQueueFinished) {
       VideoQueue().Finish();
     }
 
     SeekCompleted();
   }
 
-  void OnSeekTaskRejected(const SeekTaskRejectValue& aValue)
+  void OnSeekTaskRejected(MediaResult aError)
   {
-    mSeekTaskRequest.Complete();
-
-    if (aValue.mIsAudioQueueFinished) {
+    if (mIsAudioQueueFinished) {
       AudioQueue().Finish();
     }
 
-    if (aValue.mIsVideoQueueFinished) {
+    if (mIsVideoQueueFinished) {
       VideoQueue().Finish();
     }
 
-    mMaster->DecodeError(aValue.mError);
+    mMaster->DecodeError(aError);
   }
 
   /*
