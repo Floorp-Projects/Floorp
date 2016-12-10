@@ -15,6 +15,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Printf.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -424,13 +425,13 @@ static void UnexpectedExit() {
  * @param fmt
  *        printf-style format string followed by arguments.
  */
-static void Output(bool isError, const char *fmt, ... )
+static MOZ_FORMAT_PRINTF(2, 3) void Output(bool isError, const char *fmt, ... )
 {
   va_list ap;
   va_start(ap, fmt);
 
 #if defined(XP_WIN) && !MOZ_WINCONSOLE
-  char *msg = PR_vsmprintf(fmt, ap);
+  char *msg = mozilla::Vsmprintf(fmt, ap);
   if (msg)
   {
     UINT flags = MB_OK;
@@ -448,7 +449,7 @@ static void Output(bool isError, const char *fmt, ... )
                         sizeof(wide_msg) / sizeof(wchar_t));
 
     MessageBoxW(nullptr, wide_msg, L"XULRunner", flags);
-    PR_smprintf_free(msg);
+    mozilla::SmprintfFree(msg);
   }
 #else
   vfprintf(stderr, fmt, ap);
@@ -4344,9 +4345,9 @@ XREMain::XRE_mainRun()
   // Ugly details in http://bugzil.la/1175039#c27
   char appFile[MAX_PATH];
   if (GetEnvironmentVariableA("XUL_APP_FILE", appFile, sizeof(appFile))) {
-    char* saved = PR_smprintf("XUL_APP_FILE=%s", appFile);
+    char* saved = mozilla::Smprintf("XUL_APP_FILE=%s", appFile);
     PR_SetEnv(saved);
-    PR_smprintf_free(saved);
+    mozilla::SmprintfFree(saved);
   }
 #endif
 
