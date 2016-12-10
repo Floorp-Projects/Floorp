@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderWorker", "resource://gre/modules/reader/ReaderWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector", "resource:///modules/translation/LanguageDetector.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Readability", function() {
   let scope = {};
@@ -36,6 +37,8 @@ XPCOMUtils.defineLazyGetter(this, "Readability", function() {
   Services.scriptloader.loadSubScript("resource://gre/modules/reader/Readability.js", scope);
   return scope["Readability"];
 });
+
+const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
 this.ReaderMode = {
   // Version of the cache schema.
@@ -461,6 +464,12 @@ this.ReaderMode = {
     let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
     article.title = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils)
                                                     .convertToPlainText(article.title, flags, 0);
+    if (gIsFirefoxDesktop) {
+      yield this._findLanguage(article.textContent);
+      this._maybeAssignTextDirection(article);
+    }
+
+    this._assignReadTime(article);
 
     histogram.add(PARSE_SUCCESS);
     return article;
@@ -510,5 +519,73 @@ this.ReaderMode = {
       }
       return undefined;
     });
-  }
+  },
+
+  /**
+   * Sets a global language string value if the result is confident
+   *
+   * @return Promise
+   * @resolves when the language is detected
+   */
+  _findLanguage(textContent) {
+    return LanguageDetector.detectLanguage(textContent).then(result => {
+      this._foundLanguage = result.confident ? result.language : null;
+    });
+  },
+
+  _maybeAssignTextDirection(article) {
+    // TODO: Remove the hardcoded language codes below once bug 1320265 is resolved.
+    if (!article.dir && ["ar", "fa", "he", "ug", "ur"].includes(this._foundLanguage)) {
+      article.dir = "rtl";
+    }
+  },
+
+  /**
+   * Assigns the estimated reading time range of the article to the article object.
+   *
+   * @param article the article object to assign the reading time estimate to.
+   */
+  _assignReadTime(article) {
+    let lang = this._foundLanguage || "en";
+    const readingSpeed = this._getReadingSpeedForLanguage(lang);
+    const charactersPerMinuteLow = readingSpeed.cpm - readingSpeed.variance;
+    const charactersPerMinuteHigh = readingSpeed.cpm + readingSpeed.variance;
+    const length = article.length;
+
+    article.readingTimeMinsSlow = Math.ceil(length / charactersPerMinuteLow);
+    article.readingTimeMinsFast  = Math.ceil(length / charactersPerMinuteHigh);
+  },
+
+  /**
+   * Returns the reading speed of a selection of languages with likely variance.
+   *
+   * Reading speed estimated from a study done on reading speeds in various languages.
+   * study can be found here: http://iovs.arvojournals.org/article.aspx?articleid=2166061
+   *
+   * @return object with characters per minute and variance. Defaults to English
+   *         if no suitable language is found in the collection.
+   */
+  _getReadingSpeedForLanguage(lang) {
+    const readingSpeed = new Map([
+      [ "en", {cpm: 987,  variance: 118 } ],
+      [ "ar", {cpm: 612,  variance: 88 } ],
+      [ "de", {cpm: 920,  variance: 86 } ],
+      [ "es", {cpm: 1025, variance: 127 } ],
+      [ "fi", {cpm: 1078, variance: 121 } ],
+      [ "fr", {cpm: 998,  variance: 126 } ],
+      [ "he", {cpm: 833,  variance: 130 } ],
+      [ "it", {cpm: 950,  variance: 140 } ],
+      [ "jw", {cpm: 357,  variance: 56 } ],
+      [ "nl", {cpm: 978,  variance: 143 } ],
+      [ "pl", {cpm: 916,  variance: 126 } ],
+      [ "pt", {cpm: 913,  variance: 145 } ],
+      [ "ru", {cpm: 986,  variance: 175 } ],
+      [ "sk", {cpm: 885,  variance: 145 } ],
+      [ "sv", {cpm: 917,  variance: 156 } ],
+      [ "tr", {cpm: 1054, variance: 156 } ],
+      [ "zh", {cpm: 255,  variance: 29 } ],
+    ]);
+
+    return readingSpeed.get(lang) || readingSpeed.get("en");
+  },
 };
