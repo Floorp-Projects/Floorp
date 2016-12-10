@@ -42,20 +42,6 @@ public:
   void HandleNotWaited(const WaitForDataRejectValue& aRejection) override;
 
   ~AccurateSeekTask();
-
-  /*
-   * Internal state.
-   */
-  const media::TimeUnit mCurrentTimeBeforeSeek;
-  const uint32_t mAudioRate;  // Audio sample rate.
-  bool mDoneAudioSeeking;
-  bool mDoneVideoSeeking;
-
-  // This temporarily stores the first frame we decode after we seek.
-  // This is so that if we hit end of stream while we're decoding to reach
-  // the seek target, we will still have a frame that we can display as the
-  // last frame in the media.
-  RefPtr<MediaData> mFirstVideoFrameAfterSeek;
 };
 
 } // namespace mozilla

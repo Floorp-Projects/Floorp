@@ -905,17 +905,17 @@ public:
     // Video-only seek doesn't reset audio decoder. There might be pending audio
     // requests when AccurateSeekTask::Seek() begins. We will just store the data
     // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
-    if (mTask->mTarget.IsVideoOnly()) {
-      mTask->mSeekedAudioData = audio.forget();
+    if (mSeekJob.mTarget.IsVideoOnly()) {
+      mSeekedAudioData = audio.forget();
       return;
     }
 
     AdjustFastSeekIfNeeded(audio);
 
-    if (mTask->mTarget.IsFast()) {
+    if (mSeekJob.mTarget.IsFast()) {
       // Non-precise seek; we can stop the seek at the first sample.
-      mTask->mSeekedAudioData = audio;
-      mTask->mDoneAudioSeeking = true;
+      mSeekedAudioData = audio;
+      mDoneAudioSeeking = true;
     } else {
       nsresult rv = DropAudioUpToSeekTarget(audio);
       if (NS_FAILED(rv)) {
@@ -924,7 +924,7 @@ public:
       }
     }
 
-    if (!mTask->mDoneAudioSeeking) {
+    if (!mDoneAudioSeeking) {
       RequestAudioData();
       return;
     }
@@ -945,10 +945,10 @@ public:
 
     AdjustFastSeekIfNeeded(video);
 
-    if (mTask->mTarget.IsFast()) {
+    if (mSeekJob.mTarget.IsFast()) {
       // Non-precise seek. We can stop the seek at the first sample.
-      mTask->mSeekedVideoData = video;
-      mTask->mDoneVideoSeeking = true;
+      mSeekedVideoData = video;
+      mDoneVideoSeeking = true;
     } else {
       nsresult rv = DropVideoUpToSeekTarget(video.get());
       if (NS_FAILED(rv)) {
@@ -957,7 +957,7 @@ public:
       }
     }
 
-    if (!mTask->mDoneVideoSeeking) {
+    if (!mDoneVideoSeeking) {
       RequestVideoData();
       return;
     }
@@ -971,7 +971,7 @@ public:
     SSAMPLELOG("OnNotDecoded type=%d reason=%u", aType, aError.Code());
 
     // Ignore pending requests from video-only seek.
-    if (aType == MediaData::AUDIO_DATA && mTask->mTarget.IsVideoOnly()) {
+    if (aType == MediaData::AUDIO_DATA && mSeekJob.mTarget.IsVideoOnly()) {
       return;
     }
 
@@ -993,15 +993,15 @@ public:
 
     if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
       if (aType == MediaData::AUDIO_DATA) {
-        mTask->mIsAudioQueueFinished = true;
-        mTask->mDoneAudioSeeking = true;
+        mIsAudioQueueFinished = true;
+        mDoneAudioSeeking = true;
       } else {
-        mTask->mIsVideoQueueFinished = true;
-        mTask->mDoneVideoSeeking = true;
-        if (mTask->mFirstVideoFrameAfterSeek) {
+        mIsVideoQueueFinished = true;
+        mDoneVideoSeeking = true;
+        if (mFirstVideoFrameAfterSeek) {
           // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
           // mSeekedVideoData so we have something to display after seeking.
-          mTask->mSeekedVideoData = mTask->mFirstVideoFrameAfterSeek.forget();
+          mSeekedVideoData = mFirstVideoFrameAfterSeek.forget();
         }
       }
       MaybeFinishSeek();
@@ -1017,7 +1017,7 @@ public:
     MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
 
     // Ignore pending requests from video-only seek.
-    if (mTask->mTarget.IsVideoOnly()) {
+    if (mSeekJob.mTarget.IsVideoOnly()) {
       return;
     }
     RequestAudioData();
@@ -1038,6 +1038,10 @@ public:
 private:
   void CreateSeekTask() override
   {
+    mCurrentTimeBeforeSeek = TimeUnit::FromMicroseconds(mMaster->GetMediaTime());
+    mDoneAudioSeeking = !Info().HasAudio() || mSeekJob.mTarget.IsVideoOnly();
+    mDoneVideoSeeking = !Info().HasVideo();
+
     mSeekTask = new AccurateSeekTask(
       mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
       Info(), mMaster->Duration(), mMaster->GetMediaTime());
@@ -1057,7 +1061,7 @@ private:
   void DoSeek() override
   {
     // Request the demuxer to perform seek.
-    mSeekRequest.Begin(Reader()->Seek(mTask->mTarget, mMaster->Duration())
+    mSeekRequest.Begin(Reader()->Seek(mSeekJob.mTarget, mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (media::TimeUnit aUnit) {
                OnSeekResolved(aUnit);
@@ -1079,27 +1083,27 @@ private:
 
   int64_t CalculateNewCurrentTime() const override
   {
-    const int64_t seekTime = mTask->mTarget.GetTime().ToMicroseconds();
+    const int64_t seekTime = mSeekJob.mTarget.GetTime().ToMicroseconds();
 
     // For the accurate seek, we always set the newCurrentTime = seekTime so that
     // the updated HTMLMediaElement.currentTime will always be the seek target;
     // we rely on the MediaSink to handles the gap between the newCurrentTime and
     // the real decoded samples' start time.
-    if (mTask->mTarget.IsAccurate()) {
+    if (mSeekJob.mTarget.IsAccurate()) {
       return seekTime;
     }
 
     // For the fast seek, we update the newCurrentTime with the decoded audio and
     // video samples, set it to be the one which is closet to the seekTime.
-    if (mTask->mTarget.IsFast()) {
+    if (mSeekJob.mTarget.IsFast()) {
 
       // A situation that both audio and video approaches the end.
-      if (!mTask->mSeekedAudioData && !mTask->mSeekedVideoData) {
+      if (!mSeekedAudioData && !mSeekedVideoData) {
         return seekTime;
       }
 
-      const int64_t audioStart = mTask->mSeekedAudioData ? mTask->mSeekedAudioData->mTime : INT64_MAX;
-      const int64_t videoStart = mTask->mSeekedVideoData ? mTask->mSeekedVideoData->mTime : INT64_MAX;
+      const int64_t audioStart = mSeekedAudioData ? mSeekedAudioData->mTime : INT64_MAX;
+      const int64_t videoStart = mSeekedVideoData ? mSeekedVideoData->mTime : INT64_MAX;
       const int64_t audioGap = std::abs(audioStart - seekTime);
       const int64_t videoGap = std::abs(videoStart - seekTime);
       return audioGap <= videoGap ? audioStart : videoStart;
@@ -1114,10 +1118,10 @@ private:
 
     // We must decode the first samples of active streams, so we can determine
     // the new stream time. So dispatch tasks to do that.
-    if (!mTask->mDoneVideoSeeking) {
+    if (!mDoneVideoSeeking) {
       RequestVideoData();
     }
-    if (!mTask->mDoneAudioSeeking) {
+    if (!mDoneAudioSeeking) {
       RequestAudioData();
     }
   }
@@ -1131,7 +1135,7 @@ private:
 
   void RequestAudioData()
   {
-    MOZ_ASSERT(!mTask->mDoneAudioSeeking);
+    MOZ_ASSERT(!mDoneAudioSeeking);
     MOZ_ASSERT(!Reader()->IsRequestingAudioData());
     MOZ_ASSERT(!Reader()->IsWaitingAudioData());
     Reader()->RequestAudioData();
@@ -1139,7 +1143,7 @@ private:
 
   void RequestVideoData()
   {
-    MOZ_ASSERT(!mTask->mDoneVideoSeeking);
+    MOZ_ASSERT(!mDoneVideoSeeking);
     MOZ_ASSERT(!Reader()->IsRequestingVideoData());
     MOZ_ASSERT(!Reader()->IsWaitingVideoData());
     Reader()->RequestVideoData(false, media::TimeUnit());
@@ -1147,36 +1151,36 @@ private:
 
   void AdjustFastSeekIfNeeded(MediaData* aSample)
   {
-    if (mTask->mTarget.IsFast() &&
-        mTask->mTarget.GetTime() > mTask->mCurrentTimeBeforeSeek &&
-        aSample->mTime < mTask->mCurrentTimeBeforeSeek.ToMicroseconds()) {
+    if (mSeekJob.mTarget.IsFast() &&
+        mSeekJob.mTarget.GetTime() > mCurrentTimeBeforeSeek &&
+        aSample->mTime < mCurrentTimeBeforeSeek.ToMicroseconds()) {
       // We are doing a fastSeek, but we ended up *before* the previous
       // playback position. This is surprising UX, so switch to an accurate
       // seek and decode to the seek target. This is not conformant to the
       // spec, fastSeek should always be fast, but until we get the time to
       // change all Readers to seek to the keyframe after the currentTime
       // in this case, we'll just decode forward. Bug 1026330.
-      mTask->mTarget.SetType(SeekTarget::Accurate);
+      mSeekJob.mTarget.SetType(SeekTarget::Accurate);
     }
   }
 
   nsresult DropAudioUpToSeekTarget(MediaData* aSample)
   {
     RefPtr<AudioData> audio(aSample->As<AudioData>());
-    MOZ_ASSERT(audio && mTask->mTarget.IsAccurate());
+    MOZ_ASSERT(audio && mSeekJob.mTarget.IsAccurate());
 
-    CheckedInt64 sampleDuration = FramesToUsecs(audio->mFrames, mTask->mAudioRate);
+    CheckedInt64 sampleDuration = FramesToUsecs(audio->mFrames, Info().mAudio.mRate);
     if (!sampleDuration.isValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
 
-    if (audio->mTime + sampleDuration.value() <= mTask->mTarget.GetTime().ToMicroseconds()) {
+    if (audio->mTime + sampleDuration.value() <= mSeekJob.mTarget.GetTime().ToMicroseconds()) {
       // Our seek target lies after the frames in this AudioData. Don't
       // push it onto the audio queue, and keep decoding forwards.
       return NS_OK;
     }
 
-    if (audio->mTime > mTask->mTarget.GetTime().ToMicroseconds()) {
+    if (audio->mTime > mSeekJob.mTarget.GetTime().ToMicroseconds()) {
       // The seek target doesn't lie in the audio block just after the last
       // audio frames we've seen which were before the seek target. This
       // could have been the first audio data we've seen after seek, i.e. the
@@ -1185,21 +1189,21 @@ private:
       // silence to cover the gap. Typically this happens in poorly muxed
       // files.
       SWARN("Audio not synced after seek, maybe a poorly muxed file?");
-      mTask->mSeekedAudioData = audio;
-      mTask->mDoneAudioSeeking = true;
+      mSeekedAudioData = audio;
+      mDoneAudioSeeking = true;
       return NS_OK;
     }
 
     // The seek target lies somewhere in this AudioData's frames, strip off
     // any frames which lie before the seek target, so we'll begin playback
     // exactly at the seek target.
-    NS_ASSERTION(mTask->mTarget.GetTime().ToMicroseconds() >= audio->mTime,
+    NS_ASSERTION(mSeekJob.mTarget.GetTime().ToMicroseconds() >= audio->mTime,
                  "Target must at or be after data start.");
-    NS_ASSERTION(mTask->mTarget.GetTime().ToMicroseconds() < audio->mTime + sampleDuration.value(),
+    NS_ASSERTION(mSeekJob.mTarget.GetTime().ToMicroseconds() < audio->mTime + sampleDuration.value(),
                  "Data must end after target.");
 
     CheckedInt64 framesToPrune =
-      UsecsToFrames(mTask->mTarget.GetTime().ToMicroseconds() - audio->mTime, mTask->mAudioRate);
+      UsecsToFrames(mSeekJob.mTarget.GetTime().ToMicroseconds() - audio->mTime, Info().mAudio.mRate);
     if (!framesToPrune.isValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
@@ -1219,20 +1223,20 @@ private:
     memcpy(audioData.get(),
            audio->mAudioData.get() + (framesToPrune.value() * channels),
            frames * channels * sizeof(AudioDataValue));
-    CheckedInt64 duration = FramesToUsecs(frames, mTask->mAudioRate);
+    CheckedInt64 duration = FramesToUsecs(frames, Info().mAudio.mRate);
     if (!duration.isValid()) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
     RefPtr<AudioData> data(new AudioData(audio->mOffset,
-                                         mTask->mTarget.GetTime().ToMicroseconds(),
+                                         mSeekJob.mTarget.GetTime().ToMicroseconds(),
                                          duration.value(),
                                          frames,
                                          Move(audioData),
                                          channels,
                                          audio->mRate));
-    MOZ_ASSERT(!mTask->mSeekedAudioData, "Should be the 1st sample after seeking");
-    mTask->mSeekedAudioData = data;
-    mTask->mDoneAudioSeeking = true;
+    MOZ_ASSERT(!mSeekedAudioData, "Should be the 1st sample after seeking");
+    mSeekedAudioData = data;
+    mDoneAudioSeeking = true;
 
     return NS_OK;
   }
@@ -1243,14 +1247,14 @@ private:
     MOZ_ASSERT(video);
     SLOG("DropVideoUpToSeekTarget() frame [%lld, %lld]",
          video->mTime, video->GetEndTime());
-    const int64_t target = mTask->mTarget.GetTime().ToMicroseconds();
+    const int64_t target = mSeekJob.mTarget.GetTime().ToMicroseconds();
 
     // If the frame end time is less than the seek target, we won't want
     // to display this frame after the seek, so discard it.
     if (target >= video->GetEndTime()) {
       SLOG("DropVideoUpToSeekTarget() pop video frame [%lld, %lld] target=%lld",
            video->mTime, video->GetEndTime(), target);
-      mTask->mFirstVideoFrameAfterSeek = video;
+      mFirstVideoFrameAfterSeek = video;
     } else {
       if (target >= video->mTime && video->GetEndTime() >= target) {
         // The seek target lies inside this frame's time slice. Adjust the frame's
@@ -1259,14 +1263,14 @@ private:
         RefPtr<VideoData> temp = VideoData::ShallowCopyUpdateTimestamp(video.get(), target);
         video = temp;
       }
-      mTask->mFirstVideoFrameAfterSeek = nullptr;
+      mFirstVideoFrameAfterSeek = nullptr;
 
       SLOG("DropVideoUpToSeekTarget() found video frame [%lld, %lld] containing target=%lld",
                   video->mTime, video->GetEndTime(), target);
 
-      MOZ_ASSERT(!mTask->mSeekedVideoData, "Should be the 1st sample after seeking");
-      mTask->mSeekedVideoData = video;
-      mTask->mDoneVideoSeeking = true;
+      MOZ_ASSERT(!mSeekedVideoData, "Should be the 1st sample after seeking");
+      mSeekedVideoData = video;
+      mDoneVideoSeeking = true;
     }
 
     return NS_OK;
@@ -1274,7 +1278,7 @@ private:
 
   void MaybeFinishSeek()
   {
-    if (mTask->mDoneAudioSeeking && mTask->mDoneVideoSeeking) {
+    if (mDoneAudioSeeking && mDoneVideoSeeking) {
       mTask->Resolve(__func__); // Call to MDSM::SeekCompleted();
     }
   }
@@ -1325,6 +1329,27 @@ private:
    * Track the current seek promise made by the reader.
    */
   MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
+
+  /*
+   * Internal state.
+   */
+  media::TimeUnit mCurrentTimeBeforeSeek;
+  bool mDoneAudioSeeking = false;
+  bool mDoneVideoSeeking = false;
+
+  // This temporarily stores the first frame we decode after we seek.
+  // This is so that if we hit end of stream while we're decoding to reach
+  // the seek target, we will still have a frame that we can display as the
+  // last frame in the media.
+  RefPtr<MediaData> mFirstVideoFrameAfterSeek;
+
+  /*
+   * Information which are going to be returned to MDSM.
+   */
+  RefPtr<MediaData> mSeekedAudioData;
+  RefPtr<MediaData> mSeekedVideoData;
+  bool mIsAudioQueueFinished = false;
+  bool mIsVideoQueueFinished = false;
 
   // For refactoring only, will be removed later.
   RefPtr<AccurateSeekTask> mTask;
