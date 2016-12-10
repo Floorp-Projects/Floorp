@@ -925,6 +925,25 @@ EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
   return result;
 }
 
+/* static */ StyleAnimationValue
+EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
+                               const nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->StyleContext(),
+             "The frame should have a valid style context");
+
+  Maybe<NonOwningAnimationTarget> pseudoElement =
+    EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
+
+  MOZ_ASSERT(pseudoElement && pseudoElement->mElement,
+             "The frame should have an associated element");
+
+  return EffectCompositor::GetBaseStyle(aProperty,
+                                        aFrame->StyleContext(),
+                                        *pseudoElement->mElement,
+                                        pseudoElement->mPseudoType);
+}
+
 /* static */ void
 EffectCompositor::ClearBaseStyles(dom::Element& aElement,
                                   CSSPseudoElementType aPseudoType)
