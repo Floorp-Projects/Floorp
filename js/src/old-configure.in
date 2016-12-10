@@ -133,7 +133,7 @@ dnl Special win32 checks
 dnl ========================================================
 
 # Target the Windows 8.1 SDK by default
-WINVER=502
+WINVER=601
 
 case "$target" in
 *-mingw*)
