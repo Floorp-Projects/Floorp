@@ -168,6 +168,19 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertRaises(errors.InsecureCertificateException,
                           self.marionette.navigate, self.fixtures.where_is("/test.html", on="https"))
 
+    def test_html_document_to_image_document(self):
+        self.marionette.navigate(self.fixtures.where_is("test.html"))
+        self.marionette.navigate(self.fixtures.where_is("white.png"))
+        self.assertIn("white.png", self.marionette.title)
+
+    def test_image_document_to_image_document(self):
+        self.marionette.navigate(self.fixtures.where_is("test.html"))
+
+        self.marionette.navigate(self.fixtures.where_is("white.png"))
+        self.assertIn("white.png", self.marionette.title)
+        self.marionette.navigate(self.fixtures.where_is("black.png"))
+        self.assertIn("black.png", self.marionette.title)
+
 
 class TestTLSNavigation(MarionetteTestCase):
     insecure_tls = {"acceptInsecureCerts": True}
