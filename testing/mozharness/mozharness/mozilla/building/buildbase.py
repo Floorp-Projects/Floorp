@@ -1417,11 +1417,6 @@ or run without that action (ie: --no-{action})"
             task_id=self.buildbot_config['properties'].get('upload_to_task_id'),
         )
 
-        # TODO: Bug 1165980 - these should be in tree
-        routes.extend([
-            "%s.buildbot.branches.%s.%s" % (index, self.branch, self.stage_platform),
-            "%s.buildbot.revisions.%s.%s.%s" % (index, revision, self.branch, self.stage_platform),
-        ])
         task = tc.create_task(routes)
         tc.claim_task(task)
 
