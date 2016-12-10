@@ -37,7 +37,6 @@
 #include "nsDeque.h"
 #include "prenv.h"
 
-#include "AccurateSeekTask.h"
 #include "AudioSegment.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
@@ -1331,10 +1330,6 @@ private:
   RefPtr<MediaData> mSeekedVideoData;
   bool mIsAudioQueueFinished = false;
   bool mIsVideoQueueFinished = false;
-
-  // For refactoring only, will be removed later.
-  RefPtr<AccurateSeekTask> mTask;
-
 };
 
 class MediaDecoderStateMachine::NextFrameSeekingState
