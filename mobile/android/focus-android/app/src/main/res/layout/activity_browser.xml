@@ -5,7 +5,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    xmlns:android.support.design="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="#70000000">
 
     <org.mozilla.focus.widget.UrlBar
         android:id="@+id/urlbar"
@@ -28,6 +30,7 @@
         android:id="@+id/navbar"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="@drawable/navbar_background" />
+        android:background="@drawable/navbar_background"
+        android:visibility="gone" />
 
 </LinearLayout>

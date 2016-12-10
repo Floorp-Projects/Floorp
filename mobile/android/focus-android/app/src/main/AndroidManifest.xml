@@ -39,8 +39,17 @@
                 <data android:mimeType="text/plain"/>
                 <data android:mimeType="application/xhtml+xml"/>
             </intent-filter>
-
         </activity>
+
+        <activity android:name=".activity.SettingsActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:label="Settings"/>
+
+        <activity android:name=".activity.AboutActivity" />
+
+        <activity android:name=".activity.HelpActivity" />
+
+        <activity android:name=".activity.RightsActivity" />
 
         <service
             android:name=".customtabs.CustomTabsService"

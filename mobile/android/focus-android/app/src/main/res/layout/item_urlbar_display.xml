@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
+    android:layout_height="56dp"
     android:animateLayoutChanges="true">
 
     <LinearLayout
@@ -19,6 +19,7 @@
             android:layout_marginBottom="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
+            android:scaleType="centerInside"
             android:src="@drawable/ic_lock" />
 
         <TextView
@@ -27,15 +28,23 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_margin="8dp"
+            android:textSize="15sp"
             android:layout_weight="1"
+            android:lines="1"
+            android:ellipsize="end"
             android:gravity="center_vertical"
             android:padding="6dp"
             android:textColor="#ffffff" />
 
         <Button
             android:id="@+id/erase"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="80dp"
+            android:layout_height="40dp"
+            android:layout_marginRight="8dp"
+            android:layout_gravity="center_vertical"
+            android:textSize="15sp"
+            android:textColor="#ffffff"
+            android:background="@drawable/erase_background"
             android:text="@string/action_erase" />
 
     </LinearLayout>
@@ -43,7 +52,7 @@
     <ProgressBar
         android:id="@+id/progress"
         android:layout_width="match_parent"
-        android:layout_height="3dp"
+        android:layout_height="2dp"
         android:layout_gravity="bottom"
         android:visibility="invisible"
         style="@android:style/Widget.Material.ProgressBar.Horizontal" />

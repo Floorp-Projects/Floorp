@@ -8,39 +8,50 @@
     android:layout_height="match_parent"
     android:background="@drawable/gradient_background">
 
+    <ImageButton
+        android:id="@+id/settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_settings"
+        android:layout_gravity="right"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="45dp"
+        android:background="?android:attr/selectableItemBackground" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:orientation="vertical">
 
-        <TextView
+        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:paddingBottom="20dp"
-            android:text="@string/teaser_title"
-            android:textColor="#ffffff"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:src="@drawable/focus_wordmark"
+            android:paddingBottom="30dp"
+            android:layout_gravity="center_horizontal"/>
 
         <TextView
             android:id="@+id/url"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_height="40dp"
+            android:layout_marginLeft="18dp"
+            android:layout_marginRight="18dp"
             android:background="@drawable/urlbar_background"
             android:gravity="center"
             android:padding="8dp"
             android:text="@string/urlbar_hint"
-            android:textColor="#dddddd"
+            android:textSize="15sp"
+            android:textColor="#40ffffff"
             android:transitionName="urlbar" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:paddingTop="20dp"
+            android:paddingTop="30dp"
+            android:textSize="14sp"
+            android:lineSpacingExtra="7sp"
             android:text="@string/teaser"
             android:textColor="#eeeeee" />
 

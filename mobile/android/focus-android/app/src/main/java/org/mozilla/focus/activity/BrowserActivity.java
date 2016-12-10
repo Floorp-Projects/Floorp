@@ -9,8 +9,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -126,7 +128,10 @@ public class BrowserActivity extends Activity {
 
             @Override
             public void onOpen() {
-                // TODO: Open in external browser (or share?)
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
+                startActivity(intent);
             }
         });
 

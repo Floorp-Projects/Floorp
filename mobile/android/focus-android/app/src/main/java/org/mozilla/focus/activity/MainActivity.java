@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.view.View;
 
@@ -36,8 +37,21 @@ public class MainActivity extends Activity {
                 ActivityOptionsCompat options = ActivityOptionsCompat.
                         makeSceneTransitionAnimation(MainActivity.this, urlView, "urlbar");
 
-                startActivity(intent, options.toBundle());
+                startActivityForResult(intent, 0, options.toBundle());
             }
         });
+
+        findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Snackbar.make(findViewById(R.id.url), R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
     }
 }

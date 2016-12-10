@@ -50,7 +50,7 @@ public class UrlBar extends ViewFlipper {
     }
 
     private void init() {
-        setBackgroundColor(0xFF444444);
+        setBackgroundColor(0xFF363B40);
 
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -127,7 +127,7 @@ public class UrlBar extends ViewFlipper {
                     listener.onEnteredEditMode();
                 }
 
-                setBackgroundColor(0xFF444444);
+                setBackgroundColor(0xFF363B40);
 
                 showPrevious();
 

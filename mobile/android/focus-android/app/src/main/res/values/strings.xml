@@ -11,4 +11,6 @@
 
     <string name="action_cancel">Cancel</string>
     <string name="action_erase">Erase</string>
+
+    <string name="feedback_erase">Your browsing history has been erased.</string>
 </resources>

@@ -4,11 +4,15 @@
 <resources>
     <color name="colorPrimary">#b961cf</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
-    <color name="colorAccent">#d64648</color>
+    <color name="colorAccent">#FFCF68FF</color>
 
-    <color name="colorGradientStart">#ff8c3b3b</color>
-    <color name="colorGradientCenter">#ff7b3771</color>
-    <color name="colorGradientEnd">#ff205284</color>
+    <color name="colorGradientStart">#FFA23B3F</color>
+    <color name="colorGradientCenter">#FF83377B</color>
+    <color name="colorGradientEnd">#FF29528C</color>
 
-    <color name="colorAutocompleteHighlight">#6c3b6e</color>
+    <color name="colorUrlBarGradientStart">#FF9B3A4D</color>
+    <color name="colorUrlBarGradientCenter">#FF843779</color>
+    <color name="colorUrlBarGradientEnd">#FF3E4B89</color>
+
+    <color name="colorAutocompleteHighlight">#FFCF68FF</color>
 </resources>
