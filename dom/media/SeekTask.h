@@ -8,6 +8,8 @@
 #define SEEK_TASK_H
 
 #include "mozilla/MozPromise.h"
+#include "MediaData.h"          // For MediaData::Type.
+#include "MediaDecoderReader.h" // For WaitForDataRejectValue.
 #include "MediaResult.h"
 #include "SeekTarget.h"
 
