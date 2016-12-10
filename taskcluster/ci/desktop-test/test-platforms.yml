@@ -39,6 +39,9 @@ linux64-stylo/opt:
 linux64-qr/opt:
     build-platform: linux64-qr/opt
     test-set: qr-tests
+linux64-qr/debug:
+    build-platform: linux64-qr/debug
+    test-set: qr-tests
 
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
