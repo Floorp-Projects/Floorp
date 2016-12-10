@@ -17,7 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NarrateControls", "resource://gre/modul
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector", "resource:///modules/translation/LanguageDetector.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gChromeRegistry",
+                                   "@mozilla.org/chrome/chrome-registry;1", Ci.nsIXULChromeRegistry);
 
 var gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
@@ -59,6 +60,7 @@ var AboutReader = function(mm, win, articlePromise) {
   this._headerElementRef = Cu.getWeakReference(doc.getElementById("reader-header"));
   this._domainElementRef = Cu.getWeakReference(doc.getElementById("reader-domain"));
   this._titleElementRef = Cu.getWeakReference(doc.getElementById("reader-title"));
+  this._readTimeElementRef = Cu.getWeakReference(doc.getElementById("reader-estimated-time"));
   this._creditsElementRef = Cu.getWeakReference(doc.getElementById("reader-credits"));
   this._contentElementRef = Cu.getWeakReference(doc.getElementById("moz-reader-content"));
   this._toolbarElementRef = Cu.getWeakReference(doc.getElementById("reader-toolbar"));
@@ -149,6 +151,10 @@ AboutReader.prototype = {
 
   get _titleElement() {
     return this._titleElementRef.get();
+  },
+
+  get _readTimeElement() {
+    return this._readTimeElementRef.get();
   },
 
   get _creditsElement() {
@@ -722,14 +728,11 @@ AboutReader.prototype = {
       // Set "dir" attribute on content
       this._contentElement.setAttribute("dir", article.dir);
       this._headerElement.setAttribute("dir", article.dir);
-    } else {
-      this._languagePromise.then(language => {
-        // TODO: Remove the hardcoded language codes below once bug 1320265 is resolved.
-        if (["ar", "fa", "he", "ug", "ur"].includes(language)) {
-          this._contentElement.setAttribute("dir", "rtl");
-          this._headerElement.setAttribute("dir", "rtl");
-        }
-      });
+
+      // The native locale could be set differently than the article's text direction.
+      var localeDirection = gChromeRegistry.isLocaleRTL("global") ? "rtl" : "ltr";
+      this._readTimeElement.setAttribute("dir", localeDirection);
+      this._readTimeElement.style.textAlign = article.dir == "rtl" ? "right" : "left";
     }
   },
 
@@ -746,6 +749,14 @@ AboutReader.prototype = {
       // Have to get the attribute because .href provides an absolute URI.
       localLink.href = this._doc.documentURI + localLink.getAttribute("href");
     }
+  },
+
+  _formatReadTime(slowEstimate, fastEstimate) {
+    if (slowEstimate == fastEstimate) {
+      return gStrings.formatStringFromName("aboutReader.estimatedReadTimeValue", [slowEstimate], 1);
+    }
+
+    return gStrings.formatStringFromName("aboutReader.estimatedReadTimeRange", [fastEstimate, slowEstimate], 2);
   },
 
   _showError: function() {
@@ -789,6 +800,7 @@ AboutReader.prototype = {
     this._creditsElement.textContent = article.byline;
 
     this._titleElement.textContent = article.title;
+    this._readTimeElement.textContent = this._formatReadTime(article.readingTimeMinsSlow, article.readingTimeMinsFast);
     this._doc.title = article.title;
 
     this._headerElement.style.display = "block";
@@ -800,7 +812,6 @@ AboutReader.prototype = {
     this._contentElement.innerHTML = "";
     this._contentElement.appendChild(contentFragment);
     this._fixLocalLinks();
-    this._findLanguage(article.textContent);
     this._maybeSetTextDirection(article);
 
     this._contentElement.style.display = "block";
@@ -815,14 +826,6 @@ AboutReader.prototype = {
 
     this._doc.dispatchEvent(
       new this._win.CustomEvent("AboutReaderContentReady", { bubbles: true, cancelable: false }));
-  },
-
-  _findLanguage: function(textContent) {
-    if (gIsFirefoxDesktop) {
-      LanguageDetector.detectLanguage(textContent).then(result => {
-        this._foundLanguage(result.confident ? result.language : null);
-      });
-    }
   },
 
   _hideContent: function() {
