@@ -12,6 +12,7 @@ module.exports = {
         case "devtools.hud.loglimit":
           return 1000;
       }
+      return null;
     },
     getBoolPref: pref => {
       const falsey = [

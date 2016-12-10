@@ -160,7 +160,7 @@ FinderHighlighter.prototype = {
    *  - {Map}     frames                 Collection of frames that were encountered
    *                                     when inspecting the found ranges
    *  - {Map}     modalHighlightRectsMap Collection of ranges and their corresponding
-   *                                     Rects
+   *                                     Rects and texts
    *
    * @param  {nsIDOMWindow} window
    * @return {Object}
@@ -831,7 +831,7 @@ FinderHighlighter.prototype = {
    *                              the currently active window
    * @return {Set}         Set of rects that were found for the range
    */
-  _getRangeRects(range, dict = null) {
+  _getRangeRectsAndTexts(range, dict = null) {
     let window = range.startContainer.ownerDocument.defaultView;
     let bounds;
     // If the window is part of a frameset, try to cache the bounds query.
@@ -849,7 +849,8 @@ FinderHighlighter.prototype = {
     // A range may consist of multiple rectangles, we can also do these kind of
     // precise cut-outs. range.getBoundingClientRect() returns the fully
     // encompassing rectangle, which is too much for our purpose here.
-    for (let rect of range.getClientRects()) {
+    let {rectList, textList} = range.getClientRectsAndTexts();
+    for (let rect of rectList) {
       rect = Rect.fromRect(rect);
       rect.x += bounds.x;
       rect.y += bounds.y;
@@ -857,7 +858,7 @@ FinderHighlighter.prototype = {
       if (rect.intersects(topBounds))
         rects.push(rect);
     }
-    return rects;
+    return {rectList: rects, textList};
   },
 
   /**
@@ -876,19 +877,19 @@ FinderHighlighter.prototype = {
    */
   _updateRangeRects(range, checkIfDynamic = true, dict = null) {
     let window = range.startContainer.ownerDocument.defaultView;
-    let rects = this._getRangeRects(range, dict);
+    let rectsAndTexts = this._getRangeRectsAndTexts(range, dict);
 
     // Only fetch the rect at this point, if not passed in as argument.
     dict = dict || this.getForWindow(window.top);
-    let oldRects = dict.modalHighlightRectsMap.get(range);
-    dict.modalHighlightRectsMap.set(range, rects);
+    let oldRectsAndTexts = dict.modalHighlightRectsMap.get(range);
+    dict.modalHighlightRectsMap.set(range, rectsAndTexts);
     // Check here if we suddenly went down to zero rects from more than zero before,
     // which indicates that we should re-iterate the document.
-    if (oldRects && oldRects.length && !rects.length)
+    if (oldRectsAndTexts && oldRectsAndTexts.rectList.length && !rectsAndTexts.rectList.length)
       dict.detectedGeometryChange = true;
     if (checkIfDynamic && this._isInDynamicContainer(range))
       dict.dynamicRangesSet.add(range);
-    return rects;
+    return rectsAndTexts;
   },
 
   /**
@@ -928,11 +929,11 @@ FinderHighlighter.prototype = {
     // Text color in the outline is determined by kModalStyles.
     delete fontStyle.color;
 
-    let rects = this._getRangeRects(range);
+    let rectsAndTexts = this._getRangeRectsAndTexts(range);
     textContent = textContent || this._getRangeContentArray(range);
 
     let outlineAnonNode = dict.modalHighlightOutline;
-    let rectCount = rects.length;
+    let rectCount = rectsAndTexts.rectList.length;
     // (re-)Building the outline is conditional and happens when one of the
     // following conditions is met:
     // 1. No outline nodes were built before, or
@@ -958,7 +959,7 @@ FinderHighlighter.prototype = {
     }
 
     // Abort when there's no text to highlight.
-    if (!textContent.length)
+    if (!rectsAndTexts.textList.length)
       return;
 
     let outlineBox;
@@ -970,11 +971,8 @@ FinderHighlighter.prototype = {
 
     const kModalOutlineTextId = kModalOutlineId + "-text";
     let i = 0;
-    for (let rect of rects) {
-      // if the current rect is the last rect, then text is set to the rest of
-      // the textContent with single spaces injected between the text. Otherwise
-      // text is set to the current textContent for the matching rect.
-      let text = (i == rectCount - 1) ? textContent.slice(i).join(" ") : textContent[i];
+    for (let rect of rectsAndTexts.rectList) {
+      let text = rectsAndTexts.textList[i];
 
       // Next up is to check of the outline box' borders will not overlap with
       // rects that we drew before or will draw after this one.
@@ -984,12 +982,12 @@ FinderHighlighter.prototype = {
       // or next rect, make sure to make the necessary adjustments to the style.
       // These adjustments will override the styles as defined in `kModalStyles.outlineNode`.
       let intersectingSides = new Set();
-      let previous = rects[i - 1];
+      let previous = rectsAndTexts.rectList[i - 1];
       if (previous &&
           rect.left - previous.right <= 2 * kOutlineBoxBorderSize) {
         intersectingSides.add("left");
       }
-      let next = rects[i + 1];
+      let next = rectsAndTexts.rectList[i + 1];
       if (next &&
           next.left - rect.right <= 2 * kOutlineBoxBorderSize) {
         intersectingSides.add("right");
@@ -1138,16 +1136,16 @@ FinderHighlighter.prototype = {
       this._updateDynamicRangesRects(dict);
 
       let DOMRect = window.DOMRect;
-      for (let [range, rects] of dict.modalHighlightRectsMap) {
+      for (let [range, rectsAndTexts] of dict.modalHighlightRectsMap) {
         if (dict.updateAllRanges)
-          rects = this._updateRangeRects(range);
+          rectsAndTexts = this._updateRangeRects(range);
 
         // If a geometry change was detected, we bail out right away here, because
         // the current set of ranges has been invalidated.
         if (dict.detectedGeometryChange)
           return;
 
-        for (let rect of rects)
+        for (let rect of rectsAndTexts.rectList)
           allRects.push(new DOMRect(rect.x, rect.y, rect.width, rect.height));
       }
       dict.updateAllRanges = false;
