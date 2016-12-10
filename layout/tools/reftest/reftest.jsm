@@ -1133,6 +1133,17 @@ function ReadManifest(aURL, inherited_status, aFilter)
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             secMan.checkLoadURIWithPrincipal(principal, refURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
+            // WebRender-enabled results are non-deterministic at the moment,
+            // but we still want to run reftests there to prevent regressions.
+            // Bug 1322817 tracks making the results deterministic, at which
+            // point we can remove this block.
+            if (sandbox.webrender &&
+                (expected_status == EXPECTED_PASS ||
+                 expected_status == EXPECTED_FUZZY)) {
+                expected_status = EXPECTED_RANDOM;
+            }
+
             AddTestItem({ type: items[0],
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
