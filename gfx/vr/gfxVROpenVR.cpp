@@ -492,8 +492,6 @@ VRControllerOpenVR::VRControllerOpenVR()
   mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
 #ifdef MOZ_GAMEPAD
   mControllerInfo.mMappingType = static_cast<uint32_t>(GamepadMappingType::_empty);
-#else
-  mControllerInfo.mMappingType = 0;
 #endif
   mControllerInfo.mNumButtons = gNumOpenVRButtonMask;
   mControllerInfo.mNumAxes = gNumOpenVRAxis;
@@ -746,6 +744,23 @@ VRControllerManagerOpenVR::ScanForDevices()
     // Re-adding controllers to VRControllerManager.
     for (vr::TrackedDeviceIndex_t i = 0; i < newControllerCount; ++i) {
       vr::TrackedDeviceIndex_t trackedDevice = trackedIndexArray[i];
+  #ifdef MOZ_GAMEPAD
+      vr::ETrackedControllerRole role =
+      mVRSystem->GetControllerRoleForTrackedDeviceIndex(trackedDevice);
+      GamepadHand hand;
+
+      switch(role) {
+        case vr::ETrackedControllerRole::TrackedControllerRole_Invalid:
+          hand = GamepadHand::_empty;
+          break;
+        case vr::ETrackedControllerRole::TrackedControllerRole_LeftHand:
+          hand = GamepadHand::Left;
+          break;
+        case vr::ETrackedControllerRole::TrackedControllerRole_RightHand:
+          hand = GamepadHand::Right;
+          break;
+      }
+  #endif
       RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
       openVRController->SetIndex(mControllerCount);
       openVRController->SetTrackedIndex(trackedDevice);
@@ -754,8 +769,8 @@ VRControllerManagerOpenVR::ScanForDevices()
   // Only in MOZ_GAMEPAD platform, We add gamepads.
   #ifdef MOZ_GAMEPAD
       // Not already present, add it.
-      AddGamepad("OpenVR Gamepad", static_cast<uint32_t>(GamepadMappingType::_empty),
-                 gNumOpenVRButtonMask, gNumOpenVRAxis);
+       AddGamepad("OpenVR Gamepad", static_cast<uint32_t>(GamepadMappingType::_empty),
+               static_cast<uint32_t>(hand), gNumOpenVRButtonMask, gNumOpenVRAxis);
       ++mControllerCount;
   #endif
     }

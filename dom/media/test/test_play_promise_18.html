@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: promise-based play() method</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+// Name: 'playing' event should come before promise resolving
+// Case: invoke play() on an element which has valis source
+// Expected result: receive a 'playing' event before the promise is resolved
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  let element = document.createElement(getMajorMimeType(test.type));
+  element.src = test.name;
+  element.receivedPlayingEvent = false;
+
+  element.addEventListener("playing", () => {
+    element.receivedPlayingEvent = true;
+  });
+
+  element.play().then(
+    (result) => {
+      if (result == undefined && element.receivedPlayingEvent) {
+        ok(true, `${token} is resolved with ${result}.`);
+      } else {
+        ok(false, `${token} is resolved with ${result} and receivedPlayingEvent = ${element.receivedPlayingEvent}`);
+      }
+    },
+    (error) => {
+      ok(false, `${token} is rejected with ${error.name}.`);
+    }
+  ).then( () => { manager.finished(token); } );
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>

@@ -96,10 +96,13 @@ devtools/client/shared/*.jsm
 devtools/client/shared/webgl-utils.js
 devtools/client/shared/widgets/*.jsm
 devtools/client/webaudioeditor/**
-devtools/client/webconsole/**
-!devtools/client/webconsole/panel.js
-!devtools/client/webconsole/jsterm.js
-!devtools/client/webconsole/console-commands.js
+devtools/client/webconsole/net/**
+devtools/client/webconsole/test/**
+devtools/client/webconsole/console-output.js
+devtools/client/webconsole/hudservice.js
+devtools/client/webconsole/utils.js
+devtools/client/webconsole/webconsole-connection-proxy.js
+devtools/client/webconsole/webconsole.js
 devtools/client/webide/**
 !devtools/client/webide/components/webideCli.js
 devtools/server/*.js

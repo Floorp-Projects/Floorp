@@ -229,9 +229,7 @@ GlobalPCList.prototype = {
 };
 var _globalPCList = new GlobalPCList();
 
-function RTCIceCandidate() {
-  this.candidate = this.sdpMid = this.sdpMLineIndex = null;
-}
+function RTCIceCandidate() {}
 RTCIceCandidate.prototype = {
   classDescription: "RTCIceCandidate",
   classID: PC_ICE_CID,
@@ -242,9 +240,7 @@ RTCIceCandidate.prototype = {
   init: function(win) { this._win = win; },
 
   __init: function(dict) {
-    this.candidate = dict.candidate;
-    this.sdpMid = dict.sdpMid;
-    this.sdpMLineIndex = ("sdpMLineIndex" in dict)? dict.sdpMLineIndex : null;
+    Object.assign(this, dict);
   }
 };
 
@@ -366,6 +362,9 @@ function RTCPeerConnection() {
 
   // States
   this._iceGatheringState = this._iceConnectionState = "new";
+
+  this._hasStunServer = this._hasTurnServer = false;
+  this._iceGatheredRelayCandidates = false;
 }
 RTCPeerConnection.prototype = {
   classDescription: "RTCPeerConnection",
@@ -591,6 +590,8 @@ RTCPeerConnection.prototype = {
       }
     };
 
+    var stunServers = 0;
+
     rtcConfig.iceServers.forEach(server => {
       if (!server.urls) {
         throw new this._win.DOMException(msg + " - missing urls", "InvalidAccessError");
@@ -612,6 +613,12 @@ RTCPeerConnection.prototype = {
                             "\" is not yet implemented. Treating as password."+
                             " https://bugzil.la/1247616");
           }
+          this._hasTurnServer = true;
+          stunServers += 1;
+        }
+        else if (url.scheme in { stun:1, stuns:1 }) {
+          this._hasStunServer = true;
+          stunServers += 1;
         }
         else if (!(url.scheme in { stun:1, stuns:1 })) {
           throw new this._win.DOMException(msg + " - improper scheme: " + url.scheme,
@@ -619,6 +626,11 @@ RTCPeerConnection.prototype = {
         }
         if (url.scheme in { stuns:1, turns:1 }) {
           this.logWarning(url.scheme.toUpperCase() + " is not yet supported.");
+        }
+        if (stunServers >= 5) {
+          this.logError("Using five or more STUN/TURN servers causes problems");
+        } else if (stunServers > 2) {
+          this.logWarning("Using more than two STUN/TURN servers slows down discovery");
         }
       });
     });
@@ -734,8 +746,7 @@ RTCPeerConnection.prototype = {
             this._impl.createOffer(options);
           }));
         p = this._addIdentityAssertion(p, origin);
-        return p.then(
-          sdp => new this._win.RTCSessionDescription({ type: "offer", sdp: sdp }));
+        return p.then(sdp => Cu.cloneInto({ type: "offer", sdp: sdp }, this._win));
       });
     });
   },
@@ -769,9 +780,7 @@ RTCPeerConnection.prototype = {
             this._impl.createAnswer();
           }));
         p = this._addIdentityAssertion(p, origin);
-        return p.then(sdp => {
-          return new this._win.RTCSessionDescription({ type: "answer", sdp: sdp });
-        });
+        return p.then(sdp => Cu.cloneInto({ type: "answer", sdp: sdp }, this._win));
       });
     });
   },
@@ -981,12 +990,15 @@ RTCPeerConnection.prototype = {
       containsTrickle(topSection) || sections.every(containsTrickle);
   },
 
-
   addIceCandidate: function(c, onSuccess, onError) {
     return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
-      if (!c.candidate && !c.sdpMLineIndex) {
-        throw new this._win.DOMException("Invalid candidate passed to addIceCandidate!",
-                                         "InvalidParameterError");
+      if (!c) {
+        // TODO: Implement processing for end-of-candidates (bug 1318167)
+        return Promise.resolve();
+      }
+      if (c.sdpMid === null && c.sdpMLineIndex === null) {
+        throw new this._win.DOMException("Invalid candidate (both sdpMid and sdpMLineIndex are null).",
+                                         "TypeError");
       }
       return this._chain(() => new this._win.Promise((resolve, reject) => {
         this._onAddIceCandidateSuccess = resolve;
@@ -1130,8 +1142,7 @@ RTCPeerConnection.prototype = {
       return null;
     }
 
-    return new this._win.RTCSessionDescription({ type: this._localType,
-                                                    sdp: sdp });
+    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
   },
 
   get remoteDescription() {
@@ -1140,8 +1151,7 @@ RTCPeerConnection.prototype = {
     if (sdp.length == 0) {
       return null;
     }
-    return new this._win.RTCSessionDescription({ type: this._remoteType,
-                                                    sdp: sdp });
+    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
   },
 
   get peerIdentity() { return this._peerIdentity; },
@@ -1307,6 +1317,9 @@ PeerConnectionObserver.prototype = {
     if (candidate == "") {
       this.foundIceCandidate(null);
     } else {
+      if (candidate.includes(" typ relay ")) {
+        this._dompc._iceGatheredRelayCandidates = true;
+      }
       this.foundIceCandidate(new this._dompc._win.RTCIceCandidate(
           {
               candidate: candidate,
@@ -1380,7 +1393,18 @@ PeerConnectionObserver.prototype = {
     }
 
     if (iceConnectionState === 'failed') {
-      pc.logError("ICE failed, see about:webrtc for more details");
+      if (!pc._hasStunServer) {
+        pc.logError("ICE failed, add a STUN server and see about:webrtc for more details");
+      }
+      else if (!pc._hasTurnServer) {
+        pc.logError("ICE failed, add a TURN server and see about:webrtc for more details");
+      }
+      else if (pc._hasTurnServer && !pc._iceGatheredRelayCandidates) {
+        pc.logError("ICE failed, your TURN server appears to be broken, see about:webrtc for more details");
+      }
+      else {
+        pc.logError("ICE failed, see about:webrtc for more details");
+      }
     }
 
     pc.changeIceConnectionState(iceConnectionState);

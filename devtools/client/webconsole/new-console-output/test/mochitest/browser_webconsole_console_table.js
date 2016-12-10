@@ -137,34 +137,35 @@ add_task(function* () {
   is(consoleTableNodes.length, testCases.length,
     "console has the expected number of consoleTable items");
 
-  testCases.forEach((testCase, index) => {
-    info(testCase.info);
+  testCases.forEach((testCase, index) => testItem(testCase, nodes[index]));
+});
 
-    let node = nodes[index];
-    let columns = Array.from(node.querySelectorAll("thead th"));
-    let rows = Array.from(node.querySelectorAll("tbody tr"));
+function testItem(testCase, node) {
+  info(testCase.info);
 
-    is(
-      JSON.stringify(testCase.expected.columns),
-      JSON.stringify(columns.map(column => column.textContent)),
-      "table has the expected columns"
-    );
+  let columns = Array.from(node.querySelectorAll("thead th"));
+  let rows = Array.from(node.querySelectorAll("tbody tr"));
 
-    is(testCase.expected.rows.length, rows.length,
-      "table has the expected number of rows");
+  is(
+    JSON.stringify(testCase.expected.columns),
+    JSON.stringify(columns.map(column => column.textContent)),
+    "table has the expected columns"
+  );
 
-    testCase.expected.rows.forEach((expectedRow, rowIndex) => {
-      let row = rows[rowIndex];
-      let cells = row.querySelectorAll("td");
-      is(expectedRow.length, cells.length, "row has the expected number of cells");
+  is(testCase.expected.rows.length, rows.length,
+    "table has the expected number of rows");
 
-      expectedRow.forEach((expectedCell, cellIndex) => {
-        let cell = cells[cellIndex];
-        is(expectedCell, cell.textContent, "cell has the expected content");
-      });
+  testCase.expected.rows.forEach((expectedRow, rowIndex) => {
+    let row = rows[rowIndex];
+    let cells = row.querySelectorAll("td");
+    is(expectedRow.length, cells.length, "row has the expected number of cells");
+
+    expectedRow.forEach((expectedCell, cellIndex) => {
+      let cell = cells[cellIndex];
+      is(expectedCell, cell.textContent, "cell has the expected content");
     });
   });
-});
+}
 
 function findConsoleTable(node, index) {
   let condition = node.querySelector(

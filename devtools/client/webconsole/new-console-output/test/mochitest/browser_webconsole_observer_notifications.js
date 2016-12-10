@@ -21,6 +21,8 @@ add_task(function* () {
 });
 
 function setupObserver() {
+  const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+
   const observer = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
@@ -34,7 +36,8 @@ function setupObserver() {
           created = true;
           break;
         case "web-console-destroyed":
-          ok(!HUDService.getHudReferenceById(subject.data), "We do not have a hud reference");
+          ok(!HUDService.getHudReferenceById(subject.data),
+            "We do not have a hud reference");
           Services.obs.removeObserver(observer, "web-console-destroyed");
           destroyed = true;
           break;

@@ -7,9 +7,12 @@
   <body>
     <p>Simple webconsole test page</p>
     <script>
+      /* exported doLogs */
+      "use strict";
+
       function doLogs(num) {
         num = num || 1;
-        for (var i = 0; i < num; i++) {
+        for (let i = 0; i < num; i++) {
           console.log(i);
         }
       }

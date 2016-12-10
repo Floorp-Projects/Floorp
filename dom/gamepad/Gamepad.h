@@ -41,7 +41,7 @@ class Gamepad final : public nsISupports,
 public:
   Gamepad(nsISupports* aParent,
           const nsAString& aID, uint32_t aIndex,
-          GamepadMappingType aMapping,
+          GamepadMappingType aMapping, GamepadHand aHand,
           uint32_t aNumButtons, uint32_t aNumAxes);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
@@ -81,6 +81,11 @@ public:
     return mMapping;
   }
 
+  GamepadHand Hand()
+  {
+    return mHand;
+  }
+
   bool Connected() const
   {
     return mConnected;
@@ -117,6 +122,7 @@ protected:
 
   // The mapping in use.
   GamepadMappingType mMapping;
+  GamepadHand mHand;
 
   // true if this gamepad is currently connected.
   bool mConnected;

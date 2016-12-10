@@ -5,7 +5,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/osfile.jsm", {});
 const TARGET = "networkEvent";
 const { [TARGET]: snippets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html";
@@ -16,7 +16,7 @@ let stubs = {
 };
 
 add_task(function* () {
-  for (var [key, {keys, code}] of snippets) {
+  for (let {keys, code} of snippets.values()) {
     OS.File.writeAtomic(TEMP_FILE_PATH, `function triggerPacket() {${code}}`);
     let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
     let {ui} = toolbox.getCurrentPanel().hud;
@@ -29,19 +29,19 @@ add_task(function* () {
       toolbox.target.client.addListener(TARGET, (type, res) => {
         stubs.packets.push(formatPacket(keys[i], res));
         stubs.preparedMessages.push(formatNetworkStub(keys[i], res));
-        if(++i === keys.length ){
+        if (++i === keys.length) {
           resolve();
         }
       });
     });
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
       content.wrappedJSObject.triggerPacket();
     });
 
     yield received;
   }
   let filePath = OS.Path.join(`${BASE_PATH}/stubs/${TARGET}.js`);
-  OS.File.writeAtomic(filePath, formatFile(stubs));
+  OS.File.writeAtomic(filePath, formatFile(stubs, "NetworkEventMessage"));
   OS.File.writeAtomic(TEMP_FILE_PATH, "");
 });
