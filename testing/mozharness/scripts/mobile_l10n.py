@@ -11,6 +11,7 @@ Android.  This also creates nightly updates.
 """
 
 from copy import deepcopy
+import glob
 import os
 import re
 import subprocess
@@ -616,6 +617,20 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 if m:
                     self.upload_urls[locale] = m.groups()[0]
                     self.info("Found upload url %s" % self.upload_urls[locale])
+
+            # XXX Move the files to a SIMPLE_NAME format until we can enable
+            #     Simple names in the build system
+            if self.config.get("simple_name_move"):
+                # Assume an UPLOAD PATH
+                upload_target = self.config["upload_env"]["UPLOAD_PATH"]
+                target_path = os.path.join(upload_target, locale)
+                self.mkdir_p(target_path)
+                glob_name = "*.%s.android-arm.*" % locale
+                for f in glob.glob(os.path.join(upload_target, glob_name)):
+                    glob_extension = f[f.rfind('.'):]
+                    self.move(os.path.join(f),
+                              os.path.join(target_path, "target%s" % glob_extension))
+                self.log("Converted uploads for %s to simple names" % locale)
             success_count += 1
         self.summarize_success_count(success_count, total_count,
                                      message="Make Upload for %d of %d locales successful.")
