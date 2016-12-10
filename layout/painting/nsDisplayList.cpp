@@ -709,8 +709,9 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
 
   // Only send animations to a layer that is actually using
   // off-main-thread compositing.
-  if (aLayer->Manager()->GetBackendType() !=
-        layers::LayersBackend::LAYERS_CLIENT) {
+  LayersBackend backend = aLayer->Manager()->GetBackendType();
+  if (!(backend == layers::LayersBackend::LAYERS_CLIENT ||
+        backend == layers::LayersBackend::LAYERS_WR)) {
     return;
   }
 
