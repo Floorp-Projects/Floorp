@@ -150,17 +150,27 @@
 
       <property name="lineScrollAmount" readonly="true">
         <getter><![CDATA[
-          // If inherited element wants to customize line scroll amount by
-          // wheel events, it should override this.
-          var px = document.defaultView
-                           .getComputedStyle(this._scrollbox, "")
-                           .getPropertyValue("font-size");
-          if (px.endsWith("px")) {
-            return parseInt(px);
+          // line scroll amout should be the width (at horizontal scrollbox) or
+          // the height (at vertical scrollbox) of the scrolled elements.
+          // However, the elements may have different width or height.  So,
+          // for consistent speed, let's use avalage with of the elements.
+          var elements = this._getScrollableElements();
+          if (!elements.length) {
+            // Returning 0 shouldn't be problem because if there is no
+            // scrollable elements, it's impossible to scroll anyway.
+            return 0;
           }
-          // XXX Is this possible case?  For the last resote, let's return
-          //     default font-size of web contents.
-          return 16;
+
+          if (this._isRTLScrollbox)
+            elements.reverse();
+
+          var [start, end] = this._startEndProps;
+          var low = 0;
+          var high = elements.length - 1;
+          // XXX If the total width is 0, do we need something more?
+          var totalWidth =
+            elements[high].getBoundingClientRect()[end] - elements[low].getBoundingClientRect()[start];
+          return totalWidth / elements.length;
         ]]></getter>
       </property>
 
