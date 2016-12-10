@@ -219,6 +219,33 @@ this.PopupNotifications = function PopupNotifications(tabbrowser, panel, iconBox
 
   this.panel.addEventListener("popuphidden", this, true);
 
+  // This listener will be attached to the chrome window whenever a notification
+  // is showing, to allow the user to dismiss notifications using the escape key.
+  this._handleWindowKeyPress = aEvent => {
+    if (aEvent.keyCode != aEvent.DOM_VK_ESCAPE) {
+      return;
+    }
+
+    // Esc key cancels the topmost notification, if there is one.
+    let notification = this.panel.firstChild;
+    if (!notification) {
+      return;
+    }
+
+    let doc = this.window.document;
+    let activeElement = doc.activeElement;
+
+    // If the chrome window has a focused element, let it handle the ESC key instead.
+    if (!activeElement ||
+        activeElement == doc.body ||
+        activeElement == this.tabbrowser.selectedBrowser ||
+        // Ignore focused elements inside the notification.
+        getNotificationFromElement(activeElement) == notification ||
+        notification.contains(activeElement)) {
+      this._onButtonEvent(aEvent, "secondarybuttoncommand", notification);
+    }
+  };
+
   this.window.addEventListener("activate", this, true);
   if (this.tabbrowser.tabContainer)
     this.tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
@@ -1002,6 +1029,10 @@ PopupNotifications.prototype = {
       if (anchorElement) {
         this._showPanel(notificationsToShow, anchorElement);
       }
+
+      // Setup a capturing event listener on the whole window to catch the
+      // escape key while persistent notifications are visible.
+      this.window.addEventListener("keypress", this._handleWindowKeyPress, true);
     } else {
       // Notify observers that we're not showing the popup (useful for testing)
       this._notify("updateNotShowing");
@@ -1023,6 +1054,9 @@ PopupNotifications.prototype = {
             anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
         }
       }
+
+      // Stop listening to keyboard events for notifications.
+      this.window.removeEventListener("keypress", this._handleWindowKeyPress, true);
     }
   },
 
@@ -1281,8 +1315,10 @@ PopupNotifications.prototype = {
     }, this);
   },
 
-  _onButtonEvent(event, type) {
-    let notificationEl = getNotificationFromElement(event.originalTarget);
+  _onButtonEvent(event, type, notificationEl = null) {
+    if (!notificationEl) {
+      notificationEl = getNotificationFromElement(event.originalTarget);
+    }
 
     if (!notificationEl)
       throw "PopupNotifications._onButtonEvent: couldn't find notification element";
