@@ -19,14 +19,7 @@ import java.net.URL;
     }
 
     public void putWhiteList(final String revhost, final Trie whitelist) {
-        WhiteListTrie revhostNode = rootNode.put(revhost);
-
-        if (revhostNode != null &&
-                revhostNode.whitelist != null) {
-            throw new IllegalStateException("whitelist already set for host " + revhost);
-        }
-
-        revhostNode.whitelist = whitelist;
+        rootNode.putWhiteList(revhost, whitelist);
     }
 
     public boolean isWhiteListed(final String site, final String resource) {
