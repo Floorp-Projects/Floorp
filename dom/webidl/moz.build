@@ -11,8 +11,6 @@ GENERATED_WEBIDL_FILES = [
 PREPROCESSED_WEBIDL_FILES = [
     'Navigator.webidl',
     'Node.webidl',
-    'Promise.webidl',
-    'PromiseDebugging.webidl',
     'Window.webidl',
 ]
 
@@ -372,6 +370,8 @@ WEBIDL_FILES = [
     'PresentationRequest.webidl',
     'ProcessingInstruction.webidl',
     'ProfileTimelineMarker.webidl',
+    'Promise.webidl',
+    'PromiseDebugging.webidl',
     'PushEvent.webidl',
     'PushManager.webidl',
     'PushManager.webidl',
