@@ -766,6 +766,7 @@ selfhosted.inputs = [
     'builtin/Module.js',
     'builtin/Number.js',
     'builtin/Object.js',
+    'builtin/Promise.js',
     'builtin/Reflect.js',
     'builtin/RegExp.js',
     'builtin/RegExpGlobalReplaceOpt.h.js',
@@ -778,9 +779,6 @@ selfhosted.inputs = [
     'builtin/WeakMap.js',
     'builtin/WeakSet.js'
 ]
-
-if CONFIG['SPIDERMONKEY_PROMISE']:
-    selfhosted.inputs += ['builtin/Promise.js']
 
 if CONFIG['JS_HAS_CTYPES']:
     if CONFIG['MOZ_SYSTEM_FFI']:
