@@ -395,8 +395,6 @@
 @BINPATH@/components/PresentationNetworkHelper.manifest
 @BINPATH@/components/PresentationDataChannelSessionTransport.js
 @BINPATH@/components/PresentationDataChannelSessionTransport.manifest
-@BINPATH@/components/LegacyProviders.manifest
-@BINPATH@/components/LegacyPresentationControlService.js
 @BINPATH@/components/AndroidCastDeviceProvider.manifest
 @BINPATH@/components/AndroidCastDeviceProvider.js
 
