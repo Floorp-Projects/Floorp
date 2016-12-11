@@ -62,7 +62,7 @@ add_task(function* () {
       "GET", "The method summary value is incorrect.");
     is(tabpanel.querySelector("#headers-summary-address-value").getAttribute("value"),
       "127.0.0.1:8888", "The remote address summary value is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("code"),
+    is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("data-code"),
       "200", "The status summary code is incorrect.");
     is(tabpanel.querySelector("#headers-summary-status-value").getAttribute("value"),
       "200 Och Aye", "The status summary value is incorrect.");

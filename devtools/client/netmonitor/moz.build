@@ -6,8 +6,10 @@ DIRS += [
     'actions',
     'components',
     'har',
+    'middleware',
     'reducers',
-    'selectors'
+    'selectors',
+    'utils',
 ]
 
 DevToolsModules(
@@ -17,6 +19,8 @@ DevToolsModules(
     'events.js',
     'filter-predicates.js',
     'l10n.js',
+    'netmonitor-controller.js',
+    'netmonitor-view.js',
     'panel.js',
     'performance-statistics-view.js',
     'prefs.js',
@@ -27,6 +31,7 @@ DevToolsModules(
     'sort-predicates.js',
     'store.js',
     'toolbar-view.js',
+    'waterfall-background.js',
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

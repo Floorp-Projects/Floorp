@@ -68,6 +68,6 @@ function testNetmonitor(toolbox) {
   is(RequestsMenu.itemCount, 1, "Network request appears in the network panel");
 
   let item = RequestsMenu.getItemAtIndex(0);
-  is(item.attachment.method, "GET", "The attached method is correct.");
-  is(item.attachment.url, TEST_PATH, "The attached url is correct.");
+  is(item.method, "GET", "The request method is correct.");
+  is(item.url, TEST_PATH, "The request url is correct.");
 }

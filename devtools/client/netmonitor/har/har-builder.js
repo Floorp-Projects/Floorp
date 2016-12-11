@@ -63,9 +63,7 @@ HarBuilder.prototype = {
     let log = this.buildLog();
 
     // Build entries.
-    let items = this._options.items;
-    for (let i = 0; i < items.length; i++) {
-      let file = items[i].attachment;
+    for (let file of this._options.items) {
       log.entries.push(this.buildEntry(log, file));
     }
 
