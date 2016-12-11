@@ -64,8 +64,9 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
  // to the OS clipboard.
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1");
-  if (observerService)
+  if (observerService) {
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -94,26 +95,34 @@ UINT nsClipboard::GetFormat(const char* aMimeStr, bool aMapHTMLMime)
 {
   UINT format;
 
-  if (strcmp(aMimeStr, kTextMime) == 0)
+  if (strcmp(aMimeStr, kTextMime) == 0) {
     format = CF_TEXT;
-  else if (strcmp(aMimeStr, kUnicodeMime) == 0)
+  }
+  else if (strcmp(aMimeStr, kUnicodeMime) == 0) {
     format = CF_UNICODETEXT;
-  else if (strcmp(aMimeStr, kRTFMime) == 0)
+  }
+  else if (strcmp(aMimeStr, kRTFMime) == 0) {
     format = ::RegisterClipboardFormat(L"Rich Text Format");
+  }
   else if (strcmp(aMimeStr, kJPEGImageMime) == 0 ||
            strcmp(aMimeStr, kJPGImageMime) == 0 ||
-           strcmp(aMimeStr, kPNGImageMime) == 0)
+           strcmp(aMimeStr, kPNGImageMime) == 0) {
     format = CF_DIBV5;
+  }
   else if (strcmp(aMimeStr, kFileMime) == 0 ||
-           strcmp(aMimeStr, kFilePromiseMime) == 0)
+           strcmp(aMimeStr, kFilePromiseMime) == 0) {
     format = CF_HDROP;
+  }
   else if (strcmp(aMimeStr, kNativeHTMLMime) == 0 ||
-           aMapHTMLMime && strcmp(aMimeStr, kHTMLMime) == 0)
+           aMapHTMLMime && strcmp(aMimeStr, kHTMLMime) == 0) {
     format = CF_HTML;
-  else if (strcmp(aMimeStr, kCustomTypesMime) == 0)
+  }
+  else if (strcmp(aMimeStr, kCustomTypesMime) == 0) {
     format = CF_CUSTOMTYPES;
-  else
+  }
+  else {
     format = ::RegisterClipboardFormatW(NS_ConvertASCIItoUTF16(aMimeStr).get());
+  }
 
   return format;
 }
@@ -129,8 +138,9 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
   // the OLE IDataObject interface
   nsDataObj * dataObj = new nsDataObj(uri);
 
-  if (!dataObj) 
+  if (!dataObj) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   dataObj->AddRef();
 
@@ -253,8 +263,9 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( int32_t aWhichClipboard )
 {
-  if ( aWhichClipboard != kGlobalClipboard )
+  if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_FAILURE;
+  }
 
   mIgnoreEmptyNotification = true;
 
@@ -412,8 +423,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
   *aData = nullptr;
   *aLen = 0;
 
-  if ( !aDataObject )
+  if (!aDataObject) {
     return result;
+  }
 
   UINT    format = aFormat;
   HRESULT hres   = S_FALSE;
@@ -505,8 +517,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                     *aLen = fileNameLen * sizeof(char16_t);
                     result = NS_OK;
                   }
-                  else
+                  else {
                     result = NS_ERROR_OUT_OF_MEMORY;
+                  }
                 }
                 GlobalUnlock (stm.hGlobal) ;
 
@@ -583,8 +596,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
                                             nsITransferable * aTransferable)
 {
   // make sure we have a good transferable
-  if ( !aTransferable )
+  if (!aTransferable) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   nsresult res = NS_ERROR_FAILURE;
 
@@ -592,8 +606,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
   // obtained through conversion)
   nsCOMPtr<nsIArray> flavorList;
   res = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
-  if ( NS_FAILED(res) )
+  if (NS_FAILED(res)) {
     return NS_ERROR_FAILURE;
+  }
 
   // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
   uint32_t i;
@@ -612,26 +627,30 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       uint32_t dataLen = 0;
       bool dataFound = false;
       if (nullptr != aDataObject) {
-        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, anIndex, format, flavorStr, &data, &dataLen)) )
+        if (NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, anIndex, format, flavorStr, &data, &dataLen))) {
           dataFound = true;
+        }
       } 
       else if (nullptr != aWindow) {
-        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, anIndex, format, &data, &dataLen)) )
+        if (NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, anIndex, format, &data, &dataLen))) {
           dataFound = true;
+        }
       }
 
       // This is our second chance to try to find some data, having not found it
       // when directly asking for the flavor. Let's try digging around in other
       // flavors to help satisfy our craving for data.
       if ( !dataFound ) {
-        if ( strcmp(flavorStr, kUnicodeMime) == 0 )
-          dataFound = FindUnicodeFromPlainText ( aDataObject, anIndex, &data, &dataLen );
+        if (strcmp(flavorStr, kUnicodeMime) == 0) {
+          dataFound = FindUnicodeFromPlainText(aDataObject, anIndex, &data, &dataLen);
+        }
         else if ( strcmp(flavorStr, kURLMime) == 0 ) {
           // drags from other windows apps expose the native
           // CFSTR_INETURL{A,W} flavor
           dataFound = FindURLFromNativeURL ( aDataObject, anIndex, &data, &dataLen );
-          if ( !dataFound )
-            dataFound = FindURLFromLocalFile ( aDataObject, anIndex, &data, &dataLen );
+          if (!dataFound) {
+            dataFound = FindURLFromLocalFile(aDataObject, anIndex, &data, &dataLen);
+          }
         }
       } // if we try one last ditch effort to find our data
 
@@ -642,8 +661,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
             // we have a file path in |data|. Create an nsLocalFile object.
             nsDependentString filepath(reinterpret_cast<char16_t*>(data));
             nsCOMPtr<nsIFile> file;
-            if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, false, getter_AddRefs(file))) )
+            if (NS_SUCCEEDED(NS_NewLocalFile(filepath, false, getter_AddRefs(file)))) {
               genericDataWrapper = do_QueryInterface(file);
+            }
             free(data);
           }
         else if ( strcmp(flavorStr, kNativeHTMLMime) == 0 ) {
@@ -651,8 +671,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
           // the editor folks want CF_HTML exactly as it's on the clipboard, no conversions,
           // no fancy stuff. Pull it off the clipboard, stuff it into a wrapper and hand
           // it back to them.
-          if ( FindPlatformHTML(aDataObject, anIndex, &data, &dummy, &dataLen) )
-            nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          if (FindPlatformHTML(aDataObject, anIndex, &data, &dummy, &dataLen)) {
+            nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper));
+          }
           else
           {
             free(data);
@@ -695,8 +716,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 
             if (strcmp(flavorStr, kRTFMime) == 0) {
               // RTF on Windows is known to sometimes deliver an extra null byte.
-              if (dataLen > 0 && static_cast<char*>(data)[dataLen - 1] == '\0')
+              if (dataLen > 0 && static_cast<char*>(data)[dataLen - 1] == '\0') {
                 dataLen--;
+              }
             }
           }
 
@@ -851,8 +873,9 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
         file->GetLeafName(title);
         // We rely on IsInternetShortcut check that file has a .url extension.
         title.SetLength(title.Length() - 4);
-        if (title.IsEmpty())
+        if (title.IsEmpty()) {
           title = urlString;
+        }
         *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + title);
         *outDataLen = NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
 
@@ -910,10 +933,12 @@ nsClipboard :: FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, v
       bool unescaped = NS_UnescapeURL(static_cast<char*>(tempOutData), tempDataLen, esc_OnlyNonASCII | esc_SkipControl, urlUnescapedA);
 
       nsString urlString;
-      if (unescaped)
+      if (unescaped) {
         NS_CopyNativeToUnicode(urlUnescapedA, urlString);
-      else
+      }
+      else {
         NS_CopyNativeToUnicode(nsDependentCString(static_cast<char*>(tempOutData), tempDataLen), urlString);
+      }
 
       // the internal mozilla URL format, text/x-moz-url, contains
       // URL\ntitle.  Since we don't actually have a title here,
@@ -936,13 +961,15 @@ nsClipboard :: ResolveShortcut ( nsIFile* aFile, nsACString& outURL )
 {
   nsCOMPtr<nsIFileProtocolHandler> fph;
   nsresult rv = NS_GetFileProtocolHandler(getter_AddRefs(fph));
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return;
+  }
 
   nsCOMPtr<nsIURI> uri;
   rv = fph->ReadURLFile(aFile, getter_AddRefs(uri));
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return;
+  }
 
   uri->GetSpec(outURL);
 } // ResolveShortcut
@@ -965,8 +992,9 @@ NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, int32_t aWhichClipboard )
 {
   // make sure we have a good transferable
-  if ( !aTransferable || aWhichClipboard != kGlobalClipboard )
+  if ( !aTransferable || aWhichClipboard != kGlobalClipboard ) {
     return NS_ERROR_FAILURE;
+  }
 
   nsresult res;
 
@@ -1006,13 +1034,15 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
                                                   bool *_retval)
 {
   *_retval = false;
-  if (aWhichClipboard != kGlobalClipboard || !aFlavorList)
+  if (aWhichClipboard != kGlobalClipboard || !aFlavorList) {
     return NS_OK;
+  }
 
-  for (uint32_t i = 0;i < aLength; ++i) {
+  for (uint32_t i = 0; i < aLength; ++i) {
 #ifdef DEBUG
-    if (strcmp(aFlavorList[i], kTextMime) == 0)
-      NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
+    if (strcmp(aFlavorList[i], kTextMime) == 0) {
+      NS_WARNING("DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD");
+    }
 #endif
 
     UINT format = GetFormat(aFlavorList[i]);
@@ -1026,8 +1056,9 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
       if (strcmp(aFlavorList[i], kUnicodeMime) == 0) {
         // client asked for unicode and it wasn't present, check if we have CF_TEXT.
         // We'll handle the actual data substitution in the data object.
-        if (IsClipboardFormatAvailable(GetFormat(kTextMime)))
+        if (IsClipboardFormatAvailable(GetFormat(kTextMime))) {
           *_retval = true;
+        }
       }
     }
   }
