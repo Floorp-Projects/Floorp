@@ -46,7 +46,7 @@ using mozilla::services::GetObserverService;
 class nsFontCache final : public nsIObserver
 {
 public:
-    nsFontCache() {}
+    nsFontCache()   { MOZ_COUNT_CTOR(nsFontCache); }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -62,7 +62,7 @@ public:
     void Flush();
 
 protected:
-    ~nsFontCache() {}
+    ~nsFontCache()  { MOZ_COUNT_DTOR(nsFontCache); }
 
     nsDeviceContext*          mContext; // owner
     nsCOMPtr<nsIAtom>         mLocaleLanguage;

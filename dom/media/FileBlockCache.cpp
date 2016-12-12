@@ -38,6 +38,7 @@ FileBlockCache::FileBlockCache()
     mIsWriteScheduled(false),
     mIsOpen(false)
 {
+  MOZ_COUNT_CTOR(FileBlockCache);
 }
 
 FileBlockCache::~FileBlockCache()
@@ -56,6 +57,7 @@ FileBlockCache::~FileBlockCache()
       mFD = nullptr;
     }
   }
+  MOZ_COUNT_DTOR(FileBlockCache);
 }
 
 

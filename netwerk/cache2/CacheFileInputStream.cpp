@@ -57,6 +57,7 @@ CacheFileInputStream::CacheFileInputStream(CacheFile *aFile,
   , mCacheEntryHandle(aEntry)
 {
   LOG(("CacheFileInputStream::CacheFileInputStream() [this=%p]", this));
+  MOZ_COUNT_CTOR(CacheFileInputStream);
 
   if (mAlternativeData) {
     mPos = mFile->mAltDataOffset;
@@ -66,6 +67,7 @@ CacheFileInputStream::CacheFileInputStream(CacheFile *aFile,
 CacheFileInputStream::~CacheFileInputStream()
 {
   LOG(("CacheFileInputStream::~CacheFileInputStream() [this=%p]", this));
+  MOZ_COUNT_DTOR(CacheFileInputStream);
   MOZ_ASSERT(!mInReadSegments);
 }
 

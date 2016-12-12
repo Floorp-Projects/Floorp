@@ -89,17 +89,12 @@ private:
   static_assert(mozilla::IsClass<_type>::value,             \
                 "Token '" #_type "' is not a class type.")
 
-#define MOZ_ASSERT_NOT_ISUPPORTS(_type)                        \
-  static_assert(!mozilla::IsBaseOf<nsISupports, _type>::value, \
-                "nsISupports classes don't need to call MOZ_COUNT_CTOR or MOZ_COUNT_DTOR");
-
 // Note that the following constructor/destructor logging macros are redundant
 // for refcounted objects that log via the NS_LOG_ADDREF/NS_LOG_RELEASE macros.
 // Refcount logging is preferred.
 #define MOZ_COUNT_CTOR(_type)                                 \
 do {                                                          \
   MOZ_ASSERT_CLASSNAME(_type);                                \
-  MOZ_ASSERT_NOT_ISUPPORTS(_type);                            \
   NS_LogCtor((void*)this, #_type, sizeof(*this));             \
 } while (0)
 
@@ -107,7 +102,6 @@ do {                                                          \
 do {                                                              \
   MOZ_ASSERT_CLASSNAME(_type);                                    \
   MOZ_ASSERT_CLASSNAME(_base);                                    \
-  MOZ_ASSERT_NOT_ISUPPORTS(_type);                                \
   NS_LogCtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
 } while (0)
 
@@ -119,7 +113,6 @@ do {                                     \
 #define MOZ_COUNT_DTOR(_type)                                 \
 do {                                                          \
   MOZ_ASSERT_CLASSNAME(_type);                                \
-  MOZ_ASSERT_NOT_ISUPPORTS(_type);                            \
   NS_LogDtor((void*)this, #_type, sizeof(*this));             \
 } while (0)
 
@@ -127,7 +120,6 @@ do {                                                          \
 do {                                                              \
   MOZ_ASSERT_CLASSNAME(_type);                                    \
   MOZ_ASSERT_CLASSNAME(_base);                                    \
-  MOZ_ASSERT_NOT_ISUPPORTS(_type);                                \
   NS_LogDtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
 } while (0)
 

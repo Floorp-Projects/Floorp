@@ -523,10 +523,12 @@ public:
     : mPrompter(aPrompter)
     , mResponseMsg(aResponseMsg)
   {
+    MOZ_COUNT_CTOR(nsFtpChildAsyncAlert);
   }
 protected:
   virtual ~nsFtpChildAsyncAlert()
   {
+    MOZ_COUNT_DTOR(nsFtpChildAsyncAlert);
   }
 public:
   NS_IMETHOD Run() override
