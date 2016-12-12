@@ -491,7 +491,7 @@ static const bool isthreaded = true;
 #  define SIZEOF_PTR_2POW	3
 #  define NO_TLS
 #endif
-#ifdef __sparc64__
+#if defined(__sparc__) && defined(__arch64__)
 #  define QUANTUM_2POW_MIN	4
 #  define SIZEOF_PTR_2POW	3
 #  define NO_TLS
