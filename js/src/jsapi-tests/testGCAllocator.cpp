@@ -312,7 +312,7 @@ void unmapPages(void* p, size_t size) { }
 void*
 mapMemoryAt(void* desired, size_t length)
 {
-#if defined(__ia64__) || (defined(__sparc64__) && defined(__NetBSD__)) || defined(__aarch64__)
+#if defined(__ia64__) || (defined(__sparc__) && defined(__arch64__) && defined(__NetBSD__)) || defined(__aarch64__)
     MOZ_RELEASE_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
 #endif
     void* region = mmap(desired, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
@@ -334,7 +334,7 @@ mapMemory(size_t length)
     int fd = -1;
     off_t offset = 0;
     // The test code must be aligned with the implementation in gc/Memory.cpp.
-#if defined(__ia64__) || (defined(__sparc64__) && defined(__NetBSD__))
+#if defined(__ia64__) || (defined(__sparc__) && defined(__arch64__) && defined(__NetBSD__))
     void* region = mmap((void*)0x0000070000000000, length, prot, flags, fd, offset);
     if (region == MAP_FAILED)
         return nullptr;
