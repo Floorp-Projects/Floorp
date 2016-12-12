@@ -147,6 +147,24 @@ OggCodecState::AddVorbisComment(MetadataTags* aTags,
   return true;
 }
 
+bool
+OggCodecState::SetCodecSpecificConfig(MediaByteBuffer* aBuffer,
+                                      OggPacketQueue& aHeaders)
+{
+  nsTArray<const unsigned char*> headers;
+  nsTArray<size_t> headerLens;
+  for (size_t i = 0; i < aHeaders.Length(); i++) {
+    headers.AppendElement(aHeaders[i]->packet);
+    headerLens.AppendElement(aHeaders[i]->bytes);
+  }
+  // Save header packets for the decoder
+  if (!XiphHeadersToExtradata(aBuffer, headers, headerLens)) {
+    return false;
+  }
+  aHeaders.Erase();
+  return true;
+}
+
 void
 VorbisState::RecordVorbisPacketSamples(ogg_packet* aPacket, long aSamples)
 {
@@ -319,10 +337,9 @@ TheoraState::TheoraState(ogg_page* aBosPage)
   : OggCodecState(aBosPage, true)
   , mSetup(0)
   , mCtx(0)
-  , mPixelAspectRatio(0)
 {
   MOZ_COUNT_CTOR(TheoraState);
-  th_info_init(&mInfo);
+  th_info_init(&mTheoraInfo);
   th_comment_init(&mComment);
 }
 
@@ -332,7 +349,8 @@ TheoraState::~TheoraState()
   th_setup_free(mSetup);
   th_decode_free(mCtx);
   th_comment_clear(&mComment);
-  th_info_clear(&mInfo);
+  th_info_clear(&mTheoraInfo);
+  Reset();
 }
 
 bool
@@ -342,34 +360,50 @@ TheoraState::Init()
     return false;
   }
 
-  int64_t n = mInfo.aspect_numerator;
-  int64_t d = mInfo.aspect_denominator;
+  int64_t n = mTheoraInfo.aspect_numerator;
+  int64_t d = mTheoraInfo.aspect_denominator;
 
-  mPixelAspectRatio = (n == 0 || d == 0)
+  float aspectRatio = (n == 0 || d == 0)
     ? 1.0f : static_cast<float>(n) / static_cast<float>(d);
 
   // Ensure the frame and picture regions aren't larger than our prescribed
   // maximum, or zero sized.
-  nsIntSize frame(mInfo.frame_width, mInfo.frame_height);
-  nsIntRect picture(mInfo.pic_x, mInfo.pic_y, mInfo.pic_width, mInfo.pic_height);
-  if (!IsValidVideoRegion(frame, picture, frame)) {
+  nsIntSize frame(mTheoraInfo.frame_width, mTheoraInfo.frame_height);
+  nsIntRect picture(mTheoraInfo.pic_x, mTheoraInfo.pic_y, mTheoraInfo.pic_width, mTheoraInfo.pic_height);
+  nsIntSize display(mTheoraInfo.pic_width, mTheoraInfo.pic_height);
+  ScaleDisplayByAspectRatio(display, aspectRatio);
+  if (!IsValidVideoRegion(frame, picture, display)) {
     return mActive = false;
   }
 
-  mCtx = th_decode_alloc(&mInfo, mSetup);
+  mCtx = th_decode_alloc(&mTheoraInfo, mSetup);
   if (!mCtx) {
     return mActive = false;
   }
 
-  return true;
+  // Video track's frame sizes will not overflow. Activate the video track.
+  mInfo.mMimeType = NS_LITERAL_CSTRING("video/theora");
+  mInfo.mDisplay = display;
+  mInfo.mImage = frame;
+  mInfo.SetImageRect(picture);
+  mKeyframe_granule_shift = mTheoraInfo.keyframe_granule_shift;
+
+  return mActive = SetCodecSpecificConfig(mInfo.mCodecSpecificConfig, mHeaders);
+}
+
+nsresult
+TheoraState::Reset()
+{
+  mHeaders.Erase();
+  return OggCodecState::Reset();
 }
 
 bool
 TheoraState::DecodeHeader(ogg_packet* aPacket)
 {
-  nsAutoRef<ogg_packet> autoRelease(aPacket);
+  mHeaders.Append(aPacket);
   mPacketCount++;
-  int ret = th_decode_headerin(&mInfo,
+  int ret = th_decode_headerin(&mTheoraInfo,
                                &mComment,
                                &mSetup,
                                aPacket);
@@ -407,7 +441,7 @@ TheoraState::Time(int64_t granulepos)
   if (!mActive) {
     return -1;
   }
-  return TheoraState::Time(&mInfo, granulepos);
+  return TheoraState::Time(&mTheoraInfo, granulepos);
 }
 
 bool
@@ -444,26 +478,26 @@ TheoraState::Time(th_info* aInfo, int64_t aGranulepos)
 
 int64_t TheoraState::StartTime(int64_t granulepos)
 {
-  if (granulepos < 0 || !mActive || mInfo.fps_numerator == 0) {
+  if (granulepos < 0 || !mActive || mTheoraInfo.fps_numerator == 0) {
     return -1;
   }
   CheckedInt64 t =
     (CheckedInt64(th_granule_frame(mCtx, granulepos)) * USECS_PER_S)
-    * mInfo.fps_denominator;
+    * mTheoraInfo.fps_denominator;
   if (!t.isValid()) {
     return -1;
   }
-  return t.value() / mInfo.fps_numerator;
+  return t.value() / mTheoraInfo.fps_numerator;
 }
 
 int64_t
 TheoraState::PacketDuration(ogg_packet* aPacket)
 {
-  if (!mActive || mInfo.fps_numerator == 0) {
+  if (!mActive || mTheoraInfo.fps_numerator == 0) {
     return -1;
   }
-  CheckedInt64 t =
-    SaferMultDiv(mInfo.fps_denominator, USECS_PER_S, mInfo.fps_numerator);
+  CheckedInt64 t = SaferMultDiv(mTheoraInfo.fps_denominator, USECS_PER_S,
+                                mTheoraInfo.fps_numerator);
   return t.isValid() ? t.value() : -1;
 }
 
@@ -478,10 +512,11 @@ TheoraState::MaxKeyframeOffset()
   int64_t frameDuration;
 
   // Max number of frames keyframe could possibly be offset.
-  int64_t keyframeDiff = (1 << mInfo.keyframe_granule_shift) - 1;
+  int64_t keyframeDiff = (1 << mTheoraInfo.keyframe_granule_shift) - 1;
 
   // Length of frame in usecs.
-  frameDuration = (mInfo.fps_denominator * USECS_PER_S) / mInfo.fps_numerator;
+  frameDuration =
+    (mTheoraInfo.fps_denominator * USECS_PER_S) / mTheoraInfo.fps_numerator;
 
   // Total time in usecs keyframe can be offset from any given frame.
   return frameDuration * keyframeDiff;
@@ -553,8 +588,8 @@ TheoraState::ReconstructTheoraGranulepos()
   // frames. Granulepos are stored as ((keyframe<<shift)+offset). We
   // know the granulepos of the last frame in the list, so we can infer
   // the granulepos of the intermediate frames using their frame numbers.
-  ogg_int64_t shift = mInfo.keyframe_granule_shift;
-  ogg_int64_t version_3_2_1 = TheoraVersion(&mInfo,3,2,1);
+  ogg_int64_t shift = mTheoraInfo.keyframe_granule_shift;
+  ogg_int64_t version_3_2_1 = TheoraVersion(&mTheoraInfo,3,2,1);
   ogg_int64_t lastFrame = th_granule_frame(mCtx,
                                            lastGranulepos) + version_3_2_1;
   ogg_int64_t firstFrame = lastFrame - mUnstamped.Length() + 1;
