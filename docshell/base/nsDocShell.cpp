@@ -3008,28 +3008,6 @@ nsDocShell::TopSessionStorageManager()
   return mSessionStorageManager;
 }
 
-nsresult
-nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal, nsIDOMStorage* aStorage)
-{
-  RefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
-  if (!storage) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsIPrincipal* storagePrincipal = storage->GetPrincipal();
-  if (storagePrincipal != aPrincipal) {
-    NS_ERROR("Wanting to add a sessionStorage for different principal");
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsIDOMStorageManager> manager = TopSessionStorageManager();
-  if (!manager) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return manager->CloneStorage(aStorage);
-}
-
 NS_IMETHODIMP
 nsDocShell::GetCurrentDocumentChannel(nsIChannel** aResult)
 {
