@@ -32,6 +32,10 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     private int tilesWidth;
     private int tilesHeight;
 
+    public StreamRecyclerAdapter() {
+        setHasStableIds(true);
+    }
+
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
@@ -137,5 +141,46 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         this.topSitesCursor = cursor;
 
         notifyItemChanged(0);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        final int type = getItemViewType(position);
+
+        // To avoid having clashing IDs, we:
+        // - use history ID's as is
+        // - use hardcoded negative ID's for fixed panels
+        // - multiply bookmark ID's by -1 to not clash with history, and add an offset to not
+        //   clash with the fixed panels above
+        final int offset = -10;
+
+        // RecyclerView.NO_ID is -1, so start our hard-coded IDs at -2.
+        switch (type) {
+            case TopPanel.LAYOUT_ID:
+                return -2;
+            case HighlightsTitle.LAYOUT_ID:
+                return -3;
+            case HighlightItem.LAYOUT_ID:
+                final int cursorPosition = translatePositionToCursor(position);
+                highlightsCursor.moveToPosition(cursorPosition);
+
+                final long historyID = highlightsCursor.getLong(highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
+                final boolean isHistory = -1 != historyID;
+
+                if (isHistory) {
+                    return historyID;
+                }
+
+                final long bookmarkID = highlightsCursor.getLong(highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
+                final boolean isBookmark = -1 != bookmarkID;
+
+                if (isBookmark) {
+                    return -1 * bookmarkID + offset;
+                }
+
+                throw new IllegalArgumentException("Unhandled highlight type in getItemId - has no history or bookmark ID");
+            default:
+                throw new IllegalArgumentException("StreamItem with LAYOUT_ID=" + type + " not handled in getItemId()");
+        }
     }
 }
