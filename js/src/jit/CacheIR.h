@@ -159,6 +159,7 @@ enum class CacheKind : uint8_t
     _(LoadDynamicSlotResult)              \
     _(LoadUnboxedPropertyResult)          \
     _(LoadTypedObjectResult)              \
+    _(LoadDenseElementResult)             \
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectArgResult)       \
@@ -526,6 +527,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectArgResult, obj);
         writeOperandId(index);
     }
+    void loadDenseElementResult(ObjOperandId obj, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::LoadDenseElementResult, obj);
+        writeOperandId(index);
+    }
     void loadArgumentsObjectLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
     }
@@ -659,6 +664,8 @@ class MOZ_RAII GetPropIRGenerator
 
     bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
     bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
+
+    bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
 
     ValOperandId getElemKeyValueId() const {
         MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);

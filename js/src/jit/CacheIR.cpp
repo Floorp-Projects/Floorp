@@ -89,6 +89,8 @@ GetPropIRGenerator::tryAttachStub()
         }
         if (idVal_.isInt32()) {
             ValOperandId indexId = getElemKeyValueId();
+            if (tryAttachDenseElement(obj, objId, indexId))
+                return true;
             if (tryAttachArgumentsObjectArg(obj, objId, indexId))
                 return true;
             return false;
@@ -875,6 +877,26 @@ GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId o
 
     Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
     writer.loadArgumentsObjectArgResult(objId, int32IndexId);
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
+                                          ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->isNative())
+        return false;
+
+    if (uint32_t(idVal_.toInt32()) >= obj->as<NativeObject>().getDenseInitializedLength())
+        return false;
+
+    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadDenseElementResult(objId, int32IndexId);
     writer.typeMonitorResult();
     return true;
 }
