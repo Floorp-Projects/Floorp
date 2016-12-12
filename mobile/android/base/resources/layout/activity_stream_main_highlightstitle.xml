@@ -3,8 +3,73 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:id="@+id/welcome_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <View
+            android:id="@+id/divider0"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:padding="4dp"
+            android:background="#ffe0e0e0" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/foxfinder"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:id="@+id/welcome_fox"
+            android:layout_marginTop="@dimen/activity_stream_base_margin"
+            android:layout_marginBottom="@dimen/activity_stream_base_margin"
+            android:layout_marginLeft="-30dp"
+            android:layout_alignParentRight="true" />
+
+        <TextView
+            android:id="@+id/title_welcome"
+            android:layout_marginLeft="@dimen/activity_stream_base_margin"
+            android:layout_marginStart="@dimen/activity_stream_base_margin"
+            android:layout_marginTop="@dimen/activity_stream_base_margin"
+            android:layout_marginBottom="@dimen/activity_stream_base_margin"
+            android:layout_marginRight="@dimen/activity_stream_base_margin"
+            android:layout_marginEnd="@dimen/activity_stream_base_margin"
+            android:text="@string/activity_stream_welcome_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#FF858585" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/activity_stream_welcome_content"
+            android:textColor="#FF858585"
+            android:layout_below="@+id/title_welcome"
+            android:layout_alignLeft="@+id/title_welcome"
+            android:layout_alignStart="@+id/title_welcome"
+            android:layout_toLeftOf="@+id/welcome_fox"
+            android:layout_toStartOf="@+id/welcome_fox"
+            android:id="@+id/welcome_text"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/activity_stream_dismiss"
+            android:theme="@style/ActivityStreamButton"
+            android:elevation="1dp"
+            android:id="@+id/dismiss_welcomepanel"
+            android:layout_alignBottom="@+id/welcome_fox"
+            android:layout_alignLeft="@+id/title_welcome"
+            android:layout_alignStart="@+id/title_welcome"/>
+
+    </RelativeLayout>
+
     <View
-        android:id="@+id/divider"
+        android:id="@+id/divider1"
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:padding="4dp"

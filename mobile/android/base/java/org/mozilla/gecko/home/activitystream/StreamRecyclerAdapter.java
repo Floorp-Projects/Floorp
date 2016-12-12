@@ -16,6 +16,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
+import org.mozilla.gecko.home.activitystream.StreamItem.HighlightsHeaderPanel;
 import org.mozilla.gecko.home.activitystream.StreamItem.TopPanel;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
@@ -54,7 +55,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         if (position == 0) {
             return TopPanel.LAYOUT_ID;
         } else if (position == 1) {
-            return StreamItem.HighlightsTitle.LAYOUT_ID;
+            return HighlightsHeaderPanel.LAYOUT_ID;
         } else if (position < getItemCount()) {
             return HighlightItem.LAYOUT_ID;
         } else {
@@ -68,8 +69,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
         if (type == TopPanel.LAYOUT_ID) {
             return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
-        } else if (type == StreamItem.HighlightsTitle.LAYOUT_ID) {
-            return new StreamItem.HighlightsTitle(inflater.inflate(type, parent, false));
+        } else if (type == HighlightsHeaderPanel.LAYOUT_ID) {
+            return new HighlightsHeaderPanel(inflater.inflate(type, parent, false), this);
         } else if (type == HighlightItem.LAYOUT_ID) {
             return new HighlightItem(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else {
