@@ -527,16 +527,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   void historyPurged(in long numEntries);
 
-  /*
-   * @deprecated, use nsIDocShell.QueryInterface(nsIDOMStorageManager) instead.
-   *
-   * Add a WebApps session storage object to the docshell.
-   *
-   * @param principal the principal the storage object is associated with
-   * @param storage the storage object to add
-   */
-  void addSessionStorage(in nsIPrincipal principal, in nsIDOMStorage storage);
-
   /**
    * Gets the channel for the currently loaded document, if any.
    * For a new document load, this will be the channel of the previous document
