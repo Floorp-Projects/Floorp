@@ -712,7 +712,8 @@ private:
                                 InfallibleTArray<nsString>* dictionaries,
                                 ClipboardCapabilities* clipboardCaps,
                                 DomainPolicyClone* domainPolicy,
-                                StructuredCloneData* initialData) override;
+                                StructuredCloneData* initialData,
+                                OptionalURIParams* aUserContentSheetURL) override;
 
   virtual bool
   DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
