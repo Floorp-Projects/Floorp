@@ -73,8 +73,7 @@ public:
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
                                         const uint64_t& aFwdTransactionId,
                                         const uint64_t& aTransactionId) override;
-  mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture,
-                                            const gfx::IntRect& aRect) override;
+  mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
                                                  const uint64_t& aAsyncContainerId) override;
