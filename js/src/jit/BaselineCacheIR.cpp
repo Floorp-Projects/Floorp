@@ -948,10 +948,29 @@ bool
 BaselineCacheIRCompiler::emitGuardIsInt32()
 {
     ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
-    masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
+
+    if (cx_->runtime()->jitSupportsFloatingPoint) {
+        Label done;
+        masm.branchTestInt32(Assembler::Equal, input, &done);
+        {
+            // If the value is a double, try to convert it to int32 in place.
+            // It's fine to modify |input| in this case, as the difference is not
+            // observable.
+            masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
+            masm.unboxDouble(input, FloatReg0);
+            masm.convertDoubleToInt32(FloatReg0, scratch, failure->label());
+            masm.tagValue(JSVAL_TYPE_INT32, scratch, input);
+        }
+        masm.bind(&done);
+    } else {
+        masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
+    }
+
     return true;
 }
 
@@ -1717,6 +1736,33 @@ BaselineCacheIRCompiler::emitLoadUnboxedArrayElementResult()
     size_t width = UnboxedTypeSize(elementType);
     BaseIndex addr(scratch, index, ScaleFromElemWidth(width));
     masm.loadUnboxedProperty(addr, elementType, R0);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadTypedElementResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    TypedThingLayout layout = reader.typedThingLayout();
+    Scalar::Type type = reader.scalarType();
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Bounds check.
+    LoadTypedThingLength(masm, layout, obj, scratch);
+    masm.branch32(Assembler::BelowOrEqual, scratch, index, failure->label());
+
+    // Load the elements vector.
+    LoadTypedThingData(masm, layout, obj, scratch);
+
+    // Load the value.
+    BaseIndex source(scratch, index, ScaleFromElemWidth(Scalar::byteSize(type)));
+    masm.loadFromTypedArray(type, source, R0, false, scratch, failure->label());
     return true;
 }
 

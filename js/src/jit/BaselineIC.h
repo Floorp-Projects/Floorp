@@ -419,54 +419,6 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     };
 };
 
-// Accesses scalar elements of a typed array or typed object.
-class ICGetElem_TypedArray : public ICStub
-{
-    friend class ICStubSpace;
-
-  protected: // Protected to silence Clang warning.
-    GCPtrShape shape_;
-
-    ICGetElem_TypedArray(JitCode* stubCode, Shape* shape, Scalar::Type type);
-
-  public:
-    static size_t offsetOfShape() {
-        return offsetof(ICGetElem_TypedArray, shape_);
-    }
-
-    GCPtrShape& shape() {
-        return shape_;
-    }
-
-    class Compiler : public ICStubCompiler {
-      RootedShape shape_;
-      Scalar::Type type_;
-      TypedThingLayout layout_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(type_) << 17) |
-                  (static_cast<int32_t>(layout_) << 25);
-        }
-
-      public:
-        Compiler(JSContext* cx, Shape* shape, Scalar::Type type)
-          : ICStubCompiler(cx, ICStub::GetElem_TypedArray, Engine::Baseline),
-            shape_(cx, shape),
-            type_(type),
-            layout_(GetTypedThingLayout(shape->getObjectClass()))
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetElem_TypedArray>(space, getStubCode(), shape_, type_);
-        }
-    };
-};
-
 // SetElem
 //      JSOP_SETELEM
 //      JSOP_INITELEM
