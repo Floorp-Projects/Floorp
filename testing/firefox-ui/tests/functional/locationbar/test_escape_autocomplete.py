@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from firefox_puppeteer import PuppeteerMixin
-from marionette import MarionetteTestCase
 from marionette_driver import Wait
+from marionette_harness import MarionetteTestCase
 
 
 class TestEscapeAutocomplete(PuppeteerMixin, MarionetteTestCase):
