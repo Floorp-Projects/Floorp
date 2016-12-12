@@ -4,7 +4,7 @@
 
 from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.errors import NoCertificateError
-from marionette import MarionetteTestCase
+from marionette_harness import MarionetteTestCase
 
 
 class TestTabBar(PuppeteerMixin, MarionetteTestCase):
