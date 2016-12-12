@@ -11,8 +11,6 @@
 
 #include "mozilla/Types.h"
 
-struct sock_fprog;
-
 namespace mozilla {
 
 // SandboxCrash() has to be in libxul to use internal interfaces, but
@@ -21,7 +19,6 @@ namespace mozilla {
 
 typedef void (*SandboxCrashFunc)(int, siginfo_t*, void*);
 extern MOZ_EXPORT SandboxCrashFunc gSandboxCrashFunc;
-extern const sock_fprog* gSetSandboxFilter;
 
 } // namespace mozilla
 
