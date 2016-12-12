@@ -332,8 +332,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture,
-                                         const IntRect& aRect)
+WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
 {
   if (mDestroyed) {
     return IPC_OK();
