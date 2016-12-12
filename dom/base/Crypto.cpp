@@ -32,10 +32,12 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Crypto, mParent, mSubtle)
 
 Crypto::Crypto()
 {
+  MOZ_COUNT_CTOR(Crypto);
 }
 
 Crypto::~Crypto()
 {
+  MOZ_COUNT_DTOR(Crypto);
 }
 
 void

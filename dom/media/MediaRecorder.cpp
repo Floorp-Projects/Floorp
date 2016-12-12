@@ -424,6 +424,7 @@ public:
     , mSelectedVideoTrackID(TRACK_NONE)
   {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_COUNT_CTOR(MediaRecorder::Session);
 
     uint32_t maxMem = Preferences::GetUint("media.recorder.max_memory",
                                            MAX_ALLOW_MEMORY_BUFFER);
@@ -588,6 +589,7 @@ private:
   // Only DestroyRunnable is allowed to delete Session object.
   virtual ~Session()
   {
+    MOZ_COUNT_DTOR(MediaRecorder::Session);
     LOG(LogLevel::Debug, ("Session.~Session (%p)", this));
     CleanupStreams();
     if (mReadThread) {

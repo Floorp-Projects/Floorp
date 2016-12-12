@@ -410,11 +410,13 @@ protected:
     mContentType(aContentType),
     mLoadInBackground(false)
   {
+    MOZ_COUNT_CTOR(BaseMediaResource);
     NS_ASSERTION(!mContentType.IsEmpty(), "Must know content type");
     mURI->GetSpec(mContentURL);
   }
   virtual ~BaseMediaResource()
   {
+    MOZ_COUNT_DTOR(BaseMediaResource);
   }
 
   const nsCString& GetContentType() const override

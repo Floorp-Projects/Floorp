@@ -24,10 +24,12 @@ NS_IMPL_ISUPPORTS(MockWebBrowserPrint, nsIWebBrowserPrint);
 MockWebBrowserPrint::MockWebBrowserPrint(const PrintData &aData)
   : mData(aData)
 {
+  MOZ_COUNT_CTOR(MockWebBrowserPrint);
 }
 
 MockWebBrowserPrint::~MockWebBrowserPrint()
 {
+  MOZ_COUNT_DTOR(MockWebBrowserPrint);
 }
 
 NS_IMETHODIMP

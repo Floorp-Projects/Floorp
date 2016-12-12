@@ -17,10 +17,12 @@ NS_IMPL_ISUPPORTS(PrintProgressDialogParent, nsIObserver)
 PrintProgressDialogParent::PrintProgressDialogParent() :
   mActive(true)
 {
+  MOZ_COUNT_CTOR(PrintProgressDialogParent);
 }
 
 PrintProgressDialogParent::~PrintProgressDialogParent()
 {
+  MOZ_COUNT_DTOR(PrintProgressDialogParent);
 }
 
 void

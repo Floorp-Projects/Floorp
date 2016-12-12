@@ -36,6 +36,8 @@ public:
     mLength(aLength),
     mStatus(NotStarted)
   {
+    MOZ_COUNT_CTOR(ArchiveInputStream);
+
     // Reset the data:
     memset(&mData, 0, sizeof(mData));
 
@@ -50,6 +52,7 @@ public:
 private:
   virtual ~ArchiveInputStream()
   {
+    MOZ_COUNT_DTOR(ArchiveInputStream);
     Close();
   }
 

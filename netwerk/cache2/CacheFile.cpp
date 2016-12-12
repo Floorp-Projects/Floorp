@@ -39,6 +39,7 @@ public:
   {
     LOG(("NotifyCacheFileListenerEvent::NotifyCacheFileListenerEvent() "
          "[this=%p]", this));
+    MOZ_COUNT_CTOR(NotifyCacheFileListenerEvent);
   }
 
 protected:
@@ -46,6 +47,7 @@ protected:
   {
     LOG(("NotifyCacheFileListenerEvent::~NotifyCacheFileListenerEvent() "
          "[this=%p]", this));
+    MOZ_COUNT_DTOR(NotifyCacheFileListenerEvent);
   }
 
 public:
@@ -76,6 +78,7 @@ public:
   {
     LOG(("NotifyChunkListenerEvent::NotifyChunkListenerEvent() [this=%p]",
          this));
+    MOZ_COUNT_CTOR(NotifyChunkListenerEvent);
   }
 
 protected:
@@ -83,6 +86,7 @@ protected:
   {
     LOG(("NotifyChunkListenerEvent::~NotifyChunkListenerEvent() [this=%p]",
          this));
+    MOZ_COUNT_DTOR(NotifyChunkListenerEvent);
   }
 
 public:
@@ -110,6 +114,7 @@ public:
   explicit DoomFileHelper(CacheFileListener *aListener)
     : mListener(aListener)
   {
+    MOZ_COUNT_CTOR(DoomFileHelper);
   }
 
 
@@ -154,6 +159,7 @@ public:
 private:
   virtual ~DoomFileHelper()
   {
+    MOZ_COUNT_DTOR(DoomFileHelper);
   }
 
   nsCOMPtr<CacheFileListener>  mListener;

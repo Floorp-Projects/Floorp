@@ -28,11 +28,13 @@ AppCacheStorage::AppCacheStorage(nsILoadContextInfo* aInfo,
 : CacheStorage(aInfo, true /* disk */, false /* lookup app cache */, false /* skip size check */, false /* pin */)
 , mAppCache(aAppCache)
 {
+  MOZ_COUNT_CTOR(AppCacheStorage);
 }
 
 AppCacheStorage::~AppCacheStorage()
 {
   ProxyReleaseMainThread(mAppCache);
+  MOZ_COUNT_DTOR(AppCacheStorage);
 }
 
 NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(nsIURI *aURI,

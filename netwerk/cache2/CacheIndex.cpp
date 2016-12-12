@@ -278,6 +278,7 @@ CacheIndex::CacheIndex()
 {
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
+  MOZ_COUNT_CTOR(CacheIndex);
   MOZ_ASSERT(!gInstance, "multiple CacheIndex instances!");
 }
 
@@ -285,6 +286,7 @@ CacheIndex::~CacheIndex()
 {
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::~CacheIndex [this=%p]", this));
+  MOZ_COUNT_DTOR(CacheIndex);
 
   ReleaseBuffer();
 }
