@@ -5,12 +5,13 @@
 
 import string
 
-from marionette.marionette_test import (
-    MarionetteTestCase, parameterized
-)
 from marionette_driver.by import By
 from marionette_driver.marionette import Actions
 from marionette_driver.selection import SelectionManager
+from marionette_harness.marionette_test import (
+    MarionetteTestCase,
+    parameterized,
+)
 
 
 class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
