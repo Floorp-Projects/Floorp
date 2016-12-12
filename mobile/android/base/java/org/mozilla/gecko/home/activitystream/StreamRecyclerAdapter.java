@@ -16,7 +16,8 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
-import org.mozilla.gecko.home.activitystream.StreamItem.HighlightsHeaderPanel;
+import org.mozilla.gecko.home.activitystream.StreamItem.WelcomePanel;
+import org.mozilla.gecko.home.activitystream.StreamItem.HighlightsTitle;
 import org.mozilla.gecko.home.activitystream.StreamItem.TopPanel;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
@@ -55,7 +56,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         if (position == 0) {
             return TopPanel.LAYOUT_ID;
         } else if (position == 1) {
-            return HighlightsHeaderPanel.LAYOUT_ID;
+            return WelcomePanel.LAYOUT_ID;
+        } else if (position == 2) {
+            return HighlightsTitle.LAYOUT_ID;
         } else if (position < getItemCount()) {
             return HighlightItem.LAYOUT_ID;
         } else {
@@ -69,10 +72,12 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
         if (type == TopPanel.LAYOUT_ID) {
             return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
-        } else if (type == HighlightsHeaderPanel.LAYOUT_ID) {
-            return new HighlightsHeaderPanel(inflater.inflate(type, parent, false), this);
+        } else if (type == WelcomePanel.LAYOUT_ID) {
+            return new WelcomePanel(inflater.inflate(type, parent, false), this);
         } else if (type == HighlightItem.LAYOUT_ID) {
             return new HighlightItem(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
+        } else if (type == HighlightsTitle.LAYOUT_ID) {
+            return new HighlightsTitle(inflater.inflate(type, parent, false));
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }
@@ -83,8 +88,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             throw new IllegalArgumentException("Requested cursor position for invalid item");
         }
 
-        // We have two blank panels at the top, hence remove that to obtain the cursor position
-        return position - 2;
+        // We have three blank panels at the top, hence remove that to obtain the cursor position
+        return position - 3;
     }
 
     @Override
@@ -129,7 +134,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             highlightsCount = 0;
         }
 
-        return highlightsCount + 2;
+        return highlightsCount + 3;
     }
 
     public void swapHighlightsCursor(Cursor cursor) {
@@ -159,8 +164,10 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         switch (type) {
             case TopPanel.LAYOUT_ID:
                 return -2;
-            case HighlightsTitle.LAYOUT_ID:
+            case WelcomePanel.LAYOUT_ID:
                 return -3;
+            case HighlightsTitle.LAYOUT_ID:
+                return -4;
             case HighlightItem.LAYOUT_ID:
                 final int cursorPosition = translatePositionToCursor(position);
                 highlightsCursor.moveToPosition(cursorPosition);
