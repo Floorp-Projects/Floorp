@@ -159,6 +159,9 @@ enum class CacheKind : uint8_t
     _(LoadDynamicSlotResult)              \
     _(LoadUnboxedPropertyResult)          \
     _(LoadTypedObjectResult)              \
+    _(LoadDenseElementResult)             \
+    _(LoadUnboxedArrayElementResult)      \
+    _(LoadTypedElementResult)             \
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectArgResult)       \
@@ -526,6 +529,22 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectArgResult, obj);
         writeOperandId(index);
     }
+    void loadDenseElementResult(ObjOperandId obj, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::LoadDenseElementResult, obj);
+        writeOperandId(index);
+    }
+    void loadUnboxedArrayElementResult(ObjOperandId obj, Int32OperandId index, JSValueType elementType) {
+        writeOpWithOperandId(CacheOp::LoadUnboxedArrayElementResult, obj);
+        writeOperandId(index);
+        buffer_.writeByte(uint32_t(elementType));
+    }
+    void loadTypedElementResult(ObjOperandId obj, Int32OperandId index, TypedThingLayout layout,
+                                Scalar::Type elementType) {
+        writeOpWithOperandId(CacheOp::LoadTypedElementResult, obj);
+        writeOperandId(index);
+        buffer_.writeByte(uint32_t(layout));
+        buffer_.writeByte(uint32_t(elementType));
+    }
     void loadArgumentsObjectLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
     }
@@ -596,6 +615,7 @@ class MOZ_RAII CacheIRReader
     GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
     JSValueType valueType() { return JSValueType(buffer_.readByte()); }
     TypedThingLayout typedThingLayout() { return TypedThingLayout(buffer_.readByte()); }
+    Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
     uint32_t typeDescrKey() { return buffer_.readByte(); }
     JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
 
@@ -659,6 +679,10 @@ class MOZ_RAII GetPropIRGenerator
 
     bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
     bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
+
+    bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
+    bool tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
+    bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
 
     ValOperandId getElemKeyValueId() const {
         MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
