@@ -419,54 +419,6 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     };
 };
 
-class ICGetElem_UnboxedArray : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-    GCPtrObjectGroup group_;
-
-    ICGetElem_UnboxedArray(JitCode* stubCode, ICStub* firstMonitorStub, ObjectGroup* group);
-
-  public:
-    static ICGetElem_UnboxedArray* Clone(JSContext* cx, ICStubSpace* space,
-                                         ICStub* firstMonitorStub, ICGetElem_UnboxedArray& other);
-
-    static size_t offsetOfGroup() {
-        return offsetof(ICGetElem_UnboxedArray, group_);
-    }
-
-    GCPtrObjectGroup& group() {
-        return group_;
-    }
-
-    class Compiler : public ICStubCompiler {
-      ICStub* firstMonitorStub_;
-      RootedObjectGroup group_;
-      JSValueType elementType_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(elementType_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, ObjectGroup* group)
-          : ICStubCompiler(cx, ICStub::GetElem_UnboxedArray, Engine::Baseline),
-            firstMonitorStub_(firstMonitorStub),
-            group_(cx, group),
-            elementType_(group->unboxedLayoutDontCheckGeneration().elementType())
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetElem_UnboxedArray>(space, getStubCode(), firstMonitorStub_, group_);
-        }
-    };
-};
-
 // Accesses scalar elements of a typed array or typed object.
 class ICGetElem_TypedArray : public ICStub
 {

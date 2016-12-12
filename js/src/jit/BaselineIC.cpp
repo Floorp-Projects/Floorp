@@ -943,20 +943,6 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
         return true;
     RootedObject obj(cx, &lhs.toObject());
 
-    // Check for UnboxedArray[int] accesses.
-    if (obj->is<UnboxedArrayObject>() && rhs.isInt32() && rhs.toInt32() >= 0) {
-        JitSpew(JitSpew_BaselineIC, "  Generating GetElem(UnboxedArray[Int32]) stub");
-        ICGetElem_UnboxedArray::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                                  obj->group());
-        ICStub* unboxedStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!unboxedStub)
-            return false;
-
-        stub->addNewStub(unboxedStub);
-        *attached = true;
-        return true;
-    }
-
     // Check for TypedArray[int] => Number and TypedObject[int] => Number accesses.
     if ((obj->is<TypedArrayObject>() || IsPrimitiveArrayTypedObject(obj)) &&
         rhs.isNumber() &&
@@ -1110,56 +1096,6 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     pushStubPayload(masm, R0.scratchReg());
 
     return tailCallVM(DoGetElemFallbackInfo, masm);
-}
-
-//
-// GetElem_UnboxedArray
-//
-
-bool
-ICGetElem_UnboxedArray::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratchReg = regs.takeAny();
-
-    // Unbox R0 and group guard.
-    Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(ICStubReg, ICGetElem_UnboxedArray::offsetOfGroup()), scratchReg);
-    masm.branchTestObjGroup(Assembler::NotEqual, obj, scratchReg, &failure);
-
-    // Unbox key.
-    Register key = masm.extractInt32(R1, ExtractTemp1);
-
-    // Bounds check.
-    masm.load32(Address(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()),
-                scratchReg);
-    masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), scratchReg);
-    masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
-
-    // Load obj->elements.
-    masm.loadPtr(Address(obj, UnboxedArrayObject::offsetOfElements()), scratchReg);
-
-    // Load value.
-    size_t width = UnboxedTypeSize(elementType_);
-    BaseIndex addr(scratchReg, key, ScaleFromElemWidth(width));
-    masm.loadUnboxedProperty(addr, elementType_, R0);
-
-    // Only monitor the result if its type might change.
-    if (elementType_ == JSVAL_TYPE_OBJECT)
-        EmitEnterTypeMonitorIC(masm);
-    else
-        EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 //
@@ -7084,19 +7020,6 @@ ICTypeUpdate_ObjectGroup::ICTypeUpdate_ObjectGroup(JitCode* stubCode, ObjectGrou
   : ICStub(TypeUpdate_ObjectGroup, stubCode),
     group_(group)
 { }
-
-ICGetElem_UnboxedArray::ICGetElem_UnboxedArray(JitCode* stubCode, ICStub* firstMonitorStub,
-                                               ObjectGroup *group)
-  : ICMonitoredStub(GetElem_UnboxedArray, stubCode, firstMonitorStub),
-    group_(group)
-{ }
-
-/* static */ ICGetElem_UnboxedArray*
-ICGetElem_UnboxedArray::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                              ICGetElem_UnboxedArray& other)
-{
-    return New<ICGetElem_UnboxedArray>(cx, space, other.jitCode(), firstMonitorStub, other.group_);
-}
 
 ICGetElem_TypedArray::ICGetElem_TypedArray(JitCode* stubCode, Shape* shape, Scalar::Type type)
   : ICStub(GetElem_TypedArray, stubCode),
