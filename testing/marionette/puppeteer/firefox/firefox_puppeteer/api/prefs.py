@@ -126,7 +126,9 @@ class Preferences(BaseLib):
             retval = self.marionette.execute_script("""
               Components.utils.import("resource://gre/modules/Services.jsm");
 
-              let [pref_name, value, default_branch] = arguments;
+              let pref_name = arguments[0];
+              let value = arguments[1];
+              let default_branch = arguments[2];
 
               let prefBranch;
               if (default_branch) {
