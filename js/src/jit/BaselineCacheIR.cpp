@@ -1693,6 +1693,34 @@ BaselineCacheIRCompiler::emitLoadDenseElementResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitLoadUnboxedArrayElementResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    JSValueType elementType = reader.valueType();
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Bounds check.
+    masm.load32(Address(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()),
+                scratch);
+    masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), scratch);
+    masm.branch32(Assembler::BelowOrEqual, scratch, index, failure->label());
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, UnboxedArrayObject::offsetOfElements()), scratch);
+
+    // Load value.
+    size_t width = UnboxedTypeSize(elementType);
+    BaseIndex addr(scratch, index, ScaleFromElemWidth(width));
+    masm.loadUnboxedProperty(addr, elementType, R0);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
     allocator.discardStack(masm);

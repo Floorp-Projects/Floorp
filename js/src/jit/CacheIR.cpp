@@ -91,6 +91,8 @@ GetPropIRGenerator::tryAttachStub()
             ValOperandId indexId = getElemKeyValueId();
             if (tryAttachDenseElement(obj, objId, indexId))
                 return true;
+            if (tryAttachUnboxedArrayElement(obj, objId, indexId))
+                return true;
             if (tryAttachArgumentsObjectArg(obj, objId, indexId))
                 return true;
             return false;
@@ -898,6 +900,33 @@ GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
     Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
     writer.loadDenseElementResult(objId, int32IndexId);
     writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
+                                                 ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->is<UnboxedArrayObject>())
+        return false;
+
+    if (uint32_t(idVal_.toInt32()) >= obj->as<UnboxedArrayObject>().initializedLength())
+        return false;
+
+    writer.guardGroup(objId, obj->group());
+
+    JSValueType elementType = obj->group()->unboxedLayoutDontCheckGeneration().elementType();
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadUnboxedArrayElementResult(objId, int32IndexId, elementType);
+
+    // Only monitor the result if its type might change.
+    if (elementType == JSVAL_TYPE_OBJECT)
+        writer.typeMonitorResult();
+    else
+        writer.returnFromIC();
+
     return true;
 }
 
