@@ -317,62 +317,7 @@ Target.prototype = {
   },
 
   _logHistogram(metric) {
-    if (!developerHUD._telemetry || metric.skipTelemetry) {
-      return;
-    }
-
-    metric.appName = this.appName;
-    if (!metric.appName) {
-      return;
-    }
-
-    let metricName = metric.name.toUpperCase();
-    let metricAppName = metric.appName.toUpperCase();
-    if (!metric.custom) {
-      let keyedMetricName = 'DEVTOOLS_HUD_' + metricName;
-      try {
-        let keyed = Services.telemetry.getKeyedHistogramById(keyedMetricName);
-        if (keyed) {
-          keyed.add(metric.appName, parseInt(metric.value, 10));
-          developerHUD._histograms.add(keyedMetricName);
-          telemetryDebug(keyedMetricName, metric.value, metric.appName);
-        }
-      } catch(err) {
-        console.error('Histogram error is metricname added to histograms.json:'
-          + keyedMetricName);
-      }
-    } else {
-      let histogramName = CUSTOM_HISTOGRAM_PREFIX + metricAppName + '_'
-        + metricName;
-      // This is a call to add a value to an existing histogram.
-      if (typeof metric.value !== 'undefined') {
-        Services.telemetry.getAddonHistogram(metricAppName,
-          CUSTOM_HISTOGRAM_PREFIX + metricName).add(parseInt(metric.value, 10));
-        telemetryDebug(histogramName, metric.value);
-        return;
-      }
-
-      // The histogram already exists and are not adding data to it.
-      if (developerHUD._customHistograms.has(histogramName)) {
-        return;
-      }
-
-      // This is a call to create a new histogram.
-      try {
-        let metricType = parseInt(metric.type, 10);
-        if (metricType === Services.telemetry.HISTOGRAM_COUNT) {
-          Services.telemetry.registerAddonHistogram(metricAppName,
-            CUSTOM_HISTOGRAM_PREFIX + metricName, metricType);
-        } else {
-          Services.telemetry.registerAddonHistogram(metricAppName,
-            CUSTOM_HISTOGRAM_PREFIX + metricName, metricType, metric.min,
-            metric.max, metric.buckets);
-        }
-        developerHUD._customHistograms.add(histogramName);
-      } catch (err) {
-        console.error('Histogram error: ' + err);
-      }
-    }
+    //method left as no-op as histograms are not in use anymore.
   }
 };
 
