@@ -87,8 +87,17 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             return false;
         }
+        if (idVal_.isNumber()) {
+            ValOperandId indexId = getElemKeyValueId();
+            if (tryAttachTypedElement(obj, objId, indexId))
+                return true;
+        }
         if (idVal_.isInt32()) {
             ValOperandId indexId = getElemKeyValueId();
+            if (tryAttachDenseElement(obj, objId, indexId))
+                return true;
+            if (tryAttachUnboxedArrayElement(obj, objId, indexId))
+                return true;
             if (tryAttachArgumentsObjectArg(obj, objId, indexId))
                 return true;
             return false;
@@ -876,6 +885,85 @@ GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId o
     Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
     writer.loadArgumentsObjectArgResult(objId, int32IndexId);
     writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
+                                          ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->isNative())
+        return false;
+
+    if (uint32_t(idVal_.toInt32()) >= obj->as<NativeObject>().getDenseInitializedLength())
+        return false;
+
+    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadDenseElementResult(objId, int32IndexId);
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
+                                                 ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->is<UnboxedArrayObject>())
+        return false;
+
+    if (uint32_t(idVal_.toInt32()) >= obj->as<UnboxedArrayObject>().initializedLength())
+        return false;
+
+    writer.guardGroup(objId, obj->group());
+
+    JSValueType elementType = obj->group()->unboxedLayoutDontCheckGeneration().elementType();
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadUnboxedArrayElementResult(objId, int32IndexId, elementType);
+
+    // Only monitor the result if its type might change.
+    if (elementType == JSVAL_TYPE_OBJECT)
+        writer.typeMonitorResult();
+    else
+        writer.returnFromIC();
+
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
+                                          ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isNumber());
+
+    if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint &&
+        (TypedThingRequiresFloatingPoint(obj) || idVal_.isDouble()))
+    {
+        return false;
+    }
+
+    // Don't attach typed object stubs if the underlying storage could be
+    // detached, as the stub will always bail out.
+    if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
+        return false;
+
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+    if (layout != Layout_TypedArray)
+        writer.guardNoDetachedTypedObjects();
+
+    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadTypedElementResult(objId, int32IndexId, layout, TypedThingElementType(obj));
+    writer.returnFromIC();
     return true;
 }
 
