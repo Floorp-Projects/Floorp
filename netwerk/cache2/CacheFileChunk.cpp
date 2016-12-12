@@ -251,7 +251,6 @@ public:
   {
     LOG(("NotifyUpdateListenerEvent::NotifyUpdateListenerEvent() [this=%p]",
          this));
-    MOZ_COUNT_CTOR(NotifyUpdateListenerEvent);
   }
 
 protected:
@@ -259,7 +258,6 @@ protected:
   {
     LOG(("NotifyUpdateListenerEvent::~NotifyUpdateListenerEvent() [this=%p]",
          this));
-    MOZ_COUNT_DTOR(NotifyUpdateListenerEvent);
   }
 
 public:
@@ -347,15 +345,12 @@ CacheFileChunk::CacheFileChunk(CacheFile *aFile, uint32_t aIndex,
 {
   LOG(("CacheFileChunk::CacheFileChunk() [this=%p, index=%u, initByWriter=%d]",
        this, aIndex, aInitByWriter));
-  MOZ_COUNT_CTOR(CacheFileChunk);
-
   mBuf = new CacheFileChunkBuffer(this);
 }
 
 CacheFileChunk::~CacheFileChunk()
 {
   LOG(("CacheFileChunk::~CacheFileChunk() [this=%p]", this));
-  MOZ_COUNT_DTOR(CacheFileChunk);
 }
 
 void

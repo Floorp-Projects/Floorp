@@ -85,8 +85,6 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   , mCursorHotspotY(0)
   , mNativeKeyCommandsValid(false)
 {
-  MOZ_COUNT_CTOR(PuppetWidget);
-
   mSingleLineCommands.SetCapacity(4);
   mMultiLineCommands.SetCapacity(4);
   mRichTextCommands.SetCapacity(4);
@@ -97,8 +95,6 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
 
 PuppetWidget::~PuppetWidget()
 {
-  MOZ_COUNT_DTOR(PuppetWidget);
-
   Destroy();
 }
 

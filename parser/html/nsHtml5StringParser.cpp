@@ -18,13 +18,11 @@ nsHtml5StringParser::nsHtml5StringParser()
   , mTreeBuilder(new nsHtml5TreeBuilder(mBuilder))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
 {
-  MOZ_COUNT_CTOR(nsHtml5StringParser);
   mTokenizer->setInterner(&mAtomTable);
 }
 
 nsHtml5StringParser::~nsHtml5StringParser()
 {
-  MOZ_COUNT_DTOR(nsHtml5StringParser);
 }
 
 nsresult
