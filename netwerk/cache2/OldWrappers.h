@@ -249,6 +249,7 @@ class _OldVisitCallbackWrapper : public nsICacheVisitor
   , mLoadInfo(aInfo)
   , mHit(false)
   {
+    MOZ_COUNT_CTOR(_OldVisitCallbackWrapper);
   }
 
 private:

@@ -22,6 +22,7 @@ PrintProgressDialogChild::PrintProgressDialogChild(
   nsIObserver* aOpenObserver) :
   mOpenObserver(aOpenObserver)
 {
+  MOZ_COUNT_CTOR(PrintProgressDialogChild);
 }
 
 PrintProgressDialogChild::~PrintProgressDialogChild()
@@ -31,6 +32,7 @@ PrintProgressDialogChild::~PrintProgressDialogChild()
   // the parent to decrement its refcount, as well as prevent it from attempting
   // to contact us further.
   Unused << Send__delete__(this);
+  MOZ_COUNT_DTOR(PrintProgressDialogChild);
 }
 
 mozilla::ipc::IPCResult

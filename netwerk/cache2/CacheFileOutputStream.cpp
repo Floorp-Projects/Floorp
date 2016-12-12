@@ -56,6 +56,7 @@ CacheFileOutputStream::CacheFileOutputStream(CacheFile *aFile,
   , mCallbackFlags(0)
 {
   LOG(("CacheFileOutputStream::CacheFileOutputStream() [this=%p]", this));
+  MOZ_COUNT_CTOR(CacheFileOutputStream);
 
   if (mAlternativeData) {
     mPos = mFile->mAltDataOffset;
@@ -65,6 +66,7 @@ CacheFileOutputStream::CacheFileOutputStream(CacheFile *aFile,
 CacheFileOutputStream::~CacheFileOutputStream()
 {
   LOG(("CacheFileOutputStream::~CacheFileOutputStream() [this=%p]", this));
+  MOZ_COUNT_DTOR(CacheFileOutputStream);
 }
 
 // nsIOutputStream

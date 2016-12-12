@@ -736,6 +736,7 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
     NS_INIT_AGGREGATED(aOuter);
 
     mPropagateChanges = true;
+    MOZ_COUNT_CTOR(InMemoryDataSource);
 }
 
 
@@ -767,6 +768,8 @@ InMemoryDataSource::~InMemoryDataSource()
 
     MOZ_LOG(gLog, LogLevel::Debug,
            ("InMemoryDataSource(%p): destroyed.", this));
+
+    MOZ_COUNT_DTOR(InMemoryDataSource);
 }
 
 

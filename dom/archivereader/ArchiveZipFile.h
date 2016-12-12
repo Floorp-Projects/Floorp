@@ -37,6 +37,7 @@ public:
     mFilename(aName)
   {
     MOZ_ASSERT(mBlobImpl);
+    MOZ_COUNT_CTOR(ArchiveZipBlobImpl);
   }
 
   ArchiveZipBlobImpl(const nsAString& aName,
@@ -51,6 +52,7 @@ public:
     mFilename(aName)
   {
     MOZ_ASSERT(mBlobImpl);
+    MOZ_COUNT_CTOR(ArchiveZipBlobImpl);
   }
 
   // Overrides:
@@ -60,6 +62,7 @@ public:
 protected:
   virtual ~ArchiveZipBlobImpl()
   {
+    MOZ_COUNT_DTOR(ArchiveZipBlobImpl);
   }
 
   virtual already_AddRefed<BlobImpl>

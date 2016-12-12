@@ -1218,11 +1218,13 @@ public:
   explicit SelectorCacheKeyDeleter(SelectorCacheKey* aToDelete)
     : mSelector(aToDelete)
   {
+    MOZ_COUNT_CTOR(SelectorCacheKeyDeleter);
   }
 
 protected:
   ~SelectorCacheKeyDeleter()
   {
+    MOZ_COUNT_DTOR(SelectorCacheKeyDeleter);
   }
 
 public:

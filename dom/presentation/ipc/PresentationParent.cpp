@@ -93,10 +93,12 @@ NS_IMPL_ISUPPORTS(PresentationParent,
 
 PresentationParent::PresentationParent()
 {
+  MOZ_COUNT_CTOR(PresentationParent);
 }
 
 /* virtual */ PresentationParent::~PresentationParent()
 {
+  MOZ_COUNT_DTOR(PresentationParent);
 }
 
 bool
@@ -386,10 +388,12 @@ PresentationRequestParent::PresentationRequestParent(nsIPresentationService* aSe
   : mService(aService)
   , mChildId(aContentParentId)
 {
+  MOZ_COUNT_CTOR(PresentationRequestParent);
 }
 
 PresentationRequestParent::~PresentationRequestParent()
 {
+  MOZ_COUNT_DTOR(PresentationRequestParent);
 }
 
 void

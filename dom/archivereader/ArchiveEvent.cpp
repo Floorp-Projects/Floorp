@@ -15,10 +15,12 @@ NS_IMPL_ISUPPORTS0(ArchiveItem)
 
 ArchiveItem::ArchiveItem()
 {
+  MOZ_COUNT_CTOR(ArchiveItem);
 }
 
 ArchiveItem::~ArchiveItem()
 {
+  MOZ_COUNT_DTOR(ArchiveItem);
 }
 
 
@@ -41,6 +43,7 @@ ArchiveItem::SetType(const nsCString& aType)
 ArchiveReaderEvent::ArchiveReaderEvent(ArchiveReader* aArchiveReader)
 : mArchiveReader(aArchiveReader)
 {
+  MOZ_COUNT_CTOR(ArchiveReaderEvent);
 }
 
 ArchiveReaderEvent::~ArchiveReaderEvent()
@@ -48,6 +51,8 @@ ArchiveReaderEvent::~ArchiveReaderEvent()
   if (!NS_IsMainThread()) {
     NS_ReleaseOnMainThread(mMimeService.forget());
   }
+
+  MOZ_COUNT_DTOR(ArchiveReaderEvent);
 }
 
 // From the filename to the mimetype:

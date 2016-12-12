@@ -58,6 +58,7 @@ CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString 
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p, handle=%p, key=%s]",
        this, aHandle, PromiseFlatCString(aKey).get()));
 
+  MOZ_COUNT_CTOR(CacheFileMetadata);
   memset(&mMetaHdr, 0, sizeof(CacheFileMetadataHeader));
   mMetaHdr.mVersion = kCacheEntryVersion;
   mMetaHdr.mExpirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
@@ -87,6 +88,7 @@ CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, bool aPinned, const nsACS
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p, key=%s]",
        this, PromiseFlatCString(aKey).get()));
 
+  MOZ_COUNT_CTOR(CacheFileMetadata);
   memset(&mMetaHdr, 0, sizeof(CacheFileMetadataHeader));
   mMetaHdr.mVersion = kCacheEntryVersion;
   if (aPinned) {
@@ -119,6 +121,7 @@ CacheFileMetadata::CacheFileMetadata()
 {
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p]", this));
 
+  MOZ_COUNT_CTOR(CacheFileMetadata);
   memset(&mMetaHdr, 0, sizeof(CacheFileMetadataHeader));
 }
 
@@ -126,6 +129,7 @@ CacheFileMetadata::~CacheFileMetadata()
 {
   LOG(("CacheFileMetadata::~CacheFileMetadata() [this=%p]", this));
 
+  MOZ_COUNT_DTOR(CacheFileMetadata);
   MOZ_ASSERT(!mListener);
 
   if (mHashArray) {

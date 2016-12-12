@@ -308,6 +308,8 @@ PrintingParent::SerializeAndEnsureRemotePrintJob(
 
 PrintingParent::PrintingParent()
 {
+  MOZ_COUNT_CTOR(PrintingParent);
+
   mPrintSettingsSvc =
     do_GetService("@mozilla.org/gfx/printsettings-service;1");
   MOZ_ASSERT(mPrintSettingsSvc);
@@ -315,6 +317,7 @@ PrintingParent::PrintingParent()
 
 PrintingParent::~PrintingParent()
 {
+  MOZ_COUNT_DTOR(PrintingParent);
 }
 
 } // namespace embedding
