@@ -208,6 +208,7 @@ pub enum SampleEntry {
 #[derive(Debug, Clone, Default)]
 pub struct ES_Descriptor {
     pub audio_codec: CodecType,
+    pub audio_object_type: Option<u16>,
     pub audio_sample_rate: Option<u32>,
     pub audio_channel_count: Option<u16>,
     pub codec_esds: Vec<u8>,
@@ -228,6 +229,7 @@ pub struct AudioSampleEntry {
     pub samplesize: u16,
     pub samplerate: u32,
     pub codec_specific: AudioCodecSpecific,
+    pub protection_info: Vec<ProtectionSchemeInfoBox>,
 }
 
 #[derive(Debug, Clone)]
@@ -242,6 +244,7 @@ pub struct VideoSampleEntry {
     pub width: u16,
     pub height: u16,
     pub codec_specific: VideoCodecSpecific,
+    pub protection_info: Vec<ProtectionSchemeInfoBox>,
 }
 
 /// Represent a Video Partition Codec Configuration 'vpcC' box (aka vp9).
@@ -304,6 +307,19 @@ pub struct ProtectionSystemSpecificHeaderBox {
 
     // The entire pssh box (include header) required by Gecko.
     pub box_content: ByteData,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct TrackEncryptionBox {
+    pub is_encrypted: u32,
+    pub iv_size: u8,
+    pub kid: Vec<u8>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct ProtectionSchemeInfoBox {
+    pub code_name: String,
+    pub tenc: Option<TrackEncryptionBox>,
 }
 
 /// Internal data structures.
@@ -1233,6 +1249,8 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
 
     let audio_specific_config = be_u16(des)?;
 
+    let audio_object_type = audio_specific_config >> 11;
+
     let sample_index = (audio_specific_config & 0x07FF) >> 7;
 
     let channel_counts = (audio_specific_config & 0x007F) >> 3;
@@ -1240,6 +1258,7 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     let sample_frequency =
         frequency_table.iter().find(|item| item.0 == sample_index).map(|x| x.1);
 
+    esds.audio_object_type = Some(audio_object_type);
     esds.audio_sample_rate = sample_frequency;
     esds.audio_channel_count = Some(channel_counts);
 
@@ -1476,6 +1495,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
 
     // Skip clap/pasp/etc. for now.
     let mut codec_specific = None;
+    let mut protection_info = Vec::new();
     let mut iter = src.box_iter();
     while let Some(mut b) = iter.next_box()? {
         match b.head.name {
@@ -1491,6 +1511,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
                     return Err(Error::InvalidData("avcC box exceeds BUF_SIZE_LIMIT"));
                 }
                 let avcc = read_buf(&mut b.content, avcc_size as usize)?;
+                log!("{:?} (avcc)", avcc);
                 // TODO(kinetik): Parse avcC box?  For now we just stash the data.
                 codec_specific = Some(VideoCodecSpecific::AVCConfig(avcc));
             }
@@ -1503,6 +1524,14 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
                 let vpcc = read_vpcc(&mut b)?;
                 codec_specific = Some(VideoCodecSpecific::VPxConfig(vpcc));
             }
+            BoxType::ProtectionSchemeInformationBox => {
+                if name != BoxType::ProtectedVisualSampleEntry {
+                    return Err(Error::InvalidData("malformed video sample entry"));
+                }
+                let sinf = read_sinf(&mut b)?;
+                log!("{:?} (sinf)", sinf);
+                protection_info.push(sinf);
+            }
             _ => skip_box_content(&mut b)?,
         }
         check_parser_state!(b.content);
@@ -1514,6 +1543,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
             width: width,
             height: height,
             codec_specific: codec_specific,
+            protection_info: protection_info,
         }))
         .ok_or_else(|| Error::InvalidData("malformed video sample entry"))
 }
@@ -1537,14 +1567,6 @@ fn read_qt_wave_atom<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
 /// Parse an audio description inside an stsd box.
 fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleEntry> {
     let name = src.get_header().name;
-    track.codec_type = match name {
-        // TODO(kinetik): stagefright inspects ESDS to detect MP3 (audio/mpeg).
-        BoxType::MP4AudioSampleEntry => CodecType::AAC,
-        BoxType::FLACSampleEntry => CodecType::FLAC,
-        BoxType::OpusSampleEntry => CodecType::Opus,
-        BoxType::ProtectedAudioSampleEntry => CodecType::EncryptedAudio,
-        _ => CodecType::Unknown,
-    };
 
     // Skip uninteresting fields.
     skip(src, 6)?;
@@ -1580,6 +1602,7 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
 
     // Skip chan/etc. for now.
     let mut codec_specific = None;
+    let mut protection_info = Vec::new();
     let mut iter = src.box_iter();
     while let Some(mut b) = iter.next_box()? {
         match b.head.name {
@@ -1617,6 +1640,15 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
                 track.codec_type = qt_esds.audio_codec;
                 codec_specific = Some(AudioCodecSpecific::ES_Descriptor(qt_esds));
             }
+            BoxType::ProtectionSchemeInformationBox => {
+                if name != BoxType::ProtectedAudioSampleEntry {
+                    return Err(Error::InvalidData("malformed audio sample entry"));
+                }
+                let sinf = read_sinf(&mut b)?;
+                log!("{:?} (sinf)", sinf);
+                track.codec_type = CodecType::EncryptedAudio;
+                protection_info.push(sinf);
+            }
             _ => skip_box_content(&mut b)?,
         }
         check_parser_state!(b.content);
@@ -1629,6 +1661,7 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
             samplesize: samplesize,
             samplerate: samplerate,
             codec_specific: codec_specific,
+            protection_info: protection_info,
         }))
         .ok_or_else(|| Error::InvalidData("malformed audio sample entry"))
 }
@@ -1680,6 +1713,65 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
     Ok(SampleDescriptionBox {
         descriptions: descriptions,
     })
+}
+
+fn read_sinf<T: Read>(src: &mut BMFFBox<T>) -> Result<ProtectionSchemeInfoBox> {
+    let mut sinf = ProtectionSchemeInfoBox::default();
+
+    let mut iter = src.box_iter();
+    while let Some(mut b) = iter.next_box()? {
+        match b.head.name {
+            BoxType::OriginalFormatBox => {
+                let frma = read_frma(&mut b)?;
+                sinf.code_name = frma;
+            },
+            BoxType::SchemeInformationBox => {
+                // We only need tenc box in schi box so far.
+                sinf.tenc = read_schi(&mut b)?;
+            },
+            _ => skip_box_content(&mut b)?,
+        }
+        check_parser_state!(b.content);
+    }
+
+    Ok(sinf)
+}
+
+fn read_schi<T: Read>(src: &mut BMFFBox<T>) -> Result<Option<TrackEncryptionBox>> {
+    let mut tenc = None;
+    let mut iter = src.box_iter();
+    while let Some(mut b) = iter.next_box()? {
+        match b.head.name {
+            BoxType::TrackEncryptionBox => {
+                if tenc.is_some() {
+                    return Err(Error::InvalidData("tenc box should be only one at most in sinf box"));
+                }
+                tenc = Some(read_tenc(&mut b)?);
+            },
+            _ => skip_box_content(&mut b)?,
+        }
+    }
+
+    Ok(tenc)
+}
+
+fn read_tenc<T: Read>(src: &mut BMFFBox<T>) -> Result<TrackEncryptionBox> {
+    let (_, _) = read_fullbox_extra(src)?;
+
+    let default_is_encrypted = be_u24(src)?;
+    let default_iv_size = src.read_u8()?;
+    let default_kid = read_buf(src, 16)?;
+
+    Ok(TrackEncryptionBox {
+        is_encrypted: default_is_encrypted,
+        iv_size: default_iv_size,
+        kid: default_kid,
+    })
+}
+
+fn read_frma<T: Read>(src: &mut BMFFBox<T>) -> Result<String> {
+    let code_name = read_buf(src, 4)?;
+    String::from_utf8(code_name).map_err(From::from)
 }
 
 /// Skip a number of bytes that we don't care to parse.
