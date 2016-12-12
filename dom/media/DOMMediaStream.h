@@ -84,7 +84,6 @@ class MediaStreamTrackSourceGetter : public nsISupports
 public:
   MediaStreamTrackSourceGetter()
   {
-    MOZ_COUNT_CTOR(MediaStreamTrackSourceGetter);
   }
 
   virtual already_AddRefed<dom::MediaStreamTrackSource>
@@ -93,7 +92,6 @@ public:
 protected:
   virtual ~MediaStreamTrackSourceGetter()
   {
-    MOZ_COUNT_DTOR(MediaStreamTrackSourceGetter);
   }
 };
 

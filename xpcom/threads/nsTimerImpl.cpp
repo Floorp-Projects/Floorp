@@ -143,7 +143,6 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
   mDelay(0),
   mITimer(aTimer)
 {
-  MOZ_COUNT_CTOR(nsTimerImpl);
   // XXXbsmedberg: shouldn't this be in Init()?
   mEventTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
 
@@ -152,7 +151,6 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
 
 nsTimerImpl::~nsTimerImpl()
 {
-  MOZ_COUNT_DTOR(nsTimerImpl);
   ReleaseCallback();
 }
 
