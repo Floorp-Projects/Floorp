@@ -17,9 +17,9 @@ const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
 const kintoFilename = "kinto.sqlite";
 
 const gBlocklistClients = [
-  {client: BlocklistClients.AddonBlocklistClient, filename: BlocklistClients.FILENAME_ADDONS_JSON, testData: ["i808", "i720", "i539"]},
-  {client: BlocklistClients.PluginBlocklistClient, filename: BlocklistClients.FILENAME_PLUGINS_JSON, testData: ["p1044", "p32", "p28"]},
-  {client: BlocklistClients.GfxBlocklistClient, filename: BlocklistClients.FILENAME_GFX_JSON, testData: ["g204", "g200", "g36"]},
+  {client: BlocklistClients.AddonBlocklistClient, testData: ["i808", "i720", "i539"]},
+  {client: BlocklistClients.PluginBlocklistClient, testData: ["p1044", "p32", "p28"]},
+  {client: BlocklistClients.GfxBlocklistClient, testData: ["g204", "g200", "g36"]},
 ];
 
 
@@ -57,14 +57,10 @@ function* clear_state() {
     } finally {
       yield sqliteHandle.close();
     }
-  }
 
-  // Remove profile data.
-  for (let {filename} of gBlocklistClients) {
-    const blocklist = FileUtils.getFile(KEY_PROFILEDIR, [filename]);
-    if (blocklist.exists()) {
-      blocklist.remove(true);
-    }
+    // Remove profile data.
+    const path = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
+    yield OS.File.remove(path, { ignoreAbsent: true });
   }
 }
 
@@ -121,7 +117,7 @@ function run_test() {
 add_task(function* test_records_obtained_from_server_are_stored_in_db() {
   for (let {client} of gBlocklistClients) {
     // Test an empty db populates
-    yield client.maybeSync(2000, Date.now());
+    yield client.maybeSync(2000, Date.now(), {loadDump: false});
 
     // Open the collection, verify it's been populated:
     // Our test data has a single record; it should be in the local collection
@@ -135,11 +131,11 @@ add_task(function* test_records_obtained_from_server_are_stored_in_db() {
 add_task(clear_state);
 
 add_task(function* test_list_is_written_to_file_in_profile() {
-  for (let {client, filename, testData} of gBlocklistClients) {
-    const profFile = FileUtils.getFile(KEY_PROFILEDIR, [filename]);
+  for (let {client, testData} of gBlocklistClients) {
+    const profFile = FileUtils.getFile(KEY_PROFILEDIR, client.filename.split("/"));
     strictEqual(profFile.exists(), false);
 
-    yield client.maybeSync(2000, Date.now());
+    yield client.maybeSync(2000, Date.now(), {loadDump: false});
 
     strictEqual(profFile.exists(), true);
     const content = yield readJSON(profFile.path);
@@ -159,9 +155,9 @@ add_task(function* test_current_server_time_is_saved_in_pref() {
 add_task(clear_state);
 
 add_task(function* test_update_json_file_when_addons_has_changes() {
-  for (let {client, filename, testData} of gBlocklistClients) {
-    yield client.maybeSync(2000, Date.now() - 1000);
-    const profFile = FileUtils.getFile(KEY_PROFILEDIR, [filename]);
+  for (let {client, testData} of gBlocklistClients) {
+    yield client.maybeSync(2000, Date.now() - 1000, {loadDump: false});
+    const profFile = FileUtils.getFile(KEY_PROFILEDIR, client.filename.split("/"));
     const fileLastModified = profFile.lastModifiedTime = profFile.lastModifiedTime - 1000;
     const serverTime = Date.now();
 
@@ -179,24 +175,24 @@ add_task(function* test_update_json_file_when_addons_has_changes() {
 add_task(clear_state);
 
 add_task(function* test_sends_reload_message_when_blocklist_has_changes() {
-  for (let {client, filename} of gBlocklistClients) {
+  for (let {client} of gBlocklistClients) {
     let received = yield new Promise((resolve, reject) => {
       Services.ppmm.addMessageListener("Blocklist:reload-from-disk", {
         receiveMessage(aMsg) { resolve(aMsg) }
       });
 
-      client.maybeSync(2000, Date.now() - 1000);
+      client.maybeSync(2000, Date.now() - 1000, {loadDump: false});
     });
 
-    equal(received.data.filename, filename);
+    equal(received.data.filename, client.filename);
   }
 });
 add_task(clear_state);
 
 add_task(function* test_do_nothing_when_blocklist_is_up_to_date() {
-  for (let {client, filename} of gBlocklistClients) {
-    yield client.maybeSync(2000, Date.now() - 1000);
-    const profFile = FileUtils.getFile(KEY_PROFILEDIR, [filename]);
+  for (let {client} of gBlocklistClients) {
+    yield client.maybeSync(2000, Date.now() - 1000, {loadDump: false});
+    const profFile = FileUtils.getFile(KEY_PROFILEDIR, client.filename.split("/"));
     const fileLastModified = profFile.lastModifiedTime = profFile.lastModifiedTime - 1000;
     const serverTime = Date.now();
 
