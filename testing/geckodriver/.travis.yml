@@ -35,10 +35,14 @@ matrix:
         - TARGET=i686-unknown-linux-musl
         - NAME=linux32
         - EXT=tar.gz
+      dist: trusty
+      sudo: required
       addons:
         apt:
           packages: &i686
+          - musl-tools
           - gcc-multilib
+          - libbz2-dev
     - os: linux
       env:
         - TARGET=x86_64-pc-windows-gnu
