@@ -208,7 +208,10 @@ already_AddRefed<MediaDataDecoder>
 AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
   const AudioInfo& config = aParams.AudioConfig();
-  MOZ_ASSERT(config.mBitDepth == 16, "We only handle 16-bit audio!");
+  if (config.mBitDepth != 16) {
+    // We only handle 16-bit audio.
+    return nullptr;
+  }
 
   MediaFormat::LocalRef format;
 
