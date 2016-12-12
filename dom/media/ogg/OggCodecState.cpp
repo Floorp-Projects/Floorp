@@ -1293,12 +1293,13 @@ already_AddRefed<MediaRawData>
 OpusState::PacketOutAsMediaRawData()
 {
   ogg_packet* packet = PacketPeek();
-  uint32_t frames = 0;
-  const int64_t endFrame = packet->granulepos;
-
   if (!packet) {
     return nullptr;
   }
+
+  uint32_t frames = 0;
+  const int64_t endFrame = packet->granulepos;
+
   if (packet->e_o_s) {
     frames = GetOpusDeltaGP(packet);
   }
