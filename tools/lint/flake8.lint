@@ -177,6 +177,7 @@ LINTER = {
     'description': "Python linter",
     'include': [
         'python/mozlint',
+        'security/manager',
         'taskcluster',
         'testing/firefox-ui',
         'testing/marionette/client',
