@@ -1049,7 +1049,7 @@ var DebuggerServer = {
       try {
         m = require(module);
 
-        if (!setupParent in m) {
+        if (!(setupParent in m)) {
           dumpn(`ERROR: module '${module}' does not export '${setupParent}'`);
           return false;
         }
