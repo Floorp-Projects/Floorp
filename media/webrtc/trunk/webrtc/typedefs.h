@@ -56,7 +56,7 @@
 #define WEBRTC_ARCH_BIG_ENDIAN
 #define WEBRTC_BIG_ENDIAN
 #endif
-#elif defined(__sparc64__)
+#elif defined(__sparc__) && defined(__arch64__)
 #define WEBRTC_ARCH_SPARC 1
 #define WEBRTC_ARCH_64_BITS 1
 #define WEBRTC_ARCH_BIG_ENDIAN
