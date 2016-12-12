@@ -5,7 +5,7 @@
 import mozversion
 
 from firefox_puppeteer import PuppeteerMixin
-from marionette import MarionetteTestCase
+from marionette_harness import MarionetteTestCase
 
 
 class TestAppInfo(PuppeteerMixin, MarionetteTestCase):

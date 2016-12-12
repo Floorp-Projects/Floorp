@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from firefox_puppeteer import PuppeteerMixin
-from marionette import MarionetteTestCase
 from marionette_driver import By, expected, Wait
 from marionette_driver.errors import NoAlertPresentException
 from marionette_driver.marionette import Alert
+from marionette_harness import MarionetteTestCase
 
 
 class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):

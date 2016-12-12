@@ -6,7 +6,7 @@ import os
 
 from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.api.software_update import SoftwareUpdate
-from marionette import MarionetteTestCase
+from marionette_harness import MarionetteTestCase
 
 
 class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):

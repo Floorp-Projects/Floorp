@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import Marionette
 from marionette_driver import Wait
 from marionette_driver.errors import TimeoutException
+from marionette_harness import Marionette
 
 from external_media_tests.utils import verbose_until
 from external_media_harness.testcase import MediaTestCase

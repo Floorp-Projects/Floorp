@@ -9,7 +9,7 @@ import tempfile
 import mozfile
 import mozinfo
 
-from marionette import BaseMarionetteTestRunner, MarionetteTestCase
+from marionette_harness import BaseMarionetteTestRunner, MarionetteTestCase
 
 
 class FirefoxUITestRunner(BaseMarionetteTestRunner):

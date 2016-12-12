@@ -4,7 +4,7 @@
 
 from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
-from marionette import MarionetteTestCase
+from marionette_harness import MarionetteTestCase
 
 
 class TestUpdateWizard(PuppeteerMixin, MarionetteTestCase):
