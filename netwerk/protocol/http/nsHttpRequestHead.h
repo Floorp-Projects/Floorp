@@ -120,28 +120,6 @@ private:
 
     // During VisitHeader we sould not allow cal to SetHeader.
     bool mInVisitHeaders;
-
-#if defined(XP_WIN) && (defined(_M_IX86) || defined(_M_X64))
-    class DbgReentrantMonitorAutoEnter : ReentrantMonitorAutoEnter
-    {
-    public:
-        explicit DbgReentrantMonitorAutoEnter(nsHttpRequestHead& aInst)
-            : ReentrantMonitorAutoEnter(aInst.mReentrantMonitor),
-              mInst(aInst)
-        {
-            Protect(false);
-        }
-        ~DbgReentrantMonitorAutoEnter(void)
-        {
-            Protect(true);
-        }
-
-    private:
-        void Protect(bool aOn);
-
-        nsHttpRequestHead& mInst;
-    };
-#endif
 };
 
 } // namespace net
