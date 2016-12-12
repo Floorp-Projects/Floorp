@@ -639,4 +639,7 @@
   <string name="activity_stream_highlight_label_visited">&activity_stream_highlight_label_visited;</string>
   <string name="activity_stream_dismiss">&activity_stream_dismiss;</string>
   <string name="activity_stream_delete_history">&activity_stream_delete_history;</string>
+
+  <string name="activity_stream_welcome_title">&activity_stream_welcome_title;</string>
+  <string name="activity_stream_welcome_content">&activity_stream_welcome_content;</string>
 </resources>
