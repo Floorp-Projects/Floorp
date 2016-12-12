@@ -419,51 +419,6 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     };
 };
 
-class ICGetElem_Dense : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-    GCPtrShape shape_;
-
-    ICGetElem_Dense(JitCode* stubCode, ICStub* firstMonitorStub, Shape* shape);
-
-  public:
-    static ICGetElem_Dense* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                                  ICGetElem_Dense& other);
-
-    static size_t offsetOfShape() {
-        return offsetof(ICGetElem_Dense, shape_);
-    }
-
-    GCPtrShape& shape() {
-        return shape_;
-    }
-
-    class Compiler : public ICStubCompiler {
-      ICStub* firstMonitorStub_;
-      RootedShape shape_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1);
-        }
-
-      public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, Shape* shape)
-          : ICStubCompiler(cx, ICStub::GetElem_Dense, Engine::Baseline),
-            firstMonitorStub_(firstMonitorStub),
-            shape_(cx, shape)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetElem_Dense>(space, getStubCode(), firstMonitorStub_, shape_);
-        }
-    };
-};
-
 class ICGetElem_UnboxedArray : public ICMonitoredStub
 {
     friend class ICStubSpace;
