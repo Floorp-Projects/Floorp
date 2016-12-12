@@ -12,10 +12,9 @@ from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.api.prefs import Preferences
 from firefox_puppeteer.api.software_update import SoftwareUpdate
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
-
-from marionette import MarionetteTestCase
 from marionette_driver import Wait
 from marionette_driver.errors import NoSuchWindowException
+from marionette_harness import MarionetteTestCase
 
 
 class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):

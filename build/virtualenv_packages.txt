@@ -1,8 +1,8 @@
 altgraph.pth:python/altgraph
 marionette_driver.pth:testing/marionette/client
-browsermobproxy.pth:testing/marionette/harness/marionette/runner/mixins/browsermob-proxy-py
+marionette_harness.pth:testing/marionette/harness
+browsermobproxy.pth:testing/marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py
 wptserve.pth:testing/web-platform/tests/tools/wptserve
-marionette.pth:testing/marionette/harness
 blessings.pth:python/blessings
 configobj.pth:python/configobj
 jsmin.pth:python/jsmin

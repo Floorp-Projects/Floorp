@@ -115,7 +115,7 @@ class MarionetteHarnessTests(VirtualenvMixin, BuildbotMixin, BaseScript):
         test_relpath = self.config.get(
             'test_path',
             os.path.join('testing', 'marionette',
-                         'harness', 'marionette', 'tests',
+                         'harness', 'marionette_harness', 'tests',
                          'harness_unit')
         )
         test_path = os.path.join(dirs['abs_src_dir'], test_relpath)

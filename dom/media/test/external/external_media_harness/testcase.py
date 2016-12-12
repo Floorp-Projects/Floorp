@@ -4,12 +4,15 @@
 
 import re
 import os
-import time
 
-from marionette import BrowserMobProxyTestCaseMixin, MarionetteTestCase, Marionette
 from marionette_driver import Wait
 from marionette_driver.errors import TimeoutException
-from marionette.marionette_test import SkipTest
+from marionette_harness import (
+    BrowserMobProxyTestCaseMixin,
+    MarionetteTestCase,
+    Marionette,
+    SkipTest,
+)
 
 from firefox_puppeteer import PuppeteerMixin
 from external_media_tests.utils import (timestamp_now, verbose_until)

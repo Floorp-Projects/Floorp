@@ -1,5 +1,7 @@
-import os, shutil
-from marionette import MarionetteTestCase
+import os
+import shutil
+
+from marionette_harness import MarionetteTestCase
 
 
 class TestFirefoxRefresh(MarionetteTestCase):
