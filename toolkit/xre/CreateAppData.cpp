@@ -7,18 +7,55 @@
 #include "nsINIParser.h"
 #include "nsIFile.h"
 #include "nsAutoPtr.h"
-#include "mozilla/XREAppData.h"
+#include "mozilla/AppData.h"
 
 using namespace mozilla;
 
-static void
-ReadString(nsINIParser &parser, const char* section,
-           const char* key, XREAppData::CharPtr& result)
+nsresult
+XRE_CreateAppData(nsIFile* aINIFile, nsXREAppData **aAppData)
 {
+  NS_ENSURE_ARG(aINIFile && aAppData);
+
+  nsAutoPtr<ScopedAppData> data(new ScopedAppData());
+  if (!data)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = XRE_ParseAppData(aINIFile, data);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!data->directory) {
+    nsCOMPtr<nsIFile> appDir;
+    rv = aINIFile->GetParent(getter_AddRefs(appDir));
+    if (NS_FAILED(rv))
+      return rv;
+
+    appDir.forget(&data->directory);
+  }
+
+  *aAppData = data.forget();
+  return NS_OK;
+}
+
+struct ReadString {
+  const char *section;
+  const char *key;
+  const char **buffer;
+};
+
+static void
+ReadStrings(nsINIParser &parser, const ReadString *reads)
+{
+  nsresult rv;
   nsCString str;
-  nsresult rv = parser.GetString(section, key, str);
-  if (NS_SUCCEEDED(rv)) {
-    result = str.get();
+
+  while (reads->section) {
+    rv = parser.GetString(reads->section, reads->key, str);
+    if (NS_SUCCEEDED(rv)) {
+      SetAllocatedString(*reads->buffer, str);
+    }
+
+    ++reads;
   }
 }
 
@@ -29,25 +66,30 @@ struct ReadFlag {
 };
 
 static void
-ReadFlag(nsINIParser &parser, const char* section,
-         const char* key, uint32_t flag, uint32_t& result)
+ReadFlags(nsINIParser &parser, const ReadFlag *reads, uint32_t *buffer)
 {
+  nsresult rv;
   char buf[6]; // large enough to hold "false"
-  nsresult rv = parser.GetString(section, key, buf, sizeof(buf));
-  if (NS_SUCCEEDED(rv) || rv == NS_ERROR_LOSS_OF_SIGNIFICANT_DATA) {
-    if (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T') {
-      result |= flag;
+
+  while (reads->section) {
+    rv = parser.GetString(reads->section, reads->key, buf, sizeof(buf));
+    if (NS_SUCCEEDED(rv) || rv == NS_ERROR_LOSS_OF_SIGNIFICANT_DATA) {
+      if (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T') {
+        *buffer |= reads->flag;
+      }
+      if (buf[0] == '0' || buf[0] == 'f' || buf[0] == 'F') {
+        *buffer &= ~reads->flag;
+      }
     }
-    if (buf[0] == '0' || buf[0] == 'f' || buf[0] == 'F') {
-      result &= ~flag;
-    }
+
+    ++reads;
   }
 }
 
 nsresult
-XRE_ParseAppData(nsIFile* aINIFile, XREAppData& aAppData)
+XRE_ParseAppData(nsIFile* aINIFile, nsXREAppData *aAppData)
 {
-  NS_ENSURE_ARG(aINIFile);
+  NS_ENSURE_ARG(aINIFile && aAppData);
 
   nsresult rv;
 
@@ -56,22 +98,68 @@ XRE_ParseAppData(nsIFile* aINIFile, XREAppData& aAppData)
   if (NS_FAILED(rv))
     return rv;
 
-  ReadString(parser, "App", "Vendor", aAppData.vendor);
-  ReadString(parser, "App", "Name", aAppData.name),
-  ReadString(parser, "App", "RemotingName", aAppData.remotingName);
-  ReadString(parser, "App", "Version", aAppData.version);
-  ReadString(parser, "App", "BuildID", aAppData.buildID);
-  ReadString(parser, "App", "ID", aAppData.ID);
-  ReadString(parser, "App", "Copyright", aAppData.copyright);
-  ReadString(parser, "App", "Profile", aAppData.profile);
-  ReadString(parser, "Gecko", "MinVersion", aAppData.minVersion);
-  ReadString(parser, "Gecko", "MaxVersion", aAppData.maxVersion);
-  ReadString(parser, "Crash Reporter", "ServerURL", aAppData.crashReporterURL);
-  ReadString(parser, "App", "UAName", aAppData.UAName);
-  ReadFlag(parser, "XRE", "EnableProfileMigrator",
-           NS_XRE_ENABLE_PROFILE_MIGRATOR, aAppData.flags);
-  ReadFlag(parser, "Crash Reporter", "Enabled",
-           NS_XRE_ENABLE_CRASH_REPORTER, aAppData.flags);
+  nsCString str;
+
+  ReadString strings[] = {
+    { "App", "Vendor",        &aAppData->vendor },
+    { "App", "Name",          &aAppData->name },
+    { "App", "RemotingName",  &aAppData->remotingName },
+    { "App", "Version",       &aAppData->version },
+    { "App", "BuildID",       &aAppData->buildID },
+    { "App", "ID",            &aAppData->ID },
+    { "App", "Copyright",     &aAppData->copyright },
+    { "App", "Profile",       &aAppData->profile },
+    { nullptr }
+  };
+  ReadStrings(parser, strings);
+
+  ReadFlag flags[] = {
+    { "XRE", "EnableProfileMigrator", NS_XRE_ENABLE_PROFILE_MIGRATOR },
+    { nullptr }
+  };
+  ReadFlags(parser, flags, &aAppData->flags);
+
+  if (aAppData->size > offsetof(nsXREAppData, xreDirectory)) {
+    ReadString strings2[] = {
+      { "Gecko", "MinVersion", &aAppData->minVersion },
+      { "Gecko", "MaxVersion", &aAppData->maxVersion },
+      { nullptr }
+    };
+    ReadStrings(parser, strings2);
+  }
+
+  if (aAppData->size > offsetof(nsXREAppData, crashReporterURL)) {
+    ReadString strings3[] = {
+      { "Crash Reporter", "ServerURL", &aAppData->crashReporterURL },
+      { nullptr }
+    };
+    ReadStrings(parser, strings3);
+    ReadFlag flags2[] = {
+      { "Crash Reporter", "Enabled", NS_XRE_ENABLE_CRASH_REPORTER },
+      { nullptr }
+    };
+    ReadFlags(parser, flags2, &aAppData->flags);
+  }
+
+  if (aAppData->size > offsetof(nsXREAppData, UAName)) {
+    ReadString strings4[] = {
+      { "App", "UAName",    &aAppData->UAName },
+      { nullptr }
+    };
+    ReadStrings(parser, strings4);
+  }
 
   return NS_OK;
+}
+
+void
+XRE_FreeAppData(nsXREAppData *aAppData)
+{
+  if (!aAppData) {
+    NS_ERROR("Invalid arg");
+    return;
+  }
+
+  ScopedAppData* sad = static_cast<ScopedAppData*>(aAppData);
+  delete sad;
 }
