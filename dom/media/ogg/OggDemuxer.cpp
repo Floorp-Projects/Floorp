@@ -144,7 +144,6 @@ OggDemuxer::OggDemuxer(MediaResource* aResource)
   , mOnSeekableEvent(nullptr)
 {
   MOZ_COUNT_CTOR(OggDemuxer);
-  PodZero(&mTheoraInfo);
 }
 
 OggDemuxer::~OggDemuxer()
@@ -379,39 +378,9 @@ OggDemuxer::SetupTargetTheora(TheoraState* aTheoraState, OggHeaders& aHeaders)
     mTheoraState->Reset();
   }
 
-  nsIntRect picture = nsIntRect(aTheoraState->mInfo.pic_x,
-                                aTheoraState->mInfo.pic_y,
-                                aTheoraState->mInfo.pic_width,
-                                aTheoraState->mInfo.pic_height);
-
-  nsIntSize displaySize = nsIntSize(aTheoraState->mInfo.pic_width,
-                                    aTheoraState->mInfo.pic_height);
-
-  // Apply the aspect ratio to produce the intrinsic display size we report
-  // to the element.
-  ScaleDisplayByAspectRatio(displaySize, aTheoraState->mPixelAspectRatio);
-
-  nsIntSize frameSize(aTheoraState->mInfo.frame_width,
-                      aTheoraState->mInfo.frame_height);
-  if (IsValidVideoRegion(frameSize, picture, displaySize)) {
-    // Video track's frame sizes will not overflow. Activate the video track.
-    mInfo.mVideo.mMimeType = "video/theora";
-    mInfo.mVideo.mDisplay = displaySize;
-    mInfo.mVideo.mImage = frameSize;
-    mInfo.mVideo.SetImageRect(picture);
-
-    // Copy Theora info data for time computations on other threads.
-    memcpy(&mTheoraInfo, &aTheoraState->mInfo, sizeof(mTheoraInfo));
-
-    // Save header packets for the decoder
-    if (!XiphHeadersToExtradata(mInfo.mVideo.mCodecSpecificConfig,
-                                aHeaders.mHeaders, aHeaders.mHeaderLens)) {
-      return;
-    }
-
-    mTheoraState = aTheoraState;
-    mTheoraSerial = aTheoraState->mSerial;
-  }
+  mInfo.mVideo = *aTheoraState->GetInfo()->GetAsVideoInfo();
+  mTheoraState = aTheoraState;
+  mTheoraSerial = aTheoraState->mSerial;
 }
 
 void
@@ -502,21 +471,10 @@ OggDemuxer::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
         continue;
       }
 
+      mInfo.mVideo = *theoraState->GetInfo()->GetAsVideoInfo();
+
       if (msgInfo) {
         InitTrack(msgInfo, &mInfo.mVideo, mTheoraState == theoraState);
-      }
-
-      nsIntRect picture = nsIntRect(theoraState->mInfo.pic_x,
-                                    theoraState->mInfo.pic_y,
-                                    theoraState->mInfo.pic_width,
-                                    theoraState->mInfo.pic_height);
-      nsIntSize displaySize = nsIntSize(theoraState->mInfo.pic_width,
-                                        theoraState->mInfo.pic_height);
-      nsIntSize frameSize(theoraState->mInfo.frame_width,
-                          theoraState->mInfo.frame_height);
-      ScaleDisplayByAspectRatio(displaySize, theoraState->mPixelAspectRatio);
-      if (IsValidVideoRegion(frameSize, picture, displaySize)) {
-        mInfo.mVideo.mDisplay = displaySize;
       }
     } else if (codecState->GetType() == OggCodecState::TYPE_VORBIS) {
       VorbisState* vorbisState = static_cast<VorbisState*>(codecState);
@@ -1095,7 +1053,7 @@ OggDemuxer::GetBuffered(TrackInfo::TrackType aType)
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       } else if (aType == TrackInfo::kVideoTrack && mTheoraState &&
                  serial == mTheoraSerial) {
-        startTime = TheoraState::Time(&mTheoraInfo, granulepos);
+        startTime = mTheoraState->Time(granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       } else if (mCodecStore.Contains(serial)) {
         // Stream is not the theora or vorbis stream we're playing,
@@ -1833,11 +1791,12 @@ OggDemuxer::SeekInBufferedRange(TrackInfo::TrackType aType,
       // First post-seek frame isn't a keyframe, seek back to previous keyframe,
       // otherwise we'll get visual artifacts.
       NS_ASSERTION(packet->granulepos != -1, "Must have a granulepos");
-      int shift = mTheoraState->mInfo.keyframe_granule_shift;
+      int shift = mTheoraState->mKeyframe_granule_shift;
       int64_t keyframeGranulepos = (packet->granulepos >> shift) << shift;
       int64_t keyframeTime = mTheoraState->StartTime(keyframeGranulepos);
-      SEEK_LOG(LogLevel::Debug, ("Keyframe for %lld is at %lld, seeking back to it",
-                              frameTime, keyframeTime));
+      SEEK_LOG(LogLevel::Debug,
+               ("Keyframe for %lld is at %lld, seeking back to it", frameTime,
+                keyframeTime));
       aAdjustedTarget = std::min(aAdjustedTarget, keyframeTime);
     }
   }

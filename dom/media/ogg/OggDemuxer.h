@@ -308,8 +308,6 @@ private:
   uint32_t mTheoraSerial;
   uint32_t mFlacSerial;
 
-  th_info mTheoraInfo;
-
   Maybe<int64_t> mStartTime;
 
   // Booleans to indicate if we have audio and/or video data
