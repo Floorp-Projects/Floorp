@@ -406,7 +406,7 @@ pub extern fn wr_push_dl_builder(state:&mut WrState)
 }
 
 #[no_mangle]
-pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, transform: &Matrix4D<f32>)
+pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &Matrix4D<f32>)
 {
     assert!( unsafe { is_in_compositor_thread() });
     // 
