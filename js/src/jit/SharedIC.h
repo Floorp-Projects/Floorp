@@ -2259,6 +2259,18 @@ DoCallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
 void
 LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result);
 
+bool
+IsPrimitiveArrayTypedObject(JSObject* obj);
+
+Scalar::Type
+TypedThingElementType(JSObject* obj);
+
+bool
+TypedThingRequiresFloatingPoint(JSObject* obj);
+
+void
+LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj, Register result);
+
 class ICGetProp_Fallback : public ICMonitoredFallbackStub
 {
     friend class ICStubSpace;
