@@ -7,9 +7,9 @@ from firefox_puppeteer.ui.browser.notifications import (
     AddOnInstallFailedNotification,
     AddOnInstallConfirmationNotification,
 )
-from marionette import MarionetteTestCase
 from marionette_driver import By
 from marionette_driver.errors import TimeoutException
+from marionette_harness import MarionetteTestCase
 
 
 class TestNotifications(PuppeteerMixin, MarionetteTestCase):

@@ -29,14 +29,14 @@ Script B (ril_consts.js) not.
 The above merge way ensures the correct scope of 'strict mode.'
 """
 
-
-from marionette.marionette_test import MarionetteTestCase
 import bisect
 import inspect
 import os
 import os.path
 import re
 import unicodedata
+
+from marionette_harness import MarionetteTestCase
 
 
 class StringUtility:

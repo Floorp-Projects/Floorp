@@ -3,9 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from firefox_puppeteer import PuppeteerMixin
-from marionette import MarionetteTestCase
-from marionette.marionette_test import skip_if_e10s
 from marionette_driver import Wait
+from marionette_harness import MarionetteTestCase, skip_if_e10s
 
 
 class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):

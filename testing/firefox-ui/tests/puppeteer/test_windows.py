@@ -6,9 +6,9 @@ import firefox_puppeteer.errors as errors
 
 from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.ui.windows import BaseWindow
-from marionette import MarionetteTestCase
 from marionette_driver import By, Wait
 from marionette_driver.errors import NoSuchWindowException
+from marionette_harness import MarionetteTestCase
 
 
 class BaseWindowTestCase(PuppeteerMixin, MarionetteTestCase):

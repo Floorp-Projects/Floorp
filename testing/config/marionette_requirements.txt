@@ -1,7 +1,8 @@
 -r mozbase_requirements.txt
+
 ../tools/wptserve
 ../marionette/client
-../marionette/harness/marionette/runner/mixins/browsermob-proxy-py
+../marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py
 ../marionette/harness
 
 # Allows to use the Puppeteer page object model for Firefox

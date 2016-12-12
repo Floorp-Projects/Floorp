@@ -30,7 +30,7 @@ def run_marionette(context, **kwargs):
     test_root = os.path.join(context.package_root, 'marionette', 'tests')
     if not args.tests:
         args.tests = [os.path.join(test_root, 'testing', 'marionette', 'harness',
-                                   'marionette', 'tests', 'unit-tests.ini')]
+                                   'marionette_harness', 'tests', 'unit-tests.ini')]
 
     normalize = partial(context.normalize_test_path, test_root)
     args.tests = map(normalize, args.tests)

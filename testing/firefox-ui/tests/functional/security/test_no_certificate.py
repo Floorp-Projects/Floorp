@@ -5,8 +5,8 @@
 from urlparse import urlparse
 
 from firefox_puppeteer import PuppeteerMixin
-from marionette import MarionetteTestCase
 from marionette_driver import expected, Wait
+from marionette_harness import MarionetteTestCase
 
 
 class TestNoCertificate(PuppeteerMixin, MarionetteTestCase):
