@@ -281,11 +281,20 @@ mozilla::StaticAutoPtr<WalkTheStackCodeAddressService> gCodeAddressService;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum BloatEntryType
+{
+  RefcountedBloatEntry,
+  ManualBloatEntry,
+};
+
 class BloatEntry
 {
 public:
-  BloatEntry(const char* aClassName, uint32_t aClassSize)
+  BloatEntry(const char* aClassName,
+             uint32_t aClassSize,
+             BloatEntryType aEntryType)
     : mClassSize(aClassSize)
+    , mEntryType(aEntryType)
   {
     MOZ_ASSERT(strlen(aClassName) > 0, "BloatEntry name must be non-empty");
     mClassName = PL_strdup(aClassName);
@@ -305,6 +314,11 @@ public:
   const char* GetClassName()
   {
     return mClassName;
+  }
+
+  BloatEntryType GetEntryType() const
+  {
+    return mEntryType;
   }
 
   void Ctor()
@@ -388,6 +402,7 @@ protected:
   double mClassSize; // This is stored as a double because of the way we compute the avg class size for total bloat.
   int64_t mTotalLeaked; // Used only for TOTAL entry.
   nsTraceRefcntStats mStats;
+  BloatEntryType mEntryType;
 };
 
 static void
@@ -416,7 +431,9 @@ RecreateBloatView()
 }
 
 static BloatEntry*
-GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
+GetBloatEntry(const char* aTypeName,
+              uint32_t aInstanceSize,
+              BloatEntryType aEntryType)
 {
   if (!gBloatView) {
     RecreateBloatView();
@@ -426,7 +443,7 @@ GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
     entry = (BloatEntry*)PL_HashTableLookup(gBloatView, aTypeName);
     if (!entry && aInstanceSize > 0) {
 
-      entry = new BloatEntry(aTypeName, aInstanceSize);
+      entry = new BloatEntry(aTypeName, aInstanceSize, aEntryType);
       PLHashEntry* e = PL_HashTableAdd(gBloatView, aTypeName, entry);
       if (!e) {
         delete entry;
@@ -439,6 +456,8 @@ GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
                  "MOZ_COUNT_{C,D}TOR in the constructor or destructor, respectively. "
                  "As a workaround, the MOZ_COUNT_{C,D}TOR calls can be moved to a "
                  "non-templated base class.");
+      MOZ_ASSERT(entry->GetEntryType() == aEntryType,
+                 "Don't use MOZ_COUNT_CTOR and MOZ_COUNT_DTOR for refcounted classes.");
     }
   }
   return entry;
@@ -515,7 +534,8 @@ nsTraceRefcnt::DumpStatistics()
   AutoRestore<LoggingType> saveLogging(gLogging);
   gLogging = NoLogging;
 
-  BloatEntry total("TOTAL", 0);
+  BloatEntry total("TOTAL", 0, ManualBloatEntry);
+  // Second and third args are just dummies.
   PL_HashTableEnumerateEntries(gBloatView, BloatEntry::TotalEntries, &total);
   const char* msg;
   if (gLogLeaksOnly) {
@@ -989,8 +1009,8 @@ namespace mozilla {
 void
 LogTerm()
 {
-  NS_ASSERTION(gInitCount > 0,
-               "NS_LogTerm without matching NS_LogInit");
+  MOZ_ASSERT(gInitCount > 0,
+             "NS_LogTerm without matching NS_LogInit");
 
   if (--gInitCount == 0) {
 #ifdef DEBUG
@@ -1040,7 +1060,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     AutoTraceLogLock lock;
 
     if (aRefcnt == 1 && gBloatLog) {
-      BloatEntry* entry = GetBloatEntry(aClass, aClassSize);
+      BloatEntry* entry = GetBloatEntry(aClass, aClassSize, RefcountedBloatEntry);
       if (entry) {
         entry->Ctor();
       }
@@ -1093,7 +1113,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
     AutoTraceLogLock lock;
 
     if (aRefcnt == 0 && gBloatLog) {
-      BloatEntry* entry = GetBloatEntry(aClass, 0);
+      BloatEntry* entry = GetBloatEntry(aClass, 0, RefcountedBloatEntry);
       if (entry) {
         entry->Dtor();
       }
@@ -1152,7 +1172,7 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
   AutoTraceLogLock lock;
 
   if (gBloatLog) {
-    BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
+    BloatEntry* entry = GetBloatEntry(aType, aInstanceSize, ManualBloatEntry);
     if (entry) {
       entry->Ctor();
     }
@@ -1189,7 +1209,7 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
   AutoTraceLogLock lock;
 
   if (gBloatLog) {
-    BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
+    BloatEntry* entry = GetBloatEntry(aType, aInstanceSize, ManualBloatEntry);
     if (entry) {
       entry->Dtor();
     }
