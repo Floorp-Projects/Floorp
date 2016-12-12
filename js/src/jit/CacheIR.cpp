@@ -87,6 +87,11 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             return false;
         }
+        if (idVal_.isNumber()) {
+            ValOperandId indexId = getElemKeyValueId();
+            if (tryAttachTypedElement(obj, objId, indexId))
+                return true;
+        }
         if (idVal_.isInt32()) {
             ValOperandId indexId = getElemKeyValueId();
             if (tryAttachDenseElement(obj, objId, indexId))
@@ -927,6 +932,38 @@ GetPropIRGenerator::tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId 
     else
         writer.returnFromIC();
 
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
+                                          ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isNumber());
+
+    if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint &&
+        (TypedThingRequiresFloatingPoint(obj) || idVal_.isDouble()))
+    {
+        return false;
+    }
+
+    // Don't attach typed object stubs if the underlying storage could be
+    // detached, as the stub will always bail out.
+    if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
+        return false;
+
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+    if (layout != Layout_TypedArray)
+        writer.guardNoDetachedTypedObjects();
+
+    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadTypedElementResult(objId, int32IndexId, layout, TypedThingElementType(obj));
+    writer.returnFromIC();
     return true;
 }
 

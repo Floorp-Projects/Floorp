@@ -49,7 +49,6 @@ namespace jit {
     _(Call_IsSuspendedStarGenerator)             \
                                                  \
     _(GetElem_Fallback)                          \
-    _(GetElem_TypedArray)                        \
                                                  \
     _(SetElem_Fallback)                          \
     _(SetElem_DenseOrUnboxedArray)               \
