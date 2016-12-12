@@ -36,7 +36,6 @@ public:
 
   nsresult GetEncodedTrack(EncodedFrameContainer& aData) final override;
 
-  void ReplyGetSourceSurface(already_AddRefed<gfx::SourceSurface> aSurf);
 protected:
   nsresult Init(int32_t aWidth, int32_t aHeight,
                 int32_t aDisplayWidth, int32_t aDisplayHeight) final override;
@@ -60,8 +59,6 @@ private:
 
   // Prepare the input data to the mVPXImageWrapper for encoding.
   nsresult PrepareRawFrame(VideoChunk &aChunk);
-
-  already_AddRefed<gfx::SourceSurface> GetSourceSurface(already_AddRefed<layers::Image> aImg);
 
   // Output frame rate.
   uint32_t mEncodedFrameRate;
@@ -91,7 +88,6 @@ private:
   nsAutoPtr<vpx_codec_ctx_t> mVPXContext;
   // Image Descriptor.
   nsAutoPtr<vpx_image_t> mVPXImageWrapper;
-  RefPtr<gfx::SourceSurface> mSourceSurface;
 };
 
 } // namespace mozilla
