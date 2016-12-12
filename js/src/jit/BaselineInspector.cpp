@@ -1016,10 +1016,6 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
           case ICStub::GetProp_Generic:
             return MIRType::Value;
 
-          case ICStub::GetElem_TypedArray:
-            stubType = MIRType::Object;
-            break;
-
           case ICStub::CacheIR_Monitored:
             stubType = GetCacheIRExpectedInputType(stub->toCacheIR_Monitored());
             if (stubType == MIRType::Value)
