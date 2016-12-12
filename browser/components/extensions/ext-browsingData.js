@@ -31,6 +31,12 @@ XPCOMUtils.defineLazyGetter(this, "sanitizer", () => {
   return sanitizer;
 });
 
+function makeRange(options) {
+  return (options.since == null) ?
+    null :
+    [PlacesUtils.toPRTime(options.since), PlacesUtils.toPRTime(Date.now())];
+}
+
 function clearCache() {
   // Clearing the cache does not support timestamps.
   return sanitizer.items.cache.clear();
@@ -62,6 +68,10 @@ let clearCookies = Task.async(function* (options) {
   }
 });
 
+function clearHistory(options) {
+  return sanitizer.items.history.clear(makeRange(options));
+}
+
 function doRemoval(options, dataToRemove, extension) {
   if (options.originTypes &&
       (options.originTypes.protectedWeb || options.originTypes.extension)) {
@@ -79,6 +89,9 @@ function doRemoval(options, dataToRemove, extension) {
           break;
         case "cookies":
           removalPromises.push(clearCookies(options));
+          break;
+        case "history":
+          removalPromises.push(clearHistory(options));
           break;
         default:
           invalidDataTypes.push(dataType);
@@ -130,6 +143,9 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
       },
       removeCookies(options) {
         return doRemoval(options, {cookies: true});
+      },
+      removeHistory(options) {
+        return doRemoval(options, {history: true});
       },
     },
   };
