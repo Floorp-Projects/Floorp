@@ -21,10 +21,8 @@
 
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
-using namespace mozilla;
-
 extern "C" NS_EXPORT void
-GeckoStart(JNIEnv* env, char** argv, int argc, const StaticXREAppData& aAppData)
+GeckoStart(JNIEnv* env, char** argv, int argc, const nsXREAppData* appData)
 {
     mozilla::jni::SetGeckoThreadEnv(env);
 
@@ -41,9 +39,6 @@ GeckoStart(JNIEnv* env, char** argv, int argc, const StaticXREAppData& aAppData)
         LOG("Failed to get arguments for GeckoStart\n");
         return;
     }
-
-    XREAppData appData;
-    appData = aAppData;
 
     int result = XRE_main(argc, argv, appData, 0);
 

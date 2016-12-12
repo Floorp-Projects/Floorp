@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 xpcom_glue_src_lcppsrcs = [
+    'AppData.cpp',
     'FileUtils.cpp',
     'nsArrayEnumerator.cpp',
     'nsArrayUtils.cpp',
@@ -29,7 +30,6 @@ xpcom_glue_src_lcppsrcs = [
     'nsVersionComparator.cpp',
     'nsWeakReference.cpp',
     'PLDHashTable.cpp',
-    'XREAppData.cpp',
 ]
 
 xpcom_glue_src_cppsrcs = [
