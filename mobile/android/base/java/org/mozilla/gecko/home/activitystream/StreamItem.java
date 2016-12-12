@@ -15,6 +15,7 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -44,29 +45,37 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         super(itemView);
     }
 
-    public static class HighlightsHeaderPanel
+    public static class HighlightsTitle extends StreamItem {
+        public static final int LAYOUT_ID = R.layout.activity_stream_main_highlightstitle;
+
+        public HighlightsTitle(final View itemView) {
+            super(itemView);
+        }
+    }
+
+    public static class WelcomePanel
             extends StreamItem
             implements View.OnClickListener {
-        public static final int LAYOUT_ID = R.layout.activity_stream_main_highlightstitle;
+        public static final int LAYOUT_ID = R.layout.activity_stream_main_welcomepanel;
 
         public static final String PREF_WELCOME_DISMISSED = "activitystream.welcome_dismissed";
 
         private final RecyclerView.Adapter<StreamItem> adapter;
         private final Context context;
 
-        public HighlightsHeaderPanel(final View itemView, final RecyclerView.Adapter<StreamItem> adapter) {
+        public WelcomePanel(final View itemView, final RecyclerView.Adapter<StreamItem> adapter) {
             super(itemView);
 
             this.adapter = adapter;
             this.context = itemView.getContext();
 
-            final View wrapper = itemView.findViewById(R.id.welcome_panel);
-
             final SharedPreferences sharedPrefs = GeckoSharedPrefs.forApp(itemView.getContext());
 
-            if (sharedPrefs.getBoolean(PREF_WELCOME_DISMISSED, false)) {
-                wrapper.setVisibility(View.GONE);
-            } else {
+            if (!sharedPrefs.getBoolean(PREF_WELCOME_DISMISSED, false)) {
+                final ViewStub welcomePanelStub = (ViewStub) itemView.findViewById(R.id.welcomepanel_stub);
+
+                welcomePanelStub.inflate();
+
                 final Button dismissButton = (Button) itemView.findViewById(R.id.dismiss_welcomepanel);
 
                 dismissButton.setOnClickListener(this);
@@ -85,7 +94,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             final SharedPreferences sharedPrefs = GeckoSharedPrefs.forApp(context);
 
             sharedPrefs.edit()
-                    .putBoolean(StreamItem.HighlightsHeaderPanel.PREF_WELCOME_DISMISSED, true)
+                    .putBoolean(WelcomePanel.PREF_WELCOME_DISMISSED, true)
                     .apply();
 
             adapter.notifyItemChanged(getAdapterPosition());
