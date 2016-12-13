@@ -885,9 +885,12 @@ private:
     }
 
     SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
-    nsresult rv = mOwner->Play();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
+    IgnoredErrorResult rv;
+    RefPtr<Promise> toBeIgnored = mOwner->Play(rv);
+    MOZ_ASSERT_IF(toBeIgnored && toBeIgnored->State() == Promise::PromiseState::Rejected,
+                  rv.Failed());
+    if (rv.Failed()) {
+      NS_WARNING("Not able to resume from AudioChannel.");
     }
   }
 
@@ -3865,23 +3868,6 @@ HTMLMediaElement::MaybeDoLoad()
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     DoLoad();
   }
-}
-
-NS_IMETHODIMP HTMLMediaElement::Play()
-{
-  if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
-    MaybeDoLoad();
-    return NS_OK;
-  }
-
-  ErrorResult rv;
-  RefPtr<Promise> toBeIgnored = PlayInternal(rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  UpdateCustomPolicyAfterPlayed();
-  return NS_OK;
 }
 
 HTMLMediaElement::WakeLockBoolWrapper&
