@@ -131,8 +131,10 @@ gfxHarfBuzzShaper::GetNominalGlyph(hb_codepoint_t unicode) const
                                                        unicode);
             break;
         case 12:
-            gid = gfxFontUtils::MapCharToGlyphFormat12(data + mSubtableOffset,
-                                                       unicode);
+        case 13:
+            gid =
+                gfxFontUtils::MapCharToGlyphFormat12or13(data + mSubtableOffset,
+                                                         unicode);
             break;
         default:
             NS_WARNING("unsupported cmap format, glyphs will be missing");
@@ -190,8 +192,10 @@ gfxHarfBuzzShaper::GetVariationGlyph(hb_codepoint_t unicode,
                                                         compat);
             break;
         case 12:
-            return gfxFontUtils::MapCharToGlyphFormat12(data + mSubtableOffset,
-                                                        compat);
+        case 13:
+            return
+                gfxFontUtils::MapCharToGlyphFormat12or13(data + mSubtableOffset,
+                                                         compat);
             break;
         }
     }
