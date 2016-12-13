@@ -51,13 +51,9 @@ elif CONFIG['OS_ARCH'] == 'SunOS':
 
 DIRS += [
     'client',
+    'jsoncpp/src/lib_json',
+    'minidump-analyzer',
 ]
-
-if CONFIG['NIGHTLY_BUILD']:
-    DIRS += [
-        'jsoncpp/src/lib_json',
-        'minidump-analyzer',
-    ]
 
 if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
     DIRS += ['injector']
