@@ -38,6 +38,7 @@ typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 typedef uint32_t SuspendTypes;
 typedef uint32_t AudibleChangedReasons;
+typedef uint8_t AudibleState;
 
 namespace mozilla {
 class DecoderDoctorDiagnostics;
