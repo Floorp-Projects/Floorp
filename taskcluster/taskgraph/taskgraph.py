@@ -46,11 +46,6 @@ class TaskGraph(object):
             tasks[key] = task_json
         return tasks
 
-    def for_each_task(self, f, *args, **kwargs):
-        for task_label in self.graph.visit_postorder():
-            task = self.tasks[task_label]
-            f(task, self, *args, **kwargs)
-
     def __getitem__(self, label):
         "Get a task by label"
         return self.tasks[label]
