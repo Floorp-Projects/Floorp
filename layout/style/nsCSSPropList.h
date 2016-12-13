@@ -3878,7 +3878,7 @@ CSS_PROP_TEXT(
     VARIANT_INHERIT | VARIANT_LNCALC,
     nullptr,
     offsetof(nsStyleText, mTabSize),
-    eStyleAnimType_Coord)
+    eStyleAnimType_Discrete)
 CSS_PROP_TABLE(
     table-layout,
     table_layout,
