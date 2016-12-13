@@ -2068,6 +2068,14 @@ void HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
 }
 
+void HTMLMediaElement::DealWithFailedElement(nsIContent* aSourceElement)
+{
+  DispatchAsyncSourceError(aSourceElement);
+  nsCOMPtr<nsIRunnable> event =
+    NewRunnableMethod(this, &HTMLMediaElement::QueueLoadFromSourceTask);
+  NS_DispatchToMainThread(event);
+}
+
 void
 HTMLMediaElement::NotifyOutputTrackStopped(DOMMediaStream* aOwningStream,
                                            TrackID aDestinationTrackID)
@@ -2125,8 +2133,8 @@ void HTMLMediaElement::LoadFromSourceChildren()
     nsAutoString src;
     if (!child->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
       ReportLoadError("MediaLoadSourceMissingSrc");
-      DispatchAsyncSourceError(child);
-      continue;
+      DealWithFailedElement(child);
+      return;
     }
 
     // If we have a type attribute, it must be a supported type.
@@ -2137,20 +2145,20 @@ void HTMLMediaElement::LoadFromSourceChildren()
       diagnostics.StoreFormatDiagnostics(
         OwnerDoc(), type, canPlay != CANPLAY_NO, __func__);
       if (canPlay == CANPLAY_NO) {
-        DispatchAsyncSourceError(child);
         const char16_t* params[] = { type.get(), src.get() };
         ReportLoadError("MediaLoadUnsupportedTypeAttribute", params, ArrayLength(params));
-        continue;
+        DealWithFailedElement(child);
+        return;
       }
     }
     nsAutoString media;
     HTMLSourceElement *childSrc = HTMLSourceElement::FromContent(child);
     MOZ_ASSERT(childSrc, "Expect child to be HTMLSourceElement");
     if (childSrc && !childSrc->MatchesCurrentMedia()) {
-      DispatchAsyncSourceError(child);
       const char16_t* params[] = { media.get(), src.get() };
       ReportLoadError("MediaLoadSourceMediaNotMatched", params, ArrayLength(params));
-      continue;
+      DealWithFailedElement(child);
+      return;
     }
     LOG(LogLevel::Debug, ("%p Trying load from <source>=%s type=%s media=%s", this,
       NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get(),
@@ -2159,10 +2167,10 @@ void HTMLMediaElement::LoadFromSourceChildren()
     nsCOMPtr<nsIURI> uri;
     NewURIFromString(src, getter_AddRefs(uri));
     if (!uri) {
-      DispatchAsyncSourceError(child);
       const char16_t* params[] = { src.get() };
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
-      continue;
+      DealWithFailedElement(child);
+      return;
     }
 
     RemoveMediaElementFromURITable();
