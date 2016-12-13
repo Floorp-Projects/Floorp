@@ -1,0 +1,315 @@
+/* Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/**
+ * This file defines the <code>PPB_ContentDecryptor_Private</code>
+ * interface. Note: This is a special interface, only to be used for Content
+ * Decryption Modules, not normal plugins.
+ */
+
+[generate_thunk]
+
+label Chrome {
+  M44 = 0.14
+};
+
+/**
+ * <code>PPB_ContentDecryptor_Private</code> structure contains the function
+ * pointers the browser must implement to support plugins implementing the
+ * <code>PPP_ContentDecryptor_Private</code> interface. This interface provides
+ * browser side support for the Content Decryption Module (CDM) for Encrypted
+ * Media Extensions: http://www.w3.org/TR/encrypted-media/
+ */
+interface PPB_ContentDecryptor_Private {
+  /**
+   * A promise has been resolved by the CDM.
+   *
+   * @param[in] promise_id Identifies the promise that the CDM resolved.
+   */
+  void PromiseResolved(
+      [in] PP_Instance instance,
+      [in] uint32_t promise_id);
+
+  /**
+   * A promise that resulted in a new session has been resolved by the CDM.
+   *
+   * @param[in] promise_id Identifies the promise that the CDM resolved.
+   *
+   * @param[in] session_id A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the session's ID attribute.
+   */
+  void PromiseResolvedWithSession(
+      [in] PP_Instance instance,
+      [in] uint32_t promise_id,
+      [in] PP_Var session_id);
+
+
+  /**
+   * A promise has been rejected by the CDM due to an error.
+   *
+   * @param[in] promise_id Identifies the promise that the CDM rejected.
+   *
+   * @param[in] exception_code A <code>PP_CdmExceptionCode</code> containing
+   * the exception code.
+   *
+   * @param[in] system_code A system error code.
+   *
+   * @param[in] error_description A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the error description.
+   */
+  void PromiseRejected(
+      [in] PP_Instance instance,
+      [in] uint32_t promise_id,
+      [in] PP_CdmExceptionCode exception_code,
+      [in] uint32_t system_code,
+      [in] PP_Var error_description);
+
+  /**
+   * A message or request has been generated for key_system in the CDM, and
+   * must be sent to the web application.
+   *
+   * For example, when the browser invokes <code>CreateSession()</code>
+   * on the <code>PPP_ContentDecryptor_Private</code> interface, the plugin
+   * must send a message containing the license request.
+   *
+   * Note that <code>SessionMessage()</code> can be used for purposes other than
+   * responses to <code>CreateSession()</code> calls. See also the text
+   * in the comment for <code>SessionReady()</code>, which describes a sequence
+   * of <code>UpdateSession()</code> and <code>SessionMessage()</code> calls
+   * required to prepare for decryption.
+   *
+   * @param[in] session_id A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the ID of a session for
+   * which this message is intended.
+   *
+   * @param[in] message_type A <code>PP_CdmMessageType</code> containing the
+   * message type.
+   *
+   * @param[in] message A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_ARRAY_BUFFER</code> that contains the message.
+   *
+   * @param[in] legacy_destination_url A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the destination URL for the
+   * message.
+   */
+  void SessionMessage(
+      [in] PP_Instance instance,
+      [in] PP_Var session_id,
+      [in] PP_CdmMessageType message_type,
+      [in] PP_Var message,
+      [in] PP_Var legacy_destination_url);
+
+  /**
+   * The keys for a session have changed.
+   *
+   * @param[in] session_id A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the ID of the session that has
+   * a change in keys.
+   *
+   * @param[in] has_additional_usable_key A <code>PP_Bool</code> indicating if
+   * a new usable key has been added.
+   *
+   * @param[in] key_count The number of arguments contained in
+   * <code>key_information</code>
+   *
+   * @param[in] key_information An array of type <code>PP_KeyInformation</code>
+   * that are the session's key IDs and their status.
+   */
+  void SessionKeysChange(
+      [in] PP_Instance instance,
+      [in] PP_Var session_id,
+      [in] PP_Bool has_additional_usable_key,
+      [in] uint32_t key_count,
+      [in, size_as=key_count] PP_KeyInformation[] key_information);
+
+  /**
+   * The expiration time for a session has changed.
+   *
+   * @param[in] session_id A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the ID of the session that has
+   * a new expiration time.
+   *
+   * @param[in] new_expiry_time A <code>PP_Time</code> indicating the new
+   * expiry time of the session. The value is defined as the number of seconds
+   * since the Epoch (00:00:00 UTC, January 1, 1970).
+   */
+  void SessionExpirationChange(
+      [in] PP_Instance instance,
+      [in] PP_Var session_id,
+      [in] PP_Time new_expiry_time);
+
+  /**
+   * The session has been closed as the result of a call to the
+   * <code>ReleaseSession()</code> method on the
+   * <code>PPP_ContentDecryptor_Private</code> interface, or due to other
+   * factors as determined by the CDM.
+   *
+   * @param[in] session_id A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the session's ID attribute of
+   * the session that is now closed.
+   */
+  void SessionClosed(
+      [in] PP_Instance instance,
+      [in] PP_Var session_id);
+
+  /**
+   * An error occurred in a <code>PPP_ContentDecryptor_Private</code> method,
+   * or within the plugin implementing the interface.
+   *
+   * @param[in] session_id A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the session's ID attribute of
+   * the session that caused the error.
+   *
+   * @param[in] exception_code A <code>PP_CdmExceptionCode</code> containing
+   * the exception code.
+   *
+   * @param[in] system_code A system error code.
+   *
+   * @param[in] error_description A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the error description.
+   */
+  void LegacySessionError(
+      [in] PP_Instance instance,
+      [in] PP_Var session_id,
+      [in] PP_CdmExceptionCode exception_code,
+      [in] uint32_t system_code,
+      [in] PP_Var error_description);
+
+  /**
+   * Called after the <code>Decrypt()</code> method on the
+   * <code>PPP_ContentDecryptor_Private</code> interface completes to
+   * deliver decrypted_block to the browser for decoding and rendering.
+   *
+   * The plugin must not hold a reference to the encrypted buffer resource
+   * provided to <code>Decrypt()</code> when it calls this method. The browser
+   * will reuse the buffer in a subsequent <code>Decrypt()</code> call.
+   *
+   * @param[in] decrypted_block A <code>PP_Resource</code> corresponding to a
+   * <code>PPB_Buffer_Dev</code> resource that contains a decrypted data
+   * block.
+   *
+   * @param[in] decrypted_block_info A <code>PP_DecryptedBlockInfo</code> that
+   * contains the result code and tracking info associated with the
+   * <code>decrypted_block</code>.
+   */
+  void DeliverBlock(
+      [in] PP_Instance instance,
+      [in] PP_Resource decrypted_block,
+      [in] PP_DecryptedBlockInfo decrypted_block_info);
+
+  /**
+   * Called after the <code>InitializeAudioDecoder()</code> or
+   * <code>InitializeVideoDecoder()</code> method on the
+   * <code>PPP_ContentDecryptor_Private</code> interface completes to report
+   * decoder initialization status to the browser.
+   *
+   * @param[in] success A <code>PP_Bool</code> that is set to
+   * <code>PP_TRUE</code> when the decoder initialization request associated
+   * with <code>request_id</code> was successful.
+   *
+   * @param[in] decoder_type A <code>PP_DecryptorStreamType</code> identifying
+   * the decoder type for which this initialization status response was sent.
+   *
+   * @param[in] request_id The <code>request_id</code> value passed to
+   * <code>InitializeAudioDecoder</code> or <code>InitializeVideoDecoder</code>
+   * in <code>PP_AudioDecoderConfig</code> or
+   * <code>PP_VideoDecoderConfig</code>.
+   */
+  void DecoderInitializeDone(
+      [in] PP_Instance instance,
+      [in] PP_DecryptorStreamType decoder_type,
+      [in] uint32_t request_id,
+      [in] PP_Bool success);
+
+  /**
+   * Called after the <code>DeinitializeDecoder()</code> method on the
+   * <code>PPP_ContentDecryptor_Private</code> interface completes to report
+   * decoder de-initialization completion to the browser.
+   *
+   * @param[in] decoder_type The <code>PP_DecryptorStreamType</code> passed to
+   * <code>DeinitializeDecoder()</code>.
+   *
+   * @param[in] request_id The <code>request_id</code> value passed to
+   * <code>DeinitializeDecoder()</code>.
+   */
+  void DecoderDeinitializeDone(
+      [in] PP_Instance instance,
+      [in] PP_DecryptorStreamType decoder_type,
+      [in] uint32_t request_id);
+
+  /**
+   * Called after the <code>ResetDecoder()</code> method on the
+   * <code>PPP_ContentDecryptor_Private</code> interface completes to report
+   * decoder reset completion to the browser.
+   *
+   * @param[in] decoder_type The <code>PP_DecryptorStreamType</code> passed to
+   * <code>ResetDecoder()</code>.
+   *
+   * @param[in] request_id The <code>request_id</code> value passed to
+   * <code>ResetDecoder()</code>.
+   */
+  void DecoderResetDone(
+      [in] PP_Instance instance,
+      [in] PP_DecryptorStreamType decoder_type,
+      [in] uint32_t request_id);
+
+  /**
+   * Called after the <code>DecryptAndDecode()</code> method on the
+   * <code>PPP_ContentDecryptor_Private</code> interface completes to deliver
+   * a decrypted and decoded video frame to the browser for rendering.
+   *
+   * The plugin must not hold a reference to the encrypted buffer resource
+   * provided to <code>DecryptAndDecode()</code> when it calls this method. The
+   * browser will reuse the buffer in a subsequent
+   * <code>DecryptAndDecode()</code> call.
+   *
+   * @param[in] decrypted_frame A <code>PP_Resource</code> corresponding to a
+   * <code>PPB_Buffer_Dev</code> resource that contains a video frame.
+   *
+   * @param[in] decrypted_frame_info A <code>PP_DecryptedFrameInfo</code> that
+   * contains the result code, tracking info, and buffer format associated with
+   * <code>decrypted_frame</code>.
+   */
+  void DeliverFrame(
+      [in] PP_Instance instance,
+      [in] PP_Resource decrypted_frame,
+      [in] PP_DecryptedFrameInfo decrypted_frame_info);
+
+  /**
+   * Called after the <code>DecryptAndDecode()</code> method on the
+   * <code>PPP_ContentDecryptor_Private</code> interface completes to deliver
+   * a buffer of decrypted and decoded audio samples to the browser for
+   * rendering.
+   *
+   * The plugin must not hold a reference to the encrypted buffer resource
+   * provided to <code>DecryptAndDecode()</code> when it calls this method. The
+   * browser will reuse the buffer in a subsequent
+   * <code>DecryptAndDecode()</code> call.
+   *
+   * <code>audio_frames</code> can contain multiple audio output buffers. Each
+   * buffer is serialized in this format:
+   *
+   * |<------------------- serialized audio buffer ------------------->|
+   * | int64_t timestamp | int64_t length | length bytes of audio data |
+   *
+   * For example, with three audio output buffers, |audio_frames| will look
+   * like this:
+   *
+   * |<---------------- audio_frames ------------------>|
+   * | audio buffer 0 | audio buffer 1 | audio buffer 2 |
+   *
+   * @param[in] audio_frames A <code>PP_Resource</code> corresponding to a
+   * <code>PPB_Buffer_Dev</code> resource that contains a decrypted buffer
+   * of decoded audio samples.
+   *
+   * @param[in] decrypted_sample_info A <code>PP_DecryptedSampleInfo</code> that
+   * contains the tracking info and result code associated with the decrypted
+   * samples.
+   */
+  void DeliverSamples(
+      [in] PP_Instance instance,
+      [in] PP_Resource audio_frames,
+      [in] PP_DecryptedSampleInfo decrypted_sample_info);
+};
