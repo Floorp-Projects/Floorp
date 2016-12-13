@@ -678,6 +678,28 @@ private:
       return thenValue.forget();
     }
 
+    // Allow RefPtr<MozPromise> p = somePromise->Then();
+    //       p->Then(thread1, ...);
+    //       p->Then(thread2, ...);
+    operator RefPtr<MozPromise>()
+    {
+      RefPtr<ThenValueBase> thenValue = mThenValue.forget();
+      // mCompletionPromise must be created before ThenInternal() to avoid race.
+      RefPtr<MozPromise> p = new MozPromise::Private(
+        "<completion promise>", true /* aIsCompletionPromise */);
+      thenValue->mCompletionPromise = p;
+      // Note ThenInternal() might nullify mCompletionPromise before return.
+      // So we need to return p instead of mCompletionPromise.
+      mReceiver->ThenInternal(mResponseThread, thenValue, mCallSite);
+      return p;
+    }
+
+    // Allow calling ->Then() again for more promise chaining.
+    RefPtr<MozPromise> operator->()
+    {
+      return *this;
+    }
+
   private:
     AbstractThread* mResponseThread;
     const char* mCallSite;
