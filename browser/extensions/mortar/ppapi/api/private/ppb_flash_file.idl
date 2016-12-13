@@ -1,0 +1,126 @@
+/* Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/**
+ * This file contains the <code>PPB_Flash_File_ModuleLocal</code> and <code>PPB_Flash_File_FileRef</code> interfaces.
+ */
+
+label Chrome {
+  M24 = 2.0,
+  M25 = 3.0
+};
+
+struct PP_DirEntry_Dev {
+  str_t name;
+  PP_Bool is_dir;
+};
+
+/* Directory. */
+struct PP_DirContents_Dev {
+  int32_t count;
+  [size_is(count)] PP_DirEntry_Dev[] entries;
+};
+
+/* PPB_Flash_File_ModuleLocal */
+[version=3.0]
+interface PPB_Flash_File_ModuleLocal {
+  /* Deprecated. Returns true. */
+  PP_Bool CreateThreadAdapterForInstance(
+      [in] PP_Instance instance);
+  /* Deprecated. Does nothing. */
+  void ClearThreadAdapterForInstance(
+      [in] PP_Instance instance);
+
+  /* Opens a module-local file, returning a file descriptor (posix) or a HANDLE
+   * (win32) into file. Module-local file paths (here and below) are
+   * '/'-separated UTF-8 strings, relative to a module-specific root. The return
+   * value is the ppapi error, PP_OK if success, one of the PP_ERROR_* in case
+   * of failure
+   */
+  int32_t OpenFile(
+      [in] PP_Instance instance,
+      [in] str_t path,
+      [in] int32_t mode,
+      [out] PP_FileHandle file);
+
+  /* Renames a module-local file. The return value is the ppapi error, PP_OK if
+   * success, one of the PP_ERROR_* in case of failure.
+   */
+  int32_t RenameFile(
+      [in] PP_Instance instance,
+      [in] str_t path_from,
+      [in] str_t path_to);
+
+  /* Deletes a module-local file or directory. If recursive is set and the path
+   * points to a directory, deletes all the contents of the directory. The
+   * return value is the ppapi error, PP_OK if success, one of the PP_ERROR_* in
+   * case of failure.
+   */
+  int32_t DeleteFileOrDir(
+      [in] PP_Instance instance,
+      [in] str_t path,
+      [in] PP_Bool recursive);
+
+  /* Creates a module-local directory. The return value is the ppapi error,
+   * PP_OK if success, one of the PP_ERROR_* in case of failure.
+   */
+  int32_t CreateDir(
+      [in] PP_Instance instance,
+      [in] str_t path);
+
+  /* Queries information about a module-local file. The return value is the
+   * ppapi error, PP_OK if success, one of the PP_ERROR_* in case of failure.
+   */
+  int32_t QueryFile(
+      [in] PP_Instance instance,
+      [in] str_t path,
+      [out] PP_FileInfo info);
+
+  /* Gets the list of files contained in a module-local directory. The return
+   * value is the ppapi error, PP_OK if success, one of the PP_ERROR_* in case
+   * of failure. If non-NULL, the returned contents should be freed with
+   * FreeDirContents.
+   */
+  int32_t GetDirContents(
+      [in] PP_Instance instance,
+      [in] str_t path,
+      [out] PP_DirContents_Dev contents);
+
+  /* Frees the data allocated by GetDirContents. */
+  void FreeDirContents(
+      [in] PP_Instance instance,
+      [in] PP_DirContents_Dev contents);
+
+  /* Creates a temporary file. The file will be automatically deleted when all
+   * handles to it are closed.
+   * Returns PP_OK if successful, one of the PP_ERROR_* values in case of
+   * failure.
+   * If successful, |file| is set to a file descriptor (posix) or a HANDLE
+   * (win32) to the file. If failed, |file| is not touched.
+   */
+  int32_t CreateTemporaryFile(
+      [in] PP_Instance instance,
+      [out] PP_FileHandle file);
+};
+
+/**
+ * This interface provides (for Flash) synchronous access to files whose paths
+ * are given by a Pepper FileRef. Such FileRefs are typically obtained via the
+ * Pepper file chooser.
+ */
+[version=2.0]
+interface PPB_Flash_File_FileRef {
+  /* The functions below correspond exactly to their module-local counterparts
+   * (except in taking FileRefs instead of paths, of course). We omit the
+   * functionality which we do not provide for FileRefs.
+   */
+  int32_t OpenFile(
+      [in] PP_Resource file_ref_id,
+      [in] int32_t mode,
+      [out] PP_FileHandle file);
+  int32_t QueryFile(
+      [in] PP_Resource file_ref_id,
+      [out] PP_FileInfo info);
+};

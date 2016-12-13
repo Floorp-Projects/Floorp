@@ -1,0 +1,165 @@
+/* Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/* This file contains PPB_PDF interface. */
+
+enum PP_ResourceString{
+  PP_RESOURCESTRING_PDFGETPASSWORD = 0,
+  PP_RESOURCESTRING_PDFLOADING     = 1,
+  PP_RESOURCESTRING_PDFLOAD_FAILED = 2
+};
+
+enum PP_ResourceImage{
+  PP_RESOURCEIMAGE_PDF_BUTTON_FTH                      = 0,
+  PP_RESOURCEIMAGE_PDF_BUTTON_FTH_HOVER                = 1,
+  PP_RESOURCEIMAGE_PDF_BUTTON_FTH_PRESSED              = 2,
+  PP_RESOURCEIMAGE_PDF_BUTTON_FTW                      = 3,
+  PP_RESOURCEIMAGE_PDF_BUTTON_FTW_HOVER                = 4,
+  PP_RESOURCEIMAGE_PDF_BUTTON_FTW_PRESSED              = 5,
+  PP_RESOURCEIMAGE_PDF_BUTTON_ZOOMIN                   = 6,
+  PP_RESOURCEIMAGE_PDF_BUTTON_ZOOMIN_HOVER             = 7,
+  PP_RESOURCEIMAGE_PDF_BUTTON_ZOOMIN_PRESSED           = 8,
+  PP_RESOURCEIMAGE_PDF_BUTTON_ZOOMOUT                  = 9,
+  PP_RESOURCEIMAGE_PDF_BUTTON_ZOOMOUT_HOVER            = 10,
+  PP_RESOURCEIMAGE_PDF_BUTTON_ZOOMOUT_PRESSED          = 11,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_0              = 12,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_1              = 13,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_2              = 14,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_3              = 15,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_4              = 16,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_5              = 17,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_6              = 18,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_7              = 19,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_8              = 20,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_9              = 21,
+  PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_NUM_BACKGROUND = 22
+};
+
+enum PP_PrivateFontCharset {
+  PP_PRIVATEFONTCHARSET_ANSI        = 0,
+  PP_PRIVATEFONTCHARSET_DEFAULT     = 1,
+  PP_PRIVATEFONTCHARSET_SYMBOL      = 2,
+  PP_PRIVATEFONTCHARSET_MAC         = 77,
+  PP_PRIVATEFONTCHARSET_SHIFTJIS    = 128,
+  PP_PRIVATEFONTCHARSET_HANGUL      = 129,
+  PP_PRIVATEFONTCHARSET_JOHAB       = 130,
+  PP_PRIVATEFONTCHARSET_GB2312      = 134,
+  PP_PRIVATEFONTCHARSET_CHINESEBIG5 = 136,
+  PP_PRIVATEFONTCHARSET_GREEK       = 161,
+  PP_PRIVATEFONTCHARSET_TURKISH     = 162,
+  PP_PRIVATEFONTCHARSET_VIETNAMESE  = 163,
+  PP_PRIVATEFONTCHARSET_HEBREW      = 177,
+  PP_PRIVATEFONTCHARSET_ARABIC      = 178,
+  PP_PRIVATEFONTCHARSET_BALTIC      = 186,
+  PP_PRIVATEFONTCHARSET_RUSSIAN     = 204,
+  PP_PRIVATEFONTCHARSET_THAI        = 222,
+  PP_PRIVATEFONTCHARSET_EASTEUROPE  = 238,
+  PP_PRIVATEFONTCHARSET_OEM         = 255
+};
+
+struct PP_PrivateFontFileDescription {
+  str_t face;
+  uint32_t weight;
+  PP_Bool italic;
+};
+
+struct PP_PrivateFindResult {
+  int32_t start_index;
+  int32_t length;
+};
+
+interface PPB_PDF_0_1 {
+  /* Returns a localized string. */
+   PP_Var GetLocalizedString(
+       [in] PP_Instance instance,
+       [in] PP_ResourceString string_id);
+
+  /* Returns a resource image. */
+  PP_Resource GetResourceImage(
+      [in] PP_Instance instance,
+      [in] PP_ResourceImage image_id);
+
+  /* Returns a resource identifying a font file corresponding to the given font
+   * request after applying the browser-specific fallback.
+   *
+   * Currently Linux-only.
+   */
+  PP_Resource GetFontFileWithFallback(
+      [in] PP_Instance instance,
+      [in] PP_FontDescription_Dev description,
+      [in] PP_PrivateFontCharset charset);
+
+  /* Given a resource previously returned by GetFontFileWithFallback, returns
+   * a pointer to the requested font table. Linux only.
+   */
+  PP_Bool GetFontTableForPrivateFontFile(
+      [in] PP_Resource font_file,
+      [in] uint32_t table,
+      [out] mem_t output,
+      [out] uint32_t output_length);
+
+  /* Search the given string using ICU.  Use PPB_Core's MemFree on results when
+   * done.
+   */
+  void SearchString(
+      [in] PP_Instance instance,
+      [in] mem_t string,
+      [in] mem_t term,
+      [in] PP_Bool case_sensitive,
+      [out, size_is(count)] PP_PrivateFindResult[] results,
+      [out] int32_t count);
+
+  /* Since WebFrame doesn't know about PPAPI requests, it'll think the page has
+   * finished loading even if there are outstanding requests by the plugin.
+   * Take this out once WebFrame knows about requests by PPAPI plugins.
+   */
+  void DidStartLoading(
+      [in] PP_Instance instance);
+  void DidStopLoading(
+      [in] PP_Instance instance);
+
+  /* Sets content restriction for a full-page plugin (i.e. can't copy/print).
+   * The value is a bitfield of ContentRestriction enums.
+   */
+  void SetContentRestriction(
+      [in] PP_Instance instance,
+      [in] int32_t restrictions);
+
+  /* Use UMA so we know average pdf page count. */
+  void HistogramPDFPageCount(
+      [in] int32_t count);
+
+  /* Notifies the browser that the given action has been performed. */
+  void UserMetricsRecordAction(
+      [in] PP_Var action);
+
+  /* Notifies the browser that the PDF has an unsupported feature. */
+  void HasUnsupportedFeature(
+      [in] PP_Instance instance);
+
+  /* Tells the browser to open a dialog box to receive a password from the
+   * user, masking input characters. Returns the value entered by the user, or
+   * an empty string if the user cancels instead.
+   */
+  PP_Var ModalPromptForPassword(
+      [in] PP_Instance instance,
+      [in] PP_Var message);
+
+  /* Returns PP_TRUE if the plugin is out of process. */
+  PP_Bool IsOutOfProcess(
+      [in] PP_Instance instance);
+
+  /* Sets the selected text of the plugin. If |selected_text| is empty, then no
+   * text is selected. */
+  void SetSelectedText(
+      [in] PP_Instance instance,
+      [in] str_t selected_text);
+
+  /* Sets the link under the cursor. If |url| is empty, then no link is under
+   * the cursor. */
+  void SetLinkUnderCursor(
+      [in] PP_Instance instance,
+      [in] str_t url);
+};
