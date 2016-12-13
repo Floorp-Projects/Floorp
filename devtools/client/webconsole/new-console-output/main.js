@@ -8,7 +8,6 @@
 
 var { utils: Cu } = Components;
 
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 
 // Initialize module loader and load all modules of the new inline
@@ -19,5 +18,6 @@ const NewConsoleOutputWrapper = BrowserLoader({
   window}).require("./new-console-output-wrapper");
 
 this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, serviceContainer) {
-  return new NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, serviceContainer);
+  return new NewConsoleOutputWrapper(
+    parentNode, jsterm, toolbox, owner, serviceContainer);
 };

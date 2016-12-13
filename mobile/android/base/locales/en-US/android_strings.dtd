@@ -851,3 +851,6 @@ and allows hiding a URL/page from highlights or topsites. The page remains in hi
 is simply hidden from the Activity Stream panel. -->
 <!ENTITY activity_stream_dismiss "Dismiss">
 <!ENTITY activity_stream_delete_history "Delete from History">
+
+<!ENTITY activity_stream_welcome_title "Welcome to your Highlights">
+<!ENTITY activity_stream_welcome_content "Firefox now creates highlights of things you\'ve discovered on the web so you can find your way back to great articles, videos, bookmarks, and other pages.">

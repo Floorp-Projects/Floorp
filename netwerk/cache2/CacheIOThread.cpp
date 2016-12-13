@@ -15,6 +15,11 @@
 #include <windows.h>
 #endif
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+#include "TracedTaskCommon.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -320,6 +325,10 @@ nsresult CacheIOThread::DispatchInternal(already_AddRefed<nsIRunnable> aRunnable
 					 uint32_t aLevel)
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
+#ifdef MOZ_TASK_TRACER
+  runnable = tasktracer::CreateTracedRunnable(runnable.forget());
+  (static_cast<tasktracer::TracedRunnable*>(runnable.get()))->DispatchTask();
+#endif
 
   if (NS_WARN_IF(!runnable))
     return NS_ERROR_NULL_POINTER;

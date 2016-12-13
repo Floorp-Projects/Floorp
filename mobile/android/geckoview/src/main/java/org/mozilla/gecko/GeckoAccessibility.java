@@ -5,10 +5,10 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
@@ -34,7 +34,7 @@ public class GeckoAccessibility {
 
     private static boolean sEnabled;
     // Used to store the JSON message and populate the event later in the code path.
-    private static JSONObject sHoverEnter;
+    private static GeckoBundle sHoverEnter;
     private static AccessibilityNodeInfo sVirtualCursorNode;
     private static int sCurrentNode;
 
@@ -76,32 +76,32 @@ public class GeckoAccessibility {
             }.execute();
     }
 
-    private static void populateEventFromJSON (AccessibilityEvent event, JSONObject message) {
-        final JSONArray textArray = message.optJSONArray("text");
+    private static void populateEventFromJSON (AccessibilityEvent event, GeckoBundle message) {
+        final String[] textArray = message.getStringArray("text");
         if (textArray != null) {
-            for (int i = 0; i < textArray.length(); i++)
-                event.getText().add(textArray.optString(i));
+            for (int i = 0; i < textArray.length; i++)
+                event.getText().add(textArray[i]);
         }
 
-        event.setContentDescription(message.optString("description"));
-        event.setEnabled(message.optBoolean("enabled", true));
-        event.setChecked(message.optBoolean("checked"));
-        event.setPassword(message.optBoolean("password"));
-        event.setAddedCount(message.optInt("addedCount", -1));
-        event.setRemovedCount(message.optInt("removedCount", -1));
-        event.setFromIndex(message.optInt("fromIndex", -1));
-        event.setItemCount(message.optInt("itemCount", -1));
-        event.setCurrentItemIndex(message.optInt("currentItemIndex", -1));
-        event.setBeforeText(message.optString("beforeText"));
-        event.setToIndex(message.optInt("toIndex", -1));
-        event.setScrollable(message.optBoolean("scrollable"));
-        event.setScrollX(message.optInt("scrollX", -1));
-        event.setScrollY(message.optInt("scrollY", -1));
-        event.setMaxScrollX(message.optInt("maxScrollX", -1));
-        event.setMaxScrollY(message.optInt("maxScrollY", -1));
+        event.setContentDescription(message.getString("description"));
+        event.setEnabled(message.getBoolean("enabled", true));
+        event.setChecked(message.getBoolean("checked"));
+        event.setPassword(message.getBoolean("password"));
+        event.setAddedCount(message.getInt("addedCount", -1));
+        event.setRemovedCount(message.getInt("removedCount", -1));
+        event.setFromIndex(message.getInt("fromIndex", -1));
+        event.setItemCount(message.getInt("itemCount", -1));
+        event.setCurrentItemIndex(message.getInt("currentItemIndex", -1));
+        event.setBeforeText(message.getString("beforeText"));
+        event.setToIndex(message.getInt("toIndex", -1));
+        event.setScrollable(message.getBoolean("scrollable"));
+        event.setScrollX(message.getInt("scrollX", -1));
+        event.setScrollY(message.getInt("scrollY", -1));
+        event.setMaxScrollX(message.getInt("maxScrollX", -1));
+        event.setMaxScrollY(message.getInt("maxScrollY", -1));
     }
 
-    private static void sendDirectAccessibilityEvent(int eventType, JSONObject message) {
+    private static void sendDirectAccessibilityEvent(int eventType, GeckoBundle message) {
         final Context context = GeckoAppShell.getApplicationContext();
         final AccessibilityEvent accEvent = AccessibilityEvent.obtain(eventType);
         accEvent.setClassName(GeckoAccessibility.class.getName());
@@ -120,11 +120,11 @@ public class GeckoAccessibility {
         return sEnabled;
     }
 
-    public static void sendAccessibilityEvent (final JSONObject message) {
+    public static void sendAccessibilityEvent(final GeckoBundle message) {
         if (!sEnabled)
             return;
 
-        final int eventType = message.optInt("eventType", -1);
+        final int eventType = message.getInt("eventType", -1);
         if (eventType < 0) {
             Log.e(LOGTAG, "No accessibility event type provided");
             return;
@@ -133,11 +133,11 @@ public class GeckoAccessibility {
         sendAccessibilityEvent(message, eventType);
     }
 
-    public static void sendAccessibilityEvent (final JSONObject message, final int eventType) {
+    public static void sendAccessibilityEvent(final GeckoBundle message, final int eventType) {
         if (!sEnabled)
             return;
 
-        final String exitView = message.optString("exitView");
+        final String exitView = message.getString("exitView");
         if (exitView.equals("moveNext")) {
             sCurrentNode = VIRTUAL_ENTRY_POINT_AFTER;
         } else if (exitView.equals("movePrevious")) {
@@ -162,29 +162,30 @@ public class GeckoAccessibility {
             if (view == null)
                 return;
 
-            if (sVirtualCursorNode == null)
+            if (sVirtualCursorNode == null) {
                 sVirtualCursorNode = AccessibilityNodeInfo.obtain(view, VIRTUAL_CURSOR_POSITION);
-            sVirtualCursorNode.setEnabled(message.optBoolean("enabled", true));
-            sVirtualCursorNode.setClickable(message.optBoolean("clickable"));
-            sVirtualCursorNode.setCheckable(message.optBoolean("checkable"));
-            sVirtualCursorNode.setChecked(message.optBoolean("checked"));
-            sVirtualCursorNode.setPassword(message.optBoolean("password"));
+            }
+            sVirtualCursorNode.setEnabled(message.getBoolean("enabled", true));
+            sVirtualCursorNode.setClickable(message.getBoolean("clickable"));
+            sVirtualCursorNode.setCheckable(message.getBoolean("checkable"));
+            sVirtualCursorNode.setChecked(message.getBoolean("checked"));
+            sVirtualCursorNode.setPassword(message.getBoolean("password"));
 
-            final JSONArray textArray = message.optJSONArray("text");
+            final String[] textArray = message.getStringArray("text");
             StringBuilder sb = new StringBuilder();
-            if (textArray != null && textArray.length() > 0) {
-                sb.append(textArray.optString(0));
-                for (int i = 1; i < textArray.length(); i++) {
-                    sb.append(" ").append(textArray.optString(i));
+            if (textArray != null && textArray.length > 0) {
+                sb.append(textArray[0]);
+                for (int i = 1; i < textArray.length; i++) {
+                    sb.append(" ").append(textArray[i]);
                 }
                 sVirtualCursorNode.setText(sb.toString());
             }
-            sVirtualCursorNode.setContentDescription(message.optString("description"));
+            sVirtualCursorNode.setContentDescription(message.getString("description"));
 
-            JSONObject bounds = message.optJSONObject("bounds");
+            final GeckoBundle bounds = message.getBundle("bounds");
             if (bounds != null) {
-                Rect relativeBounds = new Rect(bounds.optInt("left"), bounds.optInt("top"),
-                                               bounds.optInt("right"), bounds.optInt("bottom"));
+                Rect relativeBounds = new Rect(bounds.getInt("left"), bounds.getInt("top"),
+                                               bounds.getInt("right"), bounds.getInt("bottom"));
                 sVirtualCursorNode.setBoundsInParent(relativeBounds);
                 int[] locationOnScreen = new int[2];
                 view.getLocationOnScreen(locationOnScreen);
@@ -193,10 +194,10 @@ public class GeckoAccessibility {
                 sVirtualCursorNode.setBoundsInScreen(screenBounds);
             }
 
-            final JSONObject braille = message.optJSONObject("brailleOutput");
+            final GeckoBundle braille = message.getBundle("brailleOutput");
             if (braille != null) {
-                sendBrailleText(view, braille.optString("text"),
-                                braille.optInt("selectionStart"), braille.optInt("selectionEnd"));
+                sendBrailleText(view, braille.getString("text"),
+                                braille.getInt("selectionStart"), braille.getInt("selectionEnd"));
             }
 
             if (eventType == AccessibilityEvent.TYPE_VIEW_HOVER_ENTER) {

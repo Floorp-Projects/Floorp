@@ -73,16 +73,33 @@ We recommend the following tools for installing Python:
     official installers -- http://www.python.org/
 '''
 
+RUST_INSTALL_COMPLETE = '''
+Rust installation complete. You should now have rustc and cargo
+in %(cargo_bin)s
+
+The installer tries to add these to your default shell PATH, so
+restarting your shell and running this script again may work.
+If it doesn't, you'll need to add the new command location
+manually.
+
+If restarting doesn't work, edit your shell initialization
+script, which may be called ~/.bashrc or ~/.bash_profile or
+~/.profile, and add the following line:
+
+    %(cmd)s
+
+Then restart your shell and run the bootstrap script again.
+'''
+
 RUST_NOT_IN_PATH = '''
-You have some rust files in %(cargo_bin)s, but they're not part of the
-standard PATH.'''
+You have some rust files in %(cargo_bin)s
+but they're not part of this shell's PATH.
 
-RUST_PATH_ADVICE = '''
-To make these available, please add this directory to the PATH variable
-in your shell initialization script, which may be called ~/.bashrc or
-~/.bash_profile or ~/.profile. Edit this and add the following line:
+To add these to the PATH, edit your shell initialization
+script, which may be called ~/.bashrc or ~/.bash_profile or
+~/.profile, and add the following line:
 
-    source %(cargo_home)s/env
+    %(cmd)s
 
 Then restart your shell and run the bootstrap script again.
 '''
@@ -108,8 +125,7 @@ run this bootstrapper again.
 
 If this continues to fail and you are sure you have a modern Rust on your
 system, ensure it is on the $PATH and try again. If that fails, you'll need to
-install Rust manually and ensure the path with the rustc and cargo  binaries
-are listed in the $PATH environment variable.
+install Rust manually.
 
 We recommend the installer from https://rustup.rs/ for installing Rust,
 but you may be able to get a recent enough version from a software install
@@ -521,6 +537,21 @@ class BaseBootstrapper(object):
         cargo_bin = os.path.join(cargo_home, 'bin')
         return cargo_home, cargo_bin
 
+    def print_rust_path_advice(self, template, cargo_home, cargo_bin):
+        # Suggest ~/.cargo/env if it exists.
+        if os.path.exists(os.path.join(cargo_home, 'env')):
+            cmd = 'source %s/env' % cargo_home
+        else:
+            # On Windows rustup doesn't write out ~/.cargo/env
+            # so fall back to a manual PATH update. Bootstrap
+            # only runs under msys, so a unix-style shell command
+            # is appropriate there.
+            cmd = 'export PATH=%s:$PATH' % cargo_bin
+        print(template % {
+            'cargo_bin': cargo_bin,
+            'cmd': cmd,
+        })
+
     def ensure_rust_modern(self):
         modern, version = self.is_rust_modern()
 
@@ -536,11 +567,11 @@ class BaseBootstrapper(object):
             have_rustc = os.path.exists(try_rustc)
             have_cargo = os.path.exists(try_cargo)
             if have_rustc or have_cargo:
-                print(RUST_NOT_IN_PATH % { 'cargo_bin': cargo_bin })
-                print(RUST_PATH_ADVICE % { 'cargo_home': cargo_home })
+                self.print_rust_path_advice(RUST_NOT_IN_PATH,
+                        cargo_home, cargo_bin)
                 sys.exit(1)
-
-        print('Your version of Rust (%s) is too old.' % version)
+        else:
+            print('Your version of Rust (%s) is too old.' % version)
 
         rustup = self.which('rustup')
         if rustup:
@@ -591,9 +622,8 @@ class BaseBootstrapper(object):
                 '--default-host', platform,
             ])
             cargo_home, cargo_bin = self.cargo_home()
-            print('Rust installation complete.')
-            print('You should now have rustc and cargo in %s' % cargo_bin)
-            print(RUST_PATH_ADVICE % { 'cargo_home': cargo_home })
+            self.print_rust_path_advice(RUST_INSTALL_COMPLETE,
+                    cargo_home, cargo_bin)
         finally:
             try:
                 os.remove(rustup_init)

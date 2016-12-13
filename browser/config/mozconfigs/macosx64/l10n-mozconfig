@@ -1,8 +1,18 @@
 . "$topsrcdir/browser/config/mozconfigs/common"
+. "$topsrcdir/build/macosx/mozconfig.common"
 
 ac_add_options --with-l10n-base=../../l10n
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --with-branding=browser/branding/nightly
+
+if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
+ac_add_options --with-macbundlename-prefix=Firefox
+fi
+
+export MOZILLA_OFFICIAL=1
+
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
 
 # Don't autoclobber l10n, as this can lead to missing binaries and broken builds
 # Bug 1283438

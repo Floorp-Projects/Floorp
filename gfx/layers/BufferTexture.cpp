@@ -282,9 +282,17 @@ BufferTextureData::BorrowDrawTarget()
   const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
 
   uint32_t stride = ImageDataSerializer::GetRGBStride(rgb);
-  mDrawTarget = gfx::Factory::CreateDrawTargetForData(mMoz2DBackend,
-                                                      GetBuffer(), rgb.size(),
-                                                      stride, rgb.format(), true);
+  if (gfx::Factory::DoesBackendSupportDataDrawtarget(mMoz2DBackend)) {
+    mDrawTarget = gfx::Factory::CreateDrawTargetForData(mMoz2DBackend,
+                                                        GetBuffer(), rgb.size(),
+                                                        stride, rgb.format(), true);
+  } else {
+    // Fall back to supported platform backend.  Note that mMoz2DBackend
+    // does not match the draw target type.
+    mDrawTarget = gfxPlatform::CreateDrawTargetForData(GetBuffer(), rgb.size(),
+                                                       stride, rgb.format(),
+                                                       true);
+  }
 
   if (mDrawTarget) {
     RefPtr<gfx::DrawTarget> dt = mDrawTarget;
@@ -294,6 +302,7 @@ BufferTextureData::BorrowDrawTarget()
   // TODO - should we warn? should we really fallback to cairo? perhaps
   // at least update mMoz2DBackend...
   if (mMoz2DBackend != gfx::BackendType::CAIRO) {
+    gfxCriticalNote << "Falling to CAIRO from " << (int)mMoz2DBackend;
     mDrawTarget = gfx::Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
                                                         GetBuffer(), rgb.size(),
                                                         stride, rgb.format(), true);

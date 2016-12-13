@@ -68,7 +68,8 @@ abstract class BaseTest extends BaseRobocopTest {
 
     protected void blockForDelayedStartup() {
         try {
-            Actions.EventExpecter delayedStartupExpector = mActions.expectGeckoEvent("Gecko:DelayedStartup");
+            Actions.EventExpecter delayedStartupExpector =
+                    mActions.expectGlobalEvent(Actions.EventType.UI, "Gecko:DelayedStartup");
             delayedStartupExpector.blockForEvent(GECKO_READY_WAIT_MS, true);
             delayedStartupExpector.unregisterListener();
         } catch (Exception e) {
@@ -78,7 +79,8 @@ abstract class BaseTest extends BaseRobocopTest {
 
     protected void blockForGeckoReady() {
         try {
-            Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:Ready");
+            Actions.EventExpecter geckoReadyExpector =
+                    mActions.expectGlobalEvent(Actions.EventType.GECKO, "Gecko:Ready");
             if (!GeckoThread.isRunning()) {
                 geckoReadyExpector.blockForEvent(GECKO_READY_WAIT_MS, true);
             }

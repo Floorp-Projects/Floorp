@@ -226,6 +226,12 @@ public:
                                           dom::Element& aElement,
                                           CSSPseudoElementType aPseudoType);
 
+  // Returns the base style corresponding to |aFrame|.
+  // This function should be called only after restyle process has done, i.e.
+  // |aFrame| has a resolved style context.
+  static StyleAnimationValue GetBaseStyle(nsCSSPropertyID aProperty,
+                                          const nsIFrame* aFrame);
+
   // Clear cached base styles of (pseudo-)element.
   static void ClearBaseStyles(dom::Element& aElement,
                               CSSPseudoElementType aPseudoType);

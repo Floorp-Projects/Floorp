@@ -5,21 +5,61 @@
 "use strict";
 
 const {
-  UPDATE_REQUESTS,
+  ADD_REQUEST,
+  UPDATE_REQUEST,
+  CLONE_SELECTED_REQUEST,
+  REMOVE_SELECTED_CUSTOM_REQUEST,
+  CLEAR_REQUESTS,
 } = require("../constants");
 
-/**
- * Update request items
- *
- * @param {array} requests - visible request items
- */
-function updateRequests(items) {
+function addRequest(id, data, batch) {
   return {
-    type: UPDATE_REQUESTS,
-    items,
+    type: ADD_REQUEST,
+    id,
+    data,
+    meta: { batch },
+  };
+}
+
+function updateRequest(id, data, batch) {
+  return {
+    type: UPDATE_REQUEST,
+    id,
+    data,
+    meta: { batch },
+  };
+}
+
+/**
+ * Clone the currently selected request, set the "isCustom" attribute.
+ * Used by the "Edit and Resend" feature.
+ */
+function cloneSelectedRequest() {
+  return {
+    type: CLONE_SELECTED_REQUEST
+  };
+}
+
+/**
+ * Remove a request from the list. Supports removing only cloned requests with a
+ * "isCustom" attribute. Other requests never need to be removed.
+ */
+function removeSelectedCustomRequest() {
+  return {
+    type: REMOVE_SELECTED_CUSTOM_REQUEST
+  };
+}
+
+function clearRequests() {
+  return {
+    type: CLEAR_REQUESTS
   };
 }
 
 module.exports = {
-  updateRequests,
+  addRequest,
+  updateRequest,
+  cloneSelectedRequest,
+  removeSelectedCustomRequest,
+  clearRequests,
 };

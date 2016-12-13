@@ -117,8 +117,10 @@ typedef enum {
     unrecognized_name = 112,
     bad_certificate_status_response = 113,
     bad_certificate_hash_value = 114,
-    no_application_protocol = 120
+    no_application_protocol = 120,
 
+    /* invalid alert */
+    no_alert = 256
 } SSL3AlertDescription;
 
 typedef struct {
@@ -284,7 +286,7 @@ typedef struct {
 
 /* NewSessionTicket handshake message. */
 typedef struct {
-    PRUint32 received_timestamp;
+    PRTime received_timestamp;
     PRUint32 ticket_lifetime_hint;
     PRUint32 flags;
     PRUint32 ticket_age_add;

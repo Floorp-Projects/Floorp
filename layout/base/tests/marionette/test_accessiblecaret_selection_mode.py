@@ -5,12 +5,14 @@
 
 import re
 
-from marionette.marionette_test import (
-    MarionetteTestCase, SkipTest, parameterized
-)
 from marionette_driver.by import By
 from marionette_driver.marionette import Actions
 from marionette_driver.selection import SelectionManager
+from marionette_harness.marionette_test import (
+    MarionetteTestCase,
+    SkipTest,
+    parameterized
+)
 
 
 def skip_if_not_rotatable(target):

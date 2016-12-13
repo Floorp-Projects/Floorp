@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(function* testWindowGetAll() {
   let raisedWin = Services.ww.openWindow(
     null, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
     "chrome,dialog=no,all,alwaysRaised", null);
@@ -30,4 +30,21 @@ add_task(function* () {
   yield extension.unload();
 
   yield BrowserTestUtils.closeWindow(raisedWin);
+});
+
+add_task(function* testInvalidWindowId() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      await browser.test.assertRejects(
+        // Assuming that this windowId does not exist.
+        browser.windows.get(123456789),
+        /Invalid window/,
+        "Should receive invalid window");
+      browser.test.notifyPass("windows.get.invalid");
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("windows.get.invalid");
+  yield extension.unload();
 });
