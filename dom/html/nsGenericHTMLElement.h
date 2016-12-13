@@ -19,7 +19,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
-#include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/Element.h"
 
 class nsDOMTokenList;
 class nsIDOMHTMLMenuElement;
