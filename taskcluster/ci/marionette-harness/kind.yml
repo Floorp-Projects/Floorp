@@ -41,7 +41,7 @@ jobs:
             command:
               - "bash"
               - "/home/worker/bin/build.sh"
-              - "--tests=testing/marionette/harness/marionette/tests/harness_unit"
+              - "--tests=testing/marionette/harness/marionette_harness/tests/harness_unit"
               - "--work-dir=mozharness_workspace"
             max-run-time: 1800
         when:

@@ -4,7 +4,7 @@
 # testing directory, we could use ./marionette_requirements.txt instead
 ../web-platform/tests/tools/wptserve
 ../marionette/client
-../marionette/harness/marionette/runner/mixins/browsermob-proxy-py
+../marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py
 ../marionette/harness
 
 # pytest

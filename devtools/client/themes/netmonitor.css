@@ -539,6 +539,7 @@
 }
 
 .requests-menu-timings-total {
+  display: inline-block;
   padding-inline-start: 4px;
   font-size: 85%;
   font-weight: 600;
@@ -548,6 +549,7 @@
 }
 
 .requests-menu-timings-box {
+  display: inline-block;
   height: 9px;
 }
 
@@ -672,6 +674,7 @@
 }
 
 .tabpanel-summary-label {
+  display: inline-block;
   padding-inline-start: 4px;
   padding-inline-end: 3px;
   font-weight: 600;
@@ -744,18 +747,28 @@
 
 /* Timings tabpanel */
 
+#timings-tabpanel .tabpanel-summary-container {
+  display: flex;
+}
+
 #timings-tabpanel .tabpanel-summary-label {
   width: 10em;
 }
 
-#timings-tabpanel .requests-menu-timings-box {
-  transition: transform 0.2s ease-out;
-  border: none;
-  min-width: 1px;
+#timings-tabpanel .requests-menu-timings-container {
+  display: flex;
+  flex: 1;
+  align-items: center;
 }
 
-#timings-tabpanel .requests-menu-timings-total {
-  transition: transform 0.2s ease-out;
+#timings-tabpanel .requests-menu-timings-offset {
+  transition: width 0.2s ease-out;
+}
+
+#timings-tabpanel .requests-menu-timings-box {
+  border: none;
+  min-width: 1px;
+  transition: width 0.2s ease-out;
 }
 
 .theme-firebug #timings-tabpanel .requests-menu-timings-total {
@@ -1069,4 +1082,14 @@
   :root[platform="linux"] .requests-menu-header-button {
     font-size: 85%;
   }
+}
+
+/*
+ * FIXME: normal html block element cannot fill outer XUL element
+ * This workaround should be removed after sidebar is migrated to react
+ */
+#react-timings-tabpanel-hook {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
 }

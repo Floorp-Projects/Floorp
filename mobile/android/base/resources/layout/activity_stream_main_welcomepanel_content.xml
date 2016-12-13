@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- We need an enclosing layout for the animation calculations to work correctly. This is provided
+     in the enclosing layout which wraps the ViewStub in a FrameLayout. -->
+<RelativeLayout
+    android:id="@+id/welcome_panel"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/divider0"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#ffe0e0e0"
+        android:padding="4dp"/>
+
+    <ImageView
+        android:id="@+id/welcome_fox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="@dimen/activity_stream_base_margin"
+        android:layout_marginLeft="-30dp"
+        android:layout_marginTop="@dimen/activity_stream_base_margin"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        android:src="@drawable/foxfinder"/>
+
+    <TextView
+        android:id="@+id/title_welcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/activity_stream_base_margin"
+        android:layout_marginEnd="@dimen/activity_stream_base_margin"
+        android:layout_marginLeft="@dimen/activity_stream_base_margin"
+        android:layout_marginRight="@dimen/activity_stream_base_margin"
+        android:layout_marginStart="@dimen/activity_stream_base_margin"
+        android:layout_marginTop="@dimen/activity_stream_base_margin"
+        android:text="@string/activity_stream_welcome_title"
+        android:textColor="#FF858585"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/welcome_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/title_welcome"
+        android:layout_alignStart="@+id/title_welcome"
+        android:layout_below="@+id/title_welcome"
+        android:layout_toLeftOf="@+id/welcome_fox"
+        android:layout_toStartOf="@+id/welcome_fox"
+        android:text="@string/activity_stream_welcome_content"
+        android:textColor="#FF858585"/>
+
+    <Button
+        android:id="@+id/dismiss_welcomepanel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/welcome_fox"
+        android:layout_alignLeft="@+id/title_welcome"
+        android:layout_alignStart="@+id/title_welcome"
+        android:elevation="1dp"
+        android:text="@string/activity_stream_dismiss"
+        android:theme="@style/ActivityStreamButton"/>
+
+</RelativeLayout>

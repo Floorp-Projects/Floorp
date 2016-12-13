@@ -63,7 +63,7 @@ var InputWidgetHelper = {
   },
 
   hasInputWidget: function(aElement) {
-    if (!aElement instanceof HTMLInputElement)
+    if (!(aElement instanceof HTMLInputElement))
       return false;
 
     let type = aElement.getAttribute('type');

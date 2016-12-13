@@ -456,7 +456,7 @@ Sync11Service.prototype = {
     this.clientsEngine = new ClientEngine(this);
 
     for (let name of engines) {
-      if (!name in ENGINE_MODULES) {
+      if (!(name in ENGINE_MODULES)) {
         this._log.info("Do not know about engine: " + name);
         continue;
       }

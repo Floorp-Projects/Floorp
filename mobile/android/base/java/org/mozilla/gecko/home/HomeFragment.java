@@ -263,6 +263,7 @@ public abstract class HomeFragment extends Fragment {
                 }
             });
 
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "home_add_to_launcher");
             return true;
         }
 
