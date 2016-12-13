@@ -6,7 +6,7 @@
 set -e
 
 # Usage: update-icu.sh <URL of ICU SVN with release>
-# E.g., for ICU 58.1: update-icu.sh https://ssl.icu-project.org/repos/icu/icu/tags/release-58-1/
+# E.g., for ICU 58.2: update-icu.sh https://ssl.icu-project.org/repos/icu/tags/release-58-2/icu4c/
 
 if [ $# -lt 1 ]; then
   echo "Usage: update-icu.sh <URL of ICU SVN with release>"
