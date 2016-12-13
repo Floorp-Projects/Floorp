@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from unittest import skip
-
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
 from marionette_driver.expected import element_present
@@ -41,7 +39,6 @@ class TestAnonymousContent(WindowManagerMixin, MarionetteTestCase):
         self.marionette.find_element(By.ID, "testXulBox")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "testAnonymousContentBox")
 
-    @skip("Bug 1311657 - Opened chrome window cannot be closed after call to switch_to_frame")
     def test_switch_to_anonymous_iframe(self):
         self.marionette.find_element(By.ID, "testAnonymousContentBox")
         el = self.marionette.find_element(By.ID, "container2")
