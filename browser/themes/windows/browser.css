@@ -1450,14 +1450,13 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 }
 
 #urlbar-search-splitter {
-  min-width: 6px;
-  margin-inline-start: -3px;
+  /* The splitter width should equal the location and search bars' combined
+     neighboring margin and border width. */
+  min-width: 8px;
+  margin: 0 -4px;
+  position: relative;
   border: none;
   background: transparent;
-}
-
-#urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
-  margin-inline-start: 0;
 }
 
 .urlbar-display {
