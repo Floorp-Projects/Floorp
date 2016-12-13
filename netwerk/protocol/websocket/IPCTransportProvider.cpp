@@ -19,12 +19,10 @@ NS_IMPL_ISUPPORTS(TransportProviderParent,
 
 TransportProviderParent::TransportProviderParent()
 {
-  MOZ_COUNT_CTOR(TransportProviderParent);
 }
 
 TransportProviderParent::~TransportProviderParent()
 {
-  MOZ_COUNT_DTOR(TransportProviderParent);
 }
 
 NS_IMETHODIMP
@@ -77,12 +75,10 @@ NS_IMPL_ISUPPORTS(TransportProviderChild,
 
 TransportProviderChild::TransportProviderChild()
 {
-  MOZ_COUNT_CTOR(TransportProviderChild);
 }
 
 TransportProviderChild::~TransportProviderChild()
 {
-  MOZ_COUNT_DTOR(TransportProviderChild);
   Send__delete__(this);
 }
 

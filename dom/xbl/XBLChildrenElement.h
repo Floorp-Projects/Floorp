@@ -161,7 +161,6 @@ public:
   explicit nsAnonymousContentList(nsIContent* aParent)
     : mParent(aParent)
   {
-    MOZ_COUNT_CTOR(nsAnonymousContentList);
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -183,7 +182,6 @@ public:
 private:
   virtual ~nsAnonymousContentList()
   {
-    MOZ_COUNT_DTOR(nsAnonymousContentList);
   }
 
   nsCOMPtr<nsIContent> mParent;

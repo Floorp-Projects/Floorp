@@ -88,7 +88,7 @@ throwError(JNIEnv* jenv, const char * funcString) {
     LOG("Error thrown\n");
 }
 
-extern "C" NS_EXPORT jstring MOZ_JNICALL
+extern "C" APKOPEN_EXPORT jstring MOZ_JNICALL
 Java_org_mozilla_gecko_NSSBridge_nativeEncrypt(JNIEnv* jenv, jclass,
                                                jstring jPath,
                                                jstring jValue)
@@ -114,7 +114,7 @@ Java_org_mozilla_gecko_NSSBridge_nativeEncrypt(JNIEnv* jenv, jclass,
     return ret;
 }
 
-extern "C" NS_EXPORT jstring MOZ_JNICALL
+extern "C" APKOPEN_EXPORT jstring MOZ_JNICALL
 Java_org_mozilla_gecko_NSSBridge_nativeDecrypt(JNIEnv* jenv, jclass,
                                                jstring jPath,
                                                jstring jValue)

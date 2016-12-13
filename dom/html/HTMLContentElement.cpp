@@ -333,8 +333,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DistributedContentList)
 DistributedContentList::DistributedContentList(HTMLContentElement* aHostElement)
   : mParent(aHostElement)
 {
-  MOZ_COUNT_CTOR(DistributedContentList);
-
   if (aHostElement->IsInsertionPoint()) {
     if (aHostElement->MatchedNodes().IsEmpty()) {
       // Fallback content.
@@ -352,7 +350,6 @@ DistributedContentList::DistributedContentList(HTMLContentElement* aHostElement)
 
 DistributedContentList::~DistributedContentList()
 {
-  MOZ_COUNT_DTOR(DistributedContentList);
 }
 
 nsIContent*

@@ -238,7 +238,11 @@ BoxObject(JSContext* aCx, JS::HandleValue aData, jni::Object::LocalRef& aOut)
 
         NS_ENSURE_TRUE(CheckJS(aCx, JS_IdToValue(aCx, id, &idVal)),
                        NS_ERROR_FAILURE);
-        NS_ENSURE_TRUE(idVal.isString(), NS_ERROR_FAILURE);
+
+        JS::RootedString idStr(aCx, JS::ToString(aCx, idVal));
+        NS_ENSURE_TRUE(CheckJS(aCx, !!idStr), NS_ERROR_FAILURE);
+
+        idVal.setString(idStr);
         NS_ENSURE_SUCCESS(BoxString(aCx, idVal, key), NS_ERROR_FAILURE);
         NS_ENSURE_TRUE(CheckJS(aCx, JS_GetPropertyById(aCx, obj, id, &val)),
                        NS_ERROR_FAILURE);

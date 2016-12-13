@@ -28,14 +28,11 @@ nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(dom::Element* aElemen
   : mElement(aElement)
   , mIsSMILOverride(aIsSMILOverride)
 {
-  MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
-
   NS_ASSERTION(aElement, "Inline style for a NULL element?");
 }
 
 nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
 {
-  MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMCSSAttributeDeclaration, mElement)

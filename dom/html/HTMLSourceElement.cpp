@@ -77,7 +77,7 @@ HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
 
   nsCSSParser cssParser;
   RefPtr<nsMediaList> mediaList = new nsMediaList();
-  cssParser.ParseMediaList(aMedia, nullptr, 0, mediaList, false);
+  cssParser.ParseMediaList(aMedia, nullptr, 0, mediaList);
 
   return pctx && mediaList->Matches(pctx, nullptr);
 }
@@ -93,7 +93,7 @@ HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue)
 
   nsCSSParser cssParser;
   mMediaList = new nsMediaList();
-  cssParser.ParseMediaList(mediaStr, nullptr, 0, mMediaList, false);
+  cssParser.ParseMediaList(mediaStr, nullptr, 0, mMediaList);
 }
 
 nsresult

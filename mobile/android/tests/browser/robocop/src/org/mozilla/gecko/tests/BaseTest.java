@@ -155,7 +155,8 @@ abstract class BaseTest extends BaseRobocopTest {
     }
 
     protected final void hitEnterAndWait() {
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        Actions.EventExpecter contentEventExpecter =
+                mActions.expectGlobalEvent(Actions.EventType.GECKO, "Content:DOMContentLoaded");
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
         // wait for screen to load
         contentEventExpecter.blockForEvent();
@@ -198,7 +199,8 @@ abstract class BaseTest extends BaseRobocopTest {
      * <code>org.mozilla.gecko.Tabs</code> API and wait for DOMContentLoaded.
      */
     protected final void loadUrlAndWait(final String url) {
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        Actions.EventExpecter contentEventExpecter =
+                mActions.expectGlobalEvent(Actions.EventType.GECKO, "Content:DOMContentLoaded");
         loadUrl(url);
         contentEventExpecter.blockForEvent();
         contentEventExpecter.unregisterListener();

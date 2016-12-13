@@ -34,9 +34,6 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 #ifdef XPC_MAP_WANT_PRECREATE
     nsIXPCScriptable::WANT_PRECREATE |
 #endif
-#ifdef XPC_MAP_WANT_ADDPROPERTY
-    nsIXPCScriptable::WANT_ADDPROPERTY |
-#endif
 #ifdef XPC_MAP_WANT_GETPROPERTY
     nsIXPCScriptable::WANT_GETPROPERTY |
 #endif
@@ -74,11 +71,6 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 
 #ifndef XPC_MAP_WANT_PRECREATE
 NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreate(nsISupports* nativeObj, JSContext * cx, JSObject * globalObj, JSObject * *parentObj)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
-#ifndef XPC_MAP_WANT_ADDPROPERTY
-NS_IMETHODIMP XPC_MAP_CLASSNAME::AddProperty(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, jsid id, JS::HandleValue val, bool* _retval)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
@@ -127,10 +119,8 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::HasInstance(nsIXPConnectWrappedNative* wrapper,
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
-#ifndef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
 NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext* cx, JSObject* proto)
     {return NS_OK;}
-#endif
 
 /**************************************************************/
 
@@ -139,10 +129,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext* cx, JSObject* pr
 
 #ifdef XPC_MAP_WANT_PRECREATE
 #undef XPC_MAP_WANT_PRECREATE
-#endif
-
-#ifdef XPC_MAP_WANT_ADDPROPERTY
-#undef XPC_MAP_WANT_ADDPROPERTY
 #endif
 
 #ifdef XPC_MAP_WANT_GETPROPERTY
@@ -179,10 +165,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext* cx, JSObject* pr
 
 #ifdef XPC_MAP_WANT_HASINSTANCE
 #undef XPC_MAP_WANT_HASINSTANCE
-#endif
-
-#ifdef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
-#undef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
 #endif
 
 #ifdef XPC_MAP_FLAGS

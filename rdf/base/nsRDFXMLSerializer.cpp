@@ -95,13 +95,10 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 nsRDFXMLSerializer::nsRDFXMLSerializer()
 {
-    MOZ_COUNT_CTOR(nsRDFXMLSerializer);
 }
 
 nsRDFXMLSerializer::~nsRDFXMLSerializer()
 {
-    MOZ_COUNT_DTOR(nsRDFXMLSerializer);
-
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kRDF_Bag);
         NS_IF_RELEASE(kRDF_Seq);

@@ -16,26 +16,6 @@
 namespace mozilla {
 namespace net {
 
-#if defined(XP_WIN) && (defined(_M_IX86) || defined(_M_X64))
-void nsHttpRequestHead::DbgReentrantMonitorAutoEnter::Protect(bool aOn)
-{
-    if (XRE_GetProcessType() == GeckoProcessType_Content &&
-        mInst.mHeaders.Count()) {
-        DWORD oldProtect;
-        LPVOID hdr = reinterpret_cast<PUINT8>(mInst.mHeaders.mHeaders.Elements()) -
-                     sizeof(nsTArrayHeader);
-        if (aOn) {
-            VirtualProtect(hdr, 4096, PAGE_READONLY, &oldProtect);
-        } else {
-            VirtualProtect(hdr, 4096, PAGE_READWRITE, &oldProtect);
-        }
-    }
-}
-
-#define ReentrantMonitorAutoEnter DbgReentrantMonitorAutoEnter
-#define mon(x) mon(*this)
-#endif
-
 nsHttpRequestHead::nsHttpRequestHead()
     : mMethod(NS_LITERAL_CSTRING("GET"))
     , mVersion(NS_HTTP_VERSION_1_1)
@@ -49,14 +29,6 @@ nsHttpRequestHead::nsHttpRequestHead()
 
 nsHttpRequestHead::~nsHttpRequestHead()
 {
-#if defined(XP_WIN) && (defined(_M_IX86) || defined(_M_X64))
-    if (XRE_GetProcessType() == GeckoProcessType_Content && mHeaders.Count()) {
-        DWORD oldProtect;
-        LPVOID hdr = reinterpret_cast<PUINT8>(mHeaders.mHeaders.Elements()) -
-                     sizeof(nsTArrayHeader);
-        VirtualProtect(hdr, 4096, PAGE_READWRITE, &oldProtect);
-    }
-#endif
     MOZ_COUNT_DTOR(nsHttpRequestHead);
 }
 
@@ -392,11 +364,6 @@ nsHttpRequestHead::Flatten(nsACString &buf, bool pruneProxyHeaders)
 
     mHeaders.Flatten(buf, pruneProxyHeaders, false);
 }
-
-#if defined(XP_WIN) && (defined(_M_IX86) || defined(_M_X64))
-#undef ReentrantMonitorAutoEnter
-#undef mon
-#endif
 
 } // namespace net
 } // namespace mozilla

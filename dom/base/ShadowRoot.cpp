@@ -739,12 +739,10 @@ NS_IMPL_RELEASE_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
 ShadowRootStyleSheetList::ShadowRootStyleSheetList(ShadowRoot* aShadowRoot)
   : mShadowRoot(aShadowRoot)
 {
-  MOZ_COUNT_CTOR(ShadowRootStyleSheetList);
 }
 
 ShadowRootStyleSheetList::~ShadowRootStyleSheetList()
 {
-  MOZ_COUNT_DTOR(ShadowRootStyleSheetList);
 }
 
 StyleSheet*
