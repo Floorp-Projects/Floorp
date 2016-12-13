@@ -38,3 +38,30 @@ def verify_docs(filename, identifiers, appearing_as):
                     "{}: `{}` missing from doc file: `{}`"
                     .format(appearing_as, identifier, filename)
                 )
+
+
+def verify_task_graph_symbol(task, taskgraph, scratch_pad):
+    """
+        This function verifies that tuple
+        (collection.keys(), machine.platform, groupSymbol, symbol) is unique
+        for a target task graph.
+    """
+    task_dict = task.task
+    if "extra" in task_dict:
+        extra = task_dict["extra"]
+        if "treeherder" in extra:
+            treeherder = extra["treeherder"]
+
+            collection_keys = tuple(sorted(treeherder.get('collection', {}).keys()))
+            platform = treeherder.get('machine', {}).get('platform')
+            group_symbol = treeherder.get('groupSymbol')
+            symbol = treeherder.get('symbol')
+
+            key = (collection_keys, platform, group_symbol, symbol)
+            if key in scratch_pad:
+                raise Exception(
+                    "conflict between `{}`:`{}` for values `{}`"
+                    .format(task.label, scratch_pad[key], key)
+                )
+            else:
+                scratch_pad[key] = task.label
