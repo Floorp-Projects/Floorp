@@ -1141,7 +1141,6 @@ public:
   explicit nsCSSShadowArray(uint32_t aArrayLen) :
     mLength(aArrayLen)
   {
-    MOZ_COUNT_CTOR(nsCSSShadowArray);
     for (uint32_t i = 1; i < mLength; ++i) {
       // Make sure we call the constructors of each nsCSSShadowItem
       // (the first one is called for us because we declared it under private)
@@ -1152,7 +1151,6 @@ public:
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~nsCSSShadowArray() {
-    MOZ_COUNT_DTOR(nsCSSShadowArray);
     for (uint32_t i = 1; i < mLength; ++i) {
       mArray[i].~nsCSSShadowItem();
     }

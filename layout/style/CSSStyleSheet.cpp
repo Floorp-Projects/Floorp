@@ -646,10 +646,7 @@ void
 nsMediaList::SetText(const nsAString& aMediaText)
 {
   nsCSSParser parser;
-
-  bool htmlMode = mStyleSheet && mStyleSheet->GetOwnerNode();
-
-  parser.ParseMediaList(aMediaText, nullptr, 0, this, htmlMode);
+  parser.ParseMediaList(aMediaText, nullptr, 0, this);
 }
 
 bool

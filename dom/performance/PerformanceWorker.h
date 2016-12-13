@@ -64,12 +64,6 @@ public:
     return nullptr;
   }
 
-  virtual Performance* GetParentPerformance() const override
-  {
-    MOZ_CRASH("This should not be called on workers.");
-    return nullptr;
-  }
-
 protected:
   ~PerformanceWorker();
 

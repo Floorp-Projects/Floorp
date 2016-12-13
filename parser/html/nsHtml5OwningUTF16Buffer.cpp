@@ -8,21 +8,16 @@ nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(char16_t* aBuffer)
   : nsHtml5UTF16Buffer(aBuffer, 0),
     next(nullptr),
     key(nullptr)
-{
-  MOZ_COUNT_CTOR(nsHtml5OwningUTF16Buffer);
-}
+{}
 
 nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(void* aKey)
   : nsHtml5UTF16Buffer(nullptr, 0),
     next(nullptr),
     key(aKey)
-{
-  MOZ_COUNT_CTOR(nsHtml5OwningUTF16Buffer);
-}
+{}
 
 nsHtml5OwningUTF16Buffer::~nsHtml5OwningUTF16Buffer()
 {
-  MOZ_COUNT_DTOR(nsHtml5OwningUTF16Buffer);
   DeleteBuffer();
 
   // This is to avoid dtor recursion on 'next', bug 706932.

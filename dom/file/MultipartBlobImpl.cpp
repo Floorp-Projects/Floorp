@@ -328,7 +328,7 @@ MultipartBlobImpl::InitializeChromeFile(Blob& aBlob,
                                         const ChromeFilePropertyBag& aBag,
                                         ErrorResult& aRv)
 {
-  NS_ASSERTION(!mImmutable, "Something went wrong ...");
+  MOZ_ASSERT(!mImmutable, "Something went wrong ...");
 
   if (mImmutable) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -362,7 +362,7 @@ MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                                         bool aIsFromNsIFile,
                                         ErrorResult& aRv)
 {
-  NS_ASSERTION(!mImmutable, "Something went wrong ...");
+  MOZ_ASSERT(!mImmutable, "Something went wrong ...");
   if (mImmutable) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;

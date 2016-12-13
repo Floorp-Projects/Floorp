@@ -17,8 +17,7 @@ class PerformanceMainThread final : public Performance
 public:
   PerformanceMainThread(nsPIDOMWindowInner* aWindow,
                         nsDOMNavigationTiming* aDOMTiming,
-                        nsITimedChannel* aChannel,
-                        Performance* aParentPerformance);
+                        nsITimedChannel* aChannel);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PerformanceMainThread,
@@ -51,11 +50,6 @@ public:
     return mChannel;
   }
 
-  virtual Performance* GetParentPerformance() const override
-  {
-    return mParentPerformance;
-  }
-
 protected:
   ~PerformanceMainThread();
 
@@ -77,7 +71,6 @@ protected:
   nsCOMPtr<nsITimedChannel> mChannel;
   RefPtr<PerformanceTiming> mTiming;
   RefPtr<PerformanceNavigation> mNavigation;
-  RefPtr<Performance> mParentPerformance;
   JS::Heap<JSObject*> mMozMemory;
 };
 

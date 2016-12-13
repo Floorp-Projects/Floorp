@@ -76,8 +76,6 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
     gfxCriticalError() << "Don't create a gfxContext without a DrawTarget";
   }
 
-  MOZ_COUNT_CTOR(gfxContext);
-
   mStateStack.SetLength(1);
   CurrentState().drawTarget = mDT;
   CurrentState().deviceOffset = aDeviceOffset;
@@ -119,7 +117,6 @@ gfxContext::~gfxContext()
     }
   }
   mDT->Flush();
-  MOZ_COUNT_DTOR(gfxContext);
 }
 
 void

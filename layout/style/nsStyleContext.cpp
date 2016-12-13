@@ -98,9 +98,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mFrameRefCnt(0)
   , mComputingStruct(nsStyleStructID_None)
 #endif
-{
-  MOZ_COUNT_CTOR(nsStyleContext);
-}
+{}
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
@@ -183,7 +181,6 @@ nsStyleContext::FinishConstruction(bool aSkipParentDisplayBasedStyleFixup)
 
 nsStyleContext::~nsStyleContext()
 {
-  MOZ_COUNT_DTOR(nsStyleContext);
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
 
 #ifdef DEBUG

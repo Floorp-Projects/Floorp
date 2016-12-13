@@ -3876,8 +3876,8 @@ Tab.prototype = {
           NetErrorHelper.attachToBrowser(this.browser);
         }
 
-        Messaging.sendRequest({
-          type: "DOMContentLoaded",
+        GlobalEventDispatcher.sendRequest({
+          type: "Content:DOMContentLoaded",
           tabID: this.id,
           bgColor: backgroundColor,
           errorType: errorType,

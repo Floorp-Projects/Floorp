@@ -24,7 +24,7 @@ MediaQueryList::MediaQueryList(nsIDocument *aDocument,
   PR_INIT_CLIST(this);
 
   nsCSSParser parser;
-  parser.ParseMediaList(aMediaQueryList, nullptr, 0, mMediaList, false);
+  parser.ParseMediaList(aMediaQueryList, nullptr, 0, mMediaList);
 }
 
 MediaQueryList::~MediaQueryList()

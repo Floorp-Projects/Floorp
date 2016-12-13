@@ -166,7 +166,6 @@ SourceBufferResource::Ended()
 SourceBufferResource::~SourceBufferResource()
 {
   SBR_DEBUG("");
-  MOZ_COUNT_DTOR(SourceBufferResource);
 }
 
 SourceBufferResource::SourceBufferResource(const nsACString& aType)
@@ -177,7 +176,6 @@ SourceBufferResource::SourceBufferResource(const nsACString& aType)
   , mEnded(false)
 {
   SBR_DEBUG("");
-  MOZ_COUNT_CTOR(SourceBufferResource);
 }
 
 #undef SBR_DEBUG
