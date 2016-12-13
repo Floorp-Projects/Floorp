@@ -82,7 +82,7 @@ private:
       mSeekableStream(do_QueryInterface(aStream)),
       mSerializableInputStream(do_QueryInterface(aStream))
   {
-    NS_ASSERTION(mSeekableStream, "Somebody gave us the wrong stream!");
+    MOZ_ASSERT(mSeekableStream, "Somebody gave us the wrong stream!");
   }
 
   RefPtr<DataOwner> mDataOwner;
@@ -108,7 +108,7 @@ nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
                                   nsIInputStream** _retval)
 {
   nsresult rv;
-  NS_ASSERTION(aDataOwner, "Uh ...");
+  MOZ_ASSERT(aDataOwner, "Uh ...");
 
   nsCOMPtr<nsIInputStream> stream;
 
@@ -672,28 +672,28 @@ NS_IMPL_ISUPPORTS_INHERITED0(BlobImplFile, BlobImpl)
 void
 BlobImplBase::GetName(nsAString& aName) const
 {
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
   aName = mName;
 }
 
 void
 BlobImplBase::GetPath(nsAString& aPath) const
 {
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
   aPath = mPath;
 }
 
 void
 BlobImplBase::SetPath(const nsAString& aPath)
 {
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
   mPath = aPath;
 }
 
 void
 BlobImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv) const
 {
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
 
   aFileName.Truncate();
 
@@ -733,7 +733,7 @@ BlobImplBase::GetType(nsAString& aType)
 int64_t
 BlobImplBase::GetLastModified(ErrorResult& aRv)
 {
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
   if (IsDateUnknown()) {
     mLastModificationDate = PR_Now();
   }
@@ -840,7 +840,7 @@ BlobImplFile::CreateSlice(uint64_t aStart, uint64_t aLength,
 void
 BlobImplFile::GetMozFullPathInternal(nsAString& aFilename, ErrorResult& aRv) const
 {
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
   aRv = mFile->GetPath(aFilename);
 }
 
@@ -848,7 +848,7 @@ uint64_t
 BlobImplFile::GetSize(ErrorResult& aRv)
 {
   if (BlobImplBase::IsSizeUnknown()) {
-    NS_ASSERTION(mWholeFile,
+    MOZ_ASSERT(mWholeFile,
                  "Should only use lazy size when using the whole file");
     int64_t fileSize;
     aRv = mFile->GetFileSize(&fileSize);
@@ -907,8 +907,8 @@ BlobImplFile::GetType(nsAString& aType)
   aType.Truncate();
 
   if (mContentType.IsVoid()) {
-    NS_ASSERTION(mWholeFile,
-                 "Should only use lazy ContentType when using the whole file");
+    MOZ_ASSERT(mWholeFile,
+               "Should only use lazy ContentType when using the whole file");
 
     if (!NS_IsMainThread()) {
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -952,7 +952,7 @@ BlobImplFile::GetType(nsAString& aType)
 int64_t
 BlobImplFile::GetLastModified(ErrorResult& aRv)
 {
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
   if (BlobImplBase::IsDateUnknown()) {
     PRTime msecs;
     aRv = mFile->GetLastModifiedTime(&msecs);
