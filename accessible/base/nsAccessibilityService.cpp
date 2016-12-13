@@ -751,163 +751,167 @@ nsAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString)
 
 void
 nsAccessibilityService::GetStringStates(uint32_t aState, uint32_t aExtraState,
-                                        nsISupports **aStringStates)
+                                        nsISupports** aStringStates)
 {
-  RefPtr<DOMStringList> stringStates = new DOMStringList();
+  RefPtr<DOMStringList> stringStates = 
+    GetStringStates(nsAccUtils::To64State(aState, aExtraState));
 
-  uint64_t state = nsAccUtils::To64State(aState, aExtraState);
-
-  // states
-  if (state & states::UNAVAILABLE) {
-    stringStates->Add(NS_LITERAL_STRING("unavailable"));
-  }
-  if (state & states::SELECTED) {
-    stringStates->Add(NS_LITERAL_STRING("selected"));
-  }
-  if (state & states::FOCUSED) {
-    stringStates->Add(NS_LITERAL_STRING("focused"));
-  }
-  if (state & states::PRESSED) {
-    stringStates->Add(NS_LITERAL_STRING("pressed"));
-  }
-  if (state & states::CHECKED) {
-    stringStates->Add(NS_LITERAL_STRING("checked"));
-  }
-  if (state & states::MIXED) {
-    stringStates->Add(NS_LITERAL_STRING("mixed"));
-  }
-  if (state & states::READONLY) {
-    stringStates->Add(NS_LITERAL_STRING("readonly"));
-  }
-  if (state & states::HOTTRACKED) {
-    stringStates->Add(NS_LITERAL_STRING("hottracked"));
-  }
-  if (state & states::DEFAULT) {
-    stringStates->Add(NS_LITERAL_STRING("default"));
-  }
-  if (state & states::EXPANDED) {
-    stringStates->Add(NS_LITERAL_STRING("expanded"));
-  }
-  if (state & states::COLLAPSED) {
-    stringStates->Add(NS_LITERAL_STRING("collapsed"));
-  }
-  if (state & states::BUSY) {
-    stringStates->Add(NS_LITERAL_STRING("busy"));
-  }
-  if (state & states::FLOATING) {
-    stringStates->Add(NS_LITERAL_STRING("floating"));
-  }
-  if (state & states::ANIMATED) {
-    stringStates->Add(NS_LITERAL_STRING("animated"));
-  }
-  if (state & states::INVISIBLE) {
-    stringStates->Add(NS_LITERAL_STRING("invisible"));
-  }
-  if (state & states::OFFSCREEN) {
-    stringStates->Add(NS_LITERAL_STRING("offscreen"));
-  }
-  if (state & states::SIZEABLE) {
-    stringStates->Add(NS_LITERAL_STRING("sizeable"));
-  }
-  if (state & states::MOVEABLE) {
-    stringStates->Add(NS_LITERAL_STRING("moveable"));
-  }
-  if (state & states::SELFVOICING) {
-    stringStates->Add(NS_LITERAL_STRING("selfvoicing"));
-  }
-  if (state & states::FOCUSABLE) {
-    stringStates->Add(NS_LITERAL_STRING("focusable"));
-  }
-  if (state & states::SELECTABLE) {
-    stringStates->Add(NS_LITERAL_STRING("selectable"));
-  }
-  if (state & states::LINKED) {
-    stringStates->Add(NS_LITERAL_STRING("linked"));
-  }
-  if (state & states::TRAVERSED) {
-    stringStates->Add(NS_LITERAL_STRING("traversed"));
-  }
-  if (state & states::MULTISELECTABLE) {
-    stringStates->Add(NS_LITERAL_STRING("multiselectable"));
-  }
-  if (state & states::EXTSELECTABLE) {
-    stringStates->Add(NS_LITERAL_STRING("extselectable"));
-  }
-  if (state & states::PROTECTED) {
-    stringStates->Add(NS_LITERAL_STRING("protected"));
-  }
-  if (state & states::HASPOPUP) {
-    stringStates->Add(NS_LITERAL_STRING("haspopup"));
-  }
-  if (state & states::REQUIRED) {
-    stringStates->Add(NS_LITERAL_STRING("required"));
-  }
-  if (state & states::ALERT) {
-    stringStates->Add(NS_LITERAL_STRING("alert"));
-  }
-  if (state & states::INVALID) {
-    stringStates->Add(NS_LITERAL_STRING("invalid"));
-  }
-  if (state & states::CHECKABLE) {
-    stringStates->Add(NS_LITERAL_STRING("checkable"));
-  }
-
-  // extraStates
-  if (state & states::SUPPORTS_AUTOCOMPLETION) {
-    stringStates->Add(NS_LITERAL_STRING("autocompletion"));
-  }
-  if (state & states::DEFUNCT) {
-    stringStates->Add(NS_LITERAL_STRING("defunct"));
-  }
-  if (state & states::SELECTABLE_TEXT) {
-    stringStates->Add(NS_LITERAL_STRING("selectable text"));
-  }
-  if (state & states::EDITABLE) {
-    stringStates->Add(NS_LITERAL_STRING("editable"));
-  }
-  if (state & states::ACTIVE) {
-    stringStates->Add(NS_LITERAL_STRING("active"));
-  }
-  if (state & states::MODAL) {
-    stringStates->Add(NS_LITERAL_STRING("modal"));
-  }
-  if (state & states::MULTI_LINE) {
-    stringStates->Add(NS_LITERAL_STRING("multi line"));
-  }
-  if (state & states::HORIZONTAL) {
-    stringStates->Add(NS_LITERAL_STRING("horizontal"));
-  }
-  if (state & states::OPAQUE1) {
-    stringStates->Add(NS_LITERAL_STRING("opaque"));
-  }
-  if (state & states::SINGLE_LINE) {
-    stringStates->Add(NS_LITERAL_STRING("single line"));
-  }
-  if (state & states::TRANSIENT) {
-    stringStates->Add(NS_LITERAL_STRING("transient"));
-  }
-  if (state & states::VERTICAL) {
-    stringStates->Add(NS_LITERAL_STRING("vertical"));
-  }
-  if (state & states::STALE) {
-    stringStates->Add(NS_LITERAL_STRING("stale"));
-  }
-  if (state & states::ENABLED) {
-    stringStates->Add(NS_LITERAL_STRING("enabled"));
-  }
-  if (state & states::SENSITIVE) {
-    stringStates->Add(NS_LITERAL_STRING("sensitive"));
-  }
-  if (state & states::EXPANDABLE) {
-    stringStates->Add(NS_LITERAL_STRING("expandable"));
-  }
-
-  //unknown states
+  // unknown state
   if (!stringStates->Length()) {
     stringStates->Add(NS_LITERAL_STRING("unknown"));
   }
 
   stringStates.forget(aStringStates);
+}
+
+already_AddRefed<DOMStringList>
+nsAccessibilityService::GetStringStates(uint64_t aStates) const
+{
+  RefPtr<DOMStringList> stringStates = new DOMStringList();
+
+  if (aStates & states::UNAVAILABLE) {
+    stringStates->Add(NS_LITERAL_STRING("unavailable"));
+  }
+  if (aStates & states::SELECTED) {
+    stringStates->Add(NS_LITERAL_STRING("selected"));
+  }
+  if (aStates & states::FOCUSED) {
+    stringStates->Add(NS_LITERAL_STRING("focused"));
+  }
+  if (aStates & states::PRESSED) {
+    stringStates->Add(NS_LITERAL_STRING("pressed"));
+  }
+  if (aStates & states::CHECKED) {
+    stringStates->Add(NS_LITERAL_STRING("checked"));
+  }
+  if (aStates & states::MIXED) {
+    stringStates->Add(NS_LITERAL_STRING("mixed"));
+  }
+  if (aStates & states::READONLY) {
+    stringStates->Add(NS_LITERAL_STRING("readonly"));
+  }
+  if (aStates & states::HOTTRACKED) {
+    stringStates->Add(NS_LITERAL_STRING("hottracked"));
+  }
+  if (aStates & states::DEFAULT) {
+    stringStates->Add(NS_LITERAL_STRING("default"));
+  }
+  if (aStates & states::EXPANDED) {
+    stringStates->Add(NS_LITERAL_STRING("expanded"));
+  }
+  if (aStates & states::COLLAPSED) {
+    stringStates->Add(NS_LITERAL_STRING("collapsed"));
+  }
+  if (aStates & states::BUSY) {
+    stringStates->Add(NS_LITERAL_STRING("busy"));
+  }
+  if (aStates & states::FLOATING) {
+    stringStates->Add(NS_LITERAL_STRING("floating"));
+  }
+  if (aStates & states::ANIMATED) {
+    stringStates->Add(NS_LITERAL_STRING("animated"));
+  }
+  if (aStates & states::INVISIBLE) {
+    stringStates->Add(NS_LITERAL_STRING("invisible"));
+  }
+  if (aStates & states::OFFSCREEN) {
+    stringStates->Add(NS_LITERAL_STRING("offscreen"));
+  }
+  if (aStates & states::SIZEABLE) {
+    stringStates->Add(NS_LITERAL_STRING("sizeable"));
+  }
+  if (aStates & states::MOVEABLE) {
+    stringStates->Add(NS_LITERAL_STRING("moveable"));
+  }
+  if (aStates & states::SELFVOICING) {
+    stringStates->Add(NS_LITERAL_STRING("selfvoicing"));
+  }
+  if (aStates & states::FOCUSABLE) {
+    stringStates->Add(NS_LITERAL_STRING("focusable"));
+  }
+  if (aStates & states::SELECTABLE) {
+    stringStates->Add(NS_LITERAL_STRING("selectable"));
+  }
+  if (aStates & states::LINKED) {
+    stringStates->Add(NS_LITERAL_STRING("linked"));
+  }
+  if (aStates & states::TRAVERSED) {
+    stringStates->Add(NS_LITERAL_STRING("traversed"));
+  }
+  if (aStates & states::MULTISELECTABLE) {
+    stringStates->Add(NS_LITERAL_STRING("multiselectable"));
+  }
+  if (aStates & states::EXTSELECTABLE) {
+    stringStates->Add(NS_LITERAL_STRING("extselectable"));
+  }
+  if (aStates & states::PROTECTED) {
+    stringStates->Add(NS_LITERAL_STRING("protected"));
+  }
+  if (aStates & states::HASPOPUP) {
+    stringStates->Add(NS_LITERAL_STRING("haspopup"));
+  }
+  if (aStates & states::REQUIRED) {
+    stringStates->Add(NS_LITERAL_STRING("required"));
+  }
+  if (aStates & states::ALERT) {
+    stringStates->Add(NS_LITERAL_STRING("alert"));
+  }
+  if (aStates & states::INVALID) {
+    stringStates->Add(NS_LITERAL_STRING("invalid"));
+  }
+  if (aStates & states::CHECKABLE) {
+    stringStates->Add(NS_LITERAL_STRING("checkable"));
+  }
+  if (aStates & states::SUPPORTS_AUTOCOMPLETION) {
+    stringStates->Add(NS_LITERAL_STRING("autocompletion"));
+  }
+  if (aStates & states::DEFUNCT) {
+    stringStates->Add(NS_LITERAL_STRING("defunct"));
+  }
+  if (aStates & states::SELECTABLE_TEXT) {
+    stringStates->Add(NS_LITERAL_STRING("selectable text"));
+  }
+  if (aStates & states::EDITABLE) {
+    stringStates->Add(NS_LITERAL_STRING("editable"));
+  }
+  if (aStates & states::ACTIVE) {
+    stringStates->Add(NS_LITERAL_STRING("active"));
+  }
+  if (aStates & states::MODAL) {
+    stringStates->Add(NS_LITERAL_STRING("modal"));
+  }
+  if (aStates & states::MULTI_LINE) {
+    stringStates->Add(NS_LITERAL_STRING("multi line"));
+  }
+  if (aStates & states::HORIZONTAL) {
+    stringStates->Add(NS_LITERAL_STRING("horizontal"));
+  }
+  if (aStates & states::OPAQUE1) {
+    stringStates->Add(NS_LITERAL_STRING("opaque"));
+  }
+  if (aStates & states::SINGLE_LINE) {
+    stringStates->Add(NS_LITERAL_STRING("single line"));
+  }
+  if (aStates & states::TRANSIENT) {
+    stringStates->Add(NS_LITERAL_STRING("transient"));
+  }
+  if (aStates & states::VERTICAL) {
+    stringStates->Add(NS_LITERAL_STRING("vertical"));
+  }
+  if (aStates & states::STALE) {
+    stringStates->Add(NS_LITERAL_STRING("stale"));
+  }
+  if (aStates & states::ENABLED) {
+    stringStates->Add(NS_LITERAL_STRING("enabled"));
+  }
+  if (aStates & states::SENSITIVE) {
+    stringStates->Add(NS_LITERAL_STRING("sensitive"));
+  }
+  if (aStates & states::EXPANDABLE) {
+    stringStates->Add(NS_LITERAL_STRING("expandable"));
+  }
+
+  return stringStates.forget();
 }
 
 void
