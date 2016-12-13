@@ -204,6 +204,22 @@ ul.children + .tag-line::before {
   display: inline;
 }
 
+.expandable.collapsed .close::before {
+  /* Display an ellipsis character in collapsed nodes that can be expanded. */
+  content: "\2026";
+  display: inline-block;
+  width: 12px;
+  height: 8px;
+  margin: 0 2px;
+  line-height: 3px;
+  color: var(--theme-body-color-inactive);;
+  border-radius: 3px;
+  border-style: solid;
+  border-width: 1px;
+  text-align: center;
+  vertical-align: middle;
+}
+
 /* Hide HTML void elements (img, hr, br, …) closing tag when the element is not
  * expanded (it can be if it has pseudo-elements attached) */
 .child.collapsed > .tag-line .void-element .close {
@@ -326,7 +342,8 @@ ul.children + .tag-line::before {
 .theme-selected ~ .editor .theme-fg-color4,
 .theme-selected ~ .editor .theme-fg-color5,
 .theme-selected ~ .editor .theme-fg-color6,
-.theme-selected ~ .editor .theme-fg-color7 {
+.theme-selected ~ .editor .theme-fg-color7,
+.theme-selected ~ .editor .close::before {
   color: var(--theme-selection-color);
 }
 
