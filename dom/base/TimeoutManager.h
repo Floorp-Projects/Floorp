@@ -87,11 +87,15 @@ public:
   template <class Callable>
   void ForEachTimeout(Callable c)
   {
-    for (Timeout* timeout = mTimeouts.GetFirst();
-         timeout;
-         timeout = timeout->getNext()) {
-      c(timeout);
-    }
+    mTimeouts.ForEach(c);
+  }
+
+  // Run some code for each Timeout in our list, but let the callback cancel
+  // the iteration by returning true.
+  template <class Callable>
+  void ForEachTimeoutAbortable(Callable c)
+  {
+    mTimeouts.ForEachAbortable(c);
   }
 
 private:
@@ -120,6 +124,28 @@ private:
     Timeout* InsertionPoint()
     {
       return mTimeoutInsertionPoint;
+    }
+
+    template <class Callable>
+    void ForEach(Callable c)
+    {
+      for (Timeout* timeout = GetFirst();
+           timeout;
+           timeout = timeout->getNext()) {
+        c(timeout);
+      }
+    }
+
+    template <class Callable>
+    void ForEachAbortable(Callable c)
+    {
+      for (Timeout* timeout = GetFirst();
+           timeout;
+           timeout = timeout->getNext()) {
+        if (c(timeout)) {
+          break;
+        }
+      }
     }
 
   private:
