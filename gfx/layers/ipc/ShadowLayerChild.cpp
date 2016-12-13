@@ -32,29 +32,13 @@ ShadowLayerChild::ActorDestroy(ActorDestroyReason why)
   MOZ_ASSERT(AncestorDeletion != why,
              "shadowable layer should have been cleaned up by now");
 
-  if (AbnormalShutdown == why) {
+  if (AbnormalShutdown == why && mLayer) {
     // This is last-ditch emergency shutdown.  Just have the layer
     // forget its IPDL resources; IPDL-generated code will clean up
     // automatically in this case.
-    Disconnect();
-  }
-}
-
-void
-ShadowLayerChild::Disconnect()
-{
-  if (mLayer) {
     mLayer->AsLayer()->Disconnect();
     mLayer = nullptr;
   }
-}
-
-/* static */ void
-ShadowLayerChild::Destroy(PLayerChild* aActor)
-{
-  ShadowLayerChild* actor = static_cast<ShadowLayerChild*>(aActor);
-  actor->Disconnect();
-  PLayerChild::Send__delete__(actor);
 }
 
 } // namespace layers
