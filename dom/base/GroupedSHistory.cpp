@@ -168,5 +168,18 @@ GroupedSHistory::GroupedHistoryEnabled() {
   return Preferences::GetBool("browser.groupedhistory.enabled", false);
 }
 
+NS_IMETHODIMP
+GroupedSHistory::CloseInactiveFrameLoaderOwners()
+{
+  for (int32_t i = 0; i < mPartialHistories.Count(); ++i) {
+    if (i != mIndexOfActivePartialHistory) {
+      nsCOMPtr<nsIFrameLoader> loader;
+      mPartialHistories[i]->GetOwnerFrameLoader(getter_AddRefs(loader));
+      loader->RequestFrameLoaderClose();
+    }
+  }
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla
