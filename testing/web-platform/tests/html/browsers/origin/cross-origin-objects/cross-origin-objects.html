@@ -70,10 +70,15 @@ addTest(function() {
  * Also tests for [[GetOwnProperty]] and [[HasOwnProperty]] behavior.
  */
 
+var whitelistedWindowIndices = ['0', '1'];
 var whitelistedWindowPropNames = ['location', 'postMessage', 'window', 'frames', 'self', 'top', 'parent',
                                   'opener', 'closed', 'close', 'blur', 'focus', 'length'];
-var whitelistedSymbols = [Symbol.isConcatSpreadable, Symbol.toStringTag,
-                          Symbol.hasInstance];
+whitelistedWindowPropNames = whitelistedWindowPropNames.concat(whitelistedWindowIndices);
+whitelistedWindowPropNames.sort();
+var whitelistedLocationPropNames = ['href', 'replace'];
+whitelistedLocationPropNames.sort();
+var whitelistedSymbols = [Symbol.toStringTag, Symbol.hasInstance,
+                          Symbol.isConcatSpreadable];
 var whitelistedWindowProps = whitelistedWindowPropNames.concat(whitelistedSymbols);
 
 addTest(function() {
@@ -260,34 +265,42 @@ addTest(function() {
  */
 
 addTest(function() {
-  assert_array_equals(whitelistedWindowPropNames.sort(),
-                      Object.getOwnPropertyNames(C).sort(),
+  assert_array_equals(Object.getOwnPropertyNames(C).sort(),
+                      whitelistedWindowPropNames,
                       "Object.getOwnPropertyNames() gives the right answer for cross-origin Window");
-  assert_array_equals(Object.getOwnPropertyNames(C.location).sort(), ['href', 'replace'],
+  assert_array_equals(Object.getOwnPropertyNames(C.location).sort(),
+                      whitelistedLocationPropNames,
                       "Object.getOwnPropertyNames() gives the right answer for cross-origin Location");
 }, "[[OwnPropertyKeys]] should return all properties from cross-origin objects");
 
-// Compare two arrays that need to have the same elements but may be in
-// different orders.  The problem is that there's no good way to sort arrays
-// containing Symbols.
-function assert_arrays_equal_up_to_order(arr1, arr2, desc) {
-  for (let item of arr1) {
-    assert_in_array(item, arr2, desc);
-  }
-
-  for (let item of arr2) {
-    assert_in_array(item, arr1, desc);
-  }
-}
-
 addTest(function() {
-  assert_arrays_equal_up_to_order(Object.getOwnPropertySymbols(C),
-                                  whitelistedSymbols,
+  assert_array_equals(Object.getOwnPropertySymbols(C), whitelistedSymbols,
     "Object.getOwnPropertySymbols() should return the three symbol-named properties that are exposed on a cross-origin Window");
-  assert_arrays_equal_up_to_order(Object.getOwnPropertySymbols(C.location),
-                                  whitelistedSymbols,
+  assert_array_equals(Object.getOwnPropertySymbols(C.location),
+                      whitelistedSymbols,
     "Object.getOwnPropertySymbols() should return the three symbol-named properties that are exposed on a cross-origin Location");
 }, "[[OwnPropertyKeys]] should return the right symbol-named properties for cross-origin objects");
+
+addTest(function() {
+  var allWindowProps = Reflect.ownKeys(C);
+  indexedWindowProps = allWindowProps.slice(0, whitelistedWindowIndices.length);
+  stringWindowProps = allWindowProps.slice(0, -1 * whitelistedSymbols.length);
+  symbolWindowProps = allWindowProps.slice(-1 * whitelistedSymbols.length);
+  assert_array_equals(indexedWindowProps, whitelistedWindowIndices,
+                      "Reflect.ownKeys should start with the indices exposed on the cross-origin window.");
+  assert_array_equals(stringWindowProps.sort(), whitelistedWindowPropNames,
+                      "Reflect.ownKeys should continue with the cross-origin window properties for a cross-origin Window.");
+  assert_array_equals(symbolWindowProps, whitelistedSymbols,
+                      "Reflect.ownKeys should end with the cross-origin symbols for a cross-origin Window.");
+
+  var allLocationProps = Reflect.ownKeys(C.location);
+  stringLocationProps = allLocationProps.slice(0, -1 * whitelistedSymbols.length);
+  symbolLocationProps = allLocationProps.slice(-1 * whitelistedSymbols.length);
+  assert_array_equals(stringLocationProps.sort(), whitelistedLocationPropNames,
+                      "Reflect.ownKeys should start with the cross-origin window properties for a cross-origin Location.")
+  assert_array_equals(symbolLocationProps, whitelistedSymbols,
+                      "Reflect.ownKeys should end with the cross-origin symbols for a cross-origin Location.")
+}, "[[OwnPropertyKeys]] should place the symbols after the property names after the subframe indices");
 
 addTest(function() {
   assert_true(B.eval('parent.C') === C, "A and B observe the same identity for C's Window");
