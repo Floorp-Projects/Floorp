@@ -32,9 +32,9 @@ marionette.jar:
   content/assert.js (assert.js)
   content/addon.js (addon.js)
 #ifdef ENABLE_TESTS
-  content/test.xul  (harness/marionette/chrome/test.xul)
-  content/test2.xul  (harness/marionette/chrome/test2.xul)
-  content/test_dialog.xul  (harness/marionette/chrome/test_dialog.xul)
-  content/test_nested_iframe.xul  (harness/marionette/chrome/test_nested_iframe.xul)
-  content/test_anonymous_content.xul  (harness/marionette/chrome/test_anonymous_content.xul)
+  content/test.xul (chrome/test.xul)
+  content/test2.xul (chrome/test2.xul)
+  content/test_dialog.xul (chrome/test_dialog.xul)
+  content/test_nested_iframe.xul (chrome/test_nested_iframe.xul)
+  content/test_anonymous_content.xul (chrome/test_anonymous_content.xul)
 #endif

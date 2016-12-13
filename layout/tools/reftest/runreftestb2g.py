@@ -21,8 +21,9 @@ from remotereftest import RemoteReftestResolver, ReftestServer
 from runreftest import RefTest
 import reftestcommandline
 
+from marionette_harness import Marionette
 from mozdevice import DeviceManagerADB, DMError
-from marionette import Marionette
+
 
 class ProfileConfigParser(ConfigParser.RawConfigParser):
     """Subclass of RawConfigParser that outputs .ini files in the exact

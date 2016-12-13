@@ -763,4 +763,9 @@
         <item name="android:listDivider">@drawable/as_contextmenu_divider</item>
     </style>
 
+    <style name="ActivityStreamButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorButtonNormal">@color/link_blue</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
 </resources>

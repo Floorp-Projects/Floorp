@@ -1,8 +1,3 @@
-recursive-include marionette/touch *.js
-recursive-include marionette/www *
-recursive-include marionette/chrome *
-recursive-include marionette/runner/mixins/resources *
 exclude MANIFEST.in
 include requirements.txt
-include marionette/runner/test.cert
-include marionette/runner/test.key
+recursive-include marionette_harness/www *

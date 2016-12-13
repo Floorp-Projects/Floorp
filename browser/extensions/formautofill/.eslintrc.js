@@ -150,9 +150,6 @@ module.exports = { // eslint-disable-line no-undef
     // No reassigning native JS objects
     "no-native-reassign": "error",
 
-    // No (!foo in bar)
-    "no-negated-in-lhs": "error",
-
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
 

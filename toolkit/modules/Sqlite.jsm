@@ -995,7 +995,7 @@ function cloneStorageConnection(options) {
   if (!source) {
     throw new TypeError("connection not specified in clone options.");
   }
-  if (!source instanceof Ci.mozIStorageAsyncConnection) {
+  if (!(source instanceof Ci.mozIStorageAsyncConnection)) {
     throw new TypeError("Connection must be a valid Storage connection.");
   }
 

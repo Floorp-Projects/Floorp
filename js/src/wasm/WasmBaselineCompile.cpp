@@ -2206,11 +2206,10 @@ class BaseCompiler
                                                          JitStackAlignment);
     }
 
-    void endCall(FunctionCall& call)
+    void endCall(FunctionCall& call, size_t stackSpace)
     {
         size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
-        if (adjustment)
-            masm.freeStack(adjustment);
+        masm.freeStack(stackSpace + adjustment);
 
         if (call.reloadMachineStateAfter) {
             loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
@@ -5873,13 +5872,9 @@ BaseCompiler::emitCall()
     else
         callDefinition(funcIndex, baselineCall);
 
-    endCall(baselineCall);
-
-    // TODO / OPTIMIZE (bug 1316827): It would be better to merge this
-    // freeStack() into the one in endCall, if we can.
+    endCall(baselineCall, stackSpace);
 
     popValueStackBy(numArgs);
-    masm.freeStack(stackSpace);
 
     if (!IsVoid(sig.ret()))
         pushReturned(baselineCall, sig.ret());
@@ -5927,27 +5922,20 @@ BaseCompiler::emitCallIndirect(bool oldStyle)
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
 
-    if (oldStyle) {
-        if (!iter_.readOldCallIndirectCallee(&callee_))
-            return false;
-    }
+    if (oldStyle && !iter_.readOldCallIndirectCallee(&callee_))
+        return false;
 
     if (!iter_.readCallReturn(sig.ret()))
         return false;
 
     callIndirect(sigIndex, callee, baselineCall);
 
-    endCall(baselineCall);
+    endCall(baselineCall, stackSpace);
 
     // For new style calls, the callee was popped off the compiler's
     // stack above.
 
     popValueStackBy(oldStyle ? numArgs + 1 : numArgs);
-
-    // TODO / OPTIMIZE (bug 1316827): It would be better to merge this
-    // freeStack() into the one in endCall, if we can.
-
-    masm.freeStack(stackSpace);
 
     if (!IsVoid(sig.ret()))
         pushReturned(baselineCall, sig.ret());
@@ -5975,13 +5963,9 @@ BaseCompiler::emitCommonMathCall(uint32_t lineOrBytecode, SymbolicAddress callee
 
     builtinCall(callee, baselineCall);
 
-    endCall(baselineCall);
-
-    // TODO / OPTIMIZE (bug 1316827): It would be better to merge this
-    // freeStack() into the one in endCall, if we can.
+    endCall(baselineCall, stackSpace);
 
     popValueStackBy(numArgs);
-    masm.freeStack(stackSpace);
 
     pushReturned(baselineCall, retType);
 
@@ -6779,10 +6763,9 @@ BaseCompiler::emitGrowMemory()
     startCallArgs(baselineCall, stackArgAreaSize(SigI_));
     passArg(baselineCall, ValType::I32, peek(0));
     builtinInstanceMethodCall(SymbolicAddress::GrowMemory, instanceArg, baselineCall);
-    endCall(baselineCall);
+    endCall(baselineCall, stackSpace);
 
     popValueStackBy(numArgs);
-    masm.freeStack(stackSpace);
 
     pushReturned(baselineCall, ExprType::I32);
 
@@ -6809,7 +6792,7 @@ BaseCompiler::emitCurrentMemory()
 
     startCallArgs(baselineCall, stackArgAreaSize(Sig_));
     builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, instanceArg, baselineCall);
-    endCall(baselineCall);
+    endCall(baselineCall, 0);
 
     pushReturned(baselineCall, ExprType::I32);
 

@@ -68,7 +68,7 @@ SEARCH_PATHS = [
     'testing/firefox-ui/harness',
     'testing/marionette/client',
     'testing/marionette/harness',
-    'testing/marionette/harness/marionette/runner/mixins/browsermob-proxy-py',
+    'testing/marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py',
     'testing/marionette/puppeteer/firefox',
     'testing/mozbase/mozcrash',
     'testing/mozbase/mozdebug',

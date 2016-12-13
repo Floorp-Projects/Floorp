@@ -1,5 +1,5 @@
 firefox-puppeteer >= 52.1.0, <53.0.0
-marionette-client >= 2.3.0
+marionette-harness >= 4.0.0
 mozfile >= 1.2
 mozinfo >= 0.8
 mozinstall >= 1.12

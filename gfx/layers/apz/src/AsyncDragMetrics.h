@@ -40,8 +40,8 @@ public:
   AsyncDragMetrics(const FrameMetrics::ViewID& aViewId,
                    uint32_t aPresShellId,
                    uint64_t aDragStartSequenceNumber,
-                   CSSIntCoord aScrollbarDragOffset,
-                   const CSSIntRect& aScrollTrack,
+                   CSSCoord aScrollbarDragOffset,
+                   const CSSRect& aScrollTrack,
                    DragDirection aDirection)
     : mViewId(aViewId)
     , mPresShellId(aPresShellId)
@@ -54,8 +54,8 @@ public:
   FrameMetrics::ViewID mViewId;
   uint32_t mPresShellId;
   uint64_t mDragStartSequenceNumber;
-  CSSIntCoord mScrollbarDragOffset;
-  CSSIntRect mScrollTrack;
+  CSSCoord mScrollbarDragOffset;
+  CSSRect mScrollTrack;
   DragDirection mDirection;
 };
 

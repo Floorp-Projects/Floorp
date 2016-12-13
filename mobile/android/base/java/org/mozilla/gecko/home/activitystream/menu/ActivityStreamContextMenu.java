@@ -20,6 +20,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -153,12 +154,31 @@ public abstract class ActivityStreamContextMenu
                     public void run() {
                         final BrowserDB db = BrowserDB.from(context);
 
+                        final TelemetryContract.Event telemetryEvent;
+                        final String telemetryExtra;
                         if (isAlreadyBookmarked) {
                             db.removeBookmarksWithURL(context.getContentResolver(), url);
+
+                            SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(context);
+                            final boolean isReaderViewPage = rch.isURLCached(url);
+
+                            telemetryEvent = TelemetryContract.Event.UNSAVE;
+
+                            if (isReaderViewPage) {
+                                telemetryExtra = "as_bookmark_reader";
+                            } else {
+                                telemetryExtra = "as_bookmark";
+                            }
                         } else {
+                            // We only store raw URLs in history (and bookmarks), hence we won't ever show about:reader
+                            // URLs in AS topsites or highlights. Therefore we don't need to do any special about:reader handling here.
                             db.addBookmark(context.getContentResolver(), title, url);
+
+                            telemetryEvent = TelemetryContract.Event.SAVE;
+                            telemetryExtra = "as_bookmark";
                         }
 
+                        Telemetry.sendUIEvent(telemetryEvent, TelemetryContract.Method.CONTEXT_MENU, telemetryExtra);
                     }
                 });
                 break;
@@ -169,6 +189,8 @@ public abstract class ActivityStreamContextMenu
 
             case R.id.add_homescreen:
                 GeckoAppShell.createShortcut(title, url);
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "as_add_to_launcher");
                 break;
 
             case R.id.open_new_tab:
