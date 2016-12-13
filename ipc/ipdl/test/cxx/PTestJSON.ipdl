@@ -41,6 +41,7 @@ parent:
         returns (JSONVariant o);
     async __delete__();
 
+/*
 state START:
     send Start goto TEST;
 
@@ -48,6 +49,7 @@ state TEST:
     recv PTestHandle goto TEST;
     recv Test goto TEST;
     recv __delete__;
+*/
 };
 
 } // namespace mozilla

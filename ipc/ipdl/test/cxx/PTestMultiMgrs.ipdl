@@ -17,6 +17,7 @@ child:
     async Check();
     async __delete__();
 
+/*
 state START:
     send PTestMultiMgrsLeft goto CONSTRUCT_RIGHT;
 state CONSTRUCT_RIGHT:
@@ -28,6 +29,7 @@ state CHILD_ACK:
 
 state DONE:
     send __delete__;
+*/
 };
 
 } // namespace _ipdltest

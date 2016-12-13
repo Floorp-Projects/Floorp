@@ -12,9 +12,11 @@ child:
     async PTestSelfManage();
     async __delete__();
 
+/*
 state LIVE:
     send PTestSelfManage goto LIVE;
     send __delete__;
+*/
 };
 
 
