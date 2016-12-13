@@ -1244,14 +1244,14 @@ AudioChannelService::AudioChannelWindow::AppendAgent(AudioChannelAgent* aAgent,
   RequestAudioFocus(aAgent);
   AppendAgentAndIncreaseAgentsNum(aAgent);
   AudioCapturedChanged(aAgent, AudioCaptureState::eCapturing);
-  if (aAudible) {
+  if (aAudible == AudibleState::eAudible) {
     AudioAudibleChanged(aAgent,
                         AudibleState::eAudible,
                         AudibleChangedReasons::eDataAudibleChanged);
-  } else if (IsEnableAudioCompetingForAllAgents() && !aAudible) {
+  } else if (IsEnableAudioCompetingForAllAgents() &&
+             aAudible != AudibleState::eAudible) {
     NotifyAudioCompetingChanged(aAgent, true);
   }
-  MaybeNotifyMediaBlocked(aAgent);
 }
 
 void
@@ -1322,13 +1322,16 @@ AudioChannelService::AudioChannelWindow::AudioAudibleChanged(AudioChannelAgent* 
 {
   MOZ_ASSERT(aAgent);
 
-  if (aAudible) {
+  if (aAudible == AudibleState::eAudible) {
     AppendAudibleAgentIfNotContained(aAgent, aReason);
   } else {
     RemoveAudibleAgentIfContained(aAgent, aReason);
   }
 
-  NotifyAudioCompetingChanged(aAgent, aAudible);
+  NotifyAudioCompetingChanged(aAgent, aAudible == AudibleState::eAudible);
+  if (aAudible != AudibleState::eNotAudible) {
+    MaybeNotifyMediaBlocked(aAgent);
+  }
 }
 
 void
@@ -1385,7 +1388,9 @@ AudioChannelService::AudioChannelWindow::NotifyAudioAudibleChanged(nsPIDOMWindow
                                                                    AudibleChangedReasons aReason)
 {
   RefPtr<AudioPlaybackRunnable> runnable =
-    new AudioPlaybackRunnable(aWindow, aAudible, aReason);
+    new AudioPlaybackRunnable(aWindow,
+                              aAudible == AudibleState::eAudible,
+                              aReason);
   DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(runnable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
 }

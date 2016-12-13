@@ -6594,25 +6594,25 @@ HTMLMediaElement::NotifyAudioPlaybackChanged(AudibleChangedReasons aReason)
   mAudioChannelAgent->NotifyStartedAudible(mAudible, aReason);
 }
 
-bool
+AudibleState
 HTMLMediaElement::IsAudible() const
 {
   // Muted or the volume should not be ~0
   if (Muted() || (std::fabs(Volume()) <= 1e-7)) {
-    return false;
+    return AudioChannelService::AudibleState::eNotAudible;
   }
 
-  // No sound can be heard during suspending.
-  if (IsSuspendedByAudioChannel()) {
-    return false;
+  // No audio track.
+  if (!HasAudio()) {
+    return AudioChannelService::AudibleState::eNotAudible;
   }
 
-  // Silent audio track.
-  if (!mIsAudioTrackAudible) {
-    return false;
+  // Might be audible but not yet.
+  if (HasAudio() && !mIsAudioTrackAudible) {
+    return AudioChannelService::AudibleState::eMaybeAudible;
   }
 
-  return true;
+  return AudioChannelService::AudibleState::eAudible;
 }
 
 void
@@ -6661,7 +6661,12 @@ HTMLMediaElement::ShouldElementBePaused()
 void
 HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
 {
+  const bool oldHasAudio = mMediaInfo.HasAudio();
   mMediaInfo = aInfo;
+  if (aInfo.HasAudio() != oldHasAudio) {
+    NotifyAudioPlaybackChanged(
+      AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
+  }
   AudioCaptureStreamChangeIfNeeded();
 }
 
