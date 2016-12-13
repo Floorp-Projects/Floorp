@@ -1,5 +1,3 @@
-from marionette import MarionetteTestCase
-from marionette_driver.errors import NoSuchElementException
 import threading
 import SimpleHTTPServer
 import SocketServer
@@ -8,6 +6,9 @@ import urllib
 import urlparse
 import os
 import posixpath
+
+from marionette_driver.errors import NoSuchElementException
+from marionette_harness import MarionetteTestCase
 
 DEBUG = True
 

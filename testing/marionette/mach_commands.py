@@ -42,7 +42,7 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
 
     if not tests:
         tests = [os.path.join(topsrcdir,
-                 'testing/marionette/harness/marionette/tests/unit-tests.ini')]
+                 'testing/marionette/harness/marionette_harness/tests/unit-tests.ini')]
 
     args = argparse.Namespace(tests=tests)
 

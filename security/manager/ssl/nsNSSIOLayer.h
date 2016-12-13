@@ -218,7 +218,6 @@ public:
   void removeInsecureFallbackSite(const nsACString& hostname, uint16_t port);
   bool isInsecureFallbackSite(const nsACString& hostname);
 
-  bool mFalseStartRequireNPN;
   uint16_t mVersionFallbackLimit;
 private:
   mozilla::Mutex mutex;

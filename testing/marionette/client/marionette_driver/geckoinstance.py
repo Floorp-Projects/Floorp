@@ -195,14 +195,15 @@ class GeckoInstance(object):
     @classmethod
     def create(cls, app=None, *args, **kwargs):
         try:
-            if not app:
-                app_id = mozversion.get_version(binary=kwargs.get('bin'))['application_id']
+            if not app and kwargs["bin"] is not None:
+                app_id = mozversion.get_version(binary=kwargs["bin"])["application_id"]
                 app = app_ids[app_id]
 
             instance_class = apps[app]
-        except KeyError:
+        except (IOError, KeyError):
+            exc, val, tb = sys.exc_info()
             msg = 'Application "{0}" unknown (should be one of {1})'
-            raise NotImplementedError(msg.format(app, apps.keys()))
+            raise NotImplementedError, msg.format(app, apps.keys()), tb
 
         return instance_class(*args, **kwargs)
 

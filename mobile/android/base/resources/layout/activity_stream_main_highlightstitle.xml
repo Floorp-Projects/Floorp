@@ -3,8 +3,9 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="wrap_content">
+
     <View
-        android:id="@+id/divider"
+        android:id="@+id/divider1"
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:padding="4dp"
