@@ -7,7 +7,12 @@ import os
 from marionette_driver.by import By
 from marionette_driver.errors import JavascriptException
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin, skip_if_chrome
+from marionette_harness import (
+    MarionetteTestCase,
+    skip_if_chrome,
+    skip_if_mobile,
+    WindowManagerMixin,
+)
 
 
 class TestImportScriptContent(WindowManagerMixin, MarionetteTestCase):
@@ -105,6 +110,7 @@ class TestImportScriptContent(WindowManagerMixin, MarionetteTestCase):
         self.assert_defined("testAnotherFunc")
 
     @skip_if_chrome
+    @skip_if_mobile  # New windows not supported in Fennec
     def test_imports_apply_globally(self):
         self.marionette.navigate(
             self.marionette.absolute_url("test_windows.html"))
