@@ -6,8 +6,7 @@ package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 /**
  * Tests the proper operation of JavascriptBridge and JavaBridge,
@@ -42,15 +41,15 @@ public class testJavascriptBridge extends JavascriptBridgeTest {
         getJS().syncCall("check_js_string_arg", "foo");
     }
 
-    public void checkJavaStringArg(final String stringbar) throws JSONException {
+    public void checkJavaStringArg(final String stringbar) {
         // Async call from JS
         fAssertEquals("String argument matches", "bar", stringbar);
-        final JSONObject obj = new JSONObject();
-        obj.put("caller", "java");
-        getJS().syncCall("check_js_object_arg", (JSONObject) obj);
+        final GeckoBundle bundle = new GeckoBundle();
+        bundle.putString("caller", "java");
+        getJS().syncCall("check_js_object_arg", bundle);
     }
 
-    public void checkJavaObjectArg(final JSONObject obj) throws JSONException {
+    public void checkJavaObjectArg(final GeckoBundle obj) {
         // Async call from JS
         fAssertEquals("Object argument matches", "js", obj.getString("caller"));
         getJS().syncCall("check_js_sync_call");

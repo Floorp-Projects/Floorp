@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function sendMessageToJava(message) {
-  SpecialPowers.Services.androidBridge.handleGeckoMessage(message);
+  SpecialPowers.Services.androidBridge.dispatch(message.type, message);
 }
 
 function _evalURI(uri, sandbox) {
@@ -36,7 +36,7 @@ function _evalURI(uri, sandbox) {
  * absolute.
  *
  * The Javascript test harness sends all output to Java via
- * Robocop:JS messages.
+ * Robocop:Java messages.
  */
 function testOneFile(uri) {
   let HEAD_JS = "robocop_head.js";
@@ -59,7 +59,7 @@ function testOneFile(uri) {
   // Output from head.js is fed, line by line, to this function.  We
   // send any such output back to the Java Robocop harness.
   testScope.dump = function (str) {
-    let message = { type: "Robocop:JS",
+    let message = { type: "Robocop:Java",
                     innerType: "progress",
                     message: str,
                   };
