@@ -15,8 +15,8 @@ xhr.onloadend = function(e) {
 xhr.onprogress = function(e) {
   if (e.loaded > 0) {
     progressFired = true;
+    xhr.abort();
   }
-  xhr.abort();
 };
 
 onmessage = function(e) {
