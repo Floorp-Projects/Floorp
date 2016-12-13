@@ -1627,6 +1627,32 @@ GeckoDriver.prototype.singleTap = function*(cmd, resp) {
 };
 
 /**
+ * Perform a series of grouped actions at the specified points in time.
+ *
+ * @param {Array.<?>} actions
+ *     Array of objects that each represent an action sequence.
+ *
+ * @throws {UnsupportedOperationError}
+ *     If the command is made in chrome context.
+ */
+GeckoDriver.prototype.performActions = function(cmd, resp) {
+  switch (this.context) {
+    case Context.CHROME:
+      throw new UnsupportedOperationError(
+          "Command 'performActions' is not available in chrome context");
+    case Context.CONTENT:
+      return this.listener.performActions({"actions": cmd.parameters.actions});
+  }
+};
+
+/**
+ * Release all the keys and pointer buttons that are currently depressed.
+ */
+GeckoDriver.prototype.releaseActions = function(cmd, resp) {
+  return this.listener.releaseActions();
+};
+
+/**
  * An action chain.
  *
  * @param {Object} value
@@ -2839,6 +2865,8 @@ GeckoDriver.prototype.commands = {
   "timeouts": GeckoDriver.prototype.setTimeouts,  // deprecated until Firefox 55
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
   "singleTap": GeckoDriver.prototype.singleTap,
+  "performActions": GeckoDriver.prototype.performActions,
+  "releaseActions": GeckoDriver.prototype.releaseActions,
   "actionChain": GeckoDriver.prototype.actionChain, // deprecated
   "multiAction": GeckoDriver.prototype.multiAction, // deprecated
   "executeAsyncScript": GeckoDriver.prototype.executeAsyncScript,
