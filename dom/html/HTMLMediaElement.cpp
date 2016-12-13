@@ -4439,8 +4439,7 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep,
 
   RefPtr<HTMLMediaElement> self(this);
   nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self] () {
-    if (self->mUnboundFromTree &&
-        self->mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+    if (self->mUnboundFromTree) {
       self->Pause();
     }
   });
