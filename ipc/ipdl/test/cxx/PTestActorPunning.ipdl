@@ -21,7 +21,7 @@ parent:
     async Pun(PTestActorPunningSub a, Bad bad);
     async __delete__();
 
-
+/*
 state PING:
     send Start goto CONSTRUCTING;
 
@@ -33,6 +33,7 @@ state CONSTRUCTING:
 
 state DEAD:
     recv __delete__;
+*/
 };
 
 } // namespace mozilla

@@ -16,6 +16,7 @@ parent:
     intr HelloRpc();
     async __delete__();
 
+/*
 state START:       recv Hello goto HI;
 state HI:          send Hi goto HELLO_SYNC;
 state HELLO_SYNC:  recv HelloSync goto HELLO_RPC;
@@ -23,6 +24,7 @@ state HELLO_RPC:   answer HelloRpc goto HI_RPC;
 state HI_RPC:      call HiRpc goto DEAD;
 state DEAD:
     recv __delete__;
+*/
 };
 
 
