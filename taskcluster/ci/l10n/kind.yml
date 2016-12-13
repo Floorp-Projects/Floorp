@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# NOTE: please write a description of this kind in taskcluster/docs/kinds.rst
-
 implementation: taskgraph.task.transform:TransformTask
 
 transforms:
@@ -13,6 +11,7 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 job-defaults:
+    locales-file: browser/locales/all-locales
     index:
         product: firefox
     treeherder:
@@ -87,6 +86,7 @@ jobs:
             need-xvfb: true
 
     android-api-15-l10n/opt:
+        locales-file: mobile/android/locales/all-locales
         description: "Single Locale Repack"
         index:
             product: mobile
