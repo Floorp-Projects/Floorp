@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from unittest import skip
-
 from marionette_driver.errors import JavascriptException
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
@@ -29,7 +27,6 @@ class TestSwitchFrameChrome(WindowManagerMixin, MarionetteTestCase):
         self.close_all_windows()
         super(TestSwitchFrameChrome, self).tearDown()
 
-    @skip("Bug 1311657 - Opened chrome window cannot be closed after call to switch_to_frame(0)")
     def test_switch_simple(self):
         self.assertIn("test.xul", self.marionette.get_url(), "Initial navigation has failed")
         self.marionette.switch_to_frame(0)
@@ -49,7 +46,6 @@ class TestSwitchFrameChrome(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_frame(iframe_element)
         self.assertIn("test2.xul", self.marionette.get_url(), "Switching by element failed")
 
-    @skip("Bug 1311657 - Opened chrome window cannot be closed after call to switch_to_frame(0)")
     def test_stack_trace(self):
         self.assertIn("test.xul", self.marionette.get_url(), "Initial navigation has failed")
         self.marionette.switch_to_frame(0)
