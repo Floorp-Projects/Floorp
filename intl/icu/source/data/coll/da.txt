@@ -9,7 +9,7 @@ da{
                 "[import da-u-co-standard]"
                 "[caseFirst off]"
             }
-            Version{"30.0.2"}
+            Version{"30.0.3"}
         }
         standard{
             Sequence{
@@ -20,7 +20,7 @@ da{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<æ<<<Æ<<ä<<<Ä<ø<<<Ø<<ö<<<Ö<<ő<<<Ő<<œ<<<Œ<å<<<Å<<<aa<<<Aa<<<AA"
             }
-            Version{"30.0.2"}
+            Version{"30.0.3"}
         }
     }
 }
