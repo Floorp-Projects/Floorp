@@ -211,10 +211,12 @@ MarkupContainer.prototype = {
     }
 
     if (this.showExpander) {
+      this.elt.classList.add("expandable");
       this.expander.style.visibility = "visible";
       // Update accessibility expanded state.
       this.tagLine.setAttribute("aria-expanded", this.expanded);
     } else {
+      this.elt.classList.remove("expandable");
       this.expander.style.visibility = "hidden";
       // No need for accessible expanded state indicator when expander is not
       // shown.
