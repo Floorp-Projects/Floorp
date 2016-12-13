@@ -5,8 +5,8 @@
 <style>
 div {
   /* Element needs geometry to be eligible for layerization */
-  width: 100px;
-  height: 100px;
+  width: 20px;
+  height: 20px;
   background-color: white;
 }
 </style>
@@ -103,6 +103,32 @@ promise_test(t => {
   });
 }, 'Composite specified on a keyframe overrides the composite mode of the ' +
    'effect');
+
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  div.animate({ transform: [ 'scale(2)', 'scale(2)' ] }, 100 * MS_PER_SEC);
+  var anim = div.animate({ transform: [ 'scale(4)', 'scale(4)' ] },
+                         { duration: 100 * MS_PER_SEC, composite: 'add' });
+
+  return waitForPaintsFlushed().then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(8, 0, 0, 8, 0, 0)',
+      'The additive scale value should be scale(8)'); // scale(2) scale(4)
+
+    anim.effect.composite = 'accumulate';
+    return waitForPaintsFlushed();
+  }).then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(1);
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(5, 0, 0, 5, 0, 0)',
+      // (scale(2 - 1) + scale(4 - 1) + scale(1))
+      'The accumulate scale value should be scale(5)');
+  });
+}, 'Composite operation change');
 
 done();
 </script>
