@@ -104,6 +104,7 @@
       <li><a href="about:license#icu">ICU License</a></li>
       <li><a href="about:license#immutable">Immutable.js License</a></li>
       <li><a href="about:license#jpnic">Japan Network Information Center License</a></li>
+      <li><a href="about:license#jsmn">JSMN License</a></li>
       <li><a href="about:license#jemalloc">jemalloc License</a></li>
       <li><a href="about:license#jquery">jQuery License</a></li>
       <li><a href="about:license#k_exp">k_exp License</a></li>
@@ -2654,12 +2655,14 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
     <p>This license applies to parts of the code in:</p>
     <ul>
+        <li><span class="path">browser/extensions/mortar/host/common/opengles2-utils.jsm</span></li>
         <li><span class="path">editor/libeditor/EditorEventListener.cpp</span></li>
         <li><span class="path">security/sandbox/</span></li>
         <li><span class="path">widget/cocoa/GfxInfo.mm</span></li>
     </ul>
     <p>and also some files in these directories:</p>
     <ul>
+        <li><span class="path">browser/extensions/mortar/ppapi/</span></li>
         <li><span class="path">dom/media/webspeech/recognition/</span></li>
         <li><span class="path">dom/plugins/</span></li>
         <li><span class="path">gfx/ots/</span></li>
@@ -2672,7 +2675,7 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     </ul>
 
 <pre>
-Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+Copyright (c) 2006-2016 The Chromium Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -3558,6 +3561,37 @@ Chiyoda-ku, Tokyo 101-0047, Japan.
 
     <hr>
 
+    <h1><a id="jsmn"></a>JSMN License</h1>
+
+    <p>This license applies to files in the directories
+    <span class="path">browser/extensions/mortar/json/</span>.
+    </p>
+
+<pre>
+Copyright (c) 2010 Serge A. Zaitsev
+Copyright (c) 2015 Andreas Gal
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+</pre>
+
+    <hr>
+
     <h1><a id="jemalloc"></a>jemalloc License</h1>
 
     <p>This license applies to files in the directories
@@ -3668,6 +3702,12 @@ SUCH DAMAGE.
     <ul>
       <li class="path">openmax_dl/dl/api/omxtypes.h</li>
       <li class="path">openmax_dl/dl/sp/api/omxSP.h</li>
+    </ul>
+
+    <p>and also some files in these directories:</p>
+
+    <ul>
+      <li class="path">browser/extensions/mortar/ppapi/</li>
     </ul>
 
 <pre>
