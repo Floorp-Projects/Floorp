@@ -59,6 +59,7 @@
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackground.h"
+#include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/storage/Variant.h"
 #include "nsAutoPtr.h"
@@ -13727,8 +13728,9 @@ Factory::RecvDeleteMe()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundIDBFactoryParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
@@ -14666,8 +14668,9 @@ Database::RecvDeleteMe()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundIDBDatabaseParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
@@ -15791,8 +15794,9 @@ NormalTransaction::RecvDeleteMe()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundIDBTransactionParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
@@ -16097,8 +16101,9 @@ VersionChangeTransaction::RecvDeleteMe()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundIDBVersionChangeTransactionParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
@@ -16892,8 +16897,9 @@ Cursor::RecvDeleteMe()
     return IPC_FAIL_NO_REASON(this);
   }
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundIDBCursorParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
@@ -28927,8 +28933,9 @@ Utils::RecvDeleteMe()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundIndexedDBUtilsParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
