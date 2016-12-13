@@ -255,7 +255,14 @@ this.PageThumbs = {
         aCallback(aMsg.data.result);
       }
       mm.addMessageListener("Browser:Thumbnail:CheckState:Response", resultFunc);
-      mm.sendAsyncMessage("Browser:Thumbnail:CheckState");
+      try {
+        mm.sendAsyncMessage("Browser:Thumbnail:CheckState");
+      } catch (ex) {
+        Cu.reportError(ex);
+        // If the message manager is not able send our message, taking a content
+        // screenshot is also not going to work: return false.
+        resultFunc({ data: { result: false } });
+      }
     } else {
       aCallback(PageThumbUtils.shouldStoreContentThumbnail(aBrowser.contentDocument,
                                                            aBrowser.docShell));
