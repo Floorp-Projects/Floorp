@@ -258,6 +258,11 @@ interface nsIFrameLoader : nsISupports
    * across root docshells.
    */
   readonly attribute nsIGroupedSHistory groupedSessionHistory;
+
+  /**
+   * Is `true` if the frameloader is dead (destroy has been called on it)
+   */
+  [infallible] readonly attribute boolean isDead;
 };
 
 %{C++
