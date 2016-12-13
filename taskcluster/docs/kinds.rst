@@ -32,7 +32,9 @@ hazardous behaviors.
 l10n
 ----
 
-TBD (Callek)
+The l10n kind takes the last published nightly build, and generates localized builds
+from it. You can read more about how to trigger these on the `wiki
+<https://wiki.mozilla.org/ReleaseEngineering/TryServer#Desktop_l10n_jobs_.28on_Taskcluster.29>`_.
 
 source-check
 ------------
