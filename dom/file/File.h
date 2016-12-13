@@ -394,8 +394,7 @@ public:
     , mLastModificationDate(INT64_MAX)
     , mSerialNumber(NextSerialNumber())
   {
-    NS_ASSERTION(aLength != UINT64_MAX,
-                 "Must know length when creating slice");
+    MOZ_ASSERT(aLength != UINT64_MAX, "Must know length when creating slice");
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
   }
@@ -551,7 +550,7 @@ public:
     : BlobImplBase(aName, aContentType, aLength, aLastModifiedDate)
     , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
-    NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
+    MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
   BlobImplMemory(void* aMemoryBuffer, uint64_t aLength,
@@ -559,7 +558,7 @@ public:
     : BlobImplBase(aContentType, aLength)
     , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
-    NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
+    MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
   virtual void GetInternalStream(nsIInputStream** aStream,
@@ -626,7 +625,7 @@ private:
     : BlobImplBase(aContentType, aOther->mStart + aStart, aLength)
     , mDataOwner(aOther->mDataOwner)
   {
-    NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
+    MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
     mImmutable = aOther->mImmutable;
   }
 
@@ -683,7 +682,7 @@ public:
     , mWholeFile(true)
     , mIsTemporary(aTemporary)
   {
-    NS_ASSERTION(mFile, "must have file");
+    MOZ_ASSERT(mFile, "must have file");
     // Lazily get the content type and size
     mContentType.SetIsVoid(true);
     mFile->GetLeafName(mName);
@@ -697,7 +696,7 @@ public:
     , mWholeFile(true)
     , mIsTemporary(false)
   {
-    NS_ASSERTION(mFile, "must have file");
+    MOZ_ASSERT(mFile, "must have file");
   }
 
   BlobImplFile(const nsAString& aName, const nsAString& aContentType,
@@ -708,7 +707,7 @@ public:
     , mWholeFile(true)
     , mIsTemporary(false)
   {
-    NS_ASSERTION(mFile, "must have file");
+    MOZ_ASSERT(mFile, "must have file");
   }
 
   // Create as a file with custom name
@@ -719,7 +718,7 @@ public:
     , mWholeFile(true)
     , mIsTemporary(false)
   {
-    NS_ASSERTION(mFile, "must have file");
+    MOZ_ASSERT(mFile, "must have file");
     if (aContentType.IsEmpty()) {
       // Lazily get the content type and size
       mContentType.SetIsVoid(true);
@@ -766,7 +765,7 @@ private:
     , mWholeFile(false)
     , mIsTemporary(false)
   {
-    NS_ASSERTION(mFile, "must have file");
+    MOZ_ASSERT(mFile, "must have file");
     mImmutable = aOther->mImmutable;
   }
 
