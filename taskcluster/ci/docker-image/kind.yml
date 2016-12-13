@@ -11,9 +11,9 @@ images_path: '../../../testing/docker'
 # generate tasks for every docker image in the directory, secure in the
 # knowledge that unnecessary images will be omitted from the target task graph
 images:
-  - desktop-test
-  - desktop1604-test
-  - desktop-build
-  - tester
-  - lint
-  - android-gradle-build
+  desktop-test: dt
+  desktop1604-test: dt16t
+  desktop-build: db
+  tester: tst
+  lint: lnt
+  android-gradle-build: agb
