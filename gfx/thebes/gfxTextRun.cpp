@@ -154,7 +154,6 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
     , mShapingState(eShapingState_Normal)
 {
     NS_ASSERTION(mAppUnitsPerDevUnit > 0, "Invalid app unit scale");
-    MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
 
 #ifndef RELEASE_OR_BETA
@@ -199,8 +198,6 @@ gfxTextRun::~gfxTextRun()
 #endif
         NS_RELEASE(mFontGroup);
     }
-
-    MOZ_COUNT_DTOR(gfxTextRun);
 }
 
 void

@@ -331,7 +331,7 @@ final class GeckoEditable extends JNIObject
             final int selEnd = Selection.getSelectionEnd(mCurrentText);
             Selection.setSelection(mShadowText, selStart, selEnd);
 
-            if (DEBUG && !mShadowText.equals(mCurrentText)) {
+            if (DEBUG && !checkEqualText(mShadowText, mCurrentText)) {
                 // Sanity check.
                 throw new IllegalStateException("Failed to sync: " +
                         mShadowStart + '-' + mShadowOldEnd + '-' + mShadowNewEnd + '/' +
@@ -355,6 +355,32 @@ final class GeckoEditable extends JNIObject
             mCurrentNewEnd = mShadowNewEnd = 0;
             mCurrentSelectionChanged = false;
         }
+    }
+
+    private static boolean checkEqualText(final Spanned s1, final Spanned s2) {
+        if (!s1.toString().equals(s2.toString())) {
+            return false;
+        }
+
+        final Object[] o1s = s1.getSpans(0, s1.length(), Object.class);
+        final Object[] o2s = s2.getSpans(0, s2.length(), Object.class);
+
+        o1loop: for (final Object o1 : o1s) {
+            for (final Object o2 : o2s)  {
+                if (o1 != o2) {
+                    continue;
+                }
+                if (s1.getSpanStart(o1) != s2.getSpanStart(o2) ||
+                        s1.getSpanEnd(o1) != s2.getSpanEnd(o2) ||
+                        s1.getSpanFlags(o1) != s2.getSpanFlags(o2)) {
+                    return false;
+                }
+                continue o1loop;
+            }
+            // o1 not found in o2s.
+            return false;
+        }
+        return true;
     }
 
     /* An action that alters the Editable

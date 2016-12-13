@@ -46,8 +46,7 @@ public:
   static already_AddRefed<Performance>
   CreateForMainThread(nsPIDOMWindowInner* aWindow,
                       nsDOMNavigationTiming* aDOMTiming,
-                      nsITimedChannel* aChannel,
-                      Performance* aParentPerformance);
+                      nsITimedChannel* aChannel);
 
   static already_AddRefed<Performance>
   CreateForWorker(workers::WorkerPrivate* aWorkerPrivate);
@@ -103,8 +102,6 @@ public:
   virtual nsDOMNavigationTiming* GetDOMTiming() const = 0;
 
   virtual nsITimedChannel* GetChannel() const = 0;
-
-  virtual Performance* GetParentPerformance() const = 0;
 
 protected:
   Performance();

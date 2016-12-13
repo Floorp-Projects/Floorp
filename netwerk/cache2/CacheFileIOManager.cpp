@@ -545,13 +545,11 @@ public:
     : mMonitor("ShutdownEvent.mMonitor")
     , mNotified(false)
   {
-    MOZ_COUNT_CTOR(ShutdownEvent);
   }
 
 protected:
   ~ShutdownEvent()
   {
-    MOZ_COUNT_DTOR(ShutdownEvent);
   }
 
 public:
@@ -601,14 +599,12 @@ public:
     , mCallback(aCallback)
     , mKey(aKey)
   {
-    MOZ_COUNT_CTOR(OpenFileEvent);
     mIOMan = CacheFileIOManager::gInstance;
   }
 
 protected:
   ~OpenFileEvent()
   {
-    MOZ_COUNT_DTOR(OpenFileEvent);
   }
 
 public:
@@ -663,13 +659,11 @@ public:
     , mCount(aCount)
     , mCallback(aCallback)
   {
-    MOZ_COUNT_CTOR(ReadEvent);
   }
 
 protected:
   ~ReadEvent()
   {
-    MOZ_COUNT_DTOR(ReadEvent);
   }
 
 public:
@@ -709,14 +703,11 @@ public:
     , mTruncate(aTruncate)
     , mCallback(aCallback)
   {
-    MOZ_COUNT_CTOR(WriteEvent);
   }
 
 protected:
   ~WriteEvent()
   {
-    MOZ_COUNT_DTOR(WriteEvent);
-
     if (!mCallback && mBuf) {
       free(const_cast<char *>(mBuf));
     }
@@ -770,13 +761,11 @@ public:
     : mCallback(aCallback)
     , mHandle(aHandle)
   {
-    MOZ_COUNT_CTOR(DoomFileEvent);
   }
 
 protected:
   ~DoomFileEvent()
   {
-    MOZ_COUNT_DTOR(DoomFileEvent);
   }
 
 public:
@@ -809,8 +798,6 @@ public:
                      CacheFileIOListener *aCallback)
     : mCallback(aCallback)
   {
-    MOZ_COUNT_CTOR(DoomFileByKeyEvent);
-
     SHA1Sum sum;
     sum.update(aKey.BeginReading(), aKey.Length());
     sum.finish(mHash);
@@ -821,7 +808,6 @@ public:
 protected:
   ~DoomFileByKeyEvent()
   {
-    MOZ_COUNT_DTOR(DoomFileByKeyEvent);
   }
 
 public:
@@ -854,13 +840,11 @@ public:
   explicit ReleaseNSPRHandleEvent(CacheFileHandle *aHandle)
     : mHandle(aHandle)
   {
-    MOZ_COUNT_CTOR(ReleaseNSPRHandleEvent);
   }
 
 protected:
   ~ReleaseNSPRHandleEvent()
   {
-    MOZ_COUNT_DTOR(ReleaseNSPRHandleEvent);
   }
 
 public:
@@ -886,13 +870,11 @@ public:
     , mEOFPos(aEOFPos)
     , mCallback(aCallback)
   {
-    MOZ_COUNT_CTOR(TruncateSeekSetEOFEvent);
   }
 
 protected:
   ~TruncateSeekSetEOFEvent()
   {
-    MOZ_COUNT_DTOR(TruncateSeekSetEOFEvent);
   }
 
 public:
@@ -929,13 +911,11 @@ public:
     , mNewName(aNewName)
     , mCallback(aCallback)
   {
-    MOZ_COUNT_CTOR(RenameFileEvent);
   }
 
 protected:
   ~RenameFileEvent()
   {
-    MOZ_COUNT_DTOR(RenameFileEvent);
   }
 
 public:
@@ -973,13 +953,11 @@ public:
     , mAnonymous(aAnonymous)
     , mPinning(aPinning)
   {
-    MOZ_COUNT_CTOR(InitIndexEntryEvent);
   }
 
 protected:
   ~InitIndexEntryEvent()
   {
-    MOZ_COUNT_DTOR(InitIndexEntryEvent);
   }
 
 public:
@@ -1017,7 +995,6 @@ public:
     , mHasFrecency(false)
     , mHasExpirationTime(false)
   {
-    MOZ_COUNT_CTOR(UpdateIndexEntryEvent);
     if (aFrecency) {
       mHasFrecency = true;
       mFrecency = *aFrecency;
@@ -1031,7 +1008,6 @@ public:
 protected:
   ~UpdateIndexEntryEvent()
   {
-    MOZ_COUNT_DTOR(UpdateIndexEntryEvent);
   }
 
 public:
@@ -1114,14 +1090,12 @@ CacheFileIOManager::CacheFileIOManager()
   , mRemovingTrashDirs(false)
 {
   LOG(("CacheFileIOManager::CacheFileIOManager [this=%p]", this));
-  MOZ_COUNT_CTOR(CacheFileIOManager);
   MOZ_ASSERT(!gInstance, "multiple CacheFileIOManager instances!");
 }
 
 CacheFileIOManager::~CacheFileIOManager()
 {
   LOG(("CacheFileIOManager::~CacheFileIOManager [this=%p]", this));
-  MOZ_COUNT_DTOR(CacheFileIOManager);
 }
 
 // static

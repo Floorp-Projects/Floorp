@@ -606,7 +606,6 @@ public:
   nsGlyphTableList()
     : mUnicodeTable(NS_LITERAL_STRING("Unicode"))
   {
-    MOZ_COUNT_CTOR(nsGlyphTableList);
   }
 
   nsresult Initialize();
@@ -623,7 +622,6 @@ public:
 private:
   ~nsGlyphTableList()
   {
-    MOZ_COUNT_DTOR(nsGlyphTableList);
   }
 
   nsPropertiesTable* PropertiesTableAt(int32_t aIndex) {

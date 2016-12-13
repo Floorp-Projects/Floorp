@@ -40,7 +40,7 @@ interface nsIXPCScriptable : nsISupports
     const uint32_t WANT_PRECREATE                   = 1 <<  0;
     // unused bit here
     // unused bit here
-    const uint32_t WANT_ADDPROPERTY                 = 1 <<  3;
+    // unused bit here
     // unused bit here
     const uint32_t WANT_GETPROPERTY                 = 1 <<  5;
     const uint32_t WANT_SETPROPERTY                 = 1 <<  6;
@@ -76,10 +76,6 @@ interface nsIXPCScriptable : nsISupports
 
     void   preCreate(in nsISupports nativeObj, in JSContextPtr cx,
                      in JSObjectPtr globalObj, out JSObjectPtr parentObj);
-
-    boolean addProperty(in nsIXPConnectWrappedNative wrapper,
-                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
-                       in jsval val);
 
     boolean getProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
