@@ -109,9 +109,7 @@ def is_symlink_to(dest, src):
         # Read the link and check if it is correct
         if not os.path.islink(dest):
             return False
-        target = os.readlink(dest)
-        target = os.path.join(os.path.dirname(dest), target)
-        target = os.path.abspath(target)
+        target = os.path.abspath(os.readlink(dest))
         abssrc = os.path.abspath(src)
         return target == abssrc
 
