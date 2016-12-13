@@ -1,0 +1,93 @@
+/* Copyright (c) 2013 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/**
+ * This file defines the <code>PPB_VideoSource_Private</code> interface for a
+ * video source resource, which receives video frames from a MediaStream video
+ * track in the browser.
+ */
+
+ label Chrome {
+   M28 = 0.1
+ };
+
+/**
+ * The <code>PPB_VideoSource_Private</code> interface contains pointers to
+ * several functions for creating video source resources and using them to
+ * receive video frames from a MediaStream video track in the browser.
+ */
+interface PPB_VideoSource_Private {
+  /**
+   * Creates a video source resource.
+   *
+   * @param[in] instance A <code>PP_Instance</code> identifying an instance of
+   * a module.
+   *
+   * @return A <code>PP_Resource</code> with a nonzero ID on success or zero on
+   * failure. Failure means the instance was invalid.
+   */
+  PP_Resource Create([in] PP_Instance instance);
+
+  /**
+   * Determines if a resource is a video source resource.
+   *
+   * @param[in] resource The <code>PP_Resource</code> to test.
+   *
+   * @return A <code>PP_Bool</code> with <code>PP_TRUE</code> if the given
+   * resource is a video source resource or <code>PP_FALSE</code> otherwise.
+   */
+  PP_Bool IsVideoSource([in] PP_Resource resource);
+
+  /**
+   * Opens a video source for getting frames.
+   *
+   * @param[in] source A <code>PP_Resource</code> corresponding to a video
+   * source resource.
+   * @param[in] stream_url A <code>PP_Var</code> string holding a URL
+   * identifying a MediaStream.
+   * @param[in] callback A <code>PP_CompletionCallback</code> to be called upon
+   * completion of Open().
+   *
+   * @return An int32_t containing a result code from <code>pp_errors.h</code>.
+   * Returns PP_ERROR_BADRESOURCE if source isn't a valid video source.
+   * Returns PP_ERROR_INPROGRESS if source is already open.
+   * Returns PP_ERROR_FAILED if the MediaStream doesn't exist or if there is
+   * some other browser error.
+   */
+  int32_t Open([in] PP_Resource source,
+               [in] PP_Var stream_url,
+               [in] PP_CompletionCallback callback);
+
+  /**
+   * Gets a frame from the video source. The returned image data is only valid
+   * until the next call to GetFrame.
+   * The image data resource inside the returned frame will have its reference
+   * count incremented by one and must be managed by the plugin.
+   *
+   * @param[in] source A <code>PP_Resource</code> corresponding to a video
+   * source resource.
+   * @param[out] frame A <code>PP_VideoFrame_Private</code> to hold a video
+   * frame from the source.
+   * @param[in] callback A <code>PP_CompletionCallback</code> to be called upon
+   * completion of GetNextFrame().
+   *
+   * @return An int32_t containing a result code from <code>pp_errors.h</code>.
+   * Returns PP_ERROR_BADRESOURCE if source isn't a valid video source.
+   * Returns PP_ERROR_FAILED if the source is not open, or if some other
+   * browser error occurs.
+   */
+  int32_t GetFrame([in] PP_Resource source,
+                   [out] PP_VideoFrame_Private frame,
+                   [in] PP_CompletionCallback callback);
+
+  /**
+   * Closes the video source.
+   *
+   * @param[in] source A <code>PP_Resource</code> corresponding to a video
+   * source resource.
+   */
+  void Close([in] PP_Resource source);
+};
+
