@@ -241,8 +241,11 @@ public:
       CreateSimilarSoftwareDrawTarget(DrawTarget* aDT, const IntSize &aSize, mozilla::gfx::SurfaceFormat aFormat);
 
     static already_AddRefed<DrawTarget>
-      CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
-                              int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
+      CreateDrawTargetForData(unsigned char* aData,
+                              const mozilla::gfx::IntSize& aSize, 
+                              int32_t aStride,
+                              mozilla::gfx::SurfaceFormat aFormat,
+                              bool aUninitialized = false);
 
     /**
      * Returns true if rendering to data surfaces produces the same results as

@@ -263,21 +263,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &callStub->expectedStr(), "baseline-callstringsplit-str");
         break;
       }
-      case ICStub::GetElem_Dense: {
-        ICGetElem_Dense* getElemStub = toGetElem_Dense();
-        TraceEdge(trc, &getElemStub->shape(), "baseline-getelem-dense-shape");
-        break;
-      }
-      case ICStub::GetElem_UnboxedArray: {
-        ICGetElem_UnboxedArray* getElemStub = toGetElem_UnboxedArray();
-        TraceEdge(trc, &getElemStub->group(), "baseline-getelem-unboxed-array-group");
-        break;
-      }
-      case ICStub::GetElem_TypedArray: {
-        ICGetElem_TypedArray* getElemStub = toGetElem_TypedArray();
-        TraceEdge(trc, &getElemStub->shape(), "baseline-getelem-typedarray-shape");
-        break;
-      }
       case ICStub::SetElem_DenseOrUnboxedArray: {
         ICSetElem_DenseOrUnboxedArray* setElemStub = toSetElem_DenseOrUnboxedArray();
         TraceNullableEdge(trc, &setElemStub->shape(), "baseline-getelem-dense-shape");

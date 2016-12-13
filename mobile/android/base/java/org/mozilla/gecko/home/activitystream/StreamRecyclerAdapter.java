@@ -16,6 +16,8 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
+import org.mozilla.gecko.home.activitystream.StreamItem.WelcomePanel;
+import org.mozilla.gecko.home.activitystream.StreamItem.HighlightsTitle;
 import org.mozilla.gecko.home.activitystream.StreamItem.TopPanel;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
@@ -31,6 +33,10 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     private int tiles;
     private int tilesWidth;
     private int tilesHeight;
+
+    public StreamRecyclerAdapter() {
+        setHasStableIds(true);
+    }
 
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.onUrlOpenListener = onUrlOpenListener;
@@ -50,7 +56,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         if (position == 0) {
             return TopPanel.LAYOUT_ID;
         } else if (position == 1) {
-            return StreamItem.HighlightsTitle.LAYOUT_ID;
+            return WelcomePanel.LAYOUT_ID;
+        } else if (position == 2) {
+            return HighlightsTitle.LAYOUT_ID;
         } else if (position < getItemCount()) {
             return HighlightItem.LAYOUT_ID;
         } else {
@@ -64,10 +72,12 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
         if (type == TopPanel.LAYOUT_ID) {
             return new TopPanel(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
-        } else if (type == StreamItem.HighlightsTitle.LAYOUT_ID) {
-            return new StreamItem.HighlightsTitle(inflater.inflate(type, parent, false));
+        } else if (type == WelcomePanel.LAYOUT_ID) {
+            return new WelcomePanel(inflater.inflate(type, parent, false), this);
         } else if (type == HighlightItem.LAYOUT_ID) {
             return new HighlightItem(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
+        } else if (type == HighlightsTitle.LAYOUT_ID) {
+            return new HighlightsTitle(inflater.inflate(type, parent, false));
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }
@@ -78,8 +88,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             throw new IllegalArgumentException("Requested cursor position for invalid item");
         }
 
-        // We have two blank panels at the top, hence remove that to obtain the cursor position
-        return position - 2;
+        // We have three blank panels at the top, hence remove that to obtain the cursor position
+        return position - 3;
     }
 
     @Override
@@ -124,7 +134,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             highlightsCount = 0;
         }
 
-        return highlightsCount + 2;
+        return highlightsCount + 3;
     }
 
     public void swapHighlightsCursor(Cursor cursor) {
@@ -137,5 +147,48 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         this.topSitesCursor = cursor;
 
         notifyItemChanged(0);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        final int type = getItemViewType(position);
+
+        // To avoid having clashing IDs, we:
+        // - use history ID's as is
+        // - use hardcoded negative ID's for fixed panels
+        // - multiply bookmark ID's by -1 to not clash with history, and add an offset to not
+        //   clash with the fixed panels above
+        final int offset = -10;
+
+        // RecyclerView.NO_ID is -1, so start our hard-coded IDs at -2.
+        switch (type) {
+            case TopPanel.LAYOUT_ID:
+                return -2;
+            case WelcomePanel.LAYOUT_ID:
+                return -3;
+            case HighlightsTitle.LAYOUT_ID:
+                return -4;
+            case HighlightItem.LAYOUT_ID:
+                final int cursorPosition = translatePositionToCursor(position);
+                highlightsCursor.moveToPosition(cursorPosition);
+
+                final long historyID = highlightsCursor.getLong(highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
+                final boolean isHistory = -1 != historyID;
+
+                if (isHistory) {
+                    return historyID;
+                }
+
+                final long bookmarkID = highlightsCursor.getLong(highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
+                final boolean isBookmark = -1 != bookmarkID;
+
+                if (isBookmark) {
+                    return -1 * bookmarkID + offset;
+                }
+
+                throw new IllegalArgumentException("Unhandled highlight type in getItemId - has no history or bookmark ID");
+            default:
+                throw new IllegalArgumentException("StreamItem with LAYOUT_ID=" + type + " not handled in getItemId()");
+        }
     }
 }

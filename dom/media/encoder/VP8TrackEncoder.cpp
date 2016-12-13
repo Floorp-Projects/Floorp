@@ -28,6 +28,31 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
+using namespace mozilla::media;
+
+static already_AddRefed<SourceSurface>
+GetSourceSurface(already_AddRefed<Image> aImg)
+{
+  RefPtr<Image> img = aImg;
+  if (!img) {
+    return nullptr;
+  }
+
+  if (!img->AsGLImage() || NS_IsMainThread()) {
+    RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
+    return surf.forget();
+  }
+
+  // GLImage::GetAsSourceSurface() only supports main thread
+  RefPtr<SourceSurface> surf;
+  RefPtr<Runnable> runnable = NewRunnableFrom([img, &surf]() -> nsresult {
+    surf = img->GetAsSourceSurface();
+    return NS_OK;
+  });
+
+  NS_DispatchToMainThread(runnable, NS_DISPATCH_SYNC);
+  return surf.forget();
+}
 
 VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate)
   : VideoTrackEncoder(aTrackRate)
@@ -431,37 +456,6 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   mVPXImageWrapper->stride[VPX_PLANE_V] = halfWidth;
 
   return NS_OK;
-}
-
-void
-VP8TrackEncoder::ReplyGetSourceSurface(already_AddRefed<gfx::SourceSurface> aSurf)
-{
-  mSourceSurface = aSurf;
-}
-
-already_AddRefed<gfx::SourceSurface>
-VP8TrackEncoder::GetSourceSurface(already_AddRefed<Image> aImg)
-{
-  RefPtr<Image> img = aImg;
-  mSourceSurface = nullptr;
-  if (img) {
-    if (img->AsGLImage() && !NS_IsMainThread()) {
-      // GLImage::GetAsSourceSurface() only support main thread
-      RefPtr<Runnable> getsourcesurface_runnable =
-        media::NewRunnableFrom([this, img]() -> nsresult {
-          // Due to the parameter DISPATCH_SYNC, encoder thread will stock at
-          // MediaRecorder::Session::Extract(bool). There is no chance
-          // that TrackEncoder will be destroyed during this period. So
-          // there is no need to use RefPtr to hold TrackEncoder.
-          ReplyGetSourceSurface(img->GetAsSourceSurface());
-          return NS_OK;
-        });
-      NS_DispatchToMainThread(getsourcesurface_runnable, NS_DISPATCH_SYNC);
-    } else {
-      mSourceSurface = img->GetAsSourceSurface();
-    }
-  }
-  return mSourceSurface.forget();
 }
 
 // These two define value used in GetNextEncodeOperation to determine the

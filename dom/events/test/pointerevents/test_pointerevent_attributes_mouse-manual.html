@@ -17,13 +17,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         runTestInNewWindow("pointerevent_attributes_mouse-manual.html");
       }
       function executeTest(int_win) {
-        sendMouseEvent(int_win, "square1", "mousemove", {button:-1});
-        sendMouseEvent(int_win, "square1", "mousedown", {button:0});
-        sendMouseEvent(int_win, "square1", "mouseup",   {button:0});
-        sendMouseEvent(int_win, "square1", "mousemove", {button:-1});
-        sendMouseEvent(int_win, "square1", "mousemove", {button:-1,
-                                                         offsetX: -1,
-                                                         offsetY: -1});
+        sendMouseEvent(int_win, "square1", "mousemove");
+        sendMouseEvent(int_win, "square1", "mousedown");
+        sendMouseEvent(int_win, "square1", "mouseup");
+        sendMouseEvent(int_win, "square1", "mousemove");
+        sendMouseEvent(int_win, "square1", "mousemove", {offsetX: -1, offSetY: -1});
       }
     </script>
   </head>

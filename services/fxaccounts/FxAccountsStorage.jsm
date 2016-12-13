@@ -403,7 +403,7 @@ this.FxAccountsStorageManager.prototype = {
     try {
       yield this.secureStorage.set(this.cachedPlain.uid, toWriteSecure);
     } catch (ex) {
-      if (!ex instanceof this.secureStorage.STORAGE_LOCKED) {
+      if (!(ex instanceof this.secureStorage.STORAGE_LOCKED)) {
         throw ex;
       }
       // This shouldn't be possible as once it is unlocked it can't be

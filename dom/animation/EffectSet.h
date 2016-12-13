@@ -199,6 +199,8 @@ public:
     return mPropertiesForAnimationsLevel;
   }
 
+  // This function is intended to be called by EffectCompositor::GetBaseStyle
+  // and should not be called directly.
   StyleAnimationValue GetBaseStyle(nsCSSPropertyID aProperty) const
   {
     StyleAnimationValue result;

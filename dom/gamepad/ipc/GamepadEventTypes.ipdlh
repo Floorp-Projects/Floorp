@@ -16,6 +16,10 @@ struct GamepadAdded {
   // But, we have dependency problems in non MOZ_GAMEPAD
   // platforms. Therefore, we make it as an uint32_t here.
   uint32_t mapping;
+  // Ideally, hand should be a GamepadHand
+  // But, we have dependency problems in non MOZ_GAMEPAD
+  // platforms. Therefore, we make it as an uint32_t here.
+  uint32_t hand;
   GamepadServiceType service_type;
   uint32_t num_buttons;
   uint32_t num_axes;

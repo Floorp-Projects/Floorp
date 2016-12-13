@@ -390,14 +390,13 @@ var BrowserApp = {
     Services.obs.addObserver(this, "android-set-pref", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
     Services.obs.addObserver(this, "keyword-search", false);
-    Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
     Services.obs.addObserver(this, "Fonts:Reload", false);
     Services.obs.addObserver(this, "Vibration:Request", false);
 
     Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
     window.addEventListener("fullscreen", function() {
-      Messaging.sendRequest({
+      WindowEventDispatcher.sendRequest({
         type: window.fullScreen ? "ToggleChrome:Hide" : "ToggleChrome:Show"
       });
     }, false);
@@ -409,7 +408,7 @@ var BrowserApp = {
       // (per spec). This means the last event on enabling will be for the innermost
       // document, which will have fullscreenElement set correctly.
       let doc = e.target;
-      Messaging.sendRequest({
+      WindowEventDispatcher.sendRequest({
         type: doc.fullscreenElement ? "DOMFullScreen:Start" : "DOMFullScreen:Stop",
         rootElement: doc.fullscreenElement == doc.documentElement
       });
@@ -508,16 +507,15 @@ var BrowserApp = {
     }
 
     // Notify Java that Gecko has loaded.
-    Messaging.sendRequest({ type: "Gecko:Ready" });
+    GlobalEventDispatcher.sendRequest({ type: "Gecko:Ready" });
 
     this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
       BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
 
       InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
-      InitLater(() => Cu.import("resource://gre/modules/PresentationDeviceInfoManager.jsm"));
 
       InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
-      InitLater(() => Messaging.sendRequest({ type: "Gecko:DelayedStartup" }));
+      InitLater(() => GlobalEventDispatcher.sendRequest({ type: "Gecko:DelayedStartup" }));
 
       if (!AppConstants.RELEASE_OR_BETA) {
         InitLater(() => WebcompatReporter.init());
@@ -573,7 +571,7 @@ var BrowserApp = {
    */
   setLocale: function (locale) {
     console.log("browser.js: requesting locale set: " + locale);
-    Messaging.sendRequest({ type: "Locale:Set", locale: locale });
+    WindowEventDispatcher.sendRequest({ type: "Locale:Set", locale: locale });
   },
 
   initContextMenu: function () {
@@ -726,7 +724,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_contact_email");
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        Messaging.sendRequest({
+        WindowEventDispatcher.sendRequest({
           type: "Contact:Add",
           email: url
         });
@@ -738,7 +736,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_contact_phone");
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        Messaging.sendRequest({
+        WindowEventDispatcher.sendRequest({
           type: "Contact:Add",
           phone: url
         });
@@ -752,7 +750,7 @@ var BrowserApp = {
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title || url;
-        Messaging.sendRequest({
+        WindowEventDispatcher.sendRequest({
           type: "Bookmark:Insert",
           url: url,
           title: title
@@ -889,7 +887,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_background_image");
 
         let src = aTarget.src;
-        Messaging.sendRequest({
+        WindowEventDispatcher.sendRequest({
           type: "Image:SetAs",
           url: src
         });
@@ -1756,7 +1754,7 @@ var BrowserApp = {
         let query = isPrivate ? "" : aData;
 
         let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Search:Keyword",
           identifier: engine.identifier,
           name: engine.name,
@@ -1902,12 +1900,8 @@ var BrowserApp = {
         break;
       }
 
-      case "sessionstore-state-purge-complete":
-        Messaging.sendRequest({ type: "Session:StatePurged" });
-        break;
-
       case "gather-telemetry":
-        Messaging.sendRequest({ type: "Telemetry:Gather" });
+        GlobalEventDispatcher.sendRequest({ type: "Telemetry:Gather" });
         break;
 
       case "Locale:OS":
@@ -2179,21 +2173,21 @@ var NativeWindow = {
       options.type = "Menu:Add";
       options.id = this._menuId;
 
-      Messaging.sendRequest(options);
+      GlobalEventDispatcher.sendRequest(options);
       this._callbacks[this._menuId] = options.callback;
       this._menuId++;
       return this._menuId - 1;
     },
 
     remove: function(aId) {
-      Messaging.sendRequest({ type: "Menu:Remove", id: aId });
+      GlobalEventDispatcher.sendRequest({ type: "Menu:Remove", id: aId });
     },
 
     update: function(aId, aOptions) {
       if (!aOptions)
         return;
 
-      Messaging.sendRequest({
+      GlobalEventDispatcher.sendRequest({
         type: "Menu:Update",
         id: aId,
         options: aOptions
@@ -3504,7 +3498,7 @@ Tab.prototype = {
         isPrivate: isPrivate,
         stub: stub
       };
-      Messaging.sendRequest(message);
+      GlobalEventDispatcher.sendRequest(message);
     }
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
@@ -4535,7 +4529,7 @@ var BrowserEventHandler = {
       case 'OpenMediaWithExternalApp': {
         let mediaSrc = aEvent.target.currentSrc || aEvent.target.src;
         let uuid = uuidgen.generateUUID().toString();
-        Services.androidBridge.handleGeckoMessage({
+        GlobalEventDispatcher.sendRequest({
           type: "Video:Play",
           uri: mediaSrc,
           uuid: uuid
@@ -5632,7 +5626,7 @@ var CharacterEncoding = {
       showCharEncoding = Services.prefs.getComplexValue("browser.menu.showCharacterEncoding", Ci.nsIPrefLocalizedString).data;
     } catch (e) { /* Optional */ }
 
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "CharEncoding:State",
       visible: showCharEncoding
     });
@@ -5666,7 +5660,7 @@ var CharacterEncoding = {
       }
     }
 
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "CharEncoding:Data",
       charsets: this._charsets,
       selected: selected
@@ -6334,7 +6328,7 @@ var Experiments = {
   OFFLINE_CACHE: "offline-cache",
 
   init() {
-    Messaging.sendRequestForResult({
+    GlobalEventDispatcher.sendRequestForResult({
       type: "Experiments:GetActive"
     }).then(experiments => {
       let names = JSON.parse(experiments);
@@ -6361,7 +6355,7 @@ var Experiments = {
   },
 
   setOverride(name, isEnabled) {
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Experiments:SetOverride",
       name: name,
       isEnabled: isEnabled
@@ -6369,7 +6363,7 @@ var Experiments = {
   },
 
   clearOverride(name) {
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Experiments:ClearOverride",
       name: name
     });

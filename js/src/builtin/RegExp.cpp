@@ -1608,6 +1608,11 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
     if (!GetGetterPure(cx, proto, NameToId(cx->names().flags), &flagsGetter))
         return false;
 
+    if (!flagsGetter) {
+        *result = false;
+        return true;
+    }
+
     if (!IsSelfHostedFunctionWithName(flagsGetter, cx->names().RegExpFlagsGetter)) {
         *result = false;
         return true;

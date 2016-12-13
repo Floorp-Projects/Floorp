@@ -4,9 +4,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-requestLongerTimeout(2)
+requestLongerTimeout(2);
 
-Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/osfile.jsm", {});
 const { consoleApi: snippets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
@@ -17,7 +17,7 @@ let stubs = {
 };
 
 add_task(function* () {
-  for (var [key, {keys, code}] of snippets) {
+  for (let [key, {keys, code}] of snippets) {
     yield OS.File.writeAtomic(TEMP_FILE_PATH, `function triggerPacket() {${code}}`);
 
     let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
@@ -31,7 +31,7 @@ add_task(function* () {
       let listener = (type, res) => {
         stubs.packets.push(formatPacket(keys[i], res));
         stubs.preparedMessages.push(formatStub(keys[i], res));
-        if(++i === keys.length ){
+        if (++i === keys.length) {
           toolbox.target.client.removeListener("consoleAPICall", listener);
           resolve();
         }
@@ -39,10 +39,12 @@ add_task(function* () {
       toolbox.target.client.addListener("consoleAPICall", listener);
     });
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, key, function(key) {
-      var script = content.document.createElement("script");
-      script.src = "test-tempfile.js?key=" + encodeURIComponent(key);
-      script.onload = function() { content.wrappedJSObject.triggerPacket(); }
+    yield ContentTask.spawn(gBrowser.selectedBrowser, key, function (subKey) {
+      let script = content.document.createElement("script");
+      script.src = "test-tempfile.js?key=" + encodeURIComponent(subKey);
+      script.onload = function () {
+        content.wrappedJSObject.triggerPacket();
+      };
       content.document.body.appendChild(script);
     });
 
@@ -51,6 +53,6 @@ add_task(function* () {
     yield closeTabAndToolbox();
   }
   let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "consoleApi.js");
-  OS.File.writeAtomic(filePath, formatFile(stubs));
+  OS.File.writeAtomic(filePath, formatFile(stubs, "ConsoleMessage"));
   OS.File.writeAtomic(TEMP_FILE_PATH, "");
 });

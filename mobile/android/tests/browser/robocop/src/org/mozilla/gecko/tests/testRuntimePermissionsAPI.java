@@ -5,13 +5,14 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
 
-public class testRuntimePermissionsAPI extends JavascriptTest implements NativeEventListener {
+public class testRuntimePermissionsAPI extends JavascriptTest implements BundleEventListener {
     public testRuntimePermissionsAPI() {
         super("testRuntimePermissionsAPI.js");
     }
@@ -20,18 +21,18 @@ public class testRuntimePermissionsAPI extends JavascriptTest implements NativeE
     public void setUp() throws Exception {
         super.setUp();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "RuntimePermissions:Prompt");
+        GeckoApp.getEventDispatcher().registerUiThreadListener(this, "RuntimePermissions:Prompt");
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "RuntimePermissions:Prompt");
+        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this, "RuntimePermissions:Prompt");
     }
 
     @Override
-    public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
+    public void handleMessage(String event, GeckoBundle message, EventCallback callback) {
         mAsserter.is(event, "RuntimePermissions:Prompt", "Received RuntimePermissions:Prompt event");
 
         try {

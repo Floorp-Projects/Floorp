@@ -85,6 +85,22 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachProxy(obj, objId, id))
                 return true;
+            return false;
+        }
+        if (idVal_.isNumber()) {
+            ValOperandId indexId = getElemKeyValueId();
+            if (tryAttachTypedElement(obj, objId, indexId))
+                return true;
+        }
+        if (idVal_.isInt32()) {
+            ValOperandId indexId = getElemKeyValueId();
+            if (tryAttachDenseElement(obj, objId, indexId))
+                return true;
+            if (tryAttachUnboxedArrayElement(obj, objId, indexId))
+                return true;
+            if (tryAttachArgumentsObjectArg(obj, objId, indexId))
+                return true;
+            return false;
         }
         return false;
     }
@@ -94,8 +110,18 @@ GetPropIRGenerator::tryAttachStub()
             return true;
         if (tryAttachStringLength(valId, id))
             return true;
-        if (tryAttachMagicArguments(valId, id))
+        if (tryAttachMagicArgumentsName(valId, id))
             return true;
+        return false;
+    }
+
+    if (idVal_.isInt32()) {
+        ValOperandId indexId = getElemKeyValueId();
+        if (tryAttachStringChar(valId, indexId))
+            return true;
+        if (tryAttachMagicArgument(valId, indexId))
+            return true;
+        return false;
     }
 
     return false;
@@ -775,7 +801,31 @@ GetPropIRGenerator::tryAttachStringLength(ValOperandId valId, HandleId id)
 }
 
 bool
-GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId, HandleId id)
+GetPropIRGenerator::tryAttachStringChar(ValOperandId valId, ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!val_.isString())
+        return false;
+
+    JSString* str = val_.toString();
+    int32_t index = idVal_.toInt32();
+    if (size_t(index) >= str->length() ||
+        !str->isLinear() ||
+        str->asLinear().latin1OrTwoByteChar(index) >= StaticStrings::UNIT_STATIC_LIMIT)
+    {
+        return false;
+    }
+
+    StringOperandId strId = writer.guardIsString(valId);
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadStringCharResult(strId, int32IndexId);
+    writer.returnFromIC();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachMagicArgumentsName(ValOperandId valId, HandleId id)
 {
     if (!val_.isMagic(JS_OPTIMIZED_ARGUMENTS))
         return false;
@@ -796,6 +846,124 @@ GetPropIRGenerator::tryAttachMagicArguments(ValOperandId valId, HandleId id)
         writer.typeMonitorResult();
     }
 
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!val_.isMagic(JS_OPTIMIZED_ARGUMENTS))
+        return false;
+
+    writer.guardMagicValue(valId, JS_OPTIMIZED_ARGUMENTS);
+    writer.guardFrameHasNoArgumentsObject();
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadFrameArgumentResult(int32IndexId);
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
+                                                ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->is<ArgumentsObject>() || obj->as<ArgumentsObject>().hasOverriddenElement())
+        return false;
+
+    if (obj->is<MappedArgumentsObject>()) {
+        writer.guardClass(objId, GuardClassKind::MappedArguments);
+    } else {
+        MOZ_ASSERT(obj->is<UnmappedArgumentsObject>());
+        writer.guardClass(objId, GuardClassKind::UnmappedArguments);
+    }
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadArgumentsObjectArgResult(objId, int32IndexId);
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
+                                          ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->isNative())
+        return false;
+
+    if (uint32_t(idVal_.toInt32()) >= obj->as<NativeObject>().getDenseInitializedLength())
+        return false;
+
+    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadDenseElementResult(objId, int32IndexId);
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
+                                                 ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (!obj->is<UnboxedArrayObject>())
+        return false;
+
+    if (uint32_t(idVal_.toInt32()) >= obj->as<UnboxedArrayObject>().initializedLength())
+        return false;
+
+    writer.guardGroup(objId, obj->group());
+
+    JSValueType elementType = obj->group()->unboxedLayoutDontCheckGeneration().elementType();
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadUnboxedArrayElementResult(objId, int32IndexId, elementType);
+
+    // Only monitor the result if its type might change.
+    if (elementType == JSVAL_TYPE_OBJECT)
+        writer.typeMonitorResult();
+    else
+        writer.returnFromIC();
+
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
+                                          ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isNumber());
+
+    if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint &&
+        (TypedThingRequiresFloatingPoint(obj) || idVal_.isDouble()))
+    {
+        return false;
+    }
+
+    // Don't attach typed object stubs if the underlying storage could be
+    // detached, as the stub will always bail out.
+    if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
+        return false;
+
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+    if (layout != Layout_TypedArray)
+        writer.guardNoDetachedTypedObjects();
+
+    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadTypedElementResult(objId, int32IndexId, layout, TypedThingElementType(obj));
+    writer.returnFromIC();
     return true;
 }
 

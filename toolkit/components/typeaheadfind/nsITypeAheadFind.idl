@@ -18,7 +18,7 @@ interface nsIDocShell;
 
 /****************************** nsTypeAheadFind ******************************/
 
-[scriptable, uuid(ae501e28-c57f-4692-ac74-410e1bed98b7)]
+[scriptable, uuid(3cfe7906-f189-45a0-8abe-8e4437a23cae)]
 interface nsITypeAheadFind : nsISupports
 {
   /****************************** Initializer ******************************/
@@ -58,7 +58,7 @@ interface nsITypeAheadFind : nsISupports
   void collapseSelection();
 
   /* Check if a range is visible */
-  boolean isRangeVisible(in nsIDOMRange aRange, in boolean aMustBeInViewPort);
+  boolean isRangeVisible(in nsIDOMRange aRange, in boolean aFlushLayout);
 
   /******************************* Attributes ******************************/
 

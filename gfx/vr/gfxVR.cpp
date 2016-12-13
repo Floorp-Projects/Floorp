@@ -68,11 +68,11 @@ VRControllerManager::AllocateControllerID()
 }
 
 void
-VRControllerManager::AddGamepad(const char* aID, uint32_t aMapping,
+VRControllerManager::AddGamepad(const char* aID, uint32_t aMapping, uint32_t aHand,
                                 uint32_t aNumButtons, uint32_t aNumAxes)
 {
   dom::GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), mControllerCount,
-                     aMapping, dom::GamepadServiceType::VR, aNumButtons,
+                     aMapping, aHand, dom::GamepadServiceType::VR, aNumButtons,
                      aNumAxes);
 
   VRManager* vm = VRManager::Get();

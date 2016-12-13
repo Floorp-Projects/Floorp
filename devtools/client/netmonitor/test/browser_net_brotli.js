@@ -27,7 +27,7 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
+  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
     "GET", HTTPS_CONTENT_TYPE_SJS + "?fmt=br", {
       status: 200,
       statusText: "Connected",
