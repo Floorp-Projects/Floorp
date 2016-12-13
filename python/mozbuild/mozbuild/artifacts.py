@@ -452,7 +452,7 @@ JOB_DETAILS = {
                                          'public/build/target\.common\.tests\.zip')),
     'macosx64-opt': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
                                       'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'macosx64-debug': (MacArtifactJob, ('public/build/firefox-(.*)\.mac64\.dmg',
+    'macosx64-debug': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
     'win32-opt': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
                                    'public/build/firefox-(.*)\.common\.tests\.zip')),
