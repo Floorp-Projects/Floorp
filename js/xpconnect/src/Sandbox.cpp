@@ -23,6 +23,7 @@
 #include "nsPrincipal.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
+#include "xpc_make_class.h"
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
 #include "Crypto.h"
