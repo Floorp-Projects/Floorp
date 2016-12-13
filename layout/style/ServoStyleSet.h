@@ -128,24 +128,19 @@ public:
   void StyleDocument();
 
   /**
-   * Eagerly styles a subtree of dirty nodes that were just appended to the
+   * Eagerly styles a subtree of unstyled nodes that was just appended to the
    * tree. This is used in situations where we need the style immediately and
    * cannot wait for a future batch restyle.
-   *
-   * The subtree must have the root dirty bit set, which currently gets
-   * propagated to all descendants. The dirty bits are cleared before
-   * returning.
    */
-  void StyleNewSubtree(nsIContent* aContent);
+  void StyleNewSubtree(Element* aRoot);
 
   /**
-   * Like the above, but does not assume that the root node is dirty. When
-   * appending multiple children to a potentially-non-dirty node, it's
-   * preferable to call StyleNewChildren on the node rather than making multiple
-   * calls to StyleNewSubtree on each child, since it allows for more
-   * parallelism.
+   * Like the above, but skips the root node, and only styles unstyled children.
+   * When potentially appending multiple children, it's preferable to call
+   * StyleNewChildren on the node rather than making multiple calls to
+   * StyleNewSubtree on each child, since it allows for more parallelism.
    */
-  void StyleNewChildren(nsIContent* aParent);
+  void StyleNewChildren(Element* aParent);
 
 #ifdef DEBUG
   void AssertTreeIsClean();

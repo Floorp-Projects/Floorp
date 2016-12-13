@@ -19,9 +19,9 @@ public final class JavascriptMessageParser {
 
     /**
     * The Javascript test harness sends test events to Java.
-    * Each such test event is wrapped in a Robocop:JS event.
+    * Each such test event is wrapped in a Robocop:Java event.
     */
-    public static final String EVENT_TYPE = "Robocop:JS";
+    public static final String EVENT_TYPE = "Robocop:Java";
 
     // Messages matching this pattern are handled specially.  Messages not
     // matching this pattern are still printed. This pattern should be able

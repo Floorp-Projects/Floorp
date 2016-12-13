@@ -69,7 +69,7 @@ extern "C" {
  * either because the way __dso_handle was used was already broken (and
  * the custom linker works around it).
  */
-  NS_EXPORT __attribute__((weak)) void *__dso_handle;
+  APKOPEN_EXPORT __attribute__((weak)) void *__dso_handle;
 }
 
 typedef int mozglueresult;
@@ -86,7 +86,7 @@ using namespace mozilla;
 static const int MAX_MAPPING_INFO = 32;
 static mapping_info lib_mapping[MAX_MAPPING_INFO];
 
-NS_EXPORT const struct mapping_info *
+APKOPEN_EXPORT const struct mapping_info *
 getLibraryMapping()
 {
   return lib_mapping;
@@ -154,13 +154,13 @@ abortThroughJava(const char* msg)
     env->PopLocalFrame(nullptr);
 }
 
-NS_EXPORT pthread_t
+APKOPEN_EXPORT pthread_t
 getJavaUiThread()
 {
     return sJavaUiThread;
 }
 
-extern "C" NS_EXPORT void MOZ_JNICALL
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoThread_registerUiThread(JNIEnv*, jclass)
 {
     sJavaUiThread = pthread_self();
@@ -325,7 +325,7 @@ loadNSSLibs(const char *apkName)
   return setup_nss_functions(nss_handle, nspr_handle, plc_handle);
 }
 
-extern "C" NS_EXPORT void MOZ_JNICALL
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_extractGeckoLibsNative(
     JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
 {
@@ -350,7 +350,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_extractGeckoLibsNative(
   jenv->ReleaseStringUTFChars(jApkName, apkName);
 }
 
-extern "C" NS_EXPORT void MOZ_JNICALL
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
 {
   jenv->GetJavaVM(&sJavaVM);
@@ -369,7 +369,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jcl
   jenv->ReleaseStringUTFChars(jApkName, str);
 }
 
-extern "C" NS_EXPORT void MOZ_JNICALL
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName) {
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
@@ -387,7 +387,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jc
   jenv->ReleaseStringUTFChars(jApkName, str);
 }
 
-extern "C" NS_EXPORT void MOZ_JNICALL
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName) {
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
@@ -447,7 +447,7 @@ FreeArgv(char** argv, int argc)
 typedef void (*GeckoStart_t)(JNIEnv*, char**, int, const nsXREAppData*);
 typedef int GeckoProcessType;
 
-extern "C" NS_EXPORT void MOZ_JNICALL
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jobjectArray jargs, int crashFd, int ipcFd)
 {
   int argc = 0;
@@ -485,7 +485,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jo
   FreeArgv(argv, argc);
 }
 
-extern "C" NS_EXPORT mozglueresult
+extern "C" APKOPEN_EXPORT mozglueresult
 ChildProcessInit(int argc, char* argv[])
 {
   int i;
