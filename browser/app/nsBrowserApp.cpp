@@ -259,47 +259,43 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
     return XRE_XPCShellMain(--argc, argv, envp, &shellData);
   }
 
+  XREAppData appData;
+  appData.xreDirectory = xreDirectory;
+
   if (appini) {
-    XREAppData appData;
     rv = XRE_ParseAppData(appini, appData);
     if (NS_FAILED(rv)) {
       Output("Couldn't read application.ini");
       return 255;
     }
-#if defined(HAS_DLL_BLOCKLIST)
-    // The dll blocklist operates in the exe vs. xullib. Pass a flag to
-    // xullib so automated tests can check the result once the browser
-    // is up and running.
-    appData->flags |=
-      DllBlocklist_CheckStatus() ? NS_XRE_DLL_BLOCKLIST_ENABLED : 0;
-#endif
-    appData.xreDirectory = xreDirectory;
+
     appini->GetParent(getter_AddRefs(appData.directory));
-    return XRE_main(argc, argv, appData, mainFlags);
-  }
+  } else {
+    // no -app flag so we use the compiled-in app data
+    appData = sAppData;
 
-  XREAppData appData;
-  appData = sAppData;
-  nsCOMPtr<nsIFile> exeFile;
-  rv = mozilla::BinaryPath::GetFile(argv[0], getter_AddRefs(exeFile));
-  if (NS_FAILED(rv)) {
-    Output("Couldn't find the application directory.\n");
-    return 255;
-  }
+    nsCOMPtr<nsIFile> exeFile;
+    rv = mozilla::BinaryPath::GetFile(argv[0], getter_AddRefs(exeFile));
+    if (NS_FAILED(rv)) {
+      Output("Couldn't find the application directory.\n");
+      return 255;
+    }
 
-  nsCOMPtr<nsIFile> greDir;
-  exeFile->GetParent(getter_AddRefs(greDir));
+    nsCOMPtr<nsIFile> greDir;
+    exeFile->GetParent(getter_AddRefs(greDir));
 #ifdef XP_MACOSX
-  greDir->SetNativeLeafName(NS_LITERAL_CSTRING(kOSXResourcesFolder));
+    greDir->SetNativeLeafName(NS_LITERAL_CSTRING(kOSXResourcesFolder));
 #endif
-  nsCOMPtr<nsIFile> appSubdir;
-  greDir->Clone(getter_AddRefs(appSubdir));
-  appSubdir->Append(NS_LITERAL_STRING(kDesktopFolder));
-
-  appData.directory = appSubdir;
-  appData.xreDirectory = xreDirectory;
+    nsCOMPtr<nsIFile> appSubdir;
+    greDir->Clone(getter_AddRefs(appSubdir));
+    appSubdir->Append(NS_LITERAL_STRING(kDesktopFolder));
+    appData.directory = appSubdir;
+  }
 
 #if defined(HAS_DLL_BLOCKLIST)
+  // The dll blocklist operates in the exe vs. xullib. Pass a flag to
+  // xullib so automated tests can check the result once the browser
+  // is up and running.
   appData.flags |=
     DllBlocklist_CheckStatus() ? NS_XRE_DLL_BLOCKLIST_ENABLED : 0;
 #endif
@@ -441,9 +437,9 @@ int main(int argc, char* argv[], char* envp[])
 #endif
 
 
-  nsIFile *xreDirectory;
+  nsCOMPtr<nsIFile> xreDirectory;
 
-  nsresult rv = InitXPCOMGlue(argv[0], &xreDirectory);
+  nsresult rv = InitXPCOMGlue(argv[0], getter_AddRefs(xreDirectory));
   if (NS_FAILED(rv)) {
     return 255;
   }
@@ -456,6 +452,7 @@ int main(int argc, char* argv[], char* envp[])
 
   int result = do_main(argc, argv, envp, xreDirectory);
 
+  xreDirectory = nullptr;
   NS_LogTerm();
 
 #ifdef XP_MACOSX
