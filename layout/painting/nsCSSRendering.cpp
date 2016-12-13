@@ -770,10 +770,10 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
   // Convert to dev pixels.
   nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
   Rect joinedBorderAreaPx = NSRectToRect(joinedBorderArea, twipsPerPixel);
-  Float borderWidths[4] = { Float(border.top / twipsPerPixel),
-                                   Float(border.right / twipsPerPixel),
-                                   Float(border.bottom / twipsPerPixel),
-                                   Float(border.left / twipsPerPixel) };
+  Float borderWidths[4] = { Float(border.top) / twipsPerPixel,
+                                   Float(border.right) / twipsPerPixel,
+                                   Float(border.bottom) / twipsPerPixel,
+                                   Float(border.left) / twipsPerPixel };
   Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
 
   uint8_t borderStyles[4];
