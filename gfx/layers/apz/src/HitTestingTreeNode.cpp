@@ -27,7 +27,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mLayersId(aLayersId)
   , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
   , mScrollDir(Layer::NONE)
-  , mScrollSize(0)
+  , mScrollThumbLength(0)
   , mIsScrollbarContainer(false)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
   , mOverride(EventRegionsOverride::NoOverride)
@@ -96,12 +96,12 @@ HitTestingTreeNode::SetLastChild(HitTestingTreeNode* aChild)
 void
 HitTestingTreeNode::SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
                                      Layer::ScrollDirection aDir,
-                                     int32_t aScrollSize,
+                                     int32_t aScrollThumbLength,
                                      bool aIsScrollContainer)
 {
   mScrollViewId = aScrollViewId;
   mScrollDir = aDir;
-  mScrollSize = aScrollSize;;
+  mScrollThumbLength = aScrollThumbLength;
   mIsScrollbarContainer = aIsScrollContainer;
 }
 
@@ -115,10 +115,10 @@ HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetric
          mScrollViewId == aDragMetrics.mViewId;
 }
 
-int32_t
-HitTestingTreeNode::GetScrollSize() const
+LayerIntCoord
+HitTestingTreeNode::GetScrollThumbLength() const
 {
-  return mScrollSize;
+  return mScrollThumbLength;
 }
 
 bool
