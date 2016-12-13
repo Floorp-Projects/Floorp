@@ -279,7 +279,7 @@ this.IsolationTestTools = {
    *    An optional boolean to ensure we get results before the next tab is opened.
    */
   runTests(aURL, aGetResultFuncs, aCompareResultFunc, aBeforeFunc,
-           aGetResultImmediately) {
+           aGetResultImmediately, aUseHttps) {
     let pageURL;
     let firstFrameSetting;
     let secondFrameSetting;
@@ -301,7 +301,10 @@ this.IsolationTestTools = {
       aGetResultFuncs = [aGetResultFuncs];
     }
 
-    let tabSettings = [
+    let tabSettings = aUseHttps ? [
+                        { firstPartyDomain: "https://example.com", userContextId: 1},
+                        { firstPartyDomain: "https://example.org", userContextId: 2}
+                      ] : [
                         { firstPartyDomain: "http://example.com", userContextId: 1},
                         { firstPartyDomain: "http://example.org", userContextId: 2}
                       ];
