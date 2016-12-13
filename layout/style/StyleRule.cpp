@@ -1130,14 +1130,11 @@ protected:
 DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(css::StyleRule *aRule)
   : mRule(aRule)
 {
-  MOZ_COUNT_CTOR(DOMCSSDeclarationImpl);
 }
 
 DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl(void)
 {
   NS_ASSERTION(!mRule, "DropReference not called.");
-
-  MOZ_COUNT_DTOR(DOMCSSDeclarationImpl);
 }
 
 inline css::DOMCSSStyleRule* DOMCSSDeclarationImpl::DomRule()

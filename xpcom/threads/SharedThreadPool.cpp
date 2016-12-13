@@ -159,13 +159,11 @@ SharedThreadPool::SharedThreadPool(const nsCString& aName,
   , mPool(aPool)
   , mRefCnt(0)
 {
-  MOZ_COUNT_CTOR(SharedThreadPool);
   mEventTarget = do_QueryInterface(aPool);
 }
 
 SharedThreadPool::~SharedThreadPool()
 {
-  MOZ_COUNT_DTOR(SharedThreadPool);
 }
 
 nsresult

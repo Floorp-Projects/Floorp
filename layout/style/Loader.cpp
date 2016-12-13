@@ -1300,7 +1300,7 @@ Loader::PrepareSheet(StyleSheet* aSheet,
 
     // We have aMediaString only when linked from link elements, style
     // elements, or PIs, so pass true.
-    mediumParser.ParseMediaList(aMediaString, nullptr, 0, mediaList, true);
+    mediumParser.ParseMediaList(aMediaString, nullptr, 0, mediaList);
   }
 
   sheet->SetMedia(mediaList);

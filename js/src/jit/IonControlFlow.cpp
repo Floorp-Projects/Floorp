@@ -1852,6 +1852,8 @@ ControlFlowGenerator::processTableSwitch(JSOp op, jssrcnote* sn)
     // Create cases
     jsbytecode* casepc = nullptr;
     for (int i = 0; i < high-low+1; i++) {
+        if (!alloc().ensureBallast())
+            return ControlStatus::Error;
         casepc = pc + GET_JUMP_OFFSET(pc2);
 
         MOZ_ASSERT(casepc >= pc && casepc <= exitpc);

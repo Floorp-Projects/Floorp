@@ -809,7 +809,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(uri);
     nsCOMPtr<nsIPrincipal> principal;
     uriPrinc->GetPrincipal(getter_AddRefs(principal));
-    NS_ASSERTION(info->mPrincipal == principal, "Wrong principal!");
+    MOZ_ASSERT(info->mPrincipal == principal, "Wrong principal!");
   }
 #endif
 
@@ -886,8 +886,6 @@ nsFontTableProtocolHandler::GetScheme(nsACString &result)
 nsresult
 NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob)
 {
-  NS_ASSERTION(IsBlobURI(aURI), "Only call this with blob URIs");
-
   *aBlob = nullptr;
 
   DataInfo* info = GetDataInfoFromURI(aURI);
@@ -936,8 +934,6 @@ NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 nsresult
 NS_GetStreamForMediaStreamURI(nsIURI* aURI, mozilla::DOMMediaStream** aStream)
 {
-  NS_ASSERTION(IsMediaStreamURI(aURI), "Only call this with mediastream URIs");
-
   DataInfo* info = GetDataInfoFromURI(aURI);
   if (!info || info->mObjectType != DataInfo::eMediaStream) {
     return NS_ERROR_DOM_BAD_URI;
@@ -985,8 +981,6 @@ nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
 nsresult
 NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource)
 {
-  NS_ASSERTION(IsMediaSourceURI(aURI), "Only call this with mediasource URIs");
-
   *aSource = nullptr;
 
   DataInfo* info = GetDataInfoFromURI(aURI);
