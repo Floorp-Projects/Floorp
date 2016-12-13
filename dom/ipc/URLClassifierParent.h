@@ -29,6 +29,11 @@ class URLClassifierParent : public nsIURIClassifierCallback,
 
  private:
   ~URLClassifierParent() = default;
+
+  // Remember what happened in StartClassify in order to annotate the crash
+  // reports later on.
+  uint32_t mStartClassifyLog = 0;
+  nsresult mStartClassifyRv = NS_OK;
 };
 
 } // namespace dom
