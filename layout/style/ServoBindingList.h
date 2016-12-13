@@ -159,7 +159,7 @@ SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
 // Restyle the given subtree.
 SERVO_BINDING_FUNC(Servo_TraverseSubtree, void,
                    RawGeckoElementBorrowed root, RawServoStyleSetBorrowed set,
-                   mozilla::SkipRootBehavior skip_root)
+                   mozilla::TraversalRootBehavior root_behavior)
 
 // Assert that the tree has no pending or unconsumed restyles.
 SERVO_BINDING_FUNC(Servo_AssertTreeIsClean, void, RawGeckoElementBorrowed root)

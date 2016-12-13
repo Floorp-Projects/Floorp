@@ -19,13 +19,11 @@ BufferDecoder::BufferDecoder(MediaResource* aResource, GMPCrashHelper* aCrashHel
   , mCrashHelper(aCrashHelper)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_COUNT_CTOR(BufferDecoder);
 }
 
 BufferDecoder::~BufferDecoder()
 {
   // The dtor may run on any thread, we cannot be sure.
-  MOZ_COUNT_DTOR(BufferDecoder);
 }
 
 void

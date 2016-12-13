@@ -170,7 +170,6 @@ nsZipHandle::nsZipHandle()
   , mFileStart(nullptr)
   , mTotalLen(0)
 {
-  MOZ_COUNT_CTOR(nsZipHandle);
 }
 
 NS_IMPL_ADDREF(nsZipHandle)
@@ -344,7 +343,6 @@ nsZipHandle::~nsZipHandle()
   mFileData = nullptr;
   mMap = nullptr;
   mBuf = nullptr;
-  MOZ_COUNT_DTOR(nsZipHandle);
 }
 
 //***********************************************************
@@ -956,8 +954,6 @@ nsZipArchive::nsZipArchive()
 {
   zipLog.AddRef();
 
-  MOZ_COUNT_CTOR(nsZipArchive);
-
   // initialize the table to nullptr
   memset(mFiles, 0, sizeof(mFiles));
 }
@@ -968,8 +964,6 @@ NS_IMPL_RELEASE(nsZipArchive)
 nsZipArchive::~nsZipArchive()
 {
   CloseArchive();
-
-  MOZ_COUNT_DTOR(nsZipArchive);
 
   zipLog.Release();
 }

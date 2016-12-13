@@ -32,7 +32,7 @@
 }
 
 :root[platform="linux"] .devtools-monospace {
-  font-size: 80%;
+  font-size: 11px;
 }
 
 /* Override wrong system font from forms.css */

@@ -174,7 +174,7 @@ DispatcherDelegate.prototype = {
   },
 };
 
-const EventDispatcher = {
+var EventDispatcher = {
   instance: new DispatcherDelegate(Services.androidBridge),
 
   for: function (window) {

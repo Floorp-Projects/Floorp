@@ -152,18 +152,14 @@ public:
                      bool*               aChanged,
                      bool                aIsImportant);
   /**
-   * Parse aBuffer into a media list |aMediaList|, which must be
-   * non-null, replacing its current contents.  If aHTMLMode is true,
-   * parse according to HTML rules, with commas as the most important
-   * delimiter.  Otherwise, parse according to CSS rules, with
-   * parentheses and strings more important than commas.  |aURL| and
-   * |aLineNumber| are used for error reporting.
+   * Parse aBuffer into a media list |aMediaList|, which must be non-null,
+   * replacing its current contents. |aURL| and |aLineNumber| are used for error
+   * reporting.
    */
   void ParseMediaList(const nsSubstring& aBuffer,
                       nsIURI*            aURL,
                       uint32_t           aLineNumber,
-                      nsMediaList*       aMediaList,
-                      bool               aHTMLMode);
+                      nsMediaList*       aMediaList);
 
   /*
    * Parse aBuffer into a list of media queries and their associated values,
@@ -181,8 +177,7 @@ public:
                            nsIURI* aURI, // for error reporting
                            uint32_t aLineNumber, // for error reporting
                            InfallibleTArray< nsAutoPtr<nsMediaQuery> >& aQueries,
-                           InfallibleTArray<nsCSSValue>& aValues,
-                           bool aHTMLMode);
+                           InfallibleTArray<nsCSSValue>& aValues);
 
   /**
    * Parse aBuffer into a nsCSSValue |aValue|. Will return false

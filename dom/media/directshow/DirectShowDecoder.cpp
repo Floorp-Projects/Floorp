@@ -53,13 +53,9 @@ DirectShowDecoder::IsEnabled()
 DirectShowDecoder::DirectShowDecoder(MediaDecoderOwner* aOwner)
   : MediaDecoder(aOwner)
 {
-  MOZ_COUNT_CTOR(DirectShowDecoder);
 }
 
-DirectShowDecoder::~DirectShowDecoder()
-{
-  MOZ_COUNT_DTOR(DirectShowDecoder);
-}
+DirectShowDecoder::~DirectShowDecoder() = default;
 
 } // namespace mozilla
 
