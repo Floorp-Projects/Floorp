@@ -292,6 +292,7 @@ VideoSink::Redraw(const VideoInfo& aInfo)
   RefPtr<MediaData> frame = VideoQueue().PeekFront();
   if (frame) {
     VideoData* video = frame->As<VideoData>();
+    video->MarkSentToCompositor();
     mContainer->SetCurrentFrame(video->mDisplay, video->mImage, TimeStamp::Now());
     return;
   }

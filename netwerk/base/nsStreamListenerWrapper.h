@@ -23,12 +23,12 @@ public:
   explicit nsStreamListenerWrapper(nsIStreamListener *listener)
     : mListener(listener)
   {
-    NS_ASSERTION(mListener, "no stream listener specified");
+    MOZ_ASSERT(mListener, "no stream listener specified");
   }
 
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
-  NS_FORWARD_NSISTREAMLISTENER(mListener->)
+  NS_FORWARD_SAFE_NSIREQUESTOBSERVER(mListener)
+  NS_FORWARD_SAFE_NSISTREAMLISTENER(mListener)
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
 private:

@@ -7,6 +7,9 @@
   <body>
     <p>console.table() test page</p>
     <script>
+      /* exported doConsoleTable */
+      "use strict";
+
       function doConsoleTable(data, constrainedHeaders = null) {
         if (constrainedHeaders) {
           console.table(data, constrainedHeaders);

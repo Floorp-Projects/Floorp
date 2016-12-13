@@ -21,12 +21,12 @@ function PC_REMOTE_SETUP_NULL_ICE_HANDLER(test) {
   test.pcRemote.setupIceCandidateHandler(test, function() {}, function () {});
 }
 function PC_REMOTE_ADD_FAKE_ICE_CANDIDATE(test) {
-  var cand = new RTCIceCandidate({"candidate":"candidate:0 1 UDP 2130379007 192.0.2.1 12345 typ host","sdpMid":"","sdpMLineIndex":0});
+  var cand = {"candidate":"candidate:0 1 UDP 2130379007 192.0.2.1 12345 typ host","sdpMid":"","sdpMLineIndex":0};
   test.pcRemote.storeOrAddIceCandidate(cand);
   info(test.pcRemote + " Stored fake candidate: " + JSON.stringify(cand));
 }
 function PC_LOCAL_ADD_FAKE_ICE_CANDIDATE(test) {
-  var cand = new RTCIceCandidate({"candidate":"candidate:0 1 UDP 2130379007 192.0.2.2 56789 typ host","sdpMid":"","sdpMLineIndex":0});
+  var cand = {"candidate":"candidate:0 1 UDP 2130379007 192.0.2.2 56789 typ host","sdpMid":"","sdpMLineIndex":0};
     test.pcLocal.storeOrAddIceCandidate(cand);
   info(test.pcLocal + " Stored fake candidate: " + JSON.stringify(cand));
 }

@@ -59,11 +59,11 @@ add_task(function* () {
     removeTab(tab);
     yield onDestroyed;
 
-    ok(!monitor._controller.client,
+    ok(!monitor.panelWin.NetMonitorController.client,
       "There shouldn't be a client available after destruction.");
-    ok(!monitor._controller.tabClient,
+    ok(!monitor.panelWin.NetMonitorController.tabClient,
       "There shouldn't be a tabClient available after destruction.");
-    ok(!monitor._controller.webConsoleClient,
+    ok(!monitor.panelWin.NetMonitorController.webConsoleClient,
       "There shouldn't be a webConsoleClient available after destruction.");
   }
 });

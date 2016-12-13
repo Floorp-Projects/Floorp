@@ -209,6 +209,17 @@ TEST_P(TlsConnectTls13, AlertWrongLevel) {
   client_->WaitForErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT, 2000);
 }
 
+TEST_F(TlsConnectStreamTls13, Tls13FailedWriteSecondFlight) {
+  EnsureTlsSetup();
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();  // Send first flight.
+  client_->adapter()->CloseWrites();
+  client_->Handshake();  // This will get an error, but shouldn't crash.
+  client_->CheckErrorCode(SSL_ERROR_SOCKET_WRITE_FAILURE);
+}
+
 INSTANTIATE_TEST_CASE_P(GenericStream, TlsConnectGeneric,
                         ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
                                            TlsConnectTestBase::kTlsVAll));

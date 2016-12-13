@@ -891,6 +891,19 @@ limitations under the License.
         var win = window.open("intersectionobserver_window.html");
       });
 
+      it('triggers only once if observed multiple times (and does not crash when collected)', function(done) {
+        var spy = sinon.spy();
+        io = new IntersectionObserver(spy, {root: rootEl});
+        io.observe(targetEl1);
+        io.observe(targetEl1);
+        io.observe(targetEl1);
+
+        callDelayed(function () {
+          expect(spy.callCount).to.be(1);
+          done();
+        }, ASYNC_TIMEOUT);
+      });
+
     });
 
     describe('observe subframe', function () {

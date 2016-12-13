@@ -200,7 +200,7 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const char16_t *aDictionary)
   if (!mHunspell)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsDependentCString label(mHunspell->get_dic_encoding());
+  nsAutoCString label(mHunspell->get_dict_encoding().c_str());
   nsAutoCString encoding;
   if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
     return NS_ERROR_UCONV_NOCONV;
@@ -480,7 +480,8 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir)
   return NS_OK;
 }
 
-nsresult mozHunspell::ConvertCharset(const char16_t* aStr, char ** aDst)
+nsresult
+mozHunspell::ConvertCharset(const char16_t* aStr, std::string* aDst)
 {
   NS_ENSURE_ARG_POINTER(aDst);
   NS_ENSURE_TRUE(mEncoder, NS_ERROR_NULL_POINTER);
@@ -490,12 +491,13 @@ nsresult mozHunspell::ConvertCharset(const char16_t* aStr, char ** aDst)
   nsresult rv = mEncoder->GetMaxLength(aStr, inLength, &outLength);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aDst = (char *) moz_xmalloc(sizeof(char) * (outLength+1));
-  NS_ENSURE_TRUE(*aDst, NS_ERROR_OUT_OF_MEMORY);
+  aDst->resize(outLength);
 
-  rv = mEncoder->Convert(aStr, &inLength, *aDst, &outLength);
-  if (NS_SUCCEEDED(rv))
-    (*aDst)[outLength] = '\0';
+  char* dst = &aDst->operator[](0);
+  rv = mEncoder->Convert(aStr, &inLength, dst, &outLength);
+  if (NS_SUCCEEDED(rv)) {
+    aDst->resize(outLength);
+  }
 
   return rv;
 }
@@ -518,12 +520,11 @@ NS_IMETHODIMP mozHunspell::Check(const char16_t *aWord, bool *aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_TRUE(mHunspell, NS_ERROR_FAILURE);
 
-  nsXPIDLCString charsetWord;
-  nsresult rv = ConvertCharset(aWord, getter_Copies(charsetWord));
+  std::string charsetWord;
+  nsresult rv = ConvertCharset(aWord, &charsetWord);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aResult = !!mHunspell->spell(charsetWord);
-
+  *aResult = mHunspell->spell(charsetWord);
 
   if (!*aResult && mPersonalDictionary)
     rv = mPersonalDictionary->Check(aWord, mLanguage.get(), aResult);
@@ -540,12 +541,12 @@ NS_IMETHODIMP mozHunspell::Suggest(const char16_t *aWord, char16_t ***aSuggestio
   nsresult rv;
   *aSuggestionCount = 0;
 
-  nsXPIDLCString charsetWord;
-  rv = ConvertCharset(aWord, getter_Copies(charsetWord));
+  std::string charsetWord;
+  rv = ConvertCharset(aWord, &charsetWord);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char ** wlst;
-  *aSuggestionCount = mHunspell->suggest(&wlst, charsetWord);
+  std::vector<std::string> suggestions = mHunspell->suggest(charsetWord);
+  *aSuggestionCount = static_cast<uint32_t>(suggestions.size());
 
   if (*aSuggestionCount) {
     *aSuggestions  = (char16_t **)moz_xmalloc(*aSuggestionCount * sizeof(char16_t *));
@@ -553,15 +554,15 @@ NS_IMETHODIMP mozHunspell::Suggest(const char16_t *aWord, char16_t ***aSuggestio
       uint32_t index = 0;
       for (index = 0; index < *aSuggestionCount && NS_SUCCEEDED(rv); ++index) {
         // Convert the suggestion to utf16
-        int32_t inLength = strlen(wlst[index]);
+        int32_t inLength = suggestions[index].size();
         int32_t outLength;
-        rv = mDecoder->GetMaxLength(wlst[index], inLength, &outLength);
+        rv = mDecoder->GetMaxLength(suggestions[index].c_str(), inLength, &outLength);
         if (NS_SUCCEEDED(rv))
         {
           (*aSuggestions)[index] = (char16_t *) moz_xmalloc(sizeof(char16_t) * (outLength+1));
           if ((*aSuggestions)[index])
           {
-            rv = mDecoder->Convert(wlst[index], &inLength, (*aSuggestions)[index], &outLength);
+            rv = mDecoder->Convert(suggestions[index].c_str(), &inLength, (*aSuggestions)[index], &outLength);
             if (NS_SUCCEEDED(rv))
               (*aSuggestions)[index][outLength] = 0;
           }
@@ -577,7 +578,6 @@ NS_IMETHODIMP mozHunspell::Suggest(const char16_t *aWord, char16_t ***aSuggestio
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(*aSuggestionCount, wlst);
   return rv;
 }
 

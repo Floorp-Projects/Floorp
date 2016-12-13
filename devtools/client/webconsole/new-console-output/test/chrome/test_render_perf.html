@@ -13,6 +13,8 @@
 <div id="output"></div>
 
 <script type="text/javascript;version=1.8">
+"use strict";
+
 const testPackets = [];
 const numMessages = 1000;
 for (let id = 0; id < numMessages; id++) {
@@ -57,9 +59,12 @@ function timeit(cb) {
 }
 
 window.onload = Task.async(function* () {
-  const { configureStore } = browserRequire("devtools/client/webconsole/new-console-output/store");
-  const { filterTextSet, filtersClear } = browserRequire("devtools/client/webconsole/new-console-output/actions/index");
-  const NewConsoleOutputWrapper = browserRequire("devtools/client/webconsole/new-console-output/new-console-output-wrapper");
+  const { configureStore } = browserRequire(
+    "devtools/client/webconsole/new-console-output/store");
+  const { filterTextSet, filtersClear } = browserRequire(
+    "devtools/client/webconsole/new-console-output/actions/index");
+  const NewConsoleOutputWrapper = browserRequire(
+    "devtools/client/webconsole/new-console-output/new-console-output-wrapper");
   const wrapper = new NewConsoleOutputWrapper(document.querySelector("#output"), {});
 
   const store = configureStore();

@@ -5,12 +5,19 @@
 "use strict";
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
-const filters = require("./filters");
+const batchingReducer = require("./batching");
 const requests = require("./requests");
+const sort = require("./sort");
+const filters = require("./filters");
+const timingMarkers = require("./timing-markers");
 const ui = require("./ui");
 
-module.exports = combineReducers({
-  filters,
-  requests,
-  ui,
-});
+module.exports = batchingReducer(
+  combineReducers({
+    requests,
+    sort,
+    filters,
+    timingMarkers,
+    ui,
+  })
+);

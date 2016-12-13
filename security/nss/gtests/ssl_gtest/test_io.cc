@@ -371,7 +371,7 @@ int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
 }
 
 int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
-  if (!peer_) {
+  if (!peer_ || !writeable_) {
     PR_SetError(PR_IO_ERROR, 0);
     return -1;
   }

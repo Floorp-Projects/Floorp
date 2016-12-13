@@ -122,7 +122,7 @@ def rust_triple_alias(host_or_target):
             # OpenBSD
             ('x86_64', 'OpenBSD'): 'x86_64-unknown-openbsd',
             # Linux
-            ('x86', 'Linux'): 'i586-unknown-linux-gnu',
+            ('x86', 'Linux'): 'i686-unknown-linux-gnu',
             # Linux
             ('x86_64', 'Linux'): 'x86_64-unknown-linux-gnu',
             # OS X and iOS

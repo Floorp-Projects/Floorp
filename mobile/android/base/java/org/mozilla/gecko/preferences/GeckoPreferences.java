@@ -41,8 +41,10 @@ import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -101,12 +103,12 @@ import java.util.Locale;
 import java.util.Map;
 
 public class GeckoPreferences
-extends AppCompatPreferenceActivity
-implements
-GeckoActivityStatus,
-NativeEventListener,
-OnPreferenceChangeListener,
-OnSharedPreferenceChangeListener
+    extends AppCompatPreferenceActivity
+    implements BundleEventListener,
+               GeckoActivityStatus,
+               NativeEventListener,
+               OnPreferenceChangeListener,
+               OnSharedPreferenceChangeListener
 {
     private static final String LOGTAG = "GeckoPreferences";
 
@@ -369,9 +371,8 @@ OnSharedPreferenceChangeListener
         // Use setResourceToOpen to specify these extras.
         Bundle intentExtras = getIntent().getExtras();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                                                                  "Sanitize:Finished",
-                                                                  "Snackbar:Show");
+        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
+                                                                  "Sanitize:Finished");
 
         // Add handling for long-press click.
         // This is only for Android 3.0 and below (which use the long-press-context-menu paradigm).
@@ -506,9 +507,8 @@ OnSharedPreferenceChangeListener
     protected void onDestroy() {
         super.onDestroy();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-                                                                    "Sanitize:Finished",
-                                                                    "Snackbar:Show");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
+                                                                    "Sanitize:Finished");
 
         if (mPrefsRequest != null) {
             PrefsHelper.removeObserver(mPrefsRequest);
@@ -518,6 +518,8 @@ OnSharedPreferenceChangeListener
 
     @Override
     public void onPause() {
+        EventDispatcher.getInstance().unregisterUiThreadListener(this, "Snackbar:Show");
+
         // Symmetric with onResume.
         if (isMultiPane()) {
             SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
@@ -534,6 +536,8 @@ OnSharedPreferenceChangeListener
     @Override
     public void onResume() {
         super.onResume();
+
+        EventDispatcher.getInstance().registerUiThreadListener(this, "Snackbar:Show");
 
         if (getApplication() instanceof GeckoApplication) {
             ((GeckoApplication) getApplication()).onActivityResume(this);
@@ -608,6 +612,17 @@ OnSharedPreferenceChangeListener
     }
 
     @Override
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("Snackbar:Show".equals(event)) {
+            SnackbarBuilder.builder(this)
+                    .fromEvent(message)
+                    .callback(callback)
+                    .buildAndShow();
+        }
+    }
+
+    @Override
     public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
         try {
             switch (event) {
@@ -618,12 +633,6 @@ OnSharedPreferenceChangeListener
                     SnackbarBuilder.builder(GeckoPreferences.this)
                             .message(stringRes)
                             .duration(Snackbar.LENGTH_LONG)
-                            .buildAndShow();
-                    break;
-                case "Snackbar:Show":
-                    SnackbarBuilder.builder(this)
-                            .fromEvent(message)
-                            .callback(callback)
                             .buildAndShow();
                     break;
             }

@@ -159,8 +159,6 @@
           'sources': [
             #TODO: building with mingw should not need this.
             'ecl/uint128.c',
-            #TODO: clang-cl needs -msse3 here
-            'intel-gcm-wrap.c',
           ],
           'libraries': [
             'advapi32.lib',
@@ -181,6 +179,16 @@
                 'mpi/mpi_x86_asm.c',
                 'intel-aes-x86-masm.asm',
                 'intel-gcm-x86-masm.asm',
+              ],
+            }],
+            [ 'cc_is_clang==1', {
+              'dependencies': [
+                'intel-gcm-wrap_c_lib',
+              ],
+            }, {
+              # MSVC
+              'sources': [
+                'intel-gcm-wrap.c',
               ],
             }],
           ],

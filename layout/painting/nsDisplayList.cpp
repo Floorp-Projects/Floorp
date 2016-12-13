@@ -428,8 +428,8 @@ SetBaseAnimationStyle(nsCSSPropertyID aProperty,
 {
   MOZ_ASSERT(aFrame);
 
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  StyleAnimationValue baseValue = effects->GetBaseStyle(aProperty);
+  StyleAnimationValue baseValue =
+    EffectCompositor::GetBaseStyle(aProperty, aFrame);
   MOZ_ASSERT(!baseValue.IsNull(),
              "The base value should be already there");
 

@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
@@ -13,6 +14,7 @@
 
   runNetworkTest(function () {
     var pc = new RTCPeerConnection();
+    var sender = pc.addTrack(getSilentTrack(), new MediaStream());
     var exception = null;
     var eTimeout = null;
 
@@ -73,27 +75,21 @@
                                                sdpMid: "test",
                                                sdpMLineIndex: 3 });
 
-      var doesFail = (p, msg) => p.then(generateErrorCallback(),
+      var doesFail = (p, msg) => p.then(generateErrorCallback(msg),
                                         r => is(r.name, "InvalidStateError", msg));
-
-      doesFail(pc.createOffer(), "createOffer fails on close")
-      .then(() => doesFail(pc.createAnswer(), "createAnswer fails on close"))
-      .then(() => doesFail(pc.setLocalDescription(offer),
-                           "setLocalDescription fails on close"))
-      .then(() => doesFail(pc.setRemoteDescription(answer),
-                           "setRemoteDescription fails on close"))
-      .then(() => doesFail(pc.addIceCandidate(candidate),
-                           "addIceCandidate fails on close"))
-      .then(() => doesFail(new Promise((y, n) => pc.createOffer(y, n)),
-                           "Legacy createOffer fails on close"))
-      .then(() => doesFail(new Promise((y, n) => pc.createAnswer(y, n)),
-                           "Legacy createAnswer fails on close"))
-      .then(() => doesFail(new Promise((y, n) => pc.setLocalDescription(offer, y, n)),
-                           "Legacy setLocalDescription fails on close"))
-      .then(() => doesFail(new Promise((y, n) => pc.setRemoteDescription(answer, y, n)),
-                           "Legacy setRemoteDescription fails on close"))
-      .then(() => doesFail(new Promise((y, n) => pc.addIceCandidate(candidate, y, n)),
-                           "Legacy addIceCandidate fails on close"))
+      Promise.all([
+        [pc.createOffer(), "createOffer"],
+        [pc.createAnswer(), "createAnswer"],
+        [pc.setLocalDescription(offer), "setLocalDescription"],
+        [pc.setRemoteDescription(answer), "setRemoteDescription"],
+        [pc.addIceCandidate(candidate), "addIceCandidate"],
+        [new Promise((y, n) => pc.createOffer(y, n)), "Legacy createOffer"],
+        [new Promise((y, n) => pc.createAnswer(y, n)), "Legacy createAnswer"],
+        [new Promise((y, n) => pc.setLocalDescription(offer, y, n)), "Legacy setLocalDescription"],
+        [new Promise((y, n) => pc.setRemoteDescription(answer, y, n)), "Legacy setRemoteDescription"],
+        [new Promise((y, n) => pc.addIceCandidate(candidate, y, n)), "Legacy addIceCandidate"],
+        [sender.replaceTrack(getBlackTrack()), "replaceTrack"],
+      ].map(([p, name]) => doesFail(p, name + " fails on close")))
       .catch(reason => ok(false, "unexpected failure: " + reason))
       .then(finish);
 

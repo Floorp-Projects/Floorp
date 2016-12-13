@@ -278,13 +278,14 @@ TraceLoggerThread::disable(bool force, const char* error)
 }
 
 const char*
-TraceLoggerThread::eventText(uint32_t id)
+TraceLoggerThread::maybeEventText(uint32_t id)
 {
     if (id < TraceLogger_Last)
         return TLTextIdString(static_cast<TraceLoggerTextId>(id));
 
     TextIdHashMap::Ptr p = textIdPayloads.lookup(id);
-    MOZ_ASSERT(p);
+    if (!p)
+        return nullptr;
 
     return p->value()->string();
 }
@@ -570,7 +571,10 @@ TraceLoggerThread::stopEvent(uint32_t id)
             MOZ_ASSERT(prev >= TraceLogger_Last);
         } else if (id >= TraceLogger_Last) {
             MOZ_ASSERT(prev >= TraceLogger_Last);
-            MOZ_ASSERT_IF(prev != id, strcmp(eventText(id), eventText(prev)) == 0);
+            if (prev != id) {
+                // Ignore if the text has been flushed already.
+                MOZ_ASSERT_IF(maybeEventText(prev), strcmp(eventText(id), eventText(prev)) == 0);
+            }
         } else {
             MOZ_ASSERT(id == prev);
         }
