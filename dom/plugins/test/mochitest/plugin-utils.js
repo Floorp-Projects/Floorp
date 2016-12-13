@@ -93,3 +93,32 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
     SimpleTest.finish();
   });
 }
+
+/**
+ * Returns a promise which resolves on `mozFullScreenChange`.
+ */
+function promiseFullScreenChange(){
+  return new Promise(resolve => {
+    document.addEventListener("fullscreenchange", function onFullScreen(e) {
+      document.removeEventListener("fullscreenchange", onFullScreen);
+      resolve();
+    });
+  });
+}
+
+/**
+ * Crashes target plugin. Returns a promise; resolves on successful crash,
+ * rejects otherwise.
+ * @param plugin  Target plugin to attempt to crash.
+ */
+function crashPlugin(plugin) {
+  return new Promise( (resolve, reject) => {
+    try {
+      plugin.crash();
+      reject();
+    }
+    catch (e) {
+      resolve();
+    }
+  });
+}
