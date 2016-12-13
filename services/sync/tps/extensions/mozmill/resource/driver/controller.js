@@ -978,7 +978,7 @@ function browserAdditions (controller) {
       }, "Timeout", timeout, aInterval);
     }
     catch (ex) {
-      if (!ex instanceof errors.TimeoutError) {
+      if (!(ex instanceof errors.TimeoutError)) {
         throw ex;
       }
       timed_out = true;

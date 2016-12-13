@@ -7,6 +7,9 @@ module.exports = {
   ],
   "rules": {
     "mozilla/import-globals": "warn",
+
+    // No (!foo in bar) or (!object instanceof Class)
+    "no-unsafe-negation": "error",
   },
   "env": {
     "es6": true
