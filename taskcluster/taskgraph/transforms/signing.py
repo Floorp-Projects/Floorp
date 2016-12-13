@@ -99,6 +99,9 @@ def make_task_description(config, jobs):
                 'build_platform': dep_job.attributes.get('build_platform'),
                 'build_type': dep_job.attributes.get('build_type'),
         }
+        if dep_job.attributes.get('chunk_locales'):
+            # Used for l10n attribute passthrough
+            attributes['chunk_locales'] = dep_job.attributes.get('chunk_locales')
 
         task = {
             'label': label,
