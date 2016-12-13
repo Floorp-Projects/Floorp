@@ -17,7 +17,7 @@ namespace layers {
 
 class ShadowableLayer;
 
-class ShadowLayerChild : public PLayerChild
+class ShadowLayerChild final : public PLayerChild
 {
 public:
   ShadowLayerChild();
@@ -26,8 +26,12 @@ public:
   void SetShadowableLayer(ShadowableLayer* aLayer);
   ShadowableLayer* layer() const { return mLayer; }
 
+  static void Destroy(PLayerChild* aActor);
+
 protected:
   virtual void ActorDestroy(ActorDestroyReason why) override;
+
+  void Disconnect();
 
 private:
   ShadowableLayer* mLayer;
