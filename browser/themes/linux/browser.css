@@ -776,12 +776,13 @@ menuitem.bookmark-item {
 }
 
 #urlbar-search-splitter {
-  /* The splitter width should equal the location and search bars' combined
-     neighboring margin and border width. */
-  width: 8px;
-  margin: 0 -4px;
-  position: relative;
   -moz-appearance: none;
+  width: 8px;
+  margin-inline-start: -4px;
+}
+
+#urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
+  margin-inline-start: 0;
 }
 
 #urlbar-display-box {
