@@ -12,6 +12,8 @@ unset CC
 unset CXX
 unset HOST_CC
 unset HOST_CXX
+unset RUSTC
+unset CARGO
 
 ac_add_options --enable-artifact-builds
 

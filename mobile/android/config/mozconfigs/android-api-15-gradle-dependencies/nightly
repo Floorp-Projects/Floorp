@@ -24,6 +24,8 @@ export GRADLE_MAVEN_REPOSITORY="http://localhost:8081/nexus/content/repositories
 ac_add_options --disable-compile-environment
 unset HOST_CC
 unset HOST_CXX
+unset RUSTC
+unset CARGO
 
 ac_add_options --disable-tests
 
