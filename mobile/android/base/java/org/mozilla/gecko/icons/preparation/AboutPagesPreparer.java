@@ -21,9 +21,7 @@ public class AboutPagesPreparer implements Preparer {
     private Set<String> aboutUrls;
 
     public AboutPagesPreparer() {
-        aboutUrls = new HashSet<>();
-
-        Collections.addAll(aboutUrls, AboutPages.DEFAULT_ICON_PAGES);
+        aboutUrls = new HashSet<>(AboutPages.DEFAULT_ICON_PAGES);
     }
 
     @Override
