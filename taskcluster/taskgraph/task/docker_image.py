@@ -58,7 +58,7 @@ class DockerImageTask(base.Task):
 
         tasks = []
         templates = Templates(path)
-        for image_name in config['images']:
+        for image_name, image_symbol in config['images'].iteritems():
             context_path = os.path.join('testing', 'docker', image_name)
             context_hash = generate_context_hash(GECKO, context_path, image_name)
 
@@ -68,6 +68,10 @@ class DockerImageTask(base.Task):
 
             image_task = templates.load('image.yml', image_parameters)
             attributes = {'image_name': image_name}
+
+            # unique symbol for different docker image
+            if 'extra' in image_task['task']:
+                image_task['task']['extra']['treeherder']['symbol'] = image_symbol
 
             # As an optimization, if the context hash exists for a high level, that image
             # task ID will be used.  The reasoning behind this is that eventually everything ends
