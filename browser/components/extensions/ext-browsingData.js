@@ -68,6 +68,10 @@ let clearCookies = Task.async(function* (options) {
   }
 });
 
+function clearDownloads(options) {
+  return sanitizer.items.downloads.clear(makeRange(options));
+}
+
 function clearHistory(options) {
   return sanitizer.items.history.clear(makeRange(options));
 }
@@ -89,6 +93,9 @@ function doRemoval(options, dataToRemove, extension) {
           break;
         case "cookies":
           removalPromises.push(clearCookies(options));
+          break;
+        case "downloads":
+          removalPromises.push(clearDownloads(options));
           break;
         case "history":
           removalPromises.push(clearHistory(options));
@@ -143,6 +150,9 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
       },
       removeCookies(options) {
         return doRemoval(options, {cookies: true});
+      },
+      removeDownloads(options) {
+        return doRemoval(options, {downloads: true});
       },
       removeHistory(options) {
         return doRemoval(options, {history: true});
