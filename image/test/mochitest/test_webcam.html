@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=641748
+
+webcam-simulacrum.mgif is a hand-edited file containing red.gif and blue.gif,
+concatenated together with the relevant headers for
+multipart/x-mixed-replace. Specifically, with the headers in
+webcam-simulacrum.mjpg^headers^, the web browser will get the following:
+
+HTTP 200 OK
+Content-Type: multipart/x-mixed-replace;boundary=BOUNDARYOMG
+
+\-\-BOUNDARYOMG\r\n
+Content-Type: image/gif\r\n
+\r\n
+<contents of red.gif> (no newline)
+\-\-BOUNDARYOMG\r\n
+Content-Type: image/gif\r\n
+\r\n
+<contents of blue.gif> (no newline)
+\-\-BOUNDARYOMG\-\-\r\n
+
+(The boundary is arbitrary, and just has to be defined as something that
+won't be in the text of the contents themselves. \-\-$(boundary)\r\n means
+"Here is the beginning of a boundary," and \-\-$(boundary)\-\- means "All done
+sending you parts.")
+-->
+<head>
+  <title>Test for Bug 641748 - WebCam Simulacrum</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <script type="application/javascript" src="animationPolling.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=641748">
+Mozilla Bug 641748: GIF decoder doesn't support multipart/x-mixed-replace
+</a>
+<p id="display"></p>
+
+<div id="content">
+  <div id="referenceDiv" style="height: 100px; width: 100px;
+                                display: none; background: #0018ff;"></div>
+  <div id="animatedImage">
+    <img id="animatedGif" src="webcam-simulacrum.sjs" style="display: none; height: 100px; width: 100px;">
+      <div id="text-descr"></div>
+  </div>
+  <div id="debug" style="display:none">
+  </div>
+</div>
+<pre id="test">
+<script type="text/javascript;version=1.8">
+const FAILURE_TIMEOUT = 60000; // Fail early after 60 seconds
+
+function main()
+{
+  var animTest = new AnimationTest(20, FAILURE_TIMEOUT, 'referenceDiv',
+                                   'animatedGif', 'debug');
+  animTest.beginTest();
+}
+
+window.onload = main;
+</script>
+</pre>
+</body>
+</html>

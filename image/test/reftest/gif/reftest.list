@@ -27,27 +27,3 @@ skip == test_bug641198.html animation2a-finalframe.gif  # Disabled; see bug 1120
 
 # Bug 1234077
 == truncated-framerect.html truncated-framerect-ref.html
-
-# webcam-simulacrum.mgif is a hand-edited file containing red.gif and blue.gif,
-# concatenated together with the relevant headers for
-# multipart/x-mixed-replace. Specifically, with the headers in
-# webcam-simulacrum.mjpg^headers^, the web browser will get the following:
-#
-# HTTP 200 OK
-# Content-Type: multipart/x-mixed-replace;boundary=BOUNDARYOMG
-#
-# --BOUNDARYOMG\r\n
-# Content-Type: image/gif\r\n
-# \r\n
-# <contents of red.gif> (no newline)
-# --BOUNDARYOMG\r\n
-# Content-Type: image/gif\r\n
-# \r\n
-# <contents of blue.gif> (no newline)
-# --BOUNDARYOMG--\r\n
-#
-# (The boundary is arbitrary, and just has to be defined as something that
-# won't be in the text of the contents themselves. --$(boundary)\r\n means
-# "Here is the beginning of a boundary," and --$(boundary)-- means "All done
-# sending you parts.")
-HTTP == webcam.html blue.gif
