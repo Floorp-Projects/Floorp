@@ -39615,6 +39615,12 @@
             "url": "/web-animations/animation-model/combining-effects/effect-composition.html"
           }
         ],
+        "web-animations/interfaces/KeyframeEffect/composite.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/composite.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/composite.html"
+          }
+        ],
         "web-animations/interfaces/KeyframeEffect/copy-contructor.html": [
           {
             "path": "web-animations/interfaces/KeyframeEffect/copy-contructor.html",

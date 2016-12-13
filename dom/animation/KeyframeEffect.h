@@ -85,6 +85,7 @@ public:
   void SetIterationComposite(
     const IterationCompositeOperation& aIterationComposite,
     CallerType aCallerType);
+  void SetComposite(const CompositeOperation& aComposite);
 };
 
 } // namespace dom
