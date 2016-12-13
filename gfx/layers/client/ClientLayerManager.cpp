@@ -897,7 +897,7 @@ ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
 ClientLayer::~ClientLayer()
 {
   if (HasShadow()) {
-    ShadowLayerChild::Destroy(GetShadow());
+    PLayerChild::Send__delete__(GetShadow());
   }
   MOZ_COUNT_DTOR(ClientLayer);
 }
