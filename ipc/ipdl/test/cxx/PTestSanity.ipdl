@@ -12,7 +12,7 @@ child:
 parent:
     async Pong(int one, float zeroPtTwoFive, uint8_t dummy);
 
-
+/*
 state PING:
     send Ping goto PONG;
 
@@ -21,6 +21,7 @@ state PONG:
 
 state DEAD:
     send __delete__;
+*/
 };
 
 
