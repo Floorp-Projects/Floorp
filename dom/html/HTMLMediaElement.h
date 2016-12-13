@@ -39,6 +39,7 @@ typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 typedef uint32_t SuspendTypes;
 typedef uint32_t AudibleChangedReasons;
+typedef uint8_t AudibleState;
 
 namespace mozilla {
 class DecoderDoctorDiagnostics;
@@ -1280,7 +1281,7 @@ protected:
   // least once or activated by manually clicking the unblocking tab icon.
   bool IsTabActivated() const;
 
-  bool IsAudible() const;
+  AudibleState IsAudible() const;
 
   // It's used for fennec only, send the notification when the user resumes the
   // media which was paused by media control.
@@ -1737,8 +1738,8 @@ private:
   // True if the audio track is not silent.
   bool mIsAudioTrackAudible;
 
-  // True if media element is audible for users.
-  bool mAudible;
+  // Indicate whether media element is audible for users.
+  AudibleState mAudible;
 
   Visibility mVisibilityState;
 
