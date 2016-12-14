@@ -145,6 +145,9 @@ public:
 #if defined(XP_WIN)
   virtual bool RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
                             IAccessibleHolder* aParentCOMProxy) override;
+
+  virtual bool RecvGetWindowedPluginIAccessible(
+      const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;
 #endif
 
 private:
