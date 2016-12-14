@@ -176,7 +176,6 @@ TileManager.prototype = {
 
       // this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
       let visited = {};
-      let evictGuard = null;
       if (create) {
 	evictGuard = function evictGuard(tile) {
 	  return !visited[tile.toString()];
@@ -828,8 +827,6 @@ TileManager.Tile.prototype = {
 
     ctx.translate(x, y);
 
-    let cw = browserView._contentWindow;
-    // let cw = browser.contentWindow;
     ctx.asyncDrawXULElement(browserView._browser,
                    rect.left, rect.top,
                    rect.right - rect.left, rect.bottom - rect.top,

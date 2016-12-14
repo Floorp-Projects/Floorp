@@ -24,8 +24,6 @@ function TimeKeeper(props) {
 }
 
 {
-  const debug = 0 ? console.log.bind(console, '[timekeeper]') : function() {};
-
   const DAY_PERIOD_IN_HOURS = 12,
         SECOND_IN_MS = 1000,
         MINUTE_IN_MS = 60000,

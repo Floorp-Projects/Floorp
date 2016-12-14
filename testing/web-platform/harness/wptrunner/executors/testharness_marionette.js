@@ -14,7 +14,7 @@ window.wrappedJSObject.addEventListener("message", function listener(event) {
     var tests = event.data.tests;
     var status = event.data.status;
 
-    var subtest_results = tests.map(function(x) {
+    var subtest_results = tests.map(function (x) {
         return [x.name, x.status, x.message, x.stack]
     });
 

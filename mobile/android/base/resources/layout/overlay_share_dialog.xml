@@ -63,6 +63,16 @@
             gecko:enabledText="@string/overlay_share_bookmark_btn_label"
             gecko:disabledText="@string/overlay_share_bookmark_btn_label_already"/>
 
+        <!-- "Open in Browser" -->
+        <org.mozilla.gecko.overlays.ui.OverlayDialogButton
+                style="@style/ShareOverlayRow"
+                android:id="@+id/overlay_share_open_browser_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                gecko:drawable="@drawable/icon_search_empty_firefox"
+                gecko:enabledText="@string/overlay_share_open_browser_btn_label"/>
+
     </LinearLayout>
 
     <ImageView

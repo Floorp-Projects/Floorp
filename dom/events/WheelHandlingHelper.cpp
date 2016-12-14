@@ -257,6 +257,7 @@ WheelTransaction::OnEvent(WidgetEvent* aEvent)
     case eMouseUp:
     case eMouseDown:
     case eMouseDoubleClick:
+    case eMouseAuxClick:
     case eMouseClick:
     case eContextMenu:
     case eDrop:

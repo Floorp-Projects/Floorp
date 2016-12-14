@@ -494,7 +494,6 @@ add_task(function* test_no_shrink_on_init() {
   let c = yield getConnection("no_shrink_on_init",
                               {shrinkMemoryOnConnectionIdleMS: 200});
 
-  let oldShrink = c._connectionData.shrinkMemory;
   let count = 0;
   Object.defineProperty(c._connectionData, "shrinkMemory", {
     value: function() {
@@ -759,11 +758,11 @@ add_task(function* test_programmatic_binding_transaction_partial_rollback() {
   try {
     yield c.executeTransaction(function* transaction() {
       // Insert one row. This won't implicitly start a transaction.
-      let result = yield c.execute(sql, bindings[0]);
+      yield c.execute(sql, bindings[0]);
 
       // Insert multiple rows. mozStorage will want to start a transaction.
       // One of the inserts will fail, so the transaction should be rolled back.
-      result = yield c.execute(sql, bindings);
+      yield c.execute(sql, bindings);
       secondSucceeded = true;
     });
   } catch (ex) {
@@ -795,7 +794,7 @@ add_task(function* test_programmatic_binding_implicit_transaction() {
   let secondSucceeded = false;
   yield c.execute(sql, {id: 1, path: "works"});
   try {
-    let result = yield c.execute(sql, bindings);
+    yield c.execute(sql, bindings);
     secondSucceeded = true;
   } catch (ex) {
     print("Caught expected exception: " + ex);
@@ -918,7 +917,7 @@ add_task(function* test_cloneStorageConnection() {
 // Test Sqlite.cloneStorageConnection invalid argument.
 add_task(function* test_cloneStorageConnection() {
   try {
-    let clone = yield Sqlite.cloneStorageConnection({ connection: null });
+    yield Sqlite.cloneStorageConnection({ connection: null });
     do_throw(new Error("Should throw on invalid connection"));
   } catch (ex) {
     if (ex.name != "TypeError") {

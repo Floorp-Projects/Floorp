@@ -7,6 +7,7 @@
 #include "nsClientAuthRemember.h"
 
 #include "nsIX509Cert.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include "nsNSSCertHelper.h"
@@ -58,9 +59,9 @@ nsClientAuthRememberService::Init()
 }
 
 NS_IMETHODIMP
-nsClientAuthRememberService::Observe(nsISupports     *aSubject,
-                               const char      *aTopic,
-                               const char16_t *aData)
+nsClientAuthRememberService::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const char16_t* aData)
 {
   // check the topic
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
@@ -97,8 +98,9 @@ nsClientAuthRememberService::RemoveAllFromMemory()
 }
 
 nsresult
-nsClientAuthRememberService::RememberDecision(const nsACString & aHostName, 
-                                              CERTCertificate *aServerCert, CERTCertificate *aClientCert)
+nsClientAuthRememberService::RememberDecision(
+  const nsACString& aHostName, const NeckoOriginAttributes& aOriginAttributes,
+  CERTCertificate* aServerCert, CERTCertificate* aClientCert)
 {
   // aClientCert == nullptr means: remember that user does not want to use a cert
   NS_ENSURE_ARG_POINTER(aServerCert);
@@ -119,11 +121,11 @@ nsClientAuthRememberService::RememberDecision(const nsACString & aHostName,
       nsAutoCString dbkey;
       rv = pipCert->GetDbKey(dbkey);
       if (NS_SUCCEEDED(rv)) {
-        AddEntryToList(aHostName, fpStr, dbkey);
+        AddEntryToList(aHostName, aOriginAttributes, fpStr, dbkey);
       }
     } else {
       nsCString empty;
-      AddEntryToList(aHostName, fpStr, empty);
+      AddEntryToList(aHostName, aOriginAttributes, fpStr, empty);
     }
   }
 
@@ -131,17 +133,16 @@ nsClientAuthRememberService::RememberDecision(const nsACString & aHostName,
 }
 
 nsresult
-nsClientAuthRememberService::HasRememberedDecision(const nsACString & aHostName, 
-                                                   CERTCertificate *aCert, 
-                                                   nsACString & aCertDBKey,
-                                                   bool *_retval)
+nsClientAuthRememberService::HasRememberedDecision(
+  const nsACString& aHostName, const NeckoOriginAttributes& aOriginAttributes,
+  CERTCertificate* aCert, nsACString& aCertDBKey, bool* aRetVal)
 {
   if (aHostName.IsEmpty())
     return NS_ERROR_INVALID_ARG;
 
   NS_ENSURE_ARG_POINTER(aCert);
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = false;
+  NS_ENSURE_ARG_POINTER(aRetVal);
+  *aRetVal = false;
 
   nsresult rv;
   nsAutoCString fpStr;
@@ -149,60 +150,64 @@ nsClientAuthRememberService::HasRememberedDecision(const nsACString & aHostName,
   if (NS_FAILED(rv))
     return rv;
 
-  nsAutoCString hostCert;
-  GetHostWithCert(aHostName, fpStr, hostCert);
+  nsAutoCString entryKey;
+  GetEntryKey(aHostName, aOriginAttributes, fpStr, entryKey);
   nsClientAuthRemember settings;
 
   {
     ReentrantMonitorAutoEnter lock(monitor);
-    nsClientAuthRememberEntry *entry = mSettingsTable.GetEntry(hostCert.get());
+    nsClientAuthRememberEntry* entry = mSettingsTable.GetEntry(entryKey.get());
     if (!entry)
       return NS_OK;
     settings = entry->mSettings; // copy
   }
 
   aCertDBKey = settings.mDBKey;
-  *_retval = true;
+  *aRetVal = true;
   return NS_OK;
 }
 
 nsresult
-nsClientAuthRememberService::AddEntryToList(const nsACString &aHostName, 
-                                      const nsACString &fingerprint,
-                                      const nsACString &db_key)
-
+nsClientAuthRememberService::AddEntryToList(
+  const nsACString& aHostName, const NeckoOriginAttributes& aOriginAttributes,
+  const nsACString& aFingerprint, const nsACString& aDBKey)
 {
-  nsAutoCString hostCert;
-  GetHostWithCert(aHostName, fingerprint, hostCert);
+  nsAutoCString entryKey;
+  GetEntryKey(aHostName, aOriginAttributes, aFingerprint, entryKey);
 
   {
     ReentrantMonitorAutoEnter lock(monitor);
-    nsClientAuthRememberEntry *entry = mSettingsTable.PutEntry(hostCert.get());
+    nsClientAuthRememberEntry* entry = mSettingsTable.PutEntry(entryKey.get());
 
     if (!entry) {
       NS_ERROR("can't insert a null entry!");
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    entry->mHostWithCert = hostCert;
+    entry->mEntryKey = entryKey;
 
-    nsClientAuthRemember &settings = entry->mSettings;
+    nsClientAuthRemember& settings = entry->mSettings;
     settings.mAsciiHost = aHostName;
-    settings.mFingerprint = fingerprint;
-    settings.mDBKey = db_key;
+    settings.mFingerprint = aFingerprint;
+    settings.mDBKey = aDBKey;
   }
 
   return NS_OK;
 }
 
 void
-nsClientAuthRememberService::GetHostWithCert(const nsACString & aHostName, 
-                                             const nsACString & fingerprint, 
-                                             nsACString& _retval)
+nsClientAuthRememberService::GetEntryKey(
+  const nsACString& aHostName,
+  const NeckoOriginAttributes& aOriginAttributes,
+  const nsACString& aFingerprint,
+  nsACString& aEntryKey)
 {
   nsAutoCString hostCert(aHostName);
+  nsAutoCString suffix;
+  aOriginAttributes.CreateSuffix(suffix);
+  hostCert.Append(suffix);
   hostCert.Append(':');
-  hostCert.Append(fingerprint);
-  
-  _retval.Assign(hostCert);
+  hostCert.Append(aFingerprint);
+
+  aEntryKey.Assign(hostCert);
 }

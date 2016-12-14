@@ -44,7 +44,7 @@ add_task(function* test_setInterval() {
   let calls = 0;
 
   yield new Promise((resolve) => {
-    let interval2 = imported.setInterval((param1, param2) => {
+    imported.setInterval((param1, param2) => {
       do_check_true(true, "Should be called");
       do_check_eq(param1, 15, "first parameter is correct");
       do_check_eq(param2, "hola", "second parameter is correct");
