@@ -54,8 +54,6 @@ public:
 
   ~NextFrameSeekTask();
 
-  bool NeedMoreVideo() const;
-
   bool IsVideoRequestPending() const;
 
   // Update the seek target's time before resolving this seek task, the updated

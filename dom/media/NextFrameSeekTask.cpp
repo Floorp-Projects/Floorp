@@ -103,17 +103,6 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
 }
 
 bool
-NextFrameSeekTask::NeedMoreVideo() const
-{
-  AssertOwnerThread();
-  // Need to request video when we have none and video queue is not finished.
-  return mVideoQueue.GetSize() == 0 &&
-         !mSeekedVideoData &&
-         !mVideoQueue.IsFinished() &&
-         !mIsVideoQueueFinished;
-}
-
-bool
 NextFrameSeekTask::IsVideoRequestPending() const
 {
   AssertOwnerThread();

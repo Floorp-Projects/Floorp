@@ -1394,7 +1394,7 @@ private:
                OnSeekTaskRejected(aValue);
              }));
 
-    if (!mTask->IsVideoRequestPending() && mTask->NeedMoreVideo()) {
+    if (!mTask->IsVideoRequestPending() && NeedMoreVideo()) {
       RequestVideoData();
     }
     MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
@@ -1430,7 +1430,7 @@ private:
       mTask->mSeekedVideoData = aVideo;
     }
 
-    if (mTask->NeedMoreVideo()) {
+    if (NeedMoreVideo()) {
       RequestVideoData();
       return;
     }
@@ -1465,7 +1465,7 @@ private:
       }
 
       // Video seek not finished.
-      if (mTask->NeedMoreVideo()) {
+      if (NeedMoreVideo()) {
         switch (aError.Code()) {
           case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
             Reader()->WaitForData(MediaData::VIDEO_DATA);
@@ -1505,7 +1505,7 @@ private:
   {
     MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
 
-    if (mTask->NeedMoreVideo()) {
+    if (NeedMoreVideo()) {
       RequestVideoData();
       return;
     }
@@ -1526,7 +1526,7 @@ private:
     }
     case MediaData::VIDEO_DATA:
     {
-      if (mTask->NeedMoreVideo()) {
+      if (NeedMoreVideo()) {
         // Reject if we can't finish video seeking.
         mTask->RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
         return;
@@ -1593,6 +1593,15 @@ private:
     Reader()->RequestVideoData(false, media::TimeUnit());
   }
 
+  bool NeedMoreVideo() const
+  {
+    // Need to request video when we have none and video queue is not finished.
+    return mTask->mVideoQueue.GetSize() == 0 &&
+           !mTask->mSeekedVideoData &&
+           !mTask->mVideoQueue.IsFinished() &&
+           !mTask->mIsVideoQueueFinished;
+  }
+
   bool IsAudioSeekComplete() const
   {
     // Don't finish seek until there are no pending requests. Otherwise, we might
@@ -1604,7 +1613,7 @@ private:
   {
     // Don't finish seek until there are no pending requests. Otherwise, we might
     // lose video samples for the promise is resolved asynchronously.
-    return !mTask->IsVideoRequestPending() && !mTask->NeedMoreVideo();
+    return !mTask->IsVideoRequestPending() && !NeedMoreVideo();
   }
 
   void MaybeFinishSeek()
