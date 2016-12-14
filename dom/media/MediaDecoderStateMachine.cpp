@@ -1593,9 +1593,23 @@ private:
     Reader()->RequestVideoData(false, media::TimeUnit());
   }
 
+  bool IsAudioSeekComplete() const
+  {
+    // Don't finish seek until there are no pending requests. Otherwise, we might
+    // lose audio samples for the promise is resolved asynchronously.
+    return !Reader()->IsRequestingAudioData() && !Reader()->IsWaitingAudioData();
+  }
+
+  bool IsVideoSeekComplete() const
+  {
+    // Don't finish seek until there are no pending requests. Otherwise, we might
+    // lose video samples for the promise is resolved asynchronously.
+    return !mTask->IsVideoRequestPending() && !mTask->NeedMoreVideo();
+  }
+
   void MaybeFinishSeek()
   {
-    if (mTask->IsAudioSeekComplete() && mTask->IsVideoSeekComplete()) {
+    if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
       mTask->UpdateSeekTargetTime();
 
       auto time = mTask->mTarget.GetTime().ToMicroseconds();
