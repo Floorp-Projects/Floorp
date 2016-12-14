@@ -215,6 +215,7 @@ CompositorD3D9::SetRenderTarget(CompositingRenderTarget *aRenderTarget)
 {
   MOZ_ASSERT(aRenderTarget && mDeviceManager);
   RefPtr<CompositingRenderTargetD3D9> oldRT = mCurrentRT;
+  Unused << oldRT;
   mCurrentRT = static_cast<CompositingRenderTargetD3D9*>(aRenderTarget);
   mCurrentRT->BindRenderTarget(device());
   PrepareViewport(mCurrentRT->GetSize());

@@ -1719,7 +1719,7 @@ TSFTextStore::FlushPendingActions()
     return;
   }
 
-  RefPtr<nsWindowBase> kungFuDeathGrip(mWidget);
+  RefPtr<nsWindowBase> widget(mWidget);
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -1748,8 +1748,8 @@ TSFTextStore::FlushPendingActions()
 
         if (action.mAdjustSelection) {
           // Select composition range so the new composition replaces the range
-          WidgetSelectionEvent selectionSet(true, eSetSelection, mWidget);
-          mWidget->InitEvent(selectionSet);
+          WidgetSelectionEvent selectionSet(true, eSetSelection, widget);
+          widget->InitEvent(selectionSet);
           selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
           selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
           selectionSet.mReversed = false;
@@ -1770,7 +1770,7 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::FlushPendingActions() "
            "dispatching compositionstart event...", this));
-        WidgetEventTime eventTime = mWidget->CurrentMessageWidgetEventTime();
+        WidgetEventTime eventTime = widget->CurrentMessageWidgetEventTime();
         nsEventStatus status;
         rv = mDispatcher->StartComposition(status, &eventTime);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1781,7 +1781,7 @@ TSFTextStore::FlushPendingActions()
              this, GetBoolName(!IsComposingInContent())));
           mDeferClearingContentForTSF = !IsComposingInContent();
         }
-        if (!mWidget || mWidget->Destroyed()) {
+        if (!widget || widget->Destroyed()) {
           break;
         }
         break;
@@ -1814,7 +1814,7 @@ TSFTextStore::FlushPendingActions()
           MOZ_LOG(sTextStoreLog, LogLevel::Debug,
             ("0x%p   TSFTextStore::FlushPendingActions() "
              "dispatching compositionchange event...", this));
-          WidgetEventTime eventTime = mWidget->CurrentMessageWidgetEventTime();
+          WidgetEventTime eventTime = widget->CurrentMessageWidgetEventTime();
           nsEventStatus status;
           rv = mDispatcher->FlushPendingComposition(status, &eventTime);
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1844,7 +1844,7 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::FlushPendingActions(), "
            "dispatching compositioncommit event...", this));
-        WidgetEventTime eventTime = mWidget->CurrentMessageWidgetEventTime();
+        WidgetEventTime eventTime = widget->CurrentMessageWidgetEventTime();
         nsEventStatus status;
         rv = mDispatcher->CommitComposition(status, &action.mData, &eventTime);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1875,8 +1875,8 @@ TSFTextStore::FlushPendingActions()
           break;
         }
 
-        WidgetSelectionEvent selectionSet(true, eSetSelection, mWidget);
-        selectionSet.mOffset = 
+        WidgetSelectionEvent selectionSet(true, eSetSelection, widget);
+        selectionSet.mOffset =
           static_cast<uint32_t>(action.mSelectionStart);
         selectionSet.mLength =
           static_cast<uint32_t>(action.mSelectionLength);
@@ -1887,7 +1887,7 @@ TSFTextStore::FlushPendingActions()
         MOZ_CRASH("unexpected action type");
     }
 
-    if (mWidget && !mWidget->Destroyed()) {
+    if (widget && !widget->Destroyed()) {
       continue;
     }
 
