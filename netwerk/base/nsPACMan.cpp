@@ -742,27 +742,15 @@ nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
   return NS_OK;
 }
 
-void
-nsPACMan::NamePACThread()
-{
-  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
-  PR_SetCurrentThreadName("Proxy Resolution");
-}
-
 nsresult
 nsPACMan::Init(nsISystemProxySettings *systemProxySettings)
 {
   mSystemProxySettings = systemProxySettings;
 
-  nsresult rv = NS_NewThread(getter_AddRefs(mPACThread), nullptr);
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult rv =
+    NS_NewNamedThread("ProxyResolution", getter_AddRefs(mPACThread));
 
-  // don't check return value as it is not a big deal for this to fail.
-  mPACThread->Dispatch(NewRunnableMethod(this, &nsPACMan::NamePACThread),
-                       nsIEventTarget::DISPATCH_NORMAL);
-
-  return NS_OK;
+  return rv;
 }
 
 } // namespace net
