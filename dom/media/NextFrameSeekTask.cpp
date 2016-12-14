@@ -102,21 +102,5 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
   return promise;
 }
 
-void
-NextFrameSeekTask::UpdateSeekTargetTime()
-{
-  AssertOwnerThread();
-
-  RefPtr<MediaData> data = mVideoQueue.PeekFront();
-  if (data) {
-    mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
-  } else if (mSeekedVideoData) {
-    mTarget.SetTime(TimeUnit::FromMicroseconds(mSeekedVideoData->mTime));
-  } else if (mIsVideoQueueFinished || mVideoQueue.AtEndOfStream()) {
-    mTarget.SetTime(mDuration);
-  } else {
-    MOZ_ASSERT(false, "No data!");
-  }
-}
 } // namespace media
 } // namespace mozilla
