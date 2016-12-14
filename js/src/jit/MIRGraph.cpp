@@ -192,9 +192,11 @@ MIRGraph::removeSuccessorBlocks(MBasicBlock* start)
             removeBlock(block);
         } else {
             MOZ_ASSERT(block != osrBlock());
-            for (size_t j = 0; j < block->numPredecessors(); j++) {
-                if (!block->getPredecessor(j)->isMarked())
+            for (size_t j = 0; j < block->numPredecessors(); ) {
+                if (!block->getPredecessor(j)->isMarked()) {
+                    j++;
                     continue;
+                }
                 block->removePredecessor(block->getPredecessor(j));
             }
             // This shouldn't have any instructions yet.
