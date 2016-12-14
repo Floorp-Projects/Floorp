@@ -1,0 +1,24 @@
+Bug 1322666 - Change MAXWORDLEN to 100
+
+diff --git a/extensions/spellcheck/hunspell/src/hunspell.cxx b/extensions/spellcheck/hunspell/src/hunspell.cxx
+--- a/extensions/spellcheck/hunspell/src/hunspell.cxx
++++ b/extensions/spellcheck/hunspell/src/hunspell.cxx
+@@ -80,17 +80,17 @@
+ #ifndef MOZILLA_CLIENT
+ #include "config.h"
+ #endif
+ #include "csutil.hxx"
+ 
+ #include <limits>
+ #include <string>
+ 
+-#define MAXWORDLEN 176
++#define MAXWORDLEN 100
+ #define MAXWORDUTF8LEN (MAXWORDLEN * 3)
+ 
+ Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key) {
+   encoding = NULL;
+   csconv = NULL;
+   utf8 = 0;
+   complexprefixes = 0;
+   affixpath = mystrdup(affpath);
