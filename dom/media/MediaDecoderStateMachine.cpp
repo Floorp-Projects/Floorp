@@ -1621,10 +1621,26 @@ private:
     return !IsVideoRequestPending() && !NeedMoreVideo();
   }
 
+  // Update the seek target's time before resolving this seek task, the updated
+  // time will be used in the MDSM::SeekCompleted() to update the MDSM's position.
+  void UpdateSeekTargetTime()
+  {
+    RefPtr<MediaData> data = mTask->mVideoQueue.PeekFront();
+    if (data) {
+      mTask->mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
+    } else if (mTask->mSeekedVideoData) {
+      mTask->mTarget.SetTime(TimeUnit::FromMicroseconds(mTask->mSeekedVideoData->mTime));
+    } else if (mTask->mIsVideoQueueFinished || mTask->mVideoQueue.AtEndOfStream()) {
+      mTask->mTarget.SetTime(mTask->mDuration);
+    } else {
+      MOZ_ASSERT(false, "No data!");
+    }
+  }
+
   void MaybeFinishSeek()
   {
     if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
-      mTask->UpdateSeekTargetTime();
+      UpdateSeekTargetTime();
 
       auto time = mTask->mTarget.GetTime().ToMicroseconds();
       DiscardFrames(mTask->mAudioQueue, [time] (int64_t aSampleTime) {
