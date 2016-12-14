@@ -1400,6 +1400,145 @@ private:
     mTask->MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
   }
 
+  void HandleAudioDecoded(MediaData* aAudio) override
+  {
+    MOZ_ASSERT(aAudio);
+    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+
+    // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
+    // resolved.
+
+    SSAMPLELOG("OnAudioDecoded [%lld,%lld]", aAudio->mTime, aAudio->GetEndTime());
+
+    // We accept any audio data here.
+    mTask->mSeekedAudioData = aAudio;
+
+    mTask->MaybeFinishSeek();
+  }
+
+  void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
+  {
+    MOZ_ASSERT(aVideo);
+    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+
+    // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
+    // resolved.
+
+    SSAMPLELOG("OnVideoDecoded [%lld,%lld]", aVideo->mTime, aVideo->GetEndTime());
+
+    if (aVideo->mTime > mTask->mCurrentTime) {
+      mTask->mSeekedVideoData = aVideo;
+    }
+
+    if (mTask->NeedMoreVideo()) {
+      mTask->RequestVideoData();
+      return;
+    }
+
+    mTask->MaybeFinishSeek();
+  }
+
+  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
+  {
+    switch (aType) {
+    case MediaData::AUDIO_DATA:
+    {
+      MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+
+      SSAMPLELOG("OnAudioNotDecoded (aError=%u)", aError.Code());
+
+      // We don't really handle audio deocde error here. Let MDSM to trigger further
+      // audio decoding tasks if it needs to play audio, and MDSM will then receive
+      // the decoding state from MediaDecoderReader.
+
+      mTask->MaybeFinishSeek();
+      break;
+    }
+    case MediaData::VIDEO_DATA:
+    {
+      MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+
+      SSAMPLELOG("OnVideoNotDecoded (aError=%u)", aError.Code());
+
+      if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+        mTask->mIsVideoQueueFinished = true;
+      }
+
+      // Video seek not finished.
+      if (mTask->NeedMoreVideo()) {
+        switch (aError.Code()) {
+          case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+            Reader()->WaitForData(MediaData::VIDEO_DATA);
+            break;
+          case NS_ERROR_DOM_MEDIA_CANCELED:
+            mTask->RequestVideoData();
+            break;
+          case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+            MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
+            break;
+          default:
+            // Reject the promise since we can't finish video seek anyway.
+            mTask->RejectIfExist(aError, __func__);
+            break;
+        }
+        return;
+      }
+
+      mTask->MaybeFinishSeek();
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("We cannot handle RAW_DATA or NULL_DATA here.");
+    }
+  }
+
+  void HandleAudioWaited(MediaData::Type aType) override
+  {
+    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+
+    // We don't make an audio decode request here, instead, let MDSM to
+    // trigger further audio decode tasks if MDSM itself needs to play audio.
+    mTask->MaybeFinishSeek();
+  }
+
+  void HandleVideoWaited(MediaData::Type aType) override
+  {
+    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+
+    if (mTask->NeedMoreVideo()) {
+      mTask->RequestVideoData();
+      return;
+    }
+    mTask->MaybeFinishSeek();
+  }
+
+  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override
+  {
+    MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
+
+    switch(aRejection.mType) {
+    case MediaData::AUDIO_DATA:
+    {
+      // We don't make an audio decode request here, instead, let MDSM to
+      // trigger further audio decode tasks if MDSM itself needs to play audio.
+      mTask->MaybeFinishSeek();
+      break;
+    }
+    case MediaData::VIDEO_DATA:
+    {
+      if (mTask->NeedMoreVideo()) {
+        // Reject if we can't finish video seeking.
+        mTask->RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+        return;
+      }
+      mTask->MaybeFinishSeek();
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("We cannot handle RAW_DATA or NULL_DATA here.");
+    }
+  }
+
   int64_t CalculateNewCurrentTime() const override
   {
     // The HTMLMediaElement.currentTime should be updated to the seek target
