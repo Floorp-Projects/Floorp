@@ -1262,7 +1262,3 @@ interface TestWorkerExposedInterface {
   [NeedsCallerType] void needsCallerTypeMethod();
   [NeedsCallerType] attribute boolean needsCallerTypeAttr;
 };
-
-[HTMLConstructor]
-interface TestHTMLConstructorInterface {
-};
