@@ -19,7 +19,7 @@ class TestShakaPlayback(MediaTestCase):
         """ Plays 60 seconds of the video from the manifest URLs given
         """
         shakaUrl = "http://shaka-player-demo.appspot.com"
-        self.prefs.set_pref('media.mediasource.webm.enabled', True)
+        self.marionette.set_pref('media.mediasource.webm.enabled', True)
 
         with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             for manifestUrl in self.video_urls:
