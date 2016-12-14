@@ -120,7 +120,7 @@ public final class WaitHelper {
 
         // Wait for the page load and title changed event.
         final EventExpecter[] eventExpecters = new EventExpecter[] {
-            sActions.expectGeckoEvent("DOMContentLoaded"),
+            sActions.expectGlobalEvent(Actions.EventType.GECKO, "Content:DOMContentLoaded"),
             sActions.expectGeckoEvent("DOMTitleChanged")
         };
 
@@ -130,7 +130,7 @@ public final class WaitHelper {
         final long expecterStartMillis = SystemClock.uptimeMillis();
         for (final EventExpecter expecter : eventExpecters) {
             final int eventWaitTimeMillis = PAGE_LOAD_WAIT_MS - (int)(SystemClock.uptimeMillis() - expecterStartMillis);
-            expecter.blockForEventDataWithTimeout(eventWaitTimeMillis);
+            expecter.blockForEvent(eventWaitTimeMillis, /* failOnTimeout */ false);
             expecter.unregisterListener();
         }
 

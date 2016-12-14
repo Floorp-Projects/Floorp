@@ -215,7 +215,7 @@ function test_audience_encoding_bug972582() {
         function(err2, backedAssertion) {
           do_check_null(err2);
 
-          let [cert, assertion] = backedAssertion.split("~");
+          let [/* cert */, assertion] = backedAssertion.split("~");
           let components = extractComponents(assertion);
           do_check_eq(components.payload.aud, audience);
 

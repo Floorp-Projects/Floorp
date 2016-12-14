@@ -17,7 +17,7 @@
           <xul:hbox class="tabPreview-canvas" xbl:inherits="style=canvasstyle">
             <children/>
           </xul:hbox>
-          <xul:label xbl:inherits="value=label,crop" class="plain"/>
+          <xul:label xbl:inherits="value=label" crop="end" class="plain"/>
         </xul:vbox>
         <xul:hbox class="ctrlTab-favicon-container" xbl:inherits="hidden=noicon">
           <xul:image class="ctrlTab-favicon" xbl:inherits="src=image"/>

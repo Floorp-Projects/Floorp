@@ -30,13 +30,11 @@ public:
     mPrincipal(aPrincipal),
     mContentType(aContentType)
   {
-    MOZ_COUNT_CTOR(BufferMediaResource);
   }
 
 protected:
   virtual ~BufferMediaResource()
   {
-    MOZ_COUNT_DTOR(BufferMediaResource);
   }
 
 private:

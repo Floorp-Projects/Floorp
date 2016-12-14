@@ -21,13 +21,13 @@ function addMessage() {
   messageId = Home.banner.add({
     text: TEXT,
     onshown: function() {
-      Messaging.sendRequest({ type: "TestHomeBanner:MessageShown" });
+      EventDispatcher.instance.sendRequest({ type: "TestHomeBanner:MessageShown" });
     },
     ondismiss: function() {
-      Messaging.sendRequest({ type: "TestHomeBanner:MessageDismissed" });
+      EventDispatcher.instance.sendRequest({ type: "TestHomeBanner:MessageDismissed" });
     }
   });
-  Messaging.sendRequest({ type: "TestHomeBanner:MessageAdded" });
+  EventDispatcher.instance.sendRequest({ type: "TestHomeBanner:MessageAdded" });
 }
 
     </script>

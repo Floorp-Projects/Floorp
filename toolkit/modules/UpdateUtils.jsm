@@ -324,23 +324,6 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
           {wReserved: BYTE}
           ]);
 
-      // This structure is described at:
-      // http://msdn.microsoft.com/en-us/library/ms724958%28v=vs.85%29.aspx
-      const SYSTEM_INFO = new ctypes.StructType('SYSTEM_INFO',
-          [
-          {wProcessorArchitecture: WORD},
-          {wReserved: WORD},
-          {dwPageSize: DWORD},
-          {lpMinimumApplicationAddress: ctypes.voidptr_t},
-          {lpMaximumApplicationAddress: ctypes.voidptr_t},
-          {dwActiveProcessorMask: DWORD.ptr},
-          {dwNumberOfProcessors: DWORD},
-          {dwProcessorType: DWORD},
-          {dwAllocationGranularity: DWORD},
-          {wProcessorLevel: WORD},
-          {wProcessorRevision: WORD}
-          ]);
-
       let kernel32 = false;
       try {
         kernel32 = ctypes.open("Kernel32");

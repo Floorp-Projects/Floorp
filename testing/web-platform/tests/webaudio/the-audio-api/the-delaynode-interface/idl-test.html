@@ -28,7 +28,7 @@ interface EventListener {};
 </pre>
 
    <pre id="audio-context-idl">callback DecodeSuccessCallback = void (AudioBuffer decodedData);
-callback DecodeErrorCallback = void ();
+callback DecodeErrorCallback = void (DOMException error);
 
 [Constructor]
 interface AudioContext : EventTarget {

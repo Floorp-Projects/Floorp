@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "nscore.h"
-#include "nsXULAppAPI.h"
 #include "nsExceptionHandler.h"
 #include "mozilla/Unused.h"
 
@@ -43,7 +42,6 @@ void PureVirtualCall()
 // Keep these in sync with CrashTestUtils.jsm!
 const int16_t CRASH_INVALID_POINTER_DEREF = 0;
 const int16_t CRASH_PURE_VIRTUAL_CALL     = 1;
-const int16_t CRASH_RUNTIMEABORT          = 2;
 const int16_t CRASH_OOM                   = 3;
 const int16_t CRASH_MOZ_CRASH             = 4;
 const int16_t CRASH_ABORT                 = 5;
@@ -63,10 +61,6 @@ void Crash(int16_t how)
     // not reached
     break;
   }
-  case CRASH_RUNTIMEABORT: {
-    NS_RUNTIMEABORT("Intentional crash");
-    break;
-  }
   case CRASH_OOM: {
     mozilla::Unused << moz_xmalloc((size_t) -1);
     mozilla::Unused << moz_xmalloc((size_t) -1);
@@ -84,14 +78,6 @@ void Crash(int16_t how)
   default:
     break;
   }
-}
-
-extern "C" NS_EXPORT
-nsISupports* LockDir(nsIFile *directory)
-{
-  nsISupports* lockfile = nullptr;
-  XRE_LockProfileDirectory(directory, &lockfile);
-  return lockfile;
 }
 
 char testData[32];

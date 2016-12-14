@@ -628,10 +628,13 @@ public:
     RefPtr<ThenValueBase> thenValue = new ThenType(
       aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
     // mCompletionPromise must be created before ThenInternal() to avoid race.
-    thenValue->mCompletionPromise = new MozPromise::Private(
+    RefPtr<MozPromise> p = new MozPromise::Private(
       "<completion promise>", true /* aIsCompletionPromise */);
+    thenValue->mCompletionPromise = p;
+    // Note ThenInternal() might nullify mCompletionPromise before return.
+    // So we need to return p instead of mCompletionPromise.
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue->mCompletionPromise;
+    return p;
   }
 
   template<typename ResolveFunction, typename RejectFunction>
@@ -643,10 +646,13 @@ public:
     RefPtr<ThenValueBase> thenValue = new ThenType(
       aResponseThread, Move(aResolveFunction), Move(aRejectFunction), aCallSite);
     // mCompletionPromise must be created before ThenInternal() to avoid race.
-    thenValue->mCompletionPromise = new MozPromise::Private(
+    RefPtr<MozPromise> p = new MozPromise::Private(
       "<completion promise>", true /* aIsCompletionPromise */);
+    thenValue->mCompletionPromise = p;
+    // Note ThenInternal() might nullify mCompletionPromise before return.
+    // So we need to return p instead of mCompletionPromise.
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue->mCompletionPromise;
+    return p;
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)

@@ -524,8 +524,7 @@ nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
   aUsage.shouldGenerateMaskLayer = maskFrames.Length() == 1 && maskFrames[0];
 #endif
 
-  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
   MOZ_ASSERT_IF(clipPathFrame,
                 svgReset->mClipPath.GetType() == StyleShapeSourceType::URL);
 
@@ -740,13 +739,14 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
      so make sure all applicable ones are set again. */
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(aFrame);
-  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
-  nsSVGMaskFrame *maskFrame = effectProperties.GetFirstMaskFrame(&isOK);
-  if (!isOK) {
+  if (effectProperties.HasInvalidEffects()) {
     // Some resource is invalid. We shouldn't paint anything.
     return DrawResult::SUCCESS;
   }
+
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
+  nsTArray<nsSVGMaskFrame*> masks = effectProperties.GetMaskFrames();
+  nsSVGMaskFrame *maskFrame = masks.IsEmpty() ? nullptr : masks[0];
 
   MixModeBlender blender(aFrame, &aContext);
   gfxContext* target = blender.ShouldCreateDrawTargetForBlend()
@@ -879,13 +879,13 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const gfxPoint &aPoint)
     return true;
   }
 
-  bool isOK = true;
-  nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(&isOK);
-  if (!isOK) {
+  if (props.HasInvalidClipPath()) {
     // clipPath is not a valid resource, so nothing gets painted, so
     // hit-testing must fail.
     return false;
   }
+  nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame();
+
   if (!clipPathFrame) {
     // clipPath doesn't exist, ignore it.
     return true;
@@ -1127,8 +1127,8 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       gfxRect clipRect(0, 0, 0, 0);
       float x, y, width, height;
       gfxMatrix tm;
-      gfxRect fillBBox = 
-        svg->GetBBoxContribution(ToMatrix(tm), 
+      gfxRect fillBBox =
+        svg->GetBBoxContribution(ToMatrix(tm),
                                  nsSVGUtils::eBBoxIncludeFill).ToThebesRect();
       x = fillBBox.x;
       y = fillBBox.y;
@@ -1136,7 +1136,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       height = fillBBox.height;
       bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
       if (hasClip) {
-        clipRect = 
+        clipRect =
           nsSVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
           if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
               aFrame->GetType() == nsGkAtoms::svgUseFrame) {
@@ -1145,35 +1145,32 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       }
       nsSVGEffects::EffectProperties effectProperties =
         nsSVGEffects::GetEffectProperties(aFrame);
-      bool isOK = true;
-      nsSVGClipPathFrame *clipPathFrame = 
-        effectProperties.GetClipPathFrame(&isOK);
-      if (clipPathFrame && isOK) {
-        SVGClipPathElement *clipContent = 
-          static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
-        RefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
-        if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-          matrix.Translate(gfxPoint(x, y));
-          matrix.Scale(width, height);
-        } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
-          matrix.Reset();
+      if (effectProperties.HasInvalidClipPath()) {
+        bbox = gfxRect(0, 0, 0, 0);
+      } else {
+        nsSVGClipPathFrame *clipPathFrame =
+          effectProperties.GetClipPathFrame();
+        if (clipPathFrame) {
+          SVGClipPathElement *clipContent =
+            static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
+          RefPtr<SVGAnimatedEnumeration> units = clipContent->ClipPathUnits();
+          if (units->AnimVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+            matrix.Translate(gfxPoint(x, y));
+            matrix.Scale(width, height);
+          } else if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+            matrix.Reset();
+          }
+          bbox =
+            clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
         }
-        bbox = 
-          clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
+
         if (hasClip) {
           bbox = bbox.Intersect(clipRect);
         }
-      } else {
-        if (!isOK) {
+
+        if (bbox.IsEmpty()) {
           bbox = gfxRect(0, 0, 0, 0);
-        } else {
-          if (hasClip) {
-            bbox = bbox.Intersect(clipRect);
-          }
         }
-      }
-      if (bbox.IsEmpty()) {
-        bbox = gfxRect(0, 0, 0, 0);
       }
     }
 

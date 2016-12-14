@@ -28,7 +28,7 @@ function toggle_debug() {
     }
   };
 
-  var wrapper = new Wrapper();
+  new Wrapper();
   Services.prefs.setBoolPref('toolkit.identity.debug', true);
 }
 

@@ -105,7 +105,7 @@ accessibility.ActionableRoles = new Set([
  * Factory function that constructs a new {@code accessibility.Checks}
  * object with enforced strictness or not.
  */
-accessibility.get = function(strict = false) {
+accessibility.get = function (strict = false) {
   return new accessibility.Checks(!!strict);
 };
 

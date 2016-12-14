@@ -625,7 +625,6 @@ function testtag_tree_UI_editing(tree, testid, rowInfo)
   // check editing UI
   var ecolumn = tree.columns[0];
   var rowIndex = 2;
-  var inputField = tree.inputField;
 
   // temporary make the tree editable to test mouse double click
   var wasEditable = tree.editable;
@@ -923,7 +922,6 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow)
 
   var failedMethods = { };
   var checkMethod, actual, expected;
-  var containerInfo = null;
   var toggleOpenStateOK = true;
 
   for (r = startRow; r < length; r++) {

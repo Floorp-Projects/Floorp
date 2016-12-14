@@ -13,19 +13,19 @@
 interface nsIXULAppInfo : nsIPlatformInfo
 {
   /**
-   * @see nsXREAppData.vendor
-   * @returns an empty string if nsXREAppData.vendor is not set.
+   * @see XREAppData.vendor
+   * @returns an empty string if XREAppData.vendor is not set.
    */
   readonly attribute ACString vendor;
 
   /**
-   * @see nsXREAppData.name
+   * @see XREAppData.name
    */
   readonly attribute ACString name;
 
   /**
-   * @see nsXREAppData.ID
-   * @returns an empty string if nsXREAppData.ID is not set.
+   * @see XREAppData.ID
+   * @returns an empty string if XREAppData.ID is not set.
    */
   readonly attribute ACString ID;
 
@@ -33,8 +33,8 @@ interface nsIXULAppInfo : nsIPlatformInfo
    * The version of the XUL application. It is different than the
    * version of the XULRunner platform. Be careful about which one you want.
    *
-   * @see nsXREAppData.version
-   * @returns an empty string if nsXREAppData.version is not set.
+   * @see XREAppData.version
+   * @returns an empty string if XREAppData.version is not set.
    */
   readonly attribute ACString version;
 
@@ -46,8 +46,8 @@ interface nsIXULAppInfo : nsIPlatformInfo
   readonly attribute ACString appBuildID;
 
   /**
-   * @see nsXREAppData.UAName
-   * @returns an empty string if nsXREAppData.UAName is not set.
+   * @see XREAppData.UAName
+   * @returns an empty string if XREAppData.UAName is not set.
    */
   readonly attribute ACString UAName;
 };
