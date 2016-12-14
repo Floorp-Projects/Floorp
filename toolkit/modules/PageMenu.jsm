@@ -21,7 +21,6 @@ PageMenu.prototype = {
 
   // Given a target node, get the context menu for it or its ancestor.
   getContextMenu: function(aTarget) {
-    let pageMenu = null;
     let target = aTarget;
     while (target) {
       let contextMenu = target.contextMenu;

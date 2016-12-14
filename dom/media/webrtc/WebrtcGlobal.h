@@ -112,6 +112,8 @@ struct ParamTraits<mozilla::dom::RTCStatsReportInternal>
     WriteParam(aMsg, aParam.mPcid);
     WriteParam(aMsg, aParam.mRemoteSdp);
     WriteParam(aMsg, aParam.mTimestamp);
+    WriteParam(aMsg, aParam.mIceRestarts);
+    WriteParam(aMsg, aParam.mIceRollbacks);
     WriteParam(aMsg, aParam.mTransportStats);
   }
 
@@ -130,6 +132,8 @@ struct ParamTraits<mozilla::dom::RTCStatsReportInternal>
         !ReadParam(aMsg, aIter, &(aResult->mPcid)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRemoteSdp)) ||
         !ReadParam(aMsg, aIter, &(aResult->mTimestamp)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mIceRestarts)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mIceRollbacks)) ||
         !ReadParam(aMsg, aIter, &(aResult->mTransportStats))) {
       return false;
     }

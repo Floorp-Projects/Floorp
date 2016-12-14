@@ -41,7 +41,7 @@ const MANAGE_OFFLINE_STATUS_PREF = "network.gonk.manage-offline-status";
  *     Listen only to connections from loopback if true.  If false,
  *     accept all connections.
  */
-this.MarionetteServer = function(port, forceLocal) {
+this.MarionetteServer = function (port, forceLocal) {
   this.port = port;
   this.forceLocal = forceLocal;
   this.conns = {};
@@ -74,7 +74,7 @@ MarionetteServer.prototype.driverFactory = function() {
   return new GeckoDriver(appName, this);
 };
 
-MarionetteServer.prototype.__defineSetter__("acceptConnections", function(value) {
+MarionetteServer.prototype.__defineSetter__("acceptConnections", function (value) {
   if (!value) {
     logger.info("New connections will no longer be accepted");
   } else {
@@ -112,7 +112,7 @@ MarionetteServer.prototype.closeListener = function() {
   this.listener = null;
 };
 
-MarionetteServer.prototype.onSocketAccepted = function(
+MarionetteServer.prototype.onSocketAccepted = function (
     serverSocket, clientSocket) {
   if (!this._acceptConnections) {
     logger.warn("New connections are currently not accepted");
@@ -133,7 +133,7 @@ MarionetteServer.prototype.onSocketAccepted = function(
   transport.ready();
 };
 
-MarionetteServer.prototype.onConnectionClosed = function(conn) {
+MarionetteServer.prototype.onConnectionClosed = function (conn) {
   let id = conn.connId;
   delete this.conns[id];
   logger.debug(`Closed connection ${id}`);

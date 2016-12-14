@@ -974,10 +974,6 @@
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
 
-            // close the autocomplete popup and revert the entered search term
-            this.closePopup();
-            controller.handleEscape();
-
             // open the search results according to the clicking subtlety
             var where = whereToOpenLink(aEvent, false, true);
             let params = {};
@@ -989,6 +985,13 @@
             if (where == "tab" && (aEvent instanceof MouseEvent) &&
                 (aEvent.button == 1 || modifier))
               params.inBackground = true;
+
+            // leave the popup open for background tab loads
+            if (!(where == "tab" && params.inBackground)) {
+              // close the autocomplete popup and revert the entered search term
+              this.closePopup();
+              controller.handleEscape();
+            }
 
             searchBar.doSearch(search, where, null, params);
             if (where == "tab" && params.inBackground)
@@ -2226,14 +2229,6 @@
 
         if (!engine)
           return;
-
-        // For some reason, if the context menu had been opened prior to the
-        // click, the suggestions popup won't be closed after loading the search
-        // in the current tab - so we hide it manually. Some focusing magic
-        // that happens when a search is loaded ensures that the popup is opened
-        // again if it needs to be, so we don't need to worry about which cases
-        // require manual hiding.
-        this.popup.hidePopup();
 
         // Select the clicked button so that consumers can easily tell which
         // button was acted on.

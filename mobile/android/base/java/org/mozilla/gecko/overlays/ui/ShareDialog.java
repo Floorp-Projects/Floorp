@@ -13,6 +13,7 @@ import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.overlays.OverlayConstants;
@@ -66,6 +67,7 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
 
     private SendTabList sendTabList;
     private OverlayDialogButton bookmarkButton;
+    private OverlayDialogButton openBrowserButton;
 
     // The bookmark button drawable set from XML - we need this to reset state.
     private Drawable bookmarkButtonDrawable;
@@ -179,16 +181,20 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         sendTabList.setAdapter(adapter);
         sendTabList.setSendTabTargetSelectedListener(this);
 
-        bookmarkButton = (OverlayDialogButton) findViewById(R.id.overlay_share_bookmark_btn);
-
-        bookmarkButtonDrawable = bookmarkButton.getBackground();
-
         // Bookmark button
         bookmarkButton = (OverlayDialogButton) findViewById(R.id.overlay_share_bookmark_btn);
         bookmarkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 addBookmark();
+            }
+        });
+        bookmarkButtonDrawable = bookmarkButton.getBackground();
+        openBrowserButton = (OverlayDialogButton) findViewById(R.id.overlay_share_open_browser_btn);
+        openBrowserButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                launchBrowser();
             }
         });
     }
@@ -261,23 +267,12 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         if (state == State.DEVICES_ONLY) {
             bookmarkButton.setVisibility(View.GONE);
 
-            titleView.setOnClickListener(null);
-            subtitleView.setOnClickListener(null);
+            openBrowserButton.setVisibility(View.GONE);
             return;
         }
 
         bookmarkButton.setVisibility(View.VISIBLE);
-
-        // Configure buttons.
-        final View.OnClickListener launchBrowser = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ShareDialog.this.launchBrowser();
-            }
-        };
-
-        titleView.setOnClickListener(launchBrowser);
-        subtitleView.setOnClickListener(launchBrowser);
+        openBrowserButton.setVisibility(View.VISIBLE);
 
         final LocalBrowserDB browserDB = new LocalBrowserDB(getCurrentProfile());
         setButtonState(url, browserDB);
@@ -394,7 +389,9 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         try {
             // This can launch in the guest profile. Sorry.
             final Intent i = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+            i.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
             i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+
             startActivity(i);
         } catch (URISyntaxException e) {
             // Nothing much we can do.
