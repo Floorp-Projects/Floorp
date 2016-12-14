@@ -149,7 +149,7 @@ class LocationBar(UIBaseLib):
         if event == 'click':
             self.urlbar.click()
         elif event == 'shortcut':
-            cmd_key = self.window.get_entity('openCmd.commandkey')
+            cmd_key = self.window.localize_entity('openCmd.commandkey')
             self.window.send_shortcut(cmd_key, accel=True)
         else:
             raise ValueError("An unknown event type was passed: %s" % event)
@@ -263,7 +263,7 @@ class LocationBar(UIBaseLib):
         if trigger == 'button':
             self.reload_button.click()
         elif trigger == 'shortcut':
-            cmd_key = self.window.get_entity('reloadCmd.commandkey')
+            cmd_key = self.window.localize_entity('reloadCmd.commandkey')
             self.window.send_shortcut(cmd_key)
         elif trigger == 'shortcut2':
             self.window.send_shortcut(keys.Keys.F5)
@@ -604,7 +604,7 @@ class IdentityPopupSecurityView(IdentityPopupView):
 
         :returns: Reference to the identity-popup more info button.
         """
-        label = self.window.get_entity('identity.moreInfoLinkText2')
+        label = self.window.localize_entity('identity.moreInfoLinkText2')
 
         return self.element.find_element(By.CSS_SELECTOR, u'button[label="{}"]'.format(label))
 
