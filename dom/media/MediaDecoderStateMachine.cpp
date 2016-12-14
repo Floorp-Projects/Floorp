@@ -1402,7 +1402,9 @@ private:
 
   int64_t CalculateNewCurrentTime() const override
   {
-    return mSeekTask->CalculateNewCurrentTime();
+    // The HTMLMediaElement.currentTime should be updated to the seek target
+    // which has been updated to the next frame's time.
+    return mTask->mTarget.GetTime().ToMicroseconds();
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)

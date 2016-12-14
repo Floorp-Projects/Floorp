@@ -59,10 +59,7 @@ int64_t
 NextFrameSeekTask::CalculateNewCurrentTime() const
 {
   AssertOwnerThread();
-
-  // The HTMLMediaElement.currentTime should be updated to the seek target
-  // which has been updated to the next frame's time.
-  return mTarget.GetTime().ToMicroseconds();
+  return 0;
 }
 
 void
