@@ -2674,6 +2674,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 #ContentSelectDropdown > menupopup > menuitem {
   padding: 0 6px;
   border-width: 0;
+  font: -moz-list;
 }
 
 #ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text,
