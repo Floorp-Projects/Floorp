@@ -1543,7 +1543,7 @@ private:
   {
     // The HTMLMediaElement.currentTime should be updated to the seek target
     // which has been updated to the next frame's time.
-    return mTask->mTarget.GetTime().ToMicroseconds();
+    return mSeekJob.mTarget.GetTime().ToMicroseconds();
   }
 
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
@@ -1627,11 +1627,11 @@ private:
   {
     RefPtr<MediaData> data = VideoQueue().PeekFront();
     if (data) {
-      mTask->mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
+      mSeekJob.mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
     } else if (mTask->mSeekedVideoData) {
-      mTask->mTarget.SetTime(TimeUnit::FromMicroseconds(mTask->mSeekedVideoData->mTime));
+      mSeekJob.mTarget.SetTime(TimeUnit::FromMicroseconds(mTask->mSeekedVideoData->mTime));
     } else if (mTask->mIsVideoQueueFinished || VideoQueue().AtEndOfStream()) {
-      mTask->mTarget.SetTime(mTask->mDuration);
+      mSeekJob.mTarget.SetTime(mTask->mDuration);
     } else {
       MOZ_ASSERT(false, "No data!");
     }
@@ -1642,7 +1642,7 @@ private:
     if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
       UpdateSeekTargetTime();
 
-      auto time = mTask->mTarget.GetTime().ToMicroseconds();
+      auto time = mSeekJob.mTarget.GetTime().ToMicroseconds();
       DiscardFrames(AudioQueue(), [time] (int64_t aSampleTime) {
         return aSampleTime < time;
       });
