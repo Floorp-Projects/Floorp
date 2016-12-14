@@ -1395,7 +1395,7 @@ private:
              }));
 
     if (!mTask->IsVideoRequestPending() && mTask->NeedMoreVideo()) {
-      mTask->RequestVideoData();
+      RequestVideoData();
     }
     MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
   }
@@ -1431,7 +1431,7 @@ private:
     }
 
     if (mTask->NeedMoreVideo()) {
-      mTask->RequestVideoData();
+      RequestVideoData();
       return;
     }
 
@@ -1471,7 +1471,7 @@ private:
             Reader()->WaitForData(MediaData::VIDEO_DATA);
             break;
           case NS_ERROR_DOM_MEDIA_CANCELED:
-            mTask->RequestVideoData();
+            RequestVideoData();
             break;
           case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
             MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
@@ -1506,7 +1506,7 @@ private:
     MOZ_ASSERT(mSeekTaskRequest.Exists(), "Seek shouldn't be finished");
 
     if (mTask->NeedMoreVideo()) {
-      mTask->RequestVideoData();
+      RequestVideoData();
       return;
     }
     MaybeFinishSeek();
@@ -1586,6 +1586,11 @@ private:
     }
 
     mMaster->DecodeError(aValue.mError);
+  }
+
+  void RequestVideoData()
+  {
+    Reader()->RequestVideoData(false, media::TimeUnit());
   }
 
   void MaybeFinishSeek()
