@@ -72,16 +72,4 @@ private:
     }                    \
   } while(0)
 
-#if defined(__LP64__)
-#  define PRIxAddr "lx"
-#  define PRIxSize "lx"
-#  define PRIdSize "ld"
-#  define PRIuSize "lu"
-#else
-#  define PRIxAddr "x"
-#  define PRIxSize "x"
-#  define PRIdSize "d"
-#  define PRIuSize "u"
-#endif
-
 #endif /* Logging_h */
