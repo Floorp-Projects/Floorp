@@ -29,8 +29,6 @@ NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
                                      MediaQueue<MediaData>& aAudioQueue,
                                      MediaQueue<MediaData>& aVideoQueue)
   : SeekTask(aDecoderID, aThread, aReader, aTarget)
-  , mCurrentTime(aCurrentTime)
-  , mDuration(aDuration)
 {
   AssertOwnerThread();
   MOZ_ASSERT(aInfo.HasVideo());
