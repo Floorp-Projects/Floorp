@@ -20,6 +20,7 @@ exclude = [
 
 [dependencies]
 byteorder = "0.5.0"
+bitreader = { version = "0.1.0" }
 
 [dev-dependencies]
 test-assembler = "0.1.2"
