@@ -54,8 +54,6 @@ public:
 
   ~NextFrameSeekTask();
 
-  void RequestVideoData();
-
   bool NeedMoreVideo() const;
 
   bool IsVideoRequestPending() const;
