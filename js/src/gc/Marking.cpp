@@ -3369,7 +3369,7 @@ UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
     if (!tenured.isMarked(GRAY))
         return;
 
-    tenured.unmark(GRAY);
+    tenured.markBlack();
     unmarkedAny = true;
 
     if (!stack.append(thing))
@@ -3459,19 +3459,22 @@ GetMarkWordAddress(Cell* cell)
 
     uintptr_t* wordp;
     uintptr_t mask;
-    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::BLACK, &wordp, &mask);
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), ColorBit::BlackBit, &wordp, &mask);
     return wordp;
 }
 
 uintptr_t
 GetMarkMask(Cell* cell, uint32_t color)
 {
+    MOZ_ASSERT(color == 0 || color == 1);
+
     if (!cell->isTenured())
         return 0;
 
+    ColorBit bit = color == 0 ? ColorBit::BlackBit : ColorBit::GrayOrBlackBit;
     uintptr_t* wordp;
     uintptr_t mask;
-    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), color, &wordp, &mask);
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), bit, &wordp, &mask);
     return mask;
 }
 
