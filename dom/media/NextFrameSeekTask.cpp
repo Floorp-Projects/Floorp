@@ -120,24 +120,6 @@ NextFrameSeekTask::IsVideoRequestPending() const
   return mReader->IsRequestingVideoData() || mReader->IsWaitingVideoData();
 }
 
-bool
-NextFrameSeekTask::IsAudioSeekComplete() const
-{
-  AssertOwnerThread();
-  // Don't finish seek until there are no pending requests. Otherwise, we might
-  // lose audio samples for the promise is resolved asynchronously.
-  return !mReader->IsRequestingAudioData() && !mReader->IsWaitingAudioData();
-}
-
-bool
-NextFrameSeekTask::IsVideoSeekComplete() const
-{
-  AssertOwnerThread();
-  // Don't finish seek until there are no pending requests. Otherwise, we might
-  // lose video samples for the promise is resolved asynchronously.
-  return !IsVideoRequestPending() && !NeedMoreVideo();
-}
-
 void
 NextFrameSeekTask::UpdateSeekTargetTime()
 {
