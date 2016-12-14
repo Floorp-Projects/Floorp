@@ -1842,7 +1842,12 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
     return NS_OK; // rules canceled the operation
   }
 
-  // Wrap the inserted quote in a <span> so we can distinguish it.
+  // Wrap the inserted quote in a <span> so we can distinguish it. If we're
+  // inserting into the <body>, we use a <span> which is displayed as a block
+  // and sized to the screen using 98 viewport width units.
+  // We could use 100vw, but 98vw avoids a horizontal scroll bar where possible.
+  // All this is done to wrap overlong lines to the screen and not to the
+  // container element, the width-restricted body.
   nsCOMPtr<Element> newNode =
     DeleteSelectionAndCreateElement(*nsGkAtoms::span);
 
@@ -1855,8 +1860,15 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
     newNode->SetAttr(kNameSpaceID_None, nsGkAtoms::mozquote,
                      NS_LITERAL_STRING("true"), true);
     // Allow wrapping on spans so long lines get wrapped to the screen.
-    newNode->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                     NS_LITERAL_STRING("white-space: pre-wrap;"), true);
+    nsCOMPtr<nsINode> parent = newNode->GetParentNode();
+    if (parent && parent->IsHTMLElement(nsGkAtoms::body)) {
+      newNode->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+        NS_LITERAL_STRING("white-space: pre-wrap; display: block; width: 98vw;"),
+        true);
+    } else {
+      newNode->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+        NS_LITERAL_STRING("white-space: pre-wrap;"), true);
+    }
 
     // and set the selection inside it:
     selection->Collapse(newNode, 0);
