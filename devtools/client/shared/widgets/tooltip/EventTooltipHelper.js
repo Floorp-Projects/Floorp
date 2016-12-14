@@ -9,9 +9,10 @@
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
 
-const viewSource = require("devtools/client/shared/view-source");
 const Editor = require("devtools/client/sourceeditor/editor");
 const beautify = require("devtools/shared/jsbeautify/beautify");
+
+loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
