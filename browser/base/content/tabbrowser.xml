@@ -5230,6 +5230,7 @@
           if (!tab.hasAttribute("blocked")) {
             tab.setAttribute("blocked", true);
             this._tabAttrModified(tab, ["blocked"]);
+            tab.startMediaBlockTimer();
           }
         ]]>
       </handler>
@@ -5243,6 +5244,9 @@
           if (tab.hasAttribute("blocked")) {
             tab.removeAttribute("blocked");
             this._tabAttrModified(tab, ["blocked"]);
+            let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
+            hist.add(2 /* unblockByVisitingTab */);
+            tab.finishMediaBlockTimer();
           }
         ]]>
       </handler>
@@ -6950,6 +6954,18 @@
         ]]></body>
       </method>
 
+      <method name="startMediaBlockTimer">
+        <body><![CDATA[
+          TelemetryStopwatch.start("TAB_MEDIA_BLOCKING_TIME_MS", this);
+        ]]></body>
+      </method>
+
+       <method name="finishMediaBlockTimer">
+        <body><![CDATA[
+          TelemetryStopwatch.finish("TAB_MEDIA_BLOCKING_TIME_MS", this);
+        ]]></body>
+      </method>
+
       <method name="toggleMuteAudio">
         <parameter name="aMuteReason"/>
         <body>
@@ -6957,6 +6973,8 @@
           let tabContainer = this.parentNode;
           let browser = this.linkedBrowser;
           let modifiedAttrs = [];
+          let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
+
           if (browser.audioBlocked) {
             this.removeAttribute("blocked");
             modifiedAttrs.push("blocked");
@@ -6970,15 +6988,19 @@
             }
 
             browser.resumeMedia();
+            hist.add(3 /* unblockByClickingIcon */);
+            this.finishMediaBlockTimer();
           } else {
             if (browser.audioMuted) {
               browser.unmute();
               this.removeAttribute("muted");
               BrowserUITelemetry.countTabMutingEvent("unmute", aMuteReason);
+              hist.add(1 /* unmute */);
             } else {
               browser.mute();
               this.setAttribute("muted", "true");
               BrowserUITelemetry.countTabMutingEvent("mute", aMuteReason);
+              hist.add(0 /* mute */);
             }
             this.muteReason = aMuteReason || null;
             modifiedAttrs.push("muted");

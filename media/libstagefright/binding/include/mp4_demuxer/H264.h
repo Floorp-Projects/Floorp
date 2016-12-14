@@ -214,7 +214,7 @@ struct SPSData
     process for inter prediction of any picture in the
     sequence. max_num_ref_frames also determines the size of the sliding
     window operation as specified in subclause 8.2.5.3. The value of
-    max_num_ref_frames shall be in the range of 0 to MaxDpbSize (as
+    max_num_ref_frames shall be in the range of 0 to MaxDpbFrames (as
     specified in subclause A.3.1 or A.3.2), inclusive.
    */
   uint32_t max_num_ref_frames;
@@ -384,8 +384,13 @@ struct SPSData
 
   uint8_t matrix_coefficients;
   bool chroma_loc_info_present_flag;
-  uint32_t chroma_sample_loc_type_top_field;
-  uint32_t chroma_sample_loc_type_bottom_field;
+  /*
+    The value of chroma_sample_loc_type_top_field and
+    chroma_sample_loc_type_bottom_field shall be in the range of 0 to 5,
+    inclusive
+  */
+  uint8_t chroma_sample_loc_type_top_field;
+  uint8_t chroma_sample_loc_type_bottom_field;
   bool timing_info_present_flag;
   uint32_t num_units_in_tick;
   uint32_t time_scale;
@@ -651,7 +656,7 @@ private:
   /* Decode PPS NAL RBSP and fill PPSData structure */
   static bool DecodePPS(const mozilla::MediaByteBuffer* aPPS,
                         const SPSDataSet& aSPSs, PPSData& aDest);
-  static void vui_parameters(BitReader& aBr, SPSData& aDest);
+  static bool vui_parameters(BitReader& aBr, SPSData& aDest);
   // Read HRD parameters, all data is ignored.
   static void hrd_parameters(BitReader& aBr);
 };

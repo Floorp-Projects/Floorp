@@ -89,8 +89,7 @@ TestHangsParent::AnswerStackFrame()
 {
     ++mNumAnswerStackFrame;
 
-    // XXX This assertion will get deleted as part of bug 1316757.
-    MOZ_ASSERT((PTestHangs::HANG != state()) == (mNumAnswerStackFrame == 1));
+    // MOZ_ASSERT((PTestHangs::HANG != state()) == (mNumAnswerStackFrame == 1));
 
     if (mNumAnswerStackFrame == 1) {
         if (CallStackFrame()) {

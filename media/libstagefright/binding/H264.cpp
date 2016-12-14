@@ -13,6 +13,24 @@
 #include <limits>
 #include <cmath>
 
+#define READSE(var, min, max)                                                  \
+  {                                                                            \
+    int32_t val = br.ReadSE();                                                 \
+    if (val < min || val > max) {                                              \
+      return false;                                                            \
+    }                                                                          \
+    aDest.var = val;                                                           \
+  }
+
+#define READUE(var, max)                                                       \
+  {                                                                            \
+    uint32_t uval = br.ReadUE();                                               \
+    if (uval > max) {                                                          \
+      return false;                                                            \
+    }                                                                          \
+    aDest.var = uval;                                                          \
+  }
+
 using namespace mozilla;
 
 namespace mp4_demuxer {
@@ -102,6 +120,52 @@ static void
 scaling_list(BitReader& aBr, uint8_t (&aScalingList)[N], const uint8_t (&aDefaultList)[N])
 {
   detail::scaling_list(aBr, aScalingList, N, aDefaultList, nullptr);
+}
+
+static uint32_t
+GetBitLength(const mozilla::MediaByteBuffer* aNAL)
+{
+  size_t size = aNAL->Length();
+
+  while (size > 0 && aNAL->ElementAt(size - 1) == 0) {
+    size--;
+  }
+
+  if (!size) {
+    return 0;
+  }
+
+  if (size > UINT32_MAX / 8) {
+    // We can't represent it, we'll use as much as we can.
+    return UINT32_MAX;
+  }
+
+  uint8_t v = aNAL->ElementAt(size - 1);
+  size *= 8;
+
+  // Remove the stop bit and following trailing zeros.
+  if (v) {
+    // Count the consecutive zero bits (trailing) on the right by binary search.
+    // Adapted from Matt Whitlock algorithm to only bother with 8 bits integers.
+    uint32_t c;
+    if (v & 1) {
+      // Special case for odd v (assumed to happen half of the time).
+      c = 0;
+    } else {
+      c = 1;
+      if ((v & 0xf) == 0) {
+        v >>= 4;
+        c += 4;
+      }
+      if ((v & 0x3) == 0) {
+        v >>= 2;
+        c += 2;
+      }
+      c -= v & 0x1;
+    }
+    size -= c + 1;
+  }
+  return size;
 }
 
 SPSData::SPSData()
@@ -201,7 +265,7 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
   if (!aSPS) {
     return false;
   }
-  BitReader br(aSPS);
+  BitReader br(aSPS, GetBitLength(aSPS));
 
   aDest.profile_idc = br.ReadBits(8);
   aDest.constraint_set0_flag = br.ReadBit();
@@ -212,10 +276,7 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
   aDest.constraint_set5_flag = br.ReadBit();
   br.ReadBits(2); // reserved_zero_2bits
   aDest.level_idc = br.ReadBits(8);
-  aDest.seq_parameter_set_id = br.ReadUE();
-  if (aDest.seq_parameter_set_id >= MAX_SPS_COUNT) {
-    return false;
-  }
+  READUE(seq_parameter_set_id, MAX_SPS_COUNT - 1);
 
   if (aDest.profile_idc == 100 || aDest.profile_idc == 110 ||
       aDest.profile_idc == 122 || aDest.profile_idc == 244 ||
@@ -223,11 +284,12 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
       aDest.profile_idc == 86 || aDest.profile_idc == 118 ||
       aDest.profile_idc == 128 || aDest.profile_idc == 138 ||
       aDest.profile_idc == 139 || aDest.profile_idc == 134) {
-    if ((aDest.chroma_format_idc = br.ReadUE()) == 3) {
+    READUE(chroma_format_idc, 3);
+    if (aDest.chroma_format_idc == 3) {
       aDest.separate_colour_plane_flag = br.ReadBit();
     }
-    aDest.bit_depth_luma_minus8 = br.ReadUE();
-    aDest.bit_depth_chroma_minus8 = br.ReadUE();
+    READUE(bit_depth_luma_minus8, 6);
+    READUE(bit_depth_chroma_minus8, 6);
     br.ReadBit();       // qpprime_y_zero_transform_bypass_flag
     aDest.seq_scaling_matrix_present_flag = br.ReadBit();
     if (aDest.seq_scaling_matrix_present_flag) {
@@ -265,14 +327,16 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
     // default value if chroma_format_idc isn't set.
     aDest.chroma_format_idc = 1;
   }
-  aDest.log2_max_frame_num = br.ReadUE() + 4;
-  aDest.pic_order_cnt_type = br.ReadUE();
+  READUE(log2_max_frame_num, 12);
+  aDest.log2_max_frame_num += 4;
+  READUE(pic_order_cnt_type, 2);
   if (aDest.pic_order_cnt_type == 0) {
-    aDest.log2_max_pic_order_cnt_lsb = br.ReadUE() + 4;
+    READUE(log2_max_pic_order_cnt_lsb, 12);
+    aDest.log2_max_pic_order_cnt_lsb += 4;
   } else if (aDest.pic_order_cnt_type == 1) {
     aDest.delta_pic_order_always_zero_flag = br.ReadBit();
-    aDest.offset_for_non_ref_pic = br.ReadSE();
-    aDest.offset_for_top_to_bottom_field = br.ReadSE();
+    READSE(offset_for_non_ref_pic, -231, 230);
+    READSE(offset_for_top_to_bottom_field, -231, 230);
     uint32_t num_ref_frames_in_pic_order_cnt_cycle = br.ReadUE();
     for (uint32_t i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++) {
       br.ReadSE(); // offset_for_ref_frame[i]
@@ -299,7 +363,9 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
   aDest.sample_ratio = 1.0f;
   aDest.vui_parameters_present_flag = br.ReadBit();
   if (aDest.vui_parameters_present_flag) {
-    vui_parameters(br, aDest);
+    if (!vui_parameters(br, aDest)) {
+      return false;
+    }
   }
 
   // Calculate common values.
@@ -358,7 +424,7 @@ H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
   return true;
 }
 
-/* static */ void
+/* static */ bool
 H264::vui_parameters(BitReader& aBr, SPSData& aDest)
 {
   aDest.aspect_ratio_info_present_flag = aBr.ReadBit();
@@ -523,8 +589,9 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
 
   aDest.chroma_loc_info_present_flag = aBr.ReadBit();
   if (aDest.chroma_loc_info_present_flag) {
-    aDest.chroma_sample_loc_type_top_field = aBr.ReadUE();
-    aDest.chroma_sample_loc_type_bottom_field = aBr.ReadUE();
+    BitReader& br = aBr; // so that macro READUE works
+    READUE(chroma_sample_loc_type_top_field, 5);
+    READUE(chroma_sample_loc_type_bottom_field, 5);
   }
 
   aDest.timing_info_present_flag = aBr.ReadBit();
@@ -533,6 +600,7 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
     aDest.time_scale = aBr.ReadBits(32);
     aDest.fixed_frame_rate_flag = aBr.ReadBit();
   }
+  return true;
 }
 
 /* static */ bool
@@ -707,15 +775,10 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS, const SPSDataSet& aSPSes,
     return false;
   }
 
-  BitReader br(aPPS);
+  BitReader br(aPPS, GetBitLength(aPPS));
 
-  aDest.pic_parameter_set_id = br.ReadUE();
-  aDest.seq_parameter_set_id = br.ReadUE();
-
-  if (aDest.pic_parameter_set_id >= MAX_PPS_COUNT ||
-      aDest.seq_parameter_set_id >= MAX_SPS_COUNT) {
-    return false;
-  }
+  READUE(pic_parameter_set_id, MAX_PPS_COUNT - 1);
+  READUE(seq_parameter_set_id, MAX_SPS_COUNT - 1);
 
   const SPSData& sps = aSPSes[aDest.seq_parameter_set_id];
 
@@ -726,9 +789,9 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS, const SPSDataSet& aSPSes,
 
   aDest.entropy_coding_mode_flag = br.ReadBit();
   aDest.bottom_field_pic_order_in_frame_present_flag = br.ReadBit();
-  aDest.num_slice_groups_minus1 = br.ReadUE();
+  READUE(num_slice_groups_minus1, 7);
   if (aDest.num_slice_groups_minus1 > 0) {
-    aDest.slice_group_map_type = br.ReadUE();
+    READUE(slice_group_map_type, 6);
     switch (aDest.slice_group_map_type) {
       case 0:
         for (uint8_t iGroup = 0; iGroup <= aDest.num_slice_groups_minus1;
@@ -764,18 +827,13 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS, const SPSDataSet& aSPSes,
         return false;
     }
   }
-  aDest.num_ref_idx_l0_default_active_minus1 = br.ReadUE();
-  aDest.num_ref_idx_l1_default_active_minus1 = br.ReadUE();
-  if (aDest.num_ref_idx_l0_default_active_minus1 > 32 ||
-      aDest.num_ref_idx_l1_default_active_minus1 > 32) {
-    // reference overflow.
-    return false;
-  }
+  READUE(num_ref_idx_l0_default_active_minus1, 31);
+  READUE(num_ref_idx_l1_default_active_minus1, 31);
   aDest.weighted_pred_flag = br.ReadBit();
   aDest.weighted_bipred_idc = br.ReadBits(2);
-  aDest.pic_init_qp_minus26 = br.ReadSE();
-  aDest.pic_init_qs_minus26 = br.ReadSE();
-  aDest.chroma_qp_index_offset = br.ReadSE();
+  READSE(pic_init_qp_minus26, -(26 + 6 * sps.bit_depth_luma_minus8), 25);
+  READSE(pic_init_qs_minus26, -26, 26);
+  READSE(chroma_qp_index_offset, -12, 12);
   aDest.deblocking_filter_control_present_flag = br.ReadBit();
   aDest.constrained_intra_pred_flag = br.ReadBit();
   aDest.redundant_pic_cnt_present_flag = br.ReadBit();
@@ -825,7 +883,7 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS, const SPSDataSet& aSPSes,
         }
       }
     }
-    aDest.second_chroma_qp_index_offset = br.ReadSE();
+    READSE(second_chroma_qp_index_offset, -12, 12);
   }
   return true;
 }
@@ -891,5 +949,8 @@ H264::GetFrameType(const mozilla::MediaRawData* aSample)
 
   return FrameType::OTHER;
 }
+
+#undef READUE
+#undef READSE
 
 } // namespace mp4_demuxer

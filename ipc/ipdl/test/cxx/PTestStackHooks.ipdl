@@ -20,7 +20,7 @@ both:
 parent:
     async __delete__();
 
-
+/*
 state START:
     send Start goto TEST1;
 
@@ -49,6 +49,7 @@ state TEST5_3:
 
 state DEAD:
     recv __delete__;
+*/
 };
 
 

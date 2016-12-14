@@ -28,9 +28,6 @@ protocol PPluginBackgroundDestroyer {
 
 parent:
     async __delete__();
-
-state DESTROYING:
-    recv __delete__;
 };
 
 }  // namespace plugins
