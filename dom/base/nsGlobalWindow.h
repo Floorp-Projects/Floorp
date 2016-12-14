@@ -925,9 +925,8 @@ public:
   static void
   ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult);
 
-  // Exposed only for testing
-  already_AddRefed<mozilla::dom::Worklet>
-  CreateWorklet(mozilla::ErrorResult& aRv);
+  mozilla::dom::Worklet*
+  GetAudioWorklet(mozilla::ErrorResult& aRv);
 
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
@@ -1801,6 +1800,7 @@ protected:
   RefPtr<mozilla::dom::U2F> mU2F;
   RefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
   RefPtr<mozilla::dom::Console> mConsole;
+  RefPtr<mozilla::dom::Worklet> mAudioWorklet;
   // We need to store an nsISupports pointer to this object because the
   // mozilla::dom::External class doesn't exist on b2g and using the type
   // forward declared here means that ~nsGlobalWindow wouldn't compile because
