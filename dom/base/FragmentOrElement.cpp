@@ -23,7 +23,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/ServoRestyleManager.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
@@ -1112,12 +1111,6 @@ FragmentOrElement::SetXBLInsertionParent(nsIContent* aContent)
     if (slots) {
       slots->mXBLInsertionParent = nullptr;
     }
-  }
-
-  // We just changed the flattened tree, so any Servo style data is now invalid.
-  // We rely on nsXBLService::LoadBindings to re-traverse the subtree afterwards.
-  if (IsElement() && AsElement()->HasServoData()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(AsElement());
   }
 }
 
