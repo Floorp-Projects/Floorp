@@ -70,10 +70,10 @@ private:
 
 private:
   // Using a raw CRITICAL_SECTION here because it can be reentered
-  CRITICAL_SECTION    mCS;
-  ULONG               mRefCnt;
-  nsTArray<WeakRef*>  mWeakRefs;
-  Flags               mFlags;
+  CRITICAL_SECTION           mCS;
+  ULONG                      mRefCnt;
+  nsTArray<RefPtr<WeakRef>>  mWeakRefs;
+  Flags                      mFlags;
 };
 
 class WeakRef : public IWeakReference
