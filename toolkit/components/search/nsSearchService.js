@@ -1611,7 +1611,13 @@ Engine.prototype = {
     } catch (ex) {
       LOG("_onLoad: Failed to init engine!\n" + ex);
       // Report an error to the user
-      promptError();
+      if (ex.result == Cr.NS_ERROR_FILE_CORRUPTED) {
+        promptError({ error: "error_invalid_engine_msg2",
+                      title: "error_invalid_format_title"
+                    });
+      } else {
+        promptError();
+      }
       return;
     }
 
@@ -1833,9 +1839,10 @@ Engine.prototype = {
 
       this._parse();
 
-    } else
-      FAIL(this._location + " is not a valid search plugin.", Cr.NS_ERROR_FAILURE);
-
+    } else {
+      Cu.reportError("Invalid search plugin due to namespace not matching.");
+      FAIL(this._location + " is not a valid search plugin.", Cr.NS_ERROR_FILE_CORRUPTED);
+    }
     // No need to keep a ref to our data (which in some cases can be a document
     // element) past this point
     this._data = null;
