@@ -100,7 +100,7 @@ add_task(function* test_crash_in_previous_frameloader() {
 
     gBrowser.updateBrowserRemoteness(browser, false);
     info("Waiting for content process to go away.");
-    let [subject, data] = yield contentProcessGone;
+    let [subject /* , data */] = yield contentProcessGone;
 
     // If we don't clean up the minidump, the harness will
     // complain.

@@ -236,6 +236,7 @@ WidgetEvent::HasMouseEventMessage() const
     case eMouseUp:
     case eMouseClick:
     case eMouseDoubleClick:
+    case eMouseAuxClick:
     case eMouseEnterIntoWidget:
     case eMouseExitFromWidget:
     case eMouseActivate:

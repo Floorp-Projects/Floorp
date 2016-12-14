@@ -6,8 +6,8 @@
   <title>Mouse Capture Tests</title>
   <link rel="stylesheet" href="chrome://global/skin/" type="text/css"/>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script> 
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body id="body" xmlns="http://www.w3.org/1999/xhtml">
   <p id="display"/><div id="content" style="display: none"/><pre id="test"/>
@@ -172,9 +172,6 @@ function runTests()
   var scrollX = parent ? parent.scrollX : 0;
   var scrollY = parent ? parent.scrollY : 0;
 
-  var b = frames[0].document.getElementById("b");
-//  runCaptureTest(b, selectionCallback);
-
   // restore scroll
   if (parent) parent.scroll(scrollX, scrollY);
 
@@ -336,4 +333,3 @@ SimpleTest.waitForFocus(runTests);
 </body>
 
 </html>
-

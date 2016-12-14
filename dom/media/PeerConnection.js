@@ -442,7 +442,11 @@ RTCPeerConnection.prototype = {
     // Warn just once per PeerConnection about deprecated getStats usage.
     this._warnDeprecatedStatsAccessNullable = { warn: () =>
       this.logWarning("non-maplike pc.getStats access is deprecated! " +
-                      "See http://w3c.github.io/webrtc-pc/#example for usage.") };
+                      "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
+
+    this._warnDeprecatedStatsCallbacksNullable = { warn: () =>
+      this.logWarning("Callback-based pc.getStats is deprecated! Use promise-version! " +
+                      "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
@@ -1213,6 +1217,11 @@ RTCPeerConnection.prototype = {
   },
 
   getStats: function(selector, onSucc, onErr) {
+    if (typeof onSucc == "function" &&
+        this._warnDeprecatedStatsCallbacksNullable.warn) {
+      this._warnDeprecatedStatsCallbacksNullable.warn();
+      this._warnDeprecatedStatsCallbacksNullable.warn = null;
+    }
     return this._auto(onSucc, onErr, () => this._getStats(selector));
   },
 
@@ -1490,7 +1499,8 @@ PeerConnectionObserver.prototype = {
     let pc = this._dompc;
     let chromeobj = new RTCStatsReport(pc._win, dict);
     let webidlobj = pc._win.RTCStatsReport._create(pc._win, chromeobj);
-    chromeobj.makeStatsPublic(pc._warnDeprecatedStatsAccessNullable);
+    chromeobj.makeStatsPublic(pc._warnDeprecatedStatsCallbacksNullable &&
+                              pc._warnDeprecatedStatsAccessNullable);
     pc._onGetStatsSuccess(webidlobj);
   },
 

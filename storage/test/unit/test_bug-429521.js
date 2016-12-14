@@ -24,7 +24,7 @@ function test_bug429521() {
 
       // BUG: the print commands after the following statement
       // are never executed. Script stops immediately.
-      var tzId = stmt.row.zone;
+      stmt.row.zone;
 
       print("*** test_bug429521: step() Read wrapper.row.zone finished");
     }

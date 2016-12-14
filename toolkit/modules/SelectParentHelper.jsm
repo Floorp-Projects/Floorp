@@ -144,8 +144,6 @@ this.SelectParentHelper = {
 
       case "command":
         if (event.target.hasAttribute("value")) {
-          let win = currentBrowser.ownerDocument.defaultView;
-
           currentBrowser.messageManager.sendAsyncMessage("Forms:SelectDropDownItem", {
             value: event.target.value,
             closedWithEnter: closedWithEnter
