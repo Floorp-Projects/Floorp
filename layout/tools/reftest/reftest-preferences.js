@@ -122,3 +122,5 @@ user_pref("places.history.enabled", false);
 // For Firefox 52 only, ESR will support non-Flash plugins while release will
 // not, so we keep testing the non-Flash pathways
 user_pref("plugin.load_flash_only", false);
+
+user_pref("media.openUnsupportedTypeWithExternalApp", false);
