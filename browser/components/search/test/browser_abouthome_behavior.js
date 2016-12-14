@@ -31,7 +31,7 @@ function test() {
     gBrowser.loadURI("about:home");
     info("Waiting for about:home load");
     tab.linkedBrowser.addEventListener("load", function load(event) {
-      if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+      if (event.originalTarget != tab.linkedBrowser.contentDocumentAsCPOW ||
           event.target.location.href == "about:blank") {
         info("skipping spurious load event");
         return;
@@ -39,7 +39,7 @@ function test() {
       tab.linkedBrowser.removeEventListener("load", load, true);
 
       // Observe page setup
-      let doc = gBrowser.contentDocument;
+      let doc = gBrowser.contentDocumentAsCPOW;
       gMutationObserver = new MutationObserver(function(mutations) {
         for (let mutation of mutations) {
           if (mutation.attributeName == "searchEngineName") {
