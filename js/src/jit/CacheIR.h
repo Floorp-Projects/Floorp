@@ -229,9 +229,6 @@ class StubField
     };
     Type type_;
 
-    bool sizeIsWord() const { return sizeIsWord(type_); }
-    bool sizeIsInt64() const { return sizeIsInt64(type_); }
-
   public:
     StubField(uint64_t data, Type type)
       : dataInt64_(data), type_(type)
@@ -240,6 +237,9 @@ class StubField
     }
 
     Type type() const { return type_; }
+
+    bool sizeIsWord() const { return sizeIsWord(type_); }
+    bool sizeIsInt64() const { return sizeIsInt64(type_); }
 
     uintptr_t asWord() const { MOZ_ASSERT(sizeIsWord()); return dataWord_; }
     uint64_t asInt64() const { MOZ_ASSERT(sizeIsInt64()); return dataInt64_; }
@@ -357,6 +357,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return stubDataSize_;
     }
     void copyStubData(uint8_t* dest) const;
+    bool stubDataEquals(const uint8_t* stubData) const;
 
     bool operandIsDead(uint32_t operandId, uint32_t currentInstruction) const {
         if (operandId >= operandLastUsed_.length())
