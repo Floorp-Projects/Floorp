@@ -11,7 +11,6 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
 interface HTMLProgressElement : HTMLElement {
            [SetterThrows]
            attribute double value;

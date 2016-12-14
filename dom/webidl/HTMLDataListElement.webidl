@@ -11,7 +11,6 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
 interface HTMLDataListElement : HTMLElement {
   readonly attribute HTMLCollection options;
 };

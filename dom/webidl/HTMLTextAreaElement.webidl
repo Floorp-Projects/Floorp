@@ -14,7 +14,6 @@
 interface nsIEditor;
 interface MozControllers;
 
-[HTMLConstructor]
 interface HTMLTextAreaElement : HTMLElement {
            // attribute DOMString autocomplete;
   [SetterThrows, Pure]
