@@ -13,7 +13,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-embed-element
-[HTMLConstructor, NeedResolve]
+[NeedResolve]
 interface HTMLEmbedElement : HTMLElement {
   [Pure, SetterThrows]
            attribute DOMString src;

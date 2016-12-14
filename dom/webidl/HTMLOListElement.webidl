@@ -13,7 +13,6 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-ol-element
-[HTMLConstructor]
 interface HTMLOListElement : HTMLElement {
            [SetterThrows]
            attribute boolean reversed;

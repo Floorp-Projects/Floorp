@@ -11,7 +11,6 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
 interface HTMLTableSectionElement : HTMLElement {
   readonly attribute HTMLCollection rows;
   [Throws]

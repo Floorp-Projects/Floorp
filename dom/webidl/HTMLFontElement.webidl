@@ -11,7 +11,6 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
 interface HTMLFontElement : HTMLElement {
   [TreatNullAs=EmptyString, SetterThrows] attribute DOMString color;
   [SetterThrows]                          attribute DOMString face;
