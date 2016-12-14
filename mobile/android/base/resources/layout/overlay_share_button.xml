@@ -3,22 +3,25 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
-    <ImageView
-        android:layout_width="60dp"
-        android:layout_height="match_parent"
-        android:id="@+id/overlaybtn_icon"
-        android:padding="30dp"
-        android:scaleType="center"/>
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+    <org.mozilla.gecko.widget.themed.ThemedImageView
+            android:id="@+id/overlaybtn_icon"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_margin="15dp"
+            gecko:drawableTintList="@color/action_bar_secondary_menu_item_colors"
+            android:scaleType="centerInside"/>
 
     <TextView
-        android:textAppearance="@style/TextAppearance.ShareOverlay"
-        android:id="@+id/overlaybtn_label"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="false"
-        android:enabled="false"
-        android:maxLines="1"
-        android:textSize="14sp"
-        android:textColor="@color/primary_text_selector"/>
+            android:textAppearance="@style/TextAppearance.ShareOverlay"
+            android:id="@+id/overlaybtn_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:enabled="false"
+            android:maxLines="1"
+            android:textSize="14sp"
+            android:textColor="@color/primary_text_selector"/>
 </merge>

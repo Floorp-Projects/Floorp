@@ -1145,6 +1145,7 @@ APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
    case eMouseUp:
    case eMouseDown:
    case eMouseDoubleClick:
+   case eMouseAuxClick:
    case eMouseClick:
    case eContextMenu:
    case eDrop:

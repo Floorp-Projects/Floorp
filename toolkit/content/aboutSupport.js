@@ -437,7 +437,7 @@ var snapshotFormatters = {
     showGpu("gpu-2", "2");
 
     // Remove adapter keys.
-    for (let [prop, key] of adapterKeys) {
+    for (let [prop, /* key */] of adapterKeys) {
       delete data[prop];
       delete data[prop + "2"];
     }

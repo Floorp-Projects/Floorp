@@ -287,7 +287,7 @@ tests.push(
         throw exception_content;
       });
 
-    let observer_2 = source.promise.then(
+    source.promise.then(
       function onResolve() {
         do_check_true(exception_thrown, "Second observer called after first observer has thrown");
       }
@@ -960,7 +960,6 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
   }
   let deferred = Promise.defer();
   let print = do_print;
-  let execute_soon = do_execute_soon;
   let observer = function({message, stack}) {
     let data = message + stack;
     print("Observing " + message + ", looking for " + aMustAppear.join(", "));
