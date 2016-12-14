@@ -76,7 +76,6 @@ CalculateNewBackPressureDelayMS(uint32_t aBacklogDepth)
 
 TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
   : mWindow(aWindow),
-    mTimeoutInsertionPoint(nullptr),
     mTimeoutIdCounter(1),
     mTimeoutFiringDepth(0),
     mRunningTimeout(nullptr),
@@ -226,7 +225,7 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
   uint32_t timerId = (uint32_t)aTimerId;
   Timeout* timeout;
 
-  for (timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
+  for (timeout = mTimeouts.GetFirst(); timeout; timeout = timeout->getNext()) {
     if (timeout->mTimeoutId == timerId && timeout->mReason == aReason) {
       if (timeout->mRunning) {
         /* We're running from inside the timeout. Mark this
@@ -296,7 +295,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   // whose mWhen is greater than deadline, since once that happens we know
   // nothing past that point is expired.
   last_expired_timeout = nullptr;
-  for (Timeout* timeout = mTimeouts.getFirst();
+  for (Timeout* timeout = mTimeouts.GetFirst();
        timeout && timeout->mWhen <= deadline;
        timeout = timeout->getNext()) {
     if (timeout->mFiringDepth == 0) {
@@ -339,12 +338,12 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   last_expired_timeout->setNext(dummy_timeout);
   RefPtr<Timeout> timeoutExtraRef(dummy_timeout);
 
-  last_insertion_point = mTimeoutInsertionPoint;
-  // If we ever start setting mTimeoutInsertionPoint to a non-dummy timeout,
-  // the logic in ResetTimersForThrottleReduction will need to change.
-  mTimeoutInsertionPoint = dummy_timeout;
+  last_insertion_point = mTimeouts.InsertionPoint();
+  // If we ever start setting insertion point to a non-dummy timeout, the logic
+  // in ResetTimersForThrottleReduction will need to change.
+  mTimeouts.SetInsertionPoint(dummy_timeout);
 
-  for (Timeout* timeout = mTimeouts.getFirst();
+  for (Timeout* timeout = mTimeouts.GetFirst();
        timeout != dummy_timeout && !mWindow.IsFrozen();
        timeout = nextTimeout) {
     nextTimeout = timeout->getNext();
@@ -387,7 +386,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
       MOZ_ASSERT(dummy_timeout->HasRefCntOne(), "dummy_timeout may leak");
       Unused << timeoutExtraRef.forget().take();
 
-      mTimeoutInsertionPoint = last_insertion_point;
+      mTimeouts.SetInsertionPoint(last_insertion_point);
 
       return;
     }
@@ -417,7 +416,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   timeoutExtraRef = nullptr;
   MOZ_ASSERT(dummy_timeout->HasRefCntOne(), "dummy_timeout may leak");
 
-  mTimeoutInsertionPoint = last_insertion_point;
+  mTimeouts.SetInsertionPoint(last_insertion_point);
 
   MaybeApplyBackPressure();
 }
@@ -598,15 +597,15 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
 
   TimeStamp now = TimeStamp::Now();
 
-  // If mTimeoutInsertionPoint is non-null, we're in the middle of firing
-  // timers and the timers we're planning to fire all come before
-  // mTimeoutInsertionPoint; mTimeoutInsertionPoint itself is a dummy timeout
-  // with an mWhen that may be semi-bogus.  In that case, we don't need to do
-  // anything with mTimeoutInsertionPoint or anything before it, so should
-  // start at the timer after mTimeoutInsertionPoint, if there is one.
+  // If insertion point is non-null, we're in the middle of firing timers and
+  // the timers we're planning to fire all come before insertion point;
+  // insertion point itself is a dummy timeout with an mWhen that may be
+  // semi-bogus.  In that case, we don't need to do anything with insertion
+  // point or anything before it, so should start at the timer after insertion
+  // point, if there is one.
   // Otherwise, start at the beginning of the list.
-  for (Timeout* timeout = mTimeoutInsertionPoint ?
-         mTimeoutInsertionPoint->getNext() : mTimeouts.getFirst();
+  for (Timeout* timeout = mTimeouts.InsertionPoint() ?
+         mTimeouts.InsertionPoint()->getNext() : mTimeouts.GetFirst();
        timeout; ) {
     // It's important that this check be <= so that we guarantee that
     // taking std::max with |now| won't make a quantity equal to
@@ -687,14 +686,15 @@ TimeoutManager::ClearAllTimeouts()
   Timeout* timeout;
   Timeout* nextTimeout;
 
-  for (timeout = mTimeouts.getFirst(); timeout; timeout = nextTimeout) {
+  for (timeout = mTimeouts.GetFirst(); timeout; timeout = nextTimeout) {
     /* If RunTimeout() is higher up on the stack for this
        window, e.g. as a result of document.write from a timeout,
        then we need to reset the list insertion point for
        newly-created timeouts in case the user adds a timeout,
        before we pop the stack back to RunTimeout. */
-    if (mRunningTimeout == timeout)
-      mTimeoutInsertionPoint = nullptr;
+    if (mRunningTimeout == timeout) {
+      mTimeouts.SetInsertionPoint(nullptr);
+    }
 
     nextTimeout = timeout->getNext();
 
@@ -716,18 +716,17 @@ TimeoutManager::ClearAllTimeouts()
   }
 
   // Clear out our list
-  mTimeouts.clear();
+  mTimeouts.Clear();
 }
 
 void
 TimeoutManager::InsertTimeoutIntoList(Timeout* aTimeout)
 {
-  // Start at mLastTimeout and go backwards.  Don't go further than
-  // mTimeoutInsertionPoint, though.  This optimizes for the common case of
-  // insertion at the end.
+  // Start at mLastTimeout and go backwards.  Don't go further than insertion
+  // point, though.  This optimizes for the common case of insertion at the end.
   Timeout* prevSibling;
-  for (prevSibling = mTimeouts.getLast();
-       prevSibling && prevSibling != mTimeoutInsertionPoint &&
+  for (prevSibling = mTimeouts.GetLast();
+       prevSibling && prevSibling != mTimeouts.InsertionPoint() &&
          // This condition needs to match the one in SetTimeoutOrInterval that
          // determines whether to set mWhen or mTimeRemaining.
          (mWindow.IsFrozen() ?
@@ -741,7 +740,7 @@ TimeoutManager::InsertTimeoutIntoList(Timeout* aTimeout)
   if (prevSibling) {
     prevSibling->setNext(aTimeout);
   } else {
-    mTimeouts.insertFront(aTimeout);
+    mTimeouts.InsertFront(aTimeout);
   }
 
   aTimeout->mFiringDepth = 0;
@@ -775,7 +774,7 @@ TimeoutManager::EndRunningTimeout(Timeout* aTimeout)
 void
 TimeoutManager::UnmarkGrayTimers()
 {
-  for (Timeout* timeout = mTimeouts.getFirst();
+  for (Timeout* timeout = mTimeouts.GetFirst();
        timeout;
        timeout = timeout->getNext()) {
     if (timeout->mScriptHandler) {
@@ -787,7 +786,7 @@ TimeoutManager::UnmarkGrayTimers()
 void
 TimeoutManager::Suspend()
 {
-  for (Timeout* t = mTimeouts.getFirst(); t; t = t->getNext()) {
+  for (Timeout* t = mTimeouts.GetFirst(); t; t = t->getNext()) {
     // Leave the timers with the current time remaining.  This will
     // cause the timers to potentially fire when the window is
     // Resume()'d.  Time effectively passes while suspended.
@@ -810,7 +809,7 @@ TimeoutManager::Resume()
   TimeStamp now = TimeStamp::Now();
   DebugOnly<bool> _seenDummyTimeout = false;
 
-  for (Timeout* t = mTimeouts.getFirst(); t; t = t->getNext()) {
+  for (Timeout* t = mTimeouts.GetFirst(); t; t = t->getNext()) {
     // There's a chance we're being called with RunTimeout on the stack in which
     // case we have a dummy timeout in the list that *must not* be resumed. It
     // can be identified by a null mWindow.
@@ -856,7 +855,7 @@ void
 TimeoutManager::Freeze()
 {
   TimeStamp now = TimeStamp::Now();
-  for (Timeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
+  for (Timeout *t = mTimeouts.GetFirst(); t; t = t->getNext()) {
     // Save the current remaining time for this timeout.  We will
     // re-apply it when the window is Thaw()'d.  This effectively
     // shifts timers to the right as if time does not pass while
@@ -879,7 +878,7 @@ TimeoutManager::Thaw()
   TimeStamp now = TimeStamp::Now();
   DebugOnly<bool> _seenDummyTimeout = false;
 
-  for (Timeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
+  for (Timeout *t = mTimeouts.GetFirst(); t; t = t->getNext()) {
     // There's a chance we're being called with RunTimeout on the stack in which
     // case we have a dummy timeout in the list that *must not* be resumed. It
     // can be identified by a null mWindow.

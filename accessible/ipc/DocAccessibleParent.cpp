@@ -403,9 +403,10 @@ DocAccessibleParent::RecvShutdown()
 {
   Destroy();
 
-  if (!static_cast<dom::TabParent*>(Manager())->IsDestroyed()) {
+  auto mgr = static_cast<dom::TabParent*>(Manager());
+  if (!mgr->IsDestroyed()) {
     if (!PDocAccessibleParent::Send__delete__(this)) {
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL_NO_REASON(mgr);
     }
   }
 
