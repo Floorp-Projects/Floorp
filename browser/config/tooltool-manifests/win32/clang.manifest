@@ -32,8 +32,8 @@
 },
 {
 "version": "clang 4.0pre/r286542",
-"size": 206088429,
-"digest": "a6de709a5097d98084b6111e340f53cd8397736f783aa6f76c9d45bcb694d3983ab3b7aea7f96756fcc4ee44f7b0e57df5ebabbd59242cd51942742fe1769d9a",
+"size": 222604502,
+"digest": "cea6119131adb66e0b7ec5030b00922ac95e4e97249fcab9561a848ea60b7f80536c9171a07136afcb79decbcdb20099a5e7ee493013710b8ba5ae072ad40851",
 "algorithm": "sha512",
 "filename": "clang.tar.bz2",
 "unpack": true

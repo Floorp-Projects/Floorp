@@ -515,17 +515,70 @@ public:
   void
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
+    if (NS_WARN_IF(!mThis->mOwnerContent)) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
     // Navigate the loader to the new index
     nsCOMPtr<nsIFrameLoader> otherLoader;
     nsresult rv = mThis->mGroupedSessionHistory->
                     GotoIndex(mGlobalIndex, getter_AddRefs(otherLoader));
-    if (NS_WARN_IF(!otherLoader || NS_FAILED(rv))) {
+
+    // Check if the gotoIndex failed because the target frameloader is dead. We
+    // need to perform a navigateAndRestoreByIndex and then return to recover.
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      // Get the nsIXULBrowserWindow so that we can call NavigateAndRestoreByIndex on it.
+      nsCOMPtr<nsIDocShell> docShell = mThis->mOwnerContent->OwnerDoc()->GetDocShell();
+      if (NS_WARN_IF(!docShell)) {
+        mPromise->MaybeRejectWithUndefined();
+        return;
+      }
+
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+      docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+      if (NS_WARN_IF(!treeOwner)) {
+        mPromise->MaybeRejectWithUndefined();
+        return;
+      }
+
+      nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
+      if (NS_WARN_IF(!window)) {
+        mPromise->MaybeRejectWithUndefined();
+        return;
+      }
+
+      nsCOMPtr<nsIXULBrowserWindow> xbw;
+      window->GetXULBrowserWindow(getter_AddRefs(xbw));
+      if (NS_WARN_IF(!xbw)) {
+        mPromise->MaybeRejectWithUndefined();
+        return;
+      }
+
+      nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(mThis->mOwnerContent);
+      if (NS_WARN_IF(!ourBrowser)) {
+        mPromise->MaybeRejectWithUndefined();
+        return;
+      }
+
+      rv = xbw->NavigateAndRestoreByIndex(ourBrowser, mGlobalIndex);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        mPromise->MaybeRejectWithUndefined();
+        return;
+      }
+      mPromise->MaybeResolveWithUndefined();
+      return;
+    }
+
+    // Check for any other type of failure
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       mPromise->MaybeRejectWithUndefined();
       return;
     }
-    nsFrameLoader* other = static_cast<nsFrameLoader*>(otherLoader.get());
 
-    if (other == mThis) {
+    // Perform the swap.
+    nsFrameLoader* other = static_cast<nsFrameLoader*>(otherLoader.get());
+    if (!other || other == mThis) {
       mPromise->MaybeRejectWithUndefined();
       return;
     }
@@ -3572,6 +3625,13 @@ nsFrameLoader::PopulateUserContextIdFromAttribute(DocShellOriginAttributes& aAtt
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetIsDead(bool* aIsDead)
+{
+  *aIsDead = mDestroyCalled;
   return NS_OK;
 }
 

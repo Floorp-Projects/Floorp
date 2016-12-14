@@ -163,8 +163,9 @@ mozilla::ipc::IPCResult
 LayerTransactionParent::RecvShutdown()
 {
   Destroy();
+  IProtocol* mgr = Manager();
   if (!Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
