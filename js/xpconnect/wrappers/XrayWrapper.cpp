@@ -1703,6 +1703,22 @@ bool
 DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags,
                               AutoIdVector& props)
 {
+    // Put the indexed properties for a window first.
+    nsGlobalWindow* win = AsWindow(cx, wrapper);
+    if (win) {
+        uint32_t length = win->Length();
+        if (!props.reserve(props.length() + length)) {
+            return false;
+        }
+        JS::RootedId indexId(cx);
+        for (uint32_t i = 0; i < length; ++i) {
+            if (!JS_IndexToId(cx, i, &indexId)) {
+                return false;
+            }
+            props.infallibleAppend(indexId);
+        }
+    }
+
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
     return XrayOwnPropertyKeys(cx, wrapper, obj, flags, props);
 }
