@@ -102,13 +102,6 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
   return promise;
 }
 
-bool
-NextFrameSeekTask::IsVideoRequestPending() const
-{
-  AssertOwnerThread();
-  return mReader->IsRequestingVideoData() || mReader->IsWaitingVideoData();
-}
-
 void
 NextFrameSeekTask::UpdateSeekTargetTime()
 {
