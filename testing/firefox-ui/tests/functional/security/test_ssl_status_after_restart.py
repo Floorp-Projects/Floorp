@@ -31,7 +31,7 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
         )
 
         # Set browser to restore previous session
-        self.puppeteer.prefs.set_pref('browser.startup.page', 3)
+        self.marionette.set_pref('browser.startup.page', 3)
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup

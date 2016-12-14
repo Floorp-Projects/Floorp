@@ -22,7 +22,7 @@ class TestStarInAutocomplete(PuppeteerMixin, MarionetteTestCase):
         self.test_urls = [self.marionette.absolute_url('layout/mozilla_grants.html')]
 
         # Disable search suggestions to only get results for history and bookmarks
-        self.puppeteer.prefs.set_pref(self.PREF_SUGGEST_SEARCHES, False)
+        self.marionette.set_pref(self.PREF_SUGGEST_SEARCHES, False)
 
         with self.marionette.using_context('content'):
             self.marionette.navigate('about:blank')
