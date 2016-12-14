@@ -4,14 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://drafts.css-houdini.org/worklets/#idl-index
+ * https://www.w3.org/TR/worklets-1/#fakeworkletglobalscope
  */
 
-[Exposed=Worklet]
-interface WorkletGlobalScope {
-};
-
-// Mozilla extensions
-partial interface WorkletGlobalScope {
-  void dump(optional DOMString str);
+[Global=(Worklet,AudioWorklet),Exposed=AudioWorklet]
+interface AudioWorkletGlobalScope : WorkletGlobalScope {
+    void registerProcessor (DOMString name, VoidFunction processorCtor);
 };

@@ -10,18 +10,17 @@
 
 setupTest();
 
-var worklet = window.createWorklet();
-ok(!!worklet, "We have a Worklet");
+ok(!!audioWorklet, "audioWorklet exists");
 
 // First loading
-worklet.import("common.js")
+audioWorklet.import("common.js")
 .then(() => {
   ok(true, "Import should load a resource.");
 })
 
 // Second loading - same file
 .then(() => {
-  return worklet.import("common.js")
+  return audioWorklet.import("common.js")
 })
 .then(() => {
   ok(true, "Import should load a resource.");
@@ -29,7 +28,7 @@ worklet.import("common.js")
 
 // 3rd loading - a network error
 .then(() => {
-  return worklet.import("404.js");
+  return audioWorklet.import("404.js");
 })
 .then(() => {
   ok(false, "The loading should fail.");
@@ -39,7 +38,7 @@ worklet.import("common.js")
 
 // 4th loading - a network error
 .then(() => {
-  return worklet.import("404.js");
+  return audioWorklet.import("404.js");
 })
 .then(() => {
   ok(false, "The loading should fail.");
