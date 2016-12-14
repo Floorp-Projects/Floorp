@@ -74,8 +74,8 @@ class TestNoCertificate(PuppeteerMixin, MarionetteTestCase):
 
         # Check the owner label equals localized 'securityNoOwner'
         self.assertEqual(page_info.deck.security.owner.get_attribute('value'),
-                         page_info.get_property('securityNoOwner'))
+                         page_info.localize_property('securityNoOwner'))
 
         # Check the verifier label equals localized 'notset'
         self.assertEqual(page_info.deck.security.verifier.get_attribute('value'),
-                         page_info.get_property('notset'))
+                         page_info.localize_property('notset'))

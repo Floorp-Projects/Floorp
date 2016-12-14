@@ -50,7 +50,7 @@ class PageInfoWindow(BaseWindow):
             elif trigger == 'menu':
                 self.menubar.select_by_id('file-menu', 'menu_close')
             elif trigger == 'shortcut':
-                win.send_shortcut(win.get_entity('closeWindow.key'),
+                win.send_shortcut(win.localize_entity('closeWindow.key'),
                                   accel=True)
             else:
                 raise ValueError('Unknown closing method: "%s"' % trigger)

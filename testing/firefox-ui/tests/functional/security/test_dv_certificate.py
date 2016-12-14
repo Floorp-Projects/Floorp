@@ -61,7 +61,7 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         insecure_label = self.identity_popup.view.security.insecure_connection_label
         self.assertEqual(insecure_label.value_of_css_property('display'), 'none')
 
-        verifier_label = self.browser.get_property('identity.identified.verifier')
+        verifier_label = self.browser.localize_property('identity.identified.verifier')
         self.assertEqual(self.identity_popup.view.security.verifier.get_attribute('textContent'),
                          verifier_label.replace("%S", cert['issuerOrganization']))
 
@@ -77,7 +77,7 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
                          cert['commonName'])
 
         self.assertEqual(deck.security.owner.get_attribute('value'),
-                         page_info_window.get_property('securityNoOwner'))
+                         page_info_window.localize_property('securityNoOwner'))
 
         self.assertEqual(deck.security.verifier.get_attribute('value'),
                          cert['issuerOrganization'])
