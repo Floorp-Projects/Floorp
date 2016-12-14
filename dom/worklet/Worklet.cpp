@@ -209,6 +209,7 @@ public:
     JS::Rooted<JS::Value> unused(cx);
     if (!JS::Evaluate(cx, compileOptions, buffer, &unused)) {
       ErrorResult error;
+      error.MightThrowJSException();
       error.StealExceptionFromJSContext(cx);
       RejectPromises(error.StealNSResult());
       return NS_OK;
