@@ -931,7 +931,7 @@ MediaFormatReader::DoDemuxVideo()
 
   if (mVideo.mFirstDemuxedSampleTime.isNothing()) {
     RefPtr<MediaFormatReader> self = this;
-    p = p->ThenPromise(OwnerThread(), __func__,
+    p = p->Then(OwnerThread(), __func__,
                 [self] (RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
                   self->OnFirstDemuxCompleted(TrackInfo::kVideoTrack, aSamples);
                 },
@@ -997,7 +997,7 @@ MediaFormatReader::DoDemuxAudio()
 
   if (mAudio.mFirstDemuxedSampleTime.isNothing()) {
     RefPtr<MediaFormatReader> self = this;
-    p = p->ThenPromise(OwnerThread(), __func__,
+    p = p->Then(OwnerThread(), __func__,
                 [self] (RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
                   self->OnFirstDemuxCompleted(TrackInfo::kAudioTrack, aSamples);
                 },

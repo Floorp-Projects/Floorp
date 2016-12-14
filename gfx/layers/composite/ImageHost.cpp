@@ -287,7 +287,8 @@ ImageHost::Composite(LayerComposite* aLayer,
                      const gfx::Matrix4x4& aTransform,
                      const gfx::SamplingFilter aSamplingFilter,
                      const gfx::IntRect& aClipRect,
-                     const nsIntRegion* aVisibleRegion)
+                     const nsIntRegion* aVisibleRegion,
+                     const Maybe<gfx::Polygon>& aGeometry)
 {
   if (!GetCompositor()) {
     // should only happen when a tab is dragged to another window and
@@ -392,8 +393,8 @@ ImageHost::Composite(LayerComposite* aLayer,
           effect->mTextureCoords.y = effect->mTextureCoords.YMost();
           effect->mTextureCoords.height = -effect->mTextureCoords.height;
         }
-        GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
-                                  aOpacity, aTransform);
+        GetCompositor()->DrawGeometry(rect, aClipRect, aEffectChain,
+                                      aOpacity, aTransform, aGeometry);
         GetCompositor()->DrawDiagnostics(diagnosticFlags | DiagnosticFlags::BIGIMAGE,
                                          rect, aClipRect, aTransform, mFlashCounter);
       } while (it->NextTile());
@@ -413,8 +414,8 @@ ImageHost::Composite(LayerComposite* aLayer,
         effect->mTextureCoords.height = -effect->mTextureCoords.height;
       }
 
-      GetCompositor()->DrawQuad(pictureRect, aClipRect, aEffectChain,
-                                aOpacity, aTransform);
+      GetCompositor()->DrawGeometry(pictureRect, aClipRect, aEffectChain,
+                                    aOpacity, aTransform, aGeometry);
       GetCompositor()->DrawDiagnostics(diagnosticFlags,
                                        pictureRect, aClipRect,
                                        aTransform, mFlashCounter);

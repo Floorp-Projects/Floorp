@@ -28,7 +28,9 @@
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/gfx/Polygon.h"        // for Polygon
 #include "mozilla/layers/AsyncCanvasRenderer.h"
+#include "mozilla/layers/BSPTree.h"     // for BSPTree
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
@@ -46,6 +48,9 @@
 #include "protobuf/LayerScopePacket.pb.h"
 #include "mozilla/Compression.h"
 #include "TreeTraversal.h"              // for ForEachNode
+
+#include <deque>
+#include <set>
 
 uint8_t gLayerManagerLayerBuilder;
 
@@ -1337,34 +1342,122 @@ ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort)
   );
 }
 
-void
-ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
+static nsTArray<LayerPolygon>
+SortLayersWithBSPTree(nsTArray<Layer*>& aArray)
 {
-  AutoTArray<Layer*, 10> toSort;
+  std::deque<LayerPolygon> inputLayers;
+  nsTArray<LayerPolygon> orderedLayers;
 
-  for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
-    ContainerLayer* container = l->AsContainerLayer();
-    if (container && container->Extend3DContext() &&
-        !container->UseIntermediateSurface()) {
-      container->Collect3DContextLeaves(toSort);
-    } else {
-      if (toSort.Length() > 0) {
-        SortLayersBy3DZOrder(toSort);
-        aArray.AppendElements(Move(toSort));
-        // XXX The move analysis gets confused here, because toSort gets moved
-        // here, and then gets used again outside of the loop. To clarify that
-        // we realize that the array is going to be empty to the move checker,
-        // we clear it again here. (This method renews toSort for the move
-        // analysis)
-        toSort.ClearAndRetainStorage();
-      }
-      aArray.AppendElement(l);
+  // Build a list of polygons to be sorted.
+  for (Layer* layer : aArray) {
+    // Ignore invisible layers.
+    if (!layer->IsVisible()) {
+      continue;
+    }
+
+    const gfx::IntRect& bounds =
+      layer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
+    const gfx::Matrix4x4& transform = layer->GetEffectiveTransform();
+
+    gfx::Polygon polygon = gfx::Polygon::FromRect(gfx::Rect(bounds));
+
+    // Transform the polygon to screen space.
+    polygon.TransformToScreenSpace(transform);
+
+    if (polygon.GetPoints().Length() >= 3) {
+      inputLayers.push_back(LayerPolygon(layer, Move(polygon)));
     }
   }
-  if (toSort.Length() > 0) {
-    SortLayersBy3DZOrder(toSort);
-    aArray.AppendElements(Move(toSort));
+
+  if (inputLayers.empty()) {
+    return orderedLayers;
   }
+
+  // Build a BSP tree from the list of polygons.
+  BSPTree tree(inputLayers);
+  orderedLayers = Move(tree.GetDrawOrder());
+
+  // Transform the polygons back to layer space.
+  for (LayerPolygon& layerPolygon : orderedLayers) {
+    gfx::Matrix4x4 inverse =
+      layerPolygon.layer->GetEffectiveTransform().Inverse();
+
+    MOZ_ASSERT(layerPolygon.geometry);
+    layerPolygon.geometry->TransformToLayerSpace(inverse);
+  }
+
+  return orderedLayers;
+}
+
+static nsTArray<LayerPolygon>
+StripLayerGeometry(const nsTArray<LayerPolygon>& aLayers)
+{
+  nsTArray<LayerPolygon> layers;
+  std::set<Layer*> uniqueLayers;
+
+  for (const LayerPolygon& layerPolygon : aLayers) {
+    auto result = uniqueLayers.insert(layerPolygon.layer);
+
+    if (result.second) {
+      // Layer was added to the set.
+      layers.AppendElement(LayerPolygon(layerPolygon.layer));
+    }
+  }
+
+  return layers;
+}
+
+nsTArray<LayerPolygon>
+ContainerLayer::SortChildrenBy3DZOrder(SortMode aSortMode)
+{
+  AutoTArray<Layer*, 10> toSort;
+  nsTArray<LayerPolygon> drawOrder;
+
+  for (Layer* layer = GetFirstChild(); layer; layer = layer->GetNextSibling()) {
+    ContainerLayer* container = layer->AsContainerLayer();
+
+    if (container && container->Extend3DContext() &&
+        !container->UseIntermediateSurface()) {
+
+      // Collect 3D layers in toSort array.
+      container->Collect3DContextLeaves(toSort);
+
+      // Sort the 3D layers.
+      if (toSort.Length() > 0) {
+        nsTArray<LayerPolygon> sorted = SortLayersWithBSPTree(toSort);
+        drawOrder.AppendElements(Move(sorted));
+
+        toSort.ClearAndRetainStorage();
+      }
+
+      continue;
+    }
+
+    drawOrder.AppendElement(LayerPolygon(layer));
+  }
+
+  if (aSortMode == SortMode::WITHOUT_GEOMETRY) {
+    // Compositor does not support arbitrary layers, strip the layer geometry
+    // and duplicate layers.
+    return StripLayerGeometry(drawOrder);
+  }
+
+  return drawOrder;
+}
+
+bool
+ContainerLayer::AnyAncestorOrThisIs3DContextLeaf()
+{
+  Layer* parent = this;
+  while (parent != nullptr) {
+    if (parent->Is3DContextLeaf()) {
+      return true;
+    }
+
+    parent = parent->GetParent();
+  }
+
+  return false;
 }
 
 void
@@ -1397,7 +1490,8 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
         ((opacity != 1.0f && !Extend3DContext()) ||
          (blendMode != CompositionOp::OP_OVER))) {
       useIntermediateSurface = true;
-    } else if (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren()) {
+    } else if ((!idealTransform.Is2D() || AnyAncestorOrThisIs3DContextLeaf()) &&
+               Creates3DContextWithExtendingChildren()) {
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
@@ -1709,7 +1803,7 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget)
 
 void
 Layer::Dump(std::stringstream& aStream, const char* aPrefix,
-            bool aDumpHtml, bool aSorted)
+            bool aDumpHtml, bool aSorted, const Maybe<gfx::Polygon>& aGeometry)
 {
 #ifdef MOZ_DUMP_PAINTING
   bool dumpCompositorTexture = gfxEnv::DumpCompositorTextures() && AsHostLayer() &&
@@ -1729,7 +1823,7 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
 #endif
     aStream << ">";
   }
-  DumpSelf(aStream, aPrefix);
+  DumpSelf(aStream, aPrefix, aGeometry);
 
 #ifdef MOZ_DUMP_PAINTING
   if (dumpCompositorTexture) {
@@ -1777,12 +1871,13 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
 #endif
 
   if (ContainerLayer* container = AsContainerLayer()) {
-    AutoTArray<Layer*, 12> children;
+    nsTArray<LayerPolygon> children;
     if (aSorted) {
-      container->SortChildrenBy3DZOrder(children);
+      children =
+        container->SortChildrenBy3DZOrder(ContainerLayer::SortMode::WITH_GEOMETRY);
     } else {
       for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
-        children.AppendElement(l);
+        children.AppendElement(LayerPolygon(l));
       }
     }
     nsAutoCString pfx(aPrefix);
@@ -1791,8 +1886,8 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
       aStream << "<ul>";
     }
 
-    for (Layer* child : children) {
-      child->Dump(aStream, pfx.get(), aDumpHtml, aSorted);
+    for (LayerPolygon& child : children) {
+      child.layer->Dump(aStream, pfx.get(), aDumpHtml, aSorted, child.geometry);
     }
 
     if (aDumpHtml) {
@@ -1805,10 +1900,31 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
   }
 }
 
+static void
+DumpGeometry(std::stringstream& aStream, const Maybe<gfx::Polygon>& aGeometry)
+{
+  aStream << " [geometry=[";
+
+  const nsTArray<gfx::Point4D>& points = aGeometry->GetPoints();
+  for (size_t i = 0; i < points.Length(); ++i) {
+    const gfx::IntPoint point = TruncatedToInt(points[i].As2DPoint());
+    const char* sfx = (i != points.Length() - 1) ? "," : "";
+    AppendToString(aStream, point, "", sfx);
+  }
+
+  aStream << "]]";
+}
+
 void
-Layer::DumpSelf(std::stringstream& aStream, const char* aPrefix)
+Layer::DumpSelf(std::stringstream& aStream, const char* aPrefix,
+                const Maybe<gfx::Polygon>& aGeometry)
 {
   PrintInfo(aStream, aPrefix);
+
+  if (aGeometry) {
+    DumpGeometry(aStream, aGeometry);
+  }
+
   aStream << "\n";
 }
 
@@ -2389,7 +2505,7 @@ LayerManager::Dump(std::stringstream& aStream, const char* aPrefix,
   if (aDumpHtml) {
     aStream << "<ul>";
   }
-  GetRoot()->Dump(aStream, pfx.get(), aDumpHtml);
+  GetRoot()->Dump(aStream, pfx.get(), aDumpHtml, aSorted);
   if (aDumpHtml) {
     aStream << "</ul></li></ul>";
   }

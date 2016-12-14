@@ -38,8 +38,6 @@ public:
 
   RefPtr<SeekTaskPromise> Seek(const media::TimeUnit& aDuration) override;
 
-  bool NeedToResetMDSM() const override;
-
   int64_t CalculateNewCurrentTime() const override;
 
   void HandleAudioDecoded(MediaData* aAudio) override;
@@ -54,7 +52,6 @@ public:
 
   void HandleNotWaited(const WaitForDataRejectValue& aRejection) override;
 
-private:
   ~NextFrameSeekTask();
 
   void RequestVideoData();

@@ -19,6 +19,7 @@ child:
     intr Child();
     async __delete__();
 
+/*
 state START:
     send Start goto TEST1;
 
@@ -76,6 +77,8 @@ state CHECK:
 
 state DYING:
     send __delete__;
+*/
+
 };
 
 } // namespace _ipdltest

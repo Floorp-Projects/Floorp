@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"             // for RefPtr, RefCounted, etc
 #include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/gfx/Polygon.h"        // for Polygon
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/gfx/Types.h"          // for SamplingFilter
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -83,7 +84,8 @@ public:
                          const gfx::Matrix4x4& aTransform,
                          const gfx::SamplingFilter aSamplingFilter,
                          const gfx::IntRect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr) = 0;
+                         const nsIntRegion* aVisibleRegion = nullptr,
+                         const Maybe<gfx::Polygon>& aGeometry = Nothing()) = 0;
 
   /**
    * Update the content host.
@@ -291,7 +293,7 @@ private:
  * CompositableMap must be global because the image bridge doesn't have any
  * reference to whatever we have created with PLayerTransaction. So, the only way to
  * actually connect these two worlds is to have something global that they can
- * both query (in the same  thread). The map is not allocated the map on the 
+ * both query (in the same  thread). The map is not allocated the map on the
  * stack to avoid the badness of static initialization.
  *
  * Also, we have a compositor/PLayerTransaction protocol/etc. per layer manager, and the

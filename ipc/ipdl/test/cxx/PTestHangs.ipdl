@@ -14,7 +14,7 @@ child:
     intr Hang();
     async __delete__();
 
-
+/*
 state START:
     send Start goto RACE;
 
@@ -34,6 +34,7 @@ state HANG:   call Hang goto DEATH;
 
 state DEATH:
     send __delete__;
+*/
 };
 
 } // namespace _ipdltest
