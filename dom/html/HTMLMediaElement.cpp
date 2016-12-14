@@ -5474,7 +5474,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
       // 6. Suspend playback.
       // Note: Playback will already be stalled, as the next frame is
       // unavailable.
-    } else if (mDecoder) {
+    } else if (mDecoder && !mDecoder->IsEnded()) {
       nextFrameStatus = mDecoder->NextFrameBufferedStatus();
     }
   }
