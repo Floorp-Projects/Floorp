@@ -248,6 +248,8 @@ var supported_properties = {
     // test_length_percent_calc_transition.
     "stroke-width": [ test_length_transition_svg, test_percent_transition,
                       test_length_clamped_svg, test_percent_clamped ],
+    "-moz-tab-size": [ test_float_zeroToOne_transition,
+                       test_float_aboveOne_transition, test_length_clamped ],
     "text-decoration": [ test_color_shorthand_transition,
                          test_true_currentcolor_shorthand_transition ],
     "text-decoration-color": [ test_color_transition,

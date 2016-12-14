@@ -3611,8 +3611,17 @@ var SessionStoreInternal = {
     // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
+    // We need a new frameloader either if we are reloading into a fresh
+    // process, or we have a browser with a grouped session history (as we don't
+    // support restoring into browsers with grouped session histories directly).
+    let newFrameloader =
+      aReloadInFreshProcess || !!browser.frameLoader.groupedSessionHistory;
     let isRemotenessUpdate =
-      tabbrowser.updateBrowserRemotenessByURL(browser, uri, aReloadInFreshProcess);
+      tabbrowser.updateBrowserRemotenessByURL(browser, uri, {
+        freshProcess: aReloadInFreshProcess,
+        newFrameloader: newFrameloader,
+      });
+
     if (isRemotenessUpdate) {
       // We updated the remoteness, so we need to send the history down again.
       //
