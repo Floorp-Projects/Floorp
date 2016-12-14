@@ -145,15 +145,13 @@ CompositorBridgeChild::Destroy()
     layers->Destroy();
   }
 
-#ifdef MOZ_ENABLE_WEBRENDER
   AutoTArray<PWebRenderBridgeChild*, 16> wRBridges;
   ManagedPWebRenderBridgeChild(wRBridges);
-  for (int i = transactions.Length() - 1; i >= 0; --i) {
+  for (int i = wRBridges.Length() - 1; i >= 0; --i) {
     RefPtr<WebRenderBridgeChild> wRBridge =
       static_cast<WebRenderBridgeChild*>(wRBridges[i]);
     wRBridge->Destroy();
   }
-#endif
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
