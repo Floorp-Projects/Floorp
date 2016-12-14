@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'AudioWorkletGlobalScope.h',
     'Worklet.h',
     'WorkletGlobalScope.h',
 ]
 
 UNIFIED_SOURCES += [
+    'AudioWorkletGlobalScope.cpp',
     'Worklet.cpp',
     'WorkletGlobalScope.cpp',
 ]
