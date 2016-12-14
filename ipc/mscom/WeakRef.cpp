@@ -99,7 +99,7 @@ WeakReferenceSupport::ClearWeakRefs()
 {
   for (uint32_t i = 0, len = mWeakRefs.Length(); i < len; ++i) {
     mWeakRefs[i]->Clear();
-    mWeakRefs[i]->Release();
+    mWeakRefs[i] = nullptr;
   }
   mWeakRefs.Clear();
 }
@@ -120,8 +120,7 @@ WeakReferenceSupport::GetWeakReference(IWeakReference** aOutWeakRef)
     return hr;
   }
 
-  mWeakRefs.AppendElement(weakRef.get());
-  weakRef->AddRef();
+  mWeakRefs.AppendElement(weakRef);
   return S_OK;
 }
 

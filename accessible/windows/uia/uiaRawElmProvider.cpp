@@ -56,8 +56,8 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
     return CO_E_OBJNOTCONNECTED;
 
   *aIdChild = CHILDID_SELF;
-  *aAcc = mAcc;
-  mAcc->AddRef();
+  RefPtr<AccessibleWrap> copy(mAcc);
+  copy.forget(aAcc);
 
   return S_OK;
 
