@@ -9,7 +9,6 @@ import mozinfo
 
 from firefox_puppeteer.base import BaseLib
 from firefox_puppeteer.api.appinfo import AppInfo
-from firefox_puppeteer.api.prefs import Preferences
 
 
 class ActiveUpdate(BaseLib):
@@ -163,14 +162,12 @@ class SoftwareUpdate(BaseLib):
     PREF_APP_DISTRIBUTION_VERSION = 'distribution.version'
     PREF_APP_UPDATE_CHANNEL = 'app.update.channel'
     PREF_APP_UPDATE_URL = 'app.update.url'
-    PREF_APP_UPDATE_URL_OVERRIDE = 'app.update.url.override'
     PREF_DISABLED_ADDONS = 'extensions.disabledAddons'
 
     def __init__(self, marionette):
         BaseLib.__init__(self, marionette)
 
         self.app_info = AppInfo(marionette)
-        self.prefs = Preferences(marionette)
 
         self._mar_channels = MARChannels(marionette)
         self._active_update = ActiveUpdate(marionette)
@@ -217,12 +214,12 @@ class SoftwareUpdate(BaseLib):
 
         :returns: A dictionary of build information
         """
-        update_url = self.get_update_url(True)
+        update_url = self.get_formatted_update_url(True)
 
         return {
             'buildid': self.app_info.appBuildID,
             'channel': self.update_channel,
-            'disabled_addons': self.prefs.get_pref(self.PREF_DISABLED_ADDONS),
+            'disabled_addons': self.marionette.get_pref(self.PREF_DISABLED_ADDONS),
             'locale': self.app_info.locale,
             'mar_channels': self.mar_channels.channels,
             'update_url': update_url,
@@ -317,7 +314,8 @@ class SoftwareUpdate(BaseLib):
     @property
     def update_channel(self):
         """Return the currently used update channel."""
-        return self.prefs.get_pref(self.PREF_APP_UPDATE_CHANNEL, default_branch=True)
+        return self.marionette.get_pref(self.PREF_APP_UPDATE_CHANNEL,
+                                        default_branch=True)
 
     @update_channel.setter
     def update_channel(self, channel):
@@ -326,7 +324,24 @@ class SoftwareUpdate(BaseLib):
         :param channel: New update channel to use
 
         """
-        self.prefs.set_pref(self.PREF_APP_UPDATE_CHANNEL, channel, default_branch=True)
+        self.marionette.set_pref(self.PREF_APP_UPDATE_CHANNEL, channel,
+                                 default_branch=True)
+
+    @property
+    def update_url(self):
+        """Return the update URL used for update checks."""
+        return self.marionette.get_pref(self.PREF_APP_UPDATE_URL,
+                                        default_branch=True)
+
+    @update_url.setter
+    def update_url(self, url):
+        """Set the update URL to be used for update checks.
+
+        :param url: New update URL to use
+
+        """
+        self.marionette.set_pref(self.PREF_APP_UPDATE_URL, url,
+                                 default_branch=True)
 
     @property
     def update_type(self):
@@ -353,22 +368,18 @@ class SoftwareUpdate(BaseLib):
 
         return snippet
 
-    def get_update_url(self, force=False):
-        """Retrieve the AUS update URL the update snippet is retrieved from.
+    def get_formatted_update_url(self, force=False):
+        """Retrieve the formatted AUS update URL the update snippet is retrieved from.
 
         :param force: Boolean flag to force an update check
 
         :returns: The URL of the update snippet
         """
-        url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL_OVERRIDE)
-        if not url:
-            url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL)
-
         # Format the URL by replacing placeholders
         url = self.marionette.execute_script("""
           Components.utils.import("resource://gre/modules/UpdateUtils.jsm")
           return UpdateUtils.formatUpdateURL(arguments[0]);
-        """, script_args=[url])
+        """, script_args=[self.update_url])
 
         if force:
             if '?' in url:
