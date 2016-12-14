@@ -3,19 +3,8 @@
 
 add_task(function* () {
   // Get a bunch of DOM nodes
-  let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-        getInterface(Ci.nsIDOMWindowUtils);
-
   let editMenu = document.getElementById("edit-menu");
-  let menubar = editMenu.parentNode;
   let menuPopup = editMenu.menupopup;
-  let editMenuIndex = -1;
-  for (let i = 0; i < menubar.children.length; i++) {
-    if (menubar.children[i] === editMenu) {
-      editMenuIndex = i;
-      break;
-    }
-  }
 
   let closeMenu = function(aCallback) {
     if (OS.Constants.Sys.Name == "Darwin") {

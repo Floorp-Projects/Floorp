@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1304044
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1304044</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    var eventsFired = [];
+    var target;
+    var eventsExpected;
+
+    function GetNodeString(node) {
+      if (node == window)
+        return "window";
+      if (node == document)
+        return "document";
+      if (node.id)
+        return node.id;
+      if (node.nodeName)
+        return node.nodeName;
+      return node;
+    }
+
+    function TargetAndListener(listener, target) {
+      this.listener = listener;
+      this.target = target;
+    }
+
+    TargetAndListener.prototype.toString = function() {
+      var targetName = GetNodeString(this.target);
+      var listenerName = GetNodeString(this.listener);
+      return "(listener: " + listenerName + ", target: " + targetName + ")";
+    }
+
+    var tests = [
+      TestAuxClickBubblesForEventListener,
+      TestAuxClickBubblesForOnAuxClick,
+    ];
+
+    function CompareEvents(evt, expected) {
+      return evt && expected && evt.listener == expected.listener &&
+          evt.target == expected.target;
+    }
+
+    function ResetEventsFired() {
+      eventsFired = [];
+    }
+
+    function ClearEventListeners() {
+      for (i in arguments) {
+        arguments[i].removeEventListener("auxclick", log_event);
+      }
+    }
+
+    function ClickTarget(tgt) {
+      synthesizeMouseAtCenter(tgt, {type : "mousedown", button: 2}, window);
+      synthesizeMouseAtCenter(tgt, {type : "mouseup", button: 2}, window);
+    }
+
+    function log_event(e) {
+      eventsFired[eventsFired.length] = new TargetAndListener(this, e.target);
+    }
+
+    function CompareEventsToExpected(expected, actual) {
+      for (var i = 0; i < expected.length || i < actual.length; i++) {
+        ok(CompareEvents(actual[i], expected[i]),
+           "Auxclick receiver's don't match: TargetAndListener " +
+           i + ": Expected: " + expected[i] + ", Actual: " + actual[i]);
+      }
+    }
+
+    function TestAuxClickBubblesForEventListener() {
+      target.addEventListener("auxclick", log_event);
+      document.addEventListener("auxclick", log_event);
+      window.addEventListener("auxclick", log_event);
+
+      ClickTarget(target)
+      CompareEventsToExpected(eventsExpected, eventsFired);
+      ResetEventsFired();
+      ClearEventListeners(target, document, window);
+    }
+
+    function TestAuxClickBubblesForOnAuxClick() {
+      target.onauxclick = log_event;
+      document.onauxclick = log_event;
+      window.onauxclick = log_event;
+
+      ClickTarget(target);
+      CompareEventsToExpected(eventsExpected, eventsFired);
+      ResetEventsFired();
+    }
+
+    function RunTests(){
+      for (var i = 0; i < tests.length; i++) {
+        tests[i]();
+      }
+    }
+
+    function Begin() {
+      target = document.getElementById("target");
+      eventsExpected =  [
+        new TargetAndListener(target, target),
+        new TargetAndListener(document, target),
+        new TargetAndListener(window, target),
+      ];
+      RunTests();
+      target.remove();
+      SimpleTest.finish();
+    }
+
+    window.onload = function() {
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.executeSoon(Begin);
+    }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1304044">Mozilla Bug 1304044</a>
+<p id="display">
+  <div id="target">Target</div>
+</p>
+<div id="content" style:"display:none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

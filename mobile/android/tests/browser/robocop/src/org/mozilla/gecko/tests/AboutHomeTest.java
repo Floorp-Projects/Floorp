@@ -84,7 +84,8 @@ abstract class AboutHomeTest extends PixelTest {
     protected void loadBookmark(String url) {
         View bookmark = getDisplayedBookmark(url);
         if (bookmark != null) {
-            Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+            Actions.EventExpecter contentEventExpecter =
+                    mActions.expectGlobalEvent(Actions.EventType.GECKO, "Content:DOMContentLoaded");
             mSolo.clickOnView(bookmark);
             contentEventExpecter.blockForEvent();
             contentEventExpecter.unregisterListener();

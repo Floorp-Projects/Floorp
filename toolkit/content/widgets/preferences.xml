@@ -1068,8 +1068,6 @@
                     .getService(Components.interfaces.nsIScriptSecurityManager);
         if (this.type == "child" && window.opener &&
             secMan.isSystemPrincipal(window.opener.document.nodePrincipal)) {
-          let psvc = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefBranch);
           var pdocEl = window.opener.document.documentElement;
           if (pdocEl.instantApply) {
             let panes = this.preferencePanes;

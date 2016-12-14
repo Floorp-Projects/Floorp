@@ -299,6 +299,7 @@ ul.children + .tag-line::before {
 
 .theme-firebug .theme-fg-color3 {
   color: var(--theme-graphs-full-blue);
+  font-weight: normal;
 }
 
 .theme-firebug .open,
@@ -335,10 +336,19 @@ ul.children + .tag-line::before {
   color: var(--theme-selection-color);
 }
 
+/* Applicable to the DOCTYPE */
+.doctype {
+  font-style: italic;
+}
+
+.theme-firebug .doctype {
+  color: #787878;
+}
+
 /* In case a node isn't displayed in the page, we fade the syntax highlighting */
 .not-displayed .open,
 .not-displayed .close {
-  opacity: .7;
+  opacity: .5;
 }
 
 /* Events */

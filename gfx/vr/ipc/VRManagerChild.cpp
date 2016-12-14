@@ -47,7 +47,6 @@ VRManagerChild::VRManagerChild()
   , mFrameRequestCallbackCounter(0)
   , mBackend(layers::LayersBackend::LAYERS_NONE)
 {
-  MOZ_COUNT_CTOR(VRManagerChild);
   MOZ_ASSERT(NS_IsMainThread());
 
   mStartTimeStamp = TimeStamp::Now();
@@ -56,7 +55,6 @@ VRManagerChild::VRManagerChild()
 VRManagerChild::~VRManagerChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_COUNT_DTOR(VRManagerChild);
 }
 
 /*static*/ void
