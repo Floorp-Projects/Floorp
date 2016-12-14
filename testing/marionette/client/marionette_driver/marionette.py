@@ -69,8 +69,14 @@ class HTMLElement(object):
         """Returns the requested property, or None if the property is
         not set.
         """
-        body = {"id": self.id, "name": name}
-        return self.marionette._send_message("getElementProperty", body, key="value")
+        try:
+            body = {"id": self.id, "name": name}
+            return self.marionette._send_message("getElementProperty", body, key="value")
+        except errors.UnknownCommandException:
+            # Keep backward compatibility for code which uses get_attribute() to
+            # also retrieve element properties.
+            # Remove when Firefox 55 is stable.
+            return self.get_attribute(name)
 
     def click(self):
         self.marionette._send_message("clickElement", {"id": self.id})
