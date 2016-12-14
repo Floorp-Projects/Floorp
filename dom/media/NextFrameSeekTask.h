@@ -64,8 +64,6 @@ public:
 
   bool IsVideoSeekComplete() const;
 
-  void MaybeFinishSeek();
-
   // Update the seek target's time before resolving this seek task, the updated
   // time will be used in the MDSM::SeekCompleted() to update the MDSM's position.
   void UpdateSeekTargetTime();
