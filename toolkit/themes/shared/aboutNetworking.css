@@ -15,7 +15,7 @@ body {
 }
 
 #sectionTitle {
-  float: left;
+  float: inline-start;
 }
 
 #refreshDiv {
@@ -84,6 +84,11 @@ body {
   height: 1.6em;
   background: url("chrome://global/skin/icons/warning.svg") no-repeat left center;
   background-size: 1.6em;
+}
+
+.title:dir(rtl)::before {
+  left: auto;
+  right: -2.3em;
 }
 
 .warningBackground button {
