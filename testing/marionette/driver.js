@@ -1830,7 +1830,8 @@ GeckoDriver.prototype.getElementAttribute = function*(cmd, resp) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
-      resp.body.value = atom.getElementAttribute(el, name, this.getCurrentWindow());
+
+      resp.body.value = el.getAttribute(name);
       break;
 
     case Context.CONTENT:
