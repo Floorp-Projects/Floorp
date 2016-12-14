@@ -13,6 +13,9 @@ class nsITimeoutHandler;
 class nsGlobalWindow;
 
 namespace mozilla {
+
+class ThrottledEventQueue;
+
 namespace dom {
 
 // This class manages the timeouts in a Window's setTimeout/setInterval pool.
@@ -44,9 +47,6 @@ public:
                          bool aRunningPendingTimeouts);
 
   void ClearAllTimeouts();
-  // Insert aTimeout into the list, before all timeouts that would
-  // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
-  void InsertTimeoutIntoList(mozilla::dom::Timeout* aTimeout);
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
   // Apply back pressure to the window if the TabGroup ThrottledEventQueue
@@ -108,6 +108,19 @@ private:
       : mTimeoutInsertionPoint(nullptr)
     {
     }
+
+    // Insert aTimeout into the list, before all timeouts that would
+    // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
+    enum class SortBy
+    {
+      TimeRemaining,
+      TimeWhen
+    };
+    void Insert(mozilla::dom::Timeout* aTimeout, SortBy aSortBy);
+    nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
+                                             int32_t aMinTimeoutValueMS,
+                                             SortBy aSortBy,
+                                             mozilla::ThrottledEventQueue* aQueue);
 
     const Timeout* GetFirst() const { return mTimeoutList.getFirst(); }
     Timeout* GetFirst() { return mTimeoutList.getFirst(); }
