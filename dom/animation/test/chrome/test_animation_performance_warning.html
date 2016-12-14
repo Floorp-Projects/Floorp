@@ -29,6 +29,8 @@
 // This is used for obtaining localized strings.
 var gStringBundle;
 
+W3CTest.runner.requestLongerTimeout(2);
+
 SpecialPowers.pushPrefEnv({ "set": [
                             ["general.useragent.locale", "en-US"],
                             // Need to set devPixelsPerPx explicitly to gain
