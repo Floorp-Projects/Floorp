@@ -241,8 +241,8 @@ protected:
            (Reader()->IsWaitForDataSupported() &&
             (Reader()->IsWaitingAudioData() || Reader()->IsWaitingVideoData()));
   }
-  MediaQueue<MediaData>& AudioQueue() { return mMaster->mAudioQueue; }
-  MediaQueue<MediaData>& VideoQueue() { return mMaster->mVideoQueue; }
+  MediaQueue<MediaData>& AudioQueue() const { return mMaster->mAudioQueue; }
+  MediaQueue<MediaData>& VideoQueue() const { return mMaster->mVideoQueue; }
 
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
@@ -1381,7 +1381,7 @@ private:
   void DoSeek() override
   {
     auto currentTime = mTask->mCurrentTime;
-    DiscardFrames(mTask->mVideoQueue, [currentTime] (int64_t aSampleTime) {
+    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
       return aSampleTime <= currentTime;
     });
 
@@ -1596,9 +1596,9 @@ private:
   bool NeedMoreVideo() const
   {
     // Need to request video when we have none and video queue is not finished.
-    return mTask->mVideoQueue.GetSize() == 0 &&
+    return VideoQueue().GetSize() == 0 &&
            !mTask->mSeekedVideoData &&
-           !mTask->mVideoQueue.IsFinished() &&
+           !VideoQueue().IsFinished() &&
            !mTask->mIsVideoQueueFinished;
   }
 
@@ -1625,12 +1625,12 @@ private:
   // time will be used in the MDSM::SeekCompleted() to update the MDSM's position.
   void UpdateSeekTargetTime()
   {
-    RefPtr<MediaData> data = mTask->mVideoQueue.PeekFront();
+    RefPtr<MediaData> data = VideoQueue().PeekFront();
     if (data) {
       mTask->mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
     } else if (mTask->mSeekedVideoData) {
       mTask->mTarget.SetTime(TimeUnit::FromMicroseconds(mTask->mSeekedVideoData->mTime));
-    } else if (mTask->mIsVideoQueueFinished || mTask->mVideoQueue.AtEndOfStream()) {
+    } else if (mTask->mIsVideoQueueFinished || VideoQueue().AtEndOfStream()) {
       mTask->mTarget.SetTime(mTask->mDuration);
     } else {
       MOZ_ASSERT(false, "No data!");
@@ -1643,7 +1643,7 @@ private:
       UpdateSeekTargetTime();
 
       auto time = mTask->mTarget.GetTime().ToMicroseconds();
-      DiscardFrames(mTask->mAudioQueue, [time] (int64_t aSampleTime) {
+      DiscardFrames(AudioQueue(), [time] (int64_t aSampleTime) {
         return aSampleTime < time;
       });
 
