@@ -11,7 +11,6 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
 interface HTMLBodyElement : HTMLElement {
 };
 

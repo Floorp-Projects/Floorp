@@ -13,7 +13,6 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-param-element
-[HTMLConstructor]
 interface HTMLParamElement : HTMLElement {
            [SetterThrows, Pure]
            attribute DOMString name;

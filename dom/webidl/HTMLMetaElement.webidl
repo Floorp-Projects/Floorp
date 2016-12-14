@@ -12,7 +12,6 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-meta-element
-[HTMLConstructor]
 interface HTMLMetaElement : HTMLElement {
   [SetterThrows, Pure]
            attribute DOMString name;

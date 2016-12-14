@@ -11,7 +11,6 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor]
 interface HTMLSourceElement : HTMLElement {
            [SetterThrows]
            attribute DOMString src;

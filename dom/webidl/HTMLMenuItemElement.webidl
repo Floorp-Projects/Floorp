@@ -12,7 +12,6 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-menuitem-element
-[HTMLConstructor]
 interface HTMLMenuItemElement : HTMLElement {
            [SetterThrows]
            attribute DOMString type;

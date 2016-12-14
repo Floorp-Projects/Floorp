@@ -13,7 +13,6 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-html-element
-[HTMLConstructor]
 interface HTMLHtmlElement : HTMLElement {};
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
