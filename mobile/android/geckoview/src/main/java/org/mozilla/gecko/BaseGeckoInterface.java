@@ -44,7 +44,8 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
 
     @Override
     public Activity getActivity() {
-        return (Activity)mContext;
+        // By default, GeckoView consumers do not have a distinguished current foreground Activity.
+        return null;
     }
 
     @Override

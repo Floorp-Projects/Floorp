@@ -836,8 +836,7 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void moveTaskToBack() {
-        if (getGeckoInterface() != null)
-            getGeckoInterface().getActivity().moveTaskToBack(true);
+        // This is a vestige, to be removed as full-screen support for GeckoView is implemented.
     }
 
     @WrapForJNI(calledFrom = "gecko")
