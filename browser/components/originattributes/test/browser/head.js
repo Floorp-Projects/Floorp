@@ -275,8 +275,11 @@ this.IsolationTestTools = {
    * @param aBeforeFunc
    *    An optional function which is called before any tabs are created so
    *    that the test case can set up/reset local state.
+   * @param aGetResultImmediately
+   *    An optional boolean to ensure we get results before the next tab is opened.
    */
-  runTests(aURL, aGetResultFuncs, aCompareResultFunc, aBeforeFunc) {
+  runTests(aURL, aGetResultFuncs, aCompareResultFunc, aBeforeFunc,
+           aGetResultImmediately, aUseHttps) {
     let pageURL;
     let firstFrameSetting;
     let secondFrameSetting;
@@ -298,7 +301,10 @@ this.IsolationTestTools = {
       aGetResultFuncs = [aGetResultFuncs];
     }
 
-    let tabSettings = [
+    let tabSettings = aUseHttps ? [
+                        { firstPartyDomain: "https://example.com", userContextId: 1},
+                        { firstPartyDomain: "https://example.org", userContextId: 2}
+                      ] : [
                         { firstPartyDomain: "http://example.com", userContextId: 1},
                         { firstPartyDomain: "http://example.org", userContextId: 2}
                       ];
@@ -317,14 +323,21 @@ this.IsolationTestTools = {
                                                         pageURL,
                                                         tabSettings[tabSettingA],
                                                         firstFrameSetting);
+        let resultsA = [];
+        if (aGetResultImmediately) {
+          for (let getResultFunc of aGetResultFuncs) {
+            resultsA.push(yield getResultFunc(tabInfoA.browser));
+          }
+        }
         let tabInfoB = yield IsolationTestTools._addTab(aMode,
                                                         pageURL,
                                                         tabSettings[tabSettingB],
                                                         secondFrameSetting);
-
+        let i = 0;
         for (let getResultFunc of aGetResultFuncs) {
           // Fetch results from tabs.
-          let resultA = yield getResultFunc(tabInfoA.browser);
+          let resultA = aGetResultImmediately ? resultsA[i++] :
+                        yield getResultFunc(tabInfoA.browser);
           let resultB = yield getResultFunc(tabInfoB.browser);
 
           // Compare results.

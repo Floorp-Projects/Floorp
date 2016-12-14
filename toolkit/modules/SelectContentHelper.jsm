@@ -207,8 +207,6 @@ function getComputedStyles(element) {
 function buildOptionListForChildren(node) {
   let result = [];
 
-  let win = node.ownerDocument.defaultView;
-
   for (let child of node.children) {
     let tagName = child.tagName.toUpperCase();
 

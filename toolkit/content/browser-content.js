@@ -438,7 +438,6 @@ var Printing = {
   },
 
   receiveMessage(message) {
-    let objects = message.objects;
     let data = message.data;
     switch (message.name) {
       case "Printing:Preview:Enter": {
@@ -664,7 +663,6 @@ var Printing = {
 
   print(contentWindow, simplifiedMode) {
     let printSettings = this.getPrintSettings();
-    let rv = Cr.NS_OK;
 
     // If we happen to be on simplified mode, we need to set docURL in order
     // to generate header/footer content correctly, since simplified tab has

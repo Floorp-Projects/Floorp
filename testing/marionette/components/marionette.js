@@ -58,7 +58,7 @@ MarionetteComponent.prototype = {
   server: null,
 };
 
-MarionetteComponent.prototype.setupLogger_ = function(level) {
+MarionetteComponent.prototype.setupLogger_ = function (level) {
   let log = Log.repository.getLogger("Marionette");
   log.level = level;
   log.addAppender(new Log.DumpAppender());
@@ -98,13 +98,13 @@ MarionetteComponent.prototype.onSocketAccepted = function(
   this.logger.info("onSocketAccepted for Marionette dummy socket");
 };
 
-MarionetteComponent.prototype.onStopListening = function(socket, status) {
+MarionetteComponent.prototype.onStopListening = function (socket, status) {
   this.logger.info(`onStopListening for Marionette dummy socket, code ${status}`);
   socket.close();
 };
 
 /** Check cmdLine argument for {@code --marionette}. */
-MarionetteComponent.prototype.handle = function(cmdLine) {
+MarionetteComponent.prototype.handle = function (cmdLine) {
   // if the CLI is there then lets do work otherwise nothing to see
   if (cmdLine.handleFlag("marionette", false)) {
     this.enabled = true;
@@ -113,7 +113,7 @@ MarionetteComponent.prototype.handle = function(cmdLine) {
   }
 };
 
-MarionetteComponent.prototype.observe = function(subj, topic, data) {
+MarionetteComponent.prototype.observe = function (subj, topic, data) {
   switch (topic) {
     case "profile-after-change":
       this.maybeReadPrefsFromEnvironment();
@@ -172,7 +172,7 @@ MarionetteComponent.prototype.maybeReadPrefsFromEnvironment = function() {
   }
 }
 
-MarionetteComponent.prototype.suppressSafeModeDialog_ = function(win) {
+MarionetteComponent.prototype.suppressSafeModeDialog_ = function (win) {
   // Wait for the modal dialog to finish loading.
   win.addEventListener("load", function onload() {
     win.removeEventListener("load", onload);
