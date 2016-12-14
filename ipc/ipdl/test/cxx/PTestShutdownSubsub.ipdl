@@ -9,8 +9,10 @@ sync protocol PTestShutdownSubsub {
 parent:
     sync __delete__();
 
+/*
 state LIVE:
     recv __delete__;
+*/
 };
 
 } // namespace _ipdltest

@@ -47,7 +47,9 @@ public:
 
   virtual void Destroy() override { mDestroyed = true; }
 
-  virtual void RenderLayer(const gfx::IntRect& aClipRect) override;
+  virtual void RenderLayer(const gfx::IntRect& aClipRect,
+                           const Maybe<gfx::Polygon>& aGeometry) override;
+
   virtual void CleanupResources() override {};
 
   virtual void GenEffectChain(EffectChain& aEffect) override;

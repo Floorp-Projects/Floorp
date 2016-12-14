@@ -2,33 +2,65 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Derived from Stagefright's ABitReader.
+
 #include "mp4_demuxer/BitReader.h"
-#include <media/stagefright/foundation/ABitReader.h>
 
 using namespace mozilla;
-using namespace stagefright;
 
 namespace mp4_demuxer
 {
 
 BitReader::BitReader(const mozilla::MediaByteBuffer* aBuffer)
-  : mBitReader(new ABitReader(aBuffer->Elements(), aBuffer->Length()))
-  , mSize(aBuffer->Length()) {}
+  : BitReader(aBuffer->Elements(), aBuffer->Length() * 8)
+{
+}
 
-BitReader::BitReader(const uint8_t* aBuffer, size_t aLength)
-  : mBitReader(new ABitReader(aBuffer, aLength))
-  , mSize(aLength) {}
+BitReader::BitReader(const mozilla::MediaByteBuffer* aBuffer, size_t aBits)
+  : BitReader(aBuffer->Elements(), aBits)
+{
+}
 
-BitReader::~BitReader() {}
+BitReader::BitReader(const uint8_t* aBuffer, size_t aBits)
+  : mData(aBuffer)
+  , mOriginalBitSize(aBits)
+  , mTotalBitsLeft(aBits)
+  , mSize((aBits + 7) / 8)
+  , mReservoir(0)
+  , mNumBitsLeft(0)
+{
+}
+
+BitReader::~BitReader() { }
 
 uint32_t
 BitReader::ReadBits(size_t aNum)
 {
   MOZ_ASSERT(aNum <= 32);
-  if (mBitReader->numBitsLeft() < aNum) {
+  if (mTotalBitsLeft < aNum) {
+    NS_ASSERTION(false, "Reading past end of buffer");
     return 0;
   }
-  return mBitReader->getBits(aNum);
+  uint32_t result = 0;
+  while (aNum > 0) {
+    if (mNumBitsLeft == 0) {
+      FillReservoir();
+    }
+
+    size_t m = aNum;
+    if (m > mNumBitsLeft) {
+      m = mNumBitsLeft;
+    }
+
+    result = (result << m) | (mReservoir >> (32 - m));
+    mReservoir <<= m;
+    mNumBitsLeft -= m;
+    mTotalBitsLeft -= m;
+
+    aNum -= m;
+  }
+
+  return result;
 }
 
 // Read unsigned integer Exp-Golomb-coded.
@@ -98,13 +130,33 @@ BitReader::ReadUTF8()
 size_t
 BitReader::BitCount() const
 {
-  return mSize * 8 - mBitReader->numBitsLeft();
+  return mOriginalBitSize - mTotalBitsLeft;
 }
 
 size_t
 BitReader::BitsLeft() const
 {
-  return mBitReader->numBitsLeft();
+  return mTotalBitsLeft;
+}
+
+void
+BitReader::FillReservoir()
+{
+  if (mSize == 0) {
+    NS_ASSERTION(false, "Attempting to fill reservoir from past end of data");
+    return;
+  }
+
+  mReservoir = 0;
+  size_t i;
+  for (i = 0; mSize > 0 && i < 4; i++) {
+    mReservoir = (mReservoir << 8) | *mData;
+    mData++;
+    mSize--;
+  }
+
+  mNumBitsLeft = 8 * i;
+  mReservoir <<= 32 - mNumBitsLeft;
 }
 
 } // namespace mp4_demuxer

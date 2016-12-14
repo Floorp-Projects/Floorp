@@ -358,6 +358,7 @@ audio > xul|videocontrols {
 %ifdef XP_MACOSX
 .positionDurationBox {
   font-size-adjust: unset;
+  font-family: "Helvetica Neue", "Helvetica", sans-serif;
 }
 %endif
 
