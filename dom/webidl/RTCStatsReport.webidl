@@ -163,6 +163,8 @@ dictionary RTCStatsReportInternal {
   DOMString                           localSdp;
   DOMString                           remoteSdp;
   DOMHighResTimeStamp                 timestamp;
+  unsigned long                       iceRestarts;
+  unsigned long                       iceRollbacks;
   boolean                             closed; // Is the PC now closed
 };
 
