@@ -226,7 +226,8 @@ config = {
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]},
         "reftest-stylo": {
             "options": ["--suite=reftest",
-                        "--disable-e10s"],
+                        "--disable-e10s",
+                        "--setpref=reftest.compareStyloToGecko=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest-stylo.list"],
         },
     },
