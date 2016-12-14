@@ -811,7 +811,8 @@ waitForAllPaints(function() {
 
   // Tests that additive animations don't throttle at all.
   add_task(function* no_throttling_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') ||
+        !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
       return;
     }
 
@@ -831,7 +832,8 @@ waitForAllPaints(function() {
 
   // Counter part of the above test.
   add_task(function* no_restyling_discrete_animations_out_of_view_element() {
-    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling') ||
+        !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
       return;
     }
 
