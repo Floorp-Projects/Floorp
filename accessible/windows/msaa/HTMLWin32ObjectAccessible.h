@@ -8,6 +8,10 @@
 
 #include "BaseAccessibles.h"
 
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/mscom/Ptr.h"
+#endif
+
 struct IAccessible;
 
 namespace mozilla {
@@ -55,6 +59,9 @@ public:
 
 protected:
   void* mHwnd;
+#if defined(MOZ_CONTENT_SANDBOX)
+  mscom::ProxyUniquePtr<IAccessible> mCOMProxy;
+#endif
 };
 
 } // namespace a11y
