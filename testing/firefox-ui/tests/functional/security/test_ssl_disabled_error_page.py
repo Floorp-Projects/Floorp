@@ -42,7 +42,7 @@ class TestSSLDisabledErrorPage(PuppeteerMixin, MarionetteTestCase):
 
             # Verify "Secure Connection Failed" error page title
             title = self.marionette.find_element(By.CLASS_NAME, 'title-text')
-            nss_failure2title = self.browser.get_entity('nssFailure2.title')
+            nss_failure2title = self.browser.localize_entity('nssFailure2.title')
             self.assertEquals(title.get_property('textContent'), nss_failure2title)
 
             # Verify the error message is correct
