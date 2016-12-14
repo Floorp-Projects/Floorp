@@ -45,6 +45,7 @@ typedef _FcPattern FcPattern;
 struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
+struct IDWriteFactory;
 struct IDWriteRenderingParams;
 struct IDWriteFontFace;
 
@@ -1501,8 +1502,10 @@ public:
    * Returns true on success, or false on failure and leaves the D2D1/Direct3D11 devices unset.
    */
   static bool SetDirect3D11Device(ID3D11Device *aDevice);
+  static bool SetDWriteFactory(IDWriteFactory *aFactory);
   static ID3D11Device *GetDirect3D11Device();
   static ID2D1Device *GetD2D1Device();
+  static IDWriteFactory *GetDWriteFactory();
   static bool SupportsD2D1();
 
   static already_AddRefed<GlyphRenderingOptions>
@@ -1522,6 +1525,7 @@ public:
 private:
   static ID2D1Device *mD2D1Device;
   static ID3D11Device *mD3D11Device;
+  static IDWriteFactory *mDWriteFactory;
 #endif
 
   static DrawEventRecorder *mRecorder;
