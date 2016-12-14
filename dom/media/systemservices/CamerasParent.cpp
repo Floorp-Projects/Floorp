@@ -13,6 +13,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/Preferences.h"
 #include "nsIPermissionManager.h"
 #include "nsThreadUtils.h"
@@ -1013,8 +1014,9 @@ CamerasParent::RecvAllDone()
   LOG((__PRETTY_FUNCTION__));
   // Don't try to send anything to the child now
   mChildIsAlive = false;
+  IProtocol* mgr = Manager();
   if (!Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }

@@ -13,6 +13,7 @@
 #include "mozilla/dom/PBackgroundFileHandleParent.h"
 #include "mozilla/dom/PBackgroundFileRequestParent.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
+#include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -1518,8 +1519,9 @@ BackgroundMutableFileParentBase::RecvDeleteMe()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundMutableFileParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
@@ -1843,8 +1845,9 @@ FileHandle::RecvDeleteMe()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
+  IProtocol* mgr = Manager();
   if (!PBackgroundFileHandleParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }
