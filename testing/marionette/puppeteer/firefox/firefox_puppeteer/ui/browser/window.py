@@ -161,7 +161,7 @@ class BrowserWindow(BaseWindow):
             elif trigger == 'menu':
                 self.menubar.select_by_id('file-menu', 'menu_closeWindow')
             elif trigger == 'shortcut':
-                win.send_shortcut(win.get_entity('closeCmd.key'),
+                win.send_shortcut(win.localize_entity('closeCmd.key'),
                                   accel=True, shift=True)
             else:
                 raise ValueError('Unknown closing method: "%s"' % trigger)
@@ -200,7 +200,7 @@ class BrowserWindow(BaseWindow):
                 self.menubar.select_by_id('file-menu', menu_id)
             elif trigger == 'shortcut':
                 cmd_key = 'privateBrowsingCmd.commandkey' if is_private else 'newNavigatorCmd.key'
-                win.send_shortcut(win.get_entity(cmd_key),
+                win.send_shortcut(win.localize_entity(cmd_key),
                                   accel=True, shift=is_private)
             else:
                 raise ValueError('Unknown opening method: "%s"' % trigger)
@@ -245,7 +245,7 @@ class BrowserWindow(BaseWindow):
             elif trigger == 'shortcut':
                 if win.marionette.session_capabilities['platformName'] == 'windows_nt':
                     raise ValueError('Page info shortcut not available on Windows.')
-                win.send_shortcut(win.get_entity('pageInfoCmd.commandkey'),
+                win.send_shortcut(win.localize_entity('pageInfoCmd.commandkey'),
                                   accel=True)
             elif trigger == 'context_menu':
                 # TODO: Add once we can do right clicks
