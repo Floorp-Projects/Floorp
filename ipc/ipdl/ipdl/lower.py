@@ -1673,11 +1673,11 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             'Transition',
             params=[ Decl(Type('MessageType'), msgtypevar.name),
                      Decl(Type('State', ptr=1), nextvar.name) ],
-            ret=Type.BOOL))
+            ret=Type.VOID))
 
         fromswitch = StmtSwitch(fromvar)
 
-        # special cases for Null and Error
+        # special case for Null
         nullerrorblock = Block()
         if ptype.hasDelete:
             ifdelete = StmtIf(ExprBinary(_deleteId(), '==', msgtypevar))
@@ -1688,15 +1688,14 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             ifdelete.addifstmt(
                 StmtExpr(ExprAssn(ExprDeref(nextvar), nextState)))
             nullerrorblock.addstmt(ifdelete)
-        nullerrorblock.addstmt(
-            StmtReturn(ExprLiteral.TRUE))
+        nullerrorblock.addstmt(StmtBreak())
         fromswitch.addcase(CaseLabel(_nullState().name), nullerrorblock)
 
         # special case for Dead
         deadblock = Block()
         deadblock.addstmts([
             _logicError('__delete__()d actor'),
-            StmtReturn(ExprLiteral.FALSE) ])
+            StmtBreak() ])
         fromswitch.addcase(CaseLabel(_deadState().name), deadblock)
 
         # special case for Dying
@@ -1706,14 +1705,13 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             ifdelete.addifstmt(
                 StmtExpr(ExprAssn(ExprDeref(nextvar), _deadState())))
             dyingblock.addstmt(ifdelete)
-            dyingblock.addstmt(
-                StmtReturn(ExprLiteral.TRUE))
+            dyingblock.addstmt(StmtBreak())
             fromswitch.addcase(CaseLabel(_dyingState().name), dyingblock)
 
         unreachedblock = Block()
         unreachedblock.addstmts([
             _logicError('corrupted actor state'),
-            StmtReturn(ExprLiteral.FALSE) ])
+            StmtBreak() ])
         fromswitch.addcase(DefaultLabel(), unreachedblock)
 
         transitionfunc.addstmt(StmtDecl(Decl(Type('State'), fromvar.name),
@@ -4564,13 +4562,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:                  stateexpr = self.protocol.stateVar()
 
         msgid = md.pqMsgId() if not reply else md.pqReplyId()
-        ifbad = StmtIf(ExprNot(
-            ExprCall(
-                ExprVar(self.protocol.name +'::Transition'),
-                args=[ ExprVar(msgid),
-                       ExprAddrOf(stateexpr) ])))
-        ifbad.addifstmts(_badTransition())
-        return [ ifbad ]
+        return [ StmtExpr(ExprCall(ExprVar(self.protocol.name +'::Transition'),
+                                   args=[ ExprVar(msgid),
+                                   ExprAddrOf(stateexpr) ])) ]
 
     def checkedRead(self, ipdltype, expr, msgexpr, iterexpr, errfn, paramtype, sentinelKey, sentinel=True):
         ifbad = StmtIf(ExprNot(self.read(ipdltype, expr, msgexpr, iterexpr)))
