@@ -3876,8 +3876,8 @@ Tab.prototype = {
           NetErrorHelper.attachToBrowser(this.browser);
         }
 
-        Messaging.sendRequest({
-          type: "DOMContentLoaded",
+        GlobalEventDispatcher.sendRequest({
+          type: "Content:DOMContentLoaded",
           tabID: this.id,
           bgColor: backgroundColor,
           errorType: errorType,
@@ -3898,7 +3898,9 @@ Tab.prototype = {
         }
 
         if (AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
-          WebsiteMetadata.parseAsynchronously(this.browser.contentDocument);
+          if (!docURI.startsWith("about:")) {
+            WebsiteMetadata.parseAsynchronously(this.browser.contentDocument);
+          }
         }
 
         break;

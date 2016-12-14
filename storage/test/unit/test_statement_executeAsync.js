@@ -828,7 +828,7 @@ function test_not_right_owning_statement()
   );
 
   let array1 = stmt1.newBindingParamsArray();
-  let array2 = stmt2.newBindingParamsArray();
+  stmt2.newBindingParamsArray();
   let bp = array1.newBindingParams();
   bp.bindByName("int", INTEGER);
   array1.addParams(bp);

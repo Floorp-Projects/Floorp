@@ -909,7 +909,7 @@ var Links = {
     }
 
     let numProvidersRemaining = this._providers.size;
-    for (let [provider, links] of this._providers) {
+    for (let [provider /* , links */] of this._providers) {
       this._populateProviderCache(provider, () => {
         if (--numProvidersRemaining == 0)
           executeCallbacks();
@@ -1022,7 +1022,7 @@ var Links = {
     * @param increment A boolean for whether to increment or decrement siteMap
     */
   _adjustSiteMapAndNotify: function(aLink, increment = true) {
-    for (let [provider, cache] of this._providers) {
+    for (let [/* provider */, cache] of this._providers) {
       // We only update siteMap if aLink is already stored in linkMap.
       if (cache.linkMap.get(aLink.url)) {
         if (increment) {

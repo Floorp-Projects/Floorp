@@ -28,12 +28,10 @@ ArchiveZipItem::ArchiveZipItem(const char* aFilename,
   mCentralStruct(aCentralStruct),
   mEncoding(aEncoding)
 {
-  MOZ_COUNT_CTOR(ArchiveZipItem);
 }
 
 ArchiveZipItem::~ArchiveZipItem()
 {
-  MOZ_COUNT_DTOR(ArchiveZipItem);
 }
 
 nsresult

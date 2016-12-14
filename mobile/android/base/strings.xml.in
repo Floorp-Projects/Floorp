@@ -131,6 +131,7 @@
   <string name="media_pause">&media_pause;</string>
   <string name="media_stop">&media_stop;</string>
 
+  <string name="overlay_share_open_browser_btn_label">&overlay_share_open_browser_btn_label;</string>
   <string name="overlay_share_send_other">&overlay_share_send_other;</string>
   <string name="overlay_share_label">&overlay_share_label;</string>
   <string name="overlay_share_bookmark_btn_label">&overlay_share_bookmark_btn_label;</string>

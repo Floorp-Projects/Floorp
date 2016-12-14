@@ -1075,15 +1075,12 @@ CamerasParent::CamerasParent()
       return NS_OK;
     });
   NS_DispatchToMainThread(threadStart);
-
-  MOZ_COUNT_CTOR(CamerasParent);
 }
 
 CamerasParent::~CamerasParent()
 {
   LOG(("~CamerasParent: %p", this));
 
-  MOZ_COUNT_DTOR(CamerasParent);
 #ifdef DEBUG
   // Verify we have shut down the webrtc engines, this is
   // supposed to happen in ActorDestroy.

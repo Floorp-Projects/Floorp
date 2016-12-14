@@ -12,7 +12,6 @@ add_task(function * ()
   var expectedKeyEvents;
   var dispatchedKeyEvents;
   var key;
-  var root;
 
   /**
    * Encapsulates EventUtils.sendChar().

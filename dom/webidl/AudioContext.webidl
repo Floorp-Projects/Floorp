@@ -11,7 +11,7 @@
  */
 
 callback DecodeSuccessCallback = void (AudioBuffer decodedData);
-callback DecodeErrorCallback = void ();
+callback DecodeErrorCallback = void (DOMException error);
 
 enum AudioContextState {
     "suspended",

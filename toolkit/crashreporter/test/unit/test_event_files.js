@@ -30,7 +30,7 @@ add_task(function* test_main_process_crash() {
       let scope = {};
       Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
       scope.TelemetryController.testSetup();
-      crashType = CrashTestUtils.CRASH_RUNTIMEABORT;
+      crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
     },
     (minidump, extra) => {

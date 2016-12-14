@@ -254,7 +254,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties['ArrayBuffer'] =
     ["constructor", "byteLength", "slice", Symbol.toStringTag];
   gConstructorProperties['ArrayBuffer'] =
-    constructorProps(["isView", "slice", Symbol.species]);
+    constructorProps(["isView", Symbol.species]);
 
   if (!isReleaseOrBeta) {
     gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "slice", "byteLength", Symbol.toStringTag];
@@ -927,11 +927,6 @@ for (var prop of props) {
       is(t.slice(4).byteLength, 8, `${c} byteLength is correct after slicing`);
       is(Cu.getGlobalForObject(t.slice(4)), iwin, "Slice results lives in the target compartment");
       is(Object.getPrototypeOf(t.slice(4)), iwin[c].prototype, "Slice results proto lives in target compartment")
-
-      // SharedArrayBuffer does not have static slice method
-      if (c === 'ArrayBuffer') {
-        is(ArrayBuffer.slice(t, 4).byteLength, 8, `${c}.slice (deprecated) works`);
-      }
 
       var i32Array = new Int32Array(t);
       // i32Array is going to be created in the buffer's target compartment,

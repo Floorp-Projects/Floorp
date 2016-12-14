@@ -453,7 +453,7 @@ this.FinderIterator = {
 
     this._notifyListeners("start", this.params);
 
-    let { linksOnly, window, word } = this._currentParams;
+    let { linksOnly, window } = this._currentParams;
     // First we collect all frames we need to search through, whilst making sure
     // that the parent window gets dibs.
     let frames = [window].concat(this._collectFrames(window, finder));

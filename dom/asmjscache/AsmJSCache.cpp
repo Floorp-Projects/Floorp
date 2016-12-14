@@ -360,7 +360,6 @@ public:
   {
     MOZ_ASSERT(XRE_IsParentProcess());
     AssertIsOnOwningThread();
-    MOZ_COUNT_CTOR(ParentRunnable);
   }
 
 private:
@@ -369,7 +368,6 @@ private:
     MOZ_ASSERT(mState == eFinished);
     MOZ_ASSERT(!mDirectoryLock);
     MOZ_ASSERT(mActorDestroyed);
-    MOZ_COUNT_DTOR(ParentRunnable);
   }
 
   bool
@@ -1233,7 +1231,6 @@ public:
     mOpened(false)
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_COUNT_CTOR(ChildRunnable);
   }
 
   JS::AsmJSCacheResult
@@ -1282,7 +1279,6 @@ private:
     MOZ_ASSERT(!mOpened);
     MOZ_ASSERT(mState == eFinished);
     MOZ_ASSERT(mActorDestroyed);
-    MOZ_COUNT_DTOR(ChildRunnable);
   }
 
   // IPDL methods.

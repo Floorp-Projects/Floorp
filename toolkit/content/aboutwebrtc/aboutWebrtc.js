@@ -272,7 +272,6 @@ AecLogging.prototype.offState = function() {
 AecLogging.prototype.onState = function() {
   this._label = getString("aec_logging_on_state_label");
   try {
-    let file = Services.prefs.getCharPref("media.webrtc.debug.aec_log_dir");
     this._message = getString("aec_logging_on_state_msg");
   } catch (e) {
     this._message = null;
@@ -678,9 +677,29 @@ ICEStats.prototype = {
 
     heading.textContent = getString("ice_stats_heading");
     div.appendChild(heading);
+
     div.appendChild(statsTable.render());
+    div.appendChild(this.renderIceMetric("ice_restart_count_label",
+                                         this._report.iceRestarts));
+    div.appendChild(this.renderIceMetric("ice_rollback_count_label",
+                                         this._report.iceRollbacks));
 
     return div;
+  },
+
+  renderIceMetric: function(labelName, value) {
+    let info = document.createElement("div");
+    let label = document.createElement("span");
+    let body = document.createElement("span");
+
+    label.className = "info-label";
+    label.textContent = `${getString(labelName)}: `;
+    info.appendChild(label);
+
+    body.className = "info-body";
+    body.textContent = value;
+    info.appendChild(body);
+    return info;
   },
 
   generateICEStats: function() {
