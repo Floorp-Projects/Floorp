@@ -3261,7 +3261,11 @@
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R6
       StrLen $R4 "$R6"
 
+!ifdef HAVE_64BIT_BUILD
+      ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES64" $R5
+!else
       ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES" $R5
+!endif
       StrLen $R3 "$R5"
 
       ${If} $R7 != "" ; _OLD_REL_PATH was passed
@@ -7803,4 +7807,3 @@
   Pop $1
   Exch $0 ; return elapsed seconds
 !macroend
-
