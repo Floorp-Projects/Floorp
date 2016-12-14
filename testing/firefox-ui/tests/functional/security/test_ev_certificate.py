@@ -79,14 +79,14 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
         # Check the owner location string
         # More information:
         # hg.mozilla.org/mozilla-central/file/eab4a81e4457/browser/base/content/browser.js#l7012
-        location = self.browser.get_property('identity.identified.state_and_country')
+        location = self.browser.localize_property('identity.identified.state_and_country')
         location = location.replace('%S', address['state'], 1).replace('%S', address['country'])
         location = address['city'] + '\n' + location
         self.assertEqual(security_view.owner_location.get_attribute('textContent'),
                          location)
 
         # Check the verifier
-        l10n_verifier = self.browser.get_property('identity.identified.verifier')
+        l10n_verifier = self.browser.localize_property('identity.identified.verifier')
         l10n_verifier = l10n_verifier.replace('%S', cert['issuerOrganization'])
         self.assertEqual(security_view.verifier.get_attribute('textContent'),
                          l10n_verifier)

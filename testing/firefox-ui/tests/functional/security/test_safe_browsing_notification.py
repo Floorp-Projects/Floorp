@@ -107,7 +107,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
     def check_not_badware_button(self, button_property, report_page):
         with self.marionette.using_context('chrome'):
             # TODO: update to use safe browsing notification bar class when bug 1139544 lands
-            label = self.browser.get_property(button_property)
+            label = self.browser.localize_property(button_property)
             button = (self.marionette.find_element(By.ID, 'content')
                       .find_element('anon attribute', {'label': label}))
 
@@ -124,7 +124,7 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
     def check_get_me_out_of_here_button(self):
         with self.marionette.using_context('chrome'):
             # TODO: update to use safe browsing notification bar class when bug 1139544 lands
-            label = self.browser.get_property('safebrowsing.getMeOutOfHereButton.label')
+            label = self.browser.localize_property('safebrowsing.getMeOutOfHereButton.label')
             button = (self.marionette.find_element(By.ID, 'content')
                       .find_element('anon attribute', {'label': label}))
             button.click()

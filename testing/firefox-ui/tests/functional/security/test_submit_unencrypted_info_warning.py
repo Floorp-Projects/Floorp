@@ -38,7 +38,7 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
             button.click()
 
             # Get the expected warning text and replace its two instances of "##" with "\n\n".
-            message = self.browser.get_property('formPostSecureToInsecureWarning.message')
+            message = self.browser.localize_property('formPostSecureToInsecureWarning.message')
             message = message.replace('##', '\n\n')
 
             # Wait for the warning, verify the expected text matches warning, accept the warning

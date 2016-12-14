@@ -82,7 +82,8 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
     def test_close_window(self):
         """Test various closing strategies."""
         def closer(win):
-            win.send_shortcut(win.get_entity('closeWindow.key'), accel=True)
+            win.send_shortcut(win.localize_entity('closeWindow.key'),
+                              accel=True)
 
         # Close a tab by each trigger method
         close_strategies = ('menu',
