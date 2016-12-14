@@ -92,23 +92,6 @@ NextFrameSeekTask::HandleNotWaited(const WaitForDataRejectValue& aRejection)
 {
 }
 
-/*
- * Remove samples from the queue until aCompare() returns false.
- * aCompare A function object with the signature bool(int64_t) which returns
- *          true for samples that should be removed.
- */
-template <typename Function> static void
-DiscardFrames(MediaQueue<MediaData>& aQueue, const Function& aCompare)
-{
-  while(aQueue.GetSize() > 0) {
-    if (aCompare(aQueue.PeekFront()->mTime)) {
-      RefPtr<MediaData> releaseMe = aQueue.PopFront();
-      continue;
-    }
-    break;
-  }
-}
-
 RefPtr<NextFrameSeekTask::SeekTaskPromise>
 NextFrameSeekTask::Seek(const media::TimeUnit&)
 {
@@ -160,22 +143,6 @@ NextFrameSeekTask::IsVideoSeekComplete() const
   // Don't finish seek until there are no pending requests. Otherwise, we might
   // lose video samples for the promise is resolved asynchronously.
   return !IsVideoRequestPending() && !NeedMoreVideo();
-}
-
-void
-NextFrameSeekTask::MaybeFinishSeek()
-{
-  AssertOwnerThread();
-  if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
-    UpdateSeekTargetTime();
-
-    auto time = mTarget.GetTime().ToMicroseconds();
-    DiscardFrames(mAudioQueue, [time] (int64_t aSampleTime) {
-      return aSampleTime < time;
-    });
-
-    Resolve(__func__); // Call to MDSM::SeekCompleted();
-  }
 }
 
 void
