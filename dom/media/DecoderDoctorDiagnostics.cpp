@@ -834,8 +834,8 @@ DecoderDoctorDiagnostics::GetDescription() const
       }
       break;
     case eEvent:
-      s = nsPrintfCString("event domain %s result=%u",
-                          EventDomainString(mEvent.mDomain), mEvent.mResult);
+      s = nsPrintfCString("event domain %s result=%" PRIu32,
+                          EventDomainString(mEvent.mDomain), static_cast<uint32_t>(mEvent.mResult));
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected DiagnosticsType");

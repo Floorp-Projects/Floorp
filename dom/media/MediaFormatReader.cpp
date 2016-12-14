@@ -2786,12 +2786,12 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
   }
 
   result += nsPrintfCString("audio decoder: %s\n", audioName);
-  result += nsPrintfCString("audio frames decoded: %lld\n",
+  result += nsPrintfCString("audio frames decoded: %" PRIu64 "\n",
                             mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {
     result += nsPrintfCString(
-      "audio state: ni=%d no=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu "
-      "out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+      "audio state: ni=%d no=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%" PRIu64
+      " out:%" PRIu64 " qs=%u pending:%u waiting:%d sid:%u\n",
       NeedInput(mAudio), mAudio.HasPromise(), mAudio.mDemuxRequest.Exists(),
       int(mAudio.mQueuedSamples.Length()),
       mAudio.mTimeThreshold ? mAudio.mTimeThreshold.ref().Time().ToSeconds()
@@ -2805,13 +2805,13 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
   result +=
     nsPrintfCString("hardware video decoding: %s\n",
                     VideoIsHardwareAccelerated() ? "enabled" : "disabled");
-  result += nsPrintfCString("video frames decoded: %lld (skipped:%lld)\n",
+  result += nsPrintfCString("video frames decoded: %" PRIu64 " (skipped:%" PRIu64 ")\n",
                             mVideo.mNumSamplesOutputTotal,
                             mVideo.mNumSamplesSkippedTotal);
   if (HasVideo()) {
     result += nsPrintfCString(
-      "video state: ni=%d no=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu "
-      "out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+      "video state: ni=%d no=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%" PRIu64
+      " out:%" PRIu64 " qs=%u pending:%u waiting:%d sid:%u\n",
       NeedInput(mVideo), mVideo.HasPromise(), mVideo.mDemuxRequest.Exists(),
       int(mVideo.mQueuedSamples.Length()),
       mVideo.mTimeThreshold ? mVideo.mTimeThreshold.ref().Time().ToSeconds()

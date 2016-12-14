@@ -50,7 +50,7 @@ public:
     MozillaRegisterDebugFILE(mFile);
   }
 
-  void Printf(const char* aFormat, ...)
+  void Printf(const char* aFormat, ...) MOZ_FORMAT_PRINTF(2, 3)
   {
     MOZ_ASSERT(mFile);
     va_list list;

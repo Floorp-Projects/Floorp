@@ -42,8 +42,8 @@ DetailedPromise::~DetailedPromise()
 void
 DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
 {
-  nsPrintfCString msg("%s promise rejected 0x%x '%s'", mName.get(), aArg,
-                      PromiseFlatCString(aReason).get());
+  nsPrintfCString msg("%s promise rejected 0x%" PRIx32 " '%s'", mName.get(),
+                      static_cast<uint32_t>(aArg), PromiseFlatCString(aReason).get());
   EME_LOG("%s", msg.get());
 
   MaybeReportTelemetry(Failed);
