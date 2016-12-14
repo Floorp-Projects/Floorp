@@ -1157,7 +1157,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
         uint32_t major, minor;
         if (NS_SUCCEEDED(httpChannelInternal->GetResponseVersion(&major,
                                                                  &minor))) {
-          ver = nsPrintfCString("/%lu.%lu", major, minor);
+          ver = nsPrintfCString("/%" PRIu32 ".%" PRIu32, major, minor);
         }
       }
 
@@ -1168,7 +1168,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       }
 
       // Assemble everything and pass to listener.
-      nsPrintfCString status("HTTP%s %lu %s", ver.get(), statusNum,
+      nsPrintfCString status("HTTP%s %" PRIu32 " %s", ver.get(), statusNum,
                              statusText.get());
       static_cast<nsIHTTPHeaderListener*>(mPStreamListener)->StatusLine(status.get());
     }

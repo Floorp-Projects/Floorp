@@ -277,7 +277,7 @@ public:
   }
 };
 
-inline void
+inline void MOZ_FORMAT_PRINTF(2, 3)
 LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
 {
   MOZ_ASSERT(IndexedDatabaseManager::GetLoggingMode() !=

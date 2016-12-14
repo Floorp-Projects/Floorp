@@ -46,7 +46,7 @@ ReflectIceEntry(const WebrtcTelemetry::WebrtcIceCandidateType *entry,
   if (!statsObj)
     return false;
   if (!JS_DefineProperty(cx, obj,
-                         nsPrintfCString("%lu", bitmask).BeginReading(),
+                         nsPrintfCString("%" PRIu32, bitmask).BeginReading(),
                          statsObj, JSPROP_ENUMERATE)) {
     return false;
   }

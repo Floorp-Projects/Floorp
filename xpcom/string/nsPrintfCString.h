@@ -25,7 +25,7 @@ class nsPrintfCString : public nsFixedCString
   typedef nsCString string_type;
 
 public:
-  explicit nsPrintfCString(const char_type* aFormat, ...)
+  explicit nsPrintfCString(const char_type* aFormat, ...) MOZ_FORMAT_PRINTF(2, 3)
     : nsFixedCString(mLocalBuffer, kLocalBufferSize, 0)
   {
     va_list ap;

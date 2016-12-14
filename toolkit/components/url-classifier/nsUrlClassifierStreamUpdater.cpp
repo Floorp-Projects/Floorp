@@ -39,7 +39,7 @@ static mozilla::LazyLogModule gUrlClassifierStreamUpdaterLog("UrlClassifierStrea
 
 // Calls nsIURLFormatter::TrimSensitiveURLs to remove sensitive
 // info from the logging message.
-static void TrimAndLog(const char* aFmt, ...)
+static MOZ_FORMAT_PRINTF(1, 2) void TrimAndLog(const char* aFmt, ...)
 {
   nsString raw;
 
@@ -404,7 +404,8 @@ nsUrlClassifierStreamUpdater::StreamFinished(nsresult status,
   // We are a service and may not be reset with Init between calls, so reset
   // mBeganStream manually.
   mBeganStream = false;
-  LOG(("nsUrlClassifierStreamUpdater::StreamFinished [%x, %d]", status, requestedDelay));
+  LOG(("nsUrlClassifierStreamUpdater::StreamFinished [%" PRIx32 ", %d]",
+       static_cast<uint32_t>(status), requestedDelay));
   if (NS_FAILED(status) || mPendingUpdates.Length() == 0) {
     // We're done.
     LOG(("nsUrlClassifierStreamUpdater::Done [this=%p]", this));
@@ -710,7 +711,7 @@ nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest *request,
   LOG(("OnDataAvailable (%d bytes)", aLength));
 
   if (aSourceOffset > MAX_FILE_SIZE) {
-    LOG(("OnDataAvailable::Abort because exceeded the maximum file size(%lld)", aSourceOffset));
+    LOG(("OnDataAvailable::Abort because exceeded the maximum file size(%" PRIu64 ")", aSourceOffset));
     return NS_ERROR_FILE_TOO_BIG;
   }
 
@@ -735,8 +736,8 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
   if (!mDBService)
     return NS_ERROR_NOT_INITIALIZED;
 
-  LOG(("OnStopRequest (status %x, beganStream %s, this=%p)", aStatus,
-       mBeganStream ? "true" : "false", this));
+  LOG(("OnStopRequest (status %" PRIx32 ", beganStream %s, this=%p)",
+       static_cast<uint32_t>(aStatus), mBeganStream ? "true" : "false", this));
 
   nsresult rv;
 
