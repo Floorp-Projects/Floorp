@@ -107,6 +107,8 @@ public:
   bool IsOnOwnerThread() override;
 #endif
 
+  ChromiumCDMProxy* AsChromiumCDMProxy() override { return this; }
+
 private:
   void OnCDMCreated(uint32_t aPromiseId);
 

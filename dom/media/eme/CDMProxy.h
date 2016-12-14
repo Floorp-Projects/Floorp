@@ -17,6 +17,7 @@
 
 namespace mozilla {
 class MediaRawData;
+class ChromiumCDMProxy;
 
 enum DecryptStatus {
   Ok = 0,
@@ -222,6 +223,8 @@ public:
 #endif
 
   virtual uint32_t GetDecryptorId() { return 0; }
+
+  virtual ChromiumCDMProxy* AsChromiumCDMProxy() { return nullptr; }
 
 protected:
   virtual ~CDMProxy() {}
