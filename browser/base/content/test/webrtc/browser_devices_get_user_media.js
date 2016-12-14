@@ -34,8 +34,8 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:allow");
     yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "CameraAndMicrophone",
-       "expected camera and microphone to be shared");
+    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+                     "expected camera and microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({audio: true, video: true});
@@ -64,8 +64,8 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:allow");
     yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "Microphone",
-       "expected microphone to be shared");
+    Assert.deepEqual((yield getMediaCaptureState()), {audio: true},
+                     "expected microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({audio: true});
@@ -94,7 +94,8 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:allow");
     yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "Camera", "expected camera to be shared");
+    Assert.deepEqual((yield getMediaCaptureState()), {video: true},
+                     "expected camera to be shared");
 
     yield indicator;
     yield checkSharingUI({video: true});
@@ -136,8 +137,8 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:allow");
     yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "CameraAndMicrophone",
-       "expected camera and microphone to be shared");
+    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+                     "expected camera and microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({video: true, audio: true});
@@ -164,20 +165,13 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:allow");
     yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "CameraAndMicrophone",
-       "expected camera and microphone to be shared");
+    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+                     "expected camera and microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({video: true, audio: true});
 
-    info("reloading the web page");
-    promise = promiseObserverCalled("recording-device-events");
-    content.location.reload();
-    yield promise;
-
-    yield expectObserverCalled("recording-window-ended");
-    yield expectNoObserverCalled();
-    yield checkNotSharing();
+    yield reloadAndAssertClosedStreams();
   }
 },
 
@@ -203,23 +197,22 @@ var gTests = [
       yield promiseMessage(expectedMessage, () => {
         activateSecondaryAction(aNever ? kActionNever : kActionAlways);
       });
-      let expected = [];
+      let expected = {};
       if (expectedMessage == "ok") {
         yield expectObserverCalled("getUserMedia:response:allow");
         yield expectObserverCalled("recording-device-events");
         if (aRequestVideo)
-          expected.push("Camera");
+          expected.video = true;
         if (aRequestAudio)
-          expected.push("Microphone");
-        expected = expected.join("And");
+          expected.audio = true;
       }
       else {
         yield expectObserverCalled("getUserMedia:response:deny");
         yield expectObserverCalled("recording-window-ended");
-        expected = "none";
       }
-      is((yield getMediaCaptureState()), expected,
-         "expected " + expected + " to be shared");
+      Assert.deepEqual((yield getMediaCaptureState()), expected,
+                       "expected " + Object.keys(expected).join(" and ") +
+                       " to be shared");
 
       function checkDevicePermissions(aDevice, aExpected) {
         let Perms = Services.perms;
@@ -302,14 +295,14 @@ var gTests = [
           yield expectObserverCalled("recording-device-events");
 
           // Check what's actually shared.
-          let expected = [];
+          let expected = {};
           if (aAllowVideo && aRequestVideo)
-            expected.push("Camera");
+            expected.video = true;
           if (aAllowAudio && aRequestAudio)
-            expected.push("Microphone");
-          expected = expected.join("And");
-          is((yield getMediaCaptureState()), expected,
-             "expected " + expected + " to be shared");
+            expected.audio = true;
+          Assert.deepEqual((yield getMediaCaptureState()), expected,
+                           "expected " + Object.keys(expected).join(" and ") +
+                           " to be shared");
 
           yield closeStream();
         }
@@ -447,7 +440,8 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:allow");
     yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "Camera", "expected camera to be shared");
+    Assert.deepEqual((yield getMediaCaptureState()), {video: true},
+                     "expected camera to be shared");
 
     yield indicator;
     yield checkSharingUI({video: true});
