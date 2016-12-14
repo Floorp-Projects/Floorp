@@ -85,7 +85,7 @@
 #include <limits>
 #include <string>
 
-#define MAXWORDLEN 176
+#define MAXWORDLEN 100
 #define MAXWORDUTF8LEN (MAXWORDLEN * 3)
 
 Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key) {
