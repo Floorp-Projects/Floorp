@@ -17,7 +17,7 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
         self.url = 'https://ssl-dv.mozqa.com/data/firefox/security/unencryptedsearch.html'
         self.test_string = 'mozilla'
 
-        self.puppeteer.prefs.set_pref('security.warn_submit_insecure', True)
+        self.marionette.set_pref('security.warn_submit_insecure', True)
 
     def tearDown(self):
         try:
