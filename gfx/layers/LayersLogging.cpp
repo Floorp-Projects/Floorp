@@ -190,10 +190,10 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     AppendToString(aStream, m.GetCumulativeResolution(), " cr=");
     AppendToString(aStream, m.GetZoom(), " z=");
     AppendToString(aStream, m.GetExtraResolution(), " er=");
-    aStream << nsPrintfCString(")] [u=(%d %d %lu)",
+    aStream << nsPrintfCString(")] [u=(%d %d %" PRIu32 ")",
             m.GetScrollUpdateType(), m.GetDoSmoothScroll(),
             m.GetScrollGeneration()).get();
-    aStream << nsPrintfCString("] [i=(%ld %lld %d)] }",
+    aStream << nsPrintfCString("] [i=(%" PRIu32 " %" PRIu64 " %d)] }",
             m.GetPresShellId(), m.GetScrollId(), m.IsRootContent()).get();
   }
   aStream << sfx;

@@ -2327,7 +2327,7 @@ nsOfflineCacheDevice::CreateApplicationCache(const nsACString &group,
 
   // Include the timestamp to guarantee uniqueness across runs, and
   // the gNextTemporaryClientID for uniqueness within a second.
-  clientID.Append(nsPrintfCString("|%016lld|%d",
+  clientID.Append(nsPrintfCString("|%016" PRId64 "|%d",
                                   now / PR_USEC_PER_SEC,
                                   gNextTemporaryClientID++));
 

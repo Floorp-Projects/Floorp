@@ -11,6 +11,8 @@
 #include <errno.h>
 #endif
 
+#include "mozilla/IntegerPrintfMacros.h"
+
 #include "mozilla/ipc/ProtocolUtils.h"
 
 #include "mozilla/dom/ContentParent.h"
@@ -232,7 +234,7 @@ AnnotateSystemError()
   if (error) {
     CrashReporter::AnnotateCrashReport(
       NS_LITERAL_CSTRING("IPCSystemError"),
-      nsPrintfCString("%lld", error));
+      nsPrintfCString("%" PRId64, error));
   }
 }
 #endif

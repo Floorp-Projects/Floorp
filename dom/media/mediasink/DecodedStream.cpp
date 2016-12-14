@@ -230,8 +230,8 @@ nsCString
 DecodedStreamData::GetDebugInfo()
 {
   return nsPrintfCString(
-    "DecodedStreamData=%p mPlaying=%d mAudioFramesWritten=%lld "
-    "mNextAudioTime=%lld mNextVideoTime=%lld mHaveSentFinish=%d "
+    "DecodedStreamData=%p mPlaying=%d mAudioFramesWritten=%" PRId64
+    " mNextAudioTime=%" PRId64 " mNextVideoTime=%" PRId64 " mHaveSentFinish=%d "
     "mHaveSentFinishAudio=%d mHaveSentFinishVideo=%d",
     this, mPlaying, mAudioFramesWritten, mNextAudioTime, mNextVideoTime,
     mHaveSentFinish, mHaveSentFinishAudio, mHaveSentFinishVideo);
@@ -781,7 +781,7 @@ DecodedStream::GetDebugInfo()
 {
   AssertOwnerThread();
   return nsPrintfCString(
-    "DecodedStream=%p mStartTime=%lld mLastOutputTime=%lld mPlaying=%d mData=%p",
+    "DecodedStream=%p mStartTime=%" PRId64 " mLastOutputTime=%" PRId64 " mPlaying=%d mData=%p",
     this, mStartTime.valueOr(-1), mLastOutputTime, mPlaying, mData.get())
     + (mData ? nsCString("\n") + mData->GetDebugInfo() : nsCString());
 }
