@@ -33,8 +33,8 @@
 },
 {
 "version": "clang 4.0pre/r286542",
-"size": 210049255,
-"digest": "8da8c653ea1948c13aa152cf0b1b0fa94e9619c49006ec80cc625d33cbf2dafa3533764f38fc0213e469cc786a738e5099f0e39d52e30f9a711718e8a3124311",
+"size": 226755339,
+"digest": "3c598607c36e70788ca7dbdf0d835f9e44fbcaa7b1ed77ef9971d743a5a230bebc0ccd2bcdf97f63ed4546d1b83f4c3556f35c30589c755aaaefbd674f750e22",
 "algorithm": "sha512",
 "filename": "clang.tar.bz2",
 "unpack": true
