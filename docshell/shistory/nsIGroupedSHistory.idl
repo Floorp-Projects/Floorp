@@ -39,9 +39,19 @@ interface nsIGroupedSHistory : nsISupports
    * corresponding to the given global index. Note it doesn't swap frameloaders,
    * but rather return the target loader for the caller to swap.
    *
-   * @param aGlobalIndex        The global index to navigate to.
-   * @param aTargetLoaderToSwap The owner frameloader of the to-be-navigate
-   *                            partial session history.
+   * This function may throw NS_ERROR_NOT_AVAILABLE if the frameloader to swap
+   * to is dead.
+   *
+   * @param  aGlobalIndex
+   *         The global index to navigate to.
+   * @return The frameloader which needs to be swapped in, or null if no
+   *         frameloader needs to be swapped.
    */
-  void gotoIndex(in unsigned long aGlobalIndex, out nsIFrameLoader aTargetLoaderToSwap);
+  nsIFrameLoader gotoIndex(in unsigned long aGlobalIndex);
+
+  /**
+   * Close the FrameLoaderOwners of the inactive PartialSHistories in this GlobalSHistory.
+   * This does not remove the PartialSHistories from the GroupedSHistory.
+   */
+  void closeInactiveFrameLoaderOwners();
 };
