@@ -29,7 +29,7 @@ class BaseWindowTestCase(PuppeteerMixin, MarionetteTestCase):
         """
         super(BaseWindowTestCase, self).setUp()
 
-        self.puppeteer.prefs.set_pref('dom.ipc.tabs.shutdownTimeoutSecs', 0)
+        self.marionette.set_pref('dom.ipc.tabs.shutdownTimeoutSecs', 0)
 
     def tearDown(self):
         try:
