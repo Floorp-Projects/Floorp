@@ -23,8 +23,8 @@ class TestSafeBrowsingWarningPages(PuppeteerMixin, MarionetteTestCase):
             'https://www.itisatrap.org/firefox/its-an-attack.html'
         ]
 
-        self.puppeteer.prefs.set_pref('browser.safebrowsing.phishing.enabled', True)
-        self.puppeteer.prefs.set_pref('browser.safebrowsing.malware.enabled', True)
+        self.marionette.set_pref('browser.safebrowsing.phishing.enabled', True)
+        self.marionette.set_pref('browser.safebrowsing.malware.enabled', True)
 
         # Give the browser a little time, because SafeBrowsing.jsm takes a
         # while between start up and adding the example urls to the db.

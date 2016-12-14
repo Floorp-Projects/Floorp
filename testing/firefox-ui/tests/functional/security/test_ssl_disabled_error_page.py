@@ -22,8 +22,8 @@ class TestSSLDisabledErrorPage(PuppeteerMixin, MarionetteTestCase):
         # Disable SSL 3.0, TLS 1.0 and TLS 1.1 for secure connections
         # by forcing the use of TLS 1.2
         # see: http://kb.mozillazine.org/Security.tls.version.*#Possible_values_and_their_effects
-        self.puppeteer.prefs.set_pref('security.tls.version.min', 3)
-        self.puppeteer.prefs.set_pref('security.tls.version.max', 3)
+        self.marionette.set_pref('security.tls.version.min', 3)
+        self.marionette.set_pref('security.tls.version.max', 3)
 
     def tearDown(self):
         try:

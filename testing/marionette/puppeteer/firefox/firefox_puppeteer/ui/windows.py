@@ -11,7 +11,6 @@ import firefox_puppeteer.errors as errors
 from firefox_puppeteer.api.l10n import L10n
 from firefox_puppeteer.base import BaseLib
 from firefox_puppeteer.decorators import use_class_as_property
-from firefox_puppeteer.api.prefs import Preferences
 
 
 class Windows(BaseLib):
@@ -217,7 +216,6 @@ class BaseWindow(BaseLib):
         super(BaseWindow, self).__init__(marionette)
 
         self._l10n = L10n(self.marionette)
-        self._prefs = Preferences(self.marionette)
         self._windows = Windows(self.marionette)
 
         if window_handle not in self.marionette.chrome_window_handles:
