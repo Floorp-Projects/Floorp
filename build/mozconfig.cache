@@ -131,11 +131,6 @@ else
         # Windows builds have a default wrapper that needs to be overridden
         mk_add_options "export CC_WRAPPER="
         mk_add_options "export CXX_WRAPPER="
-        # For now, sccache doesn't support separate PDBs so force debug info to be
-        # in object files.
-        mk_add_options "export COMPILE_PDB_FLAG="
-        mk_add_options "export HOST_PDB_FLAG="
-        mk_add_options "export MOZ_DEBUG_FLAGS=-Z7"
         ;;
     esac
 fi
