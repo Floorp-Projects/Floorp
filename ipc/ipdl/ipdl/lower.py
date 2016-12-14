@@ -1662,8 +1662,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
     def genTransitionFunc(self):
         ptype = self.protocol.decl.type
-        usesend, sendvar = set(), ExprVar('Send__')
-        userecv, recvvar = set(), ExprVar('Recv__')
 
         # bool Transition(Trigger trigger, State* next)
         # The state we are transitioning from is stored in *next.
@@ -1718,17 +1716,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             _logicError('corrupted actor state'),
             StmtReturn(ExprLiteral.FALSE) ])
         fromswitch.addcase(DefaultLabel(), unreachedblock)
-
-        if usesend:
-            transitionfunc.addstmt(
-                StmtDecl(Decl(Type('int32_t', const=1), sendvar.name),
-                         init=ExprVar('mozilla::ipc::Trigger::Send')))
-        if userecv:
-            transitionfunc.addstmt(
-                StmtDecl(Decl(Type('int32_t', const=1), recvvar.name),
-                         init=ExprVar('mozilla::ipc::Trigger::Recv')))
-        if usesend or userecv:
-            transitionfunc.addstmt(Whitespace.NL)
 
         transitionfunc.addstmt(StmtDecl(Decl(Type('State'), fromvar.name),
                                         init=ExprDeref(nextvar)))
