@@ -49,6 +49,34 @@
     is(anode.role, 'document', 'correct role of a document accessible node');
     is(anode.DOMNode, ifrDoc, 'correct DOM Node of a document accessible node');
 
+    // States may differ depending on the document state, for example, if it is
+    // loaded or is loading still.
+    var states = null;
+    switch (anode.states.length) {
+      case 5:
+        states = [
+          'readonly', 'focusable', 'opaque', 'enabled', 'sensitive'
+        ];
+        break;
+      case 6:
+        states = [
+          'readonly', 'busy', 'focusable', 'opaque', 'enabled', 'sensitive'
+        ];
+        break;
+      case 7:
+        states = [
+          'readonly', 'busy', 'focusable', 'opaque', 'stale', 'enabled', 'sensitive'
+        ];
+        break;
+      default:
+        ok(false, 'Unexpected amount of states');
+    }
+    if (states) {
+      for (var i = 0; i < states.length; i++) {
+        is(anode.states[i], states[i], `${states[i]} state is expected at ${i}th index`);
+      }
+    }
+
     finish();
   }
   </script>

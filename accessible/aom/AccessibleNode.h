@@ -9,6 +9,8 @@
 
 #include "nsWrapperCache.h"
 #include "mozilla/RefPtr.h"
+#include "nsTArray.h"
+#include "nsString.h"
 
 class nsINode;
 
@@ -20,6 +22,7 @@ namespace a11y {
 
 namespace dom {
 
+class DOMStringList;
 struct ParentObject;
 
 class AccessibleNode : public nsISupports,
@@ -35,7 +38,10 @@ public:
   virtual dom::ParentObject GetParentObject() const final;
 
   void GetRole(nsAString& aRole);
+  void GetStates(nsTArray<nsString>& aStates);
   nsINode* GetDOMNode();
+
+  a11y::Accessible* Internal() const { return mIntl; }
 
 protected:
   AccessibleNode(const AccessibleNode& aCopy) = delete;
@@ -44,6 +50,7 @@ protected:
 
   RefPtr<a11y::Accessible> mIntl;
   RefPtr<nsINode> mDOMNode;
+  RefPtr<dom::DOMStringList> mStates;
 };
 
 } // dom

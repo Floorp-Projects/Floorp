@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Unused.h"
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
@@ -341,12 +342,12 @@ xpc_MarkInCCGeneration(nsISupports* aVariant, uint32_t aGeneration)
 void
 xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
 {
-#ifdef DEBUG
+    // QIing to nsIXPConnectWrappedJSUnmarkGray may have side effects!
     nsCOMPtr<nsIXPConnectWrappedJSUnmarkGray> wjsug =
       do_QueryInterface(aWrappedJS);
+    Unused << wjsug;
     MOZ_ASSERT(!wjsug, "One should never be able to QI to "
                        "nsIXPConnectWrappedJSUnmarkGray successfully!");
-#endif
 }
 
 /***************************************************************************/
