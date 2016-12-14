@@ -9,6 +9,7 @@
 #include "nsGlobalWindow.h"
 #include "nsITimeoutHandler.h"
 #include "nsITimer.h"
+#include "mozilla/dom/TimeoutManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -60,7 +61,7 @@ void
 TimerCallback(nsITimer*, void* aClosure)
 {
   RefPtr<Timeout> timeout = (Timeout*)aClosure;
-  timeout->mWindow->RunTimeout(timeout);
+  timeout->mWindow->AsInner()->TimeoutManager().RunTimeout(timeout);
 }
 
 void

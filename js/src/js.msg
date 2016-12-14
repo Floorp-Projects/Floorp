@@ -72,7 +72,6 @@ MSG_DEF(JSMSG_INVALID_MAP_ITERABLE,    1, JSEXN_TYPEERR, "iterable for {0} shoul
 MSG_DEF(JSMSG_NESTING_GENERATOR,       0, JSEXN_TYPEERR, "already executing generator")
 MSG_DEF(JSMSG_INCOMPATIBLE_METHOD,     3, JSEXN_TYPEERR, "{0} {1} called on incompatible {2}")
 MSG_DEF(JSMSG_OBJECT_WATCH_DEPRECATED, 0, JSEXN_WARN, "Object.prototype.watch and unwatch are very slow, non-standard, and deprecated; use a getter/setter instead")
-MSG_DEF(JSMSG_ARRAYBUFFER_SLICE_DEPRECATED, 0, JSEXN_WARN, "ArrayBuffer.slice is deprecated; use ArrayBuffer.prototype.slice instead")
 MSG_DEF(JSMSG_BAD_SURROGATE_CHAR,      1, JSEXN_TYPEERR, "bad surrogate character {0}")
 MSG_DEF(JSMSG_UTF8_CHAR_TOO_LARGE,     1, JSEXN_TYPEERR, "UTF-8 character {0} too large")
 MSG_DEF(JSMSG_MALFORMED_UTF8_CHAR,     1, JSEXN_TYPEERR, "malformed UTF-8 character sequence at offset {0}")

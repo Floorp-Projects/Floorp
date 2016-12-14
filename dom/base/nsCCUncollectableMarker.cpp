@@ -32,6 +32,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ProcessGlobal.h"
+#include "mozilla/dom/TimeoutManager.h"
 #include "xpcpublic.h"
 #include "nsObserverService.h"
 #include "nsFocusManager.h"
@@ -210,7 +211,8 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
         if (elm) {
           elm->MarkForCC();
         }
-        static_cast<nsGlobalWindow*>(win.get())->UnmarkGrayTimers();
+        static_cast<nsGlobalWindow*>(win.get())->AsInner()->
+          TimeoutManager().UnmarkGrayTimers();
       }
     } else if (aPrepareForCC) {
       // Unfortunately we need to still mark user data just before running CC so
