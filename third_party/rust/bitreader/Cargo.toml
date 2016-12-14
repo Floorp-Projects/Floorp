@@ -1,0 +1,18 @@
+[package]
+name = "bitreader"
+version = "0.1.0"
+authors = ["Ilkka Rauta <ilkka.rauta@gmail.com>"]
+
+description = """
+BitReader helps reading individual bits from a slice of bytes.
+
+You can read "unusual" numbers of bits from the byte slice, for example 13 bits
+at once. The reader internally keeps track of position within the buffer.
+"""
+
+homepage = "https://github.com/irauta/bitreader"
+repository = "https://github.com/irauta/bitreader"
+
+keywords = ["bit", "bits", "bitstream"]
+
+license = "Apache-2.0"
