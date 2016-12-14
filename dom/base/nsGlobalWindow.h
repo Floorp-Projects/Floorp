@@ -56,7 +56,7 @@
 #include "nsSize.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapSource.h"
-#include "mozilla/dom/Timeout.h"
+#include "mozilla/UniquePtr.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -395,7 +395,6 @@ public:
   virtual void SyncStateFromParentWindow();
 
   virtual nsresult FireDelayedDOMEvents() override;
-  virtual bool IsRunningTimeout() override { return mTimeoutFiringDepth > 0; }
 
   // Outer windows only.
   virtual bool WouldReuseInnerWindow(nsIDocument* aNewDocument) override;
@@ -706,8 +705,6 @@ public:
   }
 
   void AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const;
-
-  void UnmarkGrayTimers();
 
   // Inner windows only.
   void AddEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
@@ -1257,6 +1254,7 @@ public:
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
 
   mozilla::dom::Performance* GetPerformance();
+
 protected:
   // Web IDL helpers
 
@@ -1465,12 +1463,7 @@ private:
 
 public:
   // Timeout Functions
-  // Language agnostic timeout function (all args passed).
   // |interval| is in milliseconds.
-  nsresult SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
-                                int32_t interval, bool aIsInterval,
-                                mozilla::dom::Timeout::Reason aReason,
-                                int32_t* aReturn);
   int32_t SetTimeoutOrInterval(JSContext* aCx,
                                mozilla::dom::Function& aFunction,
                                int32_t aTimeout,
@@ -1479,23 +1472,9 @@ public:
   int32_t SetTimeoutOrInterval(JSContext* aCx, const nsAString& aHandler,
                                int32_t aTimeout, bool aIsInterval,
                                mozilla::ErrorResult& aError);
-  void ClearTimeoutOrInterval(int32_t aTimerId,
-                              mozilla::dom::Timeout::Reason aReason);
 
-  // The timeout implementation functions.
-  void RunTimeout(mozilla::dom::Timeout* aTimeout);
-  void RunTimeout() { RunTimeout(nullptr); }
   // Return true if |aTimeout| was cleared while its handler ran.
   bool RunTimeoutHandler(mozilla::dom::Timeout* aTimeout, nsIScriptContext* aScx);
-  // Return true if |aTimeout| needs to be reinserted into the timeout list.
-  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now,
-                         bool aRunningPendingTimeouts);
-
-  void ClearAllTimeouts();
-  // Insert aTimeout into the list, before all timeouts that would
-  // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
-  void InsertTimeoutIntoList(mozilla::dom::Timeout* aTimeout);
-  uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
   // Helper Functions
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
@@ -1617,8 +1596,6 @@ protected:
 
   virtual void UpdateParentTarget() override;
 
-  inline int32_t DOMMinTimeoutValue() const;
-
   void InitializeShowFocusRings();
 
   // Clear the document-dependent slots on our JS wrapper.  Inner windows only.
@@ -1704,22 +1681,6 @@ private:
   friend class nsPIDOMWindow<mozIDOMWindowProxy>;
   friend class nsPIDOMWindow<mozIDOMWindow>;
   friend class nsPIDOMWindow<nsISupports>;
-
-  // Apply back pressure to the window if the TabGroup ThrottledEventQueue
-  // exists and has too many runnables waiting to run.  For example, increase
-  // the minimum timer delay, etc.
-  void
-  MaybeApplyBackPressure();
-
-  // Check the current ThrottledEventQueue depth and update the back pressure
-  // state.  If the queue has drained back pressure may be canceled.
-  void
-  CancelOrUpdateBackPressure();
-
-  // When timers are being throttled and we reduce the thottle delay we must
-  // reschedule.  The amount of the old throttle delay must be provided in
-  // order to bound how many timers must be examined.
-  nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS);
 
   mozilla::dom::TabGroup* TabGroupInner();
   mozilla::dom::TabGroup* TabGroupOuter();
@@ -1853,17 +1814,6 @@ protected:
 
   // These member variable are used only on inner windows.
   RefPtr<mozilla::EventListenerManager> mListenerManager;
-  // mTimeouts is generally sorted by mWhen, unless mTimeoutInsertionPoint is
-  // non-null.  In that case, the dummy timeout pointed to by
-  // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
-  // that come after it.
-  mozilla::LinkedList<mozilla::dom::Timeout> mTimeouts;
-  // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
-  // This is a dummy timeout at the moment; if that ever changes, the logic in
-  // ResetTimersForThrottleReduction needs to change.
-  mozilla::dom::Timeout*      mTimeoutInsertionPoint;
-  uint32_t                    mTimeoutIdCounter;
-  uint32_t                    mTimeoutFiringDepth;
   RefPtr<mozilla::dom::Location> mLocation;
   RefPtr<nsHistory>           mHistory;
   RefPtr<mozilla::dom::CustomElementRegistry> mCustomElements;
@@ -1874,10 +1824,9 @@ protected:
   typedef nsTArray<RefPtr<mozilla::dom::StorageEvent>> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
 
+
   uint32_t mSuspendDepth;
   uint32_t mFreezeDepth;
-
-  int32_t mBackPressureDelayMS;
 
   // the method that was used to focus mFocusedNode
   uint32_t mFocusMethod;
@@ -1893,8 +1842,6 @@ protected:
   static void InsertIdleCallbackIntoList(mozilla::dom::IdleRequest* aRequest,
                                          IdleRequests& aList);
 
-   // The current idle request callback timeout handle
-  uint32_t mIdleCallbackTimeoutCounter;
   // The current idle request callback handle
   uint32_t mIdleRequestCallbackCounter;
   IdleRequests mIdleRequestCallbacks;
@@ -1974,6 +1921,7 @@ protected:
   friend class nsDOMWindowUtils;
   friend class mozilla::dom::PostMessageEvent;
   friend class DesktopNotification;
+  friend class mozilla::dom::TimeoutManager;
 
   static WindowByIdTable* sWindowsById;
   static bool sWarnedAboutWindowInternal;

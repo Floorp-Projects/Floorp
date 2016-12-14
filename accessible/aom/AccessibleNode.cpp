@@ -6,6 +6,7 @@
 #include "AccessibleNode.h"
 #include "mozilla/dom/AccessibleNodeBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DOMStringList.h"
 
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
@@ -59,6 +60,20 @@ AccessibleNode::GetRole(nsAString& aRole)
   }
 
   aRole.AssignLiteral("unknown");
+}
+
+void
+AccessibleNode::GetStates(nsTArray<nsString>& aStates)
+{
+  if (mIntl) {
+    if (!mStates) {
+      mStates = GetOrCreateAccService()->GetStringStates(mIntl->State());
+    }
+    aStates = mStates->StringArray();
+    return;
+  }
+
+  mStates->Add(NS_LITERAL_STRING("defunct"));
 }
 
 nsINode*
