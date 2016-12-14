@@ -11,8 +11,8 @@
 
 /*
  * These macros should not be used with the NSPR printf-like functions or their
- * users, e.g. mozilla/Logging.h.  If you need to use NSPR's facilities, see the
- * comment on supported formats at the top of nsprpub/pr/include/prprf.h.
+ * users.  If you need to use NSPR's facilities, see the comment on
+ * supported formats at the top of nsprpub/pr/include/prprf.h.
  */
 
 /*
