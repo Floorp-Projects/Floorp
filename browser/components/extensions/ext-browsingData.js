@@ -72,6 +72,10 @@ function clearDownloads(options) {
   return sanitizer.items.downloads.clear(makeRange(options));
 }
 
+function clearFormData(options) {
+  return sanitizer.items.formdata.clear(makeRange(options));
+}
+
 function clearHistory(options) {
   return sanitizer.items.history.clear(makeRange(options));
 }
@@ -96,6 +100,9 @@ function doRemoval(options, dataToRemove, extension) {
           break;
         case "downloads":
           removalPromises.push(clearDownloads(options));
+          break;
+        case "formData":
+          removalPromises.push(clearFormData(options));
           break;
         case "history":
           removalPromises.push(clearHistory(options));
@@ -153,6 +160,9 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
       },
       removeDownloads(options) {
         return doRemoval(options, {downloads: true});
+      },
+      removeFormData(options) {
+        return doRemoval(options, {formData: true});
       },
       removeHistory(options) {
         return doRemoval(options, {history: true});
