@@ -12,7 +12,7 @@
 #include "nsXPCOM.h"
 #include "nsISupports.h"
 #include "mozilla/Logging.h"
-#include "nsXREAppData.h"
+#include "mozilla/XREAppData.h"
 #include "js/TypeDecls.h"
 
 #include "mozilla/ArrayUtils.h"
@@ -204,7 +204,7 @@
  *                 XPCOMGlueStartup() should be called before this method.
  */
 XRE_API(int,
-        XRE_main, (int argc, char* argv[], const nsXREAppData* aAppData,
+        XRE_main, (int argc, char* argv[], const mozilla::XREAppData& aAppData,
                    uint32_t aFlags))
 
 /**
@@ -362,18 +362,6 @@ XRE_API(void,
         XRE_TermEmbedding, ())
 
 /**
- * Create a new nsXREAppData structure from an application.ini file.
- *
- * @param aINIFile The application.ini file to parse.
- * @param aAppData A newly-allocated nsXREAppData structure. The caller is
- *                 responsible for freeing this structure using
- *                 XRE_FreeAppData.
- */
-XRE_API(nsresult,
-        XRE_CreateAppData, (nsIFile* aINIFile,
-                            nsXREAppData** aAppData))
-
-/**
  * Parse an INI file (application.ini or override.ini) into an existing
  * nsXREAppData structure.
  *
@@ -382,13 +370,7 @@ XRE_API(nsresult,
  */
 XRE_API(nsresult,
         XRE_ParseAppData, (nsIFile* aINIFile,
-                           nsXREAppData* aAppData))
-
-/**
- * Free a nsXREAppData structure that was allocated with XRE_CreateAppData.
- */
-XRE_API(void,
-        XRE_FreeAppData, (nsXREAppData* aAppData))
+                           mozilla::XREAppData& aAppData))
 
 enum GeckoProcessType
 {

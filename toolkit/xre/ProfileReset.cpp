@@ -15,14 +15,17 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
+#include "nsString.h"
 #include "nsToolkitCompsCID.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsXREAppData.h"
+#include "mozilla/XREAppData.h"
 
 #include "mozilla/Services.h"
 #include "prtime.h"
 
-extern const nsXREAppData* gAppData;
+using namespace mozilla;
+
+extern const XREAppData* gAppData;
 
 static const char kProfileProperties[] =
   "chrome://mozapps/locale/profile/profileSelection.properties";

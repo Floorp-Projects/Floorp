@@ -247,7 +247,6 @@ var ctrlTab = {
       aPreview.appendChild(tabPreviews.get(aTab));
       aPreview.setAttribute("label", aTab.label);
       aPreview.setAttribute("tooltiptext", aTab.label);
-      aPreview.setAttribute("crop", aTab.crop);
       aPreview.setAttribute("canvaswidth", canvasWidth);
       aPreview.setAttribute("canvasstyle",
                             "max-width:" + canvasWidth + "px;" +
@@ -474,7 +473,7 @@ var ctrlTab = {
         this._initRecentlyUsedTabs();
         break;
       case "TabAttrModified":
-        // tab attribute modified (e.g. label, crop, busy, image, selected)
+        // tab attribute modified (e.g. label, busy, image, selected)
         for (let i = this.previews.length - 1; i >= 0; i--) {
           if (this.previews[i]._tab && this.previews[i]._tab == event.target) {
             this.updatePreview(this.previews[i], event.target);
