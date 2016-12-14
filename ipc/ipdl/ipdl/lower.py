@@ -1663,16 +1663,15 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
     def genTransitionFunc(self):
         ptype = self.protocol.decl.type
 
-        # bool Transition(Trigger trigger, State* next)
+        # bool Transition(MessageType msg, State* next)
         # The state we are transitioning from is stored in *next.
         fromvar = ExprVar('from')
-        triggervar = ExprVar('trigger')
+        msgtypevar = ExprVar('msg')
         nextvar = ExprVar('next')
-        msgexpr = ExprSelect(triggervar, '.', 'mMessage')
 
         transitionfunc = FunctionDefn(FunctionDecl(
             'Transition',
-            params=[ Decl(Type('mozilla::ipc::Trigger'), triggervar.name),
+            params=[ Decl(Type('MessageType'), msgtypevar.name),
                      Decl(Type('State', ptr=1), nextvar.name) ],
             ret=Type.BOOL))
 
@@ -1681,7 +1680,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         # special cases for Null and Error
         nullerrorblock = Block()
         if ptype.hasDelete:
-            ifdelete = StmtIf(ExprBinary(_deleteId(), '==', msgexpr))
+            ifdelete = StmtIf(ExprBinary(_deleteId(), '==', msgtypevar))
             if ptype.hasReentrantDelete:
                 nextState = _dyingState()
             else:
@@ -1703,7 +1702,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         # special case for Dying
         if ptype.hasReentrantDelete:
             dyingblock = Block()
-            ifdelete = StmtIf(ExprBinary(_deleteReplyId(), '==', msgexpr))
+            ifdelete = StmtIf(ExprBinary(_deleteReplyId(), '==', msgtypevar))
             ifdelete.addifstmt(
                 StmtExpr(ExprAssn(ExprDeref(nextvar), _deadState())))
             dyingblock.addstmt(ifdelete)
@@ -2429,7 +2428,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
             Typedef(Type('mozilla::ipc::MessageChannel'), 'MessageChannel'),
             Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),
-            Typedef(Type('mozilla::ipc::Trigger'), 'Trigger'),
         ]
 
 
@@ -4110,7 +4108,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         method.addstmt(ifsendok)
 
         if self.protocol.decl.type.hasReentrantDelete:
-            method.addstmts(self.transition(md, 'in', actor.var(), reply=True))
+            method.addstmts(self.transition(md, actor.var(), reply=True))
 
         method.addstmts(
             self.dtorEpilogue(md, actor.var())
@@ -4192,7 +4190,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md, 'in')
+            + self.transition(md)
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             # alloc the actor, register it under the foreign ID
@@ -4222,7 +4220,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md, 'in')
+            + self.transition(md)
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             + self.invokeRecvHandler(md, implicit=0)
@@ -4248,7 +4246,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md, 'in')
+            + self.transition(md)
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             + saveIdStmts
@@ -4445,7 +4443,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ([ Whitespace.NL,
                self.logMessage(md, msgexpr, 'Sending ', actor),
                self.profilerLabel(md) ]
-            + self.transition(md, 'out', actor)
+            + self.transition(md, actor)
             + [ Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name),
                          init=ExprCall(
@@ -4462,7 +4460,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ([ Whitespace.NL,
                self.logMessage(md, msgexpr, 'Sending ', actor),
                self.profilerLabel(md) ]
-            + self.transition(md, 'out', actor)
+            + self.transition(md, actor)
             + [ Whitespace.NL,
                 StmtDecl(
                     Decl(Type.BOOL, sendok.name),
@@ -4561,24 +4559,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             saveIdStmts = [ ]
         return idvar, saveIdStmts
 
-    def transition(self, md, direction, actor=None, reply=False):
+    def transition(self, md, actor=None, reply=False):
         if actor is not None:  stateexpr = _actorState(actor)
         else:                  stateexpr = self.protocol.stateVar()
-
-        if (self.side is 'parent' and direction is 'out'
-            or self.side is 'child' and direction is 'in'):
-            action = ExprVar('Trigger::Send')
-        elif (self.side is 'parent' and direction is 'in'
-            or self.side is 'child' and direction is 'out'):
-            action = ExprVar('Trigger::Recv')
-        else: assert 0 and 'unknown combo %s/%s'% (self.side, direction)
 
         msgid = md.pqMsgId() if not reply else md.pqReplyId()
         ifbad = StmtIf(ExprNot(
             ExprCall(
                 ExprVar(self.protocol.name +'::Transition'),
-                args=[ ExprCall(ExprVar('Trigger'),
-                                args=[ action, ExprVar(msgid) ]),
+                args=[ ExprVar(msgid),
                        ExprAddrOf(stateexpr) ])))
         ifbad.addifstmts(_badTransition())
         return [ ifbad ]
