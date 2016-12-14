@@ -19,7 +19,7 @@ random skip-if(Android) HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-
 skip-if(Android) HTTP(..) == offset-1.xhtml offset-1-ref.html
 random skip-if(Android) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 random skip-if(Android) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
-skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
+skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) fails-if(webrender&&!browserIsRemote) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
 skip-if(Android) == poster-1.html poster-ref-blue250x200.html
 skip-if(Android) == poster-2.html poster-ref-black140x100.html
 skip-if(Android) == poster-3.html poster-ref-black140x100.html
