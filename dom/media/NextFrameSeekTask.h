@@ -55,12 +55,6 @@ public:
   ~NextFrameSeekTask();
 
   /*
-   * Data shared with MDSM.
-   */
-  MediaQueue<MediaData>& mAudioQueue;
-  MediaQueue<MediaData>& mVideoQueue;
-
-  /*
    * Internal state.
    */
   const int64_t mCurrentTime;
