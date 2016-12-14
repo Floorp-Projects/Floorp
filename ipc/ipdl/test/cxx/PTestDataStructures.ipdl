@@ -101,6 +101,7 @@ parent:
 
     sync Dummy(ShmemUnion su) returns (ShmemUnion rsu);
 
+/*
 state CONSTRUCTING:
     send PTestDataStructuresSub goto CONSTRUCTING;
     send Start goto TEST1;
@@ -125,6 +126,7 @@ state TEST18:  recv Test18 goto DEAD;
 
 state DEAD:
     recv __delete__;
+*/
 };
 
 } // namespace _ipdltest

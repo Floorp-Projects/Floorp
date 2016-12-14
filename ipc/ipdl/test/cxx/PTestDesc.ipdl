@@ -16,7 +16,7 @@ child:
 parent:
     async Ok(PTestDescSubsub a);
 
-
+/*
 state CONSTRUCT:
     call PTestDescSub goto TEST;
 state TEST:
@@ -25,6 +25,7 @@ state ACK:
     recv Ok goto DEAD;
 state DEAD:
     send __delete__;
+*/
 };
 
 }

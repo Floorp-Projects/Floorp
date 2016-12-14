@@ -20,6 +20,7 @@ parent:
     async Pong();
     async Pong5();
 
+/*
 state START:
     // if the timing resolution is too low, abort the test
     send __delete__;
@@ -68,6 +69,7 @@ state COMPRESSED_SPAM:          // compressed spam, mmm
 
 state DONE:
     send __delete__;
+*/
 };
 
 

@@ -753,7 +753,7 @@ public:
       return;
     }
 
-    bool newAudibleState = IsOwnerAudible();
+    AudibleState newAudibleState = IsOwnerAudible();
     if (mIsOwnerAudible == newAudibleState) {
       return;
     }
@@ -976,25 +976,25 @@ private:
             mSuspended == nsISuspendedTypes::SUSPENDED_BLOCK);
   }
 
-  bool
+  AudibleState
   IsOwnerAudible() const
   {
     // Muted or the volume should not be ~0
     if (mOwner->Muted() || (std::fabs(mOwner->Volume()) <= 1e-7)) {
-      return false;
+      return AudioChannelService::AudibleState::eNotAudible;
     }
 
-    // No sound can be heard during suspending.
-    if (IsSuspended()) {
-      return false;
+    // No audio track.
+    if (!mOwner->HasAudio()) {
+      return AudioChannelService::AudibleState::eNotAudible;
     }
 
-    // Silent audio track.
-    if (!mOwner->mIsAudioTrackAudible) {
-      return false;
+    // Might be audible but not yet.
+    if (mOwner->HasAudio() && !mOwner->mIsAudioTrackAudible) {
+      return AudioChannelService::AudibleState::eMaybeAudible;
     }
 
-    return true;
+    return AudioChannelService::AudibleState::eAudible;
   }
 
   bool
@@ -1064,8 +1064,8 @@ private:
   // and stop the audio channel agent. MediaElement can only be restarted by
   // play().
   SuspendTypes mSuspended;
-  // True if media element is audible for users.
-  bool mIsOwnerAudible;
+  // Indicate whether media element is audible for users.
+  AudibleState mIsOwnerAudible;
   bool mIsShutDown;
 };
 
@@ -6976,7 +6976,12 @@ HTMLMediaElement::ShouldElementBePaused()
 void
 HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
 {
+  const bool oldHasAudio = mMediaInfo.HasAudio();
   mMediaInfo = aInfo;
+  if (aInfo.HasAudio() != oldHasAudio) {
+    NotifyAudioPlaybackChanged(
+      AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
+  }
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->AudioCaptureStreamChangeIfNeeded();
   }

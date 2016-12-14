@@ -78,20 +78,24 @@ struct ReturnTypeIs {
  * sense for the use cases we encounter.
  *
  * A MozPromise is ThreadSafe, and may be ->Then()ed on any thread. The Then()
- * call accepts resolve and reject callbacks, and returns a MozPromise::Request.
- * The Request object serves several purposes for the consumer.
+ * call accepts resolve and reject callbacks, and returns a magic object which
+ * will be implicitly converted to a MozPromise::Request or a MozPromise object
+ * depending on how the return value is used. The magic object serves several
+ * purposes for the consumer.
  *
- *   (1) It allows the caller to cancel the delivery of the resolve/reject value
- *       if it has not already occurred, via Disconnect() (this must be done on
- *       the target thread to avoid racing).
+ *   (1) When converting to a MozPromise::Request, it allows the caller to
+ *       cancel the delivery of the resolve/reject value if it has not already
+ *       occurred, via Disconnect() (this must be done on the target thread to
+ *       avoid racing).
  *
- *   (2) It provides access to a "Completion Promise", which is roughly analagous
- *       to the Promise returned directly by ->then() calls on JS promises. If
- *       the resolve/reject callback returns a new MozPromise, that promise is
- *       chained to the completion promise, such that its resolve/reject value
- *       will be forwarded along when it arrives. If the resolve/reject callback
- *       returns void, the completion promise is resolved/rejected with the same
- *       value that was passed to the callback.
+ *   (2) When converting to a MozPromise (which is called a completion promise),
+ *       it allows promise chaining so ->Then() can be called again to attach
+ *       more resolve and reject callbacks. If the resolve/reject callback
+ *       returns a new MozPromise, that promise is chained to the completion
+ *       promise, such that its resolve/reject value will be forwarded along
+ *       when it arrives. If the resolve/reject callback returns void, the
+ *       completion promise is resolved/rejected with the same value that was
+ *       passed to the callback.
  *
  * The MozPromise APIs skirt traditional XPCOM convention by returning nsRefPtrs
  * (rather than already_AddRefed) from various methods. This is done to allow elegant
@@ -591,68 +595,97 @@ public:
     }
   }
 
-public:
-
-  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  RefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-                       ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+private:
+  /*
+   * A command object to store all information needed to make a request to
+   * the promise. This allows us to delay the request until further use is
+   * known (whether it is ->Then() again for more promise chaining or passed
+   * to MozPromiseRequestHolder::Begin() to terminate chaining and issue
+   * the request).
+   *
+   * This allows a unified syntax for promise chaining and disconnection
+   * and feels more like its JS counterpart.
+   */
+  class ThenCommand
   {
-    RefPtr<ThenValueBase> thenValue = new MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>(
-                                              aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
-    ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to RefPtr<Request>.
-  }
+    friend class MozPromise;
 
-  template<typename ResolveFunction, typename RejectFunction>
-  RefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite,
-                       ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
-  {
-    RefPtr<ThenValueBase> thenValue = new FunctionThenValue<ResolveFunction, RejectFunction>(aResponseThread,
-                                              Move(aResolveFunction), Move(aRejectFunction), aCallSite);
-    ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to RefPtr<Request>.
-  }
+    ThenCommand(AbstractThread* aResponseThread,
+                const char* aCallSite,
+                already_AddRefed<ThenValueBase> aThenValue,
+                MozPromise* aReceiver)
+      : mResponseThread(aResponseThread)
+      , mCallSite(aCallSite)
+      , mThenValue(aThenValue)
+      , mReceiver(aReceiver) {}
 
-  // ThenPromise() can be called on any thread as Then().
-  // The syntax is close to JS promise and makes promise chaining easier
-  // where you can do: p->ThenPromise()->ThenPromise()->ThenPromise();
-  //
-  // Note you would have to call Then() instead when the result needs to be held
-  // by a MozPromiseRequestHolder for future disconnection.
+    ThenCommand(ThenCommand&& aOther) = default;
+
+  public:
+    ~ThenCommand()
+    {
+      // Issue the request now if the return value of Then() is not used.
+      if (mThenValue) {
+        mReceiver->ThenInternal(mResponseThread, mThenValue, mCallSite);
+      }
+    }
+
+    // Allow passing Then() to MozPromiseRequestHolder::Begin().
+    operator RefPtr<Request>()
+    {
+      RefPtr<ThenValueBase> thenValue = mThenValue.forget();
+      mReceiver->ThenInternal(mResponseThread, thenValue, mCallSite);
+      return thenValue.forget();
+    }
+
+    // Allow RefPtr<MozPromise> p = somePromise->Then();
+    //       p->Then(thread1, ...);
+    //       p->Then(thread2, ...);
+    operator RefPtr<MozPromise>()
+    {
+      RefPtr<ThenValueBase> thenValue = mThenValue.forget();
+      // mCompletionPromise must be created before ThenInternal() to avoid race.
+      RefPtr<MozPromise> p = new MozPromise::Private(
+        "<completion promise>", true /* aIsCompletionPromise */);
+      thenValue->mCompletionPromise = p;
+      // Note ThenInternal() might nullify mCompletionPromise before return.
+      // So we need to return p instead of mCompletionPromise.
+      mReceiver->ThenInternal(mResponseThread, thenValue, mCallSite);
+      return p;
+    }
+
+    // Allow calling ->Then() again for more promise chaining.
+    RefPtr<MozPromise> operator->()
+    {
+      return *this;
+    }
+
+  private:
+    AbstractThread* mResponseThread;
+    const char* mCallSite;
+    RefPtr<ThenValueBase> mThenValue;
+    MozPromise* mReceiver;
+  };
+
+  public:
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  MOZ_MUST_USE RefPtr<MozPromise>
-  ThenPromise(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-              ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+  ThenCommand Then(AbstractThread* aResponseThread, const char* aCallSite,
+    ThisType* aThisVal, ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     using ThenType = MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>;
-    RefPtr<ThenValueBase> thenValue = new ThenType(
-      aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
-    // mCompletionPromise must be created before ThenInternal() to avoid race.
-    RefPtr<MozPromise> p = new MozPromise::Private(
-      "<completion promise>", true /* aIsCompletionPromise */);
-    thenValue->mCompletionPromise = p;
-    // Note ThenInternal() might nullify mCompletionPromise before return.
-    // So we need to return p instead of mCompletionPromise.
-    ThenInternal(aResponseThread, thenValue, aCallSite);
-    return p;
+    RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
+       aThisVal, aResolveMethod, aRejectMethod, aCallSite);
+    return ThenCommand(aResponseThread, aCallSite, thenValue.forget(), this);
   }
 
   template<typename ResolveFunction, typename RejectFunction>
-  MOZ_MUST_USE RefPtr<MozPromise>
-  ThenPromise(AbstractThread* aResponseThread, const char* aCallSite,
-              ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
+  ThenCommand Then(AbstractThread* aResponseThread, const char* aCallSite,
+    ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
   {
     using ThenType = FunctionThenValue<ResolveFunction, RejectFunction>;
-    RefPtr<ThenValueBase> thenValue = new ThenType(
-      aResponseThread, Move(aResolveFunction), Move(aRejectFunction), aCallSite);
-    // mCompletionPromise must be created before ThenInternal() to avoid race.
-    RefPtr<MozPromise> p = new MozPromise::Private(
-      "<completion promise>", true /* aIsCompletionPromise */);
-    thenValue->mCompletionPromise = p;
-    // Note ThenInternal() might nullify mCompletionPromise before return.
-    // So we need to return p instead of mCompletionPromise.
-    ThenInternal(aResponseThread, thenValue, aCallSite);
-    return p;
+    RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
+      Move(aResolveFunction), Move(aRejectFunction), aCallSite);
+    return ThenCommand(aResponseThread, aCallSite, thenValue.forget(), this);
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)
