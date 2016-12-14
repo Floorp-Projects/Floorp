@@ -73,7 +73,7 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
 
     def test_set_update_channel(self):
         self.software_update.update_channel = 'new_channel'
-        self.assertEqual(self.puppeteer.prefs.get_pref('app.update.channel', default_branch=True),
+        self.assertEqual(self.marionette.get_pref('app.update.channel', default_branch=True),
                          'new_channel')
 
 

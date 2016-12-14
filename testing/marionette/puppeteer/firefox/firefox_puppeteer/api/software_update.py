@@ -9,7 +9,6 @@ import mozinfo
 
 from firefox_puppeteer.base import BaseLib
 from firefox_puppeteer.api.appinfo import AppInfo
-from firefox_puppeteer.api.prefs import Preferences
 
 
 class ActiveUpdate(BaseLib):
@@ -170,7 +169,6 @@ class SoftwareUpdate(BaseLib):
         BaseLib.__init__(self, marionette)
 
         self.app_info = AppInfo(marionette)
-        self.prefs = Preferences(marionette)
 
         self._mar_channels = MARChannels(marionette)
         self._active_update = ActiveUpdate(marionette)
@@ -222,7 +220,7 @@ class SoftwareUpdate(BaseLib):
         return {
             'buildid': self.app_info.appBuildID,
             'channel': self.update_channel,
-            'disabled_addons': self.prefs.get_pref(self.PREF_DISABLED_ADDONS),
+            'disabled_addons': self.marionette.get_pref(self.PREF_DISABLED_ADDONS),
             'locale': self.app_info.locale,
             'mar_channels': self.mar_channels.channels,
             'update_url': update_url,
@@ -317,7 +315,8 @@ class SoftwareUpdate(BaseLib):
     @property
     def update_channel(self):
         """Return the currently used update channel."""
-        return self.prefs.get_pref(self.PREF_APP_UPDATE_CHANNEL, default_branch=True)
+        return self.marionette.get_pref(self.PREF_APP_UPDATE_CHANNEL,
+                                        default_branch=True)
 
     @update_channel.setter
     def update_channel(self, channel):
@@ -326,7 +325,8 @@ class SoftwareUpdate(BaseLib):
         :param channel: New update channel to use
 
         """
-        self.prefs.set_pref(self.PREF_APP_UPDATE_CHANNEL, channel, default_branch=True)
+        self.marionette.set_pref(self.PREF_APP_UPDATE_CHANNEL, channel,
+                                 default_branch=True)
 
     @property
     def update_type(self):
@@ -360,9 +360,9 @@ class SoftwareUpdate(BaseLib):
 
         :returns: The URL of the update snippet
         """
-        url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL_OVERRIDE)
+        url = self.marionette.get_pref(self.PREF_APP_UPDATE_URL_OVERRIDE)
         if not url:
-            url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL)
+            url = self.marionette.get_pref(self.PREF_APP_UPDATE_URL)
 
         # Format the URL by replacing placeholders
         url = self.marionette.execute_script("""
