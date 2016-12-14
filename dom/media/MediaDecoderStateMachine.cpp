@@ -1330,6 +1330,23 @@ private:
   bool mIsVideoQueueFinished = false;
 };
 
+/*
+ * Remove samples from the queue until aCompare() returns false.
+ * aCompare A function object with the signature bool(int64_t) which returns
+ *          true for samples that should be removed.
+ */
+template <typename Function> static void
+DiscardFrames(MediaQueue<MediaData>& aQueue, const Function& aCompare)
+{
+  while(aQueue.GetSize() > 0) {
+    if (aCompare(aQueue.PeekFront()->mTime)) {
+      RefPtr<MediaData> releaseMe = aQueue.PopFront();
+      continue;
+    }
+    break;
+  }
+}
+
 class MediaDecoderStateMachine::NextFrameSeekingState
   : public MediaDecoderStateMachine::SeekingState
 {
@@ -1352,6 +1369,8 @@ private:
       mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
       Info(), mMaster->Duration(),mMaster->GetMediaTime(),
       AudioQueue(), VideoQueue());
+
+    mTask = static_cast<NextFrameSeekTask*>(mSeekTask.get());
   }
 
   void ResetMDSM() override
@@ -1361,6 +1380,11 @@ private:
 
   void DoSeek() override
   {
+    auto currentTime = mTask->mCurrentTime;
+    DiscardFrames(mTask->mVideoQueue, [currentTime] (int64_t aSampleTime) {
+      return aSampleTime <= currentTime;
+    });
+
     mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (const SeekTaskResolveValue& aValue) {
@@ -1369,6 +1393,11 @@ private:
              [this] (const SeekTaskRejectValue& aValue) {
                OnSeekTaskRejected(aValue);
              }));
+
+    if (!mTask->IsVideoRequestPending() && mTask->NeedMoreVideo()) {
+      mTask->RequestVideoData();
+    }
+    mTask->MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
   }
 
   int64_t CalculateNewCurrentTime() const override
@@ -1417,6 +1446,9 @@ private:
 
     mMaster->DecodeError(aValue.mError);
   }
+
+  // For refactoring only, will be removed later.
+  RefPtr<NextFrameSeekTask> mTask;
 
 };
 
