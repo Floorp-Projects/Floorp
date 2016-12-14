@@ -11,12 +11,18 @@
 # of this, an item could have zero <failure-type>, which indicates it
 # is expected to pass, and override failure rule above it.
 
+
+#### Selectors 4 ####################################################
+
 # focus-within
 needs-focus selectors-4/focus-within-00*.html
 pref(dom.webcomponents.enabled,true) needs-focus selectors-4/focus-within-shadow-*.html
 
 # Bug 1208113
 fails needs-focus selectors-4/focus-within-shadow-001.html
+
+
+#### CSS Values 3 ####################################################
 
 # Fuzzy
 fuzzy-if(OSX,40,6) css-values-3/ch-unit-001.html
@@ -36,6 +42,104 @@ skip css-values-3/vh_not_refreshing_on_chrome_iframe.html
 # because of support files (in iframe subdir) not being copied (bug 1256580)
 skip css-values-3/vh-support-transform-origin.html
 skip css-values-3/vh-support-transform-translate.html
+
+
+#### CSS Writing Modes 3 #############################################
+
+# Fuzzy
+fuzzy-if(OSX||winWidget,255,480)  css-writing-modes-3/abs-pos-non-replaced-v??-???.xht
+fuzzy-if(OSX||winWidget,93,600)   css-writing-modes-3/baseline-inline-non-replaced-00?.xht
+fuzzy-if(OSX||winWidget,213,1540) css-writing-modes-3/block-flow-direction-???-0??.xht
+fuzzy-if(OSX,255,200)  css-writing-modes-3/box-offsets-rel-pos-vlr-005.xht
+fuzzy-if(OSX,255,200)  css-writing-modes-3/box-offsets-rel-pos-vrl-004.xht
+fuzzy-if(OSX||winWidget,93,300)   css-writing-modes-3/caption-side-v??-00?.xht
+fuzzy-if(OSX||winWidget,215,780)  css-writing-modes-3/central-baseline-alignment-00?.xht
+fuzzy-if(OSX||winWidget,75,404)   css-writing-modes-3/direction-v??-00?.xht
+fuzzy-if(OSX||winWidget,103,902)  css-writing-modes-3/float-contiguous-v??-01?.xht
+fuzzy-if(OSX||winWidget,93,300)   css-writing-modes-3/float-shrink-to-fit-vlr-009.xht
+fuzzy-if(OSX||winWidget,93,300)   css-writing-modes-3/float-shrink-to-fit-vrl-008.xht
+fuzzy-if(OSX||winWidget,93,300)   css-writing-modes-3/float-v??-0??.xht
+fuzzy-if(OSX||winWidget,62,404)   css-writing-modes-3/height-width-inline-non-replaced-v??-00?.xht
+fuzzy-if(OSX||winWidget,218,621)  css-writing-modes-3/inline-block-alignment-orthogonal-v??-00?.xht
+fuzzy-if(OSX||winWidget,104,1080) css-writing-modes-3/inline-block-alignment-slr-009.xht
+fuzzy-if(OSX||winWidget,111,960)  css-writing-modes-3/inline-block-alignment-srl-008.xht
+fuzzy-if(OSX||winWidget,213,1540) css-writing-modes-3/line-box-direction-???-0??.xht
+fuzzy-if(OSX||winWidget,110,1200) css-writing-modes-3/row-progression-???-0??.xht
+fuzzy-if(OSX||winWidget,110,1200) css-writing-modes-3/table-column-order-00?.xht
+fuzzy-if(winWidget,110,1200) css-writing-modes-3/table-column-order-slr-007.xht
+fuzzy-if(OSX||winWidget,110,1200) css-writing-modes-3/table-column-order-srl-006.xht
+fuzzy-if(OSX||winWidget,75,404)   css-writing-modes-3/text-align-v??-0??.xht
+fuzzy-if(OSX||winWidget,215,780)  css-writing-modes-3/text-baseline-???-00?.xht
+fuzzy-if(OSX,15,16)    css-writing-modes-3/text-combine-upright-decorations-001.html
+fuzzy-if(OSX||winWidget,255,480)  css-writing-modes-3/text-indent-v??-0??.xht
+fuzzy-if(OSX||winWidget,226,960)  css-writing-modes-3/text-orientation-016.xht
+fuzzy-if(OSX||winWidget,223,720)  css-writing-modes-3/vertical-alignment-*.xht
+fuzzy-if(OSX||winWidget,153,612)  css-writing-modes-3/writing-mode-vertical-??-00?.*
+fuzzy(255,960)  css-writing-modes-3/text-combine-upright-value-all-00?.html
+
+# Bug 1167911
+skip css-writing-modes-3/abs-pos-non-replaced-icb-vlr-021.xht
+skip css-writing-modes-3/abs-pos-non-replaced-icb-vrl-020.xht
+
+# Bug 1244601
+fails css-writing-modes-3/block-flow-direction-slr-058.xht
+fails css-writing-modes-3/block-flow-direction-srl-057.xht
+fails css-writing-modes-3/block-flow-direction-vlr-018.xht
+fails css-writing-modes-3/block-flow-direction-vrl-017.xht
+
+# Bug 1185430
+fails css-writing-modes-3/contiguous-floated-table-vlr-00?.xht
+fails css-writing-modes-3/contiguous-floated-table-vrl-00?.xht
+fails css-writing-modes-3/table-progression-slr-002.html
+fails css-writing-modes-3/table-progression-srl-002.html
+fails css-writing-modes-3/table-progression-vlr-00?.html
+      css-writing-modes-3/table-progression-vlr-001.html
+fails css-writing-modes-3/table-progression-vrl-00?.html
+      css-writing-modes-3/table-progression-vrl-001.html
+
+fails css-writing-modes-3/flexbox_align-items-stretch-writing-modes.html
+
+# Bug 1179952
+fails css-writing-modes-3/inline-block-alignment-00?.xht
+fuzzy-if(OSX||winWidget,111,960) css-writing-modes-3/inline-block-alignment-006.xht
+fails css-writing-modes-3/inline-table-alignment-00?.xht
+
+# Bug 1227616
+random css-writing-modes-3/line-box-direction-slr-056.xht
+random css-writing-modes-3/line-box-direction-srl-055.xht
+random css-writing-modes-3/line-box-direction-vlr-016.xht
+random css-writing-modes-3/line-box-direction-vrl-015.xht
+
+# Bug 1220352
+fails css-writing-modes-3/line-box-height-vlr-003.xht
+fails css-writing-modes-3/line-box-height-vlr-005.xht
+fails css-writing-modes-3/line-box-height-vlr-011.xht
+fails css-writing-modes-3/line-box-height-vlr-013.xht
+fails css-writing-modes-3/line-box-height-vlr-021.xht
+fails css-writing-modes-3/line-box-height-vlr-023.xht
+fails css-writing-modes-3/line-box-height-vrl-002.xht
+fails css-writing-modes-3/line-box-height-vrl-004.xht
+fails css-writing-modes-3/line-box-height-vrl-010.xht
+fails css-writing-modes-3/line-box-height-vrl-012.xht
+
+# Bug 1258635 - text-combine-upright: digits
+# Using skip because there are mismatch tests which would unexpectedly
+# pass with "fails".
+skip css-writing-modes-3/full-width-003.html
+skip css-writing-modes-3/text-combine-upright-value-digits?-001.html
+skip css-writing-modes-3/text-combine-upright-value-digits?-002.html
+
+# Bug 1220353
+fails css-writing-modes-3/vertical-alignment-vlr-023.xht
+fails css-writing-modes-3/vertical-alignment-vlr-025.xht
+fails css-writing-modes-3/vertical-alignment-vrl-022.xht
+fails css-writing-modes-3/vertical-alignment-vrl-024.xht
+
+# Bug 1102175
+fails css-writing-modes-3/wm-propagation-body-*.xht
+
+
+#### CSS Multi-column 1 ##############################################
 
 # Fuzzy annotations for multicol tests are due to AA differences.
 # Fails annotations need to be triaged later. (Bug 1299006)
