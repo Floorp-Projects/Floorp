@@ -8,6 +8,4 @@ protocol managerProtocol {
 parent:
     async managedProtocol(int i);
 
-state CREATING:
-    recv managedProtocol goto CREATING;
 };

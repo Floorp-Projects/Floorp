@@ -171,6 +171,8 @@ public:
                             const gfx::Matrix4x4& aTransform,
                             const gfx::Rect& aVisibleRect) override;
 
+  virtual bool SupportsLayerGeometry() const override;
+
   virtual void EndFrame() override;
 
   virtual bool SupportsPartialTextureUpdate() override;

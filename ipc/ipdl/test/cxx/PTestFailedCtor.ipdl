@@ -9,10 +9,12 @@ child:
     intr PTestFailedCtorSub();
     async __delete__();
 
+/*
 state CONSTRUCT:
     call PTestFailedCtorSub goto DEAD;
 state DEAD:
     send __delete__;
+*/
 };
 
 }

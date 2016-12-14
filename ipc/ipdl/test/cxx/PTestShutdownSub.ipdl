@@ -15,6 +15,7 @@ parent:
     async PTestShutdownSubsub(bool expectParentDeleted);
     sync __delete__();
 
+/*
 state CREATING:
     recv PTestShutdownSubsub goto CREATING;
     answer StackFrame goto DUMMYFRAME;
@@ -24,6 +25,7 @@ state DUMMYFRAME:
 
 state DEAD:
     recv __delete__;
+*/
 };
 
 } // namespace _ipdltest

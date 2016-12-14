@@ -15,7 +15,7 @@ parent:
     sync Sync2();
     async __delete__();
 
-
+/*
 state START:
     send Start goto TEST1;
 
@@ -35,6 +35,7 @@ state TEST2_P4:
 
 state DONE:
     recv __delete__;
+*/
 };
 
 } // namespace _ipdltest

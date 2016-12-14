@@ -7,6 +7,4 @@ intr protocol jetpackContent {
 child:
     async __delete__();
 
-state DEAD:
-    send __delete__;
 };
