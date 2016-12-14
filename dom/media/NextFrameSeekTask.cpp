@@ -235,16 +235,8 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
 {
   AssertOwnerThread();
 
-  auto currentTime = mCurrentTime;
-  DiscardFrames(mVideoQueue, [currentTime] (int64_t aSampleTime) {
-    return aSampleTime <= currentTime;
-  });
-
   RefPtr<SeekTaskPromise> promise = mSeekTaskPromise.Ensure(__func__);
-  if (!IsVideoRequestPending() && NeedMoreVideo()) {
-    RequestVideoData();
-  }
-  MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
+
   return promise;
 }
 
