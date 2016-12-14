@@ -1394,7 +1394,7 @@ private:
                OnSeekTaskRejected(aValue);
              }));
 
-    if (!mTask->IsVideoRequestPending() && NeedMoreVideo()) {
+    if (!IsVideoRequestPending() && NeedMoreVideo()) {
       RequestVideoData();
     }
     MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
@@ -1602,6 +1602,11 @@ private:
            !mTask->mIsVideoQueueFinished;
   }
 
+  bool IsVideoRequestPending() const
+  {
+    return Reader()->IsRequestingVideoData() || Reader()->IsWaitingVideoData();
+  }
+
   bool IsAudioSeekComplete() const
   {
     // Don't finish seek until there are no pending requests. Otherwise, we might
@@ -1613,7 +1618,7 @@ private:
   {
     // Don't finish seek until there are no pending requests. Otherwise, we might
     // lose video samples for the promise is resolved asynchronously.
-    return !mTask->IsVideoRequestPending() && !NeedMoreVideo();
+    return !IsVideoRequestPending() && !NeedMoreVideo();
   }
 
   void MaybeFinishSeek()
