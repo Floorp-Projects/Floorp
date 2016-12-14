@@ -13,7 +13,7 @@ child:
 parent:
     async Nonce();
 
-
+/*
 state START:
     send Start goto RACE;
 
@@ -27,6 +27,7 @@ state RACE2:
 
 state DEAD:
     send __delete__;
+*/
 };
 
 

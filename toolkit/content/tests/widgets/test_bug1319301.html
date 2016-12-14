@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - bug 1319301</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto"></video>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
+    getService(SpecialPowers.Ci.inIDOMUtils);
+
+  const video = document.getElementById("video");
+  const controlsSpacer = getAnonElementWithinVideoByAttribute(video, "anonid", "controlsSpacer");
+
+  const testCases = [];
+
+  testCases.push(() => new Promise(resolve => {
+    isnot(controlsSpacer.getAttribute("fadeout"), "true", "controlsSpacer should not fadeout before playing");
+
+    resolve();
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    video.src = "seek_with_sound.ogg";
+    video.addEventListener("play", resolve);
+    video.addEventListener("canplay", video.play);
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    is(controlsSpacer.getAttribute("fadeout"), "true", "controlsSpacer should fadeout once video starts playing");
+
+    resolve();
+  }));
+
+  function executeTestCases(tasks) {
+    return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
+  }
+
+  function startTest() {
+    executeTestCases(testCases).then(SimpleTest.finish);
+  }
+
+  function loadevent() {
+    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
+  }
+
+  window.addEventListener("load", loadevent, false);
+</script>
+</pre>
+</body>
+</html>

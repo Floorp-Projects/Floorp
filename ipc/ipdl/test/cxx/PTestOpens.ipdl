@@ -14,10 +14,12 @@ child:
 parent:
     async __delete__();
 
+/*
 state START:
     send Start goto DEAD;
 state DEAD:
     recv __delete__;
+*/
 };
 
 

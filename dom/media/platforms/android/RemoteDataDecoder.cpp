@@ -99,18 +99,6 @@ protected:
   MediaDataDecoderCallback* mDecoderCallback;
 };
 
-struct SampleTime final
-{
-  SampleTime(int64_t aStart, int64_t aDuration)
-    : mStart(aStart)
-    , mDuration(aDuration)
-  {}
-
-  int64_t mStart;
-  int64_t mDuration;
-};
-
-
 class RemoteVideoDecoder final : public RemoteDataDecoder
 {
 public:
@@ -288,18 +276,23 @@ private:
   class DurationQueue {
   public:
 
+    DurationQueue() : mMutex("Video duration queue") {}
+
     void Clear()
     {
+      MutexAutoLock lock(mMutex);
       mValues.clear();
     }
 
     void Put(int64_t aDurationUs)
     {
+      MutexAutoLock lock(mMutex);
       mValues.emplace_back(aDurationUs);
     }
 
     Maybe<int64_t> Get()
     {
+      MutexAutoLock lock(mMutex);
       if (mValues.empty()) {
         return Nothing();
       }
@@ -311,6 +304,7 @@ private:
     }
 
   private:
+    Mutex mMutex; // To protect mValues.
     std::deque<int64_t> mValues;
   };
 

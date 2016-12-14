@@ -81,11 +81,10 @@ VRManager::VRManager()
   mgr = VRDisplayManagerOpenVR::Create();
   if (mgr) {
     mManagers.AppendElement(mgr);
-  }
-
-  controllerMgr = VRControllerManagerOpenVR::Create();
-  if (controllerMgr) {
-    mControllerManagers.AppendElement(controllerMgr);
+    controllerMgr = VRControllerManagerOpenVR::Create();
+    if (controllerMgr) {
+      mControllerManagers.AppendElement(controllerMgr);
+    }
   }
 
   // OSVR is cross platform compatible
