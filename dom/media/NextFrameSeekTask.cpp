@@ -29,8 +29,6 @@ NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
                                      MediaQueue<MediaData>& aAudioQueue,
                                      MediaQueue<MediaData>& aVideoQueue)
   : SeekTask(aDecoderID, aThread, aReader, aTarget)
-  , mAudioQueue(aAudioQueue)
-  , mVideoQueue(aVideoQueue)
   , mCurrentTime(aCurrentTime)
   , mDuration(aDuration)
 {
