@@ -1321,13 +1321,12 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
 // of the array. If the check succeeds, check that the size
 // of the output does not exceed UINT32_MAX bytes. Allocate
 // the memory and copy the elements by memcpy.
-static bool
+static void*
 CheckTargetAndPopulate(const nsXPTType& type,
                        uint8_t requiredType,
                        size_t typeSize,
                        uint32_t count,
                        JSObject* tArr,
-                       void** output,
                        nsresult* pErr)
 {
     // Check that the element type expected by the interface matches
@@ -1337,20 +1336,20 @@ CheckTargetAndPopulate(const nsXPTType& type,
         if (pErr)
             *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
-        return false;
+        return nullptr;
     }
 
-    // Calulate the maximum number of elements that can fit in
+    // Calculate the maximum number of elements that can fit in
     // UINT32_MAX bytes.
     size_t max = UINT32_MAX / typeSize;
 
     // This could overflow on 32-bit systems so check max first.
     size_t byteSize = count * typeSize;
-    if (count > max || !(*output = moz_xmalloc(byteSize))) {
+    if (count > max) {
         if (pErr)
             *pErr = NS_ERROR_OUT_OF_MEMORY;
 
-        return false;
+        return nullptr;
     }
 
     JS::AutoCheckCannotGC nogc;
@@ -1362,11 +1361,13 @@ CheckTargetAndPopulate(const nsXPTType& type,
         if (pErr)
             *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
 
-        return false;
+        return nullptr;
     }
 
-    memcpy(*output, buf, byteSize);
-    return true;
+    void* output = moz_xmalloc(byteSize);
+
+    memcpy(output, buf, byteSize);
+    return output;
 }
 
 // Fast conversion of typed arrays to native using memcpy.
@@ -1404,66 +1405,74 @@ XPCConvert::JSTypedArray2Native(void** d,
 
     switch (JS_GetArrayBufferViewType(jsArray)) {
     case js::Scalar::Int8:
-        if (!CheckTargetAndPopulate(nsXPTType::T_I8, type,
-                                    sizeof(int8_t), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_I8, type,
+                                        sizeof(int8_t), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
 
     case js::Scalar::Uint8:
     case js::Scalar::Uint8Clamped:
-        if (!CheckTargetAndPopulate(nsXPTType::T_U8, type,
-                                    sizeof(uint8_t), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_U8, type,
+                                        sizeof(uint8_t), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
 
     case js::Scalar::Int16:
-        if (!CheckTargetAndPopulate(nsXPTType::T_I16, type,
-                                    sizeof(int16_t), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_I16, type,
+                                        sizeof(int16_t), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
 
     case js::Scalar::Uint16:
-        if (!CheckTargetAndPopulate(nsXPTType::T_U16, type,
-                                    sizeof(uint16_t), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_U16, type,
+                                        sizeof(uint16_t), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
 
     case js::Scalar::Int32:
-        if (!CheckTargetAndPopulate(nsXPTType::T_I32, type,
-                                    sizeof(int32_t), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_I32, type,
+                                        sizeof(int32_t), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
 
     case js::Scalar::Uint32:
-        if (!CheckTargetAndPopulate(nsXPTType::T_U32, type,
-                                    sizeof(uint32_t), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_U32, type,
+                                        sizeof(uint32_t), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
 
     case js::Scalar::Float32:
-        if (!CheckTargetAndPopulate(nsXPTType::T_FLOAT, type,
-                                    sizeof(float), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_FLOAT, type,
+                                        sizeof(float), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
 
     case js::Scalar::Float64:
-        if (!CheckTargetAndPopulate(nsXPTType::T_DOUBLE, type,
-                                    sizeof(double), count,
-                                    jsArray, &output, pErr)) {
+        output = CheckTargetAndPopulate(nsXPTType::T_DOUBLE, type,
+                                        sizeof(double), count,
+                                        jsArray, pErr);
+        if (!output) {
             return false;
         }
         break;
