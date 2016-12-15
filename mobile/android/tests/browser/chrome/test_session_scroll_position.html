@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
 
     // Creates a tab, sets a scroll position and closes the tab.
     function createAndRemoveTab() {
-      return Task.spawn(function () {
+      return Task.spawn(function* () {
         // Create a new tab.
         tabScroll = BrowserApp.addTab(URL);
         let browser = tabScroll.browser;
@@ -120,7 +120,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
 
     // Creates a tab, sets a scroll position and closes the tab.
     function createAndRemoveReaderTab() {
-      return Task.spawn(function () {
+      return Task.spawn(function* () {
         // Create a new tab.
         tabScroll = BrowserApp.addTab(URL_reader);
         let browser = tabScroll.browser;
@@ -176,7 +176,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
 
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
-      return Task.spawn(function () {
+      return Task.spawn(function* () {
         // Create a new tab.
         tabScroll = BrowserApp.addTab(URL);
         let browser = tabScroll.browser;
@@ -238,7 +238,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
 
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
-      return Task.spawn(function () {
+      return Task.spawn(function* () {
         // Create a new tab.
         tabScroll = BrowserApp.addTab(URL_desktop);
         let browser = tabScroll.browser;
