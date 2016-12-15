@@ -269,9 +269,8 @@ MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
     // Note: We don't have a way to communicate from chrome that the CDM has
     // failed to download, so we'll just let the timeout fail us in that case.
     nsTArray<PendingRequest> requests;
-    for (size_t i = mRequests.Length(); i > 0; i--) {
-      const size_t index = i - i;
-      PendingRequest& request = mRequests[index];
+    for (size_t i = mRequests.Length(); i-- > 0; ) {
+      PendingRequest& request = mRequests[i];
       nsAutoCString message;
       MediaKeySystemStatus status =
         MediaKeySystemAccess::GetKeySystemStatus(request.mKeySystem, message);
@@ -281,7 +280,7 @@ MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
       }
       // Status has changed, retry request.
       requests.AppendElement(Move(request));
-      mRequests.RemoveElementAt(index);
+      mRequests.RemoveElementAt(i);
     }
     // Retry all pending requests, but this time fail if the CDM is not installed.
     for (PendingRequest& request : requests) {
