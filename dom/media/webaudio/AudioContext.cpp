@@ -23,6 +23,7 @@
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "mozilla/dom/PannerNodeBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/StereoPannerNodeBinding.h"
 #include "mozilla/dom/WaveShaperNodeBinding.h"
 
 #include "AudioBuffer.h"
@@ -350,12 +351,7 @@ AudioContext::CreateAnalyser(ErrorResult& aRv)
 already_AddRefed<StereoPannerNode>
 AudioContext::CreateStereoPanner(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<StereoPannerNode> stereoPannerNode = new StereoPannerNode(this);
-  return stereoPannerNode.forget();
+  return StereoPannerNode::Create(*this, StereoPannerOptions(), aRv);
 }
 
 already_AddRefed<MediaElementAudioSourceNode>

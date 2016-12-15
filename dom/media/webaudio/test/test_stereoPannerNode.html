@@ -49,7 +49,7 @@ function applyMonoToStereoPanning(c, panning) {
 
 // Test the DOM interface
 var context = new OfflineAudioContext(1, 1, SR);
-var stereoPanner = context.createStereoPanner();
+var stereoPanner = new StereoPannerNode(context);
 ok(stereoPanner.pan, "The AudioParam member must exist");
 is(stereoPanner.pan.value, 0.0, "Correct initial value");
 is(stereoPanner.pan.defaultValue, 0.0, "Correct default value");
