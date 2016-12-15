@@ -1730,6 +1730,55 @@ public class LocalBrowserDB extends BrowserDB {
     }
 
     @Override
+    public void pinSiteForAS(ContentResolver cr, String url, String title) {
+        ContentValues values = new ContentValues();
+        final long now = System.currentTimeMillis();
+        values.put(Bookmarks.TITLE, title);
+        values.put(Bookmarks.URL, url);
+        values.put(Bookmarks.PARENT, Bookmarks.FIXED_PINNED_LIST_ID);
+        values.put(Bookmarks.DATE_MODIFIED, now);
+        values.put(Bookmarks.POSITION, Bookmarks.FIXED_AS_PIN_POSITION);
+        values.put(Bookmarks.IS_DELETED, 0);
+
+        cr.insert(mBookmarksUriWithProfile, values);
+    }
+
+    @Override
+    public void unpinSiteForAS(ContentResolver cr, String url) {
+        cr.delete(mBookmarksUriWithProfile,
+                Bookmarks.PARENT + " == ? AND " +
+                Bookmarks.POSITION + " == ? AND " +
+                Bookmarks.URL + " = ?",
+                new String[] {
+                        String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID),
+                        String.valueOf(Bookmarks.FIXED_AS_PIN_POSITION),
+                        url
+                });
+    }
+
+    @Override
+    public boolean isPinnedForAS(ContentResolver cr, String url) {
+        final Cursor c = cr.query(bookmarksUriWithLimit(1),
+                new String[] { Bookmarks._ID },
+                Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " = ? AND " + Bookmarks.POSITION + " = ?",
+                new String[] {
+                        url,
+                        String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID),
+                        String.valueOf(Bookmarks.FIXED_AS_PIN_POSITION)
+                }, null);
+
+        if (c == null) {
+            throw new IllegalStateException("Null cursor in isPinnedByUrl");
+        }
+
+        try {
+            return c.getCount() > 0;
+        } finally {
+            c.close();
+        }
+    }
+
+    @Override
     @RobocopTarget
     public Cursor getBookmarkForUrl(ContentResolver cr, String url) {
         Cursor c = cr.query(bookmarksUriWithLimit(1),
@@ -1857,6 +1906,8 @@ public class LocalBrowserDB extends BrowserDB {
                         String.valueOf(limit))
                 .appendQueryParameter(BrowserContract.PARAM_SUGGESTEDSITES_LIMIT,
                         String.valueOf(suggestedRangeLimit))
+                .appendQueryParameter(BrowserContract.PARAM_NON_POSITIONED_PINS,
+                        String.valueOf(true))
                 .build();
 
         return new TelemetrisedCursorLoader(context,
