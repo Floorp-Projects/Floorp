@@ -2500,27 +2500,6 @@ XMLHttpRequestMainThread::CreateChannel()
     secFlags |= nsILoadInfo::SEC_COOKIES_OMIT;
   }
 
-  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(mPrincipal);
-  if (ep) {
-    // If we have an expanded principal, instead of using that, select the
-    // principal in the whitelist which can load our URL, and use that instead.
-    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist = nullptr;
-    ep->GetWhiteList(&whitelist);
-    if (!whitelist) {
-      return NS_ERROR_FAILURE;
-    }
-    MOZ_ASSERT(!(secFlags & nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS));
-    bool dataInherits = (secFlags &
-      (nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-       nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS)) != 0;
-    for (const auto& principal : *whitelist) {
-      if (NS_SUCCEEDED(principal->CheckMayLoad(mRequestURL, false, dataInherits))) {
-        mPrincipal = principal;
-        break;
-      }
-    }
-  }
-
   // Use the responsibleDocument if we have it, except for dedicated workers
   // where it will be the parent document, which is not the one we want to use.
   nsresult rv;
@@ -2558,6 +2537,35 @@ XMLHttpRequestMainThread::CreateChannel()
       timedChannel->SetInitiatorType(NS_LITERAL_STRING("xmlhttprequest"));
     }
   }
+
+  // Using the provided principal as the triggeringPrincipal is fine, since we
+  // want to be able to access any of the origins that the principal has access
+  // to during the security checks, but we don't want a document to inherit an
+  // expanded principal, so in that case we need to select the principal in the
+  // expanded principal's whitelist that can load our URL as principalToInherit.
+  nsCOMPtr<nsIPrincipal> resultingDocumentPrincipal(mPrincipal);
+  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(mPrincipal);
+  if (ep) {
+    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist = nullptr;
+    ep->GetWhiteList(&whitelist);
+    if (!whitelist) {
+      return NS_ERROR_FAILURE;
+    }
+    MOZ_ASSERT(!(secFlags & nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS));
+    bool dataInherits = (secFlags &
+      (nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+       nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS)) != 0;
+    for (const auto& principal : *whitelist) {
+      if (NS_SUCCEEDED(principal->CheckMayLoad(mRequestURL, false, dataInherits))) {
+        resultingDocumentPrincipal = principal;
+        break;
+      }
+    }
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+  rv = loadInfo->SetPrincipalToInherit(resultingDocumentPrincipal);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
