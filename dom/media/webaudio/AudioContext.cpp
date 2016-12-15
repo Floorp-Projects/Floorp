@@ -340,12 +340,7 @@ AudioContext::CreateScriptProcessor(uint32_t aBufferSize,
 already_AddRefed<AnalyserNode>
 AudioContext::CreateAnalyser(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<AnalyserNode> analyserNode = new AnalyserNode(this);
-  return analyserNode.forget();
+  return AnalyserNode::Create(*this, AnalyserOptions(), aRv);
 }
 
 already_AddRefed<StereoPannerNode>
