@@ -202,9 +202,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SymKey,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11GenericObject,
                                           PK11GenericObject,
                                           PK11_DestroyGenericObject)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSEC_PKCS12DecoderContext,
-                                          SEC_PKCS12DecoderContext,
-                                          SEC_PKCS12DecoderFinish)
 namespace internal {
 
 inline void
@@ -371,10 +368,13 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePLArenaPool,
                                       internal::PORT_FreeArena_false)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePORTString,
                                       char,
-                                      PORT_Free);
+                                      PORT_Free)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRFileDesc,
                                       PRFileDesc,
                                       PR_Close)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePRLibraryName,
+                                      char,
+                                      PR_FreeLibraryName)
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECAlgorithmID,
                                       SECAlgorithmID,

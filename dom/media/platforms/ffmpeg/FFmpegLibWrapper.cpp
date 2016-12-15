@@ -14,16 +14,6 @@
 namespace mozilla
 {
 
-FFmpegLibWrapper::FFmpegLibWrapper()
-{
-  PodZero(this);
-}
-
-FFmpegLibWrapper::~FFmpegLibWrapper()
-{
-  Unlink();
-}
-
 FFmpegLibWrapper::LinkResult
 FFmpegLibWrapper::Link()
 {
