@@ -49,8 +49,9 @@ WebSocketChannelParent::RecvDeleteSelf()
   LOG(("WebSocketChannelParent::RecvDeleteSelf() %p\n", this));
   mChannel = nullptr;
   mAuthProvider = nullptr;
+  IProtocol* mgr = Manager();
   if (mIPCOpen && !Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }

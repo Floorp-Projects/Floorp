@@ -573,7 +573,7 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
-  
+
   TimeStamp now = TimeStamp::Now();
 
   if (drawFps) {
@@ -926,7 +926,8 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
 
   // Render our layers.
   RootLayer()->Prepare(ViewAs<RenderTargetPixel>(clipRect, PixelCastJustification::RenderTargetIsParentLayerForRoot));
-  RootLayer()->RenderLayer(clipRect.ToUnknownRect());
+  RootLayer()->RenderLayer(clipRect.ToUnknownRect(), Nothing());
+  RootLayer()->Cleanup();
 
   if (!mRegionToClear.IsEmpty()) {
     for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
@@ -1133,7 +1134,7 @@ LayerManagerComposite::RenderToPresentationSurface()
   const IntRect clipRect = IntRect::Truncate(0, 0, actualWidth, actualHeight);
 
   RootLayer()->Prepare(RenderTargetIntRect::FromUnknownRect(clipRect));
-  RootLayer()->RenderLayer(clipRect);
+  RootLayer()->RenderLayer(clipRect, Nothing());
 
   mCompositor->EndFrame();
 }
@@ -1170,7 +1171,8 @@ public:
 
   virtual void Destroy() override { mDestroyed = true; }
 
-  virtual void RenderLayer(const gfx::IntRect& aClipRect) override {}
+  virtual void RenderLayer(const gfx::IntRect& aClipRect,
+                           const Maybe<gfx::Polygon>& aGeometry) override {}
   virtual void CleanupResources() override {};
 
   virtual void GenEffectChain(EffectChain& aEffect) override {}
@@ -1213,7 +1215,8 @@ public:
 
   virtual void Destroy() override { mDestroyed = true; }
 
-  virtual void RenderLayer(const gfx::IntRect& aClipRect) override {}
+  virtual void RenderLayer(const gfx::IntRect& aClipRect,
+                           const Maybe<gfx::Polygon>& aGeometry) override {}
   virtual void CleanupResources() override {};
 
   virtual void GenEffectChain(EffectChain& aEffect) override {}

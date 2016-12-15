@@ -42,11 +42,14 @@ URLClassifierParent::StartClassify(nsIPrincipal* aPrincipal,
 nsresult
 URLClassifierParent::OnClassifyComplete(nsresult aRv)
 {
-  Unused << Send__delete__(this, aRv);
+  if (mIPCOpen) {
+    Unused << Send__delete__(this, aRv);
+  }
   return NS_OK;
 }
 
 void
 URLClassifierParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  mIPCOpen = false;
 }

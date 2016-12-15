@@ -56,18 +56,6 @@ WorkletGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto
   return nullptr;
 }
 
-bool
-WorkletGlobalScope::WrapGlobalObject(JSContext* aCx,
-                                     nsIPrincipal* aPrincipal,
-                                     JS::MutableHandle<JSObject*> aReflector)
-{
-  JS::CompartmentOptions options;
-  return WorkletGlobalScopeBinding::Wrap(aCx, this, this,
-                                         options,
-                                         nsJSPrincipals::get(aPrincipal),
-                                         true, aReflector);
-}
-
 Console*
 WorkletGlobalScope::GetConsole(ErrorResult& aRv)
 {

@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from ctypes import *
 import os
 import sys

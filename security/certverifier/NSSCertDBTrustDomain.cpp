@@ -17,8 +17,8 @@
 #include "certdb.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsNSSCertificate.h"
 #include "nsServiceManagerUtils.h"
@@ -43,8 +43,6 @@ extern LazyLogModule gCertVerifierLog;
 static const uint64_t ServerFailureDelaySeconds = 5 * 60;
 
 namespace mozilla { namespace psm {
-
-const char BUILTIN_ROOTS_MODULE_DEFAULT_NAME[] = "Builtin Roots Module";
 
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            OCSPFetching ocspFetching,
@@ -1107,20 +1105,13 @@ DisableMD5()
     0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
 }
 
-SECStatus
-LoadLoadableRoots(/*optional*/ const char* dir, const char* modNameUTF8)
+bool
+LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8)
 {
-  PR_ASSERT(modNameUTF8);
-
-  if (!modNameUTF8) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
-  }
-
-  UniquePtr<char, void(&)(char*)>
-    fullLibraryPath(PR_GetLibraryName(dir, "nssckbi"), PR_FreeLibraryName);
+  UniquePRLibraryName fullLibraryPath(
+    PR_GetLibraryName(dir.IsEmpty() ? nullptr : dir.get(), "nssckbi"));
   if (!fullLibraryPath) {
-    return SECFailure;
+    return false;
   }
 
   // Escape the \ and " characters.
@@ -1128,33 +1119,34 @@ LoadLoadableRoots(/*optional*/ const char* dir, const char* modNameUTF8)
   escapedFullLibraryPath.ReplaceSubstring("\\", "\\\\");
   escapedFullLibraryPath.ReplaceSubstring("\"", "\\\"");
   if (escapedFullLibraryPath.IsEmpty()) {
-    return SECFailure;
+    return false;
   }
 
-  // If a module exists with the same name, delete it.
-  int modType;
-  SECMOD_DeleteModule(modNameUTF8, &modType);
+  // If a module exists with the same name, make a best effort attempt to delete
+  // it. Note that it isn't possible to delete the internal module, so checking
+  // the return value would be detrimental in that case.
+  int unusedModType;
+  Unused << SECMOD_DeleteModule(modNameUTF8.get(), &unusedModType);
 
   nsAutoCString pkcs11ModuleSpec;
-  pkcs11ModuleSpec.AppendPrintf("name=\"%s\" library=\"%s\"", modNameUTF8,
+  pkcs11ModuleSpec.AppendPrintf("name=\"%s\" library=\"%s\"", modNameUTF8.get(),
                                 escapedFullLibraryPath.get());
   if (pkcs11ModuleSpec.IsEmpty()) {
-    return SECFailure;
+    return false;
   }
 
   UniqueSECMODModule rootsModule(
     SECMOD_LoadUserModule(const_cast<char*>(pkcs11ModuleSpec.get()), nullptr,
                           false));
   if (!rootsModule) {
-    return SECFailure;
+    return false;
   }
 
   if (!rootsModule->loaded) {
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
+    return false;
   }
 
-  return SECSuccess;
+  return true;
 }
 
 void

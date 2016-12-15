@@ -528,8 +528,19 @@ public:
       return mFilter && mFilter->ReferencesValidResources();
     }
 
-    bool HasNoFilterOrHasValidFilter() {
+    /*
+     * @return true if we either do not have filter or all filters we have
+     * are valid.
+     */
+    bool HasNoOrValidFilter() {
       return !mFilter || mFilter->ReferencesValidResources();
+    }
+
+    /*
+     * @return true if we have an invalid filter.
+     */
+    bool HasInvalidFilter() {
+      return !HasNoOrValidFilter();
     }
   };
 

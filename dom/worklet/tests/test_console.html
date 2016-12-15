@@ -33,7 +33,7 @@ var cl = new consoleListener();
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
-  {"set": [["dom.worklet.testing.enabled", true],
+  {"set": [["dom.audioWorklet.enabled", true],
            ["dom.worklet.enabled", true]]},
   function() { loadTest("file_console.html"); });
 

@@ -21,7 +21,7 @@ parent:
 
     async __delete__();
 
-
+/*
 state START:
     send Start goto TESTING;
 
@@ -31,6 +31,7 @@ state TESTING:
 
 state DYING:
     recv __delete__;
+*/
 };
 
 } // namespace _ipdltest

@@ -13,6 +13,9 @@ class nsITimeoutHandler;
 class nsGlobalWindow;
 
 namespace mozilla {
+
+class ThrottledEventQueue;
+
 namespace dom {
 
 // This class manages the timeouts in a Window's setTimeout/setInterval pool.
@@ -28,7 +31,7 @@ public:
   static uint32_t GetNestingLevel() { return sNestingLevel; }
   static void SetNestingLevel(uint32_t aLevel) { sNestingLevel = aLevel; }
 
-  bool HasTimeouts() const { return !mTimeouts.isEmpty(); }
+  bool HasTimeouts() const { return !mTimeouts.IsEmpty(); }
 
   nsresult SetTimeout(nsITimeoutHandler* aHandler,
                       int32_t interval, bool aIsInterval,
@@ -44,9 +47,6 @@ public:
                          bool aRunningPendingTimeouts);
 
   void ClearAllTimeouts();
-  // Insert aTimeout into the list, before all timeouts that would
-  // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
-  void InsertTimeoutIntoList(mozilla::dom::Timeout* aTimeout);
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
   // Apply back pressure to the window if the TabGroup ThrottledEventQueue
@@ -87,29 +87,96 @@ public:
   template <class Callable>
   void ForEachTimeout(Callable c)
   {
-    for (Timeout* timeout = mTimeouts.getFirst();
-         timeout;
-         timeout = timeout->getNext()) {
-      c(timeout);
-    }
+    mTimeouts.ForEach(c);
+  }
+
+  // Run some code for each Timeout in our list, but let the callback cancel
+  // the iteration by returning true.
+  template <class Callable>
+  void ForEachTimeoutAbortable(Callable c)
+  {
+    mTimeouts.ForEachAbortable(c);
   }
 
 private:
   nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS);
 
 private:
+  typedef mozilla::LinkedList<mozilla::dom::Timeout> TimeoutList;
+  struct Timeouts {
+    Timeouts()
+      : mTimeoutInsertionPoint(nullptr)
+    {
+    }
+
+    // Insert aTimeout into the list, before all timeouts that would
+    // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
+    enum class SortBy
+    {
+      TimeRemaining,
+      TimeWhen
+    };
+    void Insert(mozilla::dom::Timeout* aTimeout, SortBy aSortBy);
+    nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
+                                             int32_t aMinTimeoutValueMS,
+                                             SortBy aSortBy,
+                                             mozilla::ThrottledEventQueue* aQueue);
+
+    const Timeout* GetFirst() const { return mTimeoutList.getFirst(); }
+    Timeout* GetFirst() { return mTimeoutList.getFirst(); }
+    const Timeout* GetLast() const { return mTimeoutList.getLast(); }
+    Timeout* GetLast() { return mTimeoutList.getLast(); }
+    bool IsEmpty() const { return mTimeoutList.isEmpty(); }
+    void InsertFront(Timeout* aTimeout) { mTimeoutList.insertFront(aTimeout); }
+    void Clear() { mTimeoutList.clear(); }
+
+    void SetInsertionPoint(Timeout* aTimeout)
+    {
+      mTimeoutInsertionPoint = aTimeout;
+    }
+    Timeout* InsertionPoint()
+    {
+      return mTimeoutInsertionPoint;
+    }
+
+    template <class Callable>
+    void ForEach(Callable c)
+    {
+      for (Timeout* timeout = GetFirst();
+           timeout;
+           timeout = timeout->getNext()) {
+        c(timeout);
+      }
+    }
+
+    template <class Callable>
+    void ForEachAbortable(Callable c)
+    {
+      for (Timeout* timeout = GetFirst();
+           timeout;
+           timeout = timeout->getNext()) {
+        if (c(timeout)) {
+          break;
+        }
+      }
+    }
+
+  private:
+    // mTimeoutList is generally sorted by mWhen, unless mTimeoutInsertionPoint is
+    // non-null.  In that case, the dummy timeout pointed to by
+    // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
+    // that come after it.
+    TimeoutList               mTimeoutList;
+    // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
+    // This is a dummy timeout at the moment; if that ever changes, the logic in
+    // ResetTimersForThrottleReduction needs to change.
+    mozilla::dom::Timeout*    mTimeoutInsertionPoint;
+  };
+
   // Each nsGlobalWindow object has a TimeoutManager member.  This reference
   // points to that holder object.
   nsGlobalWindow&             mWindow;
-  // mTimeouts is generally sorted by mWhen, unless mTimeoutInsertionPoint is
-  // non-null.  In that case, the dummy timeout pointed to by
-  // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
-  // that come after it.
-  mozilla::LinkedList<mozilla::dom::Timeout> mTimeouts;
-  // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
-  // This is a dummy timeout at the moment; if that ever changes, the logic in
-  // ResetTimersForThrottleReduction needs to change.
-  mozilla::dom::Timeout*      mTimeoutInsertionPoint;
+  Timeouts                    mTimeouts;
   uint32_t                    mTimeoutIdCounter;
   uint32_t                    mTimeoutFiringDepth;
   mozilla::dom::Timeout*      mRunningTimeout;

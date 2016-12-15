@@ -7,6 +7,7 @@
 #include "WebBrowserPersistDocumentParent.h"
 
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/dom/PContentParent.h"
 #include "nsIInputStream.h"
 #include "nsThreadUtils.h"
 #include "WebBrowserPersistResourcesParent.h"
@@ -84,8 +85,9 @@ WebBrowserPersistDocumentParent::RecvInitFailure(const nsresult& aFailure)
     mOnReady->OnError(aFailure);
     mOnReady = nullptr;
     // Warning: Send__delete__ deallocates this object.
+    IProtocol* mgr = Manager();
     if (!Send__delete__(this)) {
-        return IPC_FAIL_NO_REASON(this);
+        return IPC_FAIL_NO_REASON(mgr);
     }
     return IPC_OK();
 }

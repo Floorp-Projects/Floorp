@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/gfx/Polygon.h"        // for Polygon
 #include "mozilla/gfx/Rect.h"           // for RoundedToInt, Rect
 #include "mozilla/gfx/Types.h"          // for SamplingFilter::LINEAR
 #include "mozilla/layers/Compositor.h"  // for Compositor
@@ -98,7 +99,8 @@ PaintedLayerComposite::GetRenderState()
 }
 
 void
-PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
+PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect,
+                                   const Maybe<gfx::Polygon>& aGeometry)
 {
   if (!mBuffer || !mBuffer->IsAttached()) {
     return;
@@ -123,17 +125,14 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
   }
 #endif
 
-
   RenderWithAllMasks(this, compositor, aClipRect,
-                     [&](EffectChain& effectChain, const gfx::IntRect& clipRect) {
+                     [&](EffectChain& effectChain,
+                     const gfx::IntRect& clipRect) {
     mBuffer->SetPaintWillResample(MayResample());
 
-    mBuffer->Composite(this, effectChain,
-                       GetEffectiveOpacity(),
-                       GetEffectiveTransform(),
-                       GetSamplingFilter(),
-                       clipRect,
-                       &visibleRegion);
+    mBuffer->Composite(this, effectChain, GetEffectiveOpacity(),
+                       GetEffectiveTransform(), GetSamplingFilter(),
+                       clipRect, &visibleRegion, aGeometry);
   });
 
   mBuffer->BumpFlashCounter();

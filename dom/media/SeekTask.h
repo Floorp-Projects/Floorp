@@ -8,6 +8,8 @@
 #define SEEK_TASK_H
 
 #include "mozilla/MozPromise.h"
+#include "MediaData.h"          // For MediaData::Type.
+#include "MediaDecoderReader.h" // For WaitForDataRejectValue.
 #include "MediaResult.h"
 #include "SeekTarget.h"
 
@@ -56,8 +58,6 @@ public:
 
   virtual RefPtr<SeekTaskPromise> Seek(const media::TimeUnit& aDuration) = 0;
 
-  virtual bool NeedToResetMDSM() const = 0;
-
   virtual int64_t CalculateNewCurrentTime() const = 0;
 
   virtual void HandleAudioDecoded(MediaData* aAudio) = 0;
@@ -80,6 +80,7 @@ protected:
 
   virtual ~SeekTask();
 
+public:
   void Resolve(const char* aCallSite);
 
   void RejectIfExist(const MediaResult& aError, const char* aCallSite);

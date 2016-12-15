@@ -6,6 +6,4 @@ sync protocol compositor {
 child:
     async __delete__();
 
-state DEAD:
-    send __delete__;
 };

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Exceptions in Worklet</title>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+setupTest();
+
+// This loading should fail
+audioWorklet.import("404.js")
+.then(() => {
+  ok(false, "We should not be called!");
+}, () => {
+  ok(true, "The script thrown but we are still here.");
+})
+
+// This should throw from JS
+.then(() => {
+  return audioWorklet.import("worklet_exception.js")
+})
+.then(() => {
+  ok(false, "We should not be called!");
+}, () => {
+  ok(true, "The script thrown but we are still here.");
+})
+
+.then(() => {
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>

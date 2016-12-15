@@ -55,13 +55,6 @@ NextFrameSeekTask::Discard()
   mIsDiscarded = true;
 }
 
-bool
-NextFrameSeekTask::NeedToResetMDSM() const
-{
-  AssertOwnerThread();
-  return false;
-}
-
 int64_t
 NextFrameSeekTask::CalculateNewCurrentTime() const
 {

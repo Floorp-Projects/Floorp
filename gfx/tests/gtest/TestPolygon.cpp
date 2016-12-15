@@ -14,9 +14,9 @@
 
 using namespace mozilla::gfx;
 
-TEST(Polygon3D, TriangulateRectangle)
+TEST(Polygon, TriangulateRectangle)
 {
-  const Polygon3D p {
+  const Polygon p {
     Point3D(0.0f, 0.0f, 1.0f),
     Point3D(0.0f, 1.0f, 1.0f),
     Point3D(1.0f, 1.0f, 1.0f),
@@ -32,9 +32,9 @@ TEST(Polygon3D, TriangulateRectangle)
   AssertArrayEQ(triangles, expected);
 }
 
-TEST(Polygon3D, TriangulatePentagon)
+TEST(Polygon, TriangulatePentagon)
 {
-  const Polygon3D p {
+  const Polygon p {
     Point3D(0.0f, 0.0f, 1.0f),
     Point3D(0.0f, 1.0f, 1.0f),
     Point3D(0.5f, 1.5f, 1.0f),
@@ -52,92 +52,84 @@ TEST(Polygon3D, TriangulatePentagon)
   AssertArrayEQ(triangles, expected);
 }
 
-TEST(Polygon3D, ClipRectangle)
+void
+TestClipRect(const Polygon& aPolygon,
+             const Polygon& aExpected,
+             const Rect& aRect)
 {
-  Polygon3D clipped, expected;
+  const Polygon res = aPolygon.ClipPolygon(Polygon::FromRect(aRect));
+  EXPECT_TRUE(res == aExpected);
+}
 
-  Polygon3D polygon {
+TEST(Polygon, ClipRectangle)
+{
+  Polygon polygon {
     Point3D(0.0f, 0.0f, 0.0f),
     Point3D(0.0f, 1.0f, 0.0f),
     Point3D(1.0f, 1.0f, 0.0f),
     Point3D(1.0f, 0.0f, 0.0f)
   };
+  TestClipRect(polygon, polygon, Rect(0.0f, 0.0f, 1.0f, 1.0f));
 
-  clipped = polygon.ClipPolygon(Rect(0.0f, 0.0f, 1.0f, 1.0f));
-  EXPECT_TRUE(clipped == polygon);
-
-
-  clipped = polygon.ClipPolygon(Rect(0.0f, 0.0f, 0.8f, 0.8f));
-  expected = Polygon3D {
+  Polygon expected = Polygon {
     Point3D(0.0f, 0.0f, 0.0f),
     Point3D(0.0f, 0.8f, 0.0f),
     Point3D(0.8f, 0.8f, 0.0f),
     Point3D(0.8f, 0.0f, 0.0f)
   };
-  EXPECT_TRUE(clipped == expected);
+  TestClipRect(polygon, expected, Rect(0.0f, 0.0f, 0.8f, 0.8f));
 
-
-  clipped = polygon.ClipPolygon(Rect(0.2f, 0.2f, 0.8f, 0.8f));
-  expected = Polygon3D {
+  expected = Polygon {
     Point3D(0.2f, 0.2f, 0.0f),
     Point3D(0.2f, 1.0f, 0.0f),
     Point3D(1.0f, 1.0f, 0.0f),
     Point3D(1.0f, 0.2f, 0.0f)
   };
-  EXPECT_TRUE(clipped == expected);
+  TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.8f, 0.8f));
 
-
-  clipped = polygon.ClipPolygon(Rect(0.2f, 0.2f, 0.6f, 0.6f));
-  expected = Polygon3D {
+  expected = Polygon {
     Point3D(0.2f, 0.2f, 0.0f),
     Point3D(0.2f, 0.8f, 0.0f),
     Point3D(0.8f, 0.8f, 0.0f),
     Point3D(0.8f, 0.2f, 0.0f)
   };
-  EXPECT_TRUE(clipped == expected);
+  TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.6f, 0.6f));
 }
 
-TEST(Polygon3D, ClipTriangle)
+TEST(Polygon, ClipTriangle)
 {
-  Polygon3D clipped, expected;
-  const Polygon3D polygon {
+  Polygon clipped, expected;
+  const Polygon polygon {
     Point3D(0.0f, 0.0f, 0.0f),
     Point3D(0.0f, 1.0f, 0.0f),
     Point3D(1.0f, 1.0f, 0.0f)
   };
 
-  clipped = polygon.ClipPolygon(Rect(0.0f, 0.0f, 1.0f, 1.0f));
-  expected = Polygon3D {
+  expected = Polygon {
     Point3D(0.0f, 0.0f, 0.0f),
     Point3D(0.0f, 1.0f, 0.0f),
     Point3D(1.0f, 1.0f, 0.0f)
   };
-  EXPECT_TRUE(clipped == expected);
+  TestClipRect(polygon, expected, Rect(0.0f, 0.0f, 1.0f, 1.0f));
 
-
-  clipped = polygon.ClipPolygon(Rect(0.0f, 0.0f, 0.8f, 0.8f));
-  expected = Polygon3D {
+  expected = Polygon {
     Point3D(0.0f, 0.0f, 0.0f),
     Point3D(0.0f, 0.8f, 0.0f),
     Point3D(0.8f, 0.8f, 0.0f)
   };
-  EXPECT_TRUE(clipped == expected);
+  TestClipRect(polygon, expected, Rect(0.0f, 0.0f, 0.8f, 0.8f));
 
-
-  clipped = polygon.ClipPolygon(Rect(0.2f, 0.2f, 0.8f, 0.8f));
-  expected = Polygon3D {
+  expected = Polygon {
     Point3D(0.2f, 0.2f, 0.0f),
     Point3D(0.2f, 1.0f, 0.0f),
     Point3D(1.0f, 1.0f, 0.0f)
   };
-  EXPECT_TRUE(clipped == expected);
+  TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.8f, 0.8f));
 
-
-  clipped = polygon.ClipPolygon(Rect(0.2f, 0.2f, 0.6f, 0.6f));
-  expected = Polygon3D {
+  expected = Polygon {
     Point3D(0.2f, 0.2f, 0.0f),
     Point3D(0.2f, 0.8f, 0.0f),
     Point3D(0.8f, 0.8f, 0.0f)
   };
-  EXPECT_TRUE(clipped == expected);
+  TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.6f, 0.6f));
 }

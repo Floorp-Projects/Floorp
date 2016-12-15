@@ -557,8 +557,10 @@
                             this.setupStatusFader();
                             if (!this._triggeredByControls && this.dynamicControls && this.videocontrols.isTouchControls)
                                 this.startFadeOut(this.controlBar);
-                            if (!this._triggeredByControls)
+                            if (!this._triggeredByControls) {
                                 this.clickToPlay.hidden = true;
+                                this.controlsSpacer.setAttribute("fadeout", "true");
+                            }
                             this._triggeredByControls = false;
                             break;
                         case "pause":

@@ -148,11 +148,11 @@ TEST(MozPromise, CompletionPromises)
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue, &invokedPass] () -> void {
     TestPromise::CreateAndResolve(40, __func__)
-    ->ThenPromise(queue, __func__,
+    ->Then(queue, __func__,
       [] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndResolve(aVal + 10, __func__); },
       DO_FAIL)
-    ->ThenPromise(queue, __func__, [&invokedPass] () -> void { invokedPass = true; }, DO_FAIL)
-    ->ThenPromise(queue, __func__,
+    ->Then(queue, __func__, [&invokedPass] () -> void { invokedPass = true; }, DO_FAIL)
+    ->Then(queue, __func__,
       [queue] (int aVal) -> RefPtr<TestPromise> {
         RefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
         nsCOMPtr<nsIRunnable> resolver = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(aVal - 8), 10);
@@ -160,7 +160,7 @@ TEST(MozPromise, CompletionPromises)
         return RefPtr<TestPromise>(p);
       },
       DO_FAIL)
-    ->ThenPromise(queue, __func__,
+    ->Then(queue, __func__,
       [queue] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndReject(double(aVal - 42) + 42.0, __func__); },
       DO_FAIL)
     ->Then(queue, __func__,
@@ -228,7 +228,7 @@ TEST(MozPromise, Chaining)
     auto p = TestPromise::CreateAndResolve(42, __func__);
     const size_t kIterations = 100;
     for (size_t i = 0; i < kIterations; ++i) {
-      p = p->ThenPromise(queue, __func__,
+      p = p->Then(queue, __func__,
         [] (int aVal) {
           EXPECT_EQ(aVal, 42);
         },

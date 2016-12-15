@@ -96,7 +96,7 @@ function Spinner(props, context) {
      */
     setState(newState) {
       const { value, items } = this.state;
-      const { value: newValue, items: newItems, isValueSet, isInvalid } = newState;
+      const { value: newValue, items: newItems, isValueSet, isInvalid, smoothScroll = true } = newState;
 
       if (this._isArrayDiff(newItems, items)) {
         this.state = Object.assign(this.state, newState);
@@ -104,15 +104,17 @@ function Spinner(props, context) {
         this._scrollTo(newValue, true);
       } else if (newValue != value) {
         this.state = Object.assign(this.state, newState);
-        this._smoothScrollTo(newValue);
+        if (smoothScroll) {
+          this._smoothScrollTo(newValue, true);
+        } else {
+          this._scrollTo(newValue, true);
+        }
       }
 
-      if (isValueSet) {
-        if (isInvalid) {
-          this._removeSelection();
-        } else {
-          this._updateSelection();
-        }
+      if (isValueSet && !isInvalid) {
+        this._updateSelection();
+      } else {
+        this._removeSelection();
       }
     },
 

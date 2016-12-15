@@ -521,7 +521,7 @@ public:
   gfx::Matrix4x4 GetShadowTransform();
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool GetShadowOpacitySetByAnimation() { return mShadowOpacitySetByAnimation; }
-  
+
   /**
    * Return true if a checkerboarding background color needs to be drawn
    * for this layer.
@@ -575,6 +575,7 @@ public:
    * concrete class destructor
    */
   virtual void Destroy();
+  virtual void Cleanup() {}
 
   /**
    * Perform a first pass over the layer tree to render all of the intermediate
@@ -585,7 +586,8 @@ public:
   virtual void Prepare(const RenderTargetIntRect& aClipRect) {}
 
   // TODO: This should also take RenderTargetIntRect like Prepare.
-  virtual void RenderLayer(const gfx::IntRect& aClipRect) = 0;
+  virtual void RenderLayer(const gfx::IntRect& aClipRect,
+                           const Maybe<gfx::Polygon>& aGeometry) = 0;
 
   virtual bool SetCompositableHost(CompositableHost*)
   {

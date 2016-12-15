@@ -18,7 +18,6 @@
 #include "nsNetUtil.h"
 #include "pkix/pkixnss.h"
 #include "prerror.h"
-#include "secerr.h"
 
 // Generated in Makefile.in
 #include "marketplace-prod-public.inc"
@@ -57,7 +56,7 @@ AppTrustDomain::AppTrustDomain(UniqueCERTCertList& certChain, void* pinArg)
 {
 }
 
-SECStatus
+nsresult
 AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
 {
   SECItem trustedDER;
@@ -120,36 +119,31 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
         MOZ_ASSERT(!NS_IsMainThread());
         nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
         if (!file) {
-          PR_SetError(SEC_ERROR_IO, 0);
-          return SECFailure;
+          return NS_ERROR_FAILURE;
         }
         nsresult rv = file->InitWithNativePath(
-            Preferences::GetCString(kDevImportedDER));
+          Preferences::GetCString(kDevImportedDER));
         if (NS_FAILED(rv)) {
-          PR_SetError(SEC_ERROR_IO, 0);
-          return SECFailure;
+          return rv;
         }
 
         nsCOMPtr<nsIInputStream> inputStream;
-        NS_NewLocalFileInputStream(getter_AddRefs(inputStream), file, -1, -1,
-                                   nsIFileInputStream::CLOSE_ON_EOF);
-        if (!inputStream) {
-          PR_SetError(SEC_ERROR_IO, 0);
-          return SECFailure;
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), file, -1,
+                                        -1, nsIFileInputStream::CLOSE_ON_EOF);
+        if (NS_FAILED(rv)) {
+          return rv;
         }
 
         uint64_t length;
         rv = inputStream->Available(&length);
         if (NS_FAILED(rv)) {
-          PR_SetError(SEC_ERROR_IO, 0);
-          return SECFailure;
+          return rv;
         }
 
         auto data = MakeUnique<char[]>(length);
         rv = inputStream->Read(data.get(), length, &sDevImportedDERLen);
         if (NS_FAILED(rv)) {
-          PR_SetError(SEC_ERROR_IO, 0);
-          return SECFailure;
+          return rv;
         }
 
         MOZ_ASSERT(length == sDevImportedDERLen);
@@ -163,17 +157,16 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
     }
 
     default:
-      PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-      return SECFailure;
+      return NS_ERROR_INVALID_ARG;
   }
 
   mTrustedRoot.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
                                              &trustedDER, nullptr, false, true));
   if (!mTrustedRoot) {
-    return SECFailure;
+    return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
 
-  return SECSuccess;
+  return NS_OK;
 }
 
 Result

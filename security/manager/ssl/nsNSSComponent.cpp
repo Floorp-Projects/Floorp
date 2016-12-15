@@ -1205,9 +1205,7 @@ nsNSSComponent::LoadLoadableRoots()
     }
 
     NS_ConvertUTF16toUTF8 modNameUTF8(modName);
-    if (mozilla::psm::LoadLoadableRoots(
-            libDir.Length() > 0 ? libDir.get() : nullptr,
-            modNameUTF8.get()) == SECSuccess) {
+    if (mozilla::psm::LoadLoadableRoots(libDir, modNameUTF8)) {
       break;
     }
   }

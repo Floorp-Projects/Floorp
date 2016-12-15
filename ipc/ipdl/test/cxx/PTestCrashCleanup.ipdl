@@ -12,10 +12,12 @@ child:
     intr DIEDIEDIE();
     async __delete__();
 
+/*
 state ALIVE:
     call DIEDIEDIE goto CRASH;
 state CRASH:
     send __delete__;
+*/
 };
 
 }

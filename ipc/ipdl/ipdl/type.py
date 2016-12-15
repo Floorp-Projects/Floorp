@@ -5,10 +5,10 @@
 
 import os, sys
 
-from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, StructDecl, TransitionStmt
+from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, StructDecl
 from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor
 from ipdl.ast import ASYNC, SYNC, INTR
-from ipdl.ast import IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
+from ipdl.ast import IN, OUT, INOUT
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
 import ipdl.builtin as builtin
 
@@ -19,12 +19,6 @@ def _otherside(side):
     if side == 'parent':  return 'child'
     elif side == 'child': return 'parent'
     else:  assert 0 and 'unknown side "%s"'% (side)
-
-def unique_pairs(s):
-    n = len(s)
-    for i, e1 in enumerate(s):
-        for j in xrange(i+1, n):
-            yield (e1, s[j])
 
 def cartesian_product(s1, s2):
     for e1 in s1:
@@ -49,9 +43,6 @@ class TypeVisitor:
     def visitImportedCxxType(self, t, *args):
         pass
 
-    def visitStateType(self, s, *args):
-        pass
-
     def visitMessageType(self, m, *args):
         for param in m.params:
             param.accept(self, *args)
@@ -67,7 +58,6 @@ class TypeVisitor:
 
     def visitActorType(self, a, *args):
         a.protocol.accept(self, *args)
-        a.state.accept(self, *args)
 
     def visitStructType(self, s, *args):
         if s in self.visited:
@@ -195,7 +185,6 @@ class ImportedCxxType(CxxType):
 class IPDLType(Type):
     def isIPDL(self):  return True
     def isVisible(self): return True
-    def isState(self): return False
     def isMessage(self): return False
     def isProtocol(self): return False
     def isActor(self): return False
@@ -237,17 +226,6 @@ class IPDLType(Type):
 
     def needsMoreJuiceThan(self, o):
         return not IPDLType.convertsTo(self, o)
-
-class StateType(IPDLType):
-    def __init__(self, protocol, name, start=False):
-        self.protocol = protocol
-        self.name = name
-        self.start = start
-    def isState(self): return True
-    def name(self):
-        return self.name
-    def fullname(self):
-        return self.name()
 
 class MessageType(IPDLType):
     def __init__(self, nested, prio, sendSemantics, direction,
@@ -295,7 +273,7 @@ class Bridge:
         return hash(self.parent) + hash(self.child)
 
 class ProtocolType(IPDLType):
-    def __init__(self, qname, nestedRange, sendSemantics, stateless=False):
+    def __init__(self, qname, nestedRange, sendSemantics):
         self.qname = qname
         self.nestedRange = nestedRange
         self.sendSemantics = sendSemantics
@@ -303,7 +281,6 @@ class ProtocolType(IPDLType):
         self.opens = set()              # ProtocolType
         self.managers = []           # ProtocolType
         self.manages = [ ]
-        self.stateless = stateless
         self.hasDelete = False
         self.hasReentrantDelete = False
     def isProtocol(self): return True
@@ -364,9 +341,8 @@ class ProtocolType(IPDLType):
         for mgr in self.managers: return mgr
 
 class ActorType(IPDLType):
-    def __init__(self, protocol, state=None, nullable=0):
+    def __init__(self, protocol, nullable=0):
         self.protocol = protocol
-        self.state = state
         self.nullable = nullable
     def isActor(self): return True
 
@@ -639,10 +615,6 @@ With this information, it finally type checks the AST.'''
                 and runpass(CheckProcessGraph(self.errors))):
             return False
 
-        if (tu.protocol
-            and len(tu.protocol.startStates)
-            and not runpass(CheckStateMachine(self.errors))):
-            return False
         return True
 
     def reportErrors(self, errout):
@@ -712,8 +684,7 @@ class GatherDecls(TcheckVisitor):
             fullname = str(qname)
             p.decl = self.declare(
                 loc=p.loc,
-                type=ProtocolType(qname, p.nestedRange, p.sendSemantics,
-                                  stateless=(0 == len(p.transitionStmts))),
+                type=ProtocolType(qname, p.nestedRange, p.sendSemantics),
                 shortname=p.name,
                 fullname=None if 0 == len(qname.quals) else fullname)
 
@@ -926,94 +897,6 @@ class GatherDecls(TcheckVisitor):
                     "constructor declaration required for managed protocol `%s' (managed by protocol `%s')",
                     mgdname, p.name)
 
-        p.states = { }
-
-        if len(p.transitionStmts):
-            p.startStates = [ ts for ts in p.transitionStmts
-                              if ts.state.start ]
-            if 0 == len(p.startStates):
-                p.startStates = [ p.transitionStmts[0] ]
-
-        # declare implicit "any", "dead", and "dying" states
-        self.declare(loc=State.ANY.loc,
-                     type=StateType(p.decl.type, State.ANY.name, start=False),
-                     progname=State.ANY.name)
-        self.declare(loc=State.DEAD.loc,
-                     type=StateType(p.decl.type, State.DEAD.name, start=False),
-                     progname=State.DEAD.name)
-        if p.decl.type.hasReentrantDelete:
-            self.declare(loc=State.DYING.loc,
-                         type=StateType(p.decl.type, State.DYING.name, start=False),
-                         progname=State.DYING.name)
-
-        # declare each state before decorating their mention
-        for trans in p.transitionStmts:
-            p.states[trans.state] = trans
-            trans.state.decl = self.declare(
-                loc=trans.state.loc,
-                type=StateType(p.decl.type, trans.state, trans.state.start),
-                progname=trans.state.name)
-
-        for trans in p.transitionStmts:
-            self.seentriggers = set()
-            trans.accept(self)
-
-        if not (p.decl.type.stateless
-                or (p.decl.type.isToplevel()
-                    and None is self.symtab.lookup(_DELETE_MSG))):
-            # add a special state |state DEAD: null goto DEAD;|
-            deadtrans = TransitionStmt.makeNullStmt(State.DEAD)
-            p.states[State.DEAD] = deadtrans
-            if p.decl.type.hasReentrantDelete:
-                dyingtrans = TransitionStmt.makeNullStmt(State.DYING)
-                p.states[State.DYING] = dyingtrans
-
-        # visit the message decls once more and resolve the state names
-        # attached to actor params and returns
-        def resolvestate(loc, actortype):
-            assert actortype.isIPDL() and actortype.isActor()
-
-            # already resolved this guy's state
-            if isinstance(actortype.state, Decl):
-                return
-
-            if actortype.state is None:
-                # we thought this was a C++ type until type checking,
-                # when we realized it was an IPDL actor type.  But
-                # that means that the actor wasn't specified to be in
-                # any particular state
-                actortype.state = State.ANY
-
-            statename = actortype.state.name
-            # FIXME/cjones: this is just wrong.  we need the symbol table
-            # of the protocol this actor refers to.  low priority bug
-            # since nobody's using this feature yet
-            statedecl = self.symtab.lookup(statename)
-            if statedecl is None:
-                self.error(
-                    loc,
-                    "protocol `%s' does not have the state `%s'",
-                    actortype.protocol.name(),
-                    statename)
-            elif not statedecl.type.isState():
-                self.error(
-                    loc,
-                    "tag `%s' is supposed to be of state type, but is instead of type `%s'",
-                    statename,
-                    statedecl.type.typename())
-            else:
-                actortype.state = statedecl.type
-
-        for msg in p.messageDecls:
-            for iparam in msg.inParams:
-                loc = iparam.loc
-                for actortype in iteractortypes(iparam.type):
-                    resolvestate(loc, actortype)
-            for oparam in msg.outParams:
-                loc = oparam.loc
-                for actortype in iteractortypes(oparam.type):
-                    resolvestate(loc, actortype)
-
         # FIXME/cjones declare all the little C++ thingies that will
         # be generated.  they're not relevant to IPDL itself, but
         # those ("invisible") symbols can clash with others in the
@@ -1161,56 +1044,6 @@ class GatherDecls(TcheckVisitor):
             progname=msgname)
         md.protocolDecl = self.currentProtocolDecl
         md.decl._md = md
-
-
-    def visitTransitionStmt(self, ts):
-        self.seentriggers = set()
-        TcheckVisitor.visitTransitionStmt(self, ts)
-
-    def visitTransition(self, t):
-        loc = t.loc
-
-        # check the trigger message
-        mname = t.msg
-        if t in self.seentriggers:
-            self.error(loc, "trigger `%s' appears multiple times", t.msg)
-        self.seentriggers.add(t)
-
-        mdecl = self.symtab.lookup(mname)
-        if mdecl is not None and mdecl.type.isIPDL() and mdecl.type.isProtocol():
-            mdecl = self.symtab.lookup(mname +'Constructor')
-
-        if mdecl is None:
-            self.error(loc, "message `%s' has not been declared", mname)
-        elif not mdecl.type.isMessage():
-            self.error(
-                loc,
-                "`%s' should have message type, but instead has type `%s'",
-                mname, mdecl.type.typename())
-        else:
-            t.msg = mdecl
-
-        # check the to-states
-        seenstates = set()
-        for toState in t.toStates:
-            sname = toState.name
-            sdecl = self.symtab.lookup(sname)
-
-            if sname in seenstates:
-                self.error(loc, "to-state `%s' appears multiple times", sname)
-            seenstates.add(sname)
-
-            if sdecl is None:
-                self.error(loc, "state `%s' has not been declared", sname)
-            elif not sdecl.type.isState():
-                self.error(
-                    loc, "`%s' should have state type, but instead has type `%s'",
-                    sname, sdecl.type.typename())
-            else:
-                toState.decl = sdecl
-                toState.start = sdecl.type.start
-
-        t.toStates = set(t.toStates)
 
 
     def _canonicalType(self, itype, typespec):
@@ -1521,27 +1354,6 @@ class CheckTypes(TcheckVisitor):
                 "ctor for protocol `%s', which is not managed by protocol `%s'",
                 mname[:-len('constructor')], pname)
 
-
-    def visitTransition(self, t):
-        _YNC = [ ASYNC, SYNC ]
-
-        loc = t.loc
-        impliedDirection, impliedSems = {
-            SEND: [ OUT, _YNC ], RECV: [ IN, _YNC ],
-            CALL: [ OUT, INTR ],  ANSWER: [ IN, INTR ],
-         } [t.trigger]
-
-        if (OUT is impliedDirection and t.msg.type.isIn()
-            or IN is impliedDirection and t.msg.type.isOut()
-            or _YNC is impliedSems and t.msg.type.isInterrupt()
-            or INTR is impliedSems and (not t.msg.type.isInterrupt())):
-            mtype = t.msg.type
-
-            self.error(
-                loc, "%s %s message `%s' is not `%s'd",
-                mtype.sendSemantics.pretty, mtype.direction.pretty,
-                t.msg.progname,
-                t.trigger.pretty)
 
 ##-----------------------------------------------------------------------------
 
@@ -1868,308 +1680,3 @@ class CheckProcessGraph(TcheckVisitor):
             for opensList in ProcessGraph.opens.itervalues():
                 for opens in opensList:
                     print '  ', opens
-
-##-----------------------------------------------------------------------------
-
-class CheckStateMachine(TcheckVisitor):
-    def __init__(self, errors):
-        # don't need the symbol table, we just want the error reporting
-        TcheckVisitor.__init__(self, None, errors)
-        self.p = None
-
-    def visitProtocol(self, p):
-        self.p = p
-        self.checkReachability(p)
-        for ts in p.transitionStmts:
-            ts.accept(self)
-
-    def visitTransitionStmt(self, ts):
-        # We want to disallow "race conditions" in protocols.  These
-        # can occur when a protocol state machine has a state that
-        # allows triggers of opposite direction.  That declaration
-        # allows the parent to send the child a message at the
-        # exact instance the child sends the parent a message.  One of
-        # those messages would (probably) violate the state machine
-        # and cause the child to be terminated.  It's obviously very
-        # nice if we can forbid this at the level of IPDL state
-        # machines, rather than resorting to static or dynamic
-        # checking of C++ implementation code.
-        #
-        # An easy way to avoid this problem in IPDL is to only allow
-        # "unidirectional" protocol states; that is, from each state,
-        # only send or only recv triggers are allowed.  This approach
-        # is taken by the Singularity project's "contract-based
-        # message channels."  However, this can be something of a
-        # notational burden for stateful protocols.
-        #
-        # If two messages race, the effect is that the parent's and
-        # child's states get temporarily out of sync.  Informally,
-        # IPDL allows this *only if* the state machines get out of
-        # sync for only *one* step (state machine transition), then
-        # sync back up.  This is a design decision: the states could
-        # be allowd to get out of sync for any constant k number of
-        # steps.  (If k is unbounded, there's no point in presenting
-        # the abstraction of parent and child actor states being
-        # "entangled".)  The working hypothesis is that the more steps
-        # the states are allowed to be out of sync, the harder it is
-        # to reason about the protocol.
-        #
-        # Slightly less informally, two messages are allowed to race
-        # only if processing them in either order leaves the protocol
-        # in the same state.  That is, messages A and B are allowed to
-        # race only if processing A then B leaves the protocol in
-        # state S, *and* processing B then A also leaves the protocol
-        # in state S.  Technically, if this holds, then messages A and
-        # B could be called "commutative" wrt to actor state.
-        #
-        # "Formally", state machine definitions must adhere to two
-        # rules.
-        #
-        #   *Rule 1*: from a state S, all sync triggers must be of the same
-        # "direction," i.e. only |send| or only |recv|
-        #
-        # (Pairs of sync messages can't commute, because otherwise
-        # deadlock can occur from simultaneously in-flight sync
-        # requests.)
-        #
-        #   *Rule 2*: the "Diamond Rule".
-        #   from a state S,
-        #     for any pair of triggers t1 and t2,
-        #         where t1 and t2 have opposite direction,
-        #         and t1 transitions to state T1 and t2 to T2,
-        #       then the following must be true:
-        #         (T2 allows the trigger t1, transitioning to state U)
-        #         and
-        #         (T1 allows the trigger t2, transitioning to state U)
-        #         and
-        #         (
-        #           (
-        #             (all of T1's triggers have the same direction as t2)
-        #             and
-        #             (all of T2's triggers have the same direction as t1)
-        #           )
-        #           or
-        #           (T1, T2, and U are the same "terminal state")
-        #         )
-        #
-        # A "terminal state" S is one from which all triggers
-        # transition back to S itself.
-        #
-        # The presence of triggers with multiple out states complicates
-        # this check slightly, but doesn't fundamentally change it.
-        #
-        #   from a state S,
-        #     for any pair of triggers t1 and t2,
-        #         where t1 and t2 have opposite direction,
-        #       for each pair of states (T1, T2) \in t1_out x t2_out,
-        #           where t1_out is the set of outstates from t1
-        #                 t2_out is the set of outstates from t2
-        #                 t1_out x t2_out is their Cartesian product
-        #                 and t1 transitions to state T1 and t2 to T2,
-        #         then the following must be true:
-        #           (T2 allows the trigger t1, with out-state set { U })
-        #           and
-        #           (T1 allows the trigger t2, with out-state set { U })
-        #           and
-        #           (
-        #             (
-        #               (all of T1's triggers have the same direction as t2)
-        #               and
-        #               (all of T2's triggers have the same direction as t1)
-        #             )
-        #             or
-        #             (T1, T2, and U are the same "terminal state")
-        #           )
-
-        # check Rule 1
-        syncdirection = None
-        syncok = True
-        for trans in ts.transitions:
-            if not trans.msg.type.isSync(): continue
-            if syncdirection is None:
-                syncdirection = trans.trigger.direction()
-            elif syncdirection is not trans.trigger.direction():
-                self.error(
-                    trans.loc,
-                    "sync trigger at state `%s' in protocol `%s' has different direction from earlier sync trigger at same state",
-                    ts.state.name, self.p.name)
-                syncok = False
-        # don't check the Diamond Rule if Rule 1 doesn't hold
-        if not syncok:
-            return
-
-        # helper functions
-        def triggerTargets(S, t):
-            '''Return the set of states transitioned to from state |S|
-upon trigger |t|, or { } if |t| is not a trigger in |S|.'''
-            for trans in self.p.states[S].transitions:
-                if t.trigger is trans.trigger and t.msg is trans.msg:
-                    return trans.toStates
-            return set()
-
-        def allTriggersSameDirectionAs(S, t):
-            '''Return true iff all the triggers from state |S| have the same
-direction as trigger |t|'''
-            direction = t.direction()
-            for trans in self.p.states[S].transitions:
-                if direction != trans.trigger.direction():
-                    return False
-            return True
-
-        def terminalState(S):
-            '''Return true iff |S| is a "terminal state".'''
-            for trans in self.p.states[S].transitions:
-                for S_ in trans.toStates:
-                    if S_ != S:  return False
-            return True
-
-        def sameTerminalState(S1, S2, S3):
-            '''Return true iff states |S1|, |S2|, and |S3| are all the same
-"terminal state".'''
-            if isinstance(S3, set):
-                assert len(S3) == 1
-                for S3_ in S3: pass
-                S3 = S3_
-
-            return (S1 == S2 == S3) and terminalState(S1)
-
-        S = ts.state.name
-
-        # check the Diamond Rule
-        for (t1, t2) in unique_pairs(ts.transitions):
-            # if the triggers have the same direction, they can't race,
-            # since only one endpoint can initiate either (and delivery
-            # is in-order)
-            if t1.trigger.direction() == t2.trigger.direction():
-                continue
-
-            loc = t1.loc
-            t1_out = t1.toStates
-            t2_out = t2.toStates
-
-            for (T1, T2) in cartesian_product(t1_out, t2_out):
-                # U1 <- { u | T1 --t2--> u }
-                U1 = triggerTargets(T1, t2)
-                # U2 <- { u | T2 --t1--> u }
-                U2 = triggerTargets(T2, t1)
-
-                # don't report more than one Diamond Rule violation
-                # per state. there may be O(n^4) total, way too many
-                # for a human to parse
-                #
-                # XXX/cjones: could set a limit on #printed and stop
-                # after that limit ...
-                raceError = False
-                errT1 = None
-                errT2 = None
-
-                if 0 == len(U1) or 0 == len(U2):
-                    print "******* case 1"
-                    raceError = True
-                elif 1 < len(U1) or 1 < len(U2):
-                    raceError = True
-                    # there are potentially many unpaired states; just
-                    # pick two
-                    print "******* case 2"
-                    for u1, u2 in cartesian_product(U1, U2):
-                        if u1 != u2:
-                            errT1, errT2 = u1, u2
-                            break
-                elif U1 != U2:
-                    print "******* case 3"
-                    raceError = True
-                    for errT1 in U1: pass
-                    for errT2 in U2: pass
-
-                if raceError:
-                    self.reportRaceError(loc, S,
-                                         [ T1, t1, errT1 ],
-                                         [ T2, t2, errT2 ])
-                    return
-
-                if not ((allTriggersSameDirectionAs(T1, t2.trigger)
-                           and allTriggersSameDirectionAs(T2, t1.trigger))
-                          or sameTerminalState(T1, T2, U1)):
-                    self.reportRunawayError(loc, S, [ T1, t1, None ], [ T2, t2, None ])
-                    return
-
-    def checkReachability(self, p):
-        def explore(ts, visited):
-            if ts.state in visited:
-                return
-            visited.add(ts.state)
-            for outedge in ts.transitions:
-                for toState in outedge.toStates:
-                    explore(p.states[toState], visited)
-
-        checkfordelete = (State.DEAD in p.states)
-
-        allvisited = set()         # set(State)
-        for root in p.startStates:
-            visited = set()
-
-            explore(root, visited)
-            allvisited.update(visited)
-
-            if checkfordelete and State.DEAD not in visited:
-                self.error(
-                    root.loc,
-                    "when starting from state `%s', actors of protocol `%s' cannot be deleted", root.state.name, p.name)
-
-        for ts in p.states.itervalues():
-            if ts.state is not State.DEAD and ts.state not in allvisited:
-                self.error(ts.loc,
-                           "unreachable state `%s' in protocol `%s'",
-                           ts.state.name, p.name)
-
-
-    def _normalizeTransitionSequences(self, t1Seq, t2Seq):
-        T1, M1, U1 = t1Seq
-        T2, M2, U2 = t2Seq
-        assert M1 is not None and M2 is not None
-
-        # make sure that T1/M1/U1 is the parent side of the race
-        if M1.trigger is RECV or M1.trigger is ANSWER:
-            T1, M1, U1, T2, M2, U2 = T2, M2, U2, T1, M1, U1
-
-        def stateName(S):
-            if S: return S.name
-            return '[error]'
-
-        T1 = stateName(T1)
-        T2 = stateName(T2)
-        U1 = stateName(U1)
-        U2 = stateName(U2)
-
-        return T1, M1.msg.progname, U1, T2, M2.msg.progname, U2
-
-
-    def reportRaceError(self, loc, S, t1Seq, t2Seq):
-        T1, M1, U1, T2, M2, U2 = self._normalizeTransitionSequences(t1Seq, t2Seq)
-        self.error(
-            loc,
-"""in protocol `%(P)s', the sequence of events
-     parent:    +--`send %(M1)s'-->( state `%(T1)s' )--`recv %(M2)s'-->( state %(U1)s )
-               /
- ( state `%(S)s' )
-               \\
-      child:    +--`send %(M2)s'-->( state `%(T2)s' )--`recv %(M1)s'-->( state %(U2)s )
-results in error(s) or leaves parent/child state out of sync for more than one step and is thus a race hazard; i.e., triggers `%(M1)s' and `%(M2)s' fail to commute in state `%(S)s'"""% {
-                'P': self.p.name, 'S': S, 'M1': M1, 'M2': M2,
-                'T1': T1, 'T2': T2, 'U1': U1, 'U2': U2
-        })
-
-
-    def reportRunawayError(self, loc, S, t1Seq, t2Seq):
-        T1, M1, _, T2, M2, __ = self._normalizeTransitionSequences(t1Seq, t2Seq)
-        self.error(
-            loc,
-        """in protocol `%(P)s', the sequence of events
-     parent:    +--`send %(M1)s'-->( state `%(T1)s' )
-               /
- ( state `%(S)s' )
-               \\
-      child:    +--`send %(M2)s'-->( state `%(T2)s' )
-lead to parent/child states in which parent/child state can become more than one step out of sync (though this divergence might not lead to error conditions)"""% {
-                'P': self.p.name, 'S': S, 'M1': M1, 'M2': M2, 'T1': T1, 'T2': T2
-        })

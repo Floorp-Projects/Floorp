@@ -16,11 +16,12 @@
 namespace mozilla {
 namespace gfx {
 
+bool FuzzyEquals(const Point4D& lhs, const Point4D& rhs);
 bool FuzzyEquals(const Point3D& lhs, const Point3D& rhs);
 bool FuzzyEquals(const Point& lhs, const Point& rhs);
 
 bool operator==(const Triangle& lhs, const Triangle& rhs);
-bool operator==(const Polygon3D& lhs, const Polygon3D& rhs);
+bool operator==(const Polygon& lhs, const Polygon& rhs);
 
 // Compares two arrays with the equality operator.
 template<typename T>

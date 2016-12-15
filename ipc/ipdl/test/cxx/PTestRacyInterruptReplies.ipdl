@@ -12,6 +12,7 @@ parent:
     intr _R() returns (int replyNum);
     async A_();
 
+/*
 state PARENT_START:
     call R_ goto PARENT_S1;
 
@@ -35,6 +36,7 @@ state CHILD_S2:
 
 state DYING:
     send __delete__;
+*/
 };
 
 } // namespace _ipdltest

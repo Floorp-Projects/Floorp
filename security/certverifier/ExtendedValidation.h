@@ -8,16 +8,27 @@
 
 #include "ScopedNSSTypes.h"
 #include "certt.h"
-#include "prtypes.h"
 
 namespace mozilla { namespace pkix { struct CertPolicyId; } }
 
 namespace mozilla { namespace psm {
 
 nsresult LoadExtendedValidationInfo();
-SECStatus GetFirstEVPolicy(CERTCertificate* cert,
-                           /*out*/ mozilla::pkix::CertPolicyId& policy,
-                           /*out*/ SECOidTag& policyOidTag);
+/**
+ * Finds the first policy OID in the given cert that is known to be an EV policy
+ * OID.
+ *
+ * @param cert
+ *        The cert to find the first EV policy of.
+ * @param policy
+ *        The found policy.
+ * @param policyOidTag
+ *        The OID tag of the found policy.
+ * @return true if a suitable policy was found, false otherwise.
+ */
+bool GetFirstEVPolicy(CERTCertificate& cert,
+                      /*out*/ mozilla::pkix::CertPolicyId& policy,
+                      /*out*/ SECOidTag& policyOidTag);
 
 // CertIsAuthoritativeForEVPolicy does NOT evaluate whether the cert is trusted
 // or distrusted.

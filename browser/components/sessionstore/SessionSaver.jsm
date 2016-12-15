@@ -186,6 +186,9 @@ var SessionSaverInternal = {
     let state = SessionStore.getCurrentState(forceUpdateAllWindows);
     PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
+    // Make sure we only write worth saving tabs to disk.
+    SessionStore.keepOnlyWorthSavingTabs(state);
+
     // Make sure that we keep the previous session if we started with a single
     // private window and no non-private windows have been opened, yet.
     if (state.deferredInitialState) {

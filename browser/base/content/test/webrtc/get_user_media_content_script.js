@@ -17,6 +17,20 @@ const kObservedTopics = [
 
 var gObservedTopics = {};
 function observer(aSubject, aTopic, aData) {
+  // With e10s disabled, our content script receives notifications for the
+  // preview displayed in our screen sharing permission prompt; ignore them.
+  const kBrowserURL = "chrome://browser/content/browser.xul";
+  const nsIPropertyBag = Components.interfaces.nsIPropertyBag;
+  if (aTopic == "recording-device-events" &&
+      aSubject.QueryInterface(nsIPropertyBag).getProperty("requestURL") == kBrowserURL) {
+    return;
+  }
+  if (aTopic == "recording-window-ended") {
+    let win = Services.wm.getOuterWindowWithId(aData).top;
+    if (win.document.documentURI == kBrowserURL)
+      return;
+  }
+
   if (!(aTopic in gObservedTopics))
     gObservedTopics[aTopic] = 1;
   else
@@ -44,19 +58,28 @@ function _getMediaCaptureState() {
   let hasAudio = {};
   let hasScreenShare = {};
   let hasWindowShare = {};
+  let hasAppShare = {};
+  let hasBrowserShare = {};
   MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio,
-                                              hasScreenShare, hasWindowShare);
-  if (hasVideo.value && hasAudio.value)
-    return "CameraAndMicrophone";
+                                              hasScreenShare, hasWindowShare,
+                                              hasAppShare, hasBrowserShare);
+  let result = {};
+
   if (hasVideo.value)
-    return "Camera";
+    result.video = true;
   if (hasAudio.value)
-    return "Microphone";
+    result.audio = true;
+
   if (hasScreenShare.value)
-    return "Screen";
-  if (hasWindowShare.value)
-    return "Window";
-  return "none";
+    result.screen = "Screen";
+  else if (hasWindowShare.value)
+    result.screen = "Window";
+  else if (hasAppShare.value)
+    result.screen = "Application";
+  else if (hasBrowserShare.value)
+    result.screen = "Browser";
+
+  return result;
 }
 
 addMessageListener("Test:GetMediaCaptureState", data => {

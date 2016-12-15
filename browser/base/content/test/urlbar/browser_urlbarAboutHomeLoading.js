@@ -1,5 +1,6 @@
 "use strict";
 
+const {SessionSaver} = Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", {});
 const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
 /**
@@ -83,6 +84,8 @@ add_task(function* dontTemporarilyShowAboutHome() {
   yield TabStateFlusher.flush(win.gBrowser.selectedBrowser);
   yield BrowserTestUtils.closeWindow(win);
   ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
+
+  yield SessionSaver.run();
 
   windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
   win = SessionStore.undoCloseWindow(0);

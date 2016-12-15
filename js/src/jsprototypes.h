@@ -61,12 +61,6 @@
 #define IF_SAB(real,imaginary) imaginary
 #endif
 
-#ifdef SPIDERMONKEY_PROMISE
-#define IF_PROMISE(real,imaginary) real
-#else
-#define IF_PROMISE(real,imaginary) imaginary
-#endif
-
 #define JS_FOR_PROTOTYPES(real,imaginary) \
     imaginary(Null,              0,     InitNullClass,          dummy) \
     real(Object,                 1,     InitViaClassSpec,       OCLASP(Plain)) \
@@ -122,7 +116,7 @@ IF_SAB(real,imaginary)(Atomics, 47,     InitAtomicsClass, OCLASP(Atomics)) \
     imaginary(WasmInstance,     51,     dummy,                  dummy) \
     imaginary(WasmMemory,       52,     dummy,                  dummy) \
     imaginary(WasmTable,        53,     dummy,                  dummy) \
-IF_PROMISE(real,imaginary)(Promise,             54,     InitViaClassSpec, OCLASP(Promise)) \
+    real(Promise,               54,     InitViaClassSpec,       OCLASP(Promise)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

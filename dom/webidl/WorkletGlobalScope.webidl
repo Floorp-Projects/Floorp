@@ -7,7 +7,7 @@
  * https://drafts.css-houdini.org/worklets/#idl-index
  */
 
-[Global=(Worklet), Exposed=(Worklet)]
+[Exposed=Worklet]
 interface WorkletGlobalScope {
 };
 

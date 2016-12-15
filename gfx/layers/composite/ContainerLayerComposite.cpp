@@ -52,11 +52,11 @@ namespace layers {
 
 using namespace gfx;
 
-static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
-                          LayerManagerComposite* aManager,
-                          Layer* aLayer)
+static void
+DrawLayerInfo(const RenderTargetIntRect& aClipRect,
+              LayerManagerComposite* aManager,
+              Layer* aLayer)
 {
-
   if (aLayer->GetType() == Layer::LayerType::TYPE_CONTAINER) {
     // XXX - should figure out a way to render this, but for now this
     // is hard to do, since it will often get superimposed over the first
@@ -77,14 +77,8 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
                                           maxWidth);
 }
 
-template<class ContainerT>
-static gfx::IntRect ContainerVisibleRect(ContainerT* aContainer)
-{
-  gfx::IntRect surfaceRect = aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
-  return surfaceRect;
-}
-
-static void PrintUniformityInfo(Layer* aLayer)
+static void
+PrintUniformityInfo(Layer* aLayer)
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
   if (!profiler_is_active()) {
@@ -108,13 +102,69 @@ static void PrintUniformityInfo(Layer* aLayer)
 #endif
 }
 
+static Maybe<gfx::Polygon>
+SelectLayerGeometry(const Maybe<gfx::Polygon>& aParentGeometry,
+                    const Maybe<gfx::Polygon>& aChildGeometry)
+{
+  // Both the parent and the child layer were split.
+  if (aParentGeometry && aChildGeometry) {
+    // As we use intermediate surface in these cases, this branch should never
+    // get executed.
+    MOZ_ASSERT(false,
+               "Both parent and child geometry present in nested 3D context!");
+    return Some(aParentGeometry->ClipPolygon(*aChildGeometry));
+  }
+
+  // The parent layer was split.
+  if (aParentGeometry) {
+    return aParentGeometry;
+  }
+
+  // The child layer was split.
+  if(aChildGeometry) {
+    return aChildGeometry;
+  }
+
+  // No split.
+  return Nothing();
+}
+
+static void
+TransformLayerGeometry(Layer* aLayer, Maybe<gfx::Polygon>& aGeometry)
+{
+  Layer* parent = aLayer->GetParent();
+  gfx::Matrix4x4 transform;
+
+  // Collect all parent transforms.
+  while (parent != nullptr && !parent->Is3DContextLeaf()) {
+    transform = transform * parent->GetLocalTransform();
+    parent = parent->GetParent();
+  }
+
+  // Transform the geometry to the parent 3D context leaf coordinate space.
+  aGeometry->TransformToScreenSpace(transform.ProjectTo2D().Inverse());
+}
+
+
+template<class ContainerT>
+static gfx::IntRect ContainerVisibleRect(ContainerT* aContainer)
+{
+  gfx::IntRect surfaceRect = aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
+  return surfaceRect;
+}
+
+
 /* all of the per-layer prepared data we need to maintain */
 struct PreparedLayer
 {
-  PreparedLayer(LayerComposite *aLayer, RenderTargetIntRect aClipRect) :
-    mLayer(aLayer), mClipRect(aClipRect) {}
+  PreparedLayer(LayerComposite *aLayer,
+                RenderTargetIntRect aClipRect,
+                Maybe<gfx::Polygon> aGeometry)
+  : mLayer(aLayer), mClipRect(aClipRect), mGeometry(aGeometry) {}
+
   LayerComposite* mLayer;
   RenderTargetIntRect mClipRect;
+  Maybe<Polygon> mGeometry;
 };
 
 /* all of the prepared data that we need in RenderLayer() */
@@ -134,17 +184,20 @@ ContainerPrepare(ContainerT* aContainer,
   aContainer->mPrepared = MakeUnique<PreparedData>();
   aContainer->mPrepared->mNeedsSurfaceCopy = false;
 
-  /**
-   * Determine which layers to draw.
-   */
-  AutoTArray<Layer*, 12> children;
-  aContainer->SortChildrenBy3DZOrder(children);
+  const ContainerLayerComposite::SortMode sortMode =
+    aManager->GetCompositor()->SupportsLayerGeometry()
+    ? ContainerLayerComposite::SortMode::WITH_GEOMETRY
+    : ContainerLayerComposite::SortMode::WITHOUT_GEOMETRY;
 
-  for (uint32_t i = 0; i < children.Length(); i++) {
-    LayerComposite* layerToRender = static_cast<LayerComposite*>(children.ElementAt(i)->AsHostLayer());
+  const nsTArray<LayerPolygon> polygons =
+    aContainer->SortChildrenBy3DZOrder(sortMode);
 
-    RenderTargetIntRect clipRect = layerToRender->GetLayer()->
-        CalculateScissorRect(aClipRect);
+  for (const LayerPolygon& layer : polygons) {
+    LayerComposite* layerToRender =
+      static_cast<LayerComposite*>(layer.layer->ImplData());
+
+    RenderTargetIntRect clipRect =
+      layerToRender->GetLayer()->CalculateScissorRect(aClipRect);
 
     if (layerToRender->GetLayer()->IsBackfaceHidden()) {
       continue;
@@ -168,7 +221,7 @@ ContainerPrepare(ContainerT* aContainer,
     CULLING_LOG("Preparing sublayer %p\n", layerToRender->GetLayer());
 
     layerToRender->Prepare(clipRect);
-    aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender, clipRect));
+    aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender, clipRect, layer.geometry));
   }
 
   CULLING_LOG("Preparing container layer %p\n", aContainer->GetLayer());
@@ -334,18 +387,20 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   compositor->SlowDrawRect(r, viewPortColor, clipRect, aContainer->GetEffectiveTransform(), 2);
 }
 
-
 template<class ContainerT> void
-RenderLayers(ContainerT* aContainer,
-	     LayerManagerComposite* aManager,
-	     const RenderTargetIntRect& aClipRect)
+RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
+             const RenderTargetIntRect& aClipRect,
+             const Maybe<gfx::Polygon>& aGeometry)
 {
   Compositor* compositor = aManager->GetCompositor();
 
   for (size_t i = 0u; i < aContainer->mPrepared->mLayers.Length(); i++) {
     PreparedLayer& preparedData = aContainer->mPrepared->mLayers[i];
+
+    const gfx::IntRect clipRect = preparedData.mClipRect.ToUnknownRect();
     LayerComposite* layerToRender = preparedData.mLayer;
-    const RenderTargetIntRect& clipRect = preparedData.mClipRect;
+    const Maybe<gfx::Polygon>& childGeometry = preparedData.mGeometry;
+
     Layer* layer = layerToRender->GetLayer();
 
     if (layerToRender->HasStaleCompositor()) {
@@ -372,11 +427,9 @@ RenderLayers(ContainerT* aContainer,
       // intersect areas in different coordinate spaces. So we do this a little more permissively
       // and only fill in the background when we know there is checkerboard, which in theory
       // should only occur transiently.
-      gfx::IntRect layerBounds = layer->GetLayerBounds();
       EffectChain effectChain(layer);
       effectChain.mPrimaryEffect = new EffectSolidColor(color);
-      aManager->GetCompositor()->DrawQuad(gfx::Rect(layerBounds.x, layerBounds.y, layerBounds.width, layerBounds.height),
-                                          clipRect.ToUnknownRect(),
+      aManager->GetCompositor()->DrawQuad(gfx::Rect(layer->GetLayerBounds()), clipRect,
                                           effectChain, layer->GetEffectiveOpacity(),
                                           layer->GetEffectiveTransform());
     }
@@ -393,7 +446,16 @@ RenderLayers(ContainerT* aContainer,
         layerToRender->SetClearRect(gfx::IntRect(0, 0, 0, 0));
       }
     } else {
-      layerToRender->RenderLayer(clipRect.ToUnknownRect());
+      Maybe<gfx::Polygon> geometry =
+        SelectLayerGeometry(aGeometry, childGeometry);
+
+      // If we are dealing with a nested 3D context, we might need to transform
+      // the geometry to the coordinate space of the parent 3D context leaf.
+      if (geometry && !layer->Is3DContextLeaf()) {
+        TransformLayerGeometry(layer, geometry);
+      }
+
+      layerToRender->RenderLayer(clipRect, geometry);
     }
 
     if (gfxPrefs::UniformityInfo()) {
@@ -401,7 +463,7 @@ RenderLayers(ContainerT* aContainer,
     }
 
     if (gfxPrefs::DrawLayerInfo()) {
-      DrawLayerInfo(clipRect, aManager, layer);
+      DrawLayerInfo(preparedData.mClipRect, aManager, layer);
     }
 
     // Draw a border around scrollable layers.
@@ -502,7 +564,10 @@ RenderIntermediate(ContainerT* aContainer,
 
   compositor->SetRenderTarget(surface);
   // pre-render all of the layers into our temporary
-  RenderLayers(aContainer, aManager, RenderTargetIntRect::FromUnknownRect(aClipRect));
+  RenderLayers(aContainer, aManager,
+               RenderTargetIntRect::FromUnknownRect(aClipRect),
+               Nothing());
+
   // Unbind the current surface and rebind the previous one.
   compositor->SetRenderTarget(previousTarget);
 }
@@ -510,7 +575,8 @@ RenderIntermediate(ContainerT* aContainer,
 template<class ContainerT> void
 ContainerRender(ContainerT* aContainer,
                  LayerManagerComposite* aManager,
-                 const gfx::IntRect& aClipRect)
+                 const gfx::IntRect& aClipRect,
+                 const Maybe<gfx::Polygon>& aGeometry)
 {
   MOZ_ASSERT(aContainer->mPrepared);
 
@@ -532,6 +598,7 @@ ContainerRender(ContainerT* aContainer,
     }
 
     gfx::Rect visibleRect(aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
+
     RefPtr<Compositor> compositor = aManager->GetCompositor();
 #ifdef MOZ_DUMP_PAINTING
     if (gfxEnv::DumpCompositorTextures()) {
@@ -546,14 +613,17 @@ ContainerRender(ContainerT* aContainer,
     RenderWithAllMasks(aContainer, compositor, aClipRect,
                        [&, surface, compositor, container](EffectChain& effectChain, const IntRect& clipRect) {
       effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
-      compositor->DrawQuad(visibleRect, clipRect, effectChain,
-                           container->GetEffectiveOpacity(),
-                           container->GetEffectiveTransform());
+
+      compositor->DrawGeometry(visibleRect, clipRect, effectChain,
+                               container->GetEffectiveOpacity(),
+                               container->GetEffectiveTransform(), aGeometry);
     });
+
   } else {
-    RenderLayers(aContainer, aManager, RenderTargetIntRect::FromUnknownRect(aClipRect));
+    RenderLayers(aContainer, aManager,
+                 RenderTargetIntRect::FromUnknownRect(aClipRect),
+                 aGeometry);
   }
-  aContainer->mPrepared = nullptr;
 
   // If it is a scrollable container layer with no child layers, and one of the APZCs
   // attached to it has a nonempty async transform, then that transform is not applied
@@ -623,9 +693,16 @@ ContainerLayerComposite::GetFirstChildComposite()
 }
 
 void
-ContainerLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
+ContainerLayerComposite::Cleanup()
 {
-  ContainerRender(this, mCompositeManager, aClipRect);
+  mPrepared = nullptr;
+}
+
+void
+ContainerLayerComposite::RenderLayer(const gfx::IntRect& aClipRect,
+                                     const Maybe<gfx::Polygon>& aGeometry)
+{
+  ContainerRender(this, mCompositeManager, aClipRect, aGeometry);
 }
 
 void
@@ -674,9 +751,10 @@ RefLayerComposite::GetFirstChildComposite()
 }
 
 void
-RefLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
+RefLayerComposite::RenderLayer(const gfx::IntRect& aClipRect,
+                               const Maybe<gfx::Polygon>& aGeometry)
 {
-  ContainerRender(this, mCompositeManager, aClipRect);
+  ContainerRender(this, mCompositeManager, aClipRect, aGeometry);
 }
 
 void

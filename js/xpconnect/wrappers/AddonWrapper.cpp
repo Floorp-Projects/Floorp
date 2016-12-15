@@ -23,6 +23,21 @@ using namespace JS;
 
 namespace xpc {
 
+static inline void
+ReportASCIIErrorWithId(JSContext* cx, const char* msg, HandleId id)
+{
+    RootedValue idv(cx);
+    if (!JS_IdToValue(cx, id, &idv))
+        return;
+    RootedString idstr(cx, JS::ToString(cx, idv));
+    if (!idstr)
+        return;
+    JSAutoByteString bytes;
+    if (!bytes.encodeUtf8(cx, idstr))
+        return;
+    JS_ReportErrorUTF8(cx, msg, bytes.ptr());
+}
+
 bool
 InterposeProperty(JSContext* cx, HandleObject target, const nsIID* iid, HandleId id,
                   MutableHandle<PropertyDescriptor> descriptor)
@@ -231,7 +246,7 @@ AddonWrapper<Base>::defineProperty(JSContext* cx, HandleObject wrapper, HandleId
     if (!interpDesc.object())
         return Base::defineProperty(cx, wrapper, id, desc, result);
 
-    js::ReportASCIIErrorWithId(cx, "unable to modify interposed property %s", id);
+    ReportASCIIErrorWithId(cx, "unable to modify interposed property %s", id);
     return false;
 }
 
@@ -247,7 +262,7 @@ AddonWrapper<Base>::delete_(JSContext* cx, HandleObject wrapper, HandleId id,
     if (!desc.object())
         return Base::delete_(cx, wrapper, id, result);
 
-    js::ReportASCIIErrorWithId(cx, "unable to delete interposed property %s", id);
+    ReportASCIIErrorWithId(cx, "unable to delete interposed property %s", id);
     return false;
 }
 

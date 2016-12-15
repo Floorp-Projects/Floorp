@@ -6672,7 +6672,7 @@ var Distribution = {
   // aFile is an nsIFile
   // aCallback takes the parsed JSON object as a parameter
   readJSON: function dc_readJSON(aFile, aCallback) {
-    Task.spawn(function() {
+    Task.spawn(function*() {
       let bytes = yield OS.File.read(aFile.path);
       let raw = new TextDecoder().decode(bytes) || "";
 

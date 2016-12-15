@@ -53,6 +53,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
 
@@ -406,6 +407,24 @@ nsXBLService::IsChromeOrResourceURI(nsIURI* aURI)
   return false;
 }
 
+// RAII class to invoke StyleNewChildren for Elements in Servo-backed documents
+// on destruction.
+class MOZ_STACK_CLASS AutoStyleNewChildren
+{
+public:
+  explicit AutoStyleNewChildren(Element* aElement) : mElement(aElement) { MOZ_ASSERT(mElement); }
+  ~AutoStyleNewChildren()
+  {
+    nsIPresShell* presShell = mElement->OwnerDoc()->GetShell();
+    ServoStyleSet* servoSet = presShell ? presShell->StyleSet()->GetAsServo() : nullptr;
+    if (servoSet) {
+      servoSet->StyleNewChildren(mElement);
+    }
+  }
+
+private:
+  Element* mElement;
+};
 
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
@@ -435,6 +454,15 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     // automation needs.
     return NS_OK;
   }
+
+  // There are various places in this function where we shuffle content around
+  // the subtree and rebind things to and from insertion points. Once all that's
+  // done, we want to invoke StyleNewChildren to style any unstyled children
+  // that we may have after bindings have been removed and applied. This includes
+  // anonymous content created in this function, explicit children for which we
+  // defer styling until after XBL bindings are applied, and elements whose existing
+  // style was invalidated by a call to SetXBLInsertionParent.
+  AutoStyleNewChildren styleNewChildren(aContent->AsElement());
 
   nsXBLBinding *binding = aContent->GetXBLBinding();
   if (binding) {
