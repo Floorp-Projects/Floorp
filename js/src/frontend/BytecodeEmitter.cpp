@@ -4465,13 +4465,6 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, DestructuringFlavor fla
 }
 
 bool
-BytecodeEmitter::emitDestructuringLHSInBranch(ParseNode* target, DestructuringFlavor flav)
-{
-    TDZCheckCache tdzCache(this);
-    return emitDestructuringLHS(target, flav);
-}
-
-bool
 BytecodeEmitter::emitIteratorNext(ParseNode* pn, bool allowSelfHosted)
 {
     MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting,
@@ -4741,7 +4734,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     //
     //   let x, y;
     //   let a, b, c, d;
-    //   let tmp, done, iter, result; // stack values
+    //   let iter, result, done, value; // stack values
     //
     //   iter = x[Symbol.iterator]();
     //
@@ -4749,115 +4742,113 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     //   result = iter.next();
     //   done = result.done;
     //
-    //   if (done) {
-    //     a = undefined;
+    //   if (done)
+    //     value = undefined;
+    //   else
+    //     value = result.value;
     //
-    //     result = undefined;
-    //     done = true;
-    //   } else {
-    //     a = result.value;
-    //
-    //     // Do next element's .next() and .done access here
-    //     result = iter.next();
-    //     done = result.done;
-    //   }
+    //   a = value;
     //
     //   // ==== emitted by loop for b ====
     //   if (done) {
-    //     b = undefined;
-    //
-    //     result = undefined;
-    //     done = true;
+    //     value = undefined;
     //   } else {
-    //     b = result.value;
-    //
     //     result = iter.next();
     //     done = result.done;
+    //     if (done)
+    //       value = undefined;
+    //     else
+    //       value = result.value;
     //   }
+    //
+    //   b = value;
     //
     //   // ==== emitted by loop for elision ====
     //   if (done) {
-    //     result = undefined
-    //     done = true
+    //     value = undefined;
     //   } else {
-    //     result.value;
-    //
     //     result = iter.next();
     //     done = result.done;
+    //     if (done)
+    //       value = undefined;
+    //     else
+    //       value = result.value;
     //   }
     //
     //   // ==== emitted by loop for c ====
     //   if (done) {
-    //     c = y;
+    //     value = undefined;
     //   } else {
-    //     tmp = result.value;
-    //     if (tmp === undefined)
-    //       tmp = y;
-    //     c = tmp;
-    //
-    //     // Don't do next element's .next() and .done access if
-    //     // this is the last non-spread element.
+    //     result = iter.next();
+    //     done = result.done;
+    //     if (done)
+    //       value = undefined;
+    //     else
+    //       value = result.value;
     //   }
+    //
+    //   if (value === undefined)
+    //     value = y;
+    //
+    //   c = value;
     //
     //   // ==== emitted by loop for d ====
-    //   if (done) {
-    //     // Assing empty array when completed
-    //     d = [];
-    //   } else {
-    //     d = [...iter];
-    //   }
+    //   if (done)
+    //     value = [];
+    //   else
+    //     value = [...iter];
+    //
+    //   d = value;
 
-    /*
-     * Use an iterator to destructure the RHS, instead of index lookup. We
-     * must leave the *original* value on the stack.
-     */
+    // Use an iterator to destructure the RHS, instead of index lookup. We
+    // must leave the *original* value on the stack.
     if (!emit1(JSOP_DUP))                                         // ... OBJ OBJ
         return false;
-    if (!emitIterator())                                          // ... OBJ? ITER
+    if (!emitIterator())                                          // ... OBJ ITER
         return false;
-    bool needToPopIterator = true;
 
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
         bool isHead = member == pattern->pn_head;
+        bool hasNext = !!member->pn_next;
+
         if (member->isKind(PNK_SPREAD)) {
             IfThenElseEmitter ifThenElse(this);
             if (!isHead) {
                 // If spread is not the first element of the pattern,
                 // iterator can already be completed.
-                if (!ifThenElse.emitIfElse())                     // ... OBJ? ITER
+                //                                                   ... OBJ ITER DONE
+                if (!ifThenElse.emitIfElse())                     // ... OBJ ITER
                     return false;
 
-                if (!emit1(JSOP_POP))                             // ... OBJ?
+                if (!emitUint32Operand(JSOP_NEWARRAY, 0))         // ... OBJ ITER ARRAY
                     return false;
-                if (!emitUint32Operand(JSOP_NEWARRAY, 0))         // ... OBJ? ARRAY
-                    return false;
-                if (!emitDestructuringLHSInBranch(member, flav))  // ... OBJ?
-                    return false;
-
-                if (!ifThenElse.emitElse())                       // ... OBJ? ITER
+                if (!ifThenElse.emitElse())                       // ... OBJ ITER
                     return false;
             }
 
             // If iterator is not completed, create a new array with the rest
             // of the iterator.
-            if (!emitUint32Operand(JSOP_NEWARRAY, 0))             // ... OBJ? ITER ARRAY
+            if (!emit1(JSOP_DUP))                                 // ... OBJ ITER
                 return false;
-            if (!emitNumberOp(0))                                 // ... OBJ? ITER ARRAY INDEX
+            if (!emitUint32Operand(JSOP_NEWARRAY, 0))             // ... OBJ ITER ITER ARRAY
                 return false;
-            if (!emitSpread())                                    // ... OBJ? ARRAY INDEX
+            if (!emitNumberOp(0))                                 // ... OBJ ITER ITER ARRAY INDEX
                 return false;
-            if (!emit1(JSOP_POP))                                 // ... OBJ? ARRAY
+            if (!emitSpread())                                    // ... OBJ ITER ARRAY INDEX
                 return false;
-            if (!emitDestructuringLHSInBranch(member, flav))      // ... OBJ?
+            if (!emit1(JSOP_POP))                                 // ... OBJ ITER ARRAY
                 return false;
 
             if (!isHead) {
                 if (!ifThenElse.emitEnd())
                     return false;
-                MOZ_ASSERT(ifThenElse.popped() == 1);
+                MOZ_ASSERT(ifThenElse.pushed() == 1);
             }
-            needToPopIterator = false;
-            MOZ_ASSERT(!member->pn_next);
+
+            if (!emitDestructuringLHS(member, flav))              // ... OBJ ITER
+                return false;
+
+            MOZ_ASSERT(!hasNext);
             break;
         }
 
@@ -4869,110 +4860,100 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
         }
 
         bool isElision = subpattern->isKind(PNK_ELISION);
-        bool hasNextNonSpread = member->pn_next && !member->pn_next->isKind(PNK_SPREAD);
-        bool hasNextSpread = member->pn_next && member->pn_next->isKind(PNK_SPREAD);
 
         MOZ_ASSERT(!subpattern->isKind(PNK_SPREAD));
 
-        auto emitNext = [pattern](ExclusiveContext* cx, BytecodeEmitter* bce) {
-            if (!bce->emit1(JSOP_DUP))                            // ... OBJ? ITER ITER
-                return false;
-            if (!bce->emitIteratorNext(pattern))                  // ... OBJ? ITER RESULT
-                return false;
-            if (!bce->emit1(JSOP_DUP))                            // ... OBJ? ITER RESULT RESULT
-                return false;
-            if (!bce->emitAtomOp(cx->names().done, JSOP_GETPROP)) // ... OBJ? ITER RESULT DONE?
-                return false;
-            return true;
-        };
-
-        if (isHead) {
-            if (!emitNext(cx, this))                              // ... OBJ? ITER RESULT DONE?
-                return false;
-        }
-
-        IfThenElseEmitter ifThenElse(this);
-        if (!ifThenElse.emitIfElse())                             // ... OBJ? ITER RESULT
-            return false;
-
-        if (!emit1(JSOP_POP))                                     // ... OBJ? ITER
-            return false;
-        if (pndefault) {
-            // Emit only pndefault tree here, as undefined check in emitDefault
-            // should always be true.
-            if (!emitInitializerInBranch(pndefault, subpattern))  // ... OBJ? ITER VALUE
-                return false;
-        } else {
-            if (!isElision) {
-                if (!emit1(JSOP_UNDEFINED))                       // ... OBJ? ITER UNDEFINED
+        IfThenElseEmitter ifAlreadyDone(this);
+        if (!isHead) {
+            // If this element is not the first element of the pattern,
+            // iterator can already be completed.
+            //                                                       ... OBJ ITER DONE
+            if (hasNext) {
+                if (!emit1(JSOP_DUP))                             // ... OBJ ITER DONE DONE
                     return false;
-                if (!emit1(JSOP_NOP_DESTRUCTURING))
+            }
+            if (!ifAlreadyDone.emitIfElse())                      // ... OBJ ITER ?DONE
+                return false;
+
+            if (!emit1(JSOP_UNDEFINED))                           // ... OBJ ITER ?DONE UNDEF
+                return false;
+            if (!emit1(JSOP_NOP_DESTRUCTURING))                   // ... OBJ ITER ?DONE UNDEF
+                return false;
+
+            if (!ifAlreadyDone.emitElse())                        // ... OBJ ITER ?DONE
+                return false;
+
+            if (hasNext) {
+                if (!emit1(JSOP_POP))                             // ... OBJ ITER
                     return false;
             }
         }
-        if (!isElision) {
-            if (!emitDestructuringLHSInBranch(subpattern, flav))  // ... OBJ? ITER
-                return false;
-        } else if (pndefault) {
-            if (!emit1(JSOP_POP))                                 // ... OBJ? ITER
+
+        if (!emit1(JSOP_DUP))                                     // ... OBJ ITER ITER
+            return false;
+        if (!emitIteratorNext(pattern))                           // ... OBJ ITER RESULT
+            return false;
+        if (!emit1(JSOP_DUP))                                     // ... OBJ ITER RESULT RESULT
+            return false;
+        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))          // ... OBJ ITER RESULT DONE
+            return false;
+
+        if (hasNext) {
+            if (!emit1(JSOP_DUP))                                 // ... OBJ ITER RESULT DONE DONE
                 return false;
         }
 
-        // Setup next element's result when the iterator is done.
-        if (hasNextNonSpread) {
-            if (!emit1(JSOP_UNDEFINED))                           // ... OBJ? ITER RESULT
-                return false;
-            if (!emit1(JSOP_NOP_DESTRUCTURING))
-                return false;
-            if (!emit1(JSOP_TRUE))                                // ... OBJ? ITER RESULT DONE?
-                return false;
-        } else if (hasNextSpread) {
-            if (!emit1(JSOP_TRUE))                                // ... OBJ? ITER DONE?
+        IfThenElseEmitter ifDone(this);
+        if (!ifDone.emitIfElse())                                 // ... OBJ ITER RESULT ?DONE
+            return false;
+
+        if (hasNext) {
+            if (!emit1(JSOP_SWAP))                                // ... OBJ ITER ?DONE RESULT
                 return false;
         }
-
-        if (!ifThenElse.emitElse())                               // ... OBJ? ITER RESULT
+        if (!emit1(JSOP_POP))                                     // ... OBJ ITER ?DONE
+            return false;
+        if (!emit1(JSOP_UNDEFINED))                               // ... OBJ ITER ?DONE UNDEF
+            return false;
+        if (!emit1(JSOP_NOP_DESTRUCTURING))                       // ... OBJ ITER ?DONE UNDEF
             return false;
 
-        if (!emitAtomOp(cx->names().value, JSOP_GETPROP))         // ... OBJ? ITER VALUE
+        if (!ifDone.emitElse())                                   // ... OBJ ITER RESULT ?DONE
             return false;
+
+        if (hasNext) {
+            if (!emit1(JSOP_SWAP))                                // ... OBJ ITER ?DONE RESULT
+                return false;
+        }
+        if (!emitAtomOp(cx->names().value, JSOP_GETPROP))         // ... OBJ ITER ?DONE VALUE
+            return false;
+
+        if (!ifDone.emitEnd())
+            return false;
+        MOZ_ASSERT(ifDone.pushed() == 0);
+
+        if (!isHead) {
+            if (!ifAlreadyDone.emitEnd())
+                return false;
+            MOZ_ASSERT(ifAlreadyDone.pushed() == 1);
+        }
 
         if (pndefault) {
-            if (!emitDefault(pndefault, subpattern))              // ... OBJ? ITER VALUE
+            if (!emitDefault(pndefault, subpattern))              // ... OBJ ITER ?DONE VALUE
                 return false;
         }
 
         if (!isElision) {
-            if (!emitDestructuringLHSInBranch(subpattern, flav))  // ... OBJ? ITER
+            if (!emitDestructuringLHS(subpattern, flav))          // ... OBJ ITER ?DONE
                 return false;
         } else {
-            if (!emit1(JSOP_POP))                                 // ... OBJ? ITER
+            if (!emit1(JSOP_POP))                                 // ... OBJ ITER ?DONE
                 return false;
         }
-
-        // Setup next element's result when the iterator is not done.
-        if (hasNextNonSpread) {
-            if (!emitNext(cx, this))                              // ... OBJ? ITER RESULT DONE?
-                return false;
-        } else if (hasNextSpread) {
-            if (!emit1(JSOP_FALSE))                               // ... OBJ? ITER DONE?
-                return false;
-        }
-
-        if (!ifThenElse.emitEnd())
-            return false;
-        if (hasNextNonSpread)
-            MOZ_ASSERT(ifThenElse.pushed() == 1);
-        else if (hasNextSpread)
-            MOZ_ASSERT(ifThenElse.pushed() == 0);
-        else
-            MOZ_ASSERT(ifThenElse.popped() == 1);
     }
 
-    if (needToPopIterator) {
-        if (!emit1(JSOP_POP))                                     // ... OBJ?
-            return false;
-    }
+    if (!emit1(JSOP_POP))                                         // ... OBJ
+        return false;
 
     return true;
 }
@@ -6120,7 +6101,7 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
             return false;
         if (!emit1(JSOP_DUP))                             // ITER ARR I RESULT RESULT
             return false;
-        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER ARR I RESULT DONE?
+        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER ARR I RESULT DONE
             return false;
 
         if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget)) // ITER ARR I RESULT
@@ -6309,7 +6290,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
             return false;
         if (!emit1(JSOP_DUP))                             // ITER RESULT RESULT
             return false;
-        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER RESULT DONE?
+        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER RESULT DONE
             return false;
 
         if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget))
@@ -6805,7 +6786,7 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
         return false;
     if (!emit1(JSOP_DUP))                                 // ITER RESULT RESULT
         return false;
-    if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ITER RESULT DONE?
+    if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ITER RESULT DONE
         return false;
 
     JumpList beq;
