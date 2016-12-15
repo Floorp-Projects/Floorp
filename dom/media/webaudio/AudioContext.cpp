@@ -12,6 +12,9 @@
 #include "mozilla/OwningNonNull.h"
 
 #include "mozilla/dom/AnalyserNode.h"
+#include "mozilla/dom/AnalyserNodeBinding.h"
+#include "mozilla/dom/AudioBufferSourceNodeBinding.h"
+#include "mozilla/dom/GainNodeBinding.h"
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
@@ -395,12 +398,7 @@ AudioContext::CreateMediaStreamSource(DOMMediaStream& aMediaStream,
 already_AddRefed<GainNode>
 AudioContext::CreateGain(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<GainNode> gainNode = new GainNode(this);
-  return gainNode.forget();
+  return GainNode::Create(*this, GainOptions(), aRv);
 }
 
 already_AddRefed<WaveShaperNode>
