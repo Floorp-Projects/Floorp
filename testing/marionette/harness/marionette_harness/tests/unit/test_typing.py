@@ -84,9 +84,9 @@ class TestTyping(MarionetteTestCase):
             url_bar.send_keys(mod_key, "a")
             url_bar.send_keys(Keys.BACK_SPACE)
 
-            self.assertEqual("", url_bar.get_property("value"))
+            self.assertEqual("", url_bar.get_attribute("value"))
             url_bar.send_keys(mod_key, "v")
-            self.assertEqual("zyxwvutsr", url_bar.get_property("value"))
+            self.assertEqual("zyxwvutsr", url_bar.get_attribute("value"))
 
     def testShouldBeAbleToTypeQuoteMarks(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
