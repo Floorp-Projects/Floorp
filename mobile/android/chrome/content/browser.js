@@ -6723,9 +6723,7 @@ var Distribution = {
           return;
         }
 
-        new Promise((resolve, reject) => {
-          AddonManager.getInstallForFile(new FileUtils.File(entry.path), resolve);
-        }).then(install => {
+        AddonManager.getInstallForFile(new FileUtils.File(entry.path)).then(install => {
           let id = entry.name.substring(0, entry.name.length - 4);
           if (install.addon.id !== id) {
             Cu.reportError("File entry " + entry.path + " contains an add-on with an incorrect ID");
