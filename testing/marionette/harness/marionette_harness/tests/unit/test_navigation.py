@@ -2,13 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from unittest import skip
+
 import contextlib
 import time
 import urllib
 
 from marionette_driver import errors, By, Wait
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
 
 
 def inline(doc):
@@ -48,8 +50,8 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
     def test_navigate_chrome_error(self):
         with self.marionette.using_context("chrome"):
             self.assertRaisesRegexp(
-                errors.MarionetteException, "Cannot navigate in chrome context",
-                                    self.marionette.navigate, "about:blank")
+                errors.UnsupportedOperationException, "Cannot navigate in chrome context",
+                self.marionette.navigate, "about:blank")
 
     def test_get_current_url_returns_top_level_browsing_context_url(self):
         self.marionette.navigate(self.iframe_doc)
@@ -101,7 +103,7 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return window.document.getElementById('someDiv') == undefined"))
 
-    """ Disabled due to Bug 977899
+    @skip("Disabled due to Bug 977899")
     def test_navigate_frame(self):
         self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
         self.marionette.switch_to_frame(0)
@@ -109,8 +111,8 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertTrue('empty.html' in self.marionette.get_url())
         self.marionette.switch_to_frame()
         self.assertTrue('test_iframe.html' in self.marionette.get_url())
-    """
 
+    @skip_if_mobile  # Bug 1323755 - Socket timeout
     def test_invalid_protocol(self):
         with self.assertRaises(errors.MarionetteException):
             self.marionette.navigate("thisprotocoldoesnotexist://")
@@ -148,6 +150,7 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return window.visited", sandbox=None))
 
+    @skip_if_mobile  # Fennec doesn't support other chrome windows
     def test_about_blank_for_new_docshell(self):
         """ Bug 1312674 - Hang when loading about:blank for a new docshell."""
         # Open a window to get a new docshell created for the first tab
