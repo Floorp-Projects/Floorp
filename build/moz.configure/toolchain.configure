@@ -972,4 +972,3 @@ def is_windows(target):
     return target.kernel == 'WINNT'
 
 include('windows.configure', when=is_windows)
-include('rust.configure')
