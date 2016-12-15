@@ -13,6 +13,7 @@
 #include "nsTHashtable.h"
 #include "nsString.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/dom/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 
@@ -114,12 +115,14 @@ public:
   ThrottledEventQueue*
   GetThrottledEventQueue() const;
 
+  // This method is always safe to call off the main thread.
   virtual nsresult Dispatch(const char* aName,
                             TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
-  virtual already_AddRefed<nsIEventTarget>
-  EventTargetFor(TaskCategory aCategory) const override;
+  // This method is always safe to call off the main thread. The nsIEventTarget
+  // can always be used off the main thread.
+  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
 
   TabGroup* AsTabGroup() override { return this; }
 
@@ -128,7 +131,7 @@ private:
 
   ~TabGroup();
   DocGroupMap mDocGroups;
-  bool mLastWindowLeft;
+  Atomic<bool> mLastWindowLeft;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
   bool mThrottledQueuesInitialized;
   RefPtr<ThrottledEventQueue> mThrottledEventQueue;
