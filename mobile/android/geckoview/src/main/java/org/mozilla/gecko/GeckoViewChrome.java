@@ -11,40 +11,37 @@ public class GeckoViewChrome implements GeckoView.ChromeDelegate {
     /**
     * Tell the host application to display an alert dialog.
     * @param view The GeckoView that initiated the callback.
-    * @param browser The Browser that is loading the content.
     * @param message The string to display in the dialog.
     * @param result A PromptResult used to send back the result without blocking.
     * Defaults to cancel requests.
     */
     @Override
-    public void onAlert(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result) {
+    public void onAlert(GeckoView view, String message, GeckoView.PromptResult result) {
         result.cancel();
     }
 
     /**
     * Tell the host application to display a confirmation dialog.
     * @param view The GeckoView that initiated the callback.
-    * @param browser The Browser that is loading the content.
     * @param message The string to display in the dialog.
     * @param result A PromptResult used to send back the result without blocking.
     * Defaults to cancel requests.
     */
     @Override
-    public void onConfirm(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result) {
+    public void onConfirm(GeckoView view, String message, GeckoView.PromptResult result) {
         result.cancel();
     }
 
     /**
     * Tell the host application to display an input prompt dialog.
     * @param view The GeckoView that initiated the callback.
-    * @param browser The Browser that is loading the content.
     * @param message The string to display in the dialog.
     * @param defaultValue The string to use as default input.
     * @param result A PromptResult used to send back the result without blocking.
     * Defaults to cancel requests.
     */
     @Override
-    public void onPrompt(GeckoView view, GeckoView.Browser browser, String message, String defaultValue, GeckoView.PromptResult result) {
+    public void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result) {
         result.cancel();
     }
 
