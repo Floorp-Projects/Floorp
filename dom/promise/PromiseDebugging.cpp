@@ -66,20 +66,6 @@ private:
 /* static */ MOZ_THREAD_LOCAL(bool)
 FlushRejections::sDispatched;
 
-#ifndef SPIDERMONKEY_PROMISE
-static Promise*
-UnwrapPromise(JS::Handle<JSObject*> aPromise, ErrorResult& aRv)
-{
-  Promise* promise;
-  if (NS_WARN_IF(NS_FAILED(UNWRAP_OBJECT(Promise, aPromise, promise)))) {
-    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(NS_LITERAL_STRING("Argument"));
-    return nullptr;
-  }
-  return promise;
-}
-#endif // SPIDERMONKEY_PROMISE
-
-#ifdef SPIDERMONKEY_PROMISE
 /* static */ void
 PromiseDebugging::GetState(GlobalObject& aGlobal, JS::Handle<JSObject*> aPromise,
                            PromiseDebuggingStateHolder& aState,
@@ -173,34 +159,6 @@ PromiseDebugging::GetFullfillmentStack(GlobalObject& aGlobal,
   aStack.set(JS::GetPromiseResolutionSite(obj));
 }
 
-#else
-
-/* static */ void
-PromiseDebugging::GetState(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                           PromiseDebuggingStateHolder& aState,
-                           ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  switch (promise->mState) {
-  case Promise::Pending:
-    aState.mState = PromiseDebuggingState::Pending;
-    break;
-  case Promise::Resolved:
-    aState.mState = PromiseDebuggingState::Fulfilled;
-    aState.mValue = promise->mResult;
-    break;
-  case Promise::Rejected:
-    aState.mState = PromiseDebuggingState::Rejected;
-    aState.mReason = promise->mResult;
-    break;
-  }
-}
-
-#endif // SPIDERMONKEY_PROMISE
-
 /*static */ nsString
 PromiseDebugging::sIDPrefix;
 
@@ -232,86 +190,6 @@ PromiseDebugging::FlushUncaughtRejections()
   FlushRejections::FlushSync();
 }
 
-#ifndef SPIDERMONKEY_PROMISE
-
-/* static */ void
-PromiseDebugging::GetAllocationStack(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                     JS::MutableHandle<JSObject*> aStack,
-                                     ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  aStack.set(promise->mAllocationStack);
-}
-
-/* static */ void
-PromiseDebugging::GetRejectionStack(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                    JS::MutableHandle<JSObject*> aStack,
-                                    ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  aStack.set(promise->mRejectionStack);
-}
-
-/* static */ void
-PromiseDebugging::GetFullfillmentStack(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                       JS::MutableHandle<JSObject*> aStack,
-                                       ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  aStack.set(promise->mFullfillmentStack);
-}
-
-/* static */ void
-PromiseDebugging::GetDependentPromises(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                       nsTArray<RefPtr<Promise>>& aPromises,
-                                       ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  promise->GetDependentPromises(aPromises);
-}
-
-/* static */ double
-PromiseDebugging::GetPromiseLifetime(GlobalObject&,
-                                     JS::Handle<JSObject*> aPromise,
-                                     ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return 0;
-  }
-  return (TimeStamp::Now() - promise->mCreationTimestamp).ToMilliseconds();
-}
-
-/* static */ double
-PromiseDebugging::GetTimeToSettle(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                  ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return 0;
-  }
-  if (promise->mState == Promise::Pending) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return 0;
-  }
-  return (promise->mSettlementTimestamp -
-          promise->mCreationTimestamp).ToMilliseconds();
-}
-
-#endif // SPIDERMONKEY_PROMISE
-
 /* static */ void
 PromiseDebugging::AddUncaughtRejectionObserver(GlobalObject&,
                                                UncaughtRejectionObserver& aObserver)
@@ -336,8 +214,6 @@ PromiseDebugging::RemoveUncaughtRejectionObserver(GlobalObject&,
   }
   return false;
 }
-
-#ifdef SPIDERMONKEY_PROMISE
 
 /* static */ void
 PromiseDebugging::AddUncaughtRejection(JS::HandleObject aPromise)
@@ -419,103 +295,6 @@ PromiseDebugging::FlushUncaughtRejectionsInternal()
   }
   storage->mConsumedRejections.clear();
 }
-
-#else
-
-/* static */ void
-PromiseDebugging::AddUncaughtRejection(Promise& aPromise)
-{
-  CycleCollectedJSContext::Get()->mUncaughtRejections.AppendElement(&aPromise);
-  FlushRejections::DispatchNeeded();
-}
-
-/* void */ void
-PromiseDebugging::AddConsumedRejection(Promise& aPromise)
-{
-  CycleCollectedJSContext::Get()->mConsumedRejections.AppendElement(&aPromise);
-  FlushRejections::DispatchNeeded();
-}
-
-/* static */ void
-PromiseDebugging::GetPromiseID(GlobalObject&,
-                               JS::Handle<JSObject*> aPromise,
-                               nsString& aID,
-                               ErrorResult& aRv)
-{
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  uint64_t promiseID = promise->GetID();
-  aID = sIDPrefix;
-  aID.AppendInt(promiseID);
-}
-
-/* static */ void
-PromiseDebugging::FlushUncaughtRejectionsInternal()
-{
-  CycleCollectedJSContext* storage = CycleCollectedJSContext::Get();
-
-  // The Promise that have been left uncaught (rejected and last in
-  // their chain) since the last call to this function.
-  nsTArray<nsCOMPtr<nsISupports>> uncaught;
-  storage->mUncaughtRejections.SwapElements(uncaught);
-
-  // The Promise that have been left uncaught at some point, but that
-  // have eventually had their `then` method called.
-  nsTArray<nsCOMPtr<nsISupports>> consumed;
-  storage->mConsumedRejections.SwapElements(consumed);
-
-  nsTArray<nsCOMPtr<nsISupports>>& observers = storage->mUncaughtRejectionObservers;
-
-  nsresult rv;
-  // Notify observers of uncaught Promise.
-
-  for (size_t i = 0; i < uncaught.Length(); ++i) {
-    nsCOMPtr<Promise> promise = do_QueryInterface(uncaught[i], &rv);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    if (!promise->IsLastInChain()) {
-      // This promise is not the last in the chain anymore,
-      // so the error has been caught at some point.
-      continue;
-    }
-
-    // For the moment, the Promise is still at the end of the
-    // chain. Let's inform observers, so that they may decide whether
-    // to report it.
-    for (size_t j = 0; j < observers.Length(); ++j) {
-      ErrorResult err;
-      RefPtr<UncaughtRejectionObserver> obs =
-        static_cast<UncaughtRejectionObserver*>(observers[j].get());
-
-      obs->OnLeftUncaught(*promise, err); // Ignore errors
-    }
-
-    promise->SetNotifiedAsUncaught();
-  }
-
-  // Notify observers of consumed Promise.
-
-  for (size_t i = 0; i < consumed.Length(); ++i) {
-    nsCOMPtr<Promise> promise = do_QueryInterface(consumed[i], &rv);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    if (!promise->WasNotifiedAsUncaught()) {
-      continue;
-    }
-
-    MOZ_ASSERT(!promise->IsLastInChain());
-    for (size_t j = 0; j < observers.Length(); ++j) {
-      ErrorResult err;
-      RefPtr<UncaughtRejectionObserver> obs =
-        static_cast<UncaughtRejectionObserver*>(observers[j].get());
-
-      obs->OnConsumed(*promise, err); // Ignore errors
-    }
-  }
-}
-#endif // SPIDERMONKEY_PROMISE
 
 } // namespace dom
 } // namespace mozilla

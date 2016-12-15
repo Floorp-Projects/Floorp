@@ -2961,42 +2961,6 @@ ConvertExceptionToPromise(JSContext* cx,
                           JSObject* promiseScope,
                           JS::MutableHandle<JS::Value> rval)
 {
-#ifndef SPIDERMONKEY_PROMISE
-  GlobalObject global(cx, promiseScope);
-  if (global.Failed()) {
-    return false;
-  }
-
-  JS::Rooted<JS::Value> exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) {
-    // This is very important: if there is no pending exception here but we're
-    // ending up in this code, that means the callee threw an uncatchable
-    // exception.  Just propagate that out as-is.
-    return false;
-  }
-
-  JS_ClearPendingException(cx);
-
-  nsCOMPtr<nsIGlobalObject> globalObj =
-    do_QueryInterface(global.GetAsSupports());
-  if (!globalObj) {
-    ErrorResult rv;
-    rv.Throw(NS_ERROR_UNEXPECTED);
-    return !rv.MaybeSetPendingException(cx);
-  }
-
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Reject(globalObj, cx, exn, rv);
-  if (rv.MaybeSetPendingException(cx)) {
-    // We just give up.  We put the exception from the ErrorResult on
-    // the JSContext just to make sure to not leak memory on the
-    // ErrorResult, but now just put the original exception back.
-    JS_SetPendingException(cx, exn);
-    return false;
-  }
-
-  return GetOrCreateDOMReflector(cx, promise, rval);
-#else // SPIDERMONKEY_PROMISE
   {
     JSAutoCompartment ac(cx, promiseScope);
 
@@ -3022,7 +2986,6 @@ ConvertExceptionToPromise(JSContext* cx,
 
   // Now make sure we rewrap promise back into the compartment we want
   return JS_WrapValue(cx, rval);
-#endif // SPIDERMONKEY_PROMISE
 }
 
 /* static */

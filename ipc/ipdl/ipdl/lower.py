@@ -143,11 +143,6 @@ def _nullState(proto=None):
     if proto is not None:  pfx = proto.name() +'::'
     return ExprVar(pfx +'__Null')
 
-def _errorState(proto=None):
-    pfx = ''
-    if proto is not None:  pfx = proto.name() +'::'
-    return ExprVar(pfx +'__Error')
-
 def _deadState(proto=None):
     pfx = ''
     if proto is not None:  pfx = proto.name() +'::'
@@ -1340,10 +1335,6 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
         md.returns = [ ret.accept(self) for ret in md.outParams ]
         MessageDecl.upgrade(md)
 
-    def visitTransitionStmt(self, ts):
-        name = ts.state.decl.progname
-        ts.state.decl.cxxname = name
-        ts.state.decl.cxxenum = ExprVar(self.protocolName +'::'+ name)
 
 ##-----------------------------------------------------------------------------
 
@@ -1547,16 +1538,9 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         # value '0'
         stateenum.addId(_deadState().name)
         stateenum.addId(_nullState().name)
-        stateenum.addId(_errorState().name)
         if self.protocol.decl.type.hasReentrantDelete:
             stateenum.addId(_dyingState().name)
-        for ts in p.transitionStmts:
-            stateenum.addId(ts.state.decl.cxxname)
-        if len(p.transitionStmts):
-            startstate = p.transitionStmts[0].state.decl.cxxname
-        else:
-            startstate = _nullState().name
-        stateenum.addId(_startState().name, startstate)
+        stateenum.addId(_startState().name, _nullState().name)
 
         ns.addstmts([ StmtDecl(Decl(stateenum,'')), Whitespace.NL ])
 
@@ -1681,28 +1665,12 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         usesend, sendvar = set(), ExprVar('Send__')
         userecv, recvvar = set(), ExprVar('Recv__')
 
-        def sameTrigger(trigger, actionexpr):
-            if trigger is ipdl.ast.SEND or trigger is ipdl.ast.CALL:
-                usesend.add('yes')
-                return ExprBinary(sendvar, '==', actionexpr)
-            else:
-                userecv.add('yes')
-                return ExprBinary(recvvar, '==',
-                                  actionexpr)
-
-        def stateEnum(s):
-            if s is ipdl.ast.State.DEAD:
-                return _deadState()
-            else:
-                return ExprVar(s.decl.cxxname)
-
         # bool Transition(Trigger trigger, State* next)
         # The state we are transitioning from is stored in *next.
         fromvar = ExprVar('from')
         triggervar = ExprVar('trigger')
         nextvar = ExprVar('next')
         msgexpr = ExprSelect(triggervar, '.', 'mMessage')
-        actionexpr = ExprSelect(triggervar, '.', 'mAction')
 
         transitionfunc = FunctionDefn(FunctionDecl(
             'Transition',
@@ -1712,39 +1680,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
         fromswitch = StmtSwitch(fromvar)
 
-        for ts in self.protocol.transitionStmts:
-            msgswitch = StmtSwitch(msgexpr)
-
-            msgToTransitions = { }
-
-            for t in ts.transitions:
-                msgid = t.msg._md.msgId()
-
-                ifsametrigger = StmtIf(sameTrigger(t.trigger, actionexpr))
-                # FIXME multi-out states
-                for nextstate in t.toStates: break
-                ifsametrigger.addifstmts([
-                    StmtExpr(ExprAssn(ExprDeref(nextvar),
-                                      stateEnum(nextstate))),
-                    StmtReturn(ExprLiteral.TRUE)
-                ])
-
-                transitions = msgToTransitions.get(msgid, [ ])
-                transitions.append(ifsametrigger)
-                msgToTransitions[msgid] = transitions
-
-            for msgid, transitions in msgToTransitions.iteritems():
-                block = Block()
-                block.addstmts(transitions +[ StmtBreak() ])
-                msgswitch.addcase(CaseLabel(msgid), block)
-
-            msgblock = Block()
-            msgblock.addstmts([
-                msgswitch,
-                StmtBreak()
-            ])
-            fromswitch.addcase(CaseLabel(ts.state.decl.cxxname), msgblock)
-
         # special cases for Null and Error
         nullerrorblock = Block()
         if ptype.hasDelete:
@@ -1753,14 +1688,12 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 nextState = _dyingState()
             else:
                 nextState = _deadState()
-            ifdelete.addifstmts([
-                StmtExpr(ExprAssn(ExprDeref(nextvar), nextState)),
-                StmtReturn(ExprLiteral.TRUE) ])
+            ifdelete.addifstmt(
+                StmtExpr(ExprAssn(ExprDeref(nextvar), nextState)))
             nullerrorblock.addstmt(ifdelete)
         nullerrorblock.addstmt(
-            StmtReturn(ExprBinary(_nullState(), '==', fromvar)))
-        fromswitch.addfallthrough(CaseLabel(_nullState().name))
-        fromswitch.addcase(CaseLabel(_errorState().name), nullerrorblock)
+            StmtReturn(ExprLiteral.TRUE))
+        fromswitch.addcase(CaseLabel(_nullState().name), nullerrorblock)
 
         # special case for Dead
         deadblock = Block()
@@ -1800,13 +1733,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         transitionfunc.addstmt(StmtDecl(Decl(Type('State'), fromvar.name),
                                         init=ExprDeref(nextvar)))
         transitionfunc.addstmt(fromswitch)
-        # all --> Error transitions break to here.  But only insert this
-        # block if there is any possibility of such transitions.
-        if self.protocol.transitionStmts:
-            transitionfunc.addstmts([
-                StmtExpr(ExprAssn(ExprDeref(nextvar), _errorState())),
-                StmtReturn(ExprLiteral.FALSE),
-            ])
 
         return transitionfunc
 
@@ -4150,15 +4076,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         msgvar, stmts = self.makeMessage(md, errfnSendDtor, actorvar)
         sendok, sendstmts = self.sendAsync(md, msgvar, actorvar)
-        failif = StmtIf(ExprNot(sendok))
-        failif.addifstmt(StmtReturn.FALSE)
-
         method.addstmts(
             stmts
             + self.genVerifyMessage(md.decl.type.verify, md.params,
                                     errfnSendDtor, ExprVar('msg__'))
             + sendstmts
-            + [ failif, Whitespace.NL ]
+            + [ Whitespace.NL ]
             + self.dtorEpilogue(md, actor.var())
             + [ StmtReturn(sendok) ])
 

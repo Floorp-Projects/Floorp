@@ -3270,7 +3270,8 @@ GCHelperState::startBackgroundThread(State newState, const AutoLockGC& lock,
 void
 GCHelperState::waitForBackgroundThread(js::AutoLockGC& lock)
 {
-    done.wait(lock.guard());
+    while (isBackgroundSweeping())
+        done.wait(lock.guard());
 }
 
 void

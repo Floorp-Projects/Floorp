@@ -669,8 +669,7 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
 bool
 nsSVGEffects::EffectProperties::HasNoOrValidEffects()
 {
-  return HasNoOrValidClipPath() && HasNoOrValidMask() &&
-         HasNoFilterOrHasValidFilter();
+  return HasNoOrValidClipPath() && HasNoOrValidMask() && HasNoOrValidFilter();
 }
 
 bool

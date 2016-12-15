@@ -968,7 +968,10 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
         partialHash.Assign(reinterpret_cast<char*>(&result.hash.prefix),
                            PREFIX_SIZE);
 
-        nsresult rv = completer->Complete(partialHash, gethashUrl, this);
+        nsresult rv = completer->Complete(partialHash,
+                                          gethashUrl,
+                                          result.mTableName,
+                                          this);
         if (NS_SUCCEEDED(rv)) {
           mPendingCompletions++;
         }

@@ -13,9 +13,19 @@ namespace gfx {
 const float kEpsilon = 0.001f;
 
 // Compares two points while allowing some numerical inaccuracy.
+bool FuzzyEquals(const Point4D& lhs, const Point4D& rhs)
+{
+  const auto d = lhs - rhs;
+
+  return std::abs(d.x) < kEpsilon &&
+         std::abs(d.y) < kEpsilon &&
+         std::abs(d.z) < kEpsilon &&
+         std::abs(d.w) < kEpsilon;
+}
+
 bool FuzzyEquals(const Point3D& lhs, const Point3D& rhs)
 {
-  const Point3D d = lhs - rhs;
+  const auto d = lhs - rhs;
 
   return std::abs(d.x) < kEpsilon &&
          std::abs(d.y) < kEpsilon &&
@@ -24,7 +34,7 @@ bool FuzzyEquals(const Point3D& lhs, const Point3D& rhs)
 
 bool FuzzyEquals(const Point& lhs, const Point& rhs)
 {
-  const Point d = lhs - rhs;
+  const auto d = lhs - rhs;
 
   return std::abs(d.x) < kEpsilon &&
          std::abs(d.y) < kEpsilon;
@@ -39,10 +49,10 @@ bool operator==(const Triangle& lhs, const Triangle& rhs)
 
 // Compares the points of two polygons and ensures
 // that the points are in the same winding order.
-bool operator==(const Polygon3D& lhs, const Polygon3D& rhs)
+bool operator==(const Polygon& lhs, const Polygon& rhs)
 {
-  const nsTArray<Point3D>& left = lhs.GetPoints();
-  const nsTArray<Point3D>& right = rhs.GetPoints();
+  const auto& left = lhs.GetPoints();
+  const auto& right = rhs.GetPoints();
 
   // Polygons do not have the same amount of points.
   if (left.Length() != right.Length()) {
@@ -99,7 +109,7 @@ TEST(PolygonTestUtils, TestSanity)
   EXPECT_FALSE(FuzzyEquals(Point3D(0.01f, 0.01f, 0.01f),
                            Point3D(0.0f, 0.0f, 0.0f)));
 
-  Polygon3D p1 {
+  Polygon p1 {
     Point3D(0.0f, 0.0f, 1.0f),
     Point3D(1.0f, 0.0f, 1.0f),
     Point3D(1.0f, 1.0f, 1.0f),
@@ -107,21 +117,21 @@ TEST(PolygonTestUtils, TestSanity)
   };
 
   // Same points as above shifted forward by one position.
-  Polygon3D shifted {
+  Polygon shifted {
     Point3D(0.0f, 1.0f, 1.0f),
     Point3D(0.0f, 0.0f, 1.0f),
     Point3D(1.0f, 0.0f, 1.0f),
     Point3D(1.0f, 1.0f, 1.0f)
   };
 
-  Polygon3D p2 {
+  Polygon p2 {
     Point3D(0.00001f, 0.00001f, 1.00001f),
     Point3D(1.00001f, 0.00001f, 1.00001f),
     Point3D(1.00001f, 1.00001f, 1.00001f),
     Point3D(0.00001f, 1.00001f, 1.00001f)
   };
 
-  Polygon3D p3 {
+  Polygon p3 {
     Point3D(0.01f, 0.01f, 1.01f),
     Point3D(1.01f, 0.01f, 1.01f),
     Point3D(1.01f, 1.01f, 1.01f),

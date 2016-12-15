@@ -838,19 +838,18 @@ HTMLEditRules::GetAlignment(bool* aMixed,
 
   NS_ENSURE_TRUE(nodeToExamine, NS_ERROR_NULL_POINTER);
 
-  NS_NAMED_LITERAL_STRING(typeAttrName, "align");
   nsCOMPtr<Element> blockParent = htmlEditor->GetBlock(*nodeToExamine);
 
   NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
 
   if (htmlEditor->IsCSSEnabled() &&
       htmlEditor->mCSSEditUtils->IsCSSEditableProperty(blockParent, nullptr,
-                                                        &typeAttrName)) {
+                                                       nsGkAtoms::align)) {
     // We are in CSS mode and we know how to align this element with CSS
     nsAutoString value;
     // Let's get the value(s) of text-align or margin-left/margin-right
     htmlEditor->mCSSEditUtils->GetCSSEquivalentToHTMLInlineStyleSet(
-        blockParent, nullptr, &typeAttrName, value, CSSEditUtils::eComputed);
+        blockParent, nullptr, nsGkAtoms::align, value, CSSEditUtils::eComputed);
     if (value.EqualsLiteral("center") ||
         value.EqualsLiteral("-moz-center") ||
         value.EqualsLiteral("auto auto")) {
@@ -4727,7 +4726,7 @@ HTMLEditRules::WillAlign(Selection& aSelection,
       NS_ENSURE_SUCCESS(rv, rv);
       if (useCSS) {
         htmlEditor->mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-            curNode->AsElement(), nullptr, &NS_LITERAL_STRING("align"),
+            curNode->AsElement(), nullptr, nsGkAtoms::align,
             &aAlignType, false);
         curDiv = nullptr;
         continue;
@@ -7093,9 +7092,9 @@ HTMLEditRules::CacheInlineStyles(nsIDOMNode* aNode)
                                               isSet, &outValue);
     } else {
       NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode,
-        mCachedStyles[j].tag, &(mCachedStyles[j].attr), isSet, outValue,
-        CSSEditUtils::eComputed);
+      isSet = mHTMLEditor->mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(
+                aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr), outValue,
+                CSSEditUtils::eComputed);
     }
     if (isSet) {
       mCachedStyles[j].mPresent = true;

@@ -673,7 +673,7 @@ XMLHttpRequestMainThread::CreatePartialBlob(ErrorResult& aRv)
     // Use progress info to determine whether load is complete, but use
     // mDataAvailable to ensure a slice is created based on the uncompressed
     // data count.
-    if (mLoadTotal == mLoadTransferred) {
+    if (mState == State::done) {
       mResponseBlob = mDOMBlob;
     } else {
       mResponseBlob = mDOMBlob->CreateSlice(0, mDataAvailable,
@@ -688,7 +688,7 @@ XMLHttpRequestMainThread::CreatePartialBlob(ErrorResult& aRv)
   }
 
   nsAutoCString contentType;
-  if (mLoadTotal == mLoadTransferred) {
+  if (mState == State::done) {
     mChannel->GetContentType(contentType);
   }
 
@@ -1790,7 +1790,15 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
 
   mDataAvailable += totalRead;
 
-  ChangeState(State::loading);
+  // Fire the first progress event/loading state change
+  if (mState != State::loading) {
+    ChangeState(State::loading);
+    if (!mFlagSynchronous) {
+      DispatchProgressEvent(this, ProgressEventType::progress,
+                            mLoadTransferred, mLoadTotal);
+    }
+    mProgressSinceLastProgressEvent = false;
+  }
 
   if (!mFlagSynchronous && !mProgressTimerIsActive) {
     StartProgressEventTimer();
@@ -2098,10 +2106,6 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   bool waitingForBlobCreation = false;
 
   if (NS_SUCCEEDED(status) &&
-      (mResponseType == XMLHttpRequestResponseType::_empty ||
-       mResponseType == XMLHttpRequestResponseType::Text)) {
-    mLoadTotal = mResponseBody.Length();
-  } else if (NS_SUCCEEDED(status) &&
       (mResponseType == XMLHttpRequestResponseType::Blob ||
        mResponseType == XMLHttpRequestResponseType::Moz_blob)) {
     ErrorResult rv;
@@ -2111,11 +2115,6 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     if (mDOMBlob) {
       mResponseBlob = mDOMBlob;
       mDOMBlob = nullptr;
-
-      mLoadTotal = mResponseBlob->GetSize(rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        status = rv.StealNSResult();
-      }
     } else {
       // Smaller files may be written in cache map instead of separate files.
       // Also, no-store response cannot be written in persistent cache.
@@ -2126,8 +2125,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
         // mBlobStorage can be null if the channel is non-file non-cacheable
         // and if the response length is zero.
         MaybeCreateBlobStorage();
-        mLoadTotal =
-          mBlobStorage->GetBlobWhenReady(GetOwner(), contentType, this);
+        mBlobStorage->GetBlobWhenReady(GetOwner(), contentType, this);
         waitingForBlobCreation = true;
       } else {
         // mBlobSet can be null if the channel is non-file non-cacheable
@@ -2148,10 +2146,6 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
         }
 
         mResponseBlob = Blob::Create(GetOwner(), blobImpl);
-        mLoadTotal = mResponseBlob->GetSize(rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          status = rv.StealNSResult();
-        }
       }
     }
 
@@ -2163,8 +2157,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
               mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer)) {
     // set the capacity down to the actual length, to realloc back
     // down to the actual size
-    mLoadTotal = mArrayBufferBuilder.length();
-    if (!mArrayBufferBuilder.setCapacity(mLoadTotal)) {
+    if (!mArrayBufferBuilder.setCapacity(mArrayBufferBuilder.length())) {
       // this should never happen!
       status = NS_ERROR_UNEXPECTED;
     }
@@ -2266,12 +2259,6 @@ XMLHttpRequestMainThread::ChangeStateToDone()
 
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();
-  }
-
-  if (mLoadTransferred) {
-    mLoadTotal = mLoadTransferred;
-  } else {
-    mLoadTotal = -1;
   }
 
   // Per spec, fire the last download progress event, if any,
@@ -3412,9 +3399,8 @@ XMLHttpRequestMainThread::OnProgress(nsIRequest *aRequest, nsISupports *aContext
       StartProgressEventTimer();
     }
   } else {
-    mLoadTotal = lengthComputable ? aProgressMax : -1;
+    mLoadTotal = aProgressMax;
     mLoadTransferred = aProgress;
-  
     // OnDataAvailable() handles mProgressSinceLastProgressEvent
     // for the download phase.
   }
@@ -3631,6 +3617,7 @@ XMLHttpRequestMainThread::HandleProgressTimerCallback()
                             mUploadTransferred, mUploadTotal);
     }
   } else {
+    FireReadystatechangeEvent();
     DispatchProgressEvent(this, ProgressEventType::progress,
                           mLoadTransferred, mLoadTotal);
   }
@@ -3808,12 +3795,6 @@ XMLHttpRequestMainThread::BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
 
   mResponseBlob = aBlob;
   mBlobStorage = nullptr;
-
-  ErrorResult rv;
-  mLoadTotal = mResponseBlob->GetSize(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-  }
 
   ChangeStateToDone();
 }

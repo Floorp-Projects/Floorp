@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -134,8 +135,16 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
     public static class HighlightItem extends StreamItem implements IconCallback {
         public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
+        enum HighlightSource {
+            VISITED,
+            BOOKMARKED
+        }
+
         String title;
         String url;
+
+        @Nullable Boolean isPinned;
+        @Nullable Boolean isBookmarked;
 
         final FaviconView vIconView;
         final TextView vLabel;
@@ -174,7 +183,8 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     ActivityStreamContextMenu.show(v.getContext(),
                             menuButton,
                             ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
-                            title, url, onUrlOpenListener, onUrlOpenInBackgroundListener,
+                            title, url, isBookmarked, isPinned,
+                            onUrlOpenListener, onUrlOpenInBackgroundListener,
                             vIconView.getWidth(), vIconView.getHeight());
                 }
             });
@@ -198,7 +208,10 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             layoutParams.height = tilesHeight;
             vIconView.setLayoutParams(layoutParams);
 
-            updateSource(cursor);
+            final HighlightSource source = highlightSource(cursor);
+
+            updateStateForSource(source, cursor);
+            updateUiForSource(source);
             updatePage(url);
 
             if (ongoingIconLoad != null) {
@@ -212,24 +225,44 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     .execute(this);
         }
 
-        private void updateSource(final Cursor cursor) {
-            final boolean isBookmark = -1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
-            final boolean isHistory = -1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
+        private void updateStateForSource(HighlightSource source, Cursor cursor) {
+            // We can only be certain of bookmark state if an item is a bookmark item.
+            // Otherwise, due to the underlying highlights query, we have to look up states when
+            // menus are displayed.
+            switch (source) {
+                case BOOKMARKED:
+                    isBookmarked = true;
+                    isPinned = null;
+                    break;
+                case VISITED:
+                    isBookmarked = null;
+                    isPinned = null;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown source: " + source);
+            }
+        }
 
-            if (isBookmark) {
-                vSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
-                vSourceView.setVisibility(View.VISIBLE);
-                vSourceIconView.setImageResource(R.drawable.ic_as_bookmarked);
-            } else if (isHistory) {
-                vSourceView.setText(R.string.activity_stream_highlight_label_visited);
-                vSourceView.setVisibility(View.VISIBLE);
-                vSourceIconView.setImageResource(R.drawable.ic_as_visited);
-            } else {
-                vSourceView.setVisibility(View.INVISIBLE);
-                vSourceIconView.setImageResource(0);
+        private void updateUiForSource(HighlightSource source) {
+            switch (source) {
+                case BOOKMARKED:
+                    vSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
+                    vSourceView.setVisibility(View.VISIBLE);
+                    vSourceIconView.setImageResource(R.drawable.ic_as_bookmarked);
+                    break;
+                case VISITED:
+                    vSourceView.setText(R.string.activity_stream_highlight_label_visited);
+                    vSourceView.setVisibility(View.VISIBLE);
+                    vSourceIconView.setImageResource(R.drawable.ic_as_visited);
+                    break;
+                default:
+                    vSourceView.setVisibility(View.INVISIBLE);
+                    vSourceIconView.setImageResource(0);
+                    break;
             }
 
-            vSourceView.setText(vSourceView.getText());
+            // TODO Why?
+            // vSourceView.setText(vSourceView.getText());
         }
 
         private void updatePage(final String url) {
@@ -245,5 +278,17 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         public void onIconResponse(IconResponse response) {
             vIconView.updateImage(response);
         }
+    }
+
+    private static HighlightItem.HighlightSource highlightSource(final Cursor cursor) {
+        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID))) {
+            return HighlightItem.HighlightSource.BOOKMARKED;
+        }
+
+        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID))) {
+            return HighlightItem.HighlightSource.VISITED;
+        }
+
+        throw new IllegalArgumentException("Unknown highlight source.");
     }
 }

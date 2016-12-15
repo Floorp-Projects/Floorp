@@ -1438,7 +1438,6 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
-#ifdef SPIDERMONKEY_PROMISE
 static bool
 SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1546,43 +1545,6 @@ RejectPromise(JSContext* cx, unsigned argc, Value* vp)
         args.rval().setUndefined();
     return result;
 }
-
-#else
-
-static const js::Class FakePromiseClass = {
-    "Promise", JSCLASS_IS_ANONYMOUS
-};
-
-static bool
-MakeFakePromise(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &FakePromiseClass, nullptr));
-    if (!obj)
-        return false;
-
-    JS::dbg::onNewPromise(cx, obj);
-    args.rval().setObject(*obj);
-    return true;
-}
-
-static bool
-SettleFakePromise(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "settleFakePromise", 1))
-        return false;
-    if (!args[0].isObject() || args[0].toObject().getClass() != &FakePromiseClass) {
-        JS_ReportErrorASCII(cx, "first argument must be a (fake) Promise object");
-        return false;
-    }
-
-    RootedObject promise(cx, &args[0].toObject());
-    JS::dbg::onPromiseSettled(cx, promise);
-    return true;
-}
-#endif // SPIDERMONKEY_PROMISE
 
 static unsigned finalizeCount = 0;
 
@@ -4214,7 +4176,6 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  This is also disabled when --fuzzing-safe is specified."),
 #endif
 
-#ifdef SPIDERMONKEY_PROMISE
     JS_FN_HELP("settlePromiseNow", SettlePromiseNow, 1, 0,
 "settlePromiseNow(promise)",
 "  'Settle' a 'promise' immediately. This just marks the promise as resolved\n"
@@ -4231,20 +4192,6 @@ JS_FN_HELP("resolvePromise", ResolvePromise, 2, 0,
 JS_FN_HELP("rejectPromise", RejectPromise, 2, 0,
 "rejectPromise(promise, reason)",
 "  Reject a Promise by calling the JSAPI function JS::RejectPromise."),
-#else
-    JS_FN_HELP("makeFakePromise", MakeFakePromise, 0, 0,
-"makeFakePromise()",
-"  Create an object whose [[Class]] name is 'Promise' and call\n"
-"  JS::dbg::onNewPromise on it before returning it. It doesn't actually have\n"
-"  any of the other behavior associated with promises."),
-
-    JS_FN_HELP("settleFakePromise", SettleFakePromise, 1, 0,
-"settleFakePromise(promise)",
-"  'Settle' a 'promise' created by makeFakePromise(). This doesn't have any\n"
-"  observable effects outside of firing any onPromiseSettled hooks set on\n"
-"  Debugger instances that are observing the given promise's global as a\n"
-"  debuggee."),
-#endif // SPIDERMONKEY_PROMISE
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
 "makeFinalizeObserver()",

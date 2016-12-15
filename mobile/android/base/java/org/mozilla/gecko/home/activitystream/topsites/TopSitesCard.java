@@ -5,6 +5,8 @@
 package org.mozilla.gecko.home.activitystream.topsites;
 
 import android.graphics.Color;
+import android.support.annotation.Nullable;
+import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -15,6 +17,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.icons.IconCallback;
@@ -37,6 +40,8 @@ class TopSitesCard extends RecyclerView.ViewHolder
     private Future<IconResponse> ongoingIconLoad;
 
     private String url;
+    private int type;
+    @Nullable private Boolean isBookmarked;
 
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
     private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
@@ -69,6 +74,8 @@ class TopSitesCard extends RecyclerView.ViewHolder
         });
 
         this.url = topSite.url;
+        this.type = topSite.type;
+        this.isBookmarked = topSite.isBookmarked;
 
         if (ongoingIconLoad != null) {
             ongoingIconLoad.cancel(true);
@@ -79,6 +86,9 @@ class TopSitesCard extends RecyclerView.ViewHolder
                 .skipNetwork()
                 .build()
                 .execute(this);
+
+        final int pinResourceId = (isPinned(this.type) ? R.drawable.pin : 0);
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(title, pinResourceId, 0, 0, 0);
     }
 
     @Override
@@ -102,10 +112,17 @@ class TopSitesCard extends RecyclerView.ViewHolder
                     menuButton,
                     ActivityStreamContextMenu.MenuMode.TOPSITE,
                     title.getText().toString(), url,
+
+                    isBookmarked, isPinned(type),
+
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     faviconView.getWidth(), faviconView.getHeight());
 
             Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.CONTEXT_MENU, "as_top_sites");
         }
+    }
+
+    private static boolean isPinned(int type) {
+        return type == BrowserContract.TopSites.TYPE_PINNED;
     }
 }

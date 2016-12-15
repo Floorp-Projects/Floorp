@@ -118,7 +118,9 @@ public class ActivityStream extends FrameLayout {
                 return BrowserDB.from(context).getHighlights(context, 10);
             } else if (id == LOADER_ID_TOPSITES) {
                 return BrowserDB.from(context).getActivityStreamTopSites(
-                        context, TopSitesPagerAdapter.PAGES * MAXIMUM_TILES);
+                        context,
+                        MAXIMUM_TILES * TopSitesPagerAdapter.SUGGESTED_SITES_MAX_PAGES,
+                        MAXIMUM_TILES * TopSitesPagerAdapter.PAGES);
             } else {
                 throw new IllegalArgumentException("Can't handle loader id " + id);
             }

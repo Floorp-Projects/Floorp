@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Unused.h"
+#include "mozilla/layers/PImageBridgeParent.h"
 
 #include "MediaSystemResourceManagerParent.h"
 
@@ -58,8 +59,9 @@ MediaSystemResourceManagerParent::RecvRelease(const uint32_t& aId)
 mozilla::ipc::IPCResult
 MediaSystemResourceManagerParent::RecvRemoveResourceManager()
 {
+  IProtocol* mgr = Manager();
   if (!PMediaSystemResourceManagerParent::Send__delete__(this)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
 }

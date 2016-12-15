@@ -375,6 +375,34 @@ this.SessionStore = {
     }
     return number <= FORMAT_VERSION;
   },
+
+  /**
+   * Filters out not worth-saving tabs from a given browser state object.
+   *
+   * @param aState (object)
+   *        The browser state for which we remove worth-saving tabs.
+   *        The given object will be modified.
+   */
+  keepOnlyWorthSavingTabs: function (aState) {
+    for (let i = aState.windows.length - 1; i >= 0; i--) {
+      let win = aState.windows[i];
+      for (let j = win.tabs.length - 1; j >= 0; j--) {
+        let tab = win.tabs[j];
+        if (!SessionStoreInternal._shouldSaveTabState(tab)) {
+          win.tabs.splice(j, 1);
+          if (win.selected > j) {
+            win.selected--;
+          }
+        }
+      }
+      if (!win.tabs.length) {
+        aState.windows.splice(i, 1);
+        if (aState.selectedWindow > i) {
+          aState.selectedWindow--;
+        }
+      }
+    }
+  },
 };
 
 // Freeze the SessionStore object. We don't want anyone to modify it.
@@ -3611,8 +3639,17 @@ var SessionStoreInternal = {
     // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
+    // We need a new frameloader either if we are reloading into a fresh
+    // process, or we have a browser with a grouped session history (as we don't
+    // support restoring into browsers with grouped session histories directly).
+    let newFrameloader =
+      aReloadInFreshProcess || !!browser.frameLoader.groupedSessionHistory;
     let isRemotenessUpdate =
-      tabbrowser.updateBrowserRemotenessByURL(browser, uri, aReloadInFreshProcess);
+      tabbrowser.updateBrowserRemotenessByURL(browser, uri, {
+        freshProcess: aReloadInFreshProcess,
+        newFrameloader: newFrameloader,
+      });
+
     if (isRemotenessUpdate) {
       // We updated the remoteness, so we need to send the history down again.
       //
