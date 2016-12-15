@@ -129,6 +129,7 @@ enum class LogReason : int {
   AlphaWithBasicClient,
   UnbalancedClipStack,
   ProcessingError,
+  NativeFontResourceNotFound,
   // End
   MustBeLessThanThis = 101,
 };
