@@ -70,27 +70,54 @@ GroupedSHistory::AppendPartialSessionHistory(nsIPartialSHistory* aPartialHistory
 }
 
 NS_IMETHODIMP
-GroupedSHistory::OnPartialSessionHistoryChange(
-  nsIPartialSHistory* aPartialSessionHistory)
+GroupedSHistory::HandleSHistoryUpdate(nsIPartialSHistory* aPartial, bool aTruncate)
 {
-  if (!aPartialSessionHistory) {
+  if (!aPartial) {
     return NS_ERROR_INVALID_POINTER;
   }
+  nsCOMPtr<nsIPartialSHistory> partialHistory = aPartial;
 
-  nsCOMPtr<nsIPartialSHistory> partialHistory(aPartialSessionHistory);
-  int32_t index = mPartialHistories.IndexOf(partialHistory);
-  if (NS_WARN_IF(index != mIndexOfActivePartialHistory) ||
-      NS_WARN_IF(index < 0)) {
-    // Non-active or not attached partialHistory
-    return NS_ERROR_UNEXPECTED;
+  int32_t index = partialHistory->GetGlobalIndex();
+  // Get the lower and upper bounds for the viewer window
+  int32_t lower = index - nsISHistory::VIEWER_WINDOW;
+  int32_t upper = index + nsISHistory::VIEWER_WINDOW;
+  for (uint32_t i = 0; i < mPartialHistories.Length(); ++i) {
+    nsIPartialSHistory* pHistory = mPartialHistories[i];
+    // Skip the active partial history.
+    if (pHistory == partialHistory) {
+      continue;
+    }
+
+    // Check if the given partialshistory entry is too far away in history, and
+    // if it is, close it.
+    int32_t thisCount = pHistory->GetCount();
+    int32_t thisOffset = pHistory->GetGlobalIndexOffset();
+    if ((thisOffset > upper) || ((thisCount + thisOffset) < lower)) {
+      nsCOMPtr<nsIFrameLoader> loader;
+      pHistory->GetOwnerFrameLoader(getter_AddRefs(loader));
+      if (loader && !loader->GetIsDead()) {
+        loader->RequestFrameLoaderClose();
+      }
+    }
   }
 
-  PurgePartialHistories(index);
+  // If we should be truncating, make sure to purge any partialSHistories which
+  // follow the one being updated.
+  if (aTruncate) {
+    int32_t index = mPartialHistories.IndexOf(partialHistory);
+    if (NS_WARN_IF(index != mIndexOfActivePartialHistory) ||
+        NS_WARN_IF(index < 0)) {
+      // Non-active or not attached partialHistory
+      return NS_ERROR_UNEXPECTED;
+    }
 
-  // Update global count.
-  uint32_t count = partialHistory->GetCount();
-  uint32_t offset = partialHistory->GetGlobalIndexOffset();
-  mCount = count + offset;
+    PurgePartialHistories(index);
+
+    // Update global count.
+    uint32_t count = partialHistory->GetCount();
+    uint32_t offset = partialHistory->GetGlobalIndexOffset();
+    mCount = count + offset;
+  }
 
   return NS_OK;
 }
