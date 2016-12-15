@@ -161,7 +161,7 @@ public:
   void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType) override;
   NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
-  NS_IMETHOD              SetIcon(const nsAString& aIconSpec) override;
+  virtual void            SetIcon(const nsAString& aIconSpec) override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual LayoutDeviceIntSize ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) override;
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,

@@ -1805,11 +1805,11 @@ nsWindow::SetTitle(const nsAString& aTitle)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetIcon(const nsAString& aIconSpec)
 {
     if (!mShell)
-        return NS_OK;
+        return;
 
     nsAutoCString iconName;
 
@@ -1866,8 +1866,6 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     if (foundIcon) {
         gtk_window_set_icon_name(GTK_WINDOW(mShell), iconName.get());
     }
-
-    return NS_OK;
 }
 
 

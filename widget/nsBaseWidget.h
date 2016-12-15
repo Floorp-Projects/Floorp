@@ -247,7 +247,7 @@ public:
                           GetAttention(int32_t aCycleCount) override
                           { return NS_OK; }
   virtual bool            HasPendingInputEvent() override;
-  NS_IMETHOD              SetIcon(const nsAString &anIconSpec) override;
+  virtual void            SetIcon(const nsAString &aIconSpec) override {}
   virtual void            SetWindowTitlebarColor(nscolor aColor, bool aActive)
                             override {}
   virtual void            SetDrawsInTitlebar(bool aState) override {}
