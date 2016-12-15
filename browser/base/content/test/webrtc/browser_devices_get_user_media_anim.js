@@ -22,13 +22,15 @@ var gTests = [
       });
       yield expectObserverCalled("getUserMedia:response:allow");
       yield expectObserverCalled("recording-device-events");
-      let expected = [];
+      let expected = {};
       if (aVideo)
-        expected.push("Camera");
+        expected.video = true;
       if (aAudio)
-        expected.push("Microphone");
-      is((yield getMediaCaptureState()), expected.join("And"),
-         "expected stream to be shared");
+        expected.audio = true;
+      Assert.deepEqual((yield getMediaCaptureState()), expected,
+                       "expected " + Object.keys(expected).join(" and ") +
+                       " to be shared");
+
 
       // Check the attribute on the tab, and check there's no visible
       // sharing icon on the tab

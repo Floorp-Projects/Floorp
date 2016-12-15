@@ -18,7 +18,7 @@
 #include "mozilla/TouchEvents.h"
 
 // Desktop builds target apis for 502. Win8 Metro builds target 602.
-#if WINVER < 0x0602
+#if WINVER < 0x0601
 
 DECLARE_HANDLE(HGESTUREINFO);
 

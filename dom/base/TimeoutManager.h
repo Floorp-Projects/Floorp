@@ -13,6 +13,9 @@ class nsITimeoutHandler;
 class nsGlobalWindow;
 
 namespace mozilla {
+
+class ThrottledEventQueue;
+
 namespace dom {
 
 // This class manages the timeouts in a Window's setTimeout/setInterval pool.
@@ -44,9 +47,6 @@ public:
                          bool aRunningPendingTimeouts);
 
   void ClearAllTimeouts();
-  // Insert aTimeout into the list, before all timeouts that would
-  // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
-  void InsertTimeoutIntoList(mozilla::dom::Timeout* aTimeout);
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
   // Apply back pressure to the window if the TabGroup ThrottledEventQueue
@@ -87,11 +87,15 @@ public:
   template <class Callable>
   void ForEachTimeout(Callable c)
   {
-    for (Timeout* timeout = mTimeouts.GetFirst();
-         timeout;
-         timeout = timeout->getNext()) {
-      c(timeout);
-    }
+    mTimeouts.ForEach(c);
+  }
+
+  // Run some code for each Timeout in our list, but let the callback cancel
+  // the iteration by returning true.
+  template <class Callable>
+  void ForEachTimeoutAbortable(Callable c)
+  {
+    mTimeouts.ForEachAbortable(c);
   }
 
 private:
@@ -104,6 +108,19 @@ private:
       : mTimeoutInsertionPoint(nullptr)
     {
     }
+
+    // Insert aTimeout into the list, before all timeouts that would
+    // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
+    enum class SortBy
+    {
+      TimeRemaining,
+      TimeWhen
+    };
+    void Insert(mozilla::dom::Timeout* aTimeout, SortBy aSortBy);
+    nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
+                                             int32_t aMinTimeoutValueMS,
+                                             SortBy aSortBy,
+                                             mozilla::ThrottledEventQueue* aQueue);
 
     const Timeout* GetFirst() const { return mTimeoutList.getFirst(); }
     Timeout* GetFirst() { return mTimeoutList.getFirst(); }
@@ -120,6 +137,28 @@ private:
     Timeout* InsertionPoint()
     {
       return mTimeoutInsertionPoint;
+    }
+
+    template <class Callable>
+    void ForEach(Callable c)
+    {
+      for (Timeout* timeout = GetFirst();
+           timeout;
+           timeout = timeout->getNext()) {
+        c(timeout);
+      }
+    }
+
+    template <class Callable>
+    void ForEachAbortable(Callable c)
+    {
+      for (Timeout* timeout = GetFirst();
+           timeout;
+           timeout = timeout->getNext()) {
+        if (c(timeout)) {
+          break;
+        }
+      }
     }
 
   private:

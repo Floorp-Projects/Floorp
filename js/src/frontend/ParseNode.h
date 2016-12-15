@@ -649,14 +649,12 @@ class ParseNode
         MOZ_ASSERT(pn_arity == PN_CODE && getKind() == PNK_FUNCTION);
         MOZ_ASSERT(isOp(JSOP_LAMBDA) ||        // lambda, genexpr
                    isOp(JSOP_LAMBDA_ARROW) ||  // arrow function
-                   isOp(JSOP_FUNWITHPROTO) ||  // already emitted lambda with needsProto
                    isOp(JSOP_DEFFUN) ||        // non-body-level function statement
                    isOp(JSOP_NOP) ||           // body-level function stmt in global code
                    isOp(JSOP_GETLOCAL) ||      // body-level function stmt in function code
                    isOp(JSOP_GETARG) ||        // body-level function redeclaring formal
                    isOp(JSOP_INITLEXICAL));    // block-level function stmt
-        return !isOp(JSOP_LAMBDA) && !isOp(JSOP_LAMBDA_ARROW) &&
-               !isOp(JSOP_FUNWITHPROTO) && !isOp(JSOP_DEFFUN);
+        return !isOp(JSOP_LAMBDA) && !isOp(JSOP_LAMBDA_ARROW) && !isOp(JSOP_DEFFUN);
     }
 
     /*

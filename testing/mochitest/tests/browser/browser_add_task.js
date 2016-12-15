@@ -15,12 +15,12 @@ function executeWithTimeout() {
   );
 }
 
-add_task(function asyncTest_no1() {
+add_task(function* asyncTest_no1() {
   yield executeWithTimeout();
   test1Complete = true;
 });
 
-add_task(function asyncTest_no2() {
+add_task(function* asyncTest_no2() {
   yield executeWithTimeout();
   test2Complete = true;
 });

@@ -604,7 +604,7 @@ WinUtils::SystemScaleFactor()
   return systemScale;
 }
 
-#ifndef WM_DPICHANGED
+#if WINVER < 0x603
 typedef enum {
   MDT_EFFECTIVE_DPI = 0,
   MDT_ANGULAR_DPI = 1,

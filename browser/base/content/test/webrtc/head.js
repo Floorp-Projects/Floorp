@@ -102,7 +102,7 @@ function* assertWebRTCIndicatorStatus(expected) {
     if (expected.audio)
       expectAudio = true;
     if (expected.screen)
-      expectScreen = true;
+      expectScreen = expected.screen;
   }
   is(ui.showCameraIndicator, expectVideo, "camera global indicator as expected");
   is(ui.showMicrophoneIndicator, expectAudio, "microphone global indicator as expected");
@@ -217,15 +217,25 @@ function expectObserverCalled(aTopic) {
   });
 }
 
-function expectNoObserverCalled() {
+function expectNoObserverCalled(aIgnoreDeviceEvents = false) {
   return new Promise(resolve => {
     let mm = _mm();
     mm.addMessageListener("Test:ExpectNoObserverCalled:Reply",
                           function listener({data}) {
       mm.removeMessageListener("Test:ExpectNoObserverCalled:Reply", listener);
       for (let topic in data) {
-        if (data[topic])
+        if (!data[topic])
+          continue;
+
+        // If we are stopping tracks that were created from 2 different
+        // getUserMedia calls, the "recording-device-events" notification is
+        // fired twice on Windows and Mac, and intermittently twice on Linux.
+        if (topic == "recording-device-events" && aIgnoreDeviceEvents) {
+          todo(false, "Got " + data[topic] + " unexpected " + topic +
+               " notifications, see bug 1320994");
+        } else {
           is(data[topic], 0, topic + " notification unexpected");
+        }
       }
       resolve();
     });
@@ -233,18 +243,26 @@ function expectNoObserverCalled() {
   });
 }
 
-function promiseMessage(aMessage, aAction) {
-  let promise = new Promise((resolve, reject) => {
+function promiseMessageReceived() {
+  return new Promise((resolve, reject) => {
     let mm = _mm();
     mm.addMessageListener("Test:MessageReceived", function listener({data}) {
+      mm.removeMessageListener("Test:MessageReceived", listener);
+      resolve(data);
+    });
+    mm.sendAsyncMessage("Test:WaitForMessage");
+  });
+}
+
+function promiseMessage(aMessage, aAction) {
+  let promise = new Promise((resolve, reject) => {
+    promiseMessageReceived(aAction).then(data => {
       is(data, aMessage, "received " + aMessage);
       if (data == aMessage)
         resolve();
       else
         reject();
-      mm.removeMessageListener("Test:MessageReceived", listener);
     });
-    mm.sendAsyncMessage("Test:WaitForMessage");
   });
 
   if (aAction)
@@ -328,7 +346,8 @@ function getMediaCaptureState() {
   });
 }
 
-function* stopSharing(aType = "camera") {
+function* stopSharing(aType = "camera", aShouldKeepSharing = false,
+                      aExpectDoubleRecordingEvent = false) {
   let promiseRecordingEvent = promiseObserverCalled("recording-device-events");
   gIdentityHandler._identityBox.click();
   let permissions = document.getElementById("identity-popup-permission-list");
@@ -339,9 +358,16 @@ function* stopSharing(aType = "camera") {
   gIdentityHandler._identityPopup.hidden = true;
   yield promiseRecordingEvent;
   yield expectObserverCalled("getUserMedia:revoke");
-  yield expectObserverCalled("recording-window-ended");
-  yield expectNoObserverCalled();
-  yield* checkNotSharing();
+
+  // If we are stopping screen sharing and expect to still have another stream,
+  // "recording-window-ended" won't be fired.
+  if (!aShouldKeepSharing)
+    yield expectObserverCalled("recording-window-ended");
+
+  yield expectNoObserverCalled(aExpectDoubleRecordingEvent);
+
+  if (!aShouldKeepSharing)
+    yield* checkNotSharing();
 }
 
 function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId, aType) {
@@ -379,7 +405,19 @@ function* closeStream(aAlreadyClosed, aFrameId) {
   yield* assertWebRTCIndicatorStatus(null);
 }
 
-function checkDeviceSelectors(aAudio, aVideo) {
+function* reloadAndAssertClosedStreams() {
+  info("reloading the web page");
+  let promise = promiseObserverCalled("recording-device-events");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null,
+                          "() => content.location.reload()");
+  yield promise;
+
+  yield expectObserverCalled("recording-window-ended");
+  yield expectNoObserverCalled();
+  yield checkNotSharing();
+}
+
+function checkDeviceSelectors(aAudio, aVideo, aScreen) {
   let micSelector = document.getElementById("webRTC-selectMicrophone");
   if (aAudio)
     ok(!micSelector.hidden, "microphone selector visible");
@@ -391,6 +429,12 @@ function checkDeviceSelectors(aAudio, aVideo) {
     ok(!cameraSelector.hidden, "camera selector visible");
   else
     ok(cameraSelector.hidden, "camera selector hidden");
+
+  let screenSelector = document.getElementById("webRTC-selectWindowOrScreen");
+  if (aScreen)
+    ok(!screenSelector.hidden, "screen selector visible");
+  else
+    ok(screenSelector.hidden, "screen selector hidden");
 }
 
 function* checkSharingUI(aExpected, aWin = window) {
@@ -399,7 +443,9 @@ function* checkSharingUI(aExpected, aWin = window) {
   let identityBox = doc.getElementById("identity-box");
   ok(identityBox.hasAttribute("sharing"), "sharing attribute is set");
   let sharing = identityBox.getAttribute("sharing");
-  if (aExpected.video)
+  if (aExpected.screen)
+    is(sharing, "screen", "showing screen icon on the control center icon");
+  else if (aExpected.video)
     is(sharing, "camera", "showing camera icon on the control center icon");
   else if (aExpected.audio)
     is(sharing, "microphone", "showing mic icon on the control center icon");
@@ -439,7 +485,8 @@ function* checkSharingUI(aExpected, aWin = window) {
 }
 
 function* checkNotSharing() {
-  is((yield getMediaCaptureState()), "none", "expected nothing to be shared");
+  Assert.deepEqual((yield getMediaCaptureState()), {},
+                   "expected nothing to be shared");
 
   ok(!document.getElementById("identity-box").hasAttribute("sharing"),
      "no sharing indicator on the control center icon");
