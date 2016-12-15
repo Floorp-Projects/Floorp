@@ -14,6 +14,7 @@
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
+#include "mozilla/dom/DelayNodeBinding.h"
 #include "mozilla/dom/GainNodeBinding.h"
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/dom/HTMLMediaElement.h"
@@ -415,17 +416,9 @@ AudioContext::CreateWaveShaper(ErrorResult& aRv)
 already_AddRefed<DelayNode>
 AudioContext::CreateDelay(double aMaxDelayTime, ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  if (aMaxDelayTime > 0. && aMaxDelayTime < 180.) {
-    RefPtr<DelayNode> delayNode = new DelayNode(this, aMaxDelayTime);
-    return delayNode.forget();
-  }
-
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  DelayOptions options;
+  options.mMaxDelayTime = aMaxDelayTime;
+  return DelayNode::Create(*this, options, aRv);
 }
 
 already_AddRefed<PannerNode>
