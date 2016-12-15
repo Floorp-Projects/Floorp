@@ -9,13 +9,6 @@ import android.os.Bundle;
 
 public class GeckoViewChrome implements GeckoView.ChromeDelegate {
     /**
-    * Tell the host application that Gecko is ready to handle requests.
-    * @param view The GeckoView that initiated the callback.
-    */
-    @Override
-    public void onReady(GeckoView view) {}
-
-    /**
     * Tell the host application to display an alert dialog.
     * @param view The GeckoView that initiated the callback.
     * @param browser The Browser that is loading the content.
