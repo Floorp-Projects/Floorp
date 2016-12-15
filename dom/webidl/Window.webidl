@@ -480,10 +480,9 @@ partial interface Window {
   attribute EventHandler onvrdisplaypresentchange;
 };
 
-// For testing worklet only
 partial interface Window {
-  [Pref="dom.worklet.testing.enabled", Throws]
-  Worklet createWorklet();
+  [Pref="dom.audioWorklet.enabled", Throws, SameObject]
+  readonly attribute Worklet audioWorklet;
 };
 
 Window implements ChromeWindow;

@@ -17,51 +17,8 @@ callback PromiseJobCallback = void();
 [TreatNonCallableAsNull]
 callback AnyCallback = any (any value);
 
-// When using SpiderMonkey promises, we don't want to define all this stuff;
-// just define a tiny interface to make codegen of Promise arguments and return
-// values work.
-#ifndef SPIDERMONKEY_PROMISE
-[Constructor(PromiseInit init),
- Exposed=(Window,Worker,WorkerDebugger,System)]
-// Need to escape "Promise" so it's treated as an identifier.
-interface _Promise {
-  // Have to use "any" (or "object", but "any" is simpler) as the type to
-  // support the subclassing behavior, since nothing actually requires the
-  // return value of PromiseSubclass.resolve/reject to be a Promise object.
-  [NewObject, Throws]
-  static any resolve(optional any value);
-  [NewObject, Throws]
-  static any reject(optional any value);
-
-  // The [TreatNonCallableAsNull] annotation is required since then() should do
-  // nothing instead of throwing errors when non-callable arguments are passed.
-  // Have to use "any" (or "object", but "any" is simpler) as the type to
-  // support the subclassing behavior, since nothing actually requires the
-  // return value of PromiseSubclass.then/catch to be a Promise object.
-  [NewObject, Throws]
-  any then([TreatNonCallableAsNull] optional AnyCallback? fulfillCallback = null,
-           [TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
-
-  [NewObject, Throws]
-  any catch([TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
-
-  // Have to use "any" (or "object", but "any" is simpler) as the type to
-  // support the subclassing behavior, since nothing actually requires the
-  // return value of PromiseSubclass.all to be a Promise object.  As a result,
-  // we also have to do our argument conversion manually, because we want to
-  // convert its exceptions into rejections.
-  [NewObject, Throws]
-  static any all(optional any iterable);
-
-  // Have to use "any" (or "object", but "any" is simpler) as the type to
-  // support the subclassing behavior, since nothing actually requires the
-  // return value of PromiseSubclass.race to be a Promise object.  As a result,
-  // we also have to do our argument conversion manually, because we want to
-  // convert its exceptions into rejections.
-  [NewObject, Throws]
-  static any race(optional any iterable);
-};
-#else // SPIDERMONKEY_PROMISE
+// Promises are implemented in SpiderMonkey; just define a tiny interface to make
+// codegen of Promise arguments and return values work.
 [NoInterfaceObject,
  Exposed=(Window,Worker,WorkerDebugger,System)]
 // Need to escape "Promise" so it's treated as an identifier.
@@ -74,4 +31,3 @@ interface _Promise {
  Exposed=(Window,Worker,System)]
 interface PromiseNativeHandler {
 };
-#endif // SPIDERMONKEY_PROMISE
