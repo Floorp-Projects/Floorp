@@ -264,7 +264,8 @@ public:
   virtual nsresult        ActivateNativeMenuItemAt(const nsAString& indexString) override { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ForceUpdateNativeMenuAt(const nsAString& indexString) override { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              NotifyIME(const IMENotification& aIMENotification) override final;
-  NS_IMETHOD              StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+  virtual MOZ_MUST_USE nsresult
+                          StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                                          int32_t aPanelX, int32_t aPanelY,
                                          nsString& aCommitted) override
                           { return NS_ERROR_NOT_IMPLEMENTED; }
