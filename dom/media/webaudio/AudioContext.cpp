@@ -16,6 +16,7 @@
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/dom/BiquadFilterNodeBinding.h"
+#include "mozilla/dom/ConvolverNodeBinding.h"
 #include "mozilla/dom/DelayNodeBinding.h"
 #include "mozilla/dom/GainNodeBinding.h"
 #include "mozilla/dom/IIRFilterNodeBinding.h"
@@ -425,12 +426,7 @@ AudioContext::CreatePanner(ErrorResult& aRv)
 already_AddRefed<ConvolverNode>
 AudioContext::CreateConvolver(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<ConvolverNode> convolverNode = new ConvolverNode(this);
-  return convolverNode.forget();
+  return ConvolverNode::Create(nullptr, *this, ConvolverOptions(), aRv);
 }
 
 already_AddRefed<ChannelSplitterNode>

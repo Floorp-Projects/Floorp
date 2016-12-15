@@ -13,13 +13,25 @@
 namespace mozilla {
 namespace dom {
 
+class AudioContext;
+struct ConvolverOptions;
+
 class ConvolverNode final : public AudioNode
 {
 public:
-  explicit ConvolverNode(AudioContext* aContext);
+  static already_AddRefed<ConvolverNode>
+  Create(JSContext* aCx, AudioContext& aAudioContext,
+         const ConvolverOptions& aOptions, ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ConvolverNode, AudioNode);
+
+  static already_AddRefed<ConvolverNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const ConvolverOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aGlobal.Context(), aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -28,7 +40,7 @@ public:
     return mBuffer;
   }
 
-  void SetBuffer(JSContext* aCx, AudioBuffer* aBufferi, ErrorResult& aRv);
+  void SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv);
 
   bool Normalize() const
   {
@@ -62,10 +74,10 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-  virtual ~ConvolverNode();
-
 private:
+  explicit ConvolverNode(AudioContext* aContext);
+  ~ConvolverNode() = default;
+
   RefPtr<AudioBuffer> mBuffer;
   bool mNormalize;
 };
@@ -75,4 +87,3 @@ private:
 } //end namespace mozilla
 
 #endif
-
