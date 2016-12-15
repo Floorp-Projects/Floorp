@@ -49,14 +49,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'nsDownloadScanner.cpp',
     ]
 
-# XXX - Until Suite builds off XULRunner we can't guarantee our implementation
-# of nsIDownloadManagerUI overrides toolkit's.
-if not CONFIG['MOZ_SUITE']:
-    EXTRA_COMPONENTS += [
-        'nsDownloadManagerUI.js',
-        'nsDownloadManagerUI.manifest',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
