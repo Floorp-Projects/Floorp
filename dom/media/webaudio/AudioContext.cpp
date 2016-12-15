@@ -14,6 +14,7 @@
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
+#include "mozilla/dom/BiquadFilterNodeBinding.h"
 #include "mozilla/dom/DelayNodeBinding.h"
 #include "mozilla/dom/GainNodeBinding.h"
 #include "mozilla/dom/AudioContextBinding.h"
@@ -495,13 +496,7 @@ AudioContext::CreateDynamicsCompressor(ErrorResult& aRv)
 already_AddRefed<BiquadFilterNode>
 AudioContext::CreateBiquadFilter(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<BiquadFilterNode> filterNode =
-    new BiquadFilterNode(this);
-  return filterNode.forget();
+  return BiquadFilterNode::Create(*this, BiquadFilterOptions(), aRv);
 }
 
 already_AddRefed<IIRFilterNode>
