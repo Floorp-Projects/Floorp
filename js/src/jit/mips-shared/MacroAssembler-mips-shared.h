@@ -249,6 +249,11 @@ class MacroAssemblerMIPSShared : public Assembler
     void atomicExchange(int nbytes, bool signExtend, const BaseIndex& address, Register value,
                         Register valueTemp, Register offsetTemp, Register maskTemp,
                         Register output);
+
+  public:
+    struct AutoPrepareForPatching {
+        explicit AutoPrepareForPatching(MacroAssemblerMIPSShared&) {}
+    };
 };
 
 } // namespace jit
