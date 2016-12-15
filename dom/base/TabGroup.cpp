@@ -255,12 +255,11 @@ TabGroup::Dispatch(const char* aName,
   }
 }
 
-already_AddRefed<nsIEventTarget>
+nsIEventTarget*
 TabGroup::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_RELEASE_ASSERT(!mLastWindowLeft);
-  nsCOMPtr<nsIEventTarget> target = mEventTargets[size_t(aCategory)];
-  return target.forget();
+  return mEventTargets[size_t(aCategory)];
 }
 
 }
