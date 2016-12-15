@@ -1023,44 +1023,9 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
       break;
 
     case Context.CHROME:
-      // At least on desktop, navigating in chrome scope does not
-      // correspond to something a user can do, and leaves marionette
-      // and the browser in an unusable state. Return a generic error insted.
-      // TODO: Error codes need to be refined as a part of bug 1100545 and
-      // bug 945729.
-      if (this.appName == "Firefox") {
-        throw new UnknownError("Cannot navigate in chrome context");
-      }
-
-      this.getCurrentWindow().location.href = url;
-      yield this.pageLoadPromise();
+      throw new UnsupportedOperationError("Cannot navigate in chrome context");
       break;
   }
-};
-
-GeckoDriver.prototype.pageLoadPromise = function() {
-  let win = this.getCurrentWindow();
-  let timeout = this.pageTimeout;
-  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  let start = new Date().getTime();
-  let end = null;
-
-  return new Promise((resolve) => {
-    let checkLoad = function() {
-      end = new Date().getTime();
-      let elapse = end - start;
-      if (timeout === null || elapse <= timeout) {
-        if (win.document.readyState == "complete") {
-          resolve();
-        } else {
-          checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-        }
-      } else {
-        throw new UnknownError("Error loading page");
-      }
-    };
-    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-  });
 };
 
 /**
