@@ -12,7 +12,5 @@
 
 [Pref="dom.webaudio.enabled"]
 interface MediaStreamAudioDestinationNode : AudioNode {
-
     readonly attribute MediaStream stream;
-
 };
