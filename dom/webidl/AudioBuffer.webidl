@@ -10,7 +10,14 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
+dictionary AudioBufferOptions {
+             unsigned long numberOfChannels = 1;
+    required unsigned long length;
+             float         sampleRate;
+};
+
+[Pref="dom.webaudio.enabled",
+ Constructor(AudioContext context, AudioBufferOptions options)]
 interface AudioBuffer {
 
     readonly attribute float sampleRate;
@@ -29,4 +36,3 @@ interface AudioBuffer {
     [Throws]
     void copyToChannel(Float32Array source, long channelNumber, optional unsigned long startInChannel = 0);
 };
-
