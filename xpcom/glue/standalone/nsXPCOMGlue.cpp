@@ -427,6 +427,28 @@ XPCOMGlueStartup(const char* aXPCOMFile)
   return NS_OK;
 }
 
+namespace mozilla {
+
+Bootstrap::UniquePtr
+GetBootstrap(const char* aXPCOMFile)
+{
+  if (NS_FAILED(XPCOMGlueStartup(aXPCOMFile))) {
+    return nullptr;
+  }
+
+  GetBootstrapType func = (GetBootstrapType)GetSymbol(sTop->libHandle, "XRE_GetBootstrap");
+  if (!func) {
+    return nullptr;
+  }
+
+  Bootstrap::UniquePtr b;
+  (*func)(b);
+
+  return b;
+}
+
+} // namespace mozilla
+
 XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager** aResult,
               nsIFile* aBinDirectory,
