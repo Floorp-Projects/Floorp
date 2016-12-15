@@ -233,6 +233,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             } else if (result == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
                 mOutputBuffers = mCodec.getOutputBuffers();
             } else if (result == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                mOutputBuffers = mCodec.getOutputBuffers();
                 mCallbackSender.notifyOutputFormat(mCodec.getOutputFormat());
             } else if (result == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 // When input ended, keep polling remaining output buffer until EOS.
