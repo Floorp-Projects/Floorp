@@ -29,7 +29,7 @@
     // should be fired when a page is restored from the bfcache as though it had
     // reloaded.
     //
-    function testIterator() {
+    function* testIterator() {
       // Make sure bfcache is on.
       enableBFCache(true);
 
@@ -69,10 +69,7 @@
       } );
       yield;
 
-      // Tell the framework the test is finished.  Include the final 'yield' 
-      // statement to prevent a StopIteration exception from being thrown.
       finish();
-      yield;
     }
     
   ]]></script>

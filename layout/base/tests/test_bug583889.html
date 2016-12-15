@@ -18,10 +18,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=583889
 SimpleTest.waitForExplicitFinish();
 
 function grabEventAndGo(event) {
-  gen.send(event);
+  gen.next(event);
 }
 
-function runTest() {
+function* runTest() {
   window.onload = grabEventAndGo;
   // Wait for onLoad event.
   yield;
@@ -43,8 +43,6 @@ function runTest() {
 
   // finish(), yet let the test actually end first, to be safe.
   SimpleTest.executeSoon(SimpleTest.finish);
-  // "End" generator.
-  yield;
 }
 
 var gen = runTest();

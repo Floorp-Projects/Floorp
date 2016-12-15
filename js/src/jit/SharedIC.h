@@ -887,6 +887,8 @@ class ICCacheIR_Monitored : public ICMonitoredStub
     const CacheIRStubInfo* stubInfo() const {
         return stubInfo_;
     }
+
+    uint8_t* stubDataStart();
 };
 
 // Updated stubs are IC stubs that use a TypeUpdate IC to track
