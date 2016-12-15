@@ -1604,11 +1604,6 @@ uint32_t nsBaseWidget::GetMaxTouchPoints() const
   return 0;
 }
 
-NS_IMETHODIMP
-nsBaseWidget::GetAttention(int32_t aCycleCount) {
-    return NS_OK;
-}
-
 bool
 nsBaseWidget::HasPendingInputEvent()
 {
@@ -1692,20 +1687,6 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
               getter_AddRefs(file));
   if (file && ResolveIconNameHelper(file, aIconName, aIconSuffix))
     NS_ADDREF(*aResult = file);
-}
-
-NS_IMETHODIMP
-nsBaseWidget::BeginResizeDrag(WidgetGUIEvent* aEvent,
-                              int32_t aHorizontal,
-                              int32_t aVertical)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsBaseWidget::BeginMoveDrag(WidgetMouseEvent* aEvent)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)
