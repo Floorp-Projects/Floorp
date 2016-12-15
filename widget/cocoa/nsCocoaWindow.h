@@ -308,7 +308,7 @@ public:
                              nsEventStatus& aStatus) override;
     virtual void CaptureRollupEvents(nsIRollupListener * aListener,
                                      bool aDoCapture) override;
-    NS_IMETHOD GetAttention(int32_t aCycleCount) override;
+    virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override;
     virtual bool HasPendingInputEvent() override;
     virtual nsTransparencyMode GetTransparencyMode() override;
     virtual void SetTransparencyMode(nsTransparencyMode aMode) override;

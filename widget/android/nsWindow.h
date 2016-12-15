@@ -204,13 +204,7 @@ public:
     void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD SetTitle(const nsAString& aTitle) override { return NS_OK; }
     NS_IMETHOD SetIcon(const nsAString& aIconSpec) override { return NS_OK; }
-    NS_IMETHOD GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                               int32_t aHorizontal,
-                               int32_t aVertical) override
-    {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
+    virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction) override;

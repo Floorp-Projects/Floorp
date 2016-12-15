@@ -148,7 +148,7 @@ public:
     virtual void       CaptureMouse(bool aCapture) override;
     virtual void       CaptureRollupEvents(nsIRollupListener *aListener,
                                            bool aDoCapture) override;
-    NS_IMETHOD         GetAttention(int32_t aCycleCount) override;
+    virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override;
     virtual nsresult   SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                                            bool aIntersectWithExisting) override;
     virtual bool       HasPendingInputEvent() override;
@@ -258,10 +258,12 @@ public:
 
     static guint32     sLastButtonPressTime;
 
-    NS_IMETHOD         BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+    virtual MOZ_MUST_USE nsresult
+                       BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                        int32_t aHorizontal,
                                        int32_t aVertical) override;
-    NS_IMETHOD         BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) override;
+    virtual MOZ_MUST_USE nsresult
+                       BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) override;
 
     MozContainer*      GetMozContainer() { return mContainer; }
     // GetMozContainerWidget returns the MozContainer even for undestroyed

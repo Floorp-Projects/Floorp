@@ -126,7 +126,8 @@ public:
   NS_IMETHOD              Move(double aX, double aY) override;
   NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+  virtual MOZ_MUST_USE nsresult
+                          BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                           int32_t aHorizontal,
                                           int32_t aVertical) override;
   virtual void            PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate) override;
@@ -169,12 +170,12 @@ public:
   virtual void            CaptureMouse(bool aCapture) override;
   virtual void            CaptureRollupEvents(nsIRollupListener* aListener,
                                               bool aDoCapture) override;
-  NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
+  virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;
   virtual LayerManager*   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
-  NS_IMETHOD              OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override;
+  virtual MOZ_MUST_USE nsresult OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override;
   virtual nsresult        SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                    int32_t aNativeKeyCode,
                                                    uint32_t aModifierFlags,

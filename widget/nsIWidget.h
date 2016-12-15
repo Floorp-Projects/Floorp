@@ -1417,7 +1417,7 @@ class nsIWidget : public nsISupports
      *                    conventions. If set to -1, cycles indefinitely until
      *                    window is brought into the foreground.
      */
-    NS_IMETHOD GetAttention(int32_t aCycleCount) = 0;
+    virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) = 0;
 
     /**
      * Ask whether there user input events pending.  All input events are
@@ -1475,14 +1475,16 @@ class nsIWidget : public nsISupports
     /**
      * Begin a window resizing drag, based on the event passed in.
      */
-    NS_IMETHOD BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                               int32_t aHorizontal,
-                               int32_t aVertical) = 0;
+    virtual MOZ_MUST_USE nsresult
+    BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                    int32_t aHorizontal,
+                    int32_t aVertical) = 0;
 
     /**
      * Begin a window moving drag, based on the event passed in.
      */
-    NS_IMETHOD BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) = 0;
+    virtual MOZ_MUST_USE nsresult
+    BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) = 0;
 
     enum Modifiers {
         CAPS_LOCK = 0x01, // when CapsLock is active
@@ -1811,7 +1813,8 @@ public:
      * keystrokes that trigger native key bindings (which require a native
      * event).
      */
-    NS_IMETHOD AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) = 0;
+    virtual MOZ_MUST_USE nsresult
+    AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) = 0;
 
     /*
      * Execute native key bindings for aType.
@@ -1838,7 +1841,8 @@ public:
      * Call this method when a dialog is opened which has a default button.
      * The button's rectangle should be supplied in aButtonRect.
      */
-    NS_IMETHOD OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) = 0;
+    virtual MOZ_MUST_USE nsresult
+    OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) = 0;
 
     /**
      * Return true if this process shouldn't use platform widgets, and
