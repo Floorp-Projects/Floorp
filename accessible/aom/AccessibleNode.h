@@ -8,9 +8,7 @@
 #define A11Y_AOM_ACCESSIBLENODE_H
 
 #include "nsWrapperCache.h"
-#include "mozilla/RefPtr.h"
-#include "nsTArray.h"
-#include "nsString.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 class nsINode;
 
@@ -40,6 +38,8 @@ public:
   void GetRole(nsAString& aRole);
   void GetStates(nsTArray<nsString>& aStates);
   nsINode* GetDOMNode();
+
+  bool Is(const Sequence<nsString>& aFlavors);
 
   a11y::Accessible* Internal() const { return mIntl; }
 
