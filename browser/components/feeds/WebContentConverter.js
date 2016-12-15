@@ -30,7 +30,6 @@ const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_SELECTED_ACTION = "browser.feeds.handler";
 const PREF_SELECTED_READER = "browser.feeds.handler.default";
 const PREF_HANDLER_EXTERNAL_PREFIX = "network.protocol-handler.external";
-const PREF_ALLOW_DIFFERENT_HOST = "gecko.handlerService.allowRegisterFromDifferentHost";
 
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
@@ -158,9 +157,8 @@ const Utils = {
     // We also reject handlers registered from a different host (see bug 402287)
     // The pref allows us to test the feature
     let pb = Services.prefs;
-    if (!pb.getBoolPref(PREF_ALLOW_DIFFERENT_HOST) &&
-        (!["http:", "https:"].includes(aContentWindow.location.protocol) ||
-         aContentWindow.location.hostname != uri.host)) {
+    if (!["http:", "https:"].includes(aContentWindow.location.protocol) ||
+         aContentWindow.location.hostname != uri.host) {
       throw this.getSecurityError(
         "Permission denied to add " + uri.spec + " as a content or protocol handler",
         aContentWindow);
