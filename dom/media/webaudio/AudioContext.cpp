@@ -22,6 +22,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WaveShaperNodeBinding.h"
 
 #include "AudioBuffer.h"
 #include "AudioBufferSourceNode.h"
@@ -407,12 +408,7 @@ AudioContext::CreateGain(ErrorResult& aRv)
 already_AddRefed<WaveShaperNode>
 AudioContext::CreateWaveShaper(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<WaveShaperNode> waveShaperNode = new WaveShaperNode(this);
-  return waveShaperNode.forget();
+  return WaveShaperNode::Create(*this, WaveShaperOptions(), aRv);
 }
 
 already_AddRefed<DelayNode>
