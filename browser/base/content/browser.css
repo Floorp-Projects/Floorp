@@ -559,16 +559,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   visibility: collapse;
 }
 
+#urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
+#urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels {
   visibility: collapse;
 }
 
 #urlbar[pageproxystate="invalid"] > #identity-box {
   pointer-events: none;
-}
-
-#urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box {
-  pointer-events: auto;
 }
 
 #identity-icon-labels {
