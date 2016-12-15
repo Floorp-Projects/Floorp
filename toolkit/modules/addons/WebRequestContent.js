@@ -80,6 +80,10 @@ var ContentPolicy = {
 
   shouldLoad(policyType, contentLocation, requestOrigin,
              node, mimeTypeGuess, extra, requestPrincipal) {
+    if (requestPrincipal &&
+        Services.scriptSecurityManager.isSystemPrincipal(requestPrincipal)) {
+      return Ci.nsIContentPolicy.ACCEPT;
+    }
     let url = contentLocation.spec;
     if (IS_HTTP.test(url)) {
       // We'll handle this in our parent process HTTP observer.
