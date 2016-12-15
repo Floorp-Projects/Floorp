@@ -34,6 +34,13 @@ TimeoutManager::DOMMinTimeoutValue() const {
     std::max(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, value);
 }
 
+#define TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY 0 // Consider all timeouts coming from tracking scripts as tracking
+// These strategies are useful for testing.
+#define ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY        1 // Consider all timeouts as normal
+#define ALTERNATE_TIMEOUT_BUCKETING_STRATEGY         2 // Put every other timeout in the list of tracking timeouts
+#define RANDOM_TIMEOUT_BUCKETING_STRATEGY            3 // Put timeouts into either the normal or tracking timeouts list randomly
+static int32_t gTimeoutBucketingStrategy = 0;
+
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
 // uses 5.
 #define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
@@ -113,6 +120,9 @@ TimeoutManager::Initialize()
   Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
                               "dom.min_background_timeout_value",
                               DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
+  Preferences::AddIntVarCache(&gTimeoutBucketingStrategy,
+                              "dom.timeout_bucketing_strategy",
+                              TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY);
 }
 
 uint32_t
@@ -230,10 +240,26 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     }
   }
 
-  const char* filename = nullptr;
-  uint32_t dummyLine = 0, dummyColumn = 0;
-  aHandler->GetLocation(&filename, &dummyLine, &dummyColumn);
-  bool isTracking = doc->IsScriptTracking(nsDependentCString(filename));
+  bool isTracking = false;
+  switch (gTimeoutBucketingStrategy) {
+  default:
+  case TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY: {
+    const char* filename = nullptr;
+    uint32_t dummyLine = 0, dummyColumn = 0;
+    aHandler->GetLocation(&filename, &dummyLine, &dummyColumn);
+    isTracking = doc->IsScriptTracking(nsDependentCString(filename));
+    break;
+  }
+  case ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY:
+    // isTracking is already false!
+    break;
+  case ALTERNATE_TIMEOUT_BUCKETING_STRATEGY:
+    isTracking = (mTimeoutIdCounter % 2) == 0;
+    break;
+  case RANDOM_TIMEOUT_BUCKETING_STRATEGY:
+    isTracking = (rand() % 2) == 0;
+    break;
+  }
 
   Timeouts::SortBy sort(mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
                                            : Timeouts::SortBy::TimeWhen);
