@@ -365,7 +365,8 @@ public:
 
   NS_IMETHOD        SetTitle(const nsAString& title) override;
 
-  NS_IMETHOD        GetAttention(int32_t aCycleCount) override;
+  virtual MOZ_MUST_USE nsresult
+                    GetAttention(int32_t aCycleCount) override;
 
   virtual bool HasPendingInputEvent() override;
 
@@ -378,7 +379,7 @@ public:
   NS_IMETHOD_(InputContext) GetInputContext() override;
   NS_IMETHOD_(TextEventDispatcherListener*)
     GetNativeTextEventDispatcherListener() override;
-  NS_IMETHOD        AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override;
+  virtual MOZ_MUST_USE nsresult AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override;
   NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
                       NativeKeyBindingsType aType,
                       const mozilla::WidgetKeyboardEvent& aEvent,

@@ -2111,7 +2111,8 @@ nsCocoaWindow::CaptureRollupEvents(nsIRollupListener* aListener,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::GetAttention(int32_t aCycleCount)
+nsresult
+nsCocoaWindow::GetAttention(int32_t aCycleCount)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
