@@ -187,17 +187,20 @@ GMPCapabilitiesToString()
 void
 GeckoMediaPluginServiceChild::UpdateGMPCapabilities(nsTArray<GMPCapabilityData>&& aCapabilities)
 {
-  StaticMutexAutoLock lock(sGMPCapabilitiesMutex);
-  if (!sGMPCapabilities) {
-    sGMPCapabilities = new nsTArray<GMPCapabilityAndVersion>();
-    ClearOnShutdown(&sGMPCapabilities);
-  }
-  sGMPCapabilities->Clear();
-  for (const GMPCapabilityData& plugin : aCapabilities) {
-    sGMPCapabilities->AppendElement(GMPCapabilityAndVersion(plugin));
-  }
+  {
+    // The mutex should unlock before sending the "gmp-changed" observer service notification.
+    StaticMutexAutoLock lock(sGMPCapabilitiesMutex);
+    if (!sGMPCapabilities) {
+      sGMPCapabilities = new nsTArray<GMPCapabilityAndVersion>();
+      ClearOnShutdown(&sGMPCapabilities);
+    }
+    sGMPCapabilities->Clear();
+    for (const GMPCapabilityData& plugin : aCapabilities) {
+      sGMPCapabilities->AppendElement(GMPCapabilityAndVersion(plugin));
+    }
 
-  LOGD(("UpdateGMPCapabilities {%s}", GMPCapabilitiesToString().get()));
+    LOGD(("UpdateGMPCapabilities {%s}", GMPCapabilitiesToString().get()));
+  }
 
   // Fire a notification so that any MediaKeySystemAccess
   // requests waiting on a CDM to download will retry.
