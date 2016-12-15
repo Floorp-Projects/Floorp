@@ -2205,12 +2205,20 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   aBuilder->SetContainsBlendMode(false);
  
   nsRect dirtyRectOutsideTransform = dirtyRect;
+  bool allowAsyncAnimation = false;
   if (isTransformed) {
     const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
-    if (nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder,
-                                                              this)) {
-      dirtyRect = overflow;
-    } else {
+    nsDisplayTransform::PrerenderDecision decision =
+        nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this, &dirtyRect);
+    switch (decision) {
+    case nsDisplayTransform::FullPrerender:
+      allowAsyncAnimation = true;
+      break;
+    case nsDisplayTransform::PartialPrerender:
+      allowAsyncAnimation = true;
+      MOZ_FALLTHROUGH;
+      // fall through to the NoPrerender case
+    case nsDisplayTransform::NoPrerender:
       if (overflow.IsEmpty() && !extend3DContext) {
         return;
       }
@@ -2571,12 +2579,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     if (!aBuilder->IsForGenerateGlyphMask() &&
         !aBuilder->IsForPaintingSelectionBG()) {
-      bool isFullyVisible =
-        dirtyRectOutsideSVGEffects.Contains(GetVisualOverflowRectRelativeToSelf());
       nsDisplayTransform *transformItem =
         new (aBuilder) nsDisplayTransform(aBuilder, this,
                                           &resultList, dirtyRect, 0,
-                                          isFullyVisible);
+                                          allowAsyncAnimation);
       resultList.AppendNewToTop(transformItem);
     }
 

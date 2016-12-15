@@ -872,70 +872,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return updated;
     }
 
-    /**
-     * Get topsites by themselves, without the inclusion of pinned sites. Suggested sites
-     * will be appended (if necessary) to the end of the list in order to provide up to PARAM_LIMIT items.
-     */
-    private Cursor getPlainTopSites(final Uri uri) {
-        final SQLiteDatabase db = getReadableDatabase(uri);
-
-        final String limitParam = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
-        final int limit;
-        if (limitParam != null) {
-            limit = Integer.parseInt(limitParam);
-        } else {
-            limit = 12;
-        }
-
-        // Filter out: unvisited pages (history_id == -1) pinned (and other special) sites, deleted sites,
-        // and about: pages.
-        final String ignoreForTopSitesWhereClause =
-                "(" + Combined.HISTORY_ID + " IS NOT -1)" +
-                " AND " +
-                Combined.URL + " NOT IN (SELECT " +
-                Bookmarks.URL + " FROM " + TABLE_BOOKMARKS + " WHERE " +
-                DBUtils.qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT) + " < " + Bookmarks.FIXED_ROOT_ID + " AND " +
-                DBUtils.qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " == 0)" +
-                " AND " +
-                "(" + Combined.URL + " NOT LIKE ?)";
-
-        final String[] ignoreForTopSitesArgs = new String[] {
-                AboutPages.URL_FILTER
-        };
-
-        final Cursor c = db.rawQuery("SELECT " +
-                   Bookmarks._ID + ", " +
-                   Combined.BOOKMARK_ID + ", " +
-                   Combined.HISTORY_ID + ", " +
-                   Bookmarks.URL + ", " +
-                   Bookmarks.TITLE + ", " +
-                   Combined.HISTORY_ID + ", " +
-                   TopSites.TYPE_TOP + " AS " + TopSites.TYPE +
-                   " FROM " + Combined.VIEW_NAME +
-                   " WHERE " + ignoreForTopSitesWhereClause +
-                   " ORDER BY " + BrowserContract.getCombinedFrecencySortOrder(true, false) +
-                   " LIMIT " + limit,
-                ignoreForTopSitesArgs);
-
-        c.setNotificationUri(getContext().getContentResolver(),
-                BrowserContract.AUTHORITY_URI);
-
-        if (c.getCount() == limit) {
-            return c;
-        }
-
-        // If we don't have enough data: get suggested sites too
-        final SuggestedSites suggestedSites = BrowserDB.from(GeckoProfile.get(
-                getContext(), uri.getQueryParameter(BrowserContract.PARAM_PROFILE))).getSuggestedSites();
-
-        final Cursor suggestedSitesCursor = suggestedSites.get(limit - c.getCount());
-
-        return new MergeCursor(new Cursor[]{
-                c,
-                suggestedSitesCursor
-        });
-    }
-
     private Cursor getTopSites(final Uri uri) {
         // In order to correctly merge the top and pinned sites we:
         //
@@ -960,6 +896,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         final String limitParam = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
         final String gridLimitParam = uri.getQueryParameter(BrowserContract.PARAM_SUGGESTEDSITES_LIMIT);
+        final String nonPositionedPins = uri.getQueryParameter(BrowserContract.PARAM_NON_POSITIONED_PINS);
 
         final int totalLimit;
         final int suggestedGridLimit;
@@ -976,9 +913,22 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             suggestedGridLimit = Integer.parseInt(gridLimitParam, 10);
         }
 
-        final String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " +
-                                             Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID +
-                                             " AND " + Bookmarks.IS_DELETED + " IS NOT 1";
+        // We have two types of pinned sites, positioned and non-positioned. Positioned pins are used
+        // by regular Top Sites, where position in the grid is of importance. Non-positioned pins are
+        // used by Activity Stream Top Sites, where pins are displayed in front of other top site items.
+        // Non-positioned pins all have the same special position value which is used to identify them.
+        // An alternative to this is creating a separate special folder for non-positioned pins, introducing
+        // a database migration, adjusting sync code, etc. While on some level this might
+        // be a cleaner solution, a "position hack" is simpler to implement and manage over time in light
+        // of A-S being either a likely replacement for regular Top Sites, or being scrapped.
+        String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " +
+                Bookmarks.PARENT + " = " + Bookmarks.FIXED_PINNED_LIST_ID +
+                " AND " + Bookmarks.IS_DELETED + " IS NOT 1";
+        if (nonPositionedPins != null) {
+            pinnedSitesFromClause += " AND " + Bookmarks.POSITION + " = " + Bookmarks.FIXED_AS_PIN_POSITION;
+        } else {
+            pinnedSitesFromClause += " AND " + Bookmarks.POSITION + " != " + Bookmarks.FIXED_AS_PIN_POSITION;
+        }
 
         // Ideally we'd use a recursive CTE to generate our sequence, e.g. something like this worked at one point:
         // " WITH RECURSIVE" +
@@ -1193,7 +1143,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                         TopSites.TYPE_PINNED + " as " + TopSites.TYPE +
                         " " + pinnedSitesFromClause +
 
-                        " ORDER BY " + Bookmarks.POSITION,
+                        // In case position is non-unique (as in Activity Stream pins, whose position
+                        // is always zero), we need to ensure we get stable ordering.
+                        " ORDER BY " + Bookmarks.POSITION + ", " + Bookmarks.URL,
 
                         null);
 
@@ -1230,6 +1182,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final String bookmarksQuery = "SELECT * FROM (SELECT " +
                 "-1 AS " + Combined.HISTORY_ID + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " AS " + Bookmarks.PARENT + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.POSITION) + " AS " + Bookmarks.POSITION + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TITLE) + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " AS " + Highlights.DATE + " " +
@@ -1242,6 +1196,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                   "OR " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " IS NULL) " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.IS_DELETED)  + " = 0 " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TYPE) + " = " + Bookmarks.TYPE_BOOKMARK + " " +
+                "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " >= " + Bookmarks.FIXED_ROOT_ID + " " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
                 "ORDER BY " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " DESC " +
                 "LIMIT " + bookmarkLimit + ")";
@@ -1251,20 +1206,25 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // Select recent history that has not been visited much.
         final String historyQuery = "SELECT * FROM (SELECT " +
-                History._ID + " AS " + Combined.HISTORY_ID + ", " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History._ID) + " AS " + Combined.HISTORY_ID + ", " +
                 "-1 AS " + Combined.BOOKMARK_ID + ", " +
-                History.URL + ", " +
-                History.TITLE + ", " +
-                History.DATE_LAST_VISITED + " AS " + Highlights.DATE + " " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " AS " + Bookmarks.PARENT + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.POSITION) + " AS " + Bookmarks.POSITION + ", " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + ", " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + ", " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " AS " + Highlights.DATE + " " +
                 "FROM " + History.TABLE_NAME + " " +
-                "WHERE " + History.DATE_LAST_VISITED + " < " + last30Minutes + " " +
-                "AND " + History.VISITS + " <= 3 " +
-                "AND " + History.TITLE + " NOT NULL AND " + History.TITLE + " != '' " +
-                "AND " + History.IS_DELETED + " = 0 " +
-                "AND " + History.URL + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
+                "LEFT JOIN " + Bookmarks.TABLE_NAME + " ON " +
+                    DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " = " +
+                    DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " " +
+                "WHERE " + DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " < " + last30Minutes + " " +
+                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " <= 3 " +
+                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + " NOT NULL AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + " != '' " +
+                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.IS_DELETED) + " = 0 " +
+                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
                 // TODO: Implement domain black list (bug 1298786)
                 // TODO: Group by host (bug 1298785)
-                "ORDER BY " + History.DATE_LAST_VISITED + " DESC " +
+                "ORDER BY " + DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " DESC " +
                 "LIMIT " + historyLimit + ")";
 
         final String query = "SELECT DISTINCT * " +
@@ -1290,11 +1250,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // TopSites requires a writable connection (because of the temporary tables it uses), hence
         // we handle that separately, i.e. before retrieving a readable connection.
         if (match == TOPSITES) {
-            if (uri.getBooleanQueryParameter(BrowserContract.PARAM_TOPSITES_DISABLE_PINNED, false)) {
-                return getPlainTopSites(uri);
-            } else {
-                return getTopSites(uri);
-            }
+            return getTopSites(uri);
         }
 
         SQLiteDatabase db = getReadableDatabase(uri);

@@ -96,10 +96,6 @@ richlistitem.download button {
 .download-state[state="8"]:not(.temporary-block)
                                            .downloadUnblockMenuItem,
 
-.download-state:not(:-moz-any([state="2"], /* Failed             */
-                              [state="4"]) /* Paused             */)
-                                           .downloadCancelMenuItem,
-
 .download-state:not(:-moz-any([state="1"], /* Finished           */
                               [state="2"], /* Failed             */
                               [state="3"], /* Canceled           */
@@ -114,8 +110,20 @@ richlistitem.download button {
                               [state="4"], /* Paused             */
                               [state="5"]) /* Starting (queued)  */)
                                            .downloadShowMenuItem,
+.download-state[state="1"]:not([exists])
+                                           .downloadShowMenuItem,
 
-.download-state[state="7"]                 .downloadCommandsSeparator
+.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
+                              [state="0"], /* Downloading        */
+                              [state="1"], /* Finished           */
+                              [state="4"], /* Paused             */
+                              [state="5"], /* Starting (queued)  */
+                              [state="8"]) /* Blocked (dirty)    */)
+                                           .downloadCommandsSeparator,
+.download-state[state="1"]:not([exists])
+                                           .downloadCommandsSeparator,
+.download-state[state="8"]:not(.temporary-block)
+                                           .downloadCommandsSeparator
 
 {
   display: none;

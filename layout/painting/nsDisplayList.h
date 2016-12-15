@@ -4063,6 +4063,12 @@ class nsDisplayTransform: public nsDisplayItem
   };
 
 public:
+  enum PrerenderDecision {
+    NoPrerender,
+    FullPrerender,
+    PartialPrerender
+  };
+
   /**
    * Returns a matrix (in pixels) for the current frame. The matrix should be relative to
    * the current frame's coordinate space.
@@ -4077,7 +4083,7 @@ public:
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayList *aList, const nsRect& aChildrenVisibleRect,
-                     uint32_t aIndex = 0, bool aIsFullyVisible = false);
+                     uint32_t aIndex = 0, bool aAllowAsyncAnimation = false);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayItem *aItem, const nsRect& aChildrenVisibleRect,
                      uint32_t aIndex = 0);
@@ -4276,11 +4282,16 @@ public:
                                                uint32_t aFlags,
                                                const nsRect* aBoundsOverride = nullptr);
   /**
-   * Return true when we should try to prerender the entire contents of the
+   * Decide whether we should prerender some or all of the contents of the
    * transformed frame even when it's not completely visible (yet).
+   * Return FullPrerender if the entire contents should be prerendered,
+   * PartialPrerender if some but not all of the contents should be prerendered,
+   * or NoPrerender if only the visible area should be rendered.
+   * |aDirtyRect| is updated to the area that should be prerendered.
    */
-  static bool ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                nsIFrame* aFrame);
+  static PrerenderDecision ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
+                                                             nsIFrame* aFrame,
+                                                             nsRect* aDirtyRect);
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
   bool MayBeAnimated(nsDisplayListBuilder* aBuilder);
@@ -4380,9 +4391,8 @@ private:
   bool mIsTransformSeparator;
   // True if mTransformPreserves3D have been initialized.
   bool mTransformPreserves3DInited;
-  // True if the entire untransformed area has been treated as
-  // visible during display list construction.
-  bool mIsFullyVisible;
+  // True if async animation of the transform is allowed.
+  bool mAllowAsyncAnimation;
 };
 
 /* A display item that applies a perspective transformation to a single

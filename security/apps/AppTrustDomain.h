@@ -23,7 +23,7 @@ public:
 
   AppTrustDomain(UniqueCERTCertList& certChain, void* pinArg);
 
-  SECStatus SetTrustedRoot(AppTrustedRoot trustedRoot);
+  nsresult SetTrustedRoot(AppTrustedRoot trustedRoot);
 
   virtual Result GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                               const mozilla::pkix::CertPolicyId& policy,

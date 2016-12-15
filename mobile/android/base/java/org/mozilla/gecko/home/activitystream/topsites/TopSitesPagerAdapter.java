@@ -22,6 +22,7 @@ import java.util.LinkedList;
  */
 public class TopSitesPagerAdapter extends PagerAdapter {
     public static final int PAGES = 4;
+    public static final int SUGGESTED_SITES_MAX_PAGES = 2;
 
     private int tiles;
     private int tilesWidth;
