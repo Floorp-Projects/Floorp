@@ -16,7 +16,6 @@ var supportedProps = [
   "languages",
   "hardwareConcurrency",
   { name: "storage", nightly: true },
-  { name: "connection", nightly: true },
 ];
 
 self.onmessage = function(event) {
