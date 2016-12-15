@@ -25,6 +25,7 @@
 #include "mozilla/dom/IIRFilterNodeBinding.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
+#include "mozilla/dom/OscillatorNodeBinding.h"
 #include "mozilla/dom/PannerNodeBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StereoPannerNodeBinding.h"
@@ -474,13 +475,7 @@ AudioContext::CreateIIRFilter(const mozilla::dom::binding_detail::AutoSequence<d
 already_AddRefed<OscillatorNode>
 AudioContext::CreateOscillator(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<OscillatorNode> oscillatorNode =
-    new OscillatorNode(this);
-  return oscillatorNode.forget();
+  return OscillatorNode::Create(*this, OscillatorOptions(), aRv);
 }
 
 already_AddRefed<PeriodicWave>
