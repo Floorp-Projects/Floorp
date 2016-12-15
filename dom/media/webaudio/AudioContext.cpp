@@ -16,6 +16,7 @@
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/dom/BiquadFilterNodeBinding.h"
+#include "mozilla/dom/ChannelSplitterNodeBinding.h"
 #include "mozilla/dom/ConvolverNodeBinding.h"
 #include "mozilla/dom/DelayNodeBinding.h"
 #include "mozilla/dom/GainNodeBinding.h"
@@ -432,19 +433,9 @@ AudioContext::CreateConvolver(ErrorResult& aRv)
 already_AddRefed<ChannelSplitterNode>
 AudioContext::CreateChannelSplitter(uint32_t aNumberOfOutputs, ErrorResult& aRv)
 {
-  if (aNumberOfOutputs == 0 ||
-      aNumberOfOutputs > WebAudioUtils::MaxChannelCount) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return nullptr;
-  }
-
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<ChannelSplitterNode> splitterNode =
-    new ChannelSplitterNode(this, aNumberOfOutputs);
-  return splitterNode.forget();
+  ChannelSplitterOptions options;
+  options.mNumberOfOutputs = aNumberOfOutputs;
+  return ChannelSplitterNode::Create(*this, options, aRv);
 }
 
 already_AddRefed<ChannelMergerNode>
