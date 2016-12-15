@@ -19,21 +19,26 @@ namespace dom {
 class Promise;
 class StorageManager;
 
-namespace network {
-class Connection;
-} // namespace network
-
 class WorkerNavigator final : public nsWrapperCache
 {
   typedef struct workers::RuntimeService::NavigatorProperties NavigatorProperties;
 
   NavigatorProperties mProperties;
   RefPtr<StorageManager> mStorageManager;
-  RefPtr<network::Connection> mConnection;
   bool mOnline;
 
-  WorkerNavigator(const NavigatorProperties& aProperties, bool aOnline);
-  ~WorkerNavigator();
+  WorkerNavigator(const NavigatorProperties& aProperties,
+                  bool aOnline)
+    : mProperties(aProperties)
+    , mOnline(aOnline)
+  {
+    MOZ_COUNT_CTOR(WorkerNavigator);
+  }
+
+  ~WorkerNavigator()
+  {
+    MOZ_COUNT_DTOR(WorkerNavigator);
+  }
 
 public:
 
@@ -105,8 +110,6 @@ public:
   uint64_t HardwareConcurrency() const;
 
   StorageManager* Storage();
-
-  network::Connection* GetConnection(ErrorResult& aRv);
 };
 
 } // namespace dom
