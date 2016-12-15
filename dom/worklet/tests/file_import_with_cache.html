@@ -10,11 +10,8 @@
 
 setupTest();
 
-var worklet = window.createWorklet();
-ok(!!worklet, "We have a Worklet");
-
 function loading() {
-  worklet.import("server_import_with_cache.sjs")
+  audioWorklet.import("server_import_with_cache.sjs")
   .then(() => {
     ok(true, "Import should load a resource.");
   }, () => {

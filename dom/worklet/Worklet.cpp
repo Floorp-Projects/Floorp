@@ -209,6 +209,7 @@ public:
     JS::Rooted<JS::Value> unused(cx);
     if (!JS::Evaluate(cx, compileOptions, buffer, &unused)) {
       ErrorResult error;
+      error.MightThrowJSException();
       error.StealExceptionFromJSContext(cx);
       RejectPromises(error.StealNSResult());
       return NS_OK;
@@ -352,7 +353,8 @@ WorkletGlobalScope*
 Worklet::GetOrCreateGlobalScope(JSContext* aCx)
 {
   if (!mScope) {
-    mScope = new WorkletGlobalScope(mWindow);
+    // So far we don't have any other global scope to implement.
+    mScope = new AudioWorkletGlobalScope(mWindow);
 
     JS::Rooted<JSObject*> global(aCx);
     NS_ENSURE_TRUE(mScope->WrapGlobalObject(aCx, mPrincipal, &global), nullptr);

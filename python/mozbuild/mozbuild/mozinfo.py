@@ -95,7 +95,6 @@ def build_dict(config, env=os.environ):
     d['addon_signing'] = substs.get('MOZ_ADDON_SIGNING') == '1'
     d['require_signing'] = substs.get('MOZ_REQUIRE_SIGNING') == '1'
     d['official'] = bool(substs.get('MOZILLA_OFFICIAL'))
-    d['sm_promise'] = bool(substs.get('SPIDERMONKEY_PROMISE'))
 
     def guess_platform():
         if d['buildapp'] in ('browser', 'mulet'):

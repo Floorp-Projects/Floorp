@@ -10,9 +10,7 @@
 
 setupTest();
 
-var worklet = window.createWorklet();
-ok(!!worklet, "We have a Worklet");
-worklet.import("worklet_console.js");
+audioWorklet.import("worklet_console.js");
 
 </script>
 </body>

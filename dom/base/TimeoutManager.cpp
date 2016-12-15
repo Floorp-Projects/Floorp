@@ -55,19 +55,35 @@ const uint32_t kThrottledEventQueueBackPressure = 5000;
 // in the queue equates to an additional kBackPressureDelayMS.
 const double kBackPressureDelayMS = 500;
 
+// This defines a limit for how much the delay must drop before we actually
+// reduce back pressure throttle amount.  This makes the throttle delay
+// a bit "sticky" once we enter back pressure.
+const double kBackPressureDelayReductionThresholdMS = 400;
+
+// The minimum delay we can reduce back pressure to before we just floor
+// the value back to zero.  This allows us to ensure that we can exit
+// back pressure event if there are always a small number of runnables
+// queued up.
+const double kBackPressureDelayMinimumMS = 100;
+
 // Convert a ThrottledEventQueue length to a timer delay in milliseconds.
-// This will return a value between kBackPressureDelayMS and INT32_MAX.
+// This will return a value between 0 and INT32_MAX.
 int32_t
 CalculateNewBackPressureDelayMS(uint32_t aBacklogDepth)
 {
-  // The calculations here assume we are only operating while in back
-  // pressure conditions.
-  MOZ_ASSERT(aBacklogDepth >= kThrottledEventQueueBackPressure);
   double multiplier = static_cast<double>(aBacklogDepth) /
                       static_cast<double>(kThrottledEventQueueBackPressure);
   double value = kBackPressureDelayMS * multiplier;
+  // Avoid overflow
   if (value > INT32_MAX) {
     value = INT32_MAX;
+  }
+
+  // Once we get close to an empty queue just floor the delay back to zero.
+  // We want to ensure we don't get stuck in a condition where there is a
+  // small amount of delay remaining due to an active, but reasonable, queue.
+  else if (value < kBackPressureDelayMinimumMS) {
+    value = 0;
   }
   return static_cast<int32_t>(value);
 }
@@ -468,32 +484,50 @@ TimeoutManager::CancelOrUpdateBackPressure(nsGlobalWindow* aWindow)
   MOZ_ASSERT(aWindow == &mWindow);
   MOZ_ASSERT(mBackPressureDelayMS > 0);
 
-  // First, check to see if we are still in back pressure.  If we've dropped
-  // below the threshold we can simply drop our back pressure delay.  We
-  // must also reset timers to remove the old back pressure delay in order to
-  // avoid out-of-order timer execution.
+  // First, re-calculate the back pressure delay.
   RefPtr<ThrottledEventQueue> queue = mWindow.TabGroup()->GetThrottledEventQueue();
-  if (!queue || queue->Length() < kThrottledEventQueueBackPressure) {
+  int32_t newBackPressureDelayMS =
+    CalculateNewBackPressureDelayMS(queue ? queue->Length() : 0);
+
+  // If the delay has increased, then simply apply it.  Increasing the delay
+  // does not risk re-ordering timers with similar parameters.  We want to
+  // extra careful not to re-order sequential calls to setTimeout(func, 0),
+  // for example.
+  if (newBackPressureDelayMS > mBackPressureDelayMS) {
+    mBackPressureDelayMS = newBackPressureDelayMS;
+  }
+
+  // If the delay has decreased, though, we only apply the new value if it has
+  // reduced significantly.  This hysteresis avoids thrashing the back pressure
+  // value back and forth rapidly.  This is important because reducing the
+  // backpressure delay requires calling ResetTimerForThrottleReduction() which
+  // can be quite expensive.  We only want to call that method if the back log
+  // is really clearing.
+  else if (newBackPressureDelayMS == 0 ||
+           (newBackPressureDelayMS <=
+           (mBackPressureDelayMS - kBackPressureDelayReductionThresholdMS))) {
     int32_t oldBackPressureDelayMS = mBackPressureDelayMS;
-    mBackPressureDelayMS = 0;
+    mBackPressureDelayMS = newBackPressureDelayMS;
+
+    // If the back pressure delay has gone down we must reset any existing
+    // timers to use the new value.  Otherwise we run the risk of executing
+    // timer callbacks out-of-order.
     ResetTimersForThrottleReduction(oldBackPressureDelayMS);
+  }
+
+  // If all of the back pressure delay has been removed then we no longer need
+  // to check back pressure updates.  We can simply return without scheduling
+  // another update runnable.
+  if (!mBackPressureDelayMS) {
     return;
   }
 
-  // Otherwise we are still in back pressure mode.
-
-  // Re-calculate the back pressure delay.
-  int32_t oldBackPressureDelayMS = mBackPressureDelayMS;
-  mBackPressureDelayMS = CalculateNewBackPressureDelayMS(queue->Length());
-
-  // If the back pressure delay has gone down we must reset any existing
-  // timers to use the new value.  Otherwise we run the risk of executing
-  // timer callbacks out-of-order.
-  if (mBackPressureDelayMS < oldBackPressureDelayMS) {
-    ResetTimersForThrottleReduction(oldBackPressureDelayMS);
-  }
-
-  // Dispatch another runnable to update the back pressure state again.
+  // Otherwise, if there is a back pressure delay still in effect we need
+  // queue a runnable to check if it can be reduced in the future.  Note
+  // that this runnable is dispatched to the ThrottledEventQueue.  This
+  // means we will not check for a new value until the current back log
+  // has been processed.  The next update will only keep back pressure if
+  // more runnables continue to be dispatched to the queue.
   nsCOMPtr<nsIRunnable> r =
     NewNonOwningRunnableMethod<StorensRefPtrPassByPtr<nsGlobalWindow>>(this,
       &TimeoutManager::CancelOrUpdateBackPressure, &mWindow);

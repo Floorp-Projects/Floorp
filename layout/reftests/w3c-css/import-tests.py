@@ -34,6 +34,7 @@ gSubtrees = [
     os.path.join("css-conditional-3"),
     os.path.join("css-values-3"),
     os.path.join("css-multicol-1"),
+    os.path.join("css-writing-modes-3"),
     os.path.join("selectors-4"),
 ]
 
