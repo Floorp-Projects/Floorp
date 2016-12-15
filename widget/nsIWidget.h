@@ -1318,19 +1318,17 @@ class nsIWidget : public nsISupports
      *
      * @param aTitle string displayed as the title of the widget
      */
-
     NS_IMETHOD SetTitle(const nsAString& aTitle) = 0;
 
     /**
      * Set the widget's icon.
      * Must be called after Create.
      *
-     * @param anIconSpec string specifying the icon to use; convention is to pass
-     *                   a resource: URL from which a platform-dependent resource
-     *                   file name will be constructed
+     * @param aIconSpec string specifying the icon to use; convention is to
+     *                  pass a resource: URL from which a platform-dependent
+     *                  resource file name will be constructed
      */
-
-    NS_IMETHOD SetIcon(const nsAString& anIconSpec) = 0;
+    virtual void SetIcon(const nsAString& aIconSpec) = 0;
 
     /**
      * Return this widget's origin in screen coordinates.
