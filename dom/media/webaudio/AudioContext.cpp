@@ -14,10 +14,11 @@
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
+#include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/dom/BiquadFilterNodeBinding.h"
 #include "mozilla/dom/DelayNodeBinding.h"
 #include "mozilla/dom/GainNodeBinding.h"
-#include "mozilla/dom/AudioContextBinding.h"
+#include "mozilla/dom/IIRFilterNodeBinding.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -504,35 +505,10 @@ AudioContext::CreateIIRFilter(const mozilla::dom::binding_detail::AutoSequence<d
                               const mozilla::dom::binding_detail::AutoSequence<double>& aFeedback,
                               mozilla::ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  if (aFeedforward.Length() == 0 || aFeedforward.Length() > 20) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
-  if (aFeedback.Length() == 0 || aFeedback.Length() > 20) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
-  bool feedforwardAllZeros = true;
-  for (size_t i = 0; i < aFeedforward.Length(); ++i) {
-    if (aFeedforward.Elements()[i] != 0.0) {
-      feedforwardAllZeros = false;
-    }
-  }
-
-  if (feedforwardAllZeros || aFeedback.Elements()[0] == 0.0) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  RefPtr<IIRFilterNode> filterNode =
-    new IIRFilterNode(this, aFeedforward, aFeedback);
-  return filterNode.forget();
+  IIRFilterOptions options;
+  options.mFeedforward = aFeedforward;
+  options.mFeedback = aFeedback;
+  return IIRFilterNode::Create(*this, options, aRv);
 }
 
 already_AddRefed<OscillatorNode>
