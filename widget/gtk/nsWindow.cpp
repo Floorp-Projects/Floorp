@@ -831,12 +831,12 @@ nsWindow::GetDefaultScaleInternal()
     return GdkScaleFactor() * gfxPlatformGtk::GetDPIScale();
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
     if (mContainer || !mGdkWindow) {
         NS_NOTREACHED("nsWindow::SetParent called illegally");
-        return NS_ERROR_NOT_IMPLEMENTED;
+        return;
     }
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
@@ -852,7 +852,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         // reparent.
         MOZ_ASSERT(gdk_window_is_destroyed(mGdkWindow),
                    "live GdkWindow with no widget");
-        return NS_OK;
+        return;
     }
 
     if (aNewParent) {
@@ -868,7 +868,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         ReparentNativeWidgetInternal(aNewParent, newContainer, newParentWindow,
                                      oldContainer);
     }
-    return NS_OK;
 }
 
 bool

@@ -1632,11 +1632,11 @@ nsWindow::RedrawAll()
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
     if ((nsIWidget*)mParent == aNewParent)
-        return NS_OK;
+        return;
 
     // If we had a parent before, remove ourselves from its list of
     // children.
@@ -1651,8 +1651,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     // if we are now in the toplevel window's hierarchy, schedule a redraw
     if (FindTopLevel() == nsWindow::TopWindow())
         RedrawAll();
-
-    return NS_OK;
 }
 
 nsIWidget*

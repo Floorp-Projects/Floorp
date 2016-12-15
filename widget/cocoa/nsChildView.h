@@ -309,7 +309,7 @@ public:
   NS_IMETHOD              Show(bool aState) override;
   virtual bool            IsVisible() const override;
 
-  NS_IMETHOD              SetParent(nsIWidget* aNewParent) override;
+  virtual void            SetParent(nsIWidget* aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
   virtual float           GetDPI() override;
 
