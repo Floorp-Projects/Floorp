@@ -92,7 +92,7 @@ add_task(function* test_formdata() {
   // Creates a tab, loads a page with some form fields,
   // modifies their values and closes the tab.
   function createAndRemoveTab() {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;
@@ -147,7 +147,7 @@ add_task(function* test_formdata2() {
   // Creates a tab, loads a page with some form fields,
   // modifies their values and closes the tab.
   function createAndRemoveTab() {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;
@@ -207,7 +207,7 @@ add_task(function* test_formdata_navigation() {
   // Creates a tab, loads a page with some form fields, modifies their values,
   // navigates to a different page and back again and closes the tab.
   function createNavigateAndRemoveTab() {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;

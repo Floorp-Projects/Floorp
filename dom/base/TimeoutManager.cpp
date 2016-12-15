@@ -11,6 +11,7 @@
 #include "nsITimeoutHandler.h"
 #include "mozilla/dom/TabGroup.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 static int32_t              gRunningTimeoutDepth       = 0;
@@ -227,7 +228,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     }
   }
 
-  InsertTimeoutIntoList(timeout);
+  mTimeouts.Insert(timeout, mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
+                                               : Timeouts::SortBy::TimeWhen);
 
   timeout->mTimeoutId = GetTimeoutId(aReason);
   *aReturn = timeout->mTimeoutId;
@@ -239,30 +241,30 @@ void
 TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
 {
   uint32_t timerId = (uint32_t)aTimerId;
-  Timeout* timeout;
 
-  for (timeout = mTimeouts.GetFirst(); timeout; timeout = timeout->getNext()) {
-    if (timeout->mTimeoutId == timerId && timeout->mReason == aReason) {
-      if (timeout->mRunning) {
-        /* We're running from inside the timeout. Mark this
-           timeout for deferred deletion by the code in
+  ForEachTimeoutAbortable([&](Timeout* aTimeout) {
+    if (aTimeout->mTimeoutId == timerId && aTimeout->mReason == aReason) {
+      if (aTimeout->mRunning) {
+        /* We're running from inside the aTimeout. Mark this
+           aTimeout for deferred deletion by the code in
            RunTimeout() */
-        timeout->mIsInterval = false;
+        aTimeout->mIsInterval = false;
       }
       else {
-        /* Delete the timeout from the pending timeout list */
-        timeout->remove();
+        /* Delete the aTimeout from the pending aTimeout list */
+        aTimeout->remove();
 
-        if (timeout->mTimer) {
-          timeout->mTimer->Cancel();
-          timeout->mTimer = nullptr;
-          timeout->Release();
+        if (aTimeout->mTimer) {
+          aTimeout->mTimer->Cancel();
+          aTimeout->mTimer = nullptr;
+          aTimeout->Release();
         }
-        timeout->Release();
+        aTimeout->Release();
       }
-      break;
+      return true; // abort!
     }
-  }
+    return false;
+  });
 }
 
 void
@@ -420,7 +422,8 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
     if (needsReinsertion) {
       // Insert interval timeout onto list sorted in deadline order.
       // AddRefs timeout.
-      InsertTimeoutIntoList(timeout);
+      mTimeouts.Insert(timeout, mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
+                                                   : Timeouts::SortBy::TimeWhen);
     }
 
     // Release the timeout struct since it's possibly out of the list
@@ -629,6 +632,21 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
     return NS_OK;
   }
 
+  Timeouts::SortBy sortBy = mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
+                                               : Timeouts::SortBy::TimeWhen;
+
+  return mTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
+                                                   DOMMinTimeoutValue(),
+                                                   sortBy,
+                                                   mWindow.GetThrottledEventQueue());
+}
+
+nsresult
+TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
+                                                          int32_t aMinTimeoutValueMS,
+                                                          SortBy aSortBy,
+                                                          ThrottledEventQueue* aQueue)
+{
   TimeStamp now = TimeStamp::Now();
 
   // If insertion point is non-null, we're in the middle of firing timers and
@@ -638,8 +656,8 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
   // point or anything before it, so should start at the timer after insertion
   // point, if there is one.
   // Otherwise, start at the beginning of the list.
-  for (Timeout* timeout = mTimeouts.InsertionPoint() ?
-         mTimeouts.InsertionPoint()->getNext() : mTimeouts.GetFirst();
+  for (Timeout* timeout = InsertionPoint() ?
+         InsertionPoint()->getNext() : GetFirst();
        timeout; ) {
     // It's important that this check be <= so that we guarantee that
     // taking std::max with |now| won't make a quantity equal to
@@ -662,7 +680,7 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
     // background window
     TimeDuration interval =
       TimeDuration::FromMilliseconds(std::max(timeout->mInterval,
-                                            uint32_t(DOMMinTimeoutValue())));
+                                            uint32_t(aMinTimeoutValueMS)));
     uint32_t oldIntervalMillisecs = 0;
     timeout->mTimer->GetDelay(&oldIntervalMillisecs);
     TimeDuration oldInterval = TimeDuration::FromMilliseconds(oldIntervalMillisecs);
@@ -690,15 +708,14 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
       NS_ASSERTION(!nextTimeout ||
                    timeout->mWhen < nextTimeout->mWhen, "How did that happen?");
       timeout->remove();
-      // InsertTimeoutIntoList will addref |timeout| and reset
-      // mFiringDepth.  Make sure to undo that after calling it.
+      // Insert() will addref |timeout| and reset mFiringDepth.  Make sure to
+      // undo that after calling it.
       uint32_t firingDepth = timeout->mFiringDepth;
-      InsertTimeoutIntoList(timeout);
+      Insert(timeout, aSortBy);
       timeout->mFiringDepth = firingDepth;
       timeout->Release();
 
-      nsresult rv = timeout->InitTimer(mWindow.GetThrottledEventQueue(),
-                                       delay.ToMilliseconds());
+      nsresult rv = timeout->InitTimer(aQueue, delay.ToMilliseconds());
 
       if (NS_FAILED(rv)) {
         NS_WARNING("Error resetting non background timer for DOM timeout!");
@@ -717,36 +734,37 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
 void
 TimeoutManager::ClearAllTimeouts()
 {
-  Timeout* timeout;
-  Timeout* nextTimeout;
+  bool seenRunningTimeout = false;
 
-  for (timeout = mTimeouts.GetFirst(); timeout; timeout = nextTimeout) {
+  ForEachTimeout([&](Timeout* aTimeout) {
     /* If RunTimeout() is higher up on the stack for this
        window, e.g. as a result of document.write from a timeout,
        then we need to reset the list insertion point for
        newly-created timeouts in case the user adds a timeout,
        before we pop the stack back to RunTimeout. */
-    if (mRunningTimeout == timeout) {
-      mTimeouts.SetInsertionPoint(nullptr);
+    if (mRunningTimeout == aTimeout) {
+      seenRunningTimeout = true;
     }
 
-    nextTimeout = timeout->getNext();
-
-    if (timeout->mTimer) {
-      timeout->mTimer->Cancel();
-      timeout->mTimer = nullptr;
+    if (aTimeout->mTimer) {
+      aTimeout->mTimer->Cancel();
+      aTimeout->mTimer = nullptr;
 
       // Drop the count since the timer isn't going to hold on
       // anymore.
-      timeout->Release();
+      aTimeout->Release();
     }
 
     // Set timeout->mCleared to true to indicate that the timeout was
     // cleared and taken out of the list of timeouts
-    timeout->mCleared = true;
+    aTimeout->mCleared = true;
 
     // Drop the count since we're removing it from the list.
-    timeout->Release();
+    aTimeout->Release();
+  });
+
+  if (seenRunningTimeout) {
+    mTimeouts.SetInsertionPoint(nullptr);
   }
 
   // Clear out our list
@@ -754,16 +772,16 @@ TimeoutManager::ClearAllTimeouts()
 }
 
 void
-TimeoutManager::InsertTimeoutIntoList(Timeout* aTimeout)
+TimeoutManager::Timeouts::Insert(Timeout* aTimeout, SortBy aSortBy)
 {
   // Start at mLastTimeout and go backwards.  Don't go further than insertion
   // point, though.  This optimizes for the common case of insertion at the end.
   Timeout* prevSibling;
-  for (prevSibling = mTimeouts.GetLast();
-       prevSibling && prevSibling != mTimeouts.InsertionPoint() &&
+  for (prevSibling = GetLast();
+       prevSibling && prevSibling != InsertionPoint() &&
          // This condition needs to match the one in SetTimeoutOrInterval that
          // determines whether to set mWhen or mTimeRemaining.
-         (mWindow.IsFrozen() ?
+         (aSortBy == SortBy::TimeRemaining ?
           prevSibling->mTimeRemaining > aTimeout->mTimeRemaining :
           prevSibling->mWhen > aTimeout->mWhen);
        prevSibling = prevSibling->getPrevious()) {
@@ -774,7 +792,7 @@ TimeoutManager::InsertTimeoutIntoList(Timeout* aTimeout)
   if (prevSibling) {
     prevSibling->setNext(aTimeout);
   } else {
-    mTimeouts.InsertFront(aTimeout);
+    InsertFront(aTimeout);
   }
 
   aTimeout->mFiringDepth = 0;
@@ -808,33 +826,31 @@ TimeoutManager::EndRunningTimeout(Timeout* aTimeout)
 void
 TimeoutManager::UnmarkGrayTimers()
 {
-  for (Timeout* timeout = mTimeouts.GetFirst();
-       timeout;
-       timeout = timeout->getNext()) {
-    if (timeout->mScriptHandler) {
-      timeout->mScriptHandler->MarkForCC();
+  ForEachTimeout([](Timeout* aTimeout) {
+    if (aTimeout->mScriptHandler) {
+      aTimeout->mScriptHandler->MarkForCC();
     }
-  }
+  });
 }
 
 void
 TimeoutManager::Suspend()
 {
-  for (Timeout* t = mTimeouts.GetFirst(); t; t = t->getNext()) {
+  ForEachTimeout([](Timeout* aTimeout) {
     // Leave the timers with the current time remaining.  This will
     // cause the timers to potentially fire when the window is
     // Resume()'d.  Time effectively passes while suspended.
 
     // Drop the XPCOM timer; we'll reschedule when restoring the state.
-    if (t->mTimer) {
-      t->mTimer->Cancel();
-      t->mTimer = nullptr;
+    if (aTimeout->mTimer) {
+      aTimeout->mTimer->Cancel();
+      aTimeout->mTimer = nullptr;
 
       // Drop the reference that the timer's closure had on this timeout, we'll
       // add it back in Resume().
-      t->Release();
+      aTimeout->Release();
     }
-  }
+  });
 }
 
 void
@@ -843,67 +859,67 @@ TimeoutManager::Resume()
   TimeStamp now = TimeStamp::Now();
   DebugOnly<bool> _seenDummyTimeout = false;
 
-  for (Timeout* t = mTimeouts.GetFirst(); t; t = t->getNext()) {
+  ForEachTimeout([&](Timeout* aTimeout) {
     // There's a chance we're being called with RunTimeout on the stack in which
     // case we have a dummy timeout in the list that *must not* be resumed. It
     // can be identified by a null mWindow.
-    if (!t->mWindow) {
+    if (!aTimeout->mWindow) {
       NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
       _seenDummyTimeout = true;
-      continue;
+      return;
     }
 
-    MOZ_ASSERT(!t->mTimer);
+    MOZ_ASSERT(!aTimeout->mTimer);
 
     // The timeout mWhen is set to the absolute time when the timer should
     // fire.  Recalculate the delay from now until that deadline.  If the
     // the deadline has already passed or falls within our minimum delay
     // deadline, then clamp the resulting value to the minimum delay.  The
-    // mWhen will remain at its absolute time, but we won't fire the OS
+    // mWhen will remain at its absolute time, but we won'aTimeout fire the OS
     // timer until our calculated delay has passed.
     int32_t remaining = 0;
-    if (t->mWhen > now) {
-      remaining = static_cast<int32_t>((t->mWhen - now).ToMilliseconds());
+    if (aTimeout->mWhen > now) {
+      remaining = static_cast<int32_t>((aTimeout->mWhen - now).ToMilliseconds());
     }
     uint32_t delay = std::max(remaining, DOMMinTimeoutValue());
 
-    t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (!t->mTimer) {
-      t->remove();
-      continue;
+    aTimeout->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!aTimeout->mTimer) {
+      aTimeout->remove();
+      return;
     }
 
-    nsresult rv = t->InitTimer(mWindow.GetThrottledEventQueue(), delay);
+    nsresult rv = aTimeout->InitTimer(mWindow.GetThrottledEventQueue(), delay);
     if (NS_FAILED(rv)) {
-      t->mTimer = nullptr;
-      t->remove();
-      continue;
+      aTimeout->mTimer = nullptr;
+      aTimeout->remove();
+      return;
     }
 
     // Add a reference for the new timer's closure.
-    t->AddRef();
-  }
+    aTimeout->AddRef();
+  });
 }
 
 void
 TimeoutManager::Freeze()
 {
   TimeStamp now = TimeStamp::Now();
-  for (Timeout *t = mTimeouts.GetFirst(); t; t = t->getNext()) {
+  ForEachTimeout([&](Timeout* aTimeout) {
     // Save the current remaining time for this timeout.  We will
     // re-apply it when the window is Thaw()'d.  This effectively
     // shifts timers to the right as if time does not pass while
     // the window is frozen.
-    if (t->mWhen > now) {
-      t->mTimeRemaining = t->mWhen - now;
+    if (aTimeout->mWhen > now) {
+      aTimeout->mTimeRemaining = aTimeout->mWhen - now;
     } else {
-      t->mTimeRemaining = TimeDuration(0);
+      aTimeout->mTimeRemaining = TimeDuration(0);
     }
 
     // Since we are suspended there should be no OS timer set for
     // this timeout entry.
-    MOZ_ASSERT(!t->mTimer);
-  }
+    MOZ_ASSERT(!aTimeout->mTimer);
+  });
 }
 
 void
@@ -912,19 +928,19 @@ TimeoutManager::Thaw()
   TimeStamp now = TimeStamp::Now();
   DebugOnly<bool> _seenDummyTimeout = false;
 
-  for (Timeout *t = mTimeouts.GetFirst(); t; t = t->getNext()) {
+  ForEachTimeout([&](Timeout* aTimeout) {
     // There's a chance we're being called with RunTimeout on the stack in which
     // case we have a dummy timeout in the list that *must not* be resumed. It
     // can be identified by a null mWindow.
-    if (!t->mWindow) {
+    if (!aTimeout->mWindow) {
       NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
       _seenDummyTimeout = true;
-      continue;
+      return;
     }
 
     // Set mWhen back to the time when the timer is supposed to fire.
-    t->mWhen = now + t->mTimeRemaining;
+    aTimeout->mWhen = now + aTimeout->mTimeRemaining;
 
-    MOZ_ASSERT(!t->mTimer);
-  }
+    MOZ_ASSERT(!aTimeout->mTimer);
+  });
 }
