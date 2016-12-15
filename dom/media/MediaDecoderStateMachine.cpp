@@ -1242,10 +1242,8 @@ private:
     } else {
       if (target >= video->mTime && video->GetEndTime() >= target) {
         // The seek target lies inside this frame's time slice. Adjust the frame's
-        // start time to match the seek target. We do this by replacing the
-        // first frame with a shallow copy which has the new timestamp.
-        RefPtr<VideoData> temp = VideoData::ShallowCopyUpdateTimestamp(video.get(), target);
-        video = temp;
+        // start time to match the seek target.
+        video->UpdateTimestamp(target);
       }
       mFirstVideoFrameAfterSeek = nullptr;
 

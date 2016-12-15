@@ -177,55 +177,24 @@ VideoData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return size;
 }
 
-/* static */
-already_AddRefed<VideoData>
-VideoData::ShallowCopyUpdateDuration(const VideoData* aOther,
-                                     int64_t aDuration)
+void
+VideoData::UpdateDuration(int64_t aDuration)
 {
-  RefPtr<VideoData> v = new VideoData(aOther->mOffset,
-                                        aOther->mTime,
-                                        aDuration,
-                                        aOther->mKeyframe,
-                                        aOther->mTimecode,
-                                        aOther->mDisplay,
-                                        aOther->mFrameID);
-  v->mImage = aOther->mImage;
-  return v.forget();
+  MOZ_ASSERT(aDuration >= 0);
+
+  mDuration = aDuration;
 }
 
-/* static */
-already_AddRefed<VideoData>
-VideoData::ShallowCopyUpdateTimestamp(const VideoData* aOther,
-                                      int64_t aTimestamp)
+void
+VideoData::UpdateTimestamp(int64_t aTimestamp)
 {
-  NS_ENSURE_TRUE(aOther, nullptr);
-  RefPtr<VideoData> v = new VideoData(aOther->mOffset,
-                                        aTimestamp,
-                                        aOther->GetEndTime() - aTimestamp,
-                                        aOther->mKeyframe,
-                                        aOther->mTimecode,
-                                        aOther->mDisplay,
-                                        aOther->mFrameID);
-  v->mImage = aOther->mImage;
-  return v.forget();
-}
+  MOZ_ASSERT(aTimestamp >= 0);
 
-/* static */
-already_AddRefed<VideoData>
-VideoData::ShallowCopyUpdateTimestampAndDuration(const VideoData* aOther,
-                                                 int64_t aTimestamp,
-                                                 int64_t aDuration)
-{
-  NS_ENSURE_TRUE(aOther, nullptr);
-  RefPtr<VideoData> v = new VideoData(aOther->mOffset,
-                                        aTimestamp,
-                                        aDuration,
-                                        aOther->mKeyframe,
-                                        aOther->mTimecode,
-                                        aOther->mDisplay,
-                                        aOther->mFrameID);
-  v->mImage = aOther->mImage;
-  return v.forget();
+  int64_t updatedDuration = GetEndTime() - aTimestamp;
+  MOZ_ASSERT(updatedDuration >= 0);
+
+  mTime = aTimestamp;
+  mDuration = updatedDuration;
 }
 
 /* static */

@@ -493,29 +493,6 @@ public:
                                                      int64_t aTimecode,
                                                      const IntRect& aPicture);
 
-  // Creates a new VideoData identical to aOther, but with a different
-  // specified duration. All data from aOther is copied into the new
-  // VideoData. The new VideoData's mImage field holds a reference to
-  // aOther's mImage, i.e. the Image is not copied. This function is useful
-  // in reader backends that can't determine the duration of a VideoData
-  // until the next frame is decoded, i.e. it's a way to change the const
-  // duration field on a VideoData.
-  static already_AddRefed<VideoData> ShallowCopyUpdateDuration(const VideoData* aOther,
-                                                               int64_t aDuration);
-
-  // Creates a new VideoData identical to aOther, but with a different
-  // specified timestamp. All data from aOther is copied into the new
-  // VideoData, as ShallowCopyUpdateDuration() does.
-  static already_AddRefed<VideoData> ShallowCopyUpdateTimestamp(const VideoData* aOther,
-                                                                int64_t aTimestamp);
-
-  // Creates a new VideoData identical to aOther, but with a different
-  // specified timestamp and duration. All data from aOther is copied
-  // into the new VideoData, as ShallowCopyUpdateDuration() does.
-  static already_AddRefed<VideoData>
-  ShallowCopyUpdateTimestampAndDuration(const VideoData* aOther, int64_t aTimestamp,
-                                        int64_t aDuration);
-
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
   static bool SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
@@ -547,6 +524,9 @@ public:
   void SetListener(UniquePtr<Listener> aListener);
   void MarkSentToCompositor();
   bool IsSentToCompositor() { return mSentToCompositor; }
+
+  void UpdateDuration(int64_t aDuration);
+  void UpdateTimestamp(int64_t aTimestamp);
 
 protected:
   ~VideoData();
