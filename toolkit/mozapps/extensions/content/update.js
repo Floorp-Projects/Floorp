@@ -208,8 +208,7 @@ var gVersionInfoPage = {
     }
 
     logger.debug("Fetching affected addons " + idlist.toSource());
-    let fetchedAddons = yield new Promise((resolve, reject) =>
-      AddonManager.getAddonsByIDs(idlist, resolve));
+    let fetchedAddons = yield AddonManager.getAddonsByIDs(idlist);
     // We shouldn't get nulls here, but let's be paranoid...
     gUpdateWizard.addons = fetchedAddons.filter(a => a);
     if (gUpdateWizard.addons.length < 1) {
