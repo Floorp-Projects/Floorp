@@ -25,7 +25,7 @@ addLoadEvent(function() {
 
   var source = context.createBufferSource();
 
-  var panner = context.createPanner();
+  var panner = new PannerNode(context);
 
   source.buffer = buffer;
 
