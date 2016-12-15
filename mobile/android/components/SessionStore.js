@@ -1766,7 +1766,7 @@ SessionStore.prototype = {
         return {
           url: lastEntry.url,
           title: lastEntry.title || "",
-          data: tab
+          data: JSON.stringify(tab),
         };
       });
 
