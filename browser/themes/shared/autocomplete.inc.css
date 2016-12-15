@@ -40,7 +40,23 @@
 
 /* Insecure field warning */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
-  background-color: #F6F6F6; /* Bug 1319176 */
+  background-color: var(--arrowpanel-dimmed);
+  border-bottom: 1px solid var(--panel-separator-color);
+  padding-bottom: 4px;
+  padding-top: 4px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"][selected] {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title {
+  color: GrayText;
+  font-size: 1em;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"][selected] > .ac-title {
+  color: inherit;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
