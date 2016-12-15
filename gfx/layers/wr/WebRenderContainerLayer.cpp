@@ -17,16 +17,15 @@ WebRenderContainerLayer::RenderLayer()
 {
   WRScrollFrameStackingContextGenerator scrollFrames(this);
 
-  AutoTArray<Layer*, 12> children;
-  SortChildrenBy3DZOrder(children);
+  nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds/overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
   WRBridge()->AddWebRenderCommand(OpPushDLBuilder());
-  for (Layer* child : children) {
-    ToWebRenderLayer(child)->RenderLayer();
+  for (LayerPolygon& child : children) {
+    ToWebRenderLayer(child.layer)->RenderLayer();
   }
   WRBridge()->AddWebRenderCommand(
     OpPopDLBuilder(toWrRect(relBounds), toWrRect(relBounds), transform, FrameMetrics::NULL_SCROLL_ID));
