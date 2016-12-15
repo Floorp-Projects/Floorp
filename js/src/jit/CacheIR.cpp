@@ -897,7 +897,7 @@ GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
     if (!obj->isNative())
         return false;
 
-    if (uint32_t(idVal_.toInt32()) >= obj->as<NativeObject>().getDenseInitializedLength())
+    if (!obj->as<NativeObject>().containsDenseElement(uint32_t(idVal_.toInt32())))
         return false;
 
     writer.guardShape(objId, obj->as<NativeObject>().lastProperty());

@@ -25,7 +25,7 @@ add_task(function* test_setup() {
                                    0);
     CustomizableUI.ensureWidgetPlacedInWindow("new-window-button", window);
     registerCleanupFunction(function() {
-      CustomizableUI.reset();
+      CustomizableUI.removeWidgetFromArea("new-window-button");
     });
   }
 });

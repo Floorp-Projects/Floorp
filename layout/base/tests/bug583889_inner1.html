@@ -4,7 +4,7 @@
 <div style="width: 1000px; height: 1000px"></div>
 <script type="application/javascript;version=1.8">
 function grabEventAndGo(event) {
-  gen.send(event);
+  gen.next(event);
 }
 
 function waitAsync() {
@@ -17,7 +17,7 @@ function postPos() {
                      "*");
 }
 
-function runTest() {
+function* runTest() {
   var inner = document.getElementById("inner");
   window.onload = grabEventAndGo;
   // Wait for onLoad event.
@@ -55,9 +55,6 @@ function runTest() {
   postPos();
 
   parent.postMessage("done", "*");
-  // Let parent process sent messages.
-  // "End" generator.
-  yield;
 }
 
 var gen = runTest();

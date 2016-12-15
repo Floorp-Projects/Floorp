@@ -554,6 +554,9 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
         // This is not the root element or we are calculating something other
         // than font size, so rem is relative to the root element's font size.
         // Find the root style context by walking up the style context tree.
+        // NOTE: We should not call ResolveStyleFor() against the root element
+        // to obtain the root style here because it may lead to reentrant call
+        // of nsStyleSet::GetContext().
         nsStyleContext* rootStyle = aStyleContext;
         while (rootStyle->GetParent()) {
           rootStyle = rootStyle->GetParent();

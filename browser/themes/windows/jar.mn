@@ -178,14 +178,7 @@ browser.jar:
   skin/classic/browser/syncProgress-horizontalbar@2x.png
   skin/classic/browser/syncProgress-horizontalbar-XPVista7.png
   skin/classic/browser/syncProgress-horizontalbar-XPVista7@2x.png
-  skin/classic/browser/syncProgress-menuPanel.png
-  skin/classic/browser/syncProgress-menuPanel@2x.png
-  skin/classic/browser/syncProgress-toolbar.png
-  skin/classic/browser/syncProgress-toolbar@2x.png
-  skin/classic/browser/syncProgress-toolbar-inverted.png
-  skin/classic/browser/syncProgress-toolbar-inverted@2x.png
-  skin/classic/browser/syncProgress-toolbar-XPVista7.png
-  skin/classic/browser/syncProgress-toolbar-XPVista7@2x.png
+
 #ifdef E10S_TESTING_ONLY
   skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
 #endif
@@ -231,8 +224,6 @@ browser.jar:
 % override chrome://browser/skin/sync-horizontalbar@2x.png            chrome://browser/skin/sync-horizontalbar-XPVista7@2x.png          os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-horizontalbar.png       chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png     os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-horizontalbar@2x.png    chrome://browser/skin/syncProgress-horizontalbar-XPVista7@2x.png  os=WINNT osversion<=6.1
-% override chrome://browser/skin/syncProgress-toolbar.png             chrome://browser/skin/syncProgress-toolbar-XPVista7.png           os=WINNT osversion<=6.1
-% override chrome://browser/skin/syncProgress-toolbar@2x.png          chrome://browser/skin/syncProgress-toolbar-XPVista7@2x.png        os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-XPVista7.png      os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-XPVista7@2x.png   os=WINNT osversion<=6.1
