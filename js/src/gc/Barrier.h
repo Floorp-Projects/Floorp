@@ -450,10 +450,6 @@ class GCPtr : public WriteBarrieredBase<T>
 
     DECLARE_POINTER_ASSIGN_OPS(GCPtr, T);
 
-    T unbarrieredGet() const {
-        return this->value;
-    }
-
   private:
     void set(const T& v) {
         this->pre();
