@@ -20,6 +20,7 @@
 #include "mozilla/dom/ChannelSplitterNodeBinding.h"
 #include "mozilla/dom/ConvolverNodeBinding.h"
 #include "mozilla/dom/DelayNodeBinding.h"
+#include "mozilla/dom/DynamicsCompressorNodeBinding.h"
 #include "mozilla/dom/GainNodeBinding.h"
 #include "mozilla/dom/IIRFilterNodeBinding.h"
 #include "mozilla/dom/HTMLMediaElement.h"
@@ -450,13 +451,7 @@ AudioContext::CreateChannelMerger(uint32_t aNumberOfInputs, ErrorResult& aRv)
 already_AddRefed<DynamicsCompressorNode>
 AudioContext::CreateDynamicsCompressor(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<DynamicsCompressorNode> compressorNode =
-    new DynamicsCompressorNode(this);
-  return compressorNode.forget();
+  return DynamicsCompressorNode::Create(*this, DynamicsCompressorOptions(), aRv);
 }
 
 already_AddRefed<BiquadFilterNode>
