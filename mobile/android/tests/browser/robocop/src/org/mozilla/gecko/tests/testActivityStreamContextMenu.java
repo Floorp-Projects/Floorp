@@ -4,9 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -14,12 +11,11 @@ import com.robotium.solo.Condition;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.home.activitystream.ActivityStream;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
 
 /**
  * This test is unfortunately closely coupled to the current implementation, however it is still
- * useful in that it tests the bookmark/history state specific menu items for correctness.
+ * useful in that it tests the bookmark/history/pinned state specific menu items for correctness.
  */
 public class testActivityStreamContextMenu extends BaseTest {
     public void testActivityStreamContextMenu() {
@@ -31,26 +27,41 @@ public class testActivityStreamContextMenu extends BaseTest {
         db.removeHistoryEntry(getActivity().getContentResolver(), testURL);
         db.removeBookmarksWithURL(getActivity().getContentResolver(), testURL);
 
-        testMenuForUrl(testURL, false, false);
+        testMenuForUrl(testURL, null, false, null, false, false);
 
         db.addBookmark(getActivity().getContentResolver(), "foobar", testURL);
-        testMenuForUrl(testURL, true, false);
+        testMenuForUrl(testURL, null, true, null, false, false);
+        testMenuForUrl(testURL, null, true, Boolean.FALSE, false, false);
+        testMenuForUrl(testURL, Boolean.TRUE, true, null, false, false);
+        testMenuForUrl(testURL, Boolean.TRUE, true, Boolean.FALSE, false, false);
 
         db.updateVisitedHistory(getActivity().getContentResolver(), testURL);
-        testMenuForUrl(testURL, true, true);
+        testMenuForUrl(testURL, null, true, null, false, true);
+        testMenuForUrl(testURL, null, true, Boolean.FALSE, false, true);
+        testMenuForUrl(testURL, Boolean.TRUE, true, null, false, true);
+        testMenuForUrl(testURL, Boolean.TRUE, true, Boolean.FALSE, false, true);
 
         db.removeBookmarksWithURL(getActivity().getContentResolver(), testURL);
-        testMenuForUrl(testURL, false, true);
+        testMenuForUrl(testURL, null, false, null, false, true);
+        testMenuForUrl(testURL, Boolean.FALSE, false, null, false, true);
+
+        db.pinSiteForAS(getActivity().getContentResolver(), testURL, "test title");
+        testMenuForUrl(testURL, null, false, null, true, true);
+        testMenuForUrl(testURL, null, false, Boolean.TRUE, true, true);
+
+        db.addBookmark(getActivity().getContentResolver(), "foobar", testURL);
+        testMenuForUrl(testURL, null, true, null, true, true);
+        testMenuForUrl(testURL, Boolean.TRUE, true, Boolean.TRUE, true, true);
     }
 
     /**
      * Test that the menu shows the expected menu items for a given URL, and that these items have
      * the correct state.
      */
-    private void testMenuForUrl(final String url, final boolean isBookmarked, final boolean isVisited) {
+    private void testMenuForUrl(final String url, final Boolean isBookmarkedKnownState, final boolean isBookmarked, final Boolean isPinnedKnownState, final boolean isPinned, final boolean isVisited) {
         final View anchor = new View(getActivity());
 
-        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(getActivity(), anchor, ActivityStreamContextMenu.MenuMode.HIGHLIGHT, "foobar", url, null, null, 100, 100);
+        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(getActivity(), anchor, ActivityStreamContextMenu.MenuMode.HIGHLIGHT, "foobar", url, isBookmarkedKnownState, isPinnedKnownState, null, null, 100, 100);
 
         final int expectedBookmarkString;
         if (isBookmarked) {
@@ -58,6 +69,16 @@ public class testActivityStreamContextMenu extends BaseTest {
         } else {
             expectedBookmarkString = R.string.bookmark;
         }
+
+        final int expectedPinnedString;
+        if (isPinned) {
+            expectedPinnedString = R.string.contextmenu_top_sites_unpin;
+        } else {
+            expectedPinnedString = R.string.contextmenu_top_sites_pin;
+        }
+
+        final MenuItem pinItem = menu.getItemByID(R.id.pin);
+        assertMenuItemHasString(pinItem, expectedPinnedString);
 
         final MenuItem bookmarkItem = menu.getItemByID(R.id.bookmark);
         assertMenuItemHasString(bookmarkItem, expectedBookmarkString);

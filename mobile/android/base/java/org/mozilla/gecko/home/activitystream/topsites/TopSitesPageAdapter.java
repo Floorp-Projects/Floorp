@@ -6,6 +6,7 @@ package org.mozilla.gecko.home.activitystream.topsites;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -25,12 +26,14 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
         public final long id;
         public final String url;
         public final String title;
+        @Nullable public final Boolean isBookmarked;
         public final int type;
 
-        TopSite(long id, String url, String title, int type) {
+        TopSite(long id, String url, String title, @Nullable Boolean isBookmarked, int type) {
             this.id = id;
             this.url = url;
             this.title = title;
+            this.isBookmarked = isBookmarked;
             this.type = type;
         }
     }
@@ -81,7 +84,12 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
             final String title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
             final int type = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.TopSites.TYPE));
 
-            topSites.add(new TopSite(id, url, title, type));
+            // We can't figure out bookmark state of a pin, so we leave it as unknown to be queried later.
+            Boolean isBookmarked = null;
+            if (type != BrowserContract.TopSites.TYPE_PINNED) {
+                isBookmarked = !cursor.isNull(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
+            }
+            topSites.add(new TopSite(id, url, title, isBookmarked, type));
         }
 
         notifyDataSetChanged();
