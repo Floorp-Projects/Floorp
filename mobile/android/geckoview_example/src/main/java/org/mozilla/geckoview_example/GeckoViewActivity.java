@@ -49,14 +49,14 @@ public class GeckoViewActivity extends Activity {
 
     private class MyGeckoViewChrome implements GeckoView.ChromeDelegate {
         @Override
-        public void onAlert(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result) {
+        public void onAlert(GeckoView view, String message, GeckoView.PromptResult result) {
             Log.i(LOGTAG, "Alert!");
             result.confirm();
             Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
         }
 
         @Override
-        public void onConfirm(GeckoView view, GeckoView.Browser browser, String message, final GeckoView.PromptResult result) {
+        public void onConfirm(GeckoView view, String message, final GeckoView.PromptResult result) {
             Log.i(LOGTAG, "Confirm!");
             new AlertDialog.Builder(GeckoViewActivity.this)
                 .setTitle("javaScript dialog")
@@ -78,7 +78,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void onPrompt(GeckoView view, GeckoView.Browser browser, String message, String defaultValue, GeckoView.PromptResult result) {
+        public void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result) {
             result.cancel();
         }
 
@@ -91,27 +91,27 @@ public class GeckoViewActivity extends Activity {
 
     private class MyGeckoViewContent implements GeckoView.ContentDelegate {
         @Override
-        public void onPageStart(GeckoView view, GeckoView.Browser browser, String url) {
+        public void onPageStart(GeckoView view, String url) {
 
         }
 
         @Override
-        public void onPageStop(GeckoView view, GeckoView.Browser browser, boolean success) {
+        public void onPageStop(GeckoView view, boolean success) {
 
         }
 
         @Override
-        public void onPageShow(GeckoView view, GeckoView.Browser browser) {
+        public void onPageShow(GeckoView view) {
 
         }
 
         @Override
-        public void onReceivedTitle(GeckoView view, GeckoView.Browser browser, String title) {
+        public void onReceivedTitle(GeckoView view, String title) {
             Log.i(LOGTAG, "Received a title: " + title);
         }
 
         @Override
-        public void onReceivedFavicon(GeckoView view, GeckoView.Browser browser, String url, int size) {
+        public void onReceivedFavicon(GeckoView view, String url, int size) {
             Log.i(LOGTAG, "Received a favicon URL: " + url);
         }
     }
