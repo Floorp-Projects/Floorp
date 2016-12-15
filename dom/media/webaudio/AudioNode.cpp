@@ -72,6 +72,28 @@ AudioNode::~AudioNode()
   }
 }
 
+void
+AudioNode::Initialize(const AudioNodeOptions& aOptions, ErrorResult& aRv)
+{
+  if (aOptions.mChannelCount.WasPassed()) {
+    SetChannelCount(aOptions.mChannelCount.Value(), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  }
+
+  if (aOptions.mChannelCountMode.WasPassed()) {
+    SetChannelCountModeValue(aOptions.mChannelCountMode.Value(), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  }
+
+  if (aOptions.mChannelInterpretation.WasPassed()) {
+    SetChannelInterpretationValue(aOptions.mChannelInterpretation.Value());
+  }
+}
+
 size_t
 AudioNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
