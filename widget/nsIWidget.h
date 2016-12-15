@@ -1754,9 +1754,10 @@ public:
      *                    (should be just under the plugin)
      * aCommitted         The string committed during IME -- otherwise empty
      */
-    NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                              int32_t aPanelX, int32_t aPanelY,
-                              nsString& aCommitted) = 0;
+    virtual MOZ_MUST_USE nsresult
+    StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+                   int32_t aPanelX, int32_t aPanelY,
+                   nsString& aCommitted) = 0;
 
     /**
      * Tells the widget whether or not a plugin (inside the widget) has the
