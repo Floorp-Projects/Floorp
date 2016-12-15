@@ -152,7 +152,7 @@ public:
                                            nsIRunnable* aCallback) override;
   virtual nsresult        MakeFullScreen(bool aFullScreen,
                                          nsIScreen* aScreen = nullptr) override;
-  NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
+  virtual void            HideWindowChrome(bool aShouldHide) override;
   NS_IMETHOD              Invalidate(bool aEraseBackground = false,
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);

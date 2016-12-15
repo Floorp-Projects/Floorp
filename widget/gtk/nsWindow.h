@@ -160,7 +160,7 @@ public:
                                              nsIRunnable* aCallback) override;
     virtual nsresult   MakeFullScreen(bool aFullScreen,
                                       nsIScreen* aTargetScreen = nullptr) override;
-    NS_IMETHOD         HideWindowChrome(bool aShouldHide) override;
+    virtual void       HideWindowChrome(bool aShouldHide) override;
 
     /**
      * GetLastUserInputTime returns a timestamp for the most recent user input

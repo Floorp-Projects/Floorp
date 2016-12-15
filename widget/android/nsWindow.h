@@ -199,7 +199,6 @@ public:
                          uint32_t aHotspotY) override { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetHasTransparentBackground(bool aTransparent) { return NS_OK; }
     NS_IMETHOD GetHasTransparentBackground(bool& aTransparent) { aTransparent = false; return NS_OK; }
-    NS_IMETHOD HideWindowChrome(bool aShouldHide) override { return NS_ERROR_NOT_IMPLEMENTED; }
     void* GetNativeData(uint32_t aDataType) override;
     void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD SetTitle(const nsAString& aTitle) override { return NS_OK; }

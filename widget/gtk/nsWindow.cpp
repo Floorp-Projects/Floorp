@@ -5113,20 +5113,21 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::HideWindowChrome(bool aShouldHide)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
         GtkWidget *topWidget = GetToplevelWidget();
         if (!topWidget)
-            return NS_ERROR_FAILURE;
+            return;
 
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
         if (!topWindow)
-            return NS_ERROR_FAILURE;
+            return;
 
-        return topWindow->HideWindowChrome(aShouldHide);
+        topWindow->HideWindowChrome(aShouldHide);
+        return;
     }
 
     // Sawfish, metacity, and presumably other window managers get
@@ -5160,8 +5161,6 @@ nsWindow::HideWindowChrome(bool aShouldHide)
 #else
     gdk_flush ();
 #endif /* MOZ_X11 */
-
-    return NS_OK;
 }
 
 bool
