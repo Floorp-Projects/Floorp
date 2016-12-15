@@ -451,16 +451,6 @@ pref("full-screen-api.ignore-widgets", true);
 
 pref("media.volume.steps", 10);
 
-#ifdef ENABLE_MARIONETTE
-//Enable/disable marionette server, set listening port
-pref("marionette.defaultPrefs.enabled", true);
-pref("marionette.defaultPrefs.port", 2828);
-#ifndef MOZ_WIDGET_GONK
-// On desktop builds, we need to force the socket to listen on localhost only
-pref("marionette.force-local", true);
-#endif
-#endif
-
 #ifdef MOZ_UPDATER
 // When we're applying updates, we can't let anything hang us on
 // quit+restart.  The user has no recourse.
@@ -817,8 +807,7 @@ pref("network.sntp.pools", // Servers separated by ';'.
 pref("network.sntp.port", 123);
 pref("network.sntp.timeout", 30); // In seconds.
 
-// Allow ADB to run for this many hours before disabling
-// (only applies when marionette is disabled)
+// Allow ADB to run for this many hours before disabling.
 // 0 disables the timer.
 pref("b2g.adb.timeout-hours", 12);
 
