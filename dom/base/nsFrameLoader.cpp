@@ -1988,6 +1988,11 @@ nsFrameLoader::StartDestroy()
     }
   }
 
+  // Destroy the other frame loader owners now that we are being destroyed.
+  if (mGroupedSessionHistory) {
+    mGroupedSessionHistory->CloseInactiveFrameLoaderOwners();
+  }
+
   nsCOMPtr<nsIRunnable> destroyRunnable = new nsFrameLoaderDestroyRunnable(this);
   if (mNeedsAsyncDestroy || !doc ||
       NS_FAILED(doc->FinalizeFrameLoader(this, destroyRunnable))) {

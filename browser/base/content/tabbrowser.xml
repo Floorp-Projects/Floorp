@@ -2527,13 +2527,6 @@
 
             var browser = this.getBrowserForTab(aTab);
 
-            // Start closing the FrameLoaderOwners which are inactive, so that
-            // they are cleaned up as well.
-            let frameLoader = browser.frameLoader;
-            if (frameLoader && frameLoader.groupedSessionHistory) {
-              frameLoader.groupedSessionHistory.closeInactiveFrameLoaderOwners();
-            }
-
             if (!aTab._pendingPermitUnload && !aAdoptedByTab && !aSkipPermitUnload) {
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
