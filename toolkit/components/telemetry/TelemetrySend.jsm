@@ -919,7 +919,7 @@ var TelemetrySendImpl = {
     // Prevent the request channel from running though URLClassifier (bug 1296802)
     request.channel.loadFlags &= ~Ci.nsIChannel.LOAD_CLASSIFY_URI;
 
-    let startTime = monotonicNow();
+    const monotonicStartTime = monotonicNow();
     let deferred = PromiseUtils.defer();
 
     let onRequestFinished = (success, event) => {
@@ -932,7 +932,7 @@ var TelemetrySendImpl = {
       };
 
       this._pendingPingRequests.delete(id);
-      this._onPingRequestFinished(success, startTime, id, isPersisted)
+      this._onPingRequestFinished(success, monotonicStartTime, id, isPersisted)
         .then(() => onCompletion(),
               (error) => {
                 this._log.error("_doPing - request success: " + success + ", error: " + error);
@@ -984,7 +984,7 @@ var TelemetrySendImpl = {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
-    startTime = new Date();
+    let startTime = new Date();
     let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(networkPayload));
     utf8Payload += converter.Finish();
     Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(new Date() - startTime);
