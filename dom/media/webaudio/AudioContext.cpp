@@ -311,18 +311,8 @@ bool IsValidBufferSize(uint32_t aBufferSize) {
 already_AddRefed<MediaStreamAudioDestinationNode>
 AudioContext::CreateMediaStreamDestination(ErrorResult& aRv)
 {
-  if (mIsOffline) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<MediaStreamAudioDestinationNode> node =
-      new MediaStreamAudioDestinationNode(this);
-  return node.forget();
+  return MediaStreamAudioDestinationNode::Create(*this, AudioNodeOptions(),
+                                                 aRv);
 }
 
 already_AddRefed<ScriptProcessorNode>
