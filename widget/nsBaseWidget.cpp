@@ -1318,16 +1318,12 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
-#ifdef MOZ_ENABLE_WEBRENDER
   RefPtr<LayerManager> lm;
   if (gfxPrefs::WebRenderEnabled()) {
     lm = new WebRenderLayerManager(this);
   } else {
     lm = new ClientLayerManager(this);
   }
-#else
-  RefPtr<LayerManager> lm = new ClientLayerManager(this);
-#endif
 
   bool useAPZ = UseAPZ();
 
