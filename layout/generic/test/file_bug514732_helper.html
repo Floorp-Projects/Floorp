@@ -83,7 +83,7 @@ function waitInterrupt(result, gen) {
 
 function testPhoom(isCapturing, x, y, expectEvent) {
 
-  var eventGen = (function() {
+  var eventGen = (function*() {
     var innerdoc = document.getElementById('testframe').contentDocument;
 
     for (var doc of [document, innerdoc]) {
@@ -163,8 +163,6 @@ function testPhoom(isCapturing, x, y, expectEvent) {
     }
 
     setTimeout(nextTest, 0);
-
-    yield;
   })();
 
   setTimeout(function() { eventGen.next(); }, 0);

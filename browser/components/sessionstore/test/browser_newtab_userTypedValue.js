@@ -25,6 +25,8 @@ add_task(function* () {
 
   ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
 
+  yield forceSaveState();
+
   win = SessionStore.undoCloseWindow(0);
   yield TestUtils.topicObserved("sessionstore-single-window-restored",
                                 subject => subject == win);
@@ -49,6 +51,8 @@ add_task(function* () {
     yield BrowserTestUtils.closeWindow(win);
 
     ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
+
+    yield forceSaveState();
 
     win = SessionStore.undoCloseWindow(0);
     yield TestUtils.topicObserved("sessionstore-single-window-restored",
