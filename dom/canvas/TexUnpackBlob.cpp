@@ -407,8 +407,17 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
     }
 
     if (!useParanoidHandling) {
+        if (webgl->mBoundPixelUnpackBuffer) {
+            gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                            webgl->mBoundPixelUnpackBuffer->mGLName);
+        }
+
         *out_error = DoTexOrSubImage(isSubImage, gl, target, level, dui, xOffset, yOffset,
                                      zOffset, mWidth, mHeight, mDepth, uploadPtr);
+
+        if (webgl->mBoundPixelUnpackBuffer) {
+            gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+        }
         return true;
     }
 
