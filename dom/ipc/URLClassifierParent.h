@@ -29,6 +29,8 @@ class URLClassifierParent : public nsIURIClassifierCallback,
 
  private:
   ~URLClassifierParent() = default;
+
+  bool mIPCOpen = true;
 };
 
 } // namespace dom
