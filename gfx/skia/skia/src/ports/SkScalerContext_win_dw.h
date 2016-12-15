@@ -75,6 +75,7 @@ private:
     DWRITE_RENDERING_MODE fRenderingMode;
     DWRITE_TEXTURE_TYPE fTextureType;
     DWRITE_MEASURING_MODE fMeasuringMode;
+    SkTScopedComPtr<IDWriteRenderingParams> fDefaultRenderingParams;
 #if SK_HAS_DWRITE_2_H
     SkTScopedComPtr<IDWriteFactory2> fFactory2;
     bool fIsColorFont;
