@@ -523,7 +523,7 @@ class nsIWidget : public nsISupports
      *
      * @param     aNewParent   new parent
      */
-    NS_IMETHOD SetParent(nsIWidget* aNewParent) = 0;
+    virtual void SetParent(nsIWidget* aNewParent) = 0;
 
     /**
      * Return the parent Widget of this Widget or nullptr if this is a
