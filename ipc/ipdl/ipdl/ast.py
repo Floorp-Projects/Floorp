@@ -68,8 +68,6 @@ class Visitor:
             managed.accept(self)
         for msgDecl in p.messageDecls:
             msgDecl.accept(self)
-        for transitionStmt in p.transitionStmts:
-            transitionStmt.accept(self)
 
     def visitNamespace(self, ns):
         pass
@@ -94,18 +92,6 @@ class Visitor:
             inParam.accept(self)
         for outParam in md.outParams:
             outParam.accept(self)
-
-    def visitTransitionStmt(self, ts):
-        ts.state.accept(self)
-        for trans in ts.transitions:
-            trans.accept(self)
-
-    def visitTransition(self, t):
-        for toState in t.toStates:
-            toState.accept(self)
-
-    def visitState(self, s):
-        pass
 
     def visitParam(self, decl):
         pass
@@ -246,8 +232,6 @@ class Protocol(NamespacedNode):
         self.managers = [ ]
         self.managesStmts = [ ]
         self.messageDecls = [ ]
-        self.transitionStmts = [ ]
-        self.startStates = [ ]
 
 class StructField(Node):
     def __init__(self, loc, type, name):
@@ -321,83 +305,6 @@ class MessageDecl(Node):
                 self.verify = modifier
             elif modifier != '':
                 raise Exception, "Unexpected message modifier `%s'"% modifier
-
-class Transition(Node):
-    def __init__(self, loc, trigger, msg, toStates):
-        Node.__init__(self, loc)
-        self.trigger = trigger
-        self.msg = msg
-        self.toStates = toStates
-
-    def __cmp__(self, o):
-        c = cmp(self.msg, o.msg)
-        if c: return c
-        c = cmp(self.trigger, o.trigger)
-        if c: return c
-
-    def __hash__(self): return hash(str(self))
-    def __str__(self): return '%s %s'% (self.trigger, self.msg)
-
-    @staticmethod
-    def nameToTrigger(name):
-        return { 'send': SEND, 'recv': RECV, 'call': CALL, 'answer': ANSWER }[name]
-
-Transition.NULL = Transition(Loc.NONE, None, None, [ ])
-
-class TransitionStmt(Node):
-    def __init__(self, loc, state, transitions):
-        Node.__init__(self, loc)
-        self.state = state
-        self.transitions = transitions
-
-    @staticmethod
-    def makeNullStmt(state):
-        return TransitionStmt(Loc.NONE, state, [ Transition.NULL ])
-
-class SEND:
-    pretty = 'send'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def direction(cls): return OUT
-class RECV:
-    pretty = 'recv'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def direction(cls): return IN
-class CALL:
-    pretty = 'call'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def direction(cls): return OUT
-class ANSWER:
-    pretty = 'answer'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def direction(cls): return IN
-
-class State(Node):
-    def __init__(self, loc, name, start=False):
-        Node.__init__(self, loc)
-        self.name = name
-        self.start = start
-    def __eq__(self, o):
-         return (isinstance(o, State)
-                 and o.name == self.name
-                 and o.start == self.start)
-    def __hash__(self):
-        return hash(repr(self))
-    def __ne__(self, o):
-        return not (self == o)
-    def __repr__(self): return '<State %r start=%r>'% (self.name, self.start)
-    def __str__(self): return '<State %s start=%s>'% (self.name, self.start)
-
-State.ANY = State(Loc.NONE, '[any]', start=True)
-State.DEAD = State(Loc.NONE, '[dead]', start=False)
-State.DYING = State(Loc.NONE, '[dying]', start=False)
 
 class Param(Node):
     def __init__(self, loc, typespec, name):

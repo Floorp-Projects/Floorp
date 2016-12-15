@@ -1206,13 +1206,6 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
 
         if (!options.globalProperties.DefineInSandbox(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
-
-#ifndef SPIDERMONKEY_PROMISE
-        // Promise is supposed to be part of ES, and therefore should appear on
-        // every global.
-        if (!dom::PromiseBinding::GetConstructorObject(cx))
-            return NS_ERROR_XPC_UNEXPECTED;
-#endif // SPIDERMONKEY_PROMISE
     }
 
     // We handle the case where the context isn't in a compartment for the

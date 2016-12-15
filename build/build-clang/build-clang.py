@@ -137,6 +137,11 @@ def install_libgcc(gcc_dir, clang_dir):
     copy_dir_contents(include_dir, clang_include_dir)
 
 
+def install_import_library(build_dir, clang_dir):
+    shutil.copy2(os.path.join(build_dir, "lib", "clang.lib"),
+                 os.path.join(clang_dir, "lib"))
+
+
 def svn_co(source_dir, url, directory, revision):
     run_in(source_dir, ["svn", "co", "-q", "-r", revision, url, directory])
 
@@ -211,7 +216,10 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
 
     if is_linux():
         install_libgcc(gcc_dir, inst_dir)
-
+    # For some reasons the import library clang.lib of clang.exe is not
+    # installed, so we copy it by ourselves.
+    if is_windows():
+        install_import_library(build_dir, inst_dir)
 
 def get_compiler(config, key):
     if key not in config:

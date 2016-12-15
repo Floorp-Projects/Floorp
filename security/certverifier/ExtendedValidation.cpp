@@ -20,8 +20,6 @@
 #include "pk11pub.h"
 #include "pkix/pkixtypes.h"
 #include "prerror.h"
-#include "prinit.h"
-#include "secerr.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
 
@@ -1373,66 +1371,66 @@ LoadExtendedValidationInfo()
   return NS_OK;
 }
 
-// Find the first policy OID that is known to be an EV policy OID.
-SECStatus
-GetFirstEVPolicy(CERTCertificate* cert,
+// Helper function for GetFirstEVPolicy(): returns the first suitable policy
+// from the given list of policies.
+bool
+GetFirstEVPolicyFromPolicyList(const UniqueCERTCertificatePolicies& policies,
+                       /*out*/ mozilla::pkix::CertPolicyId& policy,
+                       /*out*/ SECOidTag& policyOidTag)
+{
+  for (size_t i = 0; policies->policyInfos[i]; i++) {
+    const CERTPolicyInfo* policyInfo = policies->policyInfos[i];
+    SECOidTag policyInfoOID = policyInfo->oid;
+    if (policyInfoOID == SEC_OID_UNKNOWN || !isEVPolicy(policyInfoOID)) {
+      continue;
+    }
+
+    const SECOidData* oidData = SECOID_FindOIDByTag(policyInfoOID);
+    MOZ_ASSERT(oidData);
+    MOZ_ASSERT(oidData->oid.data);
+    MOZ_ASSERT(oidData->oid.len > 0);
+    MOZ_ASSERT(oidData->oid.len <= mozilla::pkix::CertPolicyId::MAX_BYTES);
+    if (!oidData || !oidData->oid.data || oidData->oid.len == 0 ||
+        oidData->oid.len > mozilla::pkix::CertPolicyId::MAX_BYTES) {
+      continue;
+    }
+
+    policy.numBytes = AssertedCast<uint16_t>(oidData->oid.len);
+    PodCopy(policy.bytes, oidData->oid.data, policy.numBytes);
+    policyOidTag = policyInfoOID;
+    return true;
+  }
+
+  return false;
+}
+
+bool
+GetFirstEVPolicy(CERTCertificate& cert,
                  /*out*/ mozilla::pkix::CertPolicyId& policy,
                  /*out*/ SECOidTag& policyOidTag)
 {
-  if (!cert) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
+  if (!cert.extensions) {
+    return false;
   }
 
-  if (cert->extensions) {
-    for (int i=0; cert->extensions[i]; i++) {
-      const SECItem* oid = &cert->extensions[i]->id;
+  for (size_t i = 0; cert.extensions[i]; i++) {
+    const CERTCertExtension* extension = cert.extensions[i];
+    if (SECOID_FindOIDTag(&extension->id) != SEC_OID_X509_CERTIFICATE_POLICIES) {
+      continue;
+    }
 
-      SECOidTag oidTag = SECOID_FindOIDTag(oid);
-      if (oidTag != SEC_OID_X509_CERTIFICATE_POLICIES)
-        continue;
+    UniqueCERTCertificatePolicies policies(
+      CERT_DecodeCertificatePoliciesExtension(&extension->value));
+    if (!policies) {
+      continue;
+    }
 
-      SECItem* value = &cert->extensions[i]->value;
-
-      CERTCertificatePolicies* policies;
-      CERTPolicyInfo** policyInfos;
-
-      policies = CERT_DecodeCertificatePoliciesExtension(value);
-      if (!policies)
-        continue;
-
-      policyInfos = policies->policyInfos;
-
-      bool found = false;
-      while (*policyInfos) {
-        const CERTPolicyInfo* policyInfo = *policyInfos++;
-
-        SECOidTag oid_tag = policyInfo->oid;
-        if (oid_tag != SEC_OID_UNKNOWN && isEVPolicy(oid_tag)) {
-          const SECOidData* oidData = SECOID_FindOIDByTag(oid_tag);
-          PR_ASSERT(oidData);
-          PR_ASSERT(oidData->oid.data);
-          PR_ASSERT(oidData->oid.len > 0);
-          PR_ASSERT(oidData->oid.len <= mozilla::pkix::CertPolicyId::MAX_BYTES);
-          if (oidData && oidData->oid.data && oidData->oid.len > 0 &&
-              oidData->oid.len <= mozilla::pkix::CertPolicyId::MAX_BYTES) {
-            policy.numBytes = static_cast<uint16_t>(oidData->oid.len);
-            memcpy(policy.bytes, oidData->oid.data, policy.numBytes);
-            policyOidTag = oid_tag;
-            found = true;
-          }
-          break;
-        }
-      }
-      CERT_DestroyCertificatePoliciesExtension(policies);
-      if (found) {
-        return SECSuccess;
-      }
+    if (GetFirstEVPolicyFromPolicyList(policies, policy, policyOidTag)) {
+      return true;
     }
   }
 
-  PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
-  return SECFailure;
+  return false;
 }
 
 } } // namespace mozilla::psm

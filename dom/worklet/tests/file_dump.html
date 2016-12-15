@@ -10,10 +10,9 @@
 
 setupTest();
 
-var worklet = window.createWorklet();
-ok(!!worklet, "We have a Worklet");
-worklet.import("worklet_dump.js")
+audioWorklet.import("worklet_dump.js")
 .then(() => {
+  ok(true, "All good!");
   SimpleTest.finish();
 });
 

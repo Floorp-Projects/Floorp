@@ -38,7 +38,8 @@ ContentHostTexture::Composite(LayerComposite* aLayer,
                               const gfx::Matrix4x4& aTransform,
                               const SamplingFilter aSamplingFilter,
                               const IntRect& aClipRect,
-                              const nsIntRegion* aVisibleRegion)
+                              const nsIntRegion* aVisibleRegion,
+                              const Maybe<gfx::Polygon>& aGeometry)
 {
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");
 
@@ -180,7 +181,10 @@ ContentHostTexture::Composite(LayerComposite* aLayer,
                                         Float(tileRegionRect.y) / texRect.height,
                                         Float(tileRegionRect.width) / texRect.width,
                                         Float(tileRegionRect.height) / texRect.height);
-          GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
+
+          GetCompositor()->DrawGeometry(rect, aClipRect, aEffectChain,
+                                        aOpacity, aTransform, aGeometry);
+
           if (usingTiles) {
             DiagnosticFlags diagnostics = DiagnosticFlags::CONTENT | DiagnosticFlags::BIGIMAGE;
             if (iterOnWhite) {

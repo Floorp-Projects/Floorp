@@ -99,6 +99,9 @@ NS_IMETHODIMP
 GroupedSHistory::GotoIndex(uint32_t aGlobalIndex,
                            nsIFrameLoader** aTargetLoaderToSwap)
 {
+  MOZ_ASSERT(aTargetLoaderToSwap);
+  *aTargetLoaderToSwap = nullptr;
+
   nsCOMPtr<nsIPartialSHistory> currentPartialHistory =
     mPartialHistories[mIndexOfActivePartialHistory];
   if (!currentPartialHistory) {
@@ -118,7 +121,15 @@ GroupedSHistory::GotoIndex(uint32_t aGlobalIndex,
     uint32_t count = partialHistory->GetCount();
     if (offset <= aGlobalIndex && (offset + count) > aGlobalIndex) {
       uint32_t targetIndex = aGlobalIndex - offset;
-      partialHistory->GetOwnerFrameLoader(aTargetLoaderToSwap);
+
+      // Check if we are trying to swap to a dead frameloader, and return
+      // NS_ERROR_NOT_AVAILABLE if we are.
+      nsCOMPtr<nsIFrameLoader> frameLoader;
+      partialHistory->GetOwnerFrameLoader(getter_AddRefs(frameLoader));
+      if (!frameLoader || frameLoader->GetIsDead()) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+
       if ((size_t)mIndexOfActivePartialHistory == i) {
         return NS_OK;
       }
@@ -127,6 +138,9 @@ GroupedSHistory::GotoIndex(uint32_t aGlobalIndex,
           NS_FAILED(partialHistory->OnActive(mCount, targetIndex))) {
         return NS_ERROR_FAILURE;
       }
+
+      // Return the target frameloader to the caller.
+      frameLoader.forget(aTargetLoaderToSwap);
       return NS_OK;
     }
   }
@@ -166,6 +180,19 @@ GroupedSHistory::PurgePartialHistories(uint32_t aLastPartialIndexToKeep)
 /* static */ bool
 GroupedSHistory::GroupedHistoryEnabled() {
   return Preferences::GetBool("browser.groupedhistory.enabled", false);
+}
+
+NS_IMETHODIMP
+GroupedSHistory::CloseInactiveFrameLoaderOwners()
+{
+  for (int32_t i = 0; i < mPartialHistories.Count(); ++i) {
+    if (i != mIndexOfActivePartialHistory) {
+      nsCOMPtr<nsIFrameLoader> loader;
+      mPartialHistories[i]->GetOwnerFrameLoader(getter_AddRefs(loader));
+      loader->RequestFrameLoaderClose();
+    }
+  }
+  return NS_OK;
 }
 
 } // namespace dom

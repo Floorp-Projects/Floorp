@@ -2741,6 +2741,14 @@ pref("dom.animations-api.element-animate.enabled", true);
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);
 
+// Prefs to control the maximum area to pre-render when animating a large
+// element on the compositor.
+pref("layout.animation.prerender.partial", false);
+pref("layout.animation.prerender.viewport-ratio-limit-x", "1.125");
+pref("layout.animation.prerender.viewport-ratio-limit-y", "1.125");
+pref("layout.animation.prerender.absolute-limit-x", 4096);
+pref("layout.animation.prerender.absolute-limit-y", 4096);
+
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
 
@@ -5137,7 +5145,7 @@ pref("browser.safebrowsing.provider.google.reportURL", "https://safebrowsing.goo
 pref("browser.safebrowsing.provider.google4.pver", "4");
 pref("browser.safebrowsing.provider.google4.lists", "goog-phish-proto,googpub-phish-proto,goog-malware-proto,goog-unwanted-proto");
 pref("browser.safebrowsing.provider.google4.updateURL", "https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?$ct=application/x-protobuf&key=%GOOGLE_API_KEY%");
-pref("browser.safebrowsing.provider.google4.gethashURL", "https://safebrowsing.googleapis.com/v4/fullHashes:find?$req=%REQUEST_BASE64%&$ct=application/x-protobuf&key=%GOOGLE_API_KEY%");
+pref("browser.safebrowsing.provider.google4.gethashURL", "https://safebrowsing.googleapis.com/v4/fullHashes:find?$ct=application/x-protobuf&key=%GOOGLE_API_KEY%");
 pref("browser.safebrowsing.provider.google4.reportURL", "https://safebrowsing.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 
 pref("browser.safebrowsing.reportPhishMistakeURL", "https://%LOCALE%.phish-error.mozilla.com/?hl=%LOCALE%&url=");

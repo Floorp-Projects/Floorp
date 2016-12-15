@@ -73,7 +73,7 @@ public abstract class BrowserDB {
      */
     public abstract Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit);
 
-    public abstract CursorLoader getActivityStreamTopSites(Context context, int limit);
+    public abstract CursorLoader getActivityStreamTopSites(Context context, int suggestedRangeLimit, int limit);
 
     public abstract void updateVisitedHistory(ContentResolver cr, String uri);
 
@@ -161,8 +161,16 @@ public abstract class BrowserDB {
             String title, String guid, long parent, long added, long modified,
             long position, String keyword, int type);
 
+    // Used by regular top sites, which observe pinning position.
     public abstract void pinSite(ContentResolver cr, String url, String title, int position);
     public abstract void unpinSite(ContentResolver cr, int position);
+
+    // Used by activity stream top sites, which ignore position - it's always 0.
+    // Pins show up in front of other top sites.
+    public abstract void pinSiteForAS(ContentResolver cr, String url, String title);
+    public abstract void unpinSiteForAS(ContentResolver cr, String url);
+
+    public abstract boolean isPinnedForAS(ContentResolver cr, String url);
 
     public abstract boolean hideSuggestedSite(String url);
     public abstract void setSuggestedSites(SuggestedSites suggestedSites);

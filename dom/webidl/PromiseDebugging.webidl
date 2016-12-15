@@ -38,11 +38,7 @@ callback interface UncaughtRejectionObserver {
    * caught, i.e. if its `then` callback is called, `onConsumed` will
    * be called.
    */
-#ifdef SPIDERMONKEY_PROMISE
   void onLeftUncaught(object p);
-#else
-  void onLeftUncaught(Promise<any> p);
-#endif SPIDERMONKEY_PROMISE
 
   /**
    * A Promise previously left uncaught is not the last in its
@@ -51,11 +47,7 @@ callback interface UncaughtRejectionObserver {
    * @param p A Promise that was previously left in uncaught state is
    * now caught, i.e. it is not the last in its chain anymore.
    */
-#ifdef SPIDERMONKEY_PROMISE
   void onConsumed(object p);
-#else
-  void onConsumed(Promise<any> p);
-#endif SPIDERMONKEY_PROMISE
 };
 
 [ChromeOnly, Exposed=(Window,System)]
@@ -104,42 +96,6 @@ interface PromiseDebugging {
    */
   [Throws]
   static object? getFullfillmentStack(object p);
-
-#ifndef SPIDERMONKEY_PROMISE
-  /**
-   * Get the promises directly depending on a given promise.  These are:
-   *
-   * 1) Return values of then() calls on the promise
-   * 2) Return values of Promise.all() if the given promise was passed in as one
-   *    of the arguments.
-   * 3) Return values of Promise.race() if the given promise was passed in as
-   *    one of the arguments.
-   *
-   * Once a promise is settled, it will generally notify its dependent promises
-   * and forget about them, so this is most useful on unsettled promises.
-   *
-   * Note that this function only returns the promises that directly depend on
-   * p.  It does not recursively return promises that depend on promises that
-   * depend on p.
-   */
-  [Throws]
-  static sequence<Promise<any>> getDependentPromises(object p);
-
-  /**
-   * Get the number of milliseconds elapsed since the given promise was created.
-   */
-  [Throws]
-  static DOMHighResTimeStamp getPromiseLifetime(object p);
-
-  /*
-   * Get the number of milliseconds elapsed between the promise being created
-   * and being settled.  Throws NS_ERROR_UNEXPECTED if the promise has not
-   * settled.
-   */
-  [Throws]
-  static DOMHighResTimeStamp getTimeToSettle(object p);
-
-#endif // SPIDERMONKEY_PROMISE
 
   /**
    * Watching uncaught rejections on the current thread.

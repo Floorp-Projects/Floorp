@@ -51,7 +51,7 @@ Also known as pretty-printing.'''
             self.println('/* Included file:')
             IPDLCodeGen(outf=self.outf, indentCols=self.indentCols,
                         printed=self.printed).visitTranslationUnit(inc.tu)
-        
+
             self.println('*/')
 
     def visitProtocol(self, p):
@@ -67,8 +67,6 @@ Also known as pretty-printing.'''
 
         for msgDecl in p.messageDecls:  msgDecl.accept(self)
         self.println()
-
-        for transStmt in p.transitionStmts:  transStmt.accept(self)
 
         self.dedent()
         self.println('}')

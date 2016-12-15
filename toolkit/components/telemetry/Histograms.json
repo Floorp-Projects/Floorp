@@ -4161,6 +4161,14 @@
     "bug_numbers": [1150921],
     "description": "Server HTTP status code from remote SafeBrowsing gethash lookups. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
   },
+  "URLCLASSIFIER_COMPLETION_ERROR": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "59",
+    "kind": "enumerated",
+    "n_values": 16,
+    "bug_numbers": [1276826],
+    "description": "SafeBrowsing v4 hash completion error (0 = success, 1 = parsing failure, 2 = unknown threat type)"
+  },
   "URLCLASSIFIER_COMPLETE_TIMEOUT": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "56",
@@ -9623,196 +9631,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Reports whether the graphics sanity test passed an OS snapshot test. 0=Pass, 1=Fail, 2=Error, 3=Timed out."
   },
-  "DEVTOOLS_HUD_JANK": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "exponential",
-    "keyed": true,
-    "description": "The duration which a thread is blocked in ms, keyed by appName.",
-    "high": 5000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_REFLOW_DURATION": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "exponential",
-    "keyed": true,
-    "description": "The duration a reflow takes in ms, keyed by appName.",
-    "high": 1000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_REFLOWS": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "count",
-    "keyed": true,
-    "description": "A count of the number of reflows, keyed by appName."
-  },
-  "DEVTOOLS_HUD_SECURITY_CATEGORY": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "enumerated",
-    "keyed": true,
-    "description": "The security error enums, keyed by appName.",
-    "n_values": 8
-  },
-  "DEVTOOLS_HUD_ERRORS": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "count",
-    "keyed": true,
-    "description": "Number of errors, keyed by appName."
-  },
-  "DEVTOOLS_HUD_WARNINGS": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "count",
-    "keyed": true,
-    "description": "Number of warnings, keyed by appName."
-  },
-  "DEVTOOLS_HUD_USS": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "low": 20000000,
-    "high": 100000000,
-    "n_buckets": 52,
-    "description": "The USS memory consumed by an application, keyed by appName."
-  },
-  "DEVTOOLS_HUD_APP_STARTUP_TIME_CONTENTINTERACTIVE": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The duration in ms between application launch and the 'contentInteractive' performance mark, keyed by appName.",
-    "high": 2000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_STARTUP_TIME_NAVIGATIONINTERACTIVE": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The duration in ms between application launch and the 'navigationInteractive' performance mark, keyed by appName.",
-    "high": 3000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_STARTUP_TIME_NAVIGATIONLOADED": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The duration in ms between application launch and the 'navigationLoaded' performance mark, keyed by appName.",
-    "high": 4000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_STARTUP_TIME_VISUALLYLOADED": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The duration in ms between application launch and the 'visuallyLoaded' performance mark, keyed by appName.",
-    "high": 5000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_STARTUP_TIME_MEDIAENUMERATED": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The duration in ms between application launch and the 'mediaEnumerated' performance mark, keyed by appName.",
-    "high": 5000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_STARTUP_TIME_FULLYLOADED": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The duration in ms between application launch and the 'fullyLoaded' performance mark, keyed by appName.",
-    "high": 30000,
-    "n_buckets": 30
-  },
-  "DEVTOOLS_HUD_APP_STARTUP_TIME_SCANEND": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The duration in ms between application launch and the 'scanEnd' performance mark, keyed by appName.",
-    "high": 30000,
-    "n_buckets": 30
-  },
-  "DEVTOOLS_HUD_APP_MEMORY_CONTENTINTERACTIVE_V2": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The USS memory consumed by an application at the time of the 'contentInteractive' performance mark, keyed by appName.",
-    "low": 20000000,
-    "high": 30000000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_MEMORY_NAVIGATIONINTERACTIVE_V2": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The USS memory consumed by an application at the time of the 'navigationInteractive' performance mark, keyed by appName.",
-    "low": 20000000,
-    "high": 30000000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_MEMORY_NAVIGATIONLOADED_V2": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The USS memory consumed by an application at the time of the 'navigationLoaded' performance mark, keyed by appName.",
-    "low": 20000000,
-    "high": 30000000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_MEMORY_VISUALLYLOADED_V2": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The USS memory consumed by an application at the time of the 'visuallyLoaded' performance mark, keyed by appName.",
-    "low": 20000000,
-    "high": 30000000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_MEMORY_MEDIAENUMERATED_V2": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The USS memory consumed by an application at the time of the 'mediaEnumerated' performance mark, keyed by appName.",
-    "low": 20000000,
-    "high": 40000000,
-    "n_buckets": 10
-  },
-  "DEVTOOLS_HUD_APP_MEMORY_FULLYLOADED_V2": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The USS memory consumed by an application at the time of the 'fullyLoaded' performance mark, keyed by appName.",
-    "low": 20000000,
-    "high": 40000000,
-    "n_buckets": 20
-  },
-  "DEVTOOLS_HUD_APP_MEMORY_SCANEND_V2": {
-    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "linear",
-    "keyed": true,
-    "description": "The USS memory consumed by an application at the time of the 'scanEnd' performance mark, keyed by appName.",
-    "low": 20000000,
-    "high": 40000000,
-    "n_buckets": 20
-  },
   "DEVTOOLS_MEMORY_TAKE_SNAPSHOT_COUNT": {
     "expires_in_version": "56",
     "kind": "count",
@@ -10786,5 +10604,25 @@
     "n_buckets": 100,
     "bug_numbers": [1307242],
     "description": "The time between navigation start and the first non-blank paint of a foreground root content document, in milliseconds. This only records documents that were in an active docshell throughout the whole time between navigation start and non-blank paint. The non-blank paint timestamp is taken during display list building and does not include rasterization or compositing of that paint."
+  },
+  "TAB_AUDIO_INDICATOR_USED": {
+    "alert_emails": ["alwu@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "enumerated",
+    "n_values": 6,
+    "bug_numbers": [1314220],
+    "description": "The total usage amount of the operations of tab audio indicator, mute=0 , unmuted=1, unblockByVisitingTab=2, unblockingByClickingIcon=3",
+    "releaseChannelCollection": "opt-out"
+  },
+  "TAB_MEDIA_BLOCKING_TIME_MS": {
+    "alert_emails": ["alwu@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "linear",
+    "low": 1000,
+    "high": 90000,
+    "n_buckets": 91,
+    "bug_numbers": [1314220],
+    "description": "The time duration from tab's media was blocked to unblocked. Now we record from 1 to 90 seconds, but the record by milliseconds, so the bucket is like [1000ms, 2000ms], [2000ms, 3000ms], e.t.c.",
+    "releaseChannelCollection": "opt-out"
   }
 }

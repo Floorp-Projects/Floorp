@@ -23,8 +23,8 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:allow");
     yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "CameraAndMicrophone",
-       "expected camera and microphone to be shared");
+    Assert.deepEqual((yield getMediaCaptureState()), {audio: true, video: true},
+                     "expected camera and microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({video: true, audio: true});

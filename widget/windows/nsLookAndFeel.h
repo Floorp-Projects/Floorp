@@ -27,6 +27,8 @@
 #ifndef SM_SYSTEMDOCKED
 #define SM_CONVERTIBLESLATEMODE 0x00002003
 #define SM_SYSTEMDOCKED         0x00002004
+#endif
+#if WINVER < 0x0601
 typedef enum _AR_STATE
 {
   AR_ENABLED        = 0x0,

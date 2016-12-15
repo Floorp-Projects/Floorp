@@ -8,6 +8,7 @@
 #include "nsIURI.idl"
 #include "nsIDOMNode.idl"
 
+interface nsIBrowser;
 interface nsIRequest;
 interface nsIDOMElement;
 interface nsIInputStream;
@@ -73,5 +74,14 @@ interface nsIXULBrowserWindow : nsISupports
    * Return the number of tabs in this window.
    */
   uint32_t getTabCount();
+
+  /**
+   * Navigate the browser to the given history index after restoring the full history
+   * from SessionStore. If the browser is currently in GroupedSHistory mode, it will
+   * be reverted to a non-grouped history mode. If a process change is required to
+   * perform the load, this will also occur.
+   */
+  void navigateAndRestoreByIndex(in nsIBrowser aBrowser, in long aIndex);
+
 };
 

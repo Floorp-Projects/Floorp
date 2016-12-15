@@ -716,6 +716,12 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = false;
 #endif
 
+#ifdef MOZ_STYLO
+    sandbox.stylo = true;
+#else
+    sandbox.stylo = false;
+#endif
+
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
     var httpProps = ["userAgent", "appName", "appVersion", "vendor",

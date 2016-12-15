@@ -1669,38 +1669,37 @@
       <method name="updateBrowserRemoteness">
         <parameter name="aBrowser"/>
         <parameter name="aShouldBeRemote"/>
-        <parameter name="aNewRemoteType"/>
-        <parameter name="aOpener"/>
-        <parameter name="aFreshProcess"/>
+        <parameter name="aOptions"/>
         <body>
           <![CDATA[
+            aOptions = aOptions || {};
+            let isRemote = aBrowser.getAttribute("remote") == "true";
+
             if (!gMultiProcessBrowser && aShouldBeRemote) {
               throw new Error("Cannot switch to remote browser in a window " +
                               "without the remote tabs load context.");
             }
 
-            let isRemote = aBrowser.getAttribute("remote") == "true";
-
-            // If going remote and no aNewRemoteType then use default.
-            if (aShouldBeRemote && !aNewRemoteType) {
-              aNewRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+            // Default values for remoteType
+            if (!aOptions.remoteType) {
+              aOptions.remoteType = aShouldBeRemote ? E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
             }
 
             // If we are passed an opener, we must be making the browser non-remote, and
             // if the browser is _currently_ non-remote, we need the openers to match,
             // because it is already too late to change it.
-            if (aOpener) {
+            if (aOptions.opener) {
               if (aShouldBeRemote) {
                 throw new Error("Cannot set an opener on a browser which should be remote!");
               }
-              if (!isRemote && aBrowser.contentWindow.opener != aOpener) {
+              if (!isRemote && aBrowser.contentWindow.opener != aOptions.opener) {
                 throw new Error("Cannot change opener on an already non-remote browser!");
               }
             }
 
             // Abort if we're not going to change anything
-            if (isRemote == aShouldBeRemote && !aFreshProcess &&
-                (!isRemote || aBrowser.getAttribute("remoteType") == aNewRemoteType)) {
+            if (isRemote == aShouldBeRemote && !aOptions.newFrameloader && !aOptions.freshProcess &&
+                (!isRemote || aBrowser.getAttribute("remoteType") == aOptions.remoteType)) {
               return false;
             }
 
@@ -1739,7 +1738,7 @@
             parent.removeChild(aBrowser);
             if (aShouldBeRemote) {
               aBrowser.setAttribute("remote", "true");
-              aBrowser.setAttribute("remoteType", aNewRemoteType);
+              aBrowser.setAttribute("remoteType", aOptions.remoteType);
             } else {
               aBrowser.setAttribute("remote", "false");
               aBrowser.removeAttribute("remoteType");
@@ -1749,13 +1748,15 @@
             // turns this normal property into a field.
             aBrowser.relatedBrowser = relatedBrowser;
 
-            // Set the opener window on the browser, such that when the frame
-            // loader is created the opener is set correctly.
-            aBrowser.presetOpenerWindow(aOpener);
+            if (aOptions.opener) {
+              // Set the opener window on the browser, such that when the frame
+              // loader is created the opener is set correctly.
+              aBrowser.presetOpenerWindow(aOptions.opener);
+            }
 
             // Set the freshProcess attribute so that the frameloader knows to
             // create a new process
-            if (aFreshProcess) {
+            if (aOptions.freshProcess) {
               aBrowser.setAttribute("freshProcess", "true");
             }
 
@@ -1830,24 +1831,24 @@
       <method name="updateBrowserRemotenessByURL">
         <parameter name="aBrowser"/>
         <parameter name="aURL"/>
-        <parameter name="aFreshProcess"/>
+        <parameter name="aOptions"/>
         <body>
           <![CDATA[
+            aOptions = aOptions || {};
+
             if (!gMultiProcessBrowser)
               return this.updateBrowserRemoteness(aBrowser, false);
 
             // If this URL can't load in the current browser then flip it to the
             // correct type.
             let currentRemoteType = aBrowser.remoteType;
-            let requiredRemoteType =
+            aOptions.remoteType =
               E10SUtils.getRemoteTypeForURI(aURL, gMultiProcessBrowser,
                                             currentRemoteType);
-            if (currentRemoteType != requiredRemoteType || aFreshProcess) {
-              return this.updateBrowserRemoteness(aBrowser,
-                                                  !!requiredRemoteType,
-                                                  requiredRemoteType,
-                                                  /* aOpener */ null,
-                                                  aFreshProcess);
+            if (currentRemoteType != aOptions.remoteType ||
+                aOptions.freshProcess || aOptions.newFrameloader) {
+              let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
+              return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
             }
 
             return false;
@@ -2525,6 +2526,13 @@
 
             var browser = this.getBrowserForTab(aTab);
 
+            // Start closing the FrameLoaderOwners which are inactive, so that
+            // they are cleaned up as well.
+            let frameLoader = browser.frameLoader;
+            if (frameLoader && frameLoader.groupedSessionHistory) {
+              frameLoader.groupedSessionHistory.closeInactiveFrameLoaderOwners();
+            }
+
             if (!aTab._pendingPermitUnload && !aAdoptedByTab && !aSkipPermitUnload) {
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
@@ -2916,11 +2924,29 @@
 
       <method name="swapBrowsers">
         <parameter name="aOurTab"/>
-        <parameter name="aOtherBrowser"/>
+        <parameter name="aOtherTab"/>
         <parameter name="aFlags"/>
         <body>
           <![CDATA[
-            this._swapBrowserDocShells(aOurTab, aOtherBrowser, aFlags);
+            let otherBrowser = aOtherTab.linkedBrowser;
+            let otherTabBrowser = otherBrowser.getTabBrowser();
+
+            // We aren't closing the other tab so, we also need to swap its tablisteners.
+            let filter = otherTabBrowser._tabFilters.get(aOtherTab);
+            let tabListener = otherTabBrowser._tabListeners.get(aOtherTab);
+            otherBrowser.webProgress.removeProgressListener(filter);
+            filter.removeProgressListener(tabListener);
+
+            // Perform the docshell swap through the common mechanism.
+            this._swapBrowserDocShells(aOurTab, otherBrowser, aFlags);
+
+            // Restore the listeners for the swapped in tab.
+            tabListener = otherTabBrowser.mTabProgressListener(aOtherTab, otherBrowser, false, false);
+            otherTabBrowser._tabListeners.set(aOtherTab, tabListener);
+
+            const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
+            filter.addProgressListener(tabListener, notifyAll);
+            otherBrowser.webProgress.addProgressListener(filter, notifyAll);
           ]]>
         </body>
       </method>
@@ -5204,6 +5230,7 @@
           if (!tab.hasAttribute("blocked")) {
             tab.setAttribute("blocked", true);
             this._tabAttrModified(tab, ["blocked"]);
+            tab.startMediaBlockTimer();
           }
         ]]>
       </handler>
@@ -5217,6 +5244,9 @@
           if (tab.hasAttribute("blocked")) {
             tab.removeAttribute("blocked");
             this._tabAttrModified(tab, ["blocked"]);
+            let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
+            hist.add(2 /* unblockByVisitingTab */);
+            tab.finishMediaBlockTimer();
           }
         ]]>
       </handler>
@@ -6924,6 +6954,18 @@
         ]]></body>
       </method>
 
+      <method name="startMediaBlockTimer">
+        <body><![CDATA[
+          TelemetryStopwatch.start("TAB_MEDIA_BLOCKING_TIME_MS", this);
+        ]]></body>
+      </method>
+
+       <method name="finishMediaBlockTimer">
+        <body><![CDATA[
+          TelemetryStopwatch.finish("TAB_MEDIA_BLOCKING_TIME_MS", this);
+        ]]></body>
+      </method>
+
       <method name="toggleMuteAudio">
         <parameter name="aMuteReason"/>
         <body>
@@ -6931,6 +6973,8 @@
           let tabContainer = this.parentNode;
           let browser = this.linkedBrowser;
           let modifiedAttrs = [];
+          let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
+
           if (browser.audioBlocked) {
             this.removeAttribute("blocked");
             modifiedAttrs.push("blocked");
@@ -6944,15 +6988,19 @@
             }
 
             browser.resumeMedia();
+            hist.add(3 /* unblockByClickingIcon */);
+            this.finishMediaBlockTimer();
           } else {
             if (browser.audioMuted) {
               browser.unmute();
               this.removeAttribute("muted");
               BrowserUITelemetry.countTabMutingEvent("unmute", aMuteReason);
+              hist.add(1 /* unmute */);
             } else {
               browser.mute();
               this.setAttribute("muted", "true");
               BrowserUITelemetry.countTabMutingEvent("mute", aMuteReason);
+              hist.add(0 /* mute */);
             }
             this.muteReason = aMuteReason || null;
             modifiedAttrs.push("muted");
