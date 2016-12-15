@@ -457,51 +457,6 @@ public class GeckoView extends LayerView
         }
     }
 
-    /* Provides a means for the client to respond to a script message with some data.
-     * An instance of this class is passed to GeckoViewChrome.onScriptMessage.
-     */
-    public class MessageResult {
-        private final EventCallback mCallback;
-
-        public MessageResult(EventCallback callback) {
-            if (callback == null) {
-                throw new IllegalArgumentException("EventCallback should not be null.");
-            }
-            mCallback = callback;
-        }
-
-        private JSONObject bundleToJSON(Bundle data) {
-            JSONObject result = new JSONObject();
-            if (data == null) {
-                return result;
-            }
-
-            final Set<String> keys = data.keySet();
-            for (String key : keys) {
-                try {
-                    result.put(key, data.get(key));
-                } catch (JSONException e) {
-                }
-            }
-            return result;
-        }
-
-        /**
-        * Handle a successful response to a script message.
-        * @param value Bundle value to return to the script context.
-        */
-        public void success(Bundle data) {
-            mCallback.sendSuccess(bundleToJSON(data));
-        }
-
-        /**
-        * Handle a failure response to a script message.
-        */
-        public void failure(Bundle data) {
-            mCallback.sendError(bundleToJSON(data));
-        }
-    }
-
     public interface ChromeDelegate {
         /**
         * Tell the host application to display an alert dialog.
@@ -541,15 +496,6 @@ public class GeckoView extends LayerView
         * Defaults to cancel requests.
         */
         public void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
-
-        /**
-        * Receive a message from an imported script.
-        * @param view The GeckoView that initiated the callback.
-        * @param data Bundle of data sent with the message. Never null.
-        * @param result A MessageResult used to send back a response without blocking. Can be null.
-        * Defaults to do nothing.
-        */
-        public void onScriptMessage(GeckoView view, Bundle data, GeckoView.MessageResult result);
     }
 
     public interface ContentDelegate {

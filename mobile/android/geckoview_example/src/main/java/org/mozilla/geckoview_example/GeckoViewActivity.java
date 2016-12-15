@@ -87,18 +87,6 @@ public class GeckoViewActivity extends Activity {
             Log.i(LOGTAG, "Remote Debug!");
             result.confirm();
         }
-
-        @Override
-        public void onScriptMessage(GeckoView view, Bundle data, GeckoView.MessageResult result) {
-            Log.i(LOGTAG, "Got Script Message: " + data.toString());
-            String type = data.getString("type");
-            if ("fetch".equals(type)) {
-                Bundle ret = new Bundle();
-                ret.putString("name", "Mozilla");
-                ret.putString("url", "https://mozilla.org");
-                result.success(ret);
-            }
-        }
     }
 
     private class MyGeckoViewContent implements GeckoView.ContentDelegate {
