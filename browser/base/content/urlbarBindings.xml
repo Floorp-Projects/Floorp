@@ -747,6 +747,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             SetPageProxyState("invalid");
             this.focus();
             this.handleCommand();
+            // Force not showing the dropped URI immediately.
+            gBrowser.userTypedValue = null;
+            URLBarSetURI();
           }
         ]]></body>
       </method>

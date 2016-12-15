@@ -1625,6 +1625,8 @@ nsGlobalWindow::CleanUp()
 
   mConsole = nullptr;
 
+  mAudioWorklet = nullptr;
+
   mExternal = nullptr;
 
   mMozSelfSupport = nullptr;
@@ -1991,6 +1993,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mU2F)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMozSelfSupport)
 
@@ -2068,6 +2071,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mU2F)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMozSelfSupport)
 
@@ -14255,18 +14259,22 @@ nsGlobalWindow::TemporarilyDisableDialogs::~TemporarilyDisableDialogs()
   }
 }
 
-already_AddRefed<Worklet>
-nsGlobalWindow::CreateWorklet(ErrorResult& aRv)
+Worklet*
+nsGlobalWindow::GetAudioWorklet(ErrorResult& aRv)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
-  if (!mDoc) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+  if (!mAudioWorklet) {
+    nsIPrincipal* principal = GetPrincipal();
+    if (!principal) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    mAudioWorklet = new Worklet(AsInner(), principal);
   }
 
-  RefPtr<Worklet> worklet = new Worklet(AsInner(), mDoc->NodePrincipal());
-  return worklet.forget();
+  return mAudioWorklet;
 }
 
 template class nsPIDOMWindow<mozIDOMWindowProxy>;

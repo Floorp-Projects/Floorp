@@ -470,10 +470,8 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
   MOZ_ASSERT(mDebuggerPromiseMicroTaskQueue.empty());
   MOZ_ASSERT(mPromiseMicroTaskQueue.empty());
 
-#ifdef SPIDERMONKEY_PROMISE
   mUncaughtRejections.reset();
   mConsumedRejections.reset();
-#endif // SPIDERMONKEY_PROMISE
 
   JS_DestroyContext(mJSContext);
   mJSContext = nullptr;
@@ -550,12 +548,10 @@ CycleCollectedJSContext::Initialize(JSContext* aParentContext,
 
   JS::SetGetIncumbentGlobalCallback(mJSContext, GetIncumbentGlobalCallback);
 
-#ifdef SPIDERMONKEY_PROMISE
   JS::SetEnqueuePromiseJobCallback(mJSContext, EnqueuePromiseJobCallback, this);
   JS::SetPromiseRejectionTrackerCallback(mJSContext, PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
   mConsumedRejections.init(mJSContext, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
-#endif // SPIDERMONKEY_PROMISE
 
   JS::dbg::SetDebuggerMallocSizeOf(mJSContext, moz_malloc_size_of);
 
@@ -981,7 +977,6 @@ CycleCollectedJSContext::EnqueuePromiseJobCallback(JSContext* aCx,
   return true;
 }
 
-#ifdef SPIDERMONKEY_PROMISE
 /* static */
 void
 CycleCollectedJSContext::PromiseRejectionTrackerCallback(JSContext* aCx,
@@ -1001,7 +996,6 @@ CycleCollectedJSContext::PromiseRejectionTrackerCallback(JSContext* aCx,
     PromiseDebugging::AddConsumedRejection(aPromise);
   }
 }
-#endif // SPIDERMONKEY_PROMISE
 
 struct JsGcTracer : public TraceCallbacks
 {

@@ -791,7 +791,6 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         return CreateHolderIfNeeded(flat, d, dest);
     }
 
-#ifdef SPIDERMONKEY_PROMISE
     if (iid->Equals(NS_GET_IID(nsISupports))) {
         // Check for a Promise being returned via nsISupports.  In that
         // situation, we want to dig out its underlying JS object and return
@@ -804,7 +803,6 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
             return CreateHolderIfNeeded(flat, d, dest);
         }
     }
-#endif // SPIDERMONKEY_PROMISE
 
     // Don't double wrap CPOWs. This is a temporary measure for compatibility
     // with objects that don't provide necessary QIs (such as objects under
@@ -943,7 +941,6 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
             return false;
         }
 
-#ifdef SPIDERMONKEY_PROMISE
         // Deal with Promises being passed as nsISupports.  In that situation we
         // want to create a dom::Promise and use that.
         if (iid->Equals(NS_GET_IID(nsISupports))) {
@@ -954,7 +951,6 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
                 return p && NS_SUCCEEDED(p->QueryInterface(*iid, dest));
             }
         }
-#endif // SPIDERMONKEY_PROMISE
     }
 
     RefPtr<nsXPCWrappedJS> wrapper;
