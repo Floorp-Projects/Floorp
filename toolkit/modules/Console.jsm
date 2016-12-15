@@ -304,6 +304,8 @@ const LOG_LEVELS = {
   "time": 3,
   "group": 3,
   "groupEnd": 3,
+  "profile": 3,
+  "profileEnd": 3,
   "dir": 3,
   "dirxml": 3,
   "warn": 4,
@@ -698,6 +700,32 @@ ConsoleAPI.prototype = {
     sendConsoleAPIMessage(this, "timeEnd", frame, args, { timer: timer });
     dumpMessage(this, "timeEnd",
                 "'" + timer.name + "' " + timer.duration + "ms");
+  },
+
+  profile(profileName) {
+    if (!shouldLog("profile", this.maxLogLevel)) {
+      return;
+    }
+    Services.obs.notifyObservers({
+      wrappedJSObject: {
+        action: "profile",
+        arguments: [ profileName ]
+      }
+    }, "console-api-profiler", null);
+    dumpMessage(this, "profile", `'${profileName}'`);
+  },
+
+  profileEnd(profileName) {
+    if (!shouldLog("profileEnd", this.maxLogLevel)) {
+      return;
+    }
+    Services.obs.notifyObservers({
+      wrappedJSObject: {
+        action: "profileEnd",
+        arguments: [ profileName ]
+      }
+    }, "console-api-profiler", null);
+    dumpMessage(this, "profileEnd", `'${profileName}'`);
   },
 
   get maxLogLevel() {
