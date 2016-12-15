@@ -241,13 +241,9 @@ bool AudioContext::CheckClosed(ErrorResult& aRv)
 already_AddRefed<AudioBufferSourceNode>
 AudioContext::CreateBufferSource(ErrorResult& aRv)
 {
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  RefPtr<AudioBufferSourceNode> bufferNode =
-    new AudioBufferSourceNode(this);
-  return bufferNode.forget();
+  return AudioBufferSourceNode::Create(nullptr, *this,
+                                       AudioBufferSourceOptions(),
+                                       aRv);
 }
 
 already_AddRefed<ConstantSourceNode>
