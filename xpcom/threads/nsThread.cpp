@@ -38,6 +38,7 @@
 #include "nsIIncrementalRunnable.h"
 #include "nsThreadSyncDispatch.h"
 #include "LeakRefPtr.h"
+#include "GeckoProfiler.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsServiceManagerUtils.h"
@@ -446,6 +447,8 @@ nsThread::ThreadFunc(void* aArg)
 {
   using mozilla::ipc::BackgroundChild;
 
+  char stackTop;
+
   ThreadInitData* initData = static_cast<ThreadInitData*>(aArg);
   nsThread* self = initData->thread;  // strong reference
 
@@ -454,6 +457,8 @@ nsThread::ThreadFunc(void* aArg)
 
   if (initData->name.Length() > 0) {
     PR_SetCurrentThreadName(initData->name.BeginReading());
+
+    profiler_register_thread(initData->name.BeginReading(), &stackTop);
   }
 
   // Inform the ThreadManager
@@ -518,6 +523,8 @@ nsThread::ThreadFunc(void* aArg)
 
   // Inform the threadmanager that this thread is going away
   nsThreadManager::get().UnregisterCurrentThread(*self);
+
+  profiler_unregister_thread();
 
   // Dispatch shutdown ACK
   NotNull<nsThreadShutdownContext*> context =
