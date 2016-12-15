@@ -221,9 +221,10 @@ public:
 
   virtual LayoutDeviceIntRect GetScreenBounds() override;
 
-  NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                            int32_t aPanelX, int32_t aPanelY,
-                            nsString& aCommitted) override;
+  virtual MOZ_MUST_USE nsresult
+  StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+                 int32_t aPanelX, int32_t aPanelY,
+                 nsString& aCommitted) override;
 
   virtual void SetPluginFocused(bool& aFocused) override;
   virtual void DefaultProcOfPluginEvent(
