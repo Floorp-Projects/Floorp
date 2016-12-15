@@ -28,3 +28,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED$"
 
 SortIncludes: false
 
+
+# All of the following items are default
+# in the Mozila coding style from clang format 4.0
+AlwaysBreakAfterReturnType: TopLevel
+BinPackArguments: false
+BinPackParameters: false
+SpaceAfterTemplateKeyword: false
+ReflowComments: false
