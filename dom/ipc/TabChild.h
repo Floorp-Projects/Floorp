@@ -184,6 +184,8 @@ public:
   NS_DECL_NSIPARTIALSHISTORYLISTENER
 
 private:
+  nsresult SHistoryDidUpdate(bool aTruncate = false);
+
   ~TabChildSHistoryListener() {}
   TabChild* mTabChild;
 };
@@ -660,6 +662,8 @@ public:
     mIsFreshProcess = false;
     return wasFreshProcess;
   }
+
+  already_AddRefed<nsISHistory> GetRelatedSHistory();
 
 protected:
   virtual ~TabChild();

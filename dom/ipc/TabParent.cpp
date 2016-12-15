@@ -3224,7 +3224,7 @@ TabParent::RecvLookUpDictionary(const nsString& aText,
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvNotifySessionHistoryChange(const uint32_t& aCount)
+TabParent::RecvSHistoryUpdate(const uint32_t& aCount, const uint32_t& aLocalIndex, const bool& aTruncate)
 {
   RefPtr<nsFrameLoader> frameLoader(GetFrameLoader());
   if (!frameLoader) {
@@ -3240,7 +3240,7 @@ TabParent::RecvNotifySessionHistoryChange(const uint32_t& aCount)
     return IPC_OK();
   }
 
-  partialHistory->OnSessionHistoryChange(aCount);
+  partialHistory->HandleSHistoryUpdate(aCount, aLocalIndex, aTruncate);
   return IPC_OK();
 }
 
