@@ -1177,9 +1177,7 @@ for (let test of testParams) {
   }
 
   add_task(function* cleanup() {
-    let addons = yield new Promise(resolve => {
-      AddonManager.getAddonsByTypes(["extension"], resolve);
-    });
+    let addons = yield AddonManager.getAddonsByTypes(["extension"]);
 
     for (let addon of addons)
       addon.uninstall();

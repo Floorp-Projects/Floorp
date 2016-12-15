@@ -1014,7 +1014,7 @@ var AddonTestUtils = {
    *
    * @param {AddonInstall} install
    *        The add-on to install.
-   * @returns {Promise}
+   * @returns {Promise<AddonInstall>}
    *        Resolves when the install completes, either successfully or
    *        in failure.
    */
@@ -1034,6 +1034,7 @@ var AddonTestUtils = {
       install.install();
     }).then(() => {
       install.removeListener(listener);
+      return install;
     });
   },
 

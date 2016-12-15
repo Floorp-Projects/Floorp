@@ -15,9 +15,7 @@ const ADDONS = {
 };
 
 function createInstall(filename) {
-  return new Promise(resolve => {
-    AddonManager.getInstallForFile(do_get_file(DATA + filename), resolve, "application/x-xpinstall");
-  });
+  return AddonManager.getInstallForFile(do_get_file(DATA + filename), null, "application/x-xpinstall");
 }
 
 function run_test() {
