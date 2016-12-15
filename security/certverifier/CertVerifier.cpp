@@ -22,10 +22,7 @@
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
-#include "prerror.h"
-#include "secerr.h"
 #include "secmod.h"
-#include "sslerr.h"
 
 using namespace mozilla::ct;
 using namespace mozilla::pkix;
@@ -486,9 +483,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
       CertPolicyId evPolicy;
       SECOidTag evPolicyOidTag;
-      SECStatus srv = GetFirstEVPolicy(cert, evPolicy, evPolicyOidTag);
+      bool foundEVPolicy = GetFirstEVPolicy(*cert, evPolicy, evPolicyOidTag);
       for (size_t i = 0;
-           i < sha1ModeConfigurationsCount && rv != Success && srv == SECSuccess;
+           i < sha1ModeConfigurationsCount && rv != Success && foundEVPolicy;
            i++) {
         // Don't attempt verification if the SHA1 mode set by preferences
         // (mSHA1Mode) is more restrictive than the SHA1 mode option we're on.

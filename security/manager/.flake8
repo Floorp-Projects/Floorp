@@ -1,0 +1,14 @@
+[flake8]
+# E128: continuation line under-indented for visual indent.
+#       Best visual indent typically determined based on context.
+# E261: at least two spaces before inline comment.
+#       Not PSM style.
+# E302: expected 2 blank lines, found 1.
+#       Not really PSM style.
+ignore = E128,E261,E302
+
+# PSM style is to stick close to 80 chars, but 4 space indentation means we
+# sometimes need more space.
+max-line-length = 100
+
+filename = *.py

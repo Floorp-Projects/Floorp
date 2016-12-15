@@ -41,12 +41,12 @@ AnimationPerformanceWarning::ToLocalizedString(
         ToLocalizedStringWithIntParams<2>(
           "CompositorAnimationWarningContentTooSmall", aLocalizedString));
     case Type::ContentTooLarge:
-      MOZ_ASSERT(mParams && mParams->Length() == 7,
-                 "Parameter's length should be 7 for ContentTooLarge");
+      MOZ_ASSERT(mParams && mParams->Length() == 6,
+                 "Parameter's length should be 6 for ContentTooLarge");
 
       return NS_SUCCEEDED(
         ToLocalizedStringWithIntParams<7>(
-          "CompositorAnimationWarningContentTooLarge", aLocalizedString));
+          "CompositorAnimationWarningContentTooLarge2", aLocalizedString));
     case Type::TransformBackfaceVisibilityHidden:
       key = "CompositorAnimationWarningTransformBackfaceVisibilityHidden";
       break;

@@ -5,10 +5,10 @@
 package org.mozilla.gecko.home.activitystream.menu;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -31,12 +31,16 @@ import org.mozilla.gecko.home.HomePager;
                             final MenuMode mode,
                             final String title,
                             @NonNull final String url,
+                            @Nullable final Boolean isBookmarked,
+                            @Nullable final Boolean isPinned,
                             HomePager.OnUrlOpenListener onUrlOpenListener,
                             HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         super(context,
                 mode,
                 title,
                 url,
+                isBookmarked,
+                isPinned,
                 onUrlOpenListener,
                 onUrlOpenInBackgroundListener);
 

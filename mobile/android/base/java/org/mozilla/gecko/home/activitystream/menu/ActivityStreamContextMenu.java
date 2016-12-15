@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,10 +43,13 @@ public abstract class ActivityStreamContextMenu
     final String title;
     final String url;
 
+    // We might not know bookmarked/pinned states, so we allow for null values.
+    private @Nullable Boolean isBookmarked;
+    private @Nullable Boolean isPinned;
+
     final HomePager.OnUrlOpenListener onUrlOpenListener;
     final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
-    boolean isAlreadyBookmarked; // default false;
 
     public abstract MenuItem getItemByID(int id);
 
@@ -58,6 +62,7 @@ public abstract class ActivityStreamContextMenu
     /* package-private */ ActivityStreamContextMenu(final Context context,
                                                     final MenuMode mode,
                                                     final String title, @NonNull final String url,
+                                                    @Nullable final Boolean isBookmarked, @Nullable final Boolean isPinned,
                                                     HomePager.OnUrlOpenListener onUrlOpenListener,
                                                     HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.context = context;
@@ -66,6 +71,8 @@ public abstract class ActivityStreamContextMenu
 
         this.title = title;
         this.url = url;
+        this.isBookmarked = isBookmarked;
+        this.isPinned = isPinned;
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
@@ -77,6 +84,16 @@ public abstract class ActivityStreamContextMenu
      * called, i.e. you should probably inflate your menu items before this call.
      */
     protected void postInit() {
+        final MenuItem bookmarkItem = getItemByID(R.id.bookmark);
+        if (Boolean.TRUE.equals(this.isBookmarked)) {
+            bookmarkItem.setTitle(R.string.bookmark_remove);
+        }
+
+        final MenuItem pinItem = getItemByID(R.id.pin);
+        if (Boolean.TRUE.equals(this.isPinned)) {
+            pinItem.setTitle(R.string.contextmenu_top_sites_unpin);
+        }
+
         // Disable "dismiss" for topsites until we have decided on its behaviour for topsites
         // (currently "dismiss" adds the URL to a highlights-specific blocklist, which the topsites
         // query has no knowledge of).
@@ -85,26 +102,49 @@ public abstract class ActivityStreamContextMenu
             dismissItem.setVisible(false);
         }
 
-        // Disable the bookmark item until we know its bookmark state
-        final MenuItem bookmarkItem = getItemByID(R.id.bookmark);
-        bookmarkItem.setEnabled(false);
+        if (isBookmarked == null) {
+            // Disable the bookmark item until we know its bookmark state
+            bookmarkItem.setEnabled(false);
 
-        (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
-            @Override
-            protected Void doInBackground() {
-                isAlreadyBookmarked = BrowserDB.from(context).isBookmark(context.getContentResolver(), url);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                if (isAlreadyBookmarked) {
-                    bookmarkItem.setTitle(R.string.bookmark_remove);
+            (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
+                @Override
+                protected Void doInBackground() {
+                    isBookmarked = BrowserDB.from(context).isBookmark(context.getContentResolver(), url);
+                    return null;
                 }
 
-                bookmarkItem.setEnabled(true);
-            }
-        }).execute();
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    if (isBookmarked) {
+                        bookmarkItem.setTitle(R.string.bookmark_remove);
+                    }
+
+                    bookmarkItem.setEnabled(true);
+                }
+            }).execute();
+        }
+
+        if (isPinned == null) {
+            // Disable the pin item until we know its pinned state
+            pinItem.setEnabled(false);
+
+            (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
+                @Override
+                protected Void doInBackground() {
+                    isPinned = BrowserDB.from(context).isPinnedForAS(context.getContentResolver(), url);
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    if (isPinned) {
+                        pinItem.setTitle(R.string.contextmenu_top_sites_unpin);
+                    }
+
+                    pinItem.setEnabled(true);
+                }
+            }).execute();
+        }
 
         // Only show the "remove from history" item if a page actually has history
         final MenuItem deleteHistoryItem = getItemByID(R.id.delete);
@@ -156,7 +196,7 @@ public abstract class ActivityStreamContextMenu
 
                         final TelemetryContract.Event telemetryEvent;
                         final String telemetryExtra;
-                        if (isAlreadyBookmarked) {
+                        if (isBookmarked) {
                             db.removeBookmarksWithURL(context.getContentResolver(), url);
 
                             SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(context);
@@ -182,6 +222,20 @@ public abstract class ActivityStreamContextMenu
                     }
                 });
                 break;
+
+            case R.id.pin:
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final BrowserDB db = BrowserDB.from(context);
+
+                        if (isPinned) {
+                            db.unpinSiteForAS(context.getContentResolver(), url);
+                        } else {
+                            db.pinSiteForAS(context.getContentResolver(), url, title);
+                        }
+                    }
+                });
 
             case R.id.copy_url:
                 Clipboard.setText(url);
@@ -241,6 +295,7 @@ public abstract class ActivityStreamContextMenu
                                                       View anchor,
                                                       final MenuMode menuMode,
                                                       final String title, @NonNull final String url,
+                                                      @Nullable final Boolean isBookmarked, @Nullable final Boolean isPinned,
                                                       HomePager.OnUrlOpenListener onUrlOpenListener,
                                                       HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
                                                       final int tilesWidth, final int tilesHeight) {
@@ -249,14 +304,14 @@ public abstract class ActivityStreamContextMenu
         if (!HardwareUtils.isTablet()) {
             menu = new BottomSheetContextMenu(context,
                     menuMode,
-                    title, url,
+                    title, url, isBookmarked, isPinned,
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     tilesWidth, tilesHeight);
         } else {
             menu = new PopupContextMenu(context,
                     anchor,
                     menuMode,
-                    title, url,
+                    title, url, isBookmarked, isPinned,
                     onUrlOpenListener, onUrlOpenInBackgroundListener);
         }
 

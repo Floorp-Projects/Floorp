@@ -426,4 +426,54 @@ LFSRgenerator.prototype = {
   },
 };
 
+function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
+  let dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                     .getService(Ci.nsIUrlClassifierDBService);
+
+  dbService.getTables(metaData => {
+    do_print("metadata: " + metaData);
+    let didCallback = false;
+    metaData.split("\n").some(line => {
+      // Parse [tableName];[stateBase64]
+      let p = line.indexOf(";");
+      if (-1 === p) {
+        return false; // continue.
+      }
+      let tableName = line.substring(0, p);
+      let metadata = line.substring(p + 1).split(":");
+      let stateBase64 = metadata[0];
+      let checksumBase64 = metadata[1];
+
+      if (tableName !== 'test-phish-proto') {
+        return false; // continue.
+      }
+
+      if (stateBase64 === btoa(expectedState) &&
+          checksumBase64 === btoa(expectedChecksum)) {
+        do_print('State has been saved to disk!');
+
+        // We slightly defer the callback to see if the in-memory
+        // |getTables| caching works correctly.
+        dbService.getTables(cachedMetadata => {
+          equal(cachedMetadata, metaData);
+          callback();
+        });
+
+        // Even though we haven't done callback at this moment
+        // but we still claim "we have" in order to stop repeating
+        // a new timer.
+        didCallback = true;
+      }
+
+      return true; // break no matter whether the state is matching.
+    });
+
+    if (!didCallback) {
+      do_timeout(1000, waitUntilMetaDataSaved.bind(null, expectedState,
+                                                         expectedChecksum,
+                                                         callback));
+    }
+  });
+}
+
 cleanUp();
