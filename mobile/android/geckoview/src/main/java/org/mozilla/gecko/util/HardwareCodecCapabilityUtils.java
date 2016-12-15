@@ -7,7 +7,6 @@
 package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants.Versions;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;

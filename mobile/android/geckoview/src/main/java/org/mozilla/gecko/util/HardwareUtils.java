@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.util;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.SysInfo;
 
 import android.content.Context;
@@ -13,7 +12,9 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.util.Log;
-import android.view.ViewConfiguration;
+
+import org.mozilla.gecko.SysInfo;
+import org.mozilla.geckoview.BuildConfig;
 
 public final class HardwareUtils {
     private static final String LOGTAG = "GeckoHardwareUtils";
@@ -86,8 +87,8 @@ public final class HardwareUtils {
         boolean isSystemARM = Build.CPU_ABI != null && Build.CPU_ABI.startsWith("arm");
         boolean isSystemX86 = Build.CPU_ABI != null && Build.CPU_ABI.startsWith("x86");
 
-        boolean isAppARM = AppConstants.ANDROID_CPU_ARCH.startsWith("arm");
-        boolean isAppX86 = AppConstants.ANDROID_CPU_ARCH.startsWith("x86");
+        boolean isAppARM = BuildConfig.ANDROID_CPU_ARCH.startsWith("arm");
+        boolean isAppX86 = BuildConfig.ANDROID_CPU_ARCH.startsWith("x86");
 
         // Only reject known incompatible ABIs. Better safe than sorry.
         if ((isSystemX86 && isAppARM) || (isSystemARM && isAppX86)) {
@@ -98,7 +99,7 @@ public final class HardwareUtils {
             return true;
         }
 
-        Log.w(LOGTAG, "Unknown app/system ABI combination: " + AppConstants.MOZ_APP_ABI + " / " + Build.CPU_ABI);
+        Log.w(LOGTAG, "Unknown app/system ABI combination: " + BuildConfig.MOZ_APP_ABI + " / " + Build.CPU_ABI);
         return true;
     }
 }

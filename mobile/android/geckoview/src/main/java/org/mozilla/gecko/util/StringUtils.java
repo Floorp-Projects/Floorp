@@ -9,8 +9,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import org.mozilla.gecko.AppConstants.Versions;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;

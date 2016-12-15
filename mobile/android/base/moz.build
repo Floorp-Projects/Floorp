@@ -7,9 +7,13 @@
 DIRS += ['locales']
 
 GENERATED_FILES += [
+    '../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java',
     'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
 ]
+w = GENERATED_FILES['../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java']
+w.script = 'generate_build_config.py'
+w.inputs += ['../geckoview/BuildConfig.java.in']
 x = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AdjustConstants.java']
 x.script = 'generate_build_config.py'
 x.inputs += ['AdjustConstants.java.in']
@@ -40,6 +44,7 @@ constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'Locales.java',
 ]]
 constants_jar.generated_sources = [
+    '../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java',
     'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
 ]

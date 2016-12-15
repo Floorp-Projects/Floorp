@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.util;
 
-import org.mozilla.gecko.AppConstants.Versions;
-
 import android.content.Context;
 import android.os.Build;
 import android.util.DisplayMetrics;
