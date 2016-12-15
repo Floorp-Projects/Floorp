@@ -1117,6 +1117,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     nsContentUtils::GetCurrentJSContext() ? nsContentUtils::SubjectPrincipal() :
                                             nullptr;
 
+  bool isPrivateBrowsingWindow = false;
+
   if (windowIsNew) {
     auto* docShell = static_cast<nsDocShell*>(newDocShell.get());
 
@@ -1127,8 +1129,26 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
         docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
       DocShellOriginAttributes attrs;
       attrs.InheritFromDocToChildDocShell(BasePrincipal::Cast(subjectPrincipal)->OriginAttributesRef());
-
+      isPrivateBrowsingWindow = !!attrs.mPrivateBrowsingId;
       docShell->SetOriginAttributes(attrs);
+    } else {
+      nsCOMPtr<nsIDocShellTreeItem> parentItem;
+      GetWindowTreeItem(aParent, getter_AddRefs(parentItem));
+      nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(parentItem);
+      if (parentContext) {
+        isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
+      }
+    }
+
+    bool autoPrivateBrowsing =
+      Preferences::GetBool("browser.privatebrowsing.autostart");
+
+    if (!autoPrivateBrowsing &&
+        (chromeFlags & nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW)) {
+      isPrivateBrowsingWindow = false;
+    } else if (autoPrivateBrowsing ||
+               (chromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW)) {
+      isPrivateBrowsingWindow = true;
     }
 
     // Now set the opener principal on the new window.  Note that we need to do
@@ -1155,26 +1175,6 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
           globalWin->SetIsPopupSpamWindow(true);
         }
       }
-    }
-  }
-
-  // If all windows should be private, make sure the new window is also
-  // private.  Otherwise, see if the caller has explicitly requested a
-  // private or non-private window.
-  bool isPrivateBrowsingWindow =
-    Preferences::GetBool("browser.privatebrowsing.autostart") ||
-    (!!(chromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW) &&
-     !(chromeFlags & nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW));
-
-  // Otherwise, propagate the privacy status of the parent window, if
-  // available, to the child.
-  if (!isPrivateBrowsingWindow &&
-      !(chromeFlags & nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW)) {
-    nsCOMPtr<nsIDocShellTreeItem> parentItem;
-    GetWindowTreeItem(aParent, getter_AddRefs(parentItem));
-    nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(parentItem);
-    if (parentContext) {
-      isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
     }
   }
 
