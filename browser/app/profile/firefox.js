@@ -216,6 +216,8 @@ pref("browser.shell.defaultBrowserCheckCount", 0);
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "chrome://branding/locale/browserconfig.properties");
+// Whether we should skip the homepage when opening the first-run page
+pref("browser.startup.firstrunSkipsHomepage", false);
 
 pref("browser.slowStartup.notificationDisabled", false);
 pref("browser.slowStartup.timeThreshold", 40000);
