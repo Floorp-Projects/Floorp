@@ -180,7 +180,7 @@ public:
   virtual void            SetShowsToolbarButton(bool aShow) override {}
   virtual void            SetShowsFullScreenButton(bool aShow) override {}
   virtual void            SetWindowAnimationType(WindowAnimationType aType) override {}
-  NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
+  virtual void            HideWindowChrome(bool aShouldHide) override {}
   virtual bool PrepareForFullscreenTransition(nsISupports** aData) override { return false; }
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
                                            uint16_t aDuration,
