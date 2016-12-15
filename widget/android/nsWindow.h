@@ -203,7 +203,6 @@ public:
     void* GetNativeData(uint32_t aDataType) override;
     void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD SetTitle(const nsAString& aTitle) override { return NS_OK; }
-    NS_IMETHOD SetIcon(const nsAString& aIconSpec) override { return NS_OK; }
     virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
