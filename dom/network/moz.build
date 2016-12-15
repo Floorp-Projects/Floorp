@@ -29,6 +29,8 @@ EXPORTS.mozilla.dom.network += [
 
 UNIFIED_SOURCES += [
     'Connection.cpp',
+    'ConnectionMainThread.cpp',
+    'ConnectionWorker.cpp',
     'TCPServerSocket.cpp',
     'TCPServerSocketChild.cpp',
     'TCPServerSocketParent.cpp',
@@ -56,6 +58,10 @@ IPDL_SOURCES += [
     'PTCPServerSocket.ipdl',
     'PTCPSocket.ipdl',
     'PUDPSocket.ipdl',
+]
+
+LOCAL_INCLUDES += [
+    '../workers',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
