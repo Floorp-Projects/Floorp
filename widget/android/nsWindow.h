@@ -158,7 +158,7 @@ public:
                                          nsWidgetInitData* aInitData) override;
     virtual void Destroy() override;
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
-    NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
+    virtual void SetParent(nsIWidget* aNewParent) override;
     virtual nsIWidget *GetParent(void) override;
     virtual float GetDPI() override;
     virtual double GetDefaultScaleInternal() override;

@@ -538,18 +538,6 @@ void nsBaseWidget::Destroy()
 #endif
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Set this nsBaseWidget's parent
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::SetParent(nsIWidget* aNewParent)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Get this nsBaseWidget parent
