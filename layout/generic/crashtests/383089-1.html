@@ -16,14 +16,13 @@ function olo()
 
 function neext()
 {
-  try {
-    iter.next();
-  } catch (e if e instanceof StopIteration) {
+  let {done} = iter.next();
+  if (done) {
     clearInterval(interv);
   }
 }
 
-function foo()
+function* foo()
 {
   var docElem = document.documentElement;
   var head = document.getElementById("head");
