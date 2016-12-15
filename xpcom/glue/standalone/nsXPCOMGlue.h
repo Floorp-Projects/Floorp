@@ -11,6 +11,8 @@
 
 #ifdef XPCOM_GLUE
 
+#include "mozilla/Bootstrap.h"
+
 /**
  * The following functions are only available in the standalone glue.
  */
@@ -39,6 +41,16 @@ struct nsDynamicFunctionLoad
  */
 extern "C" NS_HIDDEN_(nsresult)
 XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad* aSymbols);
+
+namespace mozilla {
+
+/**
+ * Initialize the XPCOM glue by dynamically linking against the XPCOM
+ * shared library indicated by xpcomFile and return a Bootstrap instance.
+ */
+NS_HIDDEN_(Bootstrap::UniquePtr) GetBootstrap(const char* aXPCOMFile);
+
+} // namespace mozilla
 
 #endif // XPCOM_GLUE
 #endif // nsXPCOMGlue_h__
