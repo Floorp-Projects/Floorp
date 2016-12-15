@@ -258,7 +258,7 @@ public:
     virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
     NS_IMETHOD              Move(double aX, double aY) override;
     virtual void            SetSizeMode(nsSizeMode aMode) override;
-    NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
+    virtual void            HideWindowChrome(bool aShouldHide) override;
 
     void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
     virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
