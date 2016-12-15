@@ -18,8 +18,7 @@ enum ConnectionType {
     "unknown"
 };
 
-[Func="mozilla::dom::network::Connection::IsEnabled",
- Exposed=(Window,Worker)]
+[Pref="dom.netinfo.enabled"]
 interface NetworkInformation : EventTarget {
     readonly    attribute ConnectionType type;
                 attribute EventHandler   ontypechange;
