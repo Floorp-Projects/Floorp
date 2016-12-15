@@ -504,12 +504,6 @@ public class GeckoView extends LayerView
 
     public interface ChromeDelegate {
         /**
-        * Tell the host application that Gecko is ready to handle requests.
-        * @param view The GeckoView that initiated the callback.
-        */
-        public void onReady(GeckoView view);
-
-        /**
         * Tell the host application to display an alert dialog.
         * @param view The GeckoView that initiated the callback.
         * @param browser The Browser that is loading the content.
