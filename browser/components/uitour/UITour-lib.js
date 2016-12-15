@@ -220,6 +220,10 @@ if (typeof Mozilla == 'undefined') {
     });
   };
 
+  Mozilla.UITour.showNewTab = function() {
+    _sendEvent('showNewTab');
+  };
+
   Mozilla.UITour.getConfiguration = function(configName, callback) {
     _sendEvent('getConfiguration', {
       callbackID: _waitForCallback(callback),
