@@ -6,6 +6,7 @@ package org.mozilla.gecko.home.activitystream.menu;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
@@ -34,16 +35,19 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
     private final NavigationView navigationView;
 
     public BottomSheetContextMenu(final Context context,
-                           final MenuMode mode,
-                           final String title, @NonNull final String url,
-                           HomePager.OnUrlOpenListener onUrlOpenListener,
-                           HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
-                           final int tilesWidth, final int tilesHeight) {
+                                  final MenuMode mode,
+                                  final String title, @NonNull final String url,
+                                  @Nullable final Boolean isBookmarked, @Nullable final Boolean isPinned,
+                                  HomePager.OnUrlOpenListener onUrlOpenListener,
+                                  HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
+                                  final int tilesWidth, final int tilesHeight) {
 
         super(context,
                 mode,
                 title,
                 url,
+                isBookmarked,
+                isPinned,
                 onUrlOpenListener,
                 onUrlOpenInBackgroundListener);
 
