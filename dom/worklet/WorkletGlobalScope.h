@@ -25,8 +25,8 @@ namespace dom {
 
 class Console;
 
-class WorkletGlobalScope final : public nsIGlobalObject
-                               , public nsWrapperCache
+class WorkletGlobalScope : public nsIGlobalObject
+                         , public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(WORKLET_IID)
@@ -44,9 +44,9 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  bool
+  virtual bool
   WrapGlobalObject(JSContext* aCx, nsIPrincipal* aPrincipal,
-                   JS::MutableHandle<JSObject*> aReflector);
+                   JS::MutableHandle<JSObject*> aReflector) = 0;
 
   virtual JSObject*
   GetGlobalJSObject() override
@@ -60,9 +60,10 @@ public:
   void
   Dump(const Optional<nsAString>& aString) const;
 
-private:
+protected:
   ~WorkletGlobalScope();
 
+private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<Console> mConsole;
 };

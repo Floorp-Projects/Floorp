@@ -1,0 +1,105 @@
+<head>
+  <meta charset="utf-8">
+  <title>Plugin Crash, FullScreenElement Remains, iframe -> div[F]; iframe -> iframe -> plugin</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+</head>
+
+<body onLoad="load()">
+  <script class="testbody" type="application/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+    SimpleTest.expectChildProcessCrash();
+    SimpleTest.requestFlakyTimeout("This is needed in the event the " +
+        "fullscreen element fails to cancel fullscreen.  The fullscreen " +
+        "element is expected to exit fullscreen but takes some time to " +
+        "register as having exited when using `mozCancelFullScreen`.  So we " +
+        "can't just check that `mozFullScreenElement` is true or false after " +
+        "having called `mozCancelFullScreen` without the timeout because it " +
+        "will return the value prior to actually cancelling. A timeout is " +
+        "preferred here as opposed to polling methods similar to " +
+        "`SimpleTest.waitForCondition` in `SimpleTest.js` for reasons of" +
+        "idiomaticity."
+        );
+
+    /**
+     * FullScreen element is expected to remain alive after the test ends; this
+     * stops it.
+     */
+    SimpleTest.registerCleanupFunction(() => {
+      if (this.document.mozFullScreenElement) {
+        let fullScreenChange = promiseFullScreenChange();
+        this.document.mozCancelFullScreen();
+        return fullScreenChange;
+      }
+    });
+
+    /**
+     * Start with a fullscreen element.
+     * Then crash the plugin - which is expected to not be a child of the full
+     * screen element - and therefore remain in the fullscreen element.
+     */
+    let load = function testCrashChildPlugin_expectFullScreenElementToRemain() {
+      add_task(function* () {
+        /* Needed to be able to programatically (without user interaction) enter
+         * fullscreen  (has been deemed a security issue otherwise and therefore
+         * disabled by default)
+         */
+        yield SpecialPowers.pushPrefEnv(
+            { "set": [ ["full-screen-api.allow-trusted-requests-only", false] ] });
+      });
+
+      add_task(function* () {
+        let fullScreenElement = document.getElementById('iframeA')
+        let plugin = document.getElementById('iframe1')
+          .contentDocument.getElementById('iframe2')
+          .contentDocument.getElementById('plugin1');
+
+        let fullScreenChange = promiseFullScreenChange();
+        fullScreenElement.mozRequestFullScreen();
+        yield fullScreenChange;
+        ok(true, "Element is fullscreen");
+
+        yield crashPlugin(plugin)
+          .then(() => {
+            ok(true, "Plugin was crashed");
+          })
+          .catch(() => {
+            ok(false, "Plugin was crashed");
+          });
+      });
+
+      add_task(function* () {
+        /**
+         * We expect the fullscreen mode to _not_ change in this test. We'll wait
+         * 5 seconds for any kind of fullscreen change to occur, and fail if it
+         * does. Otherwise, we'll assume fullscreen didn't change and finish the
+         * test.
+         */
+        yield new Promise((resolve, reject) => {
+          let timeoutId;
+          let onFullScreenChange = () => {
+            document.removeEventListener("fullscreenchange", onFullScreenChange);
+            clearTimeout(timeoutId);
+            reject();
+          }
+          document.addEventListener("fullscreenchange", onFullScreenChange);
+          timeoutId = setTimeout(() => {
+            document.removeEventListener("fullscreenchange", onFullScreenChange);
+            resolve();
+          }, 5000);
+        })
+        .then(() => {
+          ok(true, "Element is still fullscreen");
+        })
+        .catch(() => {
+          ok(false, "Element is still fullscreen");
+        });
+      });
+
+    }
+  </script>
+
+  <iframe id="iframeA" src="1028200-subpageC.html" allowfullscreen="true"></iframe>
+  <iframe id="iframe1" src="1028200-subpageA.html" height="600" width="600"></iframe>
+</body>
