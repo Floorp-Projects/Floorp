@@ -608,10 +608,30 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   mStream->AddMainThreadListener(this);
 }
 
-AudioBufferSourceNode::~AudioBufferSourceNode()
+/* static */ already_AddRefed<AudioBufferSourceNode>
+AudioBufferSourceNode::Create(JSContext* aCx, AudioContext& aAudioContext,
+                              const AudioBufferSourceOptions& aOptions,
+                              ErrorResult& aRv)
 {
-}
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
 
+  RefPtr<AudioBufferSourceNode> audioNode = new AudioBufferSourceNode(&aAudioContext);
+
+  if (aOptions.mBuffer.WasPassed()) {
+    MOZ_ASSERT(aCx);
+    audioNode->SetBuffer(aCx, aOptions.mBuffer.Value());
+  }
+
+  audioNode->Detune()->SetValue(aOptions.mDetune);
+  audioNode->SetLoop(aOptions.mLoop);
+  audioNode->SetLoopEnd(aOptions.mLoopEnd);
+  audioNode->SetLoopStart(aOptions.mLoopStart);
+  audioNode->PlaybackRate()->SetValue(aOptions.mPlaybackRate);
+
+  return audioNode.forget();
+}
 void
 AudioBufferSourceNode::DestroyMediaStream()
 {
