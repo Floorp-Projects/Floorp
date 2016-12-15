@@ -8,9 +8,9 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.permissions.Permissions;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import java.io.File;
 import java.lang.IllegalArgumentException;
@@ -29,7 +29,7 @@ import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class DownloadsIntegration implements NativeEventListener
+public class DownloadsIntegration implements BundleEventListener
 {
     private static final String LOGTAG = "GeckoDownloadsIntegration";
 
@@ -45,7 +45,7 @@ public class DownloadsIntegration implements NativeEventListener
     private static final String DOWNLOAD_REMOVE = "Download:Remove";
 
     private DownloadsIntegration() {
-        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this, DOWNLOAD_REMOVE);
+        EventDispatcher.getInstance().registerBackgroundThreadListener(this, DOWNLOAD_REMOVE);
     }
 
     private static DownloadsIntegration sInstance;
@@ -65,7 +65,7 @@ public class DownloadsIntegration implements NativeEventListener
             this.id = id;
         }
 
-        public static Download fromJSON(final NativeJSObject obj) {
+        public static Download fromBundle(final GeckoBundle obj) {
             final String path = obj.getString("path");
             return new Download(path);
         }
@@ -88,10 +88,10 @@ public class DownloadsIntegration implements NativeEventListener
     }
 
     @Override
-    public void handleMessage(final String event, final NativeJSObject message,
+    public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
         if (DOWNLOAD_REMOVE.equals(event)) {
-            final Download d = Download.fromJSON(message);
+            final Download d = Download.fromBundle(message);
             removeDownload(d);
         }
     }
