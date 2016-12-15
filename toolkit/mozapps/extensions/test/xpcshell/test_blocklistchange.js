@@ -459,11 +459,10 @@ function Pbackground_update() {
 function Pmanual_update(aVersion) {
   let Pinstalls = [];
   for (let name of ["soft1", "soft2", "soft3", "soft4", "soft5", "hard1", "regexp1"]) {
-    Pinstalls.push(new Promise((resolve, reject) => {
-      AddonManager.getInstallForURL("http://localhost:" + gPort + "/addons/blocklist_"
-                                       + name + "_" + aVersion + ".xpi",
-                                    resolve, "application/x-xpinstall");
-    }));
+    Pinstalls.push(
+      AddonManager.getInstallForURL(
+        `http://localhost:${gPort}/addons/blocklist_${name}_${aVersion}.xpi`,
+        null, "application/x-xpinstall"));
   }
 
   return Promise.all(Pinstalls).then(installs => {
@@ -1289,9 +1288,7 @@ add_task(function* run_local_install_test() {
     do_get_file("addons/blocklist_regexp1_1.xpi")
   ]);
 
-  let aInstalls = yield new Promise((resolve, reject) => {
-    AddonManager.getAllInstalls(resolve)
-  });
+  let aInstalls = yield AddonManager.getAllInstalls();
   // Should have finished all installs without needing to restart
   do_check_eq(aInstalls.length, 0);
 
