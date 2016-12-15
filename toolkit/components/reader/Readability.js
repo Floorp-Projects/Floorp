@@ -119,7 +119,7 @@ Readability.prototype = {
   // All of the regular expressions in use within readability.
   // Defined up here so we don't instantiate them repeatedly in loops.
   REGEXPS: {
-    unlikelyCandidates: /banner|combx|comment|community|cover-wrap|disqus|extra|foot|header|legends|menu|modal|related|remark|rss|shoutbox|sidebar|skyscraper|sponsor|ad-break|agegate|pagination|pager|popup|yom-remote/i,
+    unlikelyCandidates: /banner|combx|comment|community|disqus|extra|foot|header|legends|menu|modal|related|remark|rss|shoutbox|sidebar|skyscraper|sponsor|ad-break|agegate|pagination|pager|popup/i,
     okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
     positive: /article|body|content|entry|hentry|h-entry|main|page|pagination|post|text|blog|story/i,
     negative: /hidden|^hid$| hid$| hid |^hid |banner|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|modal|outbrain|promo|related|scroll|share|shoutbox|sidebar|skyscraper|sponsor|shopping|tags|tool|widget/i,
@@ -155,8 +155,8 @@ Readability.prototype = {
    *
    * If function is not passed, removes all the nodes in node list.
    *
-   * @param NodeList nodeList The nodes to operate on
-   * @param Function filterFn the function to use as a filter
+   * @param NodeList nodeList The no
+   * @param Function filterFn
    * @return void
    */
   _removeNodes: function(nodeList, filterFn) {
@@ -172,20 +172,6 @@ Readability.prototype = {
   },
 
   /**
-   * Iterates over a NodeList, and calls _setNodeTag for each node.
-   *
-   * @param NodeList nodeList The nodes to operate on
-   * @param String newTagName the new tag name to use
-   * @return void
-   */
-  _replaceNodeTags: function(nodeList, newTagName) {
-    for (var i = nodeList.length - 1; i >= 0; i--) {
-      var node = nodeList[i];
-      this._setNodeTag(node, newTagName);
-    }
-  },
-
-  /**
    * Iterate over a NodeList, which doesn't natively fully implement the Array
    * interface.
    *
@@ -194,9 +180,10 @@ Readability.prototype = {
    *
    * @param  NodeList nodeList The NodeList.
    * @param  Function fn       The iterate function.
+   * @param  Boolean  backward Whether to use backward iteration.
    * @return void
    */
-  _forEachNode: function(nodeList, fn) {
+  _forEachNode: function(nodeList, fn, backward) {
     Array.prototype.forEach.call(nodeList, fn, this);
   },
 
@@ -375,7 +362,9 @@ Readability.prototype = {
       this._replaceBrs(doc.body);
     }
 
-    this._replaceNodeTags(doc.getElementsByTagName("font"), "SPAN");
+    this._forEachNode(doc.getElementsByTagName("font"), function(fontNode) {
+      this._setNodeTag(fontNode, "SPAN");
+    });
   },
 
   /**
@@ -1073,15 +1062,12 @@ Readability.prototype = {
       metadata.excerpt = values["twitter:description"];
     }
 
-    metadata.title = this._getArticleTitle();
-    if (!metadata.title) {
-      if ("og:title" in values) {
-        // Use facebook open graph title.
-        metadata.title = values["og:title"];
-      } else if ("twitter:title" in values) {
-        // Use twitter cards title.
-        metadata.title = values["twitter:title"];
-      }
+    if ("og:title" in values) {
+      // Use facebook open graph title.
+      metadata.title = values["og:title"];
+    } else if ("twitter:title" in values) {
+      // Use twitter cards title.
+      metadata.title = values["twitter:title"];
     }
 
     return metadata;
@@ -1871,7 +1857,7 @@ Readability.prototype = {
     this._prepDocument();
 
     var metadata = this._getArticleMetadata();
-    var articleTitle = metadata.title;
+    var articleTitle = metadata.title || this._getArticleTitle();
 
     var articleContent = this._grabArticle();
     if (!articleContent)
