@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+addEventListener('DOMContentLoaded', function(){
+ document.documentElement.className = 'lizard';
+ setTimeout(function(){
+  document.execCommand('selectAll', false, null);
+  document.designMode = 'on';
+  document.execCommand('removeformat', false, null);
+ }, 0);
+});
+</script>
+<style>
+.lizard{
+ -webkit-user-select:all;
+}
+*{
+ position:fixed;
+ display:table-column;
+}
+</style>
+</head>
+<body>
+<span>
+<span contenteditable>
+<span class=lizard></span>
+<span class=lizard></span>
+<span />
+</span>
+</span>
+</span>
+</span>
+</body>
+</html>
