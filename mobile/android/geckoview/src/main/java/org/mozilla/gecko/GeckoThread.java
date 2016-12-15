@@ -466,7 +466,8 @@ public class GeckoThread extends Thread {
         // with each build.  In official builds, the startup cache is purged by
         // the buildid mechanism, but most un-official builds don't bump the
         // buildid, so we purge here instead.
-        if (!AppConstants.MOZILLA_OFFICIAL) {
+        final GeckoAppShell.GeckoInterface gi = GeckoAppShell.getGeckoInterface();
+        if (gi == null || !gi.isOfficial()) {
             Log.w(LOGTAG, "STARTUP PERFORMANCE WARNING: un-official build: purging the " +
                           "startup (JavaScript) caches.");
             args.add("-purgecaches");
@@ -540,9 +541,9 @@ public class GeckoThread extends Thread {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
-        if (!AppConstants.MOZILLA_OFFICIAL) {
-            String msg = new String("RunGecko - args =" + TextUtils.join(" ", args));
-            Log.i(LOGTAG, msg);
+        final GeckoAppShell.GeckoInterface gi = GeckoAppShell.getGeckoInterface();
+        if (gi == null || !gi.isOfficial()) {
+            Log.i(LOGTAG, "RunGecko - args = " + args);
         }
 
         // And go.

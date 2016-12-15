@@ -21,7 +21,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.mozilla.gecko.annotation.JNITarget;
-import org.mozilla.gecko.AppConstants;
 
 import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
@@ -66,9 +65,7 @@ public class MatrixBlobCursor extends AbstractCursor {
         }
 
         this.data = new Object[columnCount * initialCapacity];
-        if (AppConstants.DEBUG_BUILD) {
-            this.allocationStack = new Throwable("allocationStack");
-        }
+        this.allocationStack = new Throwable("allocationStack");
     }
 
     /**
@@ -355,10 +352,8 @@ public class MatrixBlobCursor extends AbstractCursor {
 
     @Override
     protected void finalize() {
-        if (AppConstants.DEBUG_BUILD) {
-            if (!isClosed()) {
-                Log.e(LOGTAG, "Cursor finalized without being closed", this.allocationStack);
-            }
+        if (!isClosed()) {
+            Log.e(LOGTAG, "Cursor finalized without being closed", this.allocationStack);
         }
 
         super.finalize();

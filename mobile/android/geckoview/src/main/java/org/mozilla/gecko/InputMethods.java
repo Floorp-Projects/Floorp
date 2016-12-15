@@ -7,8 +7,6 @@ package org.mozilla.gecko;
 
 import java.util.Collection;
 
-import org.mozilla.gecko.AppConstants.Versions;
-
 import android.content.Context;
 import android.os.Build;
 import android.provider.Settings.Secure;

@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.SynchronousQueue;
 
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;

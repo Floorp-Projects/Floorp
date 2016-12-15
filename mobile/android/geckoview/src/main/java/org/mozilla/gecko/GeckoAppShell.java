@@ -1824,6 +1824,13 @@ public class GeckoAppShell
          * @return URI or null.
          */
         String getDefaultChromeURI();
+
+        /**
+         * Is this an official Mozilla application, like Firefox or Thunderbird?
+         *
+         * @return true if MOZILLA_OFFICIAL.
+         */
+        boolean isOfficial();
     };
 
     private static GeckoInterface sGeckoInterface;
