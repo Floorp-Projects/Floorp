@@ -56,8 +56,7 @@ public:
   // This method may or may not be safe off of the main thread. For nsIDocument
   // it is safe. For nsIGlobalWindow it is not safe. The nsIEventTarget can
   // always be used off the main thread.
-  virtual already_AddRefed<nsIEventTarget>
-  EventTargetFor(TaskCategory aCategory) const;
+  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
 };
 
 // Base class for DocGroup and TabGroup.
@@ -70,8 +69,7 @@ public:
 
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
-  virtual already_AddRefed<nsIEventTarget>
-  EventTargetFor(TaskCategory aCategory) const = 0;
+  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const = 0;
 
   // These methods perform a safe cast. They return null if |this| is not of the
   // requested type.
