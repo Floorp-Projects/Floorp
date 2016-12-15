@@ -16,11 +16,6 @@
  */
 
 /**
- * Enabled preloading of dynamically loaded libraries
- */
-extern "C" NS_HIDDEN_(void) XPCOMGlueEnablePreload();
-
-/**
  * Initialize the XPCOM glue by dynamically linking against the XPCOM
  * shared library indicated by xpcomFile.
  */

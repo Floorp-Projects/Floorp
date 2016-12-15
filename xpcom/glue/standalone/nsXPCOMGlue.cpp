@@ -22,7 +22,6 @@ using namespace mozilla;
 #define XPCOM_DEPENDENT_LIBS_LIST "dependentlibs.list"
 
 static XPCOMFunctions xpcomFunctions;
-static bool do_preload = false;
 
 #if defined(XP_WIN)
 #define READ_TEXTMODE L"rt"
@@ -146,11 +145,10 @@ AppendDependentLib(LibHandleType aLibHandle)
 }
 
 static bool
-ReadDependentCB(pathstr_t aDependentLib, bool aDoPreload)
+ReadDependentCB(pathstr_t aDependentLib)
 {
-  if (aDoPreload) {
-    ReadAheadLib(aDependentLib);
-  }
+  // We do this unconditionally because of data in bug 771745
+  ReadAheadLib(aDependentLib);
   LibHandleType libHandle = GetLibHandle(aDependentLib);
   if (libHandle) {
     AppendDependentLib(libHandle);
@@ -161,11 +159,11 @@ ReadDependentCB(pathstr_t aDependentLib, bool aDoPreload)
 
 #ifdef XP_WIN
 static bool
-ReadDependentCB(const char* aDependentLib, bool do_preload)
+ReadDependentCB(const char* aDependentLib)
 {
   wchar_t wideDependentLib[MAX_PATH];
   MultiByteToWideChar(CP_UTF8, 0, aDependentLib, -1, wideDependentLib, MAX_PATH);
-  return ReadDependentCB(wideDependentLib, do_preload);
+  return ReadDependentCB(wideDependentLib);
 }
 
 inline FILE*
@@ -320,7 +318,7 @@ XPCOMGlueLoad(const char* aXPCOMFile)
     }
 
     strcpy(cursor, buffer);
-    if (!ReadDependentCB(xpcomDir, do_preload)) {
+    if (!ReadDependentCB(xpcomDir)) {
       XPCOMGlueUnload();
       return nullptr;
     }
@@ -357,12 +355,6 @@ XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad* aSymbols)
     ++aSymbols;
   }
   return rv;
-}
-
-void
-XPCOMGlueEnablePreload()
-{
-  do_preload = true;
 }
 
 #if defined(MOZ_WIDGET_GTK) && (defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__))
