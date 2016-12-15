@@ -1339,6 +1339,8 @@ HTMLInputElement::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) co
         // We no longer have our original checked state.  Set our
         // checked state on the clone.
         it->DoSetChecked(mChecked, false, true);
+        // Then tell DoneCreatingElement() not to overwrite:
+        it->mShouldInitChecked = false;
       }
       break;
     case VALUE_MODE_DEFAULT:
