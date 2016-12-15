@@ -101,6 +101,45 @@ public:
   uint32_t mChunksToProcess = 0;
 };
 
+/* static */ already_AddRefed<AnalyserNode>
+AnalyserNode::Create(AudioContext& aAudioContext,
+                     const AnalyserOptions& aOptions,
+                     ErrorResult& aRv)
+{
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<AnalyserNode> analyserNode = new AnalyserNode(&aAudioContext);
+
+  analyserNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  analyserNode->SetFftSize(aOptions.mFftSize, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  analyserNode->SetMinDecibels(aOptions.mMinDecibels, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  analyserNode->SetMaxDecibels(aOptions.mMaxDecibels, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  analyserNode->SetSmoothingTimeConstant(aOptions.mSmoothingTimeConstant, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return analyserNode.forget();
+}
+
 AnalyserNode::AnalyserNode(AudioContext* aContext)
   : AudioNode(aContext,
               1,
