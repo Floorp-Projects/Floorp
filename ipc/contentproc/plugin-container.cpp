@@ -58,13 +58,13 @@ private:
 };
 #endif
 
-mozilla::gmp::SandboxStarter*
+mozilla::UniquePtr<mozilla::gmp::SandboxStarter>
 MakeSandboxStarter()
 {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-    return new WinSandboxStarter();
+    return mozilla::MakeUnique<WinSandboxStarter>();
 #elif defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-    return new MacSandboxStarter();
+    return mozilla::MakeUnique<MacSandboxStarter>();
 #else
     return nullptr;
 #endif
@@ -107,9 +107,8 @@ content_process_main(int argc, char* argv[])
 #if !defined(XP_LINUX) && defined(MOZ_PLUGIN_CONTAINER)
     // On Windows and MacOS, the GMPLoader lives in plugin-container, so that its
     // code can be covered by an EME/GMP vendor's voucher.
-    nsAutoPtr<mozilla::gmp::SandboxStarter> starter(MakeSandboxStarter());
     if (XRE_GetProcessType() == GeckoProcessType_GMPlugin) {
-        childData.gmpLoader = mozilla::gmp::CreateGMPLoader(starter);
+        childData.gmpLoader = mozilla::gmp::CreateGMPLoader(MakeSandboxStarter());
     }
 #endif
     nsresult rv = XRE_InitChildProcess(argc, argv, &childData);
