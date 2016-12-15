@@ -775,7 +775,19 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   nsPoint offsetToBoundingBox;
   nsPoint offsetToUserSpace;
   gfxContextMatrixAutoSaveRestore matSR;
-  DrawTarget* target = ctx.GetDrawTarget();
+  RefPtr<DrawTarget> maskTarget = ctx.GetDrawTarget();
+
+  if (maskUsage.shouldGenerateMaskLayer &&
+      maskUsage.shouldGenerateClipMaskLayer) {
+    // We will paint both mask of positioned mask and clip-path into
+    // maskTarget.
+    //
+    // Create one extra draw target for drawing positioned mask, so that we do
+    // not have to copy the content of maskTarget before painting
+    // clip-path into it.
+    maskTarget = maskTarget->CreateSimilarDrawTarget(maskTarget->GetSize(),
+                                                     SurfaceFormat::A8);
+  }
 
   if (maskUsage.shouldApplyBasicShape) {
     matSR.SetContext(&ctx);
@@ -806,7 +818,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     // XXX Bug 1323912.
     MOZ_ASSERT(maskUsage.opacity == 1.0,
                "nsSVGIntegrationUtils::PaintMask can not handle opacity now.");
-    result = PaintMaskSurface(aParams, target, 1.0,
+    result = PaintMaskSurface(aParams, maskTarget, 1.0,
                               firstFrame->StyleContext(), maskFrames,
                               ctx.CurrentMatrix(), offsetToUserSpace);
     if (result != DrawResult::SUCCESS) {
@@ -836,7 +848,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 
     nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
     RefPtr<SourceSurface> maskSurface =
-      maskUsage.shouldGenerateMaskLayer ? target->Snapshot() : nullptr;
+      maskUsage.shouldGenerateMaskLayer ? maskTarget->Snapshot() : nullptr;
     result =
       clipPathFrame->PaintClipMask(ctx, frame, cssPxToDevPxMatrix,
                                    &clipMaskTransform, maskSurface,
