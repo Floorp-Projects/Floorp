@@ -24,7 +24,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.AppConstants;
+import org.mozilla.geckoview.BuildConfig;
 
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
@@ -357,7 +357,7 @@ public final class GeckoLoader {
         message.append(lib);
 
         // These might differ. If so, we know why the library won't load!
-        message.append(": ABI: " + AppConstants.MOZ_APP_ABI + ", " + getCPUABI());
+        message.append(": ABI: " + BuildConfig.MOZ_APP_ABI + ", " + getCPUABI());
         message.append(": Data: " + context.getApplicationInfo().dataDir);
         try {
             final boolean appLibExists = new File("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so").exists();

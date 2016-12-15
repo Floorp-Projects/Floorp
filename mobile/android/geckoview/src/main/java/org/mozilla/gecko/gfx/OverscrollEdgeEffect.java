@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.AppConstants.Versions;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
