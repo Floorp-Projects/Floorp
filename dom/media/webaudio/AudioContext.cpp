@@ -25,6 +25,7 @@
 #include "mozilla/dom/IIRFilterNodeBinding.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/MediaElementAudioSourceNodeBinding.h"
+#include "mozilla/dom/MediaStreamAudioSourceNodeBinding.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "mozilla/dom/OscillatorNodeBinding.h"
 #include "mozilla/dom/PannerNodeBinding.h"
@@ -374,16 +375,10 @@ already_AddRefed<MediaStreamAudioSourceNode>
 AudioContext::CreateMediaStreamSource(DOMMediaStream& aMediaStream,
                                       ErrorResult& aRv)
 {
-  if (mIsOffline) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
+  MediaStreamAudioSourceOptions options;
+  options.mMediaStream = aMediaStream;
 
-  if (CheckClosed(aRv)) {
-    return nullptr;
-  }
-
-  return MediaStreamAudioSourceNode::Create(this, &aMediaStream, aRv);
+  return MediaStreamAudioSourceNode::Create(*this, options, aRv);
 }
 
 already_AddRefed<GainNode>
