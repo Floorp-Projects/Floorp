@@ -11,6 +11,8 @@
 const TEST_URI = "data:text/html;charset=utf8,<title>bug870220</title>\n" +
                  "<p>hello world\n<p>native getters!";
 
+requestLongerTimeout(2);
+
 add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
