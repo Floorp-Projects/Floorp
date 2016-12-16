@@ -30,7 +30,7 @@ class VideoDecoder : public GMPVideoDecoder
                    , public RefCounted
 {
 public:
-  VideoDecoder(GMPVideoHost *aHostAPI);
+  explicit VideoDecoder(GMPVideoHost *aHostAPI);
 
   virtual void InitDecode(const GMPVideoCodec& aCodecSettings,
                           const uint8_t* aCodecSpecific,
