@@ -2404,8 +2404,30 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let canvas = capture.viewport(this.getCurrentWindow());
-      resp.body.value = capture.toBase64(canvas);
+      let win = this.getCurrentWindow();
+      let canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      let doc = win.document.documentElement;
+      let docRect = doc.getBoundingClientRect();
+      let width = docRect.width;
+      let height = docRect.height;
+
+      // Convert width and height from CSS pixels (potentially fractional)
+      // to device pixels (integer).
+      let scale = win.devicePixelRatio;
+      canvas.setAttribute("width", Math.round(width * scale));
+      canvas.setAttribute("height", Math.round(height * scale));
+
+      // Bug 1075168: CanvasRenderingContext2D image is distorted when using
+      // certain flags in chrome context.
+      let flags = context.DRAWWINDOW_DRAW_VIEW |
+          context.DRAWWINDOW_USE_WIDGET_LAYERS;
+
+      let context = canvas.getContext("2d");
+      context.scale(scale, scale);
+      context.drawWindow(win, 0, 0, width, height, "rgb(255,255,255)", flags);
+      let dataUrl = canvas.toDataURL("image/png", "");
+      let data = dataUrl.substring(dataUrl.indexOf(",") + 1);
+      resp.body.value = data;
       break;
 
     case Context.CONTENT:
