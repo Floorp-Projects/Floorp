@@ -755,9 +755,6 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity,
                                  maskUsage);
-  MOZ_ASSERT(maskUsage.shouldGenerateMaskLayer ||
-             maskUsage.shouldApplyClipPath ||
-             maskUsage.shouldGenerateClipMaskLayer);
 
   nsIFrame* frame = aParams.frame;
   if (!ValidateSVGFrame(frame)) {
@@ -792,8 +789,27 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
                                                      SurfaceFormat::A8);
   }
 
+  if (maskUsage.shouldApplyBasicShape) {
+    matSR.SetContext(&ctx);
+
+    SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
+                       offsetToUserSpace, false);
+
+    nsCSSClipPathInstance::ApplyBasicShapeClip(ctx, frame);
+    if (!maskUsage.shouldGenerateMaskLayer) {
+      // Only have basic-shape clip-path effect. Fill clipped region by
+      // opaque white.
+      ctx.SetColor(Color(0.0, 0.0, 0.0, 1.0));
+      ctx.Fill();
+      ctx.PopClip();
+
+      return result;
+    }
+  }
+
   // Paint mask onto ctx.
   if (maskUsage.shouldGenerateMaskLayer) {
+    matSR.Restore();
     matSR.SetContext(&ctx);
 
     SetupContextMatrix(frame, aParams, offsetToBoundingBox,
@@ -805,8 +821,17 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
                               firstFrame->StyleContext(), maskFrames,
                               ctx.CurrentMatrix(), offsetToUserSpace);
     if (result != DrawResult::SUCCESS) {
+      if (maskUsage.shouldApplyBasicShape) {
+        ctx.PopClip();
+      }
+
       return result;
     }
+  }
+
+  if (maskUsage.shouldApplyBasicShape) {
+    ctx.PopClip();
+    return result;
   }
 
   // Paint clip-path onto ctx.
@@ -816,6 +841,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 
     SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
                        offsetToUserSpace, false);
+
     Matrix clipMaskTransform;
     gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(frame);
 
