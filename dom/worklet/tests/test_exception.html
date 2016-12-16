@@ -10,11 +10,36 @@
 
 <script type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  {"set": [["dom.audioWorklet.enabled", true],
-           ["dom.worklet.enabled", true]]},
-  function() { loadTest("file_exception.html"); });
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioWorklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  // This loading should fail
+  audioWorklet.import("404.js")
+  .then(() => {
+    ok(false, "We should not be called!");
+  }, () => {
+    ok(true, "The script thrown but we are still here.");
+  })
+
+  // This should throw from JS
+  .then(() => {
+    return audioWorklet.import("worklet_exception.js")
+  })
+  .then(() => {
+    ok(false, "We should not be called!");
+  }, () => {
+    ok(true, "The script thrown but we are still here.");
+  })
+
+  .then(() => {
+    SimpleTest.finish();
+  });
+}
 
 </script>
 </body>
