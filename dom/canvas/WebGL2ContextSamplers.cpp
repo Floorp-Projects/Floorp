@@ -26,7 +26,13 @@ WebGL2Context::CreateSampler()
 void
 WebGL2Context::DeleteSampler(WebGLSampler* sampler)
 {
-    if (!ValidateDeleteObject("deleteSampler", sampler))
+    if (IsContextLost())
+        return;
+
+    if (!ValidateObjectAllowDeletedOrNull("deleteSampler", sampler))
+        return;
+
+    if (!sampler || sampler->IsDeleted())
         return;
 
     for (int n = 0; n < mGLMaxTextureUnits; n++) {
@@ -41,9 +47,18 @@ WebGL2Context::DeleteSampler(WebGLSampler* sampler)
 }
 
 bool
-WebGL2Context::IsSampler(const WebGLSampler* sampler)
+WebGL2Context::IsSampler(WebGLSampler* sampler)
 {
-    if (!ValidateIsObject("isSampler", sampler))
+    if (IsContextLost())
+        return false;
+
+    if (!sampler)
+        return false;
+
+    if (!ValidateObjectAllowDeleted("isSampler", sampler))
+        return false;
+
+    if (sampler->IsDeleted())
         return false;
 
     MakeContextCurrent();
@@ -56,63 +71,148 @@ WebGL2Context::BindSampler(GLuint unit, WebGLSampler* sampler)
     if (IsContextLost())
         return;
 
-    if (sampler && !ValidateObject("bindSampler", *sampler))
+    if (!ValidateObjectAllowDeletedOrNull("bindSampler", sampler))
         return;
 
     if (GLint(unit) >= mGLMaxTextureUnits)
         return ErrorInvalidValue("bindSampler: unit must be < %d", mGLMaxTextureUnits);
 
-    ////
+    if (sampler && sampler->IsDeleted())
+        return ErrorInvalidOperation("bindSampler: binding deleted sampler");
 
-    gl->MakeCurrent();
-    gl->fBindSampler(unit, sampler ? sampler->mGLName : 0);
-
+    WebGLContextUnchecked::BindSampler(unit, sampler);
     InvalidateResolveCacheForTextureWithTexUnit(unit);
+
     mBoundSamplers[unit] = sampler;
 }
 
 void
-WebGL2Context::SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint paramInt)
+WebGL2Context::SamplerParameteri(WebGLSampler* sampler, GLenum pname, GLint param)
 {
-    const char funcName[] = "samplerParameteri";
     if (IsContextLost())
         return;
 
-    if (!ValidateObject(funcName, sampler))
+    if (!sampler || sampler->IsDeleted())
+        return ErrorInvalidOperation("samplerParameteri: invalid sampler");
+
+    if (!ValidateSamplerParameterParams(pname, WebGLIntOrFloat(param), "samplerParameteri"))
         return;
 
-    sampler.SamplerParameter(funcName, pname, paramInt);
+    sampler->SamplerParameter1i(pname, param);
+    WebGLContextUnchecked::SamplerParameteri(sampler, pname, param);
 }
 
 void
-WebGL2Context::SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat paramFloat)
+WebGL2Context::SamplerParameteriv(WebGLSampler* sampler, GLenum pname, const dom::Int32Array& param)
 {
-    const char funcName[] = "samplerParameterf";
     if (IsContextLost())
         return;
 
-    if (!ValidateObject(funcName, sampler))
+    if (!sampler || sampler->IsDeleted())
+        return ErrorInvalidOperation("samplerParameteriv: invalid sampler");
+
+    param.ComputeLengthAndData();
+    if (param.Length() < 1)
+        return /* TODO(djg): Error message */;
+
+    /* TODO(djg): All of these calls in ES3 only take 1 param */
+    if (!ValidateSamplerParameterParams(pname, WebGLIntOrFloat(param.Data()[0]), "samplerParameteriv"))
         return;
 
-    sampler.SamplerParameter(funcName, pname, WebGLIntOrFloat(paramFloat).AsInt());
+    sampler->SamplerParameter1i(pname, param.Data()[0]);
+    WebGLContextUnchecked::SamplerParameteriv(sampler, pname, param.Data());
 }
 
 void
-WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler, GLenum pname,
-                                   JS::MutableHandleValue retval)
+WebGL2Context::SamplerParameteriv(WebGLSampler* sampler, GLenum pname, const dom::Sequence<GLint>& param)
 {
-    const char funcName[] = "getSamplerParameter";
+    if (IsContextLost())
+        return;
+
+    if (!sampler || sampler->IsDeleted())
+        return ErrorInvalidOperation("samplerParameteriv: invalid sampler");
+
+    if (param.Length() < 1)
+        return /* TODO(djg): Error message */;
+
+    /* TODO(djg): All of these calls in ES3 only take 1 param */
+    if (!ValidateSamplerParameterParams(pname, WebGLIntOrFloat(param[0]), "samplerParameteriv"))
+        return;
+
+    sampler->SamplerParameter1i(pname, param[0]);
+    WebGLContextUnchecked::SamplerParameteriv(sampler, pname, param.Elements());
+}
+
+void
+WebGL2Context::SamplerParameterf(WebGLSampler* sampler, GLenum pname, GLfloat param)
+{
+    if (IsContextLost())
+        return;
+
+    if (!sampler || sampler->IsDeleted())
+        return ErrorInvalidOperation("samplerParameterf: invalid sampler");
+
+    if (!ValidateSamplerParameterParams(pname, WebGLIntOrFloat(param), "samplerParameterf"))
+        return;
+
+    sampler->SamplerParameter1f(pname, param);
+    WebGLContextUnchecked::SamplerParameterf(sampler, pname, param);
+}
+
+void
+WebGL2Context::SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const dom::Float32Array& param)
+{
+    if (IsContextLost())
+        return;
+
+    if (!sampler || sampler->IsDeleted())
+        return ErrorInvalidOperation("samplerParameterfv: invalid sampler");
+
+    param.ComputeLengthAndData();
+    if (param.Length() < 1)
+        return /* TODO(djg): Error message */;
+
+    /* TODO(djg): All of these calls in ES3 only take 1 param */
+    if (!ValidateSamplerParameterParams(pname, WebGLIntOrFloat(param.Data()[0]), "samplerParameterfv"))
+        return;
+
+    sampler->SamplerParameter1f(pname, param.Data()[0]);
+    WebGLContextUnchecked::SamplerParameterfv(sampler, pname, param.Data());
+}
+
+void
+WebGL2Context::SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const dom::Sequence<GLfloat>& param)
+{
+    if (IsContextLost())
+        return;
+
+    if (!sampler || sampler->IsDeleted())
+        return ErrorInvalidOperation("samplerParameterfv: invalid sampler");
+
+    if (param.Length() < 1)
+        return /* TODO(djg): Error message */;
+
+    /* TODO(djg): All of these calls in ES3 only take 1 param */
+    if (!ValidateSamplerParameterParams(pname, WebGLIntOrFloat(param[0]), "samplerParameterfv"))
+        return;
+
+    sampler->SamplerParameter1f(pname, param[0]);
+    WebGLContextUnchecked::SamplerParameterfv(sampler, pname, param.Elements());
+}
+
+void
+WebGL2Context::GetSamplerParameter(JSContext*, WebGLSampler* sampler, GLenum pname, JS::MutableHandleValue retval)
+{
     retval.setNull();
 
     if (IsContextLost())
         return;
 
-    if (!ValidateObject(funcName, sampler))
+    if (!sampler || sampler->IsDeleted())
+        return ErrorInvalidOperation("getSamplerParameter: invalid sampler");
+
+    if (!ValidateSamplerParameterName(pname, "getSamplerParameter"))
         return;
-
-    ////
-
-    gl->MakeCurrent();
 
     switch (pname) {
     case LOCAL_GL_TEXTURE_MIN_FILTER:
@@ -122,24 +222,14 @@ WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler, GLen
     case LOCAL_GL_TEXTURE_WRAP_R:
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
     case LOCAL_GL_TEXTURE_COMPARE_FUNC:
-        {
-            GLint param = 0;
-            gl->fGetSamplerParameteriv(sampler.mGLName, pname, &param);
-            retval.set(JS::Int32Value(param));
-        }
+        retval.set(JS::Int32Value(
+            WebGLContextUnchecked::GetSamplerParameteriv(sampler, pname)));
         return;
 
     case LOCAL_GL_TEXTURE_MIN_LOD:
     case LOCAL_GL_TEXTURE_MAX_LOD:
-        {
-            GLfloat param = 0;
-            gl->fGetSamplerParameterfv(sampler.mGLName, pname, &param);
-            retval.set(JS::Float32Value(param));
-        }
-        return;
-
-    default:
-        ErrorInvalidEnum("%s: invalid pname: %s", funcName, EnumName(pname));
+        retval.set(JS::Float32Value(
+            WebGLContextUnchecked::GetSamplerParameterfv(sampler, pname)));
         return;
     }
 }

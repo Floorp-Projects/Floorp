@@ -105,63 +105,50 @@ WebGL2Context::GetFramebufferAttachmentParameter(JSContext* cx,
                                                            out_error);
 }
 
-////
-
+// Map attachments intended for the default buffer, to attachments for a non-
+// default buffer.
 static bool
-ValidateBackbufferAttachmentEnum(WebGLContext* webgl, const char* funcName,
-                                 GLenum attachment)
+TranslateDefaultAttachments(const dom::Sequence<GLenum>& in, dom::Sequence<GLenum>* out)
 {
-    switch (attachment) {
-    case LOCAL_GL_COLOR:
-    case LOCAL_GL_DEPTH:
-    case LOCAL_GL_STENCIL:
-        return true;
+    for (size_t i = 0; i < in.Length(); i++) {
+        switch (in[i]) {
+            case LOCAL_GL_COLOR:
+                if (!out->AppendElement(LOCAL_GL_COLOR_ATTACHMENT0, fallible)) {
+                    return false;
+                }
+                break;
 
-    default:
-        webgl->ErrorInvalidEnum("%s: attachment: invalid enum value 0x%x.",
-                                funcName, attachment);
-        return false;
+            case LOCAL_GL_DEPTH:
+                if (!out->AppendElement(LOCAL_GL_DEPTH_ATTACHMENT, fallible)) {
+                    return false;
+                }
+                break;
+
+            case LOCAL_GL_STENCIL:
+                if (!out->AppendElement(LOCAL_GL_STENCIL_ATTACHMENT, fallible)) {
+                    return false;
+                }
+                break;
+        }
     }
+
+    return true;
 }
 
-static bool
-ValidateFramebufferAttachmentEnum(WebGLContext* webgl, const char* funcName,
-                                  GLenum attachment)
+void
+WebGL2Context::InvalidateFramebuffer(GLenum target,
+                                     const dom::Sequence<GLenum>& attachments,
+                                     ErrorResult& rv)
 {
-    if (attachment >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-        attachment <= webgl->LastColorAttachmentEnum())
-    {
-        return true;
-    }
+    const char funcName[] = "invalidateSubFramebuffer";
 
-    switch (attachment) {
-    case LOCAL_GL_DEPTH_ATTACHMENT:
-    case LOCAL_GL_STENCIL_ATTACHMENT:
-    case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-        return true;
-
-    default:
-        webgl->ErrorInvalidEnum("%s: attachment: invalid enum value 0x%x.",
-                                funcName, attachment);
-        return false;
-    }
-}
-
-bool
-WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
-                                            const dom::Sequence<GLenum>& attachments,
-                                            ErrorResult* const out_rv,
-                                            std::vector<GLenum>* const scopedVector,
-                                            GLsizei* const out_glNumAttachments,
-                                            const GLenum** const out_glAttachments)
-{
     if (IsContextLost())
-        return false;
+        return;
 
-    gl->MakeCurrent();
+    MakeContextCurrent();
 
     if (!ValidateFramebufferTarget(target, funcName))
-        return false;
+        return;
 
     const WebGLFramebuffer* fb;
     bool isDefaultFB;
@@ -181,77 +168,33 @@ WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
         MOZ_CRASH("GFX: Bad target.");
     }
 
-    *out_glNumAttachments = attachments.Length();
-    *out_glAttachments = attachments.Elements();
-
-    if (fb) {
-        for (const auto& attachment : attachments) {
-            if (!ValidateFramebufferAttachmentEnum(this, funcName, attachment))
-                return false;
+    const bool badColorAttachmentIsInvalidOp = true;
+    for (size_t i = 0; i < attachments.Length(); i++) {
+        if (!ValidateFramebufferAttachment(fb, attachments[i], funcName,
+                                           badColorAttachmentIsInvalidOp))
+        {
+            return;
         }
+    }
+
+    // InvalidateFramebuffer is a hint to the driver. Should be OK to
+    // skip calls if not supported, for example by OSX 10.9 GL
+    // drivers.
+    if (!gl->IsSupported(gl::GLFeature::invalidate_framebuffer))
+        return;
+
+    if (!fb && !isDefaultFB) {
+        dom::Sequence<GLenum> tmpAttachments;
+        if (!TranslateDefaultAttachments(attachments, &tmpAttachments)) {
+            rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
+
+        gl->fInvalidateFramebuffer(target, tmpAttachments.Length(),
+                                   tmpAttachments.Elements());
     } else {
-        for (const auto& attachment : attachments) {
-            if (!ValidateBackbufferAttachmentEnum(this, funcName, attachment))
-                return false;
-        }
-
-        if (!isDefaultFB) {
-            MOZ_ASSERT(scopedVector->empty());
-            scopedVector->reserve(attachments.Length());
-            for (const auto& attachment : attachments) {
-                switch (attachment) {
-                case LOCAL_GL_COLOR:
-                    scopedVector->push_back(LOCAL_GL_COLOR_ATTACHMENT0);
-                    break;
-
-                case LOCAL_GL_DEPTH:
-                    scopedVector->push_back(LOCAL_GL_DEPTH_ATTACHMENT);
-                    break;
-
-                case LOCAL_GL_STENCIL:
-                    scopedVector->push_back(LOCAL_GL_STENCIL_ATTACHMENT);
-                    break;
-
-                default:
-                    MOZ_CRASH();
-                }
-            }
-            *out_glNumAttachments = scopedVector->size();
-            *out_glAttachments = scopedVector->data();
-        }
+        gl->fInvalidateFramebuffer(target, attachments.Length(), attachments.Elements());
     }
-
-    return true;
-}
-
-void
-WebGL2Context::InvalidateFramebuffer(GLenum target,
-                                     const dom::Sequence<GLenum>& attachments,
-                                     ErrorResult& rv)
-{
-    const char funcName[] = "invalidateSubFramebuffer";
-
-    std::vector<GLenum> scopedVector;
-    GLsizei glNumAttachments;
-    const GLenum* glAttachments;
-    if (!ValidateInvalidateFramebuffer(funcName, target, attachments, &rv, &scopedVector,
-                                       &glNumAttachments, &glAttachments))
-    {
-        return;
-    }
-
-    ////
-
-    // Some drivers (like OSX 10.9 GL) just don't support invalidate_framebuffer.
-    const bool useFBInvalidation = (mAllowFBInvalidation &&
-                                    gl->IsSupported(gl::GLFeature::invalidate_framebuffer));
-    if (useFBInvalidation) {
-        gl->fInvalidateFramebuffer(target, glNumAttachments, glAttachments);
-        return;
-    }
-
-    // Use clear instead?
-    // No-op for now.
 }
 
 void
@@ -261,34 +204,65 @@ WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenu
 {
     const char funcName[] = "invalidateSubFramebuffer";
 
-    std::vector<GLenum> scopedVector;
-    GLsizei glNumAttachments;
-    const GLenum* glAttachments;
-    if (!ValidateInvalidateFramebuffer(funcName, target, attachments, &rv, &scopedVector,
-                                       &glNumAttachments, &glAttachments))
-    {
+    if (IsContextLost())
+        return;
+
+    MakeContextCurrent();
+
+    if (!ValidateFramebufferTarget(target, funcName))
+        return;
+
+    if (width < 0 || height < 0) {
+        ErrorInvalidValue("%s: width and height must be >= 0.", funcName);
         return;
     }
 
-    if (!ValidateNonNegative(funcName, "width", width) ||
-        !ValidateNonNegative(funcName, "height", height))
-    {
-        return;
+    const WebGLFramebuffer* fb;
+    bool isDefaultFB;
+    switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+        fb = mBoundDrawFramebuffer;
+        isDefaultFB = gl->Screen()->IsDrawFramebufferDefault();
+        break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+        fb = mBoundReadFramebuffer;
+        isDefaultFB = gl->Screen()->IsReadFramebufferDefault();
+        break;
+
+    default:
+        MOZ_CRASH("GFX: Bad target.");
     }
 
-    ////
-
-    // Some drivers (like OSX 10.9 GL) just don't support invalidate_framebuffer.
-    const bool useFBInvalidation = (mAllowFBInvalidation &&
-                                    gl->IsSupported(gl::GLFeature::invalidate_framebuffer));
-    if (useFBInvalidation) {
-        gl->fInvalidateSubFramebuffer(target, glNumAttachments, glAttachments, x, y,
-                                      width, height);
-        return;
+    const bool badColorAttachmentIsInvalidOp = true;
+    for (size_t i = 0; i < attachments.Length(); i++) {
+        if (!ValidateFramebufferAttachment(fb, attachments[i], funcName,
+                                           badColorAttachmentIsInvalidOp))
+        {
+            return;
+        }
     }
 
-    // Use clear instead?
-    // No-op for now.
+    // InvalidateFramebuffer is a hint to the driver. Should be OK to
+    // skip calls if not supported, for example by OSX 10.9 GL
+    // drivers.
+    if (!gl->IsSupported(gl::GLFeature::invalidate_framebuffer))
+        return;
+
+    if (!fb && !isDefaultFB) {
+        dom::Sequence<GLenum> tmpAttachments;
+        if (!TranslateDefaultAttachments(attachments, &tmpAttachments)) {
+            rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
+
+        gl->fInvalidateSubFramebuffer(target, tmpAttachments.Length(),
+                                      tmpAttachments.Elements(), x, y, width, height);
+    } else {
+        gl->fInvalidateSubFramebuffer(target, attachments.Length(),
+                                      attachments.Elements(), x, y, width, height);
+    }
 }
 
 void

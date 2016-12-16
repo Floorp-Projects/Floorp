@@ -21,7 +21,7 @@ WebGLVertexArray::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 }
 
 WebGLVertexArray::WebGLVertexArray(WebGLContext* webgl)
-    : WebGLRefCountedObject(webgl)
+    : WebGLContextBoundObject(webgl)
     , mGLName(0)
 {
     mContext->mVertexArrays.insertBack(this);
@@ -50,7 +50,7 @@ WebGLVertexArray::Delete()
 }
 
 bool
-WebGLVertexArray::IsVertexArray() const
+WebGLVertexArray::IsVertexArray()
 {
     return IsVertexArrayImpl();
 }

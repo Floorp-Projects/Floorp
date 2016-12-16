@@ -29,8 +29,7 @@ WebGLUniformLocation::~WebGLUniformLocation()
 { }
 
 bool
-WebGLUniformLocation::ValidateForProgram(const WebGLProgram* prog,
-                                         const char* funcName) const
+WebGLUniformLocation::ValidateForProgram(WebGLProgram* prog, const char* funcName) const
 {
     // Check the weak-pointer.
     if (!mLinkInfo) {

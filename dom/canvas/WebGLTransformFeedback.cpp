@@ -12,12 +12,11 @@
 namespace mozilla {
 
 WebGLTransformFeedback::WebGLTransformFeedback(WebGLContext* webgl, GLuint tf)
-    : WebGLRefCountedObject(webgl)
+    : WebGLContextBoundObject(webgl)
     , mGLName(tf)
     , mIndexedBindings(webgl->mGLMaxTransformFeedbackSeparateAttribs)
     , mIsPaused(false)
     , mIsActive(false)
-    , mBuffersForTF_Dirty(true)
 {
     mContext->mTransformFeedbacks.insertBack(this);
 }
@@ -35,28 +34,6 @@ WebGLTransformFeedback::Delete()
         mContext->gl->fDeleteTransformFeedbacks(1, &mGLName);
     }
     removeFrom(mContext->mTransformFeedbacks);
-}
-
-////
-
-const decltype(WebGLTransformFeedback::mBuffersForTF)&
-WebGLTransformFeedback::BuffersForTF() const
-{
-    // The generic bind point cannot incur undefined read/writes because otherwise it
-    // would be impossible to read back from this. The spec implies that readback from
-    // the TRANSFORM_FEEDBACK target is possible, just not simultaneously with being
-    // "bound or in use for transform feedback".
-    // Therefore, only the indexed bindings of the TFO count.
-    if (mBuffersForTF_Dirty) {
-        mBuffersForTF.clear();
-        for (const auto& cur : mIndexedBindings) {
-            if (cur.mBufferBinding) {
-                mBuffersForTF.insert(cur.mBufferBinding.get());
-            }
-        }
-        mBuffersForTF_Dirty = false;
-    }
-    return mBuffersForTF;
 }
 
 ////////////////////////////////////////
@@ -130,6 +107,13 @@ WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode)
 
     ////
 
+    for (const auto& cur : mIndexedBindings) {
+        const auto& buffer = cur.mBufferBinding;
+        if (buffer) {
+            buffer->mNumActiveTFOs++;
+        }
+    }
+
     mActive_Program->mNumActiveTFOs++;
 }
 
@@ -154,6 +138,13 @@ WebGLTransformFeedback::EndTransformFeedback()
     mIsPaused = false;
 
     ////
+
+    for (const auto& cur : mIndexedBindings) {
+        const auto& buffer = cur.mBufferBinding;
+        if (buffer) {
+            buffer->mNumActiveTFOs--;
+        }
+    }
 
     mActive_Program->mNumActiveTFOs--;
 }

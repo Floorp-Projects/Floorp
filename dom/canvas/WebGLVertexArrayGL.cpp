@@ -47,7 +47,7 @@ WebGLVertexArrayGL::GenVertexArray()
 }
 
 bool
-WebGLVertexArrayGL::IsVertexArrayImpl() const
+WebGLVertexArrayGL::IsVertexArrayImpl()
 {
     gl::GLContext* gl = mContext->gl;
     if (gl->WorkAroundDriverBugs())

@@ -604,7 +604,7 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
 // WebGLFramebuffer
 
 WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)
-    : WebGLRefCountedObject(webgl)
+    : WebGLContextBoundObject(webgl)
     , mGLName(fbo)
 #ifdef ANDROID
     , mIsFB(false)
@@ -1301,7 +1301,7 @@ WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnu
     }
 
     // `rb`
-    if (rb && !mContext->ValidateObject("framebufferRenderbuffer: rb", *rb))
+    if (!mContext->ValidateObjectAllowNull("framebufferRenderbuffer: rb", rb))
         return;
 
     // End of validation.
@@ -1343,10 +1343,10 @@ WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
     }
 
     // `texture`
-    if (tex) {
-        if (!mContext->ValidateObject("framebufferTexture2D: texture", *tex))
-            return;
+    if (!mContext->ValidateObjectAllowNull("framebufferTexture2D: texture", tex))
+        return;
 
+    if (tex) {
         if (!tex->HasEverBeenBound()) {
             mContext->ErrorInvalidOperation("%s: `texture` has never been bound.",
                                             funcName);
@@ -1419,6 +1419,15 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
     }
     const auto& attach = maybeAttach.value();
 
+    // `texture`
+    if (!mContext->ValidateObjectAllowNull("framebufferTextureLayer: texture", tex))
+        return;
+
+    if (tex && !tex->HasEverBeenBound()) {
+        mContext->ErrorInvalidOperation("%s: `texture` has never been bound.", funcName);
+        return;
+    }
+
     // `level`, `layer`
     if (layer < 0)
         return mContext->ErrorInvalidValue("%s: `layer` must be >= 0.", funcName);
@@ -1426,18 +1435,8 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
     if (level < 0)
         return mContext->ErrorInvalidValue("%s: `level` must be >= 0.", funcName);
 
-    // `texture`
     TexImageTarget texImageTarget = LOCAL_GL_TEXTURE_3D;
     if (tex) {
-        if (!mContext->ValidateObject("framebufferTextureLayer: texture", *tex))
-            return;
-
-        if (!tex->HasEverBeenBound()) {
-            mContext->ErrorInvalidOperation("%s: `texture` has never been bound.",
-                                            funcName);
-            return;
-        }
-
         texImageTarget = tex->Target().get();
         switch (texImageTarget.get()) {
         case LOCAL_GL_TEXTURE_3D:

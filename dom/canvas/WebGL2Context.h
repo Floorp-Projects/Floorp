@@ -121,7 +121,7 @@ public:
     {
         const char funcName[] = "compressedTexImage3D";
         const uint8_t funcDims = 3;
-        const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
+        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
                            height, depth, border, src);
     }
@@ -135,7 +135,7 @@ public:
     {
         const char funcName[] = "compressedTexSubImage3D";
         const uint8_t funcDims = 3;
-        const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
+        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src);
     }
@@ -159,7 +159,7 @@ public:
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
                     GLenum unpackType, const T& anySrc, ErrorResult& out_error)
     {
-        const TexImageSourceAdapter src(&anySrc, &out_error);
+        const TexImageSourceAdapter src(anySrc, &out_error);
         TexImage3D(target, level, internalFormat, width, height, depth, border,
                    unpackFormat, unpackType, src);
     }
@@ -169,7 +169,7 @@ public:
                     GLenum unpackType, const dom::ArrayBufferView& view,
                     GLuint viewElemOffset, ErrorResult&)
     {
-        const TexImageSourceAdapter src(&view, viewElemOffset);
+        const TexImageSourceAdapter src(view, viewElemOffset);
         TexImage3D(target, level, internalFormat, width, height, depth, border,
                    unpackFormat, unpackType, src);
     }
@@ -194,7 +194,7 @@ public:
                        GLenum unpackFormat, GLenum unpackType, const T& anySrc,
                        ErrorResult& out_error)
     {
-        const TexImageSourceAdapter src(&anySrc, &out_error);
+        const TexImageSourceAdapter src(anySrc, &out_error);
         TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height, depth,
                       unpackFormat, unpackType, src);
     }
@@ -202,17 +202,10 @@ public:
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLenum unpackFormat, GLenum unpackType,
-                       const dom::Nullable<dom::ArrayBufferView>& maybeSrcView,
-                       GLuint srcElemOffset, ErrorResult&)
+                       const dom::ArrayBufferView& srcView, GLuint srcElemOffset,
+                       ErrorResult&)
     {
-        if (IsContextLost())
-            return;
-
-        if (!ValidateNonNull("texSubImage3D", maybeSrcView))
-            return;
-        const auto& srcView = maybeSrcView.Value();
-
-        const TexImageSourceAdapter src(&srcView, srcElemOffset);
+        const TexImageSourceAdapter src(srcView, srcElemOffset);
         TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height, depth,
                       unpackFormat, unpackType, src);
     }
@@ -231,7 +224,7 @@ protected:
 public:
     // -------------------------------------------------------------------------
     // Programs and shaders - WebGL2ContextPrograms.cpp
-    GLint GetFragDataLocation(const WebGLProgram& program, const nsAString& name);
+    GLint GetFragDataLocation(WebGLProgram* program, const nsAString& name);
 
 
     // -------------------------------------------------------------------------
@@ -314,24 +307,26 @@ public:
 
     already_AddRefed<WebGLSampler> CreateSampler();
     void DeleteSampler(WebGLSampler* sampler);
-    bool IsSampler(const WebGLSampler* sampler);
+    bool IsSampler(WebGLSampler* sampler);
     void BindSampler(GLuint unit, WebGLSampler* sampler);
-    void SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint param);
-    void SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat param);
-    void GetSamplerParameter(JSContext*, const WebGLSampler& sampler, GLenum pname,
-                             JS::MutableHandleValue retval);
+    void SamplerParameteri(WebGLSampler* sampler, GLenum pname, GLint param);
+    void SamplerParameteriv(WebGLSampler* sampler, GLenum pname, const dom::Int32Array& param);
+    void SamplerParameteriv(WebGLSampler* sampler, GLenum pname, const dom::Sequence<GLint>& param);
+    void SamplerParameterf(WebGLSampler* sampler, GLenum pname, GLfloat param);
+    void SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const dom::Float32Array& param);
+    void SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const dom::Sequence<GLfloat>& param);
+    void GetSamplerParameter(JSContext*, WebGLSampler* sampler, GLenum pname, JS::MutableHandleValue retval);
 
 
     // -------------------------------------------------------------------------
     // Sync objects - WebGL2ContextSync.cpp
 
     already_AddRefed<WebGLSync> FenceSync(GLenum condition, GLbitfield flags);
-    bool IsSync(const WebGLSync* sync);
+    bool IsSync(WebGLSync* sync);
     void DeleteSync(WebGLSync* sync);
-    GLenum ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 timeout);
-    void WaitSync(const WebGLSync& sync, GLbitfield flags, GLint64 timeout);
-    void GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
-                          JS::MutableHandleValue retval);
+    GLenum ClientWaitSync(WebGLSync* sync, GLbitfield flags, GLuint64 timeout);
+    void WaitSync(WebGLSync* sync, GLbitfield flags, GLuint64 timeout);
+    void GetSyncParameter(JSContext*, WebGLSync* sync, GLenum pname, JS::MutableHandleValue retval);
 
 
     // -------------------------------------------------------------------------
@@ -339,17 +334,14 @@ public:
 
     already_AddRefed<WebGLTransformFeedback> CreateTransformFeedback();
     void DeleteTransformFeedback(WebGLTransformFeedback* tf);
-    bool IsTransformFeedback(const WebGLTransformFeedback* tf);
+    bool IsTransformFeedback(WebGLTransformFeedback* tf);
     void BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf);
     void BeginTransformFeedback(GLenum primitiveMode);
     void EndTransformFeedback();
     void PauseTransformFeedback();
     void ResumeTransformFeedback();
-    void TransformFeedbackVaryings(WebGLProgram& program,
-                                   const dom::Sequence<nsString>& varyings,
-                                   GLenum bufferMode);
-    already_AddRefed<WebGLActiveInfo>
-    GetTransformFeedbackVarying(const WebGLProgram& program, GLuint index);
+    void TransformFeedbackVaryings(WebGLProgram* program, const dom::Sequence<nsString>& varyings, GLenum bufferMode);
+    already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(WebGLProgram* program, GLuint index);
 
 
     // -------------------------------------------------------------------------
@@ -362,21 +354,23 @@ public:
     virtual JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv) override;
     void GetIndexedParameter(JSContext* cx, GLenum target, GLuint index,
                              JS::MutableHandleValue retval, ErrorResult& rv);
-    void GetUniformIndices(const WebGLProgram& program,
+    void GetUniformIndices(WebGLProgram* program,
                            const dom::Sequence<nsString>& uniformNames,
                            dom::Nullable< nsTArray<GLuint> >& retval);
-    void GetActiveUniforms(JSContext* cx, const WebGLProgram& program,
-                           const dom::Sequence<GLuint>& uniformIndices, GLenum pname,
+    void GetActiveUniforms(JSContext* cx,
+                           WebGLProgram* program,
+                           const dom::Sequence<GLuint>& uniformIndices,
+                           GLenum pname,
                            JS::MutableHandleValue retval);
 
-    GLuint GetUniformBlockIndex(const WebGLProgram& program,
-                                const nsAString& uniformBlockName);
-    void GetActiveUniformBlockParameter(JSContext*, const WebGLProgram& program,
+    GLuint GetUniformBlockIndex(WebGLProgram* program, const nsAString& uniformBlockName);
+    void GetActiveUniformBlockParameter(JSContext*, WebGLProgram* program,
                                         GLuint uniformBlockIndex, GLenum pname,
-                                        JS::MutableHandleValue retval, ErrorResult& rv);
-    void GetActiveUniformBlockName(const WebGLProgram& program, GLuint uniformBlockIndex,
+                                        JS::MutableHandleValue retval,
+                                        ErrorResult& rv);
+    void GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBlockIndex,
                                    nsAString& retval);
-    void UniformBlockBinding(WebGLProgram& program, GLuint uniformBlockIndex,
+    void UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockIndex,
                              GLuint uniformBlockBinding);
 
 
