@@ -16,7 +16,7 @@ namespace a11y {
 class ProxyAccessibleWrap : public AccessibleWrap
 {
 public:
-  ProxyAccessibleWrap(ProxyAccessible* aProxy) :
+  explicit ProxyAccessibleWrap(ProxyAccessible* aProxy) :
     AccessibleWrap(nullptr, nullptr)
   {
     mType = eProxyType;
@@ -38,7 +38,7 @@ public:
 class HyperTextProxyAccessibleWrap : public HyperTextAccessibleWrap
 {
 public:
-  HyperTextProxyAccessibleWrap(ProxyAccessible* aProxy) :
+  explicit HyperTextProxyAccessibleWrap(ProxyAccessible* aProxy) :
     HyperTextAccessibleWrap(nullptr, nullptr)
   {
     mType = eProxyType;
@@ -60,7 +60,7 @@ public:
 class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap
 {
 public:
-  DocProxyAccessibleWrap(ProxyAccessible* aProxy) :
+  explicit DocProxyAccessibleWrap(ProxyAccessible* aProxy) :
     HyperTextProxyAccessibleWrap(aProxy)
   { mGenericTypes |= eDocument; }
 

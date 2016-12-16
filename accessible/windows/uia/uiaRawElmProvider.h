@@ -24,7 +24,7 @@ class uiaRawElmProvider final : public IAccessibleEx,
                                 public IRawElementProviderSimple
 {
 public:
-  uiaRawElmProvider(AccessibleWrap* aAcc) : mAcc(aAcc) { }
+  explicit uiaRawElmProvider(AccessibleWrap* aAcc) : mAcc(aAcc) { }
 
   // IUnknown
   DECL_IUNKNOWN
