@@ -85,8 +85,8 @@ if (!gl) {
 
   // in real world case, after some drawing, we can invalidate the depth attachment of the bound fbo
   invalidation(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.STENCIL_ATTACHMENT);
- 
-  // set up framebuffer to blit to and read back from 
+
+  // set up framebuffer to blit to and read back from
   var fb = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   var buffer = gl.createRenderbuffer();
@@ -102,16 +102,16 @@ if (!gl) {
   gl.blitFramebuffer(0, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
   wtu.glErrorShouldBe(gl, gl.NO_ERROR,
       "should be no errors after bliting framebuffer.");
- 
+
   // invalidate the multi-sampled color attachment of the bound read framebuffer after blitFramebuffer.
   invalidation(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT);
 
   var maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
   gl.invalidateSubFramebuffer(gl.READ_FRAMEBUFFER, [gl.COLOR_ATTACHMENT0 + maxColorAttachments], 5, 5, 10, 10);
-  wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION,
+  wtu.glErrorShouldBe(gl, [gl.INVALID_OPERATION, gl.INVALID_ENUM],
       "calling invalidateSubFramebuffer to invalidate a COLOR_ATTACHMENT that exceeds MAX_COLOR_ATTACHMENT should generate INVALID_OPERATION.");
   gl.invalidateFramebuffer(gl.READ_FRAMEBUFFER, [gl.COLOR_ATTACHMENT0 + maxColorAttachments]);
-  wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION,
+  wtu.glErrorShouldBe(gl, [gl.INVALID_OPERATION, gl.INVALID_ENUM],
       "calling invalidateFramebuffer to invalidate a COLOR_ATTACHMENT that exceeds MAX_COLOR_ATTACHMENT should generate INVALID_OPERATION.");
 
   // invalidate the default framebuffer
