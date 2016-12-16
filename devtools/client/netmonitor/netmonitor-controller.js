@@ -25,8 +25,6 @@ XPCOMUtils.defineConstant(window, "EVENTS", EVENTS);
 XPCOMUtils.defineConstant(window, "ACTIVITY_TYPE", ACTIVITY_TYPE);
 XPCOMUtils.defineConstant(window, "Editor", Editor);
 XPCOMUtils.defineConstant(window, "Prefs", Prefs);
-XPCOMUtils.defineLazyModuleGetter(window, "Chart",
-  "resource://devtools/client/shared/widgets/Chart.jsm");
 
 // Initialize the global Redux store
 window.gStore = configureStore();

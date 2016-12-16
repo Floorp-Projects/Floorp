@@ -13,7 +13,8 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, Chart } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { Chart } = NetMonitorView.Statistics;
 
   let chart = Chart.PieTable(document, {
     title: "Table title",
