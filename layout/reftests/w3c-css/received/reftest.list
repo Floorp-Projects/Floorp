@@ -50,9 +50,9 @@ fails HTTP(../../..) == css-multicol-1/multicol-block-clip-002.xht css-multicol-
 fails == css-multicol-1/multicol-br-inside-avoidcolumn-001.xht css-multicol-1/multicol-br-inside-avoidcolumn-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-break-000.xht css-multicol-1/multicol-break-000-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-break-001.xht css-multicol-1/multicol-break-001-ref.xht
-fuzzy(116,1008) HTTP(../../..) == css-multicol-1/multicol-clip-001.xht css-multicol-1/multicol-clip-001-ref.xht
-fuzzy(116,702) HTTP(../../..) == css-multicol-1/multicol-clip-002.xht css-multicol-1/multicol-clip-002-ref.xht
-fuzzy(116,467) HTTP(../../..) == css-multicol-1/multicol-collapsing-001.xht css-multicol-1/multicol-collapsing-001-ref.xht
+fuzzy(135,1008) HTTP(../../..) == css-multicol-1/multicol-clip-001.xht css-multicol-1/multicol-clip-001-ref.xht
+fuzzy(135,702) HTTP(../../..) == css-multicol-1/multicol-clip-002.xht css-multicol-1/multicol-clip-002-ref.xht
+fuzzy(135,467) HTTP(../../..) == css-multicol-1/multicol-collapsing-001.xht css-multicol-1/multicol-collapsing-001-ref.xht
 fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-columns-001.xht css-multicol-1/multicol-columns-001-ref.xht
 fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-columns-002.xht css-multicol-1/multicol-columns-001-ref.xht
 fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-columns-003.xht css-multicol-1/multicol-columns-001-ref.xht
@@ -63,7 +63,7 @@ fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-columns-007.xht css-mult
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) HTTP(../../..) == css-multicol-1/multicol-columns-invalid-001.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
 fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-columns-invalid-002.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) HTTP(../../..) == css-multicol-1/multicol-columns-toolong-001.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
-fuzzy(116,530) HTTP(../../..) == css-multicol-1/multicol-containing-001.xht css-multicol-1/multicol-containing-001-ref.xht
+fuzzy(135,530) HTTP(../../..) == css-multicol-1/multicol-containing-001.xht css-multicol-1/multicol-containing-001-ref.xht
 fuzzy(215,241) HTTP(../../..) == css-multicol-1/multicol-containing-002.xht css-multicol-1/multicol-containing-002-ref.xht
 fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-count-001.xht css-multicol-1/multicol-columns-001-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-count-002.xht css-multicol-1/multicol-count-002-ref.xht
@@ -82,13 +82,13 @@ fuzzy(204,930) fuzzy-if(skiaContent,208,930) HTTP(../../..) == css-multicol-1/mu
 HTTP(../../..) == css-multicol-1/multicol-fill-000.xht css-multicol-1/multicol-fill-000-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-fill-001.xht css-multicol-1/multicol-fill-001-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-fill-auto-001.xht css-multicol-1/multicol-fill-auto-001-ref.xht
-fuzzy(116,80) HTTP(../../..) == css-multicol-1/multicol-fill-auto-002.xht css-multicol-1/multicol-fill-auto-002-ref.xht
-fuzzy(116,3270) HTTP(../../..) == css-multicol-1/multicol-fill-auto-003.xht css-multicol-1/multicol-fill-auto-003-ref.xht
+fuzzy(135,80) HTTP(../../..) == css-multicol-1/multicol-fill-auto-002.xht css-multicol-1/multicol-fill-auto-002-ref.xht
+fuzzy(135,3270) HTTP(../../..) == css-multicol-1/multicol-fill-auto-003.xht css-multicol-1/multicol-fill-auto-003-ref.xht
 fails == css-multicol-1/multicol-fill-auto-block-children-001.xht css-multicol-1/multicol-fill-auto-block-children-ref.xht
 fails == css-multicol-1/multicol-fill-auto-block-children-002.xht css-multicol-1/multicol-fill-auto-block-children-002-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-fill-auto.xht css-multicol-1/multicol-fill-ref.xht
-fuzzy(116,80) HTTP(../../..) == css-multicol-1/multicol-fill-balance-001.xht css-multicol-1/multicol-fill-balance-001-ref.xht
-fuzzy(116,821) HTTP(../../..) == css-multicol-1/multicol-gap-000.xht css-multicol-1/multicol-gap-000-ref.xht
+fuzzy(135,80) HTTP(../../..) == css-multicol-1/multicol-fill-balance-001.xht css-multicol-1/multicol-fill-balance-001-ref.xht
+fuzzy(135,821) HTTP(../../..) == css-multicol-1/multicol-gap-000.xht css-multicol-1/multicol-gap-000-ref.xht
 fuzzy(255,290) HTTP(../../..) == css-multicol-1/multicol-gap-001.xht css-multicol-1/multicol-gap-001-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) HTTP(../../..) == css-multicol-1/multicol-gap-002.xht css-multicol-1/multicol-gap-002-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) HTTP(../../..) == css-multicol-1/multicol-gap-003.xht css-multicol-1/multicol-gap-002-ref.xht
@@ -99,7 +99,7 @@ fuzzy(204,930) fuzzy-if(skiaContent,208,930) HTTP(../../..) == css-multicol-1/mu
 HTTP(../../..) == css-multicol-1/multicol-height-001.xht css-multicol-1/multicol-height-001-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-height-block-child-001.xht css-multicol-1/multicol-height-block-child-001-ref.xht
 fuzzy(255,3762) HTTP(../../..) == css-multicol-1/multicol-inherit-001.xht css-multicol-1/multicol-inherit-001-ref.xht
-fuzzy(116,1893) HTTP(../../..) == css-multicol-1/multicol-inherit-002.xht css-multicol-1/multicol-inherit-002-ref.xht
+fuzzy(135,1893) HTTP(../../..) == css-multicol-1/multicol-inherit-002.xht css-multicol-1/multicol-inherit-002-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-inherit-003.xht css-multicol-1/multicol-inherit-3-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-inherit-004.xht css-multicol-1/multicol-inherit-4-ref.xht
 fuzzy(96,264) HTTP(../../..) == css-multicol-1/multicol-list-item-001.xht css-multicol-1/multicol-list-item-001-ref.xht
@@ -114,11 +114,11 @@ fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-nested-margin
 fuzzy(204,2371) fuzzy-if(skiaContent,208,2371) HTTP(../../..) == css-multicol-1/multicol-nested-margin-003.xht css-multicol-1/multicol-nested-margin-003-ref.xht
 fuzzy(225,2529) HTTP(../../..) == css-multicol-1/multicol-nested-margin-004.xht css-multicol-1/multicol-nested-margin-004-ref.xht
 fuzzy(225,2529) HTTP(../../..) == css-multicol-1/multicol-nested-margin-005.xht css-multicol-1/multicol-nested-margin-004-ref.xht
-fuzzy(116,142) HTTP(../../..) == css-multicol-1/multicol-overflow-000.xht css-multicol-1/multicol-overflow-000-ref.xht
+fuzzy(135,142) HTTP(../../..) == css-multicol-1/multicol-overflow-000.xht css-multicol-1/multicol-overflow-000-ref.xht
 fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) HTTP(../../..) == css-multicol-1/multicol-overflowing-001.xht css-multicol-1/multicol-overflowing-001-ref.xht
 fuzzy-if(OSX,61,2) fuzzy-if(skiaContent,64,2) HTTP(../../..) == css-multicol-1/multicol-reduce-000.xht css-multicol-1/multicol-reduce-000-ref.xht
 fuzzy-if(OSX,8,20) HTTP(../../..) == css-multicol-1/multicol-rule-000.xht css-multicol-1/multicol-rule-000-ref.xht
-fuzzy(116,1584) HTTP(../../..) == css-multicol-1/multicol-rule-001.xht css-multicol-1/multicol-rule-001-ref.xht
+fuzzy(135,1584) HTTP(../../..) == css-multicol-1/multicol-rule-001.xht css-multicol-1/multicol-rule-001-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-rule-002.xht css-multicol-1/multicol-rule-ref.xht
 fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-rule-003.xht css-multicol-1/multicol-rule-003-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-rule-004.xht css-multicol-1/multicol-rule-004-ref.xht
