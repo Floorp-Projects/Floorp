@@ -60,6 +60,7 @@ CreatePermissionStatus(JSContext* aCx,
     case PermissionName::Geolocation:
     case PermissionName::Notifications:
     case PermissionName::Push:
+    case PermissionName::Persistent_storage:
       return PermissionStatus::Create(aWindow, permission.mName, aRv);
 
     default:

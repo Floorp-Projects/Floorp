@@ -899,7 +899,9 @@ let WebChannelMessageToChromeListener = {
     if (e.detail) {
       if (typeof e.detail != 'string') {
         // Check if the principal is one of the ones that's allowed to send
-        // non-string values for e.detail.
+        // non-string values for e.detail.  They're whitelisted by site origin,
+        // so we compare on originNoSuffix in order to avoid other origin attributes
+        // that are not relevant here, such as containers or private browsing.
         let objectsAllowed = this._getWhitelistedPrincipals().some(whitelisted =>
           principal.originNoSuffix == whitelisted.originNoSuffix);
         if (!objectsAllowed) {

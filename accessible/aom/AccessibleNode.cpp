@@ -73,7 +73,7 @@ AccessibleNode::GetStates(nsTArray<nsString>& aStates)
     return;
   }
 
-  mStates->Add(NS_LITERAL_STRING("defunct"));
+  aStates.AppendElement(NS_LITERAL_STRING("defunct"));
 }
 
 bool

@@ -997,6 +997,13 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_PROGRESS_TROUGH:
       return GetWidgetStyleWithClass(MOZ_GTK_PROGRESSBAR,
                                      GTK_STYLE_CLASS_TROUGH);
+    case MOZ_GTK_PROGRESS_CHUNK: {
+      GtkStyleContext* style =
+        GetWidgetStyleWithClass(MOZ_GTK_PROGRESSBAR,
+                                GTK_STYLE_CLASS_PROGRESSBAR);
+      gtk_style_context_remove_class(style, GTK_STYLE_CLASS_TROUGH);
+      return style;
+    }
     case MOZ_GTK_GRIPPER:
       return GetWidgetStyleWithClass(MOZ_GTK_GRIPPER,
                                      GTK_STYLE_CLASS_GRIP);

@@ -23,14 +23,6 @@ PerformanceWorker::~PerformanceWorker()
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
 
-DOMHighResTimeStamp
-PerformanceWorker::Now() const
-{
-  TimeDuration duration =
-    TimeStamp::Now() - mWorkerPrivate->NowBaseTimeStamp();
-  return RoundTime(duration.ToMilliseconds());
-}
-
 // To be removed once bug 1124165 lands
 bool
 PerformanceWorker::IsPerformanceTimingAttribute(const nsAString& aName)
@@ -47,7 +39,7 @@ PerformanceWorker::GetPerformanceTimingFromString(const nsAString& aProperty)
   }
 
   if (aProperty.EqualsLiteral("navigationStart")) {
-    return mWorkerPrivate->NowBaseTime();
+    return mWorkerPrivate->CreationTime();
   }
 
   MOZ_CRASH("IsPerformanceTimingAttribute and GetPerformanceTimingFromString are out of sync");
@@ -72,13 +64,13 @@ PerformanceWorker::InsertUserEntry(PerformanceEntry* aEntry)
 TimeStamp
 PerformanceWorker::CreationTimeStamp() const
 {
-  return mWorkerPrivate->NowBaseTimeStamp();
+  return mWorkerPrivate->CreationTimeStamp();
 }
 
 DOMHighResTimeStamp
 PerformanceWorker::CreationTime() const
 {
-  return mWorkerPrivate->NowBaseTime();
+  return mWorkerPrivate->CreationTime();
 }
 
 } // dom namespace
