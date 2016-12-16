@@ -10,12 +10,20 @@
 
 <script type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  {"set": [["dom.audioWorklet.enabled", true],
-           ["dom.worklet.enabled", true]]},
-  function() { loadTest("file_dump.html"); });
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioWorklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
 
+// This function is called into an iframe.
+function runTestInIframe() {
+  audioWorklet.import("worklet_dump.js")
+  .then(() => {
+    ok(true, "All good!");
+    SimpleTest.finish();
+  });
+}
 </script>
 </body>
 </html>
