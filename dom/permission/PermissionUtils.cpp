@@ -13,7 +13,8 @@ const char* kPermissionTypes[] = {
   "geo",
   "desktop-notification",
   // Alias `push` to `desktop-notification`.
-  "desktop-notification"
+  "desktop-notification",
+  "persistent-storage"
 };
 
 // `-1` for the last null entry.
