@@ -2397,7 +2397,10 @@ MediaFormatReader::OnSeekFailed(TrackType aTrack, const MediaResult& aError)
   }
   MOZ_ASSERT(!mVideo.mSeekRequest.Exists() && !mAudio.mSeekRequest.Exists());
   mPendingSeekTime.reset();
-  mSeekPromise.Reject(aError, __func__);
+
+  auto type = aTrack == TrackType::kAudioTrack
+    ? MediaData::AUDIO_DATA : MediaData::VIDEO_DATA;
+  mSeekPromise.Reject(SeekRejectValue(type, aError), __func__);
 }
 
 void
