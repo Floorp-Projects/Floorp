@@ -47,9 +47,6 @@ NS_EVENT_MESSAGE(eKeyDown)
 NS_EVENT_MESSAGE(eKeyDownOnPlugin)
 NS_EVENT_MESSAGE(eKeyUpOnPlugin)
 
-NS_EVENT_MESSAGE(eAfterKeyDown)
-NS_EVENT_MESSAGE(eAfterKeyUp)
-
 // This message is sent after a content process handles a key event or accesskey
 // to indicate that an potential accesskey was not found. The parent process may
 // then respond by, for example, opening menus and processing other shortcuts.

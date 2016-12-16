@@ -174,9 +174,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent) override;
-
-  virtual mozilla::ipc::IPCResult
   RecvAccessKeyNotHandled(const WidgetKeyboardEvent& aEvent) override;
 
   virtual mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,

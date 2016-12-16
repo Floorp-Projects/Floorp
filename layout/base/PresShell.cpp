@@ -7093,56 +7093,6 @@ BuildTargetChainForBeforeAfterKeyboardEvent(nsINode* aTarget,
   }
 }
 
-void
-PresShell::DispatchAfterKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >& aChain,
-                                              const WidgetKeyboardEvent& aEvent,
-                                              bool aEmbeddedCancelled,
-                                              size_t aStartOffset)
-{
-  size_t length = aChain.Length();
-  if (!CanDispatchEvent(&aEvent) || !length) {
-    return;
-  }
-
-  EventMessage message =
-    (aEvent.mMessage == eKeyDown) ? eAfterKeyDown : eAfterKeyUp;
-  bool embeddedCancelled = aEmbeddedCancelled;
-  nsCOMPtr<EventTarget> eventTarget;
-  // Dispatch after events from the innermost element.
-  for (uint32_t i = aStartOffset; i < length; i++) {
-    eventTarget = do_QueryInterface(aChain[i]->OwnerDoc()->GetWindow());
-    if (!eventTarget || !CanDispatchEvent(&aEvent)) {
-      return;
-    }
-
-    InternalBeforeAfterKeyboardEvent afterEvent(aEvent.IsTrusted(),
-                                                message, aEvent.mWidget);
-    afterEvent.AssignBeforeAfterKeyEventData(aEvent, false);
-    afterEvent.mEmbeddedCancelled.SetValue(embeddedCancelled);
-    EventDispatcher::Dispatch(eventTarget, mPresContext, &afterEvent);
-    embeddedCancelled = afterEvent.DefaultPrevented();
-  }
-}
-
-void
-PresShell::DispatchAfterKeyboardEvent(nsINode* aTarget,
-                                      const WidgetKeyboardEvent& aEvent,
-                                      bool aEmbeddedCancelled)
-{
-  MOZ_ASSERT(aTarget);
-  MOZ_ASSERT(BeforeAfterKeyboardEventEnabled());
-
-  if (NS_WARN_IF(aEvent.mMessage != eKeyDown && aEvent.mMessage != eKeyUp)) {
-    return;
-  }
-
-  // Build up a target chain. Each item in the chain will receive an after event.
-  AutoTArray<nsCOMPtr<Element>, 5> chain;
-  bool targetIsIframe = IsTargetIframe(aTarget);
-  BuildTargetChainForBeforeAfterKeyboardEvent(aTarget, chain, targetIsIframe);
-  DispatchAfterKeyboardEventInternal(chain, aEvent, aEmbeddedCancelled);
-}
-
 bool
 PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const
 {
@@ -7166,43 +7116,8 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
   // return true if the event target is in its child process
   bool targetIsIframe = IsTargetIframe(aTarget);
 
-  // Dispatch event directly if the event is a keypress event, a key event on
-  // plugin, or there is no need to fire beforeKey* and afterKey* events.
-  if (aEvent.mMessage == eKeyPress ||
-      aEvent.IsKeyEventOnPlugin() ||
-      !BeforeAfterKeyboardEventEnabled()) {
-    ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
-                                         aStatus, aEventCB);
-    return;
-  }
-
-  MOZ_ASSERT(aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyUp);
-
-  // Build up a target chain. Each item in the chain will receive a before event.
-  AutoTArray<nsCOMPtr<Element>, 5> chain;
-  BuildTargetChainForBeforeAfterKeyboardEvent(aTarget, chain, targetIsIframe);
-
-  if (ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
-                                           aStatus, aEventCB)) {
-    return;
-  }
-
-  if (aEvent.DefaultPrevented()) {
-    // When embedder prevents the default action of actual key event, attribute
-    // 'embeddedCancelled' of after event is false, i.e. |!targetIsIframe|.
-    // On the contrary, if the defult action is prevented by embedded iframe,
-    // 'embeddedCancelled' is true which equals to |!targetIsIframe|.
-    DispatchAfterKeyboardEventInternal(chain, aEvent, !targetIsIframe, 0);
-    return;
-  }
-
-  // Event listeners may kill nsPresContext and nsPresShell.
-  if (targetIsIframe || !CanDispatchEvent()) {
-    return;
-  }
-
-  // Dispatch after events to all items in the chain.
-  DispatchAfterKeyboardEventInternal(chain, aEvent, aEvent.DefaultPrevented());
+  ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
+                                       aStatus, aEventCB);
 }
 
 #ifdef MOZ_B2G
