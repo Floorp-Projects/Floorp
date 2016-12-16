@@ -19,7 +19,7 @@
 class AutoCriticalSection
 {
 public:
-  AutoCriticalSection(LPCRITICAL_SECTION aSection)
+  explicit AutoCriticalSection(LPCRITICAL_SECTION aSection)
     : mSection(aSection)
   {
     ::EnterCriticalSection(mSection);
@@ -150,7 +150,7 @@ protected:
   {
   }
 
-  nsSimpleRef(RawRef aRawRef) : mRawRef(aRawRef)
+  explicit nsSimpleRef(RawRef aRawRef) : mRawRef(aRawRef)
   {
   }
 
@@ -219,7 +219,7 @@ public:
 // nsAutoRef work as intention.
 class nsHGLOBAL {
 public:
-  nsHGLOBAL(HGLOBAL hGlobal) : m_hGlobal(hGlobal)
+  MOZ_IMPLICIT nsHGLOBAL(HGLOBAL hGlobal) : m_hGlobal(hGlobal)
   {
   }
 
@@ -255,7 +255,7 @@ public:
 // another specialization for nsAutoRefTraits.
 class nsHPRINTER {
 public:
-  nsHPRINTER(HANDLE hPrinter) : m_hPrinter(hPrinter)
+  MOZ_IMPLICIT nsHPRINTER(HANDLE hPrinter) : m_hPrinter(hPrinter)
   {
   }
 
