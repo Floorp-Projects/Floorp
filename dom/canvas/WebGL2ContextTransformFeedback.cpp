@@ -136,29 +136,29 @@ WebGL2Context::ResumeTransformFeedback()
 }
 
 void
-WebGL2Context::TransformFeedbackVaryings(WebGLProgram* program,
+WebGL2Context::TransformFeedbackVaryings(WebGLProgram& program,
                                          const dom::Sequence<nsString>& varyings,
                                          GLenum bufferMode)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("transformFeedbackVaryings: program", program))
+    if (!ValidateObjectRef("transformFeedbackVaryings: program", program))
         return;
 
-    program->TransformFeedbackVaryings(varyings, bufferMode);
+    program.TransformFeedbackVaryings(varyings, bufferMode);
 }
 
 already_AddRefed<WebGLActiveInfo>
-WebGL2Context::GetTransformFeedbackVarying(WebGLProgram* program, GLuint index)
+WebGL2Context::GetTransformFeedbackVarying(const WebGLProgram& program, GLuint index)
 {
     if (IsContextLost())
         return nullptr;
 
-    if (!ValidateObject("getTransformFeedbackVarying: program", program))
+    if (!ValidateObjectRef("getTransformFeedbackVarying: program", program))
         return nullptr;
 
-    return program->GetTransformFeedbackVarying(index);
+    return program.GetTransformFeedbackVarying(index);
 }
 
 } // namespace mozilla

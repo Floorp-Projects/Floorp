@@ -20,18 +20,6 @@ class WebGLContextUnchecked
 public:
     explicit WebGLContextUnchecked(gl::GLContext* gl);
 
-    // -------------------------------------------------------------------------
-    // Sampler Objects
-    void BindSampler(GLuint unit, WebGLSampler* sampler);
-
-    GLint   GetSamplerParameteriv(WebGLSampler* sampler, GLenum pname);
-    GLfloat GetSamplerParameterfv(WebGLSampler* sampler, GLenum pname);
-
-    void SamplerParameteri(WebGLSampler* sampler, GLenum pname, GLint param);
-    void SamplerParameteriv(WebGLSampler* sampler, GLenum pname, const GLint* param);
-    void SamplerParameterf(WebGLSampler* sampler, GLenum pname, GLfloat param);
-    void SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const GLfloat* param);
-
 protected:
     // We've had issues in the past with nulling `gl` without actually releasing
     // all of our resources. This construction ensures that we are aware that we
