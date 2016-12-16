@@ -280,6 +280,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'process/GeckoProcessManager.java',
     'process/GeckoServiceChildProcess.java',
     'ScreenManagerHelper.java',
+    'ScreenOrientationDelegate.java',
     'sqlite/ByteBufferInputStream.java',
     'sqlite/MatrixBlobCursor.java',
     'sqlite/SQLiteBridge.java',
