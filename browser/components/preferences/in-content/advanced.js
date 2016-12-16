@@ -56,8 +56,10 @@ var gAdvancedPane = {
     this.updateActualAppCacheSize();
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
+      Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
       SiteDataManager.updateSites();
-      this.updateTotalSiteDataSize();
+      setEventListener("clearSiteDataButton", "command",
+                       gAdvancedPane.clearSiteData);
     }
 
     setEventListener("layers.acceleration.disabled", "change",
@@ -479,6 +481,23 @@ var gAdvancedPane = {
     this.updateOfflineApps();
   },
 
+  clearSiteData: function() {
+    let flags =
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
+      Services.prompt.BUTTON_POS_0_DEFAULT;
+    let prefStrBundle = document.getElementById("bundlePreferences");
+    let title = prefStrBundle.getString("clearSiteDataPromptTitle");
+    let text = prefStrBundle.getString("clearSiteDataPromptText");
+    let btn0Label = prefStrBundle.getString("clearSiteDataNow");
+
+    let result = Services.prompt.confirmEx(
+      window, title, text, flags, btn0Label, null, null, null, {});
+    if (result == 0) {
+      SiteDataManager.removeAll();
+    }
+  },
+
   readOfflineNotify: function()
   {
     var pref = document.getElementById("browser.offline-apps.notify");
@@ -773,6 +792,10 @@ var gAdvancedPane = {
       switch (aTopic) {
         case "nsPref:changed":
           this.updateReadPrefs();
+          break;
+
+        case "sitedatamanager:sites-updated":
+          this.updateTotalSiteDataSize();
           break;
       }
     }
