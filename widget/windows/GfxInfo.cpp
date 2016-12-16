@@ -532,6 +532,37 @@ GfxInfo::Init()
     }
   }
 
+  // Sometimes, the enumeration is not quite right and the two adapters
+  // end up being swapped.  Actually enumerate the adapters that come
+  // back from the DXGI factory to check, and tag the second as active
+  // if found.
+  if (mHasDualGPU) {
+    nsModuleHandle dxgiModule(LoadLibrarySystem32(L"dxgi.dll"));
+    decltype(CreateDXGIFactory)* createDXGIFactory = (decltype(CreateDXGIFactory)*)
+      GetProcAddress(dxgiModule, "CreateDXGIFactory");
+
+    if (createDXGIFactory) {
+      RefPtr<IDXGIFactory> factory = nullptr;
+      HRESULT hrf = createDXGIFactory(__uuidof(IDXGIFactory),
+                                      (void**)(&factory) );
+      if (factory) {
+        RefPtr<IDXGIAdapter> adapter;
+        if (SUCCEEDED(factory->EnumAdapters(0, getter_AddRefs(adapter)))) {
+          DXGI_ADAPTER_DESC desc;
+          PodZero(&desc);
+          if (SUCCEEDED(adapter->GetDesc(&desc))) {
+            if (desc.VendorId != adapterVendorID[0] &&
+                desc.DeviceId != adapterDeviceID[0] &&
+                desc.VendorId == adapterVendorID[1] &&
+                desc.DeviceId == adapterDeviceID[1]) {
+              mActiveGPUIndex = 1;
+            }
+          }
+        }
+      }
+    }
+  }
+
   mHasDriverVersionMismatch = false;
   if (mAdapterVendorID[mActiveGPUIndex] == GfxDriverInfo::GetDeviceVendor(VendorIntel)) {
     // we've had big crashers (bugs 590373 and 595364) apparently correlated
@@ -806,7 +837,13 @@ GfxInfo::AddCrashReportAnnotations()
     nsAutoString adapterDriverVersionString2;
     nsCString narrowDeviceID2, narrowVendorID2, narrowSubsysID2;
 
-    note.AppendLiteral("Has dual GPUs. GPU #2: ");
+    // Make a slight difference between the two cases so that we
+    // can see it in the crash reports.  It may come in handy.
+    if (mActiveGPUIndex == 1) {
+      note.AppendLiteral("Has dual GPUs. GPU-#2: ");
+    } else {
+      note.AppendLiteral("Has dual GPUs. GPU #2: ");
+    }
     GetAdapterDeviceID2(deviceID2);
     CopyUTF16toUTF8(deviceID2, narrowDeviceID2);
     GetAdapterVendorID2(vendorID2);
