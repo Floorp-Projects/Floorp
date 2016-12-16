@@ -91,20 +91,12 @@ capture.viewport = function (win, highlights=[]) {
  *     has been painted on.
  */
 capture.canvas = function (win, left, top, width, height, highlights=[]) {
-  let scale = win.devicePixelRatio;
-
   let canvas = win.document.createElementNS(XHTML_NS, "canvas");
-  canvas.width = width * scale;
-  canvas.height = height * scale;
+  canvas.width = width;
+  canvas.height = height;
 
   let ctx = canvas.getContext(CONTEXT_2D);
-  let flags = ctx.DRAWWINDOW_DRAW_CARET |
-      ctx.DRAWWINDOW_DRAW_VIEW;
-      // Bug 1009762 - Crash in [@ mozilla::gl::ReadPixelsIntoDataSurface]
-      // ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
-
-  ctx.scale(scale, scale);
-  ctx.drawWindow(win, left, top, width, height, BG_COLOUR, flags);
+  ctx.drawWindow(win, left, top, width, height, BG_COLOUR);
   ctx = capture.highlight_(ctx, highlights, top, left);
 
   return canvas;
