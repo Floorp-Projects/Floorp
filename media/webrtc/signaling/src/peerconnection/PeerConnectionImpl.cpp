@@ -3685,7 +3685,7 @@ static void ToRTCIceCandidateStats(
     cand.mPortNumber.Construct(c->cand_addr.port);
     cand.mTransport.Construct(
         NS_ConvertASCIItoUTF16(c->cand_addr.transport.c_str()));
-    if (candidateType == RTCStatsType::Localcandidate) {
+    if (candidateType == RTCStatsType::Local_candidate) {
       cand.mMozLocalTransport.Construct(
           NS_ConvertASCIItoUTF16(c->local_addr.transport.c_str()));
     }
@@ -3719,7 +3719,7 @@ static void RecordIceStats_s(
     s.mId.Construct(codeword);
     s.mComponentId.Construct(componentId);
     s.mTimestamp.Construct(now);
-    s.mType.Construct(RTCStatsType::Candidatepair);
+    s.mType.Construct(RTCStatsType::Candidate_pair);
     s.mLocalCandidateId.Construct(localCodeword);
     s.mRemoteCandidateId.Construct(remoteCodeword);
     s.mNominated.Construct(p->nominated);
@@ -3732,7 +3732,7 @@ static void RecordIceStats_s(
   std::vector<NrIceCandidate> candidates;
   if (NS_SUCCEEDED(mediaStream.GetLocalCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates,
-                           RTCStatsType::Localcandidate,
+                           RTCStatsType::Local_candidate,
                            componentId,
                            now,
                            report);
@@ -3741,7 +3741,7 @@ static void RecordIceStats_s(
 
   if (NS_SUCCEEDED(mediaStream.GetRemoteCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates,
-                           RTCStatsType::Remotecandidate,
+                           RTCStatsType::Remote_candidate,
                            componentId,
                            now,
                            report);
@@ -3795,7 +3795,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             RTCInboundRTPStreamStats s;
             s.mTimestamp.Construct(timestamp);
             s.mId.Construct(remoteId);
-            s.mType.Construct(RTCStatsType::Inboundrtp);
+            s.mType.Construct(RTCStatsType::Inbound_rtp);
             if (ssrc.Length()) {
               s.mSsrc.Construct(ssrc);
             }
@@ -3816,7 +3816,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           RTCOutboundRTPStreamStats s;
           s.mTimestamp.Construct(query->now);
           s.mId.Construct(localId);
-          s.mType.Construct(RTCStatsType::Outboundrtp);
+          s.mType.Construct(RTCStatsType::Outbound_rtp);
           if (ssrc.Length()) {
             s.mSsrc.Construct(ssrc);
           }
@@ -3869,7 +3869,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             RTCOutboundRTPStreamStats s;
             s.mTimestamp.Construct(timestamp);
             s.mId.Construct(remoteId);
-            s.mType.Construct(RTCStatsType::Outboundrtp);
+            s.mType.Construct(RTCStatsType::Outbound_rtp);
             if (ssrc.Length()) {
               s.mSsrc.Construct(ssrc);
             }
@@ -3886,7 +3886,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         RTCInboundRTPStreamStats s;
         s.mTimestamp.Construct(query->now);
         s.mId.Construct(localId);
-        s.mType.Construct(RTCStatsType::Inboundrtp);
+        s.mType.Construct(RTCStatsType::Inbound_rtp);
         if (ssrc.Length()) {
           s.mSsrc.Construct(ssrc);
         }
