@@ -250,6 +250,10 @@ SkScalerContext* DWriteFontTypeface::onCreateScalerContext(const SkScalerContext
     return new SkScalerContext_DW(const_cast<DWriteFontTypeface*>(this), effects, desc);
 }
 
+#ifdef MOZ_SKIA
+IDWriteRenderingParams* GetDwriteRenderingParams(bool aGDI);
+#endif
+
 void DWriteFontTypeface::onFilterRec(SkScalerContext::Rec* rec) const {
     if (rec->fFlags & SkScalerContext::kLCD_Vertical_Flag) {
         rec->fMaskFormat = SkMask::kA8_Format;
@@ -279,6 +283,16 @@ void DWriteFontTypeface::onFilterRec(SkScalerContext::Rec* rec) const {
             rec->setContrast(defaultRenderingParams->GetEnhancedContrast());
         }
     }
+#elif defined(MOZ_SKIA)
+    IDWriteRenderingParams* params = GetDwriteRenderingParams(ForceGDI());
+    SkASSERT(params);
+    rec->setContrast(params->GetEnhancedContrast());
+
+    // GDI gamma should be 2.3
+    // See the LUT gamma values comment for GDI fonts.
+    float gamma = ForceGDI() ? 2.3f : params->GetGamma();
+    rec->setDeviceGamma(gamma);
+    rec->setPaintGamma(gamma);
 #endif
 }
 
