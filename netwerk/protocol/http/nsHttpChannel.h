@@ -290,8 +290,10 @@ private:
     void     SetupTransactionRequestContext();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
-    nsresult ContinueProcessResponse1(nsresult);
+    void     AsyncContinueProcessResponse();
+    nsresult ContinueProcessResponse1();
     nsresult ContinueProcessResponse2(nsresult);
+    nsresult ContinueProcessResponse3(nsresult);
     nsresult ProcessNormal();
     nsresult ContinueProcessNormal(nsresult);
     void     ProcessAltService();
