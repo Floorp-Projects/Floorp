@@ -21,7 +21,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"

@@ -11,3 +11,5 @@ ac_add_options --enable-artifact-builds
 ac_add_options --enable-artifact-build-symbols
 unset CC
 unset CXX
+unset RUSTC
+unset CARGO

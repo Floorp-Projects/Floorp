@@ -527,6 +527,11 @@ this.UITour = {
         break;
       }
 
+      case "showNewTab": {
+        this.showNewTab(window, browser);
+        break;
+      }
+
       case "getConfiguration": {
         if (typeof data.configuration != "string") {
           log.warn("getConfiguration: No configuration option specified");
@@ -1742,6 +1747,10 @@ this.UITour = {
       let panel = aWindow.gIdentityHandler._identityPopup;
       panel.hidePopup();
     }
+  },
+
+  showNewTab: function(aWindow, aBrowser) {
+    aWindow.openLinkIn("about:newtab", "current", {targetBrowser: aBrowser});
   },
 
   hideAnnotationsForPanel: function(aEvent, aTargetPositionCallback) {

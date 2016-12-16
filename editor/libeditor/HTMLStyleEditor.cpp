@@ -1231,8 +1231,13 @@ HTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
   if (!cancel && !handled) {
     // Loop through the ranges in the selection
     uint32_t rangeCount = selection->RangeCount();
+    // Since ranges might be modified by SplitStyleAboveRange, we need hold
+    // current ranges
+    AutoTArray<OwningNonNull<nsRange>, 8> arrayOfRanges;
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-      OwningNonNull<nsRange> range = *selection->GetRangeAt(rangeIdx);
+      arrayOfRanges.AppendElement(*selection->GetRangeAt(rangeIdx));
+    }
+    for (auto& range : arrayOfRanges) {
       if (aProperty == nsGkAtoms::name) {
         // Promote range if it starts or end in a named anchor and we want to
         // remove named anchors

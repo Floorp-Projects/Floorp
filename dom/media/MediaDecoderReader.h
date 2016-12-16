@@ -70,7 +70,7 @@ public:
     MozPromise<RefPtr<MetadataHolder>, MediaResult, IsExclusive>;
   using MediaDataPromise =
     MozPromise<RefPtr<MediaData>, MediaResult, IsExclusive>;
-  using SeekPromise = MozPromise<media::TimeUnit, nsresult, IsExclusive>;
+  using SeekPromise = MozPromise<media::TimeUnit, MediaResult, IsExclusive>;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
   // But in the current architecture it's only ever used exclusively (by MDSM),
