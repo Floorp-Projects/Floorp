@@ -871,11 +871,6 @@ public:
     RefPtr<MediaData> audio(aAudio);
     MOZ_ASSERT(audio);
 
-    // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
-    // resolved.
-
-    SSAMPLELOG("HandleAudioDecoded [%lld,%lld]", audio->mTime, audio->GetEndTime());
-
     // Video-only seek doesn't reset audio decoder. There might be pending audio
     // requests when AccurateSeekTask::Seek() begins. We will just store the data
     // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
@@ -912,11 +907,6 @@ public:
     RefPtr<MediaData> video(aVideo);
     MOZ_ASSERT(video);
 
-    // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
-    // resolved.
-
-    SSAMPLELOG("HandleVideoDecoded [%lld,%lld]", video->mTime, video->GetEndTime());
-
     AdjustFastSeekIfNeeded(video);
 
     if (mSeekJob.mTarget.IsFast()) {
@@ -941,8 +931,6 @@ public:
   void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
   {
     MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
-
-    SSAMPLELOG("OnNotDecoded type=%d reason=%u", aType, aError.Code());
 
     // Ignore pending requests from video-only seek.
     if (aType == MediaData::AUDIO_DATA && mSeekJob.mTarget.IsVideoOnly()) {
