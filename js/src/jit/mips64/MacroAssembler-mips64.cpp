@@ -497,7 +497,7 @@ void
 MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L overflow)
 {
     // Check for signed range because of as_daddiu
-    if (Imm16::IsInSignedRange(imm.value) && Imm16::IsInUnsignedRange(imm.value)) {
+    if (Imm16::IsInSignedRange(imm.value)) {
         as_daddiu(SecondScratchReg, rs, imm.value);
         as_addiu(rd, rs, imm.value);
         ma_b(rd, SecondScratchReg, overflow, Assembler::NotEqual);
