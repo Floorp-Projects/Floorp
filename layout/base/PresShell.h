@@ -91,9 +91,6 @@ public:
 
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
-  // BeforeAfterKeyboardEvent preference
-  static bool BeforeAfterKeyboardEventEnabled();
-
   static bool IsTargetIframe(nsINode* aTarget);
 
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,

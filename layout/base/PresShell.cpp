@@ -744,7 +744,6 @@ static bool sPointerEventEnabled = true;
 static bool sPointerEventImplicitCapture = false;
 static bool sAccessibleCaretEnabled = false;
 static bool sAccessibleCaretOnTouch = false;
-static bool sBeforeAfterKeyboardEventEnabled = false;
 
 /* static */ bool
 PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell)
@@ -766,18 +765,6 @@ PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell)
   }
   // Otherwise, disabled.
   return false;
-}
-
-/* static */ bool
-PresShell::BeforeAfterKeyboardEventEnabled()
-{
-  static bool sInitialized = false;
-  if (!sInitialized) {
-    Preferences::AddBoolVarCache(&sBeforeAfterKeyboardEventEnabled,
-      "dom.beforeAfterKeyboardEvent.enabled");
-    sInitialized = true;
-  }
-  return sBeforeAfterKeyboardEventEnabled;
 }
 
 /* static */ bool
@@ -7041,55 +7028,6 @@ private:
   bool mIsPrimary;
   bool mIsSet;
 };
-
-static bool
-CheckPermissionForBeforeAfterKeyboardEvent(Element* aElement)
-{
-  // An element which is chrome-privileged should be able to handle before
-  // events and after events.
-  nsIPrincipal* principal = aElement->NodePrincipal();
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    return true;
-  }
-
-  // An element which has "before-after-keyboard-event" permission should be
-  // able to handle before events and after events.
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  if (permMgr) {
-    permMgr->TestPermissionFromPrincipal(principal, "before-after-keyboard-event", &permission);
-    if (permission == nsIPermissionManager::ALLOW_ACTION) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static void
-BuildTargetChainForBeforeAfterKeyboardEvent(nsINode* aTarget,
-                                            nsTArray<nsCOMPtr<Element> >& aChain,
-                                            bool aTargetIsIframe)
-{
-  Element* frameElement;
-  // If event target is not an iframe, skip the event target and get its
-  // parent frame.
-  if (aTargetIsIframe) {
-    frameElement = aTarget->AsElement();
-  } else {
-    nsPIDOMWindowOuter* window = aTarget->OwnerDoc()->GetWindow();
-    frameElement = window ? window->GetFrameElementInternal() : nullptr;
-  }
-
-  // Check permission for all ancestors and add them into the target chain.
-  while (frameElement) {
-    if (CheckPermissionForBeforeAfterKeyboardEvent(frameElement)) {
-      aChain.AppendElement(frameElement);
-    }
-    nsPIDOMWindowOuter* window = frameElement->OwnerDoc()->GetWindow();
-    frameElement = window ? window->GetFrameElementInternal() : nullptr;
-  }
-}
 
 bool
 PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const
