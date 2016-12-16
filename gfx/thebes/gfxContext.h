@@ -517,13 +517,11 @@ private:
   // This ensures mPathBuilder contains a valid PathBuilder (in user space!)
   void EnsurePathBuilder();
   void FillAzure(const Pattern& aPattern, mozilla::gfx::Float aOpacity);
-  void PushClipsToDT(mozilla::gfx::DrawTarget *aDT);
   CompositionOp GetOp();
   void ChangeTransform(const mozilla::gfx::Matrix &aNewMatrix, bool aUpdatePatternTransform = true);
   Rect GetAzureDeviceSpaceClipBounds();
   Matrix GetDeviceTransform() const;
   Matrix GetDTTransform() const;
-  void PushNewDT(gfxContentType content);
 
   bool mPathIsRect;
   bool mTransformChanged;
