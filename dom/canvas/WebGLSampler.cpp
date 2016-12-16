@@ -12,7 +12,7 @@
 namespace mozilla {
 
 WebGLSampler::WebGLSampler(WebGLContext* webgl, GLuint sampler)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mGLName(sampler)
     , mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR)
     , mMagFilter(LOCAL_GL_LINEAR)

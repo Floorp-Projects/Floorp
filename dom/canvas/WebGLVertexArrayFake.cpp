@@ -62,7 +62,7 @@ WebGLVertexArrayFake::DeleteImpl()
 }
 
 bool
-WebGLVertexArrayFake::IsVertexArrayImpl()
+WebGLVertexArrayFake::IsVertexArrayImpl() const
 {
     return mIsVAO;
 }

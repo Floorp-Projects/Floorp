@@ -130,7 +130,6 @@ class WebGLProgram final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLProgram>
     , public LinkedListElement<WebGLProgram>
-    , public WebGLContextBoundObject
 {
     friend class WebGLTransformFeedback;
 

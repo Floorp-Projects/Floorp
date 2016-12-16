@@ -119,11 +119,8 @@ WebGLContext::BindBuffer(GLenum target, WebGLBuffer* buffer)
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowDeletedOrNull(funcName, buffer))
+    if (buffer && !ValidateObject(funcName, *buffer))
         return;
-
-    if (buffer && buffer->IsDeleted())
-        return ErrorInvalidOperation("%s: Cannot bind a deleted object.", funcName);
 
     const auto& slot = ValidateBufferSlot(funcName, target);
     if (!slot)
@@ -183,11 +180,8 @@ WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowDeletedOrNull(funcName, buffer))
+    if (buffer && !ValidateObject(funcName, *buffer))
         return;
-
-    if (buffer && buffer->IsDeleted())
-        return ErrorInvalidOperation("%s: Cannot bind a deleted object.", funcName);
 
     WebGLRefPtr<WebGLBuffer>* genericBinding;
     IndexedBufferBinding* indexedBinding;
@@ -234,11 +228,8 @@ WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowDeletedOrNull(funcName, buffer))
+    if (buffer && !ValidateObject(funcName, *buffer))
         return;
-
-    if (buffer && buffer->IsDeleted())
-        return ErrorInvalidOperation("%s: Cannot bind a deleted object.", funcName);
 
     if (!ValidateNonNegative(funcName, "offset", offset) ||
         !ValidateNonNegative(funcName, "size", size))
@@ -476,13 +467,7 @@ WebGLContext::CreateBuffer()
 void
 WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
 {
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObjectAllowDeletedOrNull("deleteBuffer", buffer))
-        return;
-
-    if (!buffer || buffer->IsDeleted())
+    if (!ValidateDeleteObject("deleteBuffer", buffer))
         return;
 
     ////
@@ -530,13 +515,7 @@ WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
 bool
 WebGLContext::IsBuffer(WebGLBuffer* buffer)
 {
-    if (IsContextLost())
-        return false;
-
-    if (!ValidateObjectAllowDeleted("isBuffer", buffer))
-        return false;
-
-    if (buffer->IsDeleted())
+    if (!ValidateIsObject("isBuffer", buffer))
         return false;
 
     MakeContextCurrent();
