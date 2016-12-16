@@ -41,7 +41,7 @@ WebGLExtensionVertexArray::DeleteVertexArrayOES(WebGLVertexArray* array)
 }
 
 bool
-WebGLExtensionVertexArray::IsVertexArrayOES(const WebGLVertexArray* array)
+WebGLExtensionVertexArray::IsVertexArrayOES(WebGLVertexArray* array)
 {
     if (mIsLost)
         return false;

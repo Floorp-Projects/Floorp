@@ -127,7 +127,7 @@ public:
     explicit WebGLExtensionDebugShaders(WebGLContext*);
     virtual ~WebGLExtensionDebugShaders();
 
-    void GetTranslatedShaderSource(const WebGLShader& shader, nsAString& retval) const;
+    void GetTranslatedShaderSource(WebGLShader* shader, nsAString& retval);
 
     DECL_WEBGL_EXTENSION_GOOP
 };
@@ -326,7 +326,7 @@ public:
 
     already_AddRefed<WebGLVertexArray> CreateVertexArrayOES();
     void DeleteVertexArrayOES(WebGLVertexArray* array);
-    bool IsVertexArrayOES(const WebGLVertexArray* array);
+    bool IsVertexArrayOES(WebGLVertexArray* array);
     void BindVertexArrayOES(WebGLVertexArray* array);
 
     DECL_WEBGL_EXTENSION_GOOP
@@ -372,12 +372,12 @@ public:
     already_AddRefed<WebGLQuery> CreateQueryEXT() const;
     void DeleteQueryEXT(WebGLQuery* query) const;
     bool IsQueryEXT(const WebGLQuery* query) const;
-    void BeginQueryEXT(GLenum target, WebGLQuery& query) const;
+    void BeginQueryEXT(GLenum target, WebGLQuery* query) const;
     void EndQueryEXT(GLenum target) const;
-    void QueryCounterEXT(WebGLQuery& query, GLenum target) const;
+    void QueryCounterEXT(WebGLQuery* query, GLenum target) const;
     void GetQueryEXT(JSContext* cx, GLenum target, GLenum pname,
                      JS::MutableHandleValue retval) const;
-    void GetQueryObjectEXT(JSContext* cx, const WebGLQuery& query,
+    void GetQueryObjectEXT(JSContext* cx, const WebGLQuery* query,
                            GLenum pname, JS::MutableHandleValue retval) const;
 
     static bool IsSupported(const WebGLContext*);

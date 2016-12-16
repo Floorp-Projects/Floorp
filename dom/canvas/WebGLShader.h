@@ -28,6 +28,7 @@ class WebGLShader final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLShader>
     , public LinkedListElement<WebGLShader>
+    , public WebGLContextBoundObject
 {
     friend class WebGLContext;
     friend class WebGLProgram;

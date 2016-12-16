@@ -14,7 +14,7 @@ namespace mozilla {
 // Programs and shaders
 
 GLint
-WebGL2Context::GetFragDataLocation(const WebGLProgram& prog, const nsAString& name)
+WebGL2Context::GetFragDataLocation(WebGLProgram* prog, const nsAString& name)
 {
     if (IsContextLost())
         return -1;
@@ -22,7 +22,7 @@ WebGL2Context::GetFragDataLocation(const WebGLProgram& prog, const nsAString& na
     if (!ValidateObject("getFragDataLocation: program", prog))
         return -1;
 
-    return prog.GetFragDataLocation(name);
+    return prog->GetFragDataLocation(name);
 }
 
 } // namespace mozilla

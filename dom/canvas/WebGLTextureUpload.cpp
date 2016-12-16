@@ -185,19 +185,14 @@ FromView(WebGLContext* webgl, const char* funcName, TexImageTarget target,
 
 static UniquePtr<webgl::TexUnpackBytes>
 FromPboOffset(WebGLContext* webgl, const char* funcName, TexImageTarget target,
-              uint32_t width, uint32_t height, uint32_t depth, WebGLsizeiptr pboOffset)
+              uint32_t width, uint32_t height, uint32_t depth, WebGLsizeiptr pboOffset,
+              size_t availBufferBytes)
 {
     if (pboOffset < 0) {
         webgl->ErrorInvalidValue("%s: offset cannot be negative.", funcName);
         return nullptr;
     }
 
-    const auto& buffer = webgl->ValidateBufferSelection(funcName,
-                                                        LOCAL_GL_PIXEL_UNPACK_BUFFER);
-    if (!buffer)
-        return nullptr;
-
-    size_t availBufferBytes = buffer->ByteLength();
     if (size_t(pboOffset) > availBufferBytes) {
         webgl->ErrorInvalidOperation("%s: Offset is passed end of buffer.", funcName);
         return nullptr;
@@ -371,12 +366,25 @@ WebGLContext::From(const char* funcName, TexImageTarget target, GLsizei rawWidth
     }
 
     if (src.mPboOffset) {
+        if (!mBoundPixelUnpackBuffer) {
+            ErrorInvalidOperation("%s: PACK_BUFFER must be non-null.", funcName);
+            return nullptr;
+        }
+
+        if (mBoundPixelUnpackBuffer->mNumActiveTFOs) {
+            ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
+                                  " object.",
+                                  funcName);
+            return nullptr;
+        }
+
+        const auto& availBytes = mBoundPixelUnpackBuffer->ByteLength();
         return FromPboOffset(this, funcName, target, width, height, depth,
-                             *(src.mPboOffset));
+                             *(src.mPboOffset), availBytes);
     }
 
     if (mBoundPixelUnpackBuffer) {
-        ErrorInvalidOperation("%s: PIXEL_UNPACK_BUFFER must be null.", funcName);
+        ErrorInvalidOperation("%s: PACK_BUFFER must be null.", funcName);
         return nullptr;
     }
 
@@ -1362,12 +1370,25 @@ WebGLContext::FromCompressed(const char* funcName, TexImageTarget target,
     }
 
     if (src.mPboOffset) {
+        if (!mBoundPixelUnpackBuffer) {
+            ErrorInvalidOperation("%s: PACK_BUFFER must be non-null.", funcName);
+            return nullptr;
+        }
+
+        if (mBoundPixelUnpackBuffer->mNumActiveTFOs) {
+            ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
+                                  " object.",
+                                  funcName);
+            return nullptr;
+        }
+
+        const auto& availBytes = mBoundPixelUnpackBuffer->ByteLength();
         return FromPboOffset(this, funcName, target, width, height, depth,
-                             *(src.mPboOffset));
+                             *(src.mPboOffset), availBytes);
     }
 
     if (mBoundPixelUnpackBuffer) {
-        ErrorInvalidOperation("%s: PIXEL_UNPACK_BUFFER must be null.", funcName);
+        ErrorInvalidOperation("%s: PACK_BUFFER must be null.", funcName);
         return nullptr;
     }
 
@@ -1920,90 +1941,6 @@ WebGLTexture::ValidateCopyTexImageForFeedback(const char* funcName, uint32_t lev
     return true;
 }
 
-static bool
-DoCopyTexOrSubImage(WebGLContext* webgl, const char* funcName, bool isSubImage,
-                    const WebGLTexture* tex, TexImageTarget target, GLint level,
-                    GLint xWithinSrc, GLint yWithinSrc,
-                    uint32_t srcTotalWidth, uint32_t srcTotalHeight,
-                    const webgl::FormatUsageInfo* srcUsage,
-                    GLint xOffset, GLint yOffset, GLint zOffset,
-                    uint32_t dstWidth, uint32_t dstHeight,
-                    const webgl::FormatUsageInfo* dstUsage)
-{
-    gl::GLContext* gl = webgl->gl;
-    gl->MakeCurrent();
-
-    ////
-
-    uint32_t readX, readY;
-    uint32_t writeX, writeY;
-    uint32_t rwWidth, rwHeight;
-    Intersect(srcTotalWidth, xWithinSrc, dstWidth, &readX, &writeX, &rwWidth);
-    Intersect(srcTotalHeight, yWithinSrc, dstHeight, &readY, &writeY, &rwHeight);
-
-    ////
-
-    GLenum error = 0;
-    do {
-        const auto& idealUnpack = dstUsage->idealUnpack;
-        if (!isSubImage) {
-            UniqueBuffer buffer;
-
-            if (rwWidth != dstWidth || rwHeight != dstHeight) {
-                const auto& pi = idealUnpack->ToPacking();
-                CheckedUint32 byteCount = BytesPerPixel(pi);
-                byteCount *= dstWidth;
-                byteCount *= dstHeight;
-
-                if (byteCount.isValid()) {
-                    buffer = calloc(1, byteCount.value());
-                }
-
-                if (!buffer.get()) {
-                    webgl->ErrorOutOfMemory("%s: Ran out of memory allocating zeros.",
-                                            funcName);
-                    return false;
-                }
-            }
-
-            const ScopedUnpackReset unpackReset(webgl);
-            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
-            error = DoTexImage(gl, target, level, idealUnpack, dstWidth, dstHeight, 1,
-                               buffer.get());
-            if (error)
-                break;
-        }
-
-        if (!rwWidth || !rwHeight) {
-            // There aren't any pixels to copy, so we're 'done'.
-            return true;
-        }
-
-        const auto& srcFormat = srcUsage->format;
-        ScopedCopyTexImageSource maybeSwizzle(webgl, funcName, srcTotalWidth,
-                                              srcTotalHeight, srcFormat, dstUsage);
-
-        const uint8_t zOffset = 0;
-        error = DoCopyTexSubImage(gl, target, level, writeX, writeY, zOffset, readX,
-                                  readY, rwWidth, rwHeight);
-        if (error)
-            break;
-
-        return true;
-    } while (false);
-
-    if (error == LOCAL_GL_OUT_OF_MEMORY) {
-        webgl->ErrorOutOfMemory("%s: Ran out of memory during texture copy.", funcName);
-        return false;
-    }
-
-    MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
-    webgl->GenerateWarning("%s: Unexpected error during texture copy. Context lost.",
-                           funcName);
-    webgl->ForceLoseContext();
-    return false;
-}
-
 // There is no CopyTexImage3D.
 void
 WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internalFormat,
@@ -2034,13 +1971,11 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     // Get source info
 
     const webgl::FormatUsageInfo* srcUsage;
-    uint32_t srcTotalWidth;
-    uint32_t srcTotalHeight;
-    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcTotalWidth,
-                                        &srcTotalHeight))
-    {
+    uint32_t srcWidth;
+    uint32_t srcHeight;
+    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcWidth, &srcHeight))
         return;
-    }
+    auto srcFormat = srcUsage->format;
 
     if (!ValidateCopyTexImageForFeedback(funcName, level))
         return;
@@ -2048,13 +1983,13 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     ////////////////////////////////////
     // Check that source and dest info are compatible
 
-    const auto& srcFormat = srcUsage->format;
     const auto dstUsage = ValidateCopyDestUsage(funcName, mContext, srcFormat,
                                                 internalFormat);
     if (!dstUsage)
         return;
 
-    const auto& dstFormat = dstUsage->format;
+    const auto dstFormat = dstUsage->format;
+
     if (!ValidateTargetForFormat(funcName, mContext, target, dstFormat))
         return;
 
@@ -2070,11 +2005,63 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     ////////////////////////////////////
     // Do the thing!
 
-    const bool isSubImage = false;
-    if (!DoCopyTexOrSubImage(mContext, funcName, isSubImage, this, target, level, x, y,
-                             srcTotalWidth, srcTotalHeight, srcUsage, 0, 0, 0, width,
-                             height, dstUsage))
-    {
+    gl::GLContext* gl = mContext->gl;
+    gl->MakeCurrent();
+
+    ScopedCopyTexImageSource maybeSwizzle(mContext, funcName, srcWidth, srcHeight,
+                                          srcFormat, dstUsage);
+
+    uint32_t readX, readY;
+    uint32_t writeX, writeY;
+    uint32_t rwWidth, rwHeight;
+    Intersect(srcWidth, x, width, &readX, &writeX, &rwWidth);
+    Intersect(srcHeight, y, height, &readY, &writeY, &rwHeight);
+
+    const auto& idealUnpack = dstUsage->idealUnpack;
+    const auto& driverInternalFormat = idealUnpack->internalFormat;
+
+    GLenum error = DoCopyTexImage2D(gl, target, level, driverInternalFormat, x, y, width,
+                                    height);
+    do {
+        if (rwWidth == uint32_t(width) && rwHeight == uint32_t(height))
+            break;
+
+        if (error)
+            break;
+
+        // 1. Zero the texture data.
+        // 2. CopyTexSubImage the subrect.
+
+        const uint8_t zOffset = 0;
+        if (!ZeroTextureData(mContext, funcName, mGLName, target, level, dstUsage, 0, 0,
+                             zOffset, width, height, depth))
+        {
+            mContext->ErrorOutOfMemory("%s: Failed to zero texture data.", funcName);
+            MOZ_ASSERT(false, "Failed to zero texture data.");
+            return;
+        }
+
+        if (!rwWidth || !rwHeight) {
+            // There aren't any, so we're 'done'.
+            mContext->DummyReadFramebufferOperation(funcName);
+            return;
+        }
+
+        error = DoCopyTexSubImage(gl, target, level, writeX, writeY, zOffset, readX,
+                                  readY, rwWidth, rwHeight);
+    } while (false);
+
+    if (error == LOCAL_GL_OUT_OF_MEMORY) {
+        mContext->ErrorOutOfMemory("%s: Ran out of memory during texture copy.",
+                                   funcName);
+        return;
+    }
+    if (error) {
+        MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
+        mContext->GenerateWarning("%s: Unexpected error during texture copy. Context"
+                                  " lost.",
+                                  funcName);
+        mContext->ForceLoseContext();
         return;
     }
 
@@ -2111,8 +2098,8 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
 
     auto dstUsage = imageInfo->mFormat;
     MOZ_ASSERT(dstUsage);
-
     auto dstFormat = dstUsage->format;
+
     if (!mContext->IsWebGL2() && dstFormat->d) {
         mContext->ErrorInvalidOperation("%s: Function may not be called on a texture of"
                                         " format %s.",
@@ -2124,13 +2111,11 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
     // Get source info
 
     const webgl::FormatUsageInfo* srcUsage;
-    uint32_t srcTotalWidth;
-    uint32_t srcTotalHeight;
-    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcTotalWidth,
-                                        &srcTotalHeight))
-    {
+    uint32_t srcWidth;
+    uint32_t srcHeight;
+    if (!mContext->ValidateCurFBForRead(funcName, &srcUsage, &srcWidth, &srcHeight))
         return;
-    }
+    auto srcFormat = srcUsage->format;
 
     if (!ValidateCopyTexImageForFeedback(funcName, level, zOffset))
         return;
@@ -2138,12 +2123,28 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
     ////////////////////////////////////
     // Check that source and dest info are compatible
 
-    auto srcFormat = srcUsage->format;
     if (!ValidateCopyTexImageFormats(mContext, funcName, srcFormat, dstFormat))
         return;
 
     ////////////////////////////////////
     // Do the thing!
+
+    mContext->gl->MakeCurrent();
+
+    ScopedCopyTexImageSource maybeSwizzle(mContext, funcName, srcWidth, srcHeight,
+                                          srcFormat, dstUsage);
+
+    uint32_t readX, readY;
+    uint32_t writeX, writeY;
+    uint32_t rwWidth, rwHeight;
+    Intersect(srcWidth, x, width, &readX, &writeX, &rwWidth);
+    Intersect(srcHeight, y, height, &readY, &writeY, &rwHeight);
+
+    if (!rwWidth || !rwHeight) {
+        // There aren't any, so we're 'done'.
+        mContext->DummyReadFramebufferOperation(funcName);
+        return;
+    }
 
     bool uploadWillInitialize;
     if (!EnsureImageDataInitializedForUpload(this, funcName, target, level, xOffset,
@@ -2153,11 +2154,21 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
         return;
     }
 
-    const bool isSubImage = true;
-    if (!DoCopyTexOrSubImage(mContext, funcName, isSubImage, this, target, level, x, y,
-                             srcTotalWidth, srcTotalHeight, srcUsage, xOffset, yOffset,
-                             zOffset, width, height, dstUsage))
-    {
+    GLenum error = DoCopyTexSubImage(mContext->gl, target, level, xOffset + writeX,
+                                     yOffset + writeY, zOffset, readX, readY, rwWidth,
+                                     rwHeight);
+
+    if (error == LOCAL_GL_OUT_OF_MEMORY) {
+        mContext->ErrorOutOfMemory("%s: Ran out of memory during texture copy.",
+                                   funcName);
+        return;
+    }
+    if (error) {
+        MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
+        mContext->GenerateWarning("%s: Unexpected error during texture copy. Context"
+                                  " lost.",
+                                  funcName);
+        mContext->ForceLoseContext();
         return;
     }
 

@@ -12,7 +12,7 @@
 namespace mozilla {
 
 WebGLSync::WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags)
-    : WebGLRefCountedObject(webgl)
+    : WebGLContextBoundObject(webgl)
 {
    mContext->mSyncs.insertBack(this);
    mGLName = mContext->gl->fFenceSync(condition, flags);
