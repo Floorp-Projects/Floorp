@@ -583,6 +583,160 @@ WebGLTexture::EnsureImageDataInitialized(const char* funcName, TexImageTarget ta
     return InitializeImageData(funcName, target, level);
 }
 
+static void
+ZeroANGLEDepthTexture(WebGLContext* webgl, GLuint tex,
+                      const webgl::FormatUsageInfo* usage, uint32_t width,
+                      uint32_t height)
+{
+    const auto& format = usage->format;
+    GLenum attachPoint = 0;
+    GLbitfield clearBits = 0;
+
+    if (format->d) {
+        attachPoint = LOCAL_GL_DEPTH_ATTACHMENT;
+        clearBits |= LOCAL_GL_DEPTH_BUFFER_BIT;
+    }
+
+    if (format->s) {
+        attachPoint = (format->d ? LOCAL_GL_DEPTH_STENCIL_ATTACHMENT
+                                 : LOCAL_GL_STENCIL_ATTACHMENT);
+        clearBits |= LOCAL_GL_STENCIL_BUFFER_BIT;
+    }
+
+    MOZ_RELEASE_ASSERT(attachPoint && clearBits, "GFX: No bits cleared.");
+
+    ////
+    const auto& gl = webgl->gl;
+    MOZ_ASSERT(gl->IsCurrent());
+
+    gl::ScopedFramebuffer scopedFB(gl);
+    const gl::ScopedBindFramebuffer scopedBindFB(gl, scopedFB.FB());
+
+    gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachPoint, LOCAL_GL_TEXTURE_2D,
+                              tex, 0);
+
+    const auto& status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    MOZ_RELEASE_ASSERT(status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
+
+    ////
+
+    const bool fakeNoAlpha = false;
+    webgl->ForceClearFramebufferWithDefaultValues(clearBits, fakeNoAlpha);
+}
+
+static bool
+ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
+                TexImageTarget target, uint32_t level,
+                const webgl::FormatUsageInfo* usage, uint32_t width, uint32_t height,
+                uint32_t depth)
+{
+    // This has two usecases:
+    // 1. Lazy zeroing of uninitialized textures:
+    //    a. Before draw, when FakeBlack isn't viable. (TexStorage + Draw*)
+    //    b. Before partial upload. (TexStorage + TexSubImage)
+    // 2. Zero subrects from out-of-bounds blits. (CopyTex(Sub)Image)
+
+    // We have no sympathy for any of these cases.
+
+    // "Doctor, it hurts when I do this!" "Well don't do that!"
+    webgl->GenerateWarning("%s: This operation requires zeroing texture data. This is"
+                           " slow.",
+                           funcName);
+
+    gl::GLContext* gl = webgl->GL();
+    gl->MakeCurrent();
+
+    GLenum scopeBindTarget;
+    switch (target.get()) {
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        scopeBindTarget = LOCAL_GL_TEXTURE_CUBE_MAP;
+        break;
+    default:
+        scopeBindTarget = target.get();
+        break;
+    }
+    const gl::ScopedBindTexture scopeBindTexture(gl, tex, scopeBindTarget);
+    auto compression = usage->format->compression;
+    if (compression) {
+        auto sizedFormat = usage->format->sizedFormat;
+        MOZ_RELEASE_ASSERT(sizedFormat, "GFX: texture sized format not set");
+
+        const auto fnSizeInBlocks = [](CheckedUint32 pixels, uint8_t pixelsPerBlock) {
+            return RoundUpToMultipleOf(pixels, pixelsPerBlock) / pixelsPerBlock;
+        };
+
+        const auto widthBlocks = fnSizeInBlocks(width, compression->blockWidth);
+        const auto heightBlocks = fnSizeInBlocks(height, compression->blockHeight);
+
+        CheckedUint32 checkedByteCount = compression->bytesPerBlock;
+        checkedByteCount *= widthBlocks;
+        checkedByteCount *= heightBlocks;
+        checkedByteCount *= depth;
+
+        if (!checkedByteCount.isValid())
+            return false;
+
+        const size_t byteCount = checkedByteCount.value();
+
+        UniqueBuffer zeros = calloc(1, byteCount);
+        if (!zeros)
+            return false;
+
+        ScopedUnpackReset scopedReset(webgl);
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1); // Don't bother with striding it
+                                                        // well.
+
+        const auto error = DoCompressedTexSubImage(gl, target.get(), level, 0, 0, 0,
+                                                   width, height, depth, sizedFormat,
+                                                   byteCount, zeros.get());
+        return !error;
+    }
+
+    const auto driverUnpackInfo = usage->idealUnpack;
+    MOZ_RELEASE_ASSERT(driverUnpackInfo, "GFX: ideal unpack info not set.");
+
+    if (webgl->IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture) &&
+        gl->IsANGLE() &&
+        usage->format->d)
+    {
+        // ANGLE_depth_texture does not allow uploads, so we have to clear.
+        // (Restriction because of D3D9)
+        MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D);
+        MOZ_ASSERT(level == 0);
+        ZeroANGLEDepthTexture(webgl, tex, usage, width, height);
+        return true;
+    }
+
+    const webgl::PackingInfo packing = driverUnpackInfo->ToPacking();
+
+    const auto bytesPerPixel = webgl::BytesPerPixel(packing);
+
+    CheckedUint32 checkedByteCount = bytesPerPixel;
+    checkedByteCount *= width;
+    checkedByteCount *= height;
+    checkedByteCount *= depth;
+
+    if (!checkedByteCount.isValid())
+        return false;
+
+    const size_t byteCount = checkedByteCount.value();
+
+    UniqueBuffer zeros = calloc(1, byteCount);
+    if (!zeros)
+        return false;
+
+    ScopedUnpackReset scopedReset(webgl);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1); // Don't bother with striding it well.
+    const auto error = DoTexSubImage(gl, target, level, 0, 0, 0, width, height, depth,
+                                     packing, zeros.get());
+    return !error;
+}
+
 bool
 WebGLTexture::InitializeImageData(const char* funcName, TexImageTarget target,
                                   uint32_t level)
@@ -596,8 +750,8 @@ WebGLTexture::InitializeImageData(const char* funcName, TexImageTarget target,
     const auto& height = imageInfo.mHeight;
     const auto& depth = imageInfo.mDepth;
 
-    if (!ZeroTextureData(mContext, funcName, mGLName, target, level, usage, 0, 0, 0,
-                         width, height, depth))
+    if (!ZeroTextureData(mContext, funcName, mGLName, target, level, usage, width, height,
+                         depth))
     {
         return false;
     }
