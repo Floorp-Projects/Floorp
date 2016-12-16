@@ -125,7 +125,12 @@ interface AudioNode : EventTarget {
 
 };</pre>
 
-<pre id="gain-node-idl">interface GainNode : AudioNode {
+<pre id="gain-node-idl">dictionary GainOptions : AudioNodeOptions {
+             float gain = 1.0;
+};
+
+[Constructor(AudioContext context, optional GainOptions options)]
+interface GainNode : AudioNode {
 
     readonly attribute AudioParam gain;
 

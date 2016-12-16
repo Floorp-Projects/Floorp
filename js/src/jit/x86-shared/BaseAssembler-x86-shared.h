@@ -45,17 +45,6 @@ namespace X86Encoding {
 
 class BaseAssembler;
 
-class AutoUnprotectAssemblerBufferRegion
-{
-    BaseAssembler* assembler;
-    size_t firstByteOffset;
-    size_t lastByteOffset;
-
-  public:
-    AutoUnprotectAssemblerBufferRegion(BaseAssembler& holder, int32_t offset, size_t size);
-    ~AutoUnprotectAssemblerBufferRegion();
-};
-
 class BaseAssembler : public GenericAssembler {
 public:
     BaseAssembler()
@@ -3819,7 +3808,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         MOZ_RELEASE_ASSERT(to.offset() == -1 || size_t(to.offset()) <= size());
 
         unsigned char* code = m_formatter.data();
-        AutoUnprotectAssemblerBufferRegion unprotect(*this, from.offset() - 4, 4);
         SetInt32(code + from.offset(), to.offset());
     }
 
@@ -3838,7 +3826,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
         spew(".set .Lfrom%d, .Llabel%d", from.offset(), to.offset());
         unsigned char* code = m_formatter.data();
-        AutoUnprotectAssemblerBufferRegion unprotect(*this, from.offset() - 4, 4);
         SetRel32(code + from.offset(), code + to.offset());
     }
 
@@ -3849,13 +3836,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
     MOZ_MUST_USE bool appendBuffer(const BaseAssembler& other)
     {
         return m_formatter.append(other.m_formatter.buffer(), other.size());
-    }
-
-    void unprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
-        m_formatter.unprotectDataRegion(firstByteOffset, lastByteOffset);
-    }
-    void reprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
-        m_formatter.reprotectDataRegion(firstByteOffset, lastByteOffset);
     }
 
   protected:
@@ -5129,13 +5109,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
             return m_buffer.append(values, size);
         }
 
-        void unprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
-            m_buffer.unprotectDataRegion(firstByteOffset, lastByteOffset);
-        }
-        void reprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
-            m_buffer.reprotectDataRegion(firstByteOffset, lastByteOffset);
-        }
-
     private:
 
         // Internals; ModRm and REX formatters.
@@ -5367,23 +5340,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
     bool useVEX_;
 };
-
-MOZ_ALWAYS_INLINE
-AutoUnprotectAssemblerBufferRegion::AutoUnprotectAssemblerBufferRegion(BaseAssembler& holder,
-                                                                       int32_t offset, size_t size)
-{
-    assembler = &holder;
-    MOZ_ASSERT(offset >= 0);
-    firstByteOffset = size_t(offset);
-    lastByteOffset = firstByteOffset + (size - 1);
-    assembler->unprotectDataRegion(firstByteOffset, lastByteOffset);
-}
-
-MOZ_ALWAYS_INLINE
-AutoUnprotectAssemblerBufferRegion::~AutoUnprotectAssemblerBufferRegion()
-{
-    assembler->reprotectDataRegion(firstByteOffset, lastByteOffset);
-}
 
 } // namespace X86Encoding
 

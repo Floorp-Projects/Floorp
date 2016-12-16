@@ -21,6 +21,12 @@ enum ChannelInterpretation {
     "discrete"
 };
 
+dictionary AudioNodeOptions {
+             unsigned long         channelCount;
+             ChannelCountMode      channelCountMode;
+             ChannelInterpretation channelInterpretation;
+};
+
 [Pref="dom.webaudio.enabled"]
 interface AudioNode : EventTarget {
 

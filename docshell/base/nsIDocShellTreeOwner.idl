@@ -23,11 +23,9 @@ interface nsIDocShellTreeOwner : nsISupports
 	 *
 	 * @param aContentShell the shell being added.
 	 * @param aPrimary whether the shell is primary.
-	 * @param aID the "id" of the shell.  What this actually means is
-	 *			undefined. Don't rely on this for anything.
 	 */
 	void contentShellAdded(in nsIDocShellTreeItem aContentShell,
-	                       in boolean aPrimary, in AString aID);
+	                       in boolean aPrimary);
 
 	/**
 	 * Called when a content shell is removed from the docshell tree.  This is

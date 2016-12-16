@@ -369,43 +369,6 @@ public class GeckoView extends LayerView
         return eventDispatcher;
     }
 
-    /**
-    * Wrapper for a browser in the GeckoView container. Associated with a browser
-    * element in the Gecko system.
-    */
-    public class Browser {
-        private final int mId;
-        private Browser(int Id) {
-            mId = Id;
-        }
-
-        /**
-        * Get the ID of the Browser. This is the same ID used by Gecko for it's underlying
-        * browser element.
-        * @return The integer ID of the Browser.
-        */
-        private int getId() {
-            return mId;
-        }
-
-        /**
-        * Load a URL resource into the Browser.
-        * @param url The URL string.
-        */
-        public void loadUrl(String url) {
-            JSONObject args = new JSONObject();
-            try {
-                args.put("url", url);
-                args.put("parentId", -1);
-                args.put("newTab", false);
-                args.put("tabID", mId);
-            } catch (Exception e) {
-                Log.w(LOGTAG, "Error building JSON arguments for loadUrl.", e);
-            }
-            GeckoAppShell.notifyObservers("Tab:Load", args.toString());
-        }
-    }
-
     /* Provides a means for the client to indicate whether a JavaScript
      * dialog request should proceed. An instance of this class is passed to
      * various GeckoViewChrome callback actions.
@@ -457,88 +420,34 @@ public class GeckoView extends LayerView
         }
     }
 
-    /* Provides a means for the client to respond to a script message with some data.
-     * An instance of this class is passed to GeckoViewChrome.onScriptMessage.
-     */
-    public class MessageResult {
-        private final EventCallback mCallback;
-
-        public MessageResult(EventCallback callback) {
-            if (callback == null) {
-                throw new IllegalArgumentException("EventCallback should not be null.");
-            }
-            mCallback = callback;
-        }
-
-        private JSONObject bundleToJSON(Bundle data) {
-            JSONObject result = new JSONObject();
-            if (data == null) {
-                return result;
-            }
-
-            final Set<String> keys = data.keySet();
-            for (String key : keys) {
-                try {
-                    result.put(key, data.get(key));
-                } catch (JSONException e) {
-                }
-            }
-            return result;
-        }
-
-        /**
-        * Handle a successful response to a script message.
-        * @param value Bundle value to return to the script context.
-        */
-        public void success(Bundle data) {
-            mCallback.sendSuccess(bundleToJSON(data));
-        }
-
-        /**
-        * Handle a failure response to a script message.
-        */
-        public void failure(Bundle data) {
-            mCallback.sendError(bundleToJSON(data));
-        }
-    }
-
     public interface ChromeDelegate {
-        /**
-        * Tell the host application that Gecko is ready to handle requests.
-        * @param view The GeckoView that initiated the callback.
-        */
-        public void onReady(GeckoView view);
-
         /**
         * Tell the host application to display an alert dialog.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that is loading the content.
         * @param message The string to display in the dialog.
         * @param result A PromptResult used to send back the result without blocking.
         * Defaults to cancel requests.
         */
-        public void onAlert(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result);
+        public void onAlert(GeckoView view, String message, GeckoView.PromptResult result);
 
         /**
         * Tell the host application to display a confirmation dialog.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that is loading the content.
         * @param message The string to display in the dialog.
         * @param result A PromptResult used to send back the result without blocking.
         * Defaults to cancel requests.
         */
-        public void onConfirm(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result);
+        public void onConfirm(GeckoView view, String message, GeckoView.PromptResult result);
 
         /**
         * Tell the host application to display an input prompt dialog.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that is loading the content.
         * @param message The string to display in the dialog.
         * @param defaultValue The string to use as default input.
         * @param result A PromptResult used to send back the result without blocking.
         * Defaults to cancel requests.
         */
-        public void onPrompt(GeckoView view, GeckoView.Browser browser, String message, String defaultValue, GeckoView.PromptResult result);
+        public void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result);
 
         /**
         * Tell the host application to display a remote debugging request dialog.
@@ -547,59 +456,45 @@ public class GeckoView extends LayerView
         * Defaults to cancel requests.
         */
         public void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
-
-        /**
-        * Receive a message from an imported script.
-        * @param view The GeckoView that initiated the callback.
-        * @param data Bundle of data sent with the message. Never null.
-        * @param result A MessageResult used to send back a response without blocking. Can be null.
-        * Defaults to do nothing.
-        */
-        public void onScriptMessage(GeckoView view, Bundle data, GeckoView.MessageResult result);
     }
 
     public interface ContentDelegate {
         /**
-        * A Browser has started loading content from the network.
+        * A View has started loading content from the network.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that is loading the content.
         * @param url The resource being loaded.
         */
-        public void onPageStart(GeckoView view, GeckoView.Browser browser, String url);
+        public void onPageStart(GeckoView view, String url);
 
         /**
-        * A Browser has finished loading content from the network.
+        * A View has finished loading content from the network.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that was loading the content.
         * @param success Whether the page loaded successfully or an error occurred.
         */
-        public void onPageStop(GeckoView view, GeckoView.Browser browser, boolean success);
+        public void onPageStop(GeckoView view, boolean success);
 
         /**
-        * A Browser is displaying content. This page could have been loaded via
+        * A View is displaying content. This page could have been loaded via
         * network or from the session history.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that is showing the content.
         */
-        public void onPageShow(GeckoView view, GeckoView.Browser browser);
+        public void onPageShow(GeckoView view);
 
         /**
         * A page title was discovered in the content or updated after the content
         * loaded.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that is showing the content.
         * @param title The title sent from the content.
         */
-        public void onReceivedTitle(GeckoView view, GeckoView.Browser browser, String title);
+        public void onReceivedTitle(GeckoView view, String title);
 
         /**
         * A link element was discovered in the content or updated after the content
         * loaded that specifies a favicon.
         * @param view The GeckoView that initiated the callback.
-        * @param browser The Browser that is showing the content.
         * @param url The href of the link element specifying the favicon.
         * @param size The maximum size specified for the favicon, or -1 for any size.
         */
-        public void onReceivedFavicon(GeckoView view, GeckoView.Browser browser, String url, int size);
+        public void onReceivedFavicon(GeckoView view, String url, int size);
     }
 }

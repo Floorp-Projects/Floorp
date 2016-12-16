@@ -90,6 +90,27 @@ PartialSHistory::GetCount(uint32_t* aResult)
 }
 
 NS_IMETHODIMP
+PartialSHistory::GetGlobalIndex(int32_t* aResult)
+{
+  if (!aResult) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+
+  nsCOMPtr<nsISHistory> shistory = GetSessionHistory();
+  if (shistory) {
+    int32_t idx;
+    nsresult rv = shistory->GetIndex(&idx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aResult = idx + GetGlobalIndexOffset();
+    return NS_OK;
+  }
+
+  *aResult = mIndex + GetGlobalIndexOffset();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PartialSHistory::GetGlobalIndexOffset(uint32_t* aResult)
 {
   if (!aResult) {
@@ -150,10 +171,32 @@ PartialSHistory::OnAttachGroupedSessionHistory(uint32_t aOffset)
 }
 
 NS_IMETHODIMP
-PartialSHistory::OnSessionHistoryChange(uint32_t aCount)
+PartialSHistory::HandleSHistoryUpdate(uint32_t aCount, uint32_t aIndex, bool aTruncate)
 {
+  // Update our local cache of mCount and mIndex
   mCount = aCount;
-  return OnLengthChange(aCount);
+  mIndex = aIndex;
+  return SHistoryDidUpdate(aTruncate);
+}
+
+nsresult
+PartialSHistory::SHistoryDidUpdate(bool aTruncate /* = false */)
+{
+  if (!mOwnerFrameLoader) {
+    // Cycle collected?
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIGroupedSHistory> groupedHistory;
+  mOwnerFrameLoader->GetGroupedSessionHistory(getter_AddRefs(groupedHistory));
+  if (NS_WARN_IF(!groupedHistory)) {
+    // Maybe we're not the active partial history, but in this case we shouldn't
+    // receive any update from session history object either.
+    return NS_ERROR_FAILURE;
+  }
+
+  groupedHistory->HandleSHistoryUpdate(this, aTruncate);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -227,27 +270,15 @@ PartialSHistory::OnRequestCrossBrowserNavigation(uint32_t aIndex)
  ******************************************************************************/
 
 NS_IMETHODIMP
-PartialSHistory::OnLengthChange(int32_t aCount)
+PartialSHistory::OnLengthChanged(int32_t aCount)
 {
-  if (!mOwnerFrameLoader) {
-    // Cycle collected?
-    return NS_ERROR_UNEXPECTED;
-  }
+  return SHistoryDidUpdate(/* aTruncate = */ true);
+}
 
-  if (aCount < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIGroupedSHistory> groupedHistory;
-  mOwnerFrameLoader->GetGroupedSessionHistory(getter_AddRefs(groupedHistory));
-  if (!groupedHistory) {
-    // Maybe we're not the active partial history, but in this case we shouldn't
-    // receive any update from session history object either.
-    return NS_ERROR_FAILURE;
-  }
-
-  groupedHistory->OnPartialSessionHistoryChange(this);
-  return NS_OK;
+NS_IMETHODIMP
+PartialSHistory::OnIndexChanged(int32_t aIndex)
+{
+  return SHistoryDidUpdate(/* aTruncate = */ false);
 }
 
 NS_IMETHODIMP

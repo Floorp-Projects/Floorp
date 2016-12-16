@@ -21,7 +21,16 @@ enum BiquadFilterType {
   "allpass"
 };
 
-[Pref="dom.webaudio.enabled"]
+dictionary BiquadFilterOptions : AudioNodeOptions {
+             BiquadFilterType type = "lowpass";
+             float            Q = 1;
+             float            detune = 0;
+             float            frequency = 350;
+             float            gain = 0;
+};
+
+[Pref="dom.webaudio.enabled",
+ Constructor(AudioContext context, optional BiquadFilterOptions options)]
 interface BiquadFilterNode : AudioNode {
 
     attribute BiquadFilterType type;

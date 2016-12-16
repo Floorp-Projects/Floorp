@@ -12,13 +12,25 @@
 namespace mozilla {
 namespace dom {
 
+class AudioContext;
+struct AudioNodeOptions;
+
 class MediaStreamAudioDestinationNode final : public AudioNode
 {
 public:
-  explicit MediaStreamAudioDestinationNode(AudioContext* aContext);
+  static already_AddRefed<MediaStreamAudioDestinationNode>
+  Create(AudioContext& aAudioContext, const AudioNodeOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamAudioDestinationNode, AudioNode)
+
+  static already_AddRefed<MediaStreamAudioDestinationNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const AudioNodeOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -42,10 +54,10 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-  virtual ~MediaStreamAudioDestinationNode();
-
 private:
+  explicit MediaStreamAudioDestinationNode(AudioContext* aContext);
+  ~MediaStreamAudioDestinationNode() = default;
+
   RefPtr<DOMMediaStream> mDOMStream;
   RefPtr<MediaInputPort> mPort;
 };

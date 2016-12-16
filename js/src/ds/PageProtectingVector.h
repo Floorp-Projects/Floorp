@@ -15,10 +15,12 @@
 namespace js {
 
 /*
- * PageProtectingVector is a vector that can only grow or be cleared, and marks
- * all of its fully used memory pages as read-only. It can be used to detect
- * heap corruption in important buffers, since anything that tries to write
- * into its protected pages will crash.
+ * PageProtectingVector is a vector that can only grow or be cleared, restricts
+ * access to memory pages that haven't been used yet, and marks all of its fully
+ * used memory pages as read-only. It can be used to detect heap corruption in
+ * important buffers, since anything that tries to write into its protected
+ * pages will crash. On Nightly and Aurora, these crashes will additionally be
+ * annotated with a moz crash reason using MemoryProtectionExceptionHandler.
  *
  * PageProtectingVector's protection is limited to full pages. If the front
  * of its buffer is not aligned on a page boundary, bytes preceding the first
@@ -28,7 +30,10 @@ namespace js {
  */
 template<typename T,
          size_t MinInlineCapacity = 0,
-         class AllocPolicy = mozilla::MallocAllocPolicy>
+         class AllocPolicy = mozilla::MallocAllocPolicy,
+         bool ProtectUsed = true,
+         bool ProtectUnused = true,
+         size_t InitialLowerBound = 0>
 class PageProtectingVector final
 {
     mozilla::Vector<T, MinInlineCapacity, AllocPolicy> vector;
@@ -44,20 +49,33 @@ class PageProtectingVector final
      */
     size_t offsetToPage;
 
+    /*
+     * The offset in bytes of the first completely unused page in the buffer.
+     * Note: this page might extend or even begin past the end of the buffer.
+     */
+    size_t firstUnusedPage;
+
     /* The number of currently protected bytes (a multiple of pageSize). */
     size_t protectedBytes;
+    size_t protectedUnusedBytes;
 
     /*
-     * The number of bytes that are currently unprotected, but could be.
+     * The number of used bytes that are currently unprotected, but could be.
      * This number starts at |-offsetToPage|, since any bytes before
      * |vector.begin() + offsetToPage| can never be protected (as we do not own
      * the whole page). As a result, if |unprotectedBytes >= pageSize|, we know
      * we can protect at least one more page, and |unprotectedBytes & ~pageMask|
      * is always the number of additional bytes we can protect. Put another way,
-     * |offsetToPage + protectedBytes + unprotectedBytes == vector.length()|
+     * |offsetToPage + protectedBytes + unprotectedBytes == [size in bytes]|
      * always holds, and if |protectedBytes != 0| then |unprotectedBytes >= 0|.
      */
     intptr_t unprotectedBytes;
+
+    /*
+     * The number of unprotected, unused pages. Note that this value
+     * may not be up to date if unused page protection is disabled.
+     */
+    intptr_t unprotectedUnusedPages;
 
     /*
      * The size in bytes that a buffer needs to be before its pages will be
@@ -66,21 +84,42 @@ class PageProtectingVector final
      */
     size_t protectionLowerBound;
 
-    bool protectionEnabled;
+    bool protectUsedEnabled;
+    bool protectUnusedEnabled;
     bool regionUnprotected;
+    bool protectionDisabled;
 
-    void updateOffsetToPage() {
+    void updateProtectUsedOffsets() {
+        MOZ_ASSERT(!protectedBytes);
         unprotectedBytes += offsetToPage;
         offsetToPage = (pageSize - (uintptr_t(vector.begin()) & pageMask)) & pageMask;
         unprotectedBytes -= offsetToPage;
-#ifndef RELEASE_OR_BETA
-        protectionEnabled = vector.capacity() >= protectionLowerBound &&
-                            vector.capacity() >= pageSize + offsetToPage;
-#endif
+        protectUsedEnabled = ProtectUsed && !protectionDisabled &&
+                             vector.capacity() * sizeof(T) >= protectionLowerBound &&
+                             vector.capacity() * sizeof(T) >= pageSize + offsetToPage;
+    }
+
+    void updateProtectUnusedOffsets() {
+        MOZ_ASSERT(!protectedUnusedBytes);
+        firstUnusedPage = ((vector.length() * sizeof(T) - offsetToPage - 1) | pageMask) +
+                          offsetToPage + 1;
+        if (MOZ_LIKELY(vector.capacity() * sizeof(T) >= firstUnusedPage))
+            unprotectedUnusedPages = (vector.capacity() * sizeof(T) - firstUnusedPage) / pageSize;
+        else
+            unprotectedUnusedPages = 0;
+        protectUnusedEnabled = ProtectUnused && !protectionDisabled &&
+                               vector.capacity() * sizeof(T) >= protectionLowerBound &&
+                               vector.capacity() * sizeof(T) >= pageSize + offsetToPage;
+    }
+
+    void updateProtectionOffsets() {
+        updateProtectUsedOffsets();
+        updateProtectUnusedOffsets();
     }
 
     void protect() {
-        if (!regionUnprotected && protectionEnabled && unprotectedBytes >= intptr_t(pageSize)) {
+        MOZ_ASSERT(!regionUnprotected);
+        if (MOZ_UNLIKELY(protectUsedEnabled && unprotectedBytes >= intptr_t(pageSize))) {
             size_t toProtect = size_t(unprotectedBytes) & ~pageMask;
             uintptr_t addr = uintptr_t(vector.begin()) + offsetToPage + protectedBytes;
             gc::MakePagesReadOnly(reinterpret_cast<void*>(addr), toProtect);
@@ -89,9 +128,30 @@ class PageProtectingVector final
         }
     }
 
+    void protectUnused() {
+        MOZ_ASSERT(!protectedUnusedBytes);
+        if (protectUnusedEnabled && unprotectedUnusedPages) {
+            size_t toProtect = unprotectedUnusedPages * pageSize;
+            uintptr_t addr = uintptr_t(vector.begin()) + firstUnusedPage;
+            gc::ProtectPages(reinterpret_cast<void*>(addr), toProtect);
+            unprotectedUnusedPages = 0;
+            protectedUnusedBytes = toProtect;
+        }
+    }
+
+    void protectNewBuffer() {
+        updateProtectionOffsets();
+        if (protectUsedEnabled || protectUnusedEnabled)
+            MemoryProtectionExceptionHandler::addRegion(vector.begin(),
+                                                        vector.capacity() * sizeof(T));
+        protect();
+        protectUnused();
+    }
+
     void unprotect() {
-        MOZ_ASSERT_IF(!protectionEnabled, !protectedBytes);
-        if (!regionUnprotected && protectedBytes) {
+        MOZ_ASSERT(!regionUnprotected);
+        MOZ_ASSERT_IF(!protectUsedEnabled, !protectedBytes);
+        if (protectedBytes) {
             uintptr_t addr = uintptr_t(vector.begin()) + offsetToPage;
             gc::UnprotectPages(reinterpret_cast<void*>(addr), protectedBytes);
             unprotectedBytes += protectedBytes;
@@ -99,17 +159,24 @@ class PageProtectingVector final
         }
     }
 
-    void protectNewBuffer() {
-        updateOffsetToPage();
-        if (protectionEnabled)
-            MemoryProtectionExceptionHandler::addRegion(vector.begin(), vector.capacity());
-        protect();
+    void unprotectUnused(size_t newSize) {
+        MOZ_ASSERT_IF(!protectUnusedEnabled, !protectedUnusedBytes);
+        if (MOZ_UNLIKELY(protectedUnusedBytes && newSize > firstUnusedPage)) {
+            size_t toUnprotect = ((newSize - firstUnusedPage) + pageMask) & ~pageMask;
+            if (toUnprotect > protectedUnusedBytes)
+                toUnprotect = protectedUnusedBytes;
+            uintptr_t addr = uintptr_t(vector.begin()) + firstUnusedPage;
+            gc::UnprotectPages(reinterpret_cast<void*>(addr), toUnprotect);
+            firstUnusedPage += toUnprotect;
+            protectedUnusedBytes -= toUnprotect;
+        }
     }
 
     void unprotectOldBuffer() {
-        if (protectionEnabled)
-            MemoryProtectionExceptionHandler::removeRegion(vector.begin());
         unprotect();
+        unprotectUnused(vector.capacity() * sizeof(T));
+        if (protectUsedEnabled || protectUnusedEnabled)
+            MemoryProtectionExceptionHandler::removeRegion(vector.begin());
     }
 
     bool anyProtected(size_t first, size_t last) {
@@ -128,9 +195,14 @@ class PageProtectingVector final
         *addr = firstPage;
     }
 
-    void increaseElemsUsed(size_t used) {
-        unprotectedBytes += used * sizeof(T);
+    void protectAfterUsing(size_t size) {
+        unprotectedBytes += size * sizeof(T);
         protect();
+    }
+
+    void unprotectBeforeUsing(size_t size) {
+        MOZ_ASSERT(vector.length() + size <= vector.capacity());
+        unprotectUnused((vector.length() + size) * sizeof(T));
     }
 
     /* A helper class to simplify unprotecting and reprotecting when needed. */
@@ -162,13 +234,31 @@ class PageProtectingVector final
         pageSize(gc::SystemPageSize()),
         pageMask(pageSize - 1),
         offsetToPage(0),
+        firstUnusedPage(0),
         protectedBytes(0),
+        protectedUnusedBytes(0),
         unprotectedBytes(0),
-        protectionLowerBound(0),
-        protectionEnabled(false),
-        regionUnprotected(false) { protectNewBuffer(); }
+        unprotectedUnusedPages(0),
+        protectionLowerBound(InitialLowerBound),
+        protectUsedEnabled(false),
+        protectUnusedEnabled(false),
+        regionUnprotected(false),
+        protectionDisabled(false) { protectNewBuffer(); }
 
     ~PageProtectingVector() { unprotectOldBuffer(); }
+
+    void disableProtection() {
+        MOZ_ASSERT(!protectionDisabled);
+        unprotectOldBuffer();
+        protectionDisabled = true;
+        updateProtectionOffsets();
+    }
+
+    void enableProtection() {
+        MOZ_ASSERT(protectionDisabled);
+        protectionDisabled = false;
+        protectNewBuffer();
+    }
 
     /*
      * Sets the lower bound on the size, in bytes, that this vector's underlying
@@ -233,8 +323,9 @@ class PageProtectingVector final
 
     template<typename U>
     MOZ_ALWAYS_INLINE void infallibleAppend(const U* values, size_t size) {
+        unprotectBeforeUsing(size);
         vector.infallibleAppend(values, size);
-        increaseElemsUsed(size);
+        protectAfterUsing(size);
     }
 
     template<typename U>
@@ -244,10 +335,12 @@ class PageProtectingVector final
             AutoUnprotect guard;
             if (MOZ_UNLIKELY(vector.length() + size > vector.capacity()))
                 guard.emplace(this);
+            else
+                unprotectBeforeUsing(size);
             ret = vector.append(values, size);
         }
         if (ret)
-            increaseElemsUsed(size);
+            protectAfterUsing(size);
         return ret;
     }
 };

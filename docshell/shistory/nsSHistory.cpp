@@ -48,8 +48,6 @@ static const char* kObservedPrefs[] = {
 };
 
 static int32_t gHistoryMaxSize = 50;
-// Max viewers allowed per SHistory objects
-static const int32_t gHistoryMaxViewers = 3;
 // List of all SHistory objects, used for content viewer cache eviction
 static PRCList gSHistoryList;
 // Max viewers allowed total, across all SHistory objects - negative default
@@ -430,7 +428,8 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
   // what the length was before, it should always be set back to the current and
   // lop off the forward.
   mLength = (++mIndex + 1);
-  NOTIFY_LISTENERS(OnLengthChange, (mLength));
+  NOTIFY_LISTENERS(OnLengthChanged, (mLength));
+  NOTIFY_LISTENERS(OnIndexChanged, (mIndex));
 
   // Much like how mLength works above, when changing our entries, all following
   // partial histories should be purged, so we just reset the number to zero.
@@ -561,6 +560,7 @@ nsSHistory::GetEntryAtIndex(int32_t aIndex, bool aModifyIndex,
       // Set mIndex to the requested index, if asked to do so..
       if (aModifyIndex) {
         mIndex = aIndex;
+        NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
       }
     }
   }
@@ -784,7 +784,6 @@ nsSHistory::PurgeHistory(int32_t aEntries)
   }
   mLength -= cnt;
   mIndex -= cnt;
-  NOTIFY_LISTENERS(OnLengthChange, (mLength));
 
   // All following partial histories will be deleted in this case.
   mEntriesInFollowingPartialHistories = 0;
@@ -794,6 +793,9 @@ nsSHistory::PurgeHistory(int32_t aEntries)
   if (mIndex < -1) {
     mIndex = -1;
   }
+
+  NOTIFY_LISTENERS(OnLengthChanged, (mLength));
+  NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
 
   if (mRootDocShell) {
     mRootDocShell->HistoryPurged(cnt);
@@ -1041,14 +1043,14 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex)
 
   // We need to release all content viewers that are no longer in the range
   //
-  //  aIndex - gHistoryMaxViewers to aIndex + gHistoryMaxViewers
+  //  aIndex - VIEWER_WINDOW to aIndex + VIEWER_WINDOW
   //
   // to ensure that this SHistory object isn't responsible for more than
-  // gHistoryMaxViewers content viewers.  But our job is complicated by the
+  // VIEWER_WINDOW content viewers.  But our job is complicated by the
   // fact that two transactions which are related by either hash navigations or
   // history.pushState will have the same content viewer.
   //
-  // To illustrate the issue, suppose gHistoryMaxViewers = 3 and we have four
+  // To illustrate the issue, suppose VIEWER_WINDOW = 3 and we have four
   // linked transactions in our history.  Suppose we then add a new content
   // viewer and call into this function.  So the history looks like:
   //
@@ -1056,7 +1058,7 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex)
   //     +     *
   //
   // where the letters are content viewers and + and * denote the beginning and
-  // end of the range aIndex +/- gHistoryMaxViewers.
+  // end of the range aIndex +/- VIEWER_WINDOW.
   //
   // Although one copy of the content viewer A exists outside the range, we
   // don't want to evict A, because it has other copies in range!
@@ -1064,7 +1066,7 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex)
   // We therefore adjust our eviction strategy to read:
   //
   //   Evict each content viewer outside the range aIndex -/+
-  //   gHistoryMaxViewers, unless that content viewer also appears within the
+  //   VIEWER_WINDOW, unless that content viewer also appears within the
   //   range.
   //
   // (Note that it's entirely legal to have two copies of one content viewer
@@ -1078,14 +1080,14 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex)
   NS_ENSURE_TRUE_VOID(aIndex < mLength);
 
   // Calculate the range that's safe from eviction.
-  int32_t startSafeIndex = std::max(0, aIndex - gHistoryMaxViewers);
-  int32_t endSafeIndex = std::min(mLength, aIndex + gHistoryMaxViewers);
+  int32_t startSafeIndex = std::max(0, aIndex - nsISHistory::VIEWER_WINDOW);
+  int32_t endSafeIndex = std::min(mLength, aIndex + nsISHistory::VIEWER_WINDOW);
 
   LOG(("EvictOutOfRangeWindowContentViewers(index=%d), "
        "mLength=%d. Safe range [%d, %d]",
        aIndex, mLength, startSafeIndex, endSafeIndex));
 
-  // The content viewers in range aIndex -/+ gHistoryMaxViewers will not be
+  // The content viewers in range aIndex -/+ VIEWER_WINDOW will not be
   // evicted.  Collect a set of them so we don't accidentally evict one of them
   // if it appears outside this range.
   nsCOMArray<nsIContentViewer> safeViewers;
@@ -1182,7 +1184,7 @@ nsSHistory::GloballyEvictContentViewers()
     nsTArray<TransactionAndDistance> shTransactions;
 
     // Content viewers are likely to exist only within shist->mIndex -/+
-    // gHistoryMaxViewers, so only search within that range.
+    // VIEWER_WINDOW, so only search within that range.
     //
     // A content viewer might exist outside that range due to either:
     //
@@ -1194,9 +1196,9 @@ nsSHistory::GloballyEvictContentViewers()
     //     SHistory object in question, we'll do a full search of its history
     //     and evict the out-of-range content viewers, so we don't bother here.
     //
-    int32_t startIndex = std::max(0, shist->mIndex - gHistoryMaxViewers);
+    int32_t startIndex = std::max(0, shist->mIndex - nsISHistory::VIEWER_WINDOW);
     int32_t endIndex = std::min(shist->mLength - 1,
-                                shist->mIndex + gHistoryMaxViewers);
+                                shist->mIndex + nsISHistory::VIEWER_WINDOW);
     nsCOMPtr<nsISHTransaction> trans;
     shist->GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
     for (int32_t i = startIndex; trans && i <= endIndex; i++) {
@@ -1259,8 +1261,8 @@ nsSHistory::GloballyEvictContentViewers()
 nsresult
 nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aEntry)
 {
-  int32_t startIndex = std::max(0, mIndex - gHistoryMaxViewers);
-  int32_t endIndex = std::min(mLength - 1, mIndex + gHistoryMaxViewers);
+  int32_t startIndex = std::max(0, mIndex - nsISHistory::VIEWER_WINDOW);
+  int32_t endIndex = std::min(mLength - 1, mIndex + nsISHistory::VIEWER_WINDOW);
   nsCOMPtr<nsISHTransaction> trans;
   GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
 
@@ -1458,6 +1460,7 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
     // Adjust our indices to reflect the removed transaction
     if (mIndex > aIndex) {
       mIndex = mIndex - 1;
+      NOTIFY_LISTENERS(OnIndexChanged, (mIndex));
     }
 
     // NB: If the transaction we are removing is the transaction currently
@@ -1477,7 +1480,7 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
     }
     --mLength;
     mEntriesInFollowingPartialHistories = 0;
-    NOTIFY_LISTENERS(OnLengthChange, (mLength));
+    NOTIFY_LISTENERS(OnLengthChanged, (mLength));
     return true;
   }
   return false;
@@ -1547,6 +1550,7 @@ nsSHistory::UpdateIndex()
   if (mIndex != mRequestedIndex && mRequestedIndex != -1) {
     RemoveDynEntries(mIndex, mRequestedIndex);
     mIndex = mRequestedIndex;
+    NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
   }
 
   mRequestedIndex = -1;

@@ -13,7 +13,7 @@
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var context = new AudioContext();
-  var conv = context.createConvolver();
+  var conv = new ConvolverNode(context);
 
   is(conv.channelCount, 2, "Convolver node has 2 input channels by default");
   is(conv.channelCountMode, "clamped-max", "Correct channelCountMode for the Convolver node");

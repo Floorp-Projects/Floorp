@@ -10,8 +10,8 @@
       <tab id="tab2" label="Tab 2" />
     </tabs>
     <tabpanels flex="1">
-      <browser id="browser1" type="content-primary" flex="1" src="about:blank"/>
-      <browser id="browser2" type="content-primary" flex="1" src="about:blank"/>
+      <browser id="browser1" type="content" primary="true" flex="1" src="about:blank"/>
+      <browser id="browser2" type="content" primary="true" flex="1" src="about:blank"/>
     </tabpanels>
   </tabbox>
   <script type="application/javascript" src="plugin-utils.js"/>

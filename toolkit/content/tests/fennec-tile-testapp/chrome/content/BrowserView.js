@@ -409,7 +409,8 @@ function() {
 
       this._restoreBrowser(browser);
 
-      browser.setAttribute("type", "content-primary");
+      browser.setAttribute("type", "content");
+      browser.setAttribute("primary", "true");
 
       this.beginBatchOperation();
 

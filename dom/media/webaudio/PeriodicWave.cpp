@@ -44,6 +44,32 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
   mCoefficients->SetData(1, nullptr, free, buffer+aLength);
 }
 
+/* static */ already_AddRefed<PeriodicWave>
+PeriodicWave::Constructor(const GlobalObject& aGlobal,
+                          AudioContext& aAudioContext,
+                          const PeriodicWaveOptions& aOptions,
+                          ErrorResult& aRv)
+{
+  if (!aOptions.mReal.WasPassed() || !aOptions.mImag.WasPassed() ||
+      aOptions.mReal.Value().Length() != aOptions.mImag.Value().Length() ||
+      aOptions.mReal.Value().Length() == 0) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  RefPtr<PeriodicWave> wave =
+    new PeriodicWave(&aAudioContext, aOptions.mReal.Value().Elements(),
+                     aOptions.mImag.Value().Elements(),
+                     aOptions.mReal.Value().Length(),
+                     aOptions.mDisableNormalization,
+                     aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  return wave.forget();
+}
+
 size_t
 PeriodicWave::SizeOfExcludingThisIfNotShared(MallocSizeOf aMallocSizeOf) const
 {
@@ -71,4 +97,3 @@ PeriodicWave::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 } // namespace dom
 } // namespace mozilla
-

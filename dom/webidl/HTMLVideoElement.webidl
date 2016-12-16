@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[HTMLConstructor]
 interface HTMLVideoElement : HTMLMediaElement {
   [SetterThrows]
            attribute unsigned long width;

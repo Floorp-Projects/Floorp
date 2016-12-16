@@ -18,7 +18,15 @@ enum OscillatorType {
   "custom"
 };
 
-[Pref="dom.webaudio.enabled"]
+dictionary OscillatorOptions : AudioNodeOptions {
+             OscillatorType type = "sine";
+             float          frequency = 440;
+             float          detune = 0;
+             PeriodicWave   periodicWave;
+};
+
+[Pref="dom.webaudio.enabled",
+ Constructor(AudioContext context, optional OscillatorOptions options)]
 interface OscillatorNode : AudioNode {
 
     [SetterThrows]
@@ -39,4 +47,3 @@ interface OscillatorNode : AudioNode {
 
 // Mozilla extensions
 OscillatorNode implements AudioNodePassThrough;
-

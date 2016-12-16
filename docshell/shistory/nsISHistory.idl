@@ -33,6 +33,15 @@ interface nsIPartialSHistoryListener;
 interface nsISHistory: nsISupports
 {
   /**
+   * The size of the window of SHEntries which can have alive viewers in the
+   * bfcache around the currently active SHEntry.
+   *
+   * We try to keep viewers for SHEntries between index - VIEWER_WINDOW and
+   * index + VIEWER_WINDOW alive.
+   */
+  const long VIEWER_WINDOW = 3;
+
+  /**
    * An attribute denoting whether the nsISHistory is associated to a grouped
    * session history.
    *

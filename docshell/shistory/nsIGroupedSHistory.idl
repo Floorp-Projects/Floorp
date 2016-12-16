@@ -29,10 +29,13 @@ interface nsIGroupedSHistory : nsISupports
 
   /**
    * Notify the grouped session history that the active partial session history
-   * has been modified. All partial session histories after the active one
-   * will be removed and destroy.
+   * has been modified.
+   *
+   * @param aPartialHistory The partial history which was updated
+   * @param aTruncate If this parameter is true, all partial session histories
+   *                  after this one will be removed.
    */
-  void onPartialSessionHistoryChange(in nsIPartialSHistory aPartialHistory);
+  void handleSHistoryUpdate(in nsIPartialSHistory aPartialHistory, in boolean aTruncate);
 
   /**
    * Find the proper partial session history and navigate to the entry

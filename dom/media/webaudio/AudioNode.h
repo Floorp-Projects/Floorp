@@ -251,6 +251,9 @@ private:
   bool DisconnectFromOutputIfConnected(uint32_t aOutputIndex, uint32_t aInputIndex);
 
 protected:
+  // Helper for the Constructors for nodes.
+  void Initialize(const AudioNodeOptions& aOptions, ErrorResult& aRv);
+
   // Helpers for sending different value types to streams
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
   void SendInt32ParameterToStream(uint32_t aIndex, int32_t aValue);

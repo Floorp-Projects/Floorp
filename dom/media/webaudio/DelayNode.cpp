@@ -206,8 +206,30 @@ DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
                                     aContext->Graph());
 }
 
-DelayNode::~DelayNode()
+/* static */ already_AddRefed<DelayNode>
+DelayNode::Create(AudioContext& aAudioContext,
+                  const DelayOptions& aOptions,
+                  ErrorResult& aRv)
 {
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  if (aOptions.mMaxDelayTime <= 0. || aOptions.mMaxDelayTime >= 180.) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  RefPtr<DelayNode> audioNode = new DelayNode(&aAudioContext,
+                                              aOptions.mMaxDelayTime);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  audioNode->DelayTime()->SetValue(aOptions.mDelayTime);
+  return audioNode.forget();
 }
 
 size_t

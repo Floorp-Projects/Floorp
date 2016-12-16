@@ -13,6 +13,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-area-element
+[HTMLConstructor]
 interface HTMLAreaElement : HTMLElement {
            [SetterThrows]
            attribute DOMString alt;

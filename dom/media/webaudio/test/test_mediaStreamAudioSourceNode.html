@@ -31,7 +31,7 @@ var gTest = {
     source.connect(dest);
     source.start(0);
 
-    var mediaStreamSource = context.createMediaStreamSource(dest.stream);
+    var mediaStreamSource = new MediaStreamAudioSourceNode(context, { mediaStream: dest.stream });
     // channelCount and channelCountMode should have no effect
     mediaStreamSource.channelCount = 1;
     mediaStreamSource.channelCountMode = "explicit";

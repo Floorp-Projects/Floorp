@@ -426,8 +426,35 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
   mStream->AddMainThreadListener(this);
 }
 
-OscillatorNode::~OscillatorNode()
+/* static */ already_AddRefed<OscillatorNode>
+OscillatorNode::Create(AudioContext& aAudioContext,
+                       const OscillatorOptions& aOptions,
+                       ErrorResult& aRv)
 {
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<OscillatorNode> audioNode = new OscillatorNode(&aAudioContext);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  audioNode->SetType(aOptions.mType, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  audioNode->Frequency()->SetValue(aOptions.mFrequency);
+  audioNode->Detune()->SetValue(aOptions.mDetune);
+
+  if (aOptions.mPeriodicWave.WasPassed()) {
+    audioNode->SetPeriodicWave(aOptions.mPeriodicWave.Value());
+  }
+
+  return audioNode.forget();
 }
 
 size_t

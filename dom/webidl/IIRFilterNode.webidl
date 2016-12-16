@@ -9,7 +9,13 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
+dictionary IIRFilterOptions : AudioNodeOptions {
+    required sequence<double> feedforward;
+    required sequence<double> feedback;
+};
+
+[Pref="dom.webaudio.enabled",
+Constructor(AudioContext context, IIRFilterOptions options)]
 interface IIRFilterNode : AudioNode {
     void getFrequencyResponse(Float32Array frequencyHz, Float32Array magResponse, Float32Array phaseResponse);
 };
