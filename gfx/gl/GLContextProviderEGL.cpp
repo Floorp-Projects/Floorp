@@ -43,7 +43,7 @@
     // a little helper
     class AutoDestroyHWND {
     public:
-        AutoDestroyHWND(HWND aWnd = nullptr)
+        explicit AutoDestroyHWND(HWND aWnd = nullptr)
             : mWnd(aWnd)
         {
         }
