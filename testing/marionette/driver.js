@@ -23,7 +23,6 @@ Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/browser.js");
-Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
@@ -2406,7 +2405,12 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
       let canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      let doc = win.document.documentElement;
+      let doc;
+      if (this.appName == "B2G") {
+        doc = win.document.body;
+      } else {
+        doc = win.document.documentElement;
+      }
       let docRect = doc.getBoundingClientRect();
       let width = docRect.width;
       let height = docRect.height;
@@ -2417,12 +2421,20 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
       canvas.setAttribute("width", Math.round(width * scale));
       canvas.setAttribute("height", Math.round(height * scale));
 
-      // Bug 1075168: CanvasRenderingContext2D image is distorted when using
-      // certain flags in chrome context.
-      let flags = context.DRAWWINDOW_DRAW_VIEW |
-          context.DRAWWINDOW_USE_WIDGET_LAYERS;
-
       let context = canvas.getContext("2d");
+      let flags;
+      if (this.appName == "B2G") {
+        flags =
+          context.DRAWWINDOW_DRAW_CARET |
+          context.DRAWWINDOW_DRAW_VIEW |
+          context.DRAWWINDOW_USE_WIDGET_LAYERS;
+      } else {
+        // Bug 1075168: CanvasRenderingContext2D image is distorted
+        // when using certain flags in chrome context.
+        flags =
+          context.DRAWWINDOW_DRAW_VIEW |
+          context.DRAWWINDOW_USE_WIDGET_LAYERS;
+      }
       context.scale(scale, scale);
       context.drawWindow(win, 0, 0, width, height, "rgb(255,255,255)", flags);
       let dataUrl = canvas.toDataURL("image/png", "");
