@@ -30,11 +30,12 @@ this.capture = {};
  *     The canvas element where the element has been painted on.
  */
 capture.element = function (node, highlights=[]) {
-  let win = node.ownerDocument.defaultView;
+  let doc = node.ownerDocument;
+  let win = doc.defaultView;
   let rect = node.getBoundingClientRect();
 
   return capture.canvas(
-      win,
+      doc,
       rect.left,
       rect.top,
       rect.width,
@@ -43,12 +44,12 @@ capture.element = function (node, highlights=[]) {
 };
 
 /**
- * Take a screenshot of the window's viewport by taking into account
- * the current offsets.
+ * Take a screenshot of the document's viewport, taking into account
+ * the current window's offset.
  *
- * @param {DOMWindow} win
- *     The DOM window providing the document element to capture,
- *     and the offsets for the viewport.
+ * @param {Document} document
+ *     The DOM document providing the document element to capture,
+ *     and a window for determining the offset of the viewport.
  * @param {Array.<Node>=} highlights
  *     Optional array of nodes, around which a border will be marked to
  *     highlight them in the screenshot.
@@ -56,24 +57,25 @@ capture.element = function (node, highlights=[]) {
  * @return {HTMLCanvasElement}
  *     The canvas element where the viewport has been painted on.
  */
-capture.viewport = function (win, highlights=[]) {
-  let rootNode = win.document.documentElement;
+capture.viewport = function (document, highlights=[]) {
+  let win = document.defaultView;
+  let docEl = document.documentElement;
 
   return capture.canvas(
-      win,
+      document,
       win.pageXOffset,
       win.pageYOffset,
-      rootNode.clientWidth,
-      rootNode.clientHeight,
+      docEl.clientWidth,
+      docEl.clientHeight,
       highlights);
 };
 
 /**
  * Low-level interface to draw a rectangle off the framebuffer.
  *
- * @param {DOMWindow} win
- *     The DOM window used for the framebuffer, and providing the interfaces
- *     for creating an HTMLCanvasElement.
+ * @param {Document} document
+ *     A DOM document providing the window used to the framebuffer,
+ *     and interfaces for creating an HTMLCanvasElement.
  * @param {number} left
  *     The left, X axis offset of the rectangle.
  * @param {number} top
@@ -90,8 +92,10 @@ capture.viewport = function (win, highlights=[]) {
  *     The canvas on which the selection from the window's framebuffer
  *     has been painted on.
  */
-capture.canvas = function (win, left, top, width, height, highlights=[]) {
-  let canvas = win.document.createElementNS(XHTML_NS, "canvas");
+capture.canvas = function (document, left, top, width, height, highlights=[]) {
+  let win = document.defaultView;
+
+  let canvas = document.createElementNS(XHTML_NS, "canvas");
   canvas.width = width;
   canvas.height = height;
 
