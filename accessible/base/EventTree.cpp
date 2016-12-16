@@ -25,7 +25,6 @@ EventTree* const TreeMutation::kNoEventTree = reinterpret_cast<EventTree*>(-1);
 TreeMutation::TreeMutation(Accessible* aParent, bool aNoEvents) :
   mParent(aParent), mStartIdx(UINT32_MAX),
   mStateFlagsCopy(mParent->mStateFlags),
-  mEventTree(aNoEvents ? kNoEventTree : nullptr),
   mQueueEvents(!aNoEvents)
 {
 #ifdef DEBUG
@@ -33,7 +32,7 @@ TreeMutation::TreeMutation(Accessible* aParent, bool aNoEvents) :
 #endif
 
 #ifdef A11Y_LOG
-  if (mEventTree != kNoEventTree && logging::IsEnabled(logging::eEventTree)) {
+  if (mQueueEvents && logging::IsEnabled(logging::eEventTree)) {
     logging::MsgBegin("EVENTS_TREE", "reordering tree before");
     logging::AccessibleInfo("reordering for", mParent);
     Controller()->RootEventTree().Log();
@@ -119,7 +118,7 @@ TreeMutation::Done()
 #endif
 
 #ifdef A11Y_LOG
-  if (mEventTree != kNoEventTree && logging::IsEnabled(logging::eEventTree)) {
+  if (mQueueEvents && logging::IsEnabled(logging::eEventTree)) {
     logging::MsgBegin("EVENTS_TREE", "reordering tree after");
     logging::AccessibleInfo("reordering for", mParent);
     Controller()->RootEventTree().Log();

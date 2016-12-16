@@ -47,7 +47,6 @@ private:
   Accessible* mParent;
   uint32_t mStartIdx;
   uint32_t mStateFlagsCopy;
-  EventTree* mEventTree;
 
   /*
    * True if mutation events should be queued.
