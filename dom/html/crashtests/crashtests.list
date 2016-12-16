@@ -11,13 +11,13 @@ load 378993-1.xhtml
 load 382568-1.html
 load 383137.xhtml
 load 388183-1.html
-load 395340-1.html
+skip-if(stylo) load 395340-1.html # bug 1323652
 load 399694-1.html
 load 407053.html
 load 423371-1.html
 load 448564.html
 load 451123-1.html
-load 453406-1.html
+skip-if(stylo) load 453406-1.html # bug 1323654
 load 464197-1.html
 load 465466-1.xhtml
 load 468562-1.html
@@ -31,7 +31,7 @@ load 515829-2.html
 load 564461.xhtml
 load 570566-1.html
 load 571428-1.html
-load 580507-1.xhtml
+skip-if(stylo) load 580507-1.xhtml # bug 1323655
 load 590387.html
 load 596785-1.html
 load 596785-2.html

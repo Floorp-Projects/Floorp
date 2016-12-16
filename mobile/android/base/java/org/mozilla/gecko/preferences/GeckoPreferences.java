@@ -47,7 +47,6 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
-import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -106,7 +105,6 @@ public class GeckoPreferences
     extends AppCompatPreferenceActivity
     implements BundleEventListener,
                GeckoActivityStatus,
-               NativeEventListener,
                OnPreferenceChangeListener,
                OnSharedPreferenceChangeListener
 {
@@ -371,8 +369,7 @@ public class GeckoPreferences
         // Use setResourceToOpen to specify these extras.
         Bundle intentExtras = getIntent().getExtras();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
-                                                                  "Sanitize:Finished");
+        EventDispatcher.getInstance().registerUiThreadListener(this, "Sanitize:Finished");
 
         // Add handling for long-press click.
         // This is only for Android 3.0 and below (which use the long-press-context-menu paradigm).
@@ -507,8 +504,7 @@ public class GeckoPreferences
     protected void onDestroy() {
         super.onDestroy();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
-                                                                    "Sanitize:Finished");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this, "Sanitize:Finished");
 
         if (mPrefsRequest != null) {
             PrefsHelper.removeObserver(mPrefsRequest);
@@ -619,25 +615,15 @@ public class GeckoPreferences
                     .fromEvent(message)
                     .callback(callback)
                     .buildAndShow();
-        }
-    }
 
-    @Override
-    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
-        try {
-            switch (event) {
-                case "Sanitize:Finished":
-                    boolean success = message.getBoolean("success");
-                    final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
+        } else if ("Sanitize:Finished".equals(event)) {
+            final boolean success = message.getBoolean("success");
+            final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
 
-                    SnackbarBuilder.builder(GeckoPreferences.this)
-                            .message(stringRes)
-                            .duration(Snackbar.LENGTH_LONG)
-                            .buildAndShow();
-                    break;
-            }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+            SnackbarBuilder.builder(this)
+                    .message(stringRes)
+                    .duration(Snackbar.LENGTH_LONG)
+                    .buildAndShow();
         }
     }
 

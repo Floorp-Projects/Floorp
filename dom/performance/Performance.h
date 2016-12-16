@@ -68,7 +68,7 @@ public:
 
   void ClearResourceTimings();
 
-  virtual DOMHighResTimeStamp Now() const = 0;
+  DOMHighResTimeStamp Now() const;
 
   DOMHighResTimeStamp TimeOrigin();
 
