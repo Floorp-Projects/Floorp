@@ -470,8 +470,7 @@ public:
 
   RefPtr<MediaDataDemuxer::InitPromise> Init();
 
-  already_AddRefed<MediaTrackDemuxer>
-  GetTrackDemuxer(TrackType aTrack, uint32_t aTrackNumber) const
+  already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(TrackType aTrack, uint32_t aTrackNumber)
   {
     MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
 
@@ -485,7 +484,7 @@ public:
     }
   }
 
-  uint32_t GetNumberTracks(TrackType aTrack) const
+  uint32_t GetNumberTracks(TrackType aTrack)
   {
     MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
 
@@ -499,21 +498,21 @@ public:
     }
   }
 
-  bool IsSeekable() const
+  bool IsSeekable()
   {
     MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
 
     return mData->mSeekable;
   }
 
-  bool IsSeekableOnlyInBufferedRanges() const
+  bool IsSeekableOnlyInBufferedRanges()
   {
     MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
 
     return mData->mSeekableOnlyInBufferedRange;
   }
 
-  UniquePtr<EncryptionInfo> GetCrypto() const
+  UniquePtr<EncryptionInfo> GetCrypto()
   {
     MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
 
