@@ -5,7 +5,6 @@
 const kUnknownEvent       = 0x000;
 const kKeyDownEvent       = 0x001;
 const kKeyUpEvent         = 0x002;
-const kBeforeEvent        = 0x010;
 const kAfterEvent         = 0x020;
 const kParent             = 0x100;
 const kChild              = 0x200;
@@ -22,8 +21,6 @@ function frameScript()
   }
   addEventListener('keydown', handler);
   addEventListener('keyup', handler);
-  addEventListener('mozbrowserbeforekeydown', handler);
-  addEventListener('mozbrowserbeforekeyup', handler);
   addEventListener('mozbrowserafterkeydown', handler);
   addEventListener('mozbrowserafterkeyup', handler);
 }
@@ -61,8 +58,6 @@ function setupHandlers(element, handler)
 {
   element.addEventListener('keydown', handler);
   element.addEventListener('keyup', handler);
-  element.addEventListener('mozbrowserbeforekeydown', handler);
-  element.addEventListener('mozbrowserbeforekeyup', handler);
   element.addEventListener('mozbrowserafterkeydown', handler);
   element.addEventListener('mozbrowserafterkeyup', handler);
 }
@@ -71,8 +66,6 @@ function teardownHandlers(element, handler)
 {
   element.removeEventListener('keydown', handler);
   element.removeEventListener('keyup', handler);
-  element.removeEventListener('mozbrowserbeforekeydown', handler);
-  element.removeEventListener('mozbrowserbeforekeyup', handler);
   element.removeEventListener('mozbrowserafterkeydown', handler);
   element.removeEventListener('mozbrowserafterkeyup', handler);
 }
@@ -80,12 +73,8 @@ function teardownHandlers(element, handler)
 function convertNameToCode(name)
 {
   switch (name) {
-    case "mozbrowserbeforekeydown":
-      return kBeforeEvent | kKeyDownEvent;
     case "mozbrowserafterkeydown":
       return kAfterEvent | kKeyDownEvent;
-    case "mozbrowserbeforekeyup":
-      return kBeforeEvent | kKeyUpEvent;
     case "mozbrowserafterkeyup":
       return kAfterEvent | kKeyUpEvent;
     case "keydown":
@@ -162,11 +151,6 @@ function embedderHandlerWithCheck(e)
   // Verify value of attribute embeddedCancelled
   embedderHandler(e, function checkEmbeddedCancelled(code){
   switch (code) {
-    case kBeforeEvent | kKeyDownEvent:
-    case kBeforeEvent | kKeyUpEvent:
-      is(e.embeddedCancelled, null,
-         gCurrentTest.description + ": embeddedCancelled should be null");
-      break;
     case kAfterEvent | kKeyDownEvent:
       if ((gCurrentTest.doPreventDefaultAt & 0xFF) == kKeyDownEvent) {
         is(e.embeddedCancelled, true,

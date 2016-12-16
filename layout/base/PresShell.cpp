@@ -7094,40 +7094,6 @@ BuildTargetChainForBeforeAfterKeyboardEvent(nsINode* aTarget,
 }
 
 void
-PresShell::DispatchBeforeKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >& aChain,
-                                               const WidgetKeyboardEvent& aEvent,
-                                               size_t& aChainIndex,
-                                               bool& aDefaultPrevented)
-{
-  size_t length = aChain.Length();
-  if (!CanDispatchEvent(&aEvent) || !length) {
-    return;
-  }
-
-  EventMessage message =
-    (aEvent.mMessage == eKeyDown) ? eBeforeKeyDown : eBeforeKeyUp;
-  nsCOMPtr<EventTarget> eventTarget;
-  // Dispatch before events from the outermost element.
-  for (int32_t i = length - 1; i >= 0; i--) {
-    eventTarget = do_QueryInterface(aChain[i]->OwnerDoc()->GetWindow());
-    if (!eventTarget || !CanDispatchEvent(&aEvent)) {
-      return;
-    }
-
-    aChainIndex = i;
-    InternalBeforeAfterKeyboardEvent beforeEvent(aEvent.IsTrusted(),
-                                                 message, aEvent.mWidget);
-    beforeEvent.AssignBeforeAfterKeyEventData(aEvent, false);
-    EventDispatcher::Dispatch(eventTarget, mPresContext, &beforeEvent);
-
-    if (beforeEvent.DefaultPrevented()) {
-      aDefaultPrevented = true;
-      return;
-    }
-  }
-}
-
-void
 PresShell::DispatchAfterKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >& aChain,
                                               const WidgetKeyboardEvent& aEvent,
                                               bool aEmbeddedCancelled,
@@ -7216,31 +7182,6 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
   AutoTArray<nsCOMPtr<Element>, 5> chain;
   BuildTargetChainForBeforeAfterKeyboardEvent(aTarget, chain, targetIsIframe);
 
-  // Dispatch before events. If each item in the chain consumes the before
-  // event and doesn't prevent the default action, we will go further to
-  // dispatch the actual key event and after events in the reverse order.
-  // Otherwise, only items which has handled the before event will receive an
-  // after event.
-  size_t chainIndex;
-  bool defaultPrevented = false;
-  DispatchBeforeKeyboardEventInternal(chain, aEvent, chainIndex,
-                                      defaultPrevented);
-
-  // Before event is default-prevented. Dispatch after events with
-  // embeddedCancelled = false to partial items.
-  if (defaultPrevented) {
-    *aStatus = nsEventStatus_eConsumeNoDefault;
-    DispatchAfterKeyboardEventInternal(chain, aEvent, false, chainIndex);
-    // No need to forward the event to child process.
-    aEvent.StopCrossProcessForwarding();
-    return;
-  }
-
-  // Event listeners may kill nsPresContext and nsPresShell.
-  if (!CanDispatchEvent()) {
-    return;
-  }
-
   if (ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
                                            aStatus, aEventCB)) {
     return;
@@ -7251,7 +7192,7 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
     // 'embeddedCancelled' of after event is false, i.e. |!targetIsIframe|.
     // On the contrary, if the defult action is prevented by embedded iframe,
     // 'embeddedCancelled' is true which equals to |!targetIsIframe|.
-    DispatchAfterKeyboardEventInternal(chain, aEvent, !targetIsIframe, chainIndex);
+    DispatchAfterKeyboardEventInternal(chain, aEvent, !targetIsIframe, 0);
     return;
   }
 
