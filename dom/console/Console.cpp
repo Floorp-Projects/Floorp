@@ -1573,7 +1573,6 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
 
   else if (aData->mMethodName == MethodTime && !aArguments.IsEmpty()) {
     event.mTimer = CreateStartTimerValue(aCx, aData->mStartTimerLabel,
-                                         aData->mStartTimerValue,
                                          aData->mStartTimerStatus);
   }
 
@@ -2000,7 +1999,6 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
 
 JS::Value
 Console::CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
-                               DOMHighResTimeStamp aTimerValue,
                                bool aTimerStatus) const
 {
   if (!aTimerStatus) {
@@ -2017,7 +2015,6 @@ Console::CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
   RootedDictionary<ConsoleTimerStart> timer(aCx);
 
   timer.mName = aTimerLabel;
-  timer.mStarted = aTimerValue;
 
   JS::Rooted<JS::Value> value(aCx);
   if (!ToJSValue(aCx, timer, &value)) {

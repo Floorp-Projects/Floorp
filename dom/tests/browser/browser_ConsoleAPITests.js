@@ -375,7 +375,6 @@ function testConsoleTime(aMessageObject) {
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
   is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
   is(aMessageObject.timer.name, gArgs[0].timer.name, "timer.name matches");
-  ok(aMessageObject.timer.started, "timer.started exists");
 
   gArgs[0].arguments.forEach(function (a, i) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
