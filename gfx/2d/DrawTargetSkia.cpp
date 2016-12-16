@@ -1041,13 +1041,15 @@ GfxMatrixToCGAffineTransform(const Matrix &m)
 static bool
 SetupCGContext(DrawTargetSkia* aDT,
                CGContextRef aCGContext,
-               sk_sp<SkCanvas> aCanvas)
+               sk_sp<SkCanvas> aCanvas,
+               const IntPoint& aOrigin,
+               const IntSize& aSize)
 {
   // DrawTarget expects the origin to be at the top left, but CG
   // expects it to be at the bottom left. Transform to set the origin to
   // the top left. Have to set this before we do anything else.
   // This is transform (1) up top
-  CGContextTranslateCTM(aCGContext, 0, aDT->GetSize().height);
+  CGContextTranslateCTM(aCGContext, -aOrigin.x, aOrigin.y + aSize.height);
 
   // Transform (2) from the comments.
   CGContextScaleCTM(aCGContext, 1, -1);
@@ -1102,9 +1104,10 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
   int32_t stride;
   SurfaceFormat format;
   IntSize size;
+  IntPoint origin;
 
   uint8_t* aSurfaceData = nullptr;
-  if (!LockBits(&aSurfaceData, &size, &stride, &format)) {
+  if (!LockBits(&aSurfaceData, &size, &stride, &format, &origin)) {
     NS_WARNING("Could not lock skia bits to wrap CG around");
     return nullptr;
   }
@@ -1114,7 +1117,7 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
     // we can reuse the CG Context
     CGContextSaveGState(mCG);
     CGContextSetAlpha(mCG, aOptions.mAlpha);
-    SetupCGContext(this, mCG, mCanvas);
+    SetupCGContext(this, mCG, mCanvas, origin, size);
     return mCG;
   }
 
@@ -1155,7 +1158,7 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
   CGContextSetShouldSmoothFonts(mCG, true);
   CGContextSetTextDrawingMode(mCG, kCGTextFill);
   CGContextSaveGState(mCG);
-  SetupCGContext(this, mCG, mCanvas);
+  SetupCGContext(this, mCG, mCanvas, origin, size);
   return mCG;
 }
 
