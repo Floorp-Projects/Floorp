@@ -245,10 +245,17 @@ var gMainPane = {
   {
     let homePref = document.getElementById("browser.startup.homepage");
 
-    // If the pref is set to about:home, set the value to "" to show the
-    // placeholder text (about:home title).
-    if (homePref.value.toLowerCase() == "about:home")
+    // If the pref is set to about:home or about:newtab, set the value to ""
+    // to show the placeholder text (about:home title) rather than
+    // exposing those URLs to users.
+    let defaultBranch = Services.prefs.getDefaultBranch("");
+    let defaultValue = defaultBranch.getComplexValue("browser.startup.homepage",
+                                                     Ci.nsIPrefLocalizedString).data;
+    let currentValue = homePref.value.toLowerCase();
+    if (currentValue == "about:home" ||
+        (currentValue == defaultValue && currentValue == "about:newtab")) {
       return "";
+    }
 
     // If the pref is actually "", show about:blank.  The actual home page
     // loading code treats them the same, and we don't want the placeholder text
