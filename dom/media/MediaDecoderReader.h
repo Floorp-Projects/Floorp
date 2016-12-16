@@ -40,6 +40,18 @@ struct WaitForDataRejectValue
   Reason mReason;
 };
 
+struct SeekRejectValue
+{
+  MOZ_IMPLICIT SeekRejectValue(const MediaResult& aError)
+    : mType(MediaData::NULL_DATA), mError(aError) {}
+  MOZ_IMPLICIT SeekRejectValue(nsresult aResult)
+    : mType(MediaData::NULL_DATA), mError(aResult) {}
+  SeekRejectValue(MediaData::Type aType, const MediaResult& aError)
+    : mType(aType), mError(aError) {}
+  MediaData::Type mType;
+  MediaResult mError;
+};
+
 class MetadataHolder
 {
 public:
@@ -70,7 +82,7 @@ public:
     MozPromise<RefPtr<MetadataHolder>, MediaResult, IsExclusive>;
   using MediaDataPromise =
     MozPromise<RefPtr<MediaData>, MediaResult, IsExclusive>;
-  using SeekPromise = MozPromise<media::TimeUnit, MediaResult, IsExclusive>;
+  using SeekPromise = MozPromise<media::TimeUnit, SeekRejectValue, IsExclusive>;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
   // But in the current architecture it's only ever used exclusively (by MDSM),
