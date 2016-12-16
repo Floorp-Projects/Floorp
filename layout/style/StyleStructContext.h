@@ -80,8 +80,8 @@ public:
   typedef mozilla::LookAndFeel LookAndFeel;
   nscolor DefaultColor()
   {
-    SERVO_DEFAULT(LookAndFeel::GetColor(LookAndFeel::eColorID_WindowForeground,
-                                        NS_RGB(0x00, 0x00, 0x00)));
+    // Workaround Bug 1323404
+    SERVO_DEFAULT(NS_RGB(0x00, 0x00, 0x00));
     return mPresContext->DefaultColor();
   }
 
