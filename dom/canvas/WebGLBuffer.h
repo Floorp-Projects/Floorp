@@ -79,8 +79,6 @@ protected:
     GLenum mUsage;
     size_t mByteLength;
     UniquePtr<WebGLElementArrayCache> mCache;
-    size_t mNumActiveTFOs;
-    bool mBoundForTF;
 };
 
 } // namespace mozilla
