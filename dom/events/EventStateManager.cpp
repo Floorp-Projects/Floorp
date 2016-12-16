@@ -2948,7 +2948,14 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
 
       nsCOMPtr<nsIContent> activeContent;
-      if (nsEventStatus_eConsumeNoDefault != *aStatus) {
+      // When content calls PreventDefault on pointerdown, we also call
+      // PreventDefault on the subsequent mouse events to suppress default
+      // behaviors. Normally, aStatus should be nsEventStatus_eConsumeNoDefault
+      // when the event is DefaultPrevented but it's reset to
+      // nsEventStatus_eIgnore in EventStateManager::PreHandleEvent. So we also
+      // check if the event is DefaultPrevented.
+      if (nsEventStatus_eConsumeNoDefault != *aStatus &&
+          !aEvent->DefaultPrevented()) {
         nsCOMPtr<nsIContent> newFocus;      
         bool suppressBlur = false;
         if (mCurrentTarget) {

@@ -7396,7 +7396,11 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
     RefPtr<AccessibleCaretEventHub> eventHub =
       presShell ? presShell->GetAccessibleCaretEventHub() : nullptr;
-    if (eventHub) {
+    if (eventHub && *aEventStatus != nsEventStatus_eConsumeNoDefault) {
+      // Don't dispatch event to AccessibleCaretEventHub when the event status
+      // is nsEventStatus_eConsumeNoDefault. This might be happened when content
+      // preventDefault on the pointer events. In such case, we also call
+      // preventDefault on mouse events to stop default behaviors.
       *aEventStatus = eventHub->HandleEvent(aEvent);
       if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
         // If the event is consumed, cancel APZC panning by setting
