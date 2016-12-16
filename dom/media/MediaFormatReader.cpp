@@ -2393,7 +2393,6 @@ MediaFormatReader::OnSeekFailed(TrackType aTrack, const MediaResult& aError)
       return;
     }
     NotifyWaitingForData(aTrack);
-    return;
   }
   MOZ_ASSERT(!mVideo.mSeekRequest.Exists() && !mAudio.mSeekRequest.Exists());
   mPendingSeekTime.reset();
