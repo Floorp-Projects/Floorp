@@ -2404,16 +2404,9 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let container = {frame: this.getCurrentWindow()};
-      let highlightEls = [];
-
-      for (let h of highlights) {
-        let el = this.curBrowser.seenEls.get(h, container);
-        highlightEls.push(el);
-      }
-
-      let canvas = capture.viewport(this.getCurrentWindow(), highlightEls);
-      return capture.toBase64(canvas);
+      let canvas = capture.viewport(this.getCurrentWindow());
+      resp.body.value = capture.toBase64(canvas);
+      break;
 
     case Context.CONTENT:
       if (hash) {
