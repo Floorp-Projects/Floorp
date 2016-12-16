@@ -2390,9 +2390,6 @@ GeckoDriver.prototype.clearImportedScripts = function*(cmd, resp) {
  *     Reference to a web element.
  * @param {string} highlights
  *     List of web elements to highlight.
- * @param {boolean} full
- *     True to take a screenshot of the entire document element. Is not
- *     considered if {@code id} is not defined. Defaults to true.
  * @param {boolean} hash
  *     True if the user requests a hash of the image data.
  *
@@ -2407,7 +2404,6 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let canvas;
       let container = {frame: this.getCurrentWindow()};
       let highlightEls = [];
 
@@ -2416,22 +2412,7 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
         highlightEls.push(el);
       }
 
-      // viewport
-      if (!id && !full) {
-        canvas = capture.viewport(container.frame, highlightEls);
-
-      // element or full document element
-      } else {
-        let node;
-        if (id) {
-          node = this.curBrowser.seenEls.get(id, container);
-        } else {
-          node = container.frame.document.documentElement;
-        }
-
-        canvas = capture.element(node, highlightEls);
-      }
-
+      let canvas = capture.viewport(this.getCurrentWindow(), highlightEls);
       if (hash) {
         return capture.toHash(canvas);
       } else {
