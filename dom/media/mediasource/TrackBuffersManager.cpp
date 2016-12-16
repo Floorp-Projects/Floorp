@@ -444,7 +444,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
       }
       partialEvict = 0;
     }
-    if (frame->mTime >= lowerLimit.ToMicroseconds()) {
+    if (frame->GetEndTime() >= lowerLimit.ToMicroseconds()) {
       break;
     }
     partialEvict += frame->ComputedSizeOfIncludingThis();
