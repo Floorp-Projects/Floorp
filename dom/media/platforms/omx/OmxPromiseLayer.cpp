@@ -87,7 +87,7 @@ RefPtr<OmxPromiseLayer::OmxBufferPromise>
 OmxPromiseLayer::EmptyBuffer(BufferData* aData)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  LOG("buffer %p, size %d", aData->mBuffer, aData->mBuffer->nFilledLen);
+  LOG("buffer %p, size %lu", aData->mBuffer, aData->mBuffer->nFilledLen);
 
   RefPtr<OmxBufferPromise> p = aData->mPromise.Ensure(__func__);
 
@@ -267,7 +267,7 @@ OmxPromiseLayer::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2)
         mCommandStatePromise.Resolve(OMX_CommandStateSet, __func__);
       } else if (cmd == OMX_CommandFlush) {
         MOZ_RELEASE_ASSERT(mFlushCommands.ElementAt(0).type == aData2);
-        LOG("OMX_CommandFlush completed port type %d", aData2);
+        LOG("OMX_CommandFlush completed port type %lu", aData2);
         mFlushCommands.RemoveElementAt(0);
 
         // Sending next flush command.

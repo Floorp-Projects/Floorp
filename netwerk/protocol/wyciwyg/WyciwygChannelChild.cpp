@@ -48,13 +48,13 @@ WyciwygChannelChild::WyciwygChannelChild()
   , mIPCOpen(false)
   , mSentAppData(false)
 {
-  LOG(("Creating WyciwygChannelChild @%x\n", this));
+  LOG(("Creating WyciwygChannelChild @%p\n", this));
   mEventQ = new ChannelEventQueue(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this));
 }
 
 WyciwygChannelChild::~WyciwygChannelChild()
 {
-  LOG(("Destroying WyciwygChannelChild @%x\n", this));
+  LOG(("Destroying WyciwygChannelChild @%p\n", this));
   if (mLoadInfo) {
     NS_ReleaseOnMainThread(mLoadInfo.forget());
   }
@@ -275,8 +275,8 @@ WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 void
 WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
 {
-  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%p status=%u]\n",
-           this, statusCode));
+  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%p status=%" PRIu32 "]\n",
+       this, static_cast<uint32_t>(statusCode)));
 
   { // We need to ensure that all IPDL message dispatching occurs
     // before we delete the protocol below

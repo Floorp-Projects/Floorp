@@ -12,6 +12,7 @@
 #include "nsIStorageStream.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Telemetry.h"
 #include <algorithm>
@@ -267,7 +268,7 @@ bool
 nsMemoryCacheDevice::EntryIsTooBig(int64_t entrySize)
 {
     CACHE_LOG_DEBUG(("nsMemoryCacheDevice::EntryIsTooBig "
-                     "[size=%d max=%d soft=%d]\n",
+                     "[size=%" PRId64 " max=%d soft=%d]\n",
                      entrySize, mMaxEntrySize, mSoftLimit));
     if (mMaxEntrySize == -1)
         return entrySize > mSoftLimit;
@@ -482,7 +483,8 @@ nsMemoryCacheDevice::DoEvictEntries(bool (*matchFn)(nsCacheEntry* entry, void* a
             if (entry->IsInUse()) {
                 nsresult rv = nsCacheService::DoomEntry(entry);
                 if (NS_FAILED(rv)) {
-                    CACHE_LOG_WARNING(("memCache->DoEvictEntries() aborted: rv =%x", rv));
+                    CACHE_LOG_WARNING(("memCache->DoEvictEntries() aborted: rv =%" PRIx32,
+                                       static_cast<uint32_t>(rv)));
                     return rv;
                 }
             } else {

@@ -331,7 +331,8 @@ GMPVideoDecoder::Decode(MediaRawData* aSample)
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
     mDecodePromise.Reject(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                      RESULT_DETAIL("mGMP->Decode:%x", rv)),
+                                      RESULT_DETAIL("mGMP->Decode:%" PRIx32,
+                                                    static_cast<uint32_t>(rv))),
                           __func__);
   }
   return p;

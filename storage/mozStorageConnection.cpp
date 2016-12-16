@@ -221,7 +221,7 @@ int tracefunc (unsigned aReason, void *aClosure, void *aP, void *aX)
       sqlite_int64 time = *(static_cast<sqlite_int64*>(aX)) / 1000000;
       if (time > 0) {
         MOZ_LOG(gStorageLog, LogLevel::Debug,
-          ("TRACE_TIME on %p: %dms", aClosure, time));
+          ("TRACE_TIME on %p: %lldms", aClosure, time));
       }
       break;
     }

@@ -1274,7 +1274,8 @@ MediaCache::Update()
             // This block is already going to be read by the other stream.
             // So don't try to read it from this stream as well.
             enableReading = false;
-            CACHE_LOG(LogLevel::Debug, ("Stream %p waiting on same block (%lld) from stream %p",
+            CACHE_LOG(LogLevel::Debug, ("Stream %p waiting on same block (%"
+                                        PRId64 ") from stream %p",
                                      stream, desiredOffset/BLOCK_SIZE, other));
             break;
           }
@@ -1837,8 +1838,8 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
   if (blockOffset > 0) {
     CACHE_LOG(LogLevel::Debug,
               ("Stream %p writing partial block: [%d] bytes; "
-               "mStreamOffset [%lld] mChannelOffset[%lld] mStreamLength [%lld] "
-               "notifying: [%s]",
+               "mStreamOffset [%" PRId64 "] mChannelOffset[%"
+               PRId64 "] mStreamLength [%" PRId64 "] notifying: [%s]",
                this, blockOffset, mStreamOffset, mChannelOffset, mStreamLength,
                aNotifyAll ? "yes" : "no"));
 
@@ -2305,7 +2306,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     // have changed
     gMediaCache->QueueUpdate();
   }
-  CACHE_LOG(LogLevel::Debug, ("Stream %p Read at %lld count=%d", this, streamOffset-count, count));
+  CACHE_LOG(LogLevel::Debug, ("Stream %p Read at %" PRId64 " count=%d", this, streamOffset-count, count));
   *aBytes = count;
   mStreamOffset = streamOffset;
   return NS_OK;

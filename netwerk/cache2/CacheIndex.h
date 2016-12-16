@@ -15,6 +15,7 @@
 #include "nsTHashtable.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -255,7 +256,7 @@ public:
   void Log() const {
     LOG(("CacheIndexEntry::Log() [this=%p, hash=%08x%08x%08x%08x%08x, fresh=%u,"
          " initialized=%u, removed=%u, dirty=%u, anonymous=%u, "
-         "originAttrsHash=%llx, frecency=%u, expirationTime=%u, size=%u]",
+         "originAttrsHash=%" PRIx64 ", frecency=%u, expirationTime=%u, size=%u]",
          this, LOGSHA1(mRec->mHash), IsFresh(), IsInitialized(), IsRemoved(),
          IsDirty(), Anonymous(), OriginAttrsHash(), GetFrecency(),
          GetExpirationTime(), GetFileSize()));

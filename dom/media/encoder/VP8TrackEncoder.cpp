@@ -251,7 +251,7 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
     videoData->SetDuration((uint64_t)duration.value());
     videoData->SwapInFrameData(frameData);
     VP8LOG(LogLevel::Verbose,
-           "GetEncodedPartitions TimeStamp %lld, Duration %lld, FrameType %d",
+           "GetEncodedPartitions TimeStamp %" PRIu64 ", Duration %" PRIu64 ", FrameType %d",
            videoData->GetTimeStamp(), videoData->GetDuration(),
            videoData->GetFrameType());
     aData.AppendEncodedFrame(videoData);
@@ -550,7 +550,7 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   for (VideoSegment::ChunkIterator iter(mSourceSegment);
        !iter.IsEnded(); iter.Next()) {
     VideoChunk &chunk = *iter;
-    VP8LOG(LogLevel::Verbose, "nextEncodeOperation is %d for frame of duration %lld",
+    VP8LOG(LogLevel::Verbose, "nextEncodeOperation is %d for frame of duration %" PRId64,
              nextEncodeOperation, chunk.GetDuration());
 
     // Encode frame.

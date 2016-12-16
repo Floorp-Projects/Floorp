@@ -2088,7 +2088,7 @@ ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr)
   for (int i = 0; i < rects->num_rectangles; i++)  {
       const cairo_rectangle_t& r = rects->rectangles[i];
       aRegion.Or(aRegion, LayoutDeviceIntRect::Truncate(r.x, r.y, r.width, r.height));
-      LOGDRAW(("\t%d %d %d %d\n", r.x, r.y, r.width, r.height));
+      LOGDRAW(("\t%f %f %f %f\n", r.x, r.y, r.width, r.height));
   }
 
   cairo_rectangle_list_destroy(rects);
@@ -4835,7 +4835,7 @@ nsWindow::SetNonXEmbedPluginFocus()
                    &curFocusWindow,
                    &focusState);
 
-    LOGFOCUS(("\t curFocusWindow=%p\n", curFocusWindow));
+    LOGFOCUS(("\t curFocusWindow=%ld\n", curFocusWindow));
 
     GdkWindow* toplevel = gdk_window_get_toplevel(mGdkWindow);
 #if (MOZ_WIDGET_GTK == 2)
@@ -4870,7 +4870,7 @@ nsWindow::SetNonXEmbedPluginFocus()
     gPluginFocusWindow = this;
     gdk_window_add_filter(nullptr, plugin_client_message_filter, this);
 
-    LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus oldfocus=%p new=%p\n",
+    LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus oldfocus=%lu new=%lu\n",
               mOldFocusWindow, gdk_x11_window_get_xid(mGdkWindow)));
 }
 

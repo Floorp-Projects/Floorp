@@ -50,7 +50,7 @@ void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("SetMode(aMode=%d)", aMode);
+  MSE_API("SetMode(aMode=%" PRIu32 ")", static_cast<uint32_t>(aMode));
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;

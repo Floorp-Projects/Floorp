@@ -248,8 +248,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
     mLib->avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet);
 
   FFMPEG_LOG("DoDecodeFrame:decode_video: rv=%d decoded=%d "
-             "(Input: pts(%lld) dts(%lld) Output: pts(%lld) "
-             "opaque(%lld) pkt_pts(%lld) pkt_dts(%lld))",
+             "(Input: pts(%" PRId64 ") dts(%" PRId64 ") Output: pts(%" PRId64 ") "
+             "opaque(%" PRId64 ") pkt_pts(%" PRId64 ") pkt_dts(%" PRId64 "))",
              bytesConsumed, decoded, packet.pts, packet.dts, mFrame->pts,
              mFrame->reordered_opaque, mFrame->pkt_pts, mFrame->pkt_dts);
 
@@ -281,7 +281,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
     mDurationMap.Clear();
   }
   FFMPEG_LOG(
-    "Got one frame output with pts=%lld dts=%lld duration=%lld opaque=%lld",
+    "Got one frame output with pts=%" PRId64 " dts=%" PRId64
+    " duration=%" PRId64 " opaque=%" PRId64,
     pts, mFrame->pkt_dts, duration, mCodecContext->reordered_opaque);
 
   VideoData::YCbCrBuffer b;

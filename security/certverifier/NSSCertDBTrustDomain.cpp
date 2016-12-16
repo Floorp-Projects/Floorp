@@ -437,7 +437,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     // able to fetch a more recent one.
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
            ("NSSCertDBTrustDomain: cached OCSP response: error %d",
-           cachedResponseResult));
+            static_cast<int>(cachedResponseResult)));
     // When a good cached response has expired, it is more convenient
     // to convert that to an error code and just deal with
     // cachedResponseResult from here on out.

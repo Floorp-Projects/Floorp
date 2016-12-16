@@ -237,7 +237,7 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
 
     if (!v) {
       LOG(
-        "Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
+        "Image allocation error source %ux%u display %ux%u picture %ux%u",
         img->d_w, img->d_h, mInfo.mDisplay.width, mInfo.mDisplay.height,
         mInfo.mImage.width, mInfo.mImage.height);
       return DecodePromise::CreateAndReject(

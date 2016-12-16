@@ -239,7 +239,8 @@ WebSocketChannelChild::OnStart(const nsCString& aProtocol,
     nsresult rv = mListenerMT->mListener->OnStart(mListenerMT->mContext);
     if (NS_FAILED(rv)) {
       LOG(("WebSocketChannelChild::OnStart "
-           "mListenerMT->mListener->OnStart() failed with error 0x%08x", rv));
+           "mListenerMT->mListener->OnStart() failed with error 0x%08" PRIx32,
+           static_cast<uint32_t>(rv)));
     }
   }
 }
@@ -282,7 +283,8 @@ WebSocketChannelChild::OnStop(const nsresult& aStatusCode)
       mListenerMT->mListener->OnStop(mListenerMT->mContext, aStatusCode);
     if (NS_FAILED(rv)) {
       LOG(("WebSocketChannel::OnStop "
-           "mListenerMT->mListener->OnStop() failed with error 0x%08x", rv));
+           "mListenerMT->mListener->OnStop() failed with error 0x%08" PRIx32,
+           static_cast<uint32_t>(rv)));
     }
   }
 }
@@ -333,7 +335,7 @@ WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg)
     if (NS_FAILED(rv)) {
       LOG(("WebSocketChannelChild::OnMessageAvailable "
            "mListenerMT->mListener->OnMessageAvailable() "
-           "failed with error 0x%08x", rv));
+           "failed with error 0x%08" PRIx32, static_cast<uint32_t>(rv)));
     }
   }
 }
@@ -360,7 +362,7 @@ WebSocketChannelChild::OnBinaryMessageAvailable(const nsCString& aMsg)
     if (NS_FAILED(rv)) {
       LOG(("WebSocketChannelChild::OnBinaryMessageAvailable "
            "mListenerMT->mListener->OnBinaryMessageAvailable() "
-           "failed with error 0x%08x", rv));
+           "failed with error 0x%08" PRIx32, static_cast<uint32_t>(rv)));
     }
   }
 }
@@ -404,7 +406,7 @@ WebSocketChannelChild::OnAcknowledge(const uint32_t& aSize)
     if (NS_FAILED(rv)) {
       LOG(("WebSocketChannel::OnAcknowledge "
            "mListenerMT->mListener->OnAcknowledge() "
-           "failed with error 0x%08x", rv));
+           "failed with error 0x%08" PRIx32, static_cast<uint32_t>(rv)));
     }
   }
 }
@@ -673,7 +675,7 @@ public:
     nsresult rv = mChild->SendBinaryStream(mStream, mLength);
     if (NS_FAILED(rv)) {
       LOG(("WebSocketChannelChild::BinaryStreamEvent %p "
-           "SendBinaryStream failed (%08x)\n", this, rv));
+           "SendBinaryStream failed (%08" PRIx32 ")\n", this, static_cast<uint32_t>(rv)));
     }
     return NS_OK;
   }

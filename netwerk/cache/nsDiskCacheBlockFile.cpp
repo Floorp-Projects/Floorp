@@ -8,6 +8,7 @@
 #include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include <algorithm>
 
@@ -43,8 +44,8 @@ nsDiskCacheBlockFile::Open(nsIFile * blockFile,
     if (NS_FAILED(rv)) {
         *corruptInfo = nsDiskCache::kCouldNotCreateBlockFile;
         CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Open "
-                         "[this=%p] unable to open or create file: %d",
-                         this, rv));
+                         "[this=%p] unable to open or create file: %" PRId32,
+                         this, static_cast<uint32_t>(rv)));
         return rv;  // unable to open or create file
     }
     
@@ -102,7 +103,7 @@ nsDiskCacheBlockFile::Open(nsIFile * blockFile,
 
 error_exit:
     CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Open [this=%p] failed with "
-                     "error %d", this, rv));
+                     "error %" PRId32, this, static_cast<uint32_t>(rv)));
     Close(false);
     return rv;
 }

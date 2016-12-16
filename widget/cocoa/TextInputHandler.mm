@@ -12,6 +12,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 
@@ -350,7 +351,8 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
     ("%p TISInputSourceWrapper::TranslateToString, aKeyCode=0x%X, "
      "aModifiers=0x%X, aKbType=0x%X UCKey=%p\n    "
      "Shift: %s, Ctrl: %s, Opt: %s, Cmd: %s, CapsLock: %s, NumLock: %s",
-     this, aKeyCode, aModifiers, aKbType, UCKey,
+     this, static_cast<unsigned int>(aKeyCode), static_cast<unsigned int>(aModifiers),
+     static_cast<unsigned int>(aKbType), UCKey,
      OnOrOff(aModifiers & shiftKey), OnOrOff(aModifiers & controlKey),
      OnOrOff(aModifiers & optionKey), OnOrOff(aModifiers & cmdKey),
      OnOrOff(aModifiers & alphaLock),
@@ -367,8 +369,8 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
                                   &deadKeyState, 5, &len, chars);
 
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::TranslateToString, err=0x%X, len=%llu",
-     this, err, len));
+    ("%p TISInputSourceWrapper::TranslateToString, err=0x%X, len=%" PRIuSIZE,
+     this, static_cast<int>(err), len));
 
   NS_ENSURE_TRUE(err == noErr, false);
   if (len == 0) {
@@ -1065,7 +1067,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
        this, aNativeKeyEvent, utf8Chars.get(),
        GetGeckoKeyEventType(aKeyEvent), aKeyEvent.mCharCode,
        uniChar ? NS_ConvertUTF16toUTF8(&uniChar, 1).get() : "",
-       kbType, TrueOrFalse(IsOpenedIMEMode())));
+       static_cast<unsigned int>(kbType), TrueOrFalse(IsOpenedIMEMode())));
   }
 
   nsAutoString insertStringForCharCode;
@@ -1103,8 +1105,9 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
-     "isRomanKeyboardLayout=%s, key=0x%X",
-     this, TrueOrFalse(isRomanKeyboardLayout), kbType, key));
+     "isRomanKeyboardLayout=%s, kbType=0x%X, key=0x%X",
+     this, TrueOrFalse(isRomanKeyboardLayout), static_cast<unsigned int>(kbType),
+     static_cast<unsigned int>(key)));
 
   nsString str;
 
@@ -1234,7 +1237,8 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     ("%p TISInputSourceWrapper::ComputeGeckoKeyCode, aNativeKeyCode=0x%X, "
      "aKbType=0x%X, aCmdIsPressed=%s, IsOpenedIMEMode()=%s, "
      "IsASCIICapable()=%s",
-     this, aNativeKeyCode, aKbType, TrueOrFalse(aCmdIsPressed),
+     this, static_cast<unsigned int>(aNativeKeyCode),
+     static_cast<unsigned int>(aKbType), TrueOrFalse(aCmdIsPressed),
      TrueOrFalse(IsOpenedIMEMode()), TrueOrFalse(IsASCIICapable())));
 
   switch (aNativeKeyCode) {
@@ -1522,11 +1526,12 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   MOZ_LOG(gLog, LogLevel::Info, (""));
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleKeyDownEvent, aNativeEvent=%p, "
-     "type=%s, keyCode=%lld (0x%X), modifierFlags=0x%X, characters=\"%s\", "
+     "type=%s, keyCode=%u (0x%X), modifierFlags=0x%lX, characters=\"%s\", "
      "charactersIgnoringModifiers=\"%s\"",
      this, aNativeEvent, GetNativeKeyEventType(aNativeEvent),
      [aNativeEvent keyCode], [aNativeEvent keyCode],
-     [aNativeEvent modifierFlags], GetCharacters([aNativeEvent characters]),
+     static_cast<unsigned long>([aNativeEvent modifierFlags]),
+     GetCharacters([aNativeEvent characters]),
      GetCharacters([aNativeEvent charactersIgnoringModifiers])));
 
   // Except when Command key is pressed, we should hide mouse cursor until
@@ -1704,12 +1709,13 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleKeyUpEvent, aNativeEvent=%p, "
-     "type=%s, keyCode=%lld (0x%X), modifierFlags=0x%X, characters=\"%s\", "
+     "type=%s, keyCode=%u (0x%X), modifierFlags=0x%lX, characters=\"%s\", "
      "charactersIgnoringModifiers=\"%s\", "
      "IsIMEComposing()=%s",
      this, aNativeEvent, GetNativeKeyEventType(aNativeEvent),
      [aNativeEvent keyCode], [aNativeEvent keyCode],
-     [aNativeEvent modifierFlags], GetCharacters([aNativeEvent characters]),
+     static_cast<unsigned long>([aNativeEvent modifierFlags]),
+     GetCharacters([aNativeEvent characters]),
      GetCharacters([aNativeEvent charactersIgnoringModifiers]),
      TrueOrFalse(IsIMEComposing())));
 
@@ -1756,11 +1762,12 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleFlagsChanged, aNativeEvent=%p, "
-     "type=%s, keyCode=%s (0x%X), modifierFlags=0x%08X, "
-     "sLastModifierState=0x%08X, IsIMEComposing()=%s",
+     "type=%s, keyCode=%s (0x%X), modifierFlags=0x%08lX, "
+     "sLastModifierState=0x%08lX, IsIMEComposing()=%s",
      this, aNativeEvent, GetNativeKeyEventType(aNativeEvent),
      GetKeyNameForNativeKeyCode([aNativeEvent keyCode]), [aNativeEvent keyCode],
-     [aNativeEvent modifierFlags], sLastModifierState,
+     static_cast<unsigned long>([aNativeEvent modifierFlags]),
+     static_cast<unsigned long>(sLastModifierState),
      TrueOrFalse(IsIMEComposing())));
 
   MOZ_ASSERT([aNativeEvent type] == NSFlagsChanged);
@@ -2122,13 +2129,13 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::InsertText, aAttrString=\"%s\", "
-     "aReplacementRange=%p { location=%llu, length=%llu }, "
+     "aReplacementRange=%p { location=%lu, length=%lu }, "
      "IsIMEComposing()=%s, IgnoreIMEComposition()=%s, "
      "keyevent=%p, keydownHandled=%s, keypressDispatched=%s, "
      "causedOtherKeyEvents=%s, compositionDispatched=%s",
      this, GetCharacters([aAttrString string]), aReplacementRange,
-     aReplacementRange ? aReplacementRange->location : 0,
-     aReplacementRange ? aReplacementRange->length : 0,
+     static_cast<unsigned long>(aReplacementRange ? aReplacementRange->location : 0),
+     static_cast<unsigned long>(aReplacementRange ? aReplacementRange->length : 0),
      TrueOrFalse(IsIMEComposing()), TrueOrFalse(IgnoreIMEComposition()),
      currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr,
      currentKeyEvent ?
@@ -2762,8 +2769,8 @@ IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
 {
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::ConvertToTextRangeType, "
-     "aUnderlineStyle=%llu, aSelectedRange.length=%llu,",
-     this, aUnderlineStyle, aSelectedRange.length));
+     "aUnderlineStyle=%u, aSelectedRange.length=%lu,",
+     this, aUnderlineStyle, static_cast<unsigned long>(aSelectedRange.length)));
 
   // We assume that aUnderlineStyle is NSUnderlineStyleSingle or
   // NSUnderlineStyleThick.  NSUnderlineStyleThick should indicate a selected
@@ -2814,7 +2821,7 @@ IMEInputHandler::GetRangeCount(NSAttributedString *aAttrString)
   }
 
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::GetRangeCount, aAttrString=\"%s\", count=%llu",
+    ("%p IMEInputHandler::GetRangeCount, aAttrString=\"%s\", count=%u",
      this, GetCharacters([aAttrString string]), count));
 
   return count;
@@ -2859,7 +2866,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
 
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p IMEInputHandler::CreateTextRangeArray, "
-       "range={ mStartOffset=%llu, mEndOffset=%llu, mRangeType=%s }",
+       "range={ mStartOffset=%u, mEndOffset=%u, mRangeType=%s }",
        this, range.mStartOffset, range.mEndOffset,
        ToChar(range.mRangeType)));
 
@@ -2877,7 +2884,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::CreateTextRangeArray, "
-     "range={ mStartOffset=%llu, mEndOffset=%llu, mRangeType=%s }",
+     "range={ mStartOffset=%u, mEndOffset=%u, mRangeType=%s }",
      this, range.mStartOffset, range.mEndOffset,
      ToChar(range.mRangeType)));
 
@@ -2891,9 +2898,10 @@ IMEInputHandler::DispatchCompositionStartEvent()
 {
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::DispatchCompositionStartEvent, "
-     "mSelectedRange={ location=%llu, length=%llu }, Destroyed()=%s, "
+     "mSelectedRange={ location=%lu, length=%lu }, Destroyed()=%s, "
      "mView=%p, mWidget=%p, inputContext=%p, mIsIMEComposing=%s",
-     this,  SelectedRange().location, mSelectedRange.length,
+     this,  static_cast<unsigned long>(SelectedRange().location),
+     static_cast<unsigned long>(mSelectedRange.length),
      TrueOrFalse(Destroyed()), mView, mWidget,
      mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
@@ -2947,11 +2955,12 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
      "aText=\"%s\", aAttrString=\"%s\", "
-     "aSelectedRange={ location=%llu, length=%llu }, Destroyed()=%s, mView=%p, "
+     "aSelectedRange={ location=%lu, length=%lu }, Destroyed()=%s, mView=%p, "
      "mWidget=%p, inputContext=%p, mIsIMEComposing=%s",
      this, NS_ConvertUTF16toUTF8(aText).get(),
      GetCharacters([aAttrString string]),
-     aSelectedRange.location, aSelectedRange.length,
+     static_cast<unsigned long>(aSelectedRange.location),
+     static_cast<unsigned long>(aSelectedRange.length),
      TrueOrFalse(Destroyed()), mView, mWidget,
      mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
@@ -3086,14 +3095,15 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
-     "aAttrString=\"%s\", aReplacementRange=%p { location=%llu, length=%llu }, "
+     "aAttrString=\"%s\", aReplacementRange=%p { location=%lu, length=%lu }, "
      "Destroyed()=%s, IsIMEComposing()=%s, "
-     "mMarkedRange={ location=%llu, length=%llu }",
+     "mMarkedRange={ location=%lu, length=%lu }",
      this, GetCharacters([aAttrString string]), aReplacementRange,
-     aReplacementRange ? aReplacementRange->location : 0,
-     aReplacementRange ? aReplacementRange->length : 0,
+     static_cast<unsigned long>(aReplacementRange ? aReplacementRange->location : 0),
+     static_cast<unsigned long>(aReplacementRange ? aReplacementRange->length : 0),
      TrueOrFalse(Destroyed()), TrueOrFalse(IsIMEComposing()),
-     mMarkedRange.location, mMarkedRange.length));
+     static_cast<unsigned long>(mMarkedRange.location),
+     static_cast<unsigned long>(mMarkedRange.length)));
 
   if (IgnoreIMECommit()) {
     MOZ_CRASH("IMEInputHandler::InsertTextAsCommittingComposition() must not"
@@ -3162,19 +3172,21 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::SetMarkedText, "
-     "aAttrString=\"%s\", aSelectedRange={ location=%llu, length=%llu }, "
-     "aReplacementRange=%p { location=%llu, length=%llu }, "
+     "aAttrString=\"%s\", aSelectedRange={ location=%lu, length=%lu }, "
+     "aReplacementRange=%p { location=%lu, length=%lu }, "
      "Destroyed()=%s, IgnoreIMEComposition()=%s, IsIMEComposing()=%s, "
-     "mMarkedRange={ location=%llu, length=%llu }, keyevent=%p, "
+     "mMarkedRange={ location=%lu, length=%lu }, keyevent=%p, "
      "keydownHandled=%s, keypressDispatched=%s, causedOtherKeyEvents=%s, "
      "compositionDispatched=%s",
      this, GetCharacters([aAttrString string]),
-     aSelectedRange.location, aSelectedRange.length, aReplacementRange,
-     aReplacementRange ? aReplacementRange->location : 0,
-     aReplacementRange ? aReplacementRange->length : 0,
+     static_cast<unsigned long>(aSelectedRange.location),
+     static_cast<unsigned long>(aSelectedRange.length), aReplacementRange,
+     static_cast<unsigned long>(aReplacementRange ? aReplacementRange->location : 0),
+     static_cast<unsigned long>(aReplacementRange ? aReplacementRange->length : 0),
      TrueOrFalse(Destroyed()), TrueOrFalse(IgnoreIMEComposition()),
      TrueOrFalse(IsIMEComposing()),
-     mMarkedRange.location, mMarkedRange.length,
+     static_cast<unsigned long>(mMarkedRange.location),
+     static_cast<unsigned long>(mMarkedRange.length),
      currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr,
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyDownHandled) : "N/A",
@@ -3265,8 +3277,9 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
-     "aRange={ location=%llu, length=%llu }, aActualRange=%p, Destroyed()=%s",
-     this, aRange.location, aRange.length, aActualRange,
+     "aRange={ location=%lu, length=%lu }, aActualRange=%p, Destroyed()=%s",
+     this, static_cast<unsigned long>(aRange.location),
+     static_cast<unsigned long>(aRange.length), aActualRange,
      TrueOrFalse(Destroyed())));
 
   if (aActualRange) {
@@ -3366,8 +3379,9 @@ IMEInputHandler::HasMarkedText()
 {
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::HasMarkedText, "
-     "mMarkedRange={ location=%llu, length=%llu }",
-     this, mMarkedRange.location, mMarkedRange.length));
+     "mMarkedRange={ location=%lu, length=%lu }",
+     this, static_cast<unsigned long>(mMarkedRange.location),
+     static_cast<unsigned long>(mMarkedRange.length)));
 
   return (mMarkedRange.location != NSNotFound) && (mMarkedRange.length != 0);
 }
@@ -3377,8 +3391,9 @@ IMEInputHandler::MarkedRange()
 {
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::MarkedRange, "
-     "mMarkedRange={ location=%llu, length=%llu }",
-     this, mMarkedRange.location, mMarkedRange.length));
+     "mMarkedRange={ location=%lu, length=%lu }",
+     this, static_cast<unsigned long>(mMarkedRange.location),
+     static_cast<unsigned long>(mMarkedRange.length)));
 
   if (!HasMarkedText()) {
     return NSMakeRange(NSNotFound, 0);
@@ -3393,9 +3408,9 @@ IMEInputHandler::SelectedRange()
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::SelectedRange, Destroyed()=%s, mSelectedRange={ "
-     "location=%llu, length=%llu }",
-     this, TrueOrFalse(Destroyed()), mSelectedRange.location,
-     mSelectedRange.length));
+     "location=%lu, length=%lu }",
+     this, TrueOrFalse(Destroyed()), static_cast<unsigned long>(mSelectedRange.location),
+     static_cast<unsigned long>(mSelectedRange.length)));
 
   if (Destroyed()) {
     return mSelectedRange;
@@ -3475,9 +3490,9 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::FirstRectForCharacterRange, Destroyed()=%s, "
-     "aRange={ location=%llu, length=%llu }, aActualRange=%p }",
-     this, TrueOrFalse(Destroyed()), aRange.location, aRange.length,
-     aActualRange));
+     "aRange={ location=%lu, length=%lu }, aActualRange=%p }",
+     this, TrueOrFalse(Destroyed()), static_cast<unsigned long>(aRange.location),
+     static_cast<unsigned long>(aRange.length), aActualRange));
 
   // XXX this returns first character rect or caret rect, it is limitation of
   // now. We need more work for returns first line rect. But current
@@ -3565,10 +3580,10 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::FirstRectForCharacterRange, "
      "useCaretRect=%s rect={ x=%f, y=%f, width=%f, height=%f }, "
-     "actualRange={ location=%llu, length=%llu }",
+     "actualRange={ location=%lu, length=%lu }",
      this, TrueOrFalse(useCaretRect), rect.origin.x, rect.origin.y,
-     rect.size.width, rect.size.height, actualRange.location,
-     actualRange.length));
+     rect.size.width, rect.size.height, static_cast<unsigned long>(actualRange.location),
+     static_cast<unsigned long>(actualRange.length)));
 
   return rect;
 
@@ -3747,7 +3762,7 @@ IMEInputHandler::SendCommittedText(NSString *aString)
     ("%p IMEInputHandler::SendCommittedText, mView=%p, mWidget=%p, "
      "inputContext=%p, mIsIMEComposing=%s",
      this, mView, mWidget, mView ? [mView inputContext] : nullptr,
-     TrueOrFalse(mIsIMEComposing), mWidget));
+     TrueOrFalse(mIsIMEComposing)));
 
   NS_ENSURE_TRUE(mWidget, );
   // XXX We should send the string without mView.
@@ -4191,8 +4206,8 @@ TextInputHandlerBase::GetWindowLevel()
   NSInteger windowLevel = [[editorView window] level];
 
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TextInputHandlerBase::GetWindowLevel, windowLevel=%s (%X)",
-     this, GetWindowLevelName(windowLevel), windowLevel));
+    ("%p TextInputHandlerBase::GetWindowLevel, windowLevel=%s (%lX)",
+     this, GetWindowLevelName(windowLevel), static_cast<unsigned long>(windowLevel)));
 
   return windowLevel;
 

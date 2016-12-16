@@ -400,7 +400,8 @@ Statement::internalFinalize(bool aDestructing)
     NS_WARNING(msg);
 #endif // 0
 
-    MOZ_LOG(gStorageLog, LogLevel::Warning, (msg));
+    // Use %s so we aren't exposing random strings to printf interpolation.
+    MOZ_LOG(gStorageLog, LogLevel::Warning, ("%s", msg));
 
     ::mozilla::SmprintfFree(msg);
   }

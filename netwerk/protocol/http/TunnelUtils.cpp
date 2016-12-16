@@ -282,8 +282,9 @@ TLSFilterTransaction::OnWriteSegment(char *aData,
     mFilterReadCode = NS_BASE_STREAM_CLOSED;
   }
 
-  LOG(("TLSFilterTransaction::OnWriteSegment %p rv=%x didread=%d "
-        "2 layers of ssl stripped to plaintext\n", this, mFilterReadCode, bytesRead));
+  LOG(("TLSFilterTransaction::OnWriteSegment %p rv=%" PRIx32 " didread=%d "
+       "2 layers of ssl stripped to plaintext\n",
+       this, static_cast<uint32_t>(mFilterReadCode), bytesRead));
   return mFilterReadCode;
 }
 
@@ -297,8 +298,9 @@ TLSFilterTransaction::FilterInput(char *aBuf, int32_t aAmount)
   uint32_t outCountRead = 0;
   mFilterReadCode = mSegmentWriter->OnWriteSegment(aBuf, aAmount, &outCountRead);
   if (NS_SUCCEEDED(mFilterReadCode) && outCountRead) {
-    LOG(("TLSFilterTransaction::FilterInput rv=%x read=%d input from net "
-         "1 layer stripped, 1 still on\n", mFilterReadCode, outCountRead));
+    LOG(("TLSFilterTransaction::FilterInput rv=%" PRIx32 " read=%d input from net "
+         "1 layer stripped, 1 still on\n",
+         static_cast<uint32_t>(mFilterReadCode), outCountRead));
     if (mReadSegmentBlocked) {
       mNudgeCounter = 0;
     }
@@ -324,12 +326,12 @@ TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader *aReader,
   mReadSegmentBlocked = false;
   mSegmentReader = aReader;
   nsresult rv = mTransaction->ReadSegments(this, aCount, outCountRead);
-  LOG(("TLSFilterTransaction %p called trans->ReadSegments rv=%x %d\n",
-       this, rv, *outCountRead));
+  LOG(("TLSFilterTransaction %p called trans->ReadSegments rv=%" PRIx32 " %d\n",
+       this, static_cast<uint32_t>(rv), *outCountRead));
   if (NS_SUCCEEDED(rv) && mReadSegmentBlocked) {
     rv = NS_BASE_STREAM_WOULD_BLOCK;
-    LOG(("TLSFilterTransaction %p read segment blocked found rv=%x\n",
-         this, rv));
+    LOG(("TLSFilterTransaction %p read segment blocked found rv=%" PRIx32 "\n",
+         this, static_cast<uint32_t>(rv)));
     Connection()->ForceSend();
   }
 
@@ -356,8 +358,8 @@ TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter *aWriter,
       Connection()->ResumeRecv();
     }
   }
-  LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%x %d\n",
-       this, rv, *outCountWritten));
+  LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%" PRIx32 " %d\n",
+       this, static_cast<uint32_t>(rv), *outCountWritten));
   return rv;
 }
 
@@ -817,8 +819,8 @@ SocketInWrapper::OnWriteSegment(char *segment, uint32_t count, uint32_t *countWr
   LOG(("SocketInWrapper OnWriteSegment %d %p filter=%p\n", count, this, mTLSFilter.get()));
 
   nsresult rv = mStream->Read(segment, count, countWritten);
-  LOG(("SocketInWrapper OnWriteSegment %p wrapped read %x %d\n",
-       this, rv, *countWritten));
+  LOG(("SocketInWrapper OnWriteSegment %p wrapped read %" PRIx32 " %d\n",
+       this, static_cast<uint32_t>(rv), *countWritten));
   return rv;
 }
 
@@ -1105,7 +1107,8 @@ SpdyConnectTransaction::Flush(uint32_t count, uint32_t *countRead)
     rv = mSegmentReader->OnReadSegment(&mOutputData[mOutputDataOffset],
                                        count, countRead);
     if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_WOULD_BLOCK)) {
-      LOG(("SpdyConnectTransaction::Flush %p Error %x\n", this, rv));
+      LOG(("SpdyConnectTransaction::Flush %p Error %" PRIx32 "\n",
+           this, static_cast<uint32_t>(rv)));
       CreateShimError(rv);
       return rv;
     }
@@ -1149,8 +1152,8 @@ SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader *reader,
         OnReadSegment(mConnectString.BeginReading() + mConnectStringOffset,
                       toWrite, countRead);
       if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_WOULD_BLOCK)) {
-        LOG(("SpdyConnectTransaction::ReadSegments %p OnReadSegmentError %x\n",
-             this, rv));
+        LOG(("SpdyConnectTransaction::ReadSegments %p OnReadSegmentError %" PRIx32 "\n",
+             this, static_cast<uint32_t>(rv)));
         CreateShimError(rv);
       } else {
         mConnectStringOffset += toWrite;
@@ -1233,7 +1236,8 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
                                        count, countWritten);
   if (NS_FAILED(rv)) {
     if (rv != NS_BASE_STREAM_WOULD_BLOCK) {
-      LOG(("SpdyConnectTransaction::WriteSegments wrapped writer %p Error %x\n", this, rv));
+      LOG(("SpdyConnectTransaction::WriteSegments wrapped writer %p Error %" PRIx32 "\n",
+           this, static_cast<uint32_t>(rv)));
       CreateShimError(rv);
     }
     return rv;
@@ -1248,10 +1252,11 @@ SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
 
   rv = mTunnelStreamIn->mCallback->OnInputStreamReady(mTunnelStreamIn);
   LOG(("SpdyConnectTransaction::WriteSegments %p "
-       "after InputStreamReady callback %d total of ciphered data buffered rv=%x\n",
-       this, mInputDataUsed - mInputDataOffset, rv));
+       "after InputStreamReady callback %d total of ciphered data buffered rv=%"
+       PRIx32 "\n",
+       this, mInputDataUsed - mInputDataOffset, static_cast<uint32_t>(rv)));
   LOG(("SpdyConnectTransaction::WriteSegments %p "
-       "goodput %p out %llu\n", this, mTunneledConn.get(),
+       "goodput %p out %" PRId64 "\n", this, mTunneledConn.get(),
        mTunneledConn->ContentBytesWritten()));
   if (NS_SUCCEEDED(rv) && !mTunneledConn->ContentBytesWritten()) {
     mTunnelStreamOut->AsyncWait(mTunnelStreamOut->mCallback, 0, 0, nullptr);
@@ -1274,7 +1279,7 @@ SpdyConnectTransaction::RequestHead()
 void
 SpdyConnectTransaction::Close(nsresult code)
 {
-  LOG(("SpdyConnectTransaction close %p %x\n", this, code));
+  LOG(("SpdyConnectTransaction close %p %" PRIx32 "\n", this, static_cast<uint32_t>(code)));
 
   NullHttpTransaction::Close(code);
   if (NS_FAILED(code) && (code != NS_BASE_STREAM_WOULD_BLOCK)) {

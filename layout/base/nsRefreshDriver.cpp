@@ -325,7 +325,7 @@ protected:
 
   static void TickDriver(nsRefreshDriver* driver, int64_t jsnow, TimeStamp now)
   {
-    LOG(">> TickDriver: %p (jsnow: %lld)", driver, jsnow);
+    LOG(">> TickDriver: %p (jsnow: %" PRId64 ")", driver, jsnow);
     driver->Tick(jsnow, now);
   }
 

@@ -126,7 +126,7 @@ AsyncStatement::initialize(Connection *aDBConnection,
   mSQLString = aSQLStatement;
 
   MOZ_LOG(gStorageLog, LogLevel::Debug, ("Inited async statement '%s' (0x%p)",
-                                      mSQLString.get()));
+                                      mSQLString.get(), this));
 
 #ifdef DEBUG
   // We want to try and test for LIKE and that consumers are using
