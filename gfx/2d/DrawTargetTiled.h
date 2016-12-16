@@ -114,6 +114,8 @@ public:
 
   virtual void SetTransform(const Matrix &aTransform) override;
 
+  virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
+
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
                                                                   int32_t aStride,
@@ -159,6 +161,15 @@ private:
   std::vector<TileInternal> mTiles;
   std::vector<std::vector<uint32_t> > mClippedOutTilesStack;
   IntRect mRect;
+
+  struct PushedLayer
+  {
+    explicit PushedLayer(bool aOldPermitSubpixelAA)
+      : mOldPermitSubpixelAA(aOldPermitSubpixelAA)
+    {}
+    bool mOldPermitSubpixelAA;
+  };
+  std::vector<PushedLayer> mPushedLayers;
 };
 
 class SnapshotTiled : public SourceSurface
