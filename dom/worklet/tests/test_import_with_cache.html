@@ -10,12 +10,39 @@
 
 <script type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  {"set": [["dom.audioWorklet.enabled", true],
-           ["dom.worklet.enabled", true]]},
-  function() { loadTest("file_import_with_cache.html"); });
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioWorklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
 
+// This function is called into an iframe.
+function runTestInIframe() {
+  function loading() {
+    audioWorklet.import("server_import_with_cache.sjs")
+    .then(() => {
+      ok(true, "Import should load a resource.");
+    }, () => {
+      ok(false, "Import should load a resource.");
+    })
+    .then(() => {
+      done();
+    });
+  }
+
+  var count = 0;
+  const MAX = 10;
+
+  function done() {
+    if (++count == MAX) {
+      SimpleTest.finish();
+    }
+  }
+
+  for (var i = 0; i < MAX; ++i) {
+    loading();
+  }
+}
 </script>
 </body>
 </html>

@@ -10,33 +10,37 @@
 
 <script type="application/javascript">
 
-function consoleListener() {
-  SpecialPowers.addObserver(this, "console-api-log-event", false);
-}
+function configureTest() {
+  function consoleListener() {
+    SpecialPowers.addObserver(this, "console-api-log-event", false);
+  }
 
-consoleListener.prototype  = {
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "console-api-log-event") {
-      var obj = aSubject.wrappedJSObject;
-      if (obj.arguments[0] == "So far so good") {
-        ok(true, "Message received \\o/");
+  consoleListener.prototype  = {
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic == "console-api-log-event") {
+        var obj = aSubject.wrappedJSObject;
+        if (obj.arguments[0] == "So far so good") {
+          ok(true, "Message received \\o/");
 
-        SpecialPowers.removeObserver(this, "console-api-log-event");
-        SimpleTest.finish();
-        return;
+          SpecialPowers.removeObserver(this, "console-api-log-event");
+          SimpleTest.finish();
+          return;
+        }
       }
     }
   }
+
+  var cl = new consoleListener();
+
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioWorklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
 }
 
-var cl = new consoleListener();
-
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  {"set": [["dom.audioWorklet.enabled", true],
-           ["dom.worklet.enabled", true]]},
-  function() { loadTest("file_audioWorklet.html"); });
-
+// This function is called into an iframe.
+function runTestInIframe() {
+  audioWorklet.import("worklet_audioWorklet.js")
+}
 </script>
 </body>
 </html>
