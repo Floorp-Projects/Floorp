@@ -469,4 +469,12 @@ interface nsIHttpChannel : nsIChannel
      * this channels is being load in.
      */
     attribute uint64_t topLevelContentWindowId;
+
+    /**
+     * Returns true if the channel has loaded a resource that is on the tracking
+     * protection list.  This is only available if the
+     * privacy.trackingprotection.annotate_channels pref is set and its value
+     * should only be relied on after the channel has established a connection.
+     */
+    [infallible] readonly attribute boolean isTrackingResource;
 };
