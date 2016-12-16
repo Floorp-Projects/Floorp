@@ -474,7 +474,7 @@ public class GeckoAppShell
                                                        float bearing, float speed, long time);
 
     private static class DefaultListeners
-            implements SensorEventListener, LocationListener, NotificationListener {
+            implements SensorEventListener, LocationListener, NotificationListener, ScreenOrientationDelegate {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
@@ -604,12 +604,23 @@ public class GeckoAppShell
         public void closeNotification(String name) {
             // Do nothing.
         }
+
+        @Override
+        public boolean setRequestedOrientationForCurrentActivity(int requestedActivityInfoOrientation) {
+            // Do nothing, and report that the orientation was not set.
+            return false;
+        }
     }
 
     private static final DefaultListeners DEFAULT_LISTENERS = new DefaultListeners();
     private static SensorEventListener sSensorListener = DEFAULT_LISTENERS;
     private static LocationListener sLocationListener = DEFAULT_LISTENERS;
     private static NotificationListener sNotificationListener = DEFAULT_LISTENERS;
+
+    /**
+     * A delegate for supporting the Screen Orientation API.
+     */
+    private static ScreenOrientationDelegate sScreenOrientationDelegate = DEFAULT_LISTENERS;
 
     public static SensorEventListener getSensorListener() {
         return sSensorListener;
@@ -633,6 +644,14 @@ public class GeckoAppShell
 
     public static void setNotificationListener(final NotificationListener listener) {
         sNotificationListener = (listener != null) ? listener : DEFAULT_LISTENERS;
+    }
+
+    public static ScreenOrientationDelegate getScreenOrientationDelegate() {
+        return sScreenOrientationDelegate;
+    }
+
+    public static void setScreenOrientationDelegate(ScreenOrientationDelegate screenOrientationDelegate) {
+        sScreenOrientationDelegate = (screenOrientationDelegate != null) ? screenOrientationDelegate : DEFAULT_LISTENERS;
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -2072,11 +2091,13 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void lockScreenOrientation(int aOrientation) {
+        // TODO: don't vector through GeckoAppShell.
         GeckoScreenOrientation.getInstance().lock(aOrientation);
     }
 
     @WrapForJNI(calledFrom = "gecko")
     private static void unlockScreenOrientation() {
+        // TODO: don't vector through GeckoAppShell.
         GeckoScreenOrientation.getInstance().unlock();
     }
 
