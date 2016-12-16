@@ -565,7 +565,7 @@ struct AutoPaintSetup {
       temp.setBlendMode(GfxOpToSkiaOp(aOptions.mCompositionOp));
       temp.setAlpha(ColorFloatToByte(aOptions.mAlpha));
       //TODO: Get a rect here
-      mCanvas->saveLayer(nullptr, &temp);
+      mCanvas->saveLayerPreserveLCDTextRequests(nullptr, &temp);
       mNeedsRestore = true;
     } else {
       mPaint.setAlpha(ColorFloatToByte(aOptions.mAlpha));
@@ -842,8 +842,8 @@ DrawTargetSkia::Fill(const Path *aPath,
 bool
 DrawTargetSkia::ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialiasMode)
 {
-  // For non-opaque surfaces, only allow subpixel AA if explicitly permitted.
-  if (!IsOpaque(mFormat) && !mPermitSubpixelAA) {
+  // Only allow subpixel AA if explicitly permitted.
+  if (!GetPermitSubpixelAA()) {
     return false;
   }
 
@@ -1773,6 +1773,7 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
   mSize = aSize;
   mFormat = aFormat;
   mCanvas = sk_ref_sp(mSurface->getCanvas());
+  SetPermitSubpixelAA(IsOpaque(mFormat));
 
   if (info.isOpaque()) {
     mCanvas->clear(SK_ColorBLACK);
@@ -1801,6 +1802,7 @@ DrawTargetSkia::Init(SkCanvas* aCanvas)
   mSize.height = size.height();
   mFormat = SkiaColorTypeToGfxFormat(imageInfo.colorType(),
                                      imageInfo.alphaType());
+  SetPermitSubpixelAA(IsOpaque(mFormat));
   return true;
 }
 
@@ -1850,6 +1852,7 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
   mSize = aSize;
   mFormat = aFormat;
   mCanvas = sk_ref_sp(mSurface->getCanvas());
+  SetPermitSubpixelAA(IsOpaque(mFormat));
   return true;
 }
 
@@ -1869,6 +1872,7 @@ DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride
   mSize = aSize;
   mFormat = aFormat;
   mCanvas = sk_ref_sp(mSurface->getCanvas());
+  SetPermitSubpixelAA(IsOpaque(mFormat));
   return true;
 }
 
@@ -2021,7 +2025,8 @@ DrawTargetSkia::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
   SkCanvas::SaveLayerRec saveRec(aBounds.IsEmpty() ? nullptr : &bounds,
                                  &paint,
                                  backdrop.get(),
-                                 aOpaque ? SkCanvas::kIsOpaque_SaveLayerFlag : 0);
+                                 SkCanvas::kPreserveLCDText_SaveLayerFlag |
+                                   (aOpaque ? SkCanvas::kIsOpaque_SaveLayerFlag : 0));
 
   mCanvas->saveLayer(saveRec);
 
