@@ -36,7 +36,7 @@ public:
 
   void Discard() override;
 
-  RefPtr<SeekTaskPromise> Seek() override;
+  RefPtr<SeekTaskPromise> Seek(const media::TimeUnit& aDuration) override;
 
   int64_t CalculateNewCurrentTime() const override;
 
