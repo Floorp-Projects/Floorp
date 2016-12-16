@@ -18,11 +18,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 
-// Register the resource path of formautofill
-let resHandler = Services.io.getProtocolHandler("resource")
-                            .QueryInterface(Ci.nsISubstitutingProtocolHandler);
-let dataURI = NetUtil.newURI(do_get_file(".", true));
-resHandler.setSubstitution("formautofill", dataURI);
+// Load our bootstrap extension manifest so we can access our chrome/resource URIs.
+const EXTENSION_ID = "formautofill@mozilla.org";
+let extensionDir = Services.dirsvc.get("GreD", Ci.nsIFile);
+extensionDir.append("browser");
+extensionDir.append("features");
+extensionDir.append(EXTENSION_ID);
+// If the unpacked extension doesn't exist, use the packed version.
+if (!extensionDir.exists()) {
+  extensionDir = extensionDir.parent;
+  extensionDir.append(EXTENSION_ID + ".xpi");
+}
+Components.manager.addBootstrappedManifestLocation(extensionDir);
 
 // While the previous test file should have deleted all the temporary files it
 // used, on Windows these might still be pending deletion on the physical file
