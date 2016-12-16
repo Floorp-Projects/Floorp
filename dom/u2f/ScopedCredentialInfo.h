@@ -35,7 +35,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScopedCredentialInfo)
 
 public:
-  ScopedCredentialInfo(WebAuthentication* aParent);
+  explicit ScopedCredentialInfo(WebAuthentication* aParent);
 
 protected:
   ~ScopedCredentialInfo();
