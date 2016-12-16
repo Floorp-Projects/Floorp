@@ -11,7 +11,7 @@ const TEST_CASES = [
   {
     desc: "no warnings",
     uri: "https://example.com" + CORS_SJS_PATH,
-    warnCipher: false,
+    warnCipher: null,
   },
 ];
 
@@ -47,7 +47,7 @@ add_task(function* () {
       yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
     }
 
-    is(cipher.hidden, !test.warnCipher, "Cipher suite warning is hidden.");
+    is(cipher, test.warnCipher, "Cipher suite warning is hidden.");
 
     RequestsMenu.clear();
   }

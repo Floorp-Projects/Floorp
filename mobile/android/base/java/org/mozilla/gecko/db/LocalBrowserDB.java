@@ -1908,6 +1908,8 @@ public class LocalBrowserDB extends BrowserDB {
                         String.valueOf(suggestedRangeLimit))
                 .appendQueryParameter(BrowserContract.PARAM_NON_POSITIONED_PINS,
                         String.valueOf(true))
+                .appendQueryParameter(BrowserContract.PARAM_TOPSITES_EXCLUDE_REMOTE_ONLY,
+                        String.valueOf(true))
                 .build();
 
         return new TelemetrisedCursorLoader(context,
