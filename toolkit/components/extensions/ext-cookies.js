@@ -22,7 +22,7 @@ global.getCookieStoreIdForTab = function(data, tab) {
   }
 
   if (tab.userContextId) {
-    return getCookieStoreIdForContainer(tab.userContextId);
+    return CONTAINER_STORE + tab.userContextId;
   }
 
   return DEFAULT_STORE;
@@ -38,10 +38,6 @@ global.isDefaultCookieStoreId = function(storeId) {
 
 global.isContainerCookieStoreId = function(storeId) {
   return storeId !== null && storeId.startsWith(CONTAINER_STORE);
-};
-
-global.getCookieStoreIdForContainer = function(containerId) {
-  return CONTAINER_STORE + containerId;
 };
 
 global.getContainerForCookieStoreId = function(storeId) {
@@ -80,7 +76,7 @@ function convert({cookie, isPrivate}) {
   }
 
   if (cookie.originAttributes.userContextId) {
-    result.storeId = getCookieStoreIdForContainer(cookie.originAttributes.userContextId);
+    result.storeId = CONTAINER_STORE + cookie.originAttributes.userContextId;
   } else if (cookie.originAttributes.privateBrowsingId || isPrivate) {
     result.storeId = PRIVATE_STORE;
   } else {

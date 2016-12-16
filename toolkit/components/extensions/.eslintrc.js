@@ -16,8 +16,6 @@ module.exports = { // eslint-disable-line no-undef
     "Extension": true,
     "ExtensionManagement": true,
     "extensions": true,
-    "getContainerForCookieStoreId": true,
-    "getCookieStoreIdForContainer": true,
     "global": true,
     "NetUtil": true,
     "openOptionsPage": true,
