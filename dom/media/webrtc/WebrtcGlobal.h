@@ -72,7 +72,7 @@ template<>
 struct ParamTraits<mozilla::dom::RTCStatsType> :
   public ContiguousEnumSerializer<
     mozilla::dom::RTCStatsType,
-    mozilla::dom::RTCStatsType::Inboundrtp,
+    mozilla::dom::RTCStatsType::Inbound_rtp,
     mozilla::dom::RTCStatsType::EndGuard_>
 {};
 
