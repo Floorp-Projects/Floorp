@@ -16,43 +16,37 @@ namespace mozilla {
 already_AddRefed<WebGLSync>
 WebGL2Context::FenceSync(GLenum condition, GLbitfield flags)
 {
-   if (IsContextLost())
-       return nullptr;
+    if (IsContextLost())
+        return nullptr;
 
-   if (condition != LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE) {
-       ErrorInvalidEnum("fenceSync: condition must be SYNC_GPU_COMMANDS_COMPLETE");
-       return nullptr;
-   }
+    if (condition != LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE) {
+        ErrorInvalidEnum("fenceSync: condition must be SYNC_GPU_COMMANDS_COMPLETE");
+        return nullptr;
+    }
 
-   if (flags != 0) {
-       ErrorInvalidValue("fenceSync: flags must be 0");
-       return nullptr;
-   }
+    if (flags != 0) {
+        ErrorInvalidValue("fenceSync: flags must be 0");
+        return nullptr;
+    }
 
-   MakeContextCurrent();
-   RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
-   return globj.forget();
+    MakeContextCurrent();
+    RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
+    return globj.forget();
 }
 
 bool
-WebGL2Context::IsSync(WebGLSync* sync)
+WebGL2Context::IsSync(const WebGLSync* sync)
 {
-   if (IsContextLost())
-       return false;
+    if (!ValidateIsObject("isSync", sync))
+        return false;
 
-   return ValidateObjectAllowDeleted("isSync", sync) && !sync->IsDeleted();
+    return true;
 }
 
 void
 WebGL2Context::DeleteSync(WebGLSync* sync)
 {
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObjectAllowDeletedOrNull("deleteSync", sync))
-        return;
-
-    if (!sync || sync->IsDeleted())
+    if (!ValidateDeleteObject("deleteSync", sync))
         return;
 
     sync->RequestDelete();
@@ -65,7 +59,7 @@ WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 
     if (IsContextLost())
         return LOCAL_GL_WAIT_FAILED;
 
-    if (!ValidateObjectRef(funcName, sync))
+    if (!ValidateObject(funcName, sync))
         return LOCAL_GL_WAIT_FAILED;
 
     if (flags != 0 && flags != LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT) {
@@ -84,7 +78,7 @@ WebGL2Context::WaitSync(const WebGLSync& sync, GLbitfield flags, GLint64 timeout
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef(funcName, sync))
+    if (!ValidateObject(funcName, sync))
         return;
 
     if (flags != 0) {
@@ -110,7 +104,7 @@ WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef(funcName, sync))
+    if (!ValidateObject(funcName, sync))
         return;
 
     ////
