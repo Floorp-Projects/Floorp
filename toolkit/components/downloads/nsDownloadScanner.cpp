@@ -291,7 +291,7 @@ nsDownloadScanner::ScannerThreadFunction(void *p)
 // the main thread too
 class ReleaseDispatcher : public mozilla::Runnable {
 public:
-  ReleaseDispatcher(nsISupports *ptr)
+  explicit ReleaseDispatcher(nsISupports *ptr)
     : mPtr(ptr) {}
   NS_IMETHOD Run();
 private:
