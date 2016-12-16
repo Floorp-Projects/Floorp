@@ -1536,10 +1536,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Instrumentation for entering and leaving the profiler.
     void profilerEnterFrame(Register framePtr, Register scratch);
     void profilerExitFrame();
-
-    struct AutoPrepareForPatching {
-        explicit AutoPrepareForPatching(MacroAssemblerARMCompat&) {}
-    };
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;

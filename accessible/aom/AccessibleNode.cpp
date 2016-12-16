@@ -76,6 +76,33 @@ AccessibleNode::GetStates(nsTArray<nsString>& aStates)
   mStates->Add(NS_LITERAL_STRING("defunct"));
 }
 
+bool
+AccessibleNode::Is(const Sequence<nsString>& aFlavors)
+{
+  if (!mIntl) {
+    for (const auto& flavor : aFlavors) {
+      if (!flavor.EqualsLiteral("unknown") && !flavor.EqualsLiteral("defunct")) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  nsAutoString role;
+  GetOrCreateAccService()->GetStringRole(mIntl->Role(), role);
+
+  if (!mStates) {
+    mStates = GetOrCreateAccService()->GetStringStates(mIntl->State());
+  }
+
+  for (const auto& flavor : aFlavors) {
+    if (!flavor.Equals(role) && !mStates->Contains(flavor)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 nsINode*
 AccessibleNode::GetDOMNode()
 {

@@ -21,6 +21,7 @@ enum SelectionMode {
 
 interface nsIControllers;
 
+[HTMLConstructor]
 interface HTMLInputElement : HTMLElement {
   [Pure, SetterThrows]
            attribute DOMString accept;

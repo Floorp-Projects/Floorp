@@ -1060,14 +1060,7 @@ class AssemblerX86Shared : public AssemblerShared
         return CodeOffset(masm.call().offset());
     }
 
-    struct AutoPrepareForPatching : X86Encoding::AutoUnprotectAssemblerBufferRegion {
-        explicit AutoPrepareForPatching(AssemblerX86Shared& masm)
-          : X86Encoding::AutoUnprotectAssemblerBufferRegion(masm.masm, 0, masm.size())
-        {}
-    };
-
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
-        // The caller uses AutoUnprotectBuffer.
         unsigned char* code = masm.data();
         X86Encoding::SetRel32(code + callerOffset, code + calleeOffset);
     }
@@ -1075,7 +1068,6 @@ class AssemblerX86Shared : public AssemblerShared
         return CodeOffset(masm.jmp().offset());
     }
     void patchFarJump(CodeOffset farJump, uint32_t targetOffset) {
-        // The caller uses AutoUnprotectBuffer.
         unsigned char* code = masm.data();
         X86Encoding::SetRel32(code + farJump.offset(), code + targetOffset);
     }
