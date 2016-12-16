@@ -231,7 +231,7 @@ DiscardFrames(MediaQueue<MediaData>& aQueue, const Function& aCompare)
 }
 
 RefPtr<NextFrameSeekTask::SeekTaskPromise>
-NextFrameSeekTask::Seek()
+NextFrameSeekTask::Seek(const media::TimeUnit&)
 {
   AssertOwnerThread();
 

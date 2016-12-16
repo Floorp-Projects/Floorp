@@ -320,7 +320,7 @@ DirectShowReader::DecodeVideoFrame(bool &aKeyframeSkip,
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-DirectShowReader::Seek(const SeekTarget& aTarget)
+DirectShowReader::Seek(const SeekTarget& aTarget, int64_t aEndTime)
 {
   nsresult res = SeekInternal(aTarget.GetTime().ToMicroseconds());
   if (NS_FAILED(res)) {

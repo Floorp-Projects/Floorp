@@ -1055,7 +1055,7 @@ private:
   void DoSeek() override
   {
     // Request the demuxer to perform seek.
-    mSeekRequest.Begin(Reader()->Seek(mSeekJob.mTarget)
+    mSeekRequest.Begin(Reader()->Seek(mSeekJob.mTarget, mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (media::TimeUnit aUnit) {
                OnSeekResolved(aUnit);
@@ -1350,7 +1350,7 @@ private:
   {
     mSeekTask = new NextFrameSeekTask(
       mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
-      Info(), mMaster->Duration(), mMaster->GetMediaTime(),
+      Info(), mMaster->Duration(),mMaster->GetMediaTime(),
       AudioQueue(), VideoQueue());
   }
 
@@ -1361,7 +1361,7 @@ private:
 
   void DoSeek() override
   {
-    mSeekTaskRequest.Begin(mSeekTask->Seek()
+    mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (const SeekTaskResolveValue& aValue) {
                OnSeekTaskResolved(aValue);

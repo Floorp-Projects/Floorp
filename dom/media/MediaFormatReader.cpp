@@ -2277,7 +2277,7 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-MediaFormatReader::Seek(const SeekTarget& aTarget)
+MediaFormatReader::Seek(const SeekTarget& aTarget, int64_t aUnused)
 {
   MOZ_ASSERT(OnTaskQueue());
 
