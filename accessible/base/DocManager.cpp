@@ -533,19 +533,19 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
           DocAccessibleChild* ipcDoc = new DocAccessibleChild(docAcc);
           docAcc->SetIPCDoc(ipcDoc);
 
+#if defined(XP_WIN)
+          IAccessibleHolder holder(CreateHolderFromAccessible(docAcc));
+#endif
+
           static_cast<TabChild*>(tabChild.get())->
             SendPDocAccessibleConstructor(ipcDoc, nullptr, 0,
 #if defined(XP_WIN)
-                                          AccessibleWrap::GetChildIDFor(docAcc)
+                                          AccessibleWrap::GetChildIDFor(docAcc),
+                                          holder
 #else
-                                          0
+                                          0, 0
 #endif
                                           );
-
-#if defined(XP_WIN)
-          IAccessibleHolder holder(CreateHolderFromAccessible(docAcc));
-          ipcDoc->SendCOMProxy(holder);
-#endif
         }
       }
     }

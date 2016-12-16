@@ -10,7 +10,8 @@
 enum PermissionName {
   "geolocation",
   "notifications",
-  "push"
+  "push",
+  "persistent-storage"
   // Unsupported: "midi"
 };
 

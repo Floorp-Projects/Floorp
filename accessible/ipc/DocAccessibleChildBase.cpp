@@ -89,7 +89,7 @@ DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent)
   nsTArray<AccessibleData> shownTree;
   ShowEventData data(parentID, idxInParent, shownTree);
   SerializeTree(aShowEvent->GetAccessible(), data.NewTree());
-  SendShowEvent(data, aShowEvent->IsFromUserInput());
+  MaybeSendShowEvent(data, aShowEvent->IsFromUserInput());
 }
 
 } // namespace a11y

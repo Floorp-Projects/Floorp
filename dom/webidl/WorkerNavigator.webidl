@@ -12,3 +12,10 @@ WorkerNavigator implements NavigatorLanguage;
 WorkerNavigator implements NavigatorOnLine;
 WorkerNavigator implements NavigatorConcurrentHardware;
 WorkerNavigator implements NavigatorStorage;
+
+// http://wicg.github.io/netinfo/#extensions-to-the-navigator-interface
+[Exposed=(Worker)]
+partial interface WorkerNavigator {
+    [Func="mozilla::dom::network::Connection::IsEnabled", Throws]
+    readonly attribute NetworkInformation connection;
+};
