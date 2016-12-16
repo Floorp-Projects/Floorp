@@ -796,11 +796,6 @@ protected:
                            bool aEmbeddedCancelled,
                            nsEventStatus* aStatus,
                            mozilla::EventDispatchingCallback* aEventCB);
-  void DispatchBeforeKeyboardEventInternal(
-         const nsTArray<nsCOMPtr<mozilla::dom::Element> >& aChain,
-         const mozilla::WidgetKeyboardEvent& aEvent,
-         size_t& aChainIndex,
-         bool& aDefaultPrevented);
   void DispatchAfterKeyboardEventInternal(
          const nsTArray<nsCOMPtr<mozilla::dom::Element> >& aChain,
          const mozilla::WidgetKeyboardEvent& aEvent,

@@ -188,11 +188,9 @@ KeyboardEvent::CharCode()
   }
 
   switch (mEvent->mMessage) {
-  case eBeforeKeyDown:
   case eKeyDown:
   case eKeyDownOnPlugin:
   case eAfterKeyDown:
-  case eBeforeKeyUp:
   case eKeyUp:
   case eKeyUpOnPlugin:
   case eAfterKeyUp:
@@ -237,11 +235,9 @@ KeyboardEvent::Which()
   }
 
   switch (mEvent->mMessage) {
-    case eBeforeKeyDown:
     case eKeyDown:
     case eKeyDownOnPlugin:
     case eAfterKeyDown:
-    case eBeforeKeyUp:
     case eKeyUp:
     case eKeyUpOnPlugin:
     case eAfterKeyUp:

@@ -427,9 +427,7 @@ private:
  * This is extended from WidgetKeyboardEvent and is mapped to DOM event
  * "BeforeAfterKeyboardEvent".
  *
- * Event mMessage: eBeforeKeyDown
- *                 eBeforeKeyUp
- *                 eAfterKeyDown
+ * Event mMessage: eAfterKeyDown
  *                 eAfterKeyUp
  ******************************************************************************/
 class InternalBeforeAfterKeyboardEvent : public WidgetKeyboardEvent
