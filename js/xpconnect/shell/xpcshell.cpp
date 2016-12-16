@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "mozilla/WindowsDllBlocklist.h"
+#include "mozilla/Bootstrap.h"
 
 #include "nsXULAppAPI.h"
 #ifdef XP_MACOSX
@@ -59,7 +60,13 @@ main(int argc, char** argv, char** envp)
       mozilla::sandboxing::GetInitializedBrokerServices();
 #endif
 
-    int result = XRE_XPCShellMain(argc, argv, envp, &shellData);
+    mozilla::Bootstrap::UniquePtr bootstrap;
+    XRE_GetBootstrap(bootstrap);
+    if (!bootstrap) {
+        return 2;
+    }
+
+    int result = bootstrap->XRE_XPCShellMain(argc, argv, envp, &shellData);
 
 #ifdef XP_MACOSX
     FinishAutoreleasePool();
