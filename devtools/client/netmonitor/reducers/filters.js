@@ -6,9 +6,9 @@
 
 const I = require("devtools/client/shared/vendor/immutable");
 const {
-  TOGGLE_FILTER_TYPE,
-  ENABLE_FILTER_TYPE_ONLY,
-  SET_FILTER_TEXT,
+  TOGGLE_REQUEST_FILTER_TYPE,
+  ENABLE_REQUEST_FILTER_TYPE_ONLY,
+  SET_REQUEST_FILTER_TEXT,
 } = require("../constants");
 
 const FilterTypes = I.Record({
@@ -26,11 +26,11 @@ const FilterTypes = I.Record({
 });
 
 const Filters = I.Record({
-  types: new FilterTypes({ all: true }),
-  text: "",
+  requestFilterTypes: new FilterTypes({ all: true }),
+  requestFilterText: "",
 });
 
-function toggleFilterType(state, action) {
+function toggleRequestFilterType(state, action) {
   let { filter } = action;
   let newState;
 
@@ -54,7 +54,7 @@ function toggleFilterType(state, action) {
   return newState;
 }
 
-function enableFilterTypeOnly(state, action) {
+function enableRequestFilterTypeOnly(state, action) {
   let { filter } = action;
 
   // Ignore unknown filter type
@@ -67,12 +67,14 @@ function enableFilterTypeOnly(state, action) {
 
 function filters(state = new Filters(), action) {
   switch (action.type) {
-    case TOGGLE_FILTER_TYPE:
-      return state.set("types", toggleFilterType(state.types, action));
-    case ENABLE_FILTER_TYPE_ONLY:
-      return state.set("types", enableFilterTypeOnly(state.types, action));
-    case SET_FILTER_TEXT:
-      return state.set("text", action.text);
+    case TOGGLE_REQUEST_FILTER_TYPE:
+      return state.set("requestFilterTypes",
+        toggleRequestFilterType(state.requestFilterTypes, action));
+    case ENABLE_REQUEST_FILTER_TYPE_ONLY:
+      return state.set("requestFilterTypes",
+        enableRequestFilterTypeOnly(state.requestFilterTypes, action));
+    case SET_REQUEST_FILTER_TEXT:
+      return state.set("requestFilterText", action.text);
     default:
       return state;
   }

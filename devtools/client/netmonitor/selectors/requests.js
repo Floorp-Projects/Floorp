@@ -24,10 +24,10 @@ function getOrigRequest(requests, req) {
 const getFilterFn = createSelector(
   state => state.filters,
   filters => r => {
-    const matchesType = filters.types.some((enabled, filter) => {
+    const matchesType = filters.requestFilterTypes.some((enabled, filter) => {
       return enabled && Filters[filter] && Filters[filter](r);
     });
-    return matchesType && isFreetextMatch(r, filters.text);
+    return matchesType && isFreetextMatch(r, filters.requestFilterText);
   }
 );
 

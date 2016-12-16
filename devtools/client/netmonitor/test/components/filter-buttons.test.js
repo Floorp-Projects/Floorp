@@ -57,7 +57,7 @@ describe("FilterButtons::enableFilterOnly:", () => {
     FilterButtons()
   ));
 
-  store.dispatch(Actions.enableFilterTypeOnly("xhr"));
+  store.dispatch(Actions.enableRequestFilterTypeOnly("xhr"));
   asExpected(wrapper, expectXHRTypes, `when enableFilterOnly("xhr") is called`);
 });
 
@@ -83,8 +83,8 @@ describe("FilterButtons::toggleFilter:", () => {
     FilterButtons()
   ));
 
-  store.dispatch(Actions.toggleFilterType("xhr"));
-  store.dispatch(Actions.toggleFilterType("js"));
+  store.dispatch(Actions.toggleRequestFilterType("xhr"));
+  store.dispatch(Actions.toggleRequestFilterType("js"));
   asExpected(wrapper, expectXHRJSTypes, `when xhr, js is toggled`);
 });
 
