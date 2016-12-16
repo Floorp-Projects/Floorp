@@ -936,6 +936,20 @@ SumPhase(Phase phase, const Statistics::PhaseTimeTable times)
     return sum;
 }
 
+static void
+CheckSelfTime(Phase parent, Phase child, const Statistics::PhaseTimeTable times, int64_t selfTimes[PHASE_LIMIT], int64_t childTime)
+{
+    if (selfTimes[parent] < childTime) {
+        fprintf(stderr,
+                "Parent %s time = %" PRId64
+                " with %" PRId64 " remaining, "
+                "child %s time %" PRId64 "\n",
+                phases[parent].name, SumPhase(parent, times),
+                selfTimes[parent],
+                phases[child].name, childTime);
+    }
+}
+
 static Phase
 LongestPhaseSelfTime(const Statistics::PhaseTimeTable times)
 {
@@ -954,12 +968,14 @@ LongestPhaseSelfTime(const Statistics::PhaseTimeTable times)
             for (auto edge : dagChildEdges) {
                 if (edge.parent == parent) {
                     size_t dagSlot = phaseExtra[edge.parent].dagSlot;
+                    CheckSelfTime(parent, edge.child, times, selfTimes, times[dagSlot][edge.child]);
                     MOZ_ASSERT(selfTimes[parent] >= times[dagSlot][edge.child]);
                     selfTimes[parent] -= times[dagSlot][edge.child];
                 }
             }
         } else if (parent != PHASE_NO_PARENT) {
             MOZ_ASSERT(selfTimes[parent] >= selfTimes[i]);
+            CheckSelfTime(parent, Phase(i), times, selfTimes, selfTimes[i]);
             selfTimes[parent] -= selfTimes[i];
         }
     }
