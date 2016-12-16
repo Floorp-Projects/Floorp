@@ -209,7 +209,7 @@ WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture* newTex)
     if (IsContextLost())
         return;
 
-     if (!ValidateObjectAllowDeletedOrNull("bindTexture", newTex))
+     if (newTex && !ValidateObject("bindTexture", *newTex))
         return;
 
     // Need to check rawTarget first before comparing against newTex->Target() as
@@ -290,10 +290,7 @@ WebGLContext::GetTexParameter(GLenum rawTexTarget, GLenum pname)
 bool
 WebGLContext::IsTexture(WebGLTexture* tex)
 {
-    if (IsContextLost())
-        return false;
-
-    if (!ValidateObjectAllowDeleted("isTexture", tex))
+    if (!ValidateIsObject("isTexture", tex))
         return false;
 
     return tex->IsTexture();
