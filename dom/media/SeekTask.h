@@ -56,7 +56,7 @@ public:
 
   virtual void Discard() = 0;
 
-  virtual RefPtr<SeekTaskPromise> Seek() = 0;
+  virtual RefPtr<SeekTaskPromise> Seek(const media::TimeUnit& aDuration) = 0;
 
   virtual int64_t CalculateNewCurrentTime() const = 0;
 

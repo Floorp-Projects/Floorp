@@ -313,7 +313,7 @@ bool AndroidMediaReader::DecodeAudioData()
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-AndroidMediaReader::Seek(const SeekTarget& aTarget)
+AndroidMediaReader::Seek(const SeekTarget& aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
 
