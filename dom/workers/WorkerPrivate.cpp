@@ -2299,8 +2299,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     MOZ_ASSERT_IF(mIsChromeWorker, mIsSecureContext);
 
     MOZ_ASSERT(IsDedicatedWorker());
-    mNowBaseTimeStamp = aParent->NowBaseTimeStamp();
-    mNowBaseTimeHighRes = aParent->NowBaseTime();
 
     if (aParent->mParentFrozen) {
       Freeze(nullptr);
@@ -2329,18 +2327,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                  .creationOptions().setSecureContext(true);
       mJSSettings.content.compartmentOptions
                  .creationOptions().setSecureContext(true);
-    }
-
-    if (IsDedicatedWorker() && mLoadInfo.mWindow &&
-        mLoadInfo.mWindow->GetPerformance()) {
-      mNowBaseTimeStamp = mLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
-        GetNavigationStartTimeStamp();
-      mNowBaseTimeHighRes =
-      mLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
-        GetNavigationStartHighRes();
-    } else {
-      mNowBaseTimeStamp = CreationTimeStamp();
-      mNowBaseTimeHighRes = CreationTime();
     }
 
     // Our parent can get suspended after it initiates the async creation

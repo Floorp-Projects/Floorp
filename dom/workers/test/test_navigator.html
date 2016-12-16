@@ -20,6 +20,7 @@ Tests of DOM Worker Navigator
 <pre id="test">
 <script class="testbody" language="javascript">
 
+function runTest() {
   var worker = new Worker("navigator_worker.js");
 
   worker.onmessage = function(event) {
@@ -45,6 +46,11 @@ Tests of DOM Worker Navigator
       return;
     }
 
+    if (args.name === "connection") {
+      is(typeof navigator.connection, typeof args.value, "connection type matches");
+      return;
+    }
+
     is(navigator[args.name], args.value,
        "Mismatched navigator string for " + args.name + "!");
   };
@@ -59,8 +65,10 @@ Tests of DOM Worker Navigator
   var isRelease = !version.includes("a");
 
   worker.postMessage({ isNightly, isRelease });
+}
 
-  SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.netinfo.enabled", true]]}, runTest);
+SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>

@@ -75,7 +75,7 @@ PerformanceTiming*
 PerformanceMainThread::Timing()
 {
   if (!mTiming) {
-    // For navigation timing, the third argument (an nsIHtttpChannel) is null
+    // For navigation timing, the third argument (an nsIHttpChannel) is null
     // since the cross-domain redirect were already checked.  The last argument
     // (zero time) for performance.timing is the navigation start value.
     mTiming = new PerformanceTiming(this, mChannel, nullptr,
@@ -103,12 +103,6 @@ PerformanceMainThread::Navigation()
   }
 
   return mNavigation;
-}
-
-DOMHighResTimeStamp
-PerformanceMainThread::Now() const
-{
-  return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now()));
 }
 
 /**
