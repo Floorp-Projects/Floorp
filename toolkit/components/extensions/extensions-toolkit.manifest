@@ -1,6 +1,7 @@
 # scripts
 category webextension-scripts alarms chrome://extensions/content/ext-alarms.js
 category webextension-scripts backgroundPage chrome://extensions/content/ext-backgroundPage.js
+category webextension-scripts contextualIdentities chrome://extensions/content/ext-contextualIdentities.js
 category webextension-scripts cookies chrome://extensions/content/ext-cookies.js
 category webextension-scripts downloads chrome://extensions/content/ext-downloads.js
 category webextension-scripts management chrome://extensions/content/ext-management.js
@@ -41,6 +42,7 @@ category webextension-scripts-addon storage chrome://extensions/content/ext-c-st
 
 # schemas
 category webextension-schemas alarms chrome://extensions/content/schemas/alarms.json
+category webextension-schemas contextualIdentities chrome://extensions/content/schemas/contextual_identities.json
 category webextension-schemas cookies chrome://extensions/content/schemas/cookies.json
 category webextension-schemas downloads chrome://extensions/content/schemas/downloads.json
 category webextension-schemas events chrome://extensions/content/schemas/events.json
