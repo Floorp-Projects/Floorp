@@ -17,7 +17,7 @@
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/ImportRule.h"
 #include "nsCSSRules.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
