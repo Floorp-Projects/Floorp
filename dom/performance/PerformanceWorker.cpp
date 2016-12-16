@@ -23,14 +23,6 @@ PerformanceWorker::~PerformanceWorker()
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
 
-DOMHighResTimeStamp
-PerformanceWorker::Now() const
-{
-  TimeDuration duration =
-    TimeStamp::Now() - mWorkerPrivate->NowBaseTimeStamp();
-  return RoundTime(duration.ToMilliseconds());
-}
-
 // To be removed once bug 1124165 lands
 bool
 PerformanceWorker::IsPerformanceTimingAttribute(const nsAString& aName)
