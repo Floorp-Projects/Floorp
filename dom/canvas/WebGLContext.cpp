@@ -126,6 +126,7 @@ WebGLContext::WebGLContext()
     , mNeedsFakeNoDepth(false)
     , mNeedsFakeNoStencil(false)
     , mNeedsEmulatedLoneDepthStencil(false)
+    , mAllowFBInvalidation(gfxPrefs::WebGLFBInvalidation())
 {
     mGeneration = 0;
     mInvalidated = false;
