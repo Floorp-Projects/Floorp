@@ -902,7 +902,7 @@ function pollForReadyState(msg, start = undefined, callback = undefined) {
     callback = () => {};
   }
 
-  let checkLoad = function() {
+  let checkLoad = () => {
     navTimer.cancel();
 
     let doc = curContainer.frame.document;
@@ -1020,42 +1020,41 @@ function get(msg) {
   // Prevent DOMContentLoaded events from frames from invoking this
   // code, unless the event is coming from the frame associated with
   // the current window (i.e. someone has used switch_to_frame).
-  onDOMContentLoaded = function onDOMContentLoaded(event) {
-    let frameEl = event.originalTarget.defaultView.frameElement;
+  onDOMContentLoaded = ev => {
+    let frameEl = ev.originalTarget.defaultView.frameElement;
     let correctFrame = !frameEl || frameEl == curContainer.frame.frameElement;
 
-    // If the page we're at fired DOMContentLoaded and appears
-    // to be the one we asked to load, then we definitely
-    // saw the load occur. We need this because for error
-    // pages, like about:neterror for unsupported protocols,
-    // we don't end up opening a channel that our
-    // WebProgressListener can monitor.
+    // If the page we're at fired DOMContentLoaded and appears to
+    // be the one we asked to load, then we definitely saw the load
+    // occur. We need this because for error pages, like about:neterror
+    // for unsupported protocols, we don't end up opening a channel that
+    // our WebProgressListener can monitor.
     if (curContainer.frame.location == requestedURL) {
       sawLoad = true;
     }
 
-    // We also need to make sure that if the requested URL is not about:blank
-    // the DOMContentLoaded we saw isn't for the initial about:blank of a newly
-    // created docShell.
+    // We also need to make sure that if the requested URL is not
+    // about:blank the DOMContentLoaded we saw isn't for the initial
+    // about:blank of a newly created docShell.
     let loadedRequestedURI = (requestedURL == "about:blank") ||
         docShell.hasLoadedNonBlankURI;
 
     if (correctFrame && sawLoad && loadedRequestedURI) {
-      webProgress.removeProgressListener(loadListener);
       pollForReadyState(msg, start, () => {
+        webProgress.removeProgressListener(loadListener);
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
       });
     }
   };
 
   if (typeof pageTimeout != "undefined") {
-    let onTimeout = function() {
+    let onTimeout = () => {
       if (loadEventExpected) {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
       }
       webProgress.removeProgressListener(loadListener);
       sendError(new TimeoutError("Error loading page, timed out (onDOMContentLoaded)"), command_id);
-    }
+    };
     navTimer.initWithCallback(onTimeout, pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
   }
 
