@@ -572,6 +572,13 @@ public:
     return mCreationTimeHighRes;
   }
 
+  DOMHighResTimeStamp TimeStampToDOMHighRes(const TimeStamp& aTimeStamp) const
+  {
+    MOZ_ASSERT(!aTimeStamp.IsNull());
+    TimeDuration duration = aTimeStamp - mCreationTimeStamp;
+    return duration.ToMilliseconds();
+  }
+
   nsIPrincipal*
   GetPrincipal() const
   {
