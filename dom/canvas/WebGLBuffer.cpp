@@ -13,7 +13,7 @@
 namespace mozilla {
 
 WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mGLName(buf)
     , mContent(Kind::Undefined)
     , mUsage(LOCAL_GL_STATIC_DRAW)

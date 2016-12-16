@@ -22,7 +22,6 @@ class WebGLBuffer final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLBuffer>
     , public LinkedListElement<WebGLBuffer>
-    , public WebGLContextBoundObject
 {
     friend class WebGLContext;
     friend class WebGL2Context;
