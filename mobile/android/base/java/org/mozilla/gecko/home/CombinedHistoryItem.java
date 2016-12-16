@@ -6,9 +6,7 @@ package org.mozilla.gecko.home;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -123,10 +121,6 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
             nameView.setTextColor(ContextCompat.getColor(context, isCollapsed ? R.color.tabs_tray_icon_grey : R.color.placeholder_active_grey));
             if (client.tabs.size() > 0) {
                 deviceExpanded.setImageResource(isCollapsed ? R.drawable.home_group_collapsed : R.drawable.arrow_down);
-                Drawable expandedDrawable = deviceExpanded.getDrawable();
-                if (expandedDrawable != null) {
-                    DrawableCompat.setAutoMirrored(expandedDrawable, true);
-                }
             }
         }
     }
