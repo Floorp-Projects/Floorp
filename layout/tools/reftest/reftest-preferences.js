@@ -5,6 +5,7 @@
 user_pref("dom.use_xbl_scopes_for_remote_xul", false);
 user_pref("gfx.color_management.mode", 2);
 user_pref("gfx.color_management.force_srgb", true);
+user_pref("gfx.logging.level", 1);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("ui.caretBlinkTime", -1);
 user_pref("dom.send_after_paint_to_content", true);
