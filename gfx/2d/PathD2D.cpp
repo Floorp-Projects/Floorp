@@ -19,7 +19,7 @@ namespace gfx {
 class OpeningGeometrySink : public ID2D1SimplifiedGeometrySink
 {
 public:
-  OpeningGeometrySink(ID2D1SimplifiedGeometrySink *aSink)
+  explicit OpeningGeometrySink(ID2D1SimplifiedGeometrySink *aSink)
     : mSink(aSink)
     , mNeedsFigureEnded(false)
   {
@@ -118,7 +118,7 @@ private:
 class StreamingGeometrySink : public ID2D1SimplifiedGeometrySink
 {
 public:
-  StreamingGeometrySink(PathSink *aSink)
+  explicit StreamingGeometrySink(PathSink *aSink)
     : mSink(aSink)
   {
   }
