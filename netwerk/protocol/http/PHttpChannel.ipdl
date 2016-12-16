@@ -31,7 +31,6 @@ parent:
   // Note: channels are opened during construction, so no open method here:
   // see PNecko.ipdl
 
-  async SetPriority(uint16_t priority);
   async SetClassOfService(uint32_t cos);
 
   async SetCacheTokenCachedCharset(nsCString charset);
@@ -177,6 +176,8 @@ both:
   // after that. When receiving this message, the child will call
   // Send__delete__() and complete the steps required to finish the redirect.
   async FinishInterceptedRedirect();
+
+  async SetPriority(uint16_t priority);
 };
 
 
