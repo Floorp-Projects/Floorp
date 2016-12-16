@@ -929,18 +929,24 @@ class BaseMarionetteTestRunner(object):
             manifest = TestManifest()
             manifest.read(filepath)
 
+            json_path = update_mozinfo(filepath)
+            self.logger.info("mozinfo updated from: {}".format(json_path))
+            self.logger.info("mozinfo is: {}".format(mozinfo.info))
+
             filters = []
             if self.test_tags:
                 filters.append(tags(self.test_tags))
-            update_mozinfo(filepath)
-            self.logger.info("mozinfo updated with the following: {}".format(None))
-            self.logger.info("mozinfo is: {}".format(mozinfo.info))
+
+            values = {
+                "appname": self.appName,
+                "e10s": self.e10s,
+            }
+            values.update(mozinfo.info)
+
             manifest_tests = manifest.active_tests(exists=False,
                                                    disabled=True,
                                                    filters=filters,
-                                                   app=self.appName,
-                                                   e10s=self.e10s,
-                                                   **mozinfo.info)
+                                                   **values)
             if len(manifest_tests) == 0:
                 self.logger.error("No tests to run using specified "
                                   "combination of filters: {}".format(
