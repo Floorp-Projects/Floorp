@@ -7,7 +7,7 @@
 include protocol PFileDescriptorSet;
 include protocol PBrowser;
 
-using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/COMPtrTypes.h";
+using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
