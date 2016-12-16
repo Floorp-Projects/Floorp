@@ -1359,6 +1359,14 @@ HttpChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
+HttpChannelParent::NotifyTrackingResource()
+{
+  if (!mIPCClosed)
+    Unused << SendNotifyTrackingResource();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelParent::Delete()
 {
   if (!mIPCClosed)

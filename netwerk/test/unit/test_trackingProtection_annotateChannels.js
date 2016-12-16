@@ -7,14 +7,18 @@ do_get_profile();
 
 var Ci = Components.interfaces;
 
-function listener(priority, nextTest) {
+function listener(tracking, priority, nextTest) {
+  this._tracking = tracking;
   this._priority = priority;
   this._nextTest = nextTest;
 }
 listener.prototype = {
   onStartRequest: function(request, context) {
+    do_check_eq(request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource,
+                this._tracking);
     do_check_eq(request.QueryInterface(Ci.nsISupportsPriority).priority,
                 this._priority);
+    request.cancel(Components.results.NS_ERROR_ABORT);
     this._nextTest();
   },
   onDataAvailable: function(request, context, stream, offset, count) {
@@ -24,7 +28,7 @@ listener.prototype = {
 };
 
 var httpServer;
-var origin;
+var normalOrigin, trackingOrigin;
 var testPriorityMap;
 var currentTest;
 
@@ -32,7 +36,9 @@ function setup_test() {
   httpServer = new HttpServer();
   httpServer.start(-1);
   httpServer.identity.setPrimary("http", "tracking.example.com", httpServer.identity.primaryPort);
-  origin = "http://tracking.example.com:" + httpServer.identity.primaryPort;
+  httpServer.identity.add("http", "example.com", httpServer.identity.primaryPort);
+  normalOrigin = "http://localhost:" + httpServer.identity.primaryPort;
+  trackingOrigin = "http://tracking.example.com:" + httpServer.identity.primaryPort;
 
   runTests();
 }
@@ -45,7 +51,9 @@ function doPriorityTest() {
 
   currentTest = testPriorityMap.shift();
   var channel = makeChannel(currentTest.path);
-  channel.asyncOpen2(new listener(currentTest.expectedPriority, doPriorityTest));
+  channel.asyncOpen2(new listener(currentTest.expectedTracking,
+                                  currentTest.expectedPriority,
+                                  doPriorityTest));
 }
 
 function makeChannel(path) {
@@ -76,11 +84,23 @@ var tests =[
     Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", false);
     testPriorityMap = [
       {
-        path: origin + "/evil.css",
+        path: normalOrigin + "/innocent.css",
+        expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
       },
       {
-        path: origin + "/evil.js",
+        path: normalOrigin + "/innocent.js",
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+      },
+      {
+        path: trackingOrigin + "/evil.css",
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+      },
+      {
+        path: trackingOrigin + "/evil.js",
+        expectedTracking: false,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
       },
     ];
@@ -94,11 +114,23 @@ var tests =[
     Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", true);
     testPriorityMap = [
       {
-        path: origin + "/evil.css",
+        path: normalOrigin + "/innocent.css",
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+      },
+      {
+        path: normalOrigin + "/innocent.js",
+        expectedTracking: false,
+        expectedPriority: Ci.nsISupportsPriority.PRIORITY_NORMAL
+      },
+      {
+        path: trackingOrigin + "/evil.css",
+        expectedTracking: true,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST
       },
       {
-        path: origin + "/evil.js",
+        path: trackingOrigin + "/evil.js",
+        expectedTracking: true,
         expectedPriority: Ci.nsISupportsPriority.PRIORITY_LOWEST
       },
     ];

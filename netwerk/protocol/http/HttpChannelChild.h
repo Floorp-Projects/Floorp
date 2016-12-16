@@ -106,6 +106,7 @@ public:
   bool IsSuspended();
 
   mozilla::ipc::IPCResult RecvNotifyTrackingProtectionDisabled() override;
+  mozilla::ipc::IPCResult RecvNotifyTrackingResource() override;
   void FlushedForDiversion();
 
 protected:
