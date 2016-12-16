@@ -192,7 +192,7 @@ public:
     }
   }
 
-  operator bool() {
+  explicit operator bool() {
     return module && mXInputGetState;
   }
 
@@ -306,7 +306,7 @@ public:
     }
   }
 
-  operator bool() {
+  explicit operator bool() {
     return mModule &&
       mHidD_GetProductString &&
       mHidP_GetCaps &&
