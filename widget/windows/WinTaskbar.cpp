@@ -125,7 +125,7 @@ class DefaultController final : public nsITaskbarPreviewController
   ~DefaultController() {}
   HWND mWnd;
 public:
-  DefaultController(HWND hWnd)
+  explicit DefaultController(HWND hWnd)
     : mWnd(hWnd)
   {
   }

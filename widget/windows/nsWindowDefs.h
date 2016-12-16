@@ -117,7 +117,7 @@ struct MSGResult
   // If mConsumed is true, the caller shouldn't call next wndproc.
   bool mConsumed;
 
-  MSGResult(LRESULT* aResult = nullptr) :
+  explicit MSGResult(LRESULT* aResult = nullptr) :
     mResult(aResult ? *aResult : mDefaultResult), mConsumed(false)
   {
   }

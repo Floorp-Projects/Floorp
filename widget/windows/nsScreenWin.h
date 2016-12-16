@@ -14,7 +14,7 @@
 class nsScreenWin final : public nsBaseScreen
 {
 public:
-  nsScreenWin ( HMONITOR inScreen );
+  explicit nsScreenWin ( HMONITOR inScreen );
   ~nsScreenWin();
 
   NS_IMETHOD GetId(uint32_t* aId);

@@ -17,7 +17,7 @@ class CompositorWidgetParent final
    public WinCompositorWidget
 {
 public:
-  CompositorWidgetParent(const CompositorWidgetInitData& aInitData);
+  explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData);
   ~CompositorWidgetParent() override;
 
   mozilla::ipc::IPCResult RecvEnterPresentLock() override;

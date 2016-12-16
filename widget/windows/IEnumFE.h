@@ -60,7 +60,7 @@ private:
 class CEnumFormatEtc final : public IEnumFORMATETC
 {
 public:
-    CEnumFormatEtc(nsTArray<FormatEtc>& aArray);
+    explicit CEnumFormatEtc(nsTArray<FormatEtc>& aArray);
     CEnumFormatEtc();
     ~CEnumFormatEtc();
 
