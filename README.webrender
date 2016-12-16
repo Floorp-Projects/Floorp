@@ -1,20 +1,13 @@
-Step 1: Install/switch to Rust Nightly
-    If you don't have it installed, you can install it from https://www.rust-lang.org/en-US/downloads.html
-    For Linux/Mac you can do this using rustup, see the curl command at the bottom of the page
-    For Windows you can use the MSVC ABI Nightly installer linked to from that download page
-    Note: do NOT install rust using ./mach bootstrap, as that will install the stable version and we need Nightly.
-          If you have already installed stable rust, make sure it is not in your $PATH
+Step 1: Install Rust if you don't have it already
+    If you are doing gecko builds already, you should already have Rust as it is a build requirement.
+    If not, you can install it using |mach bootstrap| (recommended) or from https://www.rust-lang.org/
+        Note: If installing manually, use the stable 64-bit release - on Windows make sure to use the MSVC ABI installer.
+    Ensure that rustc and cargo are in your $PATH (adding $HOME/.cargo/bin/ should be sufficient)
 
-Step 2: Set up environment
-    Add the following two lines to your mozconfig:
-        ac_add_options --enable-rust
+Step 2: Set up mozconfig
+    Add the following line to your mozconfig:
         ac_add_options --enable-webrender
-    Ensure rustc and cargo are in your $PATH.
-        On Windows in the MozillaBuild shell you can run:
-            export PATH="$PATH:/c/Program Files/Rust nightly MSVC 1.14/bin"
-        to add them to your path assuming you used the default installation options when installing.
-        You can also add the export statement to your mozconfig
-    The first time you do a build with these changes, you should also run |mach clobber|
+    The first time you do a build with this changes, you should also run |mach clobber|
 
 Step 3:
     Build using |mach build|
