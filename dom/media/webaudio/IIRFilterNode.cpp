@@ -133,8 +133,8 @@ private:
 };
 
 IIRFilterNode::IIRFilterNode(AudioContext* aContext,
-                             const mozilla::dom::binding_detail::AutoSequence<double>& aFeedforward,
-                             const mozilla::dom::binding_detail::AutoSequence<double>& aFeedback)
+                             const Sequence<double>& aFeedforward,
+                             const Sequence<double>& aFeedback)
   : AudioNode(aContext,
               2,
               ChannelCountMode::Max,
@@ -168,8 +168,46 @@ IIRFilterNode::IIRFilterNode(AudioContext* aContext,
                                     aContext->Graph());
 }
 
-IIRFilterNode::~IIRFilterNode()
+/* static */ already_AddRefed<IIRFilterNode>
+IIRFilterNode::Create(AudioContext& aAudioContext,
+                 const IIRFilterOptions& aOptions,
+                 ErrorResult& aRv)
 {
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  if (aOptions.mFeedforward.Length() == 0 || aOptions.mFeedforward.Length() > 20) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  if (aOptions.mFeedback.Length() == 0 || aOptions.mFeedback.Length() > 20) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  bool feedforwardAllZeros = true;
+  for (size_t i = 0; i < aOptions.mFeedforward.Length(); ++i) {
+    if (aOptions.mFeedforward.Elements()[i] != 0.0) {
+      feedforwardAllZeros = false;
+    }
+  }
+
+  if (feedforwardAllZeros || aOptions.mFeedback.Elements()[0] == 0.0) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<IIRFilterNode> audioNode =
+    new IIRFilterNode(&aAudioContext, aOptions.mFeedforward, aOptions.mFeedback);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return audioNode.forget();
 }
 
 size_t

@@ -24,7 +24,7 @@ var gTest = {
       buffers.push(buffer);
     }
 
-    var merger = context.createChannelMerger();
+    var merger = new ChannelMergerNode(context);
     is(merger.channelCount, 1, "merger node has 1 input channels");
     is(merger.channelCountMode, "explicit", "Correct channelCountMode for the merger node");
     is(merger.channelInterpretation, "speakers", "Correct channelCountInterpretation for the merger node");

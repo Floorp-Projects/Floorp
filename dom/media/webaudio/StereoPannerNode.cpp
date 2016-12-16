@@ -183,8 +183,24 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
                                     aContext->Graph());
 }
 
-StereoPannerNode::~StereoPannerNode()
+/* static */ already_AddRefed<StereoPannerNode>
+StereoPannerNode::Create(AudioContext& aAudioContext,
+                         const StereoPannerOptions& aOptions,
+                         ErrorResult& aRv)
 {
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<StereoPannerNode> audioNode = new StereoPannerNode(&aAudioContext);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  audioNode->Pan()->SetValue(aOptions.mPan);
+  return audioNode.forget();
 }
 
 size_t

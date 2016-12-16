@@ -11,6 +11,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#htmlframeelement
+[HTMLConstructor]
 interface HTMLFrameElement : HTMLElement {
            [SetterThrows]
            attribute DOMString name;

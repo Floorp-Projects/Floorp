@@ -133,11 +133,6 @@ public:
     }
 
     bool AccelerateLayersByDefault() override {
-#ifdef NIGHTLY_BUILD
-      // Only enable the GL compositor on Nightly for now until we have
-      // sufficient data for blocklisting.
-      return true;
-#endif
       return false;
     }
 

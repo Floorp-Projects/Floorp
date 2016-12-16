@@ -14,17 +14,32 @@ var gTest = {
   length: 2048,
   numberOfChannels: 1,
   createGraph: function(context) {
+
+    var gain = new GainNode(context);
+    ok(gain.gain, "The audioparam member must exist");
+    is(gain.gain.value, 1.0, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    gain.gain.value = 0.5;
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+
+    gain = new GainNode(context, { gain: 0.5 });
+    ok(gain.gain, "The audioparam member must exist");
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    gain.gain.value = 0.5;
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+
     var buffer = context.createBuffer(1, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {
       buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
     }
 
     var source = context.createBufferSource();
-
-    var gain = context.createGain();
-
     source.buffer = buffer;
 
+    gain = context.createGain();
     source.connect(gain);
 
     ok(gain.gain, "The audioparam member must exist");

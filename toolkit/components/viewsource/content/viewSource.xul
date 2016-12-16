@@ -223,7 +223,8 @@
 
   <vbox id="appcontent" flex="1">
 
-    <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
+    <browser id="content" type="content" name="content" src="about:blank" flex="1"
+             primary="true"
              context="viewSourceContextMenu" showcaret="true" tooltip="aHTMLTooltip" />
     <findbar id="FindToolbar" browserid="content"/>
   </vbox>

@@ -365,6 +365,9 @@ include transform-3d/reftest.list
 # unicode/ (verify that we don't do expend effort doing unicode-aware case checks)
 include unicode/reftest.list
 
+# usercss
+include usercss/reftest.list
+
 include view-source/reftest.list
 
 # web-animations

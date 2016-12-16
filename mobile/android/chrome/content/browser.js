@@ -3665,13 +3665,13 @@ Tab.prototype = {
     this.lastTouchedAt = Date.now();
 
     if (aActive) {
-      this.browser.setAttribute("type", "content-primary");
+      this.browser.setAttribute("primary", "true");
       this.browser.focus();
       this.browser.docShellIsActive = true;
       Reader.updatePageAction(this);
       ExternalApps.updatePageAction(this.browser.currentURI, this.browser.contentDocument);
     } else {
-      this.browser.setAttribute("type", "content");
+      this.browser.removeAttribute("primary");
       this.browser.docShellIsActive = false;
       this.browser.blur();
     }

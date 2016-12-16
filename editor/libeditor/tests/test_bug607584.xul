@@ -19,7 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
   <p/>
   <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           id="editor"
-          type="content-primary"
+          type="content"
+          primary="true"
           editortype="html"
           style="width: 400px; height: 100px; border: thin solid black"/>
   <p/>

@@ -15,18 +15,25 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
+struct IIRFilterOptions;
 
 class IIRFilterNode final : public AudioNode
 {
 public:
-  explicit IIRFilterNode(AudioContext* aContext,
-                         const mozilla::dom::binding_detail::AutoSequence<double>& aFeedforward,
-                         const mozilla::dom::binding_detail::AutoSequence<double>& aFeedback);
+  static already_AddRefed<IIRFilterNode>
+  Create(AudioContext& aAudioContext, const IIRFilterOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  static already_AddRefed<IIRFilterNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const IIRFilterOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetFrequencyResponse(const Float32Array& aFrequencyHz,
                             const Float32Array& aMagResponse,
@@ -40,16 +47,17 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-  virtual ~IIRFilterNode();
-
 private:
-    nsTArray<double> mFeedback;
-    nsTArray<double> mFeedforward;
+  IIRFilterNode(AudioContext* aContext,
+                const Sequence<double>& aFeedforward,
+                const Sequence<double>& aFeedback);
+  ~IIRFilterNode() = default;
+
+  nsTArray<double> mFeedback;
+  nsTArray<double> mFeedforward;
 };
 
 } // namespace dom
 } // namespace mozilla
 
 #endif
-

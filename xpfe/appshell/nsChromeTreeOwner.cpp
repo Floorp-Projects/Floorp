@@ -139,10 +139,10 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 
 NS_IMETHODIMP
 nsChromeTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                                     bool aPrimary, const nsAString& aID)
+                                     bool aPrimary)
 {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->ContentShellAdded(aContentShell, aPrimary, aID);
+  return mXULWindow->ContentShellAdded(aContentShell, aPrimary);
 }
 
 NS_IMETHODIMP

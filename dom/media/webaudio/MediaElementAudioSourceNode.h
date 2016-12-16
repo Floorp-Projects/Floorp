@@ -12,11 +12,23 @@
 namespace mozilla {
 namespace dom {
 
+class AudioContext;
+struct MediaElementAudioSourceOptions;
+
 class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode
 {
 public:
   static already_AddRefed<MediaElementAudioSourceNode>
-  Create(AudioContext* aContext, DOMMediaStream* aStream, ErrorResult& aRv);
+  Create(AudioContext& aAudioContext,
+         const MediaElementAudioSourceOptions& aOptions,
+         ErrorResult& aRv);
+
+  static already_AddRefed<MediaElementAudioSourceNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const MediaElementAudioSourceOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
