@@ -30,7 +30,7 @@ Any other render format? HTML?
 class nsImageToClipboard
 {
 public:
-  nsImageToClipboard(imgIContainer* aInImage, bool aWantDIBV5 = true);
+  explicit nsImageToClipboard(imgIContainer* aInImage, bool aWantDIBV5 = true);
   ~nsImageToClipboard();
 
     // Call to get the actual bits that go on the clipboard. If |nullptr|, the
