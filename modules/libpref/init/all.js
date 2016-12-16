@@ -5252,9 +5252,6 @@ pref("camera.control.low_memory_thresholdMB", 404);
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
 
-// Disable before keyboard events and after keyboard events by default.
-pref("dom.beforeAfterKeyboardEvent.enabled", false);
-
 // Presentation API
 pref("dom.presentation.enabled", false);
 pref("dom.presentation.controller.enabled", false);
