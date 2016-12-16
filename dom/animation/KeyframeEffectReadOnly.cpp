@@ -1024,12 +1024,9 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
       nsAutoString stringValue;
       if (propertyValue.mServoDeclarationBlock) {
-        // FIXME: When we support animations for custom properties on servo, we
-        // should pass the flag to Servo_DeclarationBlock_SerializeOneValue.
-        // Now, we pass false to simplify it.
-        nsIAtom* atom = nsCSSProps::AtomForProperty(propertyValue.mProperty);
         Servo_DeclarationBlock_SerializeOneValue(
-          propertyValue.mServoDeclarationBlock, atom, false, &stringValue);
+          propertyValue.mServoDeclarationBlock,
+          propertyValue.mProperty, &stringValue);
       } else {
         // nsCSSValue::AppendToString does not accept shorthands properties but
         // works with token stream values if we pass eCSSProperty_UNKNOWN as

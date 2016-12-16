@@ -15,6 +15,9 @@ namespace mozilla {
 
 namespace dom {
 
+class AudioContext;
+struct MediaStreamAudioSourceOptions;
+
 class MediaStreamAudioSourceNodeEngine final : public AudioNodeEngine
 {
 public:
@@ -46,10 +49,18 @@ class MediaStreamAudioSourceNode : public AudioNode,
 {
 public:
   static already_AddRefed<MediaStreamAudioSourceNode>
-  Create(AudioContext* aContext, DOMMediaStream* aStream, ErrorResult& aRv);
+  Create(AudioContext& aContext, const MediaStreamAudioSourceOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamAudioSourceNode, AudioNode)
+
+  static already_AddRefed<MediaStreamAudioSourceNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const MediaStreamAudioSourceOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

@@ -99,16 +99,3 @@ StorageEvent::InitStorageEvent(const nsAString& aType, bool aCanBubble,
 
 } // namespace dom
 } // namespace mozilla
-
-using namespace mozilla;
-using namespace mozilla::dom;
-
-already_AddRefed<StorageEvent>
-NS_NewDOMStorageEvent(EventTarget* aOwner)
-{
-  RefPtr<StorageEvent> e = new StorageEvent(aOwner);
-
-  e->SetTrusted(e->Init(aOwner));
-  return e.forget();
-}
-

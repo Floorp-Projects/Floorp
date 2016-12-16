@@ -867,7 +867,8 @@ TabParent::SetDocShell(nsIDocShell *aDocShell)
 
   a11y::PDocAccessibleParent*
 TabParent::AllocPDocAccessibleParent(PDocAccessibleParent* aParent,
-                                     const uint64_t&, const uint32_t&)
+                                     const uint64_t&, const uint32_t&,
+                                     const IAccessibleHolder&)
 {
 #ifdef ACCESSIBILITY
   return new a11y::DocAccessibleParent();
@@ -889,7 +890,8 @@ mozilla::ipc::IPCResult
 TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
                                          PDocAccessibleParent* aParentDoc,
                                          const uint64_t& aParentID,
-                                         const uint32_t& aMsaaID)
+                                         const uint32_t& aMsaaID,
+                                         const IAccessibleHolder& aDocCOMProxy)
 {
 #ifdef ACCESSIBILITY
   auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
@@ -905,6 +907,7 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
     bool added = parentDoc->AddChildDoc(doc, aParentID);
 #ifdef XP_WIN
+    MOZ_ASSERT(aDocCOMProxy.IsNull());
     if (added) {
       a11y::WrapperFor(doc)->SetID(aMsaaID);
     }
@@ -926,6 +929,9 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     a11y::DocManager::RemoteDocAdded(doc);
 #ifdef XP_WIN
     a11y::WrapperFor(doc)->SetID(aMsaaID);
+    MOZ_ASSERT(!aDocCOMProxy.IsNull());
+    RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
+    doc->SetCOMProxy(proxy);
 #endif
   }
 #endif
@@ -3224,7 +3230,7 @@ TabParent::RecvLookUpDictionary(const nsString& aText,
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvNotifySessionHistoryChange(const uint32_t& aCount)
+TabParent::RecvSHistoryUpdate(const uint32_t& aCount, const uint32_t& aLocalIndex, const bool& aTruncate)
 {
   RefPtr<nsFrameLoader> frameLoader(GetFrameLoader());
   if (!frameLoader) {
@@ -3240,7 +3246,7 @@ TabParent::RecvNotifySessionHistoryChange(const uint32_t& aCount)
     return IPC_OK();
   }
 
-  partialHistory->OnSessionHistoryChange(aCount);
+  partialHistory->HandleSHistoryUpdate(aCount, aLocalIndex, aTruncate);
   return IPC_OK();
 }
 

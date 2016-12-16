@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/MediaQueryList.h"
 #include "nsPresContext.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsCSSParser.h"
 #include "nsIDocument.h"
 

@@ -96,6 +96,8 @@ GetPropIRGenerator::tryAttachStub()
             ValOperandId indexId = getElemKeyValueId();
             if (tryAttachDenseElement(obj, objId, indexId))
                 return true;
+            if (tryAttachDenseElementHole(obj, objId, indexId))
+                return true;
             if (tryAttachUnboxedArrayElement(obj, objId, indexId))
                 return true;
             if (tryAttachArgumentsObjectArg(obj, objId, indexId))
@@ -904,6 +906,88 @@ GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
 
     Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
     writer.loadDenseElementResult(objId, int32IndexId);
+    writer.typeMonitorResult();
+    return true;
+}
+
+static bool
+CanAttachDenseElementHole(JSObject* obj)
+{
+    // Make sure this object already has dense elements.
+    if (obj->as<NativeObject>().getDenseInitializedLength() == 0)
+        return false;
+
+    // Now we have to make sure the objects on the prototype don't
+    // have any int32 properties or that such properties can't appear
+    // without a shape change.
+    // Otherwise returning undefined for holes would obviously be incorrect,
+    // because we would have to lookup a property on the prototype instead.
+    do {
+        if (obj->isIndexed())
+            return false;
+
+        if (ClassCanHaveExtraProperties(obj->getClass()))
+            return false;
+
+        JSObject* proto = obj->staticPrototype();
+        if (!proto)
+            break;
+
+        if (!proto->isNative())
+            return false;
+
+        // Make sure objects on the prototype don't have dense elements.
+        if (proto->as<NativeObject>().getDenseInitializedLength() != 0)
+            return false;
+
+        obj = proto;
+    } while (true);
+
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
+                                              ValOperandId indexId)
+{
+    MOZ_ASSERT(idVal_.isInt32());
+
+    if (idVal_.toInt32() < 0)
+        return false;
+
+    if (!obj->isNative() || !CanAttachDenseElementHole(obj))
+        return false;
+
+    // Guard on the shape, to prevent non-dense elements from appearing.
+    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
+
+    if (obj->hasUncacheableProto()) {
+        // If the shape does not imply the proto, emit an explicit proto guard.
+        writer.guardProto(objId, obj->staticPrototype());
+    }
+
+    JSObject* pobj = obj->staticPrototype();
+    while (pobj) {
+        ObjOperandId protoId = writer.loadObject(pobj);
+
+        // Non-singletons with uncacheable protos can change their proto
+        // without a shape change, so also guard on the group (which determines
+        // the proto) in this case.
+        if (pobj->hasUncacheableProto() && !pobj->isSingleton())
+            writer.guardGroup(protoId, pobj->group());
+
+        // Make sure the shape matches, to avoid non-dense elements or anything
+        // else that is being checked by CanAttachDenseElementHole.
+        writer.guardShape(protoId, pobj->as<NativeObject>().lastProperty());
+
+        // Also make sure there are no dense elements.
+        writer.guardNoDenseElements(protoId);
+
+        pobj = pobj->staticPrototype();
+    }
+
+    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    writer.loadDenseElementHoleResult(objId, int32IndexId);
     writer.typeMonitorResult();
     return true;
 }

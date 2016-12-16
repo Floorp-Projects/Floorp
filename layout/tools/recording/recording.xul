@@ -9,5 +9,5 @@
         style="background:white; overflow:hidden; width:800px; height:600px;"
         >
     <script type="application/ecmascript" src="recording.js" />
-  <browser id="browser" type="content-primary" style="min-width: 1024px; min-height: 768px; max-width: 1024px; max-height: 768px"/>
+  <browser id="browser" type="content" primary="true" style="min-width: 1024px; min-height: 768px; max-width: 1024px; max-height: 768px"/>
 </window>

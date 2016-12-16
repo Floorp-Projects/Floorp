@@ -106,8 +106,7 @@ protected:
 
    // See nsIDocShellTreeOwner for docs on next two methods
    nsresult ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-                              bool aPrimary,
-                              const nsAString& aID);
+                              bool aPrimary);
    nsresult ContentShellRemoved(nsIDocShellTreeItem* aContentShell);
    NS_IMETHOD GetPrimaryContentSize(int32_t* aWidth,
                                     int32_t* aHeight);
@@ -146,7 +145,6 @@ protected:
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
    nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
    nsCOMPtr<nsIDocShellTreeItem> mPrimaryContentShell;
-   nsTArray<nsContentShellInfo*> mContentShells; // array of doc shells by id
    nsresult                mModalStatus;
    bool                    mContinueModalLoop;
    bool                    mDebuting;       // being made visible right now
@@ -178,20 +176,4 @@ private:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)
-
-// nsContentShellInfo
-// Used to map shell IDs to nsIDocShellTreeItems.
-
-class nsContentShellInfo
-{
-public:
-   nsContentShellInfo(const nsAString& aID,
-                      nsIWeakReference* aContentShell);
-   ~nsContentShellInfo();
-
-public:
-   nsString id; // The identifier of the content shell
-   nsWeakPtr child; // content shell (weak reference to nsIDocShellTreeItem)
-};
-
 #endif /* nsXULWindow_h__ */

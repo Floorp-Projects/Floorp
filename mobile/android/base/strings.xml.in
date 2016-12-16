@@ -431,7 +431,7 @@
   <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary2;</string>
 
   <string name="pref_compact_tabs">&pref_compact_tabs;</string>
-  <string name="pref_compact_tabs_summary">&pref_compact_tabs_summary;</string>
+  <string name="pref_compact_tabs_summary">&pref_compact_tabs_summary2;</string>
 
   <string name="page_removed">&page_removed;</string>
 

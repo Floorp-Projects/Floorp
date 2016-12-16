@@ -21610,6 +21610,10 @@
         "url": "/html/semantics/forms/the-input-element/checked.xhtml"
       },
       {
+        "path": "html/semantics/forms/the-input-element/clone.html",
+        "url": "/html/semantics/forms/the-input-element/clone.html"
+      },
+      {
         "path": "html/semantics/forms/the-input-element/cloning-steps.html",
         "url": "/html/semantics/forms/the-input-element/cloning-steps.html"
       },

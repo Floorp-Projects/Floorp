@@ -353,7 +353,7 @@ public:
 
   virtual PDocAccessibleParent*
   AllocPDocAccessibleParent(PDocAccessibleParent*, const uint64_t&,
-                            const uint32_t&) override;
+                            const uint32_t&, const IAccessibleHolder&) override;
 
   virtual bool DeallocPDocAccessibleParent(PDocAccessibleParent*) override;
 
@@ -361,7 +361,8 @@ public:
   RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
                                 PDocAccessibleParent* aParentDoc,
                                 const uint64_t& aParentID,
-                                const uint32_t& aMsaaID) override;
+                                const uint32_t& aMsaaID,
+                                const IAccessibleHolder& aDocCOMProxy) override;
 
   /**
    * Return the top level doc accessible parent for this tab.
@@ -629,7 +630,9 @@ protected:
   virtual mozilla::ipc::IPCResult RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
                                                                        const bool& aActive) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifySessionHistoryChange(const uint32_t& aCount) override;
+  virtual mozilla::ipc::IPCResult RecvSHistoryUpdate(const uint32_t& aCount,
+                                                     const uint32_t& aLocalIndex,
+                                                     const bool& aTruncate) override;
 
   virtual mozilla::ipc::IPCResult RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex) override;
 

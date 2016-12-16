@@ -13,6 +13,7 @@
 interface nsISupports;
 interface Variant;
 
+[HTMLConstructor]
 interface HTMLCanvasElement : HTMLElement {
   [Pure, SetterThrows]
            attribute unsigned long width;

@@ -418,7 +418,7 @@ struct ObjectGroupCompartment::NewEntry
     }
 
     static inline bool match(const ObjectGroupCompartment::NewEntry& key, const Lookup& lookup) {
-        TaggedProto proto = key.group.unbarrieredGet()->proto().unbarrieredGet();
+        TaggedProto proto = key.group.unbarrieredGet()->proto();
         JSObject* assoc = key.associated;
         MOZ_ASSERT(proto.hasUniqueId());
         MOZ_ASSERT_IF(assoc, assoc->zone()->hasUniqueId(assoc));

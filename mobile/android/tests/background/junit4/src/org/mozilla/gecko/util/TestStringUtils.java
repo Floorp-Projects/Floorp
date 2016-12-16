@@ -104,4 +104,42 @@ public class TestStringUtils {
 
         assertEquals("m::o::z::i::l::l::a", StringUtils.join("::", Arrays.asList("m", "o", "z", "i", "l", "l", "a")));
     }
+
+    @Test
+    public void testIsSearchQuery(){
+        boolean any = true;
+        // test trim
+        assertFalse(StringUtils.isSearchQuery("",false));
+        assertTrue(StringUtils.isSearchQuery("",true));
+
+        // test space
+        assertTrue(StringUtils.isSearchQuery(" apple pen ",any));
+        assertTrue(StringUtils.isSearchQuery("pineapple pen",any));
+        assertTrue(StringUtils.isSearchQuery(": :",any));
+        assertTrue(StringUtils.isSearchQuery(". .",any));
+        assertTrue(StringUtils.isSearchQuery("gcm site:stackoverflow.com",any));
+        assertTrue(StringUtils.isSearchQuery("/mnt/etc/resolv.conf does not exist",true));
+
+        // test colon
+        assertFalse(StringUtils.isSearchQuery(":",any));
+        assertFalse(StringUtils.isSearchQuery("site:stackoverflow.com",any));
+        assertFalse(StringUtils.isSearchQuery("http:mozilla.com",any));
+        assertFalse(StringUtils.isSearchQuery("http://mozilla.com",any));
+        assertFalse(StringUtils.isSearchQuery("http:/mozilla.com",any));
+
+        // test dot
+        assertFalse(StringUtils.isSearchQuery(".",any));
+        assertFalse(StringUtils.isSearchQuery("cd..",any));
+        assertFalse(StringUtils.isSearchQuery("cd...",any));
+        assertFalse(StringUtils.isSearchQuery("mozilla.com",any));
+
+
+        // test ambiguous
+        String ambiguous = "~!@#$%^&*()_+`34567890-=qwertyuiop[]\\QWERTYUIOP{}|asdfghjkl;'ASDFGHJKL:\"ZXCVBNM<>?zxcvbnm,./";
+        ambiguous = ambiguous.replace(" ","").replace(".","").replace(":","");
+        assertTrue(StringUtils.isSearchQuery(ambiguous,true));
+        assertFalse(StringUtils.isSearchQuery(ambiguous,false));
+
+
+    }
 }

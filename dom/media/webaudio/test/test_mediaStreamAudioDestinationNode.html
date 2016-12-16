@@ -23,7 +23,7 @@ addLoadEvent(function() {
   var source = context.createBufferSource();
   source.buffer = buffer;
 
-  var dest = context.createMediaStreamDestination();
+  var dest = new MediaStreamAudioDestinationNode(context);
   source.connect(dest);
 
   var elem = document.getElementById('audioelem');

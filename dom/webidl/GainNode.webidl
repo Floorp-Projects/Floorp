@@ -10,7 +10,12 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
+dictionary GainOptions : AudioNodeOptions {
+             float gain = 1.0;
+};
+
+[Pref="dom.webaudio.enabled",
+ Constructor(AudioContext context, optional GainOptions options)]
 interface GainNode : AudioNode {
 
     readonly attribute AudioParam gain;

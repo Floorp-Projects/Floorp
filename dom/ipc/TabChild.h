@@ -184,6 +184,8 @@ public:
   NS_DECL_NSIPARTIALSHISTORYLISTENER
 
 private:
+  nsresult SHistoryDidUpdate(bool aTruncate = false);
+
   ~TabChildSHistoryListener() {}
   TabChild* mTabChild;
 };
@@ -434,7 +436,7 @@ public:
 
   virtual PDocAccessibleChild*
   AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&,
-                           const uint32_t&) override;
+                           const uint32_t&, const IAccessibleHolder&) override;
 
   virtual bool DeallocPDocAccessibleChild(PDocAccessibleChild*) override;
 
@@ -660,6 +662,8 @@ public:
     mIsFreshProcess = false;
     return wasFreshProcess;
   }
+
+  already_AddRefed<nsISHistory> GetRelatedSHistory();
 
 protected:
   virtual ~TabChild();

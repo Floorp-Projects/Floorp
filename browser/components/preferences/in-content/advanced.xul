@@ -335,6 +335,8 @@
 
         <hbox align="center">
           <label id="totalSiteDataSize" flex="1"></label>
+          <button id="clearSiteDataButton" icon="clear"
+                  label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
         </hbox>
       </groupbox>
     </tabpanel>

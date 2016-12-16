@@ -13,7 +13,7 @@
 #include "mozilla/CSSStyleSheet.h"
 
 #include "mozAutoDocUpdate.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsNullPrincipal.h"
 
 namespace mozilla {

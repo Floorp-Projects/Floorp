@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[HTMLConstructor]
 interface HTMLTableElement : HTMLElement {
            [SetterThrows]
            attribute HTMLTableCaptionElement? caption;
