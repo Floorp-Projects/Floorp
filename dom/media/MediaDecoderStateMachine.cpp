@@ -873,7 +873,7 @@ public:
     // requests when AccurateSeekTask::Seek() begins. We will just store the data
     // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
     if (mSeekJob.mTarget.IsVideoOnly()) {
-      mSeekedAudioData = aAudio;
+      mMaster->Push(aAudio);
       return;
     }
 
@@ -881,7 +881,7 @@ public:
 
     if (mSeekJob.mTarget.IsFast()) {
       // Non-precise seek; we can stop the seek at the first sample.
-      mSeekedAudioData = aAudio;
+      mMaster->Push(aAudio);
       mDoneAudioSeeking = true;
     } else {
       nsresult rv = DropAudioUpToSeekTarget(aAudio->As<AudioData>());
@@ -907,7 +907,7 @@ public:
 
     if (mSeekJob.mTarget.IsFast()) {
       // Non-precise seek. We can stop the seek at the first sample.
-      mSeekedVideoData = aVideo;
+      mMaster->Push(aVideo);
       mDoneVideoSeeking = true;
     } else {
       nsresult rv = DropVideoUpToSeekTarget(aVideo);
@@ -959,7 +959,7 @@ public:
         if (mFirstVideoFrameAfterSeek) {
           // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
           // mSeekedVideoData so we have something to display after seeking.
-          mSeekedVideoData = mFirstVideoFrameAfterSeek.forget();
+          mMaster->Push(mFirstVideoFrameAfterSeek);
         }
       }
       MaybeFinishSeek();
@@ -1038,14 +1038,16 @@ private:
     // For the fast seek, we update the newCurrentTime with the decoded audio and
     // video samples, set it to be the one which is closet to the seekTime.
     if (mSeekJob.mTarget.IsFast()) {
+      RefPtr<MediaData> audio = AudioQueue().PeekFront();
+      RefPtr<MediaData> video = VideoQueue().PeekFront();
 
       // A situation that both audio and video approaches the end.
-      if (!mSeekedAudioData && !mSeekedVideoData) {
+      if (!audio && !video) {
         return seekTime;
       }
 
-      const int64_t audioStart = mSeekedAudioData ? mSeekedAudioData->mTime : INT64_MAX;
-      const int64_t videoStart = mSeekedVideoData ? mSeekedVideoData->mTime : INT64_MAX;
+      const int64_t audioStart = audio ? audio->mTime : INT64_MAX;
+      const int64_t videoStart = video ? video->mTime : INT64_MAX;
       const int64_t audioGap = std::abs(audioStart - seekTime);
       const int64_t videoGap = std::abs(videoStart - seekTime);
       return audioGap <= videoGap ? audioStart : videoStart;
@@ -1130,7 +1132,7 @@ private:
       // silence to cover the gap. Typically this happens in poorly muxed
       // files.
       SWARN("Audio not synced after seek, maybe a poorly muxed file?");
-      mSeekedAudioData = aAudio;
+      mMaster->Push(aAudio);
       mDoneAudioSeeking = true;
       return NS_OK;
     }
@@ -1175,8 +1177,8 @@ private:
                                          Move(audioData),
                                          channels,
                                          aAudio->mRate));
-    MOZ_ASSERT(!mSeekedAudioData, "Should be the 1st sample after seeking");
-    mSeekedAudioData = data.forget();
+    MOZ_ASSERT(AudioQueue().GetSize() == 0, "Should be the 1st sample after seeking");
+    mMaster->Push(data);
     mDoneAudioSeeking = true;
 
     return NS_OK;
@@ -1207,8 +1209,8 @@ private:
       SLOG("DropVideoUpToSeekTarget() found video frame [%lld, %lld] containing target=%lld",
                   video->mTime, video->GetEndTime(), target);
 
-      MOZ_ASSERT(!mSeekedVideoData, "Should be the 1st sample after seeking");
-      mSeekedVideoData = video;
+      MOZ_ASSERT(VideoQueue().GetSize() == 0, "Should be the 1st sample after seeking");
+      mMaster->Push(video);
       mDoneVideoSeeking = true;
     }
 
@@ -1224,14 +1226,6 @@ private:
 
   void OnSeekTaskResolved()
   {
-    if (mSeekedAudioData) {
-      mMaster->Push(mSeekedAudioData);
-    }
-
-    if (mSeekedVideoData) {
-      mMaster->Push(mSeekedVideoData);
-    }
-
     SeekCompleted();
   }
 
@@ -1257,12 +1251,6 @@ private:
   // the seek target, we will still have a frame that we can display as the
   // last frame in the media.
   RefPtr<MediaData> mFirstVideoFrameAfterSeek;
-
-  /*
-   * Information which are going to be returned to MDSM.
-   */
-  RefPtr<MediaData> mSeekedAudioData;
-  RefPtr<MediaData> mSeekedVideoData;
 };
 
 /*
