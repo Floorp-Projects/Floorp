@@ -139,6 +139,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   , mCachedParamLength(0)
   , mCachedParamNames(nullptr)
   , mCachedParamValues(nullptr)
+  , mMuted(false)
 {
   mNPP.pdata = nullptr;
   mNPP.ndata = this;
@@ -1794,6 +1795,14 @@ nsNPAPIPluginInstance::WindowVolumeChanged(float aVolume, bool aMuted)
   // We just support mute/unmute
   nsresult rv = SetMuted(aMuted);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetMuted failed");
+  if (mMuted != aMuted) {
+    mMuted = aMuted;
+    AudioChannelService::AudibleState audible = aMuted ?
+      AudioChannelService::AudibleState::eNotAudible :
+      AudioChannelService::AudibleState::eAudible;
+    mAudioChannelAgent->NotifyStartedAudible(audible,
+                                             AudioChannelService::AudibleChangedReasons::eVolumeChanged);
+  }
   return rv;
 }
 
