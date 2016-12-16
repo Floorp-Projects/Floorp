@@ -347,8 +347,15 @@
         </setter>
       </property>
 
+      <field name="_tabbox">null</field>
       <property name="tabbox" readonly="true">
         <getter><![CDATA[
+          // Memoize the result in a field rather than replacing this property,
+          // so that it can be reset along with the binding.
+          if (this._tabbox) {
+            return this._tabbox;
+          }
+
           let parent = this.parentNode;
           while (parent) {
             if (parent.localName == "tabbox") {
@@ -357,14 +364,7 @@
             parent = parent.parentNode;
           }
 
-          // Avoid having to recalculate the tabbox property each time
-          Object.defineProperty(this, "tabbox", {
-            configurable: true,
-            enumerable: true,
-            writable: true,
-            value: parent
-          });
-          return parent;
+          return this._tabbox = parent;
         ]]></getter>
       </property>
 
@@ -642,8 +642,15 @@
       </method>
 
       <!-- public -->
+      <field name="_tabbox">null</field>
       <property name="tabbox" readonly="true">
         <getter><![CDATA[
+          // Memoize the result in a field rather than replacing this property,
+          // so that it can be reset along with the binding.
+          if (this._tabbox) {
+            return this._tabbox;
+          }
+
           let parent = this.parentNode;
           while (parent) {
             if (parent.localName == "tabbox") {
@@ -652,14 +659,7 @@
             parent = parent.parentNode;
           }
 
-          // Avoid having to recalculate the tabbox property each time
-          Object.defineProperty(this, "tabbox", {
-            configurable: true,
-            enumerable: true,
-            writable: true,
-            value: parent
-          });
-          return parent;
+          return this._tabbox = parent;
         ]]></getter>
       </property>
 

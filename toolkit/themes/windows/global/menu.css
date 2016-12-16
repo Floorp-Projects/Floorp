@@ -12,8 +12,7 @@
 
 menu,
 menuitem,
-menucaption,
-.splitmenu-menuitem {
+menucaption {
   -moz-appearance: menuitem;
   -moz-box-align: center;
   color: MenuText;
@@ -28,10 +27,8 @@ menuitem[default="true"] {
 
 menu[disabled="true"],
 menuitem[disabled="true"],
-.splitmenu-menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
-menuitem[_moz-menuactive="true"][disabled="true"],
-.splitmenu-menuitem[_moz-menuactive="true"][disabled="true"] {
+menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
   text-shadow: none;
 }
@@ -39,8 +36,7 @@ menuitem[_moz-menuactive="true"][disabled="true"],
 @media (-moz-windows-classic) {
   menu[disabled="true"],
   menubar > menu[disabled="true"][_moz-menuactive="true"],
-  menuitem[disabled="true"],
-  .splitmenu-menuitem[disabled="true"] {
+  menuitem[disabled="true"] {
     color: ThreeDShadow;
     text-shadow: 1px 1px ThreeDHighlight;
   }
@@ -102,8 +98,7 @@ menucaption > .menu-iconic-text {
 }
 
 menu.menu-iconic > .menu-iconic-left,
-menuitem.menuitem-iconic > .menu-iconic-left,
-.splitmenu-menuitem[iconic="true"] > .menu-iconic-left {
+menuitem.menuitem-iconic > .menu-iconic-left {
   -moz-appearance: menuimage;
   padding-top: 2px;
 }
@@ -186,8 +181,7 @@ menupopup > menucaption {
 }
 
 menu[_moz-menuactive="true"],
-menuitem[_moz-menuactive="true"],
-.splitmenu-menuitem[_moz-menuactive="true"] {
+menuitem[_moz-menuactive="true"] {
   background-color: -moz-menuhover;
   color: -moz-menuhovertext;
 }

@@ -277,7 +277,25 @@ element.find = function (container, strategy, selector, opts = {}) {
 
 function find_(container, strategy, selector, searchFn, opts) {
   let rootNode = container.shadowRoot || container.frame.document;
-  let startNode = opts.startNode || rootNode;
+  let startNode;
+
+  if (opts.startNode) {
+    startNode = opts.startNode;
+  } else {
+    switch (strategy) {
+      // For anonymous nodes the start node needs to be of type DOMElement, which
+      // will refer to :root in case of a DOMDocument.
+      case element.Strategy.Anon:
+      case element.Strategy.AnonAttribute:
+        if (rootNode instanceof Ci.nsIDOMDocument) {
+          startNode = rootNode.documentElement;
+        }
+        break;
+
+      default:
+        startNode = rootNode;
+    }
+  }
 
   let res;
   try {

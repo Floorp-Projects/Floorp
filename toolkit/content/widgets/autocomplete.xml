@@ -69,8 +69,15 @@
 
       <!-- =================== nsIAutoCompleteInput =================== -->
 
+      <field name="_popup">null</field>
       <property name="popup" readonly="true">
         <getter><![CDATA[
+          // Memoize the result in a field rather than replacing this property,
+          // so that it can be reset along with the binding.
+          if (this._popup) {
+            return this._popup;
+          }
+
           let popup = null;
           let popupId = this.getAttribute("autocompletepopup");
           if (popupId) {
@@ -86,14 +93,7 @@
           }
           popup.mInput = this;
 
-          // Avoid having to recalculate the popup property each time
-          Object.defineProperty(this, "popup", {
-            configurable: true,
-            enumerable: true,
-            writable: true,
-            value: popup
-          });
-          return popup;
+          return this._popup = popup;
         ]]></getter>
       </property>
 

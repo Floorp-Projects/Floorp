@@ -18,8 +18,6 @@
 <script clas="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
-    getService(SpecialPowers.Ci.inIDOMUtils);
   const video = document.getElementById("video");
   const ccBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "closedCaptionButton");
   const testCases = [];
