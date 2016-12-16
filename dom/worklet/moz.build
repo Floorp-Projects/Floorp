@@ -6,12 +6,14 @@
 
 EXPORTS.mozilla.dom += [
     'AudioWorkletGlobalScope.h',
+    'PaintWorkletGlobalScope.h',
     'Worklet.h',
     'WorkletGlobalScope.h',
 ]
 
 UNIFIED_SOURCES += [
     'AudioWorkletGlobalScope.cpp',
+    'PaintWorkletGlobalScope.cpp',
     'Worklet.cpp',
     'WorkletGlobalScope.cpp',
 ]
