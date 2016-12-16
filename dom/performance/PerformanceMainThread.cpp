@@ -105,12 +105,6 @@ PerformanceMainThread::Navigation()
   return mNavigation;
 }
 
-DOMHighResTimeStamp
-PerformanceMainThread::Now() const
-{
-  return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now()));
-}
-
 /**
  * An entry should be added only after the resource is loaded.
  * This method is not thread safe and can only be called on the main thread.
