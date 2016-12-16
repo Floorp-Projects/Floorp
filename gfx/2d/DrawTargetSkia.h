@@ -176,18 +176,21 @@ private:
                 bool aOpaque,
                 Float aOpacity,
                 SourceSurface* aMask,
-                const Matrix& aMaskTransform)
+                const Matrix& aMaskTransform,
+                SkBaseDevice* aPreviousDevice)
       : mOldPermitSubpixelAA(aOldPermitSubpixelAA),
         mOpaque(aOpaque),
         mOpacity(aOpacity),
         mMask(aMask),
-        mMaskTransform(aMaskTransform)
+        mMaskTransform(aMaskTransform),
+        mPreviousDevice(aPreviousDevice)
     {}
     bool mOldPermitSubpixelAA;
     bool mOpaque;
     Float mOpacity;
     RefPtr<SourceSurface> mMask;
     Matrix mMaskTransform;
+    SkBaseDevice* mPreviousDevice;
   };
   std::vector<PushedLayer> mPushedLayers;
 
