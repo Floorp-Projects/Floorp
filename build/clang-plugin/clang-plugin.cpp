@@ -298,7 +298,10 @@ bool isIgnoredPathForImplicitCtor(const Decl *Declaration) {
         Begin->compare_lower(StringRef("hunspell")) == 0 ||
         Begin->compare_lower(StringRef("scoped_ptr.h")) == 0 ||
         Begin->compare_lower(StringRef("graphite2")) == 0 ||
-        Begin->compare_lower(StringRef("icu")) == 0) {
+        Begin->compare_lower(StringRef("icu")) == 0 ||
+        Begin->compare_lower(StringRef("libcubeb")) == 0 ||
+        Begin->compare_lower(StringRef("libstagefright")) == 0 ||
+        Begin->compare_lower(StringRef("cairo")) == 0) {
       return true;
     }
     if (Begin->compare_lower(StringRef("chromium")) == 0) {
