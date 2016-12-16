@@ -370,12 +370,12 @@ def check_compiler(compiler, language, target):
         if info.type == 'clang-cl' and info.language_version != 201402:
             append_flag('-std=c++14')
 
-    # We force clang-cl to emulate Visual C++ 2015 Update 2 with fallback to
+    # We force clang-cl to emulate Visual C++ 2015 Update 3 with fallback to
     # cl.exe.
-    if info.type == 'clang-cl' and info.version != '19.00.23918':
+    if info.type == 'clang-cl' and info.version != '19.00.24213':
         # Those flags are direct clang-cl flags that don't need -Xclang, add
         # them directly.
-        flags.append('-fms-compatibility-version=19.00.23918')
+        flags.append('-fms-compatibility-version=19.00.24213')
         flags.append('-fallback')
 
     # Check compiler target
@@ -716,11 +716,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 'Only clang/llvm 3.6 or newer is supported.')
 
         if info.type == 'msvc':
-            if info.version < '19.00.23918':
+            if info.version < '19.00.24213':
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported.\n'
-                    'You must install Visual C++ 2015 Update 2 or newer in '
+                    'You must install Visual C++ 2015 Update 3 or newer in '
                     'order to build.\n'
                     'See https://developer.mozilla.org/en/'
                     'Windows_Build_Prerequisites' % info.version)
