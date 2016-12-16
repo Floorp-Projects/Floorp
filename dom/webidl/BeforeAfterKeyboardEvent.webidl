@@ -10,9 +10,6 @@
  ChromeOnly]
 interface BeforeAfterKeyboardEvent : KeyboardEvent
 {
-  // The valid value of embeddedCancelled is:
-  // - "mozbrowserafterkeydown": true/false
-  // - "mozbrowserafterkeyup": true/false
   readonly attribute boolean? embeddedCancelled;
 };
 
