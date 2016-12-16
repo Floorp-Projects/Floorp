@@ -14,12 +14,23 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
+struct StereoPannerOptions;
 
 class StereoPannerNode final : public AudioNode
 {
 public:
+  static already_AddRefed<StereoPannerNode>
+  Create(AudioContext& aAudioContext, const StereoPannerOptions& aOptions,
+         ErrorResult& aRv);
+
   MOZ_DECLARE_REFCOUNTED_TYPENAME(StereoPannerNode)
-  explicit StereoPannerNode(AudioContext* aContext);
+
+  static already_AddRefed<StereoPannerNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const StereoPannerOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -56,10 +67,10 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-  virtual ~StereoPannerNode();
-
 private:
+  explicit StereoPannerNode(AudioContext* aContext);
+  ~StereoPannerNode() = default;
+
   RefPtr<AudioParam> mPan;
 };
 
@@ -67,4 +78,3 @@ private:
 } // namespace mozilla
 
 #endif
-

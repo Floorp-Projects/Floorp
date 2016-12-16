@@ -339,6 +339,8 @@ class RefTest(object):
         else:
             profile = mozprofile.Profile(**kwargs)
 
+        options.extraProfileFiles.append(os.path.join(here, 'chrome'))
+
         self.copyExtraFilesToProfile(options, profile)
         return profile
 

@@ -24,6 +24,7 @@ class ThreadSharedFloatArrayBufferList;
 
 namespace dom {
 
+struct AudioBufferOptions;
 class AudioContext;
 
 /**
@@ -55,6 +56,10 @@ public:
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioBuffer)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioBuffer)
+
+  static already_AddRefed<AudioBuffer>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const AudioBufferOptions& aOptions, ErrorResult& aRv);
 
   nsPIDOMWindowInner* GetParentObject() const
   {
@@ -134,4 +139,3 @@ protected:
 } // namespace mozilla
 
 #endif
-

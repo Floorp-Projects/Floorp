@@ -747,9 +747,15 @@ protected:
 
   /**
    * Initializes mTiming if it isn't yet.
-   * After calling this, mTiming is non-null.
+   * After calling this, mTiming is non-null. This method returns true if the
+   * initialization of the Timing can be reset (basically this is true if a new
+   * Timing object is created).
+   * In case the loading is aborted, MaybeResetInitTiming() can be called
+   * passing the return value of MaybeInitTiming(): if it's possible to reset
+   * the Timing, this method will do it.
    */
-  void MaybeInitTiming();
+  MOZ_MUST_USE bool MaybeInitTiming();
+  void MaybeResetInitTiming(bool aReset);
 
   bool DisplayLoadError(nsresult aError, nsIURI* aURI, const char16_t* aURL,
                         nsIChannel* aFailedChannel)

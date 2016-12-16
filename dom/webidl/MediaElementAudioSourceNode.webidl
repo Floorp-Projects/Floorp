@@ -10,7 +10,12 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
+dictionary MediaElementAudioSourceOptions {
+    required HTMLMediaElement mediaElement;
+};
+
+[Pref="dom.webaudio.enabled",
+ Constructor(AudioContext context, MediaElementAudioSourceOptions options)]
 interface MediaElementAudioSourceNode : AudioNode {
 
 };

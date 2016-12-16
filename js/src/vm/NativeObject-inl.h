@@ -291,7 +291,7 @@ NativeObject::setSlotWithType(ExclusiveContext* cx, Shape* shape,
 inline void
 NativeObject::updateShapeAfterMovingGC()
 {
-    Shape* shape = shape_.unbarrieredGet();
+    Shape* shape = shape_;
     if (IsForwarded(shape))
         shape_.unsafeSet(Forwarded(shape));
 }

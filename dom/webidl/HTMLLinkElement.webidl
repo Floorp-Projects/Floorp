@@ -12,6 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-link-element
+[HTMLConstructor]
 interface HTMLLinkElement : HTMLElement {
   [Pure]
            attribute boolean disabled;

@@ -204,8 +204,34 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
                                     aContext->Graph());
 }
 
-ConvolverNode::~ConvolverNode()
+/* static */ already_AddRefed<ConvolverNode>
+ConvolverNode::Create(JSContext* aCx, AudioContext& aAudioContext,
+                      const ConvolverOptions& aOptions,
+                      ErrorResult& aRv)
 {
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<ConvolverNode> audioNode = new ConvolverNode(&aAudioContext);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  // This must be done before setting the buffer.
+  audioNode->SetNormalize(!aOptions.mDisableNormalization);
+
+  if (aOptions.mBuffer.WasPassed()) {
+    MOZ_ASSERT(aCx);
+    audioNode->SetBuffer(aCx, aOptions.mBuffer.Value(), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+  }
+
+  return audioNode.forget();
 }
 
 size_t
@@ -292,4 +318,3 @@ ConvolverNode::SetNormalize(bool aNormalize)
 
 } // namespace dom
 } // namespace mozilla
-

@@ -180,6 +180,24 @@ AudioBuffer::~AudioBuffer()
   mozilla::DropJSObjects(this);
 }
 
+/* static */ already_AddRefed<AudioBuffer>
+AudioBuffer::Constructor(const GlobalObject& aGlobal,
+                         AudioContext& aAudioContext,
+                         const AudioBufferOptions& aOptions,
+                         ErrorResult& aRv)
+{
+  if (!aOptions.mNumberOfChannels) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
+  }
+
+  float sampleRate = aOptions.mSampleRate.WasPassed()
+                       ? aOptions.mSampleRate.Value()
+                       : aAudioContext.SampleRate();
+  return Create(&aAudioContext, aOptions.mNumberOfChannels, aOptions.mLength,
+                sampleRate, aRv);
+}
+
 void
 AudioBuffer::ClearJSChannels()
 {

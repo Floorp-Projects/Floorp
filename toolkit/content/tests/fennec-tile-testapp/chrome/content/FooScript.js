@@ -213,7 +213,8 @@ BrowserView.prototype = {
       currentBrowser.docShell.isOffScreenBrowser = false;
     }
 
-    browser.setAttribute("type", "content-primary");
+    browser.setAttribute("type", "content");
+    browser.setAttribute("primary", "true");
     if (!skipZoom)
       browser.docShell.isOffScreenBrowser = true;
 

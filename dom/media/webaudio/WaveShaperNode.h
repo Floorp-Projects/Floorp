@@ -15,21 +15,28 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
+struct WaveShaperOptions;
 
 class WaveShaperNode final : public AudioNode
 {
 public:
-  explicit WaveShaperNode(AudioContext *aContext);
+  static already_AddRefed<WaveShaperNode>
+  Create(AudioContext& aAudioContext, const WaveShaperOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WaveShaperNode, AudioNode)
 
+  static already_AddRefed<WaveShaperNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const WaveShaperOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
+
   JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void GetCurve(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval) const
-  {
-    aRetval.set(mCurve);
-  }
+  void GetCurve(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval);
   void SetCurve(const Nullable<Float32Array>& aData, ErrorResult& aRv);
 
   OverSampleType Oversample() const
@@ -55,14 +62,17 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-protected:
-  virtual ~WaveShaperNode();
-
 private:
-  void ClearCurve();
+  explicit WaveShaperNode(AudioContext *aContext);
+  ~WaveShaperNode() = default;
 
-private:
-  JS::Heap<JSObject*> mCurve;
+  void SetCurveInternal(const nsTArray<float>& aCurve,
+                        ErrorResult& aRv);
+  void CleanCurveInternal();
+
+  void SendCurveToStream();
+
+  nsTArray<float> mCurve;
   OverSampleType mType;
 };
 

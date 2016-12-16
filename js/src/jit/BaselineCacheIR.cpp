@@ -1712,6 +1712,60 @@ BaselineCacheIRCompiler::emitLoadDenseElementResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardNoDenseElements()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Make sure there are no dense elements.
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::NotEqual, initLength, Imm32(0), failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadDenseElementHoleResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Make sure the index is nonnegative.
+    masm.branch32(Assembler::LessThan, index, Imm32(0), failure->label());
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Guard on the initialized length.
+    Label hole;
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, index, &hole);
+
+    // Load the value.
+    Label done;
+    masm.loadValue(BaseObjectElementIndex(scratch, index), R0);
+    masm.branchTestMagic(Assembler::NotEqual, R0, &done);
+
+    // Load undefined for the hole.
+    masm.bind(&hole);
+    masm.moveValue(UndefinedValue(), R0);
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitLoadUnboxedArrayElementResult()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());

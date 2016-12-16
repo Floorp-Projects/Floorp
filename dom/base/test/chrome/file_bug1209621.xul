@@ -30,43 +30,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
     ok(treeOwner, "Active docshell should have a TreeOwner!");
 
     is(treeOwner.primaryContentShell, null,
-       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+       "There shouldn't be primaryContentShell because no browser has primary=true.");
     is(treeOwner.primaryTabParent, null,
-       "There shouldn't be primaryTabParent because no remote browser has type=content-primary.");
+       "There shouldn't be primaryTabParent because no remote browser has primary=true.");
 
     var ip = document.getElementById("inprocess");
     var remote = document.getElementById("remote");
     var remote2 = document.getElementById("remote2");
 
-    ip.setAttribute("type", "content-primary");
+    ip.setAttribute("primary", "true");
     ok(ip.docShell, "non-remote browser should have a DocShell.");
     is(treeOwner.primaryContentShell, ip.docShell,
-       "content-primary browser should be the primaryContentShell.");
+       "primary browser should be the primaryContentShell.");
     is(treeOwner.primaryTabParent, null,
-       "There shouldn't be primaryTabParent because no remote browser has type=content-primary.");
+       "There shouldn't be primaryTabParent because no remote browser has primary=true.");
 
-    ip.setAttribute("type", "content");
-    remote.setAttribute("type", "content-primary");
+    ip.removeAttribute("primary");
+    remote.setAttribute("primary", "true");
     is(treeOwner.primaryContentShell, null,
-       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+       "There shouldn't be primaryContentShell because no browser has primary=true.");
     var tp = remote.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.tabParent;
     ok(tp, "Remote browsers should have a TabParent.");
     is(treeOwner.primaryTabParent, tp,
-       "content-primary remote browser should be the primaryTabParent.");
+       "primary remote browser should be the primaryTabParent.");
 
-    remote.setAttribute("type", "content");
+    remote.removeAttribute("primary");
     is(treeOwner.primaryContentShell, null,
-       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+       "There shouldn't be primaryContentShell because no browser has primary=true.");
     is(treeOwner.primaryTabParent, null,
-       "There shouldn't be primaryTabParent because no remote browser has type=content-primary.");
+       "There shouldn't be primaryTabParent because no remote browser has primary=true.");
 
-    remote2.setAttribute("type", "content-primary");
+    remote2.setAttribute("primary", "true");
     var tp2 = remote2.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.tabParent;
     ok(tp2, "Remote browsers should have a TabParent.");
     is(treeOwner.primaryTabParent, tp2,
-       "content-primary remote browser should be the primaryTabParent.");
+       "primary remote browser should be the primaryTabParent.");
     is(treeOwner.primaryContentShell, null,
-       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+       "There shouldn't be primaryContentShell because no browser has primary=true.");
 
     opener.setTimeout("done()", 0);
     window.close();

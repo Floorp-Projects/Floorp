@@ -17,6 +17,9 @@ namespace mozilla {
 
 namespace dom {
 
+class AudioContext;
+struct PeriodicWaveOptions;
+
 class PeriodicWave final : public nsWrapperCache
 {
 public:
@@ -29,6 +32,10 @@ public:
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PeriodicWave)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PeriodicWave)
+
+  static already_AddRefed<PeriodicWave>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const PeriodicWaveOptions& aOptions, ErrorResult& aRv);
 
   AudioContext* GetParentObject() const
   {
@@ -56,7 +63,7 @@ public:
   size_t SizeOfIncludingThisIfNotShared(MallocSizeOf aMallocSizeOf) const;
 
 private:
-  ~PeriodicWave() {}
+  ~PeriodicWave() = default;
 
   RefPtr<AudioContext> mContext;
   RefPtr<ThreadSharedFloatArrayBufferList> mCoefficients;

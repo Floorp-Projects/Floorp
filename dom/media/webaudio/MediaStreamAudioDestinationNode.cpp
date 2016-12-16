@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-class AudioDestinationTrackSource :
+class AudioDestinationTrackSource final :
   public MediaStreamTrackSource
 {
 public:
@@ -50,7 +50,7 @@ public:
   }
 
 private:
-  virtual ~AudioDestinationTrackSource() {}
+  ~AudioDestinationTrackSource() = default;
 
   RefPtr<MediaStreamAudioDestinationNode> mNode;
 };
@@ -102,8 +102,29 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
   mPort = outputStream->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK);
 }
 
-MediaStreamAudioDestinationNode::~MediaStreamAudioDestinationNode()
+/* static */ already_AddRefed<MediaStreamAudioDestinationNode>
+MediaStreamAudioDestinationNode::Create(AudioContext& aAudioContext,
+                                        const AudioNodeOptions& aOptions,
+                                        ErrorResult& aRv)
 {
+  if (aAudioContext.IsOffline()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<MediaStreamAudioDestinationNode> audioNode =
+    new MediaStreamAudioDestinationNode(&aAudioContext);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return audioNode.forget();
 }
 
 size_t

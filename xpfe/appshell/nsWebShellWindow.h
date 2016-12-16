@@ -70,7 +70,6 @@ protected:
   
   virtual ~nsWebShellWindow();
 
-  void                     LoadContentAreas();
   bool                     ExecuteCloseHandler();
   void                     ConstrainToOpenerScreen(int32_t* aX, int32_t* aY);
 

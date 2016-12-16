@@ -17,6 +17,9 @@ interface nsIPartialSHistory : nsISupports
   // The number of entries of its corresponding nsISHistory.
   [infallible] readonly attribute unsigned long count;
 
+  // The current global index of the active shentry in this partialSHistory.
+  [infallible] readonly attribute long globalIndex;
+
   // If it's part of a grouped session history, globalIndexOffset denotes the
   // number of entries ahead.
   [infallible] readonly attribute unsigned long globalIndexOffset;
@@ -34,15 +37,15 @@ interface nsIPartialSHistory : nsISupports
   void onAttachGroupedSessionHistory(in unsigned long aOffset);
 
   /**
-   * Notify that one or more entries in its associated nsISHistory object
-   * have been changed (i.e. add / remove / replace). It's mainly used for
-   * cross-process case, since in the in-process case we can just register an
-   * nsISHistoryListener instead.
+   * This method is used by the TabParent to notify the PartialSHistory
+   * that the state of its corresponding nsISHistory in the content process
+   * has been updated. It is unused in the in-process case.
    *
-   * @param aCount The number of entries in the associated session history.
-   *               It can be the same as the old value if entries were replaced.
+   * @param aCount      The number of entries in the associated session history.
+   * @param aLocalIndex The local index of the currently active entry in the
+   *                    associated session history
    */
-  void onSessionHistoryChange(in unsigned long aCount);
+  void handleSHistoryUpdate(in unsigned long aCount, in unsigned long aLocalIndex, in boolean aTruncate);
 
   /**
    * Notify that the partial session history has been swapped in as the active
