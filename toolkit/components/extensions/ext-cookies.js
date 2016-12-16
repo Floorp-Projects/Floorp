@@ -45,7 +45,7 @@ global.getCookieStoreIdForContainer = function(containerId) {
 };
 
 global.getContainerForCookieStoreId = function(storeId) {
-  if (!global.isContainerCookieStoreId(storeId)) {
+  if (!isContainerCookieStoreId(storeId)) {
     return null;
   }
 
@@ -58,9 +58,9 @@ global.getContainerForCookieStoreId = function(storeId) {
 };
 
 global.isValidCookieStoreId = function(storeId) {
-  return global.isDefaultCookieStoreId(storeId) ||
-         global.isPrivateCookieStoreId(storeId) ||
-         global.isContainerCookieStoreId(storeId);
+  return isDefaultCookieStoreId(storeId) ||
+         isPrivateCookieStoreId(storeId) ||
+         isContainerCookieStoreId(storeId);
 };
 
 function convert({cookie, isPrivate}) {
@@ -201,17 +201,17 @@ function* query(detailsIn, props, context) {
   let userContextId = 0;
   let isPrivate = context.incognito;
   if (details.storeId) {
-    if (!global.isValidCookieStoreId(details.storeId)) {
+    if (!isValidCookieStoreId(details.storeId)) {
       return;
     }
 
-    if (global.isDefaultCookieStoreId(details.storeId)) {
+    if (isDefaultCookieStoreId(details.storeId)) {
       isPrivate = false;
-    } else if (global.isPrivateCookieStoreId(details.storeId)) {
+    } else if (isPrivateCookieStoreId(details.storeId)) {
       isPrivate = true;
-    } else if (global.isContainerCookieStoreId(details.storeId)) {
+    } else if (isContainerCookieStoreId(details.storeId)) {
       isPrivate = false;
-      userContextId = global.getContainerForCookieStoreId(details.storeId);
+      userContextId = getContainerForCookieStoreId(details.storeId);
       if (!userContextId) {
         return;
       }
@@ -372,12 +372,12 @@ extensions.registerSchemaAPI("cookies", "addon_parent", context => {
         let expiry = isSession ? Number.MAX_SAFE_INTEGER : details.expirationDate;
         let isPrivate = context.incognito;
         let userContextId = 0;
-        if (global.isDefaultCookieStoreId(details.storeId)) {
+        if (isDefaultCookieStoreId(details.storeId)) {
           isPrivate = false;
-        } else if (global.isPrivateCookieStoreId(details.storeId)) {
+        } else if (isPrivateCookieStoreId(details.storeId)) {
           isPrivate = true;
-        } else if (global.isContainerCookieStoreId(details.storeId)) {
-          let containerId = global.getContainerForCookieStoreId(details.storeId);
+        } else if (isContainerCookieStoreId(details.storeId)) {
+          let containerId = getContainerForCookieStoreId(details.storeId);
           if (containerId === null) {
             return Promise.reject({message: `Illegal storeId: ${details.storeId}`});
           }
