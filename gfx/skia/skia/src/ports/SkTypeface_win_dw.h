@@ -97,7 +97,7 @@ public:
                                       fontFileLoader, fontCollectionLoader);
     }
 
-    bool ForceGDI() { return fForceGDI; }
+    bool ForceGDI() const { return fForceGDI; }
 
 protected:
     void weak_dispose() const override {
