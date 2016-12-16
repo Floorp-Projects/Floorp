@@ -4,12 +4,16 @@ cu.import("resource://testing-common/httpd.js");
 
 var httpserver = new HttpServer();
 var httpserver2 = new HttpServer();
+var httpserver3 = new HttpServer();
 var testpath = "/simple";
+var redirectpath = "/redirect";
 var negativetestpath = "/negative";
 var httpbody = "<?xml version='1.0' ?><root>0123456789</root>";
 
 var sb = cu.Sandbox(["http://www.example.com",
-                     "http://localhost:4444/simple"],
+                     "http://localhost:4444/redirect",
+                     "http://localhost:4444/simple",
+                     "http://localhost:4446/redirect"],
                      { wantGlobalProperties: ["XMLHttpRequest"] });
 
 function createXHR(loc, async)
@@ -35,7 +39,7 @@ function checkResults(xhr)
 var httpServersClosed = 0;
 function finishIfDone()
 {
-  if (++httpServersClosed == 2)
+  if (++httpServersClosed == 3)
     do_test_finished();
 }
 
@@ -44,10 +48,14 @@ function run_test()
   do_test_pending();
 
   httpserver.registerPathHandler(testpath, serverHandler);
+  httpserver.registerPathHandler(redirectpath, redirectHandler1);
   httpserver.start(4444);
 
   httpserver2.registerPathHandler(negativetestpath, serverHandler);
   httpserver2.start(4445);
+
+  httpserver3.registerPathHandler(redirectpath, redirectHandler2);
+  httpserver3.start(4446);
 
   // Test sync XHR sending
   cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
@@ -68,7 +76,21 @@ function run_test()
     do_check_true(true);
   }
 
+  // Test redirect handling.
+  // This request bounces to server 2 and then back to server 1.  Neither of
+  // these servers support CORS, but if the expanded principal is used as the
+  // triggering principal, this should work.
+  cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
+  var res = cu.evalInSandbox('var sync = createXHR("4444/redirect"); sync.send(null); sync', sb);
+  do_check_true(checkResults(res));
+
+  var principal = res.responseXML.nodePrincipal;
+  do_check_true(principal.isCodebasePrincipal);
+  var requestURL = "http://localhost:4444/simple";
+  do_check_eq(principal.URI.spec, requestURL);
+
   httpserver2.stop(finishIfDone);
+  httpserver3.stop(finishIfDone);
 
   // Test async XHR sending
   sb.finish = function(){
@@ -95,8 +117,20 @@ function run_test()
   async.send(null);
 }
 
-function serverHandler(metadata, response)
+function serverHandler(request, response)
 {
   response.setHeader("Content-Type", "text/xml", false);
   response.bodyOutputStream.write(httpbody, httpbody.length);
+}
+
+function redirectHandler1(request, response)
+{
+  response.setStatusLine(request.httpVersion, 302, "Found");
+  response.setHeader("Location", "http://localhost:4446/redirect", false);
+}
+
+function redirectHandler2(request, response)
+{
+  response.setStatusLine(request.httpVersion, 302, "Found");
+  response.setHeader("Location", "http://localhost:4444/simple", false);
 }

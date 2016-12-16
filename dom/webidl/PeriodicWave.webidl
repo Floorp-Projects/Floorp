@@ -10,8 +10,12 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
-interface PeriodicWave {
-
+dictionary PeriodicWaveOptions : PeriodicWaveConstraints {
+             sequence<float> real;
+             sequence<float> imag;
 };
 
+[Pref="dom.webaudio.enabled",
+ Constructor(AudioContext context, PeriodicWaveOptions options)]
+interface PeriodicWave {
+};

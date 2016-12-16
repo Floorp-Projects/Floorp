@@ -12,6 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-p-element
+[HTMLConstructor]
 interface HTMLParagraphElement : HTMLElement {
 };
 

@@ -305,13 +305,6 @@ pref("mathml.disabled",    false);
 // Enable scale transform for stretchy MathML operators. See bug 414277.
 pref("mathml.scale_stretchy_operators.enabled", true);
 
-// Disable MediaError.message.
-#ifdef RELEASE_OR_BETA
-pref("dom.MediaError.message.enabled", false);
-#else
-pref("dom.MediaError.message.enabled", true);
-#endif
-
 // Enabled on nightly only until we fix mochitest failures.
 #ifdef NIGHTLY_BUILD
 pref("media.dormant-on-pause-timeout-ms", 5000);
@@ -5565,3 +5558,4 @@ pref("dom.storageManager.enabled", false);
 // To enable the DOM implementation, turn on "dom.storageManager.enabled"
 pref("browser.storageManager.enabled", false);
 
+pref("dom.IntersectionObserver.enabled", true);

@@ -967,16 +967,8 @@ nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
   NS_PRECONDITION(mOwnerContent, "Must have owning content");
 
   nsAutoString value;
-  bool isContent = false;
-  mOwnerContent->GetAttr(kNameSpaceID_None, TypeAttrName(), value);
-
-  // we accept "content" and "content-xxx" values.
-  // at time of writing, we expect "xxx" to be "primary" or "targetable", but
-  // someday it might be an integer expressing priority or something else.
-
-  isContent = value.LowerCaseEqualsLiteral("content") ||
-    StringBeginsWith(value, NS_LITERAL_STRING("content-"),
-                     nsCaseInsensitiveStringComparator());
+  bool isContent = mOwnerContent->AttrValueIs(
+    kNameSpaceID_None, TypeAttrName(), nsGkAtoms::content, eIgnoreCase);
 
   // Force mozbrowser frames to always be typeContent, even if the
   // mozbrowser interfaces are disabled.
@@ -1009,12 +1001,13 @@ nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
   if (aParentType == nsIDocShellTreeItem::typeChrome && isContent) {
     retval = true;
 
-    bool is_primary = value.LowerCaseEqualsLiteral("content-primary");
-
+    bool is_primary =
+      mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary,
+                                 nsGkAtoms::_true, eIgnoreCase);
     if (aOwner) {
       mOwnerContent->AddMutationObserver(this);
       mObservingOwnerContent = true;
-      aOwner->ContentShellAdded(aItem, is_primary, value);
+      aOwner->ContentShellAdded(aItem, is_primary);
     }
   }
 
@@ -1995,6 +1988,11 @@ nsFrameLoader::StartDestroy()
     }
   }
 
+  // Destroy the other frame loader owners now that we are being destroyed.
+  if (mGroupedSessionHistory) {
+    mGroupedSessionHistory->CloseInactiveFrameLoaderOwners();
+  }
+
   nsCOMPtr<nsIRunnable> destroyRunnable = new nsFrameLoaderDestroyRunnable(this);
   if (mNeedsAsyncDestroy || !doc ||
       NS_FAILED(doc->FinalizeFrameLoader(this, destroyRunnable))) {
@@ -2867,12 +2865,8 @@ nsFrameLoader::TryRemoteBrowser()
       return false;
     }
 
-    nsAutoString value;
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
-
-    if (!value.LowerCaseEqualsLiteral("content") &&
-        !StringBeginsWith(value, NS_LITERAL_STRING("content-"),
-                          nsCaseInsensitiveStringComparator())) {
+    if (!mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                    nsGkAtoms::content, eIgnoreCase)) {
       return false;
     }
 
@@ -3283,7 +3277,8 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
 {
   MOZ_ASSERT(mObservingOwnerContent);
 
-  if (aNameSpaceID != kNameSpaceID_None || aAttribute != TypeAttrName()) {
+  if (aNameSpaceID != kNameSpaceID_None ||
+      (aAttribute != TypeAttrName() && aAttribute != nsGkAtoms::primary)) {
     return;
   }
 
@@ -3318,10 +3313,8 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
     return;
   }
 
-  nsAutoString value;
-  aElement->GetAttr(kNameSpaceID_None, TypeAttrName(), value);
-
-  bool is_primary = value.LowerCaseEqualsLiteral("content-primary");
+  bool is_primary =
+    aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
 
 #ifdef MOZ_XUL
   // when a content panel is no longer primary, hide any open popups it may have
@@ -3333,11 +3326,8 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
 #endif
 
   parentTreeOwner->ContentShellRemoved(mDocShell);
-  if (value.LowerCaseEqualsLiteral("content") ||
-      StringBeginsWith(value, NS_LITERAL_STRING("content-"),
-                       nsCaseInsensitiveStringComparator())) {
-
-    parentTreeOwner->ContentShellAdded(mDocShell, is_primary, value);
+  if (aElement->AttrValueIs(kNameSpaceID_None, TypeAttrName(), nsGkAtoms::content, eIgnoreCase)) {
+    parentTreeOwner->ContentShellAdded(mDocShell, is_primary);
   }
 }
 
@@ -3546,10 +3536,8 @@ nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange)
     parentTreeOwner->TabParentRemoved(mRemoteBrowser);
     if (aChange == eTabParentChanged) {
       bool isPrimary =
-        mOwnerContent->AttrValueIs(kNameSpaceID_None,
-                                   TypeAttrName(),
-                                   NS_LITERAL_STRING("content-primary"),
-                                   eIgnoreCase);
+        mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary,
+                                   nsGkAtoms::_true, eIgnoreCase);
       parentTreeOwner->TabParentAdded(mRemoteBrowser, isPrimary);
     }
   }

@@ -1,6 +1,6 @@
 load 336081-1.xhtml
 load 336104.html
-load 382527-1.html
+skip-if(stylo) load 382527-1.html # bug 1323649
 load 382778-1.html
 load 402172-1.html
 load 403965-1.xhtml
@@ -10,7 +10,7 @@ load 407256-1.html
 load 407277-1.html
 load 414178-1.html
 load 418923-1.html
-load 420439.html
+skip-if(stylo) load 420439.html # bug 1323649
 load 428489-1.html
 load 429586-1.html
 load 430624-1.html
@@ -21,14 +21,14 @@ load 448329-3.html
 load 456727-1.html
 load 456727-2.html
 load 459613.html
-needs-focus load 467647-1.html
+skip-if(stylo) needs-focus load 467647-1.html # bug 1323649
 load 475132-1.xhtml
 load 499844-1.html
 load 503709-1.xhtml
-load 513375-1.xhtml
+skip-if(stylo) load 513375-1.xhtml # bug 1323654
 load 535632-1.xhtml
 load 574558-1.xhtml
-load 580151-1.xhtml
+skip-if(stylo) load 580151-1.xhtml # bug 1323655
 load 582138-1.xhtml
 load 612565-1.html
 load 615015-1.html
@@ -41,7 +41,7 @@ load 650572-1.html
 load 667321-1.html
 load 682650-1.html
 load 713427-1.html
-load 713427-2.xhtml
+skip-if(stylo) load 713427-2.xhtml # bug 1323649
 load 716456-1.html
 load 759748.html
 load 761861.html
@@ -49,18 +49,18 @@ load 762183.html
 load 766305.html
 load 766360.html
 load 766387.html
-load 766413.html
+skip-if(stylo) load 766413.html # bug 1323662
 load 766795.html
 load 766845.xhtml
 load 767169.html
 load 768748.html
-load 768765.html
+skip-if(stylo) load 768765.html # bug 1323662
 load 769008-1.html
 load 769967.xhtml
 needs-focus load 771749.html
 load 772282.html
 load 776323.html
-needs-focus load 793866.html
+skip-if(stylo) needs-focus load 793866.html # bug 1323662
 load 1057677.html
 needs-focus load 1128787.html
 load 1134545.html
@@ -69,4 +69,5 @@ load 1158651.html
 load 1244894.xhtml
 load 1264921.html
 load 1272490.html
+load 1317704.html
 load 1317718.html

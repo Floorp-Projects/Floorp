@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[HTMLConstructor]
 interface HTMLTableRowElement : HTMLElement {
   readonly attribute long rowIndex;
   readonly attribute long sectionRowIndex;
