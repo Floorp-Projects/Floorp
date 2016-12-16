@@ -64,7 +64,7 @@ class GlyphRenderingOptionsDWrite : public GlyphRenderingOptions
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsDWrite)
-  GlyphRenderingOptionsDWrite(IDWriteRenderingParams *aParams)
+  explicit GlyphRenderingOptionsDWrite(IDWriteRenderingParams *aParams)
     : mParams(aParams)
   {
   }
