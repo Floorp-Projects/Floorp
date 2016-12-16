@@ -47,7 +47,6 @@
 #include "MediaShutdownManager.h"
 #include "MediaPrefs.h"
 #include "MediaTimer.h"
-#include "NextFrameSeekTask.h"
 #include "TimeUnits.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
@@ -796,47 +795,24 @@ public:
     return mSeekJob.mPromise.Ensure(__func__);
   }
 
-  virtual void Exit() override
-  {
-    mSeekTaskRequest.DisconnectIfExists();
-    mSeekJob.RejectIfExists(__func__);
-    mSeekTask->Discard();
-  }
+  virtual void Exit() override = 0;
 
   State GetState() const override
   {
     return DECODER_STATE_SEEKING;
   }
 
-  void HandleAudioDecoded(MediaData* aAudio) override
-  {
-    mSeekTask->HandleAudioDecoded(aAudio);
-  }
+  void HandleAudioDecoded(MediaData* aAudio) override = 0;
 
-  void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
-  {
-    mSeekTask->HandleVideoDecoded(aVideo, aDecodeStart);
-  }
+  void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override = 0;
 
-  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
-  {
-    mSeekTask->HandleNotDecoded(aType, aError);
-  }
+  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override = 0;
 
-  void HandleAudioWaited(MediaData::Type aType) override
-  {
-    mSeekTask->HandleAudioWaited(aType);
-  }
+  void HandleAudioWaited(MediaData::Type aType) override = 0;
 
-  void HandleVideoWaited(MediaData::Type aType) override
-  {
-    mSeekTask->HandleVideoWaited(aType);
-  }
+  void HandleVideoWaited(MediaData::Type aType) override = 0;
 
-  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override
-  {
-    mSeekTask->HandleNotWaited(aRejection);
-  }
+  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override = 0;
 
   void HandleVideoSuspendTimeout() override
   {
@@ -851,8 +827,6 @@ public:
 
 protected:
   SeekJob mSeekJob;
-  RefPtr<SeekTask> mSeekTask;
-  MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
 
   void SeekCompleted();
 
