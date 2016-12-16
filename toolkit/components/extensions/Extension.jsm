@@ -431,8 +431,8 @@ this.ExtensionData = class {
 
       let containersEnabled = true;
       try {
-        containerEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
-      } catch(e) {
+        containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
+      } catch (e) {
         // If we fail here, we are in some xpcshell test.
       }
 
