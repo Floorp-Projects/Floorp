@@ -19,7 +19,7 @@ namespace a11y {
 class ChildrenEnumVariant final : public IEnumVARIANT
 {
 public:
-  ChildrenEnumVariant(AccessibleWrap* aAnchor) : mAnchorAcc(aAnchor),
+  explicit ChildrenEnumVariant(AccessibleWrap* aAnchor) : mAnchorAcc(aAnchor),
     mCurAcc(mAnchorAcc->GetChildAt(0)), mCurIndex(0) { }
 
   // IUnknown
