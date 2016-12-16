@@ -79,7 +79,7 @@ CloseLibHandle(LibHandleType aLibHandle)
 #else
 #include <dlfcn.h>
 
-#if defined(MOZ_LINKER) && !defined(ANDROID)
+#if defined(MOZ_LINKER)
 extern "C" {
 NS_HIDDEN __typeof(dlopen) __wrap_dlopen;
 NS_HIDDEN __typeof(dlsym) __wrap_dlsym;
@@ -147,8 +147,10 @@ AppendDependentLib(LibHandleType aLibHandle)
 static bool
 ReadDependentCB(pathstr_t aDependentLib)
 {
+#ifndef MOZ_LINKER
   // We do this unconditionally because of data in bug 771745
   ReadAheadLib(aDependentLib);
+#endif
   LibHandleType libHandle = GetLibHandle(aDependentLib);
   if (libHandle) {
     AppendDependentLib(libHandle);
@@ -231,6 +233,11 @@ ns_strrpbrk(const char* string, const char* strCharSet)
 static GetFrozenFunctionsFunc
 XPCOMGlueLoad(const char* aXPCOMFile)
 {
+#ifdef MOZ_LINKER
+  if (!ReadDependentCB(aXPCOMFile)) {
+    return nullptr;
+  }
+#else
   char xpcomDir[MAXPATHLEN];
 #ifdef XP_WIN
   const char* lastSlash = ns_strrpbrk(aXPCOMFile, "/\\");
@@ -323,6 +330,7 @@ XPCOMGlueLoad(const char* aXPCOMFile)
       return nullptr;
     }
   }
+#endif
 
   GetFrozenFunctionsFunc sym =
     (GetFrozenFunctionsFunc)GetSymbol(sTop->libHandle,
