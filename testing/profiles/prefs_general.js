@@ -32,6 +32,7 @@ user_pref("devtools.debugger.remote-port", 6023);
 user_pref("devtools.devedition.promo.enabled", false);
 user_pref("browser.EULA.override", true);
 user_pref("gfx.color_management.force_srgb", true);
+user_pref("gfx.logging.level", 1);
 user_pref("network.manage-offline-status", false);
 // Disable speculative connections so they aren't reported as leaking when they're hanging around.
 user_pref("network.http.speculative-parallel-limit", 0);
