@@ -66,12 +66,6 @@ BeforeAfterKeyboardEvent::Constructor(
 Nullable<bool>
 BeforeAfterKeyboardEvent::GetEmbeddedCancelled()
 {
-  nsAutoString type;
-  GetType(type);
-  if (type.EqualsLiteral("mozbrowserafterkeydown") ||
-      type.EqualsLiteral("mozbrowserafterkeyup")) {
-    return mEvent->AsBeforeAfterKeyboardEvent()->mEmbeddedCancelled;
-  }
   return Nullable<bool>();
 }
 

@@ -266,14 +266,6 @@ EVENT(mozkeyuponplugin,
       eKeyUpOnPlugin,
       EventNameType_None,
       eKeyboardEventClass)
-NON_IDL_EVENT(mozbrowserafterkeydown,
-              eAfterKeyDown,
-              EventNameType_None,
-              eBeforeAfterKeyboardEventClass)
-NON_IDL_EVENT(mozbrowserafterkeyup,
-              eAfterKeyUp,
-              EventNameType_None,
-              eBeforeAfterKeyboardEventClass)
 NON_IDL_EVENT(mozaccesskeynotfound,
               eAccessKeyNotFound,
               EventNameType_None,
