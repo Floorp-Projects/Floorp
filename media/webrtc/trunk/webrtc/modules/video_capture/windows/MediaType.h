@@ -19,10 +19,10 @@ namespace media {
 class MediaType : public AM_MEDIA_TYPE
 {
 public:
-  
+
   MediaType();
-  MediaType(const AM_MEDIA_TYPE* aMediaType);
-  MediaType(const MediaType& aMediaType);
+  explicit MediaType(const AM_MEDIA_TYPE* aMediaType);
+  explicit MediaType(const MediaType& aMediaType);
 
   ~MediaType();
 

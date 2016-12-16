@@ -36,13 +36,13 @@ class DECLSPEC_UUID("0e9924bd-1cb8-48ad-ba31-2fb831b162be")
 {
 public:
 
-  EnumPins(BaseFilter* aFilter)
+  explicit EnumPins(BaseFilter* aFilter)
     : mFilter(aFilter)
     , mRefCnt(0)
   {
     Reset();
   }
-  EnumPins(EnumPins* aEnumPins)
+  explicit EnumPins(EnumPins* aEnumPins)
     : mFilter(aEnumPins->mFilter)
     , mNumPins(aEnumPins->mNumPins)
     , mPinIdx(aEnumPins->mPinIdx)
