@@ -32,7 +32,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHMODULE
 
-    nsAuthSSPI(pType package = PACKAGE_TYPE_NEGOTIATE);
+    explicit nsAuthSSPI(pType package = PACKAGE_TYPE_NEGOTIATE);
 
 private:
     ~nsAuthSSPI();
