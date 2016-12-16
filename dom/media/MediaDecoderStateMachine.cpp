@@ -951,10 +951,10 @@ public:
 
     if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
       if (aType == MediaData::AUDIO_DATA) {
-        mIsAudioQueueFinished = true;
+        AudioQueue().Finish();
         mDoneAudioSeeking = true;
       } else {
-        mIsVideoQueueFinished = true;
+        VideoQueue().Finish();
         mDoneVideoSeeking = true;
         if (mFirstVideoFrameAfterSeek) {
           // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
@@ -1236,27 +1236,11 @@ private:
         mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
     }
 
-    if (mIsAudioQueueFinished) {
-      AudioQueue().Finish();
-    }
-
-    if (mIsVideoQueueFinished) {
-      VideoQueue().Finish();
-    }
-
     SeekCompleted();
   }
 
   void OnSeekTaskRejected(const MediaResult& aError)
   {
-    if (mIsAudioQueueFinished) {
-      AudioQueue().Finish();
-    }
-
-    if (mIsVideoQueueFinished) {
-      VideoQueue().Finish();
-    }
-
     mMaster->DecodeError(aError);
   }
 
@@ -1283,8 +1267,6 @@ private:
    */
   RefPtr<MediaData> mSeekedAudioData;
   RefPtr<MediaData> mSeekedVideoData;
-  bool mIsAudioQueueFinished = false;
-  bool mIsVideoQueueFinished = false;
 };
 
 /*
