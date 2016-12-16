@@ -61,7 +61,8 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
     lookupHash.FromPlaintext(aFragment, cryptoHash);
 
     bool has, complete;
-    nsresult rv = cache->Has(lookupHash, &has, &complete);
+    uint32_t matchLength;
+    nsresult rv = cache->Has(lookupHash, &has, &complete, &matchLength);
 
     EXPECT_EQ(rv, NS_OK);
     EXPECT_EQ(has, aExpectedHas);
