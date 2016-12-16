@@ -109,7 +109,7 @@ public class LocalBrowserDB extends BrowserDB {
     public static final String HISTORY_VISITS_COUNT = "visits";
     public static final String HISTORY_VISITS_URL = "url";
 
-    private static final String TELEMETRY_HISTOGRAM_ACITIVITY_STREAM_TOPSITES = "FENNEC_ACTIVITY_STREAM_TOPSITES_LOADER_TIME_MS";
+    private static final String TELEMETRY_HISTOGRAM_ACTIVITY_STREAM_TOPSITES = "FENNEC_ACTIVITY_STREAM_TOPSITES_LOADER_TIME_MS";
 
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
@@ -1922,7 +1922,7 @@ public class LocalBrowserDB extends BrowserDB {
                 null,
                 null,
                 null,
-                TELEMETRY_HISTOGRAM_ACITIVITY_STREAM_TOPSITES);
+                TELEMETRY_HISTOGRAM_ACTIVITY_STREAM_TOPSITES);
     }
 
     @Override
