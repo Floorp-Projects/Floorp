@@ -1226,14 +1226,10 @@ private:
   {
     if (mSeekedAudioData) {
       mMaster->Push(mSeekedAudioData);
-      mMaster->mDecodedAudioEndTime = std::max(
-        mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
     }
 
     if (mSeekedVideoData) {
       mMaster->Push(mSeekedVideoData);
-      mMaster->mDecodedVideoEndTime = std::max(
-        mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
     }
 
     SeekCompleted();
