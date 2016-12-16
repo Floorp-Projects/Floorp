@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebAuthnAttestation)
 
 public:
-  WebAuthnAttestation(WebAuthentication* aParent);
+  explicit WebAuthnAttestation(WebAuthentication* aParent);
 
 protected:
   ~WebAuthnAttestation();

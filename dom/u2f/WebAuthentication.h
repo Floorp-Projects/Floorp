@@ -54,7 +54,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebAuthentication)
 
 public:
-  WebAuthentication(nsPIDOMWindowInner* aParent);
+  explicit WebAuthentication(nsPIDOMWindowInner* aParent);
 
 protected:
   ~WebAuthentication();

@@ -33,7 +33,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebAuthnAssertion)
 
 public:
-  WebAuthnAssertion(WebAuthentication* aParent);
+  explicit WebAuthnAssertion(WebAuthentication* aParent);
 
 protected:
   ~WebAuthnAssertion();

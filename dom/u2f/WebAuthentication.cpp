@@ -111,11 +111,15 @@ ScopedCredentialGetData(const ScopedCredentialDescriptor& aSCD,
   MOZ_ASSERT(aBufLen);
 
   if (aSCD.mId.IsArrayBufferView()) {
-    *aBuf = aSCD.mId.GetAsArrayBufferView().Data();
-    *aBufLen = aSCD.mId.GetAsArrayBufferView().Length();
+    const ArrayBufferView& view = aSCD.mId.GetAsArrayBufferView();
+    view.ComputeLengthAndData();
+    *aBuf = view.Data();
+    *aBufLen = view.Length();
   } else if (aSCD.mId.IsArrayBuffer()) {
-    *aBuf = aSCD.mId.GetAsArrayBuffer().Data();
-    *aBufLen = aSCD.mId.GetAsArrayBuffer().Length();
+    const ArrayBuffer& buffer = aSCD.mId.GetAsArrayBuffer();
+    buffer.ComputeLengthAndData();
+    *aBuf = buffer.Data();
+    *aBufLen = buffer.Length();
   } else {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
@@ -705,7 +709,7 @@ WebAuthentication::MakeCredential(JSContext* aCx, const Account& aAccount,
 
   CryptoBuffer rpIdHash;
   if (!rpIdHash.SetLength(SHA256_LENGTH, fallible)) {
-    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
     return promise.forget();
   }
 
@@ -756,12 +760,19 @@ WebAuthentication::MakeCredential(JSContext* aCx, const Account& aAccount,
     normalizedObj.mType = aCryptoParameters[a].mType;
     normalizedObj.mAlgorithm.SetAsString().Assign(algName);
 
-    normalizedParams.AppendElement(normalizedObj);
+    if (!normalizedParams.AppendElement(normalizedObj, mozilla::fallible)){
+      promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+      return promise.forget();
+    }
   }
 
   // 4.1.1.5 If normalizedAlgorithm is empty and cryptoParameters was not empty,
   // cancel the timer started in step 2, reject promise with a DOMException
   // whose name is "NotSupportedError", and terminate this algorithm.
+  if (normalizedParams.IsEmpty() && !aCryptoParameters.IsEmpty()) {
+    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return promise.forget();
+  }
 
   // 4.1.1.6 If excludeList is undefined, set it to the empty list.
 
@@ -770,6 +781,8 @@ WebAuthentication::MakeCredential(JSContext* aCx, const Account& aAccount,
   // to the authenticator. If an error is encountered while processing an
   // extension, skip that extension and do not produce any extension data for
   // it. Call the result of this processing clientExtensions.
+
+  // Currently no extensions are supported
 
   // 4.1.1.8 Use attestationChallenge, callerOrigin and rpId, along with the
   // token binding key associated with callerOrigin (if any), to create a
@@ -950,6 +963,16 @@ WebAuthentication::GetAssertion(const ArrayBufferViewOrArrayBuffer& aChallenge,
     return promise.forget();
   }
 
+  // Note: we only support U2F-style authentication for now, so we effectively
+  // require an AllowList.
+  if (!aOptions.mAllowList.WasPassed()) {
+    promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return promise.forget();
+  }
+
+  const Sequence<ScopedCredentialDescriptor>& allowList =
+    aOptions.mAllowList.Value();
+
   // 4.1.2.6 Initialize issuedRequests to an empty list.
   RefPtr<AssertionPromise> monitorPromise = requestMonitor->Ensure();
 
@@ -964,21 +987,10 @@ WebAuthentication::GetAssertion(const ArrayBufferViewOrArrayBuffer& aChallenge,
 
     nsTArray<CryptoBuffer> credentialList;
 
-    // Note: we only support U2F-style authentication for now, so we effectively
-    // require an AllowList.
-    if (!aOptions.mAllowList.WasPassed()) {
-      promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-      return promise.forget();
-    }
-
-    const Sequence<ScopedCredentialDescriptor>& allowList =
-      aOptions.mAllowList.Value();
-
     for (const ScopedCredentialDescriptor& scd : allowList) {
       CryptoBuffer buf;
-      if (!buf.Assign(scd.mId)) {
-        promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
-        return promise.forget();
+      if (NS_WARN_IF(!buf.Assign(scd.mId))) {
+        continue;
       }
 
       // 4.1.2.7.b For each credential C within the credentialList that has a
@@ -986,7 +998,11 @@ WebAuthentication::GetAssertion(const ArrayBufferViewOrArrayBuffer& aChallenge,
       // transports to get assertions using credential C.
 
       // TODO: Filter using Transport
-      credentialList.AppendElement(buf);
+      if (!credentialList.AppendElement(buf, mozilla::fallible)) {
+        requestMonitor->CancelNow();
+        promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+        return promise.forget();
+      }
     }
 
     // 4.1.2.7.c If the above filtering process concludes that none of the
