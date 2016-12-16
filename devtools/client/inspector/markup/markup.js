@@ -20,7 +20,6 @@ const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
 const {UndoStack} = require("devtools/client/shared/undo");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {PrefObserver} = require("devtools/client/shared/prefs");
-const HTMLEditor = require("devtools/client/inspector/markup/views/html-editor");
 const MarkupElementContainer = require("devtools/client/inspector/markup/views/element-container");
 const MarkupReadOnlyContainer = require("devtools/client/inspector/markup/views/read-only-container");
 const MarkupTextContainer = require("devtools/client/inspector/markup/views/text-container");
@@ -71,7 +70,6 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.win = this._frame.contentWindow;
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.querySelector("#root");
-  this.htmlEditor = new HTMLEditor(this.doc);
 
   try {
     this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize");
@@ -569,7 +567,9 @@ MarkupView.prototype = {
   _onNewSelection: function () {
     let selection = this.inspector.selection;
 
-    this.htmlEditor.hide();
+    if (this.htmlEditor) {
+      this.htmlEditor.hide();
+    }
     if (this._hoveredNode && this._hoveredNode !== selection.nodeFront) {
       this.getContainer(this._hoveredNode).hovered = false;
       this._hoveredNode = null;
@@ -1044,7 +1044,9 @@ MarkupView.prototype = {
 
       // Since the htmlEditor is absolutely positioned, a mutation may change
       // the location in which it should be shown.
-      this.htmlEditor.refresh();
+      if (this.htmlEditor) {
+        this.htmlEditor.refresh();
+      }
     });
   },
 
@@ -1414,6 +1416,11 @@ MarkupView.prototype = {
       if (!container) {
         return;
       }
+      // Load load and create HTML Editor as it is rarely used and fetch complex deps
+      if (!this.htmlEditor) {
+        let HTMLEditor = require("devtools/client/inspector/markup/views/html-editor");
+        this.htmlEditor = new HTMLEditor(this.doc);
+      }
       this.htmlEditor.show(container.tagLine, oldValue);
       this.htmlEditor.once("popuphidden", (e, commit, value) => {
         // Need to focus the <html> element instead of the frame / window
@@ -1424,6 +1431,8 @@ MarkupView.prototype = {
           this.updateNodeOuterHTML(node, value, oldValue);
         }
       });
+
+      this.emit("begin-editing");
     });
   },
 
@@ -1724,8 +1733,10 @@ MarkupView.prototype = {
 
     this._hoveredNode = null;
 
-    this.htmlEditor.destroy();
-    this.htmlEditor = null;
+    if (this.htmlEditor) {
+      this.htmlEditor.destroy();
+      this.htmlEditor = null;
+    }
 
     this.undo.destroy();
     this.undo = null;

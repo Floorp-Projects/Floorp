@@ -5,6 +5,9 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "OfflineAppCacheHelper",
+                                  "resource:///modules/offlineAppCache.jsm");
+
 this.EXPORTED_SYMBOLS = [
   "SiteDataManager"
 ];
@@ -62,12 +65,17 @@ this.SiteDataManager = {
     this._updateQuota();
     this._updateAppCache();
     this._updateDiskCache();
+
+    Promise.all([this._updateQuotaPromise, this._updateDiskCachePromise])
+           .then(() => {
+             Services.obs.notifyObservers(null, "sitedatamanager:sites-updated", null);
+           });
   },
 
   _updateQuota() {
     this._quotaUsageRequests = [];
     let promises = [];
-    for (let [key, site] of this._sites) { // eslint-disable-line no-unused-vars
+    for (let site of this._sites.values()) {
       promises.push(new Promise(resolve => {
         let callback = {
           onUsageResult: function(request) {
@@ -96,7 +104,7 @@ this.SiteDataManager = {
 
   _updateAppCache() {
     let groups = this._appCache.getGroups();
-    for (let [key, site] of this._sites) { // eslint-disable-line no-unused-vars
+    for (let site of this._sites.values()) {
       for (let group of groups) {
         let uri = Services.io.newURI(group, null, null);
         if (site.perm.matchesURI(uri, true)) {
@@ -113,7 +121,7 @@ this.SiteDataManager = {
         let sites = this._sites;
         let visitor = {
           onCacheEntryInfo: function(uri, idEnhance, dataSize) {
-            for (let [key, site] of sites) { // eslint-disable-line no-unused-vars
+            for (let site of sites.values()) {
               if (site.perm.matchesURI(uri, true)) {
                 site.diskCacheList.push({
                   dataSize,
@@ -138,7 +146,7 @@ this.SiteDataManager = {
     return Promise.all([this._updateQuotaPromise, this._updateDiskCachePromise])
                   .then(() => {
                     let usage = 0;
-                    for (let [key, site] of this._sites) { // eslint-disable-line no-unused-vars
+                    for (let site of this._sites.values()) {
                       let cache = null;
                       for (cache of site.appCacheList) {
                         usage += cache.usage;
@@ -151,4 +159,23 @@ this.SiteDataManager = {
                     return usage;
                   });
   },
+
+  _removePermission(site) {
+    Services.perms.removePermission(site.perm);
+  },
+
+  _removeQuotaUsage(site) {
+    this._qms.clearStoragesForPrincipal(site.perm.principal, null, true);
+  },
+
+  removeAll() {
+    for (let site of this._sites.values()) {
+      this._removePermission(site);
+      this._removeQuotaUsage(site);
+    }
+    Services.cache2.clear();
+    Services.cookies.removeAll();
+    OfflineAppCacheHelper.clear();
+    this.updateSites();
+  }
 };
