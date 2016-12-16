@@ -161,40 +161,7 @@ static bool IsArg(const char* arg, const char* s)
   return false;
 }
 
-XRE_GetFileFromPathType XRE_GetFileFromPath;
-XRE_ParseAppDataType XRE_ParseAppData;
-XRE_TelemetryAccumulateType XRE_TelemetryAccumulate;
-XRE_StartupTimelineRecordType XRE_StartupTimelineRecord;
-XRE_mainType XRE_main;
-XRE_StopLateWriteChecksType XRE_StopLateWriteChecks;
-XRE_XPCShellMainType XRE_XPCShellMain;
-XRE_GetProcessTypeType XRE_GetProcessType;
-XRE_SetProcessTypeType XRE_SetProcessType;
-XRE_InitChildProcessType XRE_InitChildProcess;
-XRE_EnableSameExecutableForContentProcType XRE_EnableSameExecutableForContentProc;
-#ifdef LIBFUZZER
-XRE_LibFuzzerSetMainType XRE_LibFuzzerSetMain;
-XRE_LibFuzzerGetFuncsType XRE_LibFuzzerGetFuncs;
-#endif
-
-static const nsDynamicFunctionLoad kXULFuncs[] = {
-    { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
-    { "XRE_ParseAppData", (NSFuncPtr*) &XRE_ParseAppData },
-    { "XRE_TelemetryAccumulate", (NSFuncPtr*) &XRE_TelemetryAccumulate },
-    { "XRE_StartupTimelineRecord", (NSFuncPtr*) &XRE_StartupTimelineRecord },
-    { "XRE_main", (NSFuncPtr*) &XRE_main },
-    { "XRE_StopLateWriteChecks", (NSFuncPtr*) &XRE_StopLateWriteChecks },
-    { "XRE_XPCShellMain", (NSFuncPtr*) &XRE_XPCShellMain },
-    { "XRE_GetProcessType", (NSFuncPtr*) &XRE_GetProcessType },
-    { "XRE_SetProcessType", (NSFuncPtr*) &XRE_SetProcessType },
-    { "XRE_InitChildProcess", (NSFuncPtr*) &XRE_InitChildProcess },
-    { "XRE_EnableSameExecutableForContentProc", (NSFuncPtr*) &XRE_EnableSameExecutableForContentProc },
-#ifdef LIBFUZZER
-    { "XRE_LibFuzzerSetMain", (NSFuncPtr*) &XRE_LibFuzzerSetMain },
-    { "XRE_LibFuzzerGetFuncs", (NSFuncPtr*) &XRE_LibFuzzerGetFuncs },
-#endif
-    { nullptr, nullptr }
-};
+Bootstrap::UniquePtr gBootstrap;
 
 #ifdef LIBFUZZER
 int libfuzzer_main(int argc, char **argv);
@@ -203,7 +170,7 @@ int libfuzzer_main(int argc, char **argv);
 
 void libFuzzerGetFuncs(const char* moduleName, LibFuzzerInitFunc* initFunc,
                        LibFuzzerTestingFunc* testingFunc) {
-  return XRE_LibFuzzerGetFuncs(moduleName, initFunc, testingFunc);
+  return gBootstrap->XRE_LibFuzzerGetFuncs(moduleName, initFunc, testingFunc);
 }
 #endif
 
@@ -216,7 +183,7 @@ static int do_main(int argc, char* argv[], char* envp[])
   // Note that -app must be the *first* argument.
   const char *appDataFile = getenv("XUL_APP_FILE");
   if (appDataFile && *appDataFile) {
-    rv = XRE_GetFileFromPath(appDataFile, getter_AddRefs(appini));
+    rv = gBootstrap->XRE_GetFileFromPath(appDataFile, getter_AddRefs(appini));
     if (NS_FAILED(rv)) {
       Output("Invalid path found: '%s'", appDataFile);
       return 255;
@@ -228,7 +195,7 @@ static int do_main(int argc, char* argv[], char* envp[])
       return 255;
     }
 
-    rv = XRE_GetFileFromPath(argv[2], getter_AddRefs(appini));
+    rv = gBootstrap->XRE_GetFileFromPath(argv[2], getter_AddRefs(appini));
     if (NS_FAILED(rv)) {
       Output("application.ini path not recognized: '%s'", argv[2]);
       return 255;
@@ -254,13 +221,13 @@ static int do_main(int argc, char* argv[], char* envp[])
       sandboxing::GetInitializedBrokerServices();
 #endif
 
-    return XRE_XPCShellMain(--argc, argv, envp, &shellData);
+    return gBootstrap->XRE_XPCShellMain(--argc, argv, envp, &shellData);
   }
 
   XREAppData appData;
 
   if (appini) {
-    rv = XRE_ParseAppData(appini, appData);
+    rv = gBootstrap->XRE_ParseAppData(appini, appData);
     if (NS_FAILED(rv)) {
       Output("Couldn't read application.ini");
       return 255;
@@ -303,10 +270,10 @@ static int do_main(int argc, char* argv[], char* envp[])
 
 #ifdef LIBFUZZER
   if (getenv("LIBFUZZER"))
-    XRE_LibFuzzerSetMain(argc, argv, libfuzzer_main);
+    gBootstrap->XRE_LibFuzzerSetMain(argc, argv, libfuzzer_main);
 #endif
 
-  return XRE_main(argc, argv, appData);
+  return gBootstrap->XRE_main(argc, argv, appData);
 }
 
 static bool
@@ -345,20 +312,14 @@ InitXPCOMGlue(const char *argv0)
     return NS_ERROR_FAILURE;
   }
 
-  rv = XPCOMGlueStartup(exePath);
-  if (NS_FAILED(rv)) {
+  gBootstrap = mozilla::GetBootstrap(exePath);
+  if (!gBootstrap) {
     Output("Couldn't load XPCOM.\n");
-    return rv;
-  }
-
-  rv = XPCOMGlueLoadXULFunctions(kXULFuncs);
-  if (NS_FAILED(rv)) {
-    Output("Couldn't load XRE functions.\n");
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
   // This will set this thread as the main thread.
-  NS_LogInit();
+  gBootstrap->NS_LogInit();
 
   return NS_OK;
 }
@@ -397,10 +358,10 @@ int main(int argc, char* argv[], char* envp[])
       return 255;
     }
 
-    int result = content_process_main(argc, argv);
+    int result = content_process_main(gBootstrap.get(), argc, argv);
 
     // InitXPCOMGlue calls NS_LogInit, so we need to balance it here.
-    NS_LogTerm();
+    gBootstrap->NS_LogTerm();
 
     return result;
   }
@@ -412,15 +373,15 @@ int main(int argc, char* argv[], char* envp[])
     return 255;
   }
 
-  XRE_StartupTimelineRecord(mozilla::StartupTimeline::START, start);
+  gBootstrap->XRE_StartupTimelineRecord(mozilla::StartupTimeline::START, start);
 
 #ifdef MOZ_BROWSER_CAN_BE_CONTENTPROC
-  XRE_EnableSameExecutableForContentProc();
+  gBootstrap->XRE_EnableSameExecutableForContentProc();
 #endif
 
   int result = do_main(argc, argv, envp);
 
-  NS_LogTerm();
+  gBootstrap->NS_LogTerm();
 
 #ifdef XP_MACOSX
   // Allow writes again. While we would like to catch writes from static
@@ -428,8 +389,10 @@ int main(int argc, char* argv[], char* envp[])
   // at least one such write that we don't control (see bug 826029). For
   // now we enable writes again and early exits will have to use exit instead
   // of _exit.
-  XRE_StopLateWriteChecks();
+  gBootstrap->XRE_StopLateWriteChecks();
 #endif
+
+  gBootstrap.reset();
 
   return result;
 }
