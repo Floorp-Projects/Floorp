@@ -48,7 +48,6 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "mozilla/dom/BeforeAfterKeyboardEvent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for Event::GetEventPopupControlState()
 #include "mozilla/dom/ShadowRoot.h"
@@ -89,7 +88,6 @@
 #include "nsILayoutHistoryState.h"
 #include "nsILineIterator.h" // for ScrollContentIntoView
 #include "PLDHashTable.h"
-#include "mozilla/dom/BeforeAfterKeyboardEventBinding.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/PointerEventBinding.h"
