@@ -99,9 +99,9 @@ function TestScreenColor(gl, r, g, b, a) {
   view.set(new Float32Array([-1, -1, 1, -1, -1,  1, 1,  1]));
   var vb = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vb);
-  gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, view, gl.STATIC_DRAW);
   ok(gl.getError() == 0, 'bufferData with SAB as input parameter works ok.');
-  gl.bufferSubData(gl.ARRAY_BUFFER, 0, arr);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, view);
   ok(gl.getError() == 0, 'bufferSubData with SAB as input parameter works ok.');
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
@@ -153,7 +153,7 @@ function TestScreenColor(gl, r, g, b, a) {
   view.set(new Float32Array([-1, -1, 1, -1, -1,  1, 1,  1]));
   var vb = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vb);
-  gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, view, gl.STATIC_DRAW);
 
   var arr2 = new SharedArrayBuffer(8*4);
   var view2 = new Float32Array(arr2);
