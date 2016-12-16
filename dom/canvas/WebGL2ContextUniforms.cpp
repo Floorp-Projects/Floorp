@@ -138,7 +138,7 @@ WebGL2Context::GetUniformIndices(const WebGLProgram& program,
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef("getUniformIndices: program", program))
+    if (!ValidateObject("getUniformIndices: program", program))
         return;
 
     if (!uniformNames.Length())
@@ -179,7 +179,7 @@ WebGL2Context::GetActiveUniforms(JSContext* cx, const WebGLProgram& program,
     if (!ValidateUniformEnum(this, pname, funcName))
         return;
 
-    if (!ValidateObjectRef("getActiveUniforms: program", program))
+    if (!ValidateObject("getActiveUniforms: program", program))
         return;
 
     const auto& count = uniformIndices.Length();
@@ -231,7 +231,7 @@ WebGL2Context::GetUniformBlockIndex(const WebGLProgram& program,
     if (IsContextLost())
         return 0;
 
-    if (!ValidateObjectRef("getUniformBlockIndex: program", program))
+    if (!ValidateObject("getUniformBlockIndex: program", program))
         return 0;
 
     return program.GetUniformBlockIndex(uniformBlockName);
@@ -247,7 +247,7 @@ WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, const WebGLProgram&
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef("getActiveUniformBlockParameter: program", program))
+    if (!ValidateObject("getActiveUniformBlockParameter: program", program))
         return;
 
     MakeContextCurrent();
@@ -278,7 +278,7 @@ WebGL2Context::GetActiveUniformBlockName(const WebGLProgram& program,
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef("getActiveUniformBlockName: program", program))
+    if (!ValidateObject("getActiveUniformBlockName: program", program))
         return;
 
     program.GetActiveUniformBlockName(uniformBlockIndex, retval);
@@ -291,7 +291,7 @@ WebGL2Context::UniformBlockBinding(WebGLProgram& program, GLuint uniformBlockInd
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectRef("uniformBlockBinding: program", program))
+    if (!ValidateObject("uniformBlockBinding: program", program))
         return;
 
     program.UniformBlockBinding(uniformBlockIndex, uniformBlockBinding);

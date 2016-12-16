@@ -12,7 +12,7 @@
 namespace mozilla {
 
 WebGLTransformFeedback::WebGLTransformFeedback(WebGLContext* webgl, GLuint tf)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mGLName(tf)
     , mIndexedBindings(webgl->mGLMaxTransformFeedbackSeparateAttribs)
     , mIsPaused(false)

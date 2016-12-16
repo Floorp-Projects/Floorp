@@ -16,7 +16,6 @@ class WebGLSync final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLSync>
     , public LinkedListElement<WebGLSync>
-    , public WebGLContextBoundObject
 {
     friend class WebGL2Context;
 
