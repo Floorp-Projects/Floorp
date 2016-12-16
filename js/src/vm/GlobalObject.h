@@ -70,7 +70,6 @@ class GlobalObject : public NativeObject
     enum : unsigned {
         /* Various function values needed by the engine. */
         EVAL = APPLICATION_SLOTS + STANDARD_CLASS_SLOTS,
-        CREATE_DATAVIEW_FOR_THIS,
         THROWTYPEERROR,
 
         /*
@@ -265,12 +264,6 @@ class GlobalObject : public NativeObject
     }
 
   public:
-    /* XXX Privatize me! */
-    void setCreateDataViewForThis(Handle<JSFunction*> fun) {
-        MOZ_ASSERT(getSlotRef(CREATE_DATAVIEW_FOR_THIS).isUndefined());
-        setSlot(CREATE_DATAVIEW_FOR_THIS, ObjectValue(*fun));
-    }
-
     template<typename T>
     inline void setCreateArrayFromBuffer(Handle<JSFunction*> fun);
 
@@ -721,11 +714,6 @@ class GlobalObject : public NativeObject
         MOZ_ASSERT(v.isObject(),
                    "attempting to access [[ThrowTypeError]] too early");
         return &v.toObject();
-    }
-
-    Value createDataViewForThis() const {
-        MOZ_ASSERT(dataViewClassInitialized());
-        return getSlot(CREATE_DATAVIEW_FOR_THIS);
     }
 
     template<typename T>

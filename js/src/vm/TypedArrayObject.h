@@ -462,12 +462,12 @@ class DataViewObject : public NativeObject
     static bool
     defineGetter(JSContext* cx, PropertyName* name, HandleNativeObject proto);
 
-    static bool getAndCheckConstructorArgs(JSContext* cx, JSObject* bufobj, const CallArgs& args,
-                                           uint32_t *byteOffset, uint32_t* byteLength);
+    static bool
+    getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj, const CallArgs& args,
+                               uint32_t* byteOffset, uint32_t* byteLength);
     static bool constructSameCompartment(JSContext* cx, HandleObject bufobj, const CallArgs& args);
     static bool constructWrapped(JSContext* cx, HandleObject bufobj, const CallArgs& args);
 
-    friend bool ArrayBufferObject::createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
     static DataViewObject*
     create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
            Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, JSObject* proto);

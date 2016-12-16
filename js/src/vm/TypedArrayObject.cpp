@@ -1775,7 +1775,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
 }
 
 bool
-DataViewObject::getAndCheckConstructorArgs(JSContext* cx, JSObject* bufobj, const CallArgs& args,
+DataViewObject::getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj, const CallArgs& args,
                                            uint32_t* byteOffsetPtr, uint32_t* byteLengthPtr)
 {
     if (!IsArrayBufferMaybeShared(bufobj)) {
@@ -1890,7 +1890,7 @@ DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallA
     MOZ_ASSERT(args.isConstructing());
     MOZ_ASSERT(bufobj->is<WrapperObject>());
 
-    JSObject* unwrapped = CheckedUnwrap(bufobj);
+    RootedObject unwrapped(cx, CheckedUnwrap(bufobj));
     if (!unwrapped) {
         ReportAccessDenied(cx);
         return false;
@@ -1915,15 +1915,27 @@ DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallA
             return false;
     }
 
-    FixedInvokeArgs<3> args2(cx);
+    RootedObject dv(cx);
+    {
+        JSAutoCompartment ac(cx, unwrapped);
 
-    args2[0].set(PrivateUint32Value(byteOffset));
-    args2[1].set(PrivateUint32Value(byteLength));
-    args2[2].setObject(*proto);
+        Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
+        buffer = &unwrapped->as<ArrayBufferObjectMaybeShared>();
 
-    RootedValue fval(cx, global->createDataViewForThis());
-    RootedValue thisv(cx, ObjectValue(*bufobj));
-    return js::Call(cx, fval, thisv, args2, args.rval());
+        RootedObject wrappedProto(cx, proto);
+        if (!cx->compartment()->wrap(cx, &wrappedProto))
+            return false;
+
+        dv = DataViewObject::create(cx, byteOffset, byteLength, buffer, wrappedProto);
+        if (!dv)
+            return false;
+    }
+
+    if (!cx->compartment()->wrap(cx, &dv))
+        return false;
+
+    args.rval().setObject(*dv);
+    return true;
 }
 
 bool
@@ -2922,22 +2934,7 @@ DataViewObject::initClass(JSContext* cx)
     if (!DefineToStringTag(cx, proto, cx->names().DataView))
         return false;
 
-    /*
-     * Create a helper function to implement the craziness of
-     * |new DataView(new otherWindow.ArrayBuffer())|, and install it in the
-     * global for use by the DataViewObject constructor.
-     */
-    RootedFunction fun(cx, NewNativeFunction(cx, ArrayBufferObject::createDataViewForThis,
-                                             0, nullptr));
-    if (!fun)
-        return false;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_DataView, ctor, proto))
-        return false;
-
-    global->setCreateDataViewForThis(fun);
-
-    return true;
+    return GlobalObject::initBuiltinConstructor(cx, global, JSProto_DataView, ctor, proto);
 }
 
 void
