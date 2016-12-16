@@ -16,7 +16,8 @@ interface imgIRequest;
 interface URI;
 interface nsIStreamListener;
 
-[NamedConstructor=Image(optional unsigned long width, optional unsigned long height)]
+[HTMLConstructor,
+ NamedConstructor=Image(optional unsigned long width, optional unsigned long height)]
 interface HTMLImageElement : HTMLElement {
            [SetterThrows]
            attribute DOMString alt;

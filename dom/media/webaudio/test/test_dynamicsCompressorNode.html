@@ -20,7 +20,7 @@ addLoadEvent(function() {
   var osc = context.createOscillator();
   var sp = context.createScriptProcessor();
 
-  var compressor = context.createDynamicsCompressor();
+  var compressor = new DynamicsCompressorNode(context);
 
   osc.connect(compressor);
   osc.connect(sp);

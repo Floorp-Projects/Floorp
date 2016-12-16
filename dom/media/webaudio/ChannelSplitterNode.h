@@ -13,14 +13,23 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
+struct ChannelSplitterOptions;
 
 class ChannelSplitterNode final : public AudioNode
 {
 public:
-  ChannelSplitterNode(AudioContext* aContext,
-                      uint16_t aOutputCount);
+  static already_AddRefed<ChannelSplitterNode>
+  Create(AudioContext& aAudioContext, const ChannelSplitterOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
+
+  static already_AddRefed<ChannelSplitterNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const ChannelSplitterOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -36,10 +45,11 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-protected:
-  virtual ~ChannelSplitterNode();
-
 private:
+  ChannelSplitterNode(AudioContext* aContext,
+                      uint16_t aOutputCount);
+  ~ChannelSplitterNode() = default;
+
   const uint16_t mOutputCount;
 };
 
@@ -47,4 +57,3 @@ private:
 } // namespace mozilla
 
 #endif
-

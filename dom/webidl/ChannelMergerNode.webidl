@@ -10,8 +10,11 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
-interface ChannelMergerNode : AudioNode {
-
+dictionary ChannelMergerOptions : AudioNodeOptions {
+             unsigned long numberOfInputs = 6;
 };
 
+[Pref="dom.webaudio.enabled",
+ Constructor(AudioContext context, optional ChannelMergerOptions options)]
+interface ChannelMergerNode : AudioNode {
+};

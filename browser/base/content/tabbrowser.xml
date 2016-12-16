@@ -24,7 +24,8 @@
             <xul:hbox flex="1" class="browserSidebarContainer">
               <xul:vbox flex="1" class="browserContainer">
                 <xul:stack flex="1" class="browserStack" anonid="browserStack">
-                  <xul:browser anonid="initialBrowser" type="content-primary" message="true" messagemanagergroup="browsers"
+                  <xul:browser anonid="initialBrowser" type="content" message="true" messagemanagergroup="browsers"
+                               primary="true"
                                xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup,selectmenulist,datetimepicker"/>
                 </xul:stack>
               </xul:vbox>
@@ -1092,9 +1093,9 @@
             var oldBrowser = this.mCurrentBrowser;
 
             if (!gMultiProcessBrowser) {
-              oldBrowser.setAttribute("type", "content-targetable");
+              oldBrowser.removeAttribute("primary");
               oldBrowser.docShellIsActive = false;
-              newBrowser.setAttribute("type", "content-primary");
+              newBrowser.setAttribute("primary", "true");
               newBrowser.docShellIsActive =
                 (window.windowState != window.STATE_MINIMIZED);
             }
@@ -1940,7 +1941,7 @@
 
             let b = document.createElementNS(NS_XUL, "browser");
             b.permanentKey = aParams.permanentKey || {};
-            b.setAttribute("type", "content-targetable");
+            b.setAttribute("type", "content");
             b.setAttribute("message", "true");
             b.setAttribute("messagemanagergroup", "browsers");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
@@ -2526,13 +2527,6 @@
 
             var browser = this.getBrowserForTab(aTab);
 
-            // Start closing the FrameLoaderOwners which are inactive, so that
-            // they are cleaned up as well.
-            let frameLoader = browser.frameLoader;
-            if (frameLoader && frameLoader.groupedSessionHistory) {
-              frameLoader.groupedSessionHistory.closeInactiveFrameLoaderOwners();
-            }
-
             if (!aTab._pendingPermitUnload && !aAdoptedByTab && !aSkipPermitUnload) {
               // We need to block while calling permitUnload() because it
               // processes the event queue and may lead to another removeTab()
@@ -2622,7 +2616,7 @@
             }
 
             // We are no longer the primary content area.
-            browser.setAttribute("type", "content-targetable");
+            browser.removeAttribute("primary");
 
             // Remove this tab as the owner of any other tabs, since it's going away.
             for (let tab of this.tabs) {
@@ -3757,7 +3751,7 @@
               this.destroy();
 
               let toBrowser = this.requestedTab.linkedBrowser;
-              toBrowser.setAttribute("type", "content-primary");
+              toBrowser.setAttribute("primary", "true");
 
               this.tabbrowser._adjustFocusAfterTabSwitch(this.requestedTab);
 
@@ -3766,7 +3760,7 @@
               // before we were able to finalize, in which case, fromBrowser
               // doesn't exist.
               if (fromBrowser) {
-                fromBrowser.setAttribute("type", "content-targetable");
+                fromBrowser.removeAttribute("primary");
               }
 
               let event = new CustomEvent("TabSwitchDone", {

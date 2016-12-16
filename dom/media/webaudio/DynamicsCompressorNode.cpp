@@ -205,8 +205,30 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
                                     aContext->Graph());
 }
 
-DynamicsCompressorNode::~DynamicsCompressorNode()
+/* static */ already_AddRefed<DynamicsCompressorNode>
+DynamicsCompressorNode::Create(AudioContext& aAudioContext,
+                               const DynamicsCompressorOptions& aOptions,
+                               ErrorResult& aRv)
 {
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<DynamicsCompressorNode> audioNode =
+    new DynamicsCompressorNode(&aAudioContext);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  audioNode->Attack()->SetValue(aOptions.mAttack);
+  audioNode->Knee()->SetValue(aOptions.mKnee);
+  audioNode->Ratio()->SetValue(aOptions.mRatio);
+  audioNode->GetRelease()->SetValue(aOptions.mRelease);
+  audioNode->Threshold()->SetValue(aOptions.mThreshold);
+
+  return audioNode.forget();
 }
 
 size_t

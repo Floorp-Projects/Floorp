@@ -31,3 +31,8 @@ TEST_HARNESS_FILES.reftest += [
     'runreftestb2g.py',
     'runreftestmulet.py',
 ]
+
+TEST_HARNESS_FILES.reftest.chrome += [
+    'chrome/binding.xml',
+    'chrome/userContent.css',
+]
