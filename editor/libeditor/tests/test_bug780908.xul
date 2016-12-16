@@ -21,7 +21,8 @@ adapted from test_bug607584.xul by Kent James <kent@caspia.com>
   <p/>
   <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           id="editor"
-          type="content-primary"
+          type="content"
+          primary="true"
           editortype="html"
           style="width: 400px; height: 100px; border: thin solid black"/>
   <p/>

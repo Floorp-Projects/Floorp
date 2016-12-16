@@ -47,9 +47,9 @@ add_task(function* () {
 function* testEscapeCancels(inspector, testActor) {
   yield selectNode(SELECTOR, inspector);
 
-  let onEditorShown = once(inspector.markup.htmlEditor, "popupshown");
+  let onHtmlEditorCreated = once(inspector.markup, "begin-editing");
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
-  yield onEditorShown;
+  yield onHtmlEditorCreated;
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
 
   is((yield testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,

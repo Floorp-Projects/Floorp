@@ -45,6 +45,7 @@ public class BrowserContract {
     public static final String PARAM_PROFILE_PATH = "profilePath";
     public static final String PARAM_LIMIT = "limit";
     public static final String PARAM_SUGGESTEDSITES_LIMIT = "suggestedsites_limit";
+    public static final String PARAM_TOPSITES_EXCLUDE_REMOTE_ONLY = "topsites_exclude_remote_only";
     public static final String PARAM_IS_SYNC = "sync";
     public static final String PARAM_SHOW_DELETED = "show_deleted";
     public static final String PARAM_IS_TEST = "test";

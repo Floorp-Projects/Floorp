@@ -330,6 +330,38 @@ PannerNode::~PannerNode()
   }
 }
 
+/* static */ already_AddRefed<PannerNode>
+PannerNode::Create(AudioContext& aAudioContext,
+                   const PannerOptions& aOptions,
+                   ErrorResult& aRv)
+{
+  if (aAudioContext.CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<PannerNode> audioNode = new PannerNode(&aAudioContext);
+
+  audioNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  audioNode->SetPanningModel(aOptions.mPanningModel);
+  audioNode->SetDistanceModel(aOptions.mDistanceModel);
+  audioNode->SetPosition(aOptions.mPositionX, aOptions.mPositionY,
+                         aOptions.mPositionZ);
+  audioNode->SetOrientation(aOptions.mOrientationX, aOptions.mOrientationY,
+                            aOptions.mOrientationZ);
+  audioNode->SetRefDistance(aOptions.mRefDistance);
+  audioNode->SetMaxDistance(aOptions.mMaxDistance);
+  audioNode->SetRolloffFactor(aOptions.mRolloffFactor);
+  audioNode->SetConeInnerAngle(aOptions.mConeInnerAngle);
+  audioNode->SetConeOuterAngle(aOptions.mConeOuterAngle);
+  audioNode->SetConeOuterGain(aOptions.mConeOuterGain);
+
+  return audioNode.forget();
+}
+
 void PannerNode::SetPanningModel(PanningModelType aPanningModel)
 {
   mPanningModel = aPanningModel;
@@ -783,4 +815,3 @@ PannerNode::SendDopplerToSourcesIfNeeded()
 
 } // namespace dom
 } // namespace mozilla
-

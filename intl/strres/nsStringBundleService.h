@@ -36,7 +36,7 @@ public:
 private:
   virtual ~nsStringBundleService();
 
-  nsresult getStringBundle(const char *aUrl, nsIStringBundle** aResult);
+  void getStringBundle(const char *aUrl, nsIStringBundle** aResult);
   nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
                             uint32_t argCount, char16_t** argArray,
                             char16_t* *result);

@@ -17,7 +17,7 @@ var gTest = {
     var source = context.createBufferSource();
     source.buffer = this.buffer;
 
-    var shaper = context.createWaveShaper();
+    var shaper = new WaveShaperNode(context);
     shaper.curve = this.curve;
 
     source.connect(shaper);

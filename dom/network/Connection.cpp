@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <limits>
-#include "mozilla/Hal.h"
-#include "mozilla/dom/network/Connection.h"
+#include "Connection.h"
+#include "ConnectionMainThread.h"
+#include "ConnectionWorker.h"
 #include "nsIDOMClassInfo.h"
-#include "mozilla/Preferences.h"
 #include "Constants.h"
+#include "WorkerPrivate.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -19,6 +19,9 @@
 
 namespace mozilla {
 namespace dom {
+
+using namespace workers;
+
 namespace network {
 
 NS_IMPL_QUERY_INTERFACE_INHERITED(Connection, DOMEventTargetHelper,
@@ -34,61 +37,98 @@ Connection::Connection(nsPIDOMWindowInner* aWindow)
   , mType(static_cast<ConnectionType>(kDefaultType))
   , mIsWifi(kDefaultIsWifi)
   , mDHCPGateway(kDefaultDHCPGateway)
+  , mBeenShutDown(false)
 {
-  hal::RegisterNetworkObserver(this);
+}
 
-  hal::NetworkInformation networkInfo;
-  hal::GetCurrentNetworkInformation(&networkInfo);
-
-  UpdateFromNetworkInfo(networkInfo);
+Connection::~Connection()
+{
+  NS_ASSERT_OWNINGTHREAD(Connection);
+  MOZ_ASSERT(mBeenShutDown);
 }
 
 void
 Connection::Shutdown()
 {
-  hal::UnregisterNetworkObserver(this);
+  NS_ASSERT_OWNINGTHREAD(Connection);
+
+  if (mBeenShutDown) {
+    return;
+  }
+
+  mBeenShutDown = true;
+  ShutdownInternal();
 }
 
 NS_IMETHODIMP
-Connection::GetIsWifi(bool *aIsWifi)
+Connection::GetIsWifi(bool* aIsWifi)
 {
+  NS_ENSURE_ARG_POINTER(aIsWifi);
+  NS_ASSERT_OWNINGTHREAD(Connection);
+
   *aIsWifi = mIsWifi;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Connection::GetDhcpGateway(uint32_t *aGW)
+Connection::GetDhcpGateway(uint32_t* aGW)
 {
+  NS_ENSURE_ARG_POINTER(aGW);
+  NS_ASSERT_OWNINGTHREAD(Connection);
+
   *aGW = mDHCPGateway;
   return NS_OK;
-}
-
-void
-Connection::UpdateFromNetworkInfo(const hal::NetworkInformation& aNetworkInfo)
-{
-  mType = static_cast<ConnectionType>(aNetworkInfo.type());
-  mIsWifi = aNetworkInfo.isWifi();
-  mDHCPGateway = aNetworkInfo.dhcpGateway();
-}
-
-void
-Connection::Notify(const hal::NetworkInformation& aNetworkInfo)
-{
-  ConnectionType previousType = mType;
-
-  UpdateFromNetworkInfo(aNetworkInfo);
-
-  if (previousType == mType) {
-    return;
-  }
-
-  DispatchTrustedEvent(CHANGE_EVENT_NAME);
 }
 
 JSObject*
 Connection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return NetworkInformationBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+Connection::Update(ConnectionType aType, bool aIsWifi, bool aDHCPGateway,
+                   bool aNotify)
+{
+  NS_ASSERT_OWNINGTHREAD(Connection);
+
+  ConnectionType previousType = mType;
+
+  mType = aType;
+  mIsWifi = aIsWifi;
+  mDHCPGateway = aDHCPGateway;
+
+  if (aNotify && previousType != aType) {
+    DispatchTrustedEvent(CHANGE_EVENT_NAME);
+  }
+}
+
+/* static */ bool
+Connection::IsEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.netinfo.enabled");
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  MOZ_ASSERT(workerPrivate);
+  return workerPrivate->NetworkInformationEnabled();
+}
+
+/* static */ Connection*
+Connection::CreateForWindow(nsPIDOMWindowInner* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+  return new ConnectionMainThread(aWindow);
+}
+
+/* static */ already_AddRefed<Connection>
+Connection::CreateForWorker(workers::WorkerPrivate* aWorkerPrivate,
+                            ErrorResult& aRv)
+{
+  MOZ_ASSERT(aWorkerPrivate);
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  return ConnectionWorker::Create(aWorkerPrivate, aRv);
 }
 
 } // namespace network

@@ -434,13 +434,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   background-position: bottom left;
 }
 
-.menuitem-tooltip {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-tooltip");
-}
-
-.menuitem-iconic-tooltip,
-.menuitem-tooltip[type="checkbox"],
-.menuitem-tooltip[type="radio"] {
+.menuitem-iconic-tooltip {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
 

@@ -662,8 +662,7 @@ TabChild::Init()
 
   if (GroupedSHistory::GroupedHistoryEnabled()) {
     // Set session history listener.
-    nsCOMPtr<nsISHistory> shistory;
-    mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+    nsCOMPtr<nsISHistory> shistory = GetRelatedSHistory();
     if (!shistory) {
       return NS_ERROR_FAILURE;
     }
@@ -1510,8 +1509,7 @@ TabChild::RecvNotifyAttachGroupedSessionHistory(const uint32_t& aOffset)
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsCOMPtr<nsISHistory> shistory;
-  mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+  nsCOMPtr<nsISHistory> shistory = GetRelatedSHistory();
   NS_ENSURE_TRUE(shistory, IPC_FAIL_NO_REASON(this));
 
   if (NS_FAILED(shistory->OnAttachGroupedSessionHistory(aOffset))) {
@@ -1529,8 +1527,7 @@ TabChild::RecvNotifyPartialSessionHistoryActive(const uint32_t& aGlobalLength,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsCOMPtr<nsISHistory> shistory;
-  mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+  nsCOMPtr<nsISHistory> shistory = GetRelatedSHistory();
   NS_ENSURE_TRUE(shistory, IPC_FAIL_NO_REASON(this));
 
   if (NS_FAILED(shistory->OnPartialSessionHistoryActive(aGlobalLength,
@@ -1543,8 +1540,7 @@ TabChild::RecvNotifyPartialSessionHistoryActive(const uint32_t& aGlobalLength,
 mozilla::ipc::IPCResult
 TabChild::RecvNotifyPartialSessionHistoryDeactive()
 {
-  nsCOMPtr<nsISHistory> shistory;
-  mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+  nsCOMPtr<nsISHistory> shistory = GetRelatedSHistory();
   NS_ENSURE_TRUE(shistory, IPC_FAIL_NO_REASON(this));
 
   if (NS_FAILED(shistory->OnPartialSessionHistoryDeactive())) {
@@ -1897,7 +1893,7 @@ TabChild::RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
 
 a11y::PDocAccessibleChild*
 TabChild::AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&,
-                                   const uint32_t&)
+                                   const uint32_t&, const IAccessibleHolder&)
 {
   MOZ_ASSERT(false, "should never call this!");
   return nullptr;
@@ -3096,6 +3092,38 @@ TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
   RecvSetDocShellIsActive(true, false, aLayerObserverEpoch);
 }
 
+already_AddRefed<nsISHistory>
+TabChild::GetRelatedSHistory()
+{
+  nsCOMPtr<nsISHistory> shistory;
+  mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+  return shistory.forget();
+}
+
+nsresult
+TabChildSHistoryListener::SHistoryDidUpdate(bool aTruncate /* = false */)
+{
+  RefPtr<TabChild> tabChild(mTabChild);
+  if (NS_WARN_IF(!tabChild)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsISHistory> shistory = tabChild->GetRelatedSHistory();
+  NS_ENSURE_TRUE(shistory, NS_ERROR_FAILURE);
+
+  int32_t index, count;
+  nsresult rv = shistory->GetIndex(&index);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = shistory->GetCount(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX: It would be nice if we could batch these updates like SessionStore
+  // does, and provide a form of `Flush` command which would allow us to trigger
+  // an update, and wait for the state to become consistent.
+  NS_ENSURE_TRUE(tabChild->SendSHistoryUpdate(count, index, aTruncate), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
 /*******************************************************************************
  * nsISHistoryListener
  ******************************************************************************/
@@ -3143,19 +3171,15 @@ TabChildSHistoryListener::OnHistoryReplaceEntry(int32_t aIndex)
 }
 
 NS_IMETHODIMP
-TabChildSHistoryListener::OnLengthChange(int32_t aCount)
+TabChildSHistoryListener::OnLengthChanged(int32_t aCount)
 {
-  RefPtr<TabChild> tabChild(mTabChild);
-  if (!tabChild) {
-    return NS_ERROR_FAILURE;
-  }
+  return SHistoryDidUpdate(/* aTruncate = */ true);
+}
 
-  if (aCount < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return tabChild->SendNotifySessionHistoryChange(aCount) ?
-           NS_OK : NS_ERROR_FAILURE;
+NS_IMETHODIMP
+TabChildSHistoryListener::OnIndexChanged(int32_t aIndex)
+{
+  return SHistoryDidUpdate(/* aTruncate = */ false);
 }
 
 NS_IMETHODIMP

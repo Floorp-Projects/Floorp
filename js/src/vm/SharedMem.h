@@ -12,8 +12,8 @@
 template<typename T>
 class SharedMem
 {
-    static_assert(mozilla::IsPointer<T>::value,
-                  "SharedMem encapsulates pointer types");
+    // static_assert(mozilla::IsPointer<T>::value,
+    //               "SharedMem encapsulates pointer types");
 
     enum Sharedness {
         IsUnshared,

@@ -15,15 +15,25 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
+struct AnalyserOptions;
 
 class AnalyserNode final : public AudioNode
 {
 public:
-  explicit AnalyserNode(AudioContext* aContext);
+  static already_AddRefed<AnalyserNode>
+  Create(AudioContext& aAudioContext, const AnalyserOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<AnalyserNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const AnalyserOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   void GetFloatFrequencyData(const Float32Array& aArray);
   void GetByteFrequencyData(const Uint8Array& aArray);
@@ -62,10 +72,9 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-  ~AnalyserNode() {}
-
 private:
+  ~AnalyserNode() = default;
+
   friend class AnalyserNodeEngine;
   void AppendChunk(const AudioChunk& aChunk);
   bool AllocateBuffer();
@@ -74,6 +83,8 @@ private:
   void GetTimeDomainData(float* aData, size_t aLength);
 
 private:
+  explicit AnalyserNode(AudioContext* aContext);
+
   FFTBlock mAnalysisBlock;
   nsTArray<AudioChunk> mChunks;
   double mMinDecibels;

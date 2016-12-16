@@ -13,14 +13,23 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
+struct ChannelMergerOptions;
 
 class ChannelMergerNode final : public AudioNode
 {
 public:
-  ChannelMergerNode(AudioContext* aContext,
-                    uint16_t aInputCount);
+  static already_AddRefed<ChannelMergerNode>
+  Create(AudioContext& aAudioContext, const ChannelMergerOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
+
+  static already_AddRefed<ChannelMergerNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const ChannelMergerOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -36,10 +45,11 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-protected:
-  virtual ~ChannelMergerNode();
-
 private:
+  ChannelMergerNode(AudioContext* aContext,
+                    uint16_t aInputCount);
+  ~ChannelMergerNode() = default;
+
   const uint16_t mInputCount;
 };
 
@@ -47,4 +57,3 @@ private:
 } // namespace mozilla
 
 #endif
-

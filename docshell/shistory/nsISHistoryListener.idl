@@ -113,5 +113,12 @@ interface nsISHistoryListener : nsISupports
     * and OnHistoryPurge which happen before the modifications are actually done
     * and maybe cancellable, this function is called after these modifications.
     */
-   void OnLengthChange(in long aCount);
+   void OnLengthChanged(in long aCount);
+
+  /**
+   * Called when nsISHistory::index has been updated. Unlike the other methods
+   * on this interface, which happen before the modifications are actually done
+   * and maybe cancellable, this function is called after these modifications.
+   */
+   void OnIndexChanged(in long aIndex);
 };

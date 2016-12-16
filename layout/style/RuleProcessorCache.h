@@ -15,7 +15,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsExpirationTracker.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsIMemoryReporter.h"
 #include "nsTArray.h"
 

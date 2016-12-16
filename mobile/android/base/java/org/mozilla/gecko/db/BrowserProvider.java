@@ -896,6 +896,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         final String limitParam = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
         final String gridLimitParam = uri.getQueryParameter(BrowserContract.PARAM_SUGGESTEDSITES_LIMIT);
+        final boolean excludeRemoteOnly = Boolean.parseBoolean(
+                uri.getQueryParameter(BrowserContract.PARAM_TOPSITES_EXCLUDE_REMOTE_ONLY));
         final String nonPositionedPins = uri.getQueryParameter(BrowserContract.PARAM_NON_POSITIONED_PINS);
 
         final int totalLimit;
@@ -949,7 +951,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // Filter out: unvisited pages (history_id == -1) pinned (and other special) sites, deleted sites,
         // and about: pages.
-        final String ignoreForTopSitesWhereClause =
+        String ignoreForTopSitesWhereClause =
                 "(" + Combined.HISTORY_ID + " IS NOT -1)" +
                 " AND " +
                 Combined.URL + " NOT IN (SELECT " +
@@ -958,6 +960,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 DBUtils.qualifyColumn("bookmarks", Bookmarks.IS_DELETED) + " == 0)" +
                 " AND " +
                 "(" + Combined.URL + " NOT LIKE ?)";
+
+        if (excludeRemoteOnly) {
+            ignoreForTopSitesWhereClause += " AND (" + Combined.LOCAL_VISITS_COUNT + " > 0)";
+        }
 
         final String[] ignoreForTopSitesArgs = new String[] {
                 AboutPages.URL_FILTER

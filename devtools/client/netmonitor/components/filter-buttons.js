@@ -31,7 +31,7 @@ function FilterButtons({
   return div({ id: "requests-menu-filter-buttons" }, buttons);
 }
 
-FilterButtons.PropTypes = {
+FilterButtons.propTypes = {
   state: PropTypes.object.isRequired,
   triggerFilterType: PropTypes.func.iRequired,
 };

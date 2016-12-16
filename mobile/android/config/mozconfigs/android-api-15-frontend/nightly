@@ -19,6 +19,8 @@ export GRADLE_MAVEN_REPOSITORY="file://$topsrcdir/jcentral"
 
 unset HOST_CC
 unset HOST_CXX
+unset RUSTC
+unset CARGO
 
 ac_add_options --disable-compile-environment
 ac_add_options --disable-tests

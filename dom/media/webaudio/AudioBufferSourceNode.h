@@ -13,13 +13,16 @@
 namespace mozilla {
 namespace dom {
 
+struct AudioBufferSourceOptions;
 class AudioParam;
 
-class AudioBufferSourceNode final : public AudioNode,
-                                    public MainThreadMediaStreamListener
+class AudioBufferSourceNode final : public AudioNode
+                                  , public MainThreadMediaStreamListener
 {
 public:
-  explicit AudioBufferSourceNode(AudioContext* aContext);
+  static already_AddRefed<AudioBufferSourceNode>
+  Create(JSContext* aCx, AudioContext& aAudioContext,
+         const AudioBufferSourceOptions& aOptions, ErrorResult& aRv);
 
   void DestroyMediaStream() override;
 
@@ -33,6 +36,13 @@ public:
   }
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioNode)
+
+  static already_AddRefed<AudioBufferSourceNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const AudioBufferSourceOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aGlobal.Context(), aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -99,10 +109,10 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-  virtual ~AudioBufferSourceNode();
-
 private:
+  explicit AudioBufferSourceNode(AudioContext* aContext);
+  ~AudioBufferSourceNode() = default;
+
   friend class AudioBufferSourceNodeEngine;
   // START is sent during Start().
   // STOP is sent during Stop().
@@ -130,7 +140,6 @@ private:
   void SendBufferParameterToStream(JSContext* aCx);
   void SendOffsetAndDurationParametersToStream(AudioNodeStream* aStream);
 
-private:
   double mLoopStart;
   double mLoopEnd;
   double mOffset;
@@ -146,4 +155,3 @@ private:
 } // namespace mozilla
 
 #endif
-

@@ -13,7 +13,7 @@
 
 #include "nsGkAtoms.h"
 
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsCSSParser.h"
 #include "nsHostObjectProtocolHandler.h"
 
