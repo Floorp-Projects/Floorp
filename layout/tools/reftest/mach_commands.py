@@ -58,7 +58,7 @@ The profile should be generated in a directory called 'profile'.
 MARIONETTE_DISABLED = '''
 The reftest command requires a marionette enabled build on Mulet.
 
-Add 'ENABLE_MARIONETTE=1' to your mozconfig file and re-build the application.
+Add 'ac_add_options --enable-marionette' to your mozconfig file and re-build the application.
 Your currently active mozconfig is %s.
 '''.lstrip()
 
