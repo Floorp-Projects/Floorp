@@ -20,7 +20,7 @@
 class AutoCriticalSection
 {
 public:
-  AutoCriticalSection(LPCRITICAL_SECTION aSection)
+  explicit AutoCriticalSection(LPCRITICAL_SECTION aSection)
     : mSection(aSection)
   {
     ::EnterCriticalSection(mSection);
