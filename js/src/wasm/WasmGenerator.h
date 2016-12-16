@@ -231,6 +231,7 @@ class MOZ_STACK_CLASS ModuleGenerator
                            Metadata* maybeAsmJSMetadata = nullptr);
 
     const ModuleEnvironment& env() const { return *env_; }
+    ModuleEnvironment& mutableEnv();
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
     jit::MacroAssembler& masm() { return masm_; }
@@ -269,11 +270,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool addGlobal(ValType type, bool isConst, uint32_t* index);
     MOZ_MUST_USE bool addExport(CacheableChars&& fieldChars, uint32_t funcIndex);
 
-    // Finish compilation, provided the list of imports and source bytecode.
-    // Both these Vectors may be empty (viz., b/c asm.js does different things
-    // for imports and source).
-    SharedModule finish(const ShareableBytes& bytecode, DataSegmentVector&& dataSegments,
-                        NameInBytecodeVector&& funcNames);
+    // Finish compilation of the given bytecode.
+    SharedModule finish(const ShareableBytes& bytecode);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.

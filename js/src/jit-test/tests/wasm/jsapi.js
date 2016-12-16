@@ -156,6 +156,23 @@ assertEq(arr[2].name, "c");
 assertEq(arr[3].kind, "global");
 assertEq(arr[3].name, "⚡");
 
+// 'WebAssembly.Module.customSections' data property
+const customSectionsDesc = Object.getOwnPropertyDescriptor(Module, 'customSections');
+assertEq(typeof customSectionsDesc.value, "function");
+assertEq(customSectionsDesc.writable, true);
+assertEq(customSectionsDesc.enumerable, false);
+assertEq(customSectionsDesc.configurable, true);
+
+// 'WebAssembly.Module.customSections' method
+const moduleCustomSections = customSectionsDesc.value;
+assertEq(moduleCustomSections.length, 2);
+assertErrorMessage(() => moduleCustomSections(), TypeError, /requires more than 0 arguments/);
+assertErrorMessage(() => moduleCustomSections(undefined), TypeError, /first argument must be a WebAssembly.Module/);
+assertErrorMessage(() => moduleCustomSections({}), TypeError, /first argument must be a WebAssembly.Module/);
+var arr = moduleCustomSections(emptyModule);
+assertEq(arr instanceof Array, true);
+assertEq(arr.length, 0);
+
 // 'WebAssembly.Instance' data property
 const instanceDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Instance');
 assertEq(typeof instanceDesc.value, "function");
