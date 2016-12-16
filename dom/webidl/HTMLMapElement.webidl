@@ -11,6 +11,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-map-element
+[HTMLConstructor]
 interface HTMLMapElement : HTMLElement {
   [SetterThrows, Pure]
            attribute DOMString name;

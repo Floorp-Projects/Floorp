@@ -601,12 +601,14 @@ parent:
     sync EnsureLayersConnected();
 
     /**
-     * Notify parent that one or more entries have been added / removed from
-     * the child session history.
+     * Notify the parent that the session history state has been updated.
      *
-     * @param aCount the updated number of entries in child session history
+     * @param aCount
+     *        The updated number of entries in child session history
+     * @param aLocalIndex
+     *        The local session history index which is loaded.
      */
-    async NotifySessionHistoryChange(uint32_t aCount);
+    async SHistoryUpdate(uint32_t aCount, uint32_t aLocalIndex, bool aTruncate);
 
     /**
      * When the session history is across multiple root docshells, this function

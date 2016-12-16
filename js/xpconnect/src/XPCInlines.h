@@ -471,7 +471,7 @@ inline
 void XPCWrappedNativeTearOff::JSObjectMoved(JSObject* obj, const JSObject* old)
 {
     MOZ_ASSERT(!IsMarked());
-    MOZ_ASSERT(mJSObject.unbarrieredGetPtr() == old);
+    MOZ_ASSERT(mJSObject == old);
     mJSObject = obj;
 }
 

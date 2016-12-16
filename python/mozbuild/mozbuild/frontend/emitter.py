@@ -106,8 +106,6 @@ from mozbuild.base import ExecutionSummary
 ALLOWED_XPCOM_GLUE = {
     ('xpcshell', 'js/xpconnect/shell'),
     ('testcrasher', 'toolkit/crashreporter/test'),
-    ('mediapipeline_unittest', 'media/webrtc/signaling/test'),
-    ('signaling_unittests', 'media/webrtc/signaling/test'),
     ('TestMailCookie', 'mailnews/base/test'),
     ('calbasecomps', 'calendar/base/backend/libical/build'),
     ('purplexpcom', 'extensions/purple/purplexpcom/src'),

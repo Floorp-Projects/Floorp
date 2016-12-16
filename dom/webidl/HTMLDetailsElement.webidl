@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[HTMLConstructor]
 interface HTMLDetailsElement : HTMLElement {
   [SetterThrows]
   attribute boolean open;

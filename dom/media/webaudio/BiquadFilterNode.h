@@ -15,14 +15,24 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
+struct BiquadFilterOptions;
 
 class BiquadFilterNode final : public AudioNode
 {
 public:
-  explicit BiquadFilterNode(AudioContext* aContext);
+  static already_AddRefed<BiquadFilterNode>
+  Create(AudioContext& aAudioContext, const BiquadFilterOptions& aOptions,
+         ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BiquadFilterNode, AudioNode)
+
+  static already_AddRefed<BiquadFilterNode>
+  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
+              const BiquadFilterOptions& aOptions, ErrorResult& aRv)
+  {
+    return Create(aAudioContext, aOptions, aRv);
+  }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -64,10 +74,10 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-protected:
-  virtual ~BiquadFilterNode();
-
 private:
+  explicit BiquadFilterNode(AudioContext* aContext);
+  ~BiquadFilterNode() = default;
+
   BiquadFilterType mType;
   RefPtr<AudioParam> mFrequency;
   RefPtr<AudioParam> mDetune;
@@ -79,4 +89,3 @@ private:
 } // namespace mozilla
 
 #endif
-

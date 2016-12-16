@@ -228,7 +228,7 @@
     }
   ]]></script>
 
-  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
-  <browser type="content-primary" flex="1" id="content-remote" remote="true" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content-remote" remote="true" src="about:blank"/>
   <findbar id="FindToolbar" browserid="content"/>
 </window>

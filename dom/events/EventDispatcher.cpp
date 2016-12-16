@@ -1163,7 +1163,10 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   }
   if (aEventType.LowerCaseEqualsLiteral("storageevent")) {
     LOG_EVENT_CREATION(STORAGEEVENT);
-    return NS_NewDOMStorageEvent(aOwner);
+    RefPtr<Event> event =
+      StorageEvent::Constructor(aOwner, EmptyString(), StorageEventInit());
+    event->MarkUninitialized();
+    return event.forget();
   }
 
 #undef LOG_EVENT_CREATION
