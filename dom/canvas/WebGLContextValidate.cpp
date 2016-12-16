@@ -229,7 +229,7 @@ WebGLContext::ValidateUniformLocation(WebGLUniformLocation* loc, const char* fun
     if (!loc)
         return false;
 
-    if (!ValidateObject(funcName, loc))
+    if (!ValidateObjectAllowDeleted(funcName, *loc))
         return false;
 
     if (!mCurrentProgram) {
