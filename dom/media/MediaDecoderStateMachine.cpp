@@ -886,7 +886,7 @@ public:
     } else {
       nsresult rv = DropAudioUpToSeekTarget(aAudio->As<AudioData>());
       if (NS_FAILED(rv)) {
-        OnSeekTaskRejected(rv);
+        mMaster->DecodeError(rv);
         return;
       }
     }
@@ -912,7 +912,7 @@ public:
     } else {
       nsresult rv = DropVideoUpToSeekTarget(aVideo);
       if (NS_FAILED(rv)) {
-        OnSeekTaskRejected(rv);
+        mMaster->DecodeError(rv);
         return;
       }
     }
@@ -967,7 +967,7 @@ public:
     }
 
     // This is a decode error, delegate to the generic error path.
-    OnSeekTaskRejected(aError);
+    mMaster->DecodeError(aError);
   }
 
   void HandleAudioWaited(MediaData::Type aType) override
@@ -1072,9 +1072,8 @@ private:
 
   void OnSeekRejected(const MediaResult& aError) {
     mSeekRequest.Complete();
-
     MOZ_ASSERT(NS_FAILED(aError), "Cancels should also disconnect mSeekRequest");
-    OnSeekTaskRejected(aError);
+    mMaster->DecodeError(aError);
   }
 
   void RequestAudioData()
@@ -1220,18 +1219,8 @@ private:
   void MaybeFinishSeek()
   {
     if (mDoneAudioSeeking && mDoneVideoSeeking) {
-      OnSeekTaskResolved();
+      SeekCompleted();
     }
-  }
-
-  void OnSeekTaskResolved()
-  {
-    SeekCompleted();
-  }
-
-  void OnSeekTaskRejected(const MediaResult& aError)
-  {
-    mMaster->DecodeError(aError);
   }
 
   /*
