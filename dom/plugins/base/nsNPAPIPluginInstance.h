@@ -430,6 +430,7 @@ private:
   char **mCachedParamValues;
 
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
+  bool mMuted;
 };
 
 // On Android, we need to guard against plugin code leaking entries in the local
