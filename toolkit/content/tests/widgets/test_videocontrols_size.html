@@ -30,8 +30,6 @@
 <script clas="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
-    getService(SpecialPowers.Ci.inIDOMUtils);
   const videoElems = [...document.getElementsByTagName("video")];
   const testCases = [];
 

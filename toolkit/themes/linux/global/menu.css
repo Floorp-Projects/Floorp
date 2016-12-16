@@ -12,8 +12,7 @@
 
 menu,
 menuitem,
-menucaption,
-.splitmenu-menuitem {
+menucaption {
   -moz-appearance: menuitem;
   -moz-box-align: center;
   max-width: 42em;
@@ -28,15 +27,13 @@ menuitem[default="true"] {
 }
 
 menu[_moz-menuactive="true"],
-menuitem[_moz-menuactive="true"],
-.splitmenu-menuitem[_moz-menuactive="true"] {
+menuitem[_moz-menuactive="true"] {
   color: -moz-menuhovertext;
   background-color: -moz-menuhover;
 }
 
 menu[disabled="true"],
 menuitem[disabled="true"],
-.splitmenu-menuitem[disabled="true"],
 menucaption[disabled="true"] {
   color: GrayText;
 }
