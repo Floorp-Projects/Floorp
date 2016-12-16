@@ -1,10 +1,11 @@
 load(libdir + "wasm.js");
 load(libdir + "wasm-binary.js");
 
+const Module = WebAssembly.Module;
 const CompileError = WebAssembly.CompileError;
 
 const magicError = /failed to match magic number/;
-const unknownSection = /expected user-defined section/;
+const unknownSection = /expected custom section/;
 
 function sectionError(section) {
     return RegExp(`failed to start ${section} section`);
@@ -52,7 +53,7 @@ function varS32(s32) {
 
 const U32MAX_LEB = [255, 255, 255, 255, 15];
 
-const wasmEval = (code, imports) => new WebAssembly.Instance(new WebAssembly.Module(code), imports).exports;
+const wasmEval = (code, imports) => new WebAssembly.Instance(new Module(code), imports).exports;
 
 assertErrorMessage(() => wasmEval(toU8([])), CompileError, magicError);
 assertErrorMessage(() => wasmEval(toU8([42])), CompileError, magicError);
@@ -89,12 +90,12 @@ assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(42, 0))), CompileError, 
 assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(42, 1, 0))), CompileError, unknownSection);
 
 // user sections have special rules
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0))), CompileError, sectionError("user-defined"));  // no length
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 0))), CompileError, sectionError("user-defined"));  // no id
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 0, 0))), CompileError, sectionError("user-defined"));  // payload too small to have id length
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1, 1))), CompileError, sectionError("user-defined"));  // id not present
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1, 1, 65))), CompileError, sectionError("user-defined"));  // id length doesn't fit in section
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1, 0, 0))), CompileError, sectionError("user-defined"));  // second, unfinished user-defined section
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0))), CompileError, sectionError("custom"));  // no length
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 0))), CompileError, sectionError("custom"));  // no id
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 0, 0))), CompileError, sectionError("custom"));  // payload too small to have id length
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1, 1))), CompileError, sectionError("custom"));  // id not present
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1, 1, 65))), CompileError, sectionError("custom"));  // id length doesn't fit in section
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1, 0, 0))), CompileError, sectionError("custom"));  // second, unfinished custom section
 wasmEval(toU8(moduleHeaderThen(0, 1, 0)));  // empty id
 wasmEval(toU8(moduleHeaderThen(0, 1, 0,  0, 1, 0)));  // 2x empty id
 wasmEval(toU8(moduleHeaderThen(0, 2, 1, 65)));  // id = "A"
@@ -234,7 +235,7 @@ function nameSection(elems) {
     return { name: userDefinedId, body };
 }
 
-function userDefinedSection(name, ...body) {
+function customSection(name, ...body) {
     return { name: userDefinedId, body: [...string(name), ...body] };
 }
 
@@ -327,17 +328,47 @@ var tooBigNameSection = {
 };
 wasmEval(moduleWithSections([tooBigNameSection]));
 
-// Skip user-defined sections before any expected section
-var userDefSec = userDefinedSection("wee", 42, 13);
+// Skip custom sections before any expected section
+var customDefSec = customSection("wee", 42, 13);
 var sigSec = sigSection([v2vSig]);
 var declSec = declSection([0]);
 var bodySec = bodySection([v2vBody]);
-wasmEval(moduleWithSections([userDefSec, sigSec, declSec, bodySec]));
-wasmEval(moduleWithSections([sigSec, userDefSec, declSec, bodySec]));
-wasmEval(moduleWithSections([sigSec, declSec, userDefSec, bodySec]));
-wasmEval(moduleWithSections([sigSec, declSec, bodySec, userDefSec]));
-wasmEval(moduleWithSections([userDefSec, userDefSec, sigSec, declSec, bodySec]));
-wasmEval(moduleWithSections([userDefSec, userDefSec, sigSec, userDefSec, declSec, userDefSec, bodySec]));
+var nameSec = nameSection([{name:'hi'}]);
+wasmEval(moduleWithSections([customDefSec, sigSec, declSec, bodySec]));
+wasmEval(moduleWithSections([sigSec, customDefSec, declSec, bodySec]));
+wasmEval(moduleWithSections([sigSec, declSec, customDefSec, bodySec]));
+wasmEval(moduleWithSections([sigSec, declSec, bodySec, customDefSec]));
+wasmEval(moduleWithSections([customDefSec, customDefSec, sigSec, declSec, bodySec]));
+wasmEval(moduleWithSections([customDefSec, customDefSec, sigSec, customDefSec, declSec, customDefSec, bodySec]));
+
+// custom sections reflection:
+function checkCustomSection(buf, val) {
+    assertEq(buf instanceof ArrayBuffer, true);
+    assertEq(buf.byteLength, 1);
+    assertEq(new Uint8Array(buf)[0], val);
+}
+var custom1 = customSection("one", 1);
+var custom2 = customSection("one", 2);
+var custom3 = customSection("two", 3);
+var custom4 = customSection("three", 4);
+var custom5 = customSection("three", 5);
+var custom6 = customSection("three", 6);
+var m = new Module(moduleWithSections([custom1, sigSec, custom2, declSec, custom3, bodySec, custom4, nameSec, custom5, custom6]));
+var arr = Module.customSections(m, "one");
+assertEq(arr.length, 2);
+checkCustomSection(arr[0], 1);
+checkCustomSection(arr[1], 2);
+var arr = Module.customSections(m, "two");
+assertEq(arr.length, 1);
+checkCustomSection(arr[0], 3);
+var arr = Module.customSections(m, "three");
+assertEq(arr.length, 3);
+checkCustomSection(arr[0], 4);
+checkCustomSection(arr[1], 5);
+checkCustomSection(arr[2], 6);
+var arr = Module.customSections(m, "name");
+assertEq(arr.length, 1);
+assertEq(arr[0].byteLength, nameSec.body.length - 5 /* 4name */);
 
 // Diagnose nonstandard block signature types.
 for (var bad of [0xff, 0, 1, 0x3f])
@@ -351,12 +382,12 @@ function runStackTraceTest(namesContent, expectedName) {
         declSection([0]),
         exportSection([{funcIndex:1, name: "run"}]),
         bodySection([funcBody({locals: [], body: [CallCode, varU32(0)]})]),
-        userDefinedSection("whoa"),
-        userDefinedSection("wee", 42),
+        customSection("whoa"),
+        customSection("wee", 42),
     ];
     if (namesContent)
         sections.push(nameSection(namesContent));
-    sections.push(userDefinedSection("yay", 13));
+    sections.push(customSection("yay", 13));
 
     var result = "";
     var callback = () => {
