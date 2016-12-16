@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
-#include "WebGLShader.h"
 
 namespace mozilla {
 
@@ -24,8 +23,8 @@ WebGLExtensionDebugShaders::~WebGLExtensionDebugShaders()
 // translation has failed for shader, an empty string is returned; otherwise,
 // return the translated source.
 void
-WebGLExtensionDebugShaders::GetTranslatedShaderSource(const WebGLShader& shader,
-                                                      nsAString& retval) const
+WebGLExtensionDebugShaders::GetTranslatedShaderSource(WebGLShader* shader,
+                                                      nsAString& retval)
 {
     retval.SetIsVoid(true);
 
@@ -35,13 +34,8 @@ WebGLExtensionDebugShaders::GetTranslatedShaderSource(const WebGLShader& shader,
         return;
     }
 
-    if (mContext->IsContextLost())
-        return;
-
-    if (!mContext->ValidateObject("getShaderTranslatedSource: shader", shader))
-        return;
-
-    shader.GetShaderTranslatedSource(&retval);
+    retval.SetIsVoid(false);
+    mContext->GetShaderTranslatedSource(shader, retval);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugShaders, WEBGL_debug_shaders)

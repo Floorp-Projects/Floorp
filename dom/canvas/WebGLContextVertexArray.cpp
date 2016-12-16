@@ -18,8 +18,19 @@ WebGLContext::BindVertexArray(WebGLVertexArray* array)
     if (IsContextLost())
         return;
 
-    if (array && !ValidateObject("bindVertexArrayObject", *array))
+    if (!ValidateObjectAllowDeletedOrNull("bindVertexArrayObject", array))
         return;
+
+    if (array && array->IsDeleted()) {
+        /* http://www.khronos.org/registry/gles/extensions/OES/OES_vertex_array_object.txt
+         * BindVertexArrayOES fails and an INVALID_OPERATION error is
+         * generated if array is not a name returned from a previous call to
+         * GenVertexArraysOES, or if such a name has since been deleted with
+         * DeleteVertexArraysOES
+         */
+        ErrorInvalidOperation("bindVertexArray: can't bind a deleted array!");
+        return;
+    }
 
     InvalidateBufferFetching();
 
@@ -57,7 +68,13 @@ WebGLContext::CreateVertexArrayImpl()
 void
 WebGLContext::DeleteVertexArray(WebGLVertexArray* array)
 {
-    if (!ValidateDeleteObject("deleteVertexArray", array))
+    if (IsContextLost())
+        return;
+
+    if (array == nullptr)
+        return;
+
+    if (array->IsDeleted())
         return;
 
     if (mBoundVertexArray == array)
@@ -67,9 +84,18 @@ WebGLContext::DeleteVertexArray(WebGLVertexArray* array)
 }
 
 bool
-WebGLContext::IsVertexArray(const WebGLVertexArray* array)
+WebGLContext::IsVertexArray(WebGLVertexArray* array)
 {
-    if (!ValidateIsObject("isVertexArray", array))
+    if (IsContextLost())
+        return false;
+
+    if (!array)
+        return false;
+
+    if (!ValidateObjectAllowDeleted("isVertexArray", array))
+        return false;
+
+    if (array->IsDeleted())
         return false;
 
     MakeContextCurrent();
