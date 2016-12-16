@@ -503,7 +503,7 @@ GetAppCommandDeviceName(LPARAM aDevice)
 class MOZ_STACK_CLASS GetAppCommandKeysName final : public nsAutoCString
 {
 public:
-  GetAppCommandKeysName(WPARAM aKeys)
+  explicit GetAppCommandKeysName(WPARAM aKeys)
   {
     if (aKeys & MK_CONTROL) {
       AppendLiteral("MK_CONTROL");
