@@ -88,7 +88,6 @@ public:
 
   ConsoleCallData()
     : mMethodName(Console::MethodLog)
-    , mPrivate(false)
     , mTimeStamp(JS_Now() / PR_USEC_PER_MSEC)
     , mStartTimerValue(0)
     , mStartTimerStatus(false)
@@ -201,7 +200,6 @@ public:
   nsTArray<JS::Heap<JS::Value>> mCopiedArguments;
 
   Console::MethodName mMethodName;
-  bool mPrivate;
   int64_t mTimeStamp;
 
   // These values are set in the owning thread and they contain the timestamp of
@@ -570,20 +568,6 @@ private:
 
     if (aOuterWindow) {
       mCallData->SetIDs(aOuterWindow->WindowID(), aInnerWindow->WindowID());
-
-      // Save the principal's OriginAttributes in the console event data
-      // so that we will be able to filter messages by origin attributes.
-      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aInnerWindow);
-      if (NS_WARN_IF(!sop)) {
-        return;
-      }
-
-      nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
-      if (NS_WARN_IF(!principal)) {
-        return;
-      }
-
-      mCallData->SetOriginAttributes(BasePrincipal::Cast(principal)->OriginAttributesRef());
     } else {
       ConsoleStackEntry frame;
       if (mCallData->mTopStackFrame) {
@@ -604,15 +588,6 @@ private:
       }
 
       mCallData->SetIDs(id, innerID);
-
-      // Save the principal's OriginAttributes in the console event data
-      // so that we will be able to filter messages by origin attributes.
-      nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
-      if (NS_WARN_IF(!principal)) {
-        return;
-      }
-
-      mCallData->SetOriginAttributes(BasePrincipal::Cast(principal)->OriginAttributesRef());
     }
 
     // Now we could have the correct window (if we are not window-less).
@@ -1227,17 +1202,9 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
+  PrincipalOriginAttributes oa;
+
   if (mWindow) {
-    nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
-    if (!webNav) {
-      return;
-    }
-
-    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
-    MOZ_ASSERT(loadContext);
-
-    loadContext->GetUsePrivateBrowsing(&callData->mPrivate);
-
     // Save the principal's OriginAttributes in the console event data
     // so that we will be able to filter messages by origin attributes.
     nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
@@ -1250,8 +1217,29 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
       return;
     }
 
-    callData->SetOriginAttributes(BasePrincipal::Cast(principal)->OriginAttributesRef());
+    oa = BasePrincipal::Cast(principal)->OriginAttributesRef();
+
+#ifdef DEBUG
+    if (!nsContentUtils::IsSystemPrincipal(principal)) {
+      nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
+      if (webNav) {
+        nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
+        MOZ_ASSERT(loadContext);
+
+        bool pb;
+        if (NS_SUCCEEDED(loadContext->GetUsePrivateBrowsing(&pb))) {
+          MOZ_ASSERT(pb == !!oa.mPrivateBrowsingId);
+        }
+      }
+    }
+#endif
+  } else {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    oa = workerPrivate->GetOriginAttributes();
   }
+
+  callData->SetOriginAttributes(oa);
 
   JS::StackCapture captureMode = ShouldIncludeStackTrace(aMethodName) ?
     JS::StackCapture(JS::MaxFrames(DEFAULT_MAX_STACKTRACE_DEPTH)) :
@@ -1549,7 +1537,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
   event.mColumnNumber = frame.mColumnNumber;
   event.mFunctionName = frame.mFunctionName;
   event.mTimeStamp = aData->mTimeStamp;
-  event.mPrivate = aData->mPrivate;
+  event.mPrivate = !!aData->mOriginAttributes.mPrivateBrowsingId;
 
   switch (aData->mMethodName) {
     case MethodLog:
