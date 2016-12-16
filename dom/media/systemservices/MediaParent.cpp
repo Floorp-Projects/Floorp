@@ -93,8 +93,8 @@ class OriginKeyStore : public nsISupports
       for (auto iter = mKeys.Iter(); !iter.Done(); iter.Next()) {
         nsAutoPtr<OriginKey>& originKey = iter.Data();
         LOG((((originKey->mSecondsStamp >= since.mSecondsStamp)?
-              "%s: REMOVE %lld >= %lld" :
-              "%s: KEEP   %lld < %lld"),
+              "%s: REMOVE %" PRId64 " >= %" PRId64 :
+              "%s: KEEP   %" PRId64 " < %" PRId64),
               __FUNCTION__, originKey->mSecondsStamp, since.mSecondsStamp));
 
         if (originKey->mSecondsStamp >= since.mSecondsStamp) {

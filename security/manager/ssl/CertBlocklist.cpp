@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
@@ -638,7 +639,7 @@ CertBlocklist::IsBlocklistFresh(bool* _retval)
     int64_t interval = now - lastUpdate;
     MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
            ("CertBlocklist::IsBlocklistFresh we're after the last BlocklistUpdate "
-            "interval is %i, staleness %u", interval, sMaxStaleness));
+            "interval is %" PRId64 ", staleness %u", interval, sMaxStaleness));
     *_retval = sMaxStaleness > interval;
   }
   MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,

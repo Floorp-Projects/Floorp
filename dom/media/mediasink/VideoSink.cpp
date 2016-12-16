@@ -8,6 +8,9 @@
 #include "VideoSink.h"
 #include "MediaPrefs.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
+
 namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
@@ -394,7 +397,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
     img->mFrameID = frame->mFrameID;
     img->mProducerID = mProducerID;
 
-    VSINK_LOG_V("playing video frame %lld (id=%x) (vq-queued=%i)",
+    VSINK_LOG_V("playing video frame %" PRId64 " (id=%x) (vq-queued=%" PRIuSIZE ")",
                 frame->mTime, frame->mFrameID, VideoQueue().GetSize());
   }
   mContainer->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
@@ -421,7 +424,7 @@ VideoSink::UpdateRenderedVideoFrames()
       mFrameStats.NotifyPresentedFrame();
     } else {
       mFrameStats.NotifyDecodedFrames({ 0, 0, 1 });
-      VSINK_LOG_V("discarding video frame mTime=%lld clock_time=%lld",
+      VSINK_LOG_V("discarding video frame mTime=%" PRId64 " clock_time=%" PRId64,
                   frame->mTime, clockTime);
     }
   }

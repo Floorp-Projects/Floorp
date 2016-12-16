@@ -304,7 +304,7 @@ nsHttp::ParseInt64(const char *input, const char **next, int64_t *r)
     //          - the end points to the start of the input string.
     //          - we parsed a negative value. Consumers don't expect that.
     if (errno != 0 || end == input || value < 0) {
-        LOG(("nsHttp::ParseInt64 value=%ld errno=%d", value, errno));
+        LOG(("nsHttp::ParseInt64 value=%" PRId64 " errno=%d", value, errno));
         return false;
     }
 

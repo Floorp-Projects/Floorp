@@ -8,6 +8,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Printf.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 
 #include "mozilla/net/CookieServiceChild.h"
@@ -1745,7 +1746,7 @@ void
 nsCookieService::HandleDBClosed(DBState* aDBState)
 {
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("HandleDBClosed(): DBState %x closed", aDBState));
+    ("HandleDBClosed(): DBState %p closed", aDBState));
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
 
@@ -1773,8 +1774,9 @@ nsCookieService::HandleDBClosed(DBState* aDBState)
       NS_LITERAL_CSTRING(COOKIES_FILE ".bak-rebuild"));
 
     COOKIE_LOGSTRING(LogLevel::Warning,
-      ("HandleDBClosed(): DBState %x encountered error rebuilding db; move to "
-       "'cookies.sqlite.bak-rebuild' gave rv 0x%x", aDBState, rv));
+      ("HandleDBClosed(): DBState %p encountered error rebuilding db; move to "
+       "'cookies.sqlite.bak-rebuild' gave rv 0x%" PRIx32,
+       aDBState, static_cast<uint32_t>(rv)));
     if (os) {
       os->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
     }
@@ -1790,12 +1792,12 @@ nsCookieService::HandleCorruptDB(DBState* aDBState)
     // We've either closed the state or we've switched profiles. It's getting
     // a bit late to rebuild -- bail instead.
     COOKIE_LOGSTRING(LogLevel::Warning,
-      ("HandleCorruptDB(): DBState %x is already closed, aborting", aDBState));
+      ("HandleCorruptDB(): DBState %p is already closed, aborting", aDBState));
     return;
   }
 
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("HandleCorruptDB(): DBState %x has corruptFlag %u", aDBState,
+    ("HandleCorruptDB(): DBState %p has corruptFlag %u", aDBState,
       aDBState->corruptFlag));
 
   // Mark the database corrupt, so the close listener can begin reconstructing
@@ -1855,7 +1857,7 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
     // on rebuild completion to notify of the db closure, which won't happen --
     // do so now.
     COOKIE_LOGSTRING(LogLevel::Warning,
-      ("RebuildCorruptDB(): DBState %x is stale, aborting", aDBState));
+      ("RebuildCorruptDB(): DBState %p is stale, aborting", aDBState));
     if (os) {
       os->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
     }
@@ -2332,7 +2334,7 @@ nsCookieService::RemoveAll()
     } else {
       // Recreate the database.
       COOKIE_LOGSTRING(LogLevel::Debug,
-        ("RemoveAll(): corruption detected with rv 0x%x", rv));
+                       ("RemoveAll(): corruption detected with rv 0x%" PRIx32, static_cast<uint32_t>(rv)));
       HandleCorruptDB(mDefaultDBState);
     }
   }
@@ -2724,7 +2726,7 @@ nsCookieService::AsyncReadComplete()
   mDefaultDBState->hostArray.Clear();
   mDefaultDBState->readSet.Clear();
 
-  COOKIE_LOGSTRING(LogLevel::Debug, ("Read(): %ld cookies read",
+  COOKIE_LOGSTRING(LogLevel::Debug, ("Read(): %" PRIu32 " cookies read",
                                   mDefaultDBState->cookieCount));
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -2799,7 +2801,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
       // Recreate the database.
       COOKIE_LOGSTRING(LogLevel::Debug,
         ("EnsureReadDomain(): corruption detected when creating statement "
-         "with rv 0x%x", rv));
+         "with rv 0x%" PRIx32, static_cast<uint32_t>(rv)));
       HandleCorruptDB(mDefaultDBState);
       return;
     }
@@ -2828,7 +2830,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
       // Recreate the database.
       COOKIE_LOGSTRING(LogLevel::Debug,
         ("EnsureReadDomain(): corruption detected when reading result "
-         "with rv 0x%x", rv));
+         "with rv 0x%" PRIx32, static_cast<uint32_t>(rv)));
       HandleCorruptDB(mDefaultDBState);
       return;
     }
@@ -2850,7 +2852,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
   mDefaultDBState->readSet.PutEntry(aKey);
 
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("EnsureReadDomain(): %ld cookies read for base domain %s, "
+    ("EnsureReadDomain(): %" PRIuSIZE " cookies read for base domain %s, "
      " originAttributes = %s", array.Length(), aKey.mBaseDomain.get(),
      suffix.get()));
 }
@@ -2891,7 +2893,7 @@ nsCookieService::EnsureReadComplete()
     // Recreate the database.
     COOKIE_LOGSTRING(LogLevel::Debug,
       ("EnsureReadComplete(): corruption detected when creating statement "
-       "with rv 0x%x", rv));
+       "with rv 0x%" PRIx32, static_cast<uint32_t>(rv)));
     HandleCorruptDB(mDefaultDBState);
     return;
   }
@@ -2905,7 +2907,7 @@ nsCookieService::EnsureReadComplete()
       // Recreate the database.
       COOKIE_LOGSTRING(LogLevel::Debug,
         ("EnsureReadComplete(): corruption detected when reading result "
-         "with rv 0x%x", rv));
+         "with rv 0x%" PRIx32, static_cast<uint32_t>(rv)));
       HandleCorruptDB(mDefaultDBState);
       return;
     }
@@ -2944,7 +2946,7 @@ nsCookieService::EnsureReadComplete()
   mDefaultDBState->readSet.Clear();
 
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("EnsureReadComplete(): %ld cookies read", array.Length()));
+    ("EnsureReadComplete(): %" PRIuSIZE " cookies read", array.Length()));
 }
 
 NS_IMETHODIMP
@@ -3117,7 +3119,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   }
 
 
-  COOKIE_LOGSTRING(LogLevel::Debug, ("ImportCookies(): %ld cookies imported",
+  COOKIE_LOGSTRING(LogLevel::Debug, ("ImportCookies(): %" PRIu32 " cookies imported",
     mDefaultDBState->cookieCount));
 
   return NS_OK;
@@ -4438,7 +4440,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
 
   uint32_t initialCookieCount = mDBState->cookieCount;
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("PurgeCookies(): beginning purge with %ld cookies and %lld oldest age",
+    ("PurgeCookies(): beginning purge with %" PRIu32 " cookies and %" PRId64 " oldest age",
      mDBState->cookieCount, aCurrentTimeInUsec - mDBState->cookieOldestTime));
 
   typedef nsTArray<nsListIter> PurgeList;
@@ -4534,7 +4536,8 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
   mDBState->cookieOldestTime = oldestTime;
 
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("PurgeCookies(): %ld expired; %ld purged; %ld remain; %lld oldest age",
+    ("PurgeCookies(): %" PRIu32 " expired; %" PRIu32 " purged; %" PRIu32
+     " remain; %" PRId64 " oldest age",
      initialCookieCount - postExpiryCookieCount,
      postExpiryCookieCount - mDBState->cookieCount,
      mDBState->cookieCount,

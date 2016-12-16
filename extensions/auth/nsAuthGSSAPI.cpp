@@ -15,6 +15,7 @@
 //
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 #include "prlink.h"
 #include "nsCOMPtr.h"
@@ -519,7 +520,8 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
 end:
     gss_release_name_ptr(&minor_status, &server);
 
-    LOG(("  leaving nsAuthGSSAPI::GetNextToken [rv=%x]", rv));
+    LOG(("  leaving nsAuthGSSAPI::GetNextToken [rv=%" PRIx32 "]",
+         static_cast<uint32_t>(rv)));
     return rv;
 }
 

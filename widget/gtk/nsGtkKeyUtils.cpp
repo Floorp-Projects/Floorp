@@ -363,7 +363,7 @@ KeymapWrapper::InitBySystemSettings()
             Modifier modifier = GetModifierForGDKKeyval(syms[j]);
             MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
                 ("%p InitBySystemSettings, "
-                 "    Mod%d, j=%d, syms[j]=%s(0x%X), modifier=%s",
+                 "    Mod%d, j=%d, syms[j]=%s(0x%lX), modifier=%s",
                  this, modIndex + 1, j, gdk_keyval_name(syms[j]), syms[j],
                  GetModifierName(modifier)));
 

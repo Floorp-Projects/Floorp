@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include "mozilla/Attributes.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIBufferedStreams.h"
 #include "nsICloneableInputStream.h"
@@ -887,7 +888,8 @@ nsPipe::GetWriteSegment(char*& aSegment, uint32_t& aSegmentLen)
   // beginning of the current/first segment.  this is purely an optimization.
   if (mWriteSegment == 0 && AllReadCursorsMatchWriteCursor()) {
     char* head = mBuffer.GetSegment(0);
-    LOG(("OOO rolling back write cursor %u bytes\n", mWriteCursor - head));
+    LOG(("OOO rolling back write cursor %" PRId64 " bytes\n",
+         static_cast<int64_t>(mWriteCursor - head)));
     RollBackAllReadCursors(head);
     mWriteCursor = head;
   }
@@ -985,8 +987,8 @@ nsPipe::OnInputStreamException(nsPipeInputStream* aStream, nsresult aReason)
 void
 nsPipe::OnPipeException(nsresult aReason, bool aOutputOnly)
 {
-  LOG(("PPP nsPipe::OnPipeException [reason=%x output-only=%d]\n",
-       aReason, aOutputOnly));
+  LOG(("PPP nsPipe::OnPipeException [reason=%" PRIx32 " output-only=%d]\n",
+       static_cast<uint32_t>(aReason), aOutputOnly));
 
   nsPipeEvents events;
   {
@@ -1284,8 +1286,8 @@ nsPipeInputStream::Wait()
     mon.Wait();
     mBlocked = false;
 
-    LOG(("III pipe input: woke up [status=%x available=%u]\n",
-         Status(mon), mReadState.mAvailable));
+    LOG(("III pipe input: woke up [status=%" PRIx32 " available=%u]\n",
+         static_cast<uint32_t>(Status(mon)), mReadState.mAvailable));
   }
 
   return Status(mon) == NS_BASE_STREAM_CLOSED ? NS_OK : Status(mon);
@@ -1316,8 +1318,8 @@ MonitorAction
 nsPipeInputStream::OnInputException(nsresult aReason, nsPipeEvents& aEvents,
                                     const ReentrantMonitorAutoEnter& ev)
 {
-  LOG(("nsPipeInputStream::OnInputException [this=%x reason=%x]\n",
-       this, aReason));
+  LOG(("nsPipeInputStream::OnInputException [this=%p reason=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(aReason)));
 
   MonitorAction result = DoNotNotifyMonitor;
 
@@ -1344,7 +1346,8 @@ nsPipeInputStream::OnInputException(nsresult aReason, nsPipeEvents& aEvents,
 NS_IMETHODIMP
 nsPipeInputStream::CloseWithStatus(nsresult aReason)
 {
-  LOG(("III CloseWithStatus [this=%x reason=%x]\n", this, aReason));
+  LOG(("III CloseWithStatus [this=%p reason=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(aReason)));
 
   ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
@@ -1387,7 +1390,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun aWriter,
                                 uint32_t aCount,
                                 uint32_t* aReadCount)
 {
-  LOG(("III ReadSegments [this=%x count=%u]\n", this, aCount));
+  LOG(("III ReadSegments [this=%p count=%u]\n", this, aCount));
 
   nsresult rv = NS_OK;
 
@@ -1466,7 +1469,7 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
                              uint32_t aRequestedCount,
                              nsIEventTarget* aTarget)
 {
-  LOG(("III AsyncWait [this=%x]\n", this));
+  LOG(("III AsyncWait [this=%p]\n", this));
 
   nsPipeEvents pipeEvents;
   {
@@ -1681,8 +1684,8 @@ nsPipeOutputStream::Wait()
     mBlocked = true;
     mon.Wait();
     mBlocked = false;
-    LOG(("OOO pipe output: woke up [pipe-status=%x writable=%u]\n",
-         mPipe->mStatus, mWritable));
+    LOG(("OOO pipe output: woke up [pipe-status=%" PRIx32 " writable=%u]\n",
+         static_cast<uint32_t>(mPipe->mStatus), mWritable));
   }
 
   return mPipe->mStatus == NS_BASE_STREAM_CLOSED ? NS_OK : mPipe->mStatus;
@@ -1709,8 +1712,8 @@ nsPipeOutputStream::OnOutputWritable(nsPipeEvents& aEvents)
 MonitorAction
 nsPipeOutputStream::OnOutputException(nsresult aReason, nsPipeEvents& aEvents)
 {
-  LOG(("nsPipeOutputStream::OnOutputException [this=%x reason=%x]\n",
-       this, aReason));
+  LOG(("nsPipeOutputStream::OnOutputException [this=%p reason=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(aReason)));
 
   MonitorAction result = DoNotNotifyMonitor;
 
@@ -1748,7 +1751,8 @@ nsPipeOutputStream::Release()
 NS_IMETHODIMP
 nsPipeOutputStream::CloseWithStatus(nsresult aReason)
 {
-  LOG(("OOO CloseWithStatus [this=%x reason=%x]\n", this, aReason));
+  LOG(("OOO CloseWithStatus [this=%p reason=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(aReason)));
 
   if (NS_SUCCEEDED(aReason)) {
     aReason = NS_BASE_STREAM_CLOSED;
@@ -1771,7 +1775,7 @@ nsPipeOutputStream::WriteSegments(nsReadSegmentFun aReader,
                                   uint32_t aCount,
                                   uint32_t* aWriteCount)
 {
-  LOG(("OOO WriteSegments [this=%x count=%u]\n", this, aCount));
+  LOG(("OOO WriteSegments [this=%p count=%u]\n", this, aCount));
 
   nsresult rv = NS_OK;
 
@@ -1898,7 +1902,7 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback* aCallback,
                               uint32_t aRequestedCount,
                               nsIEventTarget* aTarget)
 {
-  LOG(("OOO AsyncWait [this=%x]\n", this));
+  LOG(("OOO AsyncWait [this=%p]\n", this));
 
   nsPipeEvents pipeEvents;
   {

@@ -58,7 +58,7 @@ public:
 private:
     virtual ~nsHttpConnectionInfo()
     {
-        MOZ_LOG(gHttpLog, LogLevel::Debug, ("Destroying nsHttpConnectionInfo @%x\n", this));
+        MOZ_LOG(gHttpLog, LogLevel::Debug, ("Destroying nsHttpConnectionInfo @%p\n", this));
     }
 
     void BuildHashKey();

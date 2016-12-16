@@ -569,7 +569,7 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
                  "unicode-range: %d script: %d match: [%s]"
                 " time: %dus cmaps: %d\n",
                 (common ? "common" : "global"), aCh,
-                 unicodeRange, script,
+                unicodeRange, static_cast<int>(script),
                 (fontEntry ? NS_ConvertUTF16toUTF8(fontEntry->Name()).get() :
                     "<none>"),
                 int32_t(elapsed.ToMicroseconds()),

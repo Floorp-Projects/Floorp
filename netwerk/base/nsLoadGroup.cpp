@@ -115,7 +115,7 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     , mTimedNonCachedRequestsUntilOnEndPageLoad(0)
 {
     NS_INIT_AGGREGATED(outer);
-    LOG(("LOADGROUP [%x]: Created.\n", this));
+    LOG(("LOADGROUP [%p]: Created.\n", this));
 }
 
 nsLoadGroup::~nsLoadGroup()
@@ -142,7 +142,7 @@ nsLoadGroup::~nsLoadGroup()
         }
     }
 
-    LOG(("LOADGROUP [%x]: Destroyed.\n", this));
+    LOG(("LOADGROUP [%p]: Destroyed.\n", this));
 }
 
 
@@ -257,7 +257,7 @@ nsLoadGroup::Cancel(nsresult status)
         if (MOZ_LOG_TEST(gLoadGroupLog, LogLevel::Debug)) {
             nsAutoCString nameStr;
             request->GetName(nameStr);
-            LOG(("LOADGROUP [%x]: Canceling request %x %s.\n",
+            LOG(("LOADGROUP [%p]: Canceling request %p %s.\n",
                  this, request, nameStr.get()));
         }
 
@@ -318,7 +318,7 @@ nsLoadGroup::Suspend()
         if (MOZ_LOG_TEST(gLoadGroupLog, LogLevel::Debug)) {
             nsAutoCString nameStr;
             request->GetName(nameStr);
-            LOG(("LOADGROUP [%x]: Suspending request %x %s.\n",
+            LOG(("LOADGROUP [%p]: Suspending request %p %s.\n",
                 this, request, nameStr.get()));
         }
 
@@ -363,7 +363,7 @@ nsLoadGroup::Resume()
         if (MOZ_LOG_TEST(gLoadGroupLog, LogLevel::Debug)) {
             nsAutoCString nameStr;
             request->GetName(nameStr);
-            LOG(("LOADGROUP [%x]: Resuming request %x %s.\n",
+            LOG(("LOADGROUP [%p]: Resuming request %p %s.\n",
                 this, request, nameStr.get()));
         }
 
@@ -452,7 +452,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     if (MOZ_LOG_TEST(gLoadGroupLog, LogLevel::Debug)) {
         nsAutoCString nameStr;
         request->GetName(nameStr);
-        LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
+        LOG(("LOADGROUP [%p]: Adding request %p %s (count=%d).\n",
              this, request, nameStr.get(), mRequests.EntryCount()));
     }
 
@@ -463,7 +463,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     // Do not add the channel, if the loadgroup is being canceled...
     //
     if (mIsCanceling) {
-        LOG(("LOADGROUP [%x]: AddChannel() ABORTED because LoadGroup is"
+        LOG(("LOADGROUP [%p]: AddChannel() ABORTED because LoadGroup is"
              " being canceled!!\n", this));
 
         return NS_BINDING_ABORTED;
@@ -509,12 +509,12 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
         //
         nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
         if (observer) {
-            LOG(("LOADGROUP [%x]: Firing OnStartRequest for request %x."
+            LOG(("LOADGROUP [%p]: Firing OnStartRequest for request %p."
                  "(foreground count=%d).\n", this, request, mForegroundCount));
 
             rv = observer->OnStartRequest(request, ctxt);
             if (NS_FAILED(rv)) {
-                LOG(("LOADGROUP [%x]: OnStartRequest for request %x FAILED.\n",
+                LOG(("LOADGROUP [%p]: OnStartRequest for request %p FAILED.\n",
                     this, request));
                 //
                 // The URI load has been canceled by the observer.  Clean up
@@ -549,8 +549,9 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     if (MOZ_LOG_TEST(gLoadGroupLog, LogLevel::Debug)) {
         nsAutoCString nameStr;
         request->GetName(nameStr);
-        LOG(("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
-            this, request, nameStr.get(), aStatus, mRequests.EntryCount() - 1));
+        LOG(("LOADGROUP [%p]: Removing request %p %s status %" PRIx32 " (count=%d).\n",
+             this, request, nameStr.get(), static_cast<uint32_t>(aStatus),
+             mRequests.EntryCount() - 1));
     }
 
     // Make sure we have a owning reference to the request we're about
@@ -566,7 +567,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     auto entry = static_cast<RequestMapEntry*>(mRequests.Search(request));
 
     if (!entry) {
-        LOG(("LOADGROUP [%x]: Unable to remove request %x. Not in group!\n",
+        LOG(("LOADGROUP [%p]: Unable to remove request %p. Not in group!\n",
             this, request));
 
         return NS_ERROR_FAILURE;
@@ -627,13 +628,13 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
         // Fire the OnStopRequest out to the observer...
         nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
         if (observer) {
-            LOG(("LOADGROUP [%x]: Firing OnStopRequest for request %x."
+            LOG(("LOADGROUP [%p]: Firing OnStopRequest for request %p."
                  "(foreground count=%d).\n", this, request, mForegroundCount));
 
             rv = observer->OnStopRequest(request, ctxt, aStatus);
 
             if (NS_FAILED(rv)) {
-                LOG(("LOADGROUP [%x]: OnStopRequest for request %x FAILED.\n",
+                LOG(("LOADGROUP [%p]: OnStopRequest for request %p FAILED.\n",
                     this, request));
             }
         }

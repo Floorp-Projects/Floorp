@@ -506,8 +506,8 @@ TabChild::Observe(nsISupports *aSubject,
     // check it comparing the windowID.
     if (window->WindowID() != windowID) {
       MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-              ("TabChild, Observe, different windowID, owner ID = %lld, "
-               "ID from wrapper = %lld", window->WindowID(), windowID));
+              ("TabChild, Observe, different windowID, owner ID = %" PRIu64 ", "
+               "ID from wrapper = %" PRIu64, window->WindowID(), windowID));
       return NS_OK;
     }
 

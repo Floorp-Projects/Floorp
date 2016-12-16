@@ -625,7 +625,8 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
   if (NS_FAILED(aStatus))
   {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsHTTPListener::OnStreamComplete status failed %d", aStatus));
+           ("nsHTTPListener::OnStreamComplete status failed %" PRIu32,
+            static_cast<uint32_t>(aStatus)));
   }
 
   if (NS_SUCCEEDED(rv))

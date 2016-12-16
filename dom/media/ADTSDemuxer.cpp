@@ -12,6 +12,7 @@
 #include "VideoUtils.h"
 #include "TimeUnits.h"
 #include "prenv.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #ifdef PR_LOGGING
 extern mozilla::LazyLogModule gMediaDemuxerLog;
@@ -476,8 +477,8 @@ ADTSTrackDemuxer::FastSeek(const media::TimeUnit& aTime)
   mParser->EndFrameSession();
 
   ADTSLOG("FastSeek End avgFrameLen=%f mNumParsedFrames=%" PRIu64
-          " mFrameIndex=%" PRId64 " mFirstFrameOffset=%llu mOffset=%" PRIu64
-          " SL=%llu",
+          " mFrameIndex=%" PRId64 " mFirstFrameOffset=%" PRIu64 " mOffset=%" PRIu64
+          " SL=%" PRIu64 "",
           AverageFrameLength(), mNumParsedFrames, mFrameIndex,
           firstFrameOffset, mOffset, StreamLength());
 
@@ -536,7 +537,7 @@ ADTSTrackDemuxer::GetSamples(int32_t aNumSamples)
     frames->mSamples.AppendElement(frame);
   }
 
-  ADTSLOGV("GetSamples() End mSamples.Size()=%d aNumSamples=%d mOffset=%" PRIu64
+  ADTSLOGV("GetSamples() End mSamples.Size()=%" PRIuSIZE " aNumSamples=%d mOffset=%" PRIu64
            " mNumParsedFrames=%" PRIu64 " mFrameIndex=%" PRId64
            " mTotalFrameLen=%" PRIu64
            " mSamplesPerFrame=%d mSamplesPerSecond=%d "
@@ -692,14 +693,14 @@ ADTSTrackDemuxer::FindNextFrame(bool findFirstFrame /*= false*/)
   }
 
   if (!foundFrame || !mParser->CurrentFrame().Length()) {
-    ADTSLOG("FindNext() Exit foundFrame=%d mParser->CurrentFrame().Length()=%d ",
+    ADTSLOG("FindNext() Exit foundFrame=%d mParser->CurrentFrame().Length()=%" PRIuSIZE " ",
            foundFrame, mParser->CurrentFrame().Length());
     mParser->Reset();
     return mParser->CurrentFrame();
   }
 
   ADTSLOGV("FindNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
-          " mFrameIndex=%" PRId64 " frameHeaderOffset=%d"
+          " mFrameIndex=%" PRId64 " frameHeaderOffset=%" PRId64
           " mTotalFrameLen=%" PRIu64 " mSamplesPerFrame=%d mSamplesPerSecond=%d"
           " mChannels=%d",
           mOffset, mNumParsedFrames, mFrameIndex, frameHeaderOffset,
@@ -730,7 +731,8 @@ ADTSTrackDemuxer::SkipNextFrame(const adts::Frame& aFrame)
 already_AddRefed<MediaRawData>
 ADTSTrackDemuxer::GetNextFrame(const adts::Frame& aFrame)
 {
-  ADTSLOG("GetNext() Begin({mOffset=%" PRId64 " HeaderSize()=%d Length()=%d})",
+  ADTSLOG("GetNext() Begin({mOffset=%" PRId64 " HeaderSize()=%" PRIuSIZE
+          " Length()=%" PRIuSIZE "})",
          aFrame.Offset(), aFrame.Header().HeaderSize(), aFrame.PayloadLength());
   if (!aFrame.IsValid())
     return nullptr;
@@ -749,7 +751,7 @@ ADTSTrackDemuxer::GetNextFrame(const adts::Frame& aFrame)
 
   const uint32_t read = Read(frameWriter->Data(), offset, length);
   if (read != length) {
-    ADTSLOG("GetNext() Exit read=%u frame->Size()=%u", read, frame->Size());
+    ADTSLOG("GetNext() Exit read=%u frame->Size()=%" PRIuSIZE, read, frame->Size());
     return nullptr;
   }
 

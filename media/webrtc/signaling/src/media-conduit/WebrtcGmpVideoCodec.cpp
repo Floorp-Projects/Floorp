@@ -7,7 +7,9 @@
 #include <iostream>
 #include <vector>
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/SyncRunnable.h"
 #include "VideoConduit.h"
 #include "AudioConduit.h"
@@ -530,7 +532,7 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
     GmpFrameTypeToWebrtcFrameType(aEncodedFrame->FrameType(), &ft);
     uint32_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999)/1000;
 
-    LOGD(("GMP Encoded: %llu, type %d, len %d",
+    LOGD(("GMP Encoded: %" PRIu64 ", type %d, len %d",
          aEncodedFrame->TimeStamp(),
          aEncodedFrame->BufferType(),
          aEncodedFrame->Size()));
@@ -857,7 +859,7 @@ WebrtcGmpVideoDecoder::Decode_g(const webrtc::EncodedImage& aInputImage,
   nsTArray<uint8_t> codecSpecificInfo;
   codecSpecificInfo.AppendElements((uint8_t*)&info, sizeof(GMPCodecSpecificInfo));
 
-  LOGD(("GMP Decode: %llu, len %d", frame->TimeStamp(), aInputImage._length));
+  LOGD(("GMP Decode: %" PRIu64 ", len %" PRIuSIZE, frame->TimeStamp(), aInputImage._length));
   nsresult rv = mGMP->Decode(Move(frame),
                              aMissingFrames,
                              codecSpecificInfo,
@@ -940,7 +942,7 @@ WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
     image.set_timestamp((aDecodedFrame->Timestamp() * 90ll + 999)/1000); // round up
     image.set_render_time_ms(0);
 
-    LOGD(("GMP Decoded: %llu", aDecodedFrame->Timestamp()));
+    LOGD(("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp()));
     mCallback->Decoded(image);
   }
   aDecodedFrame->Destroy();

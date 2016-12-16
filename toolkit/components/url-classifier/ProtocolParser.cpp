@@ -16,6 +16,8 @@
 #include "mozilla/Base64.h"
 #include "RiceDeltaDecoder.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
 
 // MOZ_LOG=UrlClassifierProtocolParser:5
 mozilla::LazyLogModule gUrlClassifierProtocolParserLog("UrlClassifierProtocolParser");
@@ -935,7 +937,7 @@ ProtocolParserProtobuf::ProcessRawAddition(TableUpdateV4& aTableUpdate,
     uint32_t* fixedLengthPrefixes = (uint32_t*)prefixes.c_str();
     size_t numOfFixedLengthPrefixes = prefixes.size() / 4;
     PARSER_LOG(("* Raw addition (4 bytes)"));
-    PARSER_LOG(("  - # of prefixes: %d", numOfFixedLengthPrefixes));
+    PARSER_LOG(("  - # of prefixes: %" PRIuSIZE, numOfFixedLengthPrefixes));
     PARSER_LOG(("  - Memory address: 0x%p", fixedLengthPrefixes));
   } else {
     // TODO: Process variable length prefixes including full hashes.
@@ -989,7 +991,7 @@ DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
   }
 
   PARSER_LOG(("* Encoding info:"));
-  PARSER_LOG(("  - First value: %d", aEncoding.first_value()));
+  PARSER_LOG(("  - First value: %" PRId64, aEncoding.first_value()));
   PARSER_LOG(("  - Num of entries: %d", aEncoding.num_entries()));
   PARSER_LOG(("  - Rice parameter: %d", aEncoding.rice_parameter()));
 

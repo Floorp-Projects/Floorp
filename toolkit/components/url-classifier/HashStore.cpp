@@ -37,6 +37,8 @@
 #include "nsCheckSummedOutputStream.h"
 #include "prio.h"
 #include "mozilla/Logging.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "zlib.h"
 #include "Classifier.h"
 #include "nsUrlClassifierDBService.h"
@@ -186,7 +188,7 @@ TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
       LOG(("%.2X%.2X%.2X%.2X", c[0], c[1], c[2], c[3]));
     }
 
-    LOG(("---- %d fixed-length prefixes in total.", aPrefixes.size() / aSize));
+    LOG(("---- %" PRIuSIZE " fixed-length prefixes in total.", aPrefixes.size() / aSize));
   }
 
   PrefixStdString* prefix = new PrefixStdString(aPrefixes);
@@ -701,7 +703,7 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
   if (zerr != Z_OK) {
     return NS_ERROR_FAILURE;
   }
-  LOG(("DeflateWriteTArray: %d in %d out", insize, outsize));
+  LOG(("DeflateWriteTArray: %lu in %lu out", insize, outsize));
 
   outBuff.TruncateLength(outsize);
 
@@ -753,7 +755,7 @@ nsresult InflateReadTArray(nsIInputStream* aStream, FallibleTArray<T>* aOut,
   if (zerr != Z_OK) {
     return NS_ERROR_FAILURE;
   }
-  LOG(("InflateReadTArray: %d in %d out", insize, outsize));
+  LOG(("InflateReadTArray: %lu in %lu out", insize, outsize));
 
   NS_ASSERTION(outsize == aExpectedSize * sizeof(T), "Decompression size mismatch");
 
@@ -1109,7 +1111,8 @@ RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks)
     }
   }
 
-  LOG(("Removed %u dead SubPrefix entries.", aSubs.end() - subIter));
+  LOG(("Removed %" PRId64 " dead SubPrefix entries.",
+       static_cast<int64_t>(aSubs.end() - subIter)));
   aSubs.TruncateLength(subIter - aSubs.begin());
 }
 
@@ -1173,7 +1176,7 @@ HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
 {
   uint32_t cnt = aPrefixes.Length();
   if (cnt != mAddPrefixes.Length()) {
-    LOG(("Amount of prefixes in cache not consistent with store (%d vs %d)",
+    LOG(("Amount of prefixes in cache not consistent with store (%" PRIuSIZE " vs %" PRIuSIZE ")",
          aPrefixes.Length(), mAddPrefixes.Length()));
     return NS_ERROR_FAILURE;
   }
