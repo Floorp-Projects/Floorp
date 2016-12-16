@@ -626,7 +626,7 @@ nsHttpHandler::Get32BitsOfPseudoRandom()
 void
 nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
 {
-    LOG(("nsHttpHandler::NotifyObservers [chan=%x event=\"%s\"]\n", chan, event));
+    LOG(("nsHttpHandler::NotifyObservers [chan=%p event=\"%s\"]\n", chan, event));
     nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     if (obsService)
         obsService->NotifyObservers(chan, event, nullptr);

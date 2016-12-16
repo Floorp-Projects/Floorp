@@ -432,7 +432,7 @@ PresentationTCPSessionTransport::SendBlob(nsIDOMBlob* aBlob)
 NS_IMETHODIMP
 PresentationTCPSessionTransport::Close(nsresult aReason)
 {
-  PRES_DEBUG("%s:reason[%x]\n", __func__, aReason);
+  PRES_DEBUG("%s:reason[%" PRIx32 "]\n", __func__, static_cast<uint32_t>(aReason));
 
   if (mReadyState == ReadyState::CLOSED || mReadyState == ReadyState::CLOSING) {
     return NS_OK;
@@ -490,7 +490,7 @@ PresentationTCPSessionTransport::OnTransportStatus(nsITransport* aTransport,
                                                    int64_t aProgress,
                                                    int64_t aProgressMax)
 {
-  PRES_DEBUG("%s:aStatus[%x]\n", __func__, aStatus);
+  PRES_DEBUG("%s:aStatus[%" PRIx32 "]\n", __func__, static_cast<uint32_t>(aStatus));
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -536,7 +536,7 @@ PresentationTCPSessionTransport::OnStopRequest(nsIRequest* aRequest,
                                                nsISupports* aContext,
                                                nsresult aStatusCode)
 {
-  PRES_DEBUG("%s:aStatusCode[%x]\n", __func__, aStatusCode);
+  PRES_DEBUG("%s:aStatusCode[%" PRIx32 "]\n", __func__, static_cast<uint32_t>(aStatusCode));
 
   MOZ_ASSERT(NS_IsMainThread());
 

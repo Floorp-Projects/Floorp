@@ -920,7 +920,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   GetURL(&url);
 
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
-             ("nsPluginStreamListenerPeer::OnDataAvailable this=%p request=%p, offset=%llu, length=%u, url=%s\n",
+             ("nsPluginStreamListenerPeer::OnDataAvailable this=%p request=%p, offset=%" PRIu64 ", length=%u, url=%s\n",
               this, request, sourceOffset, aLength, url ? url : "no url set"));
 
   // if the plugin has requested an AsFileOnly stream, then don't
@@ -1005,8 +1005,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   }
 
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
-             ("nsPluginStreamListenerPeer::OnStopRequest this=%p aStatus=%d request=%p\n",
-              this, aStatus, request));
+             ("nsPluginStreamListenerPeer::OnStopRequest this=%p aStatus=%" PRIu32 " request=%p\n",
+              this, static_cast<uint32_t>(aStatus), request));
 
   // for ByteRangeRequest we're just updating the mDataForwardToRequest hash and return.
   nsCOMPtr<nsIByteRangeRequest> brr = do_QueryInterface(request);

@@ -67,14 +67,14 @@ nsFtpProtocolHandler::nsFtpProtocolHandler()
     , mControlQoSBits(0x00)
     , mDataQoSBits(0x00)
 {
-    LOG(("FTP:creating handler @%x\n", this));
+    LOG(("FTP:creating handler @%p\n", this));
 
     gFtpHandler = this;
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler()
 {
-    LOG(("FTP:destroying handler @%x\n", this));
+    LOG(("FTP:destroying handler @%p\n", this));
 
     NS_ASSERTION(mRootConnectionList.Length() == 0, "why wasn't Observe called?");
 

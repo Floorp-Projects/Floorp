@@ -26,6 +26,7 @@
 #include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include <math.h>
 #include <algorithm>
 
@@ -449,8 +450,8 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
 
 NS_IMETHODIMP CacheEntry::OnFileReady(nsresult aResult, bool aIsNew)
 {
-  LOG(("CacheEntry::OnFileReady [this=%p, rv=0x%08x, new=%d]",
-      this, aResult, aIsNew));
+  LOG(("CacheEntry::OnFileReady [this=%p, rv=0x%08" PRIx32 ", new=%d]",
+       this, static_cast<uint32_t>(aResult), aIsNew));
 
   MOZ_ASSERT(!mLoadStart.IsNull());
 
@@ -542,10 +543,12 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
 
     if (NS_SUCCEEDED(rv)) {
       newEntry = handle->Entry();
-      LOG(("  exchanged entry %p by entry %p, rv=0x%08x", this, newEntry.get(), rv));
+      LOG(("  exchanged entry %p by entry %p, rv=0x%08" PRIx32,
+           this, newEntry.get(), static_cast<uint32_t>(rv)));
       newEntry->AsyncOpen(aCallback, nsICacheStorage::OPEN_TRUNCATE);
     } else {
-      LOG(("  exchanged of entry %p failed, rv=0x%08x", this, rv));
+      LOG(("  exchanged of entry %p failed, rv=0x%08" PRIx32,
+           this, static_cast<uint32_t>(rv)));
       AsyncDoom(nullptr);
     }
   }
@@ -745,7 +748,8 @@ bool CacheEntry::InvokeCallback(Callback & aCallback)
 
           nsresult rv = aCallback.mCallback->OnCacheEntryCheck(
             this, nullptr, &checkResult);
-          LOG(("  OnCacheEntryCheck: rv=0x%08x, result=%d", rv, checkResult));
+          LOG(("  OnCacheEntryCheck: rv=0x%08" PRIx32 ", result=%" PRId32,
+               static_cast<uint32_t>(rv), static_cast<uint32_t>(checkResult)));
 
           if (NS_FAILED(rv))
             checkResult = ENTRY_NOT_WANTED;
@@ -836,7 +840,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
       new AvailableCallbackRunnable(this, aCallback);
 
     rv = aCallback.mTargetThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
-    LOG(("  redispatched, (rv = 0x%08x)", rv));
+    LOG(("  redispatched, (rv = 0x%08" PRIx32 ")", static_cast<uint32_t>(rv)));
     return;
   }
 
@@ -886,7 +890,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
     handle, state == WRITING, nullptr, NS_OK);
 
   if (NS_FAILED(rv)) {
-    LOG(("  writing/revalidating failed (0x%08x)", rv));
+    LOG(("  writing/revalidating failed (0x%08" PRIx32 ")", static_cast<uint32_t>(rv)));
 
     // Consumer given a new entry failed to take care of the entry.
     OnHandleClosed(handle);
@@ -1504,7 +1508,7 @@ NS_IMETHODIMP CacheEntry::GetDataSize(int64_t *aDataSize)
     return NS_ERROR_IN_PROGRESS;
   }
 
-  LOG(("  size=%lld", *aDataSize));
+  LOG(("  size=%" PRId64, *aDataSize));
   return NS_OK;
 }
 

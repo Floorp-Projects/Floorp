@@ -33,6 +33,7 @@
 #include "mozilla/LoadContext.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 
@@ -771,7 +772,7 @@ PendingLookup::LookupNext()
   // There are no more URIs to check against local list. If the file is
   // not eligible for remote lookup, bail.
   if (!IsBinaryFile()) {
-    LOG(("Not eligible for remote lookups [this=%x]", this));
+    LOG(("Not eligible for remote lookups [this=%p]", this));
     return OnComplete(false, NS_OK);
   }
   nsresult rv = SendRemoteQuery();
@@ -1074,7 +1075,7 @@ PendingLookup::OnComplete(bool shouldBlock, nsresult rv, uint32_t verdict)
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SHOULD_BLOCK,
     shouldBlock);
   double t = (TimeStamp::Now() - mStartTime).ToMilliseconds();
-  LOG(("Application Reputation verdict is %lu, obtained in %f ms [this = %p]",
+  LOG(("Application Reputation verdict is %u, obtained in %f ms [this = %p]",
        verdict, t, this));
   if (shouldBlock) {
     LOG(("Application Reputation check failed, blocking bad binary [this = %p]",
@@ -1254,7 +1255,7 @@ PendingLookup::SendRemoteQueryInternal()
   if (!mRequest.SerializeToString(&serialized)) {
     return NS_ERROR_UNEXPECTED;
   }
-  LOG(("Serialized protocol buffer [this = %p]: (length=%d) %s", this,
+  LOG(("Serialized protocol buffer [this = %p]: (length=%" PRIuSIZE ") %s", this,
        serialized.length(), serialized.c_str()));
 
   // Set the input stream to the serialized protocol buffer

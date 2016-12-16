@@ -48,6 +48,7 @@
 
 #include "nsDocLoader.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 
@@ -265,7 +266,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
   if (NS_FAILED(rv)) return rv;
 
   if (NS_FAILED(status)) {
-    LOG_ERROR(("  Request failed, status: 0x%08X", rv));
+    LOG_ERROR(("  Request failed, status: 0x%08" PRIX32, static_cast<uint32_t>(rv)));
   
     //
     // The transaction has already reported an error - so it will be torn
@@ -276,7 +277,8 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
 
   rv = DispatchContent(request, aCtxt);
 
-  LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08X", m_targetStreamListener.get(), rv));
+  LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08" PRIX32,
+       m_targetStreamListener.get(), static_cast<uint32_t>(rv)));
 
   NS_ASSERTION(NS_SUCCEEDED(rv) || !m_targetStreamListener,
                "Must not have an m_targetStreamListener with a failure return!");
@@ -286,7 +288,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
   if (m_targetStreamListener)
     rv = m_targetStreamListener->OnStartRequest(request, aCtxt);
 
-  LOG(("  OnStartRequest returning: 0x%08X", rv));
+  LOG(("  OnStartRequest returning: 0x%08" PRIX32, static_cast<uint32_t>(rv)));
   
   return rv;
 }
@@ -301,9 +303,9 @@ nsDocumentOpenInfo::CheckListenerChain()
   if (retargetableListener) {
     rv = retargetableListener->CheckListenerChain();
   }
-  LOG(("[0x%p] nsDocumentOpenInfo::CheckListenerChain %s listener %p rv %x",
+  LOG(("[0x%p] nsDocumentOpenInfo::CheckListenerChain %s listener %p rv %" PRIx32,
        this, (NS_SUCCEEDED(rv) ? "success" : "failure"),
-       (nsIStreamListener*)m_targetStreamListener, rv));
+       (nsIStreamListener*)m_targetStreamListener, static_cast<uint32_t>(rv)));
   return rv;
 }
 

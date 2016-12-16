@@ -10,6 +10,7 @@
 #include "MediaInfo.h"
 #include "AppleATDecoder.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
 
@@ -85,7 +86,7 @@ AppleATDecoder::ProcessFlush()
   if (mConverter) {
     OSStatus rv = AudioConverterReset(mConverter);
     if (rv) {
-      LOG("Error %d resetting AudioConverter", rv);
+      LOG("Error %d resetting AudioConverter", static_cast<int>(rv));
     }
   }
   if (mErrored) {
@@ -132,7 +133,7 @@ AppleATDecoder::ProcessShutdown()
   if (mStream) {
     OSStatus rv = AudioFileStreamClose(mStream);
     if (rv) {
-      LOG("error %d disposing of AudioFileStream", rv);
+      LOG("error %d disposing of AudioFileStream", static_cast<int>(rv));
       return;
     }
     mStream = nullptr;
@@ -142,7 +143,7 @@ AppleATDecoder::ProcessShutdown()
     LOG("Shutdown: Apple AudioToolbox AAC decoder");
     OSStatus rv = AudioConverterDispose(mConverter);
     if (rv) {
-      LOG("error %d disposing of AudioConverter", rv);
+      LOG("error %d disposing of AudioConverter", static_cast<int>(rv));
     }
     mConverter = nullptr;
   }
@@ -265,7 +266,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
                                                   packets.get());
 
     if (rv && rv != kNoMoreDataErr) {
-      LOG("Error decoding audio sample: %d\n", rv);
+      LOG("Error decoding audio sample: %d\n", static_cast<int>(rv));
       return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                          RESULT_DETAIL("Error decoding audio sample: %d @ %lld",
                                        rv, aSample->mTime));
@@ -387,7 +388,7 @@ AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
   if (rv) {
     return NS_OK;
   }
-  LOG("found %u available audio stream(s)",
+  LOG("found %" PRIuSIZE " available audio stream(s)",
       formatListSize / sizeof(AudioFormatListItem));
   // Get the index number of the first playable format.
   // This index number will be for the highest quality layer the platform
@@ -595,7 +596,7 @@ AppleATDecoder::SetupDecoder(MediaRawData* aSample)
 
   OSStatus status = AudioConverterNew(&inputFormat, &mOutputFormat, &mConverter);
   if (status) {
-    LOG("Error %d constructing AudioConverter", status);
+    LOG("Error %d constructing AudioConverter", static_cast<int>(status));
     mConverter = nullptr;
     return MediaResult(
       NS_ERROR_FAILURE,

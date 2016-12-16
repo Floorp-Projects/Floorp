@@ -444,7 +444,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
   nsresult rv = OpenCacheEntry(mURI, nsICacheStorage::OPEN_READONLY |
                                      nsICacheStorage::CHECK_MULTITHREADED);
   if (NS_FAILED(rv)) {
-    LOG(("nsWyciwygChannel::OpenCacheEntry failed [rv=%x]\n", rv));
+    LOG(("nsWyciwygChannel::OpenCacheEntry failed [rv=%" PRIx32 "]\n", static_cast<uint32_t>(rv)));
     mIsPending = false;
     mCallbacks = nullptr;
     return rv;
@@ -676,7 +676,7 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntry *aCacheEntry,
                                         nsresult aStatus)
 {
   LOG(("nsWyciwygChannel::OnCacheEntryAvailable [this=%p entry=%p "
-       "new=%d status=%x]\n", this, aCacheEntry, aNew, aStatus));
+       "new=%d status=%" PRIx32 "]\n", this, aCacheEntry, aNew, static_cast<uint32_t>(aStatus)));
 
   // if the channel's already fired onStopRequest, 
   // then we should ignore this event.
@@ -691,7 +691,7 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntry *aCacheEntry,
 
   nsresult rv = NS_OK;
   if (NS_FAILED(mStatus)) {
-    LOG(("channel was canceled [this=%p status=%x]\n", this, mStatus));
+    LOG(("channel was canceled [this=%p status=%" PRIx32 "]\n", this, static_cast<uint32_t>(mStatus)));
     rv = mStatus;
   }
   else if (!aNew) { // advance to the next state...
@@ -722,7 +722,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
                                   nsIInputStream *input,
                                   uint64_t offset, uint32_t count)
 {
-  LOG(("nsWyciwygChannel::OnDataAvailable [this=%p request=%x offset=%llu count=%u]\n",
+  LOG(("nsWyciwygChannel::OnDataAvailable [this=%p request=%p offset=%" PRIu64 " count=%u]\n",
       this, request, offset, count));
 
   nsresult rv;
@@ -744,7 +744,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
 NS_IMETHODIMP
 nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
-  LOG(("nsWyciwygChannel::OnStartRequest [this=%p request=%x\n",
+  LOG(("nsWyciwygChannel::OnStartRequest [this=%p request=%p]\n",
       this, request));
 
   return mListener->OnStartRequest(this, mListenerContext);
@@ -754,8 +754,8 @@ nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 NS_IMETHODIMP
 nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult status)
 {
-  LOG(("nsWyciwygChannel::OnStopRequest [this=%p request=%x status=%d\n",
-      this, request, status));
+  LOG(("nsWyciwygChannel::OnStopRequest [this=%p request=%p status=%" PRIu32 "]\n",
+       this, request, static_cast<uint32_t>(status)));
 
   if (NS_SUCCEEDED(mStatus))
     mStatus = status;

@@ -273,7 +273,8 @@ private:
             // take care of that
         }
         else {
-            LOG(("pac thread callback did not provide information %X\n", mStatus));
+            LOG(("pac thread callback did not provide information %" PRIX32 "\n",
+                 static_cast<uint32_t>(mStatus)));
             if (NS_SUCCEEDED(mStatus))
                 mPPS->MaybeDisableDNSPrefetch(mProxyInfo);
             mCallback->OnProxyAvailable(this, mChannel, mProxyInfo, mStatus);
@@ -574,7 +575,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                 if (!pref)
                     prefBranch->SetIntPref(PROXY_PREF("type"), type);
             } else if (type >= PROXYCONFIG_COUNT) {
-                LOG(("unknown proxy type: %lu; assuming direct\n", type));
+                LOG(("unknown proxy type: %" PRId32 "; assuming direct\n", type));
                 type = PROXYCONFIG_DIRECT;
             }
             mProxyConfig = type;

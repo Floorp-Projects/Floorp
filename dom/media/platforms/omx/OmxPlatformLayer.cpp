@@ -77,7 +77,7 @@ ConfigAudioOutputPort(OmxPlatformLayer& aOmx, const AudioInfo& aInfo)
   err = aOmx.SetParameter(OMX_IndexParamAudioPcm, &pcmParams, sizeof(pcmParams));
   RETURN_IF_ERR(err);
 
-  LOG("Config OMX_IndexParamAudioPcm, channel %d, sample rate %d",
+  LOG("Config OMX_IndexParamAudioPcm, channel %lu, sample rate %lu",
       pcmParams.nChannels, pcmParams.nSamplingRate);
 
   return OMX_ErrorNone;
@@ -102,7 +102,7 @@ public:
     err = aOmx.SetParameter(OMX_IndexParamAudioAac, &aacProfile, sizeof(aacProfile));
     RETURN_IF_ERR(err);
 
-    LOG("Config OMX_IndexParamAudioAac, channel %d, sample rate %d, profile %d",
+    LOG("Config OMX_IndexParamAudioAac, channel %lu, sample rate %lu, profile %d",
         aacProfile.nChannels, aacProfile.nSampleRate, aacProfile.eAACProfile);
 
     return ConfigAudioOutputPort(aOmx, aInfo);
@@ -127,7 +127,7 @@ public:
     err = aOmx.SetParameter(OMX_IndexParamAudioMp3, &mp3Param, sizeof(mp3Param));
     RETURN_IF_ERR(err);
 
-    LOG("Config OMX_IndexParamAudioMp3, channel %d, sample rate %d",
+    LOG("Config OMX_IndexParamAudioMp3, channel %lu, sample rate %lu",
         mp3Param.nChannels, mp3Param.nSampleRate);
 
     return ConfigAudioOutputPort(aOmx, aInfo);
@@ -219,7 +219,7 @@ public:
         def.format.video.eColorFormat = OMX_COLOR_FormatUnused;
         if (def.nBufferSize < MIN_VIDEO_INPUT_BUFFER_SIZE) {
           def.nBufferSize = aInfo.mImage.width * aInfo.mImage.height;
-          LOG("Change input buffer size to %d", def.nBufferSize);
+          LOG("Change input buffer size to %lu", def.nBufferSize);
         }
       } else {
         def.format.video.eCompressionFormat = OMX_VIDEO_CodingUnused;

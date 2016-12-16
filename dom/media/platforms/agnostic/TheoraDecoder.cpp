@@ -180,7 +180,7 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
                                                          mTheoraInfo.frame_height));
     if (!v) {
       LOG(
-        "Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
+        "Image allocation error source %ux%u display %ux%u picture %ux%u",
         mTheoraInfo.frame_width,
         mTheoraInfo.frame_height,
         mInfo.mDisplay.width,

@@ -12621,7 +12621,7 @@ ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo)
   nsCOMPtr<nsIThread> thread;
   aThreadInfo.mThread.swap(thread);
 
-  IDB_DEBUG_LOG(("ConnectionPool shutting down thread %lu",
+  IDB_DEBUG_LOG(("ConnectionPool shutting down thread %" PRIu32,
                  runnable->SerialNumber()));
 
   // This should clean up the thread with the profiler.
@@ -12722,7 +12722,7 @@ ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
         if (NS_SUCCEEDED(rv)) {
           MOZ_ASSERT(newThread);
 
-          IDB_DEBUG_LOG(("ConnectionPool created thread %lu",
+          IDB_DEBUG_LOG(("ConnectionPool created thread %" PRIu32,
                          runnable->SerialNumber()));
 
           dbInfo->mThreadInfo.mThread.swap(newThread);

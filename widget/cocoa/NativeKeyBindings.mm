@@ -8,6 +8,7 @@
 #include "nsTArray.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TextEvents.h"
 
 namespace mozilla {
@@ -225,7 +226,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
   nsCocoaUtils::GetCommandsFromKeyEvent(cocoaEvent, bindingCommands);
 
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-    ("%p NativeKeyBindings::KeyPress, bindingCommands=%u",
+    ("%p NativeKeyBindings::KeyPress, bindingCommands=%" PRIuSIZE,
      this, bindingCommands.Length()));
 
   AutoTArray<Command, 4> geckoCommands;

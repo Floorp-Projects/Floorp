@@ -36,6 +36,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
@@ -211,7 +212,7 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
   // results that were found than fail.
   mClassifier->Check(spec, tables, gFreshnessGuarantee, *results);
 
-  LOG(("Found %d results.", results->Length()));
+  LOG(("Found %" PRIuSIZE " results.", results->Length()));
   return NS_OK;
 }
 
@@ -268,7 +269,7 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     return rv;
   }
 
-  LOG(("Found %d results.", results->Length()));
+  LOG(("Found %" PRIuSIZE " results.", results->Length()));
 
 
   if (LOG_ENABLED()) {
@@ -650,7 +651,8 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
     if (LOG_ENABLED()) {
       nsAutoCString errorName;
       mozilla::GetErrorName(mUpdateStatus, errorName);
-      LOG(("Notifying error: %s (%d)", errorName.get(), mUpdateStatus));
+      LOG(("Notifying error: %s (%" PRIu32 ")", errorName.get(),
+           static_cast<uint32_t>(mUpdateStatus)));
     }
 
     mUpdateObserver->UpdateError(mUpdateStatus);
@@ -845,7 +847,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
 nsresult
 nsUrlClassifierDBServiceWorker::CacheMisses(PrefixArray *results)
 {
-  LOG(("nsUrlClassifierDBServiceWorker::CacheMisses [%p] %d",
+  LOG(("nsUrlClassifierDBServiceWorker::CacheMisses [%p] %" PRIuSIZE,
        this, results->Length()));
 
   // Ownership is transferred in to us
@@ -1109,7 +1111,7 @@ nsUrlClassifierLookupCallback::HandleResults()
   MOZ_ASSERT(mPendingCompletions == 0, "HandleResults() should never be "
              "called while there are pending completions");
 
-  LOG(("nsUrlClassifierLookupCallback::HandleResults [%p, %u results]",
+  LOG(("nsUrlClassifierLookupCallback::HandleResults [%p, %" PRIuSIZE " results]",
        this, mResults->Length()));
 
   nsTArray<nsCString> tables;
@@ -1125,12 +1127,12 @@ nsUrlClassifierLookupCallback::HandleResults()
            result.PartialHashHex().get(), result.mTableName.get()));
       continue;
     } else if (!result.Confirmed()) {
-      LOG(("Skipping result %X from table %s (not confirmed)",
+      LOG(("Skipping result %s from table %s (not confirmed)",
            result.PartialHashHex().get(), result.mTableName.get()));
       continue;
     }
 
-    LOG(("Confirmed result %X from table %s",
+    LOG(("Confirmed result %s from table %s",
          result.PartialHashHex().get(), result.mTableName.get()));
 
     if (tables.IndexOf(result.mTableName) == nsTArray<nsCString>::NoIndex) {
