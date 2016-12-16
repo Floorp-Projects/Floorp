@@ -18,9 +18,9 @@ assertEq(typeof desc.value, "function");
 assertEq(desc.value.name, "wasm-function[0]");
 assertEq(desc.value.length, 0);
 assertEq(desc.value(), undefined);
-assertEq(desc.writable, true);
+assertEq(desc.writable, false);
 assertEq(desc.enumerable, true);
-assertEq(desc.configurable, true);
+assertEq(desc.configurable, false);
 assertEq(desc.value(), undefined);
 
 wasmValidateText('(module (func) (func) (export "a" 0))');
