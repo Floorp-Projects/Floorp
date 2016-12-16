@@ -1444,7 +1444,7 @@ WebGLProgram::TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
             GLuint maxAttribs = 0;
             gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
                              &maxAttribs);
-            if (varyings.Length() >= maxAttribs) {
+            if (varyings.Length() > maxAttribs) {
                 mContext->ErrorInvalidValue("%s: Length of `varyings` exceeds %s.",
                                             funcName,
                                             "TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
