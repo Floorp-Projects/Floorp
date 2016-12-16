@@ -10,7 +10,6 @@
 #include "nsCOMArray.h"
 #include "nsISimpleEnumerator.h"
 #include "xpcpublic.h"
-#include "mozilla/CycleCollectedJSContext.h"
 
 nsresult
 nsObserverList::AddObserver(nsIObserver* anObserver, bool ownsWeak)
@@ -106,9 +105,6 @@ nsObserverList::NotifyObservers(nsISupports* aSubject,
                                 const char* aTopic,
                                 const char16_t* someData)
 {
-  MOZ_RELEASE_ASSERT(js::AllowGCBarriers(CycleCollectedJSContext::Get()->Context()),
-                     "Observers can be implement in JS, so they should not be called during painting.");
-
   nsCOMArray<nsIObserver> observers;
   FillObserverArray(observers);
 
