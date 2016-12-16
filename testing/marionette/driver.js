@@ -2408,13 +2408,8 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let canvas;
+      let container = {frame: this.getCurrentWindow()};
       let highlightEls = [];
-
-      let container = {frame: this.getCurrentWindow().document.defaultView};
-
-      if (!container.frame) {
-        throw new NoSuchWindowError('Unable to locate window');
-      }
 
       for (let h of highlights) {
         let el = this.curBrowser.seenEls.get(h, container);
