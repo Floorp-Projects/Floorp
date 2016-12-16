@@ -26,8 +26,8 @@
 #include <stdlib.h>
 #include "prnetdb.h"
 #include "prsystem.h"
-#include "prprf.h"
 #include "prenv.h"
+#include "mozilla/Printf.h"
 #endif
 
 #if defined(MOZ_WIDGET_GONK) && !defined(MOZ_CRASHREPORTER)
@@ -353,8 +353,8 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
     }
 
     char *signature =
-        PR_smprintf("%s:%s%lu", inet_ntoa(inaddr), aHaveFcntlLock ? "+" : "",
-                    (unsigned long)getpid());
+        mozilla::Smprintf("%s:%s%lu", inet_ntoa(inaddr), aHaveFcntlLock ? "+" : "",
+                   (unsigned long)getpid());
     const char *fileName = lockFilePath.get();
     int symlink_rv, symlink_errno = 0, tries = 0;
 
@@ -375,7 +375,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
             break;
     }
 
-    PR_smprintf_free(signature);
+    mozilla::SmprintfFree(signature);
     signature = nullptr;
 
     if (symlink_rv == 0)
