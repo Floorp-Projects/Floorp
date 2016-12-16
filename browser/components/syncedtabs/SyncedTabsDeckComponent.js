@@ -52,6 +52,7 @@ function SyncedTabsDeckComponent({
     SyncedTabs: SyncedTabs,
     clipboardHelper: Cc["@mozilla.org/widget/clipboardhelper;1"]
                        .getService(Ci.nsIClipboardHelper),
+    getChromeWindow: this._getChromeWindow,
   });
 }
 

@@ -41,7 +41,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
 #include "nsError.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsStyleUtil.h"
 #include "nsIPrincipal.h"
 #include "nsICSSUnprefixingService.h"

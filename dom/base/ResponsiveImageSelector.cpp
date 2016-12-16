@@ -12,7 +12,7 @@
 
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsRuleNode.h"
 #include "nsRuleData.h"
 

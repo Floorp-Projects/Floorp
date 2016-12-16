@@ -44,7 +44,7 @@
 #include "nsAttrName.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
-#include "nsIMediaList.h"
+#include "nsMediaList.h"
 #include "nsCSSRules.h"
 #include "nsStyleSet.h"
 #include "mozilla/dom/Element.h"
