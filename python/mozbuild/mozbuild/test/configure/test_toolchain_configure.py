@@ -213,6 +213,7 @@ VS_2013u3 = VS('18.00.30723')
 VS_2015 = VS('19.00.23026')
 VS_2015u1 = VS('19.00.23506')
 VS_2015u2 = VS('19.00.23918')
+VS_2015u3 = VS('19.00.24213')
 
 VS_PLATFORM_X86 = {
     '_M_IX86': 600,
@@ -233,7 +234,7 @@ CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
         '__STDC_VERSION__': False,
         '__cplusplus': '201103L',
     },
-    '-fms-compatibility-version=19.00.23918': VS('19.00.23918')[None],
+    '-fms-compatibility-version=19.00.24213': VS('19.00.24213')[None],
 }
 
 CLANG_CL_PLATFORM_X86 = FakeCompiler(VS_PLATFORM_X86, GCC_PLATFORM_X86[None])
@@ -732,7 +733,8 @@ class WindowsToolchainTest(BaseToolchainTest):
         '/opt/VS_2013u3/bin/cl': VS_2013u3 + VS_PLATFORM_X86,
         '/opt/VS_2015/bin/cl': VS_2015 + VS_PLATFORM_X86,
         '/opt/VS_2015u1/bin/cl': VS_2015u1 + VS_PLATFORM_X86,
-        '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86,
+        '/opt/VS_2015u2/bin/cl': VS_2015u2 + VS_PLATFORM_X86,
+        '/usr/bin/cl': VS_2015u3 + VS_PLATFORM_X86,
         '/usr/bin/clang-cl': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86,
         '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_WIN,
         '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_WIN,
@@ -750,46 +752,50 @@ class WindowsToolchainTest(BaseToolchainTest):
 
     VS_2013u2_RESULT = (
         'This version (18.00.30501) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
+        'You must install Visual C++ 2015 Update 3 or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2013u3_RESULT = (
         'This version (18.00.30723) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
+        'You must install Visual C++ 2015 Update 3 or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2015_RESULT = (
         'This version (19.00.23026) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
+        'You must install Visual C++ 2015 Update 3 or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2015u1_RESULT = (
         'This version (19.00.23506) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
+        'You must install Visual C++ 2015 Update 3 or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2015u2_RESULT = CompilerResult(
+    VS_2015u2_RESULT = (
+        'This version (19.00.23918) of the MSVC compiler is not supported.\n'
+        'You must install Visual C++ 2015 Update 3 or newer in order to build.\n'
+        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
+    VS_2015u3_RESULT = CompilerResult(
         flags=[],
-        version='19.00.23918',
+        version='19.00.24213',
         type='msvc',
         compiler='/usr/bin/cl',
         language='C',
     )
-    VSXX_2015u2_RESULT = CompilerResult(
+    VSXX_2015u3_RESULT = CompilerResult(
         flags=[],
-        version='19.00.23918',
+        version='19.00.24213',
         type='msvc',
         compiler='/usr/bin/cl',
         language='C++',
     )
     CLANG_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=gnu99',
-               '-fms-compatibility-version=19.00.23918', '-fallback'],
-        version='19.00.23918',
+               '-fms-compatibility-version=19.00.24213', '-fallback'],
+        version='19.00.24213',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C',
     )
     CLANGXX_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=c++14',
-               '-fms-compatibility-version=19.00.23918', '-fallback'],
-        version='19.00.23918',
+               '-fms-compatibility-version=19.00.24213', '-fallback'],
+        version='19.00.24213',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C++',
@@ -804,14 +810,20 @@ class WindowsToolchainTest(BaseToolchainTest):
     GCC_5_RESULT = LinuxToolchainTest.GCC_5_RESULT
     GXX_5_RESULT = LinuxToolchainTest.GXX_5_RESULT
 
-    # VS2015u2 or greater is required.
+    # VS2015u3 or greater is required.
     def test_msvc(self):
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2015u2_RESULT,
-            'cxx_compiler': self.VSXX_2015u2_RESULT,
+            'c_compiler': self.VS_2015u3_RESULT,
+            'cxx_compiler': self.VSXX_2015u3_RESULT,
         })
 
     def test_unsupported_msvc(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.VS_2015u2_RESULT,
+        }, environ={
+            'CC': '/opt/VS_2015u2/bin/cl',
+        })
+
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.VS_2015u1_RESULT,
         }, environ={
@@ -889,7 +901,7 @@ class WindowsToolchainTest(BaseToolchainTest):
 
     def test_cannot_cross(self):
         paths = {
-            '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86_64,
+            '/usr/bin/cl': VS_2015u3 + VS_PLATFORM_X86_64,
         }
         self.do_toolchain_test(paths, {
             'c_compiler': ('Target C compiler target CPU (x86_64) '
@@ -907,7 +919,8 @@ class Windows64ToolchainTest(WindowsToolchainTest):
         '/opt/VS_2013u3/bin/cl': VS_2013u3 + VS_PLATFORM_X86_64,
         '/opt/VS_2015/bin/cl': VS_2015 + VS_PLATFORM_X86_64,
         '/opt/VS_2015u1/bin/cl': VS_2015u1 + VS_PLATFORM_X86_64,
-        '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86_64,
+        '/opt/VS_2015u2/bin/cl': VS_2015u2 + VS_PLATFORM_X86_64,
+        '/usr/bin/cl': VS_2015u3 + VS_PLATFORM_X86_64,
         '/usr/bin/clang-cl': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86_64,
         '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_64_WIN,
         '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_64_WIN,
@@ -925,7 +938,7 @@ class Windows64ToolchainTest(WindowsToolchainTest):
 
     def test_cannot_cross(self):
         paths = {
-            '/usr/bin/cl': VS_2015u2 + VS_PLATFORM_X86,
+            '/usr/bin/cl': VS_2015u3 + VS_PLATFORM_X86,
         }
         self.do_toolchain_test(paths, {
             'c_compiler': ('Target C compiler target CPU (x86) '
