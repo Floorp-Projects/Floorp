@@ -14,6 +14,7 @@ import org.mozilla.gecko.util.UIAsyncTask;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -51,7 +52,7 @@ public class GeckoAccessibility {
                     AccessibilityManager accessibilityManager =
                         (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
                     sEnabled = accessibilityManager.isEnabled() && accessibilityManager.isTouchExplorationEnabled();
-                    if (Versions.feature16Plus && sEnabled && sSelfBrailleClient == null) {
+                    if (Build.VERSION.SDK_INT >= 16 && sEnabled && sSelfBrailleClient == null) {
                         sSelfBrailleClient = new SelfBrailleClient(context, false);
                     }
 
@@ -146,7 +147,7 @@ public class GeckoAccessibility {
             sCurrentNode = VIRTUAL_CURSOR_POSITION;
         }
 
-        if (Versions.preJB) {
+        if (Build.VERSION.SDK_INT < 16) {
             // Before Jelly Bean we send events directly from here while spoofing the source by setting
             // the package and class name manually.
             ThreadUtils.postToBackgroundThread(new Runnable() {
@@ -236,7 +237,7 @@ public class GeckoAccessibility {
 
     public static void setDelegate(View view) {
         // Only use this delegate in Jelly Bean.
-        if (Versions.feature16Plus) {
+        if (Build.VERSION.SDK_INT >= 16) {
             view.setAccessibilityDelegate(new GeckoAccessibilityDelegate());
             view.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
@@ -253,7 +254,7 @@ public class GeckoAccessibility {
             }
         });
 
-        if (Versions.feature19Plus) {
+        if (Build.VERSION.SDK_INT >= 19) {
             accessibilityManager.addTouchExplorationStateChangeListener(new AccessibilityManager.TouchExplorationStateChangeListener() {
                 @Override
                 public void onTouchExplorationStateChanged(boolean enabled) {

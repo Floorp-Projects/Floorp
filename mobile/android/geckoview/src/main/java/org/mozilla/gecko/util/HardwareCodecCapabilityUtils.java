@@ -13,6 +13,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCodecList;
+import android.os.Build;
 import android.util.Log;
 
 public final class HardwareCodecCapabilityUtils {
@@ -57,7 +58,7 @@ public final class HardwareCodecCapabilityUtils {
   @WrapForJNI
   public static boolean checkSupportsAdaptivePlayback(MediaCodec aCodec, String aMimeType) {
       // isFeatureSupported supported on API level >= 19.
-      if (!Versions.feature19Plus) {
+      if (!(Build.VERSION.SDK_INT >= 19)) {
           return false;
       }
 
@@ -74,7 +75,7 @@ public final class HardwareCodecCapabilityUtils {
   }
 
   public static boolean getHWEncoderCapability() {
-    if (Versions.feature20Plus) {
+    if (Build.VERSION.SDK_INT >= 20) {
       for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
         MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
         if (!info.isEncoder()) {
@@ -136,7 +137,7 @@ public final class HardwareCodecCapabilityUtils {
   }
 
   public static boolean getHWDecoderCapability(String aMimeType) {
-    if (Versions.feature20Plus) {
+    if (Build.VERSION.SDK_INT >= 20) {
       for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
         MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
         if (info.isEncoder()) {
