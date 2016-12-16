@@ -194,10 +194,11 @@ public:
   virtual size_t SizeOfVideoQueueInFrames();
   virtual size_t SizeOfAudioQueueInFrames();
 
-  virtual void NotifyDataArrived()
+  void NotifyDataArrived()
   {
     MOZ_ASSERT(OnTaskQueue());
     NS_ENSURE_TRUE_VOID(!mShutdown);
+    NotifyDataArrivedInternal();
     UpdateBuffered();
   }
 
@@ -252,6 +253,24 @@ protected:
 
   // Recomputes mBuffered.
   virtual void UpdateBuffered();
+
+  // Populates aBuffered with the time ranges which are buffered. This may only
+  // be called on the decode task queue, and should only be used internally by
+  // UpdateBuffered - mBuffered (or mirrors of it) should be used for everything
+  // else.
+  //
+  // This base implementation in MediaDecoderReader estimates the time ranges
+  // buffered by interpolating the cached byte ranges with the duration
+  // of the media. Reader subclasses should override this method if they
+  // can quickly calculate the buffered ranges more accurately.
+  //
+  // The primary advantage of this implementation in the reader base class
+  // is that it's a fast approximation, which does not perform any I/O.
+  //
+  // The OggReader relies on this base implementation not performing I/O,
+  // since in FirefoxOS we can't do I/O on the main thread, where this is
+  // called.
+  virtual media::TimeIntervals GetBuffered();
 
   RefPtr<MediaDataPromise> DecodeToFirstVideoData();
 
@@ -325,6 +344,8 @@ private:
 
   virtual void VisibilityChanged();
 
+  virtual void NotifyDataArrivedInternal() {}
+
   // Overrides of this function should decodes an unspecified amount of
   // audio data, enqueuing the audio data in mAudioQueue. Returns true
   // when there's more audio to decode, false if the audio is finished,
@@ -344,24 +365,6 @@ private:
   {
     return false;
   }
-
-  // Populates aBuffered with the time ranges which are buffered. This may only
-  // be called on the decode task queue, and should only be used internally by
-  // UpdateBuffered - mBuffered (or mirrors of it) should be used for everything
-  // else.
-  //
-  // This base implementation in MediaDecoderReader estimates the time ranges
-  // buffered by interpolating the cached byte ranges with the duration
-  // of the media. Reader subclasses should override this method if they
-  // can quickly calculate the buffered ranges more accurately.
-  //
-  // The primary advantage of this implementation in the reader base class
-  // is that it's a fast approximation, which does not perform any I/O.
-  //
-  // The OggReader relies on this base implementation not performing I/O,
-  // since in FirefoxOS we can't do I/O on the main thread, where this is
-  // called.
-  media::TimeIntervals GetBuffered();
 
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
