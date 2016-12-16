@@ -667,8 +667,45 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
 {
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
+  // Get the adapters once then reuse below
+  nsAutoString adapterVendorID[2];
+  nsAutoString adapterDeviceID[2];
+  nsAutoString adapterDriverVersionString[2];
+  bool adapterInfoFailed[2];
+  uint64_t driverVersion[2] = {0, 0};
+
+  adapterInfoFailed[0] = (NS_FAILED(GetAdapterVendorID(adapterVendorID[0])) ||
+			  NS_FAILED(GetAdapterDeviceID(adapterDeviceID[0])) ||
+			  NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString[0])));
+  adapterInfoFailed[1] = (NS_FAILED(GetAdapterVendorID2(adapterVendorID[1])) ||
+			  NS_FAILED(GetAdapterDeviceID2(adapterDeviceID[1])) ||
+			  NS_FAILED(GetAdapterDriverVersion2(adapterDriverVersionString[1])));
+  // No point in going on if we don't have adapter info
+  if (adapterInfoFailed[0] && adapterInfoFailed[1]) {
+    return 0;
+  }
+
+#if defined(XP_WIN) || defined(ANDROID)
+  if (!adapterInfoFailed[0]) {
+    ParseDriverVersion(adapterDriverVersionString[0], &driverVersion[0]);
+  }
+  if (!adapterInfoFailed[1]) {
+    ParseDriverVersion(adapterDriverVersionString[1], &driverVersion[1]);
+  }
+#endif
+
   uint32_t i = 0;
   for (; i < info.Length(); i++) {
+    // If we don't have the info for this GPU, no need to check further.
+    // It is unclear that we would ever have a mixture of 1st and 2nd
+    // GPU, but leaving the code in for that possibility for now.
+    // (Actually, currently mGpu2 will never be true, so this can
+    // be optimized out.)
+    uint32_t infoIndex = info[i].mGpu2 ? 1 : 0;
+    if (adapterInfoFailed[infoIndex]) {
+      continue;
+    }
+
     // Do the operating system check first, no point in getting the driver
     // info if we won't need to use it.
     if (!MatchingOperatingSystems(info[i].mOperatingSystem, os)) {
@@ -679,40 +716,15 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
         continue;
     }
 
-    // XXX: it would be better not to do this everytime round the loop
-    nsAutoString adapterVendorID;
-    nsAutoString adapterDeviceID;
-    nsAutoString adapterDriverVersionString;
-    if (info[i].mGpu2) {
-      if (NS_FAILED(GetAdapterVendorID2(adapterVendorID)) ||
-          NS_FAILED(GetAdapterDeviceID2(adapterDeviceID)) ||
-          NS_FAILED(GetAdapterDriverVersion2(adapterDriverVersionString)))
-      {
-        return 0;
-      }
-    } else {
-      if (NS_FAILED(GetAdapterVendorID(adapterVendorID)) ||
-          NS_FAILED(GetAdapterDeviceID(adapterDeviceID)) ||
-          NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString)))
-      {
-        return 0;
-      }
-    }
-
-#if defined(XP_WIN) || defined(ANDROID)
-    uint64_t driverVersion;
-    ParseDriverVersion(adapterDriverVersionString, &driverVersion);
-#endif
-
     if (!info[i].mAdapterVendor.Equals(GfxDriverInfo::GetDeviceVendor(VendorAll), nsCaseInsensitiveStringComparator()) &&
-        !info[i].mAdapterVendor.Equals(adapterVendorID, nsCaseInsensitiveStringComparator())) {
+        !info[i].mAdapterVendor.Equals(adapterVendorID[infoIndex], nsCaseInsensitiveStringComparator())) {
       continue;
     }
 
     if (info[i].mDevices != GfxDriverInfo::allDevices && info[i].mDevices->Length()) {
         bool deviceMatches = false;
         for (uint32_t j = 0; j < info[i].mDevices->Length(); j++) {
-            if ((*info[i].mDevices)[j].Equals(adapterDeviceID, nsCaseInsensitiveStringComparator())) {
+            if ((*info[i].mDevices)[j].Equals(adapterDeviceID[infoIndex], nsCaseInsensitiveStringComparator())) {
                 deviceMatches = true;
                 break;
             }
@@ -741,37 +753,37 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
 #if defined(XP_WIN) || defined(ANDROID)
     switch (info[i].mComparisonOp) {
     case DRIVER_LESS_THAN:
-      match = driverVersion < info[i].mDriverVersion;
+      match = driverVersion[infoIndex] < info[i].mDriverVersion;
       break;
     case DRIVER_BUILD_ID_LESS_THAN:
-      match = (driverVersion & 0xFFFF) < info[i].mDriverVersion;
+      match = (driverVersion[infoIndex] & 0xFFFF) < info[i].mDriverVersion;
       break;
     case DRIVER_LESS_THAN_OR_EQUAL:
-      match = driverVersion <= info[i].mDriverVersion;
+      match = driverVersion[infoIndex] <= info[i].mDriverVersion;
       break;
     case DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL:
-      match = (driverVersion & 0xFFFF) <= info[i].mDriverVersion;
+      match = (driverVersion[infoIndex] & 0xFFFF) <= info[i].mDriverVersion;
       break;
     case DRIVER_GREATER_THAN:
-      match = driverVersion > info[i].mDriverVersion;
+      match = driverVersion[infoIndex] > info[i].mDriverVersion;
       break;
     case DRIVER_GREATER_THAN_OR_EQUAL:
-      match = driverVersion >= info[i].mDriverVersion;
+      match = driverVersion[infoIndex] >= info[i].mDriverVersion;
       break;
     case DRIVER_EQUAL:
-      match = driverVersion == info[i].mDriverVersion;
+      match = driverVersion[infoIndex] == info[i].mDriverVersion;
       break;
     case DRIVER_NOT_EQUAL:
-      match = driverVersion != info[i].mDriverVersion;
+      match = driverVersion[infoIndex] != info[i].mDriverVersion;
       break;
     case DRIVER_BETWEEN_EXCLUSIVE:
-      match = driverVersion > info[i].mDriverVersion && driverVersion < info[i].mDriverVersionMax;
+      match = driverVersion[infoIndex] > info[i].mDriverVersion && driverVersion[infoIndex] < info[i].mDriverVersionMax;
       break;
     case DRIVER_BETWEEN_INCLUSIVE:
-      match = driverVersion >= info[i].mDriverVersion && driverVersion <= info[i].mDriverVersionMax;
+      match = driverVersion[infoIndex] >= info[i].mDriverVersion && driverVersion[infoIndex] <= info[i].mDriverVersionMax;
       break;
     case DRIVER_BETWEEN_INCLUSIVE_START:
-      match = driverVersion >= info[i].mDriverVersion && driverVersion < info[i].mDriverVersionMax;
+      match = driverVersion[infoIndex] >= info[i].mDriverVersion && driverVersion[infoIndex] < info[i].mDriverVersionMax;
       break;
     case DRIVER_COMPARISON_IGNORED:
       // We don't have a comparison op, so we match everything.
@@ -810,15 +822,11 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
   // ignore this special rule.  See bug 1008759.
   if (status == nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
     (aFeature == nsIGfxInfo::FEATURE_DIRECT2D)) {
-    nsAutoString adapterVendorID2;
-    nsAutoString adapterDeviceID2;
-    if ((!NS_FAILED(GetAdapterVendorID2(adapterVendorID2))) &&
-      (!NS_FAILED(GetAdapterDeviceID2(adapterDeviceID2))))
-    {
+    if (!adapterInfoFailed[1]) {
       nsAString &nvVendorID = (nsAString &)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA);
       const nsString nv310mDeviceId = NS_LITERAL_STRING("0x0A70");
-      if (nvVendorID.Equals(adapterVendorID2, nsCaseInsensitiveStringComparator()) &&
-        nv310mDeviceId.Equals(adapterDeviceID2, nsCaseInsensitiveStringComparator())) {
+      if (nvVendorID.Equals(adapterVendorID[1], nsCaseInsensitiveStringComparator()) &&
+        nv310mDeviceId.Equals(adapterDeviceID[1], nsCaseInsensitiveStringComparator())) {
         status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_D2D_NV310M_BLOCK";
       }
