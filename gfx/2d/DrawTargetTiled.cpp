@@ -30,7 +30,8 @@ DrawTargetTiled::Init(const TileSet& aTiles)
       return false;
     }
     if (mTiles[0].mDrawTarget->GetFormat() != mTiles.back().mDrawTarget->GetFormat() ||
-        mTiles[0].mDrawTarget->GetBackendType() != mTiles.back().mDrawTarget->GetBackendType()) {
+        mTiles[0].mDrawTarget->GetBackendType() != mTiles.back().mDrawTarget->GetBackendType() ||
+        mTiles[0].mDrawTarget->GetPermitSubpixelAA() != mTiles.back().mDrawTarget->GetPermitSubpixelAA()) {
       return false;
     }
     uint32_t newXMost = max(mRect.XMost(),
@@ -45,6 +46,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
                                                             mTiles[i].mTileOrigin.y));
   }
   mFormat = mTiles[0].mDrawTarget->GetFormat();
+  mPermitSubpixelAA = mTiles[0].mDrawTarget->GetPermitSubpixelAA();
   return true;
 }
 
@@ -203,6 +205,15 @@ DrawTargetTiled::SetTransform(const Matrix& aTransform)
 }
 
 void
+DrawTargetTiled::SetPermitSubpixelAA(bool aPermitSubpixelAA)
+{
+  DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    mTiles[i].mDrawTarget->SetPermitSubpixelAA(aPermitSubpixelAA);
+  }
+}
+
+void
 DrawTargetTiled::DrawSurface(SourceSurface* aSurface, const Rect& aDest, const Rect& aSource, const DrawSurfaceOptions& aSurfaceOptions, const DrawOptions& aDrawOptions)
 {
   Rect deviceRect = mTransform.TransformBounds(aDest);
@@ -323,6 +334,10 @@ DrawTargetTiled::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
       mTiles[i].mDrawTarget->PushLayer(aOpaque, aOpacity, aMask, aMaskTransform, bounds, aCopyBackground);
     }
   }
+
+  PushedLayer layer(GetPermitSubpixelAA());
+  mPushedLayers.push_back(layer);
+  SetPermitSubpixelAA(aOpaque);
 }
 
 void
@@ -335,6 +350,10 @@ DrawTargetTiled::PopLayer()
       mTiles[i].mDrawTarget->PopLayer();
     }
   }
+
+  MOZ_ASSERT(mPushedLayers.size());
+  const PushedLayer& layer = mPushedLayers.back();
+  SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);
 }
 
 } // namespace gfx
