@@ -17,7 +17,7 @@
 package org.mozilla.gecko.toolbar;
 
 import android.support.v4.content.ContextCompat;
-import org.mozilla.gecko.AppConstants.Versions;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.util.WeakReferenceHandler;
@@ -30,11 +30,9 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.Animation;
 
 /**
  * Progress view used for page loads.
@@ -88,7 +86,6 @@ public class ToolbarProgressView extends ThemedImageView {
     @Override
     public void onDraw(Canvas canvas) {
         final Drawable d = getDrawable();
-        DrawableCompat.setAutoMirrored(d, true);
         d.setBounds(mBounds.getBounds());
         d.draw(canvas);
     }
