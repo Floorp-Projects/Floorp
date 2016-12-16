@@ -17,6 +17,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.hardware.input.InputManager;
+import android.os.Build;
 import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -363,7 +364,7 @@ public class AndroidGamepadManager {
     }
 
     private static void addDeviceListener() {
-        if (Versions.preJB) {
+        if (Build.VERSION.SDK_INT < 16) {
             // Poll known gamepads to see if they've disappeared.
             sPollTimer = new Timer();
             sPollTimer.scheduleAtFixedRate(new TimerTask() {
@@ -377,9 +378,8 @@ public class AndroidGamepadManager {
                         }
                     }
                 }, POLL_TIMER_PERIOD, POLL_TIMER_PERIOD);
-            return;
-        }
-        sListener = new InputManager.InputDeviceListener() {
+        } else {
+            sListener = new InputManager.InputDeviceListener() {
                 @Override
                 public void onInputDeviceAdded(int deviceId) {
                     InputDevice device = InputDevice.getDevice(deviceId);
@@ -408,18 +408,19 @@ public class AndroidGamepadManager {
                 public void onInputDeviceChanged(int deviceId) {
                 }
             };
-        ((InputManager)GeckoAppShell.getContext().getSystemService(Context.INPUT_SERVICE)).registerInputDeviceListener(sListener, ThreadUtils.getUiHandler());
+            ((InputManager) GeckoAppShell.getContext().getSystemService(Context.INPUT_SERVICE)).registerInputDeviceListener(sListener, ThreadUtils.getUiHandler());
+        }
     }
 
     private static void removeDeviceListener() {
-        if (Versions.preJB) {
+        if (Build.VERSION.SDK_INT < 16) {
             if (sPollTimer != null) {
                 sPollTimer.cancel();
                 sPollTimer = null;
             }
-            return;
+        } else {
+            ((InputManager) GeckoAppShell.getContext().getSystemService(Context.INPUT_SERVICE)).unregisterInputDeviceListener(sListener);
+            sListener = null;
         }
-        ((InputManager)GeckoAppShell.getContext().getSystemService(Context.INPUT_SERVICE)).unregisterInputDeviceListener(sListener);
-        sListener = null;
     }
 }

@@ -29,7 +29,6 @@ import android.annotation.SuppressLint;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
@@ -83,6 +82,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
@@ -1506,7 +1506,7 @@ public class GeckoAppShell
                           (new File("/sys/class/nvidia-gpu")).exists();
         if (isTegra) {
             // disable on KitKat (bug 957694)
-            if (Versions.feature19Plus) {
+            if (Build.VERSION.SDK_INT >= 19) {
                 Log.w(LOGTAG, "Blocking plugins because of Tegra (bug 957694)");
                 return null;
             }
