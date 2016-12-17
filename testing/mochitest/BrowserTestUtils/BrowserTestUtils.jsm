@@ -924,28 +924,36 @@ this.BrowserTestUtils = {
           }
         }
 
-        if (dumpID) {
-          let minidumpDirectory = getMinidumpDirectory();
-          let extrafile = minidumpDirectory.clone();
-          extrafile.append(dumpID + '.extra');
-          if (extrafile.exists()) {
-            dump(`\nNo .extra file for dumpID: ${dumpID}\n`);
-            if (AppConstants.MOZ_CRASHREPORTER) {
-              extra = KeyValueParser.parseKeyValuePairsFromFile(extrafile);
-            } else {
-              dump('\nCrashReporter not enabled - will not return any extra data\n');
-            }
-          }
+        let removalPromise = Promise.resolve();
 
-          removeFile(minidumpDirectory, dumpID + '.dmp');
-          removeFile(minidumpDirectory, dumpID + '.extra');
+        if (dumpID) {
+          removalPromise = Services.crashmanager.ensureCrashIsPresent(dumpID)
+                                                .then(() => {
+            let minidumpDirectory = getMinidumpDirectory();
+            let extrafile = minidumpDirectory.clone();
+            extrafile.append(dumpID + '.extra');
+            if (extrafile.exists()) {
+              dump(`\nNo .extra file for dumpID: ${dumpID}\n`);
+              if (AppConstants.MOZ_CRASHREPORTER) {
+                extra = KeyValueParser.parseKeyValuePairsFromFile(extrafile);
+              } else {
+                dump('\nCrashReporter not enabled - will not return any extra data\n');
+              }
+            }
+
+            removeFile(minidumpDirectory, dumpID + '.dmp');
+            removeFile(minidumpDirectory, dumpID + '.extra');
+          });
         }
 
-        Services.obs.removeObserver(observer, 'ipc:content-shutdown');
-        dump("\nCrash cleaned up\n");
-        // There might be other ipc:content-shutdown handlers that need to run before
-        // we want to continue, so we'll resolve on the next tick of the event loop.
-        TestUtils.executeSoon(() => resolve());
+        removalPromise.then(() => {
+          Services.obs.removeObserver(observer, 'ipc:content-shutdown');
+          dump("\nCrash cleaned up\n");
+          // There might be other ipc:content-shutdown handlers that need to
+          // run before we want to continue, so we'll resolve on the next tick
+          // of the event loop.
+          TestUtils.executeSoon(() => resolve());
+        });
       };
 
       Services.obs.addObserver(observer, 'ipc:content-shutdown', false);

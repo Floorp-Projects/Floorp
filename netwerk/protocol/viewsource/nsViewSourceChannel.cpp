@@ -726,6 +726,20 @@ nsViewSourceChannel::SetChannelId(const nsACString& aChannelId)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
+{
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+      mHttpChannel->GetTopLevelContentWindowId(aWindowId);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
+{
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+      mHttpChannel->SetTopLevelContentWindowId(aWindowId);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetRequestMethod(nsACString & aRequestMethod)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :

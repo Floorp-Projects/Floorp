@@ -30,7 +30,8 @@ DrawTargetTiled::Init(const TileSet& aTiles)
       return false;
     }
     if (mTiles[0].mDrawTarget->GetFormat() != mTiles.back().mDrawTarget->GetFormat() ||
-        mTiles[0].mDrawTarget->GetBackendType() != mTiles.back().mDrawTarget->GetBackendType()) {
+        mTiles[0].mDrawTarget->GetBackendType() != mTiles.back().mDrawTarget->GetBackendType() ||
+        mTiles[0].mDrawTarget->GetPermitSubpixelAA() != mTiles.back().mDrawTarget->GetPermitSubpixelAA()) {
       return false;
     }
     uint32_t newXMost = max(mRect.XMost(),
@@ -45,6 +46,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
                                                             mTiles[i].mTileOrigin.y));
   }
   mFormat = mTiles[0].mDrawTarget->GetFormat();
+  mPermitSubpixelAA = mTiles[0].mDrawTarget->GetPermitSubpixelAA();
   return true;
 }
 
@@ -203,6 +205,15 @@ DrawTargetTiled::SetTransform(const Matrix& aTransform)
 }
 
 void
+DrawTargetTiled::SetPermitSubpixelAA(bool aPermitSubpixelAA)
+{
+  DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    mTiles[i].mDrawTarget->SetPermitSubpixelAA(aPermitSubpixelAA);
+  }
+}
+
+void
 DrawTargetTiled::DrawSurface(SourceSurface* aSurface, const Rect& aDest, const Rect& aSource, const DrawSurfaceOptions& aSurfaceOptions, const DrawOptions& aDrawOptions)
 {
   Rect deviceRect = mTransform.TransformBounds(aDest);
@@ -317,10 +328,16 @@ DrawTargetTiled::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
   // XXX - not sure this is what we want or whether we want to continue drawing to a larger
   // intermediate surface, that would require tweaking the code in here a little though.
   for (size_t i = 0; i < mTiles.size(); i++) {
-    IntRect bounds = aBounds;
-    bounds.MoveBy(-mTiles[i].mTileOrigin);
-    mTiles[i].mDrawTarget->PushLayer(aOpaque, aOpacity, aMask, aMaskTransform, aBounds);
+    if (!mTiles[i].mClippedOut) {
+      IntRect bounds = aBounds;
+      bounds.MoveBy(-mTiles[i].mTileOrigin);
+      mTiles[i].mDrawTarget->PushLayer(aOpaque, aOpacity, aMask, aMaskTransform, bounds, aCopyBackground);
+    }
   }
+
+  PushedLayer layer(GetPermitSubpixelAA());
+  mPushedLayers.push_back(layer);
+  SetPermitSubpixelAA(aOpaque);
 }
 
 void
@@ -329,8 +346,14 @@ DrawTargetTiled::PopLayer()
   // XXX - not sure this is what we want or whether we want to continue drawing to a larger
   // intermediate surface, that would require tweaking the code in here a little though.
   for (size_t i = 0; i < mTiles.size(); i++) {
-    mTiles[i].mDrawTarget->PopLayer();
+    if (!mTiles[i].mClippedOut) {
+      mTiles[i].mDrawTarget->PopLayer();
+    }
   }
+
+  MOZ_ASSERT(mPushedLayers.size());
+  const PushedLayer& layer = mPushedLayers.back();
+  SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);
 }
 
 } // namespace gfx

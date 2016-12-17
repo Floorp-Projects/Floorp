@@ -50,6 +50,8 @@ public:
 
 private:
   void GenerateCrashReport(RefPtr<nsIFile> aCrashDump);
+  static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
+                            const nsString& aChildDumpID);
 
 private:
   GeckoProcessType mProcessType;

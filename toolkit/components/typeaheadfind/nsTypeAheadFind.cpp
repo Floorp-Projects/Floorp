@@ -52,7 +52,6 @@
 #include "mozilla/dom/Link.h"
 #include "nsRange.h"
 #include "nsXBLBinding.h"
-#include "nsLayoutUtils.h"
 
 #include "nsTypeAheadFind.h"
 
@@ -70,6 +69,8 @@ NS_IMPL_CYCLE_COLLECTION(nsTypeAheadFind, mFoundLink, mFoundEditable,
                          mCurrentWindow, mStartFindRange, mSearchRange,
                          mStartPointRange, mEndPointRange, mSoundInterface,
                          mFind, mFoundRange)
+
+static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
 
@@ -421,7 +422,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
     while (true) {  // === Inner while loop: go through a single doc ===
       mFind->Find(mTypeAheadBuffer.get(), mSearchRange, mStartPointRange,
                   mEndPointRange, getter_AddRefs(returnRange));
-
+      
       if (!returnRange)
         break;  // Nothing found in this doc, go to outer loop (try next doc)
 
@@ -435,7 +436,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       }
 
       bool usesIndependentSelection;
-      if (!IsRangeVisible(presShell, presContext, returnRange, true,
+      if (!IsRangeVisible(presShell, presContext, returnRange,
+                          aIsFirstVisiblePreferred, false,
                           getter_AddRefs(mStartPointRange), 
                           &usesIndependentSelection) ||
           (aIsLinksOnly && !isInsideLink) ||
@@ -815,7 +817,8 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     // Ensure visible range, move forward if necessary
     // This uses ignores the return value, but usese the side effect of
     // IsRangeVisible. It returns the first visible range after searchRange
-    IsRangeVisible(presShell, presContext, mSearchRange, true,
+    IsRangeVisible(presShell, presContext, mSearchRange, 
+                   aIsFirstVisiblePreferred, true, 
                    getter_AddRefs(mStartPointRange), nullptr);
   }
   else {
@@ -1005,18 +1008,18 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     return NS_OK;
   }
 
-  bool atEnd = false;
+  bool atEnd = false;    
   if (mTypeAheadBuffer.Length()) {
     const nsAString& oldStr = Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length());
     const nsAString& newStr = Substring(aSearchString, 0, mTypeAheadBuffer.Length());
     if (oldStr.Equals(newStr))
       atEnd = true;
-
+  
     const nsAString& newStr2 = Substring(aSearchString, 0, aSearchString.Length());
     const nsAString& oldStr2 = Substring(mTypeAheadBuffer, 0, aSearchString.Length());
     if (oldStr2.Equals(newStr2))
       atEnd = true;
-
+    
     if (!atEnd)
       mStartFindRange = nullptr;
   }
@@ -1158,7 +1161,7 @@ nsTypeAheadFind::GetFoundRange(nsIDOMRange** aFoundRange)
 
 NS_IMETHODIMP
 nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
-                                bool aFlushLayout,
+                                bool aMustBeInViewPort,
                                 bool *aResult)
 {
   // Jump through hoops to extract the docShell from the range.
@@ -1175,7 +1178,8 @@ nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
   nsCOMPtr<nsIPresShell> presShell (docShell->GetPresShell());
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   nsCOMPtr<nsIDOMRange> startPointRange = new nsRange(presShell->GetDocument());
-  *aResult = IsRangeVisible(presShell, presContext, aRange, aFlushLayout,
+  *aResult = IsRangeVisible(presShell, presContext, aRange,
+                            aMustBeInViewPort, false,
                             getter_AddRefs(startPointRange),
                             nullptr);
   return NS_OK;
@@ -1184,77 +1188,32 @@ nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
 bool
 nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                 nsPresContext *aPresContext,
-                                nsIDOMRange *aRange,
-                                bool aFlushLayout,
+                                nsIDOMRange *aRange, bool aMustBeInViewPort,
+                                bool aGetTopVisibleLeaf,
                                 nsIDOMRange **aFirstVisibleRange,
                                 bool *aUsesIndependentSelection)
 {
   NS_ASSERTION(aPresShell && aPresContext && aRange && aFirstVisibleRange, 
                "params are invalid");
 
-  // We need to know if the range start and end are both visible.
-  // In all cases, return the first visible range in aFirstVisibleRange.
+  // We need to know if the range start is visible.
+  // Otherwise, return the first visible range start 
+  // in aFirstVisibleRange
+
   aRange->CloneRange(aFirstVisibleRange);
-
-  if (aFlushLayout) {
-    aPresShell->FlushPendingNotifications(Flush_Layout);
-  }
-
   nsCOMPtr<nsIDOMNode> node;
-  aRange->GetCommonAncestorContainer(getter_AddRefs(node));
+  aRange->GetStartContainer(getter_AddRefs(node));
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  if (!content) {
+  if (!content)
     return false;
-  }
 
   nsIFrame *frame = content->GetPrimaryFrame();
-  if (!frame) {
+  if (!frame)    
     return false;  // No frame! Not visible then.
-  }
 
-  // Having a primary frame doesn't mean that the range is visible inside the
-  // viewport. Do a hit-test to determine that quickly and properly.
-  bool foundContent = false;
-  AutoTArray<nsIFrame*,8> frames;
-  nsIFrame *rootFrame = aPresShell->GetRootFrame();
-  RefPtr<nsRange> range = static_cast<nsRange*>(aRange);
-  RefPtr<mozilla::dom::DOMRectList> rects = range->GetClientRects(true, false);
-  for (uint32_t i = 0; i < rects->Length(); ++i) {
-    RefPtr<mozilla::dom::DOMRect> rect = rects->Item(i);
-    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)rect->X()),
-             nsPresContext::CSSPixelsToAppUnits((float)rect->Y()),
-             nsPresContext::CSSPixelsToAppUnits((float)rect->Width()),
-             nsPresContext::CSSPixelsToAppUnits((float)rect->Height()));
-    // Append visible frames to frames array.
-    nsLayoutUtils::GetFramesForArea(rootFrame, r, frames,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
-      nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME |
-      nsLayoutUtils::ONLY_VISIBLE);
-
-    // See if any of the frames contain the content. If they do, then the range
-    // is visible. We search for the content rather than the original frame,
-    // because nsTextContinuation frames might be returned instead of the
-    // original frame.
-    for (const auto &f: frames) {
-      if (f->GetContent() == content) {
-        foundContent = true;
-        break;
-      }
-    }
-
-    if (foundContent) {
-      break;
-    }
-
-    frames.ClearAndRetainStorage();
-  }
-
-  // Test that content appears in the list of framesForArea. If it does, then
-  // that means that content is at least partly visible.
-  if (!foundContent) {
+  if (!frame->StyleVisibility()->IsVisible())
     return false;
-  }
 
   // Detect if we are _inside_ a text control, or something else with its own
   // selection controller.
@@ -1263,7 +1222,89 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
       (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
   }
 
-  return true;
+  // ---- We have a frame ----
+  if (!aMustBeInViewPort)   
+    return true; //  Don't need it to be on screen, just in rendering tree
+
+  // Get the next in flow frame that contains the range start
+  int32_t startRangeOffset, startFrameOffset, endFrameOffset;
+  aRange->GetStartOffset(&startRangeOffset);
+  while (true) {
+    frame->GetOffsets(startFrameOffset, endFrameOffset);
+    if (startRangeOffset < endFrameOffset)
+      break;
+
+    nsIFrame *nextContinuationFrame = frame->GetNextContinuation();
+    if (nextContinuationFrame)
+      frame = nextContinuationFrame;
+    else
+      break;
+  }
+
+  // Set up the variables we need, return true if we can't get at them all
+  const uint16_t kMinPixels  = 12;
+  nscoord minDistance = nsPresContext::CSSPixelsToAppUnits(kMinPixels);
+
+  // Get the bounds of the current frame, relative to the current view.
+  // We don't use the more accurate AccGetBounds, because that is
+  // more expensive and the STATE_OFFSCREEN flag that this is used
+  // for only needs to be a rough indicator
+  nsRectVisibility rectVisibility = nsRectVisibility_kAboveViewport;
+
+  if (!aGetTopVisibleLeaf && !frame->GetRect().IsEmpty()) {
+    rectVisibility =
+      aPresShell->GetRectVisibility(frame,
+                                    nsRect(nsPoint(0,0), frame->GetSize()),
+                                    minDistance);
+
+    if (rectVisibility != nsRectVisibility_kAboveViewport) {
+      return true;
+    }
+  }
+
+  // We know that the target range isn't usable because it's not in the
+  // view port. Move range forward to first visible point,
+  // this speeds us up a lot in long documents
+  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID));
+  if (trav)
+    trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                            aPresContext, frame,
+                            eLeaf,
+                            false, // aVisual
+                            false, // aLockInScrollView
+                            false, // aFollowOOFs
+                            false  // aSkipPopupChecks
+                            );
+
+  if (!frameTraversal)
+    return false;
+
+  while (rectVisibility == nsRectVisibility_kAboveViewport) {
+    frameTraversal->Next();
+    frame = frameTraversal->CurrentItem();
+    if (!frame)
+      return false;
+
+    if (!frame->GetRect().IsEmpty()) {
+      rectVisibility =
+        aPresShell->GetRectVisibility(frame,
+                                      nsRect(nsPoint(0,0), frame->GetSize()),
+                                      minDistance);
+    }
+  }
+
+  if (frame) {
+    nsCOMPtr<nsIDOMNode> firstVisibleNode = do_QueryInterface(frame->GetContent());
+
+    if (firstVisibleNode) {
+      frame->GetOffsets(startFrameOffset, endFrameOffset);
+      (*aFirstVisibleRange)->SetStart(firstVisibleNode, startFrameOffset);
+      (*aFirstVisibleRange)->SetEnd(firstVisibleNode, endFrameOffset);
+    }
+  }
+
+  return false;
 }
 
 already_AddRefed<nsIPresShell>

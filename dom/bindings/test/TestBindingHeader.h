@@ -753,13 +753,9 @@ public:
 
   // Promise types
   void PassPromise(Promise&);
-  void PassNullablePromise(Promise*);
   void PassOptionalPromise(const Optional<OwningNonNull<Promise>>&);
-  void PassOptionalNullablePromise(const Optional<RefPtr<Promise>>&);
-  void PassOptionalNullablePromiseWithDefaultValue(Promise*);
   void PassPromiseSequence(const Sequence<OwningNonNull<Promise>>&);
   void PassPromiseMozMap(const MozMap<RefPtr<Promise>>&);
-  void PassNullablePromiseSequence(const Sequence<RefPtr<Promise>> &);
   Promise* ReceivePromise();
   already_AddRefed<Promise> ReceiveAddrefedPromise();
 
