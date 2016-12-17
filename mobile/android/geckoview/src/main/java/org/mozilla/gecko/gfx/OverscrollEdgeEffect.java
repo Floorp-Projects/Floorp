@@ -5,14 +5,13 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.AppConstants.Versions;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.os.Build;
 import android.widget.EdgeEffect;
 
 import java.lang.reflect.Field;
@@ -32,7 +31,7 @@ public class OverscrollEdgeEffect implements Overscroll {
 
     public OverscrollEdgeEffect(final LayerView v) {
         Field paintField = null;
-        if (Versions.feature21Plus) {
+        if (Build.VERSION.SDK_INT >= 21) {
             try {
                 paintField = EdgeEffect.class.getDeclaredField("mPaint");
                 paintField.setAccessible(true);
@@ -84,7 +83,7 @@ public class OverscrollEdgeEffect implements Overscroll {
     }
 
     private void invalidate() {
-        if (Versions.feature16Plus) {
+        if (Build.VERSION.SDK_INT >= 16) {
             mView.postInvalidateOnAnimation();
         } else {
             mView.postInvalidateDelayed(10);

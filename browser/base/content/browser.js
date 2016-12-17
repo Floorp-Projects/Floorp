@@ -5307,7 +5307,7 @@ var gHomeButton = {
     if (homeButton) {
       var homePage = this.getHomePage();
       homePage = homePage.replace(/\|/g, ', ');
-      if (homePage.toLowerCase() == "about:home")
+      if (["about:home", "about:newtab"].includes(homePage.toLowerCase()))
         homeButton.setAttribute("tooltiptext", homeButton.getAttribute("aboutHomeOverrideTooltip"));
       else
         homeButton.setAttribute("tooltiptext", homePage);
