@@ -2390,7 +2390,7 @@ js::GetPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Value* vp)
 }
 
 static inline bool
-NativeGetGetterPureInline(NativeObject* pobj, Shape* shape, JSFunction** fp)
+NativeGetGetterPureInline(Shape* shape, JSFunction** fp)
 {
     if (shape->hasGetterObject()) {
         if (shape->getterObject()->is<JSFunction>()) {
@@ -2418,8 +2418,23 @@ js::GetGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp)
         return true;
     }
 
-    return pobj->isNative() &&
-           NativeGetGetterPureInline(&pobj->as<NativeObject>(), shape, fp);
+    return pobj->isNative() && NativeGetGetterPureInline(shape, fp);
+}
+
+bool
+js::GetOwnGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp)
+{
+    JS::AutoCheckCannotGC nogc;
+    Shape* shape;
+    if (!LookupOwnPropertyPure(cx, obj, id, &shape))
+        return false;
+
+    if (!shape) {
+        *fp = nullptr;
+        return true;
+    }
+
+    return NativeGetGetterPureInline(shape, fp);
 }
 
 bool
