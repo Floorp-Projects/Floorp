@@ -15,6 +15,8 @@
  * http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
  * https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
  * https://w3c.github.io/requestidlecallback/
+ * https://webaudio.github.io/web-audio-api/#widl-Window-audioWorklet
+ * https://drafts.css-houdini.org/css-paint-api-1/#dom-window-paintworklet
  */
 
 interface ApplicationCache;
@@ -480,9 +482,16 @@ partial interface Window {
   attribute EventHandler onvrdisplaypresentchange;
 };
 
+// https://webaudio.github.io/web-audio-api/#widl-Window-audioWorklet
 partial interface Window {
   [Pref="dom.audioWorklet.enabled", Throws, SameObject]
   readonly attribute Worklet audioWorklet;
+};
+
+// https://drafts.css-houdini.org/css-paint-api-1/#dom-window-paintworklet
+partial interface Window {
+    [Pref="dom.paintWorklet.enabled", Throws, SameObject]
+    readonly attribute Worklet paintWorklet;
 };
 
 Window implements ChromeWindow;

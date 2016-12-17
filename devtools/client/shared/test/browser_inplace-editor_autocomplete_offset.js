@@ -5,8 +5,8 @@
 
 "use strict";
 
+const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 const { InplaceEditor } = require("devtools/client/shared/inplace-editor");
-const { AutocompletePopup } = require("devtools/client/shared/autocomplete-popup");
 loadHelperScript("helper_inplace_editor.js");
 
 const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>

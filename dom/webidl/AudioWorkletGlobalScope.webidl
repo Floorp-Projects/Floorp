@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://www.w3.org/TR/worklets-1/#fakeworkletglobalscope
+ * https://webaudio.github.io/web-audio-api/#AudioWorkletGlobalScope
  */
 
 [Global=(Worklet,AudioWorklet),Exposed=AudioWorklet]

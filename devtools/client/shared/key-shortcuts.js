@@ -248,4 +248,5 @@ KeyShortcuts.prototype = {
     this.eventEmitter.off(key, listener);
   },
 };
-exports.KeyShortcuts = KeyShortcuts;
+
+module.exports = KeyShortcuts;

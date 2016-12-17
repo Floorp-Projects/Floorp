@@ -183,7 +183,7 @@ public:
   void GetBuildID(nsAString& aBuildID, CallerType aCallerType,
                   ErrorResult& aRv) const;
   PowerManager* GetMozPower(ErrorResult& aRv);
-  bool JavaEnabled(ErrorResult& aRv);
+  bool JavaEnabled(CallerType aCallerType, ErrorResult& aRv);
   uint64_t HardwareConcurrency();
   bool CpuHasSSE2();
   bool TaintEnabled()
