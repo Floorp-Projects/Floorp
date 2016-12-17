@@ -45,7 +45,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'nsWifiScannerWin.cpp',
         'win_wifiScanner.cpp',
         'win_wlanLibrary.cpp',
-        'win_xp_wifiScanner.cpp'
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
     CXXFLAGS += CONFIG['GLIB_CFLAGS']
