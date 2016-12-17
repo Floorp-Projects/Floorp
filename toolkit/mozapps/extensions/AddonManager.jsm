@@ -1507,10 +1507,9 @@ var AddonManagerInternal = {
         if (update) {
           if (Services.vc.compare(hotfixVersion, update.version) < 0) {
             logger.debug("Downloading hotfix version " + update.version);
-            let aInstall = yield new Promise((resolve, reject) =>
-              AddonManager.getInstallForURL(update.updateURL, resolve,
-                "application/x-xpinstall", update.updateHash, null,
-                null, update.version));
+            let aInstall = yield AddonManagerInternal.getInstallForURL(
+                update.updateURL, "application/x-xpinstall", update.updateHash,
+                null, null, update.version);
 
             aInstall.addListener({
               onDownloadEnded: function(aInstall) {
@@ -1827,8 +1826,6 @@ var AddonManagerInternal = {
    *
    * @param  aUrl
    *         The string represenation of the URL the add-on is located at
-   * @param  aCallback
-   *         A callback to pass the AddonInstall to
    * @param  aMimetype
    *         The mimetype of the add-on
    * @param  aHash
@@ -1843,7 +1840,7 @@ var AddonManagerInternal = {
    *         An optional <browser> element for download permissions prompts.
    * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
-  getInstallForURL: function(aUrl, aCallback, aMimetype, aHash, aName,
+  getInstallForURL: function(aUrl, aMimetype, aHash, aName,
                              aIcons, aVersion, aBrowser) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
@@ -1851,10 +1848,6 @@ var AddonManagerInternal = {
 
     if (!aUrl || typeof aUrl != "string")
       throw Components.Exception("aURL must be a non-empty string",
-                                 Cr.NS_ERROR_INVALID_ARG);
-
-    if (typeof aCallback != "function")
-      throw Components.Exception("aCallback must be a function",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     if (!aMimetype || typeof aMimetype != "string")
@@ -1883,22 +1876,19 @@ var AddonManagerInternal = {
       throw Components.Exception("aVersion must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aBrowser && (!(aBrowser instanceof Ci.nsIDOMElement)))
+    if (aBrowser && !(aBrowser instanceof Ci.nsIDOMElement))
       throw Components.Exception("aBrowser must be a nsIDOMElement or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    let providers = [...this.providers];
-    for (let provider of providers) {
+    for (let provider of this.providers) {
       if (callProvider(provider, "supportsMimetype", false, aMimetype)) {
-        callProviderAsync(provider, "getInstallForURL",
-                          aUrl, aHash, aName, aIcons, aVersion, aBrowser,
-                          function  getInstallForURL_safeCall(aInstall) {
-          safeCall(aCallback, aInstall);
-        });
-        return;
+        return promiseCallProvider(
+          provider, "getInstallForURL", aUrl, aHash, aName, aIcons,
+          aVersion, aBrowser);
       }
     }
-    safeCall(aCallback, null);
+
+    return Promise.resolve(null);
   },
 
   /**
@@ -2840,26 +2830,23 @@ var AddonManagerInternal = {
         throw new Error(`Install from ${host} not permitted`);
       }
 
-      return new Promise((resolve, reject) => {
-        try {
-          checkInstallUrl(options.url);
-        } catch (err) {
-          reject({message: err.message});
-          return;
-        }
+      try {
+        checkInstallUrl(options.url);
+      } catch (err) {
+        return Promise.reject({message: err.message});
+      }
 
-        let newInstall = install => {
-          let id = this.nextInstall++;
-          let listener = this.makeListener(id, target.messageManager);
-          install.addListener(listener);
+      return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall",
+                                                   options.hash).then(install => {
+        let id = this.nextInstall++;
+        let listener = this.makeListener(id, target.messageManager);
+        install.addListener(listener);
 
-          this.installs.set(id, {install, target, listener});
+        this.installs.set(id, {install, target, listener});
 
-          let result = {id};
-          this.copyProps(install, result);
-          resolve(result);
-        };
-        AddonManager.getInstallForURL(options.url, newInstall, "application/x-xpinstall", options.hash);
+        let result = {id};
+        this.copyProps(install, result);
+        return result;
       });
     },
 
@@ -3346,12 +3333,16 @@ this.AddonManager = {
   getInstallForURL: function(aUrl, aCallback, aMimetype,
                                                  aHash, aName, aIcons,
                                                  aVersion, aBrowser) {
-    AddonManagerInternal.getInstallForURL(aUrl, aCallback, aMimetype, aHash,
-                                          aName, aIcons, aVersion, aBrowser);
+    return promiseOrCallback(
+      AddonManagerInternal.getInstallForURL(aUrl, aMimetype, aHash,
+                                            aName, aIcons, aVersion, aBrowser),
+      aCallback);
   },
 
   getInstallForFile: function(aFile, aCallback, aMimetype) {
-    AddonManagerInternal.getInstallForFile(aFile, aMimetype).then(aCallback);
+    return promiseOrCallback(
+      AddonManagerInternal.getInstallForFile(aFile, aMimetype),
+      aCallback);
   },
 
   /**
