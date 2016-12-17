@@ -2088,6 +2088,10 @@ nsScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI&jsapi,
     return rv;
   }
 
+  if (mDocument) {
+    mDocument->NoteScriptTrackingStatus(aRequest->mURL, aRequest->IsTracking());
+  }
+
   bool isScriptElement = !aRequest->IsModuleRequest() ||
                          aRequest->AsModuleRequest()->IsTopLevel();
   aOptions->setIntroductionType(isScriptElement ? "scriptElement"
@@ -2652,6 +2656,10 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     if (NS_SUCCEEDED(rv)) {
       aRequest->mHasSourceMapURL = true;
       aRequest->mSourceMapURL = NS_ConvertUTF8toUTF16(sourceMapURL);
+    }
+
+    if (httpChannel->GetIsTrackingResource()) {
+      aRequest->SetIsTracking();
     }
   }
 
