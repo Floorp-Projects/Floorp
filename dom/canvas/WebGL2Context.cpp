@@ -175,7 +175,6 @@ WebGLContext::InitWebGL2(FailureReason* const out_failReason)
         gl->fEnable(LOCAL_GL_PRIMITIVE_RESTART_FIXED_INDEX);
     } else {
         MOZ_ASSERT(gl->IsSupported(gl::GLFeature::prim_restart));
-        gl->fEnable(LOCAL_GL_PRIMITIVE_RESTART);
     }
 
     //////
