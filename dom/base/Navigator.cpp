@@ -713,7 +713,7 @@ Navigator::GetDoNotTrack(nsAString &aResult)
 }
 
 bool
-Navigator::JavaEnabled(ErrorResult& aRv)
+Navigator::JavaEnabled(CallerType aCallerType, ErrorResult& aRv)
 {
   Telemetry::AutoTimer<Telemetry::CHECK_JAVA_ENABLED> telemetryTimer;
 
@@ -731,7 +731,7 @@ Navigator::JavaEnabled(ErrorResult& aRv)
 
   RefreshMIMEArray();
 
-  nsMimeType *mimeType = mMimeTypes->NamedItem(javaMIME);
+  nsMimeType *mimeType = mMimeTypes->NamedItem(javaMIME, aCallerType);
 
   return mimeType && mimeType->GetEnabledPlugin();
 }
