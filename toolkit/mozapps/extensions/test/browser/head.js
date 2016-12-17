@@ -173,7 +173,7 @@ registerCleanupFunction(function() {
   checkOpenWindows("Addons:Compatibility");
   checkOpenWindows("Addons:Install");
 
-  return new Promise((resolve, reject) => AddonManager.getAllInstalls(resolve))
+  return AddonManager.getAllInstalls()
     .then(aInstalls => {
       for (let install of aInstalls) {
         if (install instanceof MockInstall)

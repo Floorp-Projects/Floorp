@@ -1085,30 +1085,6 @@ var AddonTestUtils = {
   },
 
   /**
-   * A promise-based variant of AddonManager.getAddonsByIDs.
-   *
-   * @param {Array<string>} list
-   *        As the first argument of AddonManager.getAddonsByIDs
-   * @return {Promise<Array<Addon>>}
-   *        Resolves to the array of add-ons for the given IDs.
-   */
-  promiseAddonsByIDs(list) {
-    return new Promise(resolve => AddonManager.getAddonsByIDs(list, resolve));
-  },
-
-  /**
-   * A promise-based variant of AddonManager.getAddonByID.
-   *
-   * @param {string} id
-   *        The ID of the add-on.
-   * @return {Promise<Addon>}
-   *        Resolves to the add-on with the given ID.
-   */
-  promiseAddonByID(id) {
-    return new Promise(resolve => AddonManager.getAddonByID(id, resolve));
-  },
-
-  /**
    * Returns a promise that will be resolved when an add-on update check is
    * complete. The value resolved will be an AddonInstall if a new version was
    * found.
@@ -1165,19 +1141,6 @@ var AddonTestUtils = {
         }
       }, reason);
     });
-  },
-
-  /**
-   * A promise-based variant of AddonManager.getAddonsWithOperationsByTypes
-   *
-   * @param {Array<string>} types
-   *        The first argument to AddonManager.getAddonsWithOperationsByTypes
-   * @return {Promise<Array<Addon>>}
-   *        Resolves to an array of add-ons with the given operations
-   *        pending.
-   */
-  promiseAddonsWithOperationsByTypes(types) {
-    return new Promise(resolve => AddonManager.getAddonsWithOperationsByTypes(types, resolve));
   },
 
   /**

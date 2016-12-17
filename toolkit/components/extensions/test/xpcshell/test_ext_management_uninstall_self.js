@@ -6,7 +6,6 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://testing-common/AddonTestUtils.jsm");
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 
-const {promiseAddonByID} = AddonTestUtils;
 const id = "uninstall_self_test@tests.mozilla.com";
 
 const manifest = {
@@ -64,7 +63,7 @@ add_task(function* test_management_uninstall_no_prompt() {
   });
 
   yield extension.startup();
-  let addon = yield promiseAddonByID(id);
+  let addon = yield AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
   yield waitForUninstalled();
@@ -88,7 +87,7 @@ add_task(function* test_management_uninstall_prompt_uninstall() {
   });
 
   yield extension.startup();
-  let addon = yield promiseAddonByID(id);
+  let addon = yield AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
   yield waitForUninstalled();
@@ -124,11 +123,11 @@ add_task(function* test_management_uninstall_prompt_keep() {
   });
 
   yield extension.startup();
-  let addon = yield promiseAddonByID(id);
+  let addon = yield AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
   yield extension.awaitMessage("uninstall-rejected");
-  addon = yield promiseAddonByID(id);
+  addon = yield AddonManager.getAddonByID(id);
   notEqual(addon, null, "Add-on remains installed");
   yield extension.unload();
   Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry", null);
