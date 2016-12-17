@@ -34,7 +34,7 @@ const promise = require("promise");
 const events = require("devtools/shared/event-emitter");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 const { getClientCssProperties } = require("devtools/shared/fronts/css-properties");
-const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/sourceeditor.properties");

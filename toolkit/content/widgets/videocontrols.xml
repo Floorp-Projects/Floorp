@@ -15,88 +15,13 @@
           xmlns:svg="http://www.w3.org/2000/svg"
           xmlns:html="http://www.w3.org/1999/xhtml">
 
-<binding id="timeThumb"
-         extends="chrome://global/content/bindings/scale.xml#scalethumb">
-  <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <xbl:children/>
-    <hbox class="timeThumb" xbl:inherits="showhours">
-      <label class="timeLabel"/>
-    </hbox>
-  </xbl:content>
-  <implementation>
-
-  <constructor>
-    <![CDATA[
-    this.timeLabel = document.getAnonymousElementByAttribute(this, "class", "timeLabel");
-    this.timeLabel.setAttribute("value", "0:00");
-    ]]>
-  </constructor>
-
-  <property name="showHours">
-    <getter>
-      <![CDATA[
-      return this.getAttribute("showhours") == "true";
-      ]]>
-    </getter>
-    <setter>
-      <![CDATA[
-      this.setAttribute("showhours", val);
-      // If the duration becomes known while we're still showing the value
-      // for time=0, immediately update the value to show or hide the hours.
-      // It's less intrusive to do it now than when the user clicks play and
-      // is looking right next to the thumb.
-      if (!this.timeLabel) {
-        return;
-      }
-      var displayedTime = this.timeLabel.getAttribute("value");
-      if (val && displayedTime == "0:00") {
-        this.timeLabel.setAttribute("value", "0:00:00");
-      } else if (!val && displayedTime == "0:00:00") {
-        this.timeLabel.setAttribute("value", "0:00");
-      }
-      ]]>
-    </setter>
-  </property>
-
-  <method name="setTime">
-    <parameter name="time"/>
-    <body>
-      <![CDATA[
-      var timeString;
-      time = Math.round(time / 1000);
-      var hours = Math.floor(time / 3600);
-      var mins  = Math.floor((time % 3600) / 60);
-      var secs  = Math.floor(time % 60);
-      if (secs < 10) {
-        secs = "0" + secs;
-      }
-      if (hours || this.showHours) {
-        if (mins < 10) {
-          mins = "0" + mins;
-        }
-        timeString = hours + ":" + mins + ":" + secs;
-      } else {
-        timeString = mins + ":" + secs;
-      }
-
-      this.timeLabel.setAttribute("value", timeString);
-      ]]>
-    </body>
-  </method>
-  </implementation>
-</binding>
-
 <binding id="suppressChangeEvent"
          extends="chrome://global/content/bindings/scale.xml#scale">
 <implementation implements="nsIXBLAccessible">
   <!-- nsIXBLAccessible -->
   <property name="accessibleName" readonly="true">
     <getter>
-      if (this.type != "scrubber") {
-        return "";
-      }
-
-      var currTime = this.thumb.timeLabel.getAttribute("value");
+      var currTime = this.positionValue;
       var totalTime = this.durationValue;
 
       return this.scrubberNameFormat
@@ -108,17 +33,15 @@
   <constructor>
     <![CDATA[
     this.scrubberNameFormat = ]]>"&scrubberScale.nameFormat;"<![CDATA[;
+    this.positionValue = "";
     this.durationValue = "";
     this.valueBar = null;
     this.isDragging = false;
     this.isPausedByDragging = false;
 
-    this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
     this.type = this.getAttribute("class");
     this.Utils = document.getBindingParent(this.parentNode).Utils;
-    if (this.type == "scrubber") {
-      this.valueBar = this.Utils.progressBar;
-    }
+    this.valueBar = this.Utils.progressBar;
     ]]>
   </constructor>
 
@@ -133,17 +56,15 @@
       // just calls the videocontrol's seekToPosition() method directly.
       switch (which) {
         case "curpos":
-          if (this.type == "scrubber") {
-            // Update the time shown in the thumb.
-            this.thumb.setTime(newValue);
-            this.Utils.positionLabel.setAttribute("value", this.thumb.timeLabel.value);
-            // Update the value bar to match the thumb position.
-            let percent = newValue / this.max;
-            if (!isNaN(percent) && percent != Infinity) {
-              this.valueBar.value = Math.round(percent * 10000); // has max=10000
-            } else {
-              this.valueBar.removeAttribute("value");
-            }
+          // Update the time shown in the thumb.
+          this.positionValue = this.Utils.formatTime(newValue);
+          this.Utils.positionLabel.setAttribute("value", this.positionValue);
+          // Update the value bar to match the thumb position.
+          let percent = newValue / this.max;
+          if (!isNaN(percent) && percent != Infinity) {
+            this.valueBar.value = Math.round(percent * 10000); // has max=10000
+          } else {
+            this.valueBar.removeAttribute("value");
           }
 
           // The value of userChanged is true when changing the position with the mouse,
@@ -153,12 +74,7 @@
             return;
           }
           this.setAttribute("value", newValue);
-
-          if (this.type == "scrubber") {
-            this.Utils.seekToPosition(newValue);
-          } else if (this.type == "volumeControl") {
-            this.Utils.setVolume(newValue / 100);
-          }
+          this.Utils.seekToPosition(newValue);
           break;
 
         case "minpos":
@@ -166,11 +82,8 @@
           break;
 
         case "maxpos":
-          if (this.type == "scrubber") {
-            // Update the value bar to match the thumb position.
-            let percent = this.value / newValue;
-            this.valueBar.value = Math.round(percent * 10000); // has max=10000
-          }
+          // Update the value bar to match the thumb position.
+          this.valueBar.value = Math.round(this.value / newValue  * 10000); // has max=10000
           this.setAttribute("max", newValue);
           break;
       }
@@ -182,14 +95,12 @@
     <parameter name="isDragging"/>
     <body>
       <![CDATA[
-      if (this.type == "scrubber") {
-        this.Utils.log("--- dragStateChanged: " + isDragging + " ---");
-        this.isDragging = isDragging;
-        if (this.isPausedByDragging && !isDragging) {
-          // After the drag ends, resume playing.
-          this.Utils.video.play();
-          this.isPausedByDragging = false;
-        }
+      this.Utils.log("--- dragStateChanged: " + isDragging + " ---");
+      this.isDragging = isDragging;
+      if (this.isPausedByDragging && !isDragging) {
+        // After the drag ends, resume playing.
+        this.Utils.video.play();
+        this.isPausedByDragging = false;
       }
       ]]>
     </body>

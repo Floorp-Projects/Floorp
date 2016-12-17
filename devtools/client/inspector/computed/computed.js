@@ -12,7 +12,7 @@ const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
-const {OutputParser} = require("devtools/client/shared/output-parser");
+const OutputParser = require("devtools/client/shared/output-parser");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
@@ -25,8 +25,8 @@ const {
 } = require("devtools/client/inspector/shared/node-types");
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
-const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
-const {BoxModelView} = require("devtools/client/inspector/components/box-model");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const BoxModelView = require("devtools/client/inspector/components/box-model");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";

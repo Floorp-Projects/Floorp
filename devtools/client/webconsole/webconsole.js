@@ -33,7 +33,7 @@ loader.lazyRequireGetter(this, "gSequenceId", "devtools/client/webconsole/jsterm
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts", true);
+loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
 loader.lazyRequireGetter(this, "ZoomKeys", "devtools/client/shared/zoom-keys");
 loader.lazyRequireGetter(this, "WebConsoleConnectionProxy", "devtools/client/webconsole/webconsole-connection-proxy", true);
 

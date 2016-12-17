@@ -14,11 +14,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
     <script type="text/javascript">
       SimpleTest.waitForExplicitFinish();
       function startTest() {
-        runTestInNewWindow("pointerevent_pointertype_touch-manual.html");
+        runTestInNewWindow("pointerevent_pointermove_on_chorded_mouse_button-manual.html");
       }
+
       function executeTest(int_win) {
-        sendTouchEvent(int_win, "target0", "touchstart");
-        sendTouchEvent(int_win, "target0", "touchend");
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "target0", "mousedown", {button: MouseEventHelper.BUTTON_LEFT});
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "target0", "mousedown", {button: MouseEventHelper.BUTTON_MIDDLE});
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "target0", "mouseup", {button: MouseEventHelper.BUTTON_MIDDLE});
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "target0", "mouseup", {button: MouseEventHelper.BUTTON_LEFT});
       }
     </script>
   </head>
