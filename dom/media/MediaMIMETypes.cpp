@@ -10,6 +10,34 @@
 
 namespace mozilla {
 
+template <int N>
+static bool
+StartsWith(const nsACString& string, const char (&prefix)[N])
+{
+    if (N - 1 > string.Length()) {
+      return false;
+    }
+    return memcmp(string.Data(), prefix, N - 1) == 0;
+}
+
+bool
+MediaMIMEType::HasApplicationMajorType() const
+{
+  return StartsWith(mMIMEType, "application/");
+}
+
+bool
+MediaMIMEType::HasAudioMajorType() const
+{
+  return StartsWith(mMIMEType, "audio/");
+}
+
+bool
+MediaMIMEType::HasVideoMajorType() const
+{
+  return StartsWith(mMIMEType, "video/");
+}
+
 MediaMIMEType::MediaMIMEType(const nsACString& aType)
   : mMIMEType(aType)
 {
