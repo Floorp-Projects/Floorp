@@ -281,11 +281,12 @@ nsPluginArray::Length(CallerType aCallerType)
 }
 
 void
-nsPluginArray::GetSupportedNames(nsTArray<nsString>& aRetval)
+nsPluginArray::GetSupportedNames(nsTArray<nsString>& aRetval,
+                                 CallerType aCallerType)
 {
   aRetval.Clear();
 
-  if (!AllowPlugins()) {
+  if (!AllowPlugins() || nsContentUtils::ResistFingerprinting(aCallerType)) {
     return;
   }
 

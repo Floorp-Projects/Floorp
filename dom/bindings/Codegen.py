@@ -11628,14 +11628,21 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
                 shadow = "!isXray"
             else:
                 shadow = "false"
+
+            if self.descriptor.supportedNamesNeedCallerType():
+                callerType = ", " + callerTypeGetterForDescriptor(self.descriptor)
+            else:
+                callerType = ""
+
             addNames = fill(
                 """
                 nsTArray<nsString> names;
-                UnwrapProxy(proxy)->GetSupportedNames(names);
+                UnwrapProxy(proxy)->GetSupportedNames(names${callerType});
                 if (!AppendNamedPropertyIds(cx, proxy, names, ${shadow}, props)) {
                   return false;
                 }
                 """,
+                callerType=callerType,
                 shadow=shadow)
             if not self.descriptor.namedPropertiesEnumerable:
                 addNames = CGIfWrapper(CGGeneric(addNames),

@@ -39,7 +39,8 @@ public:
   nsMimeType* NamedGetter(const nsAString& name, bool &found,
                           mozilla::dom::CallerType aCallerType);
   uint32_t Length(mozilla::dom::CallerType aCallerType);
-  void GetSupportedNames(nsTArray<nsString>& retval);
+  void GetSupportedNames(nsTArray<nsString>& retval,
+                         mozilla::dom::CallerType aCallerType);
 
 protected:
   virtual ~nsMimeTypeArray();

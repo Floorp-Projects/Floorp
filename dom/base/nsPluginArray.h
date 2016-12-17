@@ -57,7 +57,8 @@ public:
   nsPluginElement* NamedGetter(const nsAString& aName, bool &aFound,
                                mozilla::dom::CallerType aCallerType);
   uint32_t Length(mozilla::dom::CallerType aCallerType);
-  void GetSupportedNames(nsTArray<nsString>& aRetval);
+  void GetSupportedNames(nsTArray<nsString>& aRetval,
+                         mozilla::dom::CallerType aCallerType);
 
 private:
   virtual ~nsPluginArray();
