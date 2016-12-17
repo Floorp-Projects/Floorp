@@ -115,17 +115,6 @@ Installer.prototype = {
           failed.push(install);
         else
           installs.push(install);
-
-        if (install.linkedInstalls) {
-          for (let linkedInstall of install.linkedInstalls) {
-            linkedInstall.addListener(this);
-            // Corrupt or incompatible items fail to install
-            if (linkedInstall.state == AddonManager.STATE_DOWNLOAD_FAILED || linkedInstall.addon.appDisabled)
-              failed.push(linkedInstall);
-            else
-              installs.push(linkedInstall);
-          }
-        }
         break;
       case AddonManager.STATE_CANCELLED:
         // Just ignore cancelled downloads
