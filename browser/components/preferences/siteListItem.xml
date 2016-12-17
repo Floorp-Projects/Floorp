@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- import-globals-from siteDataSettings.js -->
+
+<!DOCTYPE overlay [
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  <!ENTITY % applicationsDTD SYSTEM "chrome://browser/locale/preferences/siteDataSettings.dtd">
+  %brandDTD;
+  %applicationsDTD;
+]>
+
+<bindings id="siteListItemBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="siteListItem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:hbox flex="1">
+        <xul:hbox flex="4" width="50" class="item-box" align="center" xbl:inherits="tooltiptext=host">
+          <xul:label flex="1" crop="end" xbl:inherits="value=host"/>
+        </xul:hbox>
+        <xul:hbox flex="2" width="50" class="item-box" align="center" xbl:inherits="tooltiptext=status">
+          <xul:label flex="1" crop="end" xbl:inherits="value=status"/>
+        </xul:hbox>
+        <xul:hbox flex="1" width="50" class="item-box" align="center" xbl:inherits="tooltiptext=usage">
+          <xul:label flex="1" crop="end" xbl:inherits="value=usage"/>
+        </xul:hbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
+</bindings>
