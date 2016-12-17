@@ -188,6 +188,8 @@ public:
   NS_IMETHOD GetProtocolVersion(nsACString & aProtocolVersion) override;
   NS_IMETHOD GetChannelId(nsACString& aChannelId) override;
   NS_IMETHOD SetChannelId(const nsACString& aChannelId) override;
+  NS_IMETHOD GetTopLevelContentWindowId(uint64_t *aContentWindowId) override;
+  NS_IMETHOD SetTopLevelContentWindowId(uint64_t aContentWindowId) override;
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI) override;
@@ -549,6 +551,10 @@ protected:
 
   nsID mRequestContextID;
   bool EnsureRequestContextID();
+
+  // ID of the top-level document's inner window this channel is being
+  // originated from.
+  uint64_t mContentWindowId;
 
   bool                              mRequireCORSPreflight;
   nsTArray<nsCString>               mUnsafeHeaders;

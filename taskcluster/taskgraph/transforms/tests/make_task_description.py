@@ -346,12 +346,7 @@ def generic_worker_setup(config, test, taskdesc):
     worker['max-run-time'] = test['max-run-time']
     worker['artifacts'] = artifacts
 
-    worker['env'] = {
-        'APPDATA': '%cd%\\AppData\\Roaming',
-        'LOCALAPPDATA': '%cd%\\AppData\\Local',
-        'TEMP': '%cd%\\AppData\\Local\\Temp',
-        'TMP': '%cd%\\AppData\\Local\\Temp',
-    }
+    worker['env'] = {}
 
     # assemble the command line
     mh_command = [
