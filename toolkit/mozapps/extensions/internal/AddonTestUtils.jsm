@@ -1049,17 +1049,17 @@ var AddonTestUtils = {
    *        Resolves when the install has completed.
    */
   promiseInstallFile(file, ignoreIncompatible = false) {
-    return new Promise((resolve, reject) => {
-      AddonManager.getInstallForFile(file, install => {
-        if (!install)
-          reject(new Error(`No AddonInstall created for ${file.path}`));
-        else if (install.state != AddonManager.STATE_DOWNLOADED)
-          reject(new Error(`Expected file to be downloaded for install of ${file.path}`));
-        else if (ignoreIncompatible && install.addon.appDisabled)
-          resolve();
-        else
-          resolve(this.promiseCompleteInstall(install));
-      });
+    return AddonManager.getInstallForFile(file).then(install => {
+      if (!install)
+        throw new Error(`No AddonInstall created for ${file.path}`);
+
+      if (install.state != AddonManager.STATE_DOWNLOADED)
+        throw new Error(`Expected file to be downloaded for install of ${file.path}`);
+
+      if (ignoreIncompatible && install.addon.appDisabled)
+        return null;
+
+      return this.promiseCompleteInstall(install);
     });
   },
 
