@@ -1577,7 +1577,7 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
     }
 
     JSFunction* flagsGetter;
-    if (!GetGetterPure(cx, proto, NameToId(cx->names().flags), &flagsGetter))
+    if (!GetOwnGetterPure(cx, proto, NameToId(cx->names().flags), &flagsGetter))
         return false;
 
     if (!flagsGetter) {
