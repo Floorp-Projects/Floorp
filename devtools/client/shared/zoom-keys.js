@@ -6,7 +6,7 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-const { KeyShortcuts } = require("devtools/client/shared/key-shortcuts");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const ZOOM_PREF = "devtools.toolbox.zoomValue";
 const MIN_ZOOM = 0.5;
