@@ -1049,6 +1049,7 @@ WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
 
     ////
 
+    colorDrawBuffers.reserve(parent.mColorDrawBuffers.size());
     texDrawBuffers.reserve(parent.mColorDrawBuffers.size() + 2); // +2 for depth+stencil.
 
     const auto fnCommon = [&](const WebGLFBAttachPoint& attach) {
@@ -1065,15 +1066,6 @@ WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
 
     ////
 
-    const auto fnColor = [&](const WebGLFBAttachPoint& attach,
-                             decltype(drawSet)* const out_destSet)
-    {
-        if (!fnCommon(attach))
-            return;
-
-        out_destSet->insert(WebGLFBAttachPoint::Ordered(attach));
-    };
-
     const auto fnDepthStencil = [&](const WebGLFBAttachPoint& attach) {
         if (!fnCommon(attach))
             return;
@@ -1082,18 +1074,27 @@ WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
         readSet.insert(WebGLFBAttachPoint::Ordered(attach));
     };
 
-    ////
-
     fnDepthStencil(parent.mDepthAttachment);
     fnDepthStencil(parent.mStencilAttachment);
     fnDepthStencil(parent.mDepthStencilAttachment);
 
-    for (const auto& attach : parent.mColorDrawBuffers) {
-        fnColor(*attach, &drawSet);
+    ////
+
+    for (const auto& pAttach : parent.mColorDrawBuffers) {
+        const auto& attach = *pAttach;
+        if (!fnCommon(attach))
+            return;
+
+        drawSet.insert(WebGLFBAttachPoint::Ordered(attach));
+        colorDrawBuffers.push_back(&attach);
     }
 
     if (parent.mColorReadBuffer) {
-        fnColor(*(parent.mColorReadBuffer), &readSet);
+        const auto& attach = *parent.mColorReadBuffer;
+        if (!fnCommon(attach))
+            return;
+
+        readSet.insert(WebGLFBAttachPoint::Ordered(attach));
     }
 }
 
@@ -1622,6 +1623,7 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
     };
 
     const auto fnCheckColorFormat = [&](const webgl::FormatInfo* dstFormat) {
+        MOZ_ASSERT(dstFormat->r || dstFormat->g || dstFormat->b || dstFormat->a);
         dstHasColor = true;
         colorFormatsMatch &= (dstFormat == srcColorFormat);
         colorTypesMatch &= ( fnNarrowComponentType(dstFormat) ==
@@ -1634,8 +1636,8 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
         dstDepthFormat = fnGetFormat(dstFB->mResolvedCompleteData->depthBuffer);
         dstStencilFormat = fnGetFormat(dstFB->mResolvedCompleteData->stencilBuffer);
 
-        for (const auto& drawBufferEntry : dstFB->mResolvedCompleteData->drawSet) {
-            fnCheckColorFormat(drawBufferEntry.mRef.Format()->format);
+        for (const auto& cur : dstFB->mResolvedCompleteData->colorDrawBuffers) {
+            fnCheckColorFormat(cur->Format()->format);
         }
     } else {
         dstSampleBuffers = bool(gl->Screen()->Samples());
