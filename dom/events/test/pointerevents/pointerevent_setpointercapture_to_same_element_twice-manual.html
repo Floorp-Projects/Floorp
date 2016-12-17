@@ -5,9 +5,8 @@
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <script src="pointerevent_support.js"></script>
-        <script src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             add_completion_callback(showPointerTypes);
@@ -45,7 +44,6 @@
     </head>
     <body onload="run()">
         <h1>Pointer Event: setPointerCapture to the element which already captured the pointer</h1>
-        <!--
         <h4>Test Description:
             When the setPointerCapture method is invoked, if the target element had already captured the pointer, it should not trigger any gotpointercapture or lostpointercapture event
             <ol>
@@ -53,7 +51,6 @@
                 <li>Move mouse and release mouse button
             </ol>
         </h4>
-        -->
         <br>
         <div id="target0" touch-action:none></div>
         <div id="target1" touch-action:none></div>
