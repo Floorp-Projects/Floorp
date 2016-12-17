@@ -12,8 +12,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWifiAccessPoint.h"
 #include "win_wifiScanner.h"
-#include "win_xp_wifiScanner.h"
-#include "mozilla/WindowsVersion.h"
 
 using namespace mozilla;
 
@@ -31,14 +29,7 @@ nsresult
 nsWifiMonitor::DoScan()
 {
     if (!mWinWifiScanner) {
-      if (IsWin2003OrLater()) {
-        mWinWifiScanner = new WinWifiScanner();
-        LOG(("Using Windows 2003+ wifi scanner."));
-      } else {
-        mWinWifiScanner = new WinXPWifiScanner();
-        LOG(("Using Windows XP wifi scanner."));
-      }
-
+      mWinWifiScanner = new WinWifiScanner();
       if (!mWinWifiScanner) {
         // TODO: Probably return OOM error
         return NS_ERROR_FAILURE;
