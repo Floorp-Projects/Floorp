@@ -6,7 +6,20 @@
 
 DIRS += ['locales']
 
-CONFIGURE_SUBST_FILES += ['adjust_sdk_app_token']
+GENERATED_FILES += [
+    '../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java',
+    'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
+    'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
+]
+w = GENERATED_FILES['../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java']
+w.script = 'generate_build_config.py'
+w.inputs += ['../geckoview/BuildConfig.java.in']
+x = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AdjustConstants.java']
+x.script = 'generate_build_config.py'
+x.inputs += ['AdjustConstants.java.in']
+y = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AppConstants.java']
+y.script = 'generate_build_config.py'
+y.inputs += ['AppConstants.java.in']
 
 include('android-services.mozbuild')
 
@@ -31,8 +44,9 @@ constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'Locales.java',
 ]]
 constants_jar.generated_sources = [
-    'preprocessed/org/mozilla/gecko/AdjustConstants.java',
-    'preprocessed/org/mozilla/gecko/AppConstants.java',
+    '../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java',
+    'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
+    'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
 ]
 constants_jar.extra_jars = [
     CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
@@ -56,45 +70,45 @@ else:
 resjar = add_java_jar('gecko-R')
 resjar.sources = []
 resjar.generated_sources += [
-    'org/mozilla/gecko/R.java',
+    'generated/org/mozilla/gecko/R.java',
 ]
 
 if CONFIG['ANDROID_SUPPORT_V4_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v4']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_SUPPORT_V4_AAR_RES']]
-# (no resources) resjar.generated_sources += ['android/support/v4/R.java']
+# (no resources) resjar.generated_sources += ['generated/android/support/v4/R.java']
 if CONFIG['ANDROID_APPCOMPAT_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_V7_AAR_RES']]
-    resjar.generated_sources += ['android/support/v7/appcompat/R.java']
+    resjar.generated_sources += ['generated/android/support/v7/appcompat/R.java']
 if CONFIG['ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.graphics.drawable']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR_RES']]
-# (no reosurces) resjar.generated_sources += ['android/support/graphics/drawable/R.java']
+# (no reosurces) resjar.generated_sources += ['generated/android/support/graphics/drawable/R.java']
 if CONFIG['ANDROID_ANIMATED_VECTOR_DRAWABLE_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.graphics.drawable.animated']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_ANIMATED_VECTOR_DRAWABLE_AAR_RES']]
-# (no resources) resjar.generated_sources += ['android/support/graphics/drawable/animated/R.java']
+# (no resources) resjar.generated_sources += ['generated/android/support/graphics/drawable/animated/R.java']
 if CONFIG['ANDROID_CARDVIEW_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.cardview']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_CARDVIEW_V7_AAR_RES']]
-    resjar.generated_sources += ['android/support/v7/cardview/R.java']
+    resjar.generated_sources += ['generated/android/support/v7/cardview/R.java']
 if CONFIG['ANDROID_DESIGN_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.design']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_DESIGN_AAR_RES']]
-    resjar.generated_sources += ['android/support/design/R.java']
+    resjar.generated_sources += ['generated/android/support/design/R.java']
 if CONFIG['ANDROID_RECYCLERVIEW_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.recyclerview']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_RES']]
-    resjar.generated_sources += ['android/support/v7/recyclerview/R.java']
+    resjar.generated_sources += ['generated/android/support/v7/recyclerview/R.java']
 if CONFIG['ANDROID_CUSTOMTABS_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.customtabs']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_CUSTOMTABS_AAR_RES']]
-# (no resources) resjar.generated_sources += ['android/support/customtabs/R.java']
+# (no resources) resjar.generated_sources += ['generated/android/support/customtabs/R.java']
 if CONFIG['ANDROID_PALETTE_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.palette']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PALETTE_V7_AAR_RES']]
-# (no resources) resjar.generated_sources += ['android/support/v7/palette/R.java']
+# (no resources) resjar.generated_sources += ['generated/android/support/v7/palette/R.java']
 
 resjar.javac_flags += ['-Xlint:all']
 
@@ -280,6 +294,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'process/GeckoProcessManager.java',
     'process/GeckoServiceChildProcess.java',
     'ScreenManagerHelper.java',
+    'ScreenOrientationDelegate.java',
     'sqlite/ByteBufferInputStream.java',
     'sqlite/MatrixBlobCursor.java',
     'sqlite/SQLiteBridge.java',
@@ -878,22 +893,22 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
     if CONFIG['ANDROID_MEDIAROUTER_V7_AAR']:
         ANDROID_EXTRA_PACKAGES += ['android.support.v7.mediarouter']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_MEDIAROUTER_V7_AAR_RES']]
-        resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
+        resjar.generated_sources += ['generated/android/support/v7/mediarouter/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.base']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/base/R.java']
+        resjar.generated_sources += ['generated/com/google/android/gms/base/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/R.java']
+        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.cast']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/cast/R.java']
+        resjar.generated_sources += ['generated/com/google/android/gms/cast/R.java']
 
 if CONFIG['MOZ_ANDROID_GCM']:
     gbjar.extra_jars += [
@@ -906,22 +921,22 @@ if CONFIG['MOZ_ANDROID_GCM']:
     if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/R.java']
+        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/R.java']
+        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.gcm']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_RES']]
-# (no resources) resjar.generated_sources += ['com/google/android/gms/gcm/R.java']
+# (no resources) resjar.generated_sources += ['generated/com/google/android/gms/gcm/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.measurement']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_RES']]
-# (no resources) resjar.generated_sources += ['android/support/v7/palette/R.java']
+# (no resources) resjar.generated_sources += ['generated/android/support/v7/palette/R.java']
 
 if CONFIG['MOZ_INSTALL_TRACKING']:
     gbjar.extra_jars += [
@@ -932,12 +947,12 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
     if CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.ads']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/ads/R.java']
+        resjar.generated_sources += ['generated/com/google/android/gms/ads/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/R.java']
+        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
 
 gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR_LIB']]

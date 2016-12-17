@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.SynchronousQueue;
 
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
@@ -24,6 +23,7 @@ import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -345,7 +345,7 @@ class GeckoInputConnection
 
     @Override
     public void updateCompositionRects(final RectF[] aRects) {
-        if (!Versions.feature21Plus) {
+        if (!(Build.VERSION.SDK_INT >= 21)) {
             return;
         }
 
@@ -810,7 +810,7 @@ class GeckoInputConnection
                 // Does the same thing as Chromium
                 // https://chromium.googlesource.com/chromium/src/+/49.0.2623.67/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebContentsDelegateAndroid.java#445
                 // These are all the keys dispatchMediaKeyEvent supports.
-                if (AppConstants.Versions.feature19Plus) {
+                if (Build.VERSION.SDK_INT >= 19) {
                     // dispatchMediaKeyEvent is only available on Android 4.4+
                     Context viewContext = getView().getContext();
                     AudioManager am = (AudioManager)viewContext.getSystemService(Context.AUDIO_SERVICE);

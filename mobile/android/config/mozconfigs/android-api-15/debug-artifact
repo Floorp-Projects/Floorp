@@ -8,7 +8,7 @@ NO_NDK=1
 
 # Global options
 ac_add_options --enable-debug
-ENABLE_MARIONETTE=1
+ac_add_options --enable-marionette
 
 . "$topsrcdir/mobile/android/config/mozconfigs/android-api-15/nightly"
 
