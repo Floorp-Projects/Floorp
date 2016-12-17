@@ -4,3 +4,14 @@
 .reftest-userxbl {
   -moz-binding: url("binding.xml#reftest-userxbl") !important;
 }
+/* file: URLs have an empty domain */
+@-moz-document domain() {
+  .reftest-domain {
+    background: lime !important;
+  }
+}
+@-moz-document domain(example.invalid) {
+  .reftest-xdomain {
+    background: red !important;
+  }
+}
