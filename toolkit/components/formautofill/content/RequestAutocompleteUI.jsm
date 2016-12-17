@@ -47,7 +47,7 @@ this.RequestAutocompleteUI.prototype = {
 
     // Open the window providing the function to call when it closes.
     Services.ww.openWindow(null,
-                           "chrome://formautofill/content/requestAutocomplete.xhtml",
+                           "chrome://requestautocomplete/content/requestAutocomplete.xhtml",
                            "Toolkit:RequestAutocomplete",
                            "chrome,dialog=no,resizable",
                            args);

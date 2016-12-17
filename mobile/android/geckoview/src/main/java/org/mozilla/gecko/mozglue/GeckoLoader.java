@@ -24,7 +24,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.AppConstants;
+import org.mozilla.geckoview.BuildConfig;
 
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
@@ -176,7 +176,7 @@ public final class GeckoLoader {
         f = context.getCacheDir();
         putenv("CACHE_DIRECTORY=" + f.getPath());
 
-        if (AppConstants.Versions.feature17Plus) {
+        if (Build.VERSION.SDK_INT >= 17) {
             android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
             if (um != null) {
                 putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
@@ -279,7 +279,7 @@ public final class GeckoLoader {
             }
         }
 
-        if (AppConstants.Versions.feature21Plus) {
+        if (Build.VERSION.SDK_INT >= 21) {
             String[] abis = Build.SUPPORTED_ABIS;
             for (String abi : abis) {
                 if (tryLoadWithABI(lib, outDir, apkPath, abi)) {
@@ -357,7 +357,7 @@ public final class GeckoLoader {
         message.append(lib);
 
         // These might differ. If so, we know why the library won't load!
-        message.append(": ABI: " + AppConstants.MOZ_APP_ABI + ", " + getCPUABI());
+        message.append(": ABI: " + BuildConfig.MOZ_APP_ABI + ", " + getCPUABI());
         message.append(": Data: " + context.getApplicationInfo().dataDir);
         try {
             final boolean appLibExists = new File("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so").exists();

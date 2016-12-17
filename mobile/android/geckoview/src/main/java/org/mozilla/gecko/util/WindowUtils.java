@@ -5,9 +5,8 @@
 
 package org.mozilla.gecko.util;
 
-import org.mozilla.gecko.AppConstants.Versions;
-
 import android.content.Context;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -32,7 +31,7 @@ public class WindowUtils {
     public static int getLargestDimension(final Context context) {
         final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-        if (Versions.feature17Plus) {
+        if (Build.VERSION.SDK_INT >= 17) {
             final DisplayMetrics realMetrics = new DisplayMetrics();
             display.getRealMetrics(realMetrics);
             return Math.max(realMetrics.widthPixels, realMetrics.heightPixels);

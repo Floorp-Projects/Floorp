@@ -2097,6 +2097,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
       AppendToString(aStream, mScrollMetadata[i], "", "]");
     }
   }
+  if (!mAnimations.IsEmpty()) {
+    aStream << nsPrintfCString(" [%d animations]", (int) mAnimations.Length()).get();
+  }
 }
 
 // The static helper function sets the transform matrix into the packet

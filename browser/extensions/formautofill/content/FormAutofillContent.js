@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implements a service used by DOM content to request Form Autofill.
+ * Form Autofill frame script.
  */
 
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
 
 /**
  * Handles profile autofill for a DOM Form element.
@@ -130,5 +131,3 @@ FormAutofillHandler.prototype = {
     }
   },
 };
-
-this.EXPORTED_SYMBOLS = ["FormAutofillHandler"];

@@ -29,7 +29,6 @@ import android.annotation.SuppressLint;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
@@ -83,6 +82,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
@@ -474,7 +474,7 @@ public class GeckoAppShell
                                                        float bearing, float speed, long time);
 
     private static class DefaultListeners
-            implements SensorEventListener, LocationListener, NotificationListener {
+            implements SensorEventListener, LocationListener, NotificationListener, ScreenOrientationDelegate {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
@@ -604,12 +604,23 @@ public class GeckoAppShell
         public void closeNotification(String name) {
             // Do nothing.
         }
+
+        @Override
+        public boolean setRequestedOrientationForCurrentActivity(int requestedActivityInfoOrientation) {
+            // Do nothing, and report that the orientation was not set.
+            return false;
+        }
     }
 
     private static final DefaultListeners DEFAULT_LISTENERS = new DefaultListeners();
     private static SensorEventListener sSensorListener = DEFAULT_LISTENERS;
     private static LocationListener sLocationListener = DEFAULT_LISTENERS;
     private static NotificationListener sNotificationListener = DEFAULT_LISTENERS;
+
+    /**
+     * A delegate for supporting the Screen Orientation API.
+     */
+    private static ScreenOrientationDelegate sScreenOrientationDelegate = DEFAULT_LISTENERS;
 
     public static SensorEventListener getSensorListener() {
         return sSensorListener;
@@ -633,6 +644,14 @@ public class GeckoAppShell
 
     public static void setNotificationListener(final NotificationListener listener) {
         sNotificationListener = (listener != null) ? listener : DEFAULT_LISTENERS;
+    }
+
+    public static ScreenOrientationDelegate getScreenOrientationDelegate() {
+        return sScreenOrientationDelegate;
+    }
+
+    public static void setScreenOrientationDelegate(ScreenOrientationDelegate screenOrientationDelegate) {
+        sScreenOrientationDelegate = (screenOrientationDelegate != null) ? screenOrientationDelegate : DEFAULT_LISTENERS;
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -817,8 +836,7 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void moveTaskToBack() {
-        if (getGeckoInterface() != null)
-            getGeckoInterface().getActivity().moveTaskToBack(true);
+        // This is a vestige, to be removed as full-screen support for GeckoView is implemented.
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -1488,7 +1506,7 @@ public class GeckoAppShell
                           (new File("/sys/class/nvidia-gpu")).exists();
         if (isTegra) {
             // disable on KitKat (bug 957694)
-            if (Versions.feature19Plus) {
+            if (Build.VERSION.SDK_INT >= 19) {
                 Log.w(LOGTAG, "Blocking plugins because of Tegra (bug 957694)");
                 return null;
             }
@@ -1727,6 +1745,12 @@ public class GeckoAppShell
         public Activity getActivity();
         public String getDefaultUAString();
         public void doRestart();
+
+        /**
+         * This API doesn't make sense for arbitrary GeckoView consumers. In future, consider an
+         * API like Android WebView's, which provides a View to the consumer to display fullscreen.
+         * See <a href="https://developer.android.com/reference/android/webkit/WebChromeClient.html#onShowCustomView(android.view.View,%20android.webkit.WebChromeClient.CustomViewCallback)">https://developer.android.com/reference/android/webkit/WebChromeClient.html#onShowCustomView(android.view.View,%20android.webkit.WebChromeClient.CustomViewCallback)</a>.
+         */
         public void setFullScreen(boolean fullscreen);
         public void addPluginView(View view);
         public void removePluginView(final View view);
@@ -1800,6 +1824,13 @@ public class GeckoAppShell
          * @return URI or null.
          */
         String getDefaultChromeURI();
+
+        /**
+         * Is this an official Mozilla application, like Firefox or Thunderbird?
+         *
+         * @return true if MOZILLA_OFFICIAL.
+         */
+        boolean isOfficial();
     };
 
     private static GeckoInterface sGeckoInterface;
@@ -2066,11 +2097,13 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void lockScreenOrientation(int aOrientation) {
+        // TODO: don't vector through GeckoAppShell.
         GeckoScreenOrientation.getInstance().lock(aOrientation);
     }
 
     @WrapForJNI(calledFrom = "gecko")
     private static void unlockScreenOrientation() {
+        // TODO: don't vector through GeckoAppShell.
         GeckoScreenOrientation.getInstance().unlock();
     }
 

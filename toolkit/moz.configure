@@ -865,3 +865,39 @@ with only_when('--enable-compile-environment'):
 
     set_config('LIBFUZZER', enable_libfuzzer)
     set_define('LIBFUZZER', enable_libfuzzer)
+
+# Marionette is a Web Driver / Selenium comamnd server and client automation
+# driver for Mozilla's Gecko engine.  For more, see
+# https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette.
+#
+# Marionette isn't really a toolkit feature, it's a Gecko engine feature, but
+# it's enabled based on the toolkit (and target), so here it lives.
+
+@depends(target, toolkit)
+def marionette_default(target, toolkit):
+    # By default, enable Marionette if not Android and not gonk.
+    #
+    # None means "don't set anything", which allows to override with
+    # --enable-marionette.  False means --disable-marionette, which
+    # cannot be overridden with --enable-marionette.  We want to allow
+    # overrides.
+    if target.os == 'Android':
+        return None
+
+    if toolkit == 'gonk':
+        return None
+
+    return True
+
+imply_option('--enable-marionette', marionette_default,
+             reason='not Android and not gonk')
+
+option('--enable-marionette',
+       help='Enable internal Marionette command server')
+
+@depends('--enable-marionette')
+def marionette(value):
+    if value:
+        return True
+
+set_config('ENABLE_MARIONETTE', marionette)

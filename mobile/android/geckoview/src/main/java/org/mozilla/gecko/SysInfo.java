@@ -18,8 +18,8 @@ import java.util.regex.Pattern;
 
 /**
  * A collection of system info values, broadly mirroring a subset of
- * nsSystemInfo. See also the constants in AppConstants, which reflect
- * much of nsIXULAppInfo.
+ * nsSystemInfo. See also the constants in org.mozilla.geckoview.BuildConfig,
+ * which reflect much of nsIXULAppInfo.
  */
 // Normally, we'd annotate with @RobocopTarget.  Since SysInfo is compiled
 // before RobocopTarget, we instead add o.m.g.SysInfo directly to the Proguard

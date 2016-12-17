@@ -5231,17 +5231,6 @@ if test "$NECKO_COOKIES"; then
     _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_COOKIES"
 fi
 
-dnl
-dnl Always build Marionette if not Android or B2G
-dnl
-if test "$OS_TARGET" != Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
-    AC_DEFINE(ENABLE_MARIONETTE)
-fi
-AC_SUBST(ENABLE_MARIONETTE)
-if test "$ENABLE_MARIONETTE"; then
-    AC_DEFINE(ENABLE_MARIONETTE)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
