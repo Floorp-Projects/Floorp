@@ -11,7 +11,6 @@ import firefox_puppeteer.errors as errors
 from firefox_puppeteer.api.l10n import L10n
 from firefox_puppeteer.base import BaseLib
 from firefox_puppeteer.decorators import use_class_as_property
-from firefox_puppeteer.api.prefs import Preferences
 
 
 class Windows(BaseLib):
@@ -217,7 +216,6 @@ class BaseWindow(BaseLib):
         super(BaseWindow, self).__init__(marionette)
 
         self._l10n = L10n(self.marionette)
-        self._prefs = Preferences(self.marionette)
         self._windows = Windows(self.marionette)
 
         if window_handle not in self.marionette.chrome_window_handles:
@@ -313,7 +311,7 @@ class BaseWindow(BaseLib):
         """Sets the focus to the current chrome window."""
         return self._windows.focus(self.handle)
 
-    def get_entity(self, entity_id):
+    def localize_entity(self, entity_id):
         """Returns the localized string for the specified DTD entity id.
 
         :param entity_id: The id to retrieve the value from.
@@ -322,9 +320,9 @@ class BaseWindow(BaseLib):
 
         :raises MarionetteException: When entity id is not found.
         """
-        return self._l10n.get_entity(self.dtds, entity_id)
+        return self._l10n.localize_entity(self.dtds, entity_id)
 
-    def get_property(self, property_id):
+    def localize_property(self, property_id):
         """Returns the localized string for the specified property id.
 
         :param property_id: The id to retrieve the value from.
@@ -333,7 +331,7 @@ class BaseWindow(BaseLib):
 
         :raises MarionetteException: When property id is not found.
         """
-        return self._l10n.get_property(self.properties, property_id)
+        return self._l10n.localize_property(self.properties, property_id)
 
     def open_window(self, callback=None, expected_window_class=None, focus=True):
         """Opens a new top-level chrome window.

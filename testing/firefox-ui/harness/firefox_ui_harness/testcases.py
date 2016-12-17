@@ -9,7 +9,6 @@ from datetime import datetime
 import mozfile
 
 from firefox_puppeteer import PuppeteerMixin
-from firefox_puppeteer.api.prefs import Preferences
 from firefox_puppeteer.api.software_update import SoftwareUpdate
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
 from marionette_driver import Wait
@@ -189,8 +188,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
             :param dialog: Instance of :class:`UpdateWizardDialog`.
             """
-            prefs = Preferences(self.marionette)
-            prefs.set_pref(self.PREF_APP_UPDATE_ALTWINDOWTYPE, dialog.window_type)
+            self.marionette.set_pref(self.PREF_APP_UPDATE_ALTWINDOWTYPE, dialog.window_type)
 
             try:
                 # If updates have already been found, proceed to download

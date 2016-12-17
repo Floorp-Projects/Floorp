@@ -8,6 +8,7 @@
 #define mozilla_TimeStamp_h
 
 #include <stdint.h>
+#include <algorithm>  // for std::min, std::max
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
@@ -173,6 +174,17 @@ public:
     }
 
     return FromTicks(ticks);
+  }
+
+  static BaseTimeDuration Max(const BaseTimeDuration& aA,
+                              const BaseTimeDuration& aB)
+  {
+    return FromTicks(std::max(aA.mValue, aB.mValue));
+  }
+  static BaseTimeDuration Min(const BaseTimeDuration& aA,
+                              const BaseTimeDuration& aB)
+  {
+    return FromTicks(std::min(aA.mValue, aB.mValue));
   }
 
 private:

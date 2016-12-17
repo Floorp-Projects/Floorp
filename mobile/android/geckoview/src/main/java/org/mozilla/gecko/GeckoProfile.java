@@ -51,8 +51,8 @@ public final class GeckoProfile {
     private static final String TIMES_PATH = "times.json";
     private static final String PROFILE_CREATION_DATE_JSON_ATTR = "created";
 
-    // Only tests should need to do this.
-    // We can default this to AppConstants.RELEASE_OR_BETA once we fix Bug 1069687.
+    // Only tests should need to do this.  We can remove this entirely once we
+    // fix Bug 1069687.
     private static volatile boolean sAcceptDirectoryChanges = true;
 
     @RobocopTarget
@@ -227,9 +227,6 @@ public final class GeckoProfile {
         } else if (profileName == null) {
             // If only profile dir was passed in, use custom (anonymous) profile.
             profileName = CUSTOM_PROFILE;
-
-        } else if (AppConstants.DEBUG_BUILD) {
-            Log.v(LOGTAG, "Fetching profile: '" + profileName + "', '" + profileDir + "'");
         }
 
         // We require the profile dir to exist if specified, so create it here if needed.
@@ -266,11 +263,6 @@ public final class GeckoProfile {
                 if (!sAcceptDirectoryChanges || !profileDir.isDirectory()) {
                     throw new IllegalStateException(
                             "Refusing to reuse profile with a different directory.");
-                }
-
-                if (AppConstants.RELEASE_OR_BETA) {
-                    Log.e(LOGTAG, "Release build trying to switch out profile dir. " +
-                                  "This is an error, but let's do what we can.");
                 }
                 profile.setDir(profileDir);
             }

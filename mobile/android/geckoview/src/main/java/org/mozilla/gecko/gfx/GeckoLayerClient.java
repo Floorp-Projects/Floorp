@@ -10,7 +10,6 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.util.FloatUtils;
-import org.mozilla.gecko.AppConstants;
 
 import android.content.Context;
 import android.graphics.Color;
