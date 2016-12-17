@@ -819,7 +819,10 @@ CreateExportObject(JSContext* cx,
         return true;
     }
 
-    exportObj.set(JS_NewPlainObject(cx));
+    if (metadata.isAsmJS())
+        exportObj.set(NewBuiltinClassInstance<PlainObject>(cx));
+    else
+        exportObj.set(NewObjectWithGivenProto<PlainObject>(cx, nullptr));
     if (!exportObj)
         return false;
 
@@ -848,6 +851,11 @@ CreateExportObject(JSContext* cx,
         }
 
         if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
+            return false;
+    }
+
+    if (!metadata.isAsmJS()) {
+        if (!JS_FreezeObject(cx, exportObj))
             return false;
     }
 

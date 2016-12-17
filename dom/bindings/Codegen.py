@@ -5317,16 +5317,10 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             #    content-side Promise (at least not without some serious
             #    gyrations).
             # 3) Promise return value from a callback or callback interface.
-            #    This is in theory a case the spec covers but in practice it
-            #    really doesn't define behavior here because it doesn't define
-            #    what Realm we're in after the callback returns, which is when
-            #    the argument conversion happens.  We will use the current
-            #    compartment, which is the compartment of the callable (which
-            #    may itself be a cross-compartment wrapper itself), which makes
-            #    as much sense as anything else. In practice, such an API would
-            #    once again be providing a Promise to signal completion of an
-            #    operation, which would then not be exposed to anyone other than
-            #    our own implementation code.
+            #    Per spec, this should use the Realm of the callback object.  In
+            #    our case, that's the compartment of the underlying callback,
+            #    not the current compartment (which may be the compartment of
+            #    some cross-compartment wrapper around said callback).
             # 4) Return value from a JS-implemented interface.  In this case we
             #    have a problem.  Our current compartment is the compartment of
             #    the JS implementation.  But if the JS implementation returned
@@ -5368,6 +5362,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     globalObj = js::GetGlobalForObjectCrossCompartment(unwrappedVal);
                     """,
                     sourceDescription=sourceDescription)
+            elif isCallbackReturnValue == "Callback":
+                getPromiseGlobal = dedent(
+                    """
+                    // We basically want our entry global here.  Play it safe
+                    // and use GetEntryGlobal() to get it, with whatever
+                    // principal-clamping it ends up doing.
+                    globalObj = GetEntryGlobal()->GetGlobalJSObject();
+                    """)
             else:
                 getPromiseGlobal = ""
 

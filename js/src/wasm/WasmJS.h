@@ -124,6 +124,7 @@ class WasmModuleObject : public NativeObject
     static void finalize(FreeOp* fop, JSObject* obj);
     static bool imports(JSContext* cx, unsigned argc, Value* vp);
     static bool exports(JSContext* cx, unsigned argc, Value* vp);
+    static bool customSections(JSContext* cx, unsigned argc, Value* vp);
 
   public:
     static const unsigned RESERVED_SLOTS = 1;

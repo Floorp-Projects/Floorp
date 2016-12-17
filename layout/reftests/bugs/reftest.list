@@ -1562,8 +1562,8 @@ needs-focus == 568441.html 568441-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
 # 574907 is a windows-only issue, result on other platforms depends on details of font support
-random-if(!winWidget) fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 574907-1.html 574907-1-ref.html # Bug 1258240
-random-if(!winWidget) fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 574907-2.html 574907-2-ref.html # Bug 1258240
+random-if(!winWidget) random-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 574907-1.html 574907-1-ref.html # Bug 1258240
+random-if(!winWidget) random-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 574907-2.html 574907-2-ref.html # Bug 1258240
 # 574907-3 only worked under directwrite, and even there it now depends on the rendering mode; marking as random for now
 random-if(!winWidget) fails-if(winWidget&&!dwrite) random-if(winWidget&&dwrite) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html

@@ -137,6 +137,7 @@ class Module : public JS::WasmModule
     const Metadata& metadata() const { return *metadata_; }
     const ImportVector& imports() const { return imports_; }
     const ExportVector& exports() const { return exports_; }
+    const Bytes& bytecode() const { return bytecode_->bytes; }
 
     // Instantiate this module with the given imports:
 
