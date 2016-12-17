@@ -841,6 +841,36 @@
     "hash": ""
   },
   {
+    "input": "http://[::127.0.0.1]",
+    "base": "http://example.org/foo/bar",
+    "href": "http://[::7f00:1]/",
+    "origin": "http://[::7f00:1]",
+    "protocol": "http:",
+    "username": "",
+    "password": "",
+    "host": "[::7f00:1]",
+    "hostname": "[::7f00:1]",
+    "port": "",
+    "pathname": "/",
+    "search": "",
+    "hash": ""
+  },
+  {
+    "input": "http://[0:0:0:0:0:0:13.1.68.3]",
+    "base": "http://example.org/foo/bar",
+    "href": "http://[::d01:4403]/",
+    "origin": "http://[::d01:4403]",
+    "protocol": "http:",
+    "username": "",
+    "password": "",
+    "host": "[::d01:4403]",
+    "hostname": "[::d01:4403]",
+    "port": "",
+    "pathname": "/",
+    "search": "",
+    "hash": ""
+  },
+  {
     "input": "http://[2001::1]:80",
     "base": "http://example.org/foo/bar",
     "href": "http://[2001::1]/",
@@ -1262,7 +1292,7 @@
   {
     "input": "#β",
     "base": "http://example.org/foo/bar",
-    "href": "http://example.org/foo/bar#β",
+    "href": "http://example.org/foo/bar#%CE%B2",
     "origin": "http://example.org",
     "protocol": "http:",
     "username": "",
@@ -1272,7 +1302,7 @@
     "port": "",
     "pathname": "/foo/bar",
     "search": "",
-    "hash": "#β"
+    "hash": "#%CE%B2"
   },
   {
     "input": "data:text/html,test#test",
@@ -1288,6 +1318,21 @@
     "pathname": "text/html,test",
     "search": "",
     "hash": "#test"
+  },
+  {
+    "input": "tel:1234567890",
+    "base": "http://example.org/foo/bar",
+    "href": "tel:1234567890",
+    "origin": "null",
+    "protocol": "tel:",
+    "username": "",
+    "password": "",
+    "host": "",
+    "hostname": "",
+    "port": "",
+    "pathname": "1234567890",
+    "search": "",
+    "hash": ""
   },
   "# Based on http://trac.webkit.org/browser/trunk/LayoutTests/fast/url/file.html",
   {
@@ -2116,7 +2161,7 @@
   {
     "input": "http://www.google.com/foo?bar=baz# »",
     "base": "about:blank",
-    "href": "http://www.google.com/foo?bar=baz# »",
+    "href": "http://www.google.com/foo?bar=baz# %C2%BB",
     "origin": "http://www.google.com",
     "protocol": "http:",
     "username": "",
@@ -2126,12 +2171,12 @@
     "port": "",
     "pathname": "/foo",
     "search": "?bar=baz",
-    "hash": "# »"
+    "hash": "# %C2%BB"
   },
   {
     "input": "data:test# »",
     "base": "about:blank",
-    "href": "data:test# »",
+    "href": "data:test# %C2%BB",
     "origin": "null",
     "protocol": "data:",
     "username": "",
@@ -2141,7 +2186,7 @@
     "port": "",
     "pathname": "test",
     "search": "",
-    "hash": "# »"
+    "hash": "# %C2%BB"
   },
   {
     "input": "http://[www.google.com]/",
@@ -4273,5 +4318,60 @@
     "search": "??a=b&c=d",
     "searchParams": "%3Fa=b&c=d",
     "hash": ""
+  },
+  "# Scheme only",
+  {
+    "input": "http:",
+    "base": "http://example.org/foo/bar",
+    "href": "http://example.org/foo/bar",
+    "origin": "http://example.org",
+    "protocol": "http:",
+    "username": "",
+    "password": "",
+    "host": "example.org",
+    "hostname": "example.org",
+    "port": "",
+    "pathname": "/foo/bar",
+    "search": "",
+    "searchParams": "",
+    "hash": ""
+  },
+  {
+    "input": "http:",
+    "base": "https://example.org/foo/bar",
+    "failure": true
+  },
+  {
+    "input": "sc:",
+    "base": "https://example.org/foo/bar",
+    "href": "sc:",
+    "origin": "null",
+    "protocol": "sc:",
+    "username": "",
+    "password": "",
+    "host": "",
+    "hostname": "",
+    "port": "",
+    "pathname": "",
+    "search": "",
+    "searchParams": "",
+    "hash": ""
+  },
+  "# Percent encoding of fragments",
+  {
+    "input": "http://foo.bar/baz?qux#foo\bbar",
+    "base": "about:blank",
+    "href": "http://foo.bar/baz?qux#foo%08bar",
+    "origin": "http://foo.bar",
+    "protocol": "http:",
+    "username": "",
+    "password": "",
+    "host": "foo.bar",
+    "hostname": "foo.bar",
+    "port": "",
+    "pathname": "/baz",
+    "search": "?qux",
+    "searchParams": "",
+    "hash": "#foo%08bar"
   }
 ]
