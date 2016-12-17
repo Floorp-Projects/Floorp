@@ -97,32 +97,55 @@ LoginManagerPromptFactory.prototype = {
       return;
     }
 
-    this._asyncPromptInProgress = true;
-    prompt.inProgress = true;
+    // Allow only a limited number of authentication dialogs when they are all
+    // canceled by the user.
+    var cancelationCounter = (prompter._browser && prompter._browser.canceledAuthenticationPromptCounter) || { count: 0, id: 0 };
+    if (prompt.channel) {
+      var httpChannel = prompt.channel.QueryInterface(Ci.nsIHttpChannel);
+      if (httpChannel) {
+        var windowId = httpChannel.topLevelContentWindowId;
+        if (windowId != cancelationCounter.id) {
+          // window has been reloaded or navigated, reset the counter
+          cancelationCounter = { count: 0, id: windowId };
+        }
+      }
+    }
 
     var self = this;
 
     var runnable = {
+      cancel: false,
       run : function() {
         var ok = false;
-        try {
-          self.log("_doAsyncPrompt:run - performing the prompt for '" + hashKey + "'");
-          ok = prompter.promptAuth(prompt.channel,
-                                   prompt.level,
-                                   prompt.authInfo);
-        } catch (e) {
-          if (e instanceof Components.Exception &&
-              e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
-            self.log("_doAsyncPrompt:run bypassed, UI is not available in this context");
+        if (!this.cancel) {
+          try {
+            self.log("_doAsyncPrompt:run - performing the prompt for '" + hashKey + "'");
+            ok = prompter.promptAuth(prompt.channel,
+                                     prompt.level,
+                                     prompt.authInfo);
+          } catch (e) {
+            if (e instanceof Components.Exception &&
+                e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+              self.log("_doAsyncPrompt:run bypassed, UI is not available in this context");
+            } else {
+              Components.utils.reportError("LoginManagerPrompter: " +
+                                           "_doAsyncPrompt:run: " + e + "\n");
+            }
+          }
+
+          delete self._asyncPrompts[hashKey];
+          prompt.inProgress = false;
+          self._asyncPromptInProgress = false;
+
+          if (ok) {
+            cancelationCounter.count = 0;
           } else {
-            Components.utils.reportError("LoginManagerPrompter: " +
-                                         "_doAsyncPrompt:run: " + e + "\n");
+            cancelationCounter.count++;
+          }
+          if (prompter._browser) {
+            prompter._browser.canceledAuthenticationPromptCounter = cancelationCounter;
           }
         }
-
-        delete self._asyncPrompts[hashKey];
-        prompt.inProgress = false;
-        self._asyncPromptInProgress = false;
 
         for (var consumer of prompt.consumers) {
           if (!consumer.callback)
@@ -132,15 +155,30 @@ LoginManagerPromptFactory.prototype = {
 
           self.log("Calling back to " + consumer.callback + " ok=" + ok);
           try {
-            if (ok)
+            if (ok) {
               consumer.callback.onAuthAvailable(consumer.context, prompt.authInfo);
-            else
-              consumer.callback.onAuthCancelled(consumer.context, true);
+            } else {
+              consumer.callback.onAuthCancelled(consumer.context, !this.cancel);
+            }
           } catch (e) { /* Throw away exceptions caused by callback */ }
         }
         self._doAsyncPrompt();
       }
     };
+
+    var cancelDialogLimit = Services.prefs.getIntPref("prompts.authentication_dialog_abuse_limit");
+
+    this.log("cancelationCounter =", cancelationCounter);
+    if (cancelDialogLimit && cancelationCounter.count >= cancelDialogLimit) {
+      this.log("Blocking auth dialog, due to exceeding dialog bloat limit");
+      delete this._asyncPrompts[hashKey];
+
+      // just make the runnable cancel all consumers
+      runnable.cancel = true;
+    } else {
+      this._asyncPromptInProgress = true;
+      prompt.inProgress = true;
+    }
 
     Services.tm.mainThread.dispatch(runnable, Ci.nsIThread.DISPATCH_NORMAL);
     this.log("_doAsyncPrompt:run dispatched");
