@@ -463,4 +463,10 @@ interface nsIHttpChannel : nsIChannel
      * like in devtools net monitor. See bug 1274556.
      */
     attribute ACString channelId;
+
+    /**
+     * ID of the top-level document's inner window.  Identifies the content
+     * this channels is being load in.
+     */
+    attribute uint64_t topLevelContentWindowId;
 };

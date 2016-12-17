@@ -142,6 +142,7 @@ protected:
                    const bool&                aAllowStaleCacheContent,
                    const nsCString&           aContentTypeHint,
                    const nsCString&           aChannelId,
+                   const uint64_t&            aContentWindowId,
                    const nsCString&           aPreferredAlternativeType);
 
   virtual mozilla::ipc::IPCResult RecvSetPriority(const uint16_t& priority) override;

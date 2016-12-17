@@ -1812,10 +1812,10 @@ AstDecodeEnvironment(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeCodeSection(AstDecodeContext &c)
+AstDecodeCodeSection(AstDecodeContext& c)
 {
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Code, &sectionStart, &sectionSize, "code"))
+    if (!c.d.startSection(SectionId::Code, &c.env(), &sectionStart, &sectionSize, "code"))
         return false;
 
     if (sectionStart == Decoder::NotStarted) {
@@ -1850,15 +1850,14 @@ AstDecodeCodeSection(AstDecodeContext &c)
 static const size_t WRAP_DATA_BYTES = 30;
 
 static bool
-AstDecodeDataSection(AstDecodeContext &c)
+AstDecodeModuleTail(AstDecodeContext& c)
 {
     MOZ_ASSERT(c.module().memories().length() <= 1, "at most one memory in MVP");
 
-    DataSegmentVector segments;
-    if (!DecodeDataSection(c.d, c.env(), &segments))
+    if (!DecodeModuleTail(c.d, &c.env()))
         return false;
 
-    for (DataSegment& s : segments) {
+    for (DataSegment& s : c.env().dataSegments) {
         const uint8_t* src = c.d.begin() + s.bytecodeOffset;
         char16_t* buffer = static_cast<char16_t*>(c.lifo.alloc(s.length * sizeof(char16_t)));
         for (size_t i = 0; i < s.length; i++)
@@ -1897,8 +1896,7 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
 
     if (!AstDecodeEnvironment(c) ||
         !AstDecodeCodeSection(c) ||
-        !AstDecodeDataSection(c) ||
-        !DecodeUnknownSections(c.d))
+        !AstDecodeModuleTail(c))
     {
         if (error) {
             JS_ReportErrorNumberASCII(c.cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,

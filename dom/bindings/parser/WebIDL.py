@@ -6398,17 +6398,17 @@ class Parser(Tokenizer):
         type = IDLSequenceType(self.getLocation(p, 1), innerType)
         p[0] = self.handleNullable(type, p[5])
 
-    # Note: Promise<void> is allowed, so we want to parametrize on
-    # ReturnType, not Type.  Also, we want this to end up picking up
-    # the Promise interface for now, hence the games with IDLUnresolvedType.
+    # Note: Promise<void> is allowed, so we want to parametrize on ReturnType,
+    # not Type.  Also, we want this to end up picking up the Promise interface
+    # for now, hence the games with IDLUnresolvedType.  Promise types can't be
+    # null, hence no "Null" in there.
     def p_NonAnyTypePromiseType(self, p):
         """
-            NonAnyType : PROMISE LT ReturnType GT Null
+            NonAnyType : PROMISE LT ReturnType GT
         """
         innerType = p[3]
         promiseIdent = IDLUnresolvedIdentifier(self.getLocation(p, 1), "Promise")
-        type = IDLUnresolvedType(self.getLocation(p, 1), promiseIdent, p[3])
-        p[0] = self.handleNullable(type, p[5])
+        p[0] = IDLUnresolvedType(self.getLocation(p, 1), promiseIdent, p[3])
 
     def p_NonAnyTypeMozMapType(self, p):
         """

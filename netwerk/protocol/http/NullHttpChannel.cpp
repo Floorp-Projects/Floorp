@@ -70,6 +70,18 @@ NullHttpChannel::SetChannelId(const nsACString& aChannelId)
 }
 
 NS_IMETHODIMP
+NullHttpChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetTransferSize(uint64_t *aTransferSize)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
