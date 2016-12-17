@@ -192,7 +192,7 @@ partial interface Navigator {
   readonly attribute MozPowerManager mozPower;
 
   // WebKit/Blink/Trident/Presto support this.
-  [Throws]
+  [Throws, NeedsCallerType]
   boolean javaEnabled();
 
   /**
