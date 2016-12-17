@@ -9,17 +9,21 @@
                                           android:layout_width="@dimen/favicon_bg"
                                           android:layout_height="@dimen/favicon_bg"
                                           android:layout_marginLeft="16dip"
+                                          android:layout_marginStart="16dip"
                                           android:layout_marginRight="16dip"
+                                          android:layout_marginEnd="16dip"
                                           android:layout_centerVertical="true"
                                           android:minWidth="@dimen/favicon_bg"
                                           android:minHeight="@dimen/favicon_bg"/>
 
     <org.mozilla.gecko.widget.FlowLayout android:id="@+id/suggestion_layout"
                                          android:layout_toRightOf="@id/suggestion_icon"
+                                         android:layout_toEndOf="@id/suggestion_icon"
                                          android:layout_centerVertical="true"
                                          android:layout_width="wrap_content"
                                          android:layout_height="wrap_content"
                                          android:layout_marginRight="15dp"
+                                         android:layout_marginEnd="15dp"
                                          android:duplicateParentState="true">
 
         <include layout="@layout/suggestion_item"
