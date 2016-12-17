@@ -220,11 +220,12 @@ const BOOTSTRAP_REASONS = {
 };
 
 // Map new string type identifiers to old style nsIUpdateItem types
+// Type 32 was previously used for multipackage xpi files so it should
+// not be re-used since old files with that type may be floating around.
 const TYPES = {
   extension: 2,
   theme: 4,
   locale: 8,
-  multipackage: 32,
   dictionary: 64,
   experiment: 128,
 };
@@ -1181,14 +1182,12 @@ let loadManifestFromRDF = Task.async(function*(aUri, aStream) {
   if (!(addon.type in TYPES))
     throw new Error("Install manifest specifies unknown type: " + addon.type);
 
-  if (addon.type != "multipackage") {
-    if (!addon.id)
-      throw new Error("No ID in install manifest");
-    if (!gIDTest.test(addon.id))
-      throw new Error("Illegal add-on ID " + addon.id);
-    if (!addon.version)
-      throw new Error("No version in install manifest");
-  }
+  if (!addon.id)
+    throw new Error("No ID in install manifest");
+  if (!gIDTest.test(addon.id))
+    throw new Error("Illegal add-on ID " + addon.id);
+  if (!addon.version)
+    throw new Error("No version in install manifest");
 
   addon.strictCompatibility = !(addon.type in COMPATIBLE_BY_DEFAULT_TYPES) ||
                               getRDFProperty(ds, root, "strictCompatibility") == "true";
@@ -5419,7 +5418,6 @@ class AddonInstall {
     this.certificate = null;
     this.certName = null;
 
-    this.linkedInstalls = null;
     this.addon = null;
     this.state = null;
 
@@ -5574,116 +5572,6 @@ class AddonInstall {
   }
 
   /**
-   * Fills out linkedInstalls with AddonInstall instances for the other files
-   * in a multi-package XPI.
-   *
-   * @param  aFiles
-   *         An array of { entryName, file } for each remaining file from the
-   *         multi-package XPI.
-   */
-  _createLinkedInstalls(aFiles) {
-    return Task.spawn((function*() {
-      if (aFiles.length == 0)
-        return;
-
-      // Create new AddonInstall instances for every remaining file
-      if (!this.linkedInstalls)
-        this.linkedInstalls = [];
-
-      for (let { entryName, file } of aFiles) {
-        logger.debug("Creating linked install from " + entryName);
-        let install = yield createLocalInstall(file);
-
-        // Make the new install own its temporary file
-        install.ownsTempFile = true;
-
-        this.linkedInstalls.push(install);
-
-        // If one of the internal XPIs was multipackage then move its linked
-        // installs to the outer install
-        if (install.linkedInstalls) {
-          this.linkedInstalls.push(...install.linkedInstalls);
-          install.linkedInstalls = null;
-        }
-
-        install.sourceURI = this.sourceURI;
-        install.releaseNotesURI = this.releaseNotesURI;
-        if (install.state != AddonManager.STATE_DOWNLOAD_FAILED)
-          install.updateAddonURIs();
-      }
-    }).bind(this));
-  }
-
-  /**
-   * Loads add-on manifests from a multi-package XPI file. Each of the
-   * XPI and JAR files contained in the XPI will be extracted. Any that
-   * do not contain valid add-ons will be ignored. The first valid add-on will
-   * be installed by this AddonInstall instance, the rest will have new
-   * AddonInstall instances created for them.
-   *
-   * @param  aZipReader
-   *         An open nsIZipReader for the multi-package XPI's files. This will
-   *         be closed before this method returns.
-   */
-  _loadMultipackageManifests(aZipReader) {
-    return Task.spawn((function*() {
-      let files = [];
-      let entries = aZipReader.findEntries("(*.[Xx][Pp][Ii]|*.[Jj][Aa][Rr])");
-      while (entries.hasMore()) {
-        let entryName = entries.getNext();
-        let file = getTemporaryFile();
-        try {
-          aZipReader.extract(entryName, file);
-          files.push({ entryName, file });
-        }
-        catch (e) {
-          logger.warn("Failed to extract " + entryName + " from multi-package " +
-                      "XPI", e);
-          file.remove(false);
-        }
-      }
-
-      aZipReader.close();
-
-      if (files.length == 0) {
-        return Promise.reject([AddonManager.ERROR_CORRUPT_FILE,
-                               "Multi-package XPI does not contain any packages to install"]);
-      }
-
-      // Find the first file that is a valid install and use it for
-      // the add-on that this AddonInstall instance will install.
-      for (let { entryName, file } of files) {
-        this.removeTemporaryFile();
-        try {
-          yield this.loadManifest(file);
-          logger.debug("Base multi-package XPI install came from " + entryName);
-          this.file = file;
-          this.ownsTempFile = true;
-
-          yield this._createLinkedInstalls(files.filter(f => f.file != file));
-          return undefined;
-        }
-        catch (e) {
-          // _createLinkedInstalls will log errors when it tries to process this
-          // file
-        }
-      }
-
-      // No valid add-on was found, delete all the temporary files
-      for (let { file } of files) {
-        try {
-          file.remove(true);
-        } catch (e) {
-          this.logger.warn("Could not remove temp file " + file.path);
-        }
-      }
-
-      return Promise.reject([AddonManager.ERROR_CORRUPT_FILE,
-                             "Multi-package XPI does not contain any valid packages to install"]);
-    }).bind(this));
-  }
-
-  /**
    * Called after the add-on is a local file and the signature and install
    * manifest can be read.
    *
@@ -5713,9 +5601,7 @@ class AddonInstall {
         return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
       }
 
-      // A multi-package XPI is a container, the add-ons it holds each
-      // have their own id.  Everything else had better have an id here.
-      if (!this.addon.id && this.addon.type != "multipackage") {
+      if (!this.addon.id) {
         let err = new Error(`Cannot find id for addon ${file.path}`);
         return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, err]);
       }
@@ -5726,12 +5612,6 @@ class AddonInstall {
           zipreader.close();
           return Promise.reject([AddonManager.ERROR_INCORRECT_ID,
                                  `Refusing to upgrade addon ${this.existingAddon.id} to different ID {this.addon.id}`]);
-        }
-
-        if (this.addon.type == "multipackage") {
-          zipreader.close();
-          return Promise.reject([AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
-                                 `Refusing to upgrade addon ${this.existingAddon.id} to a multi-package xpi`]);
         }
 
         if (this.existingAddon.type == "webextension" && this.addon.type != "webextension") {
@@ -5777,9 +5657,6 @@ class AddonInstall {
           }
         }
       }
-
-      if (this.addon.type == "multipackage")
-        return this._loadMultipackageManifests(zipreader);
 
       zipreader.close();
 
@@ -6662,12 +6539,6 @@ class DownloadAddonInstall extends AddonInstall {
 
         // proceed with the install state machine.
         this.install();
-        if (this.linkedInstalls) {
-          for (let install of this.linkedInstalls) {
-            if (install.state == AddonManager.STATE_DOWNLOADED)
-              install.install();
-          }
-        }
       }
     });
   }
@@ -6832,13 +6703,6 @@ AddonInstallWrapper.prototype = {
 
   get sourceURI() {
     return installFor(this).sourceURI;
-  },
-
-  get linkedInstalls() {
-    let install = installFor(this);
-    if (!install.linkedInstalls)
-      return null;
-    return install.linkedInstalls.map(i => i.wrapper);
   },
 
   set _permHandler(handler) {
