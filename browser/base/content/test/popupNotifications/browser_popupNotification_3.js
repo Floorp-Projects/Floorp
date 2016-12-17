@@ -9,7 +9,6 @@ function test() {
   ok(PopupNotifications.panel, "PopupNotifications panel exists");
 
   setup();
-  goNext();
 }
 
 var tests = [
@@ -66,7 +65,7 @@ var tests = [
   },
   // Test that multiple notification icons are removed when switching tabs
   { id: "Test#3",
-    run: function() {
+    run: function* () {
       // show the notification on old tab.
       this.notifyObjOld = new BasicNotification(this.id);
       this.notifyObjOld.anchorID = "default-notification-icon";
@@ -74,7 +73,7 @@ var tests = [
 
       // switch tab
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
       // show the notification on new tab.
       this.notifyObjNew = new BasicNotification(this.id);
@@ -170,10 +169,7 @@ var tests = [
   { id: "Test#7",
     run: function* () {
       let oldSelectedTab = gBrowser.selectedTab;
-      let newTab = gBrowser.addTab("about:blank");
-      gBrowser.selectedTab = newTab;
-
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       gBrowser.selectedTab = oldSelectedTab;
       let browser = gBrowser.getBrowserForTab(newTab);
 
@@ -199,9 +195,7 @@ var tests = [
     run: function* () {
       yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let originalTab = gBrowser.selectedTab;
-      let bgTab = gBrowser.addTab("about:blank");
-      gBrowser.selectedTab = bgTab;
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      let bgTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       let anchor = document.createElement("box");
       anchor.id = "test26-anchor";
       anchor.className = "notification-anchor-icon";

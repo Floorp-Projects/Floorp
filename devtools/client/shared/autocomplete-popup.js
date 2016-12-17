@@ -86,7 +86,6 @@ function AutocompletePopup(toolboxDoc, options = {}) {
 
   this.selectedIndex = -1;
 }
-exports.AutocompletePopup = AutocompletePopup;
 
 AutocompletePopup.prototype = {
   _document: null,
@@ -592,3 +591,5 @@ AutocompletePopup.prototype = {
     return this._document.defaultView;
   },
 };
+
+module.exports = AutocompletePopup;

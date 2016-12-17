@@ -276,11 +276,9 @@ private:
   // thread.
   // * aCx - this is the context that will root the returned value.
   // * aTimerLabel - this label must be what StartTimer received as aTimerLabel.
-  // * aTimerValue - this is what StartTimer received as aTimerValue
   // * aTimerStatus - the return value of StartTimer.
   JS::Value
   CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
-                        DOMHighResTimeStamp aTimerValue,
                         bool aTimerStatus) const;
 
   // StopTimer follows the same pattern as StartTimer: it runs on the

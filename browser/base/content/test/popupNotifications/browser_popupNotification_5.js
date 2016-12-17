@@ -9,7 +9,6 @@ function test() {
   ok(PopupNotifications.panel, "PopupNotifications panel exists");
 
   setup();
-  goNext();
 }
 
 var gNotification;
@@ -65,17 +64,21 @@ var tests = [
   },
   // The anchor icon should be shown for notifications in background windows.
   { id: "Test#3",
-    run: function() {
+    run: function* () {
       let notifyObj = new BasicNotification(this.id);
       notifyObj.options.dismissed = true;
-      let win = gBrowser.replaceTabWithWindow(gBrowser.addTab("about:blank"));
-      whenDelayedStartupFinished(win, function() {
-        showNotification(notifyObj);
-        let anchor = document.getElementById("default-notification-icon");
-        is(anchor.getAttribute("showing"), "true", "the anchor is shown");
-        win.close();
-        goNext();
-      });
+
+      let win = yield BrowserTestUtils.openNewBrowserWindow();
+
+      // Open the notification in the original window, now in the background.
+      showNotification(notifyObj);
+      let anchor = document.getElementById("default-notification-icon");
+      is(anchor.getAttribute("showing"), "true", "the anchor is shown");
+
+      yield BrowserTestUtils.closeWindow(win);
+      yield waitForWindowReadyForPopupNotifications(window);
+
+      goNext();
     }
   },
   // Test that persistent doesn't allow the notification to persist after
@@ -83,8 +86,7 @@ var tests = [
   { id: "Test#4",
     run: function* () {
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistent: true
@@ -115,8 +117,7 @@ var tests = [
   { id: "Test#5",
     run: function* () {
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistent: true
@@ -152,9 +153,7 @@ var tests = [
     },
     onShown: function* (popup) {
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      info("Waiting for the new tab to load.");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
     },
     onHidden: function(popup) {
       ok(true, "Should have hidden the notification after tab switch");
@@ -179,27 +178,37 @@ var tests = [
   { id: "Test#7",
     run: function* () {
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+
+      let shown = waitForNotificationPanel();
       let notifyObj = new BasicNotification(this.id);
       notifyObj.options.persistent = true;
       this.notification = showNotification(notifyObj);
-      let win = gBrowser.replaceTabWithWindow(gBrowser.addTab("about:blank"));
-      whenDelayedStartupFinished(win, () => {
-        ok(notifyObj.shownCallbackTriggered, "Should have triggered the shown callback");
-        let anchor = win.document.getElementById("default-notification-icon");
-        win.PopupNotifications._reshowNotifications(anchor);
-        ok(win.PopupNotifications.panel.childNodes.length == 0,
-           "no notification displayed in new window");
-        ok(PopupNotifications.isPanelOpen, "Should be still showing the popup in the first window");
-        win.close();
-        let id = PopupNotifications.panel.firstChild.getAttribute("popupid");
-        ok(id.endsWith("Test#7"), "Should have found the notification from Test7");
-        ok(PopupNotifications.isPanelOpen, "Should have shown the popup again after getting back to the window");
-        this.notification.remove();
-        gBrowser.removeTab(gBrowser.selectedTab);
-        gBrowser.selectedTab = this.oldSelectedTab;
-        goNext();
-      });
+      yield shown;
+
+      ok(notifyObj.shownCallbackTriggered, "Should have triggered the shown callback");
+
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      let promiseWin = BrowserTestUtils.waitForNewWindow();
+      gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+      let win = yield promiseWin;
+
+      let anchor = win.document.getElementById("default-notification-icon");
+      win.PopupNotifications._reshowNotifications(anchor);
+      ok(win.PopupNotifications.panel.childNodes.length == 0,
+         "no notification displayed in new window");
+
+      yield BrowserTestUtils.closeWindow(win);
+      yield waitForWindowReadyForPopupNotifications(window);
+
+      let id = PopupNotifications.panel.firstChild.getAttribute("popupid");
+      ok(id.endsWith("Test#7"), "Should have found the notification from Test7");
+      ok(PopupNotifications.isPanelOpen, "Should have shown the popup again after getting back to the window");
+      this.notification.remove();
+      gBrowser.removeTab(gBrowser.selectedTab);
+      gBrowser.selectedTab = this.oldSelectedTab;
+
+      goNext();
     }
   },
   // Test that only the first persistent notification is shown on update

@@ -71,11 +71,6 @@ protected:
 
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
-  bool IsPerformanceTimingAttribute(const nsAString& aName) override;
-
-  DOMHighResTimeStamp
-  GetPerformanceTimingFromString(const nsAString& aTimingName) override;
-
   void DispatchBufferFullEvent() override
   {
     MOZ_CRASH("This should not be called on workers.");

@@ -327,7 +327,7 @@ stubPreparedMessages.set("console.dirxml(window)", new ConsoleMessage({
       "extensible": true,
       "frozen": false,
       "sealed": false,
-      "ownPropertyLength": 811,
+      "ownPropertyLength": 808,
       "preview": {
         "kind": "ObjectWithURL",
         "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html"
@@ -335,7 +335,7 @@ stubPreparedMessages.set("console.dirxml(window)", new ConsoleMessage({
     }
   ],
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":1479159908948,\"type\":\"log\",\"level\":\"log\",\"messageText\":null,\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn11.child1/obj31\",\"class\":\"Window\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":811,\"preview\":{\"kind\":\"ObjectWithURL\",\"url\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\"}}],\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=console.dirxml(window)\",\"line\":1,\"column\":27},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[]}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"timeStamp\":1479159908948,\"type\":\"log\",\"level\":\"log\",\"messageText\":null,\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn11.child1/obj31\",\"class\":\"Window\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":808,\"preview\":{\"kind\":\"ObjectWithURL\",\"url\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\"}}],\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=console.dirxml(window)\",\"line\":1,\"column\":27},\"groupId\":null,\"exceptionDocURL\":null,\"userProvidedStyles\":[]}",
   "stacktrace": null,
   "frame": {
     "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=console.dirxml(window)",
@@ -963,7 +963,7 @@ stubPackets.set("console.dirxml(window)", {
         "extensible": true,
         "frozen": false,
         "sealed": false,
-        "ownPropertyLength": 811,
+        "ownPropertyLength": 808,
         "preview": {
           "kind": "ObjectWithURL",
           "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html"
@@ -1047,8 +1047,7 @@ stubPackets.set("console.time('bar')", {
     "private": false,
     "timeStamp": 1479159911476,
     "timer": {
-      "name": "bar",
-      "started": 1166.305
+      "name": "bar"
     },
     "workerType": "none",
     "styles": [],

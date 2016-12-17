@@ -7,21 +7,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
-function whenDelayedStartupFinished(aWindow, aCallback) {
-  return new Promise(resolve => {
-    info("Waiting for delayed startup to finish");
-    Services.obs.addObserver(function observer(aSubject, aTopic) {
-      if (aWindow == aSubject) {
-        Services.obs.removeObserver(observer, aTopic);
-        if (aCallback) {
-          executeSoon(aCallback);
-        }
-        resolve();
-      }
-    }, "browser-delayed-startup-finished", false);
-  });
-}
-
 /**
  * Allows waiting for an observer notification once.
  *
@@ -43,6 +28,23 @@ function promiseTopicObserved(topic)
   return deferred.promise;
 }
 
+/**
+ * Called after opening a new window or switching windows, this will wait until
+ * we are sure that an attempt to display a notification will not fail.
+ */
+function* waitForWindowReadyForPopupNotifications(win)
+{
+  // These are the same checks that PopupNotifications.jsm makes before it
+  // allows a notification to open.
+  yield BrowserTestUtils.waitForCondition(
+    () => win.gBrowser.selectedBrowser.docShellIsActive,
+    "The browser should be active"
+  );
+  yield BrowserTestUtils.waitForCondition(
+    () => Services.focus.activeWindow == win,
+    "The window should be active"
+  );
+}
 
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
@@ -70,10 +72,10 @@ function promiseTabLoadEvent(tab, url)
 const PREF_SECURITY_DELAY_INITIAL = Services.prefs.getIntPref("security.notification_enable_delay");
 
 function setup() {
-  // Disable transitions as they slow the test down and we want to click the
-  // mouse buttons in a predictable location.
-
+  BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/")
+                  .then(goNext);
   registerCleanupFunction(() => {
+    gBrowser.removeTab(gBrowser.selectedTab);
     PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
   });
 }
@@ -173,7 +175,8 @@ BasicNotification.prototype.addOptions = function(options) {
     this.options[name] = value;
 };
 
-function ErrorNotification() {
+function ErrorNotification(testId) {
+  BasicNotification.call(this, testId);
   this.mainAction.callback = () => {
     this.mainActionClicked = true;
     throw new Error("Oops!");
@@ -184,8 +187,7 @@ function ErrorNotification() {
   };
 }
 
-ErrorNotification.prototype = new BasicNotification();
-ErrorNotification.prototype.constructor = ErrorNotification;
+ErrorNotification.prototype = BasicNotification.prototype;
 
 function checkPopup(popup, notifyObj) {
   info("Checking notification " + notifyObj.id);
@@ -255,6 +257,14 @@ function onPopupEvent(eventName, callback, condition) {
   }
   gActiveListeners.set(listener, eventName);
   PopupNotifications.panel.addEventListener(eventName, listener, false);
+}
+
+function waitForNotificationPanel() {
+  return new Promise(resolve => {
+    onPopupEvent("popupshown", function() {
+      resolve(this);
+    });
+  });
 }
 
 function triggerMainCommand(popup) {
