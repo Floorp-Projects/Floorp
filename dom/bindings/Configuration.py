@@ -623,6 +623,16 @@ class Descriptor(DescriptorProvider):
     def supportsNamedProperties(self):
         return self.operations['NamedGetter'] is not None
 
+    def supportedNamesNeedCallerType(self):
+        """
+        Determine whether our GetSupportedNames call needs a caller type.  The
+        idea is that if your named getter needs a caller type, then so does
+        GetSupportedNames.
+        """
+        assert self.supportsNamedProperties()
+        namedGetter = self.operations['NamedGetter']
+        return namedGetter.getExtendedAttribute("NeedsCallerType")
+
     def hasNonOrdinaryGetPrototypeOf(self):
         return self.interface.getExtendedAttribute("NonOrdinaryGetPrototypeOf")
 
