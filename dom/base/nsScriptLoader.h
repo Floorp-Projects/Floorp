@@ -21,7 +21,6 @@
 #include "nsAutoPtr.h"
 #include "nsIDocument.h"
 #include "nsIIncrementalStreamLoader.h"
-#include "nsIURIClassifier.h"
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/SRIMetadata.h"
@@ -84,7 +83,6 @@ public:
       mIsXSLT(false),
       mIsCanceled(false),
       mWasCompiledOMT(false),
-      mIsTracking(false),
       mOffThreadToken(nullptr),
       mScriptTextBuf(nullptr),
       mScriptTextLength(0),
@@ -134,11 +132,6 @@ public:
     return mOffThreadToken ?  &mOffThreadToken : nullptr;
   }
 
-  bool IsTracking() const
-  {
-    return mIsTracking;
-  }
-
   enum class Progress {
     Loading,
     Compiling,
@@ -172,7 +165,6 @@ public:
   bool mIsXSLT;           // True if we live in mXSLTRequests.
   bool mIsCanceled;       // True if we have been explicitly canceled.
   bool mWasCompiledOMT;   // True if the script has been compiled off main thread.
-  bool mIsTracking;       // True if the script comes from a source on our tracking protection list.
   void* mOffThreadToken;  // Off-thread parsing token.
   nsString mSourceMapURL; // Holds source map url for loaded scripts
   char16_t* mScriptTextBuf; // Holds script text for non-inline scripts. Don't
@@ -275,14 +267,6 @@ public:
   void DropDocumentReference()
   {
     mDocument = nullptr;
-  }
-
-  /**
-   * Returns the document reference.
-   */
-  nsIDocument* GetDocument() const
-  {
-    return mDocument;
   }
 
   /**
@@ -414,7 +398,7 @@ public:
    * nsScriptLoadHandler object which observes the IncrementalStreamLoader
    * loading the script.
    */
-  nsresult OnStreamComplete(nsIChannel* aChannel,
+  nsresult OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                             nsISupports* aContext,
                             nsresult aChannelStatus,
                             nsresult aSRIStatus,
@@ -577,7 +561,7 @@ private:
 
   uint32_t NumberOfProcessors();
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
-                                nsIChannel* aChannel,
+                                nsIIncrementalStreamLoader* aLoader,
                                 nsresult aStatus,
                                 mozilla::Vector<char16_t> &aString);
 
@@ -663,22 +647,17 @@ private:
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
 };
 
-class nsScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver,
-                                  private nsIURIClassifierCallback
+class nsScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver
 {
 public:
   explicit nsScriptLoadHandler(nsScriptLoader* aScriptLoader,
                                nsScriptLoadRequest *aRequest,
                                mozilla::dom::SRICheckDataVerifier *aSRIDataVerifier);
 
-  nsresult Init();
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
 
 private:
-  NS_DECL_NSIURICLASSIFIERCALLBACK
-
   virtual ~nsScriptLoadHandler();
 
   /*
@@ -696,12 +675,6 @@ private:
                      const uint8_t* aData, uint32_t aDataLength,
                      bool aEndOfStream);
 
-  /*
-   * Call the script loader OnClassifyComplete if both the load and the
-   * classification have finished.
-   */
-  nsresult MaybeInvokeOnStreamComplete();
-
   // ScriptLoader which will handle the parsed script.
   RefPtr<nsScriptLoader>        mScriptLoader;
 
@@ -711,23 +684,14 @@ private:
   // SRI data verifier.
   nsAutoPtr<mozilla::dom::SRICheckDataVerifier> mSRIDataVerifier;
 
-  // Status of the channel load.
-  nsresult                      mChannelStatus;
-
   // Status of SRI data operations.
   nsresult                      mSRIStatus;
-
-  // status of the classification of the script URI.
-  nsresult                      mClassificationStatus;
 
   // Unicode decoder for charset.
   nsCOMPtr<nsIUnicodeDecoder>   mDecoder;
 
   // Accumulated decoded char buffer.
   mozilla::Vector<char16_t>     mBuffer;
-
-  // The channel we loaded the script from.
-  nsCOMPtr<nsIChannel>          mChannel;
 };
 
 class nsAutoScriptLoaderDisabler
