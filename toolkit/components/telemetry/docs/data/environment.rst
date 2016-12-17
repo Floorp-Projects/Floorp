@@ -324,7 +324,7 @@ The following is a partial list of collected preferences.
 
 - ``browser.urlbar.userMadeSearchSuggestionsChoice``: True if the user has clicked Yes or No in the urlbar's opt-in notification. Defaults to false.
 
-- ``browser.zoom.full``: True if zoom is enabled for both text and images, that is if "Zoom Text Only" is not enabled. Defaults to true. Collection of this preference has been enabled in Firefox 50 and will be disabled again in Firefox 53 (`Bug 979323 <https://bugzilla.mozilla.org/show_bug.cgi?id=979323>`_).
+- ``browser.zoom.full`` (deprecated): True if zoom is enabled for both text and images, that is if "Zoom Text Only" is not enabled. Defaults to true. This preference was collected in Firefox 50 to 52 (`Bug 979323 <https://bugzilla.mozilla.org/show_bug.cgi?id=979323>`_).
 
 - ``security.sandbox.content.level``: The meanings of the values are OS dependent, but 0 means not sandboxed for all OS. Details of the meanings can be found in the `Firefox prefs file <http://hg.mozilla.org/mozilla-central/file/tip/browser/app/profile/firefox.js>`_.
 

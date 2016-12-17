@@ -60,15 +60,14 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
     return mg.finishFuncDef(funcIndex, &fg);
 }
 
-// Section decoding.
 static bool
 DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 {
-    if (!mg.startFuncDefs())
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Code, &mg.mutableEnv(), &sectionStart, &sectionSize, "code"))
         return false;
 
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Code, &sectionStart, &sectionSize, "code"))
+    if (!mg.startFuncDefs())
         return false;
 
     if (sectionStart == Decoder::NotStarted) {
@@ -94,71 +93,6 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
         return false;
 
     return mg.finishFuncDefs();
-}
-
-static void
-MaybeDecodeNameSectionBody(Decoder& d, NameInBytecodeVector* pfuncNames)
-{
-    // For simplicity, ignore all failures, even OOM. Failure will simply result
-    // in the names section not being included for this module.
-
-    uint32_t numFuncNames;
-    if (!d.readVarU32(&numFuncNames))
-        return;
-
-    if (numFuncNames > MaxFuncs)
-        return;
-
-    // Use a local vector (and not pfuncNames) since it could result in a
-    // partially initialized result in case of failure in the middle.
-    NameInBytecodeVector funcNames;
-    if (!funcNames.resize(numFuncNames))
-        return;
-
-    for (uint32_t i = 0; i < numFuncNames; i++) {
-        uint32_t numBytes;
-        if (!d.readVarU32(&numBytes))
-            return;
-
-        NameInBytecode name;
-        name.offset = d.currentOffset();
-        name.length = numBytes;
-        funcNames[i] = name;
-
-        if (!d.readBytes(numBytes))
-            return;
-
-        // Skip local names for a function.
-        uint32_t numLocals;
-        if (!d.readVarU32(&numLocals))
-            return;
-        for (uint32_t j = 0; j < numLocals; j++) {
-            uint32_t numBytes;
-            if (!d.readVarU32(&numBytes))
-                return;
-            if (!d.readBytes(numBytes))
-                return;
-        }
-    }
-
-    *pfuncNames = Move(funcNames);
-}
-
-static bool
-DecodeNameSection(Decoder& d, NameInBytecodeVector* funcNames)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startUserDefinedSection(NameSectionName, &sectionStart, &sectionSize))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    // Once started, user-defined sections do not report validation errors.
-
-    MaybeDecodeNameSectionBody(d, funcNames);
-
-    d.finishUserDefinedSection(sectionStart, sectionSize);
-    return true;
 }
 
 bool
@@ -190,20 +124,10 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeCodeSection(d, mg))
         return nullptr;
 
-    DataSegmentVector dataSegments;
-    if (!DecodeDataSection(d, mg.env(), &dataSegments))
-        return nullptr;
-
-    NameInBytecodeVector funcNames;
-    if (!DecodeNameSection(d, &funcNames))
-        return nullptr;
-
-    if (!DecodeUnknownSections(d))
+    if (!DecodeModuleTail(d, &mg.mutableEnv()))
         return nullptr;
 
     MOZ_ASSERT(!*error, "unreported error in decoding");
 
-    return mg.finish(bytecode,
-                     Move(dataSegments),
-                     Move(funcNames));
+    return mg.finish(bytecode);
 }

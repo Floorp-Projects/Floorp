@@ -38,14 +38,18 @@
         ok(dumpID, "dumpID is present and not an empty string");
       }
 
+      let p = Promise.resolve();
+
       if (dumpID) {
         var minidumpDirectory = getMinidumpDirectory();
-        removeFile(minidumpDirectory, dumpID + '.dmp');
-        removeFile(minidumpDirectory, dumpID + '.extra');
+        p = Services.crashmanager.ensureCrashIsPresent(dumpID).then(() => {
+          removeFile(minidumpDirectory, dumpID + '.dmp');
+          removeFile(minidumpDirectory, dumpID + '.extra');
+        });
       }
 
       Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
-      done();
+      p.then(done);
     }
     Services.obs.addObserver(crashObserver, 'ipc:content-shutdown', false);
 
