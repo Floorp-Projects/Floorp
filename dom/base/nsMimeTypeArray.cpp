@@ -43,8 +43,8 @@ nsMimeTypeArray::~nsMimeTypeArray()
 }
 
 static bool
-ResistFingerprinting() {
-  return !nsContentUtils::ThreadsafeIsCallerChrome() &&
+ResistFingerprinting(CallerType aCallerType) {
+  return aCallerType != CallerType::System &&
          nsContentUtils::ResistFingerprinting();
 }
 
@@ -69,25 +69,26 @@ nsMimeTypeArray::GetParentObject() const
 }
 
 nsMimeType*
-nsMimeTypeArray::Item(uint32_t aIndex)
+nsMimeTypeArray::Item(uint32_t aIndex, CallerType aCallerType)
 {
   bool unused;
-  return IndexedGetter(aIndex, unused);
+  return IndexedGetter(aIndex, unused, aCallerType);
 }
 
 nsMimeType*
-nsMimeTypeArray::NamedItem(const nsAString& aName)
+nsMimeTypeArray::NamedItem(const nsAString& aName, CallerType aCallerType)
 {
   bool unused;
-  return NamedGetter(aName, unused);
+  return NamedGetter(aName, unused, aCallerType);
 }
 
 nsMimeType*
-nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound)
+nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound,
+                               CallerType aCallerType)
 {
   aFound = false;
 
-  if (ResistFingerprinting()) {
+  if (ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -117,11 +118,12 @@ FindMimeType(const nsTArray<RefPtr<nsMimeType>>& aMimeTypes,
 }
 
 nsMimeType*
-nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
+nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound,
+                             CallerType aCallerType)
 {
   aFound = false;
 
-  if (ResistFingerprinting()) {
+  if (ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -144,9 +146,9 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
 }
 
 uint32_t
-nsMimeTypeArray::Length()
+nsMimeTypeArray::Length(CallerType aCallerType)
 {
-  if (ResistFingerprinting()) {
+  if (ResistFingerprinting(aCallerType)) {
     return 0;
   }
 
