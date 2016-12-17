@@ -1,5 +1,9 @@
 Directory for Pointer Events Tests
 
-All tests were got from official repository:
+Latest Editor's Draft: https://w3c.github.io/pointerevents/
 
-https://github.com/w3c/web-platform-tests/tree/master/pointerevents
+Latest W3C Technical Report: http://www.w3.org/TR/pointerevents/
+
+Discussion forum for tests: http://lists.w3.org/Archives/Public/public-test-infra/
+
+Test Assertion table: https://www.w3.org/wiki/PointerEvents/TestAssertions

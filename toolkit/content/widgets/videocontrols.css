@@ -10,10 +10,6 @@
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#suppressChangeEvent");
 }
 
-.scrubber .scale-thumb {
-  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#timeThumb");
-}
-
 .playButton,
 .muteButton,
 .scrubber .scale-slider,
@@ -70,47 +66,6 @@
 }
 .statusOverlay[fadeout] {
   opacity: 0;
-}
-
-/* Statistics formatting */
-html|td.statLabel {
-  font-weight: bold;
-  max-width: 20%;
-  white-space: nowrap;
-}
-html|td.statValue {
-  max-width: 30%;
-}
-html|td.filename {
-  max-width: 80%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-html|span.statActivity > html|span {
-  display: none;
-}
-html|span.statActivity[activity="paused"] > html|span.statActivityPaused,
-html|span.statActivity[activity="playing"] > html|span.statActivityPlaying,
-html|span.statActivity[activity="ended"] > html|span.statActivityEnded,
-html|span.statActivity[seeking] > html|span.statActivitySeeking {
-  display: inline;
-}
-
-.controlBar[size="hidden"],
-.controlBar[size="small"] .durationBox,
-.controlBar[size="small"] .durationLabel,
-.controlBar[size="small"] .positionLabel,
-.controlBar[size="small"] .volumeStack {
-  visibility: collapse;
-}
-
-.controlBar[size="small"] .scrubberStack,
-.controlBar[size="small"] .backgroundBar,
-.controlBar[size="small"] .bufferBar,
-.controlBar[size="small"] .progressBar,
-.controlBar[size="small"] .scrubber {
-  visibility: hidden;
 }
 
 /* Error description formatting */

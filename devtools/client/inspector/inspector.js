@@ -13,7 +13,7 @@ var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
-var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+var KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 var {Task} = require("devtools/shared/task");
 const {initCssProperties} = require("devtools/shared/fronts/css-properties");
 const nodeConstants = require("devtools/shared/dom-node-constants");
@@ -568,7 +568,7 @@ Inspector.prototype = {
     this.computedview = new ComputedViewTool(this, this.panelWin);
 
     if (Services.prefs.getBoolPref("devtools.layoutview.enabled")) {
-      const {LayoutView} = this.browserRequire("devtools/client/inspector/layout/layout");
+      const LayoutView = this.browserRequire("devtools/client/inspector/layout/layout");
       this.layoutview = new LayoutView(this, this.panelWin);
     }
 
