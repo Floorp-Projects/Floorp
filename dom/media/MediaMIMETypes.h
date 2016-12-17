@@ -76,6 +76,16 @@ public:
     return !mMIMEType.Equals(aOther.mMIMEType);
   }
 
+  // True if type starts with "application/".
+  bool HasApplicationMajorType() const;
+  // True if type starts with "audio/".
+  // Note that some audio content could be stored in a "video/..." container!
+  bool HasAudioMajorType() const;
+  // True if type starts with "video/".
+  // Note that this does not guarantee 100% that the content is actually video!
+  // (e.g., "video/webm" could contain a vorbis audio track.)
+  bool HasVideoMajorType() const;
+
 private:
   friend Maybe<MediaMIMEType> MakeMediaMIMEType(const nsAString& aType);
   friend class MediaExtendedMIMEType;
