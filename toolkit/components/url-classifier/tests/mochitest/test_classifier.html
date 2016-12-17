@@ -154,7 +154,8 @@ SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
             ["urlclassifier.phishTable", "test-phish-simple"],
             ["urlclassifier.downloadBlockTable", "test-block-simple"],
-            ["urlclassifier.trackingTable", "test-track-simple"]]},
+            ["urlclassifier.trackingTable", "test-track-simple"],
+            ["privacy.trackingprotection.annotate_channels", true]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))
