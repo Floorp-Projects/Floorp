@@ -62,25 +62,3 @@ add_task(function* test_update_new_id() {
 
   addon.uninstall();
 });
-
-// Verify that an update to a multi-package xpi fails
-add_task(function* test_update_new_id() {
-  yield promiseInstallFile(do_get_addon("test_update_multi1"));
-
-  let addon = yield promiseAddonByID("updatemulti@tests.mozilla.org");
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-
-  let update = yield promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED);
-  let install = update.updateAvailable;
-  do_check_eq(install.name, addon.name);
-  do_check_eq(install.version, "2.0");
-  do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
-  do_check_eq(install.existingAddon, addon);
-
-  yield Assert.rejects(promiseInstallUpdate(install),
-                       function(err) { return err.code == AddonManager.ERROR_UNEXPECTED_ADDON_TYPE },
-                       "Upgrade to a multipackage xpi fails");
-
-  addon.uninstall();
-});
