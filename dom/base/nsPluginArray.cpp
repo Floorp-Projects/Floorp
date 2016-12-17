@@ -45,12 +45,6 @@ nsPluginArray::Init()
 
 nsPluginArray::~nsPluginArray() = default;
 
-static bool
-ResistFingerprinting(CallerType aCallerType) {
-  return aCallerType != CallerType::System &&
-         nsContentUtils::ResistFingerprinting();
-}
-
 nsPIDOMWindowInner*
 nsPluginArray::GetParentObject() const
 {
@@ -195,7 +189,7 @@ nsPluginArray::IndexedGetter(uint32_t aIndex, bool &aFound, CallerType aCallerTy
 {
   aFound = false;
 
-  if (!AllowPlugins() || ResistFingerprinting(aCallerType)) {
+  if (!AllowPlugins() || nsContentUtils::ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -243,7 +237,7 @@ nsPluginArray::NamedGetter(const nsAString& aName, bool &aFound,
 {
   aFound = false;
 
-  if (!AllowPlugins() || ResistFingerprinting(aCallerType)) {
+  if (!AllowPlugins() || nsContentUtils::ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -277,7 +271,7 @@ void nsPluginArray::NotifyHiddenPluginTouched(nsPluginElement* aHiddenElement)
 uint32_t
 nsPluginArray::Length(CallerType aCallerType)
 {
-  if (!AllowPlugins() || ResistFingerprinting(aCallerType)) {
+  if (!AllowPlugins() || nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0;
   }
 
