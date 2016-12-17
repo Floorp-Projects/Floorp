@@ -6,7 +6,7 @@
 
 #include "PaintWorkletGlobalScope.h"
 #include "mozilla/dom/PaintWorkletGlobalScopeBinding.h"
-#include "mozilla/dom/RTCPeerConnectionBinding.h" // For VoidFunction
+#include "mozilla/dom/FunctionBinding.h"
 
 namespace mozilla {
 namespace dom {

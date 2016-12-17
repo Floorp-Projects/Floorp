@@ -6,7 +6,7 @@
 
 #include "AudioWorkletGlobalScope.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
-#include "mozilla/dom/RTCPeerConnectionBinding.h" // For VoidFunction
+#include "mozilla/dom/FunctionBinding.h"
 
 namespace mozilla {
 namespace dom {
