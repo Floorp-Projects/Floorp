@@ -42,12 +42,6 @@ nsMimeTypeArray::~nsMimeTypeArray()
 {
 }
 
-static bool
-ResistFingerprinting(CallerType aCallerType) {
-  return aCallerType != CallerType::System &&
-         nsContentUtils::ResistFingerprinting();
-}
-
 JSObject*
 nsMimeTypeArray::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -88,7 +82,7 @@ nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound,
 {
   aFound = false;
 
-  if (ResistFingerprinting(aCallerType)) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -123,7 +117,7 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound,
 {
   aFound = false;
 
-  if (ResistFingerprinting(aCallerType)) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -148,7 +142,7 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound,
 uint32_t
 nsMimeTypeArray::Length(CallerType aCallerType)
 {
-  if (ResistFingerprinting(aCallerType)) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0;
   }
 
