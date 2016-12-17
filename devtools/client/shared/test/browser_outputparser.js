@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {OutputParser} = require("devtools/client/shared/output-parser");
+const OutputParser = require("devtools/client/shared/output-parser");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 add_task(function* () {

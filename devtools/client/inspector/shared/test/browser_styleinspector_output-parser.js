@@ -9,7 +9,7 @@
 // This is more of a unit test than a mochitest-browser test, but can't be
 // tested with an xpcshell test as the output-parser requires the DOM to work.
 
-const {OutputParser} = require("devtools/client/shared/output-parser");
+const OutputParser = require("devtools/client/shared/output-parser");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const COLOR_CLASS = "color-class";

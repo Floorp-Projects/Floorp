@@ -9,7 +9,6 @@ function test() {
   ok(PopupNotifications.panel, "PopupNotifications panel exists");
 
   setup();
-  goNext();
 }
 
 var tests = [
@@ -58,8 +57,7 @@ var tests = [
   { id: "Test#3",
     run: function* () {
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistence: 2
@@ -69,7 +67,7 @@ var tests = [
     onShown: function* (popup) {
       this.complete = false;
       yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/")
+      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       // Next load will remove the notification
       this.complete = true;
       yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.org/");
@@ -85,8 +83,7 @@ var tests = [
   { id: "Test#4",
     run: function* () {
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       // Set a timeout of 10 minutes that should never be hit
       this.notifyObj.addOptions({
@@ -115,8 +112,7 @@ var tests = [
   { id: "Test#5",
     run: function* () {
       this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         persistWhileVisible: true
@@ -223,28 +219,4 @@ var tests = [
       window.locationbar.visible = true;
     }
   },
-  // Test that dismissed popupnotifications can be opened on about:blank
-  // (where the rest of the identity block is disabled)
-  { id: "Test#11",
-    run: function() {
-      this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-
-      this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.anchorID = "geo-notification-icon";
-      this.notifyObj.addOptions({dismissed: true});
-      this.notification = showNotification(this.notifyObj);
-
-      EventUtils.synthesizeMouse(document.getElementById("geo-notification-icon"), 0, 0, {});
-    },
-    onShown: function(popup) {
-      checkPopup(popup, this.notifyObj);
-      dismissNotification(popup);
-    },
-    onHidden: function(popup) {
-      this.notification.remove();
-      gBrowser.removeTab(gBrowser.selectedTab);
-      gBrowser.selectedTab = this.oldSelectedTab;
-    }
-  }
 ];

@@ -505,6 +505,19 @@ PopupNotifications.prototype = {
   },
 
   /**
+   * Called by the consumer to indicate that the visibility of the notification
+   * anchors may have changed, but the location has not changed. This may result
+   * in the "showing" and "shown" events for visible notifications to be
+   * invoked even if the anchor has not changed.
+   */
+  anchorVisibilityChange: function() {
+    let notifications =
+      this._getNotificationsForBrowser(this.tabbrowser.selectedBrowser);
+    this._update(notifications, this._getAnchorsForNotifications(notifications,
+      getAnchorFromBrowser(this.tabbrowser.selectedBrowser)));
+  },
+
+  /**
    * Removes a Notification.
    * @param notification
    *        The Notification object to remove.
@@ -831,6 +844,21 @@ PopupNotifications.prototype = {
 
     this._refreshPanel(notificationsToShow);
 
+    // If the anchor element is hidden or null, fall back to the identity icon.
+    if (!anchorElement || (anchorElement.boxObject.height == 0 &&
+                           anchorElement.boxObject.width == 0)) {
+      anchorElement = this.window.document.getElementById("identity-icon");
+
+      // If the identity icon is not available in this window, or maybe the
+      // entire location bar is hidden for any reason, use the tab as the
+      // anchor. We only ever show notifications for the current browser, so we
+      // can just use the current tab.
+      if (!anchorElement || (anchorElement.boxObject.height == 0 &&
+                             anchorElement.boxObject.width == 0)) {
+        anchorElement = this.tabbrowser.selectedTab;
+      }
+    }
+
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement) {
       notificationsToShow.forEach(function(n) {
         this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
@@ -848,18 +876,6 @@ PopupNotifications.prototype = {
     // it first.  Otherwise it can appear in the wrong spot.  (_hidePanel is
     // safe to call even if the panel is already hidden.)
     this._hidePanel().then(() => {
-      // If the anchor element is hidden or null, use the tab as the anchor. We
-      // only ever show notifications for the current browser, so we can just use
-      // the current tab.
-      let selectedTab = this.tabbrowser.selectedTab;
-      if (anchorElement) {
-        let bo = anchorElement.boxObject;
-        if (bo.height == 0 && bo.width == 0)
-          anchorElement = selectedTab; // hidden
-      } else {
-        anchorElement = selectedTab; // null
-      }
-
       this._currentAnchorElement = anchorElement;
 
       if (notificationsToShow.some(n => n.options.persistent)) {

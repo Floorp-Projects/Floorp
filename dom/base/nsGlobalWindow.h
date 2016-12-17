@@ -928,6 +928,9 @@ public:
   mozilla::dom::Worklet*
   GetAudioWorklet(mozilla::ErrorResult& aRv);
 
+  mozilla::dom::Worklet*
+  GetPaintWorklet(mozilla::ErrorResult& aRv);
+
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
                       nsIPrincipal& aSubjectPrincipal,
@@ -1801,6 +1804,7 @@ protected:
   RefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
   RefPtr<mozilla::dom::Console> mConsole;
   RefPtr<mozilla::dom::Worklet> mAudioWorklet;
+  RefPtr<mozilla::dom::Worklet> mPaintWorklet;
   // We need to store an nsISupports pointer to this object because the
   // mozilla::dom::External class doesn't exist on b2g and using the type
   // forward declared here means that ~nsGlobalWindow wouldn't compile because

@@ -6992,7 +6992,8 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       event.mTimeStamp = touchEvent->mTimeStamp;
       event.mFlags = touchEvent->mFlags;
       event.button = WidgetMouseEvent::eLeftButton;
-      event.buttons = WidgetMouseEvent::eLeftButtonFlag;
+      event.buttons = pointerMessage == ePointerUp ?
+                        0 : WidgetMouseEvent::eLeftButtonFlag;
       event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
       event.convertToPointer = touch->convertToPointer = false;
       PreHandlePointerEventsPreventDefault(&event, aEvent);

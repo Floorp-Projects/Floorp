@@ -7,7 +7,7 @@
 "use strict";
 
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 /**
  * A generic search box component for use across devtools
