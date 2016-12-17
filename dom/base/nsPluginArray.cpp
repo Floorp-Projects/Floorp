@@ -46,8 +46,8 @@ nsPluginArray::Init()
 nsPluginArray::~nsPluginArray() = default;
 
 static bool
-ResistFingerprinting() {
-  return !nsContentUtils::ThreadsafeIsCallerChrome() &&
+ResistFingerprinting(CallerType aCallerType) {
+  return aCallerType != CallerType::System &&
          nsContentUtils::ResistFingerprinting();
 }
 
@@ -132,17 +132,17 @@ nsPluginArray::GetCTPMimeTypes(nsTArray<RefPtr<nsMimeType>>& aMimeTypes)
 }
 
 nsPluginElement*
-nsPluginArray::Item(uint32_t aIndex)
+nsPluginArray::Item(uint32_t aIndex, CallerType aCallerType)
 {
   bool unused;
-  return IndexedGetter(aIndex, unused);
+  return IndexedGetter(aIndex, unused, aCallerType);
 }
 
 nsPluginElement*
-nsPluginArray::NamedItem(const nsAString& aName)
+nsPluginArray::NamedItem(const nsAString& aName, CallerType aCallerType)
 {
   bool unused;
-  return NamedGetter(aName, unused);
+  return NamedGetter(aName, unused, aCallerType);
 }
 
 void
@@ -191,11 +191,11 @@ nsPluginArray::Refresh(bool aReloadDocuments)
 }
 
 nsPluginElement*
-nsPluginArray::IndexedGetter(uint32_t aIndex, bool &aFound)
+nsPluginArray::IndexedGetter(uint32_t aIndex, bool &aFound, CallerType aCallerType)
 {
   aFound = false;
 
-  if (!AllowPlugins() || ResistFingerprinting()) {
+  if (!AllowPlugins() || ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -238,11 +238,12 @@ FindPlugin(const nsTArray<RefPtr<nsPluginElement> >& aPlugins,
 }
 
 nsPluginElement*
-nsPluginArray::NamedGetter(const nsAString& aName, bool &aFound)
+nsPluginArray::NamedGetter(const nsAString& aName, bool &aFound,
+                           CallerType aCallerType)
 {
   aFound = false;
 
-  if (!AllowPlugins() || ResistFingerprinting()) {
+  if (!AllowPlugins() || ResistFingerprinting(aCallerType)) {
     return nullptr;
   }
 
@@ -274,9 +275,9 @@ void nsPluginArray::NotifyHiddenPluginTouched(nsPluginElement* aHiddenElement)
 }
 
 uint32_t
-nsPluginArray::Length()
+nsPluginArray::Length(CallerType aCallerType)
 {
-  if (!AllowPlugins() || ResistFingerprinting()) {
+  if (!AllowPlugins() || ResistFingerprinting(aCallerType)) {
     return 0;
   }
 

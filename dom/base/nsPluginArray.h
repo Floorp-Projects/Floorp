@@ -12,6 +12,7 @@
 #include "nsIObserver.h"
 #include "nsWrapperCache.h"
 #include "nsPIDOMWindow.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 class nsPluginElement;
 class nsMimeType;
@@ -47,12 +48,15 @@ public:
 
   // PluginArray WebIDL methods
 
-  nsPluginElement* Item(uint32_t aIndex);
-  nsPluginElement* NamedItem(const nsAString& aName);
+  nsPluginElement* Item(uint32_t aIndex, mozilla::dom::CallerType aCallerType);
+  nsPluginElement* NamedItem(const nsAString& aName,
+                             mozilla::dom::CallerType aCallerType);
   void Refresh(bool aReloadDocuments);
-  nsPluginElement* IndexedGetter(uint32_t aIndex, bool &aFound);
-  nsPluginElement* NamedGetter(const nsAString& aName, bool &aFound);
-  uint32_t Length();
+  nsPluginElement* IndexedGetter(uint32_t aIndex, bool &aFound,
+                                 mozilla::dom::CallerType aCallerType);
+  nsPluginElement* NamedGetter(const nsAString& aName, bool &aFound,
+                               mozilla::dom::CallerType aCallerType);
+  uint32_t Length(mozilla::dom::CallerType aCallerType);
   void GetSupportedNames(nsTArray<nsString>& aRetval);
 
 private:
