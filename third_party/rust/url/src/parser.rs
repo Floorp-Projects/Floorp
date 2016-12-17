@@ -1083,12 +1083,13 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_fragment(&mut self, mut input: Input) {
-        while let Some(c) = input.next() {
+        while let Some((c, utf8_c)) = input.next_utf8() {
             if c ==  '\0' {
                 self.syntax_violation("NULL characters are ignored in URL fragment identifiers")
             } else {
                 self.check_url_code_point(c, &input);
-                self.serialization.push(c);  // No percent-encoding here.
+                self.serialization.extend(utf8_percent_encode(utf8_c,
+                                                              SIMPLE_ENCODE_SET));
             }
         }
     }
