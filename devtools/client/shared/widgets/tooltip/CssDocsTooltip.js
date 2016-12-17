@@ -6,7 +6,7 @@
 
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
-const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const TOOLTIP_WIDTH = 418;

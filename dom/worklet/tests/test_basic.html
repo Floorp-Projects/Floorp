@@ -10,11 +10,55 @@
 
 <script type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  {"set": [["dom.audioWorklet.enabled", true],
-           ["dom.worklet.enabled", true]]},
-  function() { loadTest("file_basic.html"); });
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioWorklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  ok(!!audioWorklet, "audioWorklet exists");
+
+  // First loading
+  audioWorklet.import("common.js")
+  .then(() => {
+    ok(true, "Import should load a resource.");
+  })
+
+  // Second loading - same file
+  .then(() => {
+    return audioWorklet.import("common.js")
+  })
+  .then(() => {
+    ok(true, "Import should load a resource.");
+  })
+
+  // 3rd loading - a network error
+  .then(() => {
+    return audioWorklet.import("404.js");
+  })
+  .then(() => {
+    ok(false, "The loading should fail.");
+  }, () => {
+    ok(true, "The loading should fail.");
+  })
+
+  // 4th loading - a network error
+  .then(() => {
+    return audioWorklet.import("404.js");
+  })
+  .then(() => {
+    ok(false, "The loading should fail.");
+  }, () => {
+    ok(true, "The loading should fail.");
+  })
+
+  // done
+  .then(() => {
+    SimpleTest.finish();
+  });
+}
 
 </script>
 </body>

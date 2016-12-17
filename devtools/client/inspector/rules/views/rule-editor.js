@@ -6,7 +6,7 @@
 
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
-const {Rule} = require("devtools/client/inspector/rules/models/rule");
+const Rule = require("devtools/client/inspector/rules/models/rule");
 const {InplaceEditor, editableField, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {TextPropertyEditor} =
@@ -618,4 +618,4 @@ RuleEditor.prototype = {
   }
 };
 
-exports.RuleEditor = RuleEditor;
+module.exports = RuleEditor;

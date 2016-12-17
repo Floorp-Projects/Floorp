@@ -13,7 +13,6 @@ function test() {
   ok(PopupNotifications.panel, "PopupNotifications panel exists");
 
   setup();
-  goNext();
 }
 
 var tests = [
@@ -110,7 +109,8 @@ var tests = [
   // Note: test 4 to 6 share a tab.
   { id: "Test#4",
     run: function* () {
-      let tab = gBrowser.addTab("about:blank");
+      let tab = gBrowser.addTab("http://example.com/");
+      yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
       isnot(gBrowser.selectedTab, tab, "new tab isn't selected");
       wrongBrowserNotificationObject.browser = gBrowser.getBrowserForTab(tab);
       let promiseTopic = promiseTopicObserved("PopupNotifications-backgroundShow");
