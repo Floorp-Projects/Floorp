@@ -5,8 +5,8 @@
 
 "use strict";
 
+const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
-const { AutocompletePopup } = require("devtools/client/shared/autocomplete-popup");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const CM_TERN_SCRIPTS = [

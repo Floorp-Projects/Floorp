@@ -9,7 +9,7 @@ const {Task} = require("devtools/shared/task");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
+const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 const Services = require("Services");
 
 // Maximum number of selector suggestions shown in the panel.

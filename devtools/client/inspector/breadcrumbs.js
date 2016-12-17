@@ -16,7 +16,7 @@ const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const SCROLL_REPEAT_MS = 100;
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 // Some margin may be required for visible element detection.
 const SCROLL_MARGIN = 1;
