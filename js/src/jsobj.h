@@ -1262,6 +1262,9 @@ bool
 GetGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp);
 
 bool
+GetOwnGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp);
+
+bool
 GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id, JSNative* native);
 
 bool
