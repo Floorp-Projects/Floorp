@@ -642,5 +642,5 @@
   <string name="activity_stream_delete_history">&activity_stream_delete_history;</string>
 
   <string name="activity_stream_welcome_title">&activity_stream_welcome_title;</string>
-  <string name="activity_stream_welcome_content">&activity_stream_welcome_content;</string>
+  <string name="activity_stream_welcome_content">&activity_stream_welcome_content1;</string>
 </resources>

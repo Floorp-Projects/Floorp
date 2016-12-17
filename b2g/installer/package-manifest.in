@@ -768,12 +768,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/chrome/chrome.manifest
 @RESPATH@/components/B2GComponents.manifest
 @BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
-#if defined(ENABLE_MARIONETTE) || !defined(MOZ_WIDGET_GONK)
-@RESPATH@/chrome/marionette@JAREXT@
-@RESPATH@/chrome/marionette.manifest
-@RESPATH@/components/marionette.manifest
-@RESPATH@/components/marionette.js
-#endif
 @RESPATH@/components/AlertsService.js
 @RESPATH@/components/ContentPermissionPrompt.js
 @RESPATH@/components/DirectoryProvider.js

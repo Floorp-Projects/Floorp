@@ -28,9 +28,9 @@ class TestMediaSourcePrefs(MediaTestCase):
 
     def set_mse_enabled_prefs(self, value):
         with self.marionette.using_context('chrome'):
-            self.prefs.set_pref('media.mediasource.enabled', value)
-            self.prefs.set_pref('media.mediasource.mp4.enabled', value)
-            self.prefs.set_pref('media.mediasource.webm.enabled', value)
+            self.marionette.set_pref('media.mediasource.enabled', value)
+            self.marionette.set_pref('media.mediasource.mp4.enabled', value)
+            self.marionette.set_pref('media.mediasource.webm.enabled', value)
 
     def check_mse_src(self, mse_expected, url):
         with self.marionette.using_context('content'):

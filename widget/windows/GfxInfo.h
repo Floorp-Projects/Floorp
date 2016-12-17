@@ -73,26 +73,18 @@ private:
 
   void AddCrashReportAnnotations();
 
-  nsString mDeviceString;
-  nsString mDeviceID;
-  nsString mDriverVersion;
-  nsString mDriverDate;
-  nsString mDeviceKey;
+  nsString mDeviceString[2];
+  nsString mDeviceID[2];
+  nsString mDriverVersion[2];
+  nsString mDriverDate[2];
+  nsString mDeviceKey[2];
   nsString mDeviceKeyDebug;
-  nsString mAdapterVendorID;
-  nsString mAdapterDeviceID;
-  nsString mAdapterSubsysID;
-  nsString mDeviceString2;
-  nsString mDriverVersion2;
-  nsString mDeviceID2;
-  nsString mDriverDate2;
-  nsString mDeviceKey2;
-  nsString mAdapterVendorID2;
-  nsString mAdapterDeviceID2;
-  nsString mAdapterSubsysID2;
+  nsString mAdapterVendorID[2];
+  nsString mAdapterDeviceID[2];
+  nsString mAdapterSubsysID[2];
   uint32_t mWindowsVersion;
+  uint32_t mActiveGPUIndex; // This must be 0 or 1
   bool mHasDualGPU;
-  bool mIsGPU2Active;
   bool mHasDriverVersionMismatch;
 };
 

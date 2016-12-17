@@ -21,6 +21,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
 
@@ -388,7 +389,15 @@ public class TabsPanel extends LinearLayout
         mAddTab.setVisibility(View.VISIBLE);
 
         mMenuButton.setEnabled(true);
-        mPopupMenu.setAnchor(mMenuButton);
+        // If mPopupMenu is visible then setAnchor redisplays the menu on its new anchor - but we
+        // may have just been inflated, so give mMenuButton a chance to get its true measurements
+        // before mPopupMenu.setAnchor reads them to determine its offset from the anchor.
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPopupMenu.setAnchor(mMenuButton);
+            }
+        });
     }
 
     public int getVerticalPanelHeight() {

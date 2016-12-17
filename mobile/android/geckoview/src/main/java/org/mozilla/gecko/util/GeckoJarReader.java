@@ -9,10 +9,11 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
+
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.NativeZip;
+import org.mozilla.geckoview.BuildConfig;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -256,6 +257,6 @@ public final class GeckoJarReader {
         final String resURI = new File(resourcePath).toURI().toString();
 
         // TODO: do we need to encode the file path, too?
-        return "jar:jar:" + resURI + "!/" + AppConstants.OMNIJAR_NAME + "!/" + pathInsideJAR;
+        return "jar:jar:" + resURI + "!/" + BuildConfig.OMNIJAR_NAME + "!/" + pathInsideJAR;
     }
 }

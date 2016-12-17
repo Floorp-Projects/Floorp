@@ -7,7 +7,6 @@ package org.mozilla.gecko.util;
 import java.util.concurrent.SynchronousQueue;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants.Versions;
 
 import android.content.ClipData;
 import android.content.Context;

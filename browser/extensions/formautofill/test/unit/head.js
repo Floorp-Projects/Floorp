@@ -2,7 +2,7 @@
  * Provides infrastructure for automated formautofill components tests.
  */
 
-/* exported importAutofillModule, getTempFile */
+/* exported getTempFile */
 
 "use strict";
 
@@ -18,17 +18,35 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 
-// Register the resource path of formautofill
-let resHandler = Services.io.getProtocolHandler("resource")
-                            .QueryInterface(Ci.nsISubstitutingProtocolHandler);
-let dataURI = NetUtil.newURI(do_get_file(".", true));
-resHandler.setSubstitution("formautofill", dataURI);
+// Load our bootstrap extension manifest so we can access our chrome/resource URIs.
+const EXTENSION_ID = "formautofill@mozilla.org";
+let extensionDir = Services.dirsvc.get("GreD", Ci.nsIFile);
+extensionDir.append("browser");
+extensionDir.append("features");
+extensionDir.append(EXTENSION_ID);
+// If the unpacked extension doesn't exist, use the packed version.
+if (!extensionDir.exists()) {
+  extensionDir = extensionDir.parent;
+  extensionDir.append(EXTENSION_ID + ".xpi");
+}
+Components.manager.addBootstrappedManifestLocation(extensionDir);
 
 // While the previous test file should have deleted all the temporary files it
 // used, on Windows these might still be pending deletion on the physical file
 // system.  Thus, start from a new base number every time, to make a collision
 // with a file that is still pending deletion highly unlikely.
 let gFileCounter = Math.floor(Math.random() * 1000000);
+
+function loadFormAutofillContent() {
+  let facGlobal = {};
+  let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+               .getService(Ci.mozIJSSubScriptLoader);
+  loader.loadSubScriptWithOptions("chrome://formautofill/content/FormAutofillContent.js", {
+    target: facGlobal,
+  });
+
+  return facGlobal;
+}
 
 /**
  * Returns a reference to a temporary file, that is guaranteed not to exist, and
@@ -64,10 +82,13 @@ function getTempFile(leafName) {
 }
 
 add_task(function* test_common_initialize() {
+  Services.prefs.setBoolPref("browser.formautofill.enabled", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", true);
+  loadFormAutofillContent();
 
   // Clean up after every test.
   do_register_cleanup(() => {
-    Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", false);
+    Services.prefs.clearUserPref("browser.formautofill.enabled");
+    Services.prefs.clearUserPref("dom.forms.autocomplete.experimental");
   });
 });
