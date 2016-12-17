@@ -152,8 +152,13 @@ nsMimeTypeArray::Length(CallerType aCallerType)
 }
 
 void
-nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& aRetval)
+nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& aRetval,
+                                   CallerType aCallerType)
 {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+    return;
+  }
+
   EnsurePluginMimeTypes();
 
   for (uint32_t i = 0; i < mMimeTypes.Length(); ++i) {
