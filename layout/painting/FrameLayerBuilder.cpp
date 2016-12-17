@@ -3906,6 +3906,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
                       std::min(itemRect.height, maxSize));
 
   if (surfaceSize.IsEmpty()) {
+    // Return early if we know that the size of this mask surface is empty.
     return;
   }
 
@@ -6294,6 +6295,11 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
   gfx::Matrix maskTransform =
     Matrix::Scaling(surfaceSize.width / boundingRect.Width(),
                     surfaceSize.height / boundingRect.Height());
+  if (surfaceSize.IsEmpty()) {
+    // Return early if we know that the size of this mask surface is empty.
+    return nullptr;
+  }
+
   gfx::Point p = boundingRect.TopLeft();
   maskTransform.PreTranslate(-p.x, -p.y);
   // imageTransform is only used when the clip is painted to the mask
