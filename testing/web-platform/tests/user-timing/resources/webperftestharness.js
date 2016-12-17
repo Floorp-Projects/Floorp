@@ -12,7 +12,7 @@ policies and contribution forms [3].
 // Helper Functions for NavigationTiming W3C tests
 //
 
-var performanceNamespace = window.performance;
+var performanceNamespace = self.performance;
 var timingAttributes = [
     'connectEnd',
     'connectStart',

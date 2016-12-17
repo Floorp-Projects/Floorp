@@ -126,10 +126,16 @@ protected:
 
   virtual DOMHighResTimeStamp CreationTime() const = 0;
 
-  virtual bool IsPerformanceTimingAttribute(const nsAString& aName) = 0;
+  virtual bool IsPerformanceTimingAttribute(const nsAString& aName)
+  {
+    return false;
+  }
 
   virtual DOMHighResTimeStamp
-  GetPerformanceTimingFromString(const nsAString& aTimingName) = 0;
+  GetPerformanceTimingFromString(const nsAString& aTimingName)
+  {
+    return 0;
+  }
 
   bool IsResourceEntryLimitReached() const
   {
