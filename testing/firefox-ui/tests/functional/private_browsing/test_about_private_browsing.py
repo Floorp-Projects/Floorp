@@ -15,7 +15,7 @@ class TestAboutPrivateBrowsing(PuppeteerMixin, MarionetteTestCase):
 
         # Use a fake local support URL
         support_url = 'about:blank?'
-        self.puppeteer.prefs.set_pref('app.support.baseURL', support_url)
+        self.marionette.set_pref('app.support.baseURL', support_url)
 
         self.pb_url = support_url + 'private-browsing'
 
@@ -33,7 +33,7 @@ class TestAboutPrivateBrowsing(PuppeteerMixin, MarionetteTestCase):
 
             status_node = self.marionette.find_element(By.CSS_SELECTOR, 'p.showNormal')
             self.assertEqual(status_node.text,
-                             self.browser.get_entity('aboutPrivateBrowsing.notPrivate'),
+                             self.browser.localize_entity('aboutPrivateBrowsing.notPrivate'),
                              'Status text indicates we are not in private browsing mode')
 
         def window_opener(win):

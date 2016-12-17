@@ -11,8 +11,6 @@ import java.nio.IntBuffer;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
