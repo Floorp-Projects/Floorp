@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/siteDataSettings.css" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/siteDataSettings.dtd" >
+
+<window id="SiteDataSettingsDialog" windowtype="Browser:SiteDataSettings"
+        class="windowDialog" title="&window.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width: 45em;"
+        onload="gSiteDataSettings.init();"
+        persist="screenX screenY width height">
+
+  <script src="chrome://browser/content/preferences/siteDataSettings.js"/>
+
+  <stringbundle id="bundlePreferences"
+                src="chrome://browser/locale/preferences/preferences.properties"/>
+
+  <vbox flex="1">
+    <description>&settings.description;</description>
+    <separator class="thin"/>
+
+    <richlistbox id="sitesList" orient="vertical" flex="1">
+      <listheader>
+        <treecol flex="4" width="50" label="&hostCol.label;"/>
+        <treecol flex="2" width="50" label="&statusCol.label;"/>
+        <treecol flex="1" width="50" label="&usageCol.label;"/>
+      </listheader>
+    </richlistbox>
+  </vbox>
+
+</window>

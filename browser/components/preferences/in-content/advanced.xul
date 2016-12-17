@@ -338,6 +338,11 @@
           <button id="clearSiteDataButton" icon="clear"
                   label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
         </hbox>
+        <vbox align="end">
+          <button id="siteDataSettings"
+                  label="&siteDataSettings.label;"
+                  accesskey="&siteDataSettings.accesskey;"/>
+        </vbox>
       </groupbox>
     </tabpanel>
 

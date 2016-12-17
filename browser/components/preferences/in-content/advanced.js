@@ -60,6 +60,8 @@ var gAdvancedPane = {
       SiteDataManager.updateSites();
       setEventListener("clearSiteDataButton", "command",
                        gAdvancedPane.clearSiteData);
+      setEventListener("siteDataSettings", "command",
+                       gAdvancedPane.showSiteDataSettings);
     }
 
     setEventListener("layers.acceleration.disabled", "change",
@@ -337,6 +339,10 @@ var gAdvancedPane = {
   showConnections: function()
   {
     gSubDialog.open("chrome://browser/content/preferences/connection.xul");
+  },
+
+  showSiteDataSettings: function() {
+    gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
   },
 
   updateTotalSiteDataSize: function() {
