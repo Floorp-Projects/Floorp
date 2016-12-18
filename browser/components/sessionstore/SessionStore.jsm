@@ -881,10 +881,8 @@ var SessionStoreInternal = {
         if (activePageData) {
           if (activePageData.title) {
             tab.label = activePageData.title;
-            tab.crop = "end";
           } else if (activePageData.url != "about:blank") {
             tab.label = activePageData.url;
-            tab.crop = "center";
           }
         } else if (tab.hasAttribute("customizemode")) {
           win.gCustomizeMode.setTab(tab);
