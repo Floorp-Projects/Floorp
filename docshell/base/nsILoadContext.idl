@@ -68,7 +68,8 @@ interface nsILoadContext : nsISupports
   readonly attribute boolean isContent;
 
   /*
-   * Attribute that determines if private browsing should be used.
+   * Attribute that determines if private browsing should be used. May not be
+   * changed after a document has been loaded in this context.
    */
   attribute boolean usePrivateBrowsing;
 
