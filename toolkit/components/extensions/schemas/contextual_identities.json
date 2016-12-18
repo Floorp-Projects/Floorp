@@ -1,0 +1,123 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "contextualIdentities"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "contextualIdentities",
+    "description": "Use the <code>browser.contextualIdentities</code> API to query and modify contextual identity, also called as containers.",
+    "permissions": ["contextualIdentities"],
+    "types": [
+      {
+        "id": "ContextualIdentity",
+        "type": "object",
+        "description": "Represents information about a contextual identity.",
+        "properties": {
+          "name": {"type": "string", "description": "The name of the contextual identity."},
+          "icon": {"type": "string", "description": "The icon of the contextual identity."},
+          "color": {"type": "string", "description": "The color of the contextual identity."},
+          "cookieStoreId": {"type": "string", "description": "The cookie store ID of the contextual identity."}
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "get",
+        "type": "function",
+        "description": "Retrieves information about a single contextual identity.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "string",
+            "name": "cookieStoreId",
+            "description": "The ID of the contextual identity cookie store. "
+          }
+        ]
+      },
+      {
+        "name": "query",
+        "type": "function",
+        "description": "Retrieves all contextual identities",
+        "async": true,
+        "parameters": [
+          {
+            "type": "object",
+            "name": "details",
+            "description": "Information to filter the contextual identities being retrieved.",
+            "properties": {
+              "name": {"type": "string", "optional": true, "description": "Filters the contextual identity by name."}
+            }
+          }
+        ]
+      },
+      {
+        "name": "create",
+        "type": "function",
+        "description": "Creates a contextual identity with the given data.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "object",
+            "name": "details",
+            "description": "Details about the contextual identity being created.",
+            "properties": {
+              "name": {"type": "string", "optional": false, "description": "The name of the contextual identity." },
+              "color": {"type": "string", "optional": false, "description": "The color of the contextual identity." },
+              "icon": {"type": "string", "optional": false, "description": "The icon of the contextual identity." }
+            }
+          }
+        ]
+      },
+      {
+        "name": "update",
+        "type": "function",
+        "description": "Updates a contextual identity with the given data.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "string",
+            "name": "cookieStoreId",
+            "description": "The ID of the contextual identity cookie store. "
+          },
+          {
+            "type": "object",
+            "name": "details",
+            "description": "Details about the contextual identity being created.",
+            "properties": {
+              "name": {"type": "string", "optional": true, "description": "The name of the contextual identity." },
+              "color": {"type": "string", "optional": true, "description": "The color of the contextual identity." },
+              "icon": {"type": "string", "optional": true, "description": "The icon of the contextual identity." }
+            }
+          }
+        ]
+      },
+      {
+        "name": "remove",
+        "type": "function",
+        "description": "Deletes a contetual identity by its cookie Store ID.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "string",
+            "name": "cookieStoreId",
+            "description": "The ID of the contextual identity cookie store. "
+          }
+        ]
+      }
+    ]
+  }
+]

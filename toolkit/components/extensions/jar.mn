@@ -7,6 +7,7 @@ toolkit.jar:
     content/extensions/ext-alarms.js
     content/extensions/ext-backgroundPage.js
     content/extensions/ext-browser-content.js
+    content/extensions/ext-contextualIdentities.js
     content/extensions/ext-cookies.js
     content/extensions/ext-downloads.js
     content/extensions/ext-management.js
