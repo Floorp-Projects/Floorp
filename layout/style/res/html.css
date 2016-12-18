@@ -776,6 +776,11 @@ input[type="time"] > xul|datetimebox {
   -moz-binding: url("chrome://global/content/bindings/datetimebox.xml#time-input");
 }
 
+input[type="date"] > xul|datetimebox {
+  display: flex;
+  -moz-binding: url("chrome://global/content/bindings/datetimebox.xml#date-input");
+}
+
 /* details & summary */
 details > summary:first-of-type,
 details > summary:-moz-native-anonymous {
