@@ -7,15 +7,15 @@
 #ifndef mozilla_dom_SVGPolylineElement_h
 #define mozilla_dom_SVGPolylineElement_h
 
-#include "nsSVGPolyElement.h"
+#include "SVGPolyElement.h"
 
 nsresult NS_NewSVGPolylineElement(nsIContent **aResult,
                                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-typedef nsSVGPolyElement SVGPolylineElementBase;
-
 namespace mozilla {
 namespace dom {
+
+typedef SVGPolyElement SVGPolylineElementBase;
 
 class SVGPolylineElement final : public SVGPolylineElementBase
 {
@@ -25,7 +25,7 @@ protected:
   friend nsresult (::NS_NewSVGPolylineElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-  // nsSVGPathGeometryElement methods:
+  // SVGGeometryElement methods:
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
 public:
