@@ -756,7 +756,6 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   nsSVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity,
                                  maskUsage);
   MOZ_ASSERT(maskUsage.shouldGenerateMaskLayer ||
-             maskUsage.shouldApplyClipPath ||
              maskUsage.shouldGenerateClipMaskLayer);
 
   nsIFrame* frame = aParams.frame;
@@ -798,7 +797,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   }
 
   // Paint clip-path onto ctx.
-  if (maskUsage.shouldGenerateClipMaskLayer || maskUsage.shouldApplyClipPath) {
+  if (maskUsage.shouldGenerateClipMaskLayer) {
     matSR.Restore();
     matSR.SetContext(&ctx);
 
