@@ -97,7 +97,7 @@ this.SitePermissions = {
   /* Returns an array of all permission IDs.
    */
   listPermissions: function() {
-    return kPermissionIDs;
+    return Object.keys(gPermissionObject);
   },
 
   /* Returns an array of permission states to be exposed to the user for a
