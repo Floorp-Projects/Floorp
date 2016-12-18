@@ -15,10 +15,10 @@
 #include "nsError.h"
 #include "nsString.h"
 #include "nsSVGPathDataParser.h"
-#include "nsSVGPathGeometryElement.h" // for nsSVGMark
 #include <stdarg.h>
 #include "nsStyleConsts.h"
 #include "SVGContentUtils.h"
+#include "SVGGeometryElement.h" // for nsSVGMark
 #include "SVGPathSegUtils.h"
 #include <algorithm>
 

@@ -109,7 +109,7 @@ SVGRectElement::GetLengthInfo()
 }
 
 //----------------------------------------------------------------------
-// nsSVGPathGeometryElement methods
+// SVGGeometryElement methods
 
 bool
 SVGRectElement::GetGeometryBounds(Rect* aBounds,
