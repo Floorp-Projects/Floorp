@@ -5,20 +5,20 @@
 #include "NonParamInsideFunctionDeclChecker.h"
 #include "CustomMatchers.h"
 
-void NonParamInsideFunctionDeclChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void NonParamInsideFunctionDeclChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       functionDecl(anyOf(allOf(isDefinition(),
                                hasAncestor(classTemplateSpecializationDecl()
                                                .bind("spec"))),
                          isDefinition()))
           .bind("func"),
       this);
-  AstMatcher.addMatcher(
+  AstMatcher->addMatcher(
       lambdaExpr().bind("lambda"),
       this);
 }
 
-void NonParamInsideFunctionDeclChecker::run(
+void NonParamInsideFunctionDeclChecker::check(
     const MatchFinder::MatchResult &Result) {
   static DenseSet<const FunctionDecl*> CheckedFunctionDecls;
 
@@ -47,22 +47,18 @@ void NonParamInsideFunctionDeclChecker::run(
   const ClassTemplateSpecializationDecl *Spec =
       Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("spec");
 
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "Type %0 must not be used as parameter");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "Please consider passing a const reference instead");
-  unsigned SpecNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "The bad argument was passed to %0 here");
-
   for (ParmVarDecl *p : func->parameters()) {
     QualType T = p->getType().withoutLocalFastQualifiers();
     if (NonParam.hasEffectiveAnnotation(T)) {
-      Diag.Report(p->getLocation(), ErrorID) << T;
-      Diag.Report(p->getLocation(), NoteID);
+      diag(p->getLocation(), "Type %0 must not be used as parameter",
+           DiagnosticIDs::Error) << T;
+      diag(p->getLocation(), "Please consider passing a const reference instead",
+           DiagnosticIDs::Note);
 
       if (Spec) {
-        Diag.Report(Spec->getPointOfInstantiation(), SpecNoteID)
+        diag(Spec->getPointOfInstantiation(),
+             "The bad argument was passed to %0 here",
+             DiagnosticIDs::Note)
           << Spec->getSpecializedTemplate();
       }
     }

@@ -5,14 +5,14 @@
 #include "ScopeChecker.h"
 #include "CustomMatchers.h"
 
-void ScopeChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(varDecl().bind("node"), this);
-  AstMatcher.addMatcher(cxxNewExpr().bind("node"), this);
-  AstMatcher.addMatcher(materializeTemporaryExpr().bind("node"), this);
-  AstMatcher.addMatcher(
+void ScopeChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(varDecl().bind("node"), this);
+  AstMatcher->addMatcher(cxxNewExpr().bind("node"), this);
+  AstMatcher->addMatcher(materializeTemporaryExpr().bind("node"), this);
+  AstMatcher->addMatcher(
       callExpr(callee(functionDecl(heapAllocator()))).bind("node"),
       this);
-  AstMatcher.addMatcher(parmVarDecl().bind("parm_vardecl"), this);
+  AstMatcher->addMatcher(parmVarDecl().bind("parm_vardecl"), this);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -31,10 +31,8 @@ typedef DenseMap<const MaterializeTemporaryExpr *, const Decl *>
     AutomaticTemporaryMap;
 AutomaticTemporaryMap AutomaticTemporaries;
 
-void ScopeChecker::run(
+void ScopeChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-
   // There are a variety of different reasons why something could be allocated
   AllocationVariety Variety = AV_None;
   SourceLocation Loc;
@@ -122,26 +120,25 @@ void ScopeChecker::run(
   }
 
   // Error messages for incorrect allocations.
-  unsigned StackID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "variable of type %0 only valid on the stack");
-  unsigned GlobalID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "variable of type %0 only valid as global");
-  unsigned HeapID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "variable of type %0 only valid on the heap");
-  unsigned NonHeapID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "variable of type %0 is not valid on the heap");
-  unsigned NonTemporaryID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "variable of type %0 is not valid in a temporary");
+  const char* Stack =
+      "variable of type %0 only valid on the stack";
+  const char* Global =
+      "variable of type %0 only valid as global";
+  const char* Heap =
+      "variable of type %0 only valid on the heap";
+  const char* NonHeap =
+      "variable of type %0 is not valid on the heap";
+  const char* NonTemporary =
+      "variable of type %0 is not valid in a temporary";
 
-  unsigned StackNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
-      "value incorrectly allocated in an automatic variable");
-  unsigned GlobalNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "value incorrectly allocated in a global variable");
-  unsigned HeapNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "value incorrectly allocated on the heap");
-  unsigned TemporaryNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "value incorrectly allocated in a temporary");
+  const char* StackNote =
+      "value incorrectly allocated in an automatic variable";
+  const char* GlobalNote =
+      "value incorrectly allocated in a global variable";
+  const char* HeapNote =
+      "value incorrectly allocated on the heap";
+  const char* TemporaryNote =
+      "value incorrectly allocated in a temporary";
 
   // Report errors depending on the annotations on the input types.
   switch (Variety) {
@@ -149,26 +146,26 @@ void ScopeChecker::run(
     return;
 
   case AV_Global:
-    StackClass.reportErrorIfPresent(Diag, T, Loc, StackID, GlobalNoteID);
-    HeapClass.reportErrorIfPresent(Diag, T, Loc, HeapID, GlobalNoteID);
+    StackClass.reportErrorIfPresent(*this, T, Loc, Stack, GlobalNote);
+    HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, GlobalNote);
     break;
 
   case AV_Automatic:
-    GlobalClass.reportErrorIfPresent(Diag, T, Loc, GlobalID, StackNoteID);
-    HeapClass.reportErrorIfPresent(Diag, T, Loc, HeapID, StackNoteID);
+    GlobalClass.reportErrorIfPresent(*this, T, Loc, Global, StackNote);
+    HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, StackNote);
     break;
 
   case AV_Temporary:
-    GlobalClass.reportErrorIfPresent(Diag, T, Loc, GlobalID, TemporaryNoteID);
-    HeapClass.reportErrorIfPresent(Diag, T, Loc, HeapID, TemporaryNoteID);
-    NonTemporaryClass.reportErrorIfPresent(Diag, T, Loc, NonTemporaryID,
-                                           TemporaryNoteID);
+    GlobalClass.reportErrorIfPresent(*this, T, Loc, Global, TemporaryNote);
+    HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, TemporaryNote);
+    NonTemporaryClass.reportErrorIfPresent(*this, T, Loc, NonTemporary,
+                                           TemporaryNote);
     break;
 
   case AV_Heap:
-    GlobalClass.reportErrorIfPresent(Diag, T, Loc, GlobalID, HeapNoteID);
-    StackClass.reportErrorIfPresent(Diag, T, Loc, StackID, HeapNoteID);
-    NonHeapClass.reportErrorIfPresent(Diag, T, Loc, NonHeapID, HeapNoteID);
+    GlobalClass.reportErrorIfPresent(*this, T, Loc, Global, HeapNote);
+    StackClass.reportErrorIfPresent(*this, T, Loc, Stack, HeapNote);
+    NonHeapClass.reportErrorIfPresent(*this, T, Loc, NonHeap, HeapNote);
     break;
   }
 }

@@ -5,23 +5,18 @@
 #include "ExplicitOperatorBoolChecker.h"
 #include "CustomMatchers.h"
 
-void ExplicitOperatorBoolChecker::registerMatcher(MatchFinder& AstMatcher) {
+void ExplicitOperatorBoolChecker::registerMatchers(MatchFinder* AstMatcher) {
   // Older clang versions such as the ones used on the infra recognize these
   // conversions as 'operator _Bool', but newer clang versions recognize these
   // as 'operator bool'.
-  AstMatcher.addMatcher(
+  AstMatcher->addMatcher(
       cxxMethodDecl(anyOf(hasName("operator bool"), hasName("operator _Bool")))
           .bind("node"),
       this);
 }
 
-void ExplicitOperatorBoolChecker::run(
+void ExplicitOperatorBoolChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "bad implicit conversion operator for %0");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "consider adding the explicit keyword to %0");
   const CXXConversionDecl *Method =
       Result.Nodes.getNodeAs<CXXConversionDecl>("node");
   const CXXRecordDecl *Clazz = Method->getParent();
@@ -30,7 +25,9 @@ void ExplicitOperatorBoolChecker::run(
       !MozChecker::hasCustomAnnotation(Method, "moz_implicit") &&
       !ASTIsInSystemHeader(Method->getASTContext(), *Method) &&
       isInterestingDeclForImplicitConversion(Method)) {
-    Diag.Report(Method->getLocStart(), ErrorID) << Clazz;
-    Diag.Report(Method->getLocStart(), NoteID) << "'operator bool'";
+    diag(Method->getLocStart(), "bad implicit conversion operator for %0",
+         DiagnosticIDs::Error) << Clazz;
+    diag(Method->getLocStart(), "consider adding the explicit keyword to %0",
+         DiagnosticIDs::Note) << "'operator bool'";
   }
 }

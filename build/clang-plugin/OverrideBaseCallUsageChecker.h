@@ -11,10 +11,13 @@
  *  This is a companion checker for OverrideBaseCallChecker that rejects
  *  the usage of MOZ_REQUIRED_BASE_METHOD on non-virtual base methods.
  */
-class OverrideBaseCallUsageChecker : public MatchFinder::MatchCallback {
+class OverrideBaseCallUsageChecker : public BaseCheck {
 public:
-  void registerMatcher(MatchFinder& AstMatcher);
-  virtual void run(const MatchFinder::MatchResult &Result);
+  OverrideBaseCallUsageChecker(StringRef CheckName = "override-base-call-usage",
+                               ContextType *Context = nullptr)
+    : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder* AstMatcher) override;
+  void check(const MatchFinder::MatchResult &Result) override;
 };
 
 #endif

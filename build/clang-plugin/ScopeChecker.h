@@ -7,10 +7,12 @@
 
 #include "plugin.h"
 
-class ScopeChecker : public MatchFinder::MatchCallback {
+class ScopeChecker : public BaseCheck {
 public:
-  void registerMatcher(MatchFinder& AstMatcher);
-  virtual void run(const MatchFinder::MatchResult &Result);
+  ScopeChecker(StringRef CheckName, ContextType *Context = nullptr)
+    : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder* AstMatcher) override;
+  void check(const MatchFinder::MatchResult &Result) override;
 };
 
 #endif

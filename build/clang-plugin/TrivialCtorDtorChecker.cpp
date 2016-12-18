@@ -5,17 +5,15 @@
 #include "TrivialCtorDtorChecker.h"
 #include "CustomMatchers.h"
 
-void TrivialCtorDtorChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(cxxRecordDecl(hasTrivialCtorDtor()).bind("node"),
-                        this);
+void TrivialCtorDtorChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(cxxRecordDecl(hasTrivialCtorDtor()).bind("node"),
+                         this);
 }
 
-void TrivialCtorDtorChecker::run(
+void TrivialCtorDtorChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "class %0 must have trivial constructors and destructors");
+  const char* Error =
+      "class %0 must have trivial constructors and destructors";
   const CXXRecordDecl *Node = Result.Nodes.getNodeAs<CXXRecordDecl>("node");
 
   // We need to accept non-constexpr trivial constructors as well. This occurs
@@ -25,5 +23,5 @@ void TrivialCtorDtorChecker::run(
                    Node->hasTrivialDefaultConstructor());
   bool BadDtor = !Node->hasTrivialDestructor();
   if (BadCtor || BadDtor)
-    Diag.Report(Node->getLocStart(), ErrorID) << Node;
+    diag(Node->getLocStart(), Error, DiagnosticIDs::Error) << Node;
 }

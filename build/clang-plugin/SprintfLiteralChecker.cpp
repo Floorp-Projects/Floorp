@@ -5,8 +5,8 @@
 #include "SprintfLiteralChecker.h"
 #include "CustomMatchers.h"
 
-void SprintfLiteralChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void SprintfLiteralChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       callExpr(isSnprintfLikeFunc(),
         allOf(hasArgument(0, ignoringParenImpCasts(declRefExpr().bind("buffer"))),
                              anyOf(hasArgument(1, sizeOfExpr(hasIgnoringParenImpCasts(declRefExpr().bind("size")))),
@@ -18,7 +18,7 @@ void SprintfLiteralChecker::registerMatcher(MatchFinder& AstMatcher) {
   );
 }
 
-void SprintfLiteralChecker::run(
+void SprintfLiteralChecker::check(
     const MatchFinder::MatchResult &Result) {
   if (!Result.Context->getLangOpts().CPlusPlus) {
     // SprintfLiteral is not usable in C, so there is no point in issuing these
@@ -26,11 +26,10 @@ void SprintfLiteralChecker::run(
     return;
   }
 
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-    DiagnosticIDs::Error, "Use %1 instead of %0 when writing into a character array.");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-    DiagnosticIDs::Note, "This will prevent passing in the wrong size to %0 accidentally.");
+  const char* Error =
+    "Use %1 instead of %0 when writing into a character array.";
+  const char* Note =
+    "This will prevent passing in the wrong size to %0 accidentally.";
 
   const CallExpr *D = Result.Nodes.getNodeAs<CallExpr>("funcCall");
 
@@ -51,8 +50,8 @@ void SprintfLiteralChecker::run(
       return;
     }
 
-    Diag.Report(D->getLocStart(), ErrorID) << Name << Replacement;
-    Diag.Report(D->getLocStart(), NoteID) << Name;
+    diag(D->getLocStart(), Error, DiagnosticIDs::Error) << Name << Replacement;
+    diag(D->getLocStart(), Note, DiagnosticIDs::Note) << Name;
     return;
   }
 
@@ -67,8 +66,8 @@ void SprintfLiteralChecker::run(
     }
 
     if (Type->getSize().ule(Literal->getValue())) {
-      Diag.Report(D->getLocStart(), ErrorID) << Name << Replacement;
-      Diag.Report(D->getLocStart(), NoteID) << Name;
+      diag(D->getLocStart(), Error, DiagnosticIDs::Error) << Name << Replacement;
+      diag(D->getLocStart(), Note, DiagnosticIDs::Note) << Name;
     }
   }
 }

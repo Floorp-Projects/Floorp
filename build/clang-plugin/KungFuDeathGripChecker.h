@@ -7,10 +7,13 @@
 
 #include "plugin.h"
 
-class KungFuDeathGripChecker : public MatchFinder::MatchCallback {
+class KungFuDeathGripChecker : public BaseCheck {
 public:
-  void registerMatcher(MatchFinder& AstMatcher);
-  virtual void run(const MatchFinder::MatchResult &Result);
+  KungFuDeathGripChecker(StringRef CheckName,
+                         ContextType *Context = nullptr)
+    : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder* AstMatcher) override;
+  void check(const MatchFinder::MatchResult &Result) override;
 };
 
 #endif

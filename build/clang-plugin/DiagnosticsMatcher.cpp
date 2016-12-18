@@ -4,26 +4,13 @@
 
 #include "DiagnosticsMatcher.h"
 
-DiagnosticsMatcher::DiagnosticsMatcher() {
-  Scope.registerMatcher(AstMatcher);
-  ArithmeticArg.registerMatcher(AstMatcher);
-  TrivialCtorDtor.registerMatcher(AstMatcher);
-  NaNExpr.registerMatcher(AstMatcher);
-  NoAddRefReleaseOnReturn.registerMatcher(AstMatcher);
-  RefCountedInsideLambda.registerMatcher(AstMatcher);
-  ExplicitOperatorBool.registerMatcher(AstMatcher);
-  NoDuplicateRefCntMember.registerMatcher(AstMatcher);
-  NeedsNoVTableType.registerMatcher(AstMatcher);
-  NonMemMovableTemplateArg.registerMatcher(AstMatcher);
-  NonMemMovableMember.registerMatcher(AstMatcher);
-  ExplicitImplicit.registerMatcher(AstMatcher);
-  NoAutoType.registerMatcher(AstMatcher);
-  NoExplicitMoveConstructor.registerMatcher(AstMatcher);
-  RefCountedCopyConstructor.registerMatcher(AstMatcher);
-  AssertAssignment.registerMatcher(AstMatcher);
-  KungFuDeathGrip.registerMatcher(AstMatcher);
-  SprintfLiteral.registerMatcher(AstMatcher);
-  OverrideBaseCall.registerMatcher(AstMatcher);
-  OverrideBaseCallUsage.registerMatcher(AstMatcher);
-  NonParamInsideFunctionDecl.registerMatcher(AstMatcher);
+DiagnosticsMatcher::DiagnosticsMatcher() :
+#define CHECK(cls, name) cls ## _(name),
+#include "Checks.inc"
+#undef CHECK
+  AstMatcher()
+{
+#define CHECK(cls, name) cls ## _.registerMatchers(&AstMatcher);
+#include "Checks.inc"
+#undef CHECK
 }
