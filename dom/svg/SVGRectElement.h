@@ -7,16 +7,16 @@
 #ifndef mozilla_dom_SVGRectElement_h
 #define mozilla_dom_SVGRectElement_h
 
-#include "nsSVGPathGeometryElement.h"
 #include "nsSVGLength2.h"
+#include "SVGGeometryElement.h"
 
 nsresult NS_NewSVGRectElement(nsIContent **aResult,
                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-typedef nsSVGPathGeometryElement SVGRectElementBase;
-
 namespace mozilla {
 namespace dom {
+
+typedef SVGGeometryElement SVGRectElementBase;
 
 class SVGRectElement final : public SVGRectElementBase
 {
@@ -30,7 +30,7 @@ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
-  // nsSVGPathGeometryElement methods:
+  // SVGGeometryElement methods:
   virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
                                  const Matrix& aToBoundsSpace,
                                  const Matrix* aToNonScalingStrokeSpace = nullptr) override;

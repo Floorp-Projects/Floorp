@@ -9,14 +9,8 @@
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
-interface SVGPathElement : SVGGraphicsElement {
+interface SVGPathElement : SVGGeometryElement {
 
-  [Constant]
-  readonly attribute SVGAnimatedNumber pathLength;
-
-  float getTotalLength();
-  [NewObject, Throws]
-  SVGPoint getPointAtLength(float distance);
   unsigned long getPathSegAtLength(float distance);
   [NewObject]
   SVGPathSegClosePath createSVGPathSegClosePath();
