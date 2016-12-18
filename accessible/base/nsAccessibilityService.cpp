@@ -61,7 +61,7 @@
 #include "nsIObserverService.h"
 #include "nsLayoutUtils.h"
 #include "nsPluginFrame.h"
-#include "SVGGeometryFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
@@ -1173,8 +1173,8 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
 
   if (!newAcc) {
     if (content->IsSVGElement()) {
-      SVGGeometryFrame* geometryFrame = do_QueryFrame(frame);
-      if (geometryFrame) {
+      nsSVGPathGeometryFrame* pathGeometryFrame = do_QueryFrame(frame);
+      if (pathGeometryFrame) {
         // A graphic elements: rect, circle, ellipse, line, path, polygon,
         // polyline and image. A 'use' and 'text' graphic elements require
         // special support.

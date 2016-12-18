@@ -91,7 +91,7 @@ SVGEllipseElement::GetLengthInfo()
 }
 
 //----------------------------------------------------------------------
-// SVGGeometryElement methods
+// nsSVGPathGeometryElement methods
 
 bool
 SVGEllipseElement::GetGeometryBounds(Rect* aBounds,
