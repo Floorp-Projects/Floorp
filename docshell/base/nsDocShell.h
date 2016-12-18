@@ -270,6 +270,10 @@ public:
   }
   bool InFrameSwap();
 
+private:
+  bool CanSetOriginAttributes();
+
+public:
   const mozilla::DocShellOriginAttributes&
   GetOriginAttributes()
   {
