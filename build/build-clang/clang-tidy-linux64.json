@@ -1,0 +1,18 @@
+{
+    "llvm_revision": "290055",
+    "stages": "1",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "import_clang_tidy": true,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "extra_repo": "https://llvm.org/svn/llvm-project/clang-tools-extra/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/trunk",
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "/home/worker/workspace/build/src/gcc",
+    "cc": "/home/worker/workspace/build/src/gcc/bin/gcc",
+    "cxx": "/home/worker/workspace/build/src/gcc/bin/g++"
+}
