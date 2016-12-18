@@ -5,8 +5,8 @@
 #include "NeedsNoVTableTypeChecker.h"
 #include "CustomMatchers.h"
 
-void NeedsNoVTableTypeChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void NeedsNoVTableTypeChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       classTemplateSpecializationDecl(
           allOf(hasAnyTemplateArgument(refersToType(hasVTable())),
                 hasNeedsNoVTableTypeAttr()))
@@ -14,15 +14,8 @@ void NeedsNoVTableTypeChecker::registerMatcher(MatchFinder& AstMatcher) {
       this);
 }
 
-void NeedsNoVTableTypeChecker::run(
+void NeedsNoVTableTypeChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "%0 cannot be instantiated because %1 has a VTable");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "bad instantiation of %0 requested here");
-
   const ClassTemplateSpecializationDecl *Specialization =
       Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("node");
 
@@ -37,8 +30,11 @@ void NeedsNoVTableTypeChecker::run(
     }
   }
 
-  Diag.Report(Specialization->getLocStart(), ErrorID) << Specialization
-                                                      << Offender;
-  Diag.Report(Specialization->getPointOfInstantiation(), NoteID)
-      << Specialization;
+  diag(Specialization->getLocStart(),
+       "%0 cannot be instantiated because %1 has a VTable",
+       DiagnosticIDs::Error) << Specialization
+                             << Offender;
+  diag(Specialization->getPointOfInstantiation(),
+       "bad instantiation of %0 requested here",
+       DiagnosticIDs::Note)  << Specialization;
 }

@@ -5,20 +5,19 @@
 #include "AssertAssignmentChecker.h"
 #include "CustomMatchers.h"
 
-void AssertAssignmentChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void AssertAssignmentChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       callExpr(isAssertAssignmentTestFunc()).bind("funcCall"),
       this);
 }
 
-void AssertAssignmentChecker::run(
+void AssertAssignmentChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned AssignInsteadOfComp = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "Forbidden assignment in assert expression");
   const CallExpr *FuncCall = Result.Nodes.getNodeAs<CallExpr>("funcCall");
 
   if (FuncCall && hasSideEffectAssignment(FuncCall)) {
-    Diag.Report(FuncCall->getLocStart(), AssignInsteadOfComp);
+    diag(FuncCall->getLocStart(),
+         "Forbidden assignment in assert expression",
+         DiagnosticIDs::Error);
   }
 }

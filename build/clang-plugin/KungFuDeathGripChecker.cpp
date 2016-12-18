@@ -5,21 +5,17 @@
 #include "KungFuDeathGripChecker.h"
 #include "CustomMatchers.h"
 
-void KungFuDeathGripChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(varDecl(hasType(isRefPtr())).bind("decl"),
-                        this);
+void KungFuDeathGripChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(varDecl(hasType(isRefPtr())).bind("decl"),
+                         this);
 }
 
-void KungFuDeathGripChecker::run(
+void KungFuDeathGripChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "Unused \"kungFuDeathGrip\" %0 objects constructed from %1 are prohibited");
-
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
-      "Please switch all accesses to this %0 to go through '%1', or explicitly pass '%1' to `mozilla::Unused`");
+  const char* Error =
+    "Unused \"kungFuDeathGrip\" %0 objects constructed from %1 are prohibited";
+  const char* Note =
+    "Please switch all accesses to this %0 to go through '%1', or explicitly pass '%1' to `mozilla::Unused`";
 
   const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("decl");
   if (D->isReferenced() || !D->hasLocalStorage() || !D->hasInit()) {
@@ -97,6 +93,6 @@ void KungFuDeathGripChecker::run(
   }
 
   // We cannot provide the note if we don't have an initializer
-  Diag.Report(D->getLocStart(), ErrorID) << D->getType() << ErrThing;
-  Diag.Report(E->getLocStart(), NoteID) << NoteThing << getNameChecked(D);
+  diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D->getType() << ErrThing;
+  diag(E->getLocStart(), Note, DiagnosticIDs::Note) << NoteThing << getNameChecked(D);
 }

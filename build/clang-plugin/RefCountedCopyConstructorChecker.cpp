@@ -5,8 +5,8 @@
 #include "RefCountedCopyConstructorChecker.h"
 #include "CustomMatchers.h"
 
-void RefCountedCopyConstructorChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void RefCountedCopyConstructorChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       cxxConstructExpr(
           hasDeclaration(cxxConstructorDecl(isCompilerProvidedCopyConstructor(),
                                             ofClass(hasRefCntMember()))))
@@ -14,24 +14,21 @@ void RefCountedCopyConstructorChecker::registerMatcher(MatchFinder& AstMatcher) 
       this);
 }
 
-void RefCountedCopyConstructorChecker::run(
+void RefCountedCopyConstructorChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "Invalid use of compiler-provided copy constructor "
-                            "on refcounted type");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
+  const char* Error =
+      "Invalid use of compiler-provided copy constructor on refcounted type";
+  const char* Note =
       "The default copy constructor also copies the "
       "default mRefCnt property, leading to reference "
       "count imbalance issues. Please provide your own "
       "copy constructor which only copies the fields which "
-      "need to be copied");
+      "need to be copied";
 
   // Everything we needed to know was checked in the matcher - we just report
   // the error here
   const CXXConstructExpr *E = Result.Nodes.getNodeAs<CXXConstructExpr>("node");
 
-  Diag.Report(E->getLocation(), ErrorID);
-  Diag.Report(E->getLocation(), NoteID);
+  diag(E->getLocation(), Error, DiagnosticIDs::Error);
+  diag(E->getLocation(), Note, DiagnosticIDs::Note);
 }

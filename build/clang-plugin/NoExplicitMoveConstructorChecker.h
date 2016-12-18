@@ -7,10 +7,13 @@
 
 #include "plugin.h"
 
-class NoExplicitMoveConstructorChecker : public MatchFinder::MatchCallback {
+class NoExplicitMoveConstructorChecker : public BaseCheck {
 public:
-  void registerMatcher(MatchFinder& AstMatcher);
-  virtual void run(const MatchFinder::MatchResult &Result);
+  NoExplicitMoveConstructorChecker(StringRef CheckName,
+                                   ContextType *Context = nullptr)
+    : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder* AstMatcher) override;
+  void check(const MatchFinder::MatchResult &Result) override;
 };
 
 #endif

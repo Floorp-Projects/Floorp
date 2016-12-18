@@ -5,8 +5,8 @@
 #include "OverrideBaseCallChecker.h"
 #include "CustomMatchers.h"
 
-void OverrideBaseCallChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(cxxRecordDecl(hasBaseClasses()).bind("class"),
+void OverrideBaseCallChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(cxxRecordDecl(hasBaseClasses()).bind("class"),
       this);
 }
 
@@ -63,13 +63,11 @@ void OverrideBaseCallChecker::findBaseMethodCall(
   }
 }
 
-void OverrideBaseCallChecker::run(
+void OverrideBaseCallChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned OverrideBaseCallCheckID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
+  const char* Error =
       "Method %0 must be called in all overrides, but is not called in "
-      "this override defined for class %1");
+      "this override defined for class %1";
   const CXXRecordDecl *Decl = Result.Nodes.getNodeAs<CXXRecordDecl>("class");
 
   // Loop through the methods and look for the ones that are overridden.
@@ -102,7 +100,7 @@ void OverrideBaseCallChecker::run(
 
     // If list is not empty pop up errors
     for (auto BaseMethod : MethodsList) {
-      Diag.Report(Method->getLocation(), OverrideBaseCallCheckID)
+      diag(Method->getLocation(), Error, DiagnosticIDs::Error)
           << BaseMethod->getQualifiedNameAsString()
           << Decl->getName();
     }

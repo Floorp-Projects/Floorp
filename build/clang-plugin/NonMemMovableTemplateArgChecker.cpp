@@ -5,9 +5,9 @@
 #include "NonMemMovableTemplateArgChecker.h"
 #include "CustomMatchers.h"
 
-void NonMemMovableTemplateArgChecker::registerMatcher(MatchFinder& AstMatcher) {
+void NonMemMovableTemplateArgChecker::registerMatchers(MatchFinder* AstMatcher) {
   // Handle non-mem-movable template specializations
-  AstMatcher.addMatcher(
+  AstMatcher->addMatcher(
       classTemplateSpecializationDecl(
           allOf(needsMemMovableTemplateArg(),
                 hasAnyTemplateArgument(refersToType(isNonMemMovable()))))
@@ -15,14 +15,12 @@ void NonMemMovableTemplateArgChecker::registerMatcher(MatchFinder& AstMatcher) {
       this);
 }
 
-void NonMemMovableTemplateArgChecker::run(
+void NonMemMovableTemplateArgChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "Cannot instantiate %0 with non-memmovable template argument %1");
-  unsigned Note1ID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "instantiation of %0 requested here");
+  const char* Error =
+      "Cannot instantiate %0 with non-memmovable template argument %1";
+  const char* Note =
+      "instantiation of %0 requested here";
 
   // Get the specialization
   const ClassTemplateSpecializationDecl *Specialization =
@@ -35,8 +33,9 @@ void NonMemMovableTemplateArgChecker::run(
   for (unsigned i = 0; i < Args.size(); ++i) {
     QualType ArgType = Args[i].getAsType();
     if (NonMemMovable.hasEffectiveAnnotation(ArgType)) {
-      Diag.Report(Specialization->getLocation(), ErrorID) << Specialization
-                                                          << ArgType;
+      diag(Specialization->getLocation(), Error,
+           DiagnosticIDs::Error) << Specialization
+                                 << ArgType;
       // XXX It would be really nice if we could get the instantiation stack
       // information
       // from Sema such that we could print a full template instantiation stack,
@@ -46,8 +45,8 @@ void NonMemMovableTemplateArgChecker::run(
       // can only report one level of template specialization (which in many
       // cases won't
       // be useful)
-      Diag.Report(RequestLoc, Note1ID) << Specialization;
-      NonMemMovable.dumpAnnotationReason(Diag, ArgType, RequestLoc);
+      diag(RequestLoc, Note, DiagnosticIDs::Note) << Specialization;
+      NonMemMovable.dumpAnnotationReason(*this, ArgType, RequestLoc);
     }
   }
 }

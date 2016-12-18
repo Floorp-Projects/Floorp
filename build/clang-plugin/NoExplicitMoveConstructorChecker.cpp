@@ -5,22 +5,19 @@
 #include "NoExplicitMoveConstructorChecker.h"
 #include "CustomMatchers.h"
 
-void NoExplicitMoveConstructorChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void NoExplicitMoveConstructorChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       cxxConstructorDecl(isExplicitMoveConstructor()).bind("node"),
       this);
 }
 
-void NoExplicitMoveConstructorChecker::run(
+void NoExplicitMoveConstructorChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "Move constructors may not be marked explicit");
-
   // Everything we needed to know was checked in the matcher - we just report
   // the error here
   const CXXConstructorDecl *D =
       Result.Nodes.getNodeAs<CXXConstructorDecl>("node");
 
-  Diag.Report(D->getLocation(), ErrorID);
+  diag(D->getLocation(), "Move constructors may not be marked explicit",
+       DiagnosticIDs::Error);
 }

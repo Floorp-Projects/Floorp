@@ -5,8 +5,8 @@
 #include "NaNExprChecker.h"
 #include "CustomMatchers.h"
 
-void NaNExprChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void NaNExprChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       binaryOperator(
           allOf(binaryEqualityOperator(),
                 hasLHS(hasIgnoringParenImpCasts(
@@ -18,7 +18,7 @@ void NaNExprChecker::registerMatcher(MatchFinder& AstMatcher) {
       this);
 }
 
-void NaNExprChecker::run(
+void NaNExprChecker::check(
     const MatchFinder::MatchResult &Result) {
   if (!Result.Context->getLangOpts().CPlusPlus) {
     // mozilla::IsNaN is not usable in C, so there is no point in issuing these
@@ -26,12 +26,6 @@ void NaNExprChecker::run(
     return;
   }
 
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "comparing a floating point value to itself for "
-                            "NaN checking can lead to incorrect results");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "consider using mozilla::IsNaN instead");
   const BinaryOperator *Expression = Result.Nodes.getNodeAs<BinaryOperator>(
     "node");
   const DeclRefExpr *LHS = Result.Nodes.getNodeAs<DeclRefExpr>("lhs");
@@ -53,7 +47,10 @@ void NaNExprChecker::run(
       std::distance(LHSExpr->child_begin(), LHSExpr->child_end()) == 1 &&
       std::distance(RHSExpr->child_begin(), RHSExpr->child_end()) == 1 &&
       *LHSExpr->child_begin() == LHS && *RHSExpr->child_begin() == RHS) {
-    Diag.Report(Expression->getLocStart(), ErrorID);
-    Diag.Report(Expression->getLocStart(), NoteID);
+    diag(Expression->getLocStart(), "comparing a floating point value to itself for "
+                                    "NaN checking can lead to incorrect results",
+         DiagnosticIDs::Error);
+    diag(Expression->getLocStart(), "consider using mozilla::IsNaN instead",
+         DiagnosticIDs::Note);
   }
 }

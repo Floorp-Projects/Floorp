@@ -5,9 +5,9 @@
 #include "NoAddRefReleaseOnReturnChecker.h"
 #include "CustomMatchers.h"
 
-void NoAddRefReleaseOnReturnChecker::registerMatcher(MatchFinder& AstMatcher) {
+void NoAddRefReleaseOnReturnChecker::registerMatchers(MatchFinder* AstMatcher) {
   // First, look for direct parents of the MemberExpr.
-  AstMatcher.addMatcher(
+  AstMatcher->addMatcher(
       callExpr(
           callee(functionDecl(hasNoAddRefReleaseOnReturnAttr()).bind("func")),
           hasParent(memberExpr(isAddRefOrRelease(), hasParent(callExpr()))
@@ -16,7 +16,7 @@ void NoAddRefReleaseOnReturnChecker::registerMatcher(MatchFinder& AstMatcher) {
       this);
   // Then, look for MemberExpr that need to be casted to the right type using
   // an intermediary CastExpr before we get to the CallExpr.
-  AstMatcher.addMatcher(
+  AstMatcher->addMatcher(
       callExpr(
           callee(functionDecl(hasNoAddRefReleaseOnReturnAttr()).bind("func")),
           hasParent(castExpr(
@@ -26,16 +26,15 @@ void NoAddRefReleaseOnReturnChecker::registerMatcher(MatchFinder& AstMatcher) {
       this);
 }
 
-void NoAddRefReleaseOnReturnChecker::run(
+void NoAddRefReleaseOnReturnChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "%1 cannot be called on the return value of %0");
   const Stmt *Node = Result.Nodes.getNodeAs<Stmt>("node");
   const FunctionDecl *Func = Result.Nodes.getNodeAs<FunctionDecl>("func");
   const MemberExpr *Member = Result.Nodes.getNodeAs<MemberExpr>("member");
   const CXXMethodDecl *Method =
       dyn_cast<CXXMethodDecl>(Member->getMemberDecl());
 
-  Diag.Report(Node->getLocStart(), ErrorID) << Func << Method;
+  diag(Node->getLocStart(),
+       "%1 cannot be called on the return value of %0",
+       DiagnosticIDs::Error) << Func << Method;
 }

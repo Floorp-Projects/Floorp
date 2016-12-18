@@ -53,3 +53,14 @@ typedef ASTConsumer *ASTConsumerPtr;
 #endif
 
 #endif
+
+// In order to support running our checks using clang-tidy, we implement a source
+// compatible base check class called BaseCheck, and we use the preprocessor to
+// decide which base class to pick.
+#ifdef CLANG_TIDY
+#include "../ClangTidy.h"
+typedef clang::tidy::ClangTidyCheck BaseCheck;
+typedef clang::tidy::ClangTidyContext ContextType;
+#else
+#include "BaseCheck.h"
+#endif

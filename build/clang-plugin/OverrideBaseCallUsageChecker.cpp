@@ -5,19 +5,17 @@
 #include "OverrideBaseCallUsageChecker.h"
 #include "CustomMatchers.h"
 
-void OverrideBaseCallUsageChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void OverrideBaseCallUsageChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       cxxMethodDecl(isNonVirtual(), isRequiredBaseMethod()).bind("method"),
       this);
 }
 
-void OverrideBaseCallUsageChecker::run(
+void OverrideBaseCallUsageChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "MOZ_REQUIRED_BASE_METHOD can be used only on virtual methods");
+  const char* Error =
+      "MOZ_REQUIRED_BASE_METHOD can be used only on virtual methods";
   const CXXMethodDecl *Method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
 
-  Diag.Report(Method->getLocation(), ErrorID);
+  diag(Method->getLocation(), Error, DiagnosticIDs::Error);
 }

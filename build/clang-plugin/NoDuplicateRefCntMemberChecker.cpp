@@ -5,13 +5,12 @@
 #include "NoDuplicateRefCntMemberChecker.h"
 #include "CustomMatchers.h"
 
-void NoDuplicateRefCntMemberChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(cxxRecordDecl().bind("decl"), this);
+void NoDuplicateRefCntMemberChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(cxxRecordDecl().bind("decl"), this);
 }
 
-void NoDuplicateRefCntMemberChecker::run(
+void NoDuplicateRefCntMemberChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
   const CXXRecordDecl *D = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
   const FieldDecl *RefCntMember = getClassRefCntMember(D);
   const FieldDecl *FoundRefCntBase = nullptr;
@@ -35,34 +34,30 @@ void NoDuplicateRefCntMemberChecker::run(
     if (BaseRefCntMember) {
       if (RefCntMember) {
         // We have an mRefCnt, and superclass has an mRefCnt
-        unsigned Error = Diag.getDiagnosticIDs()->getCustomDiagID(
-            DiagnosticIDs::Error,
-            "Refcounted record %0 has multiple mRefCnt members");
-        unsigned Note1 = Diag.getDiagnosticIDs()->getCustomDiagID(
-            DiagnosticIDs::Note, "Superclass %0 also has an mRefCnt member");
-        unsigned Note2 = Diag.getDiagnosticIDs()->getCustomDiagID(
-            DiagnosticIDs::Note,
-            "Consider using the _INHERITED macros for AddRef and Release here");
+        const char* Error =
+            "Refcounted record %0 has multiple mRefCnt members";
+        const char* Note1 =
+            "Superclass %0 also has an mRefCnt member";
+        const char* Note2 =
+            "Consider using the _INHERITED macros for AddRef and Release here";
 
-        Diag.Report(D->getLocStart(), Error) << D;
-        Diag.Report(BaseRefCntMember->getLocStart(), Note1)
+        diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D;
+        diag(BaseRefCntMember->getLocStart(), Note1, DiagnosticIDs::Note)
           << BaseRefCntMember->getParent();
-        Diag.Report(RefCntMember->getLocStart(), Note2);
+        diag(RefCntMember->getLocStart(), Note2, DiagnosticIDs::Note);
       }
 
       if (FoundRefCntBase) {
-        unsigned Error = Diag.getDiagnosticIDs()->getCustomDiagID(
-            DiagnosticIDs::Error,
-            "Refcounted record %0 has multiple superclasses with mRefCnt members");
-        unsigned Note = Diag.getDiagnosticIDs()->getCustomDiagID(
-            DiagnosticIDs::Note,
-            "Superclass %0 has an mRefCnt member");
+        const char* Error =
+            "Refcounted record %0 has multiple superclasses with mRefCnt members";
+        const char* Note =
+            "Superclass %0 has an mRefCnt member";
 
         // superclass has mRefCnt, and another superclass also has an mRefCnt
-        Diag.Report(D->getLocStart(), Error) << D;
-        Diag.Report(BaseRefCntMember->getLocStart(), Note)
+        diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D;
+        diag(BaseRefCntMember->getLocStart(), Note, DiagnosticIDs::Note)
           << BaseRefCntMember->getParent();
-        Diag.Report(FoundRefCntBase->getLocStart(), Note)
+        diag(FoundRefCntBase->getLocStart(), Note, DiagnosticIDs::Note)
           << FoundRefCntBase->getParent();
       }
 
