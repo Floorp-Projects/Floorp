@@ -5,21 +5,19 @@
 #include "NoAutoTypeChecker.h"
 #include "CustomMatchers.h"
 
-void NoAutoTypeChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(varDecl(hasType(autoNonAutoableType())).bind("node"),
-                        this);
+void NoAutoTypeChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(varDecl(hasType(autoNonAutoableType())).bind("node"),
+                         this);
 }
 
-void NoAutoTypeChecker::run(
+void NoAutoTypeChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "Cannot use auto to declare a variable of type %0");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "Please write out this type explicitly");
-
   const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("node");
 
-  Diag.Report(D->getLocation(), ErrorID) << D->getType();
-  Diag.Report(D->getLocation(), NoteID);
+  diag(D->getLocation(),
+       "Cannot use auto to declare a variable of type %0",
+       DiagnosticIDs::Error) << D->getType();
+  diag(D->getLocation(),
+       "Please write out this type explicitly",
+       DiagnosticIDs::Note);
 }

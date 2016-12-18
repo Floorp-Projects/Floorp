@@ -7,10 +7,13 @@
 
 #include "plugin.h"
 
-class NonMemMovableMemberChecker : public MatchFinder::MatchCallback {
+class NonMemMovableMemberChecker : public BaseCheck {
 public:
-  void registerMatcher(MatchFinder& AstMatcher);
-  virtual void run(const MatchFinder::MatchResult &Result);
+  NonMemMovableMemberChecker(StringRef CheckName,
+                             ContextType *Context = nullptr)
+    : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder* AstMatcher) override;
+  void check(const MatchFinder::MatchResult &Result) override;
 };
 
 #endif

@@ -5,8 +5,8 @@
 #include "ArithmeticArgChecker.h"
 #include "CustomMatchers.h"
 
-void ArithmeticArgChecker::registerMatcher(MatchFinder& AstMatcher) {
-  AstMatcher.addMatcher(
+void ArithmeticArgChecker::registerMatchers(MatchFinder* AstMatcher) {
+  AstMatcher->addMatcher(
       callExpr(allOf(hasDeclaration(noArithmeticExprInArgs()),
                      anyOf(hasDescendant(
                                binaryOperator(
@@ -24,7 +24,7 @@ void ArithmeticArgChecker::registerMatcher(MatchFinder& AstMatcher) {
                                    .bind("node")))))
           .bind("call"),
       this);
-  AstMatcher.addMatcher(
+  AstMatcher->addMatcher(
       cxxConstructExpr(
           allOf(hasDeclaration(noArithmeticExprInArgs()),
                 anyOf(hasDescendant(
@@ -45,17 +45,14 @@ void ArithmeticArgChecker::registerMatcher(MatchFinder& AstMatcher) {
       this);
 }
 
-void ArithmeticArgChecker::run(
+void ArithmeticArgChecker::check(
     const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "cannot pass an arithmetic expression of built-in types to %0");
+  const char* Error = "cannot pass an arithmetic expression of built-in types to %0";
   const Expr *Expression = Result.Nodes.getNodeAs<Expr>("node");
   if (const CallExpr *Call = Result.Nodes.getNodeAs<CallExpr>("call")) {
-    Diag.Report(Expression->getLocStart(), ErrorID) << Call->getDirectCallee();
+    diag(Expression->getLocStart(), Error, DiagnosticIDs::Error) << Call->getDirectCallee();
   } else if (const CXXConstructExpr *Ctr =
                  Result.Nodes.getNodeAs<CXXConstructExpr>("call")) {
-    Diag.Report(Expression->getLocStart(), ErrorID) << Ctr->getConstructor();
+    diag(Expression->getLocStart(), Error, DiagnosticIDs::Error) << Ctr->getConstructor();
   }
 }

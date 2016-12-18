@@ -7,10 +7,13 @@
 
 #include "plugin.h"
 
-class RefCountedCopyConstructorChecker : public MatchFinder::MatchCallback {
+class RefCountedCopyConstructorChecker : public BaseCheck {
 public:
-  void registerMatcher(MatchFinder& AstMatcher);
-  virtual void run(const MatchFinder::MatchResult &Result);
+  RefCountedCopyConstructorChecker(StringRef CheckName,
+                                   ContextType *Context = nullptr)
+    : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder* AstMatcher) override;
+  void check(const MatchFinder::MatchResult &Result) override;
 };
 
 #endif

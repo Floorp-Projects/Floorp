@@ -71,6 +71,54 @@ void CustomTypeAnnotation::dumpAnnotationReason(DiagnosticsEngine &Diag,
   }
 }
 
+void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check,
+                                                QualType T,
+                                                SourceLocation Loc) {
+  const char* Inherits =
+      "%1 is a %0 type because it inherits from a %0 type %2";
+  const char* Member =
+      "%1 is a %0 type because member %2 is a %0 type %3";
+  const char* Array =
+      "%1 is a %0 type because it is an array of %0 type %2";
+  const char* Templ =
+      "%1 is a %0 type because it has a template argument %0 type %2";
+
+  AnnotationReason Reason = directAnnotationReason(T);
+  for (;;) {
+    switch (Reason.Kind) {
+    case RK_ArrayElement:
+      Check.diag(Loc, Array, DiagnosticIDs::Note) << Pretty << T << Reason.Type;
+      break;
+    case RK_BaseClass: {
+      const CXXRecordDecl *Declaration = T->getAsCXXRecordDecl();
+      assert(Declaration && "This type should be a C++ class");
+
+      Check.diag(Declaration->getLocation(), Inherits, DiagnosticIDs::Note)
+        << Pretty << T << Reason.Type;
+      break;
+    }
+    case RK_Field:
+      Check.diag(Reason.Field->getLocation(), Member, DiagnosticIDs::Note)
+          << Pretty << T << Reason.Field << Reason.Type;
+      break;
+    case RK_TemplateInherited: {
+      const CXXRecordDecl *Declaration = T->getAsCXXRecordDecl();
+      assert(Declaration && "This type should be a C++ class");
+
+      Check.diag(Declaration->getLocation(), Templ, DiagnosticIDs::Note)
+        << Pretty << T << Reason.Type;
+      break;
+    }
+    default:
+      // FIXME (bug 1203263): note the original annotation.
+      return;
+    }
+
+    T = Reason.Type;
+    Reason = directAnnotationReason(T);
+  }
+}
+
 bool CustomTypeAnnotation::hasLiteralAnnotation(QualType T) const {
 #if CLANG_VERSION_FULL >= 306
   if (const TagDecl *D = T->getAsTagDecl()) {

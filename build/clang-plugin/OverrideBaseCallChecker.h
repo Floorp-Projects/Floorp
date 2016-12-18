@@ -7,10 +7,13 @@
 
 #include "plugin.h"
 
-class OverrideBaseCallChecker : public MatchFinder::MatchCallback {
+class OverrideBaseCallChecker : public BaseCheck {
 public:
-  void registerMatcher(MatchFinder& AstMatcher);
-  virtual void run(const MatchFinder::MatchResult &Result);
+  OverrideBaseCallChecker(StringRef CheckName,
+                          ContextType *Context = nullptr)
+    : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder* AstMatcher) override;
+  void check(const MatchFinder::MatchResult &Result) override;
 private:
   void evaluateExpression(const Stmt *StmtExpr,
       std::list<const CXXMethodDecl*> &MethodList);

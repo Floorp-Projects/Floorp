@@ -41,14 +41,16 @@ public:
   }
   void dumpAnnotationReason(DiagnosticsEngine &Diag, QualType T,
                             SourceLocation Loc);
+  void dumpAnnotationReason(BaseCheck &Check, QualType T,
+                            SourceLocation Loc);
 
-  void reportErrorIfPresent(DiagnosticsEngine &Diag, QualType T,
-                            SourceLocation Loc, unsigned ErrorID,
-                            unsigned NoteID) {
+  void reportErrorIfPresent(BaseCheck &Check, QualType T,
+                            SourceLocation Loc, const char* Error,
+                            const char* Note) {
     if (hasEffectiveAnnotation(T)) {
-      Diag.Report(Loc, ErrorID) << T;
-      Diag.Report(Loc, NoteID);
-      dumpAnnotationReason(Diag, T, Loc);
+      Check.diag(Loc, Error, DiagnosticIDs::Error) << T;
+      Check.diag(Loc, Note, DiagnosticIDs::Note);
+      dumpAnnotationReason(Check, T, Loc);
     }
   }
 
