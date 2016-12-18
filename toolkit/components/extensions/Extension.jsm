@@ -429,10 +429,21 @@ this.ExtensionData = class {
         // Errors are handled by the type checks above.
       }
 
+      let containersEnabled = true;
+      try {
+        containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
+      } catch (e) {
+        // If we fail here, we are in some xpcshell test.
+      }
+
       let permissions = this.manifest.permissions || [];
 
       let whitelist = [];
       for (let perm of permissions) {
+        if (perm == "contextualIdentities" && !containersEnabled) {
+          continue;
+        }
+
         this.permissions.add(perm);
 
         let match = /^(\w+)(?:\.(\w+)(?:\.\w+)*)?$/.exec(perm);
