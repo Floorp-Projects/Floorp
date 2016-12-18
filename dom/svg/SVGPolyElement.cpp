@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGPolyElement.h"
+#include "SVGPolyElement.h"
 #include "DOMSVGPointList.h"
 #include "mozilla/gfx/2D.h"
 #include "SVGContentUtils.h"
@@ -15,26 +15,26 @@ using namespace mozilla::gfx;
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGPolyElement,nsSVGPolyElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGPolyElement,nsSVGPolyElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGPolyElement,SVGPolyElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGPolyElement,SVGPolyElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGPolyElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGPolyElementBase)
+NS_INTERFACE_MAP_BEGIN(SVGPolyElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGPolyElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPolyElement::nsSVGPolyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsSVGPolyElementBase(aNodeInfo)
+SVGPolyElement::SVGPolyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  : SVGPolyElementBase(aNodeInfo)
 {
 }
 
-nsSVGPolyElement::~nsSVGPolyElement()
+SVGPolyElement::~SVGPolyElement()
 {
 }
 
 already_AddRefed<DOMSVGPointList>
-nsSVGPolyElement::Points()
+SVGPolyElement::Points()
 {
   void *key = mPoints.GetBaseValKey();
   RefPtr<DOMSVGPointList> points = DOMSVGPointList::GetDOMWrapper(key, this, false);
@@ -42,7 +42,7 @@ nsSVGPolyElement::Points()
 }
 
 already_AddRefed<DOMSVGPointList>
-nsSVGPolyElement::AnimatedPoints()
+SVGPolyElement::AnimatedPoints()
 {
   void *key = mPoints.GetAnimValKey();
   RefPtr<DOMSVGPointList> points = DOMSVGPointList::GetDOMWrapper(key, this, true);
@@ -54,30 +54,30 @@ nsSVGPolyElement::AnimatedPoints()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-nsSVGPolyElement::IsAttributeMapped(const nsIAtom* name) const
+SVGPolyElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sMarkersMap
   };
   
   return FindAttributeDependence(name, map) ||
-    nsSVGPolyElementBase::IsAttributeMapped(name);
+    SVGPolyElementBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
 /* virtual */ bool
-nsSVGPolyElement::HasValidDimensions() const
+SVGPolyElement::HasValidDimensions() const
 {
   return !mPoints.GetAnimValue().IsEmpty();
 }
 
 //----------------------------------------------------------------------
-// nsSVGPathGeometryElement methods
+// SVGGeometryElement methods
 
 bool
-nsSVGPolyElement::AttributeDefinesGeometry(const nsIAtom *aName)
+SVGPolyElement::AttributeDefinesGeometry(const nsIAtom *aName)
 {
   if (aName == nsGkAtoms::points)
     return true;
@@ -86,7 +86,7 @@ nsSVGPolyElement::AttributeDefinesGeometry(const nsIAtom *aName)
 }
 
 void
-nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
+SVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
   const SVGPointList &points = mPoints.GetAnimValue();
 
@@ -122,10 +122,10 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 }
 
 bool
-nsSVGPolyElement::GetGeometryBounds(Rect* aBounds,
-                                    const StrokeOptions& aStrokeOptions,
-                                    const Matrix& aToBoundsSpace,
-                                    const Matrix* aToNonScalingStrokeSpace)
+SVGPolyElement::GetGeometryBounds(Rect* aBounds,
+                                  const StrokeOptions& aStrokeOptions,
+                                  const Matrix& aToBoundsSpace,
+                                  const Matrix* aToNonScalingStrokeSpace)
 {
   const SVGPointList &points = mPoints.GetAnimValue();
 
