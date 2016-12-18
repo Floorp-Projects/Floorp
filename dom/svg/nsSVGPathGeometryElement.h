@@ -4,13 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGGeometryElement_h
-#define mozilla_dom_SVGGeometryElement_h
+#ifndef __NS_SVGPATHGEOMETRYELEMENT_H__
+#define __NS_SVGPATHGEOMETRYELEMENT_H__
 
 #include "mozilla/gfx/2D.h"
 #include "SVGGraphicsElement.h"
-#include "nsISVGPoint.h"
-#include "nsSVGNumber2.h"
 
 struct nsSVGMark {
   enum Type {
@@ -27,14 +25,9 @@ struct nsSVGMark {
     x(aX), y(aY), angle(aAngle), type(aType) {}
 };
 
-namespace mozilla {
-namespace dom {
+typedef mozilla::dom::SVGGraphicsElement nsSVGPathGeometryElementBase;
 
-class SVGAnimatedNumber;
-
-typedef mozilla::dom::SVGGraphicsElement SVGGeometryElementBase;
-
-class SVGGeometryElement : public SVGGeometryElementBase
+class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase
 {
 protected:
   typedef mozilla::gfx::CapStyle CapStyle;
@@ -49,7 +42,7 @@ protected:
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
 
 public:
-  explicit SVGGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit nsSVGPathGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify) override;
@@ -166,7 +159,7 @@ public:
    * that is created may be cached and returned on subsequent calls.
    */
   virtual already_AddRefed<Path> GetOrBuildPath(const DrawTarget& aDrawTarget,
-                                                FillRule fillRule);
+                                                     FillRule fillRule);
 
   /**
    * The same as GetOrBuildPath, but bypasses the cache (neither returns any
@@ -198,22 +191,8 @@ public:
    */
   FillRule GetFillRule();
 
-  // WebIDL
-  already_AddRefed<SVGAnimatedNumber> PathLength();
-  float GetTotalLength();
-  already_AddRefed<nsISVGPoint>
-    GetPointAtLength(float distance, ErrorResult& rv);
-
 protected:
-  // nsSVGElement method
-  virtual NumberAttributesInfo GetNumberInfo() override;
-
-  nsSVGNumber2 mPathLength;
-  static NumberInfo sNumberInfo;
   mutable RefPtr<Path> mCachedPath;
 };
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // mozilla_dom_SVGGeometryElement_h
+#endif
