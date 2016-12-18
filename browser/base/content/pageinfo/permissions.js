@@ -11,7 +11,12 @@ var gPermURI;
 var gPermPrincipal;
 var gUsageRequest;
 
-var gPermissions = SitePermissions.listPermissions();
+// Array of permissionIDs sorted alphabetically by label.
+var gPermissions = SitePermissions.listPermissions().sort((a, b) => {
+  let firstLabel = SitePermissions.getPermissionLabel(a);
+  let secondLabel = SitePermissions.getPermissionLabel(b);
+  return firstLabel.localeCompare(secondLabel);
+});
 gPermissions.push("plugins");
 
 var permissionObserver = {
