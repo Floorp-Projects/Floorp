@@ -23,6 +23,28 @@ linux64-clang/opt:
             - 'taskcluster/scripts/misc/build-clang-linux.sh'
             - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
+linux64-clang-tidy/opt:
+    description: "Clang-tidy build"
+    treeherder:
+        kind: build
+        platform: linux64/opt
+        symbol: Cc(Clang-Tidy)
+        tier: 1
+    run:
+        using: toolchain-script
+        script: build-clang-tidy-linux.sh
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    when:
+        files-changed:
+            - 'build/clang-plugin/**'
+            - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-tidy-linux.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
+
 linux64-gcc/opt:
     description: "GCC toolchain build"
     treeherder:
