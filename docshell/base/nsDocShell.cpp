@@ -2210,6 +2210,12 @@ nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
     NS_LITERAL_CSTRING("Internal API Used"),
     mContentViewer ? mContentViewer->GetDocument() : nullptr);
 
+  if (!CanSetOriginAttributes()) {
+    bool changed = aUsePrivateBrowsing != (mPrivateBrowsingId > 0);
+
+    return changed ? NS_ERROR_FAILURE : NS_OK;
+  }
+
   return SetPrivateBrowsing(aUsePrivateBrowsing);
 }
 
@@ -14352,12 +14358,12 @@ nsDocShell::GetOriginAttributes(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult
-nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
+bool
+nsDocShell::CanSetOriginAttributes()
 {
   MOZ_ASSERT(mChildList.IsEmpty());
   if (!mChildList.IsEmpty()) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   // TODO: Bug 1273058 - mContentViewer should be null when setting origin
@@ -14367,14 +14373,24 @@ nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
     if (doc) {
       nsIURI* uri = doc->GetDocumentURI();
       if (!uri) {
-        return NS_ERROR_FAILURE;
+        return false;
       }
       nsCString uriSpec = uri->GetSpecOrDefault();
       MOZ_ASSERT(uriSpec.EqualsLiteral("about:blank"));
       if (!uriSpec.EqualsLiteral("about:blank")) {
-        return NS_ERROR_FAILURE;
+        return false;
       }
     }
+  }
+
+  return true;
+}
+
+nsresult
+nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
+{
+  if (!CanSetOriginAttributes()) {
+    return NS_ERROR_FAILURE;
   }
 
   AssertOriginAttributesMatchPrivateBrowsing();
