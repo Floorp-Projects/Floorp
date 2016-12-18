@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGEllipseElement_h
 #define mozilla_dom_SVGEllipseElement_h
 
-#include "SVGGeometryElement.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsSVGLength2.h"
 
 nsresult NS_NewSVGEllipseElement(nsIContent **aResult,
@@ -16,7 +16,7 @@ nsresult NS_NewSVGEllipseElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-typedef SVGGeometryElement SVGEllipseElementBase;
+typedef nsSVGPathGeometryElement SVGEllipseElementBase;
 
 class SVGEllipseElement final : public SVGEllipseElementBase
 {
@@ -30,7 +30,7 @@ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
-  // SVGGeometryElement methods:
+  // nsSVGPathGeometryElement methods:
   virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
                                  const Matrix& aToBoundsSpace,
                                  const Matrix* aToNonScalingStrokeSpace = nullptr) override;
