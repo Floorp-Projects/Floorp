@@ -5553,4 +5553,3 @@ pref("prompts.authentication_dialog_abuse_limit", 3);
 // To enable the DOM implementation, turn on "dom.storageManager.enabled"
 pref("browser.storageManager.enabled", false);
 
-pref("dom.IntersectionObserver.enabled", true);
