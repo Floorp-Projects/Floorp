@@ -6005,7 +6005,7 @@ var SearchEngines = {
     }
 
     // By convention, the currently configured default engine is at position zero in searchEngines.
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "SearchEngines:Data",
       searchEngines: searchEngines,
       suggest: {
