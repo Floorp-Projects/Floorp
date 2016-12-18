@@ -1,4 +1,4 @@
-FROM          taskcluster/centos6-build:0.1.6
+FROM          taskcluster/centos6-build:0.1.7
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 ### update to latest from upstream repositories

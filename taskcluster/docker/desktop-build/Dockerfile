@@ -1,5 +1,5 @@
 # TODO remove VOLUME below when the base image is updated next.
-FROM          taskcluster/centos6-build-upd:0.1.6.20160329195300
+FROM          taskcluster/centos6-build-upd:0.1.7.20161229150900
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 # TODO remove when base image is updated
