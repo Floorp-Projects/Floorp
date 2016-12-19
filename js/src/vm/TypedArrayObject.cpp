@@ -240,9 +240,6 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
 bool
 TypedArrayObject::hasInlineElements() const
 {
-    if (!elements())
-        return true;
-
     return elements() == this->fixedData(TypedArrayObject::FIXED_DATA_START) &&
         byteLength() <= TypedArrayObject::INLINE_BUFFER_LIMIT;
 }
@@ -251,10 +248,6 @@ void
 TypedArrayObject::setInlineElements()
 {
     char* dataSlot = reinterpret_cast<char*>(this) + this->dataOffset();
-    if (length() == 0) {
-        *reinterpret_cast<void**>(dataSlot) = nullptr;
-        return;
-    }
     *reinterpret_cast<void**>(dataSlot) = this->fixedData(TypedArrayObject::FIXED_DATA_START);
 }
 
@@ -513,13 +506,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 }
             }
         } else {
-            if (len == 0) {
-                obj->initPrivate(nullptr);
-            } else {
-                void* data = obj->fixedData(FIXED_DATA_START);
-                obj->initPrivate(data);
-                memset(data, 0, len * sizeof(NativeType));
-            }
+            void* data = obj->fixedData(FIXED_DATA_START);
+            obj->initPrivate(data);
+            memset(data, 0, len * sizeof(NativeType));
         }
 
         obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(len));
@@ -632,13 +621,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             MOZ_ASSERT(offset + nbytes <= GetGCKindBytes(allocKind));
 #endif
 
-            if (len == 0) {
-                tarray->initPrivate(nullptr);
-            } else {
-                void* data = tarray->fixedData(FIXED_DATA_START);
-                tarray->initPrivate(data);
-                memset(data, 0, nbytes);
-            }
+            void* data = tarray->fixedData(FIXED_DATA_START);
+            tarray->initPrivate(data);
+            memset(data, 0, nbytes);
         }
     }
 
