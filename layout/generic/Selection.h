@@ -195,6 +195,10 @@ public:
   void Modify(const nsAString& aAlter, const nsAString& aDirection,
               const nsAString& aGranularity, mozilla::ErrorResult& aRv);
 
+  void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
+                        nsINode& aFocusNode, uint32_t aFocusOffset,
+                        mozilla::ErrorResult& aRv);
+
   bool GetInterlinePosition(mozilla::ErrorResult& aRv);
   void SetInterlinePosition(bool aValue, mozilla::ErrorResult& aRv);
 
