@@ -980,6 +980,17 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
     buf[i] = '\0';
 
+    // https://url.spec.whatwg.org/#path-state (1.4.1.2)
+    // https://url.spec.whatwg.org/#windows-drive-letter
+    if (SegmentIs(buf, mScheme, "file")) {
+        char* path = &buf[mPath.mPos];
+        if (mPath.mLen >= 3 && path[0] == '/'
+            && nsCRT::IsAsciiAlpha(path[1])
+            && path[2] == '|') {
+            buf[mPath.mPos + 2] = ':';
+        }
+    }
+
     if (mDirectory.mLen > 1) {
         netCoalesceFlags coalesceFlag = NET_COALESCE_NORMAL;
         if (SegmentIs(buf,mScheme,"ftp")) {
