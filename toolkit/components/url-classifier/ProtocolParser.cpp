@@ -812,8 +812,8 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   nsresult rv = urlUtil->ConvertThreatTypeToListNames(aResponse.threat_type(),
                                                       possibleListNames);
   if (NS_FAILED(rv)) {
-    PARSER_LOG((nsPrintfCString("Threat type to list name conversion error: %d",
-                               aResponse.threat_type())).get());
+    PARSER_LOG(("Threat type to list name conversion error: %d",
+                aResponse.threat_type()));
     return NS_ERROR_FAILURE;
   }
 
