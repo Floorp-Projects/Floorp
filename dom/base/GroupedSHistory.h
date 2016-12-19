@@ -88,12 +88,6 @@ private:
    */
   void PurgePartialHistories(uint32_t aLastPartialIndexToKeep);
 
-  /**
-   * Remove the frameloaders which are owned by the prerendering history, and
-   * remove them from mPrerenderingHistories.
-   */
-  void PurgePrerendering();
-
   // The total number of entries in all partial histories.
   uint32_t mCount;
 
@@ -103,14 +97,6 @@ private:
 
   // All participating nsIPartialSHistory objects.
   nsCOMArray<nsIPartialSHistory> mPartialHistories;
-
-  // All nsIPartialSHistories which are being prerendered.
-  struct PrerenderingHistory
-  {
-    nsCOMPtr<nsIPartialSHistory> mPartialHistory;
-    int32_t mId;
-  };
-  nsTArray<PrerenderingHistory> mPrerenderingHistories;
 };
 
 } // namespace dom

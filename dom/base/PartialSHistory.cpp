@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION(PartialSHistory, mOwnerFrameLoader, mGroupedSHistory)
+NS_IMPL_CYCLE_COLLECTION(PartialSHistory, mOwnerFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PartialSHistory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PartialSHistory)
 
@@ -26,7 +26,6 @@ NS_INTERFACE_MAP_END
 PartialSHistory::PartialSHistory(nsIFrameLoader* aOwnerFrameLoader)
   : mCount(0),
     mGlobalIndexOffset(0),
-    mActive(nsIPartialSHistory::STATE_ACTIVE),
     mOwnerFrameLoader(aOwnerFrameLoader)
 {
   MOZ_ASSERT(aOwnerFrameLoader);
@@ -145,13 +144,9 @@ PartialSHistory::GetOwnerFrameLoader(nsIFrameLoader** aResult)
 }
 
 NS_IMETHODIMP
-PartialSHistory::OnAttachGroupedSessionHistory(nsIGroupedSHistory* aGroup, uint32_t aOffset)
+PartialSHistory::OnAttachGroupedSessionHistory(uint32_t aOffset)
 {
-  MOZ_ASSERT(!mGroupedSHistory, "Only may join a single GroupedSHistory");
-
-  mActive = nsIPartialSHistory::STATE_ACTIVE;
   mGlobalIndexOffset = aOffset;
-  mGroupedSHistory = aGroup;
 
   // If we have direct reference to nsISHistory, simply pass through.
   nsCOMPtr<nsISHistory> shistory(GetSessionHistory());
@@ -192,23 +187,21 @@ PartialSHistory::SHistoryDidUpdate(bool aTruncate /* = false */)
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!mGroupedSHistory) {
-    // It's OK if we don't have a grouped history, that just means that we
-    // aren't in a grouped shistory, so we don't need to do anything.
-    return NS_OK;
+  nsCOMPtr<nsIGroupedSHistory> groupedHistory;
+  mOwnerFrameLoader->GetGroupedSessionHistory(getter_AddRefs(groupedHistory));
+  if (NS_WARN_IF(!groupedHistory)) {
+    // Maybe we're not the active partial history, but in this case we shouldn't
+    // receive any update from session history object either.
+    return NS_ERROR_FAILURE;
   }
 
-  mGroupedSHistory->HandleSHistoryUpdate(this, aTruncate);
+  groupedHistory->HandleSHistoryUpdate(this, aTruncate);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PartialSHistory::OnActive(uint32_t aGlobalLength, uint32_t aTargetLocalIndex)
 {
-  MOZ_ASSERT(mGroupedSHistory);
-
-  mActive = nsIPartialSHistory::STATE_ACTIVE;
-
   // In-process case.
   nsCOMPtr<nsISHistory> shistory(GetSessionHistory());
   if (shistory) {
@@ -236,10 +229,6 @@ PartialSHistory::OnActive(uint32_t aGlobalLength, uint32_t aTargetLocalIndex)
 NS_IMETHODIMP
 PartialSHistory::OnDeactive()
 {
-  MOZ_ASSERT(mGroupedSHistory);
-
-  mActive = nsIPartialSHistory::STATE_INACTIVE;
-
   // In-process case.
   nsCOMPtr<nsISHistory> shistory(GetSessionHistory());
   if (shistory) {
@@ -257,28 +246,6 @@ PartialSHistory::OnDeactive()
     return NS_ERROR_UNEXPECTED;
   }
   Unused << tabParent->SendNotifyPartialSessionHistoryDeactive();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PartialSHistory::GetActiveState(int32_t* aActive)
-{
-  *aActive = mActive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PartialSHistory::SetActiveState(int32_t aActive)
-{
-  mActive = aActive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PartialSHistory::GetGroupedSHistory(nsIGroupedSHistory** aGrouped)
-{
-  nsCOMPtr<nsIGroupedSHistory> shistory = mGroupedSHistory;
-  shistory.forget(aGrouped);
   return NS_OK;
 }
 
