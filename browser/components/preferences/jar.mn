@@ -30,6 +30,8 @@ browser.jar:
     content/browser/preferences/siteDataSettings.xul
     content/browser/preferences/siteDataSettings.js
     content/browser/preferences/siteDataSettings.css
+*   content/browser/preferences/siteDataRemoveSelected.xul
+    content/browser/preferences/siteDataRemoveSelected.js
     content/browser/preferences/siteListItem.xml
     content/browser/preferences/translation.xul
     content/browser/preferences/translation.js

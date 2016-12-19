@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/siteDataSettings.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/siteDataSettings.css" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/siteDataSettings.dtd" >
+
+<dialog id="SiteDataRemoveSelectedDialog"
+        windowtype="Browser:SiteDataRemoveSelected"
+        width="500"
+        title="&removingDialog.title;"
+        onload="gSiteDataRemoveSelected.init();"
+        ondialogaccept="gSiteDataRemoveSelected.ondialogaccept(); return true;"
+        ondialogcancel="gSiteDataRemoveSelected.ondialogcancel(); return true;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://browser/content/preferences/siteDataRemoveSelected.js"/>
+
+  <stringbundle id="bundlePreferences"
+                src="chrome://browser/locale/preferences/preferences.properties"/>
+
+  <vbox id="contentContainer">
+    <hbox flex="1">
+      <vbox>
+        <image class="question-icon"/>
+      </vbox>
+      <vbox flex="1">
+        <!-- Only show this label on OS X because of no dialog title -->
+        <label id="removing-label"
+#ifndef XP_MACOSX
+               hidden="true"
+#endif
+        >&removingDialog.title;</label>
+        <separator class="thin"/>
+        <description id="removing-description">&removingDialog.description;</description>
+      </vbox>
+    </hbox>
+
+    <separator />
+
+    <vbox flex="1">
+      <label>&siteTree.label;</label>
+      <separator class="thin"/>
+      <tree id="sitesTree" flex="1" seltype="single" hidecolumnpicker="true">
+        <treecols>
+          <treecol primary="true" flex="1" hideheader="true"/>
+        </treecols>
+        <treechildren />
+      </tree>
+    </vbox>
+  </vbox>
+
+</dialog>
