@@ -56,10 +56,10 @@ function cur(id) {
   return document.defaultView.getComputedStyle($(id), "").cursor;
 }
 
-is(cur("t1"), 'url("file:///tmp/foo"), url("file:///c|/"), ' +
+is(cur("t1"), 'url("file:///tmp/foo"), url("file:///c:/"), ' +
               'url("http://example.com/"), crosshair',
               "Serialize unloadable URLs using their specified value");
-is(cur("t2"), 'url("file:///tmp/foo"), url("file:///c|/"), crosshair',
+is(cur("t2"), 'url("file:///tmp/foo"), url("file:///c:/"), crosshair',
               "Serialize unloadable URLs using their specified value");
 is(cur("t3"), 'url("http://example.com/"), crosshair', "URI + fallback");
 is(cur("t4"), "auto", "Must have a fallback");
