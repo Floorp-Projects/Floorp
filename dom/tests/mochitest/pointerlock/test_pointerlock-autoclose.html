@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1323983 - Auto-close window after holding pointerlock</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+  <button onclick="document.body.requestPointerLock()">Lock Pointer</button>
+  <script>
+    if (!opener) {
+      SimpleTest.waitForExplicitFinish();
+    }
+
+    var newwin = null;
+    function finish() {
+      newwin.close()
+      setTimeout(function() {
+        SimpleTest.finish();
+      }, 0);
+    }
+
+    window.onload = function () {
+      if (!opener) {
+        newwin = window.open(location);
+      } else {
+        document.addEventListener("pointerlockchange", function() {
+          opener.is(document.pointerLockElement, document.body,
+                    "Check we have locked the pointer");
+          opener.finish();
+        }, {once: true});
+        requestAnimationFrame(function() {
+          setTimeout(function() {
+            synthesizeMouseAtCenter(document.querySelector('button'), {});
+          }, 0);
+        });
+      }
+    };
+  </script>
+</body>
+</html>
