@@ -100,7 +100,7 @@ TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
   , mVideoEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.video",
                                                  100 * 1024 * 1024))
   , mAudioEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.audio",
-                                                 10 * 1024 * 1024))
+                                                 12 * 1024 * 1024))
   , mEvictionState(EvictionState::NO_EVICTION_NEEDED)
   , mMonitor("TrackBuffersManager")
 {
@@ -273,10 +273,10 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
   const uint32_t canEvict =
     Evictable(HasVideo() ? TrackInfo::kVideoTrack : TrackInfo::kAudioTrack);
 
-  MSE_DEBUG(
-    "buffered=%lldkB, eviction threshold=%ukB, evict=%lldkB canevict=%ukB",
-    GetSize() / 1024, EvictionThreshold() / 1024, toEvict / 1024,
-    canEvict / 1024);
+  MSE_DEBUG("currentTime=%lld buffered=%lldkB, eviction threshold=%ukB, "
+            "evict=%lldkB canevict=%ukB",
+            aPlaybackTime.ToMicroseconds(), GetSize() / 1024,
+            EvictionThreshold() / 1024, toEvict / 1024, canEvict / 1024);
 
   if (toEvict <= 0) {
     mEvictionState = EvictionState::NO_EVICTION_NEEDED;
@@ -295,7 +295,9 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
     mEvictionState = EvictionState::EVICTION_NEEDED;
     result = EvictDataResult::NO_DATA_EVICTED;
   }
-  MSE_DEBUG("Reached our size limit, schedule eviction of %lld bytes", toEvict);
+  MSE_DEBUG(
+    "Reached our size limit, schedule eviction of %lld bytes (%s)", toEvict,
+    result == EvictDataResult::BUFFER_FULL ? "buffer full" : "no data evicted");
   QueueTask(new EvictDataTask(aPlaybackTime, toEvict));
 
   return result;
@@ -442,7 +444,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
       }
       partialEvict = 0;
     }
-    if (frame->mTime >= lowerLimit.ToMicroseconds()) {
+    if (frame->GetEndTime() >= lowerLimit.ToMicroseconds()) {
       break;
     }
     partialEvict += frame->ComputedSizeOfIncludingThis();

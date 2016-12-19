@@ -408,13 +408,11 @@ EventListenerManager::AddEventListenerInternal(
 #endif
       window->SetHasMouseEnterLeaveEventListeners();
     }
-#ifdef MOZ_GAMEPAD
   } else if (aEventMessage >= eGamepadEventFirst &&
              aEventMessage <= eGamepadEventLast) {
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
       window->SetHasGamepadEventListener();
     }
-#endif
   } else if (aTypeAtom == nsGkAtoms::onkeydown ||
              aTypeAtom == nsGkAtoms::onkeypress ||
              aTypeAtom == nsGkAtoms::onkeyup) {

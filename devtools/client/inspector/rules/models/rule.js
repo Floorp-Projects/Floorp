@@ -683,4 +683,4 @@ Rule.prototype = {
   }
 };
 
-exports.Rule = Rule;
+module.exports = Rule;

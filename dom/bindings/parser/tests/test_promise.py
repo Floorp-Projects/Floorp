@@ -49,6 +49,36 @@ def WebIDLTest(parser, harness):
                "non-Promise return types.")
 
     parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface _Promise {};
+            interface A {
+              Promise<any>? foo();
+            };
+        """)
+        results = parser.finish();
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow nullable Promise return values.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface _Promise {};
+            interface A {
+              void foo(Promise<any>? arg);
+            };
+        """)
+        results = parser.finish();
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow nullable Promise arguments.")
+
+    parser = parser.reset()
     parser.parse("""
         interface _Promise {};
         interface A {

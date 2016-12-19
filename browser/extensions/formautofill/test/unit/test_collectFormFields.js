@@ -4,7 +4,7 @@
 
 "use strict";
 
-let {FormAutofillHandler} = Cu.import("resource://formautofill/FormAutofillContent.jsm");
+let {FormAutofillHandler} = loadFormAutofillContent();
 
 const TESTCASES = [
   {

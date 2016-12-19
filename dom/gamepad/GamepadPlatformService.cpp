@@ -95,8 +95,8 @@ GamepadPlatformService::AddGamepad(const char* aID,
 
   uint32_t index = ++mGamepadIndex;
   GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), index,
-                 static_cast<uint32_t>(aMapping), static_cast<uint32_t>(GamepadHand::_empty),
-                 GamepadServiceType::Standard, aNumButtons, aNumAxes);
+                 aMapping, GamepadHand::_empty, GamepadServiceType::Standard,
+                 aNumButtons, aNumAxes);
   NotifyGamepadChange<GamepadAdded>(a);
   return index;
 }

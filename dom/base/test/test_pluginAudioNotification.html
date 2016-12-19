@@ -75,15 +75,23 @@ var tests = [
   },
 
   function() {
+    info("=== Mute plugin ===");
     ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
     iframe.contentWindow.toggleMuteState(true);
     ok(iframe.contentWindow.pluginMuted(), "Plugin should be muted");
-    iframe.contentWindow.toggleMuteState(false);
-    ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
-    runTest();
+    expectedNotification = 'inactive-nonaudible';
   },
 
   function() {
+    info("=== unmute plugin ==");
+    ok(iframe.contentWindow.pluginMuted(), "Plugin should be muted");
+    iframe.contentWindow.toggleMuteState(false);
+    ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
+    expectedNotification = 'active';
+  },
+
+  function() {
+    info("=== stop audio ==");
     expectedNotification = 'inactive-pause';
     iframe.contentWindow.stopAudio();
   },

@@ -499,13 +499,9 @@ IsMessageMouseUserActivity(EventMessage aMessage)
 static bool
 IsMessageGamepadUserActivity(EventMessage aMessage)
 {
-#ifndef MOZ_GAMEPAD
-  return false;
-#else
   return aMessage == eGamepadButtonDown ||
          aMessage == eGamepadButtonUp ||
          aMessage == eGamepadAxisMove;
-#endif
 }
 
 nsresult

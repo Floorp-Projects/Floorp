@@ -9,7 +9,6 @@ function test() {
   ok(PopupNotifications.panel, "PopupNotifications panel exists");
 
   setup();
-  goNext();
 }
 
 function checkCheckbox(checkbox, label, checked = false, hidden = false) {

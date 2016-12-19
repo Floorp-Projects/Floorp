@@ -143,8 +143,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["browser.tabs.animate", {what: RECORD_PREF_VALUE}],
   ["browser.urlbar.suggest.searches", {what: RECORD_PREF_VALUE}],
   ["browser.urlbar.userMadeSearchSuggestionsChoice", {what: RECORD_PREF_VALUE}],
-  // Record "Zoom Text Only" pref in Firefox 50 to 52 (Bug 979323).
-  ["browser.zoom.full", {what: RECORD_PREF_VALUE}],
   ["devtools.chrome.enabled", {what: RECORD_PREF_VALUE}],
   ["devtools.debugger.enabled", {what: RECORD_PREF_VALUE}],
   ["devtools.debugger.remote-enabled", {what: RECORD_PREF_VALUE}],
@@ -251,17 +249,6 @@ function getSystemLocale() {
   } catch (e) {
     return null;
   }
-}
-
-/**
- * Asynchronously get a list of addons of the specified type from the AddonManager.
- * @param aTypes An array containing the types of addons to request.
- * @return Promise<Array> resolved when AddonManager has finished, returning an
- *         array of addons.
- */
-function promiseGetAddonsByTypes(aTypes) {
-  return new Promise((resolve) =>
-                     AddonManager.getAddonsByTypes(aTypes, (addons) => resolve(addons)));
 }
 
 /**
@@ -569,7 +556,7 @@ EnvironmentAddonBuilder.prototype = {
    */
   _getActiveAddons: Task.async(function* () {
     // Request addons, asynchronously.
-    let allAddons = yield promiseGetAddonsByTypes(["extension", "service"]);
+    let allAddons = yield AddonManager.getAddonsByTypes(["extension", "service"]);
 
     let activeAddons = {};
     for (let addon of allAddons) {
@@ -620,7 +607,7 @@ EnvironmentAddonBuilder.prototype = {
    */
   _getActiveTheme: Task.async(function* () {
     // Request themes, asynchronously.
-    let themes = yield promiseGetAddonsByTypes(["theme"]);
+    let themes = yield AddonManager.getAddonsByTypes(["theme"]);
 
     let activeTheme = {};
     // We only store information about the active theme.
@@ -696,7 +683,7 @@ EnvironmentAddonBuilder.prototype = {
    */
   _getActiveGMPlugins: Task.async(function* () {
     // Request plugins, asynchronously.
-    let allPlugins = yield promiseGetAddonsByTypes(["plugin"]);
+    let allPlugins = yield AddonManager.getAddonsByTypes(["plugin"]);
 
     let activeGMPlugins = {};
     for (let plugin of allPlugins) {
