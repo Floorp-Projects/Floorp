@@ -1221,7 +1221,7 @@ class nsIWidget : public nsISupports
      * Invalidate a specified rect for a widget so that it will be repainted
      * later.
      */
-    NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) = 0;
+    virtual void Invalidate(const LayoutDeviceIntRect& aRect) = 0;
 
     enum LayerManagerPersistence
     {

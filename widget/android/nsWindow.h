@@ -181,7 +181,7 @@ public:
     virtual void SetSizeMode(nsSizeMode aMode) override;
     virtual void Enable(bool aState) override;
     virtual bool IsEnabled() const override;
-    NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
+    virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
     NS_IMETHOD SetFocus(bool aRaise = false) override;
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;

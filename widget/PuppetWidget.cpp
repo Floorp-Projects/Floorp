@@ -286,7 +286,7 @@ PuppetWidget::SetFocus(bool aRaise)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
 {
 #ifdef DEBUG
@@ -294,17 +294,17 @@ PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
 #endif
 
   if (mChild) {
-    return mChild->Invalidate(aRect);
+    mChild->Invalidate(aRect);
+    return;
   }
 
   mDirtyRegion.Or(mDirtyRegion, aRect);
 
   if (!mDirtyRegion.IsEmpty() && !mPaintTask.IsPending()) {
     mPaintTask = new PaintTask(this);
-    return NS_DispatchToCurrentThread(mPaintTask.get());
+    NS_DispatchToCurrentThread(mPaintTask.get());
+    return;
   }
-
-  return NS_OK;
 }
 
 void
