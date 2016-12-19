@@ -34,6 +34,158 @@ although the more recent the Firefox version,
 the more bug fixes and features.
 **Firefox 47 is explicitly not supported.**
 
+## WebDriver capabilities
+
+geckodriver supports a number of
+[WebDriver capabilities](https://w3c.github.io/webdriver/webdriver-spec.html#capabilities):
+
+<table>
+ <thead>
+  <tr>
+   <th>Name
+   <th>Type
+   <th>Description
+  </tr>
+ </thead>
+
+ <tr>
+  <td><code>proxy</code>
+  <td><a href=#proxy-object><code>proxy</code></a> object
+  <td>Sets browser proxy settings.
+ </tr>
+
+ <tr>
+  <td><code>acceptInsecureCerts</code>
+  <td>boolean
+  <td>Boolean initially set to false,
+   indicating the session will not implicitly trust untrusted
+   or self-signed TLS certificates on navigation.
+ </tr>
+</table>
+
+### `proxy` object
+
+<table>
+ <thead>
+  <tr>
+   <th>Name
+   <th>Type
+   <th>Description
+  </tr>
+ </thead>
+
+ <tr>
+  <td><code>proxyType</code>
+  <td>string
+  <td>Indicates the type of proxy configuration.
+   This value must be one of
+   <code>pac</code>,
+   <code>noproxy</code>,
+   <code>autodetect</code>,
+   <code>system</code>,
+   or <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>proxyAutoconfigUrl</code>
+  <td>string
+  <td>Defines the URL for a proxy auto-config file.
+   This property should only be set
+   when <code>proxyType</code> is <code>pac</code>.
+ </tr>
+
+ <tr>
+  <td><code>ftpProxy</code>
+  <td>string
+  <td>Defines the proxy hostname for FTP traffic.
+   Should only be set then the <code>proxyType</code>
+   is set to <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>ftpProxyPort</code>
+  <td>number
+  <td>Defines the proxy port for FTP traffic.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>httpProxy</code>
+  <td>string
+  <td>Defines the hostname for HTTP traffic.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>httpProxyPort</code>
+  <td>number
+  <td>Defines the proxy port for HTTP traffic.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>sslProxy</code>
+  <td>string
+  <td>Defines the proxy hostname
+   for encrypted TLS traffic.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>sslProxyPort</code>
+  <td>number
+  <td>Defines the proxy port for SSL traffic.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>socksProxy</code>
+  <td>string
+  <td>Defines the proxy hostname for a SOCKS proxy.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>socksProxyPort</code>
+  <td>number
+  <td>Defines the proxy port for a SOCKS proxy.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>socksVersion</code>
+  <td>number
+  <td>Defines the SOCKS proxy version.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>socksUsername</code>
+  <td>string
+  <td>Defines the username used
+   when authenticating with a SOCKS proxy.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+
+ <tr>
+  <td><code>socksPassword</code>
+  <td>string
+  <td>Defines the password used
+   when authenticating with a SOCKS proxy.
+   This property should only be set
+   when <code>proxyType</code> is <code>manual</code>.
+ </tr>
+</table>
+
 ## Firefox capabilities
 
 geckodriver also supports a capability named `moz:firefoxOptions`

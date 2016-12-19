@@ -2,6 +2,11 @@
 
 All notable changes to this program is documented in this file.
 
+## Unreleased
+
+### Added
+- Described supported WebDriver capabilities in README
+
 ## 0.11.1 (2016-10-10)
 
 ### Fixed
