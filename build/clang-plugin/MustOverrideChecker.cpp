@@ -35,7 +35,7 @@ void MustOverrideChecker::check(
     }
     Parent = Parent->getDefinition();
     for (const auto& M : Parent->methods()) {
-      if (MozChecker::hasCustomAnnotation(M, "moz_must_override"))
+      if (hasCustomAnnotation(M, "moz_must_override"))
         MustOverrides.push_back(M);
     }
   }

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CustomTypeAnnotation.h"
-#include "MozChecker.h"
 
 CustomTypeAnnotation StackClass =
     CustomTypeAnnotation("moz_stack_class", "stack");
@@ -17,57 +16,6 @@ CustomTypeAnnotation NonTemporaryClass =
     CustomTypeAnnotation("moz_non_temporary_class", "non-temporary");
 CustomTypeAnnotation NonParam =
     CustomTypeAnnotation("moz_non_param", "non-param");
-
-void CustomTypeAnnotation::dumpAnnotationReason(DiagnosticsEngine &Diag,
-                                                QualType T,
-                                                SourceLocation Loc) {
-  unsigned InheritsID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
-      "%1 is a %0 type because it inherits from a %0 type %2");
-  unsigned MemberID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "%1 is a %0 type because member %2 is a %0 type %3");
-  unsigned ArrayID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
-      "%1 is a %0 type because it is an array of %0 type %2");
-  unsigned TemplID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note,
-      "%1 is a %0 type because it has a template argument %0 type %2");
-
-  AnnotationReason Reason = directAnnotationReason(T);
-  for (;;) {
-    switch (Reason.Kind) {
-    case RK_ArrayElement:
-      Diag.Report(Loc, ArrayID) << Pretty << T << Reason.Type;
-      break;
-    case RK_BaseClass: {
-      const CXXRecordDecl *Declaration = T->getAsCXXRecordDecl();
-      assert(Declaration && "This type should be a C++ class");
-
-      Diag.Report(Declaration->getLocation(), InheritsID) << Pretty << T
-                                                   << Reason.Type;
-      break;
-    }
-    case RK_Field:
-      Diag.Report(Reason.Field->getLocation(), MemberID)
-          << Pretty << T << Reason.Field << Reason.Type;
-      break;
-    case RK_TemplateInherited: {
-      const CXXRecordDecl *Declaration = T->getAsCXXRecordDecl();
-      assert(Declaration && "This type should be a C++ class");
-
-      Diag.Report(Declaration->getLocation(), TemplID) << Pretty << T
-                                                   << Reason.Type;
-      break;
-    }
-    default:
-      // FIXME (bug 1203263): note the original annotation.
-      return;
-    }
-
-    T = Reason.Type;
-    Reason = directAnnotationReason(T);
-  }
-}
 
 void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check,
                                                 QualType T,
@@ -123,7 +71,7 @@ bool CustomTypeAnnotation::hasLiteralAnnotation(QualType T) const {
 #else
   if (const CXXRecordDecl *D = T->getAsCXXRecordDecl()) {
 #endif
-    return hasFakeAnnotation(D) || MozChecker::hasCustomAnnotation(D, Spelling);
+    return hasFakeAnnotation(D) || hasCustomAnnotation(D, Spelling);
   }
   return false;
 }
@@ -176,7 +124,7 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
 
       // Recurse into template arguments if the annotation
       // MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS is present
-      if (MozChecker::hasCustomAnnotation(
+      if (hasCustomAnnotation(
               Declaration, "moz_inherit_type_annotations_from_template_args")) {
         const ClassTemplateSpecializationDecl *Spec =
             dyn_cast<ClassTemplateSpecializationDecl>(Declaration);

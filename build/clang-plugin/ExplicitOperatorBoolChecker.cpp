@@ -22,7 +22,7 @@ void ExplicitOperatorBoolChecker::check(
   const CXXRecordDecl *Clazz = Method->getParent();
 
   if (!Method->isExplicitSpecified() &&
-      !MozChecker::hasCustomAnnotation(Method, "moz_implicit") &&
+      !hasCustomAnnotation(Method, "moz_implicit") &&
       !ASTIsInSystemHeader(Method->getASTContext(), *Method) &&
       isInterestingDeclForImplicitConversion(Method)) {
     diag(Method->getLocStart(), "bad implicit conversion operator for %0",
