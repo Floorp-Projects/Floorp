@@ -1,35 +1,32 @@
-FROM          ubuntu:16.04
-MAINTAINER    Joel Maher <joel.maher@gmail.com>
+FROM          ubuntu:12.04
+MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
-# %include taskcluster/docker/recipes/tooltool.py
-ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /setup/tooltool.py
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
-# %include taskcluster/docker/recipes/common.sh
-ADD topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
+# %include testing/docker/recipes/install-mercurial.sh
+ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /tmp/install-mercurial.sh
 
-# %include taskcluster/docker/recipes/install-mercurial.sh
-ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
 
 # Add the tooltool manifest containing the minidump_stackwalk binary.
 # %include testing/config/tooltool-manifests/linux64/releng.manifest
 ADD topsrcdir/testing/config/tooltool-manifests/linux64/releng.manifest /tmp/minidump_stackwalk.manifest
 
-# %include taskcluster/docker/recipes/ubuntu1604-test-system-setup.sh
-ADD topsrcdir/taskcluster/docker/recipes/ubuntu1604-test-system-setup.sh /setup/system-setup.sh
-RUN           bash /setup/system-setup.sh
+# %include testing/docker/recipes/ubuntu1204-test-system-setup.sh
+ADD topsrcdir/testing/docker/recipes/ubuntu1204-test-system-setup.sh /setup/system-setup.sh
+RUN bash /setup/system-setup.sh
 
-# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
-# %include taskcluster/docker/recipes/xvfb.sh
-ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
-
-# %include taskcluster/docker/recipes/run-task
-ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
+# %include testing/docker/recipes/run-task
+ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
 
 # %include taskcluster/scripts/tester/test-ubuntu.sh
 ADD topsrcdir/taskcluster/scripts/tester/test-ubuntu.sh /home/worker/bin/test-linux.sh
