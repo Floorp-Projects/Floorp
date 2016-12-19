@@ -112,6 +112,7 @@
 
 using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
+using mozilla::FloorLog2;
 using mozilla::IsPowerOfTwo;
 using mozilla::SpecificNaN;
 
@@ -1705,6 +1706,36 @@ class BaseCompiler
         if (v.kind() != Stk::ConstI64)
             return false;
         c = v.i64val();
+        stk_.popBack();
+        return true;
+    }
+
+    MOZ_MUST_USE bool popConstPositivePowerOfTwoI32(int32_t& c,
+                                                    uint_fast8_t& power,
+                                                    int32_t cutoff)
+    {
+        Stk& v = stk_.back();
+        if (v.kind() != Stk::ConstI32)
+            return false;
+        c = v.i32val();
+        if (c <= cutoff || !IsPowerOfTwo(static_cast<uint32_t>(c)))
+            return false;
+        power = FloorLog2(c);
+        stk_.popBack();
+        return true;
+    }
+
+    MOZ_MUST_USE bool popConstPositivePowerOfTwoI64(int64_t& c,
+                                                    uint_fast8_t& power,
+                                                    int64_t cutoff)
+    {
+        Stk& v = stk_.back();
+        if (v.kind() != Stk::ConstI64)
+            return false;
+        c = v.i64val();
+        if (c <= cutoff || !IsPowerOfTwo(static_cast<uint64_t>(c)))
+            return false;
+        power = FloorLog2(c);
         stk_.popBack();
         return true;
     }
@@ -4182,67 +4213,116 @@ BaseCompiler::emitMultiplyF64()
 void
 BaseCompiler::emitQuotientI32()
 {
-    // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two (Bug 1316803)
-    RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+    int32_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI32(c, power, 0)) {
+        if (power != 0) {
+            RegI32 r = popI32();
+            Label positive;
+            masm.branchTest32(Assembler::NotSigned, r, r, &positive);
+            masm.add32(Imm32(c-1), r);
+            masm.bind(&positive);
 
-    Label done;
-    checkDivideByZeroI32(r1, r0, &done);
-    checkDivideSignedOverflowI32(r1, r0, &done, ZeroOnOverflow(false));
-    masm.quotient32(r1, r0, IsUnsigned(false));
-    masm.bind(&done);
+            masm.rshift32Arithmetic(Imm32(power & 31), r);
+            pushI32(r);
+        }
+    } else {
+        RegI32 r0, r1;
+        pop2xI32ForIntMulDiv(&r0, &r1);
 
-    freeI32(r1);
-    pushI32(r0);
+        Label done;
+        checkDivideByZeroI32(r1, r0, &done);
+        checkDivideSignedOverflowI32(r1, r0, &done, ZeroOnOverflow(false));
+        masm.quotient32(r1, r0, IsUnsigned(false));
+        masm.bind(&done);
+
+        freeI32(r1);
+        pushI32(r0);
+    }
 }
 
 void
 BaseCompiler::emitQuotientU32()
 {
-    // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two (Bug 1316803)
-    RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+    int32_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI32(c, power, 0)) {
+        if (power != 0) {
+            RegI32 r = popI32();
+            masm.rshift32(Imm32(power & 31), r);
+            pushI32(r);
+        }
+    } else {
+        RegI32 r0, r1;
+        pop2xI32ForIntMulDiv(&r0, &r1);
 
-    Label done;
-    checkDivideByZeroI32(r1, r0, &done);
-    masm.quotient32(r1, r0, IsUnsigned(true));
-    masm.bind(&done);
+        Label done;
+        checkDivideByZeroI32(r1, r0, &done);
+        masm.quotient32(r1, r0, IsUnsigned(true));
+        masm.bind(&done);
 
-    freeI32(r1);
-    pushI32(r0);
+        freeI32(r1);
+        pushI32(r0);
+    }
 }
 
 void
 BaseCompiler::emitRemainderI32()
 {
-    // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two (Bug 1316803)
-    RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+    int32_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI32(c, power, 1)) {
+        RegI32 r = popI32();
+        RegI32 temp = needI32();
+        moveI32(r, temp);
 
-    Label done;
-    checkDivideByZeroI32(r1, r0, &done);
-    checkDivideSignedOverflowI32(r1, r0, &done, ZeroOnOverflow(true));
-    masm.remainder32(r1, r0, IsUnsigned(false));
-    masm.bind(&done);
+        Label positive;
+        masm.branchTest32(Assembler::NotSigned, temp, temp, &positive);
+        masm.add32(Imm32(c-1), temp);
+        masm.bind(&positive);
 
-    freeI32(r1);
-    pushI32(r0);
+        masm.rshift32Arithmetic(Imm32(power & 31), temp);
+        masm.lshift32(Imm32(power & 31), temp);
+        masm.sub32(temp, r);
+        freeI32(temp);
+
+        pushI32(r);
+    } else {
+        RegI32 r0, r1;
+        pop2xI32ForIntMulDiv(&r0, &r1);
+
+        Label done;
+        checkDivideByZeroI32(r1, r0, &done);
+        checkDivideSignedOverflowI32(r1, r0, &done, ZeroOnOverflow(true));
+        masm.remainder32(r1, r0, IsUnsigned(false));
+        masm.bind(&done);
+
+        freeI32(r1);
+        pushI32(r0);
+    }
 }
 
 void
 BaseCompiler::emitRemainderU32()
 {
-    // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two (Bug 1316803)
-    RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+    int32_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI32(c, power, 1)) {
+        RegI32 r = popI32();
+        masm.and32(Imm32(c-1), r);
+        pushI32(r);
+    } else {
+        RegI32 r0, r1;
+        pop2xI32ForIntMulDiv(&r0, &r1);
 
-    Label done;
-    checkDivideByZeroI32(r1, r0, &done);
-    masm.remainder32(r1, r0, IsUnsigned(true));
-    masm.bind(&done);
+        Label done;
+        checkDivideByZeroI32(r1, r0, &done);
+        masm.remainder32(r1, r0, IsUnsigned(true));
+        masm.bind(&done);
 
-    freeI32(r1);
-    pushI32(r0);
+        freeI32(r1);
+        pushI32(r0);
+    }
 }
 
 #ifndef INT_DIV_I64_CALLOUT
@@ -4250,11 +4330,27 @@ void
 BaseCompiler::emitQuotientI64()
 {
 # ifdef JS_PUNBOX64
-    RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
-    quotientI64(r1, r0, IsUnsigned(false));
-    freeI64(r1);
-    pushI64(r0);
+    int64_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI64(c, power, 0)) {
+        if (power != 0) {
+            RegI64 r = popI64();
+            Label positive;
+            masm.branchTest64(Assembler::NotSigned, r, r, Register::Invalid(),
+                              &positive);
+            masm.add64(Imm32(c-1), r);
+            masm.bind(&positive);
+
+            masm.rshift64Arithmetic(Imm32(power & 63), r);
+            pushI64(r);
+        }
+    } else {
+        RegI64 r0, r1;
+        pop2xI64ForIntDiv(&r0, &r1);
+        quotientI64(r1, r0, IsUnsigned(false));
+        freeI64(r1);
+        pushI64(r0);
+    }
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
 # endif
@@ -4264,11 +4360,21 @@ void
 BaseCompiler::emitQuotientU64()
 {
 # ifdef JS_PUNBOX64
-    RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
-    quotientI64(r1, r0, IsUnsigned(true));
-    freeI64(r1);
-    pushI64(r0);
+    int64_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI64(c, power, 0)) {
+        if (power != 0) {
+            RegI64 r = popI64();
+            masm.rshift64(Imm32(power & 63), r);
+            pushI64(r);
+        }
+    } else {
+        RegI64 r0, r1;
+        pop2xI64ForIntDiv(&r0, &r1);
+        quotientI64(r1, r0, IsUnsigned(true));
+        freeI64(r1);
+        pushI64(r0);
+    }
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
 # endif
@@ -4278,11 +4384,32 @@ void
 BaseCompiler::emitRemainderI64()
 {
 # ifdef JS_PUNBOX64
-    RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
-    remainderI64(r1, r0, IsUnsigned(false));
-    freeI64(r1);
-    pushI64(r0);
+    int64_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI64(c, power, 1)) {
+        RegI64 r = popI64();
+        RegI64 temp = needI64();
+        moveI64(r, temp);
+
+        Label positive;
+        masm.branchTest64(Assembler::NotSigned, temp, temp,
+                          Register::Invalid(), &positive);
+        masm.add64(Imm64(c-1), temp);
+        masm.bind(&positive);
+
+        masm.rshift64Arithmetic(Imm32(power & 63), temp);
+        masm.lshift64(Imm32(power & 63), temp);
+        masm.sub64(temp, r);
+        freeI64(temp);
+
+        pushI64(r);
+    } else {
+        RegI64 r0, r1;
+        pop2xI64ForIntDiv(&r0, &r1);
+        remainderI64(r1, r0, IsUnsigned(false));
+        freeI64(r1);
+        pushI64(r0);
+    }
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitRemainderI64");
 # endif
@@ -4292,11 +4419,19 @@ void
 BaseCompiler::emitRemainderU64()
 {
 # ifdef JS_PUNBOX64
-    RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
-    remainderI64(r1, r0, IsUnsigned(true));
-    freeI64(r1);
-    pushI64(r0);
+    int64_t c;
+    uint_fast8_t power;
+    if (popConstPositivePowerOfTwoI64(c, power, 1)) {
+        RegI64 r = popI64();
+        masm.and64(Imm64(c-1), r);
+        pushI64(r);
+    } else {
+        RegI64 r0, r1;
+        pop2xI64ForIntDiv(&r0, &r1);
+        remainderI64(r1, r0, IsUnsigned(true));
+        freeI64(r1);
+        pushI64(r0);
+    }
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
 # endif
