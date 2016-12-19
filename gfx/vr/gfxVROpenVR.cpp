@@ -25,10 +25,8 @@
 #include "nsIScreenManager.h"
 #include "openvr/openvr.h"
 
-#ifdef MOZ_GAMEPAD
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
-#endif
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -490,9 +488,7 @@ VRControllerOpenVR::VRControllerOpenVR()
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
   mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
-#ifdef MOZ_GAMEPAD
-  mControllerInfo.mMappingType = static_cast<uint32_t>(GamepadMappingType::_empty);
-#endif
+  mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mNumButtons = gNumOpenVRButtonMask;
   mControllerInfo.mNumAxes = gNumOpenVRAxis;
 }
@@ -744,7 +740,6 @@ VRControllerManagerOpenVR::ScanForDevices()
     // Re-adding controllers to VRControllerManager.
     for (vr::TrackedDeviceIndex_t i = 0; i < newControllerCount; ++i) {
       vr::TrackedDeviceIndex_t trackedDevice = trackedIndexArray[i];
-  #ifdef MOZ_GAMEPAD
       vr::ETrackedControllerRole role =
       mVRSystem->GetControllerRoleForTrackedDeviceIndex(trackedDevice);
       GamepadHand hand;
@@ -760,19 +755,15 @@ VRControllerManagerOpenVR::ScanForDevices()
           hand = GamepadHand::Right;
           break;
       }
-  #endif
       RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
       openVRController->SetIndex(mControllerCount);
       openVRController->SetTrackedIndex(trackedDevice);
       mOpenVRController.AppendElement(openVRController);
 
-  // Only in MOZ_GAMEPAD platform, We add gamepads.
-  #ifdef MOZ_GAMEPAD
       // Not already present, add it.
-       AddGamepad("OpenVR Gamepad", static_cast<uint32_t>(GamepadMappingType::_empty),
-               static_cast<uint32_t>(hand), gNumOpenVRButtonMask, gNumOpenVRAxis);
+      AddGamepad("OpenVR Gamepad", GamepadMappingType::_empty,
+                 hand, gNumOpenVRButtonMask, gNumOpenVRAxis);
       ++mControllerCount;
-  #endif
     }
   }
 }
