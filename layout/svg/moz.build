@@ -41,7 +41,6 @@ UNIFIED_SOURCES += [
     'nsSVGMarkerFrame.cpp',
     'nsSVGMaskFrame.cpp',
     'nsSVGOuterSVGFrame.cpp',
-    'nsSVGPathGeometryFrame.cpp',
     'nsSVGPatternFrame.cpp',
     'nsSVGStopFrame.cpp',
     'nsSVGSwitchFrame.cpp',
@@ -52,6 +51,7 @@ UNIFIED_SOURCES += [
     'SVGFEImageFrame.cpp',
     'SVGFELeafFrame.cpp',
     'SVGFEUnstyledLeafFrame.cpp',
+    'SVGGeometryFrame.cpp',
     'SVGTextFrame.cpp',
     'SVGViewFrame.cpp',
 ]

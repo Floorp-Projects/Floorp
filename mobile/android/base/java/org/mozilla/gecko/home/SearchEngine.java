@@ -7,10 +7,8 @@ package org.mozilla.gecko.home;
 
 import android.support.annotation.NonNull;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.R;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -29,19 +27,19 @@ public class SearchEngine {
     private final Bitmap icon;
     private volatile List<String> suggestions = new ArrayList<String>();   // Never null.
 
-    public SearchEngine(final Context context, final JSONObject engineJSON) throws JSONException {
-        if (engineJSON == null) {
-            throw new IllegalArgumentException("Can't instantiate SearchEngine from null JSON.");
+    public SearchEngine(final Context context, final GeckoBundle engine) {
+        if (engine == null) {
+            throw new IllegalArgumentException("Can't instantiate SearchEngine from null bundle.");
         }
 
-        this.name = getString(engineJSON, "name");
+        this.name = engine.getString("name");
         if (this.name == null) {
             throw new IllegalArgumentException("Cannot have an unnamed search engine.");
         }
 
-        this.identifier = getString(engineJSON, "identifier");
+        this.identifier = engine.getString("identifier");
 
-        final String iconURI = getString(engineJSON, "iconURI");
+        final String iconURI = engine.getString("iconURI");
         if (iconURI == null) {
             Log.w(LOG_TAG, "iconURI is null for search engine " + this.name);
         }
@@ -52,13 +50,6 @@ public class SearchEngine {
 
     private Bitmap getDefaultFavicon(final Context context) {
         return BitmapFactory.decodeResource(context.getResources(), R.drawable.search_icon_inactive);
-    }
-
-    private static String getString(JSONObject data, String key) throws JSONException {
-        if (data.isNull(key)) {
-            return null;
-        }
-        return data.getString(key);
     }
 
     /**

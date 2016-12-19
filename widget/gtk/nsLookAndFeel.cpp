@@ -1284,7 +1284,7 @@ nsLookAndFeel::Init()
     }
 #else
     // Text colors
-    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW_TEXT);
+    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozFieldBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);

@@ -7,13 +7,11 @@ package org.mozilla.gecko.tests;
 import java.io.File;
 import java.util.ArrayList;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.SearchEngineBar;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.R;
 
 import android.widget.ImageView;
@@ -23,7 +21,7 @@ import com.robotium.solo.Condition;
 
 /**
  * Test adding a search engine from an input field context menu.
- * 1. Get the number of existing search engines from the SearchEngine:Data event and as displayed in about:home.
+ * 1. Get the number of existing search engines from the SearchEngines:Data event and as displayed in about:home.
  * 2. Load a page with a text field, open the context menu and add a search engine from the page.
  * 3. Get the number of search engines after adding the new one and verify it has increased by 1.
  */
@@ -43,26 +41,23 @@ public class testAddSearchEngine extends AboutHomeTest {
         inputAndLoadUrl(blankPageURL);
         waitForText(mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
 
-        // Get the searchengine data by clicking the awesomebar - this causes Gecko to send Java the list
-        // of search engines.
-        Actions.EventExpecter searchEngineDataEventExpector = mActions.expectGeckoEvent("SearchEngines:Data");
+        // Get the searchengine data by clicking the awesomebar - this causes Gecko to
+        // send Java the list of search engines.
+        Actions.EventExpecter searchEngineDataEventExpector =
+                mActions.expectGlobalEvent(Actions.EventType.UI, "SearchEngines:Data");
         focusUrlBar();
         mActions.sendKeys(SEARCH_TEXT);
-        String eventData = searchEngineDataEventExpector.blockForEventData();
+
+        GeckoBundle eventData = searchEngineDataEventExpector.blockForBundle();
         searchEngineDataEventExpector.unregisterListener();
 
-        ArrayList<String> searchEngines;
-        try {
-            // Parse the data to get the number of searchengines.
-            searchEngines = getSearchEnginesNames(eventData);
-        } catch (JSONException e) {
-            mAsserter.ok(false, "Fatal exception in testAddSearchEngine while decoding JSON search engine string from Gecko prior to addition of new engine.", e.toString());
-            return;
-        }
+        // Parse the data to get the number of searchengines.
+        ArrayList<String> searchEngines = getSearchEnginesNames(eventData);
         final int initialNumSearchEngines = searchEngines.size();
         mAsserter.dumpLog("Search Engines list = " + searchEngines.toString());
 
-        // Verify that the number of displayed search engines is the same as the one received through the SearchEngines:Data event.
+        // Verify that the number of displayed search engines is the same as the one
+        // received through the SearchEngines:Data event.
         verifyDisplayedSearchEnginesCount(initialNumSearchEngines);
 
         // Load the page for the search engine to add.
@@ -71,7 +66,8 @@ public class testAddSearchEngine extends AboutHomeTest {
 
         // Used to long-tap on the search input box for the search engine to add.
         getInstrumentation().waitForIdleSync();
-        mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) + " and height = " + String.valueOf(height));
+        mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) +
+                          " and height = " + String.valueOf(height));
         mSolo.clickLongOnScreen(width,height);
 
         ImageView view = waitForViewWithDescription(ImageView.class, ADD_SEARCHENGINE_OPTION_TEXT);
@@ -90,48 +86,46 @@ public class testAddSearchEngine extends AboutHomeTest {
         waitForText(mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
 
         // Load search engines again and check that the quantity of engines has increased by 1.
-        searchEngineDataEventExpector = mActions.expectGeckoEvent("SearchEngines:Data");
+        searchEngineDataEventExpector =
+                mActions.expectGlobalEvent(Actions.EventType.UI, "SearchEngines:Data");
         focusUrlBar();
         mActions.sendKeys(SEARCH_TEXT);
-        eventData = searchEngineDataEventExpector.blockForEventData();
 
-        try {
-            // Parse the data to get the number of searchengines
-            searchEngines = getSearchEnginesNames(eventData);
-        } catch (JSONException e) {
-            mAsserter.ok(false, "Fatal exception in testAddSearchEngine while decoding JSON search engine string from Gecko after adding of new engine.", e.toString());
-            return;
-        }
+        eventData = searchEngineDataEventExpector.blockForBundle();
+        // Parse the data to get the number of searchengines
+        searchEngines = getSearchEnginesNames(eventData);
 
         mAsserter.dumpLog("Search Engines list = " + searchEngines.toString());
-        mAsserter.is(searchEngines.size(), initialNumSearchEngines + 1, "Checking the number of Search Engines has increased");
+        mAsserter.is(searchEngines.size(), initialNumSearchEngines + 1,
+                     "Checking the number of Search Engines has increased");
 
-        // Verify that the number of displayed searchengines is the same as the one received through the SearchEngines:Data event.
+        // Verify that the number of displayed searchengines is the same as the one
+        // received through the SearchEngines:Data event.
         verifyDisplayedSearchEnginesCount(initialNumSearchEngines + 1);
         searchEngineDataEventExpector.unregisterListener();
 
-        // Verify that the search plugin XML file for the new engine ended up where we expected it to.
-        // This file name is created in nsSearchService.js based on the name of the new engine.
-        final File f = GeckoProfile.get(getActivity()).getFile("searchplugins/robocop-search-engine.xml");
+        // Verify that the search plugin XML file for the new engine ended up where we
+        // expected it to.  This file name is created in nsSearchService.js based on the
+        // name of the new engine.
+        final File f = GeckoProfile.get(getActivity())
+                                   .getFile("searchplugins/robocop-search-engine.xml");
         mAsserter.ok(f.exists(), "Checking that new search plugin file exists", "");
     }
 
     /**
-     * Helper method to decode a list of search engine names from the provided search engine information
-     * JSON string sent from Gecko.
-     * @param searchEngineData The JSON string representing the search engine array to process
-     * @return An ArrayList<String> containing the names of all the search engines represented in
-     *         the provided JSON message.
-     * @throws JSONException In the event that the JSON provided cannot be decoded.
+     * Helper method to decode a list of search engine names from the provided search
+     * engine information object sent from Gecko.
+     * @param searchEngineData The object representing the search engine array to process
+     * @return An ArrayList<String> containing the names of all the search engines
+     *                              represented in the provided bundle message.
      */
-    public ArrayList<String> getSearchEnginesNames(String searchEngineData) throws JSONException {
-        JSONObject data = new JSONObject(searchEngineData);
-        JSONArray engines = data.getJSONArray("searchEngines");
+    public ArrayList<String> getSearchEnginesNames(final GeckoBundle data) {
+        final GeckoBundle[] engines = data.getBundleArray("searchEngines");
 
         ArrayList<String> searchEngineNames = new ArrayList<String>();
-        for (int i = 0; i < engines.length(); i++) {
-            JSONObject engineJSON = engines.getJSONObject(i);
-            searchEngineNames.add(engineJSON.getString("name"));
+        for (int i = 0; i < engines.length; i++) {
+            final GeckoBundle engine = engines[i];
+            searchEngineNames.add(engine.getString("name"));
         }
         return searchEngineNames;
     }
