@@ -4145,13 +4145,14 @@
     "n_buckets": 10,
     "description": "Size of the completion cache in entries"
   },
-  "URLCLASSIFIER_UPDATE_REMOTE_STATUS": {
+  "URLCLASSIFIER_UPDATE_REMOTE_STATUS2": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
+    "keyed": true,
     "n_values": 16,
-    "bug_numbers": [1150921],
-    "description": "Server HTTP status code from SafeBrowsing database updates. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
+    "bug_numbers": [1311910],
+    "description": "Server HTTP status code from SafeBrowsing database updates. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other). Keyed by provider"
   },
   "URLCLASSIFIER_COMPLETE_REMOTE_STATUS": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
@@ -4176,13 +4177,14 @@
     "bug_numbers": [1172688],
     "description": "This metric is recorded every time a gethash lookup is performed, `true` is recorded if the lookup times out."
   },
-  "URLCLASSIFIER_UPDATE_ERROR_TYPE": {
+  "URLCLASSIFIER_UPDATE_ERROR": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "58",
+    "expires_in_version": "59",
     "kind": "enumerated",
-    "n_values": 10,
-    "bug_numbers": [1305801],
-    "description": "An error was encountered while parsing a partial update returned by a Safe Browsing V4 server (0 = addition of an already existing prefix, 1 = parser got into an infinite loop, 2 = removal index out of bounds, 3 = checksum mismatch, 4 = missing checksum)"
+    "keyed": true,
+    "n_values": 16,
+    "bug_numbers": [1311910],
+    "description": "Whether or not an error was encountered while processing a Safe Browsing update (0 = success, 1 = unspecified error, 2 = addition of an already existing prefix, 3 = parser got into an infinite loop, 4 = removal index out of bounds, 5 = checksum mismatch, 6 = missing checksum). Keyed by provider"
   },
   "URLCLASSIFIER_PREFIX_MATCH": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],

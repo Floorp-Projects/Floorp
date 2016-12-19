@@ -606,6 +606,22 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
          "ApplyUpdate() since the update has already failed."));
   }
 
+  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+
+  nsCString provider;
+  // Assume that all the tables in update should have the same provider.
+  urlUtil->GetTelemetryProvider(mUpdateTables.SafeElementAt(0, EmptyCString()), provider);
+
+  nsresult updateStatus = mUpdateStatus;
+  if (NS_FAILED(mUpdateStatus)) {
+   updateStatus = NS_ERROR_GET_MODULE(mUpdateStatus) == NS_ERROR_MODULE_URL_CLASSIFIER ?
+     mUpdateStatus : NS_ERROR_UC_UPDATE_UNKNOWN;
+  }
+
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR, provider,
+                        NS_ERROR_GET_CODE(updateStatus));
+
   mMissCache.Clear();
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
