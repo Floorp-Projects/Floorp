@@ -56,14 +56,8 @@ private:
   // used for remote process case.
   uint32_t mGlobalIndexOffset;
 
-  // One of the possible active states from nsIPartialSHistory
-  int32_t mActive;
-
   // The frameloader which owns this PartialSHistory.
   nsCOMPtr<nsIFrameLoader> mOwnerFrameLoader;
-
-  // The GroupedSHistory which this PartialSHistory is part of, or null.
-  nsCOMPtr<nsIGroupedSHistory> mGroupedSHistory;
 };
 
 } // namespace dom
