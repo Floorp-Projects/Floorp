@@ -772,8 +772,6 @@ public:
       Reader()->SetVideoBlankDecode(false);
     }
 
-    CreateSeekTask();
-
     // Don't stop playback for a video-only seek since audio is playing.
     if (!mSeekJob.mTarget->IsVideoOnly()) {
       mMaster->StopPlayback();
@@ -787,8 +785,6 @@ public:
       // So we only notify the change when the seek request is from the user.
       mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
     }
-
-    ResetMDSM();
 
     DoSeek();
 
@@ -831,10 +827,6 @@ protected:
   void SeekCompleted();
 
 private:
-  virtual void CreateSeekTask() = 0;
-
-  virtual void ResetMDSM() = 0;
-
   virtual void DoSeek() = 0;
 
   virtual int64_t CalculateNewCurrentTime() const = 0;
@@ -852,6 +844,7 @@ public:
                                           EventVisibility aVisibility)
   {
     MOZ_ASSERT(aSeekJob.mTarget->IsAccurate() || aSeekJob.mTarget->IsFast());
+    mCurrentTimeBeforeSeek = TimeUnit::FromMicroseconds(mMaster->GetMediaTime());
     return SeekingState::Enter(Move(aSeekJob), aVisibility);
   }
 
@@ -994,24 +987,17 @@ public:
   }
 
 private:
-  void CreateSeekTask() override
+  void DoSeek() override
   {
-    mCurrentTimeBeforeSeek = TimeUnit::FromMicroseconds(mMaster->GetMediaTime());
     mDoneAudioSeeking = !Info().HasAudio() || mSeekJob.mTarget->IsVideoOnly();
     mDoneVideoSeeking = !Info().HasVideo();
-  }
 
-  void ResetMDSM() override
-  {
     if (mSeekJob.mTarget->IsVideoOnly()) {
       mMaster->Reset(TrackInfo::kVideoTrack);
     } else {
       mMaster->Reset();
     }
-  }
 
-  void DoSeek() override
-  {
     // Request the demuxer to perform seek.
     mSeekRequest.Begin(Reader()->Seek(mSeekJob.mTarget.ref())
       ->Then(OwnerThread(), __func__,
@@ -1271,6 +1257,8 @@ public:
                                           EventVisibility aVisibility)
   {
     MOZ_ASSERT(aSeekJob.mTarget->IsNextFrame());
+    mCurrentTime = mMaster->GetMediaTime();
+    mDuration = mMaster->Duration();
     return SeekingState::Enter(Move(aSeekJob), aVisibility);
   }
 
@@ -1325,17 +1313,6 @@ private:
     bool mIsCancelled = false;
     NextFrameSeekingState* mStateObj;
   };
-
-  void CreateSeekTask() override
-  {
-    mCurrentTime = mMaster->GetMediaTime();
-    mDuration = mMaster->Duration();
-  }
-
-  void ResetMDSM() override
-  {
-    // Do nothing.
-  }
 
   void DoSeek() override
   {
