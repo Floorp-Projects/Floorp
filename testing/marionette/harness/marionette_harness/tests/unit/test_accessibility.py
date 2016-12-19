@@ -90,10 +90,9 @@ class TestAccessibility(MarionetteTestCase):
             element = self.marionette.find_element(By.ID, id)
             testFn(element)
 
-    def setup_accessibility(self, raisesAccessibilityExceptions=True, navigate=True):
+    def setup_accessibility(self, enable_a11y_checks=True, navigate=True):
         self.marionette.delete_session()
-        self.marionette.start_session(
-            {"raisesAccessibilityExceptions": raisesAccessibilityExceptions})
+        self.marionette.start_session({"moz:accessibilityChecks": enable_a11y_checks})
         # Navigate to test_accessibility.html
         if navigate:
             test_accessibility = self.marionette.absolute_url("test_accessibility.html")
