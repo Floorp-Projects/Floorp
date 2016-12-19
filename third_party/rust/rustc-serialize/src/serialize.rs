@@ -1214,6 +1214,53 @@ impl<T:Decodable> Decodable for Option<T> {
     }
 }
 
+impl<T:Encodable, E:Encodable> Encodable for Result<T, E> {
+    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
+        s.emit_enum("Result", |s| {
+            match *self {
+                Ok(ref v) => {
+                    s.emit_enum_variant("Ok", 0, 1, |s| {
+                        try!(s.emit_enum_variant_arg(0, |s| {
+                            v.encode(s)
+                        }));
+                        Ok(())
+                    })
+                }
+                Err(ref v) => {
+                    s.emit_enum_variant("Err", 1, 1, |s| {
+                        try!(s.emit_enum_variant_arg(0, |s| {
+                            v.encode(s)
+                        }));
+                        Ok(())
+                    })
+                }
+            }
+        })
+    }
+}
+
+impl<T: Decodable, E: Decodable> Decodable for Result<T, E> {
+    fn decode<D: Decoder>(d: &mut D) -> Result<Result<T, E>, D::Error> {
+        d.read_enum("Result", |d| {
+            d.read_enum_variant(&["Ok", "Err"], |d, idx| {
+                match idx {
+                    0 => {
+                        d.read_enum_variant_arg(0, |d| {
+                            T::decode(d)
+                        }).map(|v| Ok(v))
+                    }
+                    1 => {
+                        d.read_enum_variant_arg(0, |d| {
+                            E::decode(d)
+                        }).map(|v| Err(v))
+                    }
+                    _ => panic!("Internal error"),
+                }
+            })
+        })
+    }
+}
+
 impl<T> Encodable for PhantomData<T> {
     fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
         s.emit_nil()

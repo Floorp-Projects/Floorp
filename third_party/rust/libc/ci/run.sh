@@ -21,14 +21,14 @@ if [ "$QEMU" != "" ]; then
     # image is .gz : download and uncompress it
     qemufile=$(echo ${QEMU%.gz} | sed 's/\//__/g')
     if [ ! -f $tmpdir/$qemufile ]; then
-      curl https://people.mozilla.org/~acrichton/libc-test/qemu/$QEMU | \
+      curl https://s3.amazonaws.com/rust-lang-ci/libc/$QEMU | \
         gunzip -d > $tmpdir/$qemufile
     fi
   else
     # plain qcow2 image: just download it
     qemufile=$(echo ${QEMU} | sed 's/\//__/g')
     if [ ! -f $tmpdir/$qemufile ]; then
-      curl https://people.mozilla.org/~acrichton/libc-test/qemu/$QEMU \
+      curl https://s3.amazonaws.com/rust-lang-ci/libc/$QEMU \
         > $tmpdir/$qemufile
     fi
   fi

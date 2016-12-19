@@ -709,6 +709,21 @@ pub fn vertex_attrib_pointer(index: GLuint,
 }
 
 #[inline]
+pub fn vertex_attrib_i_pointer(index: GLuint,
+                               size: GLint,
+                               type_: GLenum,
+                               stride: GLsizei,
+                               offset: GLuint) {
+    unsafe {
+        ffi::VertexAttribIPointer(index,
+                                  size,
+                                  type_,
+                                  stride,
+                                  offset as *const GLvoid)
+    }
+}
+
+#[inline]
 pub fn vertex_attrib_divisor(index: GLuint, divisor: GLuint) {
     unsafe {
         ffi::VertexAttribDivisor(index, divisor)
@@ -1430,7 +1445,7 @@ pub fn generate_mipmap(target: GLenum) {
 }
 
 #[inline]
-#[cfg(not(android))]
+#[cfg(not(target_os="android"))]
 pub fn insert_event_marker_ext(message: &str) {
     if ffi::InsertEventMarkerEXT::is_loaded() {
         unsafe {
@@ -1440,7 +1455,7 @@ pub fn insert_event_marker_ext(message: &str) {
 }
 
 #[inline]
-#[cfg(not(android))]
+#[cfg(not(target_os="android"))]
 pub fn push_group_marker_ext(message: &str) {
     if ffi::PushGroupMarkerEXT::is_loaded() {
         unsafe {
@@ -1450,7 +1465,7 @@ pub fn push_group_marker_ext(message: &str) {
 }
 
 #[inline]
-#[cfg(not(android))]
+#[cfg(not(target_os="android"))]
 pub fn pop_group_marker_ext() {
     if ffi::PopGroupMarkerEXT::is_loaded() {
         unsafe {

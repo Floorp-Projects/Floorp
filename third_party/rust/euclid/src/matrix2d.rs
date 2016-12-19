@@ -11,7 +11,6 @@ use super::{UnknownUnit, Radians};
 use num::{One, Zero};
 use point::TypedPoint2D;
 use rect::TypedRect;
-use size::TypedSize2D;
 use std::ops::{Add, Mul, Div, Sub};
 use std::marker::PhantomData;
 use approxeq::ApproxEq;
@@ -214,28 +213,12 @@ where T: Copy + Clone +
     /// matrix.
     #[inline]
     pub fn transform_rect(&self, rect: &TypedRect<T, Src>) -> TypedRect<T, Dst> {
-        let top_left = self.transform_point(&rect.origin);
-        let top_right = self.transform_point(&rect.top_right());
-        let bottom_left = self.transform_point(&rect.bottom_left());
-        let bottom_right = self.transform_point(&rect.bottom_right());
-        let (mut min_x, mut min_y) = (top_left.x, top_left.y);
-        let (mut max_x, mut max_y) = (min_x, min_y);
-        for point in &[top_right, bottom_left, bottom_right] {
-            if point.x < min_x {
-                min_x = point.x
-            }
-            if point.x > max_x {
-                max_x = point.x
-            }
-            if point.y < min_y {
-                min_y = point.y
-            }
-            if point.y > max_y {
-                max_y = point.y
-            }
-        }
-        TypedRect::new(TypedPoint2D::new(min_x, min_y),
-                       TypedSize2D::new(max_x - min_x, max_y - min_y))
+        TypedRect::from_points(&[
+            self.transform_point(&rect.origin),
+            self.transform_point(&rect.top_right()),
+            self.transform_point(&rect.bottom_left()),
+            self.transform_point(&rect.bottom_right()),
+        ])
     }
 
     /// Computes and returns the determinant of this matrix.
