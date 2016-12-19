@@ -80,6 +80,10 @@ function clearHistory(options) {
   return sanitizer.items.history.clear(makeRange(options));
 }
 
+function clearPluginData(options) {
+  return sanitizer.items.pluginData.clear(makeRange(options));
+}
+
 function doRemoval(options, dataToRemove, extension) {
   if (options.originTypes &&
       (options.originTypes.protectedWeb || options.originTypes.extension)) {
@@ -106,6 +110,9 @@ function doRemoval(options, dataToRemove, extension) {
           break;
         case "history":
           removalPromises.push(clearHistory(options));
+          break;
+        case "pluginData":
+          removalPromises.push(clearPluginData(options));
           break;
         default:
           invalidDataTypes.push(dataType);
@@ -166,6 +173,9 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
       },
       removeHistory(options) {
         return doRemoval(options, {history: true});
+      },
+      removePluginData(options) {
+        return doRemoval(options, {pluginData: true});
       },
     },
   };
