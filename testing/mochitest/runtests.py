@@ -2083,7 +2083,7 @@ toolbar#nav-bar {
         Return a path to the runtimes file for a given flavor and
         subsuite.
         """
-        template = "mochitest{e10s}-{suite_slug}.runtimes.json"
+        template = "mochitest-{suite_slug}{e10s}.runtimes.json"
         data_dir = os.path.join(SCRIPT_DIR, 'runtimes')
 
         # Determine the suite slug in the runtimes file name
