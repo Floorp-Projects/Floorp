@@ -146,8 +146,9 @@ pub const ENOTEMPTY: ::c_int = 41;
 pub const EILSEQ: ::c_int = 42;
 pub const STRUNCATE: ::c_int = 80;
 
-#[cfg(target_env = "msvc")] // " if " -- appease style checker
-#[link(name = "msvcrt")]
+#[cfg(all(target_env = "msvc", stdbuild))] // " if " -- appease style checker
+#[link(name = "msvcrt", cfg(not(target_feature = "crt-static")))]
+#[link(name = "libcmt", cfg(target_feature = "crt-static"))]
 extern {}
 
 extern {

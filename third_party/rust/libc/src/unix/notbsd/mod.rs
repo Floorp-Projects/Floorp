@@ -53,7 +53,9 @@ s! {
         pub ai_protocol: ::c_int,
         pub ai_addrlen: socklen_t,
 
-        #[cfg(any(target_os = "linux", target_os = "emscripten"))]
+        #[cfg(any(target_os = "linux",
+                  target_os = "emscripten",
+                  target_os = "fuchsia"))]
         pub ai_addr: *mut ::sockaddr,
 
         pub ai_canonname: *mut c_char,
@@ -160,6 +162,19 @@ s! {
         pub int_n_sep_by_space: ::c_char,
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
+    }
+
+    pub struct sigevent {
+        pub sigev_value: ::sigval,
+        pub sigev_signo: ::c_int,
+        pub sigev_notify: ::c_int,
+        // Actually a union.  We only expose sigev_notify_thread_id because it's
+        // the most useful member
+        pub sigev_notify_thread_id: ::c_int,
+        #[cfg(target_pointer_width = "64")]
+        __unused1: [::c_int; 11],
+        #[cfg(target_pointer_width = "32")]
+        __unused1: [::c_int; 12]
     }
 }
 
@@ -630,6 +645,10 @@ pub const PIPE_BUF: usize = 4096;
 
 pub const SI_LOAD_SHIFT: ::c_uint = 16;
 
+pub const SIGEV_SIGNAL: ::c_int = 0;
+pub const SIGEV_NONE: ::c_int = 1;
+pub const SIGEV_THREAD: ::c_int = 2;
+
 f! {
     pub fn FD_CLR(fd: ::c_int, set: *mut fd_set) -> () {
         let fd = fd as usize;
@@ -851,11 +870,15 @@ extern {
                    flg: ::c_int) -> ::c_int;
     pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
                                    abstime: *const ::timespec) -> ::c_int;
+    pub fn ptsname_r(fd: ::c_int,
+                     buf: *mut ::c_char,
+                     buflen: ::size_t) -> ::c_int;
 }
 
 cfg_if! {
     if #[cfg(any(target_os = "linux",
-                 target_os = "emscripten"))] {
+                 target_os = "emscripten",
+                 target_os = "fuchsia"))] {
         mod linux;
         pub use self::linux::*;
     } else if #[cfg(target_os = "android")] {

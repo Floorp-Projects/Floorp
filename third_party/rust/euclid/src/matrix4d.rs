@@ -11,6 +11,7 @@ use super::{UnknownUnit, Radians};
 use approxeq::ApproxEq;
 use trig::Trig;
 use point::{TypedPoint2D, TypedPoint3D, TypedPoint4D};
+use rect::TypedRect;
 use matrix2d::TypedMatrix2D;
 use scale_factor::ScaleFactor;
 use num::{One, Zero};
@@ -196,6 +197,28 @@ where T: Copy + Clone +
         )
     }
 
+    /// Drop the units, preserving only the numeric value.
+    #[inline]
+    pub fn to_untyped(&self) -> Matrix4D<T> {
+        Matrix4D::row_major(
+            self.m11, self.m12, self.m13, self.m14,
+            self.m21, self.m22, self.m23, self.m24,
+            self.m31, self.m32, self.m33, self.m34,
+            self.m41, self.m42, self.m43, self.m44,
+        )
+    }
+
+    /// Tag a unitless value with units.
+    #[inline]
+    pub fn from_untyped(m: &Matrix4D<T>) -> Self {
+        TypedMatrix4D::row_major(
+            m.m11, m.m12, m.m13, m.m14,
+            m.m21, m.m22, m.m23, m.m24,
+            m.m31, m.m32, m.m33, m.m34,
+            m.m41, m.m42, m.m43, m.m44,
+        )
+    }
+
     /// Returns the multiplication of the two matrices such that mat's transformation
     /// applies after self's transformation.
     pub fn post_mul<NewDst>(&self, mat: &TypedMatrix4D<T, Dst, NewDst>) -> TypedMatrix4D<T, Src, NewDst> {
@@ -374,6 +397,17 @@ where T: Copy + Clone +
         let z = p.x * self.m13 + p.y * self.m23 + p.z * self.m33 + p.w * self.m43;
         let w = p.x * self.m14 + p.y * self.m24 + p.z * self.m34 + p.w * self.m44;
         TypedPoint4D::new(x, y, z, w)
+    }
+
+    /// Returns a rectangle that encompasses the result of transforming the given rectangle by this
+    /// matrix.
+    pub fn transform_rect(&self, rect: &TypedRect<T, Src>) -> TypedRect<T, Dst> {
+        TypedRect::from_points(&[
+            self.transform_point(&rect.origin),
+            self.transform_point(&rect.top_right()),
+            self.transform_point(&rect.bottom_left()),
+            self.transform_point(&rect.bottom_right()),
+        ])
     }
 
     /// Create a 3d translation matrix

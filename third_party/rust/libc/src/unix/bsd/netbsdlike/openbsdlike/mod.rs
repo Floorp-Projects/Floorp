@@ -1,5 +1,3 @@
-pub type c_long = i64;
-pub type c_ulong = u64;
 pub type clock_t = i64;
 pub type suseconds_t = i64;
 pub type dev_t = i32;
@@ -433,6 +431,8 @@ extern {
                   newlen: ::size_t)
                   -> ::c_int;
     pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
+    pub fn pledge(promises: *const ::c_char,
+                  paths: *mut *const ::c_char) -> ::c_int;
 }
 
 cfg_if! {
@@ -446,3 +446,6 @@ cfg_if! {
         // Unknown target_os
     }
 }
+
+mod other;
+pub use self::other::*;

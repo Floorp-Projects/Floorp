@@ -15,6 +15,18 @@ pub type fsblkcnt_t = u64;
 pub type fsfilcnt_t = u64;
 
 s! {
+    pub struct aiocb {
+        pub aio_fildes: ::c_int,
+        pub aio_offset: ::off_t,
+        pub aio_buf: *mut ::c_void,
+        pub aio_nbytes: ::size_t,
+        pub aio_sigevent: sigevent,
+        pub aio_lio_opcode: ::c_int,
+        pub aio_reqprio: ::c_int,
+        _aio_val: ::c_int,
+        _aio_err: ::c_int
+    }
+
     pub struct dirent {
         pub d_fileno: ::ino_t,
         pub d_namlen: u16,
@@ -31,6 +43,15 @@ s! {
         pub clock_seq_hi_and_reserved: u8,
         pub clock_seq_low: u8,
         pub node: [u8; 6],
+    }
+
+    pub struct sigevent {
+        pub sigev_notify: ::c_int,
+        pub sigev_signo: ::c_int,       //actually a union
+        #[cfg(target_pointer_width = "64")]
+        __unused1: ::c_int,
+        pub sigev_value: ::sigval,
+        __unused2: *mut ::c_void        //actually a function pointer
     }
 
     pub struct statvfs {

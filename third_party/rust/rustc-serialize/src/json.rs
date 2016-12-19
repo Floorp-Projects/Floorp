@@ -3207,6 +3207,15 @@ mod tests {
     }
 
     #[test]
+    fn test_decode_result() {
+        let value: Result<i32, i8> = Ok(4);
+        let json_value = super::encode(&value).unwrap();
+        assert_eq!(json_value, "{\"variant\":\"Ok\",\"fields\":[4]}");
+        let decoded_value: Result<i32, i8> = super::decode(&json_value).unwrap();
+        assert_eq!(decoded_value, Ok(4));
+    }
+
+    #[test]
     fn test_decode_map() {
         let s = "{\"a\": \"Dog\", \"b\": {\"variant\":\"Frog\",\
                   \"fields\":[\"Henry\", 349]}}";

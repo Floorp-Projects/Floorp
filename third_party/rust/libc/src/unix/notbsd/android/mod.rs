@@ -331,6 +331,7 @@ pub const ENOPROTOOPT: ::c_int = 92;
 pub const EPROTONOSUPPORT: ::c_int = 93;
 pub const ESOCKTNOSUPPORT: ::c_int = 94;
 pub const EOPNOTSUPP: ::c_int = 95;
+pub const ENOTSUP: ::c_int = EOPNOTSUPP;
 pub const EPFNOSUPPORT: ::c_int = 96;
 pub const EAFNOSUPPORT: ::c_int = 97;
 pub const EADDRINUSE: ::c_int = 98;
@@ -640,6 +641,8 @@ pub const NETLINK_TX_RING: ::c_int = 7;
 pub const NLA_F_NESTED: ::c_int = 1 << 15;
 pub const NLA_F_NET_BYTEORDER: ::c_int = 1 << 14;
 pub const NLA_TYPE_MASK: ::c_int = !(NLA_F_NESTED | NLA_F_NET_BYTEORDER);
+
+pub const SIGEV_THREAD_ID: ::c_int = 4;
 
 f! {
     pub fn sigemptyset(set: *mut sigset_t) -> ::c_int {

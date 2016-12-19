@@ -92,6 +92,7 @@ s! {
     }
 
     pub struct stack_t {
+        // In FreeBSD 11 and later, ss_sp is actually a void*
         pub ss_sp: *mut ::c_char,
         pub ss_size: ::size_t,
         pub ss_flags: ::c_int,
@@ -175,6 +176,21 @@ s! {
         data: [u32; 4],
     }
 }
+
+pub const AIO_LISTIO_MAX: ::c_int = 16;
+pub const AIO_CANCELED: ::c_int = 1;
+pub const AIO_NOTCANCELED: ::c_int = 2;
+pub const AIO_ALLDONE: ::c_int = 3;
+pub const LIO_NOP: ::c_int = 0;
+pub const LIO_WRITE: ::c_int = 1;
+pub const LIO_READ: ::c_int = 2;
+pub const LIO_WAIT: ::c_int = 1;
+pub const LIO_NOWAIT: ::c_int = 0;
+
+pub const SIGEV_NONE: ::c_int = 0;
+pub const SIGEV_SIGNAL: ::c_int = 1;
+pub const SIGEV_THREAD: ::c_int = 2;
+pub const SIGEV_KEVENT: ::c_int = 3;
 
 pub const EMPTY: ::c_short = 0;
 pub const BOOT_TIME: ::c_short = 1;
@@ -419,6 +435,7 @@ pub const ENOPROTOOPT: ::c_int = 42;
 pub const EPROTONOSUPPORT: ::c_int = 43;
 pub const ESOCKTNOSUPPORT: ::c_int = 44;
 pub const EOPNOTSUPP: ::c_int = 45;
+pub const ENOTSUP: ::c_int = EOPNOTSUPP;
 pub const EPFNOSUPPORT: ::c_int = 46;
 pub const EAFNOSUPPORT: ::c_int = 47;
 pub const EADDRINUSE: ::c_int = 48;
@@ -745,6 +762,19 @@ extern {
 
 #[link(name = "util")]
 extern {
+    pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_error(aiocbp: *const aiocb) -> ::c_int;
+    pub fn aio_return(aiocbp: *mut aiocb) -> ::ssize_t;
+    pub fn aio_suspend(aiocb_list: *const *const aiocb, nitems: ::c_int,
+                       timeout: *const ::timespec) -> ::c_int;
+    pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
+                      nitems: ::c_int, sevp: *mut sigevent) -> ::c_int;
+    pub fn aio_waitcomplete(iocbp: *mut *mut aiocb,
+                            timeout: *mut ::timespec) -> ::ssize_t;
+
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
                        host: *mut ::c_char,
