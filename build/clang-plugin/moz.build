@@ -15,7 +15,6 @@ UNIFIED_SOURCES += [
     'ExplicitOperatorBoolChecker.cpp',
     'KungFuDeathGripChecker.cpp',
     'MozCheckAction.cpp',
-    'MozChecker.cpp',
     'MustOverrideChecker.cpp',
     'MustUseChecker.cpp',
     'NaNExprChecker.cpp',
