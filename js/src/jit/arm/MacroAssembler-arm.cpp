@@ -2306,39 +2306,57 @@ MacroAssemblerARMCompat::store32(Register src, const BaseIndex& dest)
     }
 }
 
-template <typename T>
 void
-MacroAssemblerARMCompat::storePtr(ImmWord imm, T address)
+MacroAssemblerARMCompat::storePtr(ImmWord imm, const Address& address)
+{
+    store32(Imm32(imm.value), address);
+}
+
+void
+MacroAssemblerARMCompat::storePtr(ImmWord imm, const BaseIndex& address)
+{
+    store32(Imm32(imm.value), address);
+}
+
+void
+MacroAssemblerARMCompat::storePtr(ImmPtr imm, const Address& address)
+{
+    store32(Imm32(uintptr_t(imm.value)), address);
+}
+
+void
+MacroAssemblerARMCompat::storePtr(ImmPtr imm, const BaseIndex& address)
+{
+    store32(Imm32(uintptr_t(imm.value)), address);
+}
+
+void
+MacroAssemblerARMCompat::storePtr(ImmGCPtr imm, const Address& address)
 {
     ScratchRegisterScope scratch(asMasm());
-    movePtr(imm, scratch);
-    storePtr(scratch, address);
+    SecondScratchRegisterScope scratch2(asMasm());
+    ma_mov(imm, scratch);
+    ma_str(scratch, address, scratch2);
 }
 
-template void MacroAssemblerARMCompat::storePtr<Address>(ImmWord imm, Address address);
-template void MacroAssemblerARMCompat::storePtr<BaseIndex>(ImmWord imm, BaseIndex address);
-
-template <typename T>
 void
-MacroAssemblerARMCompat::storePtr(ImmPtr imm, T address)
+MacroAssemblerARMCompat::storePtr(ImmGCPtr imm, const BaseIndex& address)
 {
-    storePtr(ImmWord(uintptr_t(imm.value)), address);
-}
+    Register base = address.base;
+    uint32_t scale = Imm32::ShiftOf(address.scale).value;
 
-template void MacroAssemblerARMCompat::storePtr<Address>(ImmPtr imm, Address address);
-template void MacroAssemblerARMCompat::storePtr<BaseIndex>(ImmPtr imm, BaseIndex address);
-
-template <typename T>
-void
-MacroAssemblerARMCompat::storePtr(ImmGCPtr imm, T address)
-{
     ScratchRegisterScope scratch(asMasm());
-    movePtr(imm, scratch);
-    storePtr(scratch, address);
-}
+    SecondScratchRegisterScope scratch2(asMasm());
 
-template void MacroAssemblerARMCompat::storePtr<Address>(ImmGCPtr imm, Address address);
-template void MacroAssemblerARMCompat::storePtr<BaseIndex>(ImmGCPtr imm, BaseIndex address);
+    if (address.offset != 0) {
+        ma_add(base, Imm32(address.offset), scratch, scratch2);
+        ma_mov(imm, scratch2);
+        ma_str(scratch2, DTRAddr(scratch, DtrRegImmShift(address.index, LSL, scale)));
+    } else {
+        ma_mov(imm, scratch);
+        ma_str(scratch, DTRAddr(base, DtrRegImmShift(address.index, LSL, scale)));
+    }
+}
 
 void
 MacroAssemblerARMCompat::storePtr(Register src, const Address& address)
