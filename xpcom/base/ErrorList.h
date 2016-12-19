@@ -989,6 +989,18 @@
 #undef MODULE
 
   /* ======================================================================= */
+  /* 42: NS_ERROR_MODULE_URL_CLASSIFIER */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_URL_CLASSIFIER
+  ERROR(NS_ERROR_UC_UPDATE_UNKNOWN,                 FAILURE(1)),
+  ERROR(NS_ERROR_UC_UPDATE_DUPLICATE_PREFIX,        FAILURE(2)),
+  ERROR(NS_ERROR_UC_UPDATE_INFINITE_LOOP,           FAILURE(3)),
+  ERROR(NS_ERROR_UC_UPDATE_WRONG_REMOVAL_INDICES,   FAILURE(4)),
+  ERROR(NS_ERROR_UC_UPDATE_CHECKSUM_MISMATCH,       FAILURE(5)),
+  ERROR(NS_ERROR_UC_UPDATE_MISSING_CHECKSUM,        FAILURE(6)),
+#undef MODULE
+
+  /* ======================================================================= */
   /* 51: NS_ERROR_MODULE_GENERAL */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_GENERAL
