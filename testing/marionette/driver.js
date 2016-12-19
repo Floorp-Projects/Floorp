@@ -156,7 +156,6 @@ this.GeckoDriver = function (appName, server) {
     "acceptInsecureCerts": !this.secureTLS,
 
     // supported features
-    "raisesAccessibilityExceptions": false,
     "rotatable": this.appName == "B2G",
     "proxy": {},
 
@@ -164,6 +163,7 @@ this.GeckoDriver = function (appName, server) {
     "specificationLevel": 0,
     "moz:processID": Services.appinfo.processID,
     "moz:profile": Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+    "moz:accessibilityChecks": false,
   };
 
   this.mm = globalMessageManager;
@@ -182,6 +182,10 @@ this.GeckoDriver = function (appName, server) {
 
   this.actions = new action.Chain();
 };
+
+Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
+  get: function () { return this.sessionCapabilities["moz:accessibilityChecks"]; }
+});
 
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
   Ci.nsIMessageListener,
@@ -532,8 +536,7 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   // If we are testing accessibility with marionette, start a11y service in
   // chrome first. This will ensure that we do not have any content-only
   // services hanging around.
-  if (this.sessionCapabilities.raisesAccessibilityExceptions &&
-      accessibility.service) {
+  if (this.a11yChecks && accessibility.service) {
     logger.info("Preemptively starting accessibility service in Chrome");
   }
 
@@ -1784,8 +1787,7 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
-      yield interaction.clickElement(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+      yield interaction.clickElement(el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -1915,7 +1917,7 @@ GeckoDriver.prototype.isElementDisplayed = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementDisplayed(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -1964,7 +1966,7 @@ GeckoDriver.prototype.isElementEnabled = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementEnabled(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -1988,7 +1990,7 @@ GeckoDriver.prototype.isElementSelected = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementSelected(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -2036,7 +2038,7 @@ GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       yield interaction.sendKeysToElement(
-          el, value, true, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, value, true, this.a11yChecks);
       break;
 
     case Context.CONTENT:
