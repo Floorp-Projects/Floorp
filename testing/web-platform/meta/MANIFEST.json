@@ -39561,6 +39561,12 @@
             "url": "/html/semantics/forms/the-select-element/select-validity.html"
           }
         ],
+        "selection/setBaseAndExtent.html": [
+          {
+            "path": "selection/setBaseAndExtent.html",
+            "url": "/selection/setBaseAndExtent.html"
+          }
+        ],
         "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html": [
           {
             "path": "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html",
