@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use euclid::{Matrix4D, Point2D, Rect, Size2D};
 use std::mem;
 use std::slice;
 use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem, BorderRadius};
@@ -15,6 +14,7 @@ use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, ItemRange, MixBlendM
 use {PushScrollLayerItem, PushStackingContextDisplayItem, RectangleDisplayItem, ScrollLayerId};
 use {ScrollPolicy, ServoScrollRootId, SpecificDisplayItem, StackingContext, TextDisplayItem};
 use {WebGLContextId, WebGLDisplayItem, YuvImageDisplayItem};
+use {LayoutTransform, LayoutPoint, LayoutRect, LayoutSize};
 
 impl BuiltDisplayListDescriptor {
     pub fn size(&self) -> usize {
@@ -72,7 +72,7 @@ impl DisplayListBuilder {
     }
 
     pub fn push_rect(&mut self,
-                     rect: Rect<f32>,
+                     rect: LayoutRect,
                      clip: ClipRegion,
                      color: ColorF) {
         let item = RectangleDisplayItem {
@@ -89,10 +89,10 @@ impl DisplayListBuilder {
     }
 
     pub fn push_image(&mut self,
-                      rect: Rect<f32>,
+                      rect: LayoutRect,
                       clip: ClipRegion,
-                      stretch_size: Size2D<f32>,
-                      tile_spacing: Size2D<f32>,
+                      stretch_size: LayoutSize,
+                      tile_spacing: LayoutSize,
                       image_rendering: ImageRendering,
                       key: ImageKey) {
         let item = ImageDisplayItem {
@@ -112,7 +112,7 @@ impl DisplayListBuilder {
     }
 
     pub fn push_yuv_image(&mut self,
-                          rect: Rect<f32>,
+                          rect: LayoutRect,
                           clip: ClipRegion,
                           y_key: ImageKey,
                           u_key: ImageKey,
@@ -131,7 +131,7 @@ impl DisplayListBuilder {
     }
 
     pub fn push_webgl_canvas(&mut self,
-                             rect: Rect<f32>,
+                             rect: LayoutRect,
                              clip: ClipRegion,
                              context_id: WebGLContextId) {
         let item = WebGLDisplayItem {
@@ -148,7 +148,7 @@ impl DisplayListBuilder {
     }
 
     pub fn push_text(&mut self,
-                     rect: Rect<f32>,
+                     rect: LayoutRect,
                      clip: ClipRegion,
                      glyphs: Vec<GlyphInstance>,
                      font_key: FontKey,
@@ -181,7 +181,7 @@ impl DisplayListBuilder {
     }
 
     pub fn push_border(&mut self,
-                       rect: Rect<f32>,
+                       rect: LayoutRect,
                        clip: ClipRegion,
                        left: BorderSide,
                        top: BorderSide,
@@ -206,10 +206,10 @@ impl DisplayListBuilder {
     }
 
     pub fn push_box_shadow(&mut self,
-                           rect: Rect<f32>,
+                           rect: LayoutRect,
                            clip: ClipRegion,
-                           box_bounds: Rect<f32>,
-                           offset: Point2D<f32>,
+                           box_bounds: LayoutRect,
+                           offset: LayoutPoint,
                            color: ColorF,
                            blur_radius: f32,
                            spread_radius: f32,
@@ -235,10 +235,10 @@ impl DisplayListBuilder {
     }
 
     pub fn push_gradient(&mut self,
-                         rect: Rect<f32>,
+                         rect: LayoutRect,
                          clip: ClipRegion,
-                         start_point: Point2D<f32>,
-                         end_point: Point2D<f32>,
+                         start_point: LayoutPoint,
+                         end_point: LayoutPoint,
                          stops: Vec<GradientStop>) {
         let item = GradientDisplayItem {
             start_point: start_point,
@@ -255,13 +255,13 @@ impl DisplayListBuilder {
         self.list.push(display_item);
     }
 
-    pub fn push_stacking_context(&mut self, 
+    pub fn push_stacking_context(&mut self,
                                  scroll_policy: ScrollPolicy,
-                                 bounds: Rect<f32>,
+                                 bounds: LayoutRect,
                                  clip: ClipRegion,
                                  z_index: i32,
-                                 transform: &Matrix4D<f32>,
-                                 perspective: &Matrix4D<f32>,
+                                 transform: &LayoutTransform,
+                                 perspective: &LayoutTransform,
                                  mix_blend_mode: MixBlendMode,
                                  filters: Vec<FilterOp>) {
         let stacking_context = StackingContext {
@@ -278,7 +278,7 @@ impl DisplayListBuilder {
             item: SpecificDisplayItem::PushStackingContext(PushStackingContextDisplayItem {
                 stacking_context: stacking_context
             }),
-            rect: Rect::zero(),
+            rect: LayoutRect::zero(),
             clip: clip,
         };
         self.list.push(item);
@@ -287,15 +287,15 @@ impl DisplayListBuilder {
     pub fn pop_stacking_context(&mut self) {
         let item = DisplayItem {
             item: SpecificDisplayItem::PopStackingContext,
-            rect: Rect::zero(),
-            clip: ClipRegion::simple(&Rect::zero()),
+            rect: LayoutRect::zero(),
+            clip: ClipRegion::simple(&LayoutRect::zero()),
         };
         self.list.push(item);
     }
 
     pub fn push_scroll_layer(&mut self,
-                             clip: Rect<f32>,
-                             content_size: Size2D<f32>,
+                             clip: LayoutRect,
+                             content_size: LayoutSize,
                              scroll_root_id: ServoScrollRootId) {
         let scroll_layer_id = self.next_scroll_layer_id;
         self.next_scroll_layer_id += 1;
@@ -308,7 +308,7 @@ impl DisplayListBuilder {
         let item = DisplayItem {
             item: SpecificDisplayItem::PushScrollLayer(item),
             rect: clip,
-            clip: ClipRegion::simple(&Rect::zero()),
+            clip: ClipRegion::simple(&LayoutRect::zero()),
         };
         self.list.push(item);
     }
@@ -316,13 +316,13 @@ impl DisplayListBuilder {
     pub fn pop_scroll_layer(&mut self) {
         let item = DisplayItem {
             item: SpecificDisplayItem::PopScrollLayer,
-            rect: Rect::zero(),
-            clip: ClipRegion::simple(&Rect::zero()),
+            rect: LayoutRect::zero(),
+            clip: ClipRegion::simple(&LayoutRect::zero()),
         };
         self.list.push(item);
     }
 
-    pub fn push_iframe(&mut self, rect: Rect<f32>, clip: ClipRegion, pipeline_id: PipelineId) {
+    pub fn push_iframe(&mut self, rect: LayoutRect, clip: ClipRegion, pipeline_id: PipelineId) {
         let item = DisplayItem {
             item: SpecificDisplayItem::Iframe(IframeDisplayItem { pipeline_id: pipeline_id }),
             rect: rect,
@@ -332,7 +332,7 @@ impl DisplayListBuilder {
     }
 
     pub fn new_clip_region(&mut self,
-                           rect: &Rect<f32>,
+                           rect: &LayoutRect,
                            complex: Vec<ComplexClipRegion>,
                            image_mask: Option<ImageMask>)
                            -> ClipRegion {

@@ -4,7 +4,6 @@
 
 use app_units::Au;
 use batch_builder::BorderSideHelpers;
-use euclid::{Point2D, Rect, Size2D};
 use fnv::FnvHasher;
 use frame::FrameId;
 use gpu_store::GpuStoreAddress;
@@ -31,7 +30,7 @@ use std::hash::{BuildHasherDefault};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::usize;
 use texture_cache::TexturePage;
-use util::{self, rect_from_points, MatrixHelpers, rect_from_points_f};
+use util::{self, rect_from_points, rect_from_points_f};
 use util::{TransformedRect, TransformedRectKind, subtract_rect, pack_as_float};
 use webrender_traits::{ColorF, FontKey, ImageKey, ImageRendering, MixBlendMode};
 use webrender_traits::{BorderDisplayItem, BorderSide, BorderStyle, YuvColorSpace};
@@ -739,7 +738,7 @@ struct RenderTargetContext<'a> {
 pub struct RenderTarget {
     pub alpha_batcher: AlphaBatcher,
     pub clip_batcher: ClipBatcher,
-    pub box_shadow_cache_prims: Vec<CachePrimitiveInstance>,
+    pub box_shadow_cache_prims: Vec<PrimitiveInstance>,
     // List of text runs to be cached to this render target.
     // TODO(gw): For now, assume that these all come from
     //           the same source texture id. This is almost
@@ -748,7 +747,7 @@ pub struct RenderTarget {
     //           glyphs visible. Once the future glyph / texture
     //           cache changes land, this restriction will
     //           be removed anyway.
-    pub text_run_cache_prims: Vec<CachePrimitiveInstance>,
+    pub text_run_cache_prims: Vec<PrimitiveInstance>,
     pub text_run_textures: BatchTextures,
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurCommand>,
@@ -826,12 +825,14 @@ impl RenderTarget {
 
                 match prim_metadata.prim_kind {
                     PrimitiveKind::BoxShadow => {
-                        self.box_shadow_cache_prims.push(CachePrimitiveInstance {
-                            task_id: render_tasks.get_task_index(&task.id, pass_index).0 as i32,
+                        self.box_shadow_cache_prims.push(PrimitiveInstance {
                             global_prim_id: prim_index.0 as i32,
                             prim_address: prim_metadata.gpu_prim_index,
+                            task_index: render_tasks.get_task_index(&task.id, pass_index).0 as i32,
+                            clip_task_index: 0,
+                            layer_index: 0,
                             sub_index: 0,
-                            user_data: [0; 4],
+                            user_data: [0; 2],
                         });
                     }
                     PrimitiveKind::TextRun => {
@@ -852,12 +853,14 @@ impl RenderTarget {
                         self.text_run_textures = textures;
 
                         for glyph_index in 0..prim_metadata.gpu_data_count {
-                            self.text_run_cache_prims.push(CachePrimitiveInstance {
-                                task_id: render_tasks.get_task_index(&task.id, pass_index).0 as i32,
+                            self.text_run_cache_prims.push(PrimitiveInstance {
                                 global_prim_id: prim_index.0 as i32,
                                 prim_address: prim_metadata.gpu_prim_index,
+                                task_index: render_tasks.get_task_index(&task.id, pass_index).0 as i32,
+                                clip_task_index: 0,
+                                layer_index: 0,
                                 sub_index: prim_metadata.gpu_data_address.0 + glyph_index,
-                                user_data: [ text.resource_address.0 + glyph_index, 0, 0, 0 ],
+                                user_data: [ text.resource_address.0 + glyph_index, 0],
                             });
                         }
                     }
@@ -1384,15 +1387,6 @@ pub struct BlurCommand {
     padding: i32,
 }
 
-#[derive(Debug)]
-pub struct CachePrimitiveInstance {
-    global_prim_id: i32,
-    prim_address: GpuStoreAddress,
-    task_id: i32,
-    sub_index: i32,
-    user_data: [i32; 4],
-}
-
 /// A clipping primitive drawn into the clipping mask.
 /// Could be an image or a rectangle, which defines the
 /// way `address` is treated.
@@ -1661,7 +1655,7 @@ impl FrameBuilderConfig {
 }
 
 pub struct FrameBuilder {
-    screen_rect: Rect<i32>,
+    screen_rect: LayerRect,
     prim_store: PrimitiveStore,
     cmds: Vec<PrimitiveRunCmd>,
     debug: bool,
@@ -1676,12 +1670,12 @@ pub struct FrameBuilder {
 /// A rendering-oriented representation of frame::Frame built by the render backend
 /// and presented to the renderer.
 pub struct Frame {
-    pub viewport_size: Size2D<i32>,
+    pub viewport_size: LayerSize,
     pub device_pixel_ratio: f32,
     pub debug_rects: Vec<DebugRect>,
     pub cache_size: DeviceSize,
     pub passes: Vec<RenderPass>,
-    pub clear_tiles: Vec<ClearTile>,
+    pub empty_tiles: Vec<ClearTile>,
     pub profile_counters: FrameProfileCounters,
 
     pub layer_texture_data: Vec<PackedStackingContext>,
@@ -1983,12 +1977,11 @@ impl ScreenTile {
 }
 
 impl FrameBuilder {
-    pub fn new(viewport_size: Size2D<f32>,
+    pub fn new(viewport_size: LayerSize,
                debug: bool,
                config: FrameBuilderConfig) -> FrameBuilder {
-        let viewport_size = Size2D::new(viewport_size.width as i32, viewport_size.height as i32);
         FrameBuilder {
-            screen_rect: Rect::new(Point2D::zero(), viewport_size),
+            screen_rect: LayerRect::new(LayerPoint::zero(), viewport_size),
             layer_store: Vec::new(),
             prim_store: PrimitiveStore::new(),
             cmds: Vec::new(),
@@ -2006,7 +1999,7 @@ impl FrameBuilder {
 
         let geometry = PrimitiveGeometry {
             local_rect: *rect,
-            local_clip_rect: LayerRect::from_untyped(&clip_region.main),
+            local_clip_rect: clip_region.main,
         };
         let clip_source = if clip_region.is_complex() {
             ClipSource::Region(clip_region.clone())
@@ -2183,10 +2176,10 @@ impl FrameBuilder {
                 pack_as_float(bottom.style as u32),
             ],
             radii: [
-                LayerSize::from_untyped(&radius.top_left),
-                LayerSize::from_untyped(&radius.top_right),
-                LayerSize::from_untyped(&radius.bottom_right),
-                LayerSize::from_untyped(&radius.bottom_left),
+                radius.top_left,
+                radius.top_right,
+                radius.bottom_right,
+                radius.bottom_left,
             ],
         };
 
@@ -2805,7 +2798,7 @@ impl FrameBuilder {
                          &mut profile_counters,
                          device_pixel_ratio);
 
-        let mut clear_tiles = Vec::new();
+        let mut empty_tiles = Vec::new();
         let mut compiled_screen_tiles = Vec::new();
         let mut max_passes_needed = 0;
 
@@ -2854,7 +2847,7 @@ impl FrameBuilder {
                         compiled_screen_tiles.push(compiled_screen_tile);
                     }
                     None => {
-                        clear_tiles.push(ClearTile {
+                        empty_tiles.push(ClearTile {
                             rect: rect,
                         });
                     }
@@ -2920,7 +2913,7 @@ impl FrameBuilder {
             debug_rects: debug_rects,
             profile_counters: profile_counters,
             passes: passes,
-            clear_tiles: clear_tiles,
+            empty_tiles: empty_tiles,
             cache_size: DeviceSize::new(RENDERABLE_CACHE_SIZE as f32,
                                         RENDERABLE_CACHE_SIZE as f32),
             layer_texture_data: self.packed_layers.clone(),

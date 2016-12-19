@@ -64,7 +64,7 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedMatrix4D<f32, Src, Dst> {
         let top_right = self.transform_point(&rect.top_right());
         let bottom_left = self.transform_point(&rect.bottom_left());
         let bottom_right = self.transform_point(&rect.bottom_right());
-        TypedRect::from_points(&top_left, &top_right, &bottom_right, &bottom_left)
+        TypedRect::from_points(&[top_left, top_right, bottom_right, bottom_left])
     }
 
     fn can_losslessly_transform_a_2d_rect(&self) -> bool {
@@ -90,42 +90,12 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedMatrix4D<f32, Src, Dst> {
 }
 
 pub trait RectHelpers<U> where Self: Sized {
-
-    fn from_points(a: &TypedPoint2D<f32, U>,
-                   b: &TypedPoint2D<f32, U>,
-                   c: &TypedPoint2D<f32, U>,
-                   d: &TypedPoint2D<f32, U>)
-                   -> Self;
     fn contains_rect(&self, other: &Self) -> bool;
     fn from_floats(x0: f32, y0: f32, x1: f32, y1: f32) -> Self;
     fn is_well_formed_and_nonempty(&self) -> bool;
 }
 
 impl<U> RectHelpers<U> for TypedRect<f32, U> {
-
-    fn from_points(a: &TypedPoint2D<f32, U>,
-                   b: &TypedPoint2D<f32, U>,
-                   c: &TypedPoint2D<f32, U>,
-                   d: &TypedPoint2D<f32, U>) -> Self {
-        let (mut min_x, mut min_y) = (a.x, a.y);
-        let (mut max_x, mut max_y) = (min_x, min_y);
-        for point in &[b, c, d] {
-            if point.x < min_x {
-                min_x = point.x
-            }
-            if point.x > max_x {
-                max_x = point.x
-            }
-            if point.y < min_y {
-                min_y = point.y
-            }
-            if point.y > max_y {
-                max_y = point.y
-            }
-        }
-        TypedRect::new(TypedPoint2D::new(min_x, min_y),
-                       TypedSize2D::new(max_x - min_x, max_y - min_y))
-    }
 
     fn contains_rect(&self, other: &Self) -> bool {
         self.origin.x <= other.origin.x &&

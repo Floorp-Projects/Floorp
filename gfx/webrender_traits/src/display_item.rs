@@ -3,55 +3,55 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use display_list::AuxiliaryListsBuilder;
-use euclid::{Point2D, Rect, Size2D};
 use {BorderRadius, BorderDisplayItem, ClipRegion, ColorF, ComplexClipRegion};
 use {FontKey, ImageKey, PipelineId, ScrollLayerId, ScrollLayerInfo, ServoScrollRootId};
 use {ImageMask, ItemRange};
+use {LayoutSize, LayoutPoint, LayoutRect};
 
 impl BorderDisplayItem {
-    pub fn top_left_inner_radius(&self) -> Size2D<f32> {
-        Size2D::new((self.radius.top_left.width - self.left.width).max(0.0),
-                    (self.radius.top_left.height - self.top.width).max(0.0))
+    pub fn top_left_inner_radius(&self) -> LayoutSize {
+        LayoutSize::new((self.radius.top_left.width - self.left.width).max(0.0),
+                     (self.radius.top_left.height - self.top.width).max(0.0))
     }
 
-    pub fn top_right_inner_radius(&self) -> Size2D<f32> {
-        Size2D::new((self.radius.top_right.width - self.right.width).max(0.0),
-                    (self.radius.top_right.height - self.top.width).max(0.0))
+    pub fn top_right_inner_radius(&self) -> LayoutSize {
+        LayoutSize::new((self.radius.top_right.width - self.right.width).max(0.0),
+                     (self.radius.top_right.height - self.top.width).max(0.0))
     }
 
-    pub fn bottom_left_inner_radius(&self) -> Size2D<f32> {
-        Size2D::new((self.radius.bottom_left.width - self.left.width).max(0.0),
-                    (self.radius.bottom_left.height - self.bottom.width).max(0.0))
+    pub fn bottom_left_inner_radius(&self) -> LayoutSize {
+        LayoutSize::new((self.radius.bottom_left.width - self.left.width).max(0.0),
+                     (self.radius.bottom_left.height - self.bottom.width).max(0.0))
     }
 
-    pub fn bottom_right_inner_radius(&self) -> Size2D<f32> {
-        Size2D::new((self.radius.bottom_right.width - self.right.width).max(0.0),
-                    (self.radius.bottom_right.height - self.bottom.width).max(0.0))
+    pub fn bottom_right_inner_radius(&self) -> LayoutSize {
+        LayoutSize::new((self.radius.bottom_right.width - self.right.width).max(0.0),
+                     (self.radius.bottom_right.height - self.bottom.width).max(0.0))
     }
 }
 
 impl BorderRadius {
     pub fn zero() -> BorderRadius {
         BorderRadius {
-            top_left: Size2D::new(0.0, 0.0),
-            top_right: Size2D::new(0.0, 0.0),
-            bottom_left: Size2D::new(0.0, 0.0),
-            bottom_right: Size2D::new(0.0, 0.0),
+            top_left: LayoutSize::new(0.0, 0.0),
+            top_right: LayoutSize::new(0.0, 0.0),
+            bottom_left: LayoutSize::new(0.0, 0.0),
+            bottom_right: LayoutSize::new(0.0, 0.0),
         }
     }
 
     pub fn uniform(radius: f32) -> BorderRadius {
         BorderRadius {
-            top_left: Size2D::new(radius, radius),
-            top_right: Size2D::new(radius, radius),
-            bottom_left: Size2D::new(radius, radius),
-            bottom_right: Size2D::new(radius, radius),
+            top_left: LayoutSize::new(radius, radius),
+            top_right: LayoutSize::new(radius, radius),
+            bottom_left: LayoutSize::new(radius, radius),
+            bottom_right: LayoutSize::new(radius, radius),
         }
     }
 }
 
 impl ClipRegion {
-    pub fn new(rect: &Rect<f32>,
+    pub fn new(rect: &LayoutRect,
                complex: Vec<ComplexClipRegion>,
                image_mask: Option<ImageMask>,
                auxiliary_lists_builder: &mut AuxiliaryListsBuilder)
@@ -63,7 +63,7 @@ impl ClipRegion {
         }
     }
 
-    pub fn simple(rect: &Rect<f32>) -> ClipRegion {
+    pub fn simple(rect: &LayoutRect) -> ClipRegion {
         ClipRegion {
             main: *rect,
             complex: ItemRange::empty(),
@@ -94,11 +94,15 @@ impl ColorF {
             a: self.a,
         }
     }
+
+    pub fn to_array(&self) -> [f32; 4] {
+        [self.r, self.g, self.b, self.a]
+    }
 }
 
 impl ComplexClipRegion {
     /// Create a new complex clip region.
-    pub fn new(rect: Rect<f32>, radii: BorderRadius) -> ComplexClipRegion {
+    pub fn new(rect: LayoutRect, radii: BorderRadius) -> ComplexClipRegion {
         ComplexClipRegion {
             rect: rect,
             radii: radii,
@@ -107,7 +111,7 @@ impl ComplexClipRegion {
 
     //TODO: move to `util` module?
     /// Return a maximum aligned rectangle that is fully inside the clip region.
-    pub fn get_inner_rect(&self) -> Option<Rect<f32>> {
+    pub fn get_inner_rect(&self) -> Option<LayoutRect> {
         let k = 0.3; //roughly higher than `1.0 - sqrt(0.5)`
         let xl = self.rect.origin.x +
             k * self.radii.top_left.width.max(self.radii.bottom_left.width);
@@ -118,7 +122,7 @@ impl ComplexClipRegion {
         let yb = self.rect.origin.y + self.rect.size.height -
             k * self.radii.bottom_left.height.max(self.radii.bottom_right.height);
         if xl <= xr && yt <= yb {
-            Some(Rect::new(Point2D::new(xl, yt), Size2D::new(xr-xl, yb-yt)))
+            Some(LayoutRect::new(LayoutPoint::new(xl, yt), LayoutSize::new(xr-xl, yb-yt)))
         } else {
             None
         }

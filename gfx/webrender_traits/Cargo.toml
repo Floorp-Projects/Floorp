@@ -16,7 +16,7 @@ ipc = ["ipc-channel"]
 [dependencies]
 app_units = "0.3.0"
 byteorder = "0.5"
-euclid = "0.10"
+euclid = "0.10.3"
 gleam = "0.2"
 heapsize = "0.3.6"
 offscreen_gl_context = {version = "0.5.0", features = ["serde_serialization"]}

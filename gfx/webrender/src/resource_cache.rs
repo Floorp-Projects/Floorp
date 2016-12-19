@@ -61,7 +61,7 @@ pub struct CacheItem {
     pub uv1: DevicePoint,
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 pub struct RenderedGlyphKey {
     pub key: GlyphKey,
     pub render_mode: FontRenderMode,
@@ -737,6 +737,14 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                             result: glyph,
                         });
                     }
+                    // Ensure that the glyphs are always processed in the same
+                    // order for a given text run (since iterating a hash set doesn't
+                    // guarantee order). This can show up as very small float inaccuacry
+                    // differences in rasterizers due to the different coordinates
+                    // that text runs get associated with by the texture cache allocator.
+                    rasterized_glyphs.sort_by(|a, b| {
+                        a.key.cmp(&b.key)
+                    });
                     result_tx.send(GlyphCacheResultMsg::EndFrame(cache, rasterized_glyphs)).unwrap();
                 }
             }

@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use display_list::AuxiliaryListsBuilder;
-use euclid::{Matrix4D, Rect};
 use {FilterOp, MixBlendMode, ScrollPolicy, StackingContext};
+use {LayoutTransform, LayoutRect};
 
 impl StackingContext {
     pub fn new(scroll_policy: ScrollPolicy,
-               bounds: Rect<f32>,
+               bounds: LayoutRect,
                z_index: i32,
-               transform: &Matrix4D<f32>,
-               perspective: &Matrix4D<f32>,
+               transform: &LayoutTransform,
+               perspective: &LayoutTransform,
                mix_blend_mode: MixBlendMode,
                filters: Vec<FilterOp>,
                auxiliary_lists_builder: &mut AuxiliaryListsBuilder)

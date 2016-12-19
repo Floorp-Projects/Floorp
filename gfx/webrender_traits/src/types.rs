@@ -9,7 +9,6 @@ use app_units::Au;
 use channel::{PayloadSender, MsgSender};
 #[cfg(feature = "nightly")]
 use core::nonzero::NonZero;
-use euclid::{Matrix4D, Point2D, Rect, Size2D};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::sync::Arc;
 
@@ -39,20 +38,20 @@ pub enum ApiMsg {
     ///
     /// After receiving this message, WebRender will read the display list, followed by the
     /// auxiliary lists, from the payload channel.
-    SetRootDisplayList(ColorF,
+    SetRootDisplayList(Option<ColorF>,
                        Epoch,
                        PipelineId,
-                       Size2D<f32>,
+                       LayoutSize,
                        BuiltDisplayListDescriptor,
                        AuxiliaryListsDescriptor),
     SetRootPipeline(PipelineId),
-    Scroll(ScrollLocation, Point2D<f32>, ScrollEventPhase),
-    ScrollLayersWithScrollId(Point2D<f32>, PipelineId, ServoScrollRootId),
+    Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
+    ScrollLayersWithScrollId(LayoutPoint, PipelineId, ServoScrollRootId),
     TickScrollingBounce,
-    TranslatePointToLayerSpace(Point2D<f32>, MsgSender<(Point2D<f32>, PipelineId)>),
+    TranslatePointToLayerSpace(WorldPoint, MsgSender<(LayoutPoint, PipelineId)>),
     GetScrollLayerState(MsgSender<Vec<ScrollLayerState>>),
-    RequestWebGLContext(Size2D<i32>, GLContextAttributes, MsgSender<Result<(WebGLContextId, GLLimits), String>>),
-    ResizeWebGLContext(WebGLContextId, Size2D<i32>),
+    RequestWebGLContext(DeviceIntSize, GLContextAttributes, MsgSender<Result<(WebGLContextId, GLLimits), String>>),
+    ResizeWebGLContext(WebGLContextId, DeviceIntSize),
     WebGLCommand(WebGLContextId, WebGLCommand),
     GenerateFrame,
     // WebVR commands that must be called in the WebGL render thread.
@@ -98,10 +97,10 @@ pub struct BorderDisplayItem {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BorderRadius {
-    pub top_left: Size2D<f32>,
-    pub top_right: Size2D<f32>,
-    pub bottom_left: Size2D<f32>,
-    pub bottom_right: Size2D<f32>,
+    pub top_left: LayoutSize,
+    pub top_right: LayoutSize,
+    pub bottom_left: LayoutSize,
+    pub bottom_right: LayoutSize,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -134,8 +133,8 @@ pub enum BoxShadowClipMode {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BoxShadowDisplayItem {
-    pub box_bounds: Rect<f32>,
-    pub offset: Point2D<f32>,
+    pub box_bounds: LayoutRect,
+    pub offset: LayoutPoint,
     pub color: ColorF,
     pub blur_radius: f32,
     pub spread_radius: f32,
@@ -176,13 +175,13 @@ known_heap_size!(0, ColorF);
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ImageMask {
     pub image: ImageKey,
-    pub rect: Rect<f32>,
+    pub rect: LayoutRect,
     pub repeat: bool,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ClipRegion {
-    pub main: Rect<f32>,
+    pub main: LayoutRect,
     pub complex: ItemRange,
     pub image_mask: Option<ImageMask>,
 }
@@ -190,7 +189,7 @@ pub struct ClipRegion {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ComplexClipRegion {
     /// The boundaries of the rectangle.
-    pub rect: Rect<f32>,
+    pub rect: LayoutRect,
     /// Border radii of this rectangle.
     pub radii: BorderRadius,
 }
@@ -198,7 +197,7 @@ pub struct ComplexClipRegion {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct DisplayItem {
     pub item: SpecificDisplayItem,
-    pub rect: Rect<f32>,
+    pub rect: LayoutRect,
     pub clip: ClipRegion,
 }
 
@@ -225,17 +224,17 @@ pub enum FilterOp {
     Sepia(f32),
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, Ord, PartialOrd)]
 pub struct FontKey(u32, u32);
 
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum FontRenderMode {
     Mono,
     Alpha,
     Subpixel,
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
 pub struct GlyphKey {
     pub font_key: FontKey,
     // The font size is in *device* pixels, not logical pixels.
@@ -275,8 +274,8 @@ pub struct GlyphInstance {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct GradientDisplayItem {
-    pub start_point: Point2D<f32>,
-    pub end_point: Point2D<f32>,
+    pub start_point: LayoutPoint,
+    pub end_point: LayoutPoint,
     pub stops: ItemRange,
 }
 
@@ -295,7 +294,7 @@ pub struct PushStackingContextDisplayItem {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PushScrollLayerItem {
-    pub content_size: Size2D<f32>,
+    pub content_size: LayoutSize,
     pub id: ScrollLayerId,
 }
 
@@ -310,8 +309,8 @@ pub struct IdNamespace(pub u32);
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ImageDisplayItem {
     pub image_key: ImageKey,
-    pub stretch_size: Size2D<f32>,
-    pub tile_spacing: Size2D<f32>,
+    pub stretch_size: LayoutSize,
+    pub tile_spacing: LayoutSize,
     pub image_rendering: ImageRendering,
 }
 
@@ -424,7 +423,7 @@ pub struct RenderApiSender {
 pub trait RenderNotifier: Send {
     fn new_frame_ready(&mut self);
     fn new_scroll_frame_ready(&mut self, composite_needed: bool);
-    fn pipeline_size_changed(&mut self, pipeline_id: PipelineId, size: Option<Size2D<f32>>);
+    fn pipeline_size_changed(&mut self, pipeline_id: PipelineId, size: Option<LayoutSize>);
 }
 
 // Trait to allow dispatching functions to a specific thread or event loop.
@@ -478,7 +477,7 @@ pub enum ScrollLayerInfo {
 pub struct ScrollLayerState {
     pub pipeline_id: PipelineId,
     pub scroll_root_id: ServoScrollRootId,
-    pub scroll_offset: Point2D<f32>,
+    pub scroll_offset: LayoutPoint,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -490,7 +489,7 @@ pub enum ScrollPolicy {
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ScrollLocation {
     /// Scroll by a certain amount.
-    Delta(Point2D<f32>), 
+    Delta(LayoutPoint), 
     /// Scroll to very top of element.
     Start,
     /// Scroll to very bottom of element. 
@@ -520,10 +519,10 @@ pub enum SpecificDisplayItem {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StackingContext {
     pub scroll_policy: ScrollPolicy,
-    pub bounds: Rect<f32>,
+    pub bounds: LayoutRect,
     pub z_index: i32,
-    pub transform: Matrix4D<f32>,
-    pub perspective: Matrix4D<f32>,
+    pub transform: LayoutTransform,
+    pub perspective: LayoutTransform,
     pub mix_blend_mode: MixBlendMode,
     pub filters: ItemRange,
 }

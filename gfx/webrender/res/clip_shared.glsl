@@ -5,6 +5,11 @@
 
 #ifdef WR_VERTEX_SHADER
 
+in int aClipRenderTaskIndex;
+in int aClipLayerIndex;
+in int aClipDataIndex;
+in int aClipBaseTaskIndex;
+
 struct CacheClipInstance {
     int render_task_index;
     int layer_index;
@@ -15,14 +20,10 @@ struct CacheClipInstance {
 CacheClipInstance fetch_clip_item(int index) {
     CacheClipInstance cci;
 
-    int offset = index * 1;
-
-    ivec4 data0 = int_data[offset + 0];
-
-    cci.render_task_index = data0.x;
-    cci.layer_index = data0.y;
-    cci.data_index = data0.z;
-    cci.base_task_index = data0.w;
+    cci.render_task_index = aClipRenderTaskIndex;
+    cci.layer_index = aClipLayerIndex;
+    cci.data_index = aClipDataIndex;
+    cci.base_task_index = aClipBaseTaskIndex;
 
     return cci;
 }
