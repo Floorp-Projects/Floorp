@@ -4,14 +4,13 @@
 
 package org.mozilla.gecko.preferences;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.widget.FaviconView;
 
 import android.app.Activity;
@@ -60,7 +59,7 @@ public class SearchEnginePreference extends CustomListPreference {
         super.onBindView(view);
 
         // We synchronise to avoid a race condition between this and the favicon loading callback in
-        // setSearchEngineFromJSON.
+        // setSearchEngineFromBundle.
         synchronized (bitmapLock) {
             // Set the icon in the FaviconView.
             mFaviconView = ((FaviconView) view.findViewById(R.id.search_engine_icon));
@@ -139,24 +138,23 @@ public class SearchEnginePreference extends CustomListPreference {
     }
 
     /**
-     * Configure this Preference object from the Gecko search engine JSON object.
-     * @param geckoEngineJSON The Gecko-formatted JSON object representing the search engine.
-     * @throws JSONException If the JSONObject is invalid.
+     * Configure this Preference object from the Gecko search engine object.
+     * @param geckoEngine The Gecko-formatted object representing the search engine.
      */
-    public void setSearchEngineFromJSON(JSONObject geckoEngineJSON) throws JSONException {
-        mIdentifier = geckoEngineJSON.getString("identifier");
+    public void setSearchEngineFromBundle(GeckoBundle geckoEngine) {
+        mIdentifier = geckoEngine.getString("identifier");
 
         // A null JS value gets converted into a string.
         if (mIdentifier.equals("null")) {
             mIdentifier = "other";
         }
 
-        final String engineName = geckoEngineJSON.getString("name");
+        final String engineName = geckoEngine.getString("name");
         final SpannableString titleSpannable = new SpannableString(engineName);
 
         setTitle(titleSpannable);
 
-        final String iconURI = geckoEngineJSON.getString("iconURI");
+        final String iconURI = geckoEngine.getString("iconURI");
         // Keep a reference to the bitmap - we'll need it later in onBindView.
         try {
             Icons.with(getContext())

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGPATHGEOMETRYFRAME_H__
-#define __NS_SVGPATHGEOMETRYFRAME_H__
+#ifndef __SVGGEOMETRYFRAME_H__
+#define __SVGGEOMETRYFRAME_H__
 
 #include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
@@ -16,13 +16,14 @@
 #include "nsSVGUtils.h"
 
 namespace mozilla {
+class SVGGeometryFrame;
 namespace gfx {
 class DrawTarget;
 } // namespace gfx
 } // namespace mozilla
 
 class gfxContext;
-class nsDisplaySVGPathGeometry;
+class nsDisplaySVGGeometry;
 class nsIAtom;
 class nsIFrame;
 class nsIPresShell;
@@ -32,25 +33,30 @@ class nsSVGMarkerProperty;
 
 struct nsRect;
 
-class nsSVGPathGeometryFrame : public nsFrame
-                             , public nsISVGChildFrame
+nsIFrame*
+NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+namespace mozilla {
+
+class SVGGeometryFrame : public nsFrame
+                       , public nsISVGChildFrame
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   friend nsIFrame*
-  NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  ::NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  friend class nsDisplaySVGPathGeometry;
+  friend class ::nsDisplaySVGGeometry;
 
 protected:
-  explicit nsSVGPathGeometryFrame(nsStyleContext* aContext)
+  explicit SVGGeometryFrame(nsStyleContext* aContext)
     : nsFrame(aContext)
   {
      AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGPathGeometryFrame)
+  NS_DECL_QUERYFRAME_TARGET(SVGGeometryFrame)
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -73,7 +79,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsGkAtoms::svgPathGeometryFrame
+   * @see nsGkAtoms::svgGeometryFrame
    */
   virtual nsIAtom* GetType() const override;
 
@@ -83,7 +89,7 @@ public:
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
   {
-    return MakeFrameName(NS_LITERAL_STRING("SVGPathGeometry"), aResult);
+    return MakeFrameName(NS_LITERAL_STRING("SVGGeometry"), aResult);
   }
 #endif
 
@@ -91,7 +97,7 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  // nsSVGPathGeometryFrame methods
+  // SVGGeometryFrame methods
   gfxMatrix GetCanvasTM();
 protected:
   // nsISVGChildFrame interface:
@@ -141,7 +147,8 @@ private:
   /**
    * @param aFrame should be the first continuation
    */
-  static MarkerProperties GetMarkerProperties(nsSVGPathGeometryFrame *aFrame);
+  static MarkerProperties GetMarkerProperties(SVGGeometryFrame *aFrame);
 };
+} // namespace mozilla
 
-#endif // __NS_SVGPATHGEOMETRYFRAME_H__
+#endif // __SVGGEOMETRYFRAME_H__

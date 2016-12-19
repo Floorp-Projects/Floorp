@@ -80,7 +80,7 @@ SVGCircleElement::GetLengthInfo()
 }
 
 //----------------------------------------------------------------------
-// nsSVGPathGeometryElement methods
+// SVGGeometryElement methods
 
 bool
 SVGCircleElement::GetGeometryBounds(Rect* aBounds,

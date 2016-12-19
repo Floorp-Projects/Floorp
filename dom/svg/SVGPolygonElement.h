@@ -8,15 +8,15 @@
 #define mozilla_dom_SVGPolygonElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsSVGPolyElement.h"
+#include "SVGPolyElement.h"
 
 nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-typedef nsSVGPolyElement SVGPolygonElementBase;
-
 namespace mozilla {
 namespace dom {
+
+typedef SVGPolyElement SVGPolygonElementBase;
 
 class SVGPolygonElement final : public SVGPolygonElementBase
 {
@@ -27,7 +27,7 @@ protected:
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
 public:
-  // nsSVGPathGeometryElement methods:
+  // SVGGeometryElement methods:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) override;
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 

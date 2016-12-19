@@ -39,7 +39,6 @@ class nsSVGElement;
 class nsSVGEnum;
 class nsSVGLength2;
 class nsSVGOuterSVGFrame;
-class nsSVGPathGeometryFrame;
 class nsTextFrame;
 
 struct nsStyleSVG;
@@ -48,6 +47,7 @@ struct nsRect;
 namespace mozilla {
 class SVGContextPaint;
 struct SVGContextPaintImpl;
+class SVGGeometryFrame;
 namespace dom {
 class Element;
 class UserSpaceMetrics;
@@ -186,6 +186,7 @@ public:
   typedef mozilla::gfx::Size Size;
   typedef mozilla::SVGContextPaint SVGContextPaint;
   typedef mozilla::SVGContextPaintImpl SVGContextPaintImpl;
+  typedef mozilla::SVGGeometryFrame SVGGeometryFrame;
   typedef mozilla::image::DrawResult DrawResult;
 
   static void Init();
@@ -482,7 +483,7 @@ public:
                                                nsTextFrame* aFrame,
                                                const gfxMatrix& aMatrix);
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                               nsSVGPathGeometryFrame* aFrame,
+                                               SVGGeometryFrame* aFrame,
                                                const gfxMatrix& aMatrix);
 
   /**

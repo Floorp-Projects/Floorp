@@ -13,11 +13,11 @@
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGPaintServerFrame.h"
-#include "nsSVGPathGeometryElement.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsIReflowCallback.h"
 #include "nsCycleCollectionParticipant.h"
+#include "SVGGeometryElement.h"
 #include "SVGUseElement.h"
 
 using namespace mozilla;
@@ -526,8 +526,8 @@ nsSVGMarkerProperty*
 nsSVGEffects::GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<nsSVGMarkerProperty>* aProperty)
 {
-  MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
-             static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable(),
+  MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::svgGeometryFrame &&
+             static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable(),
              "Bad frame");
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
@@ -743,8 +743,8 @@ nsSVGEffects::UpdateEffects(nsIFrame* aFrame)
   // We can't do that in DoUpdate as the referenced frame may not be valid
   GetOrCreateFilterProperty(aFrame);
 
-  if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
-      static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
+  if (aFrame->GetType() == nsGkAtoms::svgGeometryFrame &&
+      static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
     nsCOMPtr<nsIURI> markerURL =
       GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);

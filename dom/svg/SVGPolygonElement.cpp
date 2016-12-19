@@ -37,12 +37,12 @@ SVGPolygonElement::SVGPolygonElement(already_AddRefed<mozilla::dom::NodeInfo>& a
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPolygonElement)
 
 //----------------------------------------------------------------------
-// nsSVGPathGeometryElement methods
+// SVGGeometryElement methods
 
 void
 SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
-  nsSVGPolyElement::GetMarkPoints(aMarks);
+  SVGPolyElement::GetMarkPoints(aMarks);
 
   if (aMarks->IsEmpty() || aMarks->LastElement().type != nsSVGMark::eEnd) {
     return;
@@ -56,7 +56,7 @@ SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   endMark->angle = SVGContentUtils::AngleBisect(angle, endMark->angle);
   startMark->angle = SVGContentUtils::AngleBisect(angle, startMark->angle);
   // for a polygon (as opposed to a polyline) there's an implicit extra point
-  // co-located with the start point that nsSVGPolyElement::GetMarkPoints
+  // co-located with the start point that SVGPolyElement::GetMarkPoints
   // doesn't return
   aMarks->AppendElement(nsSVGMark(startMark->x, startMark->y, startMark->angle,
                                   nsSVGMark::eEnd));
