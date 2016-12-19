@@ -575,6 +575,7 @@ class Marionette(object):
         self.session = None
         self.session_id = None
         self.process_id = None
+        self.profile = None
         self.window = None
         self.chrome_window = None
         self.baseurl = baseurl
@@ -1275,6 +1276,7 @@ class Marionette(object):
         self.session = resp["value"] if self.protocol == 1 else resp["capabilities"]
         # fallback to processId can be removed in Firefox 55
         self.process_id = self.session.get("moz:processID", self.session.get("processId"))
+        self.profile = self.session.get("moz:profile")
 
         return self.session
 
@@ -1305,6 +1307,7 @@ class Marionette(object):
                 self.session_id = None
             self.session = None
             self.process_id = None
+            self.profile = None
             self.window = None
 
             if self.client is not None:
