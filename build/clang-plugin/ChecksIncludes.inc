@@ -10,6 +10,7 @@
 #include "ExplicitImplicitChecker.h"
 #include "ExplicitOperatorBoolChecker.h"
 #include "KungFuDeathGripChecker.h"
+#include "MustOverrideChecker.h"
 #include "NaNExprChecker.h"
 #include "NeedsNoVTableTypeChecker.h"
 #include "NoAddRefReleaseOnReturnChecker.h"

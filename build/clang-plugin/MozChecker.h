@@ -9,11 +9,11 @@
 
 class MozChecker : public ASTConsumer, public RecursiveASTVisitor<MozChecker> {
   DiagnosticsEngine &Diag;
-  const CompilerInstance &CI;
   DiagnosticsMatcher Matcher;
 
 public:
-  MozChecker(const CompilerInstance &CI) : Diag(CI.getDiagnostics()), CI(CI) {}
+  MozChecker(CompilerInstance &CI) :
+    Diag(CI.getDiagnostics()), Matcher(CI) {}
   virtual ~MozChecker() {}
 
   ASTConsumerPtr getOtherConsumer() { return Matcher.makeASTConsumer(); }
@@ -23,8 +23,6 @@ public:
   static bool hasCustomAnnotation(const Decl *D, const char *Spelling);
 
   void handleUnusedExprResult(const Stmt *Statement);
-
-  bool VisitCXXRecordDecl(CXXRecordDecl *D);
 
   bool VisitSwitchCase(SwitchCase *Statement);
   bool VisitCompoundStmt(CompoundStmt *Statement);
