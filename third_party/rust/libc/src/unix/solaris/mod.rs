@@ -602,6 +602,7 @@ pub const EMLINK: ::c_int = 31;
 pub const EPIPE: ::c_int = 32;
 pub const EDOM: ::c_int = 33;
 pub const ERANGE: ::c_int = 34;
+pub const ENOTSUP: ::c_int = 48;
 pub const EAGAIN: ::c_int = 11;
 pub const EWOULDBLOCK: ::c_int = 11;
 pub const EINPROGRESS: ::c_int = 150;

@@ -25,6 +25,16 @@ pub type sem_t = ::c_int;
 pub enum timezone {}
 
 s! {
+    pub struct aiocb {
+        pub aio_fildes: ::c_int,
+        pub aio_offset: ::off_t,
+        pub aio_buf: *mut ::c_void,
+        pub aio_nbytes: ::size_t,
+        pub aio_reqprio: ::c_int,
+        pub aio_sigevent: sigevent,
+        pub aio_lio_opcode: ::c_int
+    }
+
     pub struct utmpx {
         pub ut_user: [::c_char; _UTX_USERSIZE],
         pub ut_id: [::c_char; _UTX_IDSIZE],
@@ -302,6 +312,14 @@ s! {
         pub int_n_sep_by_space: ::c_char,
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
+    }
+
+    pub struct sigevent {
+        pub sigev_notify: ::c_int,
+        pub sigev_signo: ::c_int,
+        pub sigev_value: ::sigval,
+        __unused1: *mut ::c_void,       //actually a function pointer
+        pub sigev_notify_attributes: *mut ::pthread_attr_t
     }
 }
 
@@ -1331,6 +1349,20 @@ pub const PRIO_DARWIN_NONUI: ::c_int = 0x1001;
 
 pub const SEM_FAILED: *mut sem_t = -1isize as *mut ::sem_t;
 
+pub const SIGEV_NONE: ::c_int = 0;
+pub const SIGEV_SIGNAL: ::c_int = 1;
+pub const SIGEV_THREAD: ::c_int = 3;
+
+pub const AIO_CANCELED: ::c_int = 2;
+pub const AIO_NOTCANCELED: ::c_int = 4;
+pub const AIO_ALLDONE: ::c_int = 1;
+pub const AIO_LISTIO_MAX: ::c_int = 16;
+pub const LIO_NOP: ::c_int = 0;
+pub const LIO_WRITE: ::c_int = 2;
+pub const LIO_READ: ::c_int = 1;
+pub const LIO_WAIT: ::c_int = 2;
+pub const LIO_NOWAIT: ::c_int = 1;
+
 f! {
     pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
         status >> 8
@@ -1354,6 +1386,19 @@ f! {
 }
 
 extern {
+    pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_error(aiocbp: *const aiocb) -> ::c_int;
+    pub fn aio_return(aiocbp: *mut aiocb) -> ::ssize_t;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "aio_suspend$UNIX2003")]
+    pub fn aio_suspend(aiocb_list: *const *const aiocb, nitems: ::c_int,
+                       timeout: *const ::timespec) -> ::c_int;
+    pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
+                      nitems: ::c_int, sevp: *mut sigevent) -> ::c_int;
+
     pub fn lutimes(file: *const ::c_char, times: *const ::timeval) -> ::c_int;
 
     pub fn getutxent() -> *mut utmpx;

@@ -66,21 +66,21 @@ s! {
     }
 
     pub struct pthread_mutex_t {
-        #[cfg(any(target_arch = "mips", target_arch = "mipsel",
-                  target_arch = "arm", target_arch = "powerpc"))]
+        #[cfg(any(target_arch = "mips", target_arch = "arm",
+                  target_arch = "powerpc"))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips", target_arch = "mipsel",
-                      target_arch = "arm", target_arch = "powerpc")))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "arm",
+                      target_arch = "powerpc")))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_MUTEX_T],
     }
 
     pub struct pthread_rwlock_t {
-        #[cfg(any(target_arch = "mips", target_arch = "mipsel",
-                  target_arch = "arm", target_arch = "powerpc"))]
+        #[cfg(any(target_arch = "mips", target_arch = "arm",
+                  target_arch = "powerpc"))]
         __align: [::c_long; 0],
-        #[cfg(not(any(target_arch = "mips", target_arch = "mipsel",
-                      target_arch = "arm", target_arch = "powerpc")))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "arm",
+                      target_arch = "powerpc")))]
         __align: [::c_longlong; 0],
         size: [u8; __SIZEOF_PTHREAD_RWLOCK_T],
     }
@@ -524,6 +524,15 @@ pub const SYNC_FILE_RANGE_WAIT_AFTER: ::c_uint = 4;
 
 pub const EAI_SYSTEM: ::c_int = -11;
 
+pub const AIO_CANCELED: ::c_int = 0;
+pub const AIO_NOTCANCELED: ::c_int = 1;
+pub const AIO_ALLDONE: ::c_int = 2;
+pub const LIO_READ: ::c_int = 0;
+pub const LIO_WRITE: ::c_int = 1;
+pub const LIO_NOP: ::c_int = 2;
+pub const LIO_WAIT: ::c_int = 0;
+pub const LIO_NOWAIT: ::c_int = 1;
+
 f! {
     pub fn CPU_ZERO(cpuset: &mut cpu_set_t) -> () {
         for slot in cpuset.bits.iter_mut() {
@@ -557,6 +566,17 @@ f! {
 }
 
 extern {
+    pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_error(aiocbp: *const aiocb) -> ::c_int;
+    pub fn aio_return(aiocbp: *mut aiocb) -> ::ssize_t;
+    pub fn aio_suspend(aiocb_list: *const *const aiocb, nitems: ::c_int,
+                       timeout: *const ::timespec) -> ::c_int;
+    pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
+                      nitems: ::c_int, sevp: *mut ::sigevent) -> ::c_int;
+
     pub fn lutimes(file: *const ::c_char, times: *const ::timeval) -> ::c_int;
 
     pub fn setpwent();
@@ -714,6 +734,10 @@ extern {
                              riovcnt: ::c_ulong,
                              flags: ::c_ulong) -> isize;
     pub fn reboot(how_to: ::c_int) -> ::c_int;
+    pub fn setfsgid(gid: ::gid_t) -> ::c_int;
+    pub fn setfsuid(uid: ::uid_t) -> ::c_int;
+    pub fn setresgid(rgid: ::gid_t, egid: ::gid_t, sgid: ::gid_t) -> ::c_int;
+    pub fn setresuid(ruid: ::uid_t, euid: ::uid_t, suid: ::uid_t) -> ::c_int;
 
     // Not available now on Android
     pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char,
@@ -728,18 +752,17 @@ extern {
 
 cfg_if! {
     if #[cfg(any(target_env = "musl",
+                 target_os = "fuchsia",
                  target_os = "emscripten"))] {
         mod musl;
         pub use self::musl::*;
-    } else if #[cfg(any(target_arch = "mips", target_arch = "mipsel"))] {
+    } else if #[cfg(any(target_arch = "mips",
+                        target_arch = "mips64"))] {
         mod mips;
         pub use self::mips::*;
     } else if #[cfg(any(target_arch = "s390x"))] {
         mod s390x;
         pub use self::s390x::*;
-    } else if #[cfg(any(target_arch = "mips64"))] {
-        mod mips64;
-        pub use self::mips64::*;
     } else {
         mod other;
         pub use self::other::*;

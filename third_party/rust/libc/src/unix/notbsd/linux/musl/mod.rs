@@ -11,6 +11,26 @@ pub type fsfilcnt_t = ::c_ulonglong;
 pub type rlim_t = ::c_ulonglong;
 
 s! {
+    pub struct aiocb {
+        pub aio_fildes: ::c_int,
+        pub aio_lio_opcode: ::c_int,
+        pub aio_reqprio: ::c_int,
+        pub aio_buf: *mut ::c_void,
+        pub aio_nbytes: ::size_t,
+        pub aio_sigevent: ::sigevent,
+        __td: *mut ::c_void,
+        __lock: [::c_int; 2],
+        __err: ::c_int,
+        __ret: ::ssize_t,
+        pub aio_offset: off_t,
+        __next: *mut ::c_void,
+        __prev: *mut ::c_void,
+        #[cfg(target_pointer_width = "32")]
+        __dummy4: [::c_char; 24],
+        #[cfg(target_pointer_width = "64")]
+        __dummy4: [::c_char; 16],
+    }
+
     pub struct sigaction {
         pub sa_sigaction: ::sighandler_t,
         pub sa_mask: ::sigset_t,
@@ -231,7 +251,7 @@ extern {
 }
 
 cfg_if! {
-    if #[cfg(any(target_arch = "x86_64"))] {
+    if #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))] {
         mod b64;
         pub use self::b64::*;
     } else if #[cfg(any(target_arch = "x86",

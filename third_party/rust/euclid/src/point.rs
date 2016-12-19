@@ -38,6 +38,12 @@ impl<T: Copy + Zero, U> TypedPoint2D<T, U> {
     pub fn zero() -> TypedPoint2D<T, U> {
         TypedPoint2D::new(Zero::zero(), Zero::zero())
     }
+
+    /// Convert into a 3d point.
+    #[inline]
+    pub fn to_3d(&self) -> TypedPoint3D<T, U> {
+        TypedPoint3D::new(self.x, self.y, Zero::zero())
+    }
 }
 
 impl<T: fmt::Debug, U> fmt::Debug for TypedPoint2D<T, U> {
@@ -351,6 +357,12 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
     #[inline]
     pub fn from_untyped(p: &Point3D<T>) -> TypedPoint3D<T, U> {
         TypedPoint3D::new(p.x, p.y, p.z)
+    }
+
+    /// Convert into a 2d point.
+    #[inline]
+    pub fn to_2d(&self) -> TypedPoint2D<T, U> {
+        TypedPoint2D::new(self.x, self.y)
     }
 }
 
@@ -746,6 +758,18 @@ impl<T: ApproxEq<T>, U> ApproxEq<T> for TypedPoint4D<T, U> {
     fn approx_eq(&self, other: &Self) -> bool {
         self.approx_eq_eps(&other, &Self::approx_epsilon())
     }
+}
+
+pub fn point2<T: Copy, U>(x: T, y: T) -> TypedPoint2D<T, U> {
+    TypedPoint2D::new(x, y)
+}
+
+pub fn point3<T: Copy, U>(x: T, y: T, z: T) -> TypedPoint3D<T, U> {
+    TypedPoint3D::new(x, y, z)
+}
+
+pub fn point4<T: Copy, U>(x: T, y: T, z: T, w: T) -> TypedPoint4D<T, U> {
+    TypedPoint4D::new(x, y, z, w)
 }
 
 #[cfg(test)]

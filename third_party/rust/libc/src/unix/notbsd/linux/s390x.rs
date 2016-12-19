@@ -18,6 +18,24 @@ pub type __fsword_t = ::c_long;
 pub type __priority_which_t = ::c_uint;
 
 s! {
+    pub struct aiocb {
+        pub aio_fildes: ::c_int,
+        pub aio_lio_opcode: ::c_int,
+        pub aio_reqprio: ::c_int,
+        pub aio_buf: *mut ::c_void,
+        pub aio_nbytes: ::size_t,
+        pub aio_sigevent: ::sigevent,
+        __next_prio: *mut aiocb,
+        __abs_prio: ::c_int,
+        __policy: ::c_int,
+        __error_code: ::c_int,
+        __return_value: ::ssize_t,
+        pub aio_offset: off_t,
+        #[cfg(target_pointer_width = "32")]
+        __unused1: [::c_char; 4],
+        __glibc_reserved: [::c_char; 32]
+    }
+
     pub struct stat {
         pub st_dev: ::dev_t,
         pub st_ino: ::ino_t,
@@ -389,6 +407,7 @@ pub const ENOPROTOOPT: ::c_int = 92;
 pub const EPROTONOSUPPORT: ::c_int = 93;
 pub const ESOCKTNOSUPPORT: ::c_int = 94;
 pub const EOPNOTSUPP: ::c_int = 95;
+pub const ENOTSUP: ::c_int = EOPNOTSUPP;
 pub const EPFNOSUPPORT: ::c_int = 96;
 pub const EAFNOSUPPORT: ::c_int = 97;
 pub const ENETDOWN: ::c_int = 100;

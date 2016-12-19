@@ -12,7 +12,7 @@ use scale_factor::ScaleFactor;
 use num::Zero;
 
 use heapsize::HeapSizeOf;
-use num_traits::NumCast;
+use num_traits::{NumCast, Saturating};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cmp::Ordering;
 use std::ops::{Add, Sub, Mul, Div, Neg};
@@ -117,6 +117,17 @@ impl<U, T: Clone + SubAssign<T>> SubAssign for Length<T, U> {
     }
 }
 
+// Saturating length + length and length - length.
+impl<U, T: Clone + Saturating> Saturating for Length<T, U> {
+    fn saturating_add(self, other: Length<T, U>) -> Length<T, U> {
+        Length::new(self.get().saturating_add(other.get()))
+    }
+
+    fn saturating_sub(self, other: Length<T, U>) -> Length<T, U> {
+        Length::new(self.get().saturating_sub(other.get()))
+    }
+}
+
 // length / length
 impl<Src, Dst, T: Clone + Div<T, Output=T>> Div<Length<T, Src>> for Length<T, Dst> {
     type Output = ScaleFactor<T, Src, Dst>;
@@ -185,6 +196,7 @@ impl<Unit, T: Zero> Zero for Length<T, Unit> {
 #[cfg(test)]
 mod tests {
     use super::Length;
+    use num_traits::Saturating;
     use scale_factor::ScaleFactor;
 
     enum Inch {}
@@ -235,6 +247,36 @@ mod tests {
         let zero_feet: Length<f32, Inch> = Length::new(0.0);
         let negative_zero_feet = -zero_feet;
         assert_eq!(negative_zero_feet.get(), 0.0);
+    }
+
+    #[test]
+    fn test_add() {
+        let length1: Length<u8, Mm> = Length::new(250);
+        let length2: Length<u8, Mm> = Length::new(5);
+
+        let result = length1 + length2;
+
+        assert_eq!(result.get(), 255);
+    }
+
+    #[test]
+    fn test_saturating_add() {
+        let length1: Length<u8, Mm> = Length::new(250);
+        let length2: Length<u8, Mm> = Length::new(6);
+
+        let result = length1.saturating_add(length2);
+
+        assert_eq!(result.get(), 255);
+    }
+
+    #[test]
+    fn test_saturating_sub() {
+        let length1: Length<u8, Mm> = Length::new(5);
+        let length2: Length<u8, Mm> = Length::new(10);
+
+        let result = length1.saturating_sub(length2);
+
+        assert_eq!(result.get(), 0);
     }
 
     #[test]

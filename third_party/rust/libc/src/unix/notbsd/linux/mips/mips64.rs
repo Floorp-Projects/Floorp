@@ -14,6 +14,22 @@ pub type time_t = i64;
 pub type wchar_t = i32;
 
 s! {
+    pub struct aiocb {
+        pub aio_fildes: ::c_int,
+        pub aio_lio_opcode: ::c_int,
+        pub aio_reqprio: ::c_int,
+        pub aio_buf: *mut ::c_void,
+        pub aio_nbytes: ::size_t,
+        pub aio_sigevent: ::sigevent,
+        __next_prio: *mut aiocb,
+        __abs_prio: ::c_int,
+        __policy: ::c_int,
+        __error_code: ::c_int,
+        __return_value: ::ssize_t,
+        pub aio_offset: off_t,
+        __glibc_reserved: [::c_char; 32]
+    }
+
     pub struct stat {
         pub st_dev: ::c_ulong,
         st_pad1: [::c_long; 2],
@@ -193,46 +209,9 @@ pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
 
-pub const EADDRINUSE: ::c_int = 125;
-pub const EADDRNOTAVAIL: ::c_int = 126;
-pub const ECONNABORTED: ::c_int = 130;
-pub const ECONNREFUSED: ::c_int = 146;
-pub const ECONNRESET: ::c_int = 131;
-pub const EDEADLK: ::c_int = 45;
-pub const ENOSYS: ::c_int = 89;
-pub const ENOTCONN: ::c_int = 134;
-pub const ETIMEDOUT: ::c_int = 145;
-pub const FIOCLEX: ::c_ulong = 0x6601;
-pub const FIONBIO: ::c_ulong = 0x667e;
-pub const MAP_ANON: ::c_int = 0x800;
-pub const O_ACCMODE: ::c_int = 3;
-pub const O_APPEND: ::c_int = 8;
-pub const O_CREAT: ::c_int = 256;
-pub const O_EXCL: ::c_int = 1024;
-pub const O_NONBLOCK: ::c_int = 128;
-pub const POSIX_FADV_DONTNEED: ::c_int = 4;
-pub const POSIX_FADV_NOREUSE: ::c_int = 5;
-pub const PTHREAD_STACK_MIN: ::size_t = 131072;
-pub const NFS_SUPER_MAGIC: ::c_long = 0x00006969;
-pub const RLIM_INFINITY: ::rlim_t = 0xffffffffffffffff;
-pub const SA_ONSTACK: ::c_int = 0x08000000;
-pub const SA_SIGINFO: ::c_int = 0x00000008;
-pub const SIGBUS: ::c_int = 10;
-pub const SIGSYS: ::c_int = 12;
-pub const SIGSTKSZ: ::size_t = 0x2000;
-pub const SIG_SETMASK: ::c_int = 3;
-pub const SOCK_DGRAM: ::c_int = 1;
-pub const SOCK_STREAM: ::c_int = 2;
-pub const SOL_SOCKET: ::c_int = 0xffff;
-pub const SO_BROADCAST: ::c_int = 32;
-pub const SO_ERROR: ::c_int = 4103;
-pub const SO_RCVTIMEO: ::c_int = 4102;
-pub const SO_REUSEADDR: ::c_int = 4;
-pub const SO_SNDTIMEO: ::c_int = 4101;
-pub const SO_REUSEPORT: ::c_int = 0x200;
-pub const SO_SNDBUF: ::c_int = 4097;
-pub const SO_RCVBUF: ::c_int = 4098;
-pub const SO_KEEPALIVE: ::c_int = 8;
+pub const RLIM_INFINITY: ::rlim_t = 0xffff_ffff_ffff_ffff;
+
+pub const SYS_gettid: ::c_long = 5178;   // Valid for n64
 
 #[link(name = "util")]
 extern {
