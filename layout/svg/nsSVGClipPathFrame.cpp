@@ -12,8 +12,8 @@
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "nsGkAtoms.h"
 #include "nsSVGEffects.h"
-#include "nsSVGPathGeometryElement.h"
-#include "nsSVGPathGeometryFrame.h"
+#include "SVGGeometryElement.h"
+#include "SVGGeometryFrame.h"
 #include "nsSVGUtils.h"
 
 using namespace mozilla;
@@ -56,10 +56,10 @@ nsSVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
   IsTrivial(&singleClipPathChild);
 
   if (singleClipPathChild) {
-    nsSVGPathGeometryFrame* pathFrame = do_QueryFrame(singleClipPathChild);
+    SVGGeometryFrame* pathFrame = do_QueryFrame(singleClipPathChild);
     if (pathFrame) {
-      nsSVGPathGeometryElement* pathElement =
-        static_cast<nsSVGPathGeometryElement*>(pathFrame->GetContent());
+      SVGGeometryElement* pathElement =
+        static_cast<SVGGeometryElement*>(pathFrame->GetContent());
       gfxMatrix toChildsUserSpace = pathElement->
         PrependLocalTransformsTo(GetClipPathTransform(aClippedFrame) * aMatrix,
                                  eUserSpaceToParent);
@@ -251,7 +251,7 @@ nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
   }
 
   // Our children have NS_STATE_SVG_CLIPPATH_CHILD set on them, and
-  // nsSVGPathGeometryFrame::Render checks for that state bit and paints
+  // SVGGeometryFrame::Render checks for that state bit and paints
   // only the geometry (opaque black) if set.
   result &= frame->PaintSVG(aTarget, toChildsUserSpace);
 
@@ -426,7 +426,7 @@ nsSVGClipPathFrame::IsValid()
 
         nsIAtom* grandKidType = grandKid->GetType();
 
-        if (grandKidType != nsGkAtoms::svgPathGeometryFrame &&
+        if (grandKidType != nsGkAtoms::svgGeometryFrame &&
             grandKidType != nsGkAtoms::svgTextFrame) {
           return false;
         }
@@ -434,7 +434,7 @@ nsSVGClipPathFrame::IsValid()
       continue;
     }
 
-    if (kidType != nsGkAtoms::svgPathGeometryFrame &&
+    if (kidType != nsGkAtoms::svgGeometryFrame &&
         kidType != nsGkAtoms::svgTextFrame) {
       return false;
     }

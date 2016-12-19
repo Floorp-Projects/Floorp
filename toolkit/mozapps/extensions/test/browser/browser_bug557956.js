@@ -53,8 +53,6 @@ function end_test() {
 }
 
 function install_test_addons(aCallback) {
-  var installs = [];
-
   // Use a blank update URL
   Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "missing.rdf");
 
@@ -68,30 +66,31 @@ function install_test_addons(aCallback) {
                "browser_bug557956_8_1",
                "browser_bug557956_9_1",
                "browser_bug557956_10"];
-  for (let name of names) {
-    AddonManager.getInstallForURL(TESTROOT + "addons/" + name + ".xpi", function(aInstall) {
-      installs.push(aInstall);
-    }, "application/x-xpinstall");
-  }
 
-  var listener = {
-    installCount: 0,
+  let installPromises = Promise.all(
+    names.map(name => AddonManager.getInstallForURL(`${TESTROOT}addons/${name}.xpi`,
+                                                    null, "application/x-xpinstall")));
 
-    onInstallEnded: function() {
-      this.installCount++;
-      if (this.installCount == installs.length) {
-        // Switch to the test update URL
-        Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "browser_bug557956.rdf");
+  installPromises.then(installs => {
+    var listener = {
+      installCount: 0,
 
-        executeSoon(aCallback);
+      onInstallEnded: function() {
+        this.installCount++;
+        if (this.installCount == installs.length) {
+          // Switch to the test update URL
+          Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "browser_bug557956.rdf");
+
+          executeSoon(aCallback);
+        }
       }
-    }
-  };
+    };
 
-  for (let install of installs) {
-    install.addListener(listener);
-    install.install();
-  }
+    for (let install of installs) {
+      install.addListener(listener);
+      install.install();
+    }
+  });
 }
 
 function uninstall_test_addons(aCallback) {

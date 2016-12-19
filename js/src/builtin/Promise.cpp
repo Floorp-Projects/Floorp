@@ -1931,26 +1931,23 @@ PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
 }
 
 // ES2016, Sub-steps of 25.4.4.4 and 25.4.4.5.
-static MOZ_MUST_USE bool
-CommonStaticResolveRejectImpl(JSContext* cx, unsigned argc, Value* vp, ResolutionMode mode)
+static MOZ_MUST_USE JSObject*
+CommonStaticResolveRejectImpl(JSContext* cx, HandleValue thisVal, HandleValue argVal,
+                              ResolutionMode mode)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedValue x(cx, args.get(0));
-
     // Steps 1-2.
-    if (!args.thisv().isObject()) {
+    if (!thisVal.isObject()) {
         const char* msg = mode == ResolveMode
                           ? "Receiver of Promise.resolve call"
                           : "Receiver of Promise.reject call";
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, msg);
-        return false;
+        return nullptr;
     }
-    RootedValue cVal(cx, args.thisv());
-    RootedObject C(cx, &cVal.toObject());
+    RootedObject C(cx, &thisVal.toObject());
 
     // Step 3 of Resolve.
-    if (mode == ResolveMode && x.isObject()) {
-        RootedObject xObj(cx, &x.toObject());
+    if (mode == ResolveMode && argVal.isObject()) {
+        RootedObject xObj(cx, &argVal.toObject());
         bool isPromise = false;
         if (xObj->is<PromiseObject>()) {
             isPromise = true;
@@ -1969,11 +1966,9 @@ CommonStaticResolveRejectImpl(JSContext* cx, unsigned argc, Value* vp, Resolutio
         if (isPromise) {
             RootedValue ctorVal(cx);
             if (!GetProperty(cx, xObj, xObj, cx->names().constructor, &ctorVal))
-                return false;
-            if (ctorVal == cVal) {
-                args.rval().set(x);
-                return true;
-            }
+                return nullptr;
+            if (ctorVal == thisVal)
+                return xObj;
         }
     }
 
@@ -1982,15 +1977,17 @@ CommonStaticResolveRejectImpl(JSContext* cx, unsigned argc, Value* vp, Resolutio
     RootedObject resolveFun(cx);
     RootedObject rejectFun(cx);
     if (!NewPromiseCapability(cx, C, &promise, &resolveFun, &rejectFun, true))
-        return false;
+        return nullptr;
 
     // Step 5 of Resolve, 4 of Reject.
-    if (!RunResolutionFunction(cx, mode == ResolveMode ? resolveFun : rejectFun, x, mode, promise))
-        return false;
+    if (!RunResolutionFunction(cx, mode == ResolveMode ? resolveFun : rejectFun, argVal, mode,
+                               promise))
+    {
+        return nullptr;
+    }
 
     // Step 6 of Resolve, 4 of Reject.
-    args.rval().setObject(*promise);
-    return true;
+    return promise;
 }
 
 /**
@@ -1999,7 +1996,14 @@ CommonStaticResolveRejectImpl(JSContext* cx, unsigned argc, Value* vp, Resolutio
 bool
 js::Promise_reject(JSContext* cx, unsigned argc, Value* vp)
 {
-    return CommonStaticResolveRejectImpl(cx, argc, vp, RejectMode);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedValue thisVal(cx, args.thisv());
+    RootedValue argVal(cx, args.get(0));
+    JSObject* result = CommonStaticResolveRejectImpl(cx, thisVal, argVal, RejectMode);
+    if (!result)
+        return false;
+    args.rval().setObject(*result);
+    return true;
 }
 
 /**
@@ -2008,19 +2012,11 @@ js::Promise_reject(JSContext* cx, unsigned argc, Value* vp)
 /* static */ JSObject*
 PromiseObject::unforgeableReject(JSContext* cx, HandleValue value)
 {
-    // Steps 1-2 (omitted).
-
-    // Roughly step 3.
-    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx));
-    if (!promise)
+    RootedObject promiseCtor(cx, JS::GetPromiseConstructor(cx));
+    if (!promiseCtor)
         return nullptr;
-
-    // Roughly step 4.
-    if (!ResolvePromise(cx, promise, value, JS::PromiseState::Rejected))
-        return nullptr;
-
-    // Step 5.
-    return promise;
+    RootedValue cVal(cx, ObjectValue(*promiseCtor));
+    return CommonStaticResolveRejectImpl(cx, cVal, value, RejectMode);
 }
 
 /**
@@ -2029,7 +2025,14 @@ PromiseObject::unforgeableReject(JSContext* cx, HandleValue value)
 bool
 js::Promise_static_resolve(JSContext* cx, unsigned argc, Value* vp)
 {
-    return CommonStaticResolveRejectImpl(cx, argc, vp, ResolveMode);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedValue thisVal(cx, args.thisv());
+    RootedValue argVal(cx, args.get(0));
+    JSObject* result = CommonStaticResolveRejectImpl(cx, thisVal, argVal, ResolveMode);
+    if (!result)
+        return false;
+    args.rval().setObject(*result);
+    return true;
 }
 
 /**
@@ -2038,30 +2041,11 @@ js::Promise_static_resolve(JSContext* cx, unsigned argc, Value* vp)
 /* static */ JSObject*
 PromiseObject::unforgeableResolve(JSContext* cx, HandleValue value)
 {
-    // Steps 1-2 (omitted).
-
-    // Step 3.
-    if (value.isObject()) {
-        JSObject* obj = &value.toObject();
-        if (IsWrapper(obj))
-            obj = CheckedUnwrap(obj);
-        // Instead of getting the `constructor` property, do an unforgeable
-        // check.
-        if (obj && obj->is<PromiseObject>())
-            return obj;
-    }
-
-    // Step 4.
-    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx));
-    if (!promise)
+    RootedObject promiseCtor(cx, JS::GetPromiseConstructor(cx));
+    if (!promiseCtor)
         return nullptr;
-
-    // Steps 5.
-    if (!ResolvePromiseInternal(cx, promise, value))
-        return nullptr;
-
-    // Step 6.
-    return promise;
+    RootedValue cVal(cx, ObjectValue(*promiseCtor));
+    return CommonStaticResolveRejectImpl(cx, cVal, value, ResolveMode);
 }
 
 // ES2016, 25.4.4.6, implemented in Promise.js.

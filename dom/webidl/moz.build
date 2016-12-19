@@ -473,6 +473,7 @@ WEBIDL_FILES = [
     'SVGFitToViewBox.webidl',
     'SVGForeignObjectElement.webidl',
     'SVGGElement.webidl',
+    'SVGGeometryElement.webidl',
     'SVGGradientElement.webidl',
     'SVGGraphicsElement.webidl',
     'SVGImageElement.webidl',

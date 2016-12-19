@@ -9,20 +9,20 @@
 
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
-#include "nsSVGPathGeometryElement.h"
 #include "nsSVGString.h"
+#include "SVGGeometryElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 nsresult NS_NewSVGImageElement(nsIContent **aResult,
                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-
-typedef nsSVGPathGeometryElement SVGImageElementBase;
 
 class nsSVGImageFrame;
 
 namespace mozilla {
 namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio;
+
+typedef SVGGeometryElement SVGImageElementBase;
 
 class SVGImageElement : public SVGImageElementBase,
                         public nsImageLoadingContent
@@ -56,7 +56,7 @@ public:
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const override;
 
-  // nsSVGPathGeometryElement methods:
+  // SVGGeometryElement methods:
   virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
                                  const Matrix& aToBoundsSpace,
                                  const Matrix* aToNonScalingStrokeSpace = nullptr) override;

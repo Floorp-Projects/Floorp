@@ -15,11 +15,11 @@
 
 class nsIFrame;
 class nsSVGLength2;
-class nsSVGPathGeometryFrame;
 class nsSVGViewBox;
 
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;
+class SVGGeometryFrame;
 class nsSVGAnimatedTransformList;
 } // namespace mozilla
 
@@ -142,7 +142,7 @@ private:
   // this is a *temporary* reference to the frame of the element currently
   // referencing our pattern.  This must be temporary because different
   // referencing frames will all reference this one frame
-  nsSVGPathGeometryFrame           *mSource;
+  SVGGeometryFrame                 *mSource;
   nsAutoPtr<gfxMatrix>              mCTM;
 
 protected:

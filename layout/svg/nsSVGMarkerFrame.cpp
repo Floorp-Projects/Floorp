@@ -10,8 +10,8 @@
 #include "gfxContext.h"
 #include "nsSVGEffects.h"
 #include "mozilla/dom/SVGMarkerElement.h"
-#include "nsSVGPathGeometryElement.h"
-#include "nsSVGPathGeometryFrame.h"
+#include "SVGGeometryElement.h"
+#include "SVGGeometryFrame.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -72,7 +72,7 @@ nsSVGMarkerFrame::GetType() const
 gfxMatrix
 nsSVGMarkerFrame::GetCanvasTM()
 {
-  NS_ASSERTION(mMarkedFrame, "null nsSVGPathGeometry frame");
+  NS_ASSERTION(mMarkedFrame, "null SVGGeometry frame");
 
   if (mInUse2) {
     // We're going to be bailing drawing the marker, so return an identity.
@@ -104,7 +104,7 @@ GetAnonymousChildFrame(nsIFrame* aFrame)
 nsresult
 nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
                             const gfxMatrix& aToMarkedFrameUserSpace,
-                            nsSVGPathGeometryFrame *aMarkedFrame,
+                            SVGGeometryFrame *aMarkedFrame,
                             nsSVGMark *aMark, float aStrokeWidth)
 {
   // If the flag is set when we get here, it means this marker frame
@@ -165,7 +165,7 @@ nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
 SVGBBox
 nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
                                           uint32_t aFlags,
-                                          nsSVGPathGeometryFrame *aMarkedFrame,
+                                          SVGGeometryFrame *aMarkedFrame,
                                           const nsSVGMark *aMark,
                                           float aStrokeWidth)
 {
@@ -226,7 +226,7 @@ nsSVGMarkerFrame::SetParentCoordCtxProvider(SVGSVGElement *aContext)
 
 nsSVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
     nsSVGMarkerFrame *aFrame,
-    nsSVGPathGeometryFrame *aMarkedFrame
+    SVGGeometryFrame *aMarkedFrame
     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
       : mFrame(aFrame)
 {

@@ -36,7 +36,7 @@ SVGPolylineElement::SVGPolylineElement(already_AddRefed<mozilla::dom::NodeInfo>&
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPolylineElement)
 
 //----------------------------------------------------------------------
-// nsSVGPathGeometryElement methods
+// SVGGeometryElement methods
 
 already_AddRefed<Path>
 SVGPolylineElement::BuildPath(PathBuilder* aBuilder)

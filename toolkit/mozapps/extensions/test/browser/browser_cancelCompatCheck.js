@@ -66,36 +66,35 @@ function promise_observer(aTopic) {
 // @param aUpdateURL The real update URL to use after the add-ons are installed
 function promise_install_test_addons(aAddonList, aUpdateURL) {
   info("Starting add-on installs");
-  var installs = [];
   let deferred = Promise.defer();
 
   // Use a blank update URL
   Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "missing.rdf");
 
-  for (let addon of aAddonList) {
-    AddonManager.getInstallForURL(TESTROOT + "addons/" + addon.file + ".xpi", function(aInstall) {
-      installs.push(aInstall);
-    }, "application/x-xpinstall");
-  }
+  let installPromises = Promise.all(
+    aAddonList.map(addon => AddonManager.getInstallForURL(`${TESTROOT}addons/${addon.file}.xpi`,
+                                                          null, "application/x-xpinstall")));
 
-  var listener = {
-    installCount: 0,
+  installPromises.then(installs => {
+    var listener = {
+      installCount: 0,
 
-    onInstallEnded: function() {
-      this.installCount++;
-      if (this.installCount == installs.length) {
-        info("Done add-on installs");
-        // Switch to the test update URL
-        Services.prefs.setCharPref(PREF_UPDATEURL, aUpdateURL);
-        deferred.resolve();
+      onInstallEnded: function() {
+        this.installCount++;
+        if (this.installCount == installs.length) {
+          info("Done add-on installs");
+          // Switch to the test update URL
+          Services.prefs.setCharPref(PREF_UPDATEURL, aUpdateURL);
+          deferred.resolve();
+        }
       }
-    }
-  };
+    };
 
-  for (let install of installs) {
-    install.addListener(listener);
-    install.install();
-  }
+    for (let install of installs) {
+      install.addListener(listener);
+      install.install();
+    }
+  });
 
   return deferred.promise;
 }

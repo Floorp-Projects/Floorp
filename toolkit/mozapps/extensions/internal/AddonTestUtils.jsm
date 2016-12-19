@@ -1014,7 +1014,7 @@ var AddonTestUtils = {
    *
    * @param {AddonInstall} install
    *        The add-on to install.
-   * @returns {Promise}
+   * @returns {Promise<AddonInstall>}
    *        Resolves when the install completes, either successfully or
    *        in failure.
    */
@@ -1034,6 +1034,7 @@ var AddonTestUtils = {
       install.install();
     }).then(() => {
       install.removeListener(listener);
+      return install;
     });
   },
 
@@ -1049,17 +1050,17 @@ var AddonTestUtils = {
    *        Resolves when the install has completed.
    */
   promiseInstallFile(file, ignoreIncompatible = false) {
-    return new Promise((resolve, reject) => {
-      AddonManager.getInstallForFile(file, install => {
-        if (!install)
-          reject(new Error(`No AddonInstall created for ${file.path}`));
-        else if (install.state != AddonManager.STATE_DOWNLOADED)
-          reject(new Error(`Expected file to be downloaded for install of ${file.path}`));
-        else if (ignoreIncompatible && install.addon.appDisabled)
-          resolve();
-        else
-          resolve(this.promiseCompleteInstall(install));
-      });
+    return AddonManager.getInstallForFile(file).then(install => {
+      if (!install)
+        throw new Error(`No AddonInstall created for ${file.path}`);
+
+      if (install.state != AddonManager.STATE_DOWNLOADED)
+        throw new Error(`Expected file to be downloaded for install of ${file.path}`);
+
+      if (ignoreIncompatible && install.addon.appDisabled)
+        return null;
+
+      return this.promiseCompleteInstall(install);
     });
   },
 
@@ -1082,30 +1083,6 @@ var AddonTestUtils = {
 
   promiseCompleteAllInstalls(installs) {
     return Promise.all(Array.from(installs, this.promiseCompleteInstall));
-  },
-
-  /**
-   * A promise-based variant of AddonManager.getAddonsByIDs.
-   *
-   * @param {Array<string>} list
-   *        As the first argument of AddonManager.getAddonsByIDs
-   * @return {Promise<Array<Addon>>}
-   *        Resolves to the array of add-ons for the given IDs.
-   */
-  promiseAddonsByIDs(list) {
-    return new Promise(resolve => AddonManager.getAddonsByIDs(list, resolve));
-  },
-
-  /**
-   * A promise-based variant of AddonManager.getAddonByID.
-   *
-   * @param {string} id
-   *        The ID of the add-on.
-   * @return {Promise<Addon>}
-   *        Resolves to the add-on with the given ID.
-   */
-  promiseAddonByID(id) {
-    return new Promise(resolve => AddonManager.getAddonByID(id, resolve));
   },
 
   /**
@@ -1165,19 +1142,6 @@ var AddonTestUtils = {
         }
       }, reason);
     });
-  },
-
-  /**
-   * A promise-based variant of AddonManager.getAddonsWithOperationsByTypes
-   *
-   * @param {Array<string>} types
-   *        The first argument to AddonManager.getAddonsWithOperationsByTypes
-   * @return {Promise<Array<Addon>>}
-   *        Resolves to an array of add-ons with the given operations
-   *        pending.
-   */
-  promiseAddonsWithOperationsByTypes(types) {
-    return new Promise(resolve => AddonManager.getAddonsWithOperationsByTypes(types, resolve));
   },
 
   /**

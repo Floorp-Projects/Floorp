@@ -40,7 +40,7 @@ add_task(function* unsafeProviderStartup() {
   yield new Promise(resolve => {
     let firstProvider = mockAddonProvider("Mock1");
     firstProvider.startupCallback = function() {
-      AddonManager.getAddonByID("does-not-exist", resolve);
+      resolve(AddonManager.getAddonByID("does-not-exist"));
     };
     AddonManagerPrivate.registerProvider(firstProvider);
 
