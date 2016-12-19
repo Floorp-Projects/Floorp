@@ -164,6 +164,9 @@ WEBIDL_FILES = [
     'FormData.webidl',
     'Function.webidl',
     'GainNode.webidl',
+    'Gamepad.webidl',
+    'GamepadPose.webidl',
+    'GamepadServiceTest.webidl',
     'Geolocation.webidl',
     'GeometryUtils.webidl',
     'GetUserMediaRequest.webidl',
@@ -638,13 +641,6 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechSynthesisVoice.webidl',
     ]
 
-if CONFIG['MOZ_GAMEPAD']:
-    WEBIDL_FILES += [
-        'Gamepad.webidl',
-        'GamepadPose.webidl',
-        'GamepadServiceTest.webidl'
-    ]
-
 WEBIDL_FILES += [
     'CloseEvent.webidl',
     'CustomEvent.webidl',
@@ -696,6 +692,9 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'DownloadEvent.webidl',
     'ErrorEvent.webidl',
     'FontFaceSetLoadEvent.webidl',
+    'GamepadAxisMoveEvent.webidl',
+    'GamepadButtonEvent.webidl',
+    'GamepadEvent.webidl',
     'GroupedHistoryEvent.webidl',
     'HashChangeEvent.webidl',
     'HiddenPluginEvent.webidl',
@@ -740,13 +739,6 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechRecognitionEvent.webidl',
         'SpeechSynthesisErrorEvent.webidl',
         'SpeechSynthesisEvent.webidl',
-    ]
-
-if CONFIG['MOZ_GAMEPAD']:
-    GENERATED_EVENTS_WEBIDL_FILES += [
-        'GamepadAxisMoveEvent.webidl',
-        'GamepadButtonEvent.webidl',
-        'GamepadEvent.webidl',
     ]
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner'] or CONFIG['MOZ_SUITE']:
