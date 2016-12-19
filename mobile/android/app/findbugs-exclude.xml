@@ -9,16 +9,6 @@
     <Bug pattern="DE_MIGHT_IGNORE" />
   </Match>
 
-  <!-- Bug 1316006 -->
-  <Match>
-    <Bug pattern="DMI_INVOKING_TOSTRING_ON_ARRAY" />
-  </Match>
-
-  <!-- Bug 1316005 -->
-  <Match>
-    <Bug pattern="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS" />
-  </Match>
-
   <!-- Bug 1316008 -->
   <Match>
     <Bug pattern="DM_DEFAULT_ENCODING" />
@@ -44,19 +34,9 @@
     <Bug pattern="VO_VOLATILE_INCREMENT" />
   </Match>
 
-  <!-- Bug 1316012 -->
-  <Match>
-    <Bug pattern="DM_BOXED_PRIMITIVE_FOR_PARSING" />
-  </Match>
-
   <!-- Bug 1316021 -->
   <Match>
     <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
-  </Match>
-
-  <!-- Bug 1316023 -->
-  <Match>
-    <Bug pattern="UC_USELESS_CONDITION" />
   </Match>
 
   <!-- Bug 1320316 -->
