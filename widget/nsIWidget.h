@@ -734,9 +734,8 @@ class nsIWidget : public nsISupports
      *                 offset from the origin of the client area of the parent
      *                 widget (for root widgets and popup widgets it is in
      *                 screen coordinates)
-     *
      **/
-    NS_IMETHOD MoveClient(double aX, double aY) = 0;
+    virtual void MoveClient(double aX, double aY) = 0;
 
     /**
      * Resize this widget. Any size constraints set for the window by a
@@ -774,11 +773,10 @@ class nsIWidget : public nsISupports
      * @param aWidth   the new width of the client area.
      * @param aHeight  the new height of the client area.
      * @param aRepaint whether the widget should be repainted
-     *
      */
-    NS_IMETHOD ResizeClient(double aWidth,
-                            double aHeight,
-                            bool   aRepaint) = 0;
+    virtual void ResizeClient(double aWidth,
+                              double aHeight,
+                              bool   aRepaint) = 0;
 
     /**
      * Resize and reposition the widget so tht inner client area has the given
@@ -795,13 +793,12 @@ class nsIWidget : public nsISupports
      * @param aWidth   the new width of the client area.
      * @param aHeight  the new height of the client area.
      * @param aRepaint whether the widget should be repainted
-     *
      */
-    NS_IMETHOD ResizeClient(double aX,
-                            double aY,
-                            double aWidth,
-                            double aHeight,
-                            bool   aRepaint) = 0;
+    virtual void ResizeClient(double aX,
+                              double aY,
+                              double aWidth,
+                              double aHeight,
+                              bool   aRepaint) = 0;
 
     /**
      * Sets the widget's z-index.
