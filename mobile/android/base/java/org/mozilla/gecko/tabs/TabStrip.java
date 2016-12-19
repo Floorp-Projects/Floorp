@@ -114,7 +114,8 @@ public class TabStrip extends ThemedLinearLayout
                     break;
 
                 case ADDED:
-                    tabStripView.addTab(tab);
+                    final int tabIndex = Integer.parseInt(data);
+                    tabStripView.addTab(tab, tabIndex);
                     if (tabChangedListener != null) {
                         tabChangedListener.onTabChanged();
                     }

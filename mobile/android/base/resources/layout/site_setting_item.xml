@@ -43,7 +43,7 @@
 
     </LinearLayout>
 
-    <android.support.v7.widget.AppCompatCheckBox
+    <CheckBox
         android:id="@+id/checkbox"
         android:layout_width="35dip"
         android:layout_height="wrap_content"
