@@ -1202,6 +1202,12 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                               self.identifier.name,
                               locations)
 
+        ctor = self.ctor()
+        if ctor is not None:
+            ctor.validate()
+        for namedCtor in self.namedConstructors:
+            namedCtor.validate()
+
         indexedGetter = None
         hasLengthAttribute = False
         for member in self.members:
