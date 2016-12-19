@@ -297,6 +297,14 @@ public class Distribution {
 
                 // This will bail if we aren't delayed, or we already have a distribution.
                 distribution.processDelayedReferrer(ref);
+
+                // On Android 5+ we might receive the referrer intent
+                // and never actually launch the browser, which is the usual signal
+                // for the distribution init process to complete.
+                // Attempt to init here to handle that case.
+                // Profile setup that relies on the distribution will occur
+                // when the browser is eventually launched, via `addOnDistributionReadyCallback`.
+                distribution.doInit();
             }
         });
     }
