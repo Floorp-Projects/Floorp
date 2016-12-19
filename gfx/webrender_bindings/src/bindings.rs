@@ -10,6 +10,9 @@ use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use webrender_traits::{ExternalImageId};
+use webrender_traits::{DeviceUintSize};
+use webrender_traits::{LayoutSize, LayoutTransform};
+use webrender_traits::{LayerPoint, LayerRect, LayerSize};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use std::sync::{Arc, Mutex, Condvar};
@@ -205,7 +208,7 @@ impl webrender_traits::RenderNotifier for Notifier {
 
     fn pipeline_size_changed(&mut self,
                              _: PipelineId,
-                             _: Option<Size2D<f32>>) {
+                             _: Option<LayoutSize>) {
     }
 }
 
@@ -214,7 +217,7 @@ pub struct WrWindowState {
     api: webrender_traits::RenderApi,
     _gl_library: GlLibrary,
     root_pipeline_id: PipelineId,
-    size: Size2D<u32>,
+    size: DeviceUintSize,
     render_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
     pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
     pipeline_sync_list: Vec<PipelineId>,
@@ -312,6 +315,9 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
         precache_shaders: false,
         renderer_kind: RendererKind::Native,
         debug: false,
+        clear_framebuffer: true,
+        clear_empty_tiles: false,
+        clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
     };
 
     let (mut renderer, sender) = Renderer::new(opts);
@@ -341,7 +347,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
         api: api,
         _gl_library: library,
         root_pipeline_id: pipeline_id,
-        size: Size2D::new(0, 0),
+        size: DeviceUintSize::new(0, 0),
         render_notifier_lock: notification_lock_clone,
         pipeline_epoch_map: HashMap::with_hasher(Default::default()),
         pipeline_sync_list: Vec::new(),
@@ -364,7 +370,7 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
     });
 
     if pipeline_id == window.root_pipeline_id {
-        window.size = Size2D::new(width, height);
+        window.size = DeviceUintSize::new(width, height);
     }
 
     window.pipeline_epoch_map.insert(pipeline_id, Epoch(0));
@@ -381,18 +387,18 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
     state.z_index = 0;
 
     if state.pipeline_id == window.root_pipeline_id {
-        window.size = Size2D::new(width, height);
+        window.size = DeviceUintSize::new(width, height);
     }
 
-    let bounds = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(width as f32, height as f32));
+    let bounds = LayerRect::new(LayerPoint::new(0.0, 0.0), LayerSize::new(width as f32, height as f32));
 
     state.frame_builder.root_dl_builder.push_stacking_context(
         webrender_traits::ScrollPolicy::Scrollable,
         bounds,
         ClipRegion::simple(&bounds),
         0,
-        &Matrix4D::identity(),
-        &Matrix4D::identity(),
+        &LayoutTransform::identity(),
+        &LayoutTransform::identity(),
         webrender_traits::MixBlendMode::Normal,
         Vec::new(),
     );
@@ -406,7 +412,7 @@ pub extern fn wr_push_dl_builder(state:&mut WrState)
 }
 
 #[no_mangle]
-pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &Matrix4D<f32>)
+pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &LayoutTransform)
 {
     assert!( unsafe { is_in_compositor_thread() });
     // 
@@ -422,7 +428,7 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: W
                                   ClipRegion::simple(&bounds),
                                   state.z_index,
                                   transform,
-                                  &Matrix4D::identity(),
+                                  &LayoutTransform::identity(),
                                   webrender_traits::MixBlendMode::Normal,
                                   Vec::new());
     prev_dl.list.append(&mut dl.list);
@@ -499,9 +505,9 @@ pub extern fn wr_dp_end(window: &mut WrWindowState,
         let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
 
         //let (dl_builder, aux_builder) = fb.root_dl_builder.finalize();
-        window.api.set_root_display_list(root_background_color,
+        window.api.set_root_display_list(Some(root_background_color),
                                          *epoch,
-                                         Size2D::new(width as f32, height as f32),
+                                         LayoutSize::new(width as f32, height as f32),
                                          fb.root_dl_builder);
 
         return;
@@ -587,9 +593,9 @@ pub struct WrImageMask
 
 impl WrRect
 {
-    pub fn to_rect(&self) -> Rect<f32>
+    pub fn to_rect(&self) -> LayerRect
     {
-        Rect::new(Point2D::new(self.x, self.y), Size2D::new(self.width, self.height))
+        LayerRect::new(LayerPoint::new(self.x, self.y), LayerSize::new(self.width, self.height))
     }
 }
 
