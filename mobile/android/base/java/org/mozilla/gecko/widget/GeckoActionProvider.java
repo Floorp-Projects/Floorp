@@ -290,7 +290,7 @@ public class GeckoActionProvider {
      */
     public void downloadImageForIntent(final Intent intent) {
         final String src = IntentUtils.getStringExtraSafe(intent, Intent.EXTRA_TEXT);
-        final File dir = GeckoApp.getTempDirectory();
+        final File dir = GeckoApp.getTempDirectory(mContext);
 
         if (src == null || dir == null) {
             // We should be, but currently aren't, statically guaranteed an Activity context.
@@ -304,7 +304,7 @@ public class GeckoActionProvider {
             return;
         }
 
-        GeckoApp.deleteTempFiles();
+        GeckoApp.deleteTempFiles(mContext);
 
         String type = intent.getType();
         OutputStream os = null;

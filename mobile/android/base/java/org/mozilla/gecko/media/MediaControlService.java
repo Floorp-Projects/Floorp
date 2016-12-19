@@ -58,7 +58,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     private boolean mInitialize = false;
     private boolean mIsMediaControlPrefOn = true;
 
-    private static WeakReference<Tab> mTabReference = new WeakReference<>(null);
+    private WeakReference<Tab> mTabReference = new WeakReference<>(null);
 
     private int minCoverSize;
     private int coverSize;
