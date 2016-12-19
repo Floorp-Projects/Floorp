@@ -151,8 +151,7 @@ WebConsoleActor.prototype =
    * @type boolean
    */
   get _parentIsContentActor() {
-    return "ContentActor" in DebuggerServer &&
-            this.parentActor instanceof DebuggerServer.ContentActor;
+    return this.parentActor.constructor.name == "ContentActor";
   },
 
   /**

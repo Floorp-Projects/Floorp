@@ -80,3 +80,5 @@ ContentActor.prototype.exit = function () {
 ContentActor.prototype._sendForm = function () {
   this._chromeGlobal.sendAsyncMessage("debug:form", this.form());
 };
+
+exports.ContentActor = ContentActor;
