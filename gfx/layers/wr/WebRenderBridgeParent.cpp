@@ -476,13 +476,18 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   mozilla::widget::WidgetRenderingContext widgetContext;
 #if defined(XP_MACOSX)
   widgetContext.mGL = mGLContext;
+#elif defined(MOZ_WIDGET_ANDROID)
+  widgetContext.mCompositor = mCompositor;
 #endif
   if (!mWidget->PreRender(&widgetContext)) {
     return;
   }
+  // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
+  mWidget->DrawWindowUnderlay(&widgetContext, LayoutDeviceIntRect());
   mGLContext->MakeCurrent();
   wr_composite_window(mWRWindowState);
   mGLContext->SwapBuffers();
+  mWidget->DrawWindowOverlay(&widgetContext, LayoutDeviceIntRect());
   mWidget->PostRender(&widgetContext);
 
   TimeStamp end = TimeStamp::Now();
