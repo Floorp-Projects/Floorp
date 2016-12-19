@@ -33,6 +33,58 @@ const mockOfflineAppCacheHelper = {
   }
 };
 
+const mockSiteDataManager = {
+  sites: new Map([
+    [
+      "https://shopping.xyz.com/",
+      {
+        usage: 102400,
+        host: "shopping.xyz.com",
+        status: Ci.nsIPermissionManager.ALLOW_ACTION
+      }
+    ],
+    [
+      "https://music.bar.com/",
+      {
+        usage: 10240,
+        host: "music.bar.com",
+        status: Ci.nsIPermissionManager.ALLOW_ACTION
+      }
+    ],
+    [
+      "https://news.foo.com/",
+      {
+        usage: 1024,
+        host: "news.foo.com",
+        status: Ci.nsIPermissionManager.DENY_ACTION
+      }
+    ]
+  ]),
+
+  _originalGetSites: null,
+
+  getSites() {
+    let list = [];
+    this.sites.forEach((data, origin) => {
+      list.push({
+        usage: data.usage,
+        status: data.status,
+        uri: NetUtil.newURI(origin)
+      });
+    });
+    return Promise.resolve(list);
+  },
+
+  register() {
+    this._originalGetSites = SiteDataManager.getSites;
+    SiteDataManager.getSites = this.getSites.bind(this);
+  },
+
+  unregister() {
+    SiteDataManager.getSites = this._originalGetSites;
+  }
+};
+
 function addPersistentStoragePerm(origin) {
   let uri = NetUtil.newURI(origin);
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
@@ -91,7 +143,7 @@ add_task(function* () {
 
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_BASE_URL + "site_data_test.html");
   yield waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
 
@@ -151,5 +203,104 @@ add_task(function* () {
   is(totalUsage, 0, "The total usage should be removed");
   // Test accepting "Clear All Data" ends
 
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+add_task(function* () {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+
+  mockSiteDataManager.register();
+  let updatePromise = promiseSitesUpdated();
+  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield updatePromise;
+
+  // Open the siteDataSettings subdialog
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let settingsBtn = doc.getElementById("siteDataSettings");
+  let dialogOverlay = doc.getElementById("dialogOverlay");
+  let dialogPromise = promiseLoadSubDialog("chrome://browser/content/preferences/siteDataSettings.xul");
+  settingsBtn.doCommand();
+  yield dialogPromise;
+  is(dialogOverlay.style.visibility, "visible", "The dialog should be visible");
+
+  let dialogFrame = doc.getElementById("dialogFrame");
+  let frameDoc = dialogFrame.contentDocument;
+  let hostCol = frameDoc.getElementById("hostCol");
+  let usageCol = frameDoc.getElementById("usageCol");
+  let statusCol = frameDoc.getElementById("statusCol");
+  let sitesList = frameDoc.getElementById("sitesList");
+  let mockSites = mockSiteDataManager.sites;
+
+  // Test default sorting
+  assertSortByHost("ascending");
+
+  // Test sorting on the host column
+  hostCol.click();
+  assertSortByHost("descending");
+  hostCol.click();
+  assertSortByHost("ascending");
+
+  // Test sorting on the permission status column
+  statusCol.click();
+  assertSortByStatus("ascending");
+  statusCol.click();
+  assertSortByStatus("descending");
+
+  // Test sorting on the usage column
+  usageCol.click();
+  assertSortByUsage("ascending");
+  usageCol.click();
+  assertSortByUsage("descending");
+
+  mockSiteDataManager.unregister();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  function assertSortByHost(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aOrigin = siteItems[i].getAttribute("data-origin");
+      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
+      let a = mockSites.get(aOrigin);
+      let b = mockSites.get(bOrigin);
+      let result = a.host.localeCompare(b.host);
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by host");
+      }
+    }
+  }
+
+  function assertSortByStatus(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aOrigin = siteItems[i].getAttribute("data-origin");
+      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
+      let a = mockSites.get(aOrigin);
+      let b = mockSites.get(bOrigin);
+      let result = a.status - b.status;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by permission status");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by permission status");
+      }
+    }
+  }
+
+  function assertSortByUsage(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aOrigin = siteItems[i].getAttribute("data-origin");
+      let bOrigin = siteItems[i + 1].getAttribute("data-origin");
+      let a = mockSites.get(aOrigin);
+      let b = mockSites.get(bOrigin);
+      let result = a.usage - b.usage;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by usage");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by usage");
+      }
+    }
+  }
+});
+
