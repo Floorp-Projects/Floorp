@@ -94,13 +94,19 @@ EventTooltip.prototype = {
         header.appendChild(eventTypeLabel);
       }
 
-      if (!listener.hide.filename) {
-        let filename = doc.createElementNS(XHTML_NS, "span");
-        filename.className = "event-tooltip-filename devtools-monospace";
-        filename.textContent = listener.origin;
-        filename.setAttribute("title", listener.origin);
-        header.appendChild(filename);
+      let filename = doc.createElementNS(XHTML_NS, "span");
+      filename.className = "event-tooltip-filename devtools-monospace";
+
+      let text = listener.origin;
+      let title = text;
+      if (listener.hide.filename) {
+        text = L10N.getStr("eventsTooltip.unknownLocation");
+        title = L10N.getStr("eventsTooltip.unknownLocationExplanation");
       }
+
+      filename.textContent = text;
+      filename.setAttribute("title", title);
+      header.appendChild(filename);
 
       let attributesContainer = doc.createElementNS(XHTML_NS, "div");
       attributesContainer.className = "event-tooltip-attributes-container";

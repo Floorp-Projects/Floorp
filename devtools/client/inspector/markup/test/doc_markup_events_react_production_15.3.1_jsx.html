@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <script src="lib_babel_6.21.0_min.js"></script>
+    <script src="lib_react_with_addons_15.3.1_min.js"></script>
+    <script src="lib_react_dom_15.3.1_min.js"></script>
+    <script src="react_external_listeners.js"></script>
+  </head>
+  <body>
+    <h1>doc_markup_events_react_production_15.3.1_jsx.html</h1>
+
+    <div id="container"></div>
+
+    <script type="text/babel">
+      "use strict";
+
+      /* global React, ReactDOM, externalCapturingFunction, externalFunction */
+      /* exported ClickMe */
+
+      var ClickMe = React.createClass({
+        inlineFunction: function () {
+          alert("inlineFunction");
+        },
+
+        render: function () {
+          return (
+            <div>
+              <h3 id="inlinejsx" onClick={this.inlineFunction}>Click for inlineFunction</h3>
+              <h3 id="externaljsx" onClick={externalFunction}>Click for externalFunction</h3>
+              <h3 id="externalinlinejsx" onClick={externalFunction}
+                  onMouseUp={this.inlineFunction}>
+                Click for both
+              </h3>
+              <h3 id="externalcapturingjsx" onClickCapture={externalCapturingFunction}>
+                Click for externalCapturingFunction
+              </h3>
+            </div>
+          );
+        }
+      });
+
+      ReactDOM.render(
+        <ClickMe />,
+        document.getElementById("container")
+      );
+    </script>
+  </body>
+</html>

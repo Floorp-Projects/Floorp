@@ -13,6 +13,12 @@ module.exports = {
     "waitForTick": true,
   },
 
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true,
+    }
+  },
+
   "rules": {
     // Tests can always import anything.
     "mozilla/reject-some-requires": 0,
