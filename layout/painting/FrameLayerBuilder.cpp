@@ -4314,7 +4314,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                    "If we have rounded rects, we must have a clip rect");
 
       // It has its own layer. Update that layer's clip and visible rects.
-
       ownLayer->SetClipRect(Nothing());
       ownLayer->SetScrolledClip(Nothing());
       if (layerClip.HasClip()) {
@@ -4337,7 +4336,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
             SetupMaskLayer(ownLayer, layerClip);
           }
         }
-      } else if (item->GetType() == nsDisplayItem::TYPE_MASK) {
+      }
+
+      if (item->GetType() == nsDisplayItem::TYPE_MASK) {
+        MOZ_ASSERT(layerClip.GetRoundedRectCount() == 0);
+
         nsDisplayMask* maskItem = static_cast<nsDisplayMask*>(item);
         SetupMaskLayerForCSSMask(ownLayer, maskItem);
 
