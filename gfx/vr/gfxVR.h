@@ -22,6 +22,7 @@ class PTextureParent;
 }
 namespace dom {
 enum class GamepadMappingType : uint32_t;
+enum class GamepadHand : uint32_t;
 struct GamepadPoseState;
 }
 namespace gfx {
@@ -219,14 +220,14 @@ struct VRControllerInfo
   VRDeviceType GetType() const { return mType; }
   uint32_t GetControllerID() const { return mControllerID; }
   const nsCString& GetControllerName() const { return mControllerName; }
-  uint32_t GetMappingType() const { return mMappingType; }
+  dom::GamepadMappingType GetMappingType() const { return mMappingType; }
   uint32_t GetNumButtons() const { return mNumButtons; }
   uint32_t GetNumAxes() const { return mNumAxes; }
 
   uint32_t mControllerID;
   VRDeviceType mType;
   nsCString mControllerName;
-  uint32_t mMappingType;
+  dom::GamepadMappingType mMappingType;
   uint32_t mNumButtons;
   uint32_t mNumAxes;
 
@@ -258,8 +259,8 @@ public:
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
   void NewPoseState(uint32_t aIndex, const dom::GamepadPoseState& aPose);
-  void AddGamepad(const char* aID, uint32_t aMapping, uint32_t aHand,
-                  uint32_t aNumButtons, uint32_t aNumAxes);
+  void AddGamepad(const char* aID, dom::GamepadMappingType aMapping,
+                  dom::GamepadHand aHand, uint32_t aNumButtons, uint32_t aNumAxes);
   void RemoveGamepad(uint32_t aIndex);
 
 protected:

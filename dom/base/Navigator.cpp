@@ -32,9 +32,7 @@
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
 #include "mozilla/dom/DeviceStorageAreaListener.h"
-#ifdef MOZ_GAMEPAD
 #include "mozilla/dom/GamepadServiceTest.h"
-#endif
 #include "mozilla/dom/PowerManager.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -217,9 +215,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageAreaListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresentation)
-#ifdef MOZ_GAMEPAD
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepadServiceTest)
-#endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRGetDisplaysPromises)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -307,12 +303,10 @@ Navigator::Invalidate()
     mDeviceStorageAreaListener = nullptr;
   }
 
-#ifdef MOZ_GAMEPAD
   if (mGamepadServiceTest) {
     mGamepadServiceTest->Shutdown();
     mGamepadServiceTest = nullptr;
   }
-#endif
 
   mVRGetDisplaysPromises.Clear();
 }
@@ -1605,7 +1599,6 @@ Navigator::MozTCPSocket()
   return socket.forget();
 }
 
-#ifdef MOZ_GAMEPAD
 void
 Navigator::GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads,
                        ErrorResult& aRv)
@@ -1628,7 +1621,6 @@ Navigator::RequestGamepadServiceTest()
   }
   return mGamepadServiceTest;
 }
-#endif
 
 already_AddRefed<Promise>
 Navigator::GetVRDisplays(ErrorResult& aRv)

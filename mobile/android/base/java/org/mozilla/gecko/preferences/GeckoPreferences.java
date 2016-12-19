@@ -884,6 +884,10 @@ public class GeckoPreferences
                     preferences.removePreference(pref);
                     i--;
                     continue;
+                } else if (PREFS_COMPACT_TABS.equals(key) && HardwareUtils.isTablet()) {
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
                 }
 
                 // Some Preference UI elements are not actually preferences,
