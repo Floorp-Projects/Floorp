@@ -29,10 +29,13 @@ We also keep track of known
 and [specification](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec)
 problems in our issue tracker.
 
-Marionette support is best in Firefox 48 and onwards,
-although the more recent the Firefox version,
-the more bug fixes and features.
-**Firefox 47 is explicitly not supported.**
+Support is best in Firefox 48 and onwards,
+although generally the more recent the Firefox version,
+the better the experience as they have more bug fixes and features.
+We strongly advise using the [latest Firefox Nightly](https://nightly.mozilla.org/) with geckodriver,
+and want to make it clear that Firefox 47 and earlier is explicitly not supported.
+Since Windows XP support in Firefox will be dropped with Firefox 53,
+we do not support this platform.
 
 ## WebDriver capabilities
 
