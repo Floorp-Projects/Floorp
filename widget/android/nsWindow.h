@@ -167,16 +167,16 @@ public:
     virtual void ConstrainPosition(bool aAllowSlop,
                                    int32_t *aX,
                                    int32_t *aY) override;
-    NS_IMETHOD Move(double aX,
-                    double aY) override;
-    NS_IMETHOD Resize(double aWidth,
-                      double aHeight,
-                      bool   aRepaint) override;
-    NS_IMETHOD Resize(double aX,
-                      double aY,
-                      double aWidth,
-                      double aHeight,
-                      bool aRepaint) override;
+    virtual void Move(double aX,
+                      double aY) override;
+    virtual void Resize(double aWidth,
+                        double aHeight,
+                        bool   aRepaint) override;
+    virtual void Resize(double aX,
+                        double aY,
+                        double aWidth,
+                        double aHeight,
+                        bool aRepaint) override;
     void SetZIndex(int32_t aZIndex) override;
     virtual void SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD Enable(bool aState) override;
