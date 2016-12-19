@@ -28,9 +28,9 @@
 
     <richlistbox id="sitesList" orient="vertical" flex="1">
       <listheader>
-        <treecol flex="4" width="50" label="&hostCol.label;"/>
-        <treecol flex="2" width="50" label="&statusCol.label;"/>
-        <treecol flex="1" width="50" label="&usageCol.label;"/>
+        <treecol flex="4" width="50" label="&hostCol.label;" id="hostCol"/>
+        <treecol flex="2" width="50" label="&statusCol.label;" id="statusCol"/>
+        <treecol flex="1" width="50" label="&usageCol.label;" id="usageCol"/>
       </listheader>
     </richlistbox>
   </vbox>
