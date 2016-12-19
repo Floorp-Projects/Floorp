@@ -1271,12 +1271,19 @@ public:
   }
 
 private:
-  // VisualStudio does not allow inner class to access protected member of the
-  // enclosing class' parent class. Redefine AudioQueue()/VideoQueue() here so
-  // that AysncNextFrameSeekTask could use these version instead of
-  // StateObject::{Audio,Video}Queue().
-  MediaQueue<MediaData>& AudioQueue() const { return mMaster->mAudioQueue; }
-  MediaQueue<MediaData>& VideoQueue() const { return mMaster->mVideoQueue; }
+  void DoSeekInternal()
+  {
+    auto currentTime = mCurrentTime;
+    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
+      return aSampleTime <= currentTime;
+    });
+
+    if (!IsVideoRequestPending() && NeedMoreVideo()) {
+      RequestVideoData();
+    }
+
+    MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
+  }
 
   class AysncNextFrameSeekTask : public Runnable
   {
@@ -1286,30 +1293,17 @@ private:
     {
     }
 
-    ~AysncNextFrameSeekTask() {}
+    void Cancel() { mStateObj = nullptr; }
 
-    void Cancel() { mIsCancelled = true; }
-
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
-      if (!mIsCancelled) {
-        auto currentTime = mStateObj->mCurrentTime;
-        DiscardFrames(mStateObj->VideoQueue(), [currentTime] (int64_t aSampleTime) {
-          return aSampleTime <= currentTime;
-        });
-
-        if (!mStateObj->IsVideoRequestPending() && mStateObj->NeedMoreVideo()) {
-          mStateObj->RequestVideoData();
-        }
-
-        mStateObj->MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
+      if (mStateObj) {
+        mStateObj->DoSeekInternal();
       }
-
       return NS_OK;
     }
 
   private:
-    bool mIsCancelled = false;
     NextFrameSeekingState* mStateObj;
   };
 
