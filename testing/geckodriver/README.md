@@ -36,7 +36,7 @@ the more bug fixes and features.
 
 ## Firefox capabilities
 
-geckodriver supports a capability named `moz:firefoxOptions`
+geckodriver also supports a capability named `moz:firefoxOptions`
 which takes Firefox-specific options.
 This must be a dictionary
 and may contain any of the following fields:
@@ -133,6 +133,28 @@ and may contain any of the following fields:
   <td>One entry per preference to override.
  </tr>
 </table>
+
+## Capabilities examples
+
+To select a specific Firefox binary
+and run it with a specific command-line flag,
+set a preference,
+and enable verbose logging:
+
+```js
+{
+	"moz:firefoxOptions": {
+		"binary": "/usr/local/firefox/bin/firefox",
+		"args": ["--no-remote"],
+		"prefs": {
+			"dom.ipc.processCount": 8
+		},
+		"log": {
+			"level": "trace"
+		}
+	}
+}
+```
 
 ## Building
 
