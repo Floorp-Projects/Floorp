@@ -120,6 +120,7 @@ impl<S: AsRef<str>> fmt::Display for Host<S> {
 
 /// This mostly exists because coherence rules don’t allow us to implement
 /// `ToSocketAddrs for (Host<S>, u16)`.
+#[derive(Clone)]
 pub struct HostAndPort<S=String> {
     pub host: Host<S>,
     pub port: u16,
