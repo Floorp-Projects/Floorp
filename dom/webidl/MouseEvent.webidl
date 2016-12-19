@@ -77,11 +77,6 @@ dictionary MouseEventInit : EventModifierInit {
 // Mozilla extensions
 partial interface MouseEvent
 {
-  [BinaryName="movementX", Pref="pointer-lock-api.prefixed.enabled"]
-  readonly attribute long mozMovementX;
-  [BinaryName="movementY", Pref="pointer-lock-api.prefixed.enabled"]
-  readonly attribute long mozMovementY;
-
   // Finger or touch pressure event value
   // ranges between 0.0 and 1.0
   readonly attribute float mozPressure;
