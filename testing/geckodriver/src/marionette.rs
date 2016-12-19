@@ -50,71 +50,9 @@ use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
 
 use capabilities::FirefoxOptions;
+use prefs;
 
 const DEFAULT_HOST: &'static str = "localhost";
-
-lazy_static! {
-    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 50] = [
-        ("app.update.auto", Pref::new(false)),
-        ("app.update.enabled", Pref::new(false)),
-        ("browser.displayedE10SPrompt.1", Pref::new(5)),
-        ("browser.displayedE10SPrompt.2", Pref::new(5)),
-        ("browser.displayedE10SPrompt.3", Pref::new(5)),
-        ("browser.displayedE10SPrompt.4", Pref::new(5)),
-        ("browser.displayedE10SPrompt", Pref::new(5)),
-        ("browser.dom.window.dump.enabled", Pref::new(true)),
-        ("browser.EULA.3.accepted", Pref::new(true)),
-        ("browser.EULA.override", Pref::new(true)),
-        ("browser.firstrun-content.dismissed", Pref::new("")),
-        ("browser.offline", Pref::new(false)),
-        ("browser.safebrowsing.enabled", Pref::new(false)),
-        ("browser.safebrowsing.malware.enabled", Pref::new(false)),
-        ("browser.search.update", Pref::new(false)),
-        ("browser.sessionstore.resume_from_crash", Pref::new(false)),
-        ("browser.shell.checkDefaultBrowser", Pref::new(false)),
-        ("browser.startup.homepage_override.mstone", Pref::new("ignore")),
-        ("browser.startup.page", Pref::new(0)),
-        ("browser.tabs.warnOnOpen", Pref::new(false)),
-        ("browser.usedOnWindows10.introURL", Pref::new("")),
-        ("datareporting.healthreport.logging.consoleEnabled", Pref::new(false)),
-        ("datareporting.healthreport.service.enabled", Pref::new(false)),
-        ("datareporting.healthreport.service.firstRun", Pref::new(false)),
-        ("datareporting.healthreport.uploadEnabled", Pref::new(false)),
-        ("datareporting.policy.dataSubmissionEnabled", Pref::new(false)),
-        ("datareporting.policy.dataSubmissionPolicyAccepted", Pref::new(false)),
-        ("devtools.errorconsole.enabled", Pref::new(true)),
-        ("dom.disable_open_during_load", Pref::new(false)),
-        ("dom.ipc.reportProcessHangs", Pref::new(false)),
-        ("focusmanager.testmode", Pref::new(true)),
-        ("security.fileuri.origin_policy", Pref::new(3)),
-        ("security.fileuri.strict_origin_policy", Pref::new(false)),
-        ("security.warn_entering_secure", Pref::new(false)),
-        ("security.warn_entering_secure.show_once", Pref::new(false)),
-        ("security.warn_entering_weak", Pref::new(false)),
-        ("security.warn_entering_weak.show_once", Pref::new(false)),
-        ("security.warn_leaving_secure", Pref::new(false)),
-        ("security.warn_leaving_secure.show_once", Pref::new(false)),
-        ("security.warn_submit_insecure", Pref::new(false)),
-        ("security.warn_viewing_mixed", Pref::new(false)),
-        ("security.warn_viewing_mixed.show_once", Pref::new(false)),
-        ("signon.autofillForms", Pref::new(false)),
-        ("signon.rememberSignons", Pref::new(false)),
-        ("startup.homepage_welcome_url.additional", Pref::new("about:blank")),
-        ("startup.homepage_welcome_url", Pref::new("about:blank")),
-        ("toolkit.networkmanager.disable", Pref::new(true)),
-        ("toolkit.telemetry.enabled", Pref::new(false)),
-        ("toolkit.telemetry.prompted", Pref::new(2)),
-        ("toolkit.telemetry.rejected", Pref::new(true)),
-    ];
-
-    pub static ref FIREFOX_REQUIRED_PREFERENCES: [(&'static str, Pref); 4] = [
-        ("browser.tabs.warnOnClose", Pref::new(false)),
-        ("browser.warnOnQuit", Pref::new(false)),
-        // until bug 1238095 is fixed, we have to allow CPOWs
-        ("dom.ipc.cpows.forbid-unsafe-from-browser", Pref::new(false)),
-        ("marionette.defaultPrefs.enabled", Pref::new(true)),
-    ];
-}
 
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
@@ -399,11 +337,11 @@ impl MarionetteHandler {
         prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));
 
         if !custom_profile {
-            prefs.insert_slice(&FIREFOX_DEFAULT_PREFERENCES[..]);
+            prefs.insert_slice(&prefs::DEFAULT[..]);
         };
         prefs.insert_slice(&extra_prefs[..]);
 
-        prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
+        prefs.insert_slice(&prefs::REQUIRED[..]);
 
         if let Some(ref level) = self.current_log_level {
             prefs.insert("marionette.logging", Pref::new(level.to_string()));
