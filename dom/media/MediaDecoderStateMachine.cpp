@@ -84,7 +84,6 @@ using namespace mozilla::media;
 #define SLOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (SFMT(x, ##__VA_ARGS__)))
 #define SWARN(x, ...) NS_WARNING(nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get())
 #define SDUMP(x, ...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get(), nullptr, nullptr, -1)
-#define SSAMPLELOG(x, ...) MOZ_LOG(gMediaSampleLog, LogLevel::Debug, (SFMT(x, ##__VA_ARGS__)))
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -1336,11 +1335,6 @@ private:
     MOZ_ASSERT(aAudio);
     MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
 
-    // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
-    // resolved.
-
-    SSAMPLELOG("OnAudioDecoded [%lld,%lld]", aAudio->mTime, aAudio->GetEndTime());
-
     // We accept any audio data here.
     mSeekedAudioData = aAudio;
 
@@ -1351,11 +1345,6 @@ private:
   {
     MOZ_ASSERT(aVideo);
     MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-
-    // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
-    // resolved.
-
-    SSAMPLELOG("OnVideoDecoded [%lld,%lld]", aVideo->mTime, aVideo->GetEndTime());
 
     if (aVideo->mTime > mCurrentTime) {
       mSeekedVideoData = aVideo;
@@ -1376,8 +1365,6 @@ private:
     switch (aType) {
     case MediaData::AUDIO_DATA:
     {
-      SSAMPLELOG("OnAudioNotDecoded (aError=%u)", aError.Code());
-
       // We don't really handle audio deocde error here. Let MDSM to trigger further
       // audio decoding tasks if it needs to play audio, and MDSM will then receive
       // the decoding state from MediaDecoderReader.
@@ -1387,8 +1374,6 @@ private:
     }
     case MediaData::VIDEO_DATA:
     {
-      SSAMPLELOG("OnVideoNotDecoded (aError=%u)", aError.Code());
-
       if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
         mIsVideoQueueFinished = true;
       }
@@ -1479,14 +1464,10 @@ private:
   {
     if (mSeekedAudioData) {
       mMaster->Push(mSeekedAudioData);
-      mMaster->mDecodedAudioEndTime = std::max(
-        mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
     }
 
     if (mSeekedVideoData) {
       mMaster->Push(mSeekedVideoData);
-      mMaster->mDecodedVideoEndTime = std::max(
-        mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
     }
 
     if (mIsAudioQueueFinished) {
