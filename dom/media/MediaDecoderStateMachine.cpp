@@ -1382,8 +1382,8 @@ private:
             MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
             break;
           default:
-            // Reject the promise since we can't finish video seek anyway.
-            OnSeekTaskRejected(aError);
+            // Raise an error since we can't finish video seek anyway.
+            mMaster->DecodeError(aError);
             break;
         }
         return;
@@ -1432,8 +1432,8 @@ private:
     case MediaData::VIDEO_DATA:
     {
       if (NeedMoreVideo()) {
-        // Reject if we can't finish video seeking.
-        OnSeekTaskRejected(NS_ERROR_DOM_MEDIA_CANCELED);
+        // Error out if we can't finish video seeking.
+        mMaster->DecodeError(NS_ERROR_DOM_MEDIA_CANCELED);
         return;
       }
       MaybeFinishSeek();
@@ -1449,16 +1449,6 @@ private:
     // The HTMLMediaElement.currentTime should be updated to the seek target
     // which has been updated to the next frame's time.
     return mSeekJob.mTarget->GetTime().ToMicroseconds();
-  }
-
-  void OnSeekTaskResolved()
-  {
-    SeekCompleted();
-  }
-
-  void OnSeekTaskRejected(MediaResult aError)
-  {
-    mMaster->DecodeError(aError);
   }
 
   void RequestVideoData()
@@ -1516,7 +1506,7 @@ private:
         return aSampleTime < time;
       });
 
-      OnSeekTaskResolved();
+      SeekCompleted();
     }
   }
 
