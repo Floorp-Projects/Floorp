@@ -716,14 +716,6 @@ nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
     PrefetchHref(aHref, mDocument, hasPrefetch);
   }
 
-  if (linkTypes & nsStyleLinkElement::ePRERENDER) {
-    nsCOMPtr<nsIURI> href;
-    nsresult rv = NS_NewURI(getter_AddRefs(href), aHref);
-    if (NS_SUCCEEDED(rv)) {
-      mDocument->PrerenderHref(href);
-    }
-  }
-
   if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::eDNS_PREFETCH)) {
     PrefetchDNS(aHref);
   }

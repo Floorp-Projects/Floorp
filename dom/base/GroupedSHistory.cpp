@@ -225,16 +225,7 @@ GroupedSHistory::PurgePartialHistories(uint32_t aLastPartialIndexToKeep)
 
 /* static */ bool
 GroupedSHistory::GroupedHistoryEnabled() {
-  static bool sGroupedSHistoryEnabled = false;
-  static bool sGroupedSHistoryPrefCached = false;
-  if (!sGroupedSHistoryPrefCached) {
-    sGroupedSHistoryPrefCached = true;
-    Preferences::AddBoolVarCache(&sGroupedSHistoryEnabled,
-                                 "browser.groupedhistory.enabled",
-                                 false);
-  }
-
-  return sGroupedSHistoryEnabled;
+  return Preferences::GetBool("browser.groupedhistory.enabled", false);
 }
 
 void

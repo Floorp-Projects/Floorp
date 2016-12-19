@@ -1500,7 +1500,6 @@
         <parameter name="aPostData"/>
         <parameter name="aLoadInBackground"/>
         <parameter name="aAllowThirdPartyFixup"/>
-        <parameter name="aIsPrerendered"/>
         <body>
           <![CDATA[
             var aReferrerPolicy;
@@ -1536,7 +1535,6 @@
               aRelatedBrowser       = params.relatedBrowser;
               aOriginPrincipal      = params.originPrincipal;
               aOpener               = params.opener;
-              aIsPrerendered        = params.isPrerendered;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1559,8 +1557,7 @@
                                   userContextId: aUserContextId,
                                   originPrincipal: aOriginPrincipal,
                                   relatedBrowser: aRelatedBrowser,
-                                  opener: aOpener,
-                                  isPrerendered: aIsPrerendered });
+                                  opener: aOpener });
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -1938,7 +1935,7 @@
           <![CDATA[
             // Supported parameters:
             // userContextId, remote, remoteType, isPreloadBrowser,
-            // uriIsAboutBlank, permanentKey, isPrerendered
+            // uriIsAboutBlank, permanentKey
 
             const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -1949,10 +1946,6 @@
             b.setAttribute("messagemanagergroup", "browsers");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
-
-            if (aParams.isPrerendered) {
-              b.setAttribute("prerendered", "true");
-            }
 
             if (aParams.userContextId) {
               b.setAttribute("usercontextid", aParams.userContextId);
@@ -2042,7 +2035,7 @@
             "use strict";
 
             // Supported parameters:
-            // forceNotRemote, preferredRemoteType, userContextId, isPrerendered
+            // forceNotRemote, preferredRemoteType, userContextId
 
             let uriIsAboutBlank = !aURI || aURI == "about:blank";
 
@@ -2075,8 +2068,7 @@
                                              uriIsAboutBlank: uriIsAboutBlank,
                                              userContextId: aParams.userContextId,
                                              relatedBrowser: aParams.relatedBrowser,
-                                             opener: aParams.opener,
-                                             isPrerendered: aParams.isPrerendered});
+                                             opener: aParams.opener});
             }
 
             let notificationbox = this.getNotificationBox(browser);
@@ -2136,7 +2128,6 @@
         <parameter name="aPostData"/>
         <parameter name="aOwner"/>
         <parameter name="aAllowThirdPartyFixup"/>
-        <parameter name="aIsPrerendered"/>
         <body>
           <![CDATA[
             "use strict";
@@ -2179,7 +2170,6 @@
               aOriginPrincipal          = params.originPrincipal;
               aDisallowInheritPrincipal = params.disallowInheritPrincipal;
               aOpener                   = params.opener;
-              aIsPrerendered            = params.isPrerendered;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2195,10 +2185,6 @@
             } else if (aURI.toLowerCase().startsWith("javascript:")) {
               // This can go away when bug 672618 or bug 55696 are fixed.
               t.setAttribute("label", aURI);
-            }
-
-            if (aIsPrerendered) {
-              t.setAttribute("hidden", "true");
             }
 
             if (aUserContextId) {
@@ -2253,7 +2239,6 @@
               userContextId:  aUserContextId,
               relatedBrowser: aRelatedBrowser,
               opener: aOpener,
-              isPrerendered: aIsPrerendered,
             };
             let { usingPreloadedContent } = this._linkBrowserToTab(t, aURI, browserParams);
             let b = t.linkedBrowser;
@@ -4805,74 +4790,6 @@
               break;
             }
 
-            case "Prerender:Request": {
-              let sendCancelPrerendering = () => {
-                browser.frameloader.messageManager.
-                  sendAsyncMessage("Prerender:Canceled", { id: data.id });
-              };
-
-              let tab = this.getTabForBrowser(browser);
-              if (!tab) {
-                // No tab?
-                sendCancelPrerendering();
-                break;
-              }
-
-              if (tab.hidden) {
-                // Skip prerender on hidden tab.
-                sendCancelPrerendering();
-                break;
-              }
-
-              if (browser.canGoForward) {
-                // Skip prerender on history navigation as we don't support it
-                // yet. Remove this check once bug 1323650 is implemented.
-                sendCancelPrerendering();
-                break;
-              }
-
-              if (!data.href) {
-                // If we don't have data.href, loadOneTab will load about:blank
-                // which is meaningless for prerendering.
-                sendCancelPrerendering();
-                break;
-              }
-
-              let groupedSHistory = browser.frameLoader.ensureGroupedSHistory();
-
-              let newTab = this.loadOneTab(data.href, {
-                referrerURI: (data.referrer ? makeURI(data.referrer) : null),
-                referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
-                postData: null,
-                allowThirdPartyFixup: true,
-                relatedToCurrent: true,
-                isPrerendered: true,
-              });
-              let partialSHistory = newTab.linkedBrowser.frameLoader.partialSessionHistory;
-              groupedSHistory.addPrerenderingPartialSHistory(partialSHistory, data.id);
-              break;
-            }
-
-            case "Prerender:Cancel": {
-              let groupedSHistory = browser.frameLoader.groupedSessionHistory;
-              if (groupedSHistory) {
-                groupedSHistory.cancelPrerendering(data.id);
-              }
-              break;
-            }
-
-            case "Prerender:Swap": {
-              let frameloader = browser.frameLoader;
-              let groupedSHistory = browser.frameLoader.groupedSessionHistory;
-              if (groupedSHistory) {
-                groupedSHistory.activatePrerendering(data.id).then(
-                  () => frameloader.messageManager.sendAsyncMessage("Prerender:Swapped", data),
-                  () => frameloader.messageManager.sendAsyncMessage("Prerender:Canceled", data),
-                );
-              }
-              break;
-            }
-
           }
           return undefined;
         ]]></body>
@@ -5005,11 +4922,6 @@
           this._findAsYouType = Services.prefs.getBoolPref("accessibility.typeaheadfind");
           Services.prefs.addObserver("accessibility.typeaheadfind", this, false);
           messageManager.addMessageListener("Findbar:Keypress", this);
-
-          // Add listeners for prerender messages
-          messageManager.addMessageListener("Prerender:Request", this);
-          messageManager.addMessageListener("Prerender:Cancel", this);
-          messageManager.addMessageListener("Prerender:Swap", this);
         ]]>
       </constructor>
 
