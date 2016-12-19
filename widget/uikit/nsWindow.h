@@ -84,7 +84,8 @@ public:
 
     bool HasModalDescendents() { return false; }
 
-    //NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) override;
+    //virtual nsresult
+    //NotifyIME(const IMENotification& aIMENotification) override;
     NS_IMETHOD_(void) SetInputContext(
                         const InputContext& aContext,
                         const InputContextAction& aAction);
