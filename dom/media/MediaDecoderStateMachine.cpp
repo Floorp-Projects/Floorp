@@ -1278,13 +1278,12 @@ private:
       return aSampleTime <= currentTime;
     });
 
-    if (NeedMoreVideo() &&
-        !Reader()->IsRequestingVideoData() &&
-        !Reader()->IsWaitingVideoData()) {
+    if (!NeedMoreVideo()) {
+      FinishSeek();
+    } else if (!Reader()->IsRequestingVideoData() &&
+               !Reader()->IsWaitingVideoData()) {
       RequestVideoData();
     }
-
-    MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
   }
 
   class AysncNextFrameSeekTask : public Runnable
@@ -1339,12 +1338,10 @@ private:
 
     if (aVideo->mTime > mCurrentTime) {
       mMaster->Push(aVideo);
+      FinishSeek();
     } else {
       RequestVideoData();
-      return;
     }
-
-    MaybeFinishSeek();
   }
 
   void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
@@ -1363,29 +1360,26 @@ private:
     {
       if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
         VideoQueue().Finish();
+        FinishSeek();
+        break;
       }
 
       // Video seek not finished.
-      if (NeedMoreVideo()) {
-        switch (aError.Code()) {
-          case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-            Reader()->WaitForData(MediaData::VIDEO_DATA);
-            break;
-          case NS_ERROR_DOM_MEDIA_CANCELED:
-            RequestVideoData();
-            break;
-          case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-            MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
-            break;
-          default:
-            // Raise an error since we can't finish video seek anyway.
-            mMaster->DecodeError(aError);
-            break;
-        }
-        return;
+      switch (aError.Code()) {
+        case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+          Reader()->WaitForData(MediaData::VIDEO_DATA);
+          break;
+        case NS_ERROR_DOM_MEDIA_CANCELED:
+          RequestVideoData();
+          break;
+        case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+          MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
+          break;
+        default:
+          // Raise an error since we can't finish video seek anyway.
+          mMaster->DecodeError(aError);
+          break;
       }
-
-      MaybeFinishSeek();
       break;
     }
     default:
@@ -1460,18 +1454,15 @@ private:
     }
   }
 
-  void MaybeFinishSeek()
+  void FinishSeek()
   {
-    if (!NeedMoreVideo()) {
-      UpdateSeekTargetTime();
-
-      auto time = mSeekJob.mTarget->GetTime().ToMicroseconds();
-      DiscardFrames(AudioQueue(), [time] (int64_t aSampleTime) {
-        return aSampleTime < time;
-      });
-
-      SeekCompleted();
-    }
+    MOZ_ASSERT(!NeedMoreVideo());
+    UpdateSeekTargetTime();
+    auto time = mSeekJob.mTarget->GetTime().ToMicroseconds();
+    DiscardFrames(AudioQueue(), [time] (int64_t aSampleTime) {
+      return aSampleTime < time;
+    });
+    SeekCompleted();
   }
 
   /*
