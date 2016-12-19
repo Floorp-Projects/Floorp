@@ -4,7 +4,7 @@
 
 use app_units::Au;
 use device::TextureFilter;
-use euclid::{Size2D, TypedPoint2D, UnknownUnit};
+use euclid::{TypedPoint2D, UnknownUnit};
 use fnv::FnvHasher;
 use offscreen_gl_context::{NativeGLContext, NativeGLContextHandle};
 use offscreen_gl_context::{GLContext, NativeGLContextMethods, GLContextDispatcher};
@@ -18,7 +18,7 @@ use std::{i32, usize};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tiling;
-use webrender_traits::{Epoch, ColorF, PipelineId};
+use webrender_traits::{Epoch, ColorF, PipelineId, DeviceIntSize};
 use webrender_traits::{ImageFormat, MixBlendMode, NativeFontHandle};
 use webrender_traits::{ExternalImageId, ScrollLayerId, WebGLCommand};
 
@@ -63,12 +63,12 @@ impl GLContextHandleWrapper {
     }
 
     pub fn new_context(&self,
-                       size: Size2D<i32>,
+                       size: DeviceIntSize,
                        attributes: GLContextAttributes,
                        dispatcher: Option<Box<GLContextDispatcher>>) -> Result<GLContextWrapper, &'static str> {
         match *self {
             GLContextHandleWrapper::Native(ref handle) => {
-                let ctx = GLContext::<NativeGLContext>::new_shared_with_dispatcher(size,
+                let ctx = GLContext::<NativeGLContext>::new_shared_with_dispatcher(size.to_untyped(),
                                                                                    attributes,
                                                                                    ColorAttachmentType::Texture,
                                                                                    Some(handle),
@@ -76,7 +76,7 @@ impl GLContextHandleWrapper {
                 ctx.map(GLContextWrapper::Native)
             }
             GLContextHandleWrapper::OSMesa(ref handle) => {
-                let ctx = GLContext::<OSMesaContext>::new_shared_with_dispatcher(size,
+                let ctx = GLContext::<OSMesaContext>::new_shared_with_dispatcher(size.to_untyped(),
                                                                                  attributes,
                                                                                  ColorAttachmentType::Texture,
                                                                                  Some(handle),
@@ -126,7 +126,7 @@ impl GLContextWrapper {
         }
     }
 
-    pub fn get_info(&self) -> (Size2D<i32>, u32, GLLimits) {
+    pub fn get_info(&self) -> (DeviceIntSize, u32, GLLimits) {
         match *self {
             GLContextWrapper::Native(ref ctx) => {
                 let (real_size, texture_id) = {
@@ -136,7 +136,7 @@ impl GLContextWrapper {
 
                 let limits = ctx.borrow_limits().clone();
 
-                (real_size, texture_id, limits)
+                (DeviceIntSize::from_untyped(&real_size), texture_id, limits)
             }
             GLContextWrapper::OSMesa(ref ctx) => {
                 let (real_size, texture_id) = {
@@ -146,18 +146,18 @@ impl GLContextWrapper {
 
                 let limits = ctx.borrow_limits().clone();
 
-                (real_size, texture_id, limits)
+                (DeviceIntSize::from_untyped(&real_size), texture_id, limits)
             }
         }
     }
 
-    pub fn resize(&mut self, size: &Size2D<i32>) -> Result<(), &'static str> {
+    pub fn resize(&mut self, size: &DeviceIntSize) -> Result<(), &'static str> {
         match *self {
             GLContextWrapper::Native(ref mut ctx) => {
-                ctx.resize(*size)
+                ctx.resize(size.to_untyped())
             }
             GLContextWrapper::OSMesa(ref mut ctx) => {
-                ctx.resize(*size)
+                ctx.resize(size.to_untyped())
             }
         }
     }
@@ -223,23 +223,49 @@ impl BatchTextures {
 // In some places we need to temporarily bind a texture to any slot.
 pub const DEFAULT_TEXTURE: TextureSampler = TextureSampler::Color0;
 
+#[derive(Clone, Copy, Debug)]
 pub enum VertexAttribute {
+    // vertex-frequency basic attributes
     Position,
-    PositionRect,
-    ColorRectTL,
-    ColorRectTR,
-    ColorRectBR,
-    ColorRectBL,
-    ColorTexCoordRectTop,
-    MaskTexCoordRectTop,
-    ColorTexCoordRectBottom,
-    MaskTexCoordRectBottom,
-    BorderRadii,
-    BorderPosition,
-    BlurRadius,
-    DestTextureSize,
-    SourceTextureSize,
-    Misc,
+    Color,
+    ColorTexCoord,
+    // instance-frequency primitive attributes
+    GlobalPrimId,
+    PrimitiveAddress,
+    TaskIndex,
+    ClipTaskIndex,
+    LayerIndex,
+    ElementIndex,
+    UserData,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum ClearAttribute {
+    // vertex frequency
+    Position,
+    // instance frequency
+    Rectangle,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum BlurAttribute {
+    // vertex frequency
+    Position,
+    // instance frequency
+    RenderTaskIndex,
+    SourceTaskIndex,
+    Direction,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum ClipAttribute {
+    // vertex frequency
+    Position,
+    // instance frequency
+    RenderTaskIndex,
+    LayerIndex,
+    DataIndex,
+    BaseTaskIndex,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -260,39 +286,6 @@ impl PackedColor {
             a: (0.5 + color.a * COLOR_FLOAT_TO_FIXED).floor() as u8,
         }
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-#[repr(C)]
-pub struct PackedVertexForQuad {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
-    pub color_tl: PackedColor,
-    pub color_tr: PackedColor,
-    pub color_br: PackedColor,
-    pub color_bl: PackedColor,
-    pub u_tl: f32,
-    pub v_tl: f32,
-    pub u_tr: f32,
-    pub v_tr: f32,
-    pub u_br: f32,
-    pub v_br: f32,
-    pub u_bl: f32,
-    pub v_bl: f32,
-    pub mu_tl: u16,
-    pub mv_tl: u16,
-    pub mu_tr: u16,
-    pub mv_tr: u16,
-    pub mu_br: u16,
-    pub mv_br: u16,
-    pub mu_bl: u16,
-    pub mv_bl: u16,
-    pub matrix_index: u8,
-    pub clip_in_rect_index: u8,
-    pub clip_out_rect_index: u8,
-    pub tile_params_index: u8,
 }
 
 #[derive(Debug, Clone, Copy)]

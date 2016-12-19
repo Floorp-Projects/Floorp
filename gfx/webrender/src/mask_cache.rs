@@ -23,7 +23,7 @@ impl ClipSource {
         match self {
             &ClipSource::NoClip => None,
             &ClipSource::Complex(rect, _) => Some(rect),
-            &ClipSource::Region(ref region) => Some(LayerRect::from_untyped(&region.main)),
+            &ClipSource::Region(ref region) => Some(region.main),
         }
     }
 }
@@ -113,15 +113,14 @@ impl MaskCacheInfo {
                     PrimitiveStore::populate_clip_data(slice, data);
                     debug_assert_eq!(self.clip_range.item_count, 1);
                     local_rect = Some(rect);
-                    local_inner = ComplexClipRegion::new(rect.to_untyped(),
-                                                         BorderRadius::uniform(radius))
-                                                    .get_inner_rect().map(|r|{ LayerRect::from_untyped(&r) });
+                    local_inner = ComplexClipRegion::new(rect, BorderRadius::uniform(radius))
+                                                    .get_inner_rect();
                 }
                 &ClipSource::Region(ref region) => {
                     local_rect = Some(LayerRect::from_untyped(&rect_from_points_f(-MAX_COORD, -MAX_COORD, MAX_COORD, MAX_COORD)));
                     local_inner = match region.image_mask {
                         Some(ref mask) if !mask.repeat => {
-                            local_rect = local_rect.and_then(|r| r.intersection(&LayerRect::from_untyped(&mask.rect)));
+                            local_rect = local_rect.and_then(|r| r.intersection(&mask.rect));
                             None
                         },
                         Some(_) => None,
@@ -133,9 +132,9 @@ impl MaskCacheInfo {
                     for (clip, chunk) in clips.iter().zip(slice.chunks_mut(CLIP_DATA_GPU_SIZE)) {
                         let data = ClipData::from_clip_region(clip);
                         PrimitiveStore::populate_clip_data(chunk, data);
-                        local_rect = local_rect.and_then(|r| r.intersection(&LayerRect::from_untyped(&clip.rect)));
+                        local_rect = local_rect.and_then(|r| r.intersection(&clip.rect));
                         local_inner = local_inner.and_then(|r| clip.get_inner_rect()
-                                                                   .and_then(|ref inner| r.intersection(&LayerRect::from_untyped(&inner))));
+                                                                   .and_then(|ref inner| r.intersection(&inner)));
                     }
                 }
             };

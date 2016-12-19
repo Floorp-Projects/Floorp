@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    Primitive prim = load_primitive(gl_InstanceID);
+    Primitive prim = load_primitive();
     Image image = fetch_image(prim.prim_index);
     ResourceRect res = fetch_resource_rect(prim.user_data.x);
 

@@ -7,8 +7,8 @@ struct Blend {
     ivec4 src_id_target_id_op_amount;
 };
 
-Blend fetch_blend(int index) {
-    PrimitiveInstance pi = fetch_instance(index);
+Blend fetch_blend() {
+    PrimitiveInstance pi = fetch_prim_instance();
 
     Blend blend;
     blend.src_id_target_id_op_amount = ivec4(pi.user_data.x,
@@ -20,7 +20,7 @@ Blend fetch_blend(int index) {
 }
 
 void main(void) {
-    Blend blend = fetch_blend(gl_InstanceID);
+    Blend blend = fetch_blend();
     Tile src = fetch_tile(blend.src_id_target_id_op_amount.x);
     Tile dest = fetch_tile(blend.src_id_target_id_op_amount.y);
 

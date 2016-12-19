@@ -317,7 +317,7 @@ impl ClipData {
     pub fn from_clip_region(clip: &ComplexClipRegion) -> ClipData {
         ClipData {
             rect: ClipRect {
-                rect: LayerRect::from_untyped(&clip.rect),
+                rect: clip.rect,
                 padding: [0.0, 0.0, 0.0, 0.0],
             },
             top_left: ClipCorner {
@@ -642,7 +642,7 @@ impl PrimitiveStore {
                 uv_rect: DeviceRect::new(cache_item.uv0,
                                          DeviceSize::new(cache_item.uv1.x - cache_item.uv0.x,
                                                          cache_item.uv1.y - cache_item.uv0.y)),
-                local_rect: LayerRect::from_untyped(&mask.rect),
+                local_rect: mask.rect,
             });
         }
     }
@@ -769,7 +769,7 @@ impl PrimitiveStore {
         let (rect, is_complex) = match source {
             ClipSource::NoClip => (None, false),
             ClipSource::Complex(rect, radius) => (Some(rect), radius > 0.0),
-            ClipSource::Region(ref region) => (Some(LayerRect::from_untyped(&region.main)), region.is_complex()),
+            ClipSource::Region(ref region) => (Some(region.main), region.is_complex()),
         };
         if let Some(rect) = rect {
             self.gpu_geometry.get_mut(GpuStoreAddress(index.0 as i32))

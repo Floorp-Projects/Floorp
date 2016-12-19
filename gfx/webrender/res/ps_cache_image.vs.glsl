@@ -7,7 +7,7 @@
 // target cache to the framebuffer, applying tile clip boundaries.
 
 void main(void) {
-    Primitive prim = load_primitive(gl_InstanceID);
+    Primitive prim = load_primitive();
 
     VertexInfo vi = write_vertex(prim.local_rect,
                                  prim.local_clip_rect,

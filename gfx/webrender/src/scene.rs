@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use euclid::Size2D;
 use fnv::FnvHasher;
 use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use tiling::AuxiliaryListsMap;
 use webrender_traits::{AuxiliaryLists, BuiltDisplayList, PipelineId, Epoch, ColorF};
 use webrender_traits::{DisplayItem, SpecificDisplayItem, StackingContext};
+use webrender_traits::LayerSize;
 
 trait DisplayListHelpers {
     fn starting_stacking_context<'a>(&'a self) -> Option<&'a StackingContext>;
@@ -28,15 +28,15 @@ impl DisplayListHelpers for Vec<DisplayItem> {
 pub struct ScenePipeline {
     pub pipeline_id: PipelineId,
     pub epoch: Epoch,
-    pub viewport_size: Size2D<f32>,
-    pub background_color: ColorF,
+    pub viewport_size: LayerSize,
+    pub background_color: Option<ColorF>,
 }
 
 /// A complete representation of the layout bundling visible pipelines together.
 pub struct Scene {
     pub root_pipeline_id: Option<PipelineId>,
     pub pipeline_map: HashMap<PipelineId, ScenePipeline, BuildHasherDefault<FnvHasher>>,
-    pub pipeline_sizes: HashMap<PipelineId, Size2D<f32>>,
+    pub pipeline_sizes: HashMap<PipelineId, LayerSize>,
     pub pipeline_auxiliary_lists: AuxiliaryListsMap,
     pub display_lists: HashMap<PipelineId, Vec<DisplayItem>, BuildHasherDefault<FnvHasher>>,
 }
@@ -60,8 +60,8 @@ impl Scene {
                                  pipeline_id: PipelineId,
                                  epoch: Epoch,
                                  built_display_list: BuiltDisplayList,
-                                 background_color: ColorF,
-                                 viewport_size: Size2D<f32>,
+                                 background_color: Option<ColorF>,
+                                 viewport_size: LayerSize,
                                  auxiliary_lists: AuxiliaryLists) {
         self.pipeline_auxiliary_lists.insert(pipeline_id, auxiliary_lists);
         self.display_lists.insert(pipeline_id, built_display_list.all_display_items().to_vec());

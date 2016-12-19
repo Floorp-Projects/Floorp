@@ -15,8 +15,8 @@ float gauss(float x, float sigma) {
 }
 
 void main(void) {
-    vec4 sample = texture(sCache, vUv);
-    vec4 color = vec4(sample.rgb * sample.a, sample.a) * gauss(0.0, vSigma);
+    vec4 cache_sample = texture(sCache, vUv);
+    vec4 color = vec4(cache_sample.rgb, 1.0) * (cache_sample.a * gauss(0.0, vSigma));
 
     for (int i=1 ; i < vBlurRadius ; ++i) {
         vec2 offset = vec2(float(i)) * vOffsetScale;

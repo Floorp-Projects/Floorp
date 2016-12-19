@@ -7,8 +7,8 @@ struct Composite {
     ivec4 src0_src1_target_id_op;
 };
 
-Composite fetch_composite(int index) {
-    PrimitiveInstance pi = fetch_instance(index);
+Composite fetch_composite() {
+    PrimitiveInstance pi = fetch_prim_instance();
 
     Composite composite;
     composite.src0_src1_target_id_op = ivec4(pi.user_data.xy,
@@ -19,7 +19,7 @@ Composite fetch_composite(int index) {
 }
 
 void main(void) {
-    Composite composite = fetch_composite(gl_InstanceID);
+    Composite composite = fetch_composite();
     Tile src0 = fetch_tile(composite.src0_src1_target_id_op.x);
     Tile src1 = fetch_tile(composite.src0_src1_target_id_op.y);
     Tile dest = fetch_tile(composite.src0_src1_target_id_op.z);
