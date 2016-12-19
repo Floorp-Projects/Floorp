@@ -2004,7 +2004,8 @@ class IDLType(IDLObject):
         'callback',
         'union',
         'sequence',
-        'mozmap'
+        'mozmap',
+        'promise',
         )
 
     def __init__(self, location, name):
@@ -2754,6 +2755,8 @@ class IDLWrapperType(IDLType):
         return isinstance(self.inner, IDLDictionary)
 
     def isInterface(self):
+        if self.isPromise():
+            return False
         return (isinstance(self.inner, IDLInterface) or
                 isinstance(self.inner, IDLExternalInterface))
 
@@ -2797,6 +2800,8 @@ class IDLWrapperType(IDLType):
     def tag(self):
         if self.isInterface():
             return IDLType.Tags.interface
+        elif self.isPromise():
+            return IDLType.Tags.promise
         elif self.isEnum():
             return IDLType.Tags.enum
         elif self.isDictionary():
@@ -2846,6 +2851,10 @@ class IDLWrapperType(IDLType):
         return False
 
     def isExposedInAllOf(self, exposureSet):
+        if (self.isPromise() and
+            # Check the internal type
+            not self.promiseInnerType().unroll().isExposedInAllOf(exposureSet)):
+            return False
         if not self.isInterface():
             return True
         iface = self.inner
@@ -2853,10 +2862,6 @@ class IDLWrapperType(IDLType):
             # Let's say true, though ideally we'd only do this when
             # exposureSet contains the primary global's name.
             return True
-        if (self.isPromise() and
-            # Check the internal type
-            not self.promiseInnerType().unroll().isExposedInAllOf(exposureSet)):
-            return False
         return iface.exposureSet.issuperset(exposureSet)
 
     def _getDependentObjects(self):
@@ -3999,7 +4004,9 @@ class IDLAttribute(IDLInterfaceMember):
             raise WebIDLError("An attribute with [PutForwards] must have an "
                               "interface type as its type", [self.location])
 
-        if not self.type.isInterface() and self.getExtendedAttribute("SameObject"):
+        if (not self.type.isInterface() and
+            not self.type.isPromise() and
+            self.getExtendedAttribute("SameObject")):
             raise WebIDLError("An attribute with [SameObject] must have an "
                               "interface type as its type", [self.location])
 
