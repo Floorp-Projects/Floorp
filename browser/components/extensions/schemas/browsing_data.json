@@ -355,7 +355,6 @@
         "description": "Clears plugins' data.",
         "type": "function",
         "async": "callback",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "RemovalOptions",
