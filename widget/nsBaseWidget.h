@@ -233,9 +233,9 @@ public:
   virtual void            ConstrainPosition(bool aAllowSlop,
                                             int32_t *aX,
                                             int32_t *aY) override {}
-  NS_IMETHOD              MoveClient(double aX, double aY) override;
-  NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+  virtual void            MoveClient(double aX, double aY) override;
+  virtual void            ResizeClient(double aWidth, double aHeight, bool aRepaint) override;
+  virtual void            ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
