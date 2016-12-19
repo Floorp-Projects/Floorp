@@ -1640,7 +1640,7 @@ SavedStacks::MetadataBuilder::build(JSContext* cx, HandleObject target,
     if (!stacks.saveCurrentStack(cx, &frame))
         oomUnsafe.crash("SavedStacksMetadataBuilder");
 
-    if (!Debugger::onLogAllocationSite(cx, obj, frame, JS_GetCurrentEmbedderTime()))
+    if (!Debugger::onLogAllocationSite(cx, obj, frame, mozilla::TimeStamp::Now()))
         oomUnsafe.crash("SavedStacksMetadataBuilder");
 
     MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());
