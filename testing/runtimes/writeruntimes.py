@@ -11,8 +11,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 ACTIVE_DATA_URL = "http://activedata.allizom.org/query"
 PERCENTILE = 0.5 # ignore the bottom PERCENTILE*100% of numbers
 
-def query_activedata(suite, platforms=None):
+def query_activedata(suite, e10s, platforms=None):
     platforms = ', "build.platform":%s' % json.dumps(platforms) if platforms else ''
+
+    e10s_clause = '"eq":{"run.type":"e10s"}'
+    if not e10s:
+        e10s_clause = '"not":{%s}' % e10s_clause
 
     query = """
 {
@@ -21,11 +25,12 @@ def query_activedata(suite, platforms=None):
     "groupby":["result.test"],
     "select":{"value":"result.duration","aggregate":"average"},
     "where":{"and":[
-        {"eq":{"suite":"%s"%s}},
+        {"eq":{"run.suite":"%s"%s}},
+        {%s},
         {"gt":{"run.timestamp":"{{today-week}}"}}
     ]}
 }
-""" % (suite, platforms)
+""" % (suite, platforms, e10s_clause)
 
     response = requests.post(ACTIVE_DATA_URL,
                              data=query,
@@ -105,6 +110,9 @@ def cli(args=sys.argv[1:]):
     parser.add_argument('-s', '--suite', dest='suite', default=None,
         help="Suite for which to generate data.")
 
+    parser.add_argument('--disable-e10s', dest='e10s', default=True,
+        action='store_false', help="Generate runtimes for non-e10s tests.")
+
     args = parser.parse_args(args)
 
     if not args.suite:
@@ -115,8 +123,12 @@ def cli(args=sys.argv[1:]):
     if args.platforms:
         args.platforms = args.platforms.split(',')
 
-    data = query_activedata(args.suite, args.platforms)
-    write_runtimes(data, args.suite, indir=args.indir, outdir=args.outdir)
+    data = query_activedata(args.suite, args.e10s, args.platforms)
+
+    suite = args.suite
+    if args.e10s:
+        suite = '%s-e10s' % suite
+    write_runtimes(data, suite, indir=args.indir, outdir=args.outdir)
 
 if __name__ == "__main__":
     sys.exit(cli())
