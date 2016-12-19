@@ -14189,11 +14189,18 @@ class CGNativeMember(ClassMethod):
             # auto-wrapping in Nullable
             return CGUnionStruct.unionTypeDecl(type, isMember), True, False
 
+        if type.isPromise():
+            assert not type.nullable()
+            if optional or isMember:
+                typeDecl = "OwningNonNull<Promise>"
+            else:
+                typeDecl = "Promise&"
+            return (typeDecl, False, False)
+
         if type.isGeckoInterface() and not type.isCallbackInterface():
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()
-            forceOwningType = (iface.isCallback() or isMember or
-                               iface.identifier.name == "Promise")
+            forceOwningType = (iface.isCallback() or isMember)
             if argIsPointer:
                 if (optional or isMember) and forceOwningType:
                     typeDecl = "RefPtr<%s>"
