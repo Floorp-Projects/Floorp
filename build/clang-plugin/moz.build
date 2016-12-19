@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     'MozCheckAction.cpp',
     'MozChecker.cpp',
     'MustOverrideChecker.cpp',
+    'MustUseChecker.cpp',
     'NaNExprChecker.cpp',
     'NeedsNoVTableTypeChecker.cpp',
     'NoAddRefReleaseOnReturnChecker.cpp',
