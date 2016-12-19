@@ -2881,8 +2881,6 @@ public:
   void NoteScriptTrackingStatus(const nsACString& aURL, bool isTracking);
   bool IsScriptTracking(const nsACString& aURL) const;
 
-  bool PrerenderHref(nsIURI* aHref);
-
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {

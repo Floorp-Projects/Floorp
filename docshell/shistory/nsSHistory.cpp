@@ -510,10 +510,7 @@ nsSHistory::OnPartialSessionHistoryDeactive()
     return NS_OK;
   }
 
-  // At this point we've swapped out to an invisble tab, and can not prompt here.
-  // The check should have been done in nsDocShell::InternalLoad, so we'd
-  // just force docshell to load about:blank.
-  if (NS_FAILED(mRootDocShell->ForceCreateAboutBlankContentViewer(nullptr))) {
+  if (NS_FAILED(mRootDocShell->CreateAboutBlankContentViewer(nullptr))) {
     return NS_ERROR_FAILURE;
   }
 
