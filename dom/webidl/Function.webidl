@@ -12,3 +12,5 @@
  */
 
 callback Function = any(any... arguments);
+
+callback VoidFunction = void ();

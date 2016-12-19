@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.mozilla.gecko.AppConstants.Versions;
 
 import android.content.SharedPreferences;
 import android.util.Log;

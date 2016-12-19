@@ -55,7 +55,7 @@ loader.lazyRequireGetter(this, "system",
 loader.lazyRequireGetter(this, "getPreferenceFront",
   "devtools/shared/fronts/preference", true);
 loader.lazyRequireGetter(this, "KeyShortcuts",
-  "devtools/client/shared/key-shortcuts", true);
+  "devtools/client/shared/key-shortcuts");
 loader.lazyRequireGetter(this, "ZoomKeys",
   "devtools/client/shared/zoom-keys");
 loader.lazyRequireGetter(this, "settleAll",

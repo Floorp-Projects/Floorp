@@ -2368,7 +2368,22 @@ function BrowserPageInfo(documentURL, initialTab, imageElement, frameOuterWindow
                     "chrome,toolbar,dialog=no,resizable", args);
 }
 
-function URLBarSetURI(aURI) {
+/**
+ * Sets the URI to display in the location bar.
+ *
+ * @param aURI [optional]
+ *        nsIURI to set. If this is unspecified, the current URI will be used.
+ * @param aOptions [optional]
+ *        An object with the following properties:
+ *        {
+ *          isForLocationChange:
+ *            Set to true to indicate that the function was invoked to respond
+ *            to a location change event, rather than to reset the current URI
+ *            value. This is useful to avoid calling PopupNotifications.jsm
+ *            multiple times.
+ *        }
+ */
+function URLBarSetURI(aURI, aOptions = {}) {
   var value = gBrowser.userTypedValue;
   var valid = false;
 
@@ -2401,7 +2416,7 @@ function URLBarSetURI(aURI) {
 
   gURLBar.value = value;
   gURLBar.valueIsTyped = !valid;
-  SetPageProxyState(valid ? "valid" : "invalid");
+  SetPageProxyState(valid ? "valid" : "invalid", aOptions);
 }
 
 function losslessDecodeURI(aURI) {
@@ -2500,7 +2515,26 @@ function UpdatePageProxyState()
     SetPageProxyState("invalid");
 }
 
-function SetPageProxyState(aState)
+/**
+ * Updates the user interface to indicate whether the URI in the location bar is
+ * different than the loaded page, because it's being edited or because a search
+ * result is currently selected and is displayed in the location bar.
+ *
+ * @param aState
+ *        The string "valid" indicates that the security indicators and other
+ *        related user interface elments should be shown because the URI in the
+ *        location bar matches the loaded page. The string "invalid" indicates
+ *        that the URI in the location bar is different than the loaded page.
+ * @param aOptions [optional]
+ *        An object with the following properties:
+ *        {
+ *          isForLocationChange:
+ *            Set to true to indicate that the function was invoked to respond
+ *            to a location change event. This is useful to avoid calling
+ *            PopupNotifications.jsm multiple times.
+ *        }
+ */
+function SetPageProxyState(aState, aOptions = {})
 {
   if (!gURLBar)
     return;
@@ -2514,6 +2548,15 @@ function SetPageProxyState(aState)
     gURLBar.addEventListener("input", UpdatePageProxyState, false);
   } else if (aState == "invalid") {
     gURLBar.removeEventListener("input", UpdatePageProxyState, false);
+  }
+
+  // Only need to call anchorVisibilityChange if the PopupNotifications object
+  // for this window has already been initialized (i.e. its getter no
+  // longer exists). If this is the result of a locations change, then we will
+  // already invoke PopupNotifications.locationChange separately.
+  if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get &&
+      !aOptions.isForLocationChange) {
+    PopupNotifications.anchorVisibilityChange();
   }
 }
 
@@ -4508,7 +4551,7 @@ var XULBrowserWindow = {
         this.reloadCommand.removeAttribute("disabled");
       }
 
-      URLBarSetURI(aLocationURI);
+      URLBarSetURI(aLocationURI, { isForLocationChange: true });
 
       BookmarkingUI.onLocationChange();
 
@@ -5307,7 +5350,7 @@ var gHomeButton = {
     if (homeButton) {
       var homePage = this.getHomePage();
       homePage = homePage.replace(/\|/g, ', ');
-      if (homePage.toLowerCase() == "about:home")
+      if (["about:home", "about:newtab"].includes(homePage.toLowerCase()))
         homeButton.setAttribute("tooltiptext", homeButton.getAttribute("aboutHomeOverrideTooltip"));
       else
         homeButton.setAttribute("tooltiptext", homePage);

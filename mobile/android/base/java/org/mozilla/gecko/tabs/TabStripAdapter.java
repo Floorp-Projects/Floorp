@@ -6,93 +6,102 @@
 package org.mozilla.gecko.tabs;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
+class TabStripAdapter extends RecyclerView.Adapter<TabStripAdapter.TabStripViewHolder> {
+    private static final String LOGTAG = "Gecko" + TabStripAdapter.class.getSimpleName();
 
-class TabStripAdapter extends BaseAdapter {
-    private static final String LOGTAG = "GeckoTabStripAdapter";
+    private @NonNull List<Tab> tabs;
+    private final LayoutInflater inflater;
 
-    private final Context context;
-    private List<Tab> tabs;
-
-    public TabStripAdapter(Context context) {
-        this.context = context;
-    }
-
-    @Override
-    public Tab getItem(int position) {
-        return (tabs != null &&
-                position >= 0 &&
-                position < tabs.size() ? tabs.get(position) : null);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        final Tab tab = getItem(position);
-        return (tab != null ? tab.getId() : -1);
-    }
-
-    @Override
-    public boolean hasStableIds() {
-        return true;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        final TabStripItemView item;
-        if (convertView == null) {
-            item = (TabStripItemView)
-                    LayoutInflater.from(context).inflate(R.layout.tab_strip_item, parent, false);
-        } else {
-            item = (TabStripItemView) convertView;
+    static class TabStripViewHolder extends RecyclerView.ViewHolder {
+        TabStripViewHolder(View itemView) {
+            super(itemView);
         }
+    }
 
-        final Tab tab = tabs.get(position);
-        item.updateFromTab(tab);
+    TabStripAdapter(Context context) {
+        inflater = LayoutInflater.from(context);
+        tabs = new ArrayList<>(0);
+    }
 
-        return item;
+    public void refresh(@NonNull List<Tab> tabs) {
+        this.tabs = tabs;
+        notifyDataSetChanged();
     }
 
     @Override
-    public int getCount() {
-        return (tabs != null ? tabs.size() : 0);
+    public int getItemCount() {
+        return tabs.size();
     }
 
-    int getPositionForTab(Tab tab) {
-        if (tabs == null || tab == null) {
+    /* package */ int getPositionForTab(Tab tab) {
+        if (tab == null) {
             return -1;
         }
 
         return tabs.indexOf(tab);
     }
 
-    void removeTab(Tab tab) {
-        if (tabs == null) {
+    /* package */ void addTab(Tab tab, int position) {
+        if (position >= 0 && position <= tabs.size()) {
+            tabs.add(position, tab);
+            notifyItemInserted(position);
+        } else {
+            // Add to the end.
+            tabs.add(tab);
+            notifyItemInserted(tabs.size() - 1);
+            // index == -1 is a valid way to add to the end, the other cases are errors.
+            if (position != -1) {
+                Log.e(LOGTAG, "Tab was inserted at an invalid position: " + position);
+            }
+        }
+    }
+
+    /* package */ void removeTab(Tab tab) {
+        final int position = getPositionForTab(tab);
+        if (position == -1) {
             return;
         }
+        tabs.remove(position);
+        notifyItemRemoved(position);
+    }
 
-        tabs.remove(tab);
+    /* package */ void notifyTabChanged(Tab tab) {
+        final int position =  getPositionForTab(tab);
+        if (position == -1) {
+            return;
+        }
+        notifyItemChanged(position);
+    }
+
+    /* package */ void clear() {
+        tabs = new ArrayList<>(0);
         notifyDataSetChanged();
     }
 
-    void refresh(List<Tab> tabs) {
-        // The list of tabs is guaranteed to be non-null.
-        // See TabStripView.refreshTabs().
-        this.tabs = tabs;
-        notifyDataSetChanged();
+    @Override
+    public TabStripViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        final TabStripItemView view = (TabStripItemView) inflater.inflate(R.layout.tab_strip_item, parent, false);
+
+        return new TabStripViewHolder(view);
     }
 
-    void clear() {
-        tabs = null;
-        notifyDataSetInvalidated();
+    @Override
+    public void onBindViewHolder(TabStripViewHolder viewHolder, int position) {
+        final Tab tab = tabs.get(position);
+        final TabStripItemView itemView = (TabStripItemView) viewHolder.itemView;
+        itemView.updateFromTab(tab);
     }
 }

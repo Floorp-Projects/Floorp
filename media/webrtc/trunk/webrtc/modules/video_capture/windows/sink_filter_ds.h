@@ -81,21 +81,6 @@ public:
     {
       return mozilla::media::BaseFilter::QueryInterface(aIId, aInterface);
     }
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-      return ::InterlockedIncrement(&mRefCnt);
-    }
-
-    STDMETHODIMP_(ULONG) Release()
-    {
-      unsigned long newRefCnt = ::InterlockedDecrement(&mRefCnt);
-
-      if (!newRefCnt) {
-        delete this;
-      }
-
-      return newRefCnt;
-    }
 
     STDMETHODIMP SetMatchingMediaType(const VideoCaptureCapability& capability);
 
@@ -115,7 +100,6 @@ private:
     CaptureInputPin * m_pInput;
     VideoCaptureExternal& _captureObserver;
     int32_t _moduleId;
-    unsigned long mRefCnt;
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

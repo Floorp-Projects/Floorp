@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +9,6 @@
 
 #include "DOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
-#include "DOMSVGPoint.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "mozilla/dom/SVGPathElementBinding.h"
@@ -36,9 +34,6 @@ SVGPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return SVGPathElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::NumberInfo SVGPathElement::sNumberInfo = 
-{ &nsGkAtoms::pathLength, 0, false };
-
 //----------------------------------------------------------------------
 // Implementation
 
@@ -61,45 +56,6 @@ SVGPathElement::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPathElement)
-
-already_AddRefed<SVGAnimatedNumber>
-SVGPathElement::PathLength()
-{
-  return mPathLength.ToDOMAnimatedNumber(this);
-}
-
-float
-SVGPathElement::GetTotalLength()
-{
-  RefPtr<Path> flat = GetOrBuildPathForMeasuring();
-  return flat ? flat->ComputeLength() : 0.f;
-}
-
-already_AddRefed<nsISVGPoint>
-SVGPathElement::GetPointAtLength(float distance, ErrorResult& rv)
-{
-  RefPtr<Path> path = GetOrBuildPathForMeasuring();
-  if (!path) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  float totalLength = path->ComputeLength();
-  if (mPathLength.IsExplicitlySet()) {
-    float pathLength = mPathLength.GetAnimValue();
-    if (pathLength <= 0) {
-      rv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    distance *= totalLength / pathLength;
-  }
-  distance = std::max(0.f,         distance);
-  distance = std::min(totalLength, distance);
-
-  nsCOMPtr<nsISVGPoint> point =
-    new DOMSVGPoint(path->ComputePointAtLength(distance));
-  return point.forget();
-}
 
 uint32_t
 SVGPathElement::GetPathSegAtLength(float distance)
@@ -285,12 +241,6 @@ SVGPathElement::HasValidDimensions() const
   return !mD.GetAnimValue().IsEmpty();
 }
 
-nsSVGElement::NumberAttributesInfo
-SVGPathElement::GetNumberInfo()
-{
-  return NumberAttributesInfo(&mPathLength, &sNumberInfo, 1);
-}
-
 //----------------------------------------------------------------------
 // nsIContent methods
 
@@ -312,7 +262,7 @@ SVGPathElement::GetOrBuildPathForMeasuring()
 }
 
 //----------------------------------------------------------------------
-// nsSVGPathGeometryElement methods
+// SVGGeometryElement methods
 
 bool
 SVGPathElement::AttributeDefinesGeometry(const nsIAtom *aName)

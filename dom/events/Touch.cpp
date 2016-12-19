@@ -143,8 +143,7 @@ Touch::GetTarget() const
 int32_t
 Touch::ScreenX(CallerType aCallerType) const
 {
-  if (aCallerType != CallerType::System &&
-      nsContentUtils::ResistFingerprinting()) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return ClientX();
   }
 
@@ -154,8 +153,7 @@ Touch::ScreenX(CallerType aCallerType) const
 int32_t
 Touch::ScreenY(CallerType aCallerType) const
 {
-  if (aCallerType != CallerType::System &&
-      nsContentUtils::ResistFingerprinting()) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return ClientY();
   }
 

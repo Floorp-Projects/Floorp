@@ -31,7 +31,7 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
         )
 
         # Set browser to restore previous session
-        self.puppeteer.prefs.set_pref('browser.startup.page', 3)
+        self.marionette.set_pref('browser.startup.page', 3)
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
@@ -112,7 +112,7 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
         if identity != '':
             owner = cert['organization']
         else:
-            owner = page_info.get_property('securityNoOwner')
+            owner = page_info.localize_property('securityNoOwner')
 
         self.assertEqual(page_info.deck.security.owner.get_attribute('value'), owner,
                          'Expected owner label found for ' + url)

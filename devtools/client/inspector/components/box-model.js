@@ -838,4 +838,4 @@ BoxModelView.prototype = {
   }
 };
 
-exports.BoxModelView = BoxModelView;
+module.exports = BoxModelView;

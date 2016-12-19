@@ -327,7 +327,7 @@ def test_manifest_basic_args(mock_runner, manifest, monkeypatch):
     kwargs = get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch)
     assert kwargs['exists'] is False
     assert kwargs['disabled'] is True
-    assert kwargs['app'] == 'fake_app'
+    assert kwargs['appname'] == 'fake_app'
     assert 'mozinfo_key' in kwargs and kwargs['mozinfo_key'] == 'mozinfo_val'
 
 

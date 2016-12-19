@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "mozJSComponentLoader.h"
 #include "nsZipArchive.h"
+#include "xpc_make_class.h"
 
 #define JSPERF_CONTRACTID \
   "@mozilla.org/jsperf;1"

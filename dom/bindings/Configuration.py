@@ -609,8 +609,29 @@ class Descriptor(DescriptorProvider):
     def supportsIndexedProperties(self):
         return self.operations['IndexedGetter'] is not None
 
+    def lengthNeedsCallerType(self):
+        """
+        Determine whether our length getter needs a caller type; this is needed
+        in some indexed-getter proxy algorithms.  The idea is that if our
+        indexed getter needs a caller type, our automatically-generated Length()
+        calls need one too.
+        """
+        assert self.supportsIndexedProperties()
+        indexedGetter = self.operations['IndexedGetter']
+        return indexedGetter.getExtendedAttribute("NeedsCallerType")
+
     def supportsNamedProperties(self):
         return self.operations['NamedGetter'] is not None
+
+    def supportedNamesNeedCallerType(self):
+        """
+        Determine whether our GetSupportedNames call needs a caller type.  The
+        idea is that if your named getter needs a caller type, then so does
+        GetSupportedNames.
+        """
+        assert self.supportsNamedProperties()
+        namedGetter = self.operations['NamedGetter']
+        return namedGetter.getExtendedAttribute("NeedsCallerType")
 
     def hasNonOrdinaryGetPrototypeOf(self):
         return self.interface.getExtendedAttribute("NonOrdinaryGetPrototypeOf")

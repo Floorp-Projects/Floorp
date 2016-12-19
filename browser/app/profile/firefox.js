@@ -754,9 +754,6 @@ pref("gecko.handlerService.schemes.ircs.2.uriTemplate", "chrome://browser-region
 pref("gecko.handlerService.schemes.ircs.3.name", "chrome://browser-region/locale/region.properties");
 pref("gecko.handlerService.schemes.ircs.3.uriTemplate", "chrome://browser-region/locale/region.properties");
 
-// By default, we don't want protocol/content handlers to be registered from a different host, see bug 402287
-pref("gecko.handlerService.allowRegisterFromDifferentHost", false);
-
 pref("browser.geolocation.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/geolocation/");
 
 pref("browser.EULA.version", 3);
@@ -1555,3 +1552,6 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
 // controlling validation are located in /services/sync/services-sync.js
 pref("services.sync.validation.enabled", true);
 #endif
+
+// Preferences for the form autofill system extension
+pref("browser.formautofill.enabled", false);

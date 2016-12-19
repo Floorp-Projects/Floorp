@@ -81,7 +81,7 @@ else:
     # in the environment, which isn't true here. I don't know that
     # setting that would be harmful, but we already have this information
     # anyway.
-    if CONFIG['CLANG_CXX']:
+    if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         gyp_vars['cc_is_clang'] = 1
 
     GYP_DIRS += ['nss']

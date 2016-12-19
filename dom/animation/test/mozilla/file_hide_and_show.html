@@ -125,7 +125,36 @@ test(function(t) {
   assert_not_equals(div.getAnimations()[0], animation,
                     'Restarted animation is a newly-generated animation');
 
-}, 'Animation which has already finished starts playing when its parent ' +
+}, 'Animation with fill:forwards which has already finished starts playing ' +
+   'when its parent element is shown from "display:none" state');
+
+test(function(t) {
+  var parentElement = addDiv(t);
+  var div = addDiv(t, { style: 'animation: move 100s' });
+  parentElement.appendChild(div);
+  assert_equals(div.getAnimations().length, 1,
+                'display:initial element has animations');
+
+  var animation = div.getAnimations()[0];
+  animation.finish();
+  assert_equals(div.getAnimations().length, 0,
+                'Element does not have finished animations');
+
+  parentElement.style.display = 'none';
+  assert_equals(animation.playState, 'idle',
+                'The animation.playState should be idle');
+  assert_equals(div.getAnimations().length, 0,
+                'Element in display:none subtree has no animations');
+
+  parentElement.style.display = '';
+  assert_equals(div.getAnimations().length, 1,
+                'Element which is no longer in display:none subtree has ' +
+                'animations again');
+
+  assert_not_equals(div.getAnimations()[0], animation,
+                    'Restarted animation is a newly-generated animation');
+
+}, 'CSS Animation which has already finished starts playing when its parent ' +
    'element is shown from "display:none" state');
 
 done();

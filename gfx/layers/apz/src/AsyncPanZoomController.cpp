@@ -3139,6 +3139,17 @@ AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncMode aMode) const
       * mFrameMetrics.GetZoom() * mTestAsyncZoom.scale;
 }
 
+CSSPoint
+AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncMode aMode) const {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+    return mLastContentPaintMetrics.GetScrollOffset();
+  }
+
+  return mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset;
+}
+
 AsyncTransform
 AsyncPanZoomController::GetCurrentAsyncTransform(AsyncMode aMode) const
 {

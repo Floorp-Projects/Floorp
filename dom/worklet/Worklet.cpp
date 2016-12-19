@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Worklet.h"
-#include "WorkletGlobalScope.h"
+#include "AudioWorkletGlobalScope.h"
+#include "PaintWorkletGlobalScope.h"
+
 #include "mozilla/dom/WorkletBinding.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Fetch.h"
@@ -322,9 +324,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Worklet)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Worklet::Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
+Worklet::Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+                 WorkletType aWorkletType)
   : mWindow(aWindow)
   , mPrincipal(aPrincipal)
+  , mWorkletType(aWorkletType)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aPrincipal);
@@ -353,8 +357,14 @@ WorkletGlobalScope*
 Worklet::GetOrCreateGlobalScope(JSContext* aCx)
 {
   if (!mScope) {
-    // So far we don't have any other global scope to implement.
-    mScope = new AudioWorkletGlobalScope(mWindow);
+    switch (mWorkletType) {
+      case eAudioWorklet:
+        mScope = new AudioWorkletGlobalScope(mWindow);
+        break;
+      case ePaintWorklet:
+        mScope = new PaintWorkletGlobalScope(mWindow);
+        break;
+    }
 
     JS::Rooted<JSObject*> global(aCx);
     NS_ENSURE_TRUE(mScope->WrapGlobalObject(aCx, mPrincipal, &global), nullptr);

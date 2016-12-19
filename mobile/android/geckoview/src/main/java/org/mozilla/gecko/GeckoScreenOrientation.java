@@ -5,13 +5,14 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
-
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.util.Log;
 import android.view.Surface;
-import android.app.Activity;
+import android.view.WindowManager;
+
+import org.mozilla.gecko.annotation.WrapForJNI;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,31 +57,12 @@ public class GeckoScreenOrientation {
 
     // Singleton instance.
     private static GeckoScreenOrientation sInstance;
-    // Default screen orientation, used for initialization and unlocking.
-    private static final ScreenOrientation DEFAULT_SCREEN_ORIENTATION = ScreenOrientation.DEFAULT;
     // Default rotation, used when device rotation is unknown.
     private static final int DEFAULT_ROTATION = Surface.ROTATION_0;
-    // Default orientation, used if screen orientation is unspecified.
-    private ScreenOrientation mDefaultScreenOrientation;
     // Last updated screen orientation.
     private ScreenOrientation mScreenOrientation;
     // Whether the update should notify Gecko about screen orientation changes.
     private boolean mShouldNotify = true;
-    // Configuration screen orientation preference path.
-    private static final String DEFAULT_SCREEN_ORIENTATION_PREF = "app.orientation.default";
-
-    public GeckoScreenOrientation() {
-        PrefsHelper.getPref(DEFAULT_SCREEN_ORIENTATION_PREF, new PrefsHelper.PrefHandlerBase() {
-            @Override public void prefValue(String pref, String value) {
-                // Read and update the configuration default preference.
-                mDefaultScreenOrientation = screenOrientationFromArrayString(value);
-                setRequestedOrientation(mDefaultScreenOrientation);
-            }
-        });
-
-        mDefaultScreenOrientation = DEFAULT_SCREEN_ORIENTATION;
-        update();
-    }
 
     public static GeckoScreenOrientation getInstance() {
         if (sInstance == null) {
@@ -111,11 +93,11 @@ public class GeckoScreenOrientation {
      * @return Whether the screen orientation has changed.
      */
     public boolean update() {
-        Activity activity = getActivity();
-        if (activity == null) {
+        final Context appContext = GeckoAppShell.getApplicationContext();
+        if (appContext == null) {
             return false;
         }
-        Configuration config = activity.getResources().getConfiguration();
+        Configuration config = appContext.getResources().getConfiguration();
         return update(config.orientation);
     }
 
@@ -184,7 +166,7 @@ public class GeckoScreenOrientation {
         return mScreenOrientation;
     }
 
-    /*
+    /**
      * Lock screen orientation given the Gecko screen orientation.
      *
      * @param aGeckoOrientation
@@ -194,9 +176,8 @@ public class GeckoScreenOrientation {
         lock(ScreenOrientation.get(aGeckoOrientation));
     }
 
-    /*
+    /**
      * Lock screen orientation given the Gecko screen orientation.
-     * Retrieve rotation via GeckoAppShell.
      *
      * @param aScreenOrientation
      *        Gecko screen orientation derived from Android orientation and
@@ -206,51 +187,31 @@ public class GeckoScreenOrientation {
      */
     public boolean lock(ScreenOrientation aScreenOrientation) {
         Log.d(LOGTAG, "locking to " + aScreenOrientation);
-        update(aScreenOrientation);
-        return setRequestedOrientation(aScreenOrientation);
+        final ScreenOrientationDelegate delegate = GeckoAppShell.getScreenOrientationDelegate();
+        final int activityInfoOrientation = screenOrientationToActivityInfoOrientation(aScreenOrientation);
+        if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
+            update(aScreenOrientation);
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    /*
+    /**
      * Unlock and update screen orientation.
      *
      * @return Whether the unlocking was successful.
      */
     public boolean unlock() {
         Log.d(LOGTAG, "unlocking");
-        setRequestedOrientation(mDefaultScreenOrientation);
-        return update();
-    }
-
-    private Activity getActivity() {
-        if (GeckoAppShell.getGeckoInterface() == null) {
-            return null;
-        }
-        return GeckoAppShell.getGeckoInterface().getActivity();
-    }
-
-    /*
-     * Set the given requested orientation for the current activity.
-     * This is essentially an unlock without an update.
-     *
-     * @param aScreenOrientation
-     *        Gecko screen orientation.
-     *
-     * @return Whether the requested orientation was set. This can only fail if
-     *         the current activity cannot be retrieved via GeckoAppShell.
-     *
-     */
-    private boolean setRequestedOrientation(ScreenOrientation aScreenOrientation) {
-        int activityOrientation = screenOrientationToActivityInfoOrientation(aScreenOrientation);
-        Activity activity = getActivity();
-        if (activity == null) {
-            Log.w(LOGTAG, "setRequestOrientation: failed to get activity");
+        final ScreenOrientationDelegate delegate = GeckoAppShell.getScreenOrientationDelegate();
+        final int activityInfoOrientation = screenOrientationToActivityInfoOrientation(ScreenOrientation.DEFAULT);
+        if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
+            update();
+            return true;
+        } else {
             return false;
         }
-        if (activity.getRequestedOrientation() == activityOrientation) {
-            return false;
-        }
-        activity.setRequestedOrientation(activityOrientation);
-        return true;
     }
 
     /*
@@ -304,15 +265,16 @@ public class GeckoScreenOrientation {
     }
 
     /*
-     * @return Device rotation from Display.getRotation().
+     * @return Device rotation.
      */
     private int getRotation() {
-        Activity activity = getActivity();
-        if (activity == null) {
-            Log.w(LOGTAG, "getRotation: failed to get activity");
+        final Context appContext = GeckoAppShell.getApplicationContext();
+        if (appContext == null) {
             return DEFAULT_ROTATION;
         }
-        return activity.getWindowManager().getDefaultDisplay().getRotation();
+        final WindowManager windowManager =
+                (WindowManager) appContext.getSystemService(Context.WINDOW_SERVICE);
+        return windowManager.getDefaultDisplay().getRotation();
     }
 
     /*
@@ -325,10 +287,10 @@ public class GeckoScreenOrientation {
      */
     public static ScreenOrientation screenOrientationFromArrayString(String aArray) {
         List<String> orientations = Arrays.asList(aArray.split(","));
-        if (orientations.size() == 0) {
+        if ("".equals(aArray) || orientations.size() == 0) {
             // If nothing is listed, return default.
             Log.w(LOGTAG, "screenOrientationFromArrayString: no orientation in string");
-            return DEFAULT_SCREEN_ORIENTATION;
+            return ScreenOrientation.DEFAULT;
         }
 
         // We don't support multiple orientations yet. To avoid developer
@@ -361,7 +323,7 @@ public class GeckoScreenOrientation {
         }
 
         Log.w(LOGTAG, "screenOrientationFromString: unknown orientation string: " + aStr);
-        return DEFAULT_SCREEN_ORIENTATION;
+        return ScreenOrientation.DEFAULT;
     }
 
     /*
@@ -389,7 +351,6 @@ public class GeckoScreenOrientation {
                 return Configuration.ORIENTATION_UNDEFINED;
         }
     }
-
 
     /*
      * Convert Gecko screen orientation to Android ActivityInfo orientation.

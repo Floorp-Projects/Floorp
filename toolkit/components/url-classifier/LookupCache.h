@@ -26,20 +26,31 @@ namespace safebrowsing {
 class LookupResult {
 public:
   LookupResult() : mComplete(false), mNoise(false),
-                   mFresh(false), mProtocolConfirmed(false) {}
+                   mFresh(false), mProtocolConfirmed(false),
+                   mPartialHashLength(0) {}
 
   // The fragment that matched in the LookupCache
   union {
-    Prefix prefix;
+    Prefix fixedLengthPrefix;
     Completion complete;
   } hash;
 
-  const Prefix &PrefixHash() {
-    return hash.prefix;
-  }
   const Completion &CompleteHash() {
     MOZ_ASSERT(!mNoise);
     return hash.complete;
+  }
+
+  nsCString PartialHash() {
+    MOZ_ASSERT(mPartialHashLength <= COMPLETE_SIZE);
+    return nsCString(reinterpret_cast<char*>(hash.complete.buf), mPartialHashLength);
+  }
+
+  nsCString PartialHashHex() {
+    nsAutoCString hex;
+    for (size_t i = 0; i < mPartialHashLength; i++) {
+      hex.AppendPrintf("%.2X", hash.complete.buf[i]);
+    }
+    return hex;
   }
 
   bool Confirmed() const { return (mComplete && mFresh) || mProtocolConfirmed; }
@@ -61,6 +72,8 @@ public:
   bool mProtocolConfirmed;
 
   nsCString mTableName;
+
+  uint32_t mPartialHashLength;
 };
 
 typedef nsTArray<LookupResult> LookupResultArray;
@@ -126,7 +139,8 @@ public:
   virtual nsresult Init() = 0;
   virtual nsresult ClearPrefixes() = 0;
   virtual nsresult Has(const Completion& aCompletion,
-                       bool* aHas, bool* aComplete) = 0;
+                       bool* aHas, bool* aComplete,
+                       uint32_t* aMatchLength) = 0;
 
   virtual void ClearAll();
 
@@ -172,7 +186,8 @@ public:
   virtual nsresult Open() override;
   virtual void ClearAll() override;
   virtual nsresult Has(const Completion& aCompletion,
-                       bool* aHas, bool* aComplete) override;
+                       bool* aHas, bool* aComplete,
+                       uint32_t* aMatchLength) override;
 
   nsresult Build(AddPrefixArray& aAddPrefixes,
                  AddCompleteArray& aAddCompletes);
