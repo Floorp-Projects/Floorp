@@ -27,7 +27,7 @@ const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
  * border radius, cubic-bezier etc.).
  *
  * Usage:
- *   const {OutputParser} = require("devtools/client/shared/output-parser");
+ *   const OutputParser = require("devtools/client/shared/output-parser");
  *
  *   let parser = new OutputParser(document, supportsType);
  *
@@ -51,8 +51,6 @@ function OutputParser(document, {supportsType, isValidOnClient}) {
   this._onColorSwatchMouseDown = this._onColorSwatchMouseDown.bind(this);
   this._onAngleSwatchMouseDown = this._onAngleSwatchMouseDown.bind(this);
 }
-
-exports.OutputParser = OutputParser;
 
 OutputParser.prototype = {
   /**
@@ -693,3 +691,5 @@ OutputParser.prototype = {
     return defaults;
   }
 };
+
+module.exports = OutputParser;

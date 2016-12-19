@@ -9,7 +9,6 @@ import android.preference.Preference;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,10 +17,12 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
-public class SearchPreferenceCategory extends CustomListCategory implements GeckoEventListener {
+public class SearchPreferenceCategory extends CustomListCategory implements BundleEventListener {
     public static final String LOGTAG = "SearchPrefCategory";
 
     public SearchPreferenceCategory(Context context) {
@@ -41,7 +42,7 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
         super.onAttachedToActivity();
 
         // Register for SearchEngines messages and request list of search engines from Gecko.
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "SearchEngines:Data");
+        EventDispatcher.getInstance().registerUiThreadListener(this, "SearchEngines:Data");
         GeckoAppShell.notifyObservers("SearchEngines:GetVisible", null);
     }
 
@@ -49,7 +50,7 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
     protected void onPrepareForRemoval() {
         super.onPrepareForRemoval();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "SearchEngines:Data");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this, "SearchEngines:Data");
     }
 
     @Override
@@ -72,56 +73,44 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
         Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH_REMOVE, Method.DIALOG, identifier);
     }
 
-    @Override
-    public void handleMessage(String event, final JSONObject data) {
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle data,
+                              final EventCallback callback) {
         if (event.equals("SearchEngines:Data")) {
-            // Parse engines array from JSON.
-            JSONArray engines;
-            try {
-                engines = data.getJSONArray("searchEngines");
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Unable to decode search engine data from Gecko.", e);
-                return;
-            }
+            // Parse engines array from bundle.
+            final GeckoBundle[] engines = data.getBundleArray("searchEngines");
 
             // Clear the preferences category from this thread.
             this.removeAll();
 
             // Create an element in this PreferenceCategory for each engine.
-            for (int i = 0; i < engines.length(); i++) {
-                try {
-                    final JSONObject engineJSON = engines.getJSONObject(i);
-
-                    final SearchEnginePreference enginePreference = new SearchEnginePreference(getContext(), this);
-                    enginePreference.setSearchEngineFromJSON(engineJSON);
-                    enginePreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-                        @Override
-                        public boolean onPreferenceClick(Preference preference) {
-                            SearchEnginePreference sPref = (SearchEnginePreference) preference;
-                            // Display the configuration dialog associated with the tapped engine.
-                            sPref.showDialog();
-                            return true;
-                        }
-                    });
-
-                    addPreference(enginePreference);
-
-                    // The first element in the array is the default engine.
-                    if (i == 0) {
-                        // We set this here, not in setSearchEngineFromJSON, because it allows us to
-                        // keep a reference  to the default engine to use when the AlertDialog
-                        // callbacks are used.
-                        ThreadUtils.postToUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                enginePreference.setIsDefault(true);
-                            }
-                        });
-                        mDefaultReference = enginePreference;
+            for (int i = 0; i < engines.length; i++) {
+                final GeckoBundle engine = engines[i];
+                final SearchEnginePreference enginePreference =
+                        new SearchEnginePreference(getContext(), this);
+                enginePreference.setSearchEngineFromBundle(engine);
+                enginePreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        SearchEnginePreference sPref = (SearchEnginePreference) preference;
+                        // Display the configuration dialog associated with the tapped engine.
+                        sPref.showDialog();
+                        return true;
                     }
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "JSONException parsing engine at index " + i, e);
+                });
+
+                addPreference(enginePreference);
+
+                if (i != 0) {
+                    continue;
                 }
+
+                // The first element in the array is the default engine.
+                // We set this here, not in setSearchEngineFromBundle, because it allows us to
+                // keep a reference  to the default engine to use when the AlertDialog
+                // callbacks are used.
+                enginePreference.setIsDefault(true);
+                mDefaultReference = enginePreference;
             }
         }
     }

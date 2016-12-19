@@ -409,14 +409,20 @@ Sanitizer.prototype = {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_FORMDATA", refObj);
         try {
-          // Clear undo history of all searchBars
+          // Clear undo history of all search bars.
           let windows = Services.wm.getEnumerator("navigator:browser");
           while (windows.hasMoreElements()) {
             let currentWindow = windows.getNext();
             let currentDocument = currentWindow.document;
+
+            // searchBar.textbox may not exist due to the search bar binding
+            // not having been constructed yet if the search bar is in the
+            // overflow or menu panel. It won't have a value or edit history in
+            // that case.
             let searchBar = currentDocument.getElementById("searchbar");
-            if (searchBar)
+            if (searchBar && searchBar.textbox)
               searchBar.textbox.reset();
+
             let tabBrowser = currentWindow.gBrowser;
             if (!tabBrowser) {
               // No tab browser? This means that it's too early during startup (typically,

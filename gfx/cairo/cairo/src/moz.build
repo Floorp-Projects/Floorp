@@ -222,20 +222,18 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-type-limits',
         '-Wno-missing-field-initializers',
         '-Wno-conversion',
-        '-Wno-unused-but-set-variable',
+        '-Wno-unused',
     ]
+
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
     CFLAGS += [
+        '-Wno-absolute-value',
+        '-Wno-deprecated-register',
         '-Wno-incompatible-pointer-types',
+        '-Wno-macro-redefined',
         '-Wno-tautological-compare',
         '-Wno-tautological-constant-out-of-range-compare',
         '-Wno-error=uninitialized',
-    ]
-if CONFIG['CLANG_CL']:
-    CFLAGS += [
-        '-Wno-deprecated-register',
-        '-Wno-macro-redefined',
-        '-Wno-unused-variable',
     ]
 
 # See bug 386897.

@@ -69,10 +69,7 @@ const {
   getFileForAddon,
   manuallyInstall,
   manuallyUninstall,
-  promiseAddonByID,
   promiseAddonEvent,
-  promiseAddonsByIDs,
-  promiseAddonsWithOperationsByTypes,
   promiseCompleteAllInstalls,
   promiseCompleteInstall,
   promiseConsoleOutput,
@@ -146,6 +143,10 @@ Object.defineProperty(this, "TEST_UNPACKED", {
 // We need some internal bits of AddonManager
 var AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
 var { AddonManager, AddonManagerInternal, AddonManagerPrivate } = AMscope;
+
+const promiseAddonByID = AddonManager.getAddonByID;
+const promiseAddonsByIDs = AddonManager.getAddonsByIDs;
+const promiseAddonsWithOperationsByTypes = AddonManager.getAddonsWithOperationsByTypes;
 
 var gPort = null;
 var gUrlToFileMap = {};

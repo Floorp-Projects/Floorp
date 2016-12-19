@@ -20,8 +20,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 startupManager();
 
 function* check_normal() {
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
@@ -80,8 +79,7 @@ add_task(function*() {
   gAppInfo.browserTabsRemoteAutostart = true;
   Services.prefs.setBoolPref("extensions.e10sBlocksEnabling", true);
 
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_true(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
@@ -129,8 +127,7 @@ add_task(function*() {
   gAppInfo.browserTabsRemoteAutostart = true;
   Services.prefs.setBoolPref("extensions.e10sBlocksEnabling", true);
 
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_true(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
@@ -202,9 +199,11 @@ add_task(function*() {
   gAppInfo.browserTabsRemoteAutostart = true;
   Services.prefs.setBoolPref("extensions.e10sBlocksEnabling", true);
 
-  let install1 = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  let install2 = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap2_1"), resolve));
-  yield promiseCompleteAllInstalls([install1, install2]);
+  let [install1, install2] = yield Promise.all([
+    promiseInstallFile(do_get_addon("test_bootstrap1_1")),
+    promiseInstallFile(do_get_addon("test_bootstrap2_1")),
+  ]);
+
   do_check_eq(install1.state, AddonManager.STATE_INSTALLED);
   do_check_eq(install2.state, AddonManager.STATE_INSTALLED);
   do_check_true(hasFlag(install1.addon.pendingOperations, AddonManager.PENDING_INSTALL));
@@ -312,9 +311,10 @@ add_task(function*() {
 
   // Check that the two add-ons can be installed together correctly as
   // check_normal() only perform checks on bootstrap1.
-  let install1 = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  let install2 = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap2_1"), resolve));
-  yield promiseCompleteAllInstalls([install1, install2]);
+  let [install1, install2] = yield Promise.all([
+    promiseInstallFile(do_get_addon("test_bootstrap1_1")),
+    promiseInstallFile(do_get_addon("test_bootstrap2_1")),
+  ]);
 
   do_check_eq(install1.state, AddonManager.STATE_INSTALLED);
   do_check_eq(install2.state, AddonManager.STATE_INSTALLED);
@@ -374,9 +374,10 @@ add_task(function*() {
 
   yield promiseRestartManager();
 
-  install1 = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  install2 = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap2_1"), resolve));
-  yield promiseCompleteAllInstalls([install1, install2]);
+  [install1, install2] = yield Promise.all([
+    promiseInstallFile(do_get_addon("test_bootstrap1_1")),
+    promiseInstallFile(do_get_addon("test_bootstrap2_1")),
+  ]);
 
   do_check_eq(install1.state, AddonManager.STATE_INSTALLED);
   do_check_eq(install2.state, AddonManager.STATE_INSTALLED);

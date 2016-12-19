@@ -82,6 +82,7 @@
     locale/browser/preferences/sync.dtd               (%chrome/browser/preferences/sync.dtd)
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
     locale/browser/preferences/search.dtd             (%chrome/browser/preferences/search.dtd)
+    locale/browser/preferences/siteDataSettings.dtd   (%chrome/browser/preferences/siteDataSettings.dtd)
     locale/browser/preferences/translation.dtd        (%chrome/browser/preferences/translation.dtd)
     locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
     locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)

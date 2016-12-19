@@ -133,6 +133,7 @@ public abstract class GeckoApp
     BundleEventListener,
     ContextGetter,
     GeckoAppShell.GeckoInterface,
+    ScreenOrientationDelegate,
     GeckoMenu.Callback,
     GeckoMenu.MenuPresenter,
     Tabs.OnTabsChangedListener,
@@ -1129,6 +1130,7 @@ public abstract class GeckoApp
         // `(GeckoApplication) getApplication()` here.
         GeckoAppShell.setContextGetter(this);
         GeckoAppShell.setGeckoInterface(this);
+        GeckoAppShell.setScreenOrientationDelegate(this);
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
         // We do this via intents since we can't easily access Stumbler directly,
@@ -2080,6 +2082,7 @@ public abstract class GeckoApp
         foregrounded = true;
 
         GeckoAppShell.setGeckoInterface(this);
+        GeckoAppShell.setScreenOrientationDelegate(this);
 
         if (lastSelectedTabId >= 0 && (lastActiveGeckoApp == null || lastActiveGeckoApp.get() != this)) {
             Tabs.getInstance().selectTab(lastSelectedTabId);
@@ -2862,5 +2865,21 @@ public abstract class GeckoApp
 
     public GeckoView getGeckoView() {
         return mLayerView;
+    }
+
+    @Override
+    public boolean setRequestedOrientationForCurrentActivity(int requestedActivityInfoOrientation) {
+        // We want to support the Screen Orientation API, and it always makes sense to lock the
+        // orientation of a browser Activity, so we support locking.
+        if (getRequestedOrientation() == requestedActivityInfoOrientation) {
+            return false;
+        }
+        setRequestedOrientation(requestedActivityInfoOrientation);
+        return true;
+    }
+
+    @Override
+    public boolean isOfficial() {
+        return AppConstants.MOZILLA_OFFICIAL;
     }
 }

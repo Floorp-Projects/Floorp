@@ -1874,9 +1874,10 @@ NS_IMETHODIMP
 CanvasRenderingContext2D::SetDimensions(int32_t aWidth, int32_t aHeight)
 {
   bool retainBuffer = false;
-  if (aWidth == mWidth && aHeight == mHeight) {
-    retainBuffer = true;
-  }
+  // See bug 1318283 as to why we are disabling this optimization.
+  // Based on the results of the investigation, this may go away
+  // completely or come back.
+  // retainBuffer = (aWidth == mWidth && aHeight == mHeight);
   ClearTarget(retainBuffer);
 
   // Zero sized surfaces can cause problems.

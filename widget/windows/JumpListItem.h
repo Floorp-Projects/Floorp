@@ -26,24 +26,23 @@ class nsIThread;
 namespace mozilla {
 namespace widget {
 
-class JumpListItem : public nsIJumpListItem
+class JumpListItemBase : public nsIJumpListItem
 {
 public:
-  JumpListItem() :
+  JumpListItemBase() :
    mItemType(nsIJumpListItem::JUMPLIST_ITEM_EMPTY)
   {}
 
-  JumpListItem(int32_t type) :
+  JumpListItemBase(int32_t type) :
    mItemType(type)
   {}
 
-  NS_DECL_ISUPPORTS
   NS_DECL_NSIJUMPLISTITEM
 
   static const char kJumpListCacheDir[];
 
 protected:
-  virtual ~JumpListItem()
+  virtual ~JumpListItemBase()
   {}
 
   short Type() { return mItemType; }
@@ -51,33 +50,42 @@ protected:
 
 };
 
-class JumpListSeparator : public JumpListItem, public nsIJumpListSeparator
+class JumpListItem : public JumpListItemBase
+{
+  ~JumpListItem() {}
+
+public:
+  using JumpListItemBase::JumpListItemBase;
+
+  NS_DECL_ISUPPORTS
+};
+
+class JumpListSeparator : public JumpListItemBase, public nsIJumpListSeparator
 {
   ~JumpListSeparator() {}
 
 public:
   JumpListSeparator() :
-   JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR)
+   JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR)
   {}
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItem::GetType(aType); }
-  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override { return JumpListItem::Equals(item, _retval); }
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIJUMPLISTITEM(JumpListItemBase::)
 
   static nsresult GetSeparator(RefPtr<IShellLinkW>& aShellLink);
 };
 
-class JumpListLink : public JumpListItem, public nsIJumpListLink
+class JumpListLink : public JumpListItemBase, public nsIJumpListLink
 {
   ~JumpListLink() {}
 
 public:
   JumpListLink() :
-   JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_LINK)
+   JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_LINK)
   {}
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItem::GetType(aType); }
+  NS_DECL_ISUPPORTS
+  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItemBase::GetType(aType); }
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override;
   NS_DECL_NSIJUMPLISTLINK
 
@@ -90,18 +98,18 @@ protected:
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 };
 
-class JumpListShortcut : public JumpListItem, public nsIJumpListShortcut
+class JumpListShortcut : public JumpListItemBase, public nsIJumpListShortcut
 {
   ~JumpListShortcut() {}
 
 public:
   JumpListShortcut() :
-   JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT)
+   JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT)
   {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JumpListShortcut, JumpListItem)
-  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItem::GetType(aType); }
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JumpListShortcut, JumpListItemBase)
+  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItemBase::GetType(aType); }
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override;
   NS_DECL_NSIJUMPLISTSHORTCUT
 

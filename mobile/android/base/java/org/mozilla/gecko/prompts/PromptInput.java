@@ -18,6 +18,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.AppCompatCheckBox;
+import android.widget.CheckBox;
 import android.text.Html;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -145,7 +146,7 @@ public abstract class PromptInput {
 
         @Override
         public View getView(Context context) throws UnsupportedOperationException {
-            final CheckBox checkbox = new AppCompatCheckBox(context);
+            final CheckBox checkbox = new CheckBox(context);
             checkbox.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             checkbox.setText(mLabel);
             checkbox.setChecked(mChecked);

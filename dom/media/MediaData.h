@@ -220,6 +220,10 @@ private:
   // Returns false if memory couldn't be allocated.
   bool EnsureCapacity(size_t aLength)
   {
+    if (!aLength) {
+      // No need to allocate a buffer yet.
+      return true;
+    }
     const CheckedInt<size_t> sizeNeeded =
       CheckedInt<size_t>(aLength) * sizeof(Type) + AlignmentPaddingSize();
 

@@ -80,9 +80,11 @@ LookupCacheV4::Init()
 
 nsresult
 LookupCacheV4::Has(const Completion& aCompletion,
-                   bool* aHas, bool* aComplete)
+                   bool* aHas, bool* aComplete,
+                   uint32_t* aMatchLength)
 {
-  *aHas = false;
+  *aHas = *aComplete = false;
+  *aMatchLength = 0;
 
   uint32_t length = 0;
   nsDependentCSubstring fullhash;
@@ -93,6 +95,7 @@ LookupCacheV4::Has(const Completion& aCompletion,
 
   *aHas = length >= PREFIX_SIZE;
   *aComplete = length == COMPLETE_SIZE;
+  *aMatchLength = length;
 
   if (LOG_ENABLED()) {
     uint32_t prefix = aCompletion.ToUint32();

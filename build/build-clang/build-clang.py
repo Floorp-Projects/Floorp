@@ -398,7 +398,7 @@ if __name__ == "__main__":
         # by looking at an MSVC install, but we don't really have that here.
         # Force things on.
         extra_cflags2 = []
-        extra_cxxflags2 = ['-fms-compatibility-version=19.00.23918', '-Xclang', '-std=c++14']
+        extra_cxxflags2 = ['-fms-compatibility-version=19.00.24213', '-Xclang', '-std=c++14']
 
     build_one_stage(
         [cc] + extra_cflags,
