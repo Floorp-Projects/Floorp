@@ -3,14 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * The origin of this IDL file is
- * http://dom.spec.whatwg.org/#promises
+ * This IDL file contains utilities to help connect JS promises to our
+ * Web IDL infrastructure.
  */
-
-// TODO We use object instead Function.  There is an open issue on WebIDL to
-// have different types for "platform-provided function" and "user-provided
-// function"; for now, we just use "object".
-callback PromiseInit = void (object resolve, object reject);
 
 callback PromiseJobCallback = void();
 
