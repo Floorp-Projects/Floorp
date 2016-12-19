@@ -39,6 +39,7 @@ macro_rules! try_opt {
 }
 
 mod logging;
+mod prefs;
 mod marionette;
 mod capabilities;
 
