@@ -13,6 +13,9 @@ by acting as a proxy between the local- and remote ends.
 
 You can consult the [change log](https://github.com/mozilla/geckodriver/blob/master/CHANGES.md)
 for a record of all notable changes to the program.
+[Releases](https://github.com/mozilla/geckodriver/releases)
+are made available on GitHub
+on [supported platforms](#supported-firefoxen).
 
 ## Supported Firefoxen
 
