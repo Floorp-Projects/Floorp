@@ -11,21 +11,21 @@ VOLUME /home/worker/tooltool-cache
 ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
 
-# %include taskcluster/docker/recipes/tooltool.py
-ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /builds/tooltool.py
-ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /setup/tooltool.py
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /builds/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
-# %include taskcluster/docker/recipes/common.sh
-ADD topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
+# %include testing/docker/recipes/common.sh
+ADD topsrcdir/testing/docker/recipes/common.sh /setup/common.sh
 
-# %include taskcluster/docker/recipes/install-mercurial.sh
-ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
+# %include testing/docker/recipes/install-mercurial.sh
+ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 
-# %include taskcluster/docker/recipes/centos6-build-system-setup.sh
-ADD topsrcdir/taskcluster/docker/recipes/centos6-build-system-setup.sh /setup/system-setup.sh
+# %include testing/docker/recipes/centos6-build-system-setup.sh
+ADD topsrcdir/testing/docker/recipes/centos6-build-system-setup.sh /setup/system-setup.sh
 
 # TODO remove once base image doesn't install Mercurial
 RUN pip uninstall -y Mercurial
@@ -33,11 +33,11 @@ RUN pip uninstall -y Mercurial
 RUN bash /setup/system-setup.sh
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
-# %include taskcluster/docker/recipes/xvfb.sh
-ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
 
-# %include taskcluster/docker/recipes/run-task
-ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
+# %include testing/docker/recipes/run-task
+ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
 
 # Add configuration
 COPY            dot-config                    /home/worker/.config

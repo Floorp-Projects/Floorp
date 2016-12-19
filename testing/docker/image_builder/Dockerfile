@@ -1,19 +1,19 @@
 FROM ubuntu:16.04
 
-# %include taskcluster/docker/recipes/tooltool.py
-ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /setup/tooltool.py
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 
-# %include taskcluster/docker/recipes/common.sh
-ADD topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
+# %include testing/docker/recipes/common.sh
+ADD topsrcdir/testing/docker/recipes/common.sh /setup/common.sh
 
-# %include taskcluster/docker/recipes/install-mercurial.sh
-ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
+# %include testing/docker/recipes/install-mercurial.sh
+ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 
-# %include taskcluster/mozharness/external_tools/robustcheckout.py
-ADD topsrcdir/taskcluster/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
+# %include testing/mozharness/external_tools/robustcheckout.py
+ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
-# %include taskcluster/docker/recipes/run-task
-ADD topsrcdir/taskcluster/docker/recipes/run-task /usr/local/bin/run-task
+# %include testing/docker/recipes/run-task
+ADD topsrcdir/testing/docker/recipes/run-task /usr/local/bin/run-task
 
 # Add and run setup script
 ADD build-image.sh      /usr/local/bin/build-image.sh
