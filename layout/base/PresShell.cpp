@@ -4061,10 +4061,11 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   RefPtr<nsViewManager> viewManager = mViewManager;
   bool didStyleFlush = false;
   bool didLayoutFlush = false;
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip;
   if (isSafeToFlush && viewManager) {
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
-    nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+    kungFuDeathGrip = this;
 
     if (mResizeEvent.IsPending()) {
       FireResizeEvent();
