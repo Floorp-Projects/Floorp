@@ -677,10 +677,10 @@ InitLog(const char* aEnvVar, const char* aMsg, FILE** aResult)
       if (stream) {
         MozillaRegisterDebugFD(fileno(stream));
         *aResult = stream;
-        fprintf(stdout, "### %s defined -- logging %s to %s\n",
+        fprintf(stderr, "### %s defined -- logging %s to %s\n",
                 aEnvVar, aMsg, fname.get());
       } else {
-        fprintf(stdout, "### %s defined -- unable to log %s to %s\n",
+        fprintf(stderr, "### %s defined -- unable to log %s to %s\n",
                 aEnvVar, aMsg, fname.get());
         MOZ_ASSERT(false, "Tried and failed to create an XPCOM log");
       }
