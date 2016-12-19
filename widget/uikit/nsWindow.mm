@@ -656,11 +656,11 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
     ReportSizeModeEvent(aMode);
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
   if (!mNativeView || !mVisible)
-    return NS_OK;
+    return;
 
   MOZ_RELEASE_ASSERT(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                      "Shouldn't need to invalidate with accelerated OMTC layers!");
@@ -668,8 +668,6 @@ nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 
   [mNativeView setNeedsLayout];
   [mNativeView setNeedsDisplayInRect:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -449,7 +449,7 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>&)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     nsWindow *top = mParent;
@@ -458,12 +458,11 @@ nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
     }
     const nsTArray<nsWindow*>& windows = mScreen->GetTopWindows();
     if (top != windows[0] && this != windows[0]) {
-        return NS_OK;
+        return;
     }
 
     gDrawRequest = true;
     mozilla::NotifyEvent();
-    return NS_OK;
 }
 
 LayoutDeviceIntPoint

@@ -1823,13 +1823,12 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Invalidate(const LayoutDeviceIntRect& aRect)
+void
+nsCocoaWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
   if (mPopupContentView) {
-    return mPopupContentView->Invalidate(aRect);
+    mPopupContentView->Invalidate(aRect);
   }
-
-  return NS_OK;
 }
 
 // Pass notification of some drag event to Gecko
