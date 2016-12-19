@@ -22,14 +22,15 @@ Marionette and geckodriver are not yet feature complete.
 This means that they do not yet offer full conformance
 with the [WebDriver standard](https://w3c.github.io/webdriver/webdriver-spec.html)
 or complete compatibility with [Selenium](http://www.seleniumhq.org/).
-
 You can track the [implementation status](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status)
-of the latest Firefox Nightly on MDN.
+of the latest [Firefox Nightly](http://whattrainisitnow.com/) on
+[MDN](https://developer.mozilla.org/).
 We also keep track of known
 [Marionette](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette),
 [Selenium](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aselenium),
 and [specification](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec)
-problems in our issue tracker.
+problems in our
+[issue tracker](https://github.com/mozilla/geckodriver/issues).
 
 Support is best in Firefox 48 and onwards,
 although generally the more recent the Firefox version,
