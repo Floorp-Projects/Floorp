@@ -2220,6 +2220,9 @@ SeekingState::SeekCompleted()
     mMaster->mVideoCompleted = true;
   }
 
+  // Cache mTarget for mSeekJob.Resolve() below will reset it.
+  SeekTarget target = mSeekJob.mTarget.ref();
+
   // We want to resolve the seek request prior finishing the first frame
   // to ensure that the seeked event is fired prior loadeded.
   mSeekJob.Resolve(__func__);
@@ -2231,7 +2234,7 @@ SeekingState::SeekCompleted()
   }
 
   // Ensure timestamps are up to date.
-  if (!mSeekJob.mTarget->IsVideoOnly()) {
+  if (!target.IsVideoOnly()) {
     // Don't update playback position for video-only seek.
     // Otherwise we might have |newCurrentTime > mMediaSink->GetPosition()|
     // and fail the assertion in GetClock() since we didn't stop MediaSink.
