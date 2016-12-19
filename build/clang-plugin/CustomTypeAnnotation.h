@@ -39,8 +39,6 @@ public:
   bool hasEffectiveAnnotation(QualType T) {
     return directAnnotationReason(T).valid();
   }
-  void dumpAnnotationReason(DiagnosticsEngine &Diag, QualType T,
-                            SourceLocation Loc);
   void dumpAnnotationReason(BaseCheck &Check, QualType T,
                             SourceLocation Loc);
 

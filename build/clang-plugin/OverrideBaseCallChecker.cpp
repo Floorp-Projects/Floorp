@@ -12,7 +12,7 @@ void OverrideBaseCallChecker::registerMatchers(MatchFinder* AstMatcher) {
 
 bool OverrideBaseCallChecker::isRequiredBaseMethod(
     const CXXMethodDecl *Method) {
-  return MozChecker::hasCustomAnnotation(Method, "moz_required_base_method");
+  return hasCustomAnnotation(Method, "moz_required_base_method");
 }
 
 void OverrideBaseCallChecker::evaluateExpression(
