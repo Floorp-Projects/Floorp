@@ -25,7 +25,8 @@ public:
 
   virtual nsresult Init() override;
   virtual nsresult Has(const Completion& aCompletion,
-                       bool* aHas, bool* aComplete) override;
+                       bool* aHas, bool* aComplete,
+                       uint32_t* aMatchLength) override;
 
   nsresult Build(PrefixStringMap& aPrefixMap);
 
