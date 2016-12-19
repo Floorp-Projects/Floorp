@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    Primitive prim = load_primitive(gl_InstanceID);
+    Primitive prim = load_primitive();
     Border border = fetch_border(prim.prim_index);
     int sub_part = prim.sub_index;
 

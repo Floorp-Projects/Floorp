@@ -9,8 +9,28 @@
 #define DIR_HORIZONTAL  0
 #define DIR_VERTICAL    1
 
+in int aBlurRenderTaskIndex;
+in int aBlurSourceTaskIndex;
+in int aBlurDirection;
+
+struct BlurCommand {
+    int task_id;
+    int src_task_id;
+    int dir;
+};
+
+BlurCommand fetch_blur() {
+    BlurCommand blur;
+
+    blur.task_id = aBlurRenderTaskIndex;
+    blur.src_task_id = aBlurSourceTaskIndex;
+    blur.dir = aBlurDirection;
+
+    return blur;
+}
+
 void main(void) {
-    BlurCommand cmd = fetch_blur(gl_InstanceID);
+    BlurCommand cmd = fetch_blur();
     RenderTaskData task = fetch_render_task(cmd.task_id);
     RenderTaskData src_task = fetch_render_task(cmd.src_task_id);
 
@@ -20,7 +40,7 @@ void main(void) {
                    local_rect.xy + local_rect.zw,
                    aPosition.xy);
 
-    vec2 texture_size = textureSize(sCache, 0).xy;
+    vec2 texture_size = vec2(textureSize(sCache, 0).xy);
     vUv.z = src_task.data1.x;
     vBlurRadius = int(task.data1.y);
     vSigma = task.data1.y * 0.5;

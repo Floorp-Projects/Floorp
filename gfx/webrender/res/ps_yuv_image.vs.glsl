@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    Primitive prim = load_primitive(gl_InstanceID);
+    Primitive prim = load_primitive();
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
                                                     prim.local_clip_rect,

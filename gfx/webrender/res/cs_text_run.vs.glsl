@@ -8,7 +8,7 @@
 // as text-shadow.
 
 void main(void) {
-    CachePrimitiveInstance cpi = fetch_cache_instance(gl_InstanceID);
+    CachePrimitiveInstance cpi = fetch_cache_instance();
     RenderTaskData task = fetch_render_task(cpi.render_task_index);
     TextRun text = fetch_text_run(cpi.specific_prim_index);
     Glyph glyph = fetch_glyph(cpi.sub_index);

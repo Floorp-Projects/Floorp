@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    Primitive prim = load_primitive(gl_InstanceID);
+    Primitive prim = load_primitive();
     BoxShadow bs = fetch_boxshadow(prim.prim_index);
     vec4 segment_rect = fetch_instance_geometry(prim.sub_index);
 

@@ -31,9 +31,9 @@ impl DebugRenderer {
         let font_program_id = device.create_program("debug_font", "shared_other");
         let color_program_id = device.create_program("debug_color", "shared_other");
 
-        let font_vao = device.create_vao(VertexFormat::DebugFont, None);
-        let line_vao = device.create_vao(VertexFormat::DebugColor, None);
-        let tri_vao = device.create_vao(VertexFormat::DebugColor, None);
+        let font_vao = device.create_vao(VertexFormat::DebugFont, 32);
+        let line_vao = device.create_vao(VertexFormat::DebugColor, 32);
+        let tri_vao = device.create_vao(VertexFormat::DebugColor, 32);
 
         let font_texture_id = device.create_texture_ids(1, TextureTarget::Default)[0];
         device.init_texture(font_texture_id,
@@ -161,7 +161,7 @@ impl DebugRenderer {
     pub fn render(&mut self,
                   device: &mut Device,
                   viewport_size: &DeviceUintSize) {
-        let _ = GpuMarker::new("debug");
+        let _gm = GpuMarker::new("debug");
         device.disable_depth();
         device.set_blend(true);
         device.set_blend_mode_alpha();

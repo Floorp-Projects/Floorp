@@ -618,7 +618,7 @@ impl Profiler {
                         renderer_timers: &mut RendererProfileTimers,
                         debug_renderer: &mut DebugRenderer) {
 
-        let _ = GpuMarker::new("profile");
+        let _gm = GpuMarker::new("profile");
         self.x_left = 20.0;
         self.y_left = 40.0;
         self.x_right = 400.0;

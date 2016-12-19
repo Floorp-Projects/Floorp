@@ -4,13 +4,13 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use channel::{self, MsgSender, PayloadHelperMethods, PayloadSender};
-use euclid::{Point2D, Size2D};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
 use {ApiMsg, ColorF, DisplayListBuilder, Epoch};
 use {FontKey, IdNamespace, ImageFormat, ImageKey, NativeFontHandle, PipelineId};
 use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState, ScrollLocation, ServoScrollRootId};
 use {GlyphKey, GlyphDimensions, ImageData, WebGLContextId, WebGLCommand};
+use {DeviceIntSize, LayoutPoint, LayoutSize, WorldPoint};
 use VRCompositorCommand;
 
 impl RenderApiSender {
@@ -155,9 +155,9 @@ impl RenderApi {
     ///
     /// [notifier]: trait.RenderNotifier.html#tymethod.new_frame_ready
     pub fn set_root_display_list(&self,
-                                 background_color: ColorF,
+                                 background_color: Option<ColorF>,
                                  epoch: Epoch,
-                                 viewport_size: Size2D<f32>,
+                                 viewport_size: LayoutSize,
                                  builder: DisplayListBuilder) {
         let pipeline_id = builder.pipeline_id;
         let (display_list, auxiliary_lists) = builder.finalize();
@@ -180,13 +180,13 @@ impl RenderApi {
     ///
     /// Webrender looks for the layer closest to the user
     /// which has `ScrollPolicy::Scrollable` set.
-    pub fn scroll(&self, scroll_location: ScrollLocation, cursor: Point2D<f32>, phase: ScrollEventPhase) {
+    pub fn scroll(&self, scroll_location: ScrollLocation, cursor: WorldPoint, phase: ScrollEventPhase) {
         let msg = ApiMsg::Scroll(scroll_location, cursor, phase);
         self.api_sender.send(msg).unwrap();
     }
 
     pub fn scroll_layers_with_scroll_root_id(&self,
-                                             new_scroll_origin: Point2D<f32>,
+                                             new_scroll_origin: LayoutPoint,
                                              pipeline_id: PipelineId,
                                              scroll_root_id: ServoScrollRootId) {
         let msg = ApiMsg::ScrollLayersWithScrollId(new_scroll_origin, pipeline_id, scroll_root_id);
@@ -199,8 +199,8 @@ impl RenderApi {
     }
 
     /// Translates a point from viewport coordinates to layer space
-    pub fn translate_point_to_layer_space(&self, point: &Point2D<f32>)
-                                          -> (Point2D<f32>, PipelineId) {
+    pub fn translate_point_to_layer_space(&self, point: &WorldPoint)
+                                          -> (LayoutPoint, PipelineId) {
         let (tx, rx) = channel::msg_channel().unwrap();
         let msg = ApiMsg::TranslatePointToLayerSpace(*point, tx);
         self.api_sender.send(msg).unwrap();
@@ -214,7 +214,7 @@ impl RenderApi {
         rx.recv().unwrap()
     }
 
-    pub fn request_webgl_context(&self, size: &Size2D<i32>, attributes: GLContextAttributes)
+    pub fn request_webgl_context(&self, size: &DeviceIntSize, attributes: GLContextAttributes)
                                  -> Result<(WebGLContextId, GLLimits), String> {
         let (tx, rx) = channel::msg_channel().unwrap();
         let msg = ApiMsg::RequestWebGLContext(*size, attributes, tx);
@@ -222,7 +222,7 @@ impl RenderApi {
         rx.recv().unwrap()
     }
 
-    pub fn resize_webgl_context(&self, context_id: WebGLContextId, size: &Size2D<i32>) {
+    pub fn resize_webgl_context(&self, context_id: WebGLContextId, size: &DeviceIntSize) {
         let msg = ApiMsg::ResizeWebGLContext(context_id, *size);
         self.api_sender.send(msg).unwrap();
     }
