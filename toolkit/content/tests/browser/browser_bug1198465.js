@@ -68,5 +68,8 @@ add_task(function* () {
   EventUtils.sendChar("c", window);
   is(findBar._findField.value, "abc", "c is appended after ab");
 
+  // Clear the findField value to make the test  run successfully
+  // for multiple runs in the same browser session.
+  findBar._findField.value = "";
   yield BrowserTestUtils.removeTab(aTab);
 });
