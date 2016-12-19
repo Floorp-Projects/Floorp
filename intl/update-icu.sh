@@ -75,7 +75,7 @@ python ${topsrcdir}/js/src/tests/ecma_6/String/make-normalize-generateddata-inpu
 # build a new ICU data file.
 python `dirname $0`/icu_sources_data.py $topsrcdir
 
-hg addremove ${icu_dir} ${topsrcdir}/config/external/icu
+hg addremove "${icu_dir}/source" "${icu_dir}/SVN-INFO" ${topsrcdir}/config/external/icu
 
 # Check local tzdata version.
 `dirname $0`/update-tzdata.sh -c
