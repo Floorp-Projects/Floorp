@@ -11,7 +11,20 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION(GroupedSHistory, mPartialHistories)
+NS_IMPL_CYCLE_COLLECTION_CLASS(GroupedSHistory)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(GroupedSHistory)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPartialHistories)
+  tmp->mPrerenderingHistories.Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(GroupedSHistory)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPartialHistories)
+  for (GroupedSHistory::PrerenderingHistory& h : tmp->mPrerenderingHistories) {
+    ImplCycleCollectionTraverse(cb, h.mPartialHistory, "mPrerenderingHistories[i]->mPartialHistory", 0);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GroupedSHistory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(GroupedSHistory)
 
@@ -63,8 +76,11 @@ GroupedSHistory::AppendPartialSessionHistory(nsIPartialSHistory* aPartialHistory
   uint32_t offset = mCount;
   mCount += partialHistory->GetCount();
   mPartialHistories.AppendElement(partialHistory);
-  partialHistory->OnAttachGroupedSessionHistory(offset);
+  partialHistory->OnAttachGroupedSessionHistory(this, offset);
   mIndexOfActivePartialHistory = mPartialHistories.Count() - 1;
+
+  // Remove the prerendered documents, as there was a history navigation
+  PurgePrerendering();
 
   return NS_OK;
 }
@@ -100,6 +116,9 @@ GroupedSHistory::HandleSHistoryUpdate(nsIPartialSHistory* aPartial, bool aTrunca
       }
     }
   }
+
+  // Remove the prerendered documents, as there was a history navigation
+  PurgePrerendering();
 
   // If we should be truncating, make sure to purge any partialSHistories which
   // follow the one being updated.
@@ -209,16 +228,114 @@ GroupedSHistory::GroupedHistoryEnabled() {
   return Preferences::GetBool("browser.groupedhistory.enabled", false);
 }
 
+void
+GroupedSHistory::PurgePrerendering()
+{
+  nsTArray<PrerenderingHistory> histories = Move(mPrerenderingHistories);
+  // Remove the frameloaders which are owned by the prerendering history, and
+  // remove them from mPrerenderingHistories.
+  for (uint32_t i = 0; i < histories.Length(); ++i) {
+    nsCOMPtr<nsIFrameLoader> loader;
+    histories[i].mPartialHistory->GetOwnerFrameLoader(getter_AddRefs(loader));
+    if (loader) {
+      loader->RequestFrameLoaderClose();
+    }
+  }
+  MOZ_ASSERT(mPrerenderingHistories.IsEmpty());
+}
+
 NS_IMETHODIMP
 GroupedSHistory::CloseInactiveFrameLoaderOwners()
 {
-  for (int32_t i = 0; i < mPartialHistories.Count(); ++i) {
-    if (i != mIndexOfActivePartialHistory) {
+  MOZ_ASSERT(mIndexOfActivePartialHistory >= 0);
+  // Remove inactive frameloaders which are participating in the grouped shistory
+  for (uint32_t i = 0; i < mPartialHistories.Length(); ++i) {
+    if (i != static_cast<uint32_t>(mIndexOfActivePartialHistory)) {
       nsCOMPtr<nsIFrameLoader> loader;
       mPartialHistories[i]->GetOwnerFrameLoader(getter_AddRefs(loader));
       loader->RequestFrameLoaderClose();
     }
   }
+
+  PurgePrerendering();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GroupedSHistory::AddPrerenderingPartialSHistory(nsIPartialSHistory* aPrerendering, int32_t aId)
+{
+  NS_ENSURE_TRUE(aPrerendering && aId, NS_ERROR_UNEXPECTED);
+  aPrerendering->SetActiveState(nsIPartialSHistory::STATE_PRERENDER);
+  PrerenderingHistory history = { aPrerendering, aId };
+  mPrerenderingHistories.AppendElement(history);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GroupedSHistory::GetActiveFrameLoader(nsIFrameLoader** aFrameLoader)
+{
+  if (mIndexOfActivePartialHistory >= 0) {
+    return mPartialHistories[mIndexOfActivePartialHistory]->GetOwnerFrameLoader(aFrameLoader);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+GroupedSHistory::ActivatePrerendering(int32_t aId, JSContext* aCx, nsISupports** aPromise)
+{
+  NS_ENSURE_TRUE(aId && aCx && aPromise, NS_ERROR_UNEXPECTED);
+
+  // Look for an entry with the given aId in mPrerenderingHistories.
+  for (uint32_t i = 0; i < mPrerenderingHistories.Length(); ++i) {
+    if (mPrerenderingHistories[i].mId == aId) {
+      nsCOMPtr<nsIPartialSHistory> partialHistory = mPrerenderingHistories[i].mPartialHistory;
+      mPrerenderingHistories.RemoveElementAt(i);
+
+      nsCOMPtr<nsIFrameLoader> fl;
+      partialHistory->GetOwnerFrameLoader(getter_AddRefs(fl));
+      NS_ENSURE_TRUE(fl, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIFrameLoader> activeFl;
+      GetActiveFrameLoader(getter_AddRefs(activeFl));
+      NS_ENSURE_TRUE(activeFl, NS_ERROR_FAILURE);
+
+      nsresult rv = fl->MakePrerenderedLoaderActive();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return activeFl->AppendPartialSessionHistoryAndSwap(fl, aPromise);
+    }
+  }
+
+  // Generate a rejected promise as the entry was not found.
+  nsCOMPtr<nsIGlobalObject> go = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+  if (NS_WARN_IF(!go)) {
+    return NS_ERROR_FAILURE;
+  }
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Reject(go, aCx, JS::UndefinedHandleValue, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return NS_ERROR_FAILURE;
+  }
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GroupedSHistory::CancelPrerendering(int32_t aId)
+{
+  for (uint32_t i = 0; i < mPrerenderingHistories.Length(); ++i) {
+    if (mPrerenderingHistories[i].mId == aId) {
+      nsCOMPtr<nsIPartialSHistory> partialHistory = mPrerenderingHistories[i].mPartialHistory;
+      nsCOMPtr<nsIFrameLoader> fl;
+      partialHistory->GetOwnerFrameLoader(getter_AddRefs(fl));
+      if (fl) {
+        fl->RequestFrameLoaderClose();
+      }
+      mPrerenderingHistories.RemoveElementAt(i);
+    }
+  }
+
   return NS_OK;
 }
 
