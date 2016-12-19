@@ -7,6 +7,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/preferences/siteDataSettings.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/siteDataSettings.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/siteDataSettings.dtd" >
 
@@ -39,6 +40,17 @@
         <treecol flex="1" width="50" label="&usageCol.label;" id="usageCol"/>
       </listheader>
     </richlistbox>
+  </vbox>
+
+  <hbox align="start">
+    <button id="removeSelected" label="&removeSelected.label;" accesskey="&removeSelected.accesskey;"/>
+  </hbox>
+
+  <vbox align="end">
+    <hbox>
+        <button id="cancel" label="&cancel.label;" accesskey="&cancel.accesskey;"/>
+        <button id="save" label="&save.label;" accesskey="&save.accesskey;"/>
+    </hbox>
   </vbox>
 
 </window>
