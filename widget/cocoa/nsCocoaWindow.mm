@@ -1106,9 +1106,9 @@ void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Enable(bool aState)
+void
+nsCocoaWindow::Enable(bool aState)
 {
-  return NS_OK;
 }
 
 bool nsCocoaWindow::IsEnabled() const

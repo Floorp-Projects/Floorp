@@ -1546,7 +1546,8 @@ NS_IMETHODIMP
 nsWebBrowser::SetEnabled(bool aEnabled)
 {
   if (mInternalWidget) {
-    return mInternalWidget->Enable(aEnabled);
+    mInternalWidget->Enable(aEnabled);
+    return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
