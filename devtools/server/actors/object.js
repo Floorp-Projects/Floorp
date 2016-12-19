@@ -1158,7 +1158,11 @@ DebuggerServer.ObjectActorPreviewers = {
   }],
 
   RegExp: [function ({obj, hooks}, grip) {
-    let str = RegExp.prototype.toString.call(obj.unsafeDereference());
+    let str = DevToolsUtils.callPropertyOnObject(obj, "toString");
+    if (typeof str != "string") {
+      return false;
+    }
+
     grip.displayString = hooks.createValueGrip(str);
     return true;
   }],

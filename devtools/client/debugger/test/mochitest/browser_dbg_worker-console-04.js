@@ -1,4 +1,4 @@
-// Check that the date previewer works in the console of a worker debugger.
+// Check that the date and regexp previewers work in the console of a worker debugger.
 
 "use strict";
 
@@ -13,6 +13,11 @@ add_task(function* testPausedByConsole() {
   let jsterm = yield getSplitConsole(toolbox);
   let executed = yield jsterm.execute("new Date(0)");
   ok(executed.textContent.includes("1970-01-01T00:00:00.000Z"),
+      "Text for message appeared correct");
+
+  info("Check RegExp objects can be used in the console");
+  executed = yield jsterm.execute("new RegExp('.*')");
+  ok(executed.textContent.includes("/.*/"),
       "Text for message appeared correct");
 
   terminateWorkerInTab(tab, WORKER_URL);
