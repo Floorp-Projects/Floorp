@@ -7409,58 +7409,12 @@ class CGPerSignatureCall(CGThing):
         if needsCx:
             argsPre.append("cx")
 
-        # Hack for making Promise.prototype.then work well over Xrays.
-        if (not idlNode.isStatic() and
-            descriptor.name == "Promise" and
-            idlNode.isMethod() and
-            idlNode.identifier.name == "then"):
-            cgThings.append(CGGeneric(dedent(
-                """
-                JS::Rooted<JSObject*> calleeGlobal(cx, xpc::XrayAwareCalleeGlobal(&args.callee()));
-                """)))
-            argsPre.append("calleeGlobal")
-
         needsUnwrap = False
         argsPost = []
         if isConstructor:
-            if descriptor.name == "Promise":
-                # Hack for Promise for now: pass in our desired proto so the
-                # implementation can create the reflector with the right proto.
-                argsPost.append("desiredProto")
-                # Also, we do not want to enter the content compartment when the
-                # Promise constructor is called via Xrays, because we want to
-                # create our callback functions that we will hand to our caller
-                # in the Xray compartment.  The reason we want to do that is the
-                # following situation, over Xrays:
-                #
-                #   contentWindow.Promise.race([Promise.resolve(5)])
-                #
-                # Ideally this would work.  Internally, race() does a
-                # contentWindow.Promise.resolve() on everything in the array.
-                # Per spec, to support subclassing,
-                # contentWindow.Promise.resolve has to do:
-                #
-                #   var resolve, reject;
-                #   var p = new contentWindow.Promise(function(a, b) {
-                #    resolve = a;
-                #    reject = b;
-                #  });
-                #  resolve(arg);
-                #  return p;
-                #
-                # where "arg" is, in this case, the chrome-side return value of
-                # Promise.resolve(5).  But if the "resolve" function in that
-                # case were created in the content compartment, then calling it
-                # would wrap "arg" in an opaque wrapper, and that function tries
-                # to get .then off the argument, which would throw.  So we need
-                # to create the "resolve" function in the chrome compartment,
-                # and hence want to be running the entire Promise constructor
-                # (which creates that function) in the chrome compartment in
-                # this case. So don't set needsUnwrap here.
-            else:
-                needsUnwrap = True
-                needsUnwrappedVar = False
-                unwrappedVar = "obj"
+            needsUnwrap = True
+            needsUnwrappedVar = False
+            unwrappedVar = "obj"
         elif descriptor.interface.isJSImplemented():
             if not idlNode.isStatic():
                 needsUnwrap = True
@@ -7472,11 +7426,6 @@ class CGPerSignatureCall(CGThing):
             needsUnwrap = True
             needsUnwrappedVar = True
             argsPre.append("unwrappedObj ? *unwrappedObj : obj")
-
-        if idlNode.isStatic() and not isConstructor and descriptor.name == "Promise":
-            # Hack for Promise for now: pass in the "this" value to
-            # Promise static methods.
-            argsPre.append("args.thisv()")
 
         if needsUnwrap and needsUnwrappedVar:
             # We cannot assign into obj because it's a Handle, not a
