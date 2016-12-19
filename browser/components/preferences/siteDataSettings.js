@@ -25,27 +25,68 @@ let gSiteDataSettings = {
   _list: null,
 
   init() {
+    function setEventListener(id, eventType, callback) {
+      document.getElementById(id)
+              .addEventListener(eventType, callback.bind(gSiteDataSettings));
+    }
+
     this._list = document.getElementById("sitesList");
     SiteDataManager.getSites().then(sites => {
       this._sites = sites;
-      this._sortSites(this._sites, "decending");
+      let sortCol = document.getElementById("hostCol");
+      this._sortSites(this._sites, sortCol);
       this._buildSitesList(this._sites);
     });
+
+    setEventListener("hostCol", "click", this.onClickTreeCol);
+    setEventListener("usageCol", "click", this.onClickTreeCol);
+    setEventListener("statusCol", "click", this.onClickTreeCol);
   },
 
   /**
-   * Sort sites by usages
-   *
    * @param sites {Array}
-   * @param order {String} indicate to sort in the "decending" or "ascending" order
+   * @param col {XULElement} the <treecol> being sorted on
    */
-  _sortSites(sites, order) {
-    sites.sort((a, b) => {
-      if (order === "ascending") {
-        return a.usage - b.usage;
-      }
-      return b.usage - a.usage;
+  _sortSites(sites, col) {
+    let isCurrentSortCol = col.getAttribute("data-isCurrentSortCol")
+    let sortDirection = col.getAttribute("data-last-sortDirection") || "ascending";
+    if (isCurrentSortCol) {
+      // Sort on the current column, flip the sorting direction
+      sortDirection = sortDirection === "ascending" ? "descending" : "ascending";
+    }
+
+    let sortFunc = null;
+    switch (col.id) {
+      case "hostCol":
+        sortFunc = (a, b) => {
+          let aHost = a.uri.host.toLowerCase();
+          let bHost = b.uri.host.toLowerCase();
+          return aHost.localeCompare(bHost);
+        }
+        break;
+
+      case "statusCol":
+        sortFunc = (a, b) => a.status - b.status;
+        break;
+
+      case "usageCol":
+        sortFunc = (a, b) => a.usage - b.usage;
+        break;
+    }
+    if (sortDirection === "descending") {
+      sites.sort((a, b) => sortFunc(b, a));
+    } else {
+      sites.sort(sortFunc);
+    }
+
+    let cols = this._list.querySelectorAll("treecol");
+    cols.forEach(c => {
+      c.removeAttribute("sortDirection");
+      c.removeAttribute("data-isCurrentSortCol");
     });
+    col.setAttribute("data-isCurrentSortCol", true);
+    col.setAttribute("sortDirection", sortDirection);
+    col.setAttribute("data-last-sortDirection", sortDirection);
   },
 
   _buildSitesList(sites) {
@@ -65,5 +106,10 @@ let gSiteDataSettings = {
       item.setAttribute("usage", prefStrBundle.getFormattedString("siteUsage", size));
       this._list.appendChild(item);
     }
+  },
+
+  onClickTreeCol(e) {
+    this._sortSites(this._sites, e.target);
+    this._buildSitesList(this._sites);
   }
 };
