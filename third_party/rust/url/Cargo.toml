@@ -1,7 +1,7 @@
 [package]
 
 name = "url"
-version = "1.2.1"
+version = "1.2.4"
 authors = ["The rust-url developers"]
 
 description = "URL library for Rust, based on the WHATWG URL Standard"

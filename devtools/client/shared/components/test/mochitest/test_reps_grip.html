@@ -31,6 +31,7 @@ window.onload = Task.async(function* () {
     yield testProxy();
     yield testArrayBuffer();
     yield testSharedArrayBuffer();
+    yield testApplicationCache();
 
     // Test property iterator
     yield testMaxProps();
@@ -282,6 +283,43 @@ window.onload = Task.async(function* () {
       {
         mode: MODE.LONG,
         expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testApplicationCache() {
+    // Test object: `window.applicationCache`
+    const testName = "testApplicationCache";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub(testName);
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Grip.rep, `Rep correctly selects ${Grip.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput =
+      "OfflineResourceList { status: 0, onchecking: null, onerror: null, 7 more… }";
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: "OfflineResourceList",
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: "OfflineResourceList { status: 0, onchecking: null, " +
+          "onerror: null, onnoupdate: null, ondownloading: null, onprogress: null, " +
+          "onupdateready: null, oncached: null, onobsolete: null, mozItems: [] }",
       }
     ];
 
@@ -873,6 +911,108 @@ window.onload = Task.async(function* () {
                 "getterValue": 5,
                 "getterPrototypeLevel": 1,
                 "enumerable": false,
+                "writable": true
+              }
+            }
+          }
+        };
+      case "testApplicationCache":
+        return {
+          "type": "object",
+          "actor": "server2.conn1.child2/obj45",
+          "class": "OfflineResourceList",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {
+              "status": {
+                "getterValue": 0,
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "onchecking": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "onerror": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "onnoupdate": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "ondownloading": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "onprogress": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "onupdateready": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "oncached": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "onobsolete": {
+                "getterValue": {
+                  "type": "null"
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
+                "writable": true
+              },
+              "mozItems": {
+                "getterValue": {
+                  "type": "object",
+                  "actor": "server2.conn1.child2/obj46",
+                  "class": "DOMStringList",
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "ownPropertyLength": 0,
+                  "preview": {
+                    "kind": "ArrayLike",
+                    "length": 0
+                  }
+                },
+                "getterPrototypeLevel": 1,
+                "enumerable": true,
                 "writable": true
               }
             }
