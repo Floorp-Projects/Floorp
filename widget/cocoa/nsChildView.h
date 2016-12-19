@@ -318,7 +318,7 @@ public:
   virtual void            Resize(double aX, double aY,
                                  double aWidth, double aHeight, bool aRepaint) override;
 
-  NS_IMETHOD              Enable(bool aState) override;
+  virtual void            Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
   NS_IMETHOD              SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;

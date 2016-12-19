@@ -842,9 +842,8 @@ class nsIWidget : public nsISupports
      * Enable or disable this Widget
      *
      * @param aState true to enable the Widget, false to disable it.
-     *
      */
-    NS_IMETHOD Enable(bool aState) = 0;
+    virtual void Enable(bool aState) = 0;
 
     /**
      * Ask whether the widget is enabled

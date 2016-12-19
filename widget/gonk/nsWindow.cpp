@@ -417,10 +417,9 @@ nsWindow::Resize(double aX,
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Enable(bool aState)
 {
-    return NS_OK;
 }
 
 bool

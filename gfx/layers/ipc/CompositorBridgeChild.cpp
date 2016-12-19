@@ -474,8 +474,7 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
                        bounds.width, bounds.height, true);
       }
 
-      rv = widget->Enable(isVisible);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
+      widget->Enable(isVisible);
 
       // visible state - updated after clipping, prior to invalidating
       rv = widget->Show(isVisible);

@@ -36,9 +36,7 @@ public:
                                          override;
     virtual void Destroy() override;
     NS_IMETHOD Show(bool aState) override;
-    NS_IMETHOD              Enable(bool aState) override {
-        return NS_OK;
-    }
+    virtual void            Enable(bool aState) override {}
     virtual bool            IsEnabled() const override {
         return true;
     }

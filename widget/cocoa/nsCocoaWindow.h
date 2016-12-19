@@ -239,7 +239,7 @@ public:
 
     NS_IMETHOD              Show(bool aState) override;
     virtual nsIWidget*      GetSheetWindowParent(void) override;
-    NS_IMETHOD              Enable(bool aState) override;
+    virtual void            Enable(bool aState) override;
     virtual bool            IsEnabled() const override;
     virtual void            SetModal(bool aState) override;
     virtual void            SetFakeModal(bool aState) override;
