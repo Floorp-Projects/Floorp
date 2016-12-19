@@ -1466,7 +1466,8 @@ cairo_cff_font_write_cid_fontdict (cairo_cff_font_t *font)
 {
     unsigned int i;
     cairo_int_status_t status;
-    uint32_t *offset_array;
+    unsigned int offset_array;
+    uint32_t *offset_array_ptr;
     int offset_base;
     uint16_t count;
     uint8_t offset_size = 4;
@@ -1479,19 +1480,25 @@ cairo_cff_font_write_cid_fontdict (cairo_cff_font_t *font)
     status = _cairo_array_append (&font->output, &offset_size);
     if (unlikely (status))
         return status;
+
+    offset_array = _cairo_array_num_elements (&font->output);
     status = _cairo_array_allocate (&font->output,
                                     (font->num_subset_fontdicts + 1)*offset_size,
-                                    (void **) &offset_array);
+                                    (void **) &offset_array_ptr);
     if (unlikely (status))
         return status;
     offset_base = _cairo_array_num_elements (&font->output) - 1;
-    *offset_array++ = cpu_to_be32(1);
+    *offset_array_ptr = cpu_to_be32(1);
+    offset_array += sizeof(uint32_t);
     for (i = 0; i < font->num_subset_fontdicts; i++) {
         status = cff_dict_write (font->fd_dict[font->fd_subset_map[i]],
                                  &font->output);
         if (unlikely (status))
             return status;
-        *offset_array++ = cpu_to_be32(_cairo_array_num_elements (&font->output) - offset_base);
+
+	offset_array_ptr = (uint32_t *) _cairo_array_index (&font->output, offset_array);
+        *offset_array_ptr = cpu_to_be32(_cairo_array_num_elements (&font->output) - offset_base);
+	offset_array += sizeof(uint32_t);
     }
 
     return CAIRO_STATUS_SUCCESS;
