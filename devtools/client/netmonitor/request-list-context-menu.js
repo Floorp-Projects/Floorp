@@ -19,6 +19,7 @@ const {
   getUrlQuery,
   parseQueryString,
 } = require("./request-utils");
+const Actions = require("./actions/index");
 
 loader.lazyRequireGetter(this, "HarExporter",
   "devtools/client/netmonitor/har/har-exporter", true);
@@ -35,6 +36,13 @@ RequestListContextMenu.prototype = {
 
   get items() {
     return NetMonitorView.RequestsMenu.items;
+  },
+
+  /**
+   * Initialization function, called when the RequestsMenu is initialized.
+   */
+  initialize: function (store) {
+    this.store = store;
   },
 
   /**
@@ -173,7 +181,7 @@ RequestListContextMenu.prototype = {
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
       visible: !!NetMonitorController.supportsPerfStats,
-      click: () => NetMonitorView.toggleFrontendMode()
+      click: () => this.store.dispatch(Actions.openStatistics(true))
     }));
 
     menu.popup(screenX, screenY, NetMonitorController._toolbox);

@@ -70,6 +70,7 @@ RequestsMenuView.prototype = {
     this.store = store;
 
     this.contextMenu = new RequestListContextMenu();
+    this.contextMenu.initialize(store);
 
     Prefs.filters.forEach(type => store.dispatch(Actions.toggleFilterType(type)));
 
