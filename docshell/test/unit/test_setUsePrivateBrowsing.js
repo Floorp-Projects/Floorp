@@ -53,13 +53,13 @@ add_task(function*() {
     Assert.throws(() => { docShell.setOriginAttributes(oa); },
                   /NS_ERROR_FAILURE/,
                   "Should not be able to change origin attributes after initial load has started");
+
+    equal(loadContext.usePrivateBrowsing, false,
+          "Should not be able to change private browsing state after initial load has started");
+
+    loadContext.usePrivateBrowsing = false;
+    ok(true, "Should be able to set usePrivateBrowsing to its current value even after initial load");
   }
-
-  equal(loadContext.usePrivateBrowsing, false,
-        "Should not be able to change private browsing state after initial load has started");
-
-  loadContext.usePrivateBrowsing = false;
-  ok(true, "Should be able to set usePrivateBrowsing to its current value even after initial load");
 
   webNav.close();
 });
