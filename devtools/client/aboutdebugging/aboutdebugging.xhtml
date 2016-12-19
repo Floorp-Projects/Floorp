@@ -5,6 +5,7 @@
 
 <!DOCTYPE html [
 <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
 <!ENTITY % toolboxDTD SYSTEM "chrome://devtools/locale/toolbox.dtd"> %toolboxDTD;
 <!ENTITY % aboutdebuggingDTD SYSTEM "chrome://devtools/locale/aboutdebugging.dtd"> %aboutdebuggingDTD;
 ]>
@@ -17,6 +18,6 @@
     <script type="application/javascript" src="resource://devtools/client/shared/vendor/react.js"></script>
     <script type="application/javascript;version=1.8" src="chrome://devtools/content/aboutdebugging/initializer.js"></script>
   </head>
-  <body id="body">
+  <body id="body" dir="&locale.dir;">
   </body>
 </html>
