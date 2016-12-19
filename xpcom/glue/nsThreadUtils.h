@@ -1048,14 +1048,6 @@ public:
     return GetNextThreadName(nsDependentCString(aPoolName, LEN - 1));
   }
 
-  /**
-   * Creates and sets next thread name as "<aPoolName> #<n>"
-   * on the specified thread.  If no thread is specified (aThread
-   * is null) then the name is synchronously set on the current thread.
-   */
-  void SetThreadPoolName(const nsACString& aPoolName,
-                         nsIThread* aThread = nullptr);
-
 private:
   mozilla::Atomic<uint32_t> mCounter;
 
