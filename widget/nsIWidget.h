@@ -1738,7 +1738,7 @@ public:
      * @return If the notification is mouse button event and it's consumed by
      *         IME, this returns NS_SUCCESS_EVENT_CONSUMED.
      */
-    NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) = 0;
+    virtual nsresult NotifyIME(const IMENotification& aIMENotification) = 0;
 
     /**
      * Start plugin IME.  If this results in a string getting committed, the
