@@ -34,12 +34,8 @@ add_task(function* test_working() {
 
 // Checks the cases that should be broken
 add_task(function* test_broken() {
-  function promiseInstallForFile(file) {
-    return new Promise(resolve => AddonManager.getInstallForFile(file, resolve));
-  }
-
-  let promises = [promiseInstallForFile(do_get_file(DATA + "long_63_hash.xpi")),
-                  promiseInstallForFile(do_get_file(DATA + "long_64_hash.xpi"))];
+  let promises = [AddonManager.getInstallForFile(do_get_file(DATA + "long_63_hash.xpi")),
+                  AddonManager.getInstallForFile(do_get_file(DATA + "long_64_hash.xpi"))];
   let installs = yield Promise.all(promises);
 
   for (let install of installs) {

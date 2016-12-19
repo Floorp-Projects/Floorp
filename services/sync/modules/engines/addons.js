@@ -759,10 +759,8 @@ class AddonValidator extends CollectionValidator {
 
   getClientItems() {
     return Promise.all([
-      new Promise(resolve =>
-        AddonManager.getAllAddons(resolve)),
-      new Promise(resolve =>
-        AddonManager.getAddonsWithOperationsByTypes(["extension", "theme"], resolve)),
+      AddonManager.getAllAddons(),
+      AddonManager.getAddonsWithOperationsByTypes(["extension", "theme"]),
     ]).then(([installed, addonsWithPendingOperation]) => {
       // Addons pending install won't be in the first list, but addons pending
       // uninstall/enable/disable will be in both lists.

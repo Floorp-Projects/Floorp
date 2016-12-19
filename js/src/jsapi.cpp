@@ -4835,7 +4835,7 @@ JS::CallOriginalPromiseResolve(JSContext* cx, JS::HandleValue resolutionValue)
     assertSameCompartment(cx, resolutionValue);
 
     RootedObject promise(cx, PromiseObject::unforgeableResolve(cx, resolutionValue));
-    MOZ_ASSERT_IF(promise, promise->is<PromiseObject>());
+    MOZ_ASSERT_IF(promise, CheckedUnwrap(promise)->is<PromiseObject>());
     return promise;
 }
 
@@ -4847,7 +4847,7 @@ JS::CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue)
     assertSameCompartment(cx, rejectionValue);
 
     RootedObject promise(cx, PromiseObject::unforgeableReject(cx, rejectionValue));
-    MOZ_ASSERT_IF(promise, promise->is<PromiseObject>());
+    MOZ_ASSERT_IF(promise, CheckedUnwrap(promise)->is<PromiseObject>());
     return promise;
 }
 

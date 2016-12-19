@@ -132,7 +132,7 @@ add_task(function*() {
   yield postponed;
 
   // addon upgrade has been delayed.
-  let addon_postponed = yield promiseAddonByID(IGNORE_ID, NORMAL_ID);
+  let addon_postponed = yield promiseAddonByID(IGNORE_ID);
   do_check_neq(addon_postponed, null);
   do_check_eq(addon_postponed.version, "1.0");
   do_check_eq(addon_postponed.name, "System Test Delay Update Ignore");

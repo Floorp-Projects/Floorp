@@ -15,8 +15,7 @@ Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_PRO
 
 // Installing an add-on through the API should mark it as seen
 add_task(function*() {
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
@@ -32,8 +31,7 @@ add_task(function*() {
   do_check_true(addon.seen);
 
   // Installing an update should retain that
-  install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  install = yield promiseInstallFile(do_get_addon("test_bootstrap1_2"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
@@ -109,8 +107,7 @@ add_task(function*() {
   do_check_false(addon.seen);
 
   // Updating through the API shouldn't change the state
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_2"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
@@ -190,8 +187,7 @@ add_task(function*() {
   do_check_true(addon.seen);
 
   // Updating through the API shouldn't change the state
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_2"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 

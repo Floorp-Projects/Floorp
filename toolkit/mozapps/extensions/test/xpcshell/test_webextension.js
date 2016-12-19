@@ -317,7 +317,7 @@ add_task(function* test_experiments_dependencies() {
 
   yield promiseInstallAllFiles([addonFile]);
 
-  let addon = yield new Promise(resolve => AddonManager.getAddonByID("meh@experiment", resolve));
+  let addon = yield AddonManager.getAddonByID("meh@experiment");
 
   deepEqual(addon.dependencies, ["meh@experiments.addons.mozilla.org"],
             "Addon should have the expected dependencies");
@@ -344,11 +344,11 @@ add_task(function* test_experiments_api() {
 
   yield promiseInstallAllFiles([addonFile]);
 
-  let addons = yield new Promise(resolve => AddonManager.getAddonsByTypes(["apiextension"], resolve));
+  let addons = yield AddonManager.getAddonsByTypes(["apiextension"]);
   let addon = addons.pop();
   equal(addon.id, extensionId, "Add-on should be installed as an API extension");
 
-  addons = yield new Promise(resolve => AddonManager.getAddonsByTypes(["extension"], resolve));
+  addons = yield AddonManager.getAddonsByTypes(["extension"]);
   equal(addons.pop().id, extensionId, "Add-on type should be aliased to extension");
 
   addon.uninstall();

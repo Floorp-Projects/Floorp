@@ -235,7 +235,7 @@ SVGImageElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 //----------------------------------------------------------------------
-// nsSVGPathGeometryElement methods
+// SVGGeometryElement methods
 
 /* For the purposes of the update/invalidation logic pretend to
    be a rectangle. */

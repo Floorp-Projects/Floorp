@@ -52,7 +52,7 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
                       updateMultiprocessCompatible;
 
     let xpifile = createTempXPIFile(addonData);
-    let install = yield new Promise(resolve => AddonManager.getInstallForFile(xpifile, resolve));
+    let install = yield AddonManager.getInstallForFile(xpifile);
     do_check_eq(install.addon.multiprocessCompatible, !!multiprocessCompatible);
     do_check_eq(install.addon.mpcOptedOut, multiprocessCompatible === false)
     yield promiseCompleteAllInstalls([install]);
