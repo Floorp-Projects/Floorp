@@ -19,7 +19,7 @@ on [supported platforms](#supported-firefoxen).
 ## Supported Firefoxen
 
 Marionette and geckodriver are not yet feature complete.
-This means it does not yet offer full conformance
+This means that they do not yet offer full conformance
 with the [WebDriver standard](https://w3c.github.io/webdriver/webdriver-spec.html)
 or complete compatibility with [Selenium](http://www.seleniumhq.org/).
 
