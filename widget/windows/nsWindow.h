@@ -154,10 +154,10 @@ public:
   virtual nsresult        MakeFullScreen(bool aFullScreen,
                                          nsIScreen* aScreen = nullptr) override;
   virtual void            HideWindowChrome(bool aShouldHide) override;
-  NS_IMETHOD              Invalidate(bool aEraseBackground = false,
+  virtual void            Invalidate(bool aEraseBackground = false,
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);
-  NS_IMETHOD              Invalidate(const LayoutDeviceIntRect& aRect);
+  virtual void            Invalidate(const LayoutDeviceIntRect& aRect);
   virtual void*           GetNativeData(uint32_t aDataType) override;
   void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType) override;
