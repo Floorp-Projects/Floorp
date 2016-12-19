@@ -159,7 +159,7 @@ class DefaultWeakMap extends WeakMap {
 
   get(key) {
     if (!this.has(key)) {
-      this.set(key, this.defaultConstructor());
+      this.set(key, this.defaultConstructor(key));
     }
     return super.get(key);
   }
