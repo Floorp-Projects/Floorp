@@ -314,6 +314,46 @@ and enable verbose logging:
 }
 ```
 
+## Usage
+
+Usage steps are [documented on MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver),
+but the gist of it is this:
+
+	% geckodriver -b /usr/bin/firefox
+
+Or if you’re on Mac:
+
+	% geckodriver -b /Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
+
+You may also see all flags and options
+available in geckodriver by viewing the help message:
+
+	% geckodriver -h
+	geckodriver 0.11.1
+	WebDriver implementation for Firefox.
+
+	USAGE:
+	    geckodriver [FLAGS] [OPTIONS]
+
+	FLAGS:
+	        --connect-existing    Connect to an existing Firefox instance
+	    -h, --help                Prints help information
+	    -v                        Log level verbosity (-v for debug and -vv for
+	                              trace level)
+	    -V, --version             Prints version and copying information
+
+	OPTIONS:
+	    -b, --binary <BINARY>           Path to the Firefox binary
+	        --log <LEVEL>
+	            Set Gecko log level [values: fatal, error, warn, info, config,
+	            debug, trace]
+	        --marionette-port <PORT>
+	            Port to use to connect to Gecko (default: random free port)
+	        --host <HOST>
+	            Host ip to use for WebDriver server (default: 127.0.0.1)
+	    -p, --port <PORT>
+	            Port to use for WebDriver server (default: 4444)
+
 ## Building
 
 geckodriver is written in [Rust](https://www.rust-lang.org/)
@@ -327,14 +367,3 @@ ensure you do a compilation with optimisations:
 Or if you want a non-optimised binary for debugging:
 
     % cargo build
-
-## Usage
-
-Usage steps are [documented on MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver),
-but the gist of it is this:
-
-    % geckodriver -b /usr/bin/firefox
-
-Or if you’re on Mac:
-
-    % geckodriver -b /Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
