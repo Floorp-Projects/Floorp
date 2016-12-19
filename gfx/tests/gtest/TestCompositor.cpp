@@ -68,10 +68,10 @@ public:
                                  nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
   NS_IMETHOD              Show(bool aState) override { return NS_OK; }
   virtual bool            IsVisible() const override { return true; }
-  NS_IMETHOD              Move(double aX, double aY) override { return NS_OK; }
-  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override { return NS_OK; }
-  NS_IMETHOD              Resize(double aX, double aY,
-                                 double aWidth, double aHeight, bool aRepaint) override { return NS_OK; }
+  virtual void            Move(double aX, double aY) override {}
+  virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override {}
+  virtual void            Resize(double aX, double aY,
+                                 double aWidth, double aHeight, bool aRepaint) override {}
 
   NS_IMETHOD              Enable(bool aState) override { return NS_OK; }
   virtual bool            IsEnabled() const override { return true; }

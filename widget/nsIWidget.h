@@ -721,7 +721,7 @@ class nsIWidget : public nsISupports
      * @param aY the new y position expressed in the parent's coordinate system
      *
      **/
-    NS_IMETHOD Move(double aX, double aY) = 0;
+    virtual void Move(double aX, double aY) = 0;
 
     /**
      * Reposition this widget so that the client area has the given offset.
@@ -744,11 +744,10 @@ class nsIWidget : public nsISupports
      * @param aWidth  the new width expressed in the parent's coordinate system
      * @param aHeight the new height expressed in the parent's coordinate system
      * @param aRepaint whether the widget should be repainted
-     *
      */
-    NS_IMETHOD Resize(double aWidth,
-                      double aHeight,
-                      bool   aRepaint) = 0;
+    virtual void Resize(double aWidth,
+                        double aHeight,
+                        bool   aRepaint) = 0;
 
     /**
      * Move or resize this widget. Any size constraints set for the window by
@@ -761,11 +760,11 @@ class nsIWidget : public nsISupports
      * @param aRepaint whether the widget should be repainted if the size changes
      *
      */
-    NS_IMETHOD Resize(double aX,
-                      double aY,
-                      double aWidth,
-                      double aHeight,
-                      bool   aRepaint) = 0;
+    virtual void Resize(double aX,
+                        double aY,
+                        double aWidth,
+                        double aHeight,
+                        bool   aRepaint) = 0;
 
     /**
      * Resize the widget so that the inner client area has the given size.

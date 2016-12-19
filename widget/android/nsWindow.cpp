@@ -1748,33 +1748,33 @@ nsWindow::ConstrainPosition(bool aAllowSlop,
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Move(double aX,
                double aY)
 {
     if (IsTopLevel())
-        return NS_OK;
+        return;
 
-    return Resize(aX,
-                  aY,
-                  mBounds.width,
-                  mBounds.height,
-                  true);
+    Resize(aX,
+           aY,
+           mBounds.width,
+           mBounds.height,
+           true);
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aWidth,
                  double aHeight,
                  bool aRepaint)
 {
-    return Resize(mBounds.x,
-                  mBounds.y,
-                  aWidth,
-                  aHeight,
-                  aRepaint);
+    Resize(mBounds.x,
+           mBounds.y,
+           aWidth,
+           aHeight,
+           aRepaint);
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aX,
                  double aY,
                  double aWidth,
@@ -1800,11 +1800,9 @@ nsWindow::Resize(double aX,
 
     nsIWidgetListener* listener = GetWidgetListener();
     if (mAwaitingFullScreen && listener) {
-      listener->FullscreenChanged(mIsFullScreen);
-      mAwaitingFullScreen = false;
+        listener->FullscreenChanged(mIsFullScreen);
+        mAwaitingFullScreen = false;
     }
-
-    return NS_OK;
 }
 
 void
