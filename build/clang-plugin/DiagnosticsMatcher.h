@@ -9,7 +9,7 @@
 
 class DiagnosticsMatcher {
 public:
-  DiagnosticsMatcher();
+  DiagnosticsMatcher(CompilerInstance& CI);
 
   ASTConsumerPtr makeASTConsumer() { return AstMatcher.newASTConsumer(); }
 
