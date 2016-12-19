@@ -674,14 +674,14 @@ udat_close(UDateFormat* format)
     MOZ_CRASH("udat_close: Intl API disabled");
 }
 
-} // anonymous namespace
-
-static int32_t
+int32_t
 udat_getSymbols(const UDateFormat *fmt, UDateFormatSymbolType type, int32_t symbolIndex,
                 UChar *result, int32_t resultLength, UErrorCode *status)
 {
     MOZ_CRASH("udat_getSymbols: Intl API disabled");
 }
+
+} // anonymous namespace
 
 #endif
 
@@ -1835,6 +1835,8 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
 
 using FieldType = ImmutablePropertyNamePtr JSAtomState::*;
 
+#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
+
 static FieldType
 GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
 {
@@ -1880,6 +1882,7 @@ GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
         MOZ_ASSERT_UNREACHABLE("unexpected permill field found, even though "
                                "we don't use any user-defined patterns that "
                                "would require a permill field");
+        break;
 
       case UNUM_EXPONENT_SYMBOL_FIELD:
       case UNUM_EXPONENT_SIGN_FIELD:
@@ -1887,18 +1890,18 @@ GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
         MOZ_ASSERT_UNREACHABLE("exponent field unexpectedly found in "
                                "formatted number, even though UNUM_SCIENTIFIC "
                                "and scientific notation were never requested");
+        break;
 
       case UNUM_FIELD_COUNT:
         MOZ_ASSERT_UNREACHABLE("format field sentinel value returned by "
                                "iterator!");
+        break;
     }
 
     MOZ_ASSERT_UNREACHABLE("unenumerated, undocumented format field returned "
                            "by iterator");
     return nullptr;
 }
-
-#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
 
 static bool
 intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue result)
