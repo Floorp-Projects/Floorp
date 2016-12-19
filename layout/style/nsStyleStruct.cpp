@@ -918,7 +918,7 @@ nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const
   if (!DefinitelyEqualURIs(mMarkerEnd, aNewData.mMarkerEnd) ||
       !DefinitelyEqualURIs(mMarkerMid, aNewData.mMarkerMid) ||
       !DefinitelyEqualURIs(mMarkerStart, aNewData.mMarkerStart)) {
-    // Markers currently contribute to nsSVGPathGeometryFrame::mRect,
+    // Markers currently contribute to SVGGeometryFrame::mRect,
     // so we need a reflow as well as a repaint. No intrinsic sizes need
     // to change, so nsChangeHint_NeedReflow is sufficient.
     return nsChangeHint_UpdateEffects |
@@ -939,7 +939,7 @@ nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const
       // stroke (in which case whether we have fill or not is significant to frame
       // bounds) and whether we have fill or not just changed. In either case we
       // need to reflow so the frame rect is updated.
-      // XXXperf this is a waste on non nsSVGPathGeometryFrames.
+      // XXXperf this is a waste on non SVGGeometryFrames.
       hint |= nsChangeHint_NeedReflow |
               nsChangeHint_NeedDirtyReflow; // XXX remove me: bug 876085
     }
@@ -949,10 +949,10 @@ nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const
     }
   }
 
-  // Stroke currently contributes to nsSVGPathGeometryFrame::mRect, so
+  // Stroke currently contributes to SVGGeometryFrame::mRect, so
   // we need a reflow here. No intrinsic sizes need to change, so
   // nsChangeHint_NeedReflow is sufficient.
-  // Note that stroke-dashoffset does not affect nsSVGPathGeometryFrame::mRect.
+  // Note that stroke-dashoffset does not affect SVGGeometryFrame::mRect.
   // text-anchor changes also require a reflow since it changes frames' rects.
   if (mStrokeWidth           != aNewData.mStrokeWidth           ||
       mStrokeMiterlimit      != aNewData.mStrokeMiterlimit      ||
@@ -1186,9 +1186,9 @@ nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aNewData) const
     // XXXjwatt: why NS_STYLE_HINT_REFLOW? Isn't that excessive?
     hint |= NS_STYLE_HINT_REFLOW;
   } else if (mVectorEffect  != aNewData.mVectorEffect) {
-    // Stroke currently affects nsSVGPathGeometryFrame::mRect, and
+    // Stroke currently affects SVGGeometryFrame::mRect, and
     // vector-effect affect stroke. As a result we need to reflow if
-    // vector-effect changes in order to have nsSVGPathGeometryFrame::
+    // vector-effect changes in order to have SVGGeometryFrame::
     // ReflowSVG called to update its mRect. No intrinsic sizes need
     // to change so nsChangeHint_NeedReflow is sufficient.
     hint |= nsChangeHint_NeedReflow |
@@ -4021,8 +4021,8 @@ nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
   }
 
   if (mPointerEvents != aNewData.mPointerEvents) {
-    // nsSVGPathGeometryFrame's mRect depends on stroke _and_ on the value
-    // of pointer-events. See nsSVGPathGeometryFrame::ReflowSVG's use of
+    // SVGGeometryFrame's mRect depends on stroke _and_ on the value
+    // of pointer-events. See SVGGeometryFrame::ReflowSVG's use of
     // GetHitTestFlags. (Only a reflow, no visual change.)
     hint |= nsChangeHint_NeedReflow |
             nsChangeHint_NeedDirtyReflow; // XXX remove me: bug 876085

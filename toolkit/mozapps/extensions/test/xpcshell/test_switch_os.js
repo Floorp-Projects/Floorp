@@ -16,8 +16,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 add_task(function*() {
   startupManager();
 
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
-  yield promiseCompleteAllInstalls([install]);
+  yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);

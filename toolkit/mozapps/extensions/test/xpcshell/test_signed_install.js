@@ -75,9 +75,7 @@ function createBrokenAddonRemove(file) {
 }
 
 function createInstall(url) {
-  return new Promise(resolve => {
-    AddonManager.getInstallForURL(url, resolve, "application/x-xpinstall");
-  });
+  return AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
 }
 
 function serveUpdateRDF(leafName) {

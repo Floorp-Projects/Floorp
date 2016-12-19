@@ -7,9 +7,9 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.NetworkUtils;
 import org.mozilla.gecko.util.NetworkUtils.ConnectionSubType;
 import org.mozilla.gecko.util.NetworkUtils.ConnectionType;
@@ -42,7 +42,7 @@ import android.util.Log;
  * Logic is implemented as a state machine, so see the transition matrix to figure out what happens when.
  * This class depends on access to the context, so only use after GeckoAppShell has been initialized.
  */
-public class GeckoNetworkManager extends BroadcastReceiver implements NativeEventListener {
+public class GeckoNetworkManager extends BroadcastReceiver implements BundleEventListener {
     private static final String LOGTAG = "GeckoNetworkManager";
 
     private static final String LINK_DATA_CHANGED = "changed";
@@ -89,14 +89,14 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     }
 
     private GeckoNetworkManager() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerUiThreadListener(this,
                 "Wifi:Enable",
                 "Wifi:GetIPAddress");
     }
 
     private void onDestroy() {
         handleManagerEvent(ManagerEvent.stop);
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
                 "Wifi:Enable",
                 "Wifi:GetIPAddress");
     }
@@ -395,26 +395,29 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         }
     }
 
-    @Override
+    @Override // BundleEventListener
     /**
      * Handles native messages, not part of the state machine flow.
      */
-    public void handleMessage(final String event, final NativeJSObject message,
+    public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
         final Context applicationContext = GeckoAppShell.getApplicationContext();
         switch (event) {
             case "Wifi:Enable":
-                final WifiManager mgr = (WifiManager) applicationContext.getSystemService(Context.WIFI_SERVICE);
+                final WifiManager mgr = (WifiManager)
+                        applicationContext.getSystemService(Context.WIFI_SERVICE);
 
                 if (!mgr.isWifiEnabled()) {
                     mgr.setWifiEnabled(true);
-                } else {
-                    // If Wifi is enabled, maybe you need to select a network
-                    Intent intent = new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    applicationContext.startActivity(intent);
+                    break;
                 }
+
+                // If Wifi is enabled, maybe you need to select a network
+                Intent intent = new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                applicationContext.startActivity(intent);
                 break;
+
             case "Wifi:GetIPAddress":
                 getWifiIPAddress(callback);
                 break;
