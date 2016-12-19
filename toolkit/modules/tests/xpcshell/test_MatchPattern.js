@@ -89,4 +89,7 @@ function run_test()
   pass({url:"http://mozilla.org", pattern:["http://mozilla.org/", "http://mozilla.com/"]});
   pass({url:"http://mozilla.com", pattern:["http://mozilla.org/", "http://mozilla.com/"]});
   fail({url:"http://mozilla.biz", pattern:["http://mozilla.org/", "http://mozilla.com/"]});
+
+  // Match url with fragments.
+  pass({url: "http://mozilla.org/base#some-fragment", pattern: "http://mozilla.org/base"});
 }
