@@ -187,10 +187,11 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in nsIInputStream aHeadersStream,
                               in unsigned long aLoadFlags,
                               in nsISHEntry aSHEntry,
-                              in boolean firstParty,
+                              in boolean aFirstParty,
                               in AString aSrcdoc,
                               in nsIDocShell aSourceDocShell,
                               in nsIURI aBaseURI,
+                              in boolean aCheckForPrerender,
                               out nsIDocShell aDocShell,
                               out nsIRequest aRequest);
 
@@ -674,6 +675,13 @@ interface nsIDocShell : nsIDocShellTreeItem
   void createAboutBlankContentViewer(in nsIPrincipal aPrincipal);
 
   /**
+   * Like createAboutBlankContentViewer, but don't check for permit unload.
+   * Only used by special session history operation.
+   * @param aPrincipal the principal to use for the new document.
+   */
+  [noscript] void forceCreateAboutBlankContentViewer(in nsIPrincipal aPrincipal);
+
+  /**
    * Upon getting, returns the canonical encoding label of the document
    * currently loaded into this docshell.
    *
@@ -1107,7 +1115,12 @@ interface nsIDocShell : nsIDocShellTreeItem
    * A DocShell is locked to the current process if it would be
    * content-observable for a process switch to occur before performing a
    * navigation load. It is important to ensure that a DocShell is not process
-   * locked before perfoming process changing loads.
+   * locked before performing process changing loads.
+   */
+  [infallible] readonly attribute boolean isProcessLocked;
+  /**
+   * Return PROCESS_LOCK_NONE if docShell is not locked to current process,
+   * otherwise return the reason why process is locked.
    */
   [infallible] readonly attribute unsigned long processLockReason;
   /**
