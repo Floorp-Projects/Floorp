@@ -19,7 +19,7 @@ PresentationNetworkHelper.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationNetworkHelper]),
 
   getWifiIPAddress: function(aListener) {
-    Messaging.sendRequestForResult({type: "Wifi:GetIPAddress"})
+    EventDispatcher.instance.sendRequestForResult({type: "Wifi:GetIPAddress"})
              .then(result => aListener.onGetWifiIPAddress(result),
                    err => aListener.onError(err));
   }

@@ -77,6 +77,6 @@ add_task(function*() {
   // certificate database
   overrideCertDB();
 
-  let install = yield new Promise(resolve => AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), resolve));
+  let install = yield AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
 });

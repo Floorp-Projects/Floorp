@@ -30,6 +30,7 @@ import org.mozilla.gecko.distribution.ReferrerDescriptor;
 import org.mozilla.gecko.distribution.ReferrerReceiver;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
@@ -363,26 +364,24 @@ public class testDistribution extends ContentProviderTest {
     }
 
     private void checkSearchPlugin() {
-        Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
+        Actions.RepeatedEventExpecter eventExpecter =
+                mActions.expectGlobalEvent(Actions.EventType.UI, "SearchEngines:Data");
         mActions.sendGeckoEvent("SearchEngines:GetVisible", null);
 
-        try {
-            JSONObject data = new JSONObject(eventExpecter.blockForEventData());
-            eventExpecter.unregisterListener();
-            JSONArray searchEngines = data.getJSONArray("searchEngines");
-            boolean foundEngine = false;
-            for (int i = 0; i < searchEngines.length(); i++) {
-                JSONObject engine = (JSONObject) searchEngines.get(i);
-                String name = engine.getString("name");
-                if (name.equals("Test search engine")) {
-                    foundEngine = true;
-                    break;
-                }
+        final GeckoBundle data = eventExpecter.blockForBundle();
+        eventExpecter.unregisterListener();
+
+        final GeckoBundle[] searchEngines = data.getBundleArray("searchEngines");
+        boolean foundEngine = false;
+        for (int i = 0; i < searchEngines.length; i++) {
+            final GeckoBundle engine = searchEngines[i];
+            final String name = engine.getString("name");
+            if (name.equals("Test search engine")) {
+                foundEngine = true;
+                break;
             }
-            mAsserter.ok(foundEngine, "check search plugin", "found test search plugin");
-        } catch (JSONException e) {
-            mAsserter.ok(false, "exception getting search plugins", e.toString());
         }
+        mAsserter.ok(foundEngine, "check search plugin", "found test search plugin");
     }
 
     private void checkAddon() {

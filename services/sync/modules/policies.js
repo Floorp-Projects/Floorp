@@ -703,14 +703,12 @@ ErrorHandler.prototype = {
   _dumpAddons: function _dumpAddons() {
     // Just dump the items that sync may be concerned with. Specifically,
     // active extensions that are not hidden.
-    let addonPromise = new Promise(resolve => {
-      try {
-        AddonManager.getAddonsByTypes(["extension"], resolve);
-      } catch (e) {
-        this._log.warn("Failed to dump addons", e)
-        resolve([])
-      }
-    });
+    let addonPromise = Promise.resolve([]);
+    try {
+      addonPromise = AddonManager.getAddonsByTypes(["extension"]);
+    } catch (e) {
+      this._log.warn("Failed to dump addons", e)
+    }
 
     return addonPromise.then(addons => {
       let relevantAddons = addons.filter(x => x.isActive && !x.hidden);

@@ -47,11 +47,8 @@ add_task(function* unsafeProviderShutdown() {
   let shutdownPromise = null;
   yield new Promise(resolve => {
     secondProvider.shutdownCallback = function() {
-      return new Promise(shutdownResolve => {
-        AddonManager.getAddonByID("does-not-exist", () => {
-          shutdownResolve();
-          resolve();
-        });
+      return AddonManager.getAddonByID("does-not-exist").then(() => {
+        resolve();
       });
     };
 
