@@ -767,7 +767,7 @@
     "ur": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
+          "google", "yahoo-in", "bing", "amazon-in", "ddg", "twitter", "wikipedia-ur"
         ]
       }
     },
