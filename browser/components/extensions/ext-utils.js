@@ -640,7 +640,7 @@ ExtensionTabManager.prototype = {
       active: tab.selected,
       pinned: tab.pinned,
       status: TabManager.getStatus(tab),
-      incognito: PrivateBrowsingUtils.isBrowserPrivate(browser),
+      incognito: WindowManager.isBrowserPrivate(browser),
       width: browser.frameLoader.lazyWidth || browser.clientWidth,
       height: browser.frameLoader.lazyHeight || browser.clientHeight,
       audible: tab.soundPlaying,
@@ -865,6 +865,11 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
+function memoize(fn) {
+  let weakMap = new DefaultWeakMap(fn);
+  return weakMap.get.bind(weakMap);
+}
+
 // Manages mapping between XUL windows and extension window IDs.
 global.WindowManager = {
   _windows: new WeakMap(),
@@ -906,6 +911,10 @@ global.WindowManager = {
       window.resizeTo(width, height);
     }
   },
+
+  isBrowserPrivate: memoize(browser => {
+    return PrivateBrowsingUtils.isBrowserPrivate(browser);
+  }),
 
   getId(window) {
     if (this._windows.has(window)) {
