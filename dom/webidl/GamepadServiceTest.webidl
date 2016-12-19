@@ -5,12 +5,12 @@
 [Pref="dom.gamepad.test.enabled"]
 interface GamepadServiceTest
 {
-  readonly attribute unsigned long noMapping;
-  readonly attribute unsigned long standardMapping;
+  readonly attribute GamepadMappingType noMapping;
+  readonly attribute GamepadMappingType standardMapping;
 
   [Throws]
   Promise<unsigned long> addGamepad(DOMString id,
-                                    unsigned long mapping,
+                                    GamepadMappingType mapping,
                                     unsigned long numButtons,
                                     unsigned long numAxes);
 

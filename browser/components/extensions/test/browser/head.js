@@ -10,7 +10,8 @@
  *          promisePopupShown promisePopupHidden
  *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
- *          openActionContextMenu openActionSubmenu closeActionContextMenu
+ *          openActionContextMenu openSubmenu closeActionContextMenu
+ *          openTabContextMenu closeTabContextMenu
  *          imageBuffer getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
@@ -262,20 +263,16 @@ function* closeExtensionContextMenu(itemToSelect) {
   yield popupHiddenPromise;
 }
 
-function* openActionContextMenu(extension, kind, win = window) {
-  const menu = win.document.getElementById("toolbar-context-menu");
-  const id = `${makeWidgetId(extension.id)}-${kind}-action`;
-  const button = win.document.getElementById(id);
-  SetPageProxyState("valid");
-
+function* openChromeContextMenu(menuId, target, win = window) {
+  const node = win.document.querySelector(target);
+  const menu = win.document.getElementById(menuId);
   const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(button, {type: "contextmenu"}, win);
+  EventUtils.synthesizeMouseAtCenter(node, {type: "contextmenu"}, win);
   yield shown;
-
   return menu;
 }
 
-function* openActionSubmenu(submenuItem, win = window) {
+function* openSubmenu(submenuItem, win = window) {
   const submenu = submenuItem.firstChild;
   const shown = BrowserTestUtils.waitForEvent(submenu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(submenuItem, {}, win);
@@ -283,8 +280,8 @@ function* openActionSubmenu(submenuItem, win = window) {
   return submenu;
 }
 
-function closeActionContextMenu(itemToSelect, win = window) {
-  const menu = win.document.getElementById("toolbar-context-menu");
+function closeChromeContextMenu(menuId, itemToSelect, win = window) {
+  const menu = win.document.getElementById(menuId);
   const hidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
   if (itemToSelect) {
     EventUtils.synthesizeMouseAtCenter(itemToSelect, {}, win);
@@ -292,6 +289,25 @@ function closeActionContextMenu(itemToSelect, win = window) {
     menu.hidePopup();
   }
   return hidden;
+}
+
+function openActionContextMenu(extension, kind, win = window) {
+  // See comment from clickPageAction below.
+  SetPageProxyState("valid");
+  const id = `#${makeWidgetId(extension.id)}-${kind}-action`;
+  return openChromeContextMenu("toolbar-context-menu", id, win);
+}
+
+function closeActionContextMenu(itemToSelect, win = window) {
+  return closeChromeContextMenu("toolbar-context-menu", itemToSelect, win);
+}
+
+function openTabContextMenu(win = window) {
+  return openChromeContextMenu("tabContextMenu", ".tabbrowser-tab[selected]", win);
+}
+
+function closeTabContextMenu(itemToSelect, win = window) {
+  return closeChromeContextMenu("tabContextMenu", itemToSelect, win);
 }
 
 function getPageActionPopup(extension, win = window) {

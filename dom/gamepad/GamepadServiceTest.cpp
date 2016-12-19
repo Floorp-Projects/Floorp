@@ -113,7 +113,7 @@ GamepadServiceTest::DestroyPBackgroundActor()
 
 already_AddRefed<Promise>
 GamepadServiceTest::AddGamepad(const nsAString& aID,
-                               uint32_t aMapping,
+                               GamepadMappingType aMapping,
                                uint32_t aNumButtons,
                                uint32_t aNumAxes,
                                ErrorResult& aRv)
@@ -123,7 +123,7 @@ GamepadServiceTest::AddGamepad(const nsAString& aID,
   }
 
   GamepadAdded a(nsString(aID), 0,
-                 aMapping, static_cast<uint32_t>(GamepadHand::_empty),
+                 aMapping, GamepadHand::_empty,
                  GamepadServiceType::Standard,
                  aNumButtons, aNumAxes);
   GamepadChangeEvent e(a);
