@@ -26,24 +26,32 @@ namespace widget {
 NS_IMPL_ISUPPORTS(JumpListItem,
                   nsIJumpListItem)
 
-NS_IMPL_ISUPPORTS_INHERITED(JumpListSeparator,
-                            JumpListItem,
-                            nsIJumpListSeparator)
+NS_INTERFACE_MAP_BEGIN(JumpListSeparator)
+  NS_INTERFACE_MAP_ENTRY(nsIJumpListSeparator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIJumpListItem, JumpListItemBase)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, JumpListItemBase)
+NS_INTERFACE_MAP_END
+NS_IMPL_ADDREF(JumpListSeparator)
+NS_IMPL_RELEASE(JumpListSeparator)
 
-NS_IMPL_ISUPPORTS_INHERITED(JumpListLink,
-                            JumpListItem,
-                            nsIJumpListLink)
+NS_INTERFACE_MAP_BEGIN(JumpListLink)
+  NS_INTERFACE_MAP_ENTRY(nsIJumpListLink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIJumpListItem, JumpListItemBase)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, JumpListItemBase)
+NS_INTERFACE_MAP_END
+NS_IMPL_ADDREF(JumpListLink)
+NS_IMPL_RELEASE(JumpListLink)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JumpListShortcut)
   NS_INTERFACE_MAP_ENTRY(nsIJumpListShortcut)
-NS_INTERFACE_MAP_END_INHERITING(JumpListItem)
-
-NS_IMPL_CYCLE_COLLECTION(JumpListShortcut, mHandlerApp)
-
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIJumpListItem, JumpListItemBase)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJumpListShortcut)
+NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JumpListShortcut)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JumpListShortcut)
+NS_IMPL_CYCLE_COLLECTION(JumpListShortcut, mHandlerApp)
 
-NS_IMETHODIMP JumpListItem::GetType(int16_t *aType)
+NS_IMETHODIMP JumpListItemBase::GetType(int16_t *aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
 
@@ -52,7 +60,7 @@ NS_IMETHODIMP JumpListItem::GetType(int16_t *aType)
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListItem::Equals(nsIJumpListItem *aItem, bool *aResult)
+NS_IMETHODIMP JumpListItemBase::Equals(nsIJumpListItem *aItem, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aItem);
 

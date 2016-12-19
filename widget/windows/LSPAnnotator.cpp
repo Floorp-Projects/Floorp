@@ -34,15 +34,12 @@ class LSPAnnotationGatherer : public Runnable
   ~LSPAnnotationGatherer() {}
 
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   void Annotate();
   nsCString mString;
   nsCOMPtr<nsIThread> mThread;
 };
-
-NS_IMPL_ISUPPORTS(LSPAnnotationGatherer, nsIRunnable)
 
 void
 LSPAnnotationGatherer::Annotate()
