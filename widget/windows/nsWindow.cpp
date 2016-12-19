@@ -1675,7 +1675,8 @@ nsWindow::GetSizeConstraints()
 }
 
 // Move this component
-NS_IMETHODIMP nsWindow::Move(double aX, double aY)
+void
+nsWindow::Move(double aX, double aY)
 {
   if (mWindowType == eWindowType_toplevel ||
       mWindowType == eWindowType_dialog) {
@@ -1699,7 +1700,7 @@ NS_IMETHODIMP nsWindow::Move(double aX, double aY)
   if (mWindowType != eWindowType_popup && (mBounds.x == x) && (mBounds.y == y))
   {
     // Nothing to do, since it is already positioned correctly.
-    return NS_OK;
+    return;
   }
 
   mBounds.x = x;
@@ -1749,11 +1750,11 @@ NS_IMETHODIMP nsWindow::Move(double aX, double aY)
     SetThemeRegion();
   }
   NotifyRollupGeometryChange();
-  return NS_OK;
 }
 
 // Resize this component
-NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
+void
+nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
   // for top-level windows only, convert coordinates from desktop pixels
   // (the "parent" coordinate space) to the window's device pixel space
@@ -1771,7 +1772,7 @@ NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     if (aRepaint) {
       Invalidate();
     }
-    return NS_OK;
+    return;
   }
 
   // Set cached value for lightweight and printing
@@ -1799,12 +1800,12 @@ NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     Invalidate();
 
   NotifyRollupGeometryChange();
-  return NS_OK;
 }
 
 // Resize this component
-NS_IMETHODIMP nsWindow::Resize(double aX, double aY, double aWidth,
-                               double aHeight, bool aRepaint)
+void
+nsWindow::Resize(double aX, double aY, double aWidth,
+                 double aHeight, bool aRepaint)
 {
   // for top-level windows only, convert coordinates from desktop pixels
   // (the "parent" coordinate space) to the window's device pixel space
@@ -1825,7 +1826,7 @@ NS_IMETHODIMP nsWindow::Resize(double aX, double aY, double aWidth,
     if (aRepaint) {
       Invalidate();
     }
-    return NS_OK;
+    return;
   }
 
   // Set cached value for lightweight and printing
@@ -1863,7 +1864,6 @@ NS_IMETHODIMP nsWindow::Resize(double aX, double aY, double aWidth,
     Invalidate();
 
   NotifyRollupGeometryChange();
-  return NS_OK;
 }
 
 nsresult

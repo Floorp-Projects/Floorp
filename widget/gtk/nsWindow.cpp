@@ -1106,7 +1106,7 @@ nsWindow::Show(bool aState)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
     double scale = BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
@@ -1121,7 +1121,7 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     mBounds.SizeTo(width, height);
 
     if (!mCreated)
-        return NS_OK;
+        return;
 
     NativeResize();
 
@@ -1133,10 +1133,10 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
         DispatchResized();
     }
 
-    return NS_OK;
+    return;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                  bool aRepaint)
 {
@@ -1152,7 +1152,7 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     mBounds.SizeTo(width, height);
 
     if (!mCreated)
-        return NS_OK;
+        return;
 
     NativeMoveResize();
 
@@ -1163,7 +1163,7 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
         DispatchResized();
     }
 
-    return NS_OK;
+    return;
 }
 
 void
@@ -1197,9 +1197,7 @@ nsWindow::IsEnabled() const
     return mEnabled;
 }
 
-
-
-NS_IMETHODIMP
+void
 nsWindow::Move(double aX, double aY)
 {
     LOG(("nsWindow::Move [%p] %f %f\n", (void *)this,
@@ -1219,7 +1217,7 @@ nsWindow::Move(double aX, double aY)
     // popup window.
     if (x == mBounds.x && y == mBounds.y &&
         mWindowType != eWindowType_popup)
-        return NS_OK;
+        return;
 
     // XXX Should we do some AreBoundsSane check here?
 
@@ -1227,12 +1225,11 @@ nsWindow::Move(double aX, double aY)
     mBounds.y = y;
 
     if (!mCreated)
-        return NS_OK;
+        return;
 
     NativeMove();
 
     NotifyRollupGeometryChange();
-    return NS_OK;
 }
 
 

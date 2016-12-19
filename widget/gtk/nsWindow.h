@@ -114,13 +114,13 @@ public:
                                          int32_t *aX,
                                          int32_t *aY) override;
     virtual void       SetSizeConstraints(const SizeConstraints& aConstraints) override;
-    NS_IMETHOD         Move(double aX,
+    virtual void       Move(double aX,
                             double aY) override;
     NS_IMETHOD         Show             (bool aState) override;
-    NS_IMETHOD         Resize           (double aWidth,
+    virtual void       Resize           (double aWidth,
                                          double aHeight,
                                          bool   aRepaint) override;
-    NS_IMETHOD         Resize           (double aX,
+    virtual void       Resize           (double aX,
                                          double aY,
                                          double aWidth,
                                          double aHeight,

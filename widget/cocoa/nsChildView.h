@@ -313,9 +313,9 @@ public:
   virtual nsIWidget*      GetParent(void) override;
   virtual float           GetDPI() override;
 
-  NS_IMETHOD              Move(double aX, double aY) override;
-  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              Resize(double aX, double aY,
+  virtual void            Move(double aX, double aY) override;
+  virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override;
+  virtual void            Resize(double aX, double aY,
                                  double aWidth, double aHeight, bool aRepaint) override;
 
   NS_IMETHOD              Enable(bool aState) override;

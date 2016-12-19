@@ -89,17 +89,16 @@ public:
   { *aX = kMaxDimension; *aY = kMaxDimension; }
 
   // Widget position is controlled by the parent process via TabChild.
-  NS_IMETHOD Move(double aX, double aY) override
-  { return NS_OK; }
+  virtual void Move(double aX, double aY) override {}
 
-  NS_IMETHOD Resize(double aWidth,
-                    double aHeight,
-                    bool   aRepaint) override;
-  NS_IMETHOD Resize(double aX,
-                    double aY,
-                    double aWidth,
-                    double aHeight,
-                    bool   aRepaint) override
+  virtual void Resize(double aWidth,
+                      double aHeight,
+                      bool   aRepaint) override;
+  virtual void Resize(double aX,
+                      double aY,
+                      double aWidth,
+                      double aHeight,
+                      bool   aRepaint) override
   {
     if (mBounds.x != aX || mBounds.y != aY) {
       NotifyWindowMoved(aX, aY);

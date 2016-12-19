@@ -123,9 +123,9 @@ public:
   virtual void            ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY) override;
   virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
   virtual const SizeConstraints GetSizeConstraints() override;
-  NS_IMETHOD              Move(double aX, double aY) override;
-  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+  virtual void            Move(double aX, double aY) override;
+  virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override;
+  virtual void            Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
   virtual MOZ_MUST_USE nsresult
                           BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                           int32_t aHorizontal,
