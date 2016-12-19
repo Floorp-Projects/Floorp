@@ -1447,10 +1447,9 @@ private:
     RefPtr<MediaData> data = VideoQueue().PeekFront();
     if (data) {
       mSeekJob.mTarget->SetTime(TimeUnit::FromMicroseconds(data->mTime));
-    } else if (VideoQueue().AtEndOfStream()) {
-      mSeekJob.mTarget->SetTime(mDuration);
     } else {
-      MOZ_ASSERT(false, "No data!");
+      MOZ_ASSERT(VideoQueue().AtEndOfStream());
+      mSeekJob.mTarget->SetTime(mDuration);
     }
   }
 
