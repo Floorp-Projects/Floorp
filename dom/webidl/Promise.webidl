@@ -12,14 +12,6 @@ callback PromiseJobCallback = void();
 [TreatNonCallableAsNull]
 callback AnyCallback = any (any value);
 
-// Promises are implemented in SpiderMonkey; just define a tiny interface to make
-// codegen of Promise arguments and return values work.
-[NoInterfaceObject,
- Exposed=(Window,Worker,WorkerDebugger,System)]
-// Need to escape "Promise" so it's treated as an identifier.
-interface _Promise {
-};
-
 // Hack to allow us to have JS owning and properly tracing/CCing/etc a
 // PromiseNativeHandler.
 [NoInterfaceObject,
