@@ -634,7 +634,7 @@ function singleTap(id, corx, cory) {
     throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
 
-  let a11y = accessibility.get(capabilities.raisesAccessibilityExceptions);
+  let a11y = accessibility.get(capabilities["moz:accessibilityChecks"]);
   return a11y.getAccessible(el, true).then(acc => {
     a11y.assertVisible(acc, el, visible);
     a11y.assertActionable(acc, el);
@@ -1157,7 +1157,7 @@ function clickElement(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.clickElement(
       el,
-      !!capabilities.raisesAccessibilityExceptions,
+      !!capabilities["moz:accessibilityChecks"],
       capabilities.specificationLevel >= 1);
 }
 
@@ -1216,7 +1216,7 @@ function getElementTagName(id) {
 function isElementDisplayed(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.isElementDisplayed(
-      el, capabilities.raisesAccessibilityExceptions);
+      el, capabilities["moz:accessibilityChecks"]);
 }
 
 /**
@@ -1269,7 +1269,7 @@ function getElementRect(id) {
 function isElementEnabled(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.isElementEnabled(
-      el, capabilities.raisesAccessibilityExceptions);
+      el, capabilities["moz:accessibilityChecks"]);
 }
 
 /**
@@ -1281,7 +1281,7 @@ function isElementEnabled(id) {
 function isElementSelected(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.isElementSelected(
-      el, capabilities.raisesAccessibilityExceptions);
+      el, capabilities["moz:accessibilityChecks"]);
 }
 
 function* sendKeysToElement(id, val) {
@@ -1291,7 +1291,7 @@ function* sendKeysToElement(id, val) {
     yield interaction.uploadFile(el, path);
   } else {
     yield interaction.sendKeysToElement(
-        el, val, false, capabilities.raisesAccessibilityExceptions);
+        el, val, false, capabilities["moz:accessibilityChecks"]);
   }
 }
 
