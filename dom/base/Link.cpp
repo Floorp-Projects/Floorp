@@ -85,7 +85,7 @@ Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
 }
 
 void
-Link::TryDNSPrefetchPreconnectOrPrefetchOrPrerender()
+Link::TryDNSPrefetchPreconnectOrPrefetch()
 {
   MOZ_ASSERT(mElement->IsInComposedDoc());
   if (!ElementHasHref()) {
@@ -124,14 +124,6 @@ Link::TryDNSPrefetchPreconnectOrPrefetchOrPrerender()
     if (uri && mElement->OwnerDoc()) {
       mElement->OwnerDoc()->MaybePreconnect(uri,
         mElement->AttrValueToCORSMode(mElement->GetParsedAttr(nsGkAtoms::crossorigin)));
-      return;
-    }
-  }
-
-  if (linkTypes & nsStyleLinkElement::ePRERENDER) {
-    nsCOMPtr<nsIURI> uri(GetURI());
-    if (uri && mElement->OwnerDoc()) {
-      mElement->OwnerDoc()->PrerenderHref(uri);
       return;
     }
   }
