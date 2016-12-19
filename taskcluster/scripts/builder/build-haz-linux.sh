@@ -54,7 +54,7 @@ export MOZ_OBJDIR="$WORKSPACE/obj-analyzed"
 mkdir -p "$MOZ_OBJDIR"
 
 if [ -n "$DO_TOOLTOOL" ]; then
-  ( cd $TOOLTOOL_DIR; python $GECKO_DIR/taskcluster/docker/recipes/tooltool.py --url https://api.pub.build.mozilla.org/tooltool/ -m $GECKO_DIR/$TOOLTOOL_MANIFEST fetch -c $TOOLTOOL_CACHE )
+  ( cd $TOOLTOOL_DIR; python $GECKO_DIR/testing/docker/recipes/tooltool.py --url https://api.pub.build.mozilla.org/tooltool/ -m $GECKO_DIR/$TOOLTOOL_MANIFEST fetch -c $TOOLTOOL_CACHE )
 fi
 
 export NO_MERCURIAL_SETUP_CHECK=1

@@ -59,7 +59,7 @@ class DockerImageTask(base.Task):
         tasks = []
         templates = Templates(path)
         for image_name, image_symbol in config['images'].iteritems():
-            context_path = os.path.join('taskcluster', 'docker', image_name)
+            context_path = os.path.join('testing', 'docker', image_name)
             context_hash = generate_context_hash(GECKO, context_path, image_name)
 
             image_parameters = dict(parameters)

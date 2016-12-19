@@ -138,7 +138,7 @@ Docker tasks run.
 The tasks to generate each docker image have predictable labels:
 ``build-docker-image-<name>``.
 
-Docker images are built from subdirectories of ``taskcluster/docker``, using
+Docker images are built from subdirectories of ``testing/docker``, using
 ``docker build``.  There is currently no capability for one Docker image to
 depend on another in-tree docker image, without uploading the latter to a
 Docker repository

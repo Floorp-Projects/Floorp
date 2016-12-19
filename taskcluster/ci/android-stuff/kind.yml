@@ -63,7 +63,7 @@ jobs:
         when:
             files-changed:
               - "mobile/android/config/**"
-              - "taskcluster/docker/android-gradle-build/**"
+              - "testing/docker/android-gradle-build/**"
               - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
               - "**/*.gradle"
 
