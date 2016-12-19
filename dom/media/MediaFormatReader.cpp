@@ -4,27 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AutoTaskQueue.h"
+#include "mozilla/CDMProxy.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
+#include "nsContentUtils.h"
+#include "nsPrintfCString.h"
+#include "nsSize.h"
 #include "Layers.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "MediaFormatReader.h"
 #include "MediaPrefs.h"
 #include "MediaResource.h"
+#include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 #include "VideoFrameContainer.h"
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/layers/ShadowLayers.h"
-#include "mozilla/CDMProxy.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/SharedThreadPool.h"
-#include "mozilla/SyncRunnable.h"
-#include "nsContentUtils.h"
-#include "nsPrintfCString.h"
-#include "nsSize.h"
 
 #include <algorithm>
 #include <queue>
@@ -430,339 +427,6 @@ MediaFormatReader::DecoderFactory::DoInitDecoder(TrackType aTrack)
     }));
 }
 
-// DemuxerProxy ensures that the original main demuxer is only ever accessed
-// via its own dedicated task queue.
-// This ensure that the reader's taskqueue will never blocked while a demuxer
-// is itself blocked attempting to access the MediaCache or the MediaResource.
-class MediaFormatReader::DemuxerProxy
-{
-  using TrackType = TrackInfo::TrackType;
-  class Wrapper;
-
-public:
-  explicit DemuxerProxy(MediaDataDemuxer* aDemuxer)
-    : mTaskQueue(new AutoTaskQueue(
-                   GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER)))
-    , mData(new Data(aDemuxer))
-  {
-    MOZ_COUNT_CTOR(DemuxerProxy);
-  }
-
-  ~DemuxerProxy()
-  {
-    MOZ_COUNT_DTOR(DemuxerProxy);
-    mData->mAudioDemuxer = nullptr;
-    mData->mVideoDemuxer = nullptr;
-    RefPtr<Data> data = mData.forget();
-    mTaskQueue->Dispatch(
-      // We need to clear our reference to the demuxer now. So that in the event
-      // the init promise wasn't resolved, such as what can happen with the
-      // mediasource demuxer that is waiting on more data, it will force the
-      // init promise to be rejected.
-      NS_NewRunnableFunction([data]() { data->mDemuxer = nullptr; }));
-  }
-
-  RefPtr<MediaDataDemuxer::InitPromise> Init();
-
-  Wrapper*
-  GetTrackDemuxer(TrackType aTrack, uint32_t aTrackNumber)
-  {
-    MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
-
-    switch (aTrack) {
-      case TrackInfo::kAudioTrack:
-        return mData->mAudioDemuxer;
-      case TrackInfo::kVideoTrack:
-        return mData->mVideoDemuxer;
-      default:
-        return nullptr;
-    }
-  }
-
-  uint32_t GetNumberTracks(TrackType aTrack) const
-  {
-    MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
-
-    switch (aTrack) {
-      case TrackInfo::kAudioTrack:
-        return mData->mNumAudioTrack;
-      case TrackInfo::kVideoTrack:
-        return mData->mNumVideoTrack;
-      default:
-        return 0;
-    }
-  }
-
-  bool IsSeekable() const
-  {
-    MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
-
-    return mData->mSeekable;
-  }
-
-  bool IsSeekableOnlyInBufferedRanges() const
-  {
-    MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
-
-    return mData->mSeekableOnlyInBufferedRange;
-  }
-
-  UniquePtr<EncryptionInfo> GetCrypto() const
-  {
-    MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
-
-    if (!mData->mCrypto) {
-      return nullptr;
-    }
-    auto crypto = MakeUnique<EncryptionInfo>();
-    *crypto = *mData->mCrypto;
-    return crypto;
-  }
-
-  RefPtr<NotifyDataArrivedPromise> NotifyDataArrived();
-
-  bool ShouldComputeStartTime() const
-  {
-    MOZ_RELEASE_ASSERT(mData && mData->mInitDone);
-
-    return mData->mShouldComputeStartTime;
-  }
-
-private:
-  const RefPtr<AutoTaskQueue> mTaskQueue;
-  struct Data
-  {
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Data)
-
-    explicit Data(MediaDataDemuxer* aDemuxer)
-      : mInitDone(false)
-      , mDemuxer(aDemuxer)
-    { }
-
-    Atomic<bool> mInitDone;
-    // Only ever accessed over mTaskQueue once.
-    RefPtr<MediaDataDemuxer> mDemuxer;
-    // Only accessed once InitPromise has been resolved and immutable after.
-    // So we can safely access them without the use of the mutex.
-    uint32_t mNumAudioTrack = 0;
-    RefPtr<Wrapper> mAudioDemuxer;
-    uint32_t mNumVideoTrack = 0;
-    RefPtr<Wrapper> mVideoDemuxer;
-    bool mSeekable = false;
-    bool mSeekableOnlyInBufferedRange = false;
-    bool mShouldComputeStartTime = true;
-    UniquePtr<EncryptionInfo> mCrypto;
-  private:
-    ~Data() { }
-  };
-  RefPtr<Data> mData;
-};
-
-class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer
-{
-public:
-  Wrapper(MediaTrackDemuxer* aTrackDemuxer, AutoTaskQueue* aTaskQueue)
-    : mMutex("TrackDemuxer Mutex")
-    , mTaskQueue(aTaskQueue)
-    , mGetSamplesMayBlock(aTrackDemuxer->GetSamplesMayBlock())
-    , mInfo(aTrackDemuxer->GetInfo())
-    , mTrackDemuxer(aTrackDemuxer)
-  { }
-
-  UniquePtr<TrackInfo> GetInfo() const override
-  {
-    if (!mInfo) {
-      return nullptr;
-    }
-    return mInfo->Clone();
-  }
-
-  RefPtr<SeekPromise> Seek(const media::TimeUnit& aTime) override
-  {
-    RefPtr<Wrapper> self = this;
-    return InvokeAsync(
-             mTaskQueue, __func__,
-             [self, aTime]() { return self->mTrackDemuxer->Seek(aTime); })
-      ->Then(mTaskQueue, __func__,
-             [self]() { self->UpdateRandomAccessPoint(); },
-             [self]() { self->UpdateRandomAccessPoint(); });
-  }
-
-  RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples) override
-  {
-    RefPtr<Wrapper> self = this;
-    return InvokeAsync(mTaskQueue, __func__,
-                       [self, aNumSamples]() {
-                         return self->mTrackDemuxer->GetSamples(aNumSamples);
-                       })
-      ->Then(mTaskQueue, __func__,
-             [self]() { self->UpdateRandomAccessPoint(); },
-             [self]() { self->UpdateRandomAccessPoint(); });
-  }
-
-  bool GetSamplesMayBlock() const override
-  {
-    return mGetSamplesMayBlock;
-  }
-
-  void Reset() override
-  {
-    RefPtr<Wrapper> self = this;
-    mTaskQueue->Dispatch(NS_NewRunnableFunction([self]() {
-      self->mTrackDemuxer->Reset();
-    }));
-  }
-
-  nsresult GetNextRandomAccessPoint(TimeUnit* aTime) override
-  {
-    MutexAutoLock lock(mMutex);
-    if (NS_SUCCEEDED(mNextRandomAccessPointResult)) {
-      *aTime = mNextRandomAccessPoint;
-    }
-    return mNextRandomAccessPointResult;
-  }
-
-  RefPtr<SkipAccessPointPromise>
-  SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold) override
-  {
-    RefPtr<Wrapper> self = this;
-    return InvokeAsync(
-             mTaskQueue, __func__,
-             [self, aTimeThreshold]()  {
-               return self->mTrackDemuxer->SkipToNextRandomAccessPoint(
-                 aTimeThreshold);
-             })
-      ->Then(mTaskQueue, __func__,
-             [self]() { self->UpdateRandomAccessPoint(); },
-             [self]() { self->UpdateRandomAccessPoint(); });
-  }
-
-  TimeIntervals GetBuffered() override
-  {
-    MutexAutoLock lock(mMutex);
-    return mBuffered;
-  }
-
-  void BreakCycles() override { }
-
-private:
-  Mutex mMutex;
-  const RefPtr<AutoTaskQueue> mTaskQueue;
-  const bool mGetSamplesMayBlock;
-  const UniquePtr<TrackInfo> mInfo;
-  // mTrackDemuxer is only ever accessed on demuxer's task queue.
-  RefPtr<MediaTrackDemuxer> mTrackDemuxer;
-  // All following members are protected by mMutex
-  nsresult mNextRandomAccessPointResult = NS_OK;
-  TimeUnit mNextRandomAccessPoint;
-  TimeIntervals mBuffered;
-  friend class DemuxerProxy;
-
-  ~Wrapper()
-  {
-    RefPtr<MediaTrackDemuxer> trackDemuxer = mTrackDemuxer.forget();
-    mTaskQueue->Dispatch(NS_NewRunnableFunction(
-      [trackDemuxer]() { trackDemuxer->BreakCycles(); }));
-  }
-
-  void UpdateRandomAccessPoint()
-  {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    if (!mTrackDemuxer) {
-      // Detached.
-      return;
-    }
-    MutexAutoLock lock(mMutex);
-    mNextRandomAccessPointResult =
-      mTrackDemuxer->GetNextRandomAccessPoint(&mNextRandomAccessPoint);
-  }
-
-  void UpdateBuffered()
-  {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    if (!mTrackDemuxer) {
-      // Detached.
-      return;
-    }
-    MutexAutoLock lock(mMutex);
-    mBuffered = mTrackDemuxer->GetBuffered();
-  }
-};
-
-RefPtr<MediaDataDemuxer::InitPromise>
-MediaFormatReader::DemuxerProxy::Init()
-{
-  RefPtr<Data> data = mData;
-  RefPtr<AutoTaskQueue> taskQueue = mTaskQueue;
-  return InvokeAsync(mTaskQueue, __func__,
-                     [data, taskQueue]() {
-                       if (!data->mDemuxer) {
-                         return MediaDataDemuxer::InitPromise::CreateAndReject(
-                           NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-                       }
-                       return data->mDemuxer->Init();
-                     })
-    ->Then(taskQueue, __func__,
-           [data, taskQueue]() {
-             if (!data->mDemuxer) { // Was shutdown.
-               return;
-             }
-             data->mNumAudioTrack =
-               data->mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
-             if (data->mNumAudioTrack) {
-               RefPtr<MediaTrackDemuxer> d =
-                 data->mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
-               if (d) {
-                 RefPtr<Wrapper> wrapper =
-                   new DemuxerProxy::Wrapper(d, taskQueue);
-                 wrapper->UpdateBuffered();
-                 data->mAudioDemuxer = wrapper;
-               }
-             }
-             data->mNumVideoTrack =
-               data->mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack);
-             if (data->mNumVideoTrack) {
-               RefPtr<MediaTrackDemuxer> d =
-                 data->mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
-               if (d) {
-                 RefPtr<Wrapper> wrapper =
-                   new DemuxerProxy::Wrapper(d, taskQueue);
-                 wrapper->UpdateBuffered();
-                 data->mVideoDemuxer = wrapper;
-               }
-             }
-             data->mCrypto = data->mDemuxer->GetCrypto();
-             data->mSeekable = data->mDemuxer->IsSeekable();
-             data->mSeekableOnlyInBufferedRange =
-               data->mDemuxer->IsSeekableOnlyInBufferedRanges();
-             data->mShouldComputeStartTime =
-               data->mDemuxer->ShouldComputeStartTime();
-             data->mInitDone = true;
-           },
-           []() {});
-}
-
-RefPtr<MediaFormatReader::NotifyDataArrivedPromise>
-MediaFormatReader::DemuxerProxy::NotifyDataArrived()
-{
-  RefPtr<Data> data = mData;
-  return InvokeAsync(mTaskQueue, __func__, [data]() {
-    if (!data->mDemuxer) {
-      // Was shutdown.
-      return NotifyDataArrivedPromise::CreateAndReject(
-        NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-    }
-    data->mDemuxer->NotifyDataArrived();
-    if (data->mAudioDemuxer) {
-      data->mAudioDemuxer->UpdateBuffered();
-    }
-    if (data->mVideoDemuxer) {
-      data->mVideoDemuxer->UpdateBuffered();
-    }
-    return NotifyDataArrivedPromise::CreateAndResolve(true, __func__);
-  });
-}
-
 static const char*
 TrackTypeToStr(TrackInfo::TrackType aTrack)
 {
@@ -789,7 +453,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
            Preferences::GetUint("media.audio-max-decode-error", 3))
   , mVideo(this, MediaData::VIDEO_DATA,
            Preferences::GetUint("media.video-max-decode-error", 2))
-  , mDemuxer(new DemuxerProxy(aDemuxer))
+  , mDemuxer(aDemuxer)
   , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
   , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
@@ -1025,6 +689,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       }
       mVideo.mOriginalInfo = Move(videoInfo);
       mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
+      mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
       mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
     } else {
       mVideo.mTrackDemuxer->BreakCycles();
@@ -1053,6 +718,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       }
       mAudio.mOriginalInfo = Move(audioInfo);
       mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
+      mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
       mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
     } else {
       mAudio.mTrackDemuxer->BreakCycles();
@@ -1128,15 +794,12 @@ MediaFormatReader::MaybeResolveMetadataPromise()
     mInfo.mStartTime = startTime; // mInfo.mStartTime is initialized to 0.
   }
 
-  RefPtr<MetadataHolder> metadata = new MetadataHolder();
-  metadata->mInfo = mInfo;
-  metadata->mTags = mTags->Count() ? mTags.release() : nullptr;
-
-  // We now have all the informations required to calculate the initial buffered
-  // range.
   mHasStartTime = true;
   UpdateBuffered();
 
+  RefPtr<MetadataHolder> metadata = new MetadataHolder();
+  metadata->mInfo = mInfo;
+  metadata->mTags = mTags->Count() ? mTags.release() : nullptr;
   mMetadataPromise.Resolve(metadata, __func__);
 }
 
@@ -1492,6 +1155,9 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
     return false;
   }
 
+  // Update our cached TimeRange.
+  decoder.mTimeRanges = decoder.mTrackDemuxer->GetBuffered();
+
   // We do not want to clear mWaitingForData while there are pending
   // demuxing or seeking operations that could affect the value of this flag.
   // This is in order to ensure that we will retry once they complete as we may
@@ -1517,6 +1183,16 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
     // We do not want to clear mWaitingForData or mDemuxEOS while
     // a drain is in progress in order to properly complete the operation.
     return false;
+  }
+
+  bool hasLastEnd;
+  media::TimeUnit lastEnd = decoder.mTimeRanges.GetEnd(&hasLastEnd);
+  if (hasLastEnd) {
+    if (decoder.mLastTimeRangesEnd && decoder.mLastTimeRangesEnd.ref() < lastEnd) {
+      // New data was added after our previous end, we can clear the EOS flag.
+      decoder.mDemuxEOS = false;
+    }
+    decoder.mLastTimeRangesEnd = Some(lastEnd);
   }
 
   decoder.mReceivedNewData = false;
@@ -2510,6 +2186,47 @@ MediaFormatReader::OnAudioSeekFailed(const MediaResult& aError)
   OnSeekFailed(TrackType::kAudioTrack, aError);
 }
 
+media::TimeIntervals
+MediaFormatReader::GetBuffered()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  media::TimeIntervals videoti;
+  media::TimeIntervals audioti;
+  media::TimeIntervals intervals;
+
+  if (!mInitDone || !mHasStartTime) {
+    return intervals;
+  }
+
+  // Ensure we have up to date buffered time range.
+  if (HasVideo()) {
+    UpdateReceivedNewData(TrackType::kVideoTrack);
+  }
+  if (HasAudio()) {
+    UpdateReceivedNewData(TrackType::kAudioTrack);
+  }
+  if (HasVideo()) {
+    videoti = mVideo.mTimeRanges;
+  }
+  if (HasAudio()) {
+    audioti = mAudio.mTimeRanges;
+  }
+  if (HasAudio() && HasVideo()) {
+    intervals = media::Intersection(Move(videoti), Move(audioti));
+  } else if (HasAudio()) {
+    intervals = Move(audioti);
+  } else if (HasVideo()) {
+    intervals = Move(videoti);
+  }
+
+  if (!intervals.Length() ||
+      intervals.GetStart() == media::TimeUnit::FromMicroseconds(0)) {
+    // IntervalSet already starts at 0 or is empty, nothing to shift.
+    return intervals;
+  }
+  return intervals.Shift(media::TimeUnit() - mInfo.mStartTime);
+}
+
 void MediaFormatReader::ReleaseResources()
 {
   mVideo.ShutdownDecoder();
@@ -2523,16 +2240,22 @@ MediaFormatReader::VideoIsHardwareAccelerated() const
 }
 
 void
-MediaFormatReader::NotifyTrackDemuxers()
+MediaFormatReader::NotifyDemuxer()
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  if (mShutdown || !mDemuxer ||
+      (!mDemuxerInitDone && !mDemuxerInitRequest.Exists())) {
+    return;
+  }
+
   LOGV("");
+
+  mDemuxer->NotifyDataArrived();
 
   if (!mInitDone) {
     return;
   }
-
   if (HasVideo()) {
     mVideo.mReceivedNewData = true;
     ScheduleUpdate(TrackType::kVideoTrack);
@@ -2544,85 +2267,10 @@ MediaFormatReader::NotifyTrackDemuxers()
 }
 
 void
-MediaFormatReader::NotifyDataArrived()
+MediaFormatReader::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (mShutdown || !mDemuxer ||
-      (!mDemuxerInitDone && !mDemuxerInitRequest.Exists())) {
-    return;
-  }
-
-  RefPtr<MediaFormatReader> self = this;
-  mDemuxer->NotifyDataArrived()->Then(
-    OwnerThread(), __func__,
-    [self]() {
-      self->UpdateBuffered();
-      self->NotifyTrackDemuxers();
-    },
-    []() {});
-}
-
-void
-MediaFormatReader::UpdateBuffered()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  if (mShutdown) {
-    return;
-  }
-
-  if (!mInitDone || !mHasStartTime) {
-    mBuffered = TimeIntervals();
-    return;
-  }
-
-  if (HasVideo()) {
-    mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
-    bool hasLastEnd;
-    media::TimeUnit lastEnd = mVideo.mTimeRanges.GetEnd(&hasLastEnd);
-    if (hasLastEnd) {
-      if (mVideo.mLastTimeRangesEnd
-          && mVideo.mLastTimeRangesEnd.ref() < lastEnd) {
-        // New data was added after our previous end, we can clear the EOS flag.
-        mVideo.mDemuxEOS = false;
-        ScheduleUpdate(TrackInfo::kVideoTrack);
-      }
-      mVideo.mLastTimeRangesEnd = Some(lastEnd);
-    }
-  }
-  if (HasAudio()) {
-    mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
-    bool hasLastEnd;
-    media::TimeUnit lastEnd = mAudio.mTimeRanges.GetEnd(&hasLastEnd);
-    if (hasLastEnd) {
-      if (mAudio.mLastTimeRangesEnd
-          && mAudio.mLastTimeRangesEnd.ref() < lastEnd) {
-        // New data was added after our previous end, we can clear the EOS flag.
-        mAudio.mDemuxEOS = false;
-        ScheduleUpdate(TrackInfo::kAudioTrack);
-      }
-      mAudio.mLastTimeRangesEnd = Some(lastEnd);
-    }
-  }
-
-  media::TimeIntervals intervals;
-  if (HasAudio() && HasVideo()) {
-    intervals = media::Intersection(mVideo.mTimeRanges, mAudio.mTimeRanges);
-  } else if (HasAudio()) {
-    intervals = mAudio.mTimeRanges;
-  } else if (HasVideo()) {
-    intervals = mVideo.mTimeRanges;
-  }
-
-  if (!intervals.Length() ||
-      intervals.GetStart() == media::TimeUnit::FromMicroseconds(0)) {
-    // IntervalSet already starts at 0 or is empty, nothing to shift.
-    mBuffered = intervals;
-  } else {
-    mBuffered =
-      intervals.Shift(media::TimeUnit() - mInfo.mStartTime);
-  }
+  NotifyDemuxer();
 }
 
 bool
