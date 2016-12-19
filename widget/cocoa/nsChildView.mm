@@ -819,9 +819,9 @@ nsChildView::GetDPI()
   return 96.0;
 }
 
-NS_IMETHODIMP nsChildView::Enable(bool aState)
+void
+nsChildView::Enable(bool aState)
 {
-  return NS_OK;
 }
 
 bool nsChildView::IsEnabled() const

@@ -1826,11 +1826,10 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Enable(bool aState)
 {
     ALOG("nsWindow[%p]::Enable %d ignored", (void*)this, aState);
-    return NS_OK;
 }
 
 bool
