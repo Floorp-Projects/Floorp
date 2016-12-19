@@ -1119,6 +1119,12 @@ class CGHeaders(CGWrapper):
                     declareIncludes.add("mozilla/dom/Date.h")
                 else:
                     bindingHeaders.add("mozilla/dom/Date.h")
+            elif unrolled.isPromise():
+                # See comment in the isInterface() case for why we add
+                # Promise.h to headerSet, not bindingHeaders.
+                headerSet.add("mozilla/dom/Promise.h")
+                # We need ToJSValue to do the Promise to JS conversion.
+                bindingHeaders.add("mozilla/dom/ToJSValue.h")
             elif unrolled.isInterface():
                 if unrolled.isSpiderMonkeyInterface():
                     bindingHeaders.add("jsfriendapi.h")
@@ -1336,7 +1342,11 @@ def UnionTypes(unionTypes, config):
                     headers.add("mozilla/dom/Nullable.h")
                 isSequence = f.isSequence()
                 f = f.unroll()
-                if f.isInterface():
+                if f.isPromise():
+                    headers.add("mozilla/dom/Promise.h")
+                    # We need ToJSValue to do the Promise to JS conversion.
+                    headers.add("mozilla/dom/ToJSValue.h")
+                elif f.isInterface():
                     if f.isSpiderMonkeyInterface():
                         headers.add("jsfriendapi.h")
                         headers.add("mozilla/dom/TypedArray.h")
@@ -1418,7 +1428,11 @@ def UnionConversions(unionTypes, config):
 
             def addHeadersForType(f):
                 f = f.unroll()
-                if f.isInterface():
+                if f.isPromise():
+                    headers.add("mozilla/dom/Promise.h")
+                    # We need ToJSValue to do the Promise to JS conversion.
+                    headers.add("mozilla/dom/ToJSValue.h")
+                elif f.isInterface():
                     if f.isSpiderMonkeyInterface():
                         headers.add("jsfriendapi.h")
                         headers.add("mozilla/dom/TypedArray.h")
@@ -6502,6 +6516,19 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
 
         return (code, False)
 
+    if type.isPromise():
+        assert not type.nullable()
+        # The use of ToJSValue here is a bit annoying because the Promise
+        # version is not inlined.  But we can't put an inline version in either
+        # ToJSValue.h or BindingUtils.h, because Promise.h includes ToJSValue.h
+        # and that includes BindingUtils.h, so we'd get an include loop if
+        # either of those headers included Promise.h.  And trying to write the
+        # conversion by hand here is pretty annoying because we have to handle
+        # the various RefPtr, rawptr, NonNull, etc cases, which ToJSValue will
+        # handle for us.  So just eat the cost of the function call.
+        return (wrapAndSetPtr("ToJSValue(cx, %s, ${jsvalHandle})" % result),
+                False)
+
     if type.isGeckoInterface() and not type.isCallbackInterface():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
@@ -6516,14 +6543,6 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 wrapMethod = "GetOrCreateDOMReflector"
                 wrapArgs = "cx, %s, ${jsvalHandle}" % result
             else:
-                # Hack: the "Promise" interface is OK to return from
-                # non-newobject things even when it's not wrappercached; that
-                # happens when using SpiderMonkey promises, and the WrapObject()
-                # method will just return the existing reflector, which is just
-                # not stored in a wrappercache.
-                if (not returnsNewObject and
-                    descriptor.interface.identifier.name != "Promise"):
-                    raise MethodNotNewObjectError(descriptor.interface.identifier.name)
                 wrapMethod = "WrapNewBindingNonWrapperCachedObject"
                 wrapArgs = "cx, ${obj}, %s, ${jsvalHandle}" % result
             if isConstructorRetval:
