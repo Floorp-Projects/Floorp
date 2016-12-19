@@ -1013,7 +1013,7 @@ private:
   void DoSeek() override
   {
     // Request the demuxer to perform seek.
-    mSeekRequest.Begin(Reader()->Seek(mSeekJob.mTarget)
+    mSeekRequest.Begin(Reader()->Seek(mSeekJob.mTarget, mMaster->Duration())
       ->Then(OwnerThread(), __func__,
              [this] (media::TimeUnit aUnit) {
                OnSeekResolved(aUnit);
