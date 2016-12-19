@@ -8,29 +8,16 @@
 #include "DiagnosticsMatcher.h"
 
 class MozChecker : public ASTConsumer, public RecursiveASTVisitor<MozChecker> {
-  DiagnosticsEngine &Diag;
   DiagnosticsMatcher Matcher;
 
 public:
   MozChecker(CompilerInstance &CI) :
-    Diag(CI.getDiagnostics()), Matcher(CI) {}
+    Matcher(CI) {}
   virtual ~MozChecker() {}
 
   ASTConsumerPtr getOtherConsumer() { return Matcher.makeASTConsumer(); }
 
-  virtual void HandleTranslationUnit(ASTContext &Ctx) override;
-
   static bool hasCustomAnnotation(const Decl *D, const char *Spelling);
-
-  void handleUnusedExprResult(const Stmt *Statement);
-
-  bool VisitSwitchCase(SwitchCase *Statement);
-  bool VisitCompoundStmt(CompoundStmt *Statement);
-  bool VisitIfStmt(IfStmt *Statement);
-  bool VisitWhileStmt(WhileStmt *Statement);
-  bool VisitDoStmt(DoStmt *Statement);
-  bool VisitForStmt(ForStmt *Statement);
-  bool VisitBinComma(BinaryOperator *Op);
 };
 
 #endif
