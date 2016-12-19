@@ -23,6 +23,8 @@
 
 using namespace mozilla;
 
+static bool sShowPreviousPage = true;
+
 nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
 {
   MOZ_COUNT_CTOR(nsView);
@@ -36,6 +38,12 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mViewManager = aViewManager;
   mDirtyRegion = nullptr;
   mWidgetIsTopLevel = false;
+
+  static bool sShowPreviousPageInitialized = false;
+  if (!sShowPreviousPageInitialized) {
+    Preferences::AddBoolVarCache(&sShowPreviousPage, "layout.show_previous_page", true);
+    sShowPreviousPageInitialized = true;
+  }
 }
 
 void nsView::DropMouseGrabbing()
@@ -1123,5 +1131,5 @@ nsView::HandleEvent(WidgetGUIEvent* aEvent,
 bool
 nsView::IsPrimaryFramePaintSuppressed()
 {
-  return mFrame ? mFrame->PresContext()->PresShell()->IsPaintingSuppressed() : false;
+  return sShowPreviousPage && mFrame && mFrame->PresContext()->PresShell()->IsPaintingSuppressed();
 }
