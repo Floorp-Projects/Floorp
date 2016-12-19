@@ -71,7 +71,9 @@
         <item name="android:textAppearance">?android:attr/textAppearanceLargeInverse</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingLeft">12dip</item>
+        <item name="android:paddingStart">12dip</item>
         <item name="android:paddingRight">7dip</item>
+        <item name="android:paddingEnd">7dip</item>
         <item name="android:checkMark">?android:attr/listChoiceIndicatorMultiple</item>
         <item name="android:ellipsize">marquee</item>
     </style>
@@ -101,12 +103,14 @@
     </style>
 
     <style name="Widget.MenuItemSwitcherLayout">
-        <item name="android:gravity">left</item>
+        <item name="android:gravity">left|start</item>
     </style>
 
     <style name="Widget.MenuItemDefault">
         <item name="android:paddingLeft">15dip</item>
+        <item name="android:paddingStart">15dip</item>
         <item name="android:paddingRight">10dip</item>
+        <item name="android:paddingEnd">10dip</item>
         <item name="android:drawablePadding">6dip</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
@@ -149,6 +153,9 @@
         <item name="android:ellipsize">none</item>
         <item name="android:background">@color/about_page_header_grey</item>
         <item name="android:paddingLeft">20dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
         <item name="android:drawablePadding">20dp</item>
     </style>
 
@@ -199,7 +206,7 @@
       <item name="android:textColor">@color/top_sites_grid_item_title</item>
       <item name="android:textSize">12sp</item>
       <item name="android:paddingTop">5dip</item>
-      <item name="android:gravity">left</item>
+      <item name="android:gravity">left|start</item>
     </style>
 
     <style name="Widget.HomeListView" parent="Widget.ListView">
@@ -218,9 +225,11 @@
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
         <item name="android:background">@android:color/white</item>
         <item name="android:focusable">false</item>
-        <item name="android:gravity">center|left</item>
+        <item name="android:gravity">center|left|start</item>
         <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingStart">16dp</item>
         <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
         <item name="android:paddingTop">11dp</item>
         <item name="android:paddingBottom">11dp</item>
         <item name="android:includeFontPadding">false</item>
@@ -235,7 +244,9 @@
         <item name="android:focusable">true</item>
         <item name="android:gravity">center</item>
         <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingStart">10dip</item>
         <item name="android:paddingRight">10dip</item>
+        <item name="android:paddingEnd">10dip</item>
     </style>
 
     <style name="Widget.Home.ActionItem">
@@ -444,7 +455,7 @@
         <item name="android:textSelectHandleRight">@drawable/handle_end</item>
         <item name="android:textCursorDrawable">@null</item>
         <item name="android:singleLine">true</item>
-        <item name="android:gravity">center_vertical|left</item>
+        <item name="android:gravity">center_vertical|left|start</item>
         <item name="android:hint">@string/url_bar_default_text</item>
     </style>
 
@@ -509,7 +520,9 @@
     <style name="FindBar">
         <item name="android:background">@color/text_and_tabs_tray_grey</item>
         <item name="android:paddingLeft">3dip</item>
+        <item name="android:paddingStart">3dip</item>
         <item name="android:paddingRight">3dip</item>
+        <item name="android:paddingEnd">3dip</item>
         <item name="android:paddingTop">6dip</item>
         <item name="android:paddingBottom">6dip</item>
     </style>
@@ -519,7 +532,9 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginLeft">5dip</item>
+        <item name="android:layout_marginStart">5dip</item>
         <item name="android:layout_marginRight">5dip</item>
+        <item name="android:layout_marginEnd">5dip</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:background">@drawable/action_bar_button_inverse</item>
@@ -545,13 +560,17 @@
 
     <style name="Toast" parent="ToastBase">
         <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:layout_marginStart">16dp</item>
         <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
     </style>
 
     <style name="ToastElementBase">
         <item name="android:background">@null</item>
         <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingStart">12dp</item>
         <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
         <item name="android:paddingTop">11dp</item>
         <item name="android:paddingBottom">11dp</item>
     </style>
@@ -622,8 +641,11 @@
         <item name="android:background">@android:color/transparent</item>
         <item name="android:textAppearance">@style/TextAppearance.Medium</item>
         <item name="android:drawableLeft">@drawable/ab_done</item>
+        <item name="android:drawableStart">@drawable/ab_done</item>
         <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingStart">15dp</item>
         <item name="android:paddingRight">15dp</item>
+        <item name="android:paddingEnd">15dp</item>
         <item name="android:contentDescription">@string/actionbar_done</item>
     </style>
 
@@ -642,13 +664,15 @@
     <style name="GeckoActionBar.Buttons">
         <item name="android:background">@android:color/transparent</item>
         <item name="android:textColor">@color/placeholder_active_grey</item>
-        <item name="android:gravity">right</item>
+        <item name="android:gravity">right|end</item>
     </style>
 
     <style name="ShareOverlayTitle">
         <item name="android:gravity">center_horizontal</item>
         <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingStart">15dp</item>
         <item name="android:paddingRight">15dp</item>
+        <item name="android:paddingEnd">15dp</item>
     </style>
 
     <style name="TextAppearance.ShareOverlay">
@@ -703,7 +727,9 @@
     <!-- Remote Tabs home panel -->
     <style name="RemoteTabsPanelFrame">
         <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingStart">32dp</item>
         <item name="android:paddingRight">32dp</item>
+        <item name="android:paddingEnd">32dp</item>
         <item name="android:paddingTop">@dimen/home_remote_tabs_top_padding</item>
         <item name="android:orientation">vertical</item>
         <item name="android:layout_gravity">center_horizontal</item>
@@ -723,7 +749,9 @@
         <item name="android:textSize">16sp</item>
         <item name="android:lineSpacingMultiplier">1.25</item>
         <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginStart">8dp</item>
         <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
     </style>
 
     <style name="RemoteTabsPanelItem.TextAppearance.Header">
@@ -746,7 +774,9 @@
         <item name="android:paddingTop">16dp</item>
         <item name="android:paddingBottom">16dp</item>
         <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingStart">8dp</item>
         <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
 
         <!-- AppCompat sets Button text to all caps so we override that here. -->
         <item name="textAllCaps">false</item>

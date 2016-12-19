@@ -61,10 +61,8 @@ class Promise;
 
 class DesktopNotificationCenter;
 class MozIdleObserver;
-#ifdef MOZ_GAMEPAD
 class Gamepad;
 class GamepadServiceTest;
-#endif // MOZ_GAMEPAD
 class NavigatorUserMediaSuccessCallback;
 class NavigatorUserMediaErrorCallback;
 class MozGetUserMediaDevicesSuccessCallback;
@@ -212,10 +210,8 @@ public:
   network::Connection* GetConnection(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);
 
-#ifdef MOZ_GAMEPAD
   void GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
   GamepadServiceTest* RequestGamepadServiceTest();
-#endif // MOZ_GAMEPAD
   already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
   void GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const;
 #ifdef MOZ_TIME_MANAGER
@@ -311,9 +307,7 @@ private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<DeviceStorageAreaListener> mDeviceStorageAreaListener;
   RefPtr<Presentation> mPresentation;
-#ifdef MOZ_GAMEPAD
   RefPtr<GamepadServiceTest> mGamepadServiceTest;
-#endif
   nsTArray<RefPtr<Promise> > mVRGetDisplaysPromises;
   nsTArray<uint32_t> mRequestedVibrationPattern;
   RefPtr<StorageManager> mStorageManager;
