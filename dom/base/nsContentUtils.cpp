@@ -3570,6 +3570,11 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle *bundle = sStringBundles[aFile];
 
+  if (!aParams || !aParamsLength) {
+    return bundle->GetStringFromName(NS_ConvertASCIItoUTF16(aKey).get(),
+                                     getter_Copies(aResult));
+  }
+
   return bundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aKey).get(),
                                       aParams, aParamsLength,
                                       getter_Copies(aResult));
