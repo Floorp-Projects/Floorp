@@ -8,46 +8,27 @@
 
 namespace mozilla {
 
-SeekJob::SeekJob()
-{
-}
-
-SeekJob::SeekJob(SeekJob&& aOther) : mTarget(aOther.mTarget)
-{
-  aOther.mTarget.Reset();
-  mPromise = Move(aOther.mPromise);
-}
-
 SeekJob::~SeekJob()
 {
-  MOZ_DIAGNOSTIC_ASSERT(!mTarget.IsValid());
+  MOZ_DIAGNOSTIC_ASSERT(mTarget.isNothing());
   MOZ_DIAGNOSTIC_ASSERT(mPromise.IsEmpty());
-}
-
-SeekJob& SeekJob::operator=(SeekJob&& aOther)
-{
-  MOZ_DIAGNOSTIC_ASSERT(!Exists());
-  mTarget = aOther.mTarget;
-  aOther.mTarget.Reset();
-  mPromise = Move(aOther.mPromise);
-  return *this;
 }
 
 bool SeekJob::Exists() const
 {
-  MOZ_ASSERT(mTarget.IsValid() == !mPromise.IsEmpty());
-  return mTarget.IsValid();
+  MOZ_ASSERT(mTarget.isSome() == !mPromise.IsEmpty());
+  return mTarget.isSome();
 }
 
 void SeekJob::Resolve(const char* aCallSite)
 {
   mPromise.Resolve(true, aCallSite);
-  mTarget.Reset();
+  mTarget.reset();
 }
 
 void SeekJob::RejectIfExists(const char* aCallSite)
 {
-  mTarget.Reset();
+  mTarget.reset();
   mPromise.RejectIfExists(true, aCallSite);
 }
 

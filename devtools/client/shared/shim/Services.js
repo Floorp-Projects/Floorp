@@ -347,7 +347,8 @@ PrefBranch.prototype = {
     let parent = this;
     for (let branch of branchList) {
       if (!parent._children[branch]) {
-        let isParentRoot = !parent.parent;
+        let isParentRoot = !parent._parent;
+
         let branchName = (isParentRoot ? "" : parent.root + ".") + branch;
         parent._children[branch] = new PrefBranch(parent, branch, branchName);
       }
