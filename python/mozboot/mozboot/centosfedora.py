@@ -70,6 +70,7 @@ class CentOSFedoraBootstrapper(BaseBootstrapper):
 
             self.browser_packages += [
                 'gcc-c++',
+                'python-dbus',
             ]
 
             self.mobile_android_packages += [
