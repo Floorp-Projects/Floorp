@@ -27,7 +27,7 @@ dictionary OscillatorOptions : AudioNodeOptions {
 
 [Pref="dom.webaudio.enabled",
  Constructor(BaseAudioContext context, optional OscillatorOptions options)]
-interface OscillatorNode : AudioScheduledSourceNode {
+interface OscillatorNode : AudioNode {
 
     [SetterThrows]
     attribute OscillatorType type;
@@ -35,7 +35,14 @@ interface OscillatorNode : AudioScheduledSourceNode {
     readonly attribute AudioParam frequency; // in Hertz
     readonly attribute AudioParam detune; // in Cents
 
+    [Throws, UnsafeInPrerendering]
+    void start(optional double when = 0);
+    [Throws, UnsafeInPrerendering]
+    void stop(optional double when = 0);
     void setPeriodicWave(PeriodicWave periodicWave);
+
+    attribute EventHandler onended;
+
 };
 
 // Mozilla extensions
