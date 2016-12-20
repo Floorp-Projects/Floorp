@@ -18,6 +18,8 @@
 
 #include "jsapi.h"
 
+#include "xpc_make_class.h"
+
 namespace mozilla {
 namespace storage {
 

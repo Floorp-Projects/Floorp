@@ -19,6 +19,7 @@
 
 #include "xpcpublic.h"
 #include "xpcprivate.h"
+#include "xpc_make_class.h"
 #include "XPCWrapper.h"
 
 #include "mozilla/DOMEventTargetHelper.h"
@@ -138,6 +139,9 @@ using namespace mozilla::dom;
                                         _chromeOnly, _allowXBL)               \
   { #_class,                                                                  \
     nullptr,                                                                  \
+    XPC_MAKE_CLASS_OPS(_flags),                                               \
+    XPC_MAKE_CLASS(#_class, _flags,                                           \
+                   &sClassInfoData[eDOMClassInfo_##_class##_id].mClassOps),   \
     _helper::doCreate,                                                        \
     nullptr,                                                                  \
     nullptr,                                                                  \
@@ -786,6 +790,13 @@ uint32_t
 nsDOMClassInfo::GetScriptableFlags()
 {
   return mData->mScriptableFlags;
+}
+
+// virtual
+const js::Class*
+nsDOMClassInfo::GetClass()
+{
+    return &mData->mClass;
 }
 
 NS_IMETHODIMP
