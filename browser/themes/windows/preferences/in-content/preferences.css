@@ -4,7 +4,7 @@
 
 %include ../../../shared/incontentprefs/preferences.inc.css
 
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   #category-general > .category-icon {
     list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#general-native");
   }

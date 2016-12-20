@@ -41,6 +41,7 @@ namespace {
 
 static const char* gSupportedRegistrarVersions[] = {
   SERVICEWORKERREGISTRAR_VERSION,
+  "4",
   "3",
   "2"
 };
@@ -351,6 +352,40 @@ ServiceWorkerRegistrar::ReadData()
 
       GET_LINE(entry->currentWorkerURL());
 
+      nsAutoCString fetchFlag;
+      GET_LINE(fetchFlag);
+      if (!fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_TRUE) &&
+          !fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_FALSE)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      entry->currentWorkerHandlesFetch() =
+        fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_TRUE);
+
+      nsAutoCString cacheName;
+      GET_LINE(cacheName);
+      CopyUTF8toUTF16(cacheName, entry->cacheName());
+    } else if (version.EqualsLiteral("4")) {
+      overwrite = true;
+      dedupe = true;
+
+      nsAutoCString suffix;
+      GET_LINE(suffix);
+
+      PrincipalOriginAttributes attrs;
+      if (!attrs.PopulateFromSuffix(suffix)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      GET_LINE(entry->scope());
+
+      entry->principal() =
+        mozilla::ipc::ContentPrincipalInfo(attrs, entry->scope());
+
+      GET_LINE(entry->currentWorkerURL());
+
+      // default handlesFetch flag to Enabled
+      entry->currentWorkerHandlesFetch() = true;
+
       nsAutoCString cacheName;
       GET_LINE(cacheName);
       CopyUTF8toUTF16(cacheName, entry->cacheName());
@@ -375,6 +410,9 @@ ServiceWorkerRegistrar::ReadData()
         mozilla::ipc::ContentPrincipalInfo(attrs, entry->scope());
 
       GET_LINE(entry->currentWorkerURL());
+
+      // default handlesFetch flag to Enabled
+      entry->currentWorkerHandlesFetch() = true;
 
       nsAutoCString cacheName;
       GET_LINE(cacheName);
@@ -403,6 +441,9 @@ ServiceWorkerRegistrar::ReadData()
       GET_LINE(unused);
 
       GET_LINE(entry->currentWorkerURL());
+
+      // default handlesFetch flag to Enabled
+      entry->currentWorkerHandlesFetch() = true;
 
       nsAutoCString cacheName;
       GET_LINE(cacheName);
@@ -697,6 +738,10 @@ ServiceWorkerRegistrar::WriteData()
     buffer.Append('\n');
 
     buffer.Append(data[i].currentWorkerURL());
+    buffer.Append('\n');
+
+    buffer.Append(data[i].currentWorkerHandlesFetch() ?
+                    SERVICEWORKERREGISTRAR_TRUE : SERVICEWORKERREGISTRAR_FALSE);
     buffer.Append('\n');
 
     buffer.Append(NS_ConvertUTF16toUTF8(data[i].cacheName()));

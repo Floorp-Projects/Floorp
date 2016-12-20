@@ -284,6 +284,9 @@ protected:
     mEvent->SetComposed(aComposed);
   }
 
+  already_AddRefed<EventTarget>
+  EnsureWebAccessibleRelatedTarget(EventTarget* aRelatedTarget);
+
   mozilla::WidgetEvent*       mEvent;
   RefPtr<nsPresContext>     mPresContext;
   nsCOMPtr<EventTarget>       mExplicitOriginalTarget;

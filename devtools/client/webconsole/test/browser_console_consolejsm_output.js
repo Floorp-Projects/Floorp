@@ -283,3 +283,40 @@ add_task(function* testMaxLogLevelPref() {
   hud.ui.off("new-messages", onNewMessage);
   yield HUDService.toggleBrowserConsole();
 });
+
+// Test that console.profile/profileEnd trigger the right events
+add_task(function* testProfile() {
+  let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
+  let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
+  let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
+
+  storage.clearEvents();
+
+  let profilerEvents = [];
+
+  function observer(subject, topic) {
+    is(topic, "console-api-profiler", "The topic is 'console-api-profiler'");
+    const subjectObj = subject.wrappedJSObject;
+    const event = { action: subjectObj.action, name: subjectObj.arguments[0] };
+    info(`Profiler event: action=${event.action}, name=${event.name}`);
+    profilerEvents.push(event);
+  }
+
+  Services.obs.addObserver(observer, "console-api-profiler", false);
+
+  console.profile("test");
+  console.profileEnd("test");
+
+  Services.obs.removeObserver(observer, "console-api-profiler");
+
+  // Test that no messages were logged to the storage
+  let consoleEvents = storage.getEvents();
+  is(consoleEvents.length, 0, "There are zero logged messages");
+
+  // Test that two profiler events were fired
+  is(profilerEvents.length, 2, "Got two profiler events");
+  is(profilerEvents[0].action, "profile", "First event has the right action");
+  is(profilerEvents[0].name, "test", "First event has the right name");
+  is(profilerEvents[1].action, "profileEnd", "Second event has the right action");
+  is(profilerEvents[1].name, "test", "Second event has the right name");
+});

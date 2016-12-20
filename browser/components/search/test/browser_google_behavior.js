@@ -84,7 +84,7 @@ function test() {
         gBrowser.loadURI("about:newtab");
         info("Waiting for about:newtab load");
         tab.linkedBrowser.addEventListener("load", function load(loadEvent) {
-          if (loadEvent.originalTarget != tab.linkedBrowser.contentDocument ||
+          if (loadEvent.originalTarget != tab.linkedBrowser.contentDocumentAsCPOW ||
               loadEvent.target.location.href == "about:blank") {
             info("skipping spurious load event");
             return;
@@ -92,7 +92,7 @@ function test() {
           tab.linkedBrowser.removeEventListener("load", load, true);
 
           // Observe page setup
-          let win = gBrowser.contentWindow;
+          let win = gBrowser.contentWindowAsCPOW;
           if (win.gSearch.currentEngineName ==
               Services.search.currentEngine.name) {
             doSearch(win.document);
