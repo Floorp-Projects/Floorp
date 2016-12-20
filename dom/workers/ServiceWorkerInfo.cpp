@@ -180,6 +180,7 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   , mServiceWorkerID(GetNextID())
   , mServiceWorkerPrivate(new ServiceWorkerPrivate(this))
   , mSkipWaitingFlag(false)
+  , mHandlesFetch(Unknown)
 {
   MOZ_ASSERT(mPrincipal);
   // cache origin attributes so we can use them off main thread

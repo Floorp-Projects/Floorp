@@ -255,7 +255,6 @@ Factory::CheckSurfaceSize(const IntSize &sz,
                           int32_t allocLimit)
 {
   if (sz.width <= 0 || sz.height <= 0) {
-    gfxDebug() << "Surface width or height <= 0!";
     return false;
   }
 
