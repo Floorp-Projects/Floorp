@@ -473,17 +473,16 @@ gfxWindowsPlatform::HandleDeviceReset()
 void
 gfxWindowsPlatform::UpdateBackendPrefs()
 {
-  uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO);
-  uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
+  uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) |
+                        BackendTypeBit(BackendType::SKIA);
+  uint32_t contentMask = BackendTypeBit(BackendType::CAIRO) |
+                         BackendTypeBit(BackendType::SKIA);
   BackendType defaultBackend = BackendType::CAIRO;
   if (gfxConfig::IsEnabled(Feature::DIRECT2D) && Factory::GetD2D1Device()) {
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     defaultBackend = BackendType::DIRECT2D1_1;
-  } else {
-    canvasMask |= BackendTypeBit(BackendType::SKIA);
   }
-  contentMask |= BackendTypeBit(BackendType::SKIA);
   InitBackendPrefs(canvasMask, defaultBackend, contentMask, defaultBackend);
 }
 

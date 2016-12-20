@@ -1,0 +1,3 @@
+resource ppapiflash.js .
+content ppapiflash.js chrome/
+resource ppapi.js ../common/

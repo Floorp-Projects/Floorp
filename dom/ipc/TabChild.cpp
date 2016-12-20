@@ -1817,10 +1817,6 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
     SendAccessKeyNotHandled(localEvent);
   }
 
-  if (PresShell::BeforeAfterKeyboardEventEnabled()) {
-    SendDispatchAfterKeyboardEvent(localEvent);
-  }
-
   return IPC_OK();
 }
 
