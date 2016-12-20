@@ -11,20 +11,10 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const kAutoMigrateEnabledPref = "browser.migrate.automigrate.enabled";
 const kUndoUIEnabledPref = "browser.migrate.automigrate.ui.enabled";
 
-const kAutoMigrateStartedPref = "browser.migrate.automigrate.started";
-const kAutoMigrateFinishedPref = "browser.migrate.automigrate.finished";
 const kAutoMigrateBrowserPref = "browser.migrate.automigrate.browser";
 
 const kAutoMigrateLastUndoPromptDateMsPref = "browser.migrate.automigrate.lastUndoPromptDateMs";
 const kAutoMigrateDaysToOfferUndoPref = "browser.migrate.automigrate.daysToOfferUndo";
-
-const kPasswordManagerTopic = "passwordmgr-storage-changed";
-const kPasswordManagerTopicTypes = new Set([
-  "addLogin",
-  "modifyLogin",
-]);
-
-const kSyncTopic = "fxaccounts:onlogin";
 
 const kNotificationId = "abouthome-automigration-undo";
 
@@ -33,12 +23,21 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
 Cu.importGlobalProperties(["URL"]);
+
+/* globals kUndoStateFullPath */
+XPCOMUtils.defineLazyGetter(this, "kUndoStateFullPath", function() {
+  return OS.Path.join(OS.Constants.Path.profileDir, "initialMigrationMetadata.jsonlz4");
+});
 
 const AutoMigrate = {
   get resourceTypesToUse() {
@@ -68,39 +67,6 @@ const AutoMigrate = {
 
   init() {
     this.enabled = this._checkIfEnabled();
-    if (this.enabled) {
-      this.maybeInitUndoObserver();
-    }
-  },
-
-  maybeInitUndoObserver() {
-    if (!this.canUndo()) {
-      return;
-    }
-    // Now register places, password and sync observers:
-    this.onItemAdded = this.onItemMoved = this.onItemChanged =
-      this.removeUndoOption.bind(this, this.UNDO_REMOVED_REASON_BOOKMARK_CHANGE);
-    PlacesUtils.addLazyBookmarkObserver(this, true);
-    for (let topic of [kSyncTopic, kPasswordManagerTopic]) {
-      Services.obs.addObserver(this, topic, true);
-    }
-  },
-
-  observe(subject, topic, data) {
-    if (topic == kPasswordManagerTopic) {
-      // As soon as any login gets added or modified, disable undo:
-      // (Note that this ignores logins being removed as that doesn't
-      //  impair the 'undo' functionality of the import.)
-      if (kPasswordManagerTopicTypes.has(data)) {
-        // Ignore chrome:// things like sync credentials:
-        let loginInfo = subject.QueryInterface(Ci.nsILoginInfo);
-        if (!loginInfo.hostname || !loginInfo.hostname.startsWith("chrome://")) {
-          this.removeUndoOption(this.UNDO_REMOVED_REASON_PASSWORD_CHANGE);
-        }
-      }
-    } else if (topic == kSyncTopic) {
-      this.removeUndoOption(this.UNDO_REMOVED_REASON_SYNC_SIGNIN);
-    }
   },
 
   /**
@@ -137,21 +103,18 @@ const AutoMigrate = {
         }
         Services.obs.removeObserver(migrationObserver, "Migration:Ended");
         Services.obs.removeObserver(migrationObserver, "Migration:ItemError");
-        Services.prefs.setCharPref(kAutoMigrateStartedPref, startTime.toString());
-        Services.prefs.setCharPref(kAutoMigrateFinishedPref, Date.now().toString());
         Services.prefs.setCharPref(kAutoMigrateBrowserPref, pickedKey);
-        // Need to manually start listening to new bookmarks/logins being created,
-        // because, when we were initialized, there wasn't the possibility to
-        // 'undo' anything.
-        this.maybeInitUndoObserver();
+        // Save the undo history and block shutdown on that save completing.
+        AsyncShutdown.profileBeforeChange.addBlocker(
+          "AutoMigrate Undo saving", this.saveUndoState(), () => {
+            return {state: this._saveUndoStateTrackerForShutdown};
+          });
       }
     };
 
+    MigrationUtils.initializeUndoData();
     Services.obs.addObserver(migrationObserver, "Migration:Ended", false);
     Services.obs.addObserver(migrationObserver, "Migration:ItemError", false);
-    // We'll save this when the migration has finished, at which point the pref
-    // service will be available.
-    let startTime = Date.now();
     migrator.migrate(this.resourceTypesToUse, profileStartup, profileToMigrate);
     histogram.add(20);
   },
@@ -211,81 +174,53 @@ const AutoMigrate = {
     return profiles ? profiles[0] : null;
   },
 
-  getUndoRange() {
-    let start, finish;
+  canUndo: Task.async(function* () {
+    if (this._savingPromise) {
+      yield this._savingPromise;
+    }
+    let fileExists = false;
     try {
-      start = parseInt(Preferences.get(kAutoMigrateStartedPref, "0"), 10);
-      finish = parseInt(Preferences.get(kAutoMigrateFinishedPref, "0"), 10);
+      fileExists = yield OS.File.exists(kUndoStateFullPath);
     } catch (ex) {
       Cu.reportError(ex);
     }
-    if (!finish || !start) {
-      return null;
-    }
-    return [new Date(start), new Date(finish)];
-  },
-
-  canUndo() {
-    return !!this.getUndoRange();
-  },
+    return fileExists;
+  }),
 
   undo: Task.async(function* () {
     let histogram = Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_UNDO");
     histogram.add(0);
-    if (!this.canUndo()) {
+    if (!(yield this.canUndo())) {
       histogram.add(5);
       throw new Error("Can't undo!");
     }
 
     histogram.add(10);
 
-    yield PlacesUtils.bookmarks.eraseEverything();
+    let readPromise = OS.File.read(kUndoStateFullPath, {
+      encoding: "utf-8",
+      compression: "lz4",
+    });
+    let stateData = this._dejsonifyUndoState(yield readPromise);
+    yield this._removeUnchangedBookmarks(stateData.get("bookmarks"));
     histogram.add(15);
 
-    // NB: we drop the start time of the migration for now. This is because
-    // imported history will always end up being 'backdated' to the actual
-    // visit time recorded by the browser from which we imported. As a result,
-    // a lower bound on this item doesn't really make sense.
-    // Note that for form data this could be different, but we currently don't
-    // support form data import from any non-Firefox browser, so it isn't
-    // imported from other browsers by the automigration code, nor do we
-    // remove it here.
-    let range = this.getUndoRange();
-    yield PlacesUtils.history.removeVisitsByFilter({
-      beginDate: new Date(0),
-      endDate: range[1]
-    });
+    yield this._removeSomeVisits(stateData.get("visits"));
     histogram.add(20);
 
-    try {
-      Services.logins.removeAllLogins();
-    } catch (ex) {
-      // ignore failure.
-    }
+    yield this._removeUnchangedLogins(stateData.get("logins"));
     histogram.add(25);
+
     this.removeUndoOption(this.UNDO_REMOVED_REASON_UNDO_USED);
     histogram.add(30);
   }),
 
   removeUndoOption(reason) {
-    // Remove observers, and ensure that exceptions doing so don't break
-    // removing the pref.
-    for (let topic of [kSyncTopic, kPasswordManagerTopic]) {
-      try {
-        Services.obs.removeObserver(this, topic);
-      } catch (ex) {
-        Cu.reportError("Error removing observer for " + topic + ": " + ex);
-      }
-    }
-    try {
-      PlacesUtils.removeLazyBookmarkObserver(this);
-    } catch (ex) {
-      Cu.reportError("Error removing lazy bookmark observer: " + ex);
-    }
+    // We don't wait for the off-main-thread removal to complete. OS.File will
+    // ensure it happens before shutdown.
+    OS.File.remove(kUndoStateFullPath, {ignoreAbsent: true});
 
     let migrationBrowser = Preferences.get(kAutoMigrateBrowserPref, "unknown");
-    Services.prefs.clearUserPref(kAutoMigrateStartedPref);
-    Services.prefs.clearUserPref(kAutoMigrateFinishedPref);
     Services.prefs.clearUserPref(kAutoMigrateBrowserPref);
 
     let browserWindows = Services.wm.getEnumerator("navigator:browser");
@@ -314,9 +249,13 @@ const AutoMigrate = {
     return null;
   },
 
-  maybeShowUndoNotification(target) {
+  maybeShowUndoNotification: Task.async(function* (target) {
+    if (!(yield this.canUndo())) {
+      return;
+    }
+
     // The tab might have navigated since we requested the undo state:
-    if (!this.canUndo() || target.currentURI.spec != "about:home" ||
+    if (target.currentURI.spec != "about:home" ||
         !Preferences.get(kUndoUIEnabledPref, false)) {
       return;
     }
@@ -365,7 +304,7 @@ const AutoMigrate = {
     );
     let remainingDays = Preferences.get(kAutoMigrateDaysToOfferUndoPref, 0);
     Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_UNDO_OFFERED").add(4 - remainingDays);
-  },
+  }),
 
   shouldStillShowUndoPrompt() {
     let today = new Date();
@@ -394,6 +333,60 @@ const AutoMigrate = {
   UNDO_REMOVED_REASON_BOOKMARK_CHANGE: 3,
   UNDO_REMOVED_REASON_OFFER_EXPIRED: 4,
   UNDO_REMOVED_REASON_OFFER_REJECTED: 5,
+
+  _jsonifyUndoState(state) {
+    if (!state) {
+      return "null";
+    }
+    // Deal with date serialization.
+    let bookmarks = state.get("bookmarks");
+    for (let bm of bookmarks) {
+      bm.lastModified = bm.lastModified.getTime();
+    }
+    let serializableState = {
+      bookmarks,
+      logins: state.get("logins"),
+      visits: state.get("visits"),
+    };
+    return JSON.stringify(serializableState);
+  },
+
+  _dejsonifyUndoState(state) {
+    state = JSON.parse(state);
+    for (let bm of state.bookmarks) {
+      bm.lastModified = new Date(bm.lastModified);
+    }
+    return new Map([
+      ["bookmarks", state.bookmarks],
+      ["logins", state.logins],
+      ["visits", state.visits],
+    ]);
+  },
+
+  _saveUndoStateTrackerForShutdown: "not running",
+  saveUndoState: Task.async(function* () {
+    let resolveSavingPromise;
+    this._saveUndoStateTrackerForShutdown = "processing undo history";
+    this._savingPromise = new Promise(resolve => { resolveSavingPromise = resolve });
+    let state = yield MigrationUtils.stopAndRetrieveUndoData();
+    this._saveUndoStateTrackerForShutdown = "writing undo history";
+    this._undoSavePromise = OS.File.writeAtomic(
+      kUndoStateFullPath, this._jsonifyUndoState(state), {
+        encoding: "utf-8",
+        compression: "lz4",
+        tmpPath: kUndoStateFullPath + ".tmp",
+      });
+    this._undoSavePromise.then(
+      rv => {
+        resolveSavingPromise(rv);
+        delete this._savingPromise;
+      },
+      e => {
+        Cu.reportError("Could not write undo state for automatic migration.");
+        throw e;
+      });
+    return this._undoSavePromise;
+  }),
 
   _removeUnchangedBookmarks: Task.async(function* (bookmarks) {
     if (!bookmarks.length) {
