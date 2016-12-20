@@ -33,8 +33,6 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
-                                  "resource://gre/modules/LoginHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -437,19 +435,6 @@ const AutoMigrate = {
           Cu.reportError(err);
         }
       });
-    }
-  }),
-
-  _removeUnchangedLogins: Task.async(function* (logins) {
-    for (let login of logins) {
-      let foundLogins = LoginHelper.searchLoginsWithObject({guid: login.guid});
-      if (foundLogins.length) {
-        let foundLogin = foundLogins[0];
-        foundLogin.QueryInterface(Ci.nsILoginMetaInfo);
-        if (foundLogin.timePasswordChanged == login.timePasswordChanged) {
-          Services.logins.removeLogin(foundLogin);
-        }
-      }
     }
   }),
 
