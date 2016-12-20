@@ -98,7 +98,7 @@ class Deck(UIBaseLib):
 
         :return: Index of the selected panel.
         """
-        return int(self.element.get_attribute('selectedIndex'))
+        return int(self.element.get_property('selectedIndex'))
 
     @property
     def selected_panel(self):
@@ -133,7 +133,7 @@ class PageInfoPanel(Panel):
 
         :returns: Reference to the tab element.
         """
-        name = self.element.get_attribute('id').split('Panel')[0]
+        name = self.element.get_property('id').split('Panel')[0]
         return self.window.window_element.find_element(By.ID, name + 'Tab')
 
 
