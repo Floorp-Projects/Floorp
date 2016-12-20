@@ -1298,15 +1298,18 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest)
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     // HTTP content negotation has little value in this context.
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                  NS_LITERAL_CSTRING("*/*"),
-                                  false);
-    httpChannel->SetReferrerWithPolicy(mDocument->GetDocumentURI(),
-                                       aRequest->mReferrerPolicy);
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                       NS_LITERAL_CSTRING("*/*"),
+                                       false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = httpChannel->SetReferrerWithPolicy(mDocument->GetDocumentURI(),
+                                            aRequest->mReferrerPolicy);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     nsCOMPtr<nsIHttpChannelInternal> internalChannel(do_QueryInterface(httpChannel));
     if (internalChannel) {
-      internalChannel->SetIntegrityMetadata(aRequest->mIntegrity.GetIntegrityString());
+      rv = internalChannel->SetIntegrityMetadata(aRequest->mIntegrity.GetIntegrityString());
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
 
