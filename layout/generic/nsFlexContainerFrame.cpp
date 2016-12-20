@@ -455,7 +455,8 @@ public:
         nsLayoutUtils::GetLastLineBaseline(mWM, mFrame, &mAscent);
 
       if (!found) {
-        mAscent = mFrame->SynthesizeBaselineFromBorderBox(mWM);
+        mAscent = mFrame->SynthesizeBaselineBOffsetFromBorderBox(mWM,
+                            BaselineSharingGroup::eFirst);
       }
     }
     return mAscent;

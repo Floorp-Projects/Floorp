@@ -726,6 +726,12 @@ public:
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
   }
 
+  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                nscoord* aBaseline) const override {
+    *aBaseline = GetLogicalBaseline(aWM);
+    return true;
+  }
+
   // Recomputes the scrollable overflow area we store in the helper to take children
   // that are affected by perpsective set on the outer frame and scroll at different
   // rates.
@@ -1114,6 +1120,12 @@ public:
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
+  }
+
+  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                nscoord* aBaseline) const override {
+    *aBaseline = GetLogicalBaseline(aWM);
+    return true;
   }
 
   // Called to set the child frames. We typically have three: the scroll area,
