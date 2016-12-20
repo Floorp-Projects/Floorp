@@ -864,10 +864,8 @@ function discrete(from, to) {
   return function(property, options) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = [from, to];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: [from, to] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: from.toLowerCase() },
@@ -883,9 +881,8 @@ function discrete(from, to) {
       // the time has expired.
       var idlName = propertyToIDL(property);
       var keyframes = {};
-      keyframes[idlName] = [from, to];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: [from, to] },
                                      { duration: 1000, fill: "both",
                                        easing: "cubic-bezier(0.68,0,1,0.01)" });
       testAnimationSamples(animation, idlName,
@@ -900,11 +897,9 @@ function discrete(from, to) {
       // With this curve, we don't reach the 50% point until about 95% of
       // the time has expired.
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = [from, to];
-      keyframes.easing = "cubic-bezier(0.68,0,1,0.01)";
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: [from, to],
+                                       easing: "cubic-bezier(0.68,0,1,0.01)" },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: from.toLowerCase() },
@@ -919,10 +914,8 @@ function length() {
   return function(property, options) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["10px", "50px"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["10px", "50px"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "10px" },
@@ -932,10 +925,8 @@ function length() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["1rem", "5rem"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["1rem", "5rem"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "10px" },
@@ -949,10 +940,8 @@ function percentage() {
   return function(property, options) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["10%", "50%"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["10%", "50%"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "10%" },
@@ -966,10 +955,8 @@ function integer() {
   return function(property, options) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = [-2, 2];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: [-2, 2] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "-2" },
@@ -983,10 +970,8 @@ function positiveNumber() {
   return function(property, options) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = [1.1, 1.5];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: [1.1, 1.5] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "1.1" },
@@ -1003,10 +988,8 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["10px", "20%"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["10px", "20%"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "10px" },
@@ -1016,10 +999,8 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["10%", "2em"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["10%", "2em"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "10%" },
@@ -1029,10 +1010,8 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["1em", "2rem"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["1em", "2rem"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "10px" },
@@ -1042,10 +1021,8 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["10px", "calc(1em + 20%)"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["10px", "calc(1em + 20%)"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "10px" },
@@ -1055,11 +1032,10 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["calc(10px + 10%)", "calc(1em + 1rem + 20%)"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate(
+        { [idlName]: ["calc(10px + 10%)", "calc(1em + 1rem + 20%)"] },
+        { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,
                               expected: "calc(10px + 10%)" },
@@ -1075,10 +1051,8 @@ function visibility() {
   return function(property, options) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["visible", "hidden"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["visible", "hidden"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "visible" },
@@ -1089,10 +1063,8 @@ function visibility() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["hidden", "visible"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["hidden", "visible"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "hidden" },
@@ -1103,10 +1075,8 @@ function visibility() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["hidden", "collapse"];
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate(keyframes,
+      var animation = target.animate({ [idlName]: ["hidden", "collapse"] },
                                      { duration: 1000, fill: "both" });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: "hidden" },
@@ -1121,11 +1091,9 @@ function visibility() {
       // With this curve, the value is less than 0 till about 34%
       // also more than 1 since about 63%
       var idlName = propertyToIDL(property);
-      var keyframes = {};
-      keyframes[idlName] = ["visible", "hidden"];
       var target = createTestElement(t, options.tagName);
       var animation =
-        target.animate(keyframes,
+        target.animate({ [idlName]: ["visible", "hidden"] },
                        { duration: 1000, fill: "both",
                          easing: "cubic-bezier(0.68, -0.55, 0.26, 1.55)" });
       testAnimationSamples(animation, idlName,
