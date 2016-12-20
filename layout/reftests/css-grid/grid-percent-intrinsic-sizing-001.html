@@ -17,94 +17,57 @@ html,body {
 div {
   display: grid;
   float: left;
-  grid-template-columns: auto auto;
-  grid-template-rows: 5px;
-  height: 5px;
   border: 1px solid;
   clear: left;
   place-content: start start;
+  margin: 3px;
 }
 
 span {
-  min-width: 10px;
   background: grey;
 }
+.c > span { width: 10px; }
+.r > span { height: 10px; }
+
 span:nth-child(2) { background:lime; }
 x { background: blue; }
 x:nth-child(2) { background:pink; }
 
-.g10  { grid-gap:10%; }
-.gneg { grid-gap: calc(10% - 100px); }
-.p1   { grid-template-columns: 10%; }
-.p1a  { grid-template-columns: minmax(10%,auto); }
-.p10  { grid-template-columns: 10% 10%; }
-.p10a { grid-template-columns: minmax(40%,auto) minmax(10%,auto); }
-.p10b { grid-template-columns: minmax(40%,auto) 100px; }
-.p10c { grid-template-columns: minmax(20%,auto) 100px minmax(20%,auto) ; }
-.c10  { grid-template-columns: calc(50px + 10%) calc(50px + 10%); }
-.c10a { grid-template-columns: minmax(calc(50px + 10%), auto) minmax(calc(50px + 10%), auto); }
-.c10b { grid-template-columns: minmax(calc(50px - 10%), auto) minmax(calc(50px - 10%), auto); }
+.c { grid-auto-rows: 5px; }
+.c.p1   { grid-template-columns: 10%; }
+.c.p1a  { grid-template-columns: minmax(10%,auto); }
+.c.p2   { grid-template-columns: 10% 10%; grid-gap: 20%; }
+.c.p2a  { grid-template-columns: repeat(2,minmax(10%,auto)); grid-gap: 20%; }
+
+.r { grid-auto-columns: 5px; grid-auto-flow: column; }
+.r.p1   { grid-template-rows: 10%; }
+.r.p1a  { grid-template-rows: minmax(10%,auto); }
+.r.p2   { grid-template-rows: 10% 10%; grid-gap: 20%; }
+.r.p2a  { grid-template-rows: repeat(2,minmax(10%,auto)); grid-gap: 20%; }
 
   </style>
 </head>
 <body>
 
-<!-- Note that some of the min-width cases below SHOULD overflow. -->
+<div class="c p1"><span></span><x></x></div>
+<div class="c p1"><x></x></div>
+<div class="c p1a"><span></span><x></x></div>
+<div class="c p1a"><x></x></div>
 
-<div class="p1"><span></span></div>
-<div class="p1"><x></x></div>
-<div class="p10"><span></span></div>
-<div class="p10"><x></x></div>
-<div class="p1a"><span></span></div>
-<div class="p1a"><x></x></div>
-<div class="p10a"><span></span><span></span></div>
-<div class="p10a"><x></x><span></span></div>
-<div class="p10a"><x></x><x></x></div>
-<div class="p10b"><span></span><span></span></div>
-<div class="p10b"><span></span><x></x></div>
-<div class="p10b"><x></x><x></x></div>
-<div class="p10b"><span></span><span style="min-width:80px"></span></div>
-<div class="p10b"><x></x><span style="min-width:120px"></span></div>
-<div class="p10c"><span></span><span></span></div>
-<div class="p10c"><span></span><x></x></div>
-<div class="c10"><span></span><span></span></div>
-<div class="c10"><x></x><x></x></div>
-<div class="c10"><span></span><span style="min-width:120px"></span></div>
-<div class="c10"><x></x><span></span></div>
-<div class="c10a"><span></span><span style="min-width:120px"></span></div>
-<div class="c10a"><x></x><span style="min-width:120px"></span></div>
-<div class="c10b"><span></span><span style="min-width:120px"></span></div>
-<div class="c10b"><x></x><span style="min-width:120px"></span></div>
+<div class="c p2"><span></span><span></span><x></x></div>
+<div class="c p2"><x></x><x></x></div>
+<div class="c p2a"><span></span><span></span><x></x></div>
+<div class="c p2a"><x></x><x></x></div>
 
-<div class="g10"><span></span><span></span></div>
-<div class="g10 p1"><span></span></div>
-<div class="g10 p1"><x></x></div>
-<div class="g10 p10"><span></span></div>
-<div class="g10 p10"><x></x></div>
-<div class="g10 p1a"><span></span></div>
-<div class="g10 p1a"><x></x></div>
-<div class="g10 p10a"><span></span><span></span></div>
-<div class="g10 p10a"><x></x><span></span></div>
-<div class="g10 p10a"><x></x><x></x></div>
-<div class="g10 p10b"><span></span><span></span></div>
-<div class="g10 p10b"><span></span><x></x></div>
-<div class="g10 p10b"><x></x><x></x></div>
-<div class="g10 p10b"><span></span><span style="min-width:80px"></span></div>
-<div class="g10 p10b"><x></x><span style="min-width:120px"></span></div>
-<div class="g10 p10c"><span></span><span></span></div>
-<div class="g10 p10c"><span></span><x></x></div>
-<div class="g10 c10"><span></span><span></span></div>
-<div class="g10 c10"><x></x><x></x></div>
-<div class="g10 c10"><span></span><span style="min-width:120px"></span></div>
-<div class="g10 c10"><x></x><span></span></div>
-<div class="g10 c10a"><span></span><span style="min-width:120px"></span></div>
-<div class="g10 c10a"><x></x><span style="min-width:120px"></span></div>
-<div class="g10 c10b"><span></span><span style="min-width:120px"></span></div>
-<div class="g10 c10b"><x></x><span style="min-width:120px"></span></div>
+<div class="r p1"><span></span><x></x></div>
+<div class="r p1"><x></x></div>
+<div class="r p1a"><span></span><x></x></div>
+<div class="r p1a"><x></x></div>
 
-<div class="gneg"><span></span><span></span></div>
-<div class="gneg c10a"><span></span><span></span></div>
-<div class="gneg p10b"><span></span><span></span></div>
+<div class="r p2"><span></span><span></span><x></x></div>
+<div class="r p2"><x></x><x></x></div>
+<div class="r p2a"><span></span><span></span><x></x></div>
+<div class="r p2a"><x></x><x></x></div>
 
 </body>
 </html>
