@@ -78,7 +78,7 @@ GMPDecryptorParent::CreateSession(uint32_t aCreateSessionToken,
                                   GMPSessionType aSessionType)
 {
   LOGD(("GMPDecryptorParent[%p]::CreateSession(token=%u, promiseId=%u, aInitData='%s')",
-        this, aCreateSessionToken, aPromiseId, ToBase64(aInitData).get()));
+        this, aCreateSessionToken, aPromiseId, ToHexString(aInitData).get()));
 
   if (!mIsOpen) {
     NS_WARNING("Trying to use a dead GMP decrypter!");
@@ -110,7 +110,7 @@ GMPDecryptorParent::UpdateSession(uint32_t aPromiseId,
                                   const nsTArray<uint8_t>& aResponse)
 {
   LOGD(("GMPDecryptorParent[%p]::UpdateSession(sessionId='%s', promiseId=%u response='%s')",
-        this, aSessionId.get(), aPromiseId, ToBase64(aResponse).get()));
+        this, aSessionId.get(), aPromiseId, ToHexString(aResponse).get()));
 
   if (!mIsOpen) {
     NS_WARNING("Trying to use a dead GMP decrypter!");
@@ -295,7 +295,7 @@ GMPDecryptorParent::RecvSessionMessage(const nsCString& aSessionId,
                                        nsTArray<uint8_t>&& aMessage)
 {
   LOGD(("GMPDecryptorParent[%p]::RecvSessionMessage(sessionId='%s', type=%d, msg='%s')",
-        this, aSessionId.get(), aMessageType, ToBase64(aMessage).get()));
+        this, aSessionId.get(), aMessageType, ToHexString(aMessage).get()));
 
   if (!mIsOpen) {
     NS_WARNING("Trying to use a dead GMP decrypter!");
@@ -380,7 +380,7 @@ GMPDecryptorParent::RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
     nsTArray<CDMKeyInfo> cdmKeyInfos(aKeyInfos.Length());
     for (uint32_t i = 0; i < aKeyInfos.Length(); i++) {
       LOGD(("GMPDecryptorParent[%p]::RecvBatchedKeyStatusChanged(keyId=%s, gmp-status=%d)",
-            this, ToBase64(aKeyInfos[i].keyId()).get(), aKeyInfos[i].status()));
+            this, ToHexString(aKeyInfos[i].keyId()).get(), aKeyInfos[i].status()));
       // If the status is kGMPUnknown, we're going to forget(remove) that key info.
       if (aKeyInfos[i].status() != kGMPUnknown) {
         auto status = ToMediaKeyStatus(aKeyInfos[i].status());
