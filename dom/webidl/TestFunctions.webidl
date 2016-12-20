@@ -5,8 +5,19 @@
  */
 
 // A dumping ground for random testing functions
+
+callback PromiseReturner = Promise<any>();
+
 [Pref="dom.expose_test_interfaces"]
 interface TestFunctions {
   [Throws]
   static void throwUncatchableException();
+
+  // Simply returns its argument.  Can be used to test Promise
+  // argument processing behavior.
+  static Promise<any> passThroughPromise(Promise<any> arg);
+
+  // Returns whatever Promise the given PromiseReturner returned.
+  [Throws]
+  static Promise<any> passThroughCallbackPromise(PromiseReturner callback);
 };

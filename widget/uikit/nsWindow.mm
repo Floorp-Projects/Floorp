@@ -573,11 +573,11 @@ nsWindow::Show(bool aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Move(double aX, double aY)
 {
   if (!mNativeView || (mBounds.x == aX && mBounds.y == aY))
-    return NS_OK;
+    return;
 
   //XXX: handle this
   // The point we have is in Gecko coordinates (origin top-left). Convert
@@ -591,10 +591,9 @@ nsWindow::Move(double aX, double aY)
     [mNativeView setNeedsDisplay];
 
   ReportMoveEvent();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aX, double aY,
                  double aWidth, double aHeight,
                  bool aRepaint)
@@ -602,7 +601,7 @@ nsWindow::Resize(double aX, double aY,
     BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
     BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
     if (!mNativeView || (!isMoving && !isResizing))
-        return NS_OK;
+        return;
 
     if (isMoving) {
         mBounds.x = aX;
@@ -623,14 +622,13 @@ nsWindow::Resize(double aX, double aY,
 
     if (isResizing)
         ReportSizeEvent();
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
+void
+nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
     if (!mNativeView || (mBounds.width == aWidth && mBounds.height == aHeight))
-        return NS_OK;
+        return;
 
     mBounds.width  = aWidth;
     mBounds.height = aHeight;
@@ -641,8 +639,6 @@ NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
         [mNativeView setNeedsDisplay];
 
     ReportSizeEvent();
-
-    return NS_OK;
 }
 
 void

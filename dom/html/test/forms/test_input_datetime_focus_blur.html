@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
 -->
 <head>
-  <title>Test focus/blur behaviour for &lt;input type='time'&gt;</title>
+  <title>Test focus/blur behaviour for date/time input types</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -12,7 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288591">Mozilla Bug 1288591</a>
 <p id="display"></p>
 <div id="content">
-  <input id="input" type="time">
+  <input id="input_time" type="time">
+  <input id="input_date" type="date">
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -30,15 +31,15 @@ SimpleTest.waitForFocus(function() {
   SimpleTest.finish();
 });
 
-function test() {
-  let time = document.getElementById("input");
-  time.focus();
+function testFocusBlur(type) {
+  let input = document.getElementById("input_" + type);
+  input.focus();
 
-  // The active element returns the input type=time.
+  // The active element returns the date/time input element.
   let activeElement = document.activeElement;
-  is(activeElement, time, "activeElement should be the time element");
+  is(activeElement, input, "activeElement should be the date/time input element");
   is(activeElement.localName, "input", "activeElement should be an input element");
-  is(activeElement.type, "time", "activeElement should be of type time");
+  is(activeElement.type, type, "activeElement should be of type " + type);
 
   // Use FocusManager to check that the actual focus is on the anonymous
   // text control.
@@ -48,10 +49,17 @@ function test() {
   is(focusedElement.localName, "input", "focusedElement should be an input element");
   is(focusedElement.type, "text", "focusedElement should be of type text");
 
-  time.blur();
-  isnot(document.activeElement, time, "activeElement should no longer be the time element");
+  input.blur();
+  isnot(document.activeElement, input, "activeElement should no longer be the datetime input element");
 }
 
+function test() {
+  let inputTypes = ["time", "date"];
+
+  for (let i = 0; i < inputTypes.length; i++) {
+    testFocusBlur(inputTypes[i]);
+  }
+}
 </script>
 </pre>
 </body>

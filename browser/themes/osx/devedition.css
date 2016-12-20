@@ -22,6 +22,11 @@
   margin-bottom: 0; /* Don't overlap the inner highlight at the top of the nav-bar */
 }
 
+/* Don't use the default background for tabs toolbar */
+#TabsToolbar {
+  -moz-appearance: none !important;
+}
+
 /* Get rid of 1px bright strip at the top of window */
 #main-window[tabsintitlebar] #titlebar-content {
   background: var(--chrome-background-color);
@@ -87,11 +92,6 @@
   }
 }
 
-/* Don't use the default background for tabs toolbar */
-#TabsToolbar {
-  -moz-appearance: none !important;
-}
-
 /* Prevent the hover styling from on the identity icon from overlapping the
    urlbar border. */
 #identity-box {
@@ -99,6 +99,11 @@
   margin-bottom: -1px !important;
   padding-top: 3px !important;
   padding-bottom: 3px !important;
+}
+
+#PanelUI-button {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 :root[devtoolstheme="dark"] .findbar-closebutton:not(:hover),

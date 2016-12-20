@@ -17,8 +17,9 @@ fi
 # so that this script's behavior is consistent when run from any time zone.
 export TZ=UTC
 
-# Also ensure SVN-INFO isn't localized.
-export LANG=C
+# Also ensure SVN-INFO is consistently English.
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 icu_dir=`dirname $0`/icu
 
@@ -61,6 +62,7 @@ for patch in \
  bug-1198952-workaround-make-3.82-bug.diff \
  bug-1228227-bug-1263325-libc++-gcc_hidden.diff \
  ucol_getKeywordValuesForLocale-ulist_resetList.diff \
+ unum_formatDoubleForFields.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
@@ -73,7 +75,7 @@ python ${topsrcdir}/js/src/tests/ecma_6/String/make-normalize-generateddata-inpu
 # build a new ICU data file.
 python `dirname $0`/icu_sources_data.py $topsrcdir
 
-hg addremove ${icu_dir} ${topsrcdir}/config/external/icu
+hg addremove "${icu_dir}/source" "${icu_dir}/SVN-INFO" ${topsrcdir}/config/external/icu
 
 # Check local tzdata version.
 `dirname $0`/update-tzdata.sh -c

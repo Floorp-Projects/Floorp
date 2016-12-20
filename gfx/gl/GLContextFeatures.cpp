@@ -445,7 +445,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         GLESVersion::NONE,
         GLContext::Extension_None,
         {
-            GLContext::NV_primitive_restart,
+            //GLContext::NV_primitive_restart, // Has different enum values.
             GLContext::Extensions_End
         }
     },

@@ -17,25 +17,6 @@
 
 #include "shared-libraries.h"
 
-#ifndef MAC_OS_X_VERSION_10_6
-#define MAC_OS_X_VERSION_10_6 1060
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
-// borrowed from Breakpad
-// Fallback declarations for TASK_DYLD_INFO and friends, introduced in
-// <mach/task_info.h> in the Mac OS X 10.6 SDK.
-#define TASK_DYLD_INFO 17
-struct task_dyld_info {
-    mach_vm_address_t all_image_info_addr;
-    mach_vm_size_t all_image_info_size;
-  };
-typedef struct task_dyld_info task_dyld_info_data_t;
-typedef struct task_dyld_info *task_dyld_info_t;
-#define TASK_DYLD_INFO_COUNT (sizeof(task_dyld_info_data_t) / sizeof(natural_t))
-
-#endif
-
 // Architecture specific abstraction.
 #ifdef __i386__
 typedef mach_header platform_mach_header;
