@@ -28,6 +28,7 @@ function require(something) {
   firstTime = false;
   return "pref('pref1', 'pref1default');\n" +
     "pref('pref2', 'pref2default');\n" +
+    "pref('pref2.sub1', 'pref2sub1default');\n" +
     "pref('pref3', 'pref3default');\n";
 }
 
@@ -51,18 +52,25 @@ localStorage.setItem("Services.prefs:pref3", JSON.stringify({
 
 is(Services.prefs.getCharPref("pref1"), "pref1default", "pref1 value");
 is(Services.prefs.getCharPref("pref2"), "pref2default", "pref2 value");
+is(Services.prefs.getCharPref("pref2.sub1"), "pref2sub1default", "pref2 sub1 value");
 is(Services.prefs.getCharPref("pref3"), "glass winged butterfly", "pref3 value");
 
 // Only pref3 should be in local storage at this point.
 is(localStorage.length, 1, "local storage is correct");
 
+// Check that a default pref can be overridden properly.
 Services.prefs.setCharPref("pref2", "pref2override");
+is(localStorage.length, 2, "local storage was updated");
 
-// Check that a default pref can be overridden properly
+// Check that a child preference can be overridden.
+Services.prefs.setCharPref("pref2.sub1", "pref2sub1override");
+is(localStorage.length, 3, "local storage was updated");
 
 // Workaround to reset the prefs helper and force it to read defaults & overrides again.
 Services._prefs = null;
 is(Services.prefs.getCharPref("pref2"), "pref2override", "pref2 value overridden");
+is(Services.prefs.getCharPref("pref2.sub1"), "pref2sub1override",
+  "pref2 value overridden");
 
 // Clean up.
 localStorage.clear();

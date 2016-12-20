@@ -231,7 +231,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 }
 
 /* No extra vertical padding for nav bar */
-#nav-bar-customization-target,
 #nav-bar {
   padding-top: 0;
   padding-bottom: 0;

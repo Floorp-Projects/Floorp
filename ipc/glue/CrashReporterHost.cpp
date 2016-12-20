@@ -94,7 +94,7 @@ public:
     nsresult rv = GetShutdownBarrier()->AddBlocker(
       this, NS_LITERAL_STRING(__FILE__), __LINE__,
       NS_LITERAL_STRING("Minidump analysis"));
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   NS_IMETHOD Run() override

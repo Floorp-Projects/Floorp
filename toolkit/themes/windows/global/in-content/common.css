@@ -24,7 +24,7 @@ xul|checkbox {
   padding-inline-start: 0;
 }
 
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   xul|*.checkbox-check {
     background-image: none !important;
   }
@@ -40,7 +40,7 @@ xul|radio {
   padding-inline-start: 0;
 }
 
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   xul|*.radio-check {
     background-image: none;
   }
@@ -74,7 +74,7 @@ xul|checkbox:-moz-focusring > xul|*.checkbox-label-box {
 
 /* Use a 2px border so that selected row highlight is still visible behind
     an existing high-contrast border that uses the background color */
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   xul|treechildren::-moz-tree-row(selected),
   xul|listbox xul|listitem[selected="true"] {
      border: 2px dotted Highlight;

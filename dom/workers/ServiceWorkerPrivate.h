@@ -153,6 +153,9 @@ public:
   void
   AddPendingWindow(Runnable* aPendingWindow);
 
+  void
+  SetHandlesFetch(bool aValue);
+
 private:
   enum WakeUpReason {
     FetchEvent = 0,
