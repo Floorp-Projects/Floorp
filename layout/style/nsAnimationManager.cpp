@@ -218,10 +218,6 @@ CSSAnimation::QueueEvents()
      computedTiming.mPhase == ComputedTiming::AnimationPhase::After) ||
     (mPreviousPhaseOrIteration == PREVIOUS_PHASE_AFTER &&
      computedTiming.mPhase == ComputedTiming::AnimationPhase::Before);
-  bool skippedFirstIteration =
-    isActive &&
-    mPreviousPhaseOrIteration == PREVIOUS_PHASE_BEFORE &&
-    computedTiming.mCurrentIteration > 0;
 
   MOZ_ASSERT(!skippedActivePhase || (!isActive && !wasActive),
              "skippedActivePhase only makes sense if we were & are inactive");
@@ -240,12 +236,7 @@ CSSAnimation::QueueEvents()
                                       computedTiming.mCurrentIteration;
   const StickyTimeDuration& activeDuration = computedTiming.mActiveDuration;
 
-  if (skippedFirstIteration) {
-    // Notify animationstart and animationiteration in same tick.
-    events.AppendElement(EventPair(eAnimationStart, initialAdvance));
-    events.AppendElement(EventPair(eAnimationIteration,
-                                   std::max(iterationStart, initialAdvance)));
-  } else if (!wasActive && isActive) {
+  if (!wasActive && isActive) {
     events.AppendElement(EventPair(eAnimationStart, initialAdvance));
   } else if (wasActive && !isActive) {
     events.AppendElement(EventPair(eAnimationEnd, activeDuration));
