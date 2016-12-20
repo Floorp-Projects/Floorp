@@ -5,8 +5,7 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm", this);
 
 // We need both in order to capture stacks.
-const ENABLE_TESTS = AppConstants.MOZ_ENABLE_PROFILER_SPS &&
-                     AppConstants.MOZ_STACKWALKING;
+const ENABLE_TESTS = AppConstants.MOZ_ENABLE_PROFILER_SPS;
 
 /**
  * Ensures that the sctucture of the javascript object used for capturing stacks
