@@ -31,6 +31,9 @@ ScriptedNotificationObserver::Notify(imgIRequest* aRequest,
                                      int32_t aType,
                                      const nsIntRect* /*aUnused*/)
 {
+  MOZ_RELEASE_ASSERT(js::AllowGCBarriers(CycleCollectedJSContext::Get()->Context()),
+                     "sending image notification to JS observer during painting. See bug 1311841");
+
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     return mInner->SizeAvailable(aRequest);
   }
