@@ -1680,17 +1680,22 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     // Send a minimal Accept header for text/css
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                  NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
-                                  false);
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                       NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
+                                       false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIURI> referrerURI = aLoadData->GetReferrerURI();
-    if (referrerURI)
-      httpChannel->SetReferrerWithPolicy(referrerURI,
-                                         aLoadData->mSheet->GetReferrerPolicy());
+    if (referrerURI) {
+      rv = httpChannel->SetReferrerWithPolicy(referrerURI,
+                                              aLoadData->mSheet->GetReferrerPolicy());
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
     if (internalChannel) {
-      internalChannel->SetIntegrityMetadata(sriMetadata.GetIntegrityString());
+      rv = internalChannel->SetIntegrityMetadata(sriMetadata.GetIntegrityString());
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // Set the initiator type
