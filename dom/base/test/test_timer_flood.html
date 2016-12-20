@@ -13,6 +13,8 @@
 <pre id="test">
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+// This test takes a long time to run and it times out on Android debug as a result.
+SimpleTest.requestLongerTimeout(5);
 
 function onLoad() {
   return new Promise(resolve => {
