@@ -154,7 +154,7 @@ add_task(function* test_removeVisitsByFilter() {
       },
       onManyFrecenciesChanged: function() {
         do_print("Many frecencies changed");
-        for (let [,deferred] of frecencyChangePromises) {
+        for (let [, deferred] of frecencyChangePromises) {
           deferred.resolve();
         }
       },
