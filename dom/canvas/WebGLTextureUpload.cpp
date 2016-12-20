@@ -444,6 +444,11 @@ WebGLTexture::TexSubImage(const char* funcName, TexImageTarget target, GLint lev
     if (!blob)
         return;
 
+    if (!blob->HasData()) {
+        mContext->ErrorInvalidValue("%s: Source must not be null.", funcName);
+        return;
+    }
+
     TexSubImage(funcName, target, level, xOffset, yOffset, zOffset, pi, blob.get());
 }
 
