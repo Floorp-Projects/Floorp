@@ -15,7 +15,7 @@ dictionary IIRFilterOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
-Constructor(AudioContext context, IIRFilterOptions options)]
+Constructor(BaseAudioContext context, IIRFilterOptions options)]
 interface IIRFilterNode : AudioNode {
     void getFrequencyResponse(Float32Array frequencyHz, Float32Array magResponse, Float32Array phaseResponse);
 };
