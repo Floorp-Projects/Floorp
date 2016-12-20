@@ -804,14 +804,21 @@ var gTests = [
   },
 ];
 
-gTests.forEach(function(subtest) {
-  test(function(t) {
-    var div = addDiv(t);
-    var animation = div.animate(subtest.frames, 100 * MS_PER_SEC);
-    assert_properties_equal(animation.effect.getProperties(),
-                            subtest.expected);
-  }, subtest.desc);
-});
+SpecialPowers.pushPrefEnv(
+  { set: [["dom.animations-api.core.enabled", true]] },
+  function() {
+    gTests.forEach(function(subtest) {
+      test(function(t) {
+        var div = addDiv(t);
+        var animation = div.animate(subtest.frames, 100 * MS_PER_SEC);
+        assert_properties_equal(animation.effect.getProperties(),
+                                subtest.expected);
+      }, subtest.desc);
+    });
+
+    done();
+  }
+);
 
 </script>
 </body>
