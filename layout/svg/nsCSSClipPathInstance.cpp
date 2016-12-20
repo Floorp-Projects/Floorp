@@ -13,6 +13,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
+#include "nsMathUtils.h"
 #include "nsRenderingContext.h"
 #include "nsRuleNode.h"
 #include "nsSVGElement.h"
@@ -250,8 +251,6 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
 
   const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
-  float referenceLength = sqrt((aRefBox.width * aRefBox.width +
-                                aRefBox.height * aRefBox.height) / 2.0);
   nscoord r = 0;
   if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
     nscoord horizontal, vertical;
@@ -265,7 +264,12 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
       r = horizontal < vertical ? horizontal : vertical;
     }
   } else {
-    r = nsRuleNode::ComputeCoordPercentCalc(coords[0], referenceLength);
+    // We resolve percent <shape-radius> value for circle() as defined here:
+    // https://drafts.csswg.org/css-shapes/#funcdef-circle
+    const double sqrt2 = std::sqrt(2.0);
+    double referenceLength = NS_hypot(aRefBox.width, aRefBox.height) / sqrt2;
+    r = nsRuleNode::ComputeCoordPercentCalc(coords[0],
+                                            NSToCoordRound(referenceLength));
   }
 
   nscoord appUnitsPerDevPixel =
