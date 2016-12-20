@@ -69,7 +69,7 @@ ToJSValue(JSContext* aCx, Promise& aArgument,
           JS::MutableHandle<JS::Value> aValue)
 {
   aValue.setObject(*aArgument.PromiseObj());
-  return true;
+  return MaybeWrapObjectValue(aCx, aValue);
 }
 
 } // namespace dom

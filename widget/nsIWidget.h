@@ -523,7 +523,7 @@ class nsIWidget : public nsISupports
      *
      * @param     aNewParent   new parent
      */
-    NS_IMETHOD SetParent(nsIWidget* aNewParent) = 0;
+    virtual void SetParent(nsIWidget* aNewParent) = 0;
 
     /**
      * Return the parent Widget of this Widget or nullptr if this is a
@@ -721,7 +721,7 @@ class nsIWidget : public nsISupports
      * @param aY the new y position expressed in the parent's coordinate system
      *
      **/
-    NS_IMETHOD Move(double aX, double aY) = 0;
+    virtual void Move(double aX, double aY) = 0;
 
     /**
      * Reposition this widget so that the client area has the given offset.
@@ -734,9 +734,8 @@ class nsIWidget : public nsISupports
      *                 offset from the origin of the client area of the parent
      *                 widget (for root widgets and popup widgets it is in
      *                 screen coordinates)
-     *
      **/
-    NS_IMETHOD MoveClient(double aX, double aY) = 0;
+    virtual void MoveClient(double aX, double aY) = 0;
 
     /**
      * Resize this widget. Any size constraints set for the window by a
@@ -745,11 +744,10 @@ class nsIWidget : public nsISupports
      * @param aWidth  the new width expressed in the parent's coordinate system
      * @param aHeight the new height expressed in the parent's coordinate system
      * @param aRepaint whether the widget should be repainted
-     *
      */
-    NS_IMETHOD Resize(double aWidth,
-                      double aHeight,
-                      bool   aRepaint) = 0;
+    virtual void Resize(double aWidth,
+                        double aHeight,
+                        bool   aRepaint) = 0;
 
     /**
      * Move or resize this widget. Any size constraints set for the window by
@@ -762,11 +760,11 @@ class nsIWidget : public nsISupports
      * @param aRepaint whether the widget should be repainted if the size changes
      *
      */
-    NS_IMETHOD Resize(double aX,
-                      double aY,
-                      double aWidth,
-                      double aHeight,
-                      bool   aRepaint) = 0;
+    virtual void Resize(double aX,
+                        double aY,
+                        double aWidth,
+                        double aHeight,
+                        bool   aRepaint) = 0;
 
     /**
      * Resize the widget so that the inner client area has the given size.
@@ -774,11 +772,10 @@ class nsIWidget : public nsISupports
      * @param aWidth   the new width of the client area.
      * @param aHeight  the new height of the client area.
      * @param aRepaint whether the widget should be repainted
-     *
      */
-    NS_IMETHOD ResizeClient(double aWidth,
-                            double aHeight,
-                            bool   aRepaint) = 0;
+    virtual void ResizeClient(double aWidth,
+                              double aHeight,
+                              bool   aRepaint) = 0;
 
     /**
      * Resize and reposition the widget so tht inner client area has the given
@@ -795,13 +792,12 @@ class nsIWidget : public nsISupports
      * @param aWidth   the new width of the client area.
      * @param aHeight  the new height of the client area.
      * @param aRepaint whether the widget should be repainted
-     *
      */
-    NS_IMETHOD ResizeClient(double aX,
-                            double aY,
-                            double aWidth,
-                            double aHeight,
-                            bool   aRepaint) = 0;
+    virtual void ResizeClient(double aX,
+                              double aY,
+                              double aWidth,
+                              double aHeight,
+                              bool   aRepaint) = 0;
 
     /**
      * Sets the widget's z-index.
@@ -846,9 +842,8 @@ class nsIWidget : public nsISupports
      * Enable or disable this Widget
      *
      * @param aState true to enable the Widget, false to disable it.
-     *
      */
-    NS_IMETHOD Enable(bool aState) = 0;
+    virtual void Enable(bool aState) = 0;
 
     /**
      * Ask whether the widget is enabled
@@ -1161,7 +1156,7 @@ class nsIWidget : public nsISupports
      * Hide window chrome (borders, buttons) for this widget.
      *
      */
-    NS_IMETHOD HideWindowChrome(bool aShouldHide) = 0;
+    virtual void HideWindowChrome(bool aShouldHide) = 0;
 
     enum FullscreenTransitionStage
     {
@@ -1318,19 +1313,17 @@ class nsIWidget : public nsISupports
      *
      * @param aTitle string displayed as the title of the widget
      */
-
     NS_IMETHOD SetTitle(const nsAString& aTitle) = 0;
 
     /**
      * Set the widget's icon.
      * Must be called after Create.
      *
-     * @param anIconSpec string specifying the icon to use; convention is to pass
-     *                   a resource: URL from which a platform-dependent resource
-     *                   file name will be constructed
+     * @param aIconSpec string specifying the icon to use; convention is to
+     *                  pass a resource: URL from which a platform-dependent
+     *                  resource file name will be constructed
      */
-
-    NS_IMETHOD SetIcon(const nsAString& anIconSpec) = 0;
+    virtual void SetIcon(const nsAString& aIconSpec) = 0;
 
     /**
      * Return this widget's origin in screen coordinates.
@@ -1417,7 +1410,7 @@ class nsIWidget : public nsISupports
      *                    conventions. If set to -1, cycles indefinitely until
      *                    window is brought into the foreground.
      */
-    NS_IMETHOD GetAttention(int32_t aCycleCount) = 0;
+    virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) = 0;
 
     /**
      * Ask whether there user input events pending.  All input events are
@@ -1475,14 +1468,16 @@ class nsIWidget : public nsISupports
     /**
      * Begin a window resizing drag, based on the event passed in.
      */
-    NS_IMETHOD BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                               int32_t aHorizontal,
-                               int32_t aVertical) = 0;
+    virtual MOZ_MUST_USE nsresult
+    BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                    int32_t aHorizontal,
+                    int32_t aVertical) = 0;
 
     /**
      * Begin a window moving drag, based on the event passed in.
      */
-    NS_IMETHOD BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) = 0;
+    virtual MOZ_MUST_USE nsresult
+    BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent) = 0;
 
     enum Modifiers {
         CAPS_LOCK = 0x01, // when CapsLock is active
@@ -1754,9 +1749,10 @@ public:
      *                    (should be just under the plugin)
      * aCommitted         The string committed during IME -- otherwise empty
      */
-    NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                              int32_t aPanelX, int32_t aPanelY,
-                              nsString& aCommitted) = 0;
+    virtual MOZ_MUST_USE nsresult
+    StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+                   int32_t aPanelX, int32_t aPanelY,
+                   nsString& aCommitted) = 0;
 
     /**
      * Tells the widget whether or not a plugin (inside the widget) has the
@@ -1811,7 +1807,8 @@ public:
      * keystrokes that trigger native key bindings (which require a native
      * event).
      */
-    NS_IMETHOD AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) = 0;
+    virtual MOZ_MUST_USE nsresult
+    AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) = 0;
 
     /*
      * Execute native key bindings for aType.
@@ -1838,7 +1835,8 @@ public:
      * Call this method when a dialog is opened which has a default button.
      * The button's rectangle should be supplied in aButtonRect.
      */
-    NS_IMETHOD OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) = 0;
+    virtual MOZ_MUST_USE nsresult
+    OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) = 0;
 
     /**
      * Return true if this process shouldn't use platform widgets, and

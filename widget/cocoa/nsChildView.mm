@@ -739,13 +739,13 @@ NS_IMETHODIMP nsChildView::Show(bool aState)
 }
 
 // Change the parent of this widget
-NS_IMETHODIMP
+void
 nsChildView::SetParent(nsIWidget* aNewParent)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mOnDestroyCalled)
-    return NS_OK;
+    return;
 
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
@@ -766,9 +766,7 @@ nsChildView::SetParent(nsIWidget* aNewParent)
     mParentWidget->AddChild(this);
   }
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
@@ -821,9 +819,9 @@ nsChildView::GetDPI()
   return 96.0;
 }
 
-NS_IMETHODIMP nsChildView::Enable(bool aState)
+void
+nsChildView::Enable(bool aState)
 {
-  return NS_OK;
 }
 
 bool nsChildView::IsEnabled() const
@@ -950,15 +948,16 @@ nsChildView::RoundsWidgetCoordinatesTo()
 }
 
 // Move this component, aX and aY are in the parent widget coordinate system
-NS_IMETHODIMP nsChildView::Move(double aX, double aY)
+void
+nsChildView::Move(double aX, double aY)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   int32_t x = NSToIntRound(aX);
   int32_t y = NSToIntRound(aY);
 
   if (!mView || (mBounds.x == x && mBounds.y == y))
-    return NS_OK;
+    return;
 
   mBounds.x = x;
   mBounds.y = y;
@@ -970,20 +969,19 @@ NS_IMETHODIMP nsChildView::Move(double aX, double aY)
   NotifyRollupGeometryChange();
   ReportMoveEvent();
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsChildView::Resize(double aWidth, double aHeight, bool aRepaint)
+void
+nsChildView::Resize(double aWidth, double aHeight, bool aRepaint)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   int32_t width = NSToIntRound(aWidth);
   int32_t height = NSToIntRound(aHeight);
 
   if (!mView || (mBounds.width == width && mBounds.height == height))
-    return NS_OK;
+    return;
 
   mBounds.width  = width;
   mBounds.height = height;
@@ -998,15 +996,14 @@ NS_IMETHODIMP nsChildView::Resize(double aWidth, double aHeight, bool aRepaint)
   NotifyRollupGeometryChange();
   ReportSizeEvent();
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsChildView::Resize(double aX, double aY,
-                                  double aWidth, double aHeight, bool aRepaint)
+void
+nsChildView::Resize(double aX, double aY,
+                    double aWidth, double aHeight, bool aRepaint)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   int32_t x = NSToIntRound(aX);
   int32_t y = NSToIntRound(aY);
@@ -1016,7 +1013,7 @@ NS_IMETHODIMP nsChildView::Resize(double aX, double aY,
   BOOL isMoving = (mBounds.x != x || mBounds.y != y);
   BOOL isResizing = (mBounds.width != width || mBounds.height != height);
   if (!mView || (!isMoving && !isResizing))
-    return NS_OK;
+    return;
 
   if (isMoving) {
     mBounds.x = x;
@@ -1038,14 +1035,12 @@ NS_IMETHODIMP nsChildView::Resize(double aX, double aY,
   if (isMoving) {
     ReportMoveEvent();
     if (mOnDestroyCalled)
-      return NS_OK;
+      return;
   }
   if (isResizing)
     ReportSizeEvent();
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 static const int32_t resizeIndicatorWidth = 15;
@@ -1619,7 +1614,8 @@ NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetAttention(int32_t aCycleCount)
+nsresult
+nsChildView::GetAttention(int32_t aCycleCount)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1680,7 +1676,7 @@ bool nsChildView::HasPendingInputEvent()
 
 #pragma mark -
 
-NS_IMETHODIMP
+nsresult
 nsChildView::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,
                             nsString& aCommitted)
@@ -1788,7 +1784,7 @@ nsChildView::GetNativeTextEventDispatcherListener()
   return mTextInputHandler;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChildView::AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);

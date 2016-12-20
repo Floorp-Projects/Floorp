@@ -1145,7 +1145,8 @@ void nsWindow::SubclassWindow(BOOL bState)
  **************************************************************/
 
 // Get and set parent widgets
-NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
+void
+nsWindow::SetParent(nsIWidget *aNewParent)
 {
   mParent = aNewParent;
 
@@ -1157,13 +1158,12 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
   if (aNewParent) {
     ReparentNativeWidget(aNewParent);
     aNewParent->AddChild(this);
-    return NS_OK;
+    return;
   }
   if (mWnd) {
     // If we have no parent, SetParent should return the desktop.
     VERIFY(::SetParent(mWnd, nullptr));
   }
-  return NS_OK;
 }
 
 void
@@ -1483,7 +1483,7 @@ NS_IMETHODIMP nsWindow::Show(bool bState)
               ::ShowWindow(mWnd, SW_SHOWNORMAL);
             } else {
               ::ShowWindow(mWnd, SW_SHOWNOACTIVATE);
-              GetAttention(2);
+              Unused << GetAttention(2);
             }
             break;
         }
@@ -1675,7 +1675,8 @@ nsWindow::GetSizeConstraints()
 }
 
 // Move this component
-NS_IMETHODIMP nsWindow::Move(double aX, double aY)
+void
+nsWindow::Move(double aX, double aY)
 {
   if (mWindowType == eWindowType_toplevel ||
       mWindowType == eWindowType_dialog) {
@@ -1699,7 +1700,7 @@ NS_IMETHODIMP nsWindow::Move(double aX, double aY)
   if (mWindowType != eWindowType_popup && (mBounds.x == x) && (mBounds.y == y))
   {
     // Nothing to do, since it is already positioned correctly.
-    return NS_OK;
+    return;
   }
 
   mBounds.x = x;
@@ -1749,11 +1750,11 @@ NS_IMETHODIMP nsWindow::Move(double aX, double aY)
     SetThemeRegion();
   }
   NotifyRollupGeometryChange();
-  return NS_OK;
 }
 
 // Resize this component
-NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
+void
+nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
   // for top-level windows only, convert coordinates from desktop pixels
   // (the "parent" coordinate space) to the window's device pixel space
@@ -1771,7 +1772,7 @@ NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     if (aRepaint) {
       Invalidate();
     }
-    return NS_OK;
+    return;
   }
 
   // Set cached value for lightweight and printing
@@ -1799,12 +1800,12 @@ NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     Invalidate();
 
   NotifyRollupGeometryChange();
-  return NS_OK;
 }
 
 // Resize this component
-NS_IMETHODIMP nsWindow::Resize(double aX, double aY, double aWidth,
-                               double aHeight, bool aRepaint)
+void
+nsWindow::Resize(double aX, double aY, double aWidth,
+                 double aHeight, bool aRepaint)
 {
   // for top-level windows only, convert coordinates from desktop pixels
   // (the "parent" coordinate space) to the window's device pixel space
@@ -1825,7 +1826,7 @@ NS_IMETHODIMP nsWindow::Resize(double aX, double aY, double aWidth,
     if (aRepaint) {
       Invalidate();
     }
-    return NS_OK;
+    return;
   }
 
   // Set cached value for lightweight and printing
@@ -1863,10 +1864,9 @@ NS_IMETHODIMP nsWindow::Resize(double aX, double aY, double aWidth,
     Invalidate();
 
   NotifyRollupGeometryChange();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
                           int32_t aHorizontal,
                           int32_t aVertical)
@@ -2106,12 +2106,12 @@ nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
  **************************************************************/
 
 // Enable/disable this component
-NS_IMETHODIMP nsWindow::Enable(bool bState)
+void
+nsWindow::Enable(bool bState)
 {
   if (mWnd) {
     ::EnableWindow(mWnd, bState);
   }
-  return NS_OK;
 }
 
 // Return the current enable state
@@ -3052,17 +3052,18 @@ void nsWindow::UpdateGlass()
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::HideWindowChrome(bool aShouldHide)
+void
+nsWindow::HideWindowChrome(bool aShouldHide)
 {
   HWND hwnd = WinUtils::GetTopLevelHWND(mWnd, true);
   if (!WinUtils::GetNSWindowPtr(hwnd))
   {
     NS_WARNING("Trying to hide window decorations in an embedded context");
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   if (mHideChrome == aShouldHide)
-    return NS_OK;
+    return;
 
   DWORD_PTR style, exStyle;
   mHideChrome = aShouldHide;
@@ -3093,8 +3094,6 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(bool aShouldHide)
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hwnd, GWL_STYLE, style);
   ::SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exStyle);
-
-  return NS_OK;
 }
 
 /**************************************************************
@@ -3532,7 +3531,8 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::SetIcon(const nsAString& aIconSpec) 
+void
+nsWindow::SetIcon(const nsAString& aIconSpec)
 {
   // Assume the given string is a local identifier for an icon file.
 
@@ -3540,7 +3540,7 @@ NS_IMETHODIMP nsWindow::SetIcon(const nsAString& aIconSpec)
   ResolveIconName(aIconSpec, NS_LITERAL_STRING(".ico"),
                   getter_AddRefs(iconFile));
   if (!iconFile)
-    return NS_OK; // not an error if icon is not found
+    return;
 
   nsAutoString iconPath;
   iconFile->GetPath(iconPath);
@@ -3590,7 +3590,6 @@ NS_IMETHODIMP nsWindow::SetIcon(const nsAString& aIconSpec)
             cPath.get(), ::GetLastError()));
   }
 #endif
-  return NS_OK;
 }
 
 /**************************************************************
@@ -3720,7 +3719,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture)
  **************************************************************/
 
 // Draw user's attention to this window until it comes to foreground.
-NS_IMETHODIMP
+nsresult
 nsWindow::GetAttention(int32_t aCycleCount)
 {
   // Got window?
@@ -3838,8 +3837,8 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
  * Called after the dialog is loaded and it has a default button.
  *
  **************************************************************/
- 
-NS_IMETHODIMP
+
+nsresult
 nsWindow::OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect)
 {
   if (aButtonRect.IsEmpty())

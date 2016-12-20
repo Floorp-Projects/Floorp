@@ -89,17 +89,16 @@ public:
   { *aX = kMaxDimension; *aY = kMaxDimension; }
 
   // Widget position is controlled by the parent process via TabChild.
-  NS_IMETHOD Move(double aX, double aY) override
-  { return NS_OK; }
+  virtual void Move(double aX, double aY) override {}
 
-  NS_IMETHOD Resize(double aWidth,
-                    double aHeight,
-                    bool   aRepaint) override;
-  NS_IMETHOD Resize(double aX,
-                    double aY,
-                    double aWidth,
-                    double aHeight,
-                    bool   aRepaint) override
+  virtual void Resize(double aWidth,
+                      double aHeight,
+                      bool   aRepaint) override;
+  virtual void Resize(double aX,
+                      double aY,
+                      double aWidth,
+                      double aHeight,
+                      bool   aRepaint) override
   {
     if (mBounds.x != aX || mBounds.y != aY) {
       NotifyWindowMoved(aX, aY);
@@ -111,8 +110,8 @@ public:
 
   // XXX/cjones: copying gtk behavior here; unclear what disabling a
   // widget is supposed to entail
-  NS_IMETHOD Enable(bool aState) override
-  { mEnabled = aState;  return NS_OK; }
+  virtual void Enable(bool aState) override
+  { mEnabled = aState; }
   virtual bool IsEnabled() const override
   { return mEnabled; }
 
@@ -221,9 +220,10 @@ public:
 
   virtual LayoutDeviceIntRect GetScreenBounds() override;
 
-  NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                            int32_t aPanelX, int32_t aPanelY,
-                            nsString& aCommitted) override;
+  virtual MOZ_MUST_USE nsresult
+  StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+                 int32_t aPanelX, int32_t aPanelY,
+                 nsString& aCommitted) override;
 
   virtual void SetPluginFocused(bool& aFocused) override;
   virtual void DefaultProcOfPluginEvent(

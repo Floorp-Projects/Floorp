@@ -183,8 +183,6 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
 {
   ScopedGfxFeatureReporter reporter("D3D11 Layers");
 
-  MOZ_ASSERT(gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING));
-
   HRESULT hr;
 
   mDevice = DeviceManagerDx::Get()->GetCompositorDevice();
