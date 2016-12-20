@@ -1477,7 +1477,7 @@ public class BrowserApp extends GeckoApp
             delegate.onDestroy(this);
         }
 
-        deleteTempFiles();
+        deleteTempFiles(getApplicationContext());
 
         if (mDoorHangerPopup != null)
             mDoorHangerPopup.destroy();

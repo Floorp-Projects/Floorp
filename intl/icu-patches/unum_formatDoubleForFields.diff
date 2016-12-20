@@ -1,0 +1,134 @@
+Add an ICU API for formatting a number into constituent parts (sign, integer, grouping separator, decimal, fraction, &c.) for use in implementing Intl.NumberFormat.prototype.formatToParts.
+
+https://ssl.icu-project.org/trac/ticket/12684
+
+diff --git a/intl/icu/source/i18n/unicode/unum.h b/intl/icu/source/i18n/unicode/unum.h
+--- a/intl/icu/source/i18n/unicode/unum.h
++++ b/intl/icu/source/i18n/unicode/unum.h
+@@ -20,16 +20,17 @@
+ 
+ #include "unicode/localpointer.h"
+ #include "unicode/uloc.h"
+ #include "unicode/ucurr.h"
+ #include "unicode/umisc.h"
+ #include "unicode/parseerr.h"
+ #include "unicode/uformattable.h"
+ #include "unicode/udisplaycontext.h"
++#include "unicode/ufieldpositer.h"
+ 
+ /**
+  * \file
+  * \brief C API: NumberFormat
+  *
+  * <h2> Number Format C API </h2>
+  *
+  * Number Format C API  Provides functions for
+@@ -647,16 +648,67 @@ U_STABLE int32_t U_EXPORT2
+ unum_formatUFormattable(const UNumberFormat* fmt,
+                         const UFormattable *number,
+                         UChar *result,
+                         int32_t resultLength,
+                         UFieldPosition *pos,
+                         UErrorCode *status);
+ 
+ /**
++* Format a double using a UNumberFormat according to the UNumberFormat's locale,
++* and initialize a UFieldPositionIterator that enumerates the subcomponents of
++* the resulting string.
++*
++* @param format
++*          The formatter to use.
++* @param number
++*          The number to format.
++* @param result
++*          A pointer to a buffer to receive the NULL-terminated formatted
++*          number. If the formatted number fits into dest but cannot be
++*          NULL-terminated (length == resultLength) then the error code is set
++*          to U_STRING_NOT_TERMINATED_WARNING. If the formatted number doesn't
++*          fit into result then the error code is set to
++*          U_BUFFER_OVERFLOW_ERROR.
++* @param resultLength
++*          The maximum size of result.
++* @param fpositer
++*          A pointer to a UFieldPositionIterator created by {@link #ufieldpositer_open}
++*          (may be NULL if field position information is not needed, but in this
++*          case it's preferable to use {@link #unum_formatDouble}). Iteration
++*          information already present in the UFieldPositionIterator is deleted,
++*          and the iterator is reset to apply to the fields in the formatted
++*          string created by this function call. The field values and indexes
++*          returned by {@link #ufieldpositer_next} represent fields denoted by
++*          the UNumberFormatFields enum. Fields are not returned in a guaranteed
++*          order. Fields cannot overlap, but they may nest. For example, 1234
++*          could format as "1,234" which might consist of a grouping separator
++*          field for ',' and an integer field encompassing the entire string.
++* @param status
++*          A pointer to an UErrorCode to receive any errors
++* @return
++*          The total buffer size needed; if greater than resultLength, the
++*          output was truncated.
++* @see unum_formatDouble
++* @see unum_parse
++* @see unum_parseDouble
++* @see UFieldPositionIterator
++* @see UNumberFormatFields
++* @draft ICU 59
++*/
++U_DRAFT int32_t U_EXPORT2
++unum_formatDoubleForFields(const UNumberFormat* format,
++                           double number,
++                           UChar* result,
++                           int32_t resultLength,
++                           UFieldPositionIterator* fpositer,
++                           UErrorCode* status);
++#define ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS
++
++/**
+ * Parse a string into an integer using a UNumberFormat.
+ * The string will be parsed according to the UNumberFormat's locale.
+ * Note: parsing is not supported for styles UNUM_DECIMAL_COMPACT_SHORT
+ * and UNUM_DECIMAL_COMPACT_LONG.
+ * @param fmt The formatter to use.
+ * @param text The text to parse.
+ * @param textLength The length of text, or -1 if null-terminated.
+ * @param parsePos If not NULL, on input a pointer to an integer specifying the offset at which
+diff --git a/intl/icu/source/i18n/unum.cpp b/intl/icu/source/i18n/unum.cpp
+--- a/intl/icu/source/i18n/unum.cpp
++++ b/intl/icu/source/i18n/unum.cpp
+@@ -870,9 +870,37 @@ unum_formatUFormattable(const UNumberFor
+     if(pos != 0) {
+         pos->beginIndex = fp.getBeginIndex();
+         pos->endIndex = fp.getEndIndex();
+     }
+ 
+     return res.extract(result, resultLength, *status);
+ }
+ 
++U_CAPI int32_t U_EXPORT2
++unum_formatDoubleForFields(const UNumberFormat* format,
++                           double number,
++                           UChar* result,
++                           int32_t resultLength,
++                           UFieldPositionIterator* fpositer,
++                           UErrorCode* status)
++{
++    if (U_FAILURE(*status))
++        return -1;
++
++    if (result == NULL ? resultLength != 0 : resultLength < 0) {
++        *status = U_ILLEGAL_ARGUMENT_ERROR;
++        return -1;
++    }
++
++    UnicodeString res;
++    if (result != NULL) {
++        // NULL destination for pure preflighting: empty dummy string
++        // otherwise, alias the destination buffer
++        res.setTo(result, 0, resultLength);
++    }
++
++    ((const NumberFormat*)format)->format(number, res, (FieldPositionIterator*)fpositer, *status);
++
++    return res.extract(result, resultLength, *status);
++}
++
+ #endif /* #if !UCONFIG_NO_FORMATTING */

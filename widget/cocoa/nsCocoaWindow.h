@@ -239,7 +239,7 @@ public:
 
     NS_IMETHOD              Show(bool aState) override;
     virtual nsIWidget*      GetSheetWindowParent(void) override;
-    NS_IMETHOD              Enable(bool aState) override;
+    virtual void            Enable(bool aState) override;
     virtual bool            IsEnabled() const override;
     virtual void            SetModal(bool aState) override;
     virtual void            SetFakeModal(bool aState) override;
@@ -256,9 +256,9 @@ public:
     virtual void            ConstrainPosition(bool aAllowSlop,
                                               int32_t *aX, int32_t *aY) override;
     virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
-    NS_IMETHOD              Move(double aX, double aY) override;
+    virtual void            Move(double aX, double aY) override;
     virtual void            SetSizeMode(nsSizeMode aMode) override;
-    NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
+    virtual void            HideWindowChrome(bool aShouldHide) override;
 
     void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
     virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
@@ -279,8 +279,8 @@ public:
       mFullscreenTransitionAnimation = nil;
     }
 
-    NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
-    NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+    virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override;
+    virtual void            Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
     virtual LayoutDeviceIntRect GetClientBounds() override;
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     void                    ReportMoveEvent();
@@ -308,7 +308,7 @@ public:
                              nsEventStatus& aStatus) override;
     virtual void CaptureRollupEvents(nsIRollupListener * aListener,
                                      bool aDoCapture) override;
-    NS_IMETHOD GetAttention(int32_t aCycleCount) override;
+    virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override;
     virtual bool HasPendingInputEvent() override;
     virtual nsTransparencyMode GetTransparencyMode() override;
     virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
@@ -365,7 +365,7 @@ protected:
   void                 SetWindowBackgroundBlur();
   void                 UpdateBounds();
 
-  nsresult             DoResize(double aX, double aY, double aWidth, double aHeight,
+  void                 DoResize(double aX, double aY, double aWidth, double aHeight,
                                 bool aRepaint, bool aConstrainToCurrentScreen);
 
   inline bool ShouldToggleNativeFullscreen(bool aFullScreen,

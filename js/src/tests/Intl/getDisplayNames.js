@@ -217,13 +217,21 @@ const rangeErrorKeys = [
   ['dates/fields/dayperiods/amEXTRA'],
   ['dates/gregori\u1161n/months/january'],
   ["dates/fields/year/"],
+  ["dates/fields/year\0"],
   ["dates/fields/month/"],
+  ["dates/fields/month\0"],
   ["dates/fields/week/"],
+  ["dates/fields/week\0"],
   ["dates/fields/day/"],
+  ["dates/fields/day\0"],
   ["dates/gregorian/months/january/"],
+  ["dates/gregorian/months/january\0"],
   ["dates/gregorian/weekdays/saturday/"],
+  ["dates/gregorian/weekdays/saturday\0"],
   ["dates/gregorian/dayperiods/am/"],
+  ["dates/gregorian/dayperiods/am\0"],
   ["dates/fields/months/january/"],
+  ["dates/fields/months/january\0"],
 ];
 
 for (let keys of rangeErrorKeys) {

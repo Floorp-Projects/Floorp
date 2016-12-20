@@ -130,7 +130,7 @@ interface OnlyForUseInConstructor {
  Constructor(DOMString str),
  Constructor(unsigned long num, boolean? boolArg),
  Constructor(TestInterface? iface),
- Constructor(long arg1, IndirectlyImplementedInterface iface),
+ Constructor(unsigned long arg1, IndirectlyImplementedInterface iface),
  Constructor(Date arg1),
  Constructor(ArrayBuffer arrayBuf),
  Constructor(Uint8Array typedArr),

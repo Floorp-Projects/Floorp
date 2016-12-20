@@ -91,18 +91,6 @@ Promise::~Promise()
   mozilla::DropJSObjects(this);
 }
 
-
-bool
-Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                    JS::MutableHandle<JSObject*> aWrapper)
-{
-#ifdef DEBUG
-  binding_detail::AssertReflectorHasGivenProto(aCx, mPromiseObj, aGivenProto);
-#endif // DEBUG
-  aWrapper.set(mPromiseObj);
-  return true;
-}
-
 // static
 already_AddRefed<Promise>
 Promise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv)
