@@ -31,7 +31,6 @@
 #include "nsRegionFwd.h"
 
 #include "nsWinGesture.h"
-#include "WinPointerEvents.h"
 #include "WinUtils.h"
 #include "WindowHook.h"
 #include "TaskbarWindowPreview.h"
@@ -230,7 +229,7 @@ public:
                               mozilla::WidgetMouseEvent::eLeftButton,
                             uint16_t aInputSource =
                               nsIDOMMouseEvent::MOZ_SOURCE_MOUSE,
-                            WinPointerInfo* aPointerInfo = nullptr);
+                            uint16_t aPointerId = 0);
   virtual bool            DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent,
                                               nsEventStatus& aStatus);
   void                    DispatchPendingEvents();
@@ -429,8 +428,6 @@ protected:
   void                    OnSysColorChanged();
   void                    OnDPIChanged(int32_t x, int32_t y,
                                        int32_t width, int32_t height);
-  bool                    OnPointerEvents(UINT msg, WPARAM wParam,
-                                          LPARAM lParam);
 
   /**
    * Function that registers when the user has been active (used for detecting
@@ -657,9 +654,6 @@ protected:
   // associated with a particular widget (since we exited the widget).
   static WPARAM sMouseExitwParam;
   static LPARAM sMouseExitlParamScreen;
-
-  // Pointer events processing and management
-  WinPointerEvents mPointerEvents;
 };
 
 /**
