@@ -188,16 +188,16 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
               ChannelCountMode::Explicit,
               ChannelInterpretation::Speakers)
   , mThreshold(new AudioParam(this, DynamicsCompressorNodeEngine::THRESHOLD,
-                              "threshold", -24.f, -100.f, 0.f))
+                              -24.f, "threshold"))
   , mKnee(new AudioParam(this, DynamicsCompressorNodeEngine::KNEE,
-                         "knee", 30.f, 0.f, 40.f))
+                         30.f, "knee"))
   , mRatio(new AudioParam(this, DynamicsCompressorNodeEngine::RATIO,
-                          "ratio", 12.f, 1.f, 20.f))
+                          12.f, "ratio"))
   , mReduction(0)
   , mAttack(new AudioParam(this, DynamicsCompressorNodeEngine::ATTACK,
-                           "attack", 0.003f, 0.f, 1.f))
+                           0.003f, "attack"))
   , mRelease(new AudioParam(this, DynamicsCompressorNodeEngine::RELEASE,
-                            "release", 0.25f, 0.f, 1.f))
+                            0.25f, "release"))
 {
   DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
