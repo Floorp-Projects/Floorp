@@ -150,11 +150,12 @@ nsPrefetchNode::OpenChannel()
     nsCOMPtr<nsIHttpChannel> httpChannel =
         do_QueryInterface(mChannel);
     if (httpChannel) {
-        httpChannel->SetReferrerWithPolicy(mReferrerURI, referrerPolicy);
-        httpChannel->SetRequestHeader(
-            NS_LITERAL_CSTRING("X-Moz"),
-            NS_LITERAL_CSTRING("prefetch"),
-            false);
+        rv = httpChannel->SetReferrerWithPolicy(mReferrerURI, referrerPolicy);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
+                                           NS_LITERAL_CSTRING("prefetch"),
+                                           false);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     // Reduce the priority of prefetch network requests.
@@ -339,9 +340,10 @@ nsPrefetchNode::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
     NS_ENSURE_STATE(httpChannel);
 
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                  NS_LITERAL_CSTRING("prefetch"),
-                                  false);
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
+                                       NS_LITERAL_CSTRING("prefetch"),
+                                       false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // Assign to mChannel after we get notification about success of the
     // redirect in OnRedirectResult.
