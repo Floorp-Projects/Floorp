@@ -63,7 +63,7 @@ function initExceptionDialog() {
     if (args[0].location) {
       // We were pre-seeded with a location.
       document.getElementById("locationTextBox").value = args[0].location;
-      document.getElementById('checkCertButton').disabled = false;
+      document.getElementById("checkCertButton").disabled = false;
 
       if (args[0].sslStatus) {
         gSSLStatus = args[0].sslStatus;
@@ -106,7 +106,7 @@ function checkCert() {
   var req = new XMLHttpRequest();
   try {
     if (uri) {
-      req.open('GET', uri.prePath, false);
+      req.open("GET", uri.prePath, false);
       req.channel.notificationCallbacks = new badCertListener();
       req.send(null);
     }
@@ -176,7 +176,7 @@ function resetDialog() {
  * Called by input textboxes to manage UI state
  */
 function handleTextChange() {
-  var checkCertButton = document.getElementById('checkCertButton');
+  var checkCertButton = document.getElementById("checkCertButton");
   checkCertButton.disabled = !(document.getElementById("locationTextBox").value);
   if (gNeedReset) {
     gNeedReset = false;

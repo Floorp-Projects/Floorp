@@ -25,9 +25,9 @@ function readAndTamperWithNthByte(certificatePath, n) {
     // remember, n is negative at this point
     n = der.length + n;
   }
-  let replacement = '\x22';
+  let replacement = "\x22";
   if (der.charCodeAt(n) == replacement) {
-    replacement = '\x23';
+    replacement = "\x23";
   }
   der = der.substring(0, n) + replacement + der.substring(n + 1);
   return btoa(der);
