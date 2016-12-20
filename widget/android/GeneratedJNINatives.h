@@ -449,6 +449,21 @@ const JNINativeMethod NativePanZoomController::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class VsyncSource::Natives : public mozilla::jni::NativeImpl<VsyncSource, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod VsyncSource::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<VsyncSource::NotifyVsync_t>(
+            mozilla::jni::NativeStub<VsyncSource::NotifyVsync_t, Impl>
+            ::template Wrap<&Impl::NotifyVsync>)
+};
+
+template<class Impl>
 class NativeJSContainer::Natives : public mozilla::jni::NativeImpl<NativeJSContainer, Impl>
 {
 public:
