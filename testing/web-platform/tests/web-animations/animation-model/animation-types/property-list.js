@@ -33,8 +33,7 @@ var gCSSProperties = {
   },
   'background-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'background-blend-mode': {
     // https://drafts.fxtf.org/compositing-1/#propdef-background-blend-mode
@@ -125,8 +124,7 @@ var gCSSProperties = {
   },
   'border-bottom-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'border-bottom-left-radius': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-left-radius
@@ -223,8 +221,7 @@ var gCSSProperties = {
   },
   'border-left-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-left-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'border-left-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-left-style
@@ -243,8 +240,7 @@ var gCSSProperties = {
   },
   'border-right-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-right-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'border-right-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-right-style
@@ -268,8 +264,7 @@ var gCSSProperties = {
   },
   'border-top-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'border-top-left-radius': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-left-radius
@@ -348,8 +343,7 @@ var gCSSProperties = {
   },
   'color': {
     // https://drafts.csswg.org/css-color/#propdef-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'color-adjust': {
     // https://drafts.csswg.org/css-color-4/#color-adjust
@@ -380,8 +374,7 @@ var gCSSProperties = {
   },
   'column-rule-color': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'column-fill': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-fill
@@ -511,8 +504,7 @@ var gCSSProperties = {
   },
   'flood-color': {
     // https://drafts.fxtf.org/filters/#FloodColorProperty
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'flood-opacity': {
     // https://drafts.fxtf.org/filters/#propdef-flood-opacity
@@ -769,8 +761,7 @@ var gCSSProperties = {
   },
   'lighting-color': {
     // https://drafts.fxtf.org/filters/#LightingColorProperty
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'line-height': {
     // https://drafts.csswg.org/css21/visudet.html#propdef-line-height
@@ -1021,8 +1012,7 @@ var gCSSProperties = {
   },
   'outline-color': {
     // https://drafts.csswg.org/css-ui-3/#propdef-outline-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'outline-offset': {
     // https://drafts.csswg.org/css-ui-3/#propdef-outline-offset
@@ -1223,8 +1213,7 @@ var gCSSProperties = {
   },
   'stop-color': {
     // https://svgwg.org/svg2-draft/pservers.html#StopColorProperty
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'stop-opacity': {
     // https://svgwg.org/svg2-draft/pservers.html#StopOpacityProperty
@@ -1308,8 +1297,7 @@ var gCSSProperties = {
   },
   'text-decoration-color': {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-decoration-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'text-decoration-line': {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-decoration-line
@@ -1325,8 +1313,7 @@ var gCSSProperties = {
   },
   'text-emphasis-color': {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-emphasis-color
-    types: [
-    ]
+    types: [ 'color' ]
   },
   'text-emphasis-position': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-emphasis-position
