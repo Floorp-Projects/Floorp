@@ -1271,9 +1271,9 @@ public:
    * @param aBaselineOffset out-param, only valid if the method returns true
    * (implemented in nsIFrameInlines.h)
    */
-  inline nscoord GetBaseline(mozilla::WritingMode aWM,
-                             BaselineSharingGroup aBaselineGroup,
-                             AlignmentContext     aAlignmentContext) const;
+  inline nscoord BaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 AlignmentContext     aAlignmentContext) const;
 
   /**
    * XXX: this method is taking over the role that GetLogicalBaseline has.
