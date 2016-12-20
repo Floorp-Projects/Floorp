@@ -1408,9 +1408,6 @@ addAsyncAnimTest(function *() {
                  "large negative delay test at 0ms");
   check_events([{ type: 'animationstart', target: gDiv,
                   animationName: 'anim2', elapsedTime: 3.6,
-                  pseudoElement: "" },
-                { type: 'animationiteration', target: gDiv,
-                  animationName: 'anim2', elapsedTime: 3.6,
                   pseudoElement: "" }],
                "right after start in large negative delay test");
   advance_clock(380);
