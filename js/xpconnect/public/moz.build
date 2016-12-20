@@ -7,6 +7,7 @@
 EXPORTS += [
     'nsAXPCNativeCallContext.h',
     'nsTArrayHelpers.h',
+    'xpc_make_class.h',
     'xpc_map_end.h',
 ]
 

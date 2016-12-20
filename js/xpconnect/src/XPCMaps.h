@@ -509,41 +509,6 @@ private:
 
 /***************************************************************************/
 
-class XPCNativeScriptableSharedMap
-{
-public:
-    struct Entry : public PLDHashEntryHdr
-    {
-        // This is a weak reference that will be cleared
-        // in the XPCNativeScriptableShared destructor.
-        XPCNativeScriptableShared* key;
-
-        static PLDHashNumber
-        Hash(const void* key);
-
-        static bool
-        Match(const PLDHashEntryHdr* entry, const void* key);
-
-        static const struct PLDHashTableOps sOps;
-    };
-
-    static XPCNativeScriptableSharedMap* newMap(int length);
-
-    bool GetNewOrUsed(uint32_t flags, char* name, XPCNativeScriptableInfo* si);
-
-    inline uint32_t Count() { return mTable.EntryCount(); }
-
-    void Remove(XPCNativeScriptableShared* key) { mTable.Remove(key); }
-
-private:
-    XPCNativeScriptableSharedMap();    // no implementation
-    explicit XPCNativeScriptableSharedMap(int size);
-private:
-    PLDHashTable mTable;
-};
-
-/***************************************************************************/
-
 class XPCWrappedNativeProtoMap
 {
 public:
