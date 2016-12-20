@@ -83,6 +83,23 @@ public:
 
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override;
 
+  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                nscoord* aBaseline) const override
+  {
+    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst, aBaseline);
+  }
+
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord*             aBaseline) const override
+  {
+    if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
+      return false;
+    }
+    *aBaseline = GetLogicalBaseline(aWM);
+    return true;
+  }
+
   // nsContainerFrame overrides
   uint16_t CSSAlignmentForAbsPosChild(
             const ReflowInput& aChildRI,

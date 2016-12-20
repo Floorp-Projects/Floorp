@@ -15,14 +15,6 @@
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 
-// https://drafts.csswg.org/css-align-3/#baseline-sharing-group
-enum BaselineSharingGroup
-{
-  // NOTE Used as an array index so must be 0 and 1.
-  eFirst = 0,
-  eLast = 1,
-};
-
 /**
  * Factory function.
  * @return a newly allocated nsGridContainerFrame (infallible)
@@ -118,6 +110,22 @@ public:
     nscoord b;
     GetBBaseline(BaselineSharingGroup::eFirst, &b);
     return b;
+  }
+
+  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                nscoord* aBaseline) const override
+  {
+    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst, aBaseline);
+  }
+
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord*             aBaseline) const override
+  {
+    if (HasAnyStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE)) {
+      return false;
+    }
+    return GetBBaseline(aBaselineGroup, aBaseline);
   }
 
 #ifdef DEBUG_FRAME_DUMP
