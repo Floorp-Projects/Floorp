@@ -35,7 +35,6 @@
 
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
-#include "FuzzingWrapper.h"
 #include "H264Converter.h"
 
 #include "AgnosticDecoderModule.h"
@@ -287,21 +286,8 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
     return nullptr;
   }
 
-  MediaDataDecoderCallback* callback = aParams.mCallback;
-  RefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
-  if (MediaPrefs::PDMFuzzingEnabled()) {
-    callbackWrapper = new DecoderCallbackFuzzingWrapper(callback);
-    callbackWrapper->SetVideoOutputMinimumInterval(
-      TimeDuration::FromMilliseconds(MediaPrefs::PDMFuzzingInterval()));
-    callbackWrapper->SetDontDelayInputExhausted(!MediaPrefs::PDMFuzzingDelayInputExhausted());
-    callback = callbackWrapper.get();
-  }
-
-  CreateDecoderParams params = aParams;
-  params.mCallback = callback;
-
   if (MP4Decoder::IsH264(config.mMimeType) && !aParams.mUseBlankDecoder) {
-    RefPtr<H264Converter> h = new H264Converter(aPDM, params);
+    RefPtr<H264Converter> h = new H264Converter(aPDM, aParams);
     const nsresult rv = h->GetLastError();
     if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
       // The H264Converter either successfully created the wrapped decoder,
@@ -310,11 +296,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
       m = h.forget();
     }
   } else {
-    m = aPDM->CreateVideoDecoder(params);
-  }
-
-  if (callbackWrapper && m) {
-    m = new DecoderFuzzingWrapper(m.forget(), callbackWrapper.forget());
+    m = aPDM->CreateVideoDecoder(aParams);
   }
 
   return m.forget();
