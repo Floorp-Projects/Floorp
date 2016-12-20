@@ -10,12 +10,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sanitizer",
                                   "resource:///modules/Sanitizer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "cookieMgr",
-                                   "@mozilla.org/cookiemanager;1",
-                                   "nsICookieManager");
 
 /**
 * A number of iterations after which to yield time back
@@ -43,6 +41,7 @@ function clearCache() {
 }
 
 let clearCookies = Task.async(function* (options) {
+  let cookieMgr = Services.cookies;
   // This code has been borrowed from sanitize.js.
   let yieldCounter = 0;
 
@@ -52,7 +51,7 @@ let clearCookies = Task.async(function* (options) {
     while (cookiesEnum.hasMoreElements()) {
       let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
 
-      if (cookie.creationTime > PlacesUtils.toPRTime(options.since)) {
+      if (cookie.creationTime >= PlacesUtils.toPRTime(options.since)) {
         // This cookie was created after our cutoff, clear it.
         cookieMgr.remove(cookie.host, cookie.name, cookie.path,
                          false, cookie.originAttributes);
@@ -79,6 +78,28 @@ function clearFormData(options) {
 function clearHistory(options) {
   return sanitizer.items.history.clear(makeRange(options));
 }
+
+let clearPasswords = Task.async(function* (options) {
+  let loginManager = Services.logins;
+  let yieldCounter = 0;
+
+  if (options.since) {
+    // Iterate through the logins and delete any updated after our cutoff.
+    let logins = loginManager.getAllLogins();
+    for (let login of logins) {
+      login.QueryInterface(Ci.nsILoginMetaInfo);
+      if (login.timePasswordChanged >= options.since) {
+        loginManager.removeLogin(login);
+        if (++yieldCounter % YIELD_PERIOD == 0) {
+          yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+        }
+      }
+    }
+  } else {
+    // Remove everything.
+    loginManager.removeAllLogins();
+  }
+});
 
 function clearPluginData(options) {
   return sanitizer.items.pluginData.clear(makeRange(options));
@@ -110,6 +131,9 @@ function doRemoval(options, dataToRemove, extension) {
           break;
         case "history":
           removalPromises.push(clearHistory(options));
+          break;
+        case "passwords":
+          removalPromises.push(clearPasswords(options));
           break;
         case "pluginData":
           removalPromises.push(clearPluginData(options));
@@ -173,6 +197,9 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
       },
       removeHistory(options) {
         return doRemoval(options, {history: true});
+      },
+      removePasswords(options) {
+        return doRemoval(options, {passwords: true});
       },
       removePluginData(options) {
         return doRemoval(options, {pluginData: true});
