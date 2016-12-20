@@ -20,6 +20,9 @@
 <!ENTITY installAddonFromFile.accesskey       "I">
 <!ENTITY toolsMenu.tooltip                    "Tools for all add-ons">
 
+<!ENTITY getThemes.description                "Looking to personalize your browser?">
+<!ENTITY getThemes.learnMore                  "Choose from thousands of themes.">
+
 <!ENTITY cmd.back.tooltip                     "Go back one page">
 <!ENTITY cmd.forward.tooltip                  "Go forward one page">
 

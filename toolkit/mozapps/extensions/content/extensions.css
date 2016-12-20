@@ -198,10 +198,8 @@ setting[type="menulist"] {
   display: none;
 }
 
-#addons-page .view-pane:not([type="plugin"]) #plugindeprecation-notice {
-  display: none;
-}
-
+#addons-page .view-pane:not([type="theme"]) #getthemes-container,
+#addons-page .view-pane:not([type="plugin"]) #plugindeprecation-notice,
 #addons-page .view-pane:not([type="experiment"]) .experiment-info-container {
   display: none;
 }
