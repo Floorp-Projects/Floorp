@@ -455,7 +455,7 @@ public:
         nsLayoutUtils::GetLastLineBaseline(mWM, mFrame, &mAscent);
 
       if (!found) {
-        mAscent = mFrame->GetLogicalBaseline(mWM);
+        mAscent = mFrame->SynthesizeBaselineFromBorderBox(mWM);
       }
     }
     return mAscent;
@@ -2324,6 +2324,10 @@ nsFlexContainerFrame::GetLogicalBaseline(mozilla::WritingMode aWM) const
   NS_ASSERTION(mBaselineFromLastReflow != NS_INTRINSIC_WIDTH_UNKNOWN,
                "baseline has not been set");
 
+  if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
+    // Return a baseline synthesized from our margin-box.
+    return nsContainerFrame::GetLogicalBaseline(aWM);
+  }
   return mBaselineFromLastReflow;
 }
 
@@ -4259,6 +4263,14 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                     aStruts, aAxisTracker,
                     placeholderKids, lines);
 
+  if (lines.getFirst()->IsEmpty() &&
+      !lines.getFirst()->getNext()) {
+    // We have no flex items, our parent should synthesize a baseline if needed.
+    AddStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE);
+  } else {
+    RemoveStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE);
+  }
+
   aContentBoxMainSize =
     ResolveFlexContainerMainSize(aReflowInput, aAxisTracker,
                                  aContentBoxMainSize, aAvailableBSizeForContent,
@@ -4519,9 +4531,15 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     flexContainerAscent = desiredSizeInFlexWM.BSize(flexWM);
   }
 
-  // XXXdholbert flexContainerAscent needs to be in terms of
-  // our parent's writing-mode here. See bug 1155322.
-  aDesiredSize.SetBlockStartAscent(flexContainerAscent);
+  if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
+    // This will force our parent to call GetLogicalBaseline, which will
+    // synthesize a margin-box baseline.
+    aDesiredSize.SetBlockStartAscent(ReflowOutput::ASK_FOR_BASELINE);
+  } else {
+    // XXXdholbert flexContainerAscent needs to be in terms of
+    // our parent's writing-mode here. See bug 1155322.
+    aDesiredSize.SetBlockStartAscent(flexContainerAscent);
+  }
 
   // Cache this baseline for use outside of this call.
   mBaselineFromLastReflow = flexContainerAscent;
