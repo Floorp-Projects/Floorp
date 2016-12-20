@@ -47,6 +47,7 @@ WEBIDL_FILES = [
     'AudioWorkletGlobalScope.webidl',
     'AutocompleteInfo.webidl',
     'BarProp.webidl',
+    'BaseAudioContext.webidl',
     'BaseKeyframeTypes.webidl',
     'BatteryManager.webidl',
     'BeforeAfterKeyboardEvent.webidl',
