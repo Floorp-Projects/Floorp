@@ -237,7 +237,7 @@ protected:
     // have a waiting promise pending (such as with non-MSE EME).
     return Resource()->IsExpectingMoreData() ||
            (Reader()->IsWaitForDataSupported() &&
-            (Reader()->IsWaitingAudioData() || Reader()->IsWaitingVideoData()));
+            (mMaster->IsWaitingAudioData() || mMaster->IsWaitingVideoData()));
   }
   MediaQueue<MediaData>& AudioQueue() const { return mMaster->mAudioQueue; }
   MediaQueue<MediaData>& VideoQueue() const { return mMaster->mVideoQueue; }
@@ -683,8 +683,8 @@ private:
   void MaybeStopPrerolling()
   {
     if (mIsPrerolling &&
-        (DonePrerollingAudio() || Reader()->IsWaitingAudioData()) &&
-        (DonePrerollingVideo() || Reader()->IsWaitingVideoData())) {
+        (DonePrerollingAudio() || mMaster->IsWaitingAudioData()) &&
+        (DonePrerollingVideo() || mMaster->IsWaitingVideoData())) {
       mIsPrerolling = false;
       // Check if we can start playback.
       mMaster->ScheduleStateMachine();
@@ -928,7 +928,7 @@ public:
     // If the decoder is waiting for data, we tell it to call us back when the
     // data arrives.
     if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
-      Reader()->WaitForData(aType);
+      mMaster->WaitForData(aType);
       return;
     }
 
@@ -1065,7 +1065,7 @@ private:
   {
     MOZ_ASSERT(!mDoneAudioSeeking);
     MOZ_ASSERT(!mMaster->IsRequestingAudioData());
-    MOZ_ASSERT(!Reader()->IsWaitingAudioData());
+    MOZ_ASSERT(!mMaster->IsWaitingAudioData());
     mMaster->RequestAudioData();
   }
 
@@ -1073,7 +1073,7 @@ private:
   {
     MOZ_ASSERT(!mDoneVideoSeeking);
     MOZ_ASSERT(!mMaster->IsRequestingVideoData());
-    MOZ_ASSERT(!Reader()->IsWaitingVideoData());
+    MOZ_ASSERT(!mMaster->IsWaitingVideoData());
     mMaster->RequestVideoData(false, media::TimeUnit());
   }
 
@@ -1281,7 +1281,7 @@ private:
     if (!NeedMoreVideo()) {
       FinishSeek();
     } else if (!mMaster->IsRequestingVideoData() &&
-               !Reader()->IsWaitingVideoData()) {
+               !mMaster->IsWaitingVideoData()) {
       RequestVideoData();
     }
   }
@@ -1367,7 +1367,7 @@ private:
       // Video seek not finished.
       switch (aError.Code()) {
         case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-          Reader()->WaitForData(MediaData::VIDEO_DATA);
+          mMaster->WaitForData(MediaData::VIDEO_DATA);
           break;
         case NS_ERROR_DOM_MEDIA_CANCELED:
           RequestVideoData();
@@ -1716,7 +1716,7 @@ StateObject::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
   if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
     MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
-    Reader()->WaitForData(aType);
+    mMaster->WaitForData(aType);
     HandleWaitingForData();
     return;
   }
@@ -2047,8 +2047,8 @@ DecodingState::MaybeStartBuffering()
   } else {
     MOZ_ASSERT(Reader()->IsWaitForDataSupported());
     shouldBuffer =
-      (mMaster->OutOfDecodedAudio() && Reader()->IsWaitingAudioData()) ||
-      (mMaster->OutOfDecodedVideo() && Reader()->IsWaitingVideoData());
+      (mMaster->OutOfDecodedAudio() && mMaster->IsWaitingAudioData()) ||
+      (mMaster->OutOfDecodedVideo() && mMaster->IsWaitingVideoData());
   }
   if (shouldBuffer) {
     SetState<BufferingState>();
@@ -2138,11 +2138,11 @@ BufferingState::Step()
     MOZ_ASSERT(mMaster->mMinimizePreroll ||
                !mMaster->OutOfDecodedAudio() ||
                mMaster->IsRequestingAudioData() ||
-               Reader()->IsWaitingAudioData());
+               mMaster->IsWaitingAudioData());
     MOZ_ASSERT(mMaster->mMinimizePreroll ||
                !mMaster->OutOfDecodedVideo() ||
                mMaster->IsRequestingVideoData() ||
-               Reader()->IsWaitingVideoData());
+               mMaster->IsWaitingVideoData());
     SLOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
          "mAudioStatus: %s, outOfVideo: %d, mVideoStatus: %s",
          mMaster->OutOfDecodedAudio(), mMaster->AudioRequestStatus(),
@@ -2189,6 +2189,8 @@ ShutdownState::Enter()
   master->CancelMediaDecoderReaderWrapperCallback();
   master->mAudioDataRequest.DisconnectIfExists();
   master->mVideoDataRequest.DisconnectIfExists();
+  master->mAudioWaitRequest.DisconnectIfExists();
+  master->mVideoWaitRequest.DisconnectIfExists();
 
   master->Reset();
 
@@ -2715,32 +2717,12 @@ void
 MediaDecoderStateMachine::SetMediaDecoderReaderWrapperCallback()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
-    mTaskQueue, [this] (WaitCallbackData aData) {
-    if (aData.is<MediaData::Type>()) {
-      OnAudioWaited(aData.as<MediaData::Type>());
-    } else {
-      OnNotWaited(aData.as<WaitForDataRejectValue>());
-    }
-  });
-
-  mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
-    mTaskQueue, [this] (WaitCallbackData aData) {
-    if (aData.is<MediaData::Type>()) {
-      OnVideoWaited(aData.as<MediaData::Type>());
-    } else {
-      OnNotWaited(aData.as<WaitForDataRejectValue>());
-    }
-  });
 }
 
 void
 MediaDecoderStateMachine::CancelMediaDecoderReaderWrapperCallback()
 {
   MOZ_ASSERT(OnTaskQueue());
-  mAudioWaitCallback.Disconnect();
-  mVideoWaitCallback.Disconnect();
 }
 
 void MediaDecoderStateMachine::StopPlayback()
@@ -3070,7 +3052,7 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
 
   if (!IsAudioDecoding() ||
       IsRequestingAudioData() ||
-      mReader->IsWaitingAudioData()) {
+      IsWaitingAudioData()) {
     return;
   }
 
@@ -3118,7 +3100,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 
   if (!IsVideoDecoding() ||
       IsRequestingVideoData() ||
-      mReader->IsWaitingVideoData()) {
+      IsWaitingVideoData()) {
     return;
   }
 
@@ -3146,6 +3128,40 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
         OnVideoNotDecoded(aError);
       })
   );
+}
+
+void
+MediaDecoderStateMachine::WaitForData(MediaData::Type aType)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aType == MediaData::AUDIO_DATA || aType == MediaData::VIDEO_DATA);
+  if (aType == MediaData::AUDIO_DATA) {
+    mAudioWaitRequest.Begin(
+      mReader->WaitForData(MediaData::AUDIO_DATA)->Then(
+        OwnerThread(), __func__,
+        [this] (MediaData::Type aType) {
+          mAudioWaitRequest.Complete();
+          OnAudioWaited(aType);
+        },
+        [this] (const WaitForDataRejectValue& aRejection) {
+          mAudioWaitRequest.Complete();
+          OnNotWaited(aRejection);
+        })
+    );
+  } else {
+    mVideoWaitRequest.Begin(
+      mReader->WaitForData(MediaData::VIDEO_DATA)->Then(
+        OwnerThread(), __func__,
+        [this] (MediaData::Type aType) {
+          mVideoWaitRequest.Complete();
+          OnVideoWaited(aType);
+        },
+        [this] (const WaitForDataRejectValue& aRejection) {
+          mVideoWaitRequest.Complete();
+          OnNotWaited(aRejection);
+        })
+    );
+  }
 }
 
 void
@@ -3376,6 +3392,7 @@ MediaDecoderStateMachine::Reset(TrackSet aTracks)
     mVideoCompleted = false;
     VideoQueue().Reset();
     mVideoDataRequest.DisconnectIfExists();
+    mVideoWaitRequest.DisconnectIfExists();
   }
 
   if (aTracks.contains(TrackInfo::kAudioTrack)) {
@@ -3383,6 +3400,7 @@ MediaDecoderStateMachine::Reset(TrackSet aTracks)
     mAudioCompleted = false;
     AudioQueue().Reset();
     mAudioDataRequest.DisconnectIfExists();
+    mAudioWaitRequest.DisconnectIfExists();
   }
 
   mPlaybackOffset = 0;
@@ -3786,9 +3804,9 @@ MediaDecoderStateMachine::AudioRequestStatus() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (IsRequestingAudioData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingAudioData());
+    MOZ_DIAGNOSTIC_ASSERT(!IsWaitingAudioData());
     return "pending";
-  } else if (mReader->IsWaitingAudioData()) {
+  } else if (IsWaitingAudioData()) {
     return "waiting";
   }
   return "idle";
@@ -3799,9 +3817,9 @@ MediaDecoderStateMachine::VideoRequestStatus() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (IsRequestingVideoData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingVideoData());
+    MOZ_DIAGNOSTIC_ASSERT(!IsWaitingVideoData());
     return "pending";
-  } else if (mReader->IsWaitingVideoData()) {
+  } else if (IsWaitingVideoData()) {
     return "waiting";
   }
   return "idle";

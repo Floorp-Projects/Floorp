@@ -477,8 +477,12 @@ protected:
   void RequestVideoData(bool aSkipToNextKeyframe,
                         const media::TimeUnit& aCurrentTime);
 
+  void WaitForData(MediaData::Type aType);
+
   bool IsRequestingAudioData() const { return mAudioDataRequest.Exists(); }
   bool IsRequestingVideoData() const { return mVideoDataRequest.Exists(); }
+  bool IsWaitingAudioData() const { return mAudioWaitRequest.Exists(); }
+  bool IsWaitingVideoData() const { return mVideoWaitRequest.Exists(); }
 
   // Re-evaluates the state and determines whether we need to dispatch
   // events to run the decode, or if not whether we should set the reader
@@ -659,13 +663,12 @@ private:
 
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
-
-  MediaEventListener mAudioWaitCallback;
-  MediaEventListener mVideoWaitCallback;
-
   using MediaDataPromise = MediaDecoderReader::MediaDataPromise;
+  using WaitForDataPromise = MediaDecoderReader::WaitForDataPromise;
   MozPromiseRequestHolder<MediaDataPromise> mAudioDataRequest;
   MozPromiseRequestHolder<MediaDataPromise> mVideoDataRequest;
+  MozPromiseRequestHolder<WaitForDataPromise> mAudioWaitRequest;
+  MozPromiseRequestHolder<WaitForDataPromise> mVideoWaitRequest;
 
   const char* AudioRequestStatus() const;
   const char* VideoRequestStatus() const;
