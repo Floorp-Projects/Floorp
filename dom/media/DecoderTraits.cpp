@@ -113,13 +113,6 @@ DecoderTraits::IsMP4SupportedType(const MediaContentType& aType,
 }
 
 static bool
-IsAACSupportedType(const nsACString& aType,
-                   const nsAString& aCodecs = EmptyString())
-{
-  return ADTSDecoder::CanHandleMediaType(aType, aCodecs);
-}
-
-static bool
 IsWaveSupportedType(const nsACString& aType,
                     const nsAString& aCodecs = EmptyString())
 {
@@ -190,8 +183,7 @@ CanHandleCodecsType(const MediaContentType& aType,
   if (MP3Decoder::IsSupportedType(aType)) {
     return CANPLAY_YES;
   }
-  if (IsAACSupportedType(mimeType.Type().AsString(),
-                         aType.ExtendedType().Codecs().AsString())) {
+  if (ADTSDecoder::IsSupportedType(aType)) {
     return CANPLAY_YES;
   }
   if (IsFlacSupportedType(mimeType.Type().AsString(),
@@ -273,7 +265,7 @@ CanHandleMediaType(const MediaContentType& aType,
   if (MP3Decoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
   }
-  if (IsAACSupportedType(mimeType.Type().AsString())) {
+  if (ADTSDecoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
   }
   if (IsFlacSupportedType(mimeType.Type().AsString())) {
@@ -353,7 +345,7 @@ InstantiateDecoder(const MediaContentType& aType,
     decoder = new MP3Decoder(aOwner);
     return decoder.forget();
   }
-  if (IsAACSupportedType(aType.Type().AsString())) {
+  if (ADTSDecoder::IsSupportedType(aType)) {
     decoder = new ADTSDecoder(aOwner);
     return decoder.forget();
   }
@@ -437,7 +429,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (MP3Decoder::IsSupportedType(*type)) {
     decoderReader = new MediaFormatReader(aDecoder, new mp3::MP3Demuxer(aDecoder->GetResource()));
   } else
-  if (IsAACSupportedType(aType)) {
+  if (ADTSDecoder::IsSupportedType(*type)) {
     decoderReader = new MediaFormatReader(aDecoder, new ADTSDemuxer(aDecoder->GetResource()));
   } else
   if (IsWaveSupportedType(aType)) {
@@ -495,7 +487,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     MP4Decoder::IsSupportedType(*type, /* DecoderDoctorDiagnostics* */ nullptr) ||
 #endif
     MP3Decoder::IsSupportedType(*type) ||
-    IsAACSupportedType(aType) ||
+    ADTSDecoder::IsSupportedType(*type) ||
     IsFlacSupportedType(aType) ||
 #ifdef MOZ_DIRECTSHOW
     IsDirectShowSupportedType(aType) ||
