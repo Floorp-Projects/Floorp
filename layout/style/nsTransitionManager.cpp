@@ -180,7 +180,7 @@ CSSTransition::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 }
 
 void
-CSSTransition::QueueEvents()
+CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
 {
   if (!mEffect ||
       !mOwningElement.IsSet()) {
@@ -230,12 +230,9 @@ CSSTransition::QueueEvents()
   // Handle cancel events firts
   if (mPreviousTransitionPhase != TransitionPhase::Idle &&
       currentPhase == TransitionPhase::Idle) {
-    // FIXME: bug 1264125: We will need to get active time when cancelling
-    //                     the transition.
-    StickyTimeDuration activeTime(0);
-    TimeStamp activeTimeStamp = ElapsedTimeToTimeStamp(activeTime);
+    TimeStamp activeTimeStamp = ElapsedTimeToTimeStamp(aActiveTime);
     events.AppendElement(TransitionEventParams{ eTransitionCancel,
-                                                activeTime,
+                                                aActiveTime,
                                                 activeTimeStamp });
   }
 
