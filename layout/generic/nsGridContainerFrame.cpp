@@ -4958,31 +4958,21 @@ nsGridContainerFrame::Tracks::BackComputedIntrinsicSize(
   const nsStyleCoord& aGridGap) const
 {
   // Sum up the current sizes (where percentage tracks were treated as 'auto')
-  // in 'size' and a sum of percentages in 'percent'.
+  // in 'size'.
   nscoord size = 0;
-  float percent = 0.0f;
-  bool hasPercent = mStateUnion & TrackSize::eIndefinitePercentMinSizing;
   for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
-    const nscoord trackSize = mSizes[i].mBase;
-    nscoord length;
-    float p;
-    if (hasPercent &&
-        ::GetPercentSizeParts(aFunctions.MinSizingFor(i), &length, &p)) {
-      size += std::max(length, trackSize);
-      percent += p;
-    } else {
-      size += trackSize;
-    }
+    size += mSizes[i].mBase;
   }
 
-  // Add grid-gap contributions to 'size' and 'percent'.
+  // Add grid-gap contributions to 'size' and calculate a 'percent' sum.
+  float percent = 0.0f;
   size_t numTracks = mSizes.Length();
   if (numTracks > 1) {
     const size_t gridGapCount = numTracks - 1;
     nscoord gridGapLength;
     float gridGapPercent;
     if (::GetPercentSizeParts(aGridGap, &gridGapLength, &gridGapPercent)) {
-      percent += gridGapCount * gridGapPercent;
+      percent = gridGapCount * gridGapPercent;
     } else {
       gridGapLength = aGridGap.ToLength();
     }
