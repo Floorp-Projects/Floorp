@@ -1552,9 +1552,6 @@ XPCJSContext::~XPCJSContext()
     delete mThisTranslatorMap;
     mThisTranslatorMap = nullptr;
 
-    delete mNativeScriptableSharedMap;
-    mNativeScriptableSharedMap = nullptr;
-
     delete mDyingWrappedNativeProtoMap;
     mDyingWrappedNativeProtoMap = nullptr;
 
@@ -3244,7 +3241,6 @@ XPCJSContext::XPCJSContext()
    mClassInfo2NativeSetMap(ClassInfo2NativeSetMap::newMap(XPC_NATIVE_SET_MAP_LENGTH)),
    mNativeSetMap(NativeSetMap::newMap(XPC_NATIVE_SET_MAP_LENGTH)),
    mThisTranslatorMap(IID2ThisTranslatorMap::newMap(XPC_THIS_TRANSLATOR_MAP_LENGTH)),
-   mNativeScriptableSharedMap(XPCNativeScriptableSharedMap::newMap(XPC_NATIVE_JSCLASS_MAP_LENGTH)),
    mDyingWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DYING_NATIVE_PROTO_MAP_LENGTH)),
    mGCIsRunning(false),
    mNativesToReleaseArray(),
@@ -3490,7 +3486,6 @@ XPCJSContext::newXPCJSContext()
         self->GetClassInfo2NativeSetMap()       &&
         self->GetNativeSetMap()                 &&
         self->GetThisTranslatorMap()            &&
-        self->GetNativeScriptableSharedMap()    &&
         self->GetDyingWrappedNativeProtoMap()   &&
         self->mWatchdogManager) {
         return self;

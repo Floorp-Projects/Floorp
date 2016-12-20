@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozJSComponentLoader.h"
 #include "nsZipArchive.h"
+#include "xpc_make_class.h"
 
 #define JSCTYPES_CONTRACTID \
   "@mozilla.org/jsctypes;1"

@@ -223,19 +223,16 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
 
     // Share mScriptableInfo with the proto.
     //
-    // This is probably more trouble than it's worth, since we've already created
-    // an XPCNativeScriptableInfo for ourselves. Moreover, most of that class is
-    // shared internally via XPCNativeScriptableInfoShared, so the memory
-    // savings are negligible. Nevertheless, this is what ::Init() does, and we
-    // want to be as consistent as possible with that code.
+    // This is probably more trouble than it's worth, since we've already
+    // created an XPCNativeScriptableInfo for ourselves. Nevertheless, this is
+    // what ::Init() does, and we want to be as consistent as possible with
+    // that code.
     XPCNativeScriptableInfo* siProto = proto->GetScriptableInfo();
     if (siProto && siProto->GetCallback() == sciWrapper.GetCallback()) {
         wrapper->mScriptableInfo = siProto;
-        // XPCNativeScriptableShared instances live in a map, and are
-        // GCed, but XPCNativeScriptableInfo is per-instance and must be
-        // manually managed. If we're switching over to that of the proto, we
-        // need to destroy the one we've allocated, and also null out the
-        // AutoMarkingPtr, so that it doesn't try to mark garbage data.
+        // XPCNativeScriptableInfo uses manual memory management. If we're
+        // switching over to that of the proto, we need to destroy the one
+        // we've allocated.
         delete si;
         si = nullptr;
     } else {
@@ -751,8 +748,7 @@ XPCWrappedNative::Init(const XPCNativeScriptableCreateInfo* sci)
                 mScriptableInfo = siProto;
         }
         if (!mScriptableInfo) {
-            mScriptableInfo =
-                XPCNativeScriptableInfo::Construct(sci);
+            mScriptableInfo = XPCNativeScriptableInfo::Construct(sci);
 
             if (!mScriptableInfo)
                 return false;
@@ -972,9 +968,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
     if (HasProto())
         proto->SystemIsBeingShutDown();
 
-    // Don't destroy mScriptableInfo here because this will release
-    // XPCNativeScriptableShared, which will destroy js::ClassOps
-    // which may still be in use by JS objects.
+    // We don't destroy mScriptableInfo here. The destructor will do it.
 
     // Cleanup the tearoffs.
     for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to; to = to->GetNextTearOff()) {

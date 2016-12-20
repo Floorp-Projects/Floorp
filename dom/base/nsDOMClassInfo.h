@@ -11,6 +11,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsIXPCScriptable.h"
 #include "nsIScriptGlobalObject.h"
+#include "js/Class.h"
 #include "js/Id.h"
 #include "nsIXPConnect.h"
 
@@ -30,8 +31,12 @@ typedef nsresult (*nsDOMConstructorFunc)(nsISupports** aNewObject);
 
 struct nsDOMClassInfoData
 {
+  // XXX: mName is the same as the name gettable from the callback. This
+  // redundancy should be removed eventually.
   const char *mName;
   const char16_t *mNameUTF16;
+  const js::ClassOps mClassOps;
+  const js::Class mClass;
   nsDOMClassInfoConstructorFnc mConstructorFptr;
 
   nsIClassInfo *mCachedClassInfo;

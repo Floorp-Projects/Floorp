@@ -7,6 +7,7 @@
 /* An xpcom implementation of the JavaScript nsIID and nsCID objects. */
 
 #include "xpcprivate.h"
+#include "xpc_make_class.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
