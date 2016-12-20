@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
@@ -63,21 +64,16 @@ Observers.add("weave:engine:wipe-client:finish", engineObserver);
 Observers.add("weave:engine:sync:start", engineObserver);
 Observers.add("weave:engine:sync:finish", engineObserver);
 
-function run_test() {
-  run_next_test();
-}
-
-add_test(function test_members() {
+add_task(async function test_members() {
   _("Engine object members");
   let engine = new SteamEngine("Steam", Service);
   do_check_eq(engine.Name, "Steam");
   do_check_eq(engine.prefName, "steam");
   do_check_true(engine._store instanceof SteamStore);
   do_check_true(engine._tracker instanceof SteamTracker);
-  run_next_test();
 });
 
-add_test(function test_score() {
+add_task(async function test_score() {
   _("Engine.score corresponds to tracker.score and is readonly");
   let engine = new SteamEngine("Steam", Service);
   do_check_eq(engine.score, 0);
@@ -92,10 +88,9 @@ add_test(function test_score() {
     // the attribute's value won't change.
   }
   do_check_eq(engine.score, 5);
-  run_next_test();
 });
 
-add_test(function test_resetClient() {
+add_task(async function test_resetClient() {
   _("Engine.resetClient calls _resetClient");
   let engine = new SteamEngine("Steam", Service);
   do_check_false(engine.wasReset);
@@ -107,25 +102,27 @@ add_test(function test_resetClient() {
 
   engine.wasReset = false;
   engineObserver.reset();
-  run_next_test();
 });
 
-add_test(function test_invalidChangedIDs() {
+add_task(async function test_invalidChangedIDs() {
   _("Test that invalid changed IDs on disk don't end up live.");
   let engine = new SteamEngine("Steam", Service);
   let tracker = engine._tracker;
-  tracker.changedIDs = 5;
-  tracker.saveChangedIDs(function onSaved() {
-      tracker.changedIDs = {placeholder: true};
-      tracker.loadChangedIDs(function onLoaded(json) {
-        do_check_null(json);
-        do_check_true(tracker.changedIDs.placeholder);
-        run_next_test();
-      });
-    });
+
+  await tracker._beforeSave();
+  await OS.File.writeAtomic(tracker._storage.path, new TextEncoder().encode("5"),
+                            { tmpPath: tracker._storage.path + ".tmp" });
+
+  ok(!tracker._storage.dataReady);
+  tracker.changedIDs.placeholder = true;
+  deepEqual(tracker.changedIDs, { placeholder: true },
+    "Accessing changed IDs should load changes from disk as a side effect");
+  ok(tracker._storage.dataReady);
+
+  do_check_true(tracker.changedIDs.placeholder);
 });
 
-add_test(function test_wipeClient() {
+add_task(async function test_wipeClient() {
   _("Engine.wipeClient calls resetClient, wipes store, clears changed IDs");
   let engine = new SteamEngine("Steam", Service);
   do_check_false(engine.wasReset);
@@ -145,10 +142,9 @@ add_test(function test_wipeClient() {
   engine.wasReset = false;
   engine._store.wasWiped = false;
   engineObserver.reset();
-  run_next_test();
 });
 
-add_test(function test_enabled() {
+add_task(async function test_enabled() {
   _("Engine.enabled corresponds to preference");
   let engine = new SteamEngine("Steam", Service);
   try {
@@ -158,13 +154,12 @@ add_test(function test_enabled() {
 
     engine.enabled = false;
     do_check_false(Svc.Prefs.get("engine.steam"));
-    run_next_test();
   } finally {
     Svc.Prefs.resetBranch("");
   }
 });
 
-add_test(function test_sync() {
+add_task(async function test_sync() {
   let engine = new SteamEngine("Steam", Service);
   try {
     _("Engine.sync doesn't call _sync if it's not enabled");
@@ -181,7 +176,6 @@ add_test(function test_sync() {
     do_check_true(engine.wasSynced);
     do_check_eq(engineObserver.topics[0], "weave:engine:sync:start");
     do_check_eq(engineObserver.topics[1], "weave:engine:sync:finish");
-    run_next_test();
   } finally {
     Svc.Prefs.resetBranch("");
     engine.wasSynced = false;
@@ -189,7 +183,7 @@ add_test(function test_sync() {
   }
 });
 
-add_test(function test_disabled_no_track() {
+add_task(async function test_disabled_no_track() {
   _("When an engine is disabled, its tracker is not tracking.");
   let engine = new SteamEngine("Steam", Service);
   let tracker = engine._tracker;
@@ -214,6 +208,4 @@ add_test(function test_disabled_no_track() {
   Svc.Prefs.set("engine." + engine.prefName, false);
   do_check_false(tracker._isTracking);
   do_check_empty(tracker.changedIDs);
-
-  run_next_test();
 });

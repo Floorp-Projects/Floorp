@@ -14,7 +14,9 @@ this.EXPORTED_SYMBOLS = [
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://gre/modules/JSONFile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
@@ -51,9 +53,14 @@ this.Tracker = function Tracker(name, engine) {
 
   this._score = 0;
   this._ignored = [];
+  this._storage = new JSONFile({
+    path: Utils.jsonFilePath("changes/" + this.file),
+    // We use arrow functions instead of `.bind(this)` so that tests can
+    // easily override these hooks.
+    dataPostProcessor: json => this._dataPostProcessor(json),
+    beforeSave: () => this._beforeSave(),
+  });
   this.ignoreAll = false;
-  this.changedIDs = {};
-  this.loadChangedIDs();
 
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
@@ -76,6 +83,22 @@ Tracker.prototype = {
     return this._score;
   },
 
+  // Default to an empty object if the file doesn't exist.
+  _dataPostProcessor(json) {
+    return typeof json == "object" && json || {};
+  },
+
+  // Ensure the Weave storage directory exists before writing the file.
+  _beforeSave() {
+    let basename = OS.Path.dirname(this._storage.path);
+    return OS.File.makeDir(basename, { from: OS.Constants.Path.profileDir });
+  },
+
+  get changedIDs() {
+    Async.promiseSpinningly(this._storage.load());
+    return this._storage.data;
+  },
+
   set score(value) {
     this._score = value;
     Observers.notify("weave:engine:score:updated", this.name);
@@ -88,33 +111,12 @@ Tracker.prototype = {
 
   persistChangedIDs: true,
 
-  /**
-   * Persist changedIDs to disk at a later date.
-   * Optionally pass a callback to be invoked when the write has occurred.
-   */
-  saveChangedIDs: function (cb) {
+  _saveChangedIDs() {
     if (!this.persistChangedIDs) {
       this._log.debug("Not saving changedIDs.");
       return;
     }
-    Utils.namedTimer(function () {
-      this._log.debug("Saving changed IDs to " + this.file);
-      Utils.jsonSave("changes/" + this.file, this, this.changedIDs, cb);
-    }, 1000, this, "_lazySave");
-  },
-
-  loadChangedIDs: function (cb) {
-    Utils.jsonLoad("changes/" + this.file, this, function(json) {
-      if (json && (typeof(json) == "object")) {
-        this.changedIDs = json;
-      } else if (json !== null) {
-        this._log.warn("Changed IDs file " + this.file + " contains non-object value.");
-        json = null;
-      }
-      if (cb) {
-        cb.call(this, json);
-      }
-    });
+    this._storage.saveSoon();
   },
 
   // ignore/unignore specific IDs.  Useful for ignoring items that are
@@ -135,7 +137,7 @@ Tracker.prototype = {
   _saveChangedID(id, when) {
     this._log.trace(`Adding changed ID: ${id}, ${JSON.stringify(when)}`);
     this.changedIDs[id] = when;
-    this.saveChangedIDs(this.onSavedChangedIDs);
+    this._saveChangedIDs();
   },
 
   addChangedID: function (id, when) {
@@ -179,14 +181,14 @@ Tracker.prototype = {
         delete this.changedIDs[id];
       }
     }
-    this.saveChangedIDs();
+    this._saveChangedIDs();
     return true;
   },
 
   clearChangedIDs: function () {
     this._log.trace("Clearing changed ID list");
-    this.changedIDs = {};
-    this.saveChangedIDs();
+    this._storage.data = {};
+    this._saveChangedIDs();
   },
 
   _now() {

@@ -861,8 +861,6 @@ function BookmarksTracker(name, engine) {
   this._migratedOldEntries = false;
   Tracker.call(this, name, engine);
 
-  delete this.changedIDs; // so our getter/setter takes effect.
-
   Svc.Obs.add("places-shutdown", this);
 }
 BookmarksTracker.prototype = {
@@ -909,18 +907,6 @@ BookmarksTracker.prototype = {
   // instead of throwing.
   clearChangedIDs() {},
 
-  saveChangedIDs(cb) {
-    if (cb) {
-      cb();
-    }
-  },
-
-  loadChangedIDs(cb) {
-    if (cb) {
-      cb();
-    }
-  },
-
   promiseChangedIDs() {
     return PlacesSyncUtils.bookmarks.pullChanges();
   },
@@ -930,10 +916,7 @@ BookmarksTracker.prototype = {
   },
 
   set changedIDs(obj) {
-    // let engine init set it to nothing.
-    if (Object.keys(obj).length != 0) {
-      throw new Error("Don't set initial changed bookmark IDs");
-    }
+    throw new Error("Don't set initial changed bookmark IDs");
   },
 
   // Migrates tracker entries from the old JSON-based tracker to Places. This
