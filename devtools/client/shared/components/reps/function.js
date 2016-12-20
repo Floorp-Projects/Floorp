@@ -27,16 +27,24 @@ define(function (require, exports, module) {
     },
 
     getTitle: function (grip) {
+      let title = "function ";
+      if (grip.isGenerator) {
+        title = "function* ";
+      }
+      if (grip.isAsync) {
+        title = "async " + title;
+      }
+
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: grip
-        }, "function ");
+        }, title);
       }
-      return "";
+      return title;
     },
 
     summarizeFunction: function (grip) {
-      let name = grip.userDisplayName || grip.displayName || grip.name || "function";
+      let name = grip.userDisplayName || grip.displayName || grip.name || "";
       return cropString(name + "()", 100);
     },
 

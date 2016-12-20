@@ -19,6 +19,7 @@ Test Func rep
 window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { Func } = browserRequire("devtools/client/shared/components/reps/function");
+  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
 
   const componentUnderTest = Func;
 
@@ -32,6 +33,9 @@ window.onload = Task.async(function* () {
     yield testVarNamed();
     yield testAnon();
     yield testLongName();
+    yield testAsyncFunction();
+    yield testAnonAsyncFunction();
+    yield testGeneratorFunction();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -39,10 +43,10 @@ window.onload = Task.async(function* () {
   }
 
   function testNamed() {
-    // Test declaration: `function testName{ let innerVar = "foo" }`
+    // Test declaration: `function testName() { let innerVar = "foo" }`
     const testName = "testNamed";
 
-    const defaultOutput = `testName()`;
+    const defaultOutput = "function testName()";
 
     const modeTests = [
       {
@@ -55,10 +59,10 @@ window.onload = Task.async(function* () {
   }
 
   function testUserNamed() {
-    // Test declaration: `function testName{ let innerVar = "foo" }`
+    // Test declaration: `function testName() { let innerVar = "foo" }`
     const testName = "testUserNamed";
 
-    const defaultOutput = `testUserName()`;
+    const defaultOutput = "function testUserName()";
 
     const modeTests = [
       {
@@ -74,7 +78,7 @@ window.onload = Task.async(function* () {
     // Test declaration: `let testVarName = function() { }`
     const testName = "testVarNamed";
 
-    const defaultOutput = `testVarName()`;
+    const defaultOutput = "function testVarName()";
 
     const modeTests = [
       {
@@ -90,7 +94,7 @@ window.onload = Task.async(function* () {
     // Test declaration: `() => {}`
     const testName = "testAnon";
 
-    const defaultOutput = `function()`;
+    const defaultOutput = "function ()";
 
     const modeTests = [
       {
@@ -106,7 +110,7 @@ window.onload = Task.async(function* () {
     // Test declaration: `let f = function loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong() { }`
     const testName = "testLongName";
 
-    const defaultOutput = `looooooooooooooooooooooooooooooooooooooooooooooooo\u2026ooooooooooooooooooooooooooooooooooooooooooooong()`;
+    const defaultOutput = "function looooooooooooooooooooooooooooooooooooooooooooooooo\u2026ooooooooooooooooooooooooooooooooooooooooooooong()";
 
     const modeTests = [
       {
@@ -115,6 +119,110 @@ window.onload = Task.async(function* () {
       }
     ];
 
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testAsyncFunction() {
+    const testName = "testAsyncFunction";
+
+    const defaultOutput = "async function waitUntil2017()";
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testAnonAsyncFunction() {
+    const testName = "testAnonAsyncFunction";
+
+    const defaultOutput = "async function ()";
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testGeneratorFunction() {
+    const testName = "testGeneratorFunction";
+
+    const defaultOutput = "function* fib()";
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testAnonGeneratorFunction() {
+    const testName = "testAnonGeneratorFunction";
+
+    const defaultOutput = "function* ()";
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
@@ -128,6 +236,8 @@ window.onload = Task.async(function* () {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isAsync": false,
+          "isGenerator": false,
           "name": "testName",
           "displayName": "testName",
           "location": {
@@ -144,6 +254,8 @@ window.onload = Task.async(function* () {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isAsync": false,
+          "isGenerator": false,
           "name": "testName",
           "userDisplayName": "testUserName",
           "displayName": "testName",
@@ -161,6 +273,8 @@ window.onload = Task.async(function* () {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isAsync": false,
+          "isGenerator": false,
           "displayName": "testVarName",
           "location": {
             "url": "debugger eval code",
@@ -176,6 +290,8 @@ window.onload = Task.async(function* () {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isAsync": false,
+          "isGenerator": false,
           "location": {
             "url": "debugger eval code",
             "line": 1
@@ -190,8 +306,79 @@ window.onload = Task.async(function* () {
           "extensible": true,
           "frozen": false,
           "sealed": false,
+          "isAsync": false,
+          "isGenerator": false,
           "name": "loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong",
           "displayName": "loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong",
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+
+      case "testAsyncFunction":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn7.obj45",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isAsync": true,
+          "isGenerator": false,
+          "name": "waitUntil2017",
+          "displayName": "waitUntil2017",
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+      case "testAnonAsyncFunction":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn7.obj45",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isAsync": true,
+          "isGenerator": false,
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+      case "testGeneratorFunction":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn7.obj45",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isAsync": false,
+          "isGenerator": true,
+          "name": "fib",
+          "displayName": "fib",
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+      case "testAnonGeneratorFunction":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn7.obj45",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isAsync": false,
+          "isGenerator": true,
           "location": {
             "url": "debugger eval code",
             "line": 1
