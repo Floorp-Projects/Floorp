@@ -14,9 +14,9 @@ body,html { color:black; background:white; font-family:monospace; font:1px/1 mon
   display: grid;
   float: left;
   border: 3px solid;
-  grid-template-columns: calc((30px / 0.4) * 0.6);
-  width: calc(30px / 0.4);
-  grid-template-rows: calc(((15px / 0.6) * 0.4)) 10px;
+  grid-template-columns: 18px;
+  width: 30px;
+  grid-template-rows: 5px 10px;
   margin-right: 20px;
   grid-auto-rows: 10px;
   align-content: start;
@@ -48,22 +48,18 @@ x {
 }
 .tB {
   grid-template-columns: 30px;
-  grid-template-rows: calc(10px / 0.6 - 10px) 10px; 
+  grid-template-rows: 0 10px; 
 }
 
-.t0, .t2, .t6, .t7 { height: calc(15px / 0.6); }
 .t1 {
-  grid-template-rows: calc(20px / 0.6 - 10px) 10px;
-  grid-template-columns: calc(((30px / 0.4) * 0.6) + 10px);
+  grid-template-columns: 28px;
 }
 .t3, .t4, .t8 { grid: auto 10px / auto; width: auto; }
-.t5 { width: 30px; height: 20px; }
-.t9 { width: 30px; grid-template-rows: 5px 10px; }
 
 .t9 x { width: 18px }
 .t3 x, .t4 x, .t8 x, .tA x { width: 0 }
 .t5 x { width: 10px }
-.tB x { width: 45px }
+.tB x { width: 18px }
 
 .sz {
   grid-template-rows: 40px;
