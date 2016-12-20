@@ -313,6 +313,17 @@ WidevineDecryptor::OnResolveNewSessionPromise(uint32_t aPromiseId,
     Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d) FAIL; !mCallback", aPromiseId);
     return;
   }
+
+  // This is laid out in the API. If we fail to load a session we should
+  // call OnResolveNewSessionPromise with nullptr as the sessionId.
+  // We can safely assume this means that we have failed to load a session
+  // as the other methods specify calling 'OnRejectPromise' when they fail.
+  if (!aSessionId) {
+    Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d) Failed to load session", aPromiseId);
+    mCallback->ResolveLoadSessionPromise(aPromiseId, false);
+    return;
+  }
+
   Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d)", aPromiseId);
   auto iter = mPromiseIdToNewSessionTokens.find(aPromiseId);
   if (iter == mPromiseIdToNewSessionTokens.end()) {
