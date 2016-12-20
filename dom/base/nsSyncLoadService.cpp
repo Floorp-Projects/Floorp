@@ -143,15 +143,17 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     mChannel = aChannel;
     nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(mChannel);
     if (http) {
-        http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                               NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
-                               false);
+        rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                    NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
+                                    false);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
         if (loadInfo) {
             nsCOMPtr<nsIURI> loaderUri;
             loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(loaderUri));
             if (loaderUri) {
-              http->SetReferrerWithPolicy(loaderUri, aReferrerPolicy);
+                rv = http->SetReferrerWithPolicy(loaderUri, aReferrerPolicy);
+                MOZ_ASSERT(NS_SUCCEEDED(rv));
             }
         }
     }
