@@ -731,9 +731,6 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
     // if we weren't passed an attribute, then we want to
     // remove any matching inlinestyles entirely
     if (!aAttribute || aAttribute->IsEmpty()) {
-      NS_NAMED_LITERAL_STRING(styleAttr, "style");
-      NS_NAMED_LITERAL_STRING(classAttr, "class");
-
       bool hasStyleAttr = aNode.HasAttr(kNameSpaceID_None, nsGkAtoms::style);
       bool hasClassAttr = aNode.HasAttr(kNameSpaceID_None, nsGkAtoms::_class);
       if (aProperty && (hasStyleAttr || hasClassAttr)) {
@@ -741,14 +738,14 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
         // just remove the element... We need to create above the element
         // a span that will carry those styles or class, then we can delete
         // the node.
-        nsCOMPtr<Element> spanNode =
+        RefPtr<Element> spanNode =
           InsertContainerAbove(&aNode, nsGkAtoms::span);
         NS_ENSURE_STATE(spanNode);
         nsresult rv =
-          CloneAttribute(styleAttr, spanNode->AsDOMNode(), aNode.AsDOMNode());
+          CloneAttribute(nsGkAtoms::style, spanNode, aNode.AsElement());
         NS_ENSURE_SUCCESS(rv, rv);
         rv =
-          CloneAttribute(classAttr, spanNode->AsDOMNode(), aNode.AsDOMNode());
+          CloneAttribute(nsGkAtoms::_class, spanNode, aNode.AsElement());
         NS_ENSURE_SUCCESS(rv, rv);
       }
       nsresult rv = RemoveContainer(&aNode);

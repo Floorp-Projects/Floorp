@@ -2596,7 +2596,7 @@ HTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
 
   // New call to use instead to get proper HTML element, bug 39919
   nsCOMPtr<nsIAtom> realTagAtom = NS_Atomize(realTagName);
-  nsCOMPtr<Element> newElement = CreateHTMLContent(realTagAtom);
+  RefPtr<Element> newElement = CreateHTMLContent(realTagAtom);
   if (!newElement) {
     return nullptr;
   }
@@ -2628,8 +2628,7 @@ HTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   } else if (tagName.EqualsLiteral("td")) {
     nsresult rv =
       SetAttributeOrEquivalent(
-        static_cast<nsIDOMElement*>(newElement->AsDOMNode()),
-        NS_LITERAL_STRING("valign"), NS_LITERAL_STRING("top"), true);
+        newElement, nsGkAtoms::valign, NS_LITERAL_STRING("top"), true);
     NS_ENSURE_SUCCESS(rv, nullptr);
   }
   // ADD OTHER TAGS HERE
