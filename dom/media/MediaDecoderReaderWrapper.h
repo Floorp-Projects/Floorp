@@ -38,7 +38,6 @@ class MediaDecoderReaderWrapper {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReaderWrapper);
 
 private:
-  MediaCallbackExc<VideoCallbackData> mVideoCallback;
   MediaCallbackExc<WaitCallbackData> mAudioWaitCallback;
   MediaCallbackExc<WaitCallbackData> mVideoWaitCallback;
 
@@ -49,18 +48,18 @@ public:
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
 
-  decltype(mVideoCallback)& VideoCallback() { return mVideoCallback; }
   decltype(mAudioWaitCallback)& AudioWaitCallback() { return mAudioWaitCallback; }
   decltype(mVideoWaitCallback)& VideoWaitCallback() { return mVideoWaitCallback; }
 
   // NOTE: please set callbacks before requesting audio/video data!
   RefPtr<MediaDataPromise> RequestAudioData();
-  void RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
+
+  RefPtr<MediaDataPromise>
+  RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
   // NOTE: please set callbacks before invoking WaitForData()!
   void WaitForData(MediaData::Type aType);
 
-  bool IsRequestingVideoData() const;
   bool IsWaitingAudioData() const;
   bool IsWaitingVideoData() const;
 
@@ -121,7 +120,6 @@ private:
   bool mShutdown = false;
   Maybe<media::TimeUnit> mStartTime;
 
-  MozPromiseRequestHolder<MediaDataPromise> mVideoDataRequest;
   MozPromiseRequestHolder<WaitForDataPromise> mAudioWaitRequest;
   MozPromiseRequestHolder<WaitForDataPromise> mVideoWaitRequest;
 };

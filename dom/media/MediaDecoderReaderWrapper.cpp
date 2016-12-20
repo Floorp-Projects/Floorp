@@ -54,43 +54,26 @@ MediaDecoderReaderWrapper::RequestAudioData()
            [] (const MediaResult& aError) {});
 }
 
-void
+RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
 MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
                                             media::TimeUnit aTimeThreshold)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
-  // Time the video decode and send this value back to callbacks who accept
-  // a TimeStamp as its second parameter.
-  TimeStamp videoDecodeStartTime = TimeStamp::Now();
-
   if (aTimeThreshold.ToMicroseconds() > 0) {
     aTimeThreshold += StartTime();
   }
 
-  auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                       &MediaDecoderReader::RequestVideoData,
-                       aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds());
-
-  RefPtr<MediaDecoderReaderWrapper> self = this;
-  mVideoDataRequest.Begin(p->Then(mOwnerThread, __func__,
-    [self, videoDecodeStartTime] (MediaData* aVideoSample) {
-      self->mVideoDataRequest.Complete();
-      aVideoSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
-      self->mVideoCallback.Notify(AsVariant(MakeTuple(aVideoSample, videoDecodeStartTime)));
-    },
-    [self] (const MediaResult& aError) {
-      self->mVideoDataRequest.Complete();
-      self->mVideoCallback.Notify(AsVariant(aError));
-    }));
-}
-
-bool
-MediaDecoderReaderWrapper::IsRequestingVideoData() const
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return mVideoDataRequest.Exists();
+  int64_t startTime = StartTime().ToMicroseconds();
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
+                     &MediaDecoderReader::RequestVideoData,
+                     aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds())
+    ->Then(mOwnerThread, __func__,
+           [startTime] (MediaData* aVideo) {
+             aVideo->AdjustForStartTime(startTime);
+           },
+           [] (const MediaResult& aError) {});
 }
 
 bool
@@ -172,7 +155,6 @@ MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
   }
 
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
-    mVideoDataRequest.DisconnectIfExists();
     mVideoWaitRequest.DisconnectIfExists();
   }
 
@@ -187,8 +169,6 @@ RefPtr<ShutdownPromise>
 MediaDecoderReaderWrapper::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mVideoDataRequest.Exists());
-
   mShutdown = true;
   return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                      &MediaDecoderReader::Shutdown);
