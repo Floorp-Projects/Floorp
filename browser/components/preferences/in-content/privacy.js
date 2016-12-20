@@ -287,9 +287,7 @@ var gPrivacyPane = {
     let mode;
     let getVal = aPref => document.getElementById(aPref).value;
 
-    if (getVal("privacy.history.custom"))
-      mode = "custom";
-    else if (this._checkHistoryValues(this.prefsForKeepingHistory)) {
+    if (this._checkHistoryValues(this.prefsForKeepingHistory)) {
       if (getVal("browser.privatebrowsing.autostart"))
         mode = "dontremember";
       else
@@ -319,7 +317,6 @@ var gPrivacyPane = {
       break;
     }
     document.getElementById("historyPane").selectedIndex = selectedIndex;
-    document.getElementById("privacy.history.custom").value = selectedIndex == 2;
   },
 
   /**
