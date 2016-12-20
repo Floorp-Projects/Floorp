@@ -597,8 +597,8 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mLoopStart(0.0)
   , mLoopEnd(0.0)
   // mOffset and mDuration are initialized in Start().
-  , mPlaybackRate(new AudioParam(this, PLAYBACKRATE, "playbackRate", 1.0f))
-  , mDetune(new AudioParam(this, DETUNE, "detune", 0.0f))
+  , mPlaybackRate(new AudioParam(this, PLAYBACKRATE, 1.0f, "playbackRate"))
+  , mDetune(new AudioParam(this, DETUNE, 0.0f, "detune"))
   , mLoop(false)
   , mStartCalled(false)
 {

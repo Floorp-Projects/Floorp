@@ -96,10 +96,8 @@ interface AudioNode : EventTarget {
 
    <pre id="audio-param-idl">interface AudioParam {
 
-                    attribute float value;
-    readonly        attribute float defaultValue;
-    readonly        attribute float minValue;
-    readonly        attribute float maxValue;
+    attribute float value;
+    readonly attribute float defaultValue;
 
     // Parameter automation.
     void setValueAtTime(float value, double startTime);
