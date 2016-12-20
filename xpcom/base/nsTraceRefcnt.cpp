@@ -233,8 +233,6 @@ static const PLHashAllocOps typesToLogHashAllocOps = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef MOZ_STACKWALKING
-
 class CodeAddressServiceStringTable final
 {
 public:
@@ -276,8 +274,6 @@ typedef mozilla::CodeAddressService<CodeAddressServiceStringTable,
                                     CodeAddressServiceLock> WalkTheStackCodeAddressService;
 
 mozilla::StaticAutoPtr<WalkTheStackCodeAddressService> gCodeAddressService;
-
-#endif // MOZ_STACKWALKING
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -464,7 +460,6 @@ DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
           aHashEntry->key,
           record->refCount);
 #endif
-#ifdef MOZ_STACKWALKING
   if (!record->allocationStack.empty()) {
     static const size_t bufLen = 1024;
     char buf[bufLen];
@@ -477,7 +472,6 @@ DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
       fprintf(outputFile, "%s\n", buf);
     }
   }
-#endif
   return HT_ENUMERATE_NEXT;
 }
 
@@ -848,7 +842,6 @@ InitTraceLog()
 
 extern "C" {
 
-#ifdef MOZ_STACKWALKING
 static void
 PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
@@ -881,17 +874,14 @@ RecordStackFrame(uint32_t /*aFrameNumber*/, void* aPC, void* /*aSP*/,
   auto locations = static_cast<std::vector<void*>*>(aClosure);
   locations->push_back(aPC);
 }
-#endif // MOZ_STACKWALKING
 
 }
 
 void
 nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
-#ifdef MOZ_STACKWALKING
   MozStackWalk(PrintStackFrame, /* skipFrames */ 2, /* maxFrames */ 0, aStream,
                0, nullptr);
-#endif
 }
 
 /**
@@ -905,19 +895,16 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 static void
 WalkTheStackCached(FILE* aStream)
 {
-#ifdef MOZ_STACKWALKING
   if (!gCodeAddressService) {
     gCodeAddressService = new WalkTheStackCodeAddressService();
   }
   MozStackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0,
                aStream, 0, nullptr);
-#endif
 }
 
 static void
 WalkTheStackSavingLocations(std::vector<void*>& aLocations)
 {
-#ifdef MOZ_STACKWALKING
   if (!gCodeAddressService) {
     gCodeAddressService = new WalkTheStackCodeAddressService();
   }
@@ -927,7 +914,6 @@ WalkTheStackSavingLocations(std::vector<void*>& aLocations)
     1;                          // NS_LogCtor
   MozStackWalk(RecordStackFrame, kFramesToSkip, /* maxFrames */ 0,
                &aLocations, 0, nullptr);
-#endif
 }
 
 //----------------------------------------------------------------------
@@ -938,9 +924,7 @@ NS_LogInit()
   NS_SetMainThread();
 
   // FIXME: This is called multiple times, we should probably not allow that.
-#ifdef MOZ_STACKWALKING
   StackWalkInitCriticalAddress();
-#endif
   if (++gInitCount) {
     nsTraceRefcnt::SetActivityIsLegal(true);
   }
@@ -1301,9 +1285,7 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
 void
 nsTraceRefcnt::Shutdown()
 {
-#ifdef MOZ_STACKWALKING
   gCodeAddressService = nullptr;
-#endif
   if (gBloatView) {
     PL_HashTableDestroy(gBloatView);
     gBloatView = nullptr;
