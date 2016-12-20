@@ -326,7 +326,7 @@ var ActionBarHandler = {
 
     SELECT_ALL: {
       id: "selectall_action",
-      label: Strings.browser.GetStringFromName("contextmenu.selectAll"),
+      label: () => Strings.browser.GetStringFromName("contextmenu.selectAll"),
       icon: "drawable://ab_select_all",
       order: 5,
       floatingOrder: 5,
@@ -360,7 +360,7 @@ var ActionBarHandler = {
 
     CUT: {
       id: "cut_action",
-      label: Strings.browser.GetStringFromName("contextmenu.cut"),
+      label: () => Strings.browser.GetStringFromName("contextmenu.cut"),
       icon: "drawable://ab_cut",
       order: 4,
       floatingOrder: 1,
@@ -405,7 +405,7 @@ var ActionBarHandler = {
 
     COPY: {
       id: "copy_action",
-      label: Strings.browser.GetStringFromName("contextmenu.copy"),
+      label: () => Strings.browser.GetStringFromName("contextmenu.copy"),
       icon: "drawable://ab_copy",
       order: 3,
       floatingOrder: 2,
@@ -438,7 +438,7 @@ var ActionBarHandler = {
 
     PASTE: {
       id: "paste_action",
-      label: Strings.browser.GetStringFromName("contextmenu.paste"),
+      label: () => Strings.browser.GetStringFromName("contextmenu.paste"),
       icon: "drawable://ab_paste",
       order: 2,
       floatingOrder: 3,
@@ -471,7 +471,7 @@ var ActionBarHandler = {
 
     CALL: {
       id: "call_action",
-      label: Strings.browser.GetStringFromName("contextmenu.call"),
+      label: () => Strings.browser.GetStringFromName("contextmenu.call"),
       icon: "drawable://phone",
       order: 1,
       floatingOrder: 0,
@@ -528,7 +528,7 @@ var ActionBarHandler = {
 
     SEARCH_ADD: {
       id: "search_add_action",
-      label: Strings.browser.GetStringFromName("contextmenu.addSearchEngine3"),
+      label: () => Strings.browser.GetStringFromName("contextmenu.addSearchEngine3"),
       icon: "drawable://ab_add_search_engine",
       order: 0,
       floatingOrder: 8,
@@ -573,7 +573,7 @@ var ActionBarHandler = {
 
     SHARE: {
       id: "share_action",
-      label: Strings.browser.GetStringFromName("contextmenu.share"),
+      label: () => Strings.browser.GetStringFromName("contextmenu.share"),
       icon: "drawable://ic_menu_share",
       order: 0,
       floatingOrder: 4,
