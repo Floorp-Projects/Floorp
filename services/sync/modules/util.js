@@ -332,6 +332,10 @@ this.Utils = {
     return Utils.encodeKeyBase32(atob(encodedKey));
   },
 
+  jsonFilePath(filePath) {
+    return OS.Path.normalize(OS.Path.join(OS.Constants.Path.profileDir, "weave", filePath + ".json"));
+  },
+
   /**
    * Load a JSON file from disk in the profile directory.
    *
@@ -346,7 +350,7 @@ this.Utils = {
    *        could not be loaded, the first argument will be undefined.
    */
   jsonLoad: Task.async(function*(filePath, that, callback) {
-    let path = OS.Path.join(OS.Constants.Path.profileDir, "weave", filePath + ".json");
+    let path = Utils.jsonFilePath(filePath);
 
     if (that._log) {
       that._log.trace("Loading json from disk: " + filePath);
