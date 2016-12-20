@@ -716,15 +716,6 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, HandleObject obj, HandleI
         return Throw(rv, cx);                                                 \
     return retval ? result.succeed() : result.failMethod();
 
-static bool
-XPC_WN_Helper_AddProperty(JSContext* cx, HandleObject obj, HandleId id,
-                          HandleValue v)
-{
-    PRE_HELPER_STUB
-    AddProperty(wrapper, cx, obj, id, v, &retval);
-    POST_HELPER_STUB
-}
-
 bool
 XPC_WN_Helper_GetProperty(JSContext* cx, HandleObject obj, HandleId id,
                           MutableHandleValue vp)
