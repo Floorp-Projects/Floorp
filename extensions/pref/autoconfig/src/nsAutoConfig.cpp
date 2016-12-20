@@ -136,8 +136,8 @@ nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
     nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
     if (pHTTPCon) {
         uint32_t httpStatus;
-        pHTTPCon->GetResponseStatus(&httpStatus);
-        if (httpStatus != 200) 
+        rv = pHTTPCon->GetResponseStatus(&httpStatus);
+        if (NS_FAILED(rv) || httpStatus != 200)
         {
             MOZ_LOG(MCD, LogLevel::Debug, ("mcd http request failed with status %x\n", httpStatus));
             return readOfflineFile();
