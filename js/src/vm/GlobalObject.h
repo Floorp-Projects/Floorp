@@ -104,6 +104,7 @@ class GlobalObject : public NativeObject
         COLLATOR_PROTO,
         NUMBER_FORMAT_PROTO,
         DATE_TIME_FORMAT_PROTO,
+        PLURAL_RULES_PROTO,
         MODULE_PROTO,
         IMPORT_ENTRY_PROTO,
         EXPORT_ENTRY_PROTO,
@@ -484,6 +485,10 @@ class GlobalObject : public NativeObject
 
     JSObject* getOrCreateDateTimeFormatPrototype(JSContext* cx) {
         return getOrCreateObject(cx, DATE_TIME_FORMAT_PROTO, initIntlObject);
+    }
+
+    JSObject* getOrCreatePluralRulesPrototype(JSContext* cx) {
+        return getOrCreateObject(cx, PLURAL_RULES_PROTO, initIntlObject);
     }
 
     static bool ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*> global);
