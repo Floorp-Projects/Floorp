@@ -539,8 +539,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
     bool requestSucceeded;
-    httpChannel->GetRequestSucceeded(&requestSucceeded);
-    if (!requestSucceeded) {
+    rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
+    if (NS_FAILED(rv) || !requestSucceeded) {
       // returning error from OnStartRequest will cancel the channel
       return NS_ERROR_FILE_NOT_FOUND;
     }
