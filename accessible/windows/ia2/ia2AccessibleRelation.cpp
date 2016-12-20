@@ -34,8 +34,6 @@ IMPL_IUNKNOWN_QUERY_TAIL
 STDMETHODIMP
 ia2AccessibleRelation::get_relationType(BSTR* aRelationType)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRelationType)
     return E_INVALIDARG;
 
@@ -51,43 +49,31 @@ ia2AccessibleRelation::get_relationType(BSTR* aRelationType)
   }
 
   return *aRelationType ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_localizedRelationType(BSTR *aLocalizedRelationType)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aLocalizedRelationType)
     return E_INVALIDARG;
 
   *aLocalizedRelationType = nullptr;
   return E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_nTargets(long *aNTargets)
 {
-  A11Y_TRYBLOCK_BEGIN
-
  if (!aNTargets)
    return E_INVALIDARG;
 
  *aNTargets = mTargets.Length();
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown **aTarget)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (aTargetIndex < 0 || (uint32_t)aTargetIndex >= mTargets.Length() || !aTarget)
     return E_INVALIDARG;
 
@@ -97,16 +83,12 @@ ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown **aTarget)
   (*aTarget)->AddRef();
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleRelation::get_targets(long aMaxTargets, IUnknown **aTargets,
                                    long *aNTargets)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aNTargets || !aTargets)
     return E_INVALIDARG;
 
@@ -120,6 +102,4 @@ ia2AccessibleRelation::get_targets(long aMaxTargets, IUnknown **aTargets,
 
   *aNTargets = maxTargets;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }

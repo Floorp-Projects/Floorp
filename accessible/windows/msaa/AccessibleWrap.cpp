@@ -108,8 +108,6 @@ AccessibleWrap::Shutdown()
 STDMETHODIMP
 AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!ppv)
     return E_INVALIDARG;
 
@@ -169,8 +167,6 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 //-----------------------------------------------------
@@ -180,8 +176,6 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 AccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!ppdispParent)
     return E_INVALIDARG;
 
@@ -212,15 +206,11 @@ AccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 
   *ppdispParent = NativeAccessible(xpParentAcc);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 AccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pcountChildren)
     return E_INVALIDARG;
 
@@ -234,8 +224,6 @@ AccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
 
   *pcountChildren = ChildCount();
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -243,8 +231,6 @@ AccessibleWrap::get_accChild(
       /* [in] */ VARIANT varChild,
       /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!ppdispChild)
     return E_INVALIDARG;
 
@@ -269,8 +255,6 @@ AccessibleWrap::get_accChild(
 
   child.forget(ppdispChild);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 /**
@@ -335,8 +319,6 @@ AccessibleWrap::get_accName(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszName)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pszName || varChild.vt != VT_I4)
     return E_INVALIDARG;
 
@@ -365,8 +347,6 @@ AccessibleWrap::get_accName(
   if (!*pszName)
     return E_OUTOFMEMORY;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 
@@ -375,8 +355,6 @@ AccessibleWrap::get_accValue(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszValue)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pszValue)
     return E_INVALIDARG;
 
@@ -405,16 +383,12 @@ AccessibleWrap::get_accValue(
   if (!*pszValue)
     return E_OUTOFMEMORY;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 AccessibleWrap::get_accDescription(VARIANT varChild,
                                    BSTR __RPC_FAR *pszDescription)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pszDescription)
     return E_INVALIDARG;
 
@@ -436,8 +410,6 @@ AccessibleWrap::get_accDescription(VARIANT varChild,
   *pszDescription = ::SysAllocStringLen(description.get(),
                                         description.Length());
   return *pszDescription ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -445,8 +417,6 @@ AccessibleWrap::get_accRole(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarRole)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pvarRole)
     return E_INVALIDARG;
 
@@ -536,8 +506,6 @@ AccessibleWrap::get_accRole(
   }
 
   return E_FAIL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -545,8 +513,6 @@ AccessibleWrap::get_accState(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarState)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pvarState)
     return E_INVALIDARG;
 
@@ -578,8 +544,6 @@ AccessibleWrap::get_accState(
   nsAccUtils::To32States(state, &msaaState, nullptr);
   pvarState->lVal = msaaState;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 
@@ -588,15 +552,11 @@ AccessibleWrap::get_accHelp(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszHelp)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pszHelp)
     return E_INVALIDARG;
 
   *pszHelp = nullptr;
   return S_FALSE;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -605,16 +565,12 @@ AccessibleWrap::get_accHelpTopic(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ long __RPC_FAR *pidTopic)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pszHelpFile || !pidTopic)
     return E_INVALIDARG;
 
   *pszHelpFile = nullptr;
   *pidTopic = 0;
   return S_FALSE;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -622,8 +578,6 @@ AccessibleWrap::get_accKeyboardShortcut(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pszKeyboardShortcut)
     return E_INVALIDARG;
   *pszKeyboardShortcut = nullptr;
@@ -649,16 +603,12 @@ AccessibleWrap::get_accKeyboardShortcut(
   *pszKeyboardShortcut = ::SysAllocStringLen(shortcut.get(),
                                              shortcut.Length());
   return *pszKeyboardShortcut ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 AccessibleWrap::get_accFocus(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pvarChild)
     return E_INVALIDARG;
 
@@ -689,8 +639,6 @@ AccessibleWrap::get_accFocus(
   }
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 /**
@@ -727,8 +675,6 @@ private:
 STDMETHODIMP
 AccessibleEnumerator::QueryInterface(REFIID iid, void ** ppvObject)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (iid == IID_IEnumVARIANT) {
     *ppvObject = static_cast<IEnumVARIANT*>(this);
     AddRef();
@@ -742,15 +688,11 @@ AccessibleEnumerator::QueryInterface(REFIID iid, void ** ppvObject)
 
   *ppvObject = nullptr;
   return E_NOINTERFACE;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 AccessibleEnumerator::Next(unsigned long celt, VARIANT FAR* rgvar, unsigned long FAR* pceltFetched)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   uint32_t length = mArray.Length();
   HRESULT hr = S_OK;
 
@@ -770,29 +712,21 @@ AccessibleEnumerator::Next(unsigned long celt, VARIANT FAR* rgvar, unsigned long
     *pceltFetched = celt;
 
   return hr;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 AccessibleEnumerator::Clone(IEnumVARIANT FAR* FAR* ppenum)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   *ppenum = new AccessibleEnumerator(*this);
   if (!*ppenum)
     return E_OUTOFMEMORY;
   NS_ADDREF(*ppenum);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 AccessibleEnumerator::Skip(unsigned long celt)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   uint32_t length = mArray.Length();
   // Check if we can skip the requested number of elements
   if (celt > length - mCurIndex) {
@@ -801,8 +735,6 @@ AccessibleEnumerator::Skip(unsigned long celt)
   }
   mCurIndex += celt;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 /**
@@ -825,8 +757,6 @@ AccessibleEnumerator::Skip(unsigned long celt)
 STDMETHODIMP
 AccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pvarChildren)
     return E_INVALIDARG;
 
@@ -846,8 +776,6 @@ AccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
     NS_ADDREF(pvarChildren->punkVal = pEnum);
   }
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -855,8 +783,6 @@ AccessibleWrap::get_accDefaultAction(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pszDefaultAction)
     return E_INVALIDARG;
 
@@ -878,8 +804,6 @@ AccessibleWrap::get_accDefaultAction(
   *pszDefaultAction = ::SysAllocStringLen(defaultAction.get(),
                                           defaultAction.Length());
   return *pszDefaultAction ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -887,8 +811,6 @@ AccessibleWrap::accSelect(
       /* [in] */ long flagsSelect,
       /* [optional][in] */ VARIANT varChild)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   RefPtr<IAccessible> accessible;
   HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
   if (FAILED(hr)) {
@@ -930,8 +852,6 @@ AccessibleWrap::accSelect(
   }
 
   return E_FAIL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -942,8 +862,6 @@ AccessibleWrap::accLocation(
       /* [out] */ long __RPC_FAR *pcyHeight,
       /* [optional][in] */ VARIANT varChild)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight)
     return E_INVALIDARG;
 
@@ -970,8 +888,6 @@ AccessibleWrap::accLocation(
   *pcxWidth = rect.width;
   *pcyHeight = rect.height;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -980,8 +896,6 @@ AccessibleWrap::accNavigate(
       /* [optional][in] */ VARIANT varStart,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pvarEndUpAt)
     return E_INVALIDARG;
 
@@ -1064,8 +978,6 @@ AccessibleWrap::accNavigate(
   pvarEndUpAt->pdispVal = NativeAccessible(navAccessible);
   pvarEndUpAt->vt = VT_DISPATCH;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -1074,8 +986,6 @@ AccessibleWrap::accHitTest(
       /* [in] */ long yTop,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!pvarChild)
     return E_INVALIDARG;
 
@@ -1102,16 +1012,12 @@ AccessibleWrap::accHitTest(
     return S_FALSE;
   }
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 AccessibleWrap::accDoDefaultAction(
       /* [optional][in] */ VARIANT varChild)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   RefPtr<IAccessible> accessible;
   HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
   if (FAILED(hr)) {
@@ -1123,8 +1029,6 @@ AccessibleWrap::accDoDefaultAction(
   }
 
   return DoAction(0) ? S_OK : E_INVALIDARG;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
