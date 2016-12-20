@@ -29,6 +29,9 @@ module.exports = { // eslint-disable-line no-undef
     // Always require a trailing EOL
     "eol-last": "error",
 
+    // No spaces between function name and parentheses.
+    "func-call-spacing": ["error", "never"],
+
     // Require function* name()
     "generator-star-spacing": ["error", {"before": false, "after": true}],
 
@@ -108,6 +111,9 @@ module.exports = { // eslint-disable-line no-undef
     // No overwriting defined functions
     "no-func-assign": "error",
 
+    // No reassigning native JS objects or read only globals.
+    "no-global-assign": "error",
+
     // No invalid regular expressions
     "no-invalid-regexp": "error",
 
@@ -127,9 +133,6 @@ module.exports = { // eslint-disable-line no-undef
       "ArrayExpression": true,
       "ObjectExpression": true
     }}],
-
-    // No reassigning native JS objects
-    "no-native-reassign": "error",
 
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
@@ -157,9 +160,6 @@ module.exports = { // eslint-disable-line no-undef
 
     // No declaring variables that hide things like arguments
     "no-shadow-restricted-names": "error",
-
-    // No spaces between function name and parentheses
-    "no-spaced-func": "error",
 
     // Disallow sparse arrays, eg. let arr = [,,"error"].
     "no-sparse-arrays": "error",
