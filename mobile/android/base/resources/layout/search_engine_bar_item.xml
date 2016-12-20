@@ -3,11 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- TwoWayView doesn't let us set the margin around items (except as
-     gecko:itemMargin, but that doesn't increase the hit area) so we
-     have to surround the main View by a ViewGroup to create a pressable margin.
-
-     Note: the layout_height values are shared with the parent
+<!-- Note: the layout_height values are shared with the parent
      View (browser_search at the time of this writing).
 
      The actual width of the FrameLayout is calculated at runtime by the
