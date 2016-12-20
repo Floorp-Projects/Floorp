@@ -4542,9 +4542,6 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     aDesiredSize.SetBlockStartAscent(flexContainerAscent);
   }
 
-  // Cache this baseline for use outside of this call.
-  mBaselineFromLastReflow = flexContainerAscent;
-
   // Now: If we're complete, add bottom border/padding to desired height (which
   // we skipped via skipSides) -- unless that pushes us over available height,
   // in which case we become incomplete (unless we already weren't asking for
@@ -4566,6 +4563,16 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // We couldn't fit bottom border/padding, so we'll need a continuation.
       NS_FRAME_SET_INCOMPLETE(aStatus);
     }
+  }
+
+  // Calculate the container baselines so that our parent can baseline-align us.
+  mBaselineFromLastReflow = flexContainerAscent;
+  mLastBaselineFromLastReflow = lines.getLast()->GetLastBaselineOffset();
+  if (mLastBaselineFromLastReflow == nscoord_MIN) {
+    // XXX we fall back to a mirrored first baseline here for now, but this
+    // should probably use the last baseline of the last item or something.
+    mLastBaselineFromLastReflow =
+      desiredSizeInFlexWM.BSize(flexWM) - flexContainerAscent;
   }
 
   // Convert flex container's final desired size to parent's WM, for outparam.
