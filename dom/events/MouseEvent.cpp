@@ -302,27 +302,7 @@ MouseEvent::GetRelatedTarget()
       break;
   }
 
-  if (relatedTarget) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(relatedTarget);
-    nsCOMPtr<nsIContent> currentTarget =
-      do_QueryInterface(mEvent->mCurrentTarget);
-
-    nsIContent* shadowRelatedTarget = GetShadowRelatedTarget(currentTarget, content);
-    if (shadowRelatedTarget) {
-      relatedTarget = shadowRelatedTarget;
-    }
-
-    if (content && content->ChromeOnlyAccess() &&
-        !nsContentUtils::CanAccessNativeAnon()) {
-      relatedTarget = do_QueryInterface(content->FindFirstNonChromeOnlyAccessContent());
-    }
-
-    if (relatedTarget) {
-      relatedTarget = relatedTarget->GetTargetForDOMEvent();
-    }
-    return relatedTarget.forget();
-  }
-  return nullptr;
+  return EnsureWebAccessibleRelatedTarget(relatedTarget);
 }
 
 void

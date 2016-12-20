@@ -142,6 +142,13 @@ public:
    */
   void StyleNewChildren(Element* aParent);
 
+  /**
+   * Records that the contents of style sheets have changed since the last
+   * restyle.  Calling this will ensure that the Stylist rebuilds its
+   * selector maps.
+   */
+  void NoteStyleSheetsChanged();
+
 #ifdef DEBUG
   void AssertTreeIsClean();
 #else
