@@ -6,24 +6,7 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-DEFINES['BIN_SUFFIX'] = CONFIG['BIN_SUFFIX']
-
 if CONFIG['OS_TARGET'] != 'Android':
-    nss_files = ['nss3']
-    if not CONFIG['MOZ_FOLD_LIBS']:
-        nss_files.extend([
-            'nssutil3',
-            'plc4',
-            'nspr4',
-            'plds4',
-        ])
-    TEST_HARNESS_FILES.xpcshell.modules.libmar.tests.unit += sorted(
-        ['!/dist/bin/%s%s%s' % (
-            CONFIG['DLL_PREFIX'],
-            name,
-            CONFIG['DLL_SUFFIX'],
-        ) for name in nss_files]
-    )
     TEST_HARNESS_FILES.xpcshell.modules.libmar.tests.unit += [
         '!../tool/signmar%s' % CONFIG['BIN_SUFFIX'],
     ]
