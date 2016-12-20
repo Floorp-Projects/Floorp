@@ -7,6 +7,7 @@
 #include "mozilla/dom/AccessibleNodeBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "nsIPersistentProperties2.h"
 
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
@@ -101,6 +102,27 @@ AccessibleNode::Is(const Sequence<nsString>& aFlavors)
     }
   }
   return true;
+}
+
+void
+AccessibleNode::Get(JSContext* aCX, const nsAString& aAttribute,
+                    JS::MutableHandle<JS::Value> aValue,
+                    ErrorResult& aRv)
+{
+  if (!mIntl) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+
+  nsCOMPtr<nsIPersistentProperties> attrs = mIntl->Attributes();
+  nsAutoString value;
+  attrs->GetStringProperty(NS_ConvertUTF16toUTF8(aAttribute), value);
+
+  JS::Rooted<JS::Value> jsval(aCX);
+  if (!ToJSValue(aCX, value, &jsval)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+  }
+
+  aValue.set(jsval);
 }
 
 nsINode*
