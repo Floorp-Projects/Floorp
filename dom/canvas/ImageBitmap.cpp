@@ -684,10 +684,10 @@ ImageBitmap::TransferAsImage()
   return image.forget();
 }
 
-ImageBitmapCloneData*
-ImageBitmap::ToCloneData()
+UniquePtr<ImageBitmapCloneData>
+ImageBitmap::ToCloneData() const
 {
-  ImageBitmapCloneData* result = new ImageBitmapCloneData();
+  UniquePtr<ImageBitmapCloneData> result(new ImageBitmapCloneData());
   result->mPictureRect = mPictureRect;
   result->mIsPremultipliedAlpha = mIsPremultipliedAlpha;
   result->mIsCroppingAreaOutSideOfSourceImage = mIsCroppingAreaOutSideOfSourceImage;
@@ -695,7 +695,7 @@ ImageBitmap::ToCloneData()
   result->mSurface = surface->GetDataSurface();
   MOZ_ASSERT(result->mSurface);
 
-  return result;
+  return Move(result);
 }
 
 /* static */ already_AddRefed<ImageBitmap>

@@ -204,6 +204,7 @@ struct TexImageSource
 
     const WebGLsizeiptr* mPboOffset;
 
+    const dom::ImageBitmap* mImageBitmap;
     const dom::ImageData* mImageData;
 
     const dom::Element* mDomElem;
@@ -245,6 +246,10 @@ struct TexImageSourceAdapter final : public TexImageSource
 
     TexImageSourceAdapter(const WebGLsizeiptr* pboOffset, ErrorResult* ignored) {
         mPboOffset = pboOffset;
+    }
+
+    TexImageSourceAdapter(const dom::ImageBitmap* imageBitmap, ErrorResult*) {
+        mImageBitmap = imageBitmap;
     }
 
     TexImageSourceAdapter(const dom::ImageData* imageData, ErrorResult*) {
