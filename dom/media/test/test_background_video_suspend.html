@@ -10,10 +10,12 @@
 
 var manager = new MediaTestManager;
 
-function testDelay(v, start, min, max) {
+var MIN_DELAY = 100;
+
+function testDelay(v, start, min) {
   let end = performance.now();
   let delay = end - start;
-  ok(delay > min && delay < max, `${v.token} suspended with a delay of ${delay} ms`);
+  ok(delay > min, `${v.token} suspended with a delay of ${delay} ms`);
 }
 
 startTest({
@@ -23,7 +25,7 @@ startTest({
     [ "media.suspend-bkgnd-video.enabled", true ],
     // User a short delay to ensure video decode suspend happens before end
     // of video.
-    [ "media.suspend-bkgnd-video.delay-ms", 100 ]
+    [ "media.suspend-bkgnd-video.delay-ms", MIN_DELAY ]
   ],
   tests: gDecodeSuspendTests,
   runTest: (test, token) => {
@@ -35,7 +37,7 @@ startTest({
       .then(() => { start = performance.now(); })
       .then(() => testVideoSuspendsWhenHidden(v))
       .then(() => {
-        testDelay(v, start, 100, 1000);
+        testDelay(v, start, MIN_DELAY);
         return testVideoResumesWhenShown(v);
       })
       .then(() => waitUntilEnded(v))
