@@ -390,56 +390,6 @@ NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait)
   return NS_SUCCEEDED(aThread->ProcessNextEvent(aMayWait, &val)) && val;
 }
 
-#ifndef XPCOM_GLUE_AVOID_NSPR
-
-namespace {
-
-class nsNameThreadRunnable final : public nsIRunnable
-{
-  ~nsNameThreadRunnable() {}
-
-public:
-  explicit nsNameThreadRunnable(const nsACString& aName) : mName(aName) {}
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-protected:
-  const nsCString mName;
-};
-
-NS_IMPL_ISUPPORTS(nsNameThreadRunnable, nsIRunnable)
-
-NS_IMETHODIMP
-nsNameThreadRunnable::Run()
-{
-  PR_SetCurrentThreadName(mName.BeginReading());
-  return NS_OK;
-}
-
-} // namespace
-
-void
-NS_SetThreadName(nsIThread* aThread, const nsACString& aName)
-{
-  if (!aThread) {
-    return;
-  }
-
-  aThread->Dispatch(new nsNameThreadRunnable(aName),
-                    nsIEventTarget::DISPATCH_NORMAL);
-}
-
-#else // !XPCOM_GLUE_AVOID_NSPR
-
-void
-NS_SetThreadName(nsIThread* aThread, const nsACString& aName)
-{
-  // No NSPR, no love.
-}
-
-#endif
-
 #ifdef MOZILLA_INTERNAL_API
 nsIThread*
 NS_GetCurrentThread()
