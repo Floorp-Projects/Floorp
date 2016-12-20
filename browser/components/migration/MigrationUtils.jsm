@@ -38,9 +38,6 @@ var gProfileStartup = null;
 var gMigrationBundle = null;
 var gPreviousDefaultBrowserKey = "";
 
-let gKeepUndoData = false;
-let gUndoData = null;
-
 XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
   if (AppConstants.platform == "win") {
     return [
@@ -951,20 +948,7 @@ this.MigrationUtils = Object.freeze({
 
   insertBookmarkWrapper(bookmark) {
     this._importQuantities.bookmarks++;
-    let insertionPromise = PlacesUtils.bookmarks.insert(bookmark);
-    if (!gKeepUndoData) {
-      return insertionPromise;
-    }
-    // If we keep undo data, add a promise handler that stores the undo data once
-    // the bookmark has been inserted in the DB, and then returns the bookmark.
-    let {parentGuid} = bookmark;
-    return insertionPromise.then(bm => {
-      let {guid, lastModified, type} = bm;
-      gUndoData.get("bookmarks").push({
-        parentGuid, guid, lastModified, type
-      });
-      return bm;
-    });
+    return PlacesUtils.bookmarks.insert(bookmark);
   },
 
   insertVisitsWrapper(places, options) {
@@ -975,43 +959,6 @@ this.MigrationUtils = Object.freeze({
   insertLoginWrapper(login) {
     this._importQuantities.logins++;
     return LoginHelper.maybeImportLogin(login);
-  },
-
-  initializeUndoData() {
-    gKeepUndoData = true;
-    gUndoData = new Map([["bookmarks", []], ["visits", new Map()], ["logins", []]]);
-  },
-
-  _postProcessUndoData: Task.async(function*(state) {
-    if (!state) {
-      return state;
-    }
-    let bookmarkFolders = state.get("bookmarks").filter(b => b.type == PlacesUtils.bookmarks.TYPE_FOLDER);
-
-    let bookmarkFolderData = [];
-    let bmPromises = bookmarkFolders.map(({guid}) => {
-      // Ignore bookmarks where the promise doesn't resolve (ie that are missing)
-      // Also check that the bookmark fetch returns isn't null before adding it.
-      return PlacesUtils.bookmarks.fetch(guid).then(bm => bm && bookmarkFolderData.push(bm), () => {});
-    });
-
-    yield Promise.all(bmPromises);
-    let folderLMMap = new Map(bookmarkFolderData.map(b => [b.guid, b.lastModified]));
-    for (let bookmark of bookmarkFolders) {
-      let lastModified = folderLMMap.get(bookmark.guid);
-      // If the bookmark was deleted, the map will be returning null, so check:
-      if (lastModified) {
-        bookmark.lastModified = lastModified;
-      }
-    }
-    return state;
-  }),
-
-  stopAndRetrieveUndoData() {
-    let undoData = gUndoData;
-    gUndoData = null;
-    gKeepUndoData = false;
-    return this._postProcessUndoData(undoData);
   },
 
   /**
