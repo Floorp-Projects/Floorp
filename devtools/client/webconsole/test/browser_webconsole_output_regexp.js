@@ -3,19 +3,18 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test the webconsole output for various types of objects.
+// Test the webconsole output for a regexp object.
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-console-output-regexp.html";
+const TEST_URI = "data:text/html;charset=utf8,<p>test regexp output";
 
 var inputTests = [
   // 0
   {
     input: "/foo/igym",
     output: "/foo/gimy",
-    printOutput: "Error: source called",
+    printOutput: "/foo/gimy",
     inspectable: true,
   },
 ];

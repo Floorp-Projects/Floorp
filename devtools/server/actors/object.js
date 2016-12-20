@@ -1158,13 +1158,20 @@ DebuggerServer.ObjectActorPreviewers = {
   }],
 
   RegExp: [function ({obj, hooks}, grip) {
-    let str = RegExp.prototype.toString.call(obj.unsafeDereference());
+    let str = DevToolsUtils.callPropertyOnObject(obj, "toString");
+    if (typeof str != "string") {
+      return false;
+    }
+
     grip.displayString = hooks.createValueGrip(str);
     return true;
   }],
 
   Date: [function ({obj, hooks}, grip) {
-    let time = Date.prototype.getTime.call(obj.unsafeDereference());
+    let time = DevToolsUtils.callPropertyOnObject(obj, "getTime");
+    if (typeof time != "number") {
+      return false;
+    }
 
     grip.preview = {
       timestamp: hooks.createValueGrip(time),

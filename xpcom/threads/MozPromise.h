@@ -827,6 +827,9 @@ public:
   MozPromiseHolder()
     : mMonitor(nullptr) {}
 
+  MozPromiseHolder(MozPromiseHolder&& aOther)
+    : mMonitor(nullptr), mPromise(aOther.mPromise.forget()) {}
+
   // Move semantics.
   MozPromiseHolder& operator=(MozPromiseHolder&& aOther)
   {
