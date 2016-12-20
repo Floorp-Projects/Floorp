@@ -314,6 +314,151 @@ const colorType = {
   },
 };
 
+const transformListType = {
+  testInterpolation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['translate(200px, -200px)',
+                                                   'translate(400px, 400px)'] },
+                                     1000);
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500,  expected: [ 1, 0, 0, 1, 300, 100 ] }]);
+    }, property + ': translate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['rotate(45deg)',
+                                                   'rotate(135deg)'] },
+                                     1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500,  expected: [ Math.cos(Math.PI / 2),
+                                   Math.sin(Math.PI / 2),
+                                  -Math.sin(Math.PI / 2),
+                                   Math.cos(Math.PI / 2),
+                                   0, 0] }]);
+    }, property + ': rotate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['scale(3)', 'scale(5)'] },
+                                     1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500,  expected: [ 4, 0, 0, 4, 0, 0 ] }]);
+    }, property + ': scale');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['skew(30deg, 60deg)',
+                                                   'skew(60deg, 30deg)'] },
+                                     1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500,  expected: [ 1, Math.tan(Math.PI / 4),
+                                   Math.tan(Math.PI / 4), 1,
+                                   0, 0] }]);
+    }, property + ': skew');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation =
+        target.animate({ [idlName]: ['translateX(100px) rotate(45deg)',
+                                     'translateX(200px) rotate(135deg)'] },
+                       1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500,  expected: [ Math.cos(Math.PI / 2),
+                                   Math.sin(Math.PI / 2),
+                                  -Math.sin(Math.PI / 2),
+                                   Math.cos(Math.PI / 2),
+                                   150, 0 ] }]);
+    }, property + ': rotate and translate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation =
+        target.animate({ [idlName]: ['rotate(45deg) translateX(100px)',
+                                     'rotate(135deg) translateX(200px)'] },
+                       1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500, expected: [ Math.cos(Math.PI / 2),
+                                  Math.sin(Math.PI / 2),
+                                 -Math.sin(Math.PI / 2),
+                                  Math.cos(Math.PI / 2),
+                                  150 * Math.cos(Math.PI / 2),
+                                  150 * Math.sin(Math.PI / 2) ] }]);
+    }, property + ': translate and rotate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation =                // matrix(0, 1, -1, 0, 0, 100)
+        target.animate({ [idlName]: ['rotate(90deg) translateX(100px)',
+                                     // matrix(-1, 0, 0, -1, 200, 0)
+                                     'translateX(200px) rotate(180deg)'] },
+                       1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500, expected: [ Math.cos(Math.PI * 3 / 4),
+                                  Math.sin(Math.PI * 3 / 4),
+                                 -Math.sin(Math.PI * 3 / 4),
+                                  Math.cos(Math.PI * 3 / 4),
+                                  100, 50 ] }]);
+    }, property + ': mismatch order of translate and rotate');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation =                 // Same matrices as above.
+        target.animate({ [idlName]: [ 'matrix(0, 1, -1, 0, 0, 100)',
+                                      'matrix(-1, 0, 0, -1, 200, 0)' ] },
+                       1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500, expected: [ Math.cos(Math.PI * 3 / 4),
+                                  Math.sin(Math.PI * 3 / 4),
+                                 -Math.sin(Math.PI * 3 / 4),
+                                  Math.cos(Math.PI * 3 / 4),
+                                  100, 50 ] }]);
+    }, property + ': matrix');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation =
+        target.animate({ [idlName]: [ 'rotate3d(1, 1, 0, 0deg)',
+                                      'rotate3d(1, 1, 0, 90deg)'] },
+                       1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500, expected: rotate3dToMatrix(1, 1, 0, Math.PI / 4) }]);
+    }, property + ': rotate3d');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      // To calculate expected matrices easily, generate input matrices from
+      // rotate3d.
+      var from = rotate3dToMatrix3d(1, 1, 0, Math.PI / 4);
+      var to = rotate3dToMatrix3d(1, 1, 0, Math.PI * 3 / 4);
+      var animation =
+        target.animate({ [idlName]: [ from, to ] }, 1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500, expected: rotate3dToMatrix(1, 1, 0, Math.PI * 2 / 4) }]);
+    }, property + ': matrix3d');
+
+  },
+};
+
 const types = {
   color: colorType,
   discrete: discreteType,
@@ -322,6 +467,7 @@ const types = {
   percentage: percentageType,
   lengthPercentageOrCalc: lengthPercentageOrCalcType,
   positiveNumber: positiveNumberType,
+  transformList: transformListType,
   visibility: visibilityType,
 };
 
