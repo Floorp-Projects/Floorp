@@ -11,8 +11,7 @@ use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use webrender_traits::{ExternalImageId};
 use webrender_traits::{DeviceUintSize};
-use webrender_traits::{LayoutSize, LayoutTransform};
-use webrender_traits::{LayerPoint, LayerRect, LayerSize};
+use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use std::sync::{Arc, Mutex, Condvar};
@@ -390,7 +389,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
         window.size = DeviceUintSize::new(width, height);
     }
 
-    let bounds = LayerRect::new(LayerPoint::new(0.0, 0.0), LayerSize::new(width as f32, height as f32));
+    let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0), LayoutSize::new(width as f32, height as f32));
 
     state.frame_builder.root_dl_builder.push_stacking_context(
         webrender_traits::ScrollPolicy::Scrollable,
@@ -594,9 +593,9 @@ pub struct WrImageMask
 
 impl WrRect
 {
-    pub fn to_rect(&self) -> LayerRect
+    pub fn to_rect(&self) -> LayoutRect
     {
-        LayerRect::new(LayerPoint::new(self.x, self.y), LayerSize::new(self.width, self.height))
+        LayoutRect::new(LayoutPoint::new(self.x, self.y), LayoutSize::new(self.width, self.height))
     }
 }
 
