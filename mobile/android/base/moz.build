@@ -801,7 +801,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/TabThumbnailWrapper.java',
     'widget/ThumbnailView.java',
     'widget/TouchDelegateWithReset.java',
-    'widget/TwoWayView.java',
     'ZoomedView.java',
 ]]
 # The following sources are checked in to version control but
