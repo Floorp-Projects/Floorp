@@ -1467,7 +1467,7 @@ ValidateReadPixelsFormatAndType(const webgl::FormatInfo* srcFormat,
     }
 
     MOZ_ASSERT(gl->IsCurrent());
-    if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+    if (gl->IsGLES()) {
         const auto auxFormat = gl->GetIntAs<GLenum>(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT);
         const auto auxType = gl->GetIntAs<GLenum>(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE);
 
