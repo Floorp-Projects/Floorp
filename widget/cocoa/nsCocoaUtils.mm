@@ -613,6 +613,7 @@ nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
 
   aInputEvent.mModifiers = ModifiersForEvent(aNativeEvent);
   aInputEvent.mTime = PR_IntervalNow();
+  aInputEvent.mTimeStamp = GetEventTimeStamp([aNativeEvent timestamp]);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
