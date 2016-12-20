@@ -8,14 +8,59 @@ from marionette_driver.by import By
 from marionette_driver.errors import ElementNotVisibleException
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, skip_if_mobile
 
 
 def inline(doc):
     return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
-class TestTyping(MarionetteTestCase):
+class TypingTestCase(MarionetteTestCase):
+
+    def setUp(self):
+        super(TypingTestCase, self).setUp()
+
+        if self.marionette.session_capabilities["platformName"] == "darwin":
+            self.mod_key = Keys.META
+        else:
+            self.mod_key = Keys.CONTROL
+
+
+class TestTypingChrome(TypingTestCase):
+
+    def setUp(self):
+        super(TestTypingChrome, self).setUp()
+        self.marionette.set_context("chrome")
+
+    @skip_if_mobile  # Interacting with chrome elements not available for Fennec
+    def test_cut_and_paste_shortcuts(self):
+        with self.marionette.using_context("content"):
+            test_html = self.marionette.absolute_url("javascriptPage.html")
+            self.marionette.navigate(test_html)
+
+            keyReporter = self.marionette.find_element(By.ID, "keyReporter")
+            self.assertEqual("", keyReporter.get_property("value"))
+            keyReporter.send_keys("zyxwvutsr")
+            self.assertEqual("zyxwvutsr", keyReporter.get_property("value"))
+
+            # select all and cut
+            keyReporter.send_keys(self.mod_key, "a")
+            keyReporter.send_keys(self.mod_key, "x")
+            self.assertEqual("", keyReporter.get_property("value"))
+
+        url_bar = self.marionette.find_element(By.ID, "urlbar")
+
+        # Clear contents first
+        url_bar.send_keys(self.mod_key, "a")
+        url_bar.send_keys(Keys.BACK_SPACE)
+        self.assertEqual("", url_bar.get_attribute("value"))
+
+        url_bar.send_keys(self.mod_key, "v")
+        self.assertEqual("zyxwvutsr", url_bar.get_property("value"))
+
+
+class TestTypingContent(TypingTestCase):
+
     def testShouldFireKeyPressEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -58,12 +103,6 @@ class TestTyping(MarionetteTestCase):
         self.assertEqual("ABC DEF", keyReporter.get_property("value"))
 
     def testCutAndPasteShortcuts(self):
-        # test that modifier keys work via copy/paste shortcuts
-        if self.marionette.session_capabilities["platformName"] == "darwin":
-            mod_key = Keys.META
-        else:
-            mod_key = Keys.CONTROL
-
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
@@ -73,20 +112,12 @@ class TestTyping(MarionetteTestCase):
         self.assertEqual("zyxwvutsr", keyReporter.get_property("value"))
 
         # select all and cut
-        keyReporter.send_keys(mod_key, "a")
-        keyReporter.send_keys(mod_key, "x")
+        keyReporter.send_keys(self.mod_key, "a")
+        keyReporter.send_keys(self.mod_key, "x")
         self.assertEqual("", keyReporter.get_property("value"))
 
-        with self.marionette.using_context("chrome"):
-            url_bar = self.marionette.find_element(By.ID, "urlbar")
-
-            # lear and paste
-            url_bar.send_keys(mod_key, "a")
-            url_bar.send_keys(Keys.BACK_SPACE)
-
-            self.assertEqual("", url_bar.get_attribute("value"))
-            url_bar.send_keys(mod_key, "v")
-            self.assertEqual("zyxwvutsr", url_bar.get_attribute("value"))
+        keyReporter.send_keys(self.mod_key, "v")
+        self.assertEqual("zyxwvutsr", keyReporter.get_property("value"))
 
     def testShouldBeAbleToTypeQuoteMarks(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -182,27 +213,30 @@ class TestTyping(MarionetteTestCase):
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
+    @skip_if_mobile  # Bug 1324752 - Arrow keys cannot be sent in Fennec
     def testShouldReportKeyCodeOfArrowKeysUpDownEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
 
         result = self.marionette.find_element(By.ID, "result")
         element = self.marionette.find_element(By.ID, "keyReporter")
+
         element.send_keys(Keys.ARROW_DOWN)
-        self.assertTrue("down: 40" in result.text.strip())
-        self.assertTrue("up: 40" in result.text.strip())
+
+        self.assertIn("down: 40", result.text.strip())
+        self.assertIn("up: 40", result.text.strip())
 
         element.send_keys(Keys.ARROW_UP)
-        self.assertTrue("down: 38" in  result.text.strip())
-        self.assertTrue("up: 38" in result.text.strip())
+        self.assertIn("down: 38", result.text.strip())
+        self.assertIn("up: 38", result.text.strip())
 
         element.send_keys(Keys.ARROW_LEFT)
-        self.assertTrue("down: 37" in result.text.strip())
-        self.assertTrue("up: 37" in result.text.strip())
+        self.assertIn("down: 37", result.text.strip())
+        self.assertIn("up: 37", result.text.strip())
 
         element.send_keys(Keys.ARROW_RIGHT)
-        self.assertTrue("down: 39" in result.text.strip())
-        self.assertTrue("up: 39" in result.text.strip())
+        self.assertIn("down: 39", result.text.strip())
+        self.assertIn("up: 39", result.text.strip())
 
         #  And leave no rubbish/printable keys in the "keyReporter"
         self.assertEqual("", element.get_property("value"))
@@ -217,7 +251,7 @@ class TestTyping(MarionetteTestCase):
         numericShiftsEtc = "~!@#$%^&*()_+{}:i\"<>?|END~"
         element.send_keys(numericShiftsEtc)
         self.assertEqual(numericShiftsEtc, element.get_property("value"))
-        self.assertTrue(" up: 16" in result.text.strip())
+        self.assertIn(" up: 16", result.text.strip())
     """
 
     def testLowerCaseAlphaKeys(self):
@@ -239,7 +273,7 @@ class TestTyping(MarionetteTestCase):
         upperAlphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         element.send_keys(upperAlphas)
         self.assertEqual(upperAlphas, element.get_property("value"))
-        self.assertTrue(" up: 16" in result.text.strip())
+        self.assertIn(" up: 16", result.text.strip())
     """
 
     """Disabled. Reenable in Bug 1068726
@@ -253,7 +287,7 @@ class TestTyping(MarionetteTestCase):
         element.send_keys(allPrintable)
 
         self.assertTrue(allPrintable, element.get_property("value"))
-        self.assertTrue(" up: 16" in result.text.strip())
+        self.assertIn(" up: 16", result.text.strip())
     """
 
     """Disabled. Reenable in Bug 1068733
