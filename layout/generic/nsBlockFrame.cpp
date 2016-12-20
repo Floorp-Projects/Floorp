@@ -493,7 +493,7 @@ nscoord
 nsBlockFrame::GetLogicalBaseline(WritingMode aWM) const
 {
   auto lastBaseline =
-    GetBaseline(aWM, BaselineSharingGroup::eLast, AlignmentContext::eInline);
+    BaselineBOffset(aWM, BaselineSharingGroup::eLast, AlignmentContext::eInline);
   return BSize(aWM) - lastBaseline;
 }
 
