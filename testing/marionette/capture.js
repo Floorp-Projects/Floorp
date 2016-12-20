@@ -29,7 +29,7 @@ this.capture = {};
  * @return {HTMLCanvasElement}
  *     The canvas element where the element has been painted on.
  */
-capture.element = function (node, highlights=[]) {
+capture.element = function (node, highlights = []) {
   let win = node.ownerDocument.defaultView;
   let rect = node.getBoundingClientRect();
 
@@ -56,7 +56,7 @@ capture.element = function (node, highlights=[]) {
  * @return {HTMLCanvasElement}
  *     The canvas element where the viewport has been painted on.
  */
-capture.viewport = function (win, highlights=[]) {
+capture.viewport = function (win, highlights = []) {
   let rootNode = win.document.documentElement;
 
   return capture.canvas(
@@ -90,7 +90,7 @@ capture.viewport = function (win, highlights=[]) {
  *     The canvas on which the selection from the window's framebuffer
  *     has been painted on.
  */
-capture.canvas = function (win, left, top, width, height, highlights=[]) {
+capture.canvas = function (win, left, top, width, height, highlights = []) {
   let scale = win.devicePixelRatio;
 
   let canvas = win.document.createElementNS(XHTML_NS, "canvas");
@@ -112,7 +112,7 @@ capture.canvas = function (win, left, top, width, height, highlights=[]) {
   return canvas;
 };
 
-capture.highlight_ = function (context, highlights, top=0, left=0) {
+capture.highlight_ = function (context, highlights, top = 0, left = 0) {
   if (!highlights) {
     return;
   }
