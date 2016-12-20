@@ -637,13 +637,13 @@ MediaKeySession::MakePromise(ErrorResult& aRv, const nsACString& aName)
 }
 
 void
-MediaKeySession::SetExpiration(double aExpiration)
+MediaKeySession::SetExpiration(double aSecondsSinceEpoch)
 {
   EME_LOG("MediaKeySession[%p,'%s'] SetExpiry(%lf)",
           this,
           NS_ConvertUTF16toUTF8(mSessionId).get(),
-          aExpiration);
-  mExpiration = aExpiration;
+          aSecondsSinceEpoch);
+  mExpiration = aSecondsSinceEpoch;
 }
 
 EventHandlerNonNull*
