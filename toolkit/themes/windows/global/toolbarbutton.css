@@ -97,7 +97,7 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
   }
 }
 
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   toolbarbutton:-moz-lwtheme {
     -moz-appearance: none;
   }

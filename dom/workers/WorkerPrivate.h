@@ -973,6 +973,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mPeriodicGCTimerRunning;
   bool mIdleGCTimerRunning;
   bool mWorkerScriptExecutedSuccessfully;
+  bool mFetchHandlerWasAdded;
   bool mPreferences[WORKERPREF_COUNT];
   bool mOnLine;
 
@@ -1210,6 +1211,22 @@ public:
 
   void
   MemoryPressureInternal();
+
+  void
+  SetFetchHandlerWasAdded()
+  {
+    MOZ_ASSERT(IsServiceWorker());
+    AssertIsOnWorkerThread();
+    mFetchHandlerWasAdded = true;
+  }
+
+  bool
+  FetchHandlerWasAdded() const
+  {
+    MOZ_ASSERT(IsServiceWorker());
+    AssertIsOnWorkerThread();
+    return mFetchHandlerWasAdded;
+  }
 
   JSContext*
   GetJSContext() const

@@ -98,7 +98,7 @@
           }
         }
 
-        @media not all and (-moz-windows-default-theme) {
+        @media (-moz-windows-default-theme: 0) {
           #main-window {
             background-color: transparent;
           }
@@ -225,7 +225,7 @@
             background-color: hsl(355, 82%, 69%);
           }
         }
-        @media not all and (-moz-windows-default-theme) {
+        @media (-moz-windows-default-theme: 0) {
           .titlebar-button {
             background-color: -moz-field;
           }
@@ -444,7 +444,7 @@
 }
 
 /* Aero Basic */
-@media not all and (-moz-windows-compositor) {
+@media (-moz-windows-compositor: 0) {
   @media (-moz-windows-default-theme) {
     #main-window {
       background-color: rgb(185,209,234);
