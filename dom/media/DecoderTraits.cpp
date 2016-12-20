@@ -112,13 +112,6 @@ DecoderTraits::IsMP4SupportedType(const MediaContentType& aType,
 #endif
 }
 
-static bool
-IsFlacSupportedType(const nsACString& aType,
-                   const nsAString& aCodecs = EmptyString())
-{
-  return FlacDecoder::CanHandleMediaType(aType, aCodecs);
-}
-
 static
 CanPlayStatus
 CanHandleCodecsType(const MediaContentType& aType,
@@ -178,8 +171,7 @@ CanHandleCodecsType(const MediaContentType& aType,
   if (ADTSDecoder::IsSupportedType(aType)) {
     return CANPLAY_YES;
   }
-  if (IsFlacSupportedType(mimeType.Type().AsString(),
-                          aType.ExtendedType().Codecs().AsString())) {
+  if (FlacDecoder::IsSupportedType(aType)) {
     return CANPLAY_YES;
   }
 #ifdef MOZ_DIRECTSHOW
@@ -260,7 +252,7 @@ CanHandleMediaType(const MediaContentType& aType,
   if (ADTSDecoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
   }
-  if (IsFlacSupportedType(mimeType.Type().AsString())) {
+  if (FlacDecoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
   }
 #ifdef MOZ_DIRECTSHOW
@@ -349,7 +341,7 @@ InstantiateDecoder(const MediaContentType& aType,
     decoder = new WaveDecoder(aOwner);
     return decoder.forget();
   }
-  if (IsFlacSupportedType(aType.Type().AsString())) {
+  if (FlacDecoder::IsSupportedType(aType)) {
     decoder = new FlacDecoder(aOwner);
     return decoder.forget();
   }
@@ -427,7 +419,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (WaveDecoder::IsSupportedType(*type)) {
     decoderReader = new MediaFormatReader(aDecoder, new WAVDemuxer(aDecoder->GetResource()));
   } else
-  if (IsFlacSupportedType(aType)) {
+  if (FlacDecoder::IsSupportedType(*type)) {
     decoderReader = new MediaFormatReader(aDecoder, new FlacDemuxer(aDecoder->GetResource()));
   } else
   if (OggDecoder::IsSupportedType(*type)) {
@@ -480,7 +472,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #endif
     MP3Decoder::IsSupportedType(*type) ||
     ADTSDecoder::IsSupportedType(*type) ||
-    IsFlacSupportedType(aType) ||
+    FlacDecoder::IsSupportedType(*type) ||
 #ifdef MOZ_DIRECTSHOW
     IsDirectShowSupportedType(aType) ||
 #endif
