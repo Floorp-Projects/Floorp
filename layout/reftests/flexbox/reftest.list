@@ -59,6 +59,7 @@ fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-i
 # Tests for empty flexboxes (with no flex items)
 == flexbox-empty-1a.xhtml  flexbox-empty-1-ref.xhtml
 == flexbox-empty-1b.xhtml  flexbox-empty-1-ref.xhtml
+== flexbox-empty-container-synthesized-baseline-001.html flexbox-empty-container-synthesized-baseline-001-ref.html
 
 # Tests for handling of floated elements inside a flexbox
 == flexbox-float-1a.xhtml  flexbox-float-1-ref.xhtml
