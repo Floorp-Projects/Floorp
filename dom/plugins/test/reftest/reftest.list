@@ -1,9 +1,9 @@
 # basic sanity checking
 random-if(!haveTestPlugin) != plugin-sanity.html about:blank
-fails-if(!haveTestPlugin) fails-if(webrender) == plugin-sanity.html div-sanity.html
+fails-if(!haveTestPlugin) == plugin-sanity.html div-sanity.html
 fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) fails-if(webrender) == plugin-alpha-zindex.html div-alpha-zindex.html
 fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,164000) fails-if(webrender) == plugin-alpha-opacity.html div-alpha-opacity.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fails-if(webrender) == windowless-clipping-1.html windowless-clipping-1-ref.html # bug 631832
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1-ref.html # bug 631832
 # fuzzy because of anti-aliasing in dashed border
 fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fails-if(webrender) == border-padding-1.html border-padding-1-ref.html # bug 629430
 fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html # bug 629430
@@ -19,7 +19,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) f
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) fails-if(webrender) == plugin-background-2-step.html plugin-background-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) fails-if(webrender) == plugin-background-5-step.html plugin-background-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) fails-if(webrender) == plugin-background-10-step.html plugin-background-ref.html
-random-if(!haveTestPlugin) fails-if(webrender) == plugin-transform-1.html plugin-transform-1-ref.html
+random-if(!haveTestPlugin) == plugin-transform-1.html plugin-transform-1-ref.html
 fails-if(!haveTestPlugin) fails-if(webrender) == plugin-transform-2.html plugin-transform-2-ref.html
 skip-if(!haveTestPlugin) == shrink-1.html shrink-1-ref.html
 skip-if(!haveTestPlugin) == update-1.html update-1-ref.html
