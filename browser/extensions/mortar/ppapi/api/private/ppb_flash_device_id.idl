@@ -1,0 +1,29 @@
+/* Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/**
+ * This file contains the <code>PPB_Flash_DeviceID</code> interface.
+ */
+
+label Chrome {
+  M21 = 1.0
+};
+
+// TODO(raymes): This is deprecated by the PPB_Flash_DRM interface. Remove this
+// interface after a few versions of Chrome have passed.
+interface PPB_Flash_DeviceID {
+  PP_Resource Create([in] PP_Instance instance);
+
+  /**
+   * Asynchronously computes the device ID. When available, it will place the
+   * string in |*id| and will call the completion callback. On failure the
+   * given var will be PP_VARTYPE_UNDEFINED.
+   */
+  [version=1.0]
+  int32_t GetDeviceID([in] PP_Resource device_id,
+                      [out] PP_Var id,
+                      [in] PP_CompletionCallback callback);
+};
+

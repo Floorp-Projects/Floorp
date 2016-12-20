@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals NetMonitorView */
-
 "use strict";
 
 const {
@@ -15,6 +13,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { L10N } = require("../l10n");
 const { getDisplayedRequestsSummary } = require("../selectors/index");
+const Actions = require("../actions/index");
 
 const { button, span } = DOM;
 
@@ -49,7 +48,7 @@ module.exports = connect(
   }),
   (dispatch) => ({
     triggerSummary: () => {
-      NetMonitorView.toggleFrontendMode();
+      dispatch(Actions.openStatistics(true));
     },
   })
 )(SummaryButton);

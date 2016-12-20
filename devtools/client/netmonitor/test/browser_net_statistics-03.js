@@ -13,7 +13,8 @@ add_task(function* () {
   info("Starting test... ");
 
   let panel = monitor.panelWin;
-  let { $, EVENTS, NetMonitorView } = panel;
+  let { $, $all, EVENTS, NetMonitorView, gStore, windowRequire } = panel;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
   EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
   EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
@@ -27,7 +28,7 @@ add_task(function* () {
     panel.once(EVENTS.PRIMED_CACHE_CHART_DISPLAYED),
     panel.once(EVENTS.EMPTY_CACHE_CHART_DISPLAYED)
   ]);
-  NetMonitorView.toggleFrontendMode();
+  gStore.dispatch(Actions.openStatistics(true));
   yield onEvents;
 
   is(NetMonitorView.currentFrontendMode, "network-statistics-view",

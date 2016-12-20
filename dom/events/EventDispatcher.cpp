@@ -13,7 +13,6 @@
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
 #include "AnimationEvent.h"
-#include "BeforeAfterKeyboardEvent.h"
 #include "BeforeUnloadEvent.h"
 #include "ClipboardEvent.h"
 #include "CommandEvent.h"
@@ -913,9 +912,6 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eKeyboardEventClass:
       return NS_NewDOMKeyboardEvent(aOwner, aPresContext,
                                     aEvent->AsKeyboardEvent());
-    case eBeforeAfterKeyboardEventClass:
-      return NS_NewDOMBeforeAfterKeyboardEvent(aOwner, aPresContext,
-                                               aEvent->AsBeforeAfterKeyboardEvent());
     case eCompositionEventClass:
       return NS_NewDOMCompositionEvent(aOwner, aPresContext,
                                        aEvent->AsCompositionEvent());
