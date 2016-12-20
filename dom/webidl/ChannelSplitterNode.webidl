@@ -15,7 +15,7 @@ dictionary ChannelSplitterOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional ChannelSplitterOptions options)]
+ Constructor(AudioContext context, optional ChannelSplitterOptions options)]
 interface ChannelSplitterNode : AudioNode {
 
 };
