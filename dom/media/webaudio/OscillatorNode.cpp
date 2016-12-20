@@ -413,13 +413,11 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
                              ChannelCountMode::Max,
                              ChannelInterpretation::Speakers)
   , mType(OscillatorType::Sine)
-  , mFrequency(
-    new AudioParam(this, OscillatorNodeEngine::FREQUENCY, "frequency", 440.0f,
-                   -(aContext->SampleRate() / 2), aContext->SampleRate() / 2))
-  , mDetune(new AudioParam(this, OscillatorNodeEngine::DETUNE, "detune", 0.0f))
+  , mFrequency(new AudioParam(this, OscillatorNodeEngine::FREQUENCY,
+                              440.0f, "frequency"))
+  , mDetune(new AudioParam(this, OscillatorNodeEngine::DETUNE, 0.0f, "detune"))
   , mStartCalled(false)
 {
-
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NEED_MAIN_THREAD_FINISHED,

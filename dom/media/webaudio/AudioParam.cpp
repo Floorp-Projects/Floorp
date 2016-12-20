@@ -35,17 +35,13 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioParam, Release)
 
 AudioParam::AudioParam(AudioNode* aNode,
                        uint32_t aIndex,
-                       const char* aName,
                        float aDefaultValue,
-                       float aMinValue,
-                       float aMaxValue)
+                       const char* aName)
   : AudioParamTimeline(aDefaultValue)
   , mNode(aNode)
   , mName(aName)
   , mIndex(aIndex)
   , mDefaultValue(aDefaultValue)
-  , mMinValue(aMinValue)
-  , mMaxValue(aMaxValue)
 {
 }
 

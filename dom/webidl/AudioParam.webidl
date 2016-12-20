@@ -13,10 +13,8 @@
 [Pref="dom.webaudio.enabled"]
 interface AudioParam {
 
-                    attribute float value;
-    readonly        attribute float defaultValue;
-    readonly        attribute float minValue;
-    readonly        attribute float maxValue;
+    attribute float value;
+    readonly attribute float defaultValue;
 
     // Parameter automation. 
     [Throws]

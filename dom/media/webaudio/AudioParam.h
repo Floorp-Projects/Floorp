@@ -27,10 +27,8 @@ class AudioParam final : public nsWrapperCache,
 public:
   AudioParam(AudioNode* aNode,
              uint32_t aIndex,
-             const char* aName,
              float aDefaultValue,
-             float aMinValue = -std::numeric_limits<float>::infinity(),
-             float aMaxValue = std::numeric_limits<float>::infinity());
+             const char* aName);
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
@@ -167,16 +165,6 @@ public:
     return mDefaultValue;
   }
 
-  float MinValue() const
-  {
-    return mMinValue;
-  }
-
-  float MaxValue() const
-  {
-    return mMaxValue;
-  }
-
   const nsTArray<AudioNode::InputNode>& InputNodes() const
   {
     return mInputNodes;
@@ -256,8 +244,6 @@ private:
   RefPtr<MediaInputPort> mNodeStreamPort;
   const uint32_t mIndex;
   const float mDefaultValue;
-  const float mMinValue;
-  const float mMaxValue;
 };
 
 } // namespace dom
