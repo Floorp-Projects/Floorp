@@ -131,9 +131,13 @@ public:
 
     NS_IMETHOD Run() override
     {
+      OfflineAudioCompletionEventInit param;
+      param.mRenderedBuffer = mRenderedBuffer;
+
       RefPtr<OfflineAudioCompletionEvent> event =
-          new OfflineAudioCompletionEvent(mAudioContext, nullptr, nullptr);
-      event->InitEvent(mRenderedBuffer);
+          OfflineAudioCompletionEvent::Constructor(mAudioContext,
+                                                   NS_LITERAL_STRING("complete"),
+                                                   param);
       mAudioContext->DispatchTrustedEvent(event);
 
       return NS_OK;

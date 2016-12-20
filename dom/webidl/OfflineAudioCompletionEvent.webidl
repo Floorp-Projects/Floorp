@@ -10,10 +10,12 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webaudio.enabled"]
-interface OfflineAudioCompletionEvent : Event {
-
-    readonly attribute AudioBuffer renderedBuffer;
-
+dictionary OfflineAudioCompletionEventInit : EventInit {
+    required AudioBuffer renderedBuffer;
 };
 
+[Constructor(DOMString type, OfflineAudioCompletionEventInit eventInitDict),
+ Pref="dom.webaudio.enabled"]
+interface OfflineAudioCompletionEvent : Event {
+    readonly attribute AudioBuffer renderedBuffer;
+};
