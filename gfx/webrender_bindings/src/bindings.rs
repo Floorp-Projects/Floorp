@@ -419,13 +419,14 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: W
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
+    let overflow = overflow.to_rect();
 
     let mut dl = state.frame_builder.dl_builder.pop().unwrap();
     let mut prev_dl = state.frame_builder.dl_builder.last_mut().unwrap();
 
     prev_dl.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
-                                  ClipRegion::simple(&bounds),
+                                  ClipRegion::simple(&overflow),
                                   state.z_index,
                                   transform,
                                   &LayoutTransform::identity(),
