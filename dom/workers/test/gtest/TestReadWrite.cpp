@@ -148,11 +148,15 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
   buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("scope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.Append("scope 0\ncurrentWorkerURL 0\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TRUE "\n");
+  buffer.Append("cacheName 0\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.Append("\n");
-  buffer.Append("scope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.Append("scope 1\ncurrentWorkerURL 1\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
+  buffer.Append("cacheName 1\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -176,6 +180,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_STREQ("scope 0", cInfo0.spec().get());
   ASSERT_STREQ("scope 0", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
+  ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
@@ -189,6 +194,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_STREQ("scope 1", cInfo1.spec().get());
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
+  ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
 }
 
@@ -367,6 +373,59 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   ASSERT_STREQ("scope 1", cInfo1.spec().get());
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
+  ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
+}
+
+TEST(ServiceWorkerRegistrar, TestVersion4Migration)
+{
+  nsAutoCString buffer("4" "\n");
+
+  buffer.Append("^appId=123&inBrowser=1\n");
+  buffer.Append("scope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+
+  buffer.Append("\n");
+  buffer.Append("scope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+
+  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+
+  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+
+  nsresult rv = swr->TestReadData();
+  ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
+
+  const nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
+  ASSERT_EQ((uint32_t)2, data.Length()) << "2 entries should be found";
+
+  const mozilla::ipc::PrincipalInfo& info0 = data[0].principal();
+  ASSERT_EQ(info0.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
+  const mozilla::ipc::ContentPrincipalInfo& cInfo0 = data[0].principal();
+
+  nsAutoCString suffix0;
+  cInfo0.attrs().CreateSuffix(suffix0);
+
+  ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
+  ASSERT_STREQ("scope 0", cInfo0.spec().get());
+  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
+  // default is true
+  ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
+  ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
+
+  const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
+  ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
+  const mozilla::ipc::ContentPrincipalInfo& cInfo1 = data[1].principal();
+
+  nsAutoCString suffix1;
+  cInfo1.attrs().CreateSuffix(suffix1);
+
+  ASSERT_STREQ("", suffix1.get());
+  ASSERT_STREQ("scope 1", cInfo1.spec().get());
+  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
+  // default is true
+  ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
 }
 

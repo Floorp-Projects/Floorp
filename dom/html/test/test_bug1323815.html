@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1323815
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1323815</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1323815 **/
+
+SimpleTest.waitForExplicitFinish();
+function test() {
+  var n = document.getElementById("number");
+  var t = document.getElementById("text");
+  t.focus();
+  var gotBlur = false;
+  t.onblur = function(e) {
+    try {
+      is(e.relatedTarget.localName, "input");
+    } catch(ex) {
+      ok(false, "Accessing properties on the relatedTarget shouldn't throw! " + ex);
+    }
+    gotBlur = true;
+  }
+
+  n.focus();
+  ok(gotBlur);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(test);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1323815">Mozilla Bug 1323815</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<input type="number" id="number"><input type="text" id="text">
+</body>
+</html>

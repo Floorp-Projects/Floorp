@@ -9,7 +9,7 @@
   margin-inline-end: 16px;
 }
 
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   #header-utils-btn {
     list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities-native");
   }

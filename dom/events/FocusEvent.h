@@ -33,7 +33,7 @@ public:
              nsPresContext* aPresContext,
              InternalFocusEvent* aEvent);
 
-  EventTarget* GetRelatedTarget();
+  already_AddRefed<EventTarget> GetRelatedTarget();
 
   static already_AddRefed<FocusEvent> Constructor(const GlobalObject& aGlobal,
                                                   const nsAString& aType,

@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1181127</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1181127">Mozilla Bug 1181127</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    // Make sure the event handler during the install event persists. This ensures
+    // the reason for which the interception doesn't occur is because of the
+    // handlesFetch=false flag from ServiceWorkerInfo.
+    ["dom.serviceWorkers.idle_timeout", 299999],
+  ]});
+});
+
+var iframeg;
+function create_iframe(url) {
+  return new Promise(function(res) {
+    iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.onload = function() { res(iframe) }
+    document.body.appendChild(iframe);
+    iframeg = iframe;
+  })
+}
+
+add_task(function* test_nofetch_worker() {
+  let registration = yield navigator.serviceWorker.register(
+    "nofetch_handler_worker.js", { scope: "./nofetch_handler_worker/"} )
+    .then(function(registration) {
+      var worker = registration.installing;
+      return new Promise(function(resolve) {
+        worker.addEventListener('statechange', function() {
+          if (worker.state === 'activated') {
+            resolve(registration);
+          }
+        });
+      });
+    });
+
+  let iframe = yield create_iframe("./nofetch_handler_worker/doesnt_exist.html");
+  ok(!iframe.contentDocument.body.innerHTML.includes("intercepted"), "Request was not intercepted.");
+
+  yield SpecialPowers.popPrefEnv();
+  yield registration.unregister();
+});
+</script>
+</body>
+</html>
