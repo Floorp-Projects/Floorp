@@ -2024,6 +2024,13 @@ DoCopyTexOrSubImage(WebGLContext* webgl, const char* funcName, bool isSubImage,
         return false;
     }
 
+    if (gl->IsANGLE() && error == LOCAL_GL_INVALID_OPERATION) {
+        webgl->ErrorImplementationBug("%s: ANGLE is particular about CopyTexSubImage"
+                                      " formats matching exactly.",
+                                      funcName);
+        return false;
+    }
+
     MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
     webgl->GenerateWarning("%s: Unexpected error during texture copy. Context lost.",
                            funcName);
