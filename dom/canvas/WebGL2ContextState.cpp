@@ -118,7 +118,7 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       // GL_MAX_ELEMENT_INDEX becomes available in GL 4.3 or via ES3
       // compatibility
       if (!gl->IsSupported(gl::GLFeature::ES3_compatibility))
-        return JS::NumberValue(0);
+        return JS::NumberValue(UINT32_MAX);
 
       /*** fall through to fGetInteger64v ***/
       MOZ_FALLTHROUGH;
