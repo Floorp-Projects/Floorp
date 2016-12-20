@@ -6,10 +6,6 @@ const TEST_MSG = "ContentSearchTest";
 const CONTENT_SEARCH_MSG = "ContentSearch";
 const TEST_CONTENT_SCRIPT_BASENAME = "contentSearch.js";
 
-// This timeout is absurdly high to avoid random failures like bug 1087120.
-// That bug was reported when the timeout was 5 seconds, so let's try 10.
-const SUGGESTIONS_TIMEOUT = 10000;
-
 var gMsgMan;
 
 add_task(function* GetState() {
@@ -192,7 +188,6 @@ add_task(function* GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntry() {
     data: {
       engineName: engine.name,
       searchString: searchStr,
-      remoteTimeout: SUGGESTIONS_TIMEOUT,
     },
   });
 
@@ -228,7 +223,6 @@ add_task(function* GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntry() {
     data: {
       engineName: engine.name,
       searchString: searchStr,
-      remoteTimeout: SUGGESTIONS_TIMEOUT,
     },
   });
 
