@@ -325,6 +325,8 @@ public:
     // -------------------------------------------------------------------------
     // Sync objects - WebGL2ContextSync.cpp
 
+    const GLuint64 kMaxClientWaitSyncTimeoutNS = 1000 * 1000 * 1000; // 1000ms in ns.
+
     already_AddRefed<WebGLSync> FenceSync(GLenum condition, GLbitfield flags);
     bool IsSync(const WebGLSync* sync);
     void DeleteSync(WebGLSync* sync);

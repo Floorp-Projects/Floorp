@@ -67,6 +67,12 @@ WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 
         return LOCAL_GL_WAIT_FAILED;
     }
 
+    if (timeout > kMaxClientWaitSyncTimeoutNS) {
+        ErrorInvalidOperation("%s: `timeout` must not exceed %s nanoseconds.", funcName,
+                              "MAX_CLIENT_WAIT_TIMEOUT_WEBGL");
+        return LOCAL_GL_WAIT_FAILED;
+    }
+
     MakeContextCurrent();
     return gl->fClientWaitSync(sync.mGLName, flags, timeout);
 }
