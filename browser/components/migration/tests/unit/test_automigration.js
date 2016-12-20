@@ -1,7 +1,6 @@
 "use strict";
 
 Cu.import("resource:///modules/MigrationUtils.jsm");
-Cu.import("resource://gre/modules/LoginHelper.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
@@ -385,58 +384,3 @@ add_task(function* testBookmarkRemovalByUndo() {
   }
   yield PlacesUtils.bookmarks.eraseEverything();
 });
-
-add_task(function* checkUndoLoginsState() {
-  MigrationUtils.initializeUndoData();
-  MigrationUtils.insertLoginWrapper({
-    username: "foo",
-    password: "bar",
-    hostname: "https://example.com",
-    formSubmitURL: "https://example.com/",
-    timeCreated: new Date(),
-  });
-  let storedLogins = Services.logins.findLogins({}, "https://example.com", "", "");
-  let storedLogin = storedLogins[0];
-  storedLogin.QueryInterface(Ci.nsILoginMetaInfo);
-  let {guid, timePasswordChanged} = storedLogin;
-  let undoLoginData = (yield MigrationUtils.stopAndRetrieveUndoData()).get("logins");
-  Assert.deepEqual([{guid, timePasswordChanged}], undoLoginData);
-  Services.logins.removeAllLogins();
-});
-
-add_task(function* testLoginsRemovalByUndo() {
-  MigrationUtils.initializeUndoData();
-  MigrationUtils.insertLoginWrapper({
-    username: "foo",
-    password: "bar",
-    hostname: "https://example.com",
-    formSubmitURL: "https://example.com/",
-    timeCreated: new Date(),
-  });
-  MigrationUtils.insertLoginWrapper({
-    username: "foo",
-    password: "bar",
-    hostname: "https://example.org",
-    formSubmitURL: "https://example.org/",
-    timeCreated: new Date(new Date().getTime() - 10000),
-  });
-  // This should update the existing login
-  LoginHelper.maybeImportLogin({
-    username: "foo",
-    password: "bazzy",
-    hostname: "https://example.org",
-    formSubmitURL: "https://example.org/",
-    timePasswordChanged: new Date(),
-  });
-  Assert.equal(1, LoginHelper.searchLoginsWithObject({hostname: "https://example.org", formSubmitURL: "https://example.org/"}).length,
-               "Should be only 1 login for example.org (that was updated)");
-  let undoLoginData = (yield MigrationUtils.stopAndRetrieveUndoData()).get("logins");
-
-  yield AutoMigrate._removeUnchangedLogins(undoLoginData);
-  Assert.equal(0, LoginHelper.searchLoginsWithObject({hostname: "https://example.com", formSubmitURL: "https://example.com/"}).length,
-                   "unchanged example.com entry should have been removed.");
-  Assert.equal(1, LoginHelper.searchLoginsWithObject({hostname: "https://example.org", formSubmitURL: "https://example.org/"}).length,
-                   "changed example.org entry should have persisted.");
-  Services.logins.removeAllLogins();
-});
-
