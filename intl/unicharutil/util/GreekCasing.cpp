@@ -5,6 +5,7 @@
 
 #include "GreekCasing.h"
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 
 // Custom uppercase mapping for Greek; see bug 307039 for details
 #define GREEK_LOWER_ALPHA                      0x03B1
@@ -65,8 +66,32 @@
 namespace mozilla {
 
 uint32_t
-GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
+GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState,
+                       bool& aMarkEtaPos, bool& aUpdateMarkedEta)
 {
+  aMarkEtaPos = false;
+  aUpdateMarkedEta = false;
+
+  uint8_t category = unicode::GetGeneralCategory(aCh);
+
+  if (aState == kEtaAccMarked) {
+    switch (category) {
+      case HB_UNICODE_GENERAL_CATEGORY_LOWERCASE_LETTER:
+      case HB_UNICODE_GENERAL_CATEGORY_MODIFIER_LETTER:
+      case HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER:
+      case HB_UNICODE_GENERAL_CATEGORY_TITLECASE_LETTER:
+      case HB_UNICODE_GENERAL_CATEGORY_UPPERCASE_LETTER:
+      case HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK:
+      case HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK:
+      case HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK:
+        aUpdateMarkedEta = true;
+        break;
+      default:
+        break;
+    }
+    aState = kEtaAcc;
+  }
+
   switch (aCh) {
   case GREEK_UPPER_ALPHA:
   case GREEK_LOWER_ALPHA:
@@ -115,7 +140,7 @@ GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
     case kEpsilonAcc:
     case kOmicronAcc:
     case kUpsilonAcc:
-      aState = kStart;
+      aState = kInWord;
       return GREEK_UPPER_IOTA_DIALYTIKA;
     default:
       break;
@@ -129,7 +154,7 @@ GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
     case kEpsilonAcc:
     case kEtaAcc:
     case kOmicronAcc:
-      aState = kStart;
+      aState = kInWord;
       return GREEK_UPPER_UPSILON_DIALYTIKA;
     case kOmicron:
       aState = kOmicronUpsilon;
@@ -172,13 +197,13 @@ GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
       aState = kUpsilonAcc;
       return uint32_t(-1);
     case kOmicronUpsilon:
-      aState = kStart; // this completed a diphthong
+      aState = kInWord; // this completed a diphthong
       return uint32_t(-1);
     case kOmega:
       aState = kOmegaAcc;
       return uint32_t(-1);
     case kDiaeresis:
-      aState = kStart;
+      aState = kInWord;
       return uint32_t(-1);
     default:
       break;
@@ -189,16 +214,16 @@ GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
   // and reset to start state (don't form diphthong with following vowel)
   case GREEK_LOWER_IOTA_DIALYTIKA_TONOS:
   case GREEK_LOWER_IOTA_DIALYTIKA_OXIA:
-    aState = kStart;
+    aState = kInWord;
     return GREEK_UPPER_IOTA_DIALYTIKA;
 
   case GREEK_LOWER_UPSILON_DIALYTIKA_TONOS:
   case GREEK_LOWER_UPSILON_DIALYTIKA_OXIA:
-    aState = kStart;
+    aState = kInWord;
     return GREEK_UPPER_UPSILON_DIALYTIKA;
 
   case COMBINING_GREEK_DIALYTIKA_TONOS:
-    aState = kStart;
+    aState = kInWord;
     return COMBINING_DIAERESIS;
 
   // strip accents from vowels, and note the vowel seen so that we can detect
@@ -218,8 +243,16 @@ GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
     return GREEK_UPPER_EPSILON;
 
   case GREEK_LOWER_ETA_TONOS:
-  case GREEK_LOWER_ETA_OXIA:
   case GREEK_UPPER_ETA_TONOS:
+    if (aState == kStart) {
+      aState = kEtaAccMarked;
+      aMarkEtaPos = true; // mark in case we need to remove the tonos later
+      return GREEK_UPPER_ETA_TONOS; // treat as disjunctive eta for now
+    }
+    // if not in initial state, fall through to strip the accent
+    MOZ_FALLTHROUGH;
+
+  case GREEK_LOWER_ETA_OXIA:
   case GREEK_UPPER_ETA_OXIA:
     aState = kEtaAcc;
     return GREEK_UPPER_ETA;
@@ -244,7 +277,7 @@ GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
   case GREEK_UPPER_UPSILON_OXIA:
     switch (aState) {
     case kOmicron:
-      aState = kStart; // this completed a diphthong
+      aState = kInWord; // this completed a diphthong
       break;
     default:
       aState = kUpsilonAcc;
@@ -260,8 +293,24 @@ GreekCasing::UpperCase(uint32_t aCh, GreekCasing::State& aState)
     return GREEK_UPPER_OMEGA;
   }
 
-  // all other characters just reset the state, and use standard mappings
-  aState = kStart;
+  // all other characters just reset the state to either kStart or kInWord,
+  // and use standard mappings
+  switch (category) {
+    case HB_UNICODE_GENERAL_CATEGORY_LOWERCASE_LETTER:
+    case HB_UNICODE_GENERAL_CATEGORY_MODIFIER_LETTER:
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER:
+    case HB_UNICODE_GENERAL_CATEGORY_TITLECASE_LETTER:
+    case HB_UNICODE_GENERAL_CATEGORY_UPPERCASE_LETTER:
+    case HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK:
+    case HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK:
+    case HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK:
+      aState = kInWord;
+      break;
+    default:
+      aState = kStart;
+      break;
+  }
+
   return ToUpperCase(aCh);
 }
 
