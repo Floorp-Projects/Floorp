@@ -329,6 +329,7 @@ private:
 
   void OnAudioDecoded(MediaData* aAudio);
   void OnVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStartTime);
+  void OnAudioNotDecoded(const MediaResult& aError);
   void OnNotDecoded(MediaData::Type aType, const MediaResult& aError);
   void OnAudioWaited(MediaData::Type aType);
   void OnVideoWaited(MediaData::Type aType);
@@ -473,6 +474,8 @@ protected:
   // Start a task to decode video.
   // The decoder monitor must be held.
   void RequestVideoData();
+
+  bool IsRequestingAudioData() const { return mAudioDataRequest.Exists(); }
 
   // Re-evaluates the state and determines whether we need to dispatch
   // events to run the decode, or if not whether we should set the reader
@@ -654,10 +657,12 @@ private:
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
 
-  MediaEventListener mAudioCallback;
   MediaEventListener mVideoCallback;
   MediaEventListener mAudioWaitCallback;
   MediaEventListener mVideoWaitCallback;
+
+  using MediaDataPromise = MediaDecoderReader::MediaDataPromise;
+  MozPromiseRequestHolder<MediaDataPromise> mAudioDataRequest;
 
   const char* AudioRequestStatus() const;
   const char* VideoRequestStatus() const;
