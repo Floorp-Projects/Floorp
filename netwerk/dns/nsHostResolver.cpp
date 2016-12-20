@@ -1438,7 +1438,9 @@ nsHostResolver::ThreadFunc(void *arg)
     LOG(("DNS lookup thread - starting execution.\n"));
 
     static nsThreadPoolNaming naming;
-    naming.SetThreadPoolName(NS_LITERAL_CSTRING("DNS Resolver"));
+    nsCString name = naming.GetNextThreadName("DNS Resolver");
+
+    PR_SetCurrentThreadName(name.BeginReading());
 
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
