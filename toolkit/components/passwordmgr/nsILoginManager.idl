@@ -31,13 +31,12 @@ interface nsILoginManager : nsISupports {
    *
    * @param aLogin
    *        The login to be added.
-   * @return a clone of the login info with the guid set (even if it was not provided)
    *
    * Default values for the login's nsILoginMetaInfo properties will be
    * created. However, if the caller specifies non-default values, they will
    * be used instead.
    */
-  nsILoginInfo addLogin(in nsILoginInfo aLogin);
+  void addLogin(in nsILoginInfo aLogin);
 
 
   /**
