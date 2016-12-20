@@ -5288,13 +5288,13 @@ nsImageRenderer::PrepareImage()
 
   if (!mImage->IsComplete()) {
     // Make sure the image is actually decoding.
-    mImage->StartDecoding();
+    bool frameComplete = mImage->StartDecoding();
 
     // Check again to see if we finished.
     // We cannot prepare the image for rendering if it is not fully loaded.
     // Special case: If we requested a sync decode and the image has loaded, push
     // on through because the Draw() will do a sync decode then.
-    if (!mImage->IsComplete() &&
+    if (!(frameComplete || mImage->IsComplete()) &&
         !ShouldTreatAsCompleteDueToSyncDecode(mImage, mFlags)) {
       mPrepareResult = DrawResult::NOT_READY;
       return false;
