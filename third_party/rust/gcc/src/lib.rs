@@ -74,7 +74,7 @@ pub struct Config {
     target: Option<String>,
     host: Option<String>,
     out_dir: Option<PathBuf>,
-    opt_level: Option<u32>,
+    opt_level: Option<String>,
     debug: Option<bool>,
     env: Vec<(OsString, OsString)>,
     compiler: Option<PathBuf>,
@@ -250,7 +250,16 @@ impl Config {
     /// This option is automatically scraped from the `OPT_LEVEL` environment
     /// variable by build scripts, so it's not required to call this function.
     pub fn opt_level(&mut self, opt_level: u32) -> &mut Config {
-        self.opt_level = Some(opt_level);
+        self.opt_level = Some(opt_level.to_string());
+        self
+    }
+
+    /// Configures the optimization level of the generated object files.
+    ///
+    /// This option is automatically scraped from the `OPT_LEVEL` environment
+    /// variable by build scripts, so it's not required to call this function.
+    pub fn opt_level_str(&mut self, opt_level: &str) -> &mut Config {
+        self.opt_level = Some(opt_level.to_string());
         self
     }
 
@@ -343,6 +352,23 @@ impl Config {
         }
         self.compile_objects(&src_dst);
         self.assemble(lib_name, &dst.join(output), &objects);
+
+        if self.get_target().contains("msvc") {
+            let compiler = self.get_base_compiler();
+            let atlmfc_lib = compiler.env().iter().find(|&&(ref var, _)| {
+                var == OsStr::new("LIB")
+            }).and_then(|&(_, ref lib_paths)| {
+                env::split_paths(lib_paths).find(|path| {
+                    let sub = Path::new("atlmfc/lib");
+                    path.ends_with(sub) || path.parent().map_or(false, |p| p.ends_with(sub))
+                })
+            });
+
+            if let Some(atlmfc_lib) = atlmfc_lib {
+                self.print(&format!("cargo:rustc-link-search=native={}",
+                                    atlmfc_lib.display()));
+            }
+        }
 
         self.print(&format!("cargo:rustc-link-lib=static={}",
                             &output[3..output.len() - 2]));
@@ -437,14 +463,20 @@ impl Config {
 
         if msvc {
             cmd.args.push("/nologo".into());
-            cmd.args.push("/MD".into()); // link against msvcrt.dll for now
-            if opt_level != 0 {
-                cmd.args.push("/O2".into());
+            let features = env::var("CARGO_CFG_TARGET_FEATURE")
+                              .unwrap_or(String::new());
+            if features.contains("crt-static") {
+                cmd.args.push("/MT".into());
+            } else {
+                cmd.args.push("/MD".into());
             }
-            if target.contains("i686") {
-                cmd.args.push("/SAFESEH".into());
-            } else if target.contains("i586") {
-                cmd.args.push("/SAFESEH".into());
+            match &opt_level[..] {
+                "z" | "s" => cmd.args.push("/Os".into()),
+                "2" => cmd.args.push("/O2".into()),
+                "1" => cmd.args.push("/O1".into()),
+                _ => {}
+            }
+            if target.contains("i586") {
                 cmd.args.push("/ARCH:IA32".into());
             }
         } else if nvcc {
@@ -477,22 +509,67 @@ impl Config {
                 cmd.args.push("-Xcompiler".into());
                 cmd.args.push("\'-fPIC\'".into());
             }
+
             if target.contains("musl") {
                 cmd.args.push("-static".into());
             }
 
+            // armv7 targets get to use armv7 instructions
             if target.starts_with("armv7-unknown-linux-") {
                 cmd.args.push("-march=armv7-a".into());
             }
+
+            // On android we can guarantee some extra float instructions
+            // (specified in the android spec online)
+            if target.starts_with("armv7-linux-androideabi") {
+                cmd.args.push("-march=armv7-a".into());
+                cmd.args.push("-mfpu=vfpv3-d16".into());
+            }
+
+            // For us arm == armv6 by default
             if target.starts_with("arm-unknown-linux-") {
                 cmd.args.push("-march=armv6".into());
                 cmd.args.push("-marm".into());
             }
+
+            // Turn codegen down on i586 to avoid some instructions.
             if target.starts_with("i586-unknown-linux-") {
                 cmd.args.push("-march=pentium".into());
             }
+
+            // Set codegen level for i686 correctly
             if target.starts_with("i686-unknown-linux-") {
                 cmd.args.push("-march=i686".into());
+            }
+
+            // Looks like `musl-gcc` makes is hard for `-m32` to make its way
+            // all the way to the linker, so we need to actually instruct the
+            // linker that we're generating 32-bit executables as well. This'll
+            // typically only be used for build scripts which transitively use
+            // these flags that try to compile executables.
+            if target == "i686-unknown-linux-musl" {
+                cmd.args.push("-Wl,-melf_i386".into());
+            }
+
+            if target.starts_with("thumb") {
+                cmd.args.push("-mthumb".into());
+
+                if target.ends_with("eabihf") {
+                    cmd.args.push("-mfloat-abi=hard".into())
+                }
+            }
+            if target.starts_with("thumbv6m") {
+                cmd.args.push("-march=armv6s-m".into());
+            }
+            if target.starts_with("thumbv7em") {
+                cmd.args.push("-march=armv7e-m".into());
+
+                if target.ends_with("eabihf") {
+                    cmd.args.push("-mfpu=fpv4-sp-d16".into())
+                }
+            }
+            if target.starts_with("thumbv7m") {
+                cmd.args.push("-march=armv7-m".into());
             }
         }
 
@@ -579,7 +656,7 @@ impl Config {
         } else {
             let ar = self.get_ar();
             let cmd = ar.file_name().unwrap().to_string_lossy();
-            run(self.cmd(&ar).arg("crus")
+            run(self.cmd(&ar).arg("crs")
                                  .arg(dst)
                                  .args(objects)
                                  .args(&self.objects), &cmd);
@@ -659,6 +736,16 @@ impl Config {
             }
             return t
         }).or_else(|| {
+            if target.contains("emscripten") {
+                if self.cpp {
+                    Some(Tool::new(PathBuf::from("em++")))
+                } else {
+                    Some(Tool::new(PathBuf::from("emcc")))
+                }
+            } else {
+                None
+            }
+        }).or_else(|| {
             windows_registry::find_tool(&target, "cl.exe")
         }).unwrap_or_else(|| {
             let compiler = if host.contains("windows") &&
@@ -671,25 +758,43 @@ impl Config {
             } else if target.contains("android") {
                 format!("{}-{}", target, gnu)
             } else if self.get_host() != target {
-                let prefix = match &target[..] {
+                // CROSS_COMPILE is of the form: "arm-linux-gnueabi-"
+                let cc_env = self.getenv("CROSS_COMPILE");
+                let cross_compile = cc_env.as_ref().map(|s| s.trim_right_matches('-'));
+                let prefix = cross_compile.or(match &target[..] {
                     "aarch64-unknown-linux-gnu" => Some("aarch64-linux-gnu"),
                     "arm-unknown-linux-gnueabi" => Some("arm-linux-gnueabi"),
                     "arm-unknown-linux-gnueabihf"  => Some("arm-linux-gnueabihf"),
-                    "armv7-unknown-linux-gnueabihf" => Some("arm-linux-gnueabihf"),
                     "arm-unknown-linux-musleabi" => Some("arm-linux-musleabi"),
                     "arm-unknown-linux-musleabihf"  => Some("arm-linux-musleabihf"),
+                    "arm-unknown-netbsdelf-eabi" => Some("arm--netbsdelf-eabi"),
+                    "armv6-unknown-netbsdelf-eabihf" => Some("armv6--netbsdelf-eabihf"),
+                    "armv7-unknown-linux-gnueabihf" => Some("arm-linux-gnueabihf"),
                     "armv7-unknown-linux-musleabihf" => Some("arm-linux-musleabihf"),
-                    "powerpc-unknown-linux-gnu" => Some("powerpc-linux-gnu"),
-                    "powerpc64-unknown-linux-gnu" => Some("powerpc-linux-gnu"),
-                    "powerpc64le-unknown-linux-gnu" => Some("powerpc64le-linux-gnu"),
+                    "armv7-unknown-netbsdelf-eabihf" => Some("armv7--netbsdelf-eabihf"),
+                    "i686-pc-windows-gnu" => Some("i686-w64-mingw32"),
+                    "i686-unknown-linux-musl" => Some("musl"),
+                    "i686-unknown-netbsdelf" => Some("i486--netbsdelf"),
                     "mips-unknown-linux-gnu" => Some("mips-linux-gnu"),
                     "mipsel-unknown-linux-gnu" => Some("mipsel-linux-gnu"),
-                    "i686-pc-windows-gnu" => Some("i686-w64-mingw32"),
+                    "mips64-unknown-linux-gnuabi64" => Some("mips64-linux-gnuabi64"),
+                    "mips64el-unknown-linux-gnuabi64" => Some("mips64el-linux-gnuabi64"),
+                    "powerpc-unknown-linux-gnu" => Some("powerpc-linux-gnu"),
+                    "powerpc-unknown-netbsd" => Some("powerpc--netbsd"),
+                    "powerpc64-unknown-linux-gnu" => Some("powerpc-linux-gnu"),
+                    "powerpc64le-unknown-linux-gnu" => Some("powerpc64le-linux-gnu"),
+                    "s390x-unknown-linux-gnu" => Some("s390x-linux-gnu"),
+                    "sparc64-unknown-netbsd" => Some("sparc64--netbsd"),
+                    "thumbv6m-none-eabi" => Some("arm-none-eabi"),
+                    "thumbv7em-none-eabi" => Some("arm-none-eabi"),
+                    "thumbv7em-none-eabihf" => Some("arm-none-eabi"),
+                    "thumbv7m-none-eabi" => Some("arm-none-eabi"),
                     "x86_64-pc-windows-gnu" => Some("x86_64-w64-mingw32"),
-                    "x86_64-unknown-linux-musl" => Some("musl"),
                     "x86_64-rumprun-netbsd" => Some("x86_64-rumprun-netbsd"),
+                    "x86_64-unknown-linux-musl" => Some("musl"),
+                    "x86_64-unknown-netbsd" => Some("x86_64--netbsd"),
                     _ => None,
-                };
+                });
                 match prefix {
                     Some(prefix) => format!("{}-{}", prefix, gnu),
                     None => default.to_string(),
@@ -746,6 +851,8 @@ impl Config {
                 None
             } else if target.contains("darwin") {
                 Some("c++".to_string())
+            } else if target.contains("freebsd") {
+                Some("c++".to_string())
             } else {
                 Some("stdc++".to_string())
             }
@@ -758,6 +865,8 @@ impl Config {
         }).unwrap_or_else(|| {
             if self.get_target().contains("android") {
                 PathBuf::from(format!("{}-ar", self.get_target()))
+            } else if self.get_target().contains("emscripten") {
+                PathBuf::from("emar")
             } else {
                 PathBuf::from("ar")
             }
@@ -772,9 +881,9 @@ impl Config {
         self.host.clone().unwrap_or_else(|| self.getenv_unwrap("HOST"))
     }
 
-    fn get_opt_level(&self) -> u32 {
-        self.opt_level.unwrap_or_else(|| {
-            self.getenv_unwrap("OPT_LEVEL").parse().unwrap()
+    fn get_opt_level(&self) -> String {
+        self.opt_level.as_ref().cloned().unwrap_or_else(|| {
+            self.getenv_unwrap("OPT_LEVEL")
         })
     }
 

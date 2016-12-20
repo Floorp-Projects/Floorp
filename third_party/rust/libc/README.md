@@ -5,7 +5,7 @@ A Rust library with native bindings to the types and functions commonly found on
 various systems, including libc.
 
 [![Build Status](https://travis-ci.org/rust-lang/libc.svg?branch=master)](https://travis-ci.org/rust-lang/libc)
-[![Build status](https://ci.appveyor.com/api/projects/status/34csq3uurnw7c0rl?svg=true)](https://ci.appveyor.com/project/alexcrichton/libc)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/rust-lang/libc?svg=true)](https://ci.appveyor.com/project/rust-lang-libs/libc)
 
 [Documentation](#platforms-and-documentation)
 
@@ -132,4 +132,6 @@ The following may be supported, but are not guaranteed to always work:
   * `i686-unknown-freebsd`
   * [`x86_64-unknown-bitrig`](https://doc.rust-lang.org/libc/x86_64-unknown-bitrig/libc/)
   * [`x86_64-unknown-dragonfly`](https://doc.rust-lang.org/libc/x86_64-unknown-dragonfly/libc/)
+  * `i686-unknown-haiku`
+  * `x86_64-unknown-haiku`
   * [`x86_64-unknown-netbsd`](https://doc.rust-lang.org/libc/x86_64-unknown-netbsd/libc/)

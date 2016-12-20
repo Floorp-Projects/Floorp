@@ -20,7 +20,7 @@ script:
 osx_image: xcode7.3
 env:
   global:
-    secure: eIDEoQdTyglcsTD13zSGotAX2HDhRSXIaaTnVZTThqLSrySOc3/6KY3qmOc2Msf7XaBqfFy9QA+alk7OwfePp253eiy1Kced67ffjjFOytEcRT7FlQiYpcYQD6WNHZEj62/bJBO4LTM9sGtWNCTJVEDKW0WM8mUK7qNuC+honPM=
+    secure: "e2/3QjgRN9atOuSHp22TrYG7QVKcYUWY48Hi9b60w+r1+BhPkTseIJLte7WefRhdXtqpjjUJTooKDhnurFOeHaCT+nmBgiv+FPU893sBl4bhesY4m0vgUJVbNZcs6lTImYekWVb+aqjGdgV/XAgCw7c3kPmrZV0MzGDWL64Xaps="
 matrix:
   include:
     # 1.0.0 compat
@@ -33,7 +33,7 @@ matrix:
     # build documentation
     - os: linux
       env: TARGET=x86_64-unknown-linux-gnu
-      rust: stable
+      rust: nightly
       script: sh ci/dox.sh
 
     # stable compat
@@ -78,10 +78,19 @@ matrix:
       rust: stable
     - os: linux
       env: TARGET=powerpc64-unknown-linux-gnu
+      rust: beta
+    - os: linux
+      env: TARGET=mips-unknown-linux-musl
       rust: stable
     - os: linux
       env: TARGET=mipsel-unknown-linux-musl
       rust: stable
+    - os: linux
+      env: TARGET=mips64-unknown-linux-gnuabi64
+      rust: beta
+    - os: linux
+      env: TARGET=mips-unknown-linux-gnu
+      rust: beta
 
     # beta
     - os: linux
@@ -98,10 +107,6 @@ matrix:
     - os: osx
       env: TARGET=x86_64-apple-darwin
       rust: nightly
-    - os: linux
-      env: TARGET=mips-unknown-linux-gnu
-      # not sure why this has to be nightly...
-      rust: nightly
 
     # QEMU based targets that compile in an emulator
     - os: linux
@@ -112,6 +117,8 @@ matrix:
       rust: stable
       script: sh ci/run-docker.sh $TARGET
       install:
+
+cache: cargo
 
 notifications:
   email:

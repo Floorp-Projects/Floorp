@@ -17,5 +17,5 @@ install:
 build: false
 
 test_script:
-  - cargo test
-  - cargo run --manifest-path systest/Cargo.toml
+  - cargo test --target %TARGET%
+  - cargo run --manifest-path systest/Cargo.toml --target %TARGET%
