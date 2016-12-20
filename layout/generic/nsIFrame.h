@@ -1215,6 +1215,18 @@ public:
     return GetLogicalBaseline(GetWritingMode());
   }
 
+  /**
+   * Synthesize a baseline from our border box.  For an alphabetical baseline
+   * this is the end edge of the border box.  For a central baseline it's
+   * the center of the border box.
+   * https://drafts.csswg.org/css-align-3/#synthesize-baselines
+   */
+  nscoord SynthesizeBaselineFromBorderBox(mozilla::WritingMode aWM) const
+  {
+    nscoord borderBoxSize = BSize(aWM);
+    return aWM.IsAlphabeticalBaseline() ? borderBoxSize : borderBoxSize / 2;
+  }
+
   ///////////////////////////////////////////////////////////////////////////////
   // The public visibility API.
   ///////////////////////////////////////////////////////////////////////////////
