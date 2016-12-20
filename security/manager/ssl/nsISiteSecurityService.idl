@@ -190,6 +190,19 @@ interface nsISiteSecurityService : nsISupports
                         [optional] in boolean aIsPreload);
 
     /**
+     * Set an HSTS preload entry for a host. The resulting entries will be
+     * permanent and visible from private and non-private contexts. These
+     * entries replace any already set by this mechanism or those built-in to
+     * Gecko.
+     *
+     * @param aHost the hostname (punycode) that the entry applies to
+     * @param aIncludeSubdomains whether this entry also applies to subdomains
+     * @param aExpires the time this entry should expire (millis since epoch)
+     */
+     boolean setHSTSPreload(in string aHost, in boolean aIncludesSubdomains,
+                            in int64_t aExpires);
+
+    /**
      * Mark a host as declining to provide a given security state so that features
      * such as HSTS priming will not flood a server with requests.
      *
