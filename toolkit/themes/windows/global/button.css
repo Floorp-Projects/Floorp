@@ -59,7 +59,7 @@ button[default="true"] {
   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
 }
 
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   @media (-moz-windows-compositor) {
     /* This is for high-contrast themes on Windows 8 and later */
     button[default="true"],

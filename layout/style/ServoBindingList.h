@@ -47,6 +47,8 @@ SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet,
                    RawServoStyleSheetBorrowed reference)
+SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
+                   RawServoStyleSetBorrowed set)
 
 // CSSRuleList
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,

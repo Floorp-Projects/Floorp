@@ -118,7 +118,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
       return GMPGenericErr;
     }
     Log("cdm: 0x%x", cdm);
-    RefPtr<CDMWrapper> wrapper(new CDMWrapper(cdm));
+    RefPtr<CDMWrapper> wrapper(new CDMWrapper(cdm, decryptor));
     decryptor->SetCDM(wrapper, aDecryptorId);
     *aPluginAPI = decryptor;
 

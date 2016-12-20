@@ -46,6 +46,12 @@ private:
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;
 
+  enum {
+    Unknown,
+    Enabled,
+    Disabled
+  } mHandlesFetch;
+
   ~ServiceWorkerInfo();
 
   // Generates a unique id for the service worker, with zero being treated as
@@ -132,6 +138,22 @@ public:
   {
     AssertIsOnMainThread();
     mState = aState;
+  }
+
+  void
+  SetHandlesFetch(bool aHandlesFetch)
+  {
+    AssertIsOnMainThread();
+    MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch == Unknown);
+    mHandlesFetch = aHandlesFetch ? Enabled : Disabled;
+  }
+
+  bool
+  HandlesFetch() const
+  {
+    AssertIsOnMainThread();
+    MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch != Unknown);
+    return mHandlesFetch != Disabled;
   }
 
   void

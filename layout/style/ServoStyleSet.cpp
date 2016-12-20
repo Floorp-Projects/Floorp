@@ -474,6 +474,12 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
                         TraversalRootBehavior::UnstyledChildrenOnly);
 }
 
+void
+ServoStyleSet::NoteStyleSheetsChanged()
+{
+  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get());
+}
+
 #ifdef DEBUG
 void
 ServoStyleSet::AssertTreeIsClean()
