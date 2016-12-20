@@ -120,11 +120,3 @@ WinPointerEvents::ShouldEnableInkCollector()
   // pen.
   return !IsWin8OrLater();
 }
-
-bool
-WinPointerEvents::ShouldRollupOnPointerEvent(WPARAM aWParam)
-{
-  // Only roll up popups when we handling WM_POINTER* to fire Gecko
-  // WidgetMouseEvent and suppress Windows WM_*BUTTONDOWN.
-  return ShouldFireCompatibilityMouseEventsForPen(aWParam);
-}
