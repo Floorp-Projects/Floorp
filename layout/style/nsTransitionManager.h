@@ -243,6 +243,12 @@ protected:
 
   void QueueEvents(StickyTimeDuration activeTime = StickyTimeDuration());
 
+
+  enum class TransitionPhase;
+  // Return the TransitionPhase to use when the transition doesn't have a target
+  // effect.
+  TransitionPhase GetTransitionPhaseWithoutEffect() const;
+
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
   //
