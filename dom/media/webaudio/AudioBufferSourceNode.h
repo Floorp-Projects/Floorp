@@ -7,7 +7,7 @@
 #ifndef AudioBufferSourceNode_h_
 #define AudioBufferSourceNode_h_
 
-#include "AudioScheduledSourceNode.h"
+#include "AudioNode.h"
 #include "AudioBuffer.h"
 
 namespace mozilla {
@@ -16,7 +16,7 @@ namespace dom {
 struct AudioBufferSourceOptions;
 class AudioParam;
 
-class AudioBufferSourceNode final : public AudioScheduledSourceNode
+class AudioBufferSourceNode final : public AudioNode
                                   , public MainThreadMediaStreamListener
 {
 public:
@@ -35,8 +35,7 @@ public:
     return this;
   }
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode,
-                                           AudioScheduledSourceNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioNode)
 
   static already_AddRefed<AudioBufferSourceNode>
   Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
@@ -49,9 +48,7 @@ public:
 
   void Start(double aWhen, double aOffset,
              const Optional<double>& aDuration, ErrorResult& aRv);
-
-  void Start(double aWhen, ErrorResult& aRv) override;
-  void Stop(double aWhen, ErrorResult& aRv) override;
+  void Stop(double aWhen, ErrorResult& aRv);
 
   AudioBuffer* GetBuffer(JSContext* aCx) const
   {
@@ -99,6 +96,8 @@ public:
     SendLoopParametersToStream();
   }
   void SendDopplerShiftToStream(double aDopplerShift);
+
+  IMPL_EVENT_HANDLER(ended)
 
   void NotifyMainThreadStreamFinished() override;
 

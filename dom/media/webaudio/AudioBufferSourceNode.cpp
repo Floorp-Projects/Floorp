@@ -22,15 +22,13 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioBufferSourceNode,
-                                   AudioScheduledSourceNode, mBuffer,
-                                   mPlaybackRate, mDetune)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioBufferSourceNode, AudioNode, mBuffer, mPlaybackRate, mDetune)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioBufferSourceNode)
-NS_INTERFACE_MAP_END_INHERITING(AudioScheduledSourceNode)
+NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
-NS_IMPL_ADDREF_INHERITED(AudioBufferSourceNode, AudioScheduledSourceNode)
-NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioScheduledSourceNode)
+NS_IMPL_ADDREF_INHERITED(AudioBufferSourceNode, AudioNode)
+NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioNode)
 
 /**
  * Media-thread playback engine for AudioBufferSourceNode.
@@ -590,10 +588,10 @@ public:
 };
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
-  : AudioScheduledSourceNode(aContext,
-                             2,
-                             ChannelCountMode::Max,
-                             ChannelInterpretation::Speakers)
+  : AudioNode(aContext,
+              2,
+              ChannelCountMode::Max,
+              ChannelInterpretation::Speakers)
   , mLoopStart(0.0)
   , mLoopEnd(0.0)
   // mOffset and mDuration are initialized in Start().
@@ -711,12 +709,6 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
   if (aWhen > 0.0) {
     ns->SetDoubleParameter(START, aWhen);
   }
-}
-
-void
-AudioBufferSourceNode::Start(double aWhen, ErrorResult& aRv)
-{
-  Start(aWhen, 0 /* offset */, Optional<double>(), aRv);
 }
 
 void
