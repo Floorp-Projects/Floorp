@@ -14,6 +14,8 @@
 #include "include/ESDS.h"
 
 #ifdef MOZ_RUST_MP4PARSE
+// OpusDecoder header is really needed only by MP4 in rust
+#include "OpusDecoder.h"
 #include "mp4parse.h"
 #endif
 
@@ -188,10 +190,73 @@ MP4VideoInfo::Update(const MetaData* aMetaData, const char* aMimeType)
 }
 
 #ifdef MOZ_RUST_MP4PARSE
+static void
+UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
+                         const mp4parser_sinf_info& aSinf)
+{
+  if (aSinf.is_encrypted != 0) {
+    aConfig.mCrypto.mValid = true;
+    aConfig.mCrypto.mMode = aSinf.is_encrypted;
+    aConfig.mCrypto.mIVSize = aSinf.iv_size;
+    aConfig.mCrypto.mKeyId.AppendElements(aSinf.kid.data, aSinf.kid.length);
+  }
+}
+
+void
+MP4AudioInfo::Update(const mp4parse_track_info* track,
+                     const mp4parse_track_audio_info* audio)
+{
+  UpdateTrackProtectedInfo(*this, audio->protected_data);
+
+  if (track->codec == MP4PARSE_CODEC_OPUS) {
+    mMimeType = NS_LITERAL_CSTRING("audio/opus");
+    // The Opus decoder expects the container's codec delay or
+    // pre-skip value, in microseconds, as a 64-bit int at the
+    // start of the codec-specific config blob.
+    MOZ_ASSERT(audio->codec_specific_config.data);
+    MOZ_ASSERT(audio->codec_specific_config.length >= 12);
+    uint16_t preskip =
+      LittleEndian::readUint16(audio->codec_specific_config.data + 10);
+    OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig,
+        mozilla::FramesToUsecs(preskip, 48000).value());
+  } else if (track->codec == MP4PARSE_CODEC_AAC) {
+    mMimeType = MEDIA_MIMETYPE_AUDIO_AAC;
+  } else if (track->codec == MP4PARSE_CODEC_FLAC) {
+    mMimeType = MEDIA_MIMETYPE_AUDIO_FLAC;
+  } else if (track->codec == MP4PARSE_CODEC_MP3) {
+    mMimeType = MEDIA_MIMETYPE_AUDIO_MPEG;
+  }
+
+  mRate = audio->sample_rate;
+  mChannels = audio->channels;
+  mBitDepth = audio->bit_depth;
+  mDuration = track->duration;
+  mMediaTime = track->media_time;
+  mTrackId = track->track_id;
+
+  // TODO: mProfile (kKeyAACProfile in stagefright)
+
+  const uint8_t* cdata = audio->codec_specific_config.data;
+  size_t size = audio->codec_specific_config.length;
+  if (size > 0) {
+    mCodecSpecificConfig->AppendElements(cdata, size);
+
+    if (size > 1) {
+      ABitReader br(cdata, size);
+      mExtendedProfile = br.getBits(5);
+
+      if (mExtendedProfile == 31) {  // AAC-ELD => additional 6 bits
+        mExtendedProfile = 32 + br.getBits(6);
+      }
+    }
+  }
+}
+
 void
 MP4VideoInfo::Update(const mp4parse_track_info* track,
                      const mp4parse_track_video_info* video)
 {
+  UpdateTrackProtectedInfo(*this, video->protected_data);
   if (track->codec == MP4PARSE_CODEC_AVC) {
     mMimeType = MEDIA_MIMETYPE_VIDEO_AVC;
   } else if (track->codec == MP4PARSE_CODEC_VP9) {

@@ -93,6 +93,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
 
     def set_terminal(self, terminal):
         self.terminal = terminal
+        self._sgr0 = blessings.tigetstr('sgr0') if terminal and blessings else ''
 
     def format(self, record):
         f = record.msg.format(**record.params)
@@ -102,7 +103,13 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
 
         t = self.terminal.blue(format_seconds(self._time(record)))
 
-        return '%s %s' % (t, self._colorize(f))
+        # Some processes (notably Clang) don't reset terminal attributes after
+        # printing newlines. This can lead to terminal attributes getting in a
+        # wonky state. Work around this by sending the sgr0 sequence after every
+        # line to reset all attributes. For programs that rely on the next line
+        # inheriting the same attributes, this will prevent that from happening.
+        # But that's better than "corrupting" the terminal.
+        return '%s %s%s' % (t, self._colorize(f), self._sgr0)
 
     def _colorize(self, s):
         if not self.terminal:

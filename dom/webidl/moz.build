@@ -51,7 +51,6 @@ WEBIDL_FILES = [
     'BaseAudioContext.webidl',
     'BaseKeyframeTypes.webidl',
     'BatteryManager.webidl',
-    'BeforeAfterKeyboardEvent.webidl',
     'BeforeUnloadEvent.webidl',
     'BiquadFilterNode.webidl',
     'Blob.webidl',

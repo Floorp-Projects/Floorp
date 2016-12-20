@@ -786,7 +786,8 @@ public class ActivityChooserModel extends DataSetObservable {
                     }
 
                     resolveInfo.labelRes = R.string.overlay_share_send_other;
-                    resolveInfo.icon = R.drawable.icon_shareplane;
+                    resolveInfo.activityInfo.icon = R.drawable.icon_shareplane;
+
                 }
 
                 mActivities.add(new ActivityResolveInfo(resolveInfo));

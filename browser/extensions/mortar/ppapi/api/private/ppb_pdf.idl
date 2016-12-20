@@ -1,0 +1,182 @@
+/* Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/* This file contains PPB_PDF interface. */
+
+label Chrome {
+  M19 = 0.1
+};
+
+enum PP_PDFFeature {
+  PP_PDFFEATURE_HIDPI = 0,
+  PP_PDFFEATURE_PRINTING = 1
+};
+
+struct PP_PrivateFontFileDescription {
+  str_t face;
+  uint32_t weight;
+  PP_Bool italic;
+};
+
+struct PP_PrivateFindResult {
+  int32_t start_index;
+  int32_t length;
+};
+
+struct PP_PrivateAccessibilityViewportInfo {
+  double_t zoom;
+  PP_Point scroll;
+  PP_Point offset;
+};
+
+struct PP_PrivateAccessibilityDocInfo {
+  uint32_t page_count;
+  PP_Bool text_accessible;
+  PP_Bool text_copyable;
+};
+
+enum PP_PrivateDirection {
+  PP_PRIVATEDIRECTION_NONE = 0,
+  PP_PRIVATEDIRECTION_LTR = 1,
+  PP_PRIVATEDIRECTION_RTL = 2,
+  PP_PRIVATEDIRECTION_TTB = 3,
+  PP_PRIVATEDIRECTION_BTT = 4,
+  PP_PRIVATEDIRECTION_LAST = PP_PRIVATEDIRECTION_BTT
+};
+
+struct PP_PrivateAccessibilityPageInfo {
+  uint32_t page_index;
+  PP_Rect bounds;
+  uint32_t text_run_count;
+  uint32_t char_count;
+};
+
+struct PP_PrivateAccessibilityTextRunInfo {
+  uint32_t len;
+  double_t font_size;
+  PP_FloatRect bounds;
+  PP_PrivateDirection direction;
+};
+
+struct PP_PrivateAccessibilityCharInfo {
+  uint32_t unicode_character;
+  double_t char_width;
+};
+
+interface PPB_PDF {
+  /* Returns a resource identifying a font file corresponding to the given font
+   * request after applying the browser-specific fallback.
+   *
+   * Currently Linux-only.
+   */
+  PP_Resource GetFontFileWithFallback(
+      [in] PP_Instance instance,
+      [in] PP_BrowserFont_Trusted_Description description,
+      [in] PP_PrivateFontCharset charset);
+
+  /* Given a resource previously returned by GetFontFileWithFallback, returns
+   * a pointer to the requested font table. Linux only.
+   */
+  PP_Bool GetFontTableForPrivateFontFile(
+      [in] PP_Resource font_file,
+      [in] uint32_t table,
+      [out] mem_t output,
+      [out] uint32_t output_length);
+
+  /* Search the given string using ICU.  Use PPB_Core's MemFree on results when
+   * done.
+   */
+  void SearchString(
+      [in] PP_Instance instance,
+      [in] mem_t str,
+      [in] mem_t term,
+      [in] PP_Bool case_sensitive,
+      [out, size_is(count)] PP_PrivateFindResult[] results,
+      [out] int32_t count);
+
+  /* Since WebFrame doesn't know about PPAPI requests, it'll think the page has
+   * finished loading even if there are outstanding requests by the plugin.
+   * Take this out once WebFrame knows about requests by PPAPI plugins.
+   */
+  void DidStartLoading(
+      [in] PP_Instance instance);
+  void DidStopLoading(
+      [in] PP_Instance instance);
+
+  /* Sets content restriction for a full-page plugin (i.e. can't copy/print).
+   * The value is a bitfield of ContentRestriction enums.
+   */
+  void SetContentRestriction(
+      [in] PP_Instance instance,
+      [in] int32_t restrictions);
+
+  /* Notifies the browser that the given action has been performed. */
+  void UserMetricsRecordAction(
+      [in] PP_Instance instance,
+      [in] PP_Var action);
+
+  /* Notifies the browser that the PDF has an unsupported feature. */
+  void HasUnsupportedFeature(
+      [in] PP_Instance instance);
+
+  /*Invoke SaveAs... dialog, similar to the right-click or wrench menu. */
+  void SaveAs(
+      [in] PP_Instance instance);
+
+  /* Invoke Print dialog for plugin. */
+  void Print(
+      [in] PP_Instance instance);
+
+  PP_Bool IsFeatureEnabled(
+      [in] PP_Instance instance,
+      [in] PP_PDFFeature feature);
+
+  /* Sets the selected text of the plugin. If |selected_text| is empty, then no
+   * text is selected. */
+  void SetSelectedText(
+      [in] PP_Instance instance,
+      [in] str_t selected_text);
+
+  /* Sets the link under the cursor. If |url| is empty, then no link is under
+   * the cursor. */
+  void SetLinkUnderCursor(
+      [in] PP_Instance instance,
+      [in] str_t url);
+
+  /* Gets pointers to both the mmap'd V8 snapshot files and their sizes.
+   * This is needed when loading V8's initial snapshot from external files. */
+  void GetV8ExternalSnapshotData(
+      [in] PP_Instance instance,
+      [out] mem_ptr_t natives_data_out,
+      [out] int32_t natives_size_out,
+      [out] mem_ptr_t snapshot_data_out,
+      [out] int32_t snapshot_size_out);
+
+  /* Sends information about the viewport to the renderer for accessibility
+   * support. */
+  void SetAccessibilityViewportInfo(
+      [in] PP_Instance instance,
+      [in] PP_PrivateAccessibilityViewportInfo viewport_info);
+
+  /* Sends information about the PDF document to the renderer for accessibility
+   * support. */
+  void SetAccessibilityDocInfo(
+      [in] PP_Instance instance,
+      [in] PP_PrivateAccessibilityDocInfo doc_info);
+
+  /* Sends information about one page in a PDF document to the renderer for
+   * accessibility support. */
+  void SetAccessibilityPageInfo(
+      [in] PP_Instance instance,
+      [in] PP_PrivateAccessibilityPageInfo page_info,
+      [in] PP_PrivateAccessibilityTextRunInfo[] text_runs,
+      [in] PP_PrivateAccessibilityCharInfo[] chars);
+
+  /* Sends information about the PDF's URL and the embedder's URL. */
+  void SetCrashData(
+      [in] PP_Instance instance,
+      [in] str_t pdf_url,
+      [in] str_t top_level_url);
+};

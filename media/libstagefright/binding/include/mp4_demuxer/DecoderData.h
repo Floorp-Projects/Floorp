@@ -73,6 +73,11 @@ public:
   void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
 
+#ifdef MOZ_RUST_MP4PARSE
+  void Update(const mp4parse_track_info* track,
+              const mp4parse_track_audio_info* audio);
+#endif
+
   virtual bool IsValid() const override;
 };
 

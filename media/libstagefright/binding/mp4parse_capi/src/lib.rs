@@ -82,6 +82,10 @@ pub enum mp4parse_track_type {
     MP4PARSE_TRACK_TYPE_AUDIO = 1,
 }
 
+impl Default for mp4parse_track_type {
+    fn default() -> Self { mp4parse_track_type::MP4PARSE_TRACK_TYPE_VIDEO }
+}
+
 #[repr(C)]
 #[derive(PartialEq, Debug)]
 pub enum mp4parse_codec {
@@ -94,7 +98,12 @@ pub enum mp4parse_codec {
     MP4PARSE_CODEC_MP3,
 }
 
+impl Default for mp4parse_codec {
+    fn default() -> Self { mp4parse_codec::MP4PARSE_CODEC_UNKNOWN }
+}
+
 #[repr(C)]
+#[derive(Default)]
 pub struct mp4parse_track_info {
     pub track_type: mp4parse_track_type,
     pub codec: mp4parse_codec,
@@ -132,28 +141,38 @@ pub struct mp4parse_pssh_info {
     pub data: mp4parse_byte_data,
 }
 
-#[derive(Default)]
 #[repr(C)]
+#[derive(Default)]
+pub struct mp4parser_sinf_info {
+    pub is_encrypted: u32,
+    pub iv_size: u8,
+    pub kid: mp4parse_byte_data,
+}
+
+#[repr(C)]
+#[derive(Default)]
 pub struct mp4parse_track_audio_info {
     pub channels: u16,
     pub bit_depth: u16,
     pub sample_rate: u32,
-    // TODO(kinetik):
-    // int32_t profile;
-    // int32_t extended_profile; // check types
+    pub profile: u16,
     pub codec_specific_config: mp4parse_byte_data,
+    pub protected_data: mp4parser_sinf_info,
 }
 
 #[repr(C)]
+#[derive(Default)]
 pub struct mp4parse_track_video_info {
     pub display_width: u32,
     pub display_height: u32,
     pub image_width: u16,
     pub image_height: u16,
     pub extra_data: mp4parse_byte_data,
+    pub protected_data: mp4parser_sinf_info,
 }
 
 #[repr(C)]
+#[derive(Default)]
 pub struct mp4parse_fragment_info {
     pub fragment_duration: u64,
     // TODO:
@@ -346,6 +365,9 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
         return MP4PARSE_ERROR_BADARG;
     }
 
+    // Initialize fields to default values to ensure all fields are always valid.
+    *info = Default::default();
+
     let context = (*parser).context_mut();
     let track_index: usize = track_index as usize;
     let info: &mut mp4parse_track_info = &mut *info;
@@ -429,6 +451,9 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
         return MP4PARSE_ERROR_BADARG;
     }
 
+    // Initialize fields to default values to ensure all fields are always valid.
+    *info = Default::default();
+
     let context = (*parser).context_mut();
 
     if track_index as usize >= context.tracks.len() {
@@ -469,6 +494,9 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
             if let Some(channels) = v.audio_channel_count {
                 (*info).channels = channels;
             }
+            if let Some(profile) = v.audio_object_type {
+                (*info).profile = profile;
+            }
         }
         AudioCodecSpecific::FLACSpecificBox(ref flac) => {
             // Return the STREAMINFO metadata block in the codec_specific.
@@ -503,6 +531,17 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
         }
     }
 
+    match audio.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
+        Some(ref p) => {
+            if let Some(ref tenc) = p.tenc {
+                (*info).protected_data.is_encrypted = tenc.is_encrypted;
+                (*info).protected_data.iv_size = tenc.iv_size;
+                (*info).protected_data.kid.set_data(&(tenc.kid));
+            }
+        },
+        _ => {},
+    }
+
     MP4PARSE_OK
 }
 
@@ -512,6 +551,9 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
         return MP4PARSE_ERROR_BADARG;
     }
+
+    // Initialize fields to default values to ensure all fields are always valid.
+    *info = Default::default();
 
     let context = (*parser).context_mut();
 
@@ -552,6 +594,17 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
         _ => {},
     }
 
+    match video.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
+        Some(ref p) => {
+            if let Some(ref tenc) = p.tenc {
+                (*info).protected_data.is_encrypted = tenc.is_encrypted;
+                (*info).protected_data.iv_size = tenc.iv_size;
+                (*info).protected_data.kid.set_data(&(tenc.kid));
+            }
+        },
+        _ => {},
+    }
+
     MP4PARSE_OK
 }
 
@@ -561,6 +614,9 @@ pub unsafe extern fn mp4parse_get_fragment_info(parser: *mut mp4parse_parser, in
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
         return MP4PARSE_ERROR_BADARG;
     }
+
+    // Initialize fields to default values to ensure all fields are always valid.
+    *info = Default::default();
 
     let context = (*parser).context();
     let info: &mut mp4parse_fragment_info = &mut *info;
@@ -619,6 +675,9 @@ pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut mp4parse_parser, info: 
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
         return MP4PARSE_ERROR_BADARG;
     }
+
+    // Initialize fields to default values to ensure all fields are always valid.
+    *info = Default::default();
 
     let context = (*parser).context_mut();
     let pssh_data = (*parser).pssh_data_mut();
@@ -743,6 +802,7 @@ fn arg_validation() {
             image_width: 0,
             image_height: 0,
             extra_data: mp4parse_byte_data::default(),
+            protected_data: Default::default(),
         };
         assert_eq!(MP4PARSE_ERROR_BADARG, mp4parse_get_track_video_info(std::ptr::null_mut(), 0, &mut dummy_video));
 
@@ -788,6 +848,7 @@ fn arg_validation_with_parser() {
             image_width: 0,
             image_height: 0,
             extra_data: mp4parse_byte_data::default(),
+            protected_data: Default::default(),
         };
         assert_eq!(MP4PARSE_ERROR_BADARG, mp4parse_get_track_video_info(parser, 0, &mut dummy_video));
 
@@ -860,6 +921,7 @@ fn arg_validation_with_data() {
             image_width: 0,
             image_height: 0,
             extra_data: mp4parse_byte_data::default(),
+            protected_data: Default::default(),
         };
         assert_eq!(MP4PARSE_OK, mp4parse_get_track_video_info(parser, 0, &mut video));
         assert_eq!(video.display_width, 320);
@@ -892,7 +954,9 @@ fn arg_validation_with_data() {
                                                     display_height: 0,
                                                     image_width: 0,
                                                     image_height: 0,
-                                                    extra_data: mp4parse_byte_data::default(),};
+                                                    extra_data: mp4parse_byte_data::default(),
+                                                    protected_data: Default::default(),
+        };
         assert_eq!(MP4PARSE_ERROR_BADARG, mp4parse_get_track_video_info(parser, 3, &mut video));
         assert_eq!(video.display_width, 0);
         assert_eq!(video.display_height, 0);
