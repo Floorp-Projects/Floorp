@@ -38,26 +38,20 @@ MediaDecoderReaderWrapper::ReadMetadata()
                 &MediaDecoderReaderWrapper::OnMetadataNotRead);
 }
 
-void
+RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
 MediaDecoderReaderWrapper::RequestAudioData()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
-  auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                       &MediaDecoderReader::RequestAudioData);
-
-  RefPtr<MediaDecoderReaderWrapper> self = this;
-  mAudioDataRequest.Begin(p->Then(mOwnerThread, __func__,
-    [self] (MediaData* aAudioSample) {
-      self->mAudioDataRequest.Complete();
-      aAudioSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
-      self->mAudioCallback.Notify(AsVariant(aAudioSample));
-    },
-    [self] (const MediaResult& aError) {
-      self->mAudioDataRequest.Complete();
-      self->mAudioCallback.Notify(AsVariant(aError));
-    }));
+  int64_t startTime = StartTime().ToMicroseconds();
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(),
+                     __func__, &MediaDecoderReader::RequestAudioData)
+    ->Then(mOwnerThread, __func__,
+           [startTime] (MediaData* aAudio) {
+             aAudio->AdjustForStartTime(startTime);
+           },
+           [] (const MediaResult& aError) {});
 }
 
 void
@@ -90,13 +84,6 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
       self->mVideoDataRequest.Complete();
       self->mVideoCallback.Notify(AsVariant(aError));
     }));
-}
-
-bool
-MediaDecoderReaderWrapper::IsRequestingAudioData() const
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return mAudioDataRequest.Exists();
 }
 
 bool
@@ -181,7 +168,6 @@ MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
   if (aTracks.contains(TrackInfo::kAudioTrack)) {
-    mAudioDataRequest.DisconnectIfExists();
     mAudioWaitRequest.DisconnectIfExists();
   }
 
@@ -201,7 +187,6 @@ RefPtr<ShutdownPromise>
 MediaDecoderReaderWrapper::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mAudioDataRequest.Exists());
   MOZ_ASSERT(!mVideoDataRequest.Exists());
 
   mShutdown = true;
