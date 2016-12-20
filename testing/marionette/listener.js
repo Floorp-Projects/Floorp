@@ -239,7 +239,6 @@ var switchToShadowRootFn = dispatch(switchToShadowRoot);
 var getCookiesFn = dispatch(getCookies);
 var singleTapFn = dispatch(singleTap);
 var takeScreenshotFn = dispatch(takeScreenshot);
-var getScreenshotHashFn = dispatch(getScreenshotHash);
 var performActionsFn = dispatch(performActions);
 var releaseActionsFn = dispatch(releaseActions);
 var actionChainFn = dispatch(actionChain);
@@ -297,7 +296,6 @@ function startListeners() {
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
-  addMessageListenerId("Marionette:getScreenshotHash", getScreenshotHashFn);
   addMessageListenerId("Marionette:addCookie", addCookieFn);
   addMessageListenerId("Marionette:getCookies", getCookiesFn);
   addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
@@ -403,7 +401,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
-  removeMessageListenerId("Marionette:getScreenshotHash", getScreenshotHashFn);
   removeMessageListenerId("Marionette:addCookie", addCookieFn);
   removeMessageListenerId("Marionette:getCookies", getCookiesFn);
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
@@ -1620,70 +1617,38 @@ function getAppCacheStatus(msg) {
 /**
  * Perform a screen capture in content context.
  *
- * @param {UUID=} id
- *     Optional web element reference of an element to take a screenshot
- *     of.
- * @param {boolean=} full
- *     True to take a screenshot of the entire document element.  Is not
- *     considered if {@code id} is not defined.  Defaults to true.
- * @param {Array.<UUID>=} highlights
- *     Draw a border around the elements found by their web element
- *     references.
+ * Accepted values for |opts|:
+ *
+ *     @param {UUID=} id
+ *         Optional web element reference of an element to take a screenshot
+ *         of.
+ *     @param {boolean=} full
+ *         True to take a screenshot of the entire document element.  Is not
+ *         considered if {@code id} is not defined.  Defaults to true.
+ *     @param {Array.<UUID>=} highlights
+ *         Draw a border around the elements found by their web element
+ *         references.
+ *     @param {boolean=} scroll
+ *         When |id| is given, scroll it into view before taking the
+ *         screenshot.  Defaults to true.
+ *
+ * @param {capture.Format} format
+ *     Format to return the screenshot in.
+ * @param {Object.<string, ?>} opts
+ *     Options.
  *
  * @return {string}
- *     Base64 encoded string of an image/png type.
+ *     Base64 encoded string or a SHA-256 hash of the screenshot.
  */
-function takeScreenshot(id, full=true, highlights=[]) {
-  let canvas = screenshot(id, full, highlights);
-  return capture.toBase64(canvas);
-}
+function takeScreenshot(format, opts = {}) {
+  let id = opts.id;
+  let full = !!opts.full;
+  let highlights = opts.highlights || [];
+  let scroll = !!opts.scroll;
 
-/**
-* Perform a screen capture in content context.
-*
-* @param {UUID=} id
-*     Optional web element reference of an element to take a screenshot
-*     of.
-* @param {boolean=} full
-*     True to take a screenshot of the entire document element.  Is not
-*     considered if {@code id} is not defined.  Defaults to true.
-* @param {Array.<UUID>=} highlights
-*     Draw a border around the elements found by their web element
-*     references.
-*
-* @return {string}
-*     Hex Digest of a SHA-256 hash of the base64 encoded string of an
-*     image/png type.
-*/
-function getScreenshotHash(id, full=true, highlights=[]) {
-  let canvas = screenshot(id, full, highlights);
-  return capture.toHash(canvas);
-}
+  let highlightEls = highlights.map(ref => seenEls.get(ref, curContainer));
 
-/**
-* Perform a screen capture in content context.
-*
-* @param {UUID=} id
-*     Optional web element reference of an element to take a screenshot
-*     of.
-* @param {boolean=} full
-*     True to take a screenshot of the entire document element.  Is not
-*     considered if {@code id} is not defined.  Defaults to true.
-* @param {Array.<UUID>=} highlights
-*     Draw a border around the elements found by their web element
-*     references.
-*
-* @return {HTMLCanvasElement}
-*     The canvas element to be encoded or hashed.
-*/
-function screenshot(id, full=true, highlights=[]) {
   let canvas;
-
-  let highlightEls = [];
-  for (let h of highlights) {
-    let el = seenEls.get(h, curContainer);
-    highlightEls.push(el);
-  }
 
   // viewport
   if (!id && !full) {
@@ -1691,17 +1656,29 @@ function screenshot(id, full=true, highlights=[]) {
 
   // element or full document element
   } else {
-    let node;
+    let el;
     if (id) {
-      node = seenEls.get(id, curContainer);
+      el = seenEls.get(id, curContainer);
+      if (scroll) {
+        element.scrollIntoView(el);
+      }
     } else {
-      node = curContainer.frame.document.documentElement;
+      el = curContainer.frame.document.documentElement;
     }
 
-    canvas = capture.element(node, highlightEls);
+    canvas = capture.element(el, highlightEls);
   }
 
-  return canvas;
+  switch (format) {
+    case capture.Format.Base64:
+      return capture.toBase64(canvas);
+
+    case capture.Format.Hash:
+      return capture.toHash(canvas);
+
+    default:
+      throw new TypeError("Unknown screenshot format: " + format);
+  }
 }
 
 // Call register self when we get loaded
