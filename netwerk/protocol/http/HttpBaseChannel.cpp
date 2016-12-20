@@ -55,8 +55,10 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIXULRuntime.h"
 #include "nsICacheInfoChannel.h"
+#include "nsIDOMWindowUtils.h"
 
 #include <algorithm>
+#include "HttpBaseChannel.h"
 
 namespace mozilla {
 namespace net {
@@ -113,6 +115,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mTransferSize(0)
   , mDecodedBodySize(0)
   , mEncodedBodySize(0)
+  , mContentWindowId(0)
   , mRequireCORSPreflight(false)
   , mReportCollector(new ConsoleReportCollector())
   , mForceMainDocumentChannel(false)
@@ -1194,6 +1197,30 @@ HttpBaseChannel::SetChannelId(const nsACString& aChannelId)
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
+{
+  if (!mContentWindowId) {
+    nsCOMPtr<nsILoadContext> loadContext;
+    GetCallback(loadContext);
+    if (loadContext) {
+      nsCOMPtr<mozIDOMWindowProxy> topWindow;
+      loadContext->GetTopWindow(getter_AddRefs(topWindow));
+      nsCOMPtr<nsIDOMWindowUtils> windowUtils = do_GetInterface(topWindow);
+      if (windowUtils) {
+        windowUtils->GetCurrentInnerWindowID(&mContentWindowId);
+      }
+    }
+  }
+  *aWindowId = mContentWindowId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HttpBaseChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
+{
+  mContentWindowId = aWindowId;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
