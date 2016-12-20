@@ -100,13 +100,6 @@
         <attr name="autoUpdateTheme" format="boolean"/>
     </declare-styleable>
 
-    <declare-styleable name="TwoWayView">
-        <attr name="android:orientation"/>
-        <attr name="android:choiceMode"/>
-        <attr name="android:listSelector"/>
-        <attr name="android:drawSelectorOnTop"/>
-    </declare-styleable>
-
     <declare-styleable name="HomeListView">
         <!-- Draws a divider on top of the list, if true. Defaults to false. -->
         <attr name="topDivider" format="boolean"/>
