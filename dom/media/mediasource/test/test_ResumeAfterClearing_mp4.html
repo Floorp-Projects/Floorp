@@ -11,9 +11,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-// FIXME: bug 1319295
-addMSEPrefs(["media.dormant-on-pause-timeout-ms", -1]);
-
 var receivedSourceOpen = false;
 runWithMSE(function(ms, v) {
   ms.addEventListener("sourceopen", function() {
