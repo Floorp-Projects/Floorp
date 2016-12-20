@@ -460,6 +460,8 @@ public:
     return mSuppressScrollbarRepaints;
   }
 
+  bool DragScroll(WidgetEvent* aEvent);
+
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
   nsCOMPtr<nsIContent> mVScrollbarContent;
@@ -1033,6 +1035,10 @@ public:
     return mHelper.GetScrollSnapInfo();
   }
 
+  virtual bool DragScroll(mozilla::WidgetEvent* aEvent) override {
+    return mHelper.DragScroll(aEvent);
+  }
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -1454,6 +1460,10 @@ public:
 
   ScrollSnapInfo GetScrollSnapInfo() const override {
     return mHelper.GetScrollSnapInfo();
+  }
+
+  virtual bool DragScroll(mozilla::WidgetEvent* aEvent) override {
+    return mHelper.DragScroll(aEvent);
   }
 
 #ifdef DEBUG_FRAME_DUMP
