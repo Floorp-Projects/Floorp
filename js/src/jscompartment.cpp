@@ -1025,6 +1025,15 @@ AddLazyFunctionsForCompartment(JSContext* cx, AutoObjectVector& lazyFunctions, A
             continue;
         }
 
+        // This creates a new reference to an object that an ongoing incremental
+        // GC may find to be unreachable. Treat as if we're reading a weak
+        // reference and trigger the read barrier.
+        if (cx->zone()->needsIncrementalBarrier())
+            fun->readBarrier(fun);
+
+        // TODO: The above checks should be rolled into the cell iterator (see
+        // bug 1322971).
+
         if (fun->isInterpretedLazy()) {
             LazyScript* lazy = fun->lazyScriptOrNull();
             if (lazy && lazy->sourceObject() && !lazy->hasUncompiledEnclosingScript()) {

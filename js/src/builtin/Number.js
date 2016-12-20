@@ -36,7 +36,7 @@ function Number_toLocaleString() {
     }
 
     // Step 5.
-    return intl_FormatNumber(numberFormat, x);
+    return intl_FormatNumber(numberFormat, x, /* formatToParts = */ false);
 }
 
 // ES6 draft ES6 20.1.2.4

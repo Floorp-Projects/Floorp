@@ -6,24 +6,29 @@
 
 "use strict";
 
-const {Cc, Ci, components} = require("chrome");
-const xpcom = require("sdk/platform/xpcom");
-const {Unknown} = require("sdk/platform/xpcom");
-const {Class} = require("sdk/core/heritage");
+const {Cc, Ci, Cu, Cm, Cr, components} = require("chrome");
+const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 const categoryManager = Cc["@mozilla.org/categorymanager;1"]
   .getService(Ci.nsICategoryManager);
 
-loader.lazyRequireGetter(this, "NetworkHelper",
-  "devtools/shared/webconsole/network-helper");
-
 // Constants
 const JSON_TYPE = "application/json";
 const CONTRACT_ID = "@mozilla.org/devtools/jsonview-sniffer;1";
-const CLASS_ID = "{4148c488-dca1-49fc-a621-2a0097a62422}";
+const CLASS_ID = components.ID("{4148c488-dca1-49fc-a621-2a0097a62422}");
+const CLASS_DESCRIPTION = "JSONView content sniffer";
 const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
 const JSON_VIEW_TYPE = "JSON View";
 const CONTENT_SNIFFER_CATEGORY = "net-content-sniffers";
+
+function isTopLevelLoad(request) {
+  let loadInfo = request.loadInfo;
+  if (loadInfo && loadInfo.isTopLevelLoad) {
+    return (request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
+  }
+  return false;
+}
 
 /**
  * This component represents a sniffer (implements nsIContentSniffer
@@ -33,24 +38,21 @@ const CONTENT_SNIFFER_CATEGORY = "net-content-sniffers";
  * This internal type is consequently rendered by JSON View component
  * that represents the JSON through a viewer interface.
  */
-var Sniffer = Class({
-  extends: Unknown,
+function Sniffer() {}
 
-  interfaces: [
-    "nsIContentSniffer",
-  ],
+Sniffer.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentSniffer]),
 
   get wrappedJSObject() {
     return this;
   },
 
   getMIMETypeFromContent: function (request, data, length) {
-    // JSON View is enabled only for top level loads only.
-    if (!NetworkHelper.isTopLevelLoad(request)) {
-      return "";
-    }
-
     if (request instanceof Ci.nsIChannel) {
+      // JSON View is enabled only for top level loads only.
+      if (!isTopLevelLoad(request)) {
+        return "";
+      }
       try {
         if (request.contentDisposition ==
           Ci.nsIChannel.DISPOSITION_ATTACHMENT) {
@@ -69,19 +71,23 @@ var Sniffer = Class({
 
     return "";
   }
-});
+};
 
-var service = xpcom.Service({
-  id: components.ID(CLASS_ID),
-  contract: CONTRACT_ID,
-  Component: Sniffer,
-  register: false,
-  unregister: false
-});
+const Factory = {
+  createInstance: function (outer, iid) {
+    if (outer) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+    return new Sniffer();
+  }
+};
 
 function register() {
-  if (!xpcom.isRegistered(service)) {
-    xpcom.register(service);
+  if (!registrar.isCIDRegistered(CLASS_ID)) {
+    registrar.registerFactory(CLASS_ID,
+      CLASS_DESCRIPTION,
+      CONTRACT_ID,
+      Factory);
     categoryManager.addCategoryEntry(CONTENT_SNIFFER_CATEGORY, JSON_VIEW_TYPE,
       CONTRACT_ID, false, false);
     return true;
@@ -91,10 +97,10 @@ function register() {
 }
 
 function unregister() {
-  if (xpcom.isRegistered(service)) {
+  if (registrar.isCIDRegistered(CLASS_ID)) {
+    registrar.unregisterFactory(CLASS_ID, Factory);
     categoryManager.deleteCategoryEntry(CONTENT_SNIFFER_CATEGORY,
       JSON_VIEW_TYPE, false);
-    xpcom.unregister(service);
     return true;
   }
   return false;

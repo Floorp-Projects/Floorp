@@ -26,6 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=765772
  * This test checks that when a user types in some input types, it will not be
  * in a state where the value will be un-sanitized and usable (by a script).
  */
+const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 
 var input = document.getElementById('i');
 var form = document.getElementById('f');
@@ -138,6 +139,7 @@ function* runTest()
       ]
     },
     {
+      mobileOnly: true,
       type: 'date',
       validData: [
         '0001-01-01',
@@ -153,6 +155,28 @@ function* runTest()
         '2013-01-1',
         '1011-23-21',
         '1000-12-99',
+      ]
+    },
+    {
+      mobileOnly: true,
+      type: 'time',
+      validData: [
+        '00:00',
+        '09:09:00',
+        '08:23:23.1',
+        '21:43:56.12',
+        '23:12:45.100',
+      ],
+      invalidData: [
+        '00:',
+        '00:00:',
+        '25:00',
+        '-00:00',
+        '00:00:00.',
+        '00:60',
+        '10:58:99',
+        ':19:10',
+        '23:08:09.1012',
       ]
     },
     {
@@ -212,6 +236,10 @@ function* runTest()
 
   for (test of data) {
     gCurrentTest = test;
+
+    if (gCurrentTest.mobileOnly && isDesktop) {
+      continue;
+    }
 
     input.type = test.type;
     gValidData = test.validData;

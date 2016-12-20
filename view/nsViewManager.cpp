@@ -836,11 +836,7 @@ void nsViewManager::ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget)
     if (parentWidget) {
       // Child widget
       if (parentWidget != aNewWidget) {
-#ifdef DEBUG
-        nsresult rv =
-#endif
-          widget->SetParent(aNewWidget);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "SetParent failed!");
+        widget->SetParent(aNewWidget);
       }
     } else {
       // Toplevel widget (popup, dialog, etc)

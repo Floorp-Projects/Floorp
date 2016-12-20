@@ -541,8 +541,7 @@ NS_IMETHODIMP nsXULWindow::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
 
 NS_IMETHODIMP nsXULWindow::SetPositionDesktopPix(int32_t aX, int32_t aY)
 {
-  nsresult rv = mWindow->Move(aX, aY);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  mWindow->Move(aX, aY);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
     // window at this position. We don't persist this one-time position.
@@ -581,8 +580,7 @@ NS_IMETHODIMP nsXULWindow::SetSize(int32_t aCX, int32_t aCY, bool aRepaint)
 
   DesktopToLayoutDeviceScale scale = mWindow->GetDesktopToDeviceScale();
   DesktopSize size = LayoutDeviceIntSize(aCX, aCY) / scale;
-  nsresult rv = mWindow->Resize(size.width, size.height, aRepaint);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  mWindow->Resize(size.width, size.height, aRepaint);
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
     // window at this size & in the normal size mode (since it is the only mode
@@ -614,9 +612,8 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(int32_t aX, int32_t aY,
 
   DesktopToLayoutDeviceScale scale = mWindow->GetDesktopToDeviceScale();
   DesktopRect rect = LayoutDeviceIntRect(aX, aY, aCX, aCY) / scale;
-  nsresult rv = mWindow->Resize(rect.x, rect.y, rect.width, rect.height,
-                                !!(aFlags & nsIBaseWindow::eRepaint));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  mWindow->Resize(rect.x, rect.y, rect.width, rect.height,
+                  !!(aFlags & nsIBaseWindow::eRepaint));
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
     // window at this size and position. We don't persist this one-time setting.

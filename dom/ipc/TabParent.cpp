@@ -2126,10 +2126,10 @@ TabParent::RecvStartPluginIME(const WidgetKeyboardEvent& aKeyboardEvent,
   if (!widget) {
     return IPC_OK();
   }
-  widget->StartPluginIME(aKeyboardEvent,
-                         (int32_t&)aPanelX,
-                         (int32_t&)aPanelY,
-                         *aCommitted);
+  Unused << widget->StartPluginIME(aKeyboardEvent,
+                                   (int32_t&)aPanelX,
+                                   (int32_t&)aPanelY,
+                                   *aCommitted);
   return IPC_OK();
 }
 

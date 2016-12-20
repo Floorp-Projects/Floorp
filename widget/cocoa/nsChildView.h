@@ -309,16 +309,16 @@ public:
   NS_IMETHOD              Show(bool aState) override;
   virtual bool            IsVisible() const override;
 
-  NS_IMETHOD              SetParent(nsIWidget* aNewParent) override;
+  virtual void            SetParent(nsIWidget* aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
   virtual float           GetDPI() override;
 
-  NS_IMETHOD              Move(double aX, double aY) override;
-  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              Resize(double aX, double aY,
+  virtual void            Move(double aX, double aY) override;
+  virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override;
+  virtual void            Resize(double aX, double aY,
                                  double aWidth, double aHeight, bool aRepaint) override;
 
-  NS_IMETHOD              Enable(bool aState) override;
+  virtual void            Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
   NS_IMETHOD              SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
@@ -365,7 +365,8 @@ public:
 
   NS_IMETHOD        SetTitle(const nsAString& title) override;
 
-  NS_IMETHOD        GetAttention(int32_t aCycleCount) override;
+  virtual MOZ_MUST_USE nsresult
+                    GetAttention(int32_t aCycleCount) override;
 
   virtual bool HasPendingInputEvent() override;
 
@@ -378,7 +379,7 @@ public:
   NS_IMETHOD_(InputContext) GetInputContext() override;
   NS_IMETHOD_(TextEventDispatcherListener*)
     GetNativeTextEventDispatcherListener() override;
-  NS_IMETHOD        AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override;
+  virtual MOZ_MUST_USE nsresult AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override;
   NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
                       NativeKeyBindingsType aType,
                       const mozilla::WidgetKeyboardEvent& aEvent,
@@ -507,9 +508,10 @@ public:
 
   IAPZCTreeManager* APZCTM() { return mAPZC ; }
 
-  NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                            int32_t aPanelX, int32_t aPanelY,
-                            nsString& aCommitted) override;
+  virtual MOZ_MUST_USE nsresult
+  StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
+                 int32_t aPanelX, int32_t aPanelY,
+                 nsString& aCommitted) override;
 
   virtual void SetPluginFocused(bool& aFocused) override;
 

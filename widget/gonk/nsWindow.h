@@ -56,17 +56,17 @@ public:
 
     NS_IMETHOD Show(bool aState);
     virtual bool IsVisible() const;
-    NS_IMETHOD Move(double aX,
-                    double aY);
-    NS_IMETHOD Resize(double aWidth,
-                      double aHeight,
-                      bool  aRepaint);
-    NS_IMETHOD Resize(double aX,
-                      double aY,
-                      double aWidth,
-                      double aHeight,
-                      bool aRepaint);
-    NS_IMETHOD Enable(bool aState);
+    virtual void Move(double aX,
+                      double aY);
+    virtual void Resize(double aWidth,
+                        double aHeight,
+                        bool  aRepaint);
+    virtual void Resize(double aX,
+                        double aY,
+                        double aWidth,
+                        double aHeight,
+                        bool aRepaint);
+    virtual void Enable(bool aState);
     virtual bool IsEnabled() const;
     NS_IMETHOD SetFocus(bool aRaise = false);
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);

@@ -7,6 +7,7 @@
 #include "DocAccessibleWrap.h"
 
 #include "Compatibility.h"
+#include "mozilla/dom/TabChild.h"
 #include "DocAccessibleChild.h"
 #include "nsWinUtils.h"
 #include "Role.h"
@@ -121,7 +122,15 @@ DocAccessibleWrap::Shutdown()
 void*
 DocAccessibleWrap::GetNativeWindow() const
 {
-  return mHWND ? mHWND : DocAccessible::GetNativeWindow();
+  if (XRE_IsContentProcess()) {
+    DocAccessibleChild* ipcDoc = IPCDoc();
+    auto tab = static_cast<dom::TabChild*>(ipcDoc->Manager());
+    MOZ_ASSERT(tab);
+    return reinterpret_cast<HWND>(tab->GetNativeWindowHandle());
+  } else if (mHWND) {
+    return mHWND;
+  }
+  return DocAccessible::GetNativeWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

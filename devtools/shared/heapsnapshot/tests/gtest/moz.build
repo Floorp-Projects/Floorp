@@ -27,5 +27,7 @@ if CONFIG['GNU_CXX']:
 # to work around, so we just ignore it.
 if CONFIG['CLANG_CXX']:
   CXXFLAGS += ['-Wno-inconsistent-missing-override']
+  # Workaround bug 1142396. Suppress the warning from gmock library for clang.
+  CXXFLAGS += ['-Wno-null-dereference']
 
 FINAL_LIBRARY = 'xul-gtest'
