@@ -31,6 +31,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'fixed', 'local' ] ] }
     ]
   },
+  'background-color': {
+    // https://drafts.csswg.org/css-backgrounds-3/#background-color
+    types: [
+    ]
+  },
   'background-blend-mode': {
     // https://drafts.fxtf.org/compositing-1/#propdef-background-blend-mode
     types: [
@@ -57,10 +62,80 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'padding-box', 'content-box' ] ] }
     ]
   },
+  'background-position': {
+    // https://drafts.csswg.org/css-backgrounds-3/#background-position
+    types: [
+    ]
+  },
+  'background-position-x': {
+    // https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-x
+    types: [
+    ]
+  },
+  'background-position-y': {
+    // https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-y
+    types: [
+    ]
+  },
   'background-repeat': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-repeat
     types: [
       { type: 'discrete', options: [ [ 'space', 'round' ] ] }
+    ]
+  },
+  'background-size': {
+    // https://drafts.csswg.org/css-backgrounds-3/#background-size
+    types: [
+    ]
+  },
+  'block-size': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-block-size
+    types: [
+    ]
+  },
+  'border-block-end-color': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-block-end-color
+    types: [
+    ]
+  },
+  'border-block-end-style': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-block-end-style
+    types: [
+    ]
+  },
+  'border-block-end-width': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-block-end-width
+    types: [
+    ]
+  },
+  'border-block-start-color': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-block-start-color
+    types: [
+    ]
+  },
+  'border-block-start-style': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-block-start-style
+    types: [
+    ]
+  },
+  'border-block-start-width': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-block-start-width
+    types: [
+    ]
+  },
+  'border-bottom-color': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-color
+    types: [
+    ]
+  },
+  'border-bottom-left-radius': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-left-radius
+    types: [
+    ]
+  },
+  'border-bottom-right-radius': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-right-radius
+    types: [
     ]
   },
   'border-bottom-style': {
@@ -69,10 +144,45 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
     ]
   },
+  'border-bottom-width': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-width
+    types: [
+    ]
+  },
   'border-collapse': {
     // https://drafts.csswg.org/css-tables/#propdef-border-collapse
     types: [
       { type: 'discrete', options: [ [ 'collapse', 'separate' ] ] }
+    ]
+  },
+  'border-inline-end-color': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-inline-end-color
+    types: [
+    ]
+  },
+  'border-inline-end-style': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-inline-end-style
+    types: [
+    ]
+  },
+  'border-inline-end-width': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-inline-end-width
+    types: [
+    ]
+  },
+  'border-inline-start-color': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-inline-start-color
+    types: [
+    ]
+  },
+  'border-inline-start-style': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-block-start-style
+    types: [
+    ]
+  },
+  'border-inline-start-width': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-border-inline-start-width
+    types: [
     ]
   },
   'border-image-outset': {
@@ -107,10 +217,25 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ '1 1 1 1', '5 5 5 5' ] ] }
     ]
   },
+  'border-left-color': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-left-color
+    types: [
+    ]
+  },
   'border-left-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-left-style
     types: [
       { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
+    ]
+  },
+  'border-left-width': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-left-width
+    types: [
+    ]
+  },
+  'border-right-color': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-right-color
+    types: [
     ]
   },
   'border-right-style': {
@@ -119,16 +244,56 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
     ]
   },
+  'border-right-width': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-right-width
+    types: [
+    ]
+  },
+  'border-spacing': {
+    // https://drafts.csswg.org/css-tables/#propdef-border-spacing
+    types: [
+    ]
+  },
+  'border-top-color': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-top-color
+    types: [
+    ]
+  },
+  'border-top-left-radius': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-top-left-radius
+    types: [
+    ]
+  },
+  'border-top-right-radius': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-top-right-radius
+    types: [
+    ]
+  },
   'border-top-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-style
     types: [
       { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
     ]
   },
+  'border-top-width': {
+    // https://drafts.csswg.org/css-backgrounds-3/#border-top-width
+    types: [
+    ]
+  },
+  'bottom': {
+    // https://drafts.csswg.org/css-position/#propdef-bottom
+    types: [
+    ]
+  },
   'box-decoration-break': {
     // https://drafts.csswg.org/css-break/#propdef-box-decoration-break
     types: [
       { type: 'discrete', options: [ [ 'slice', 'clone' ] ] }
+    ]
+  },
+  'box-shadow': {
+    // https://drafts.csswg.org/css-backgrounds/#box-shadow
+    types: [
     ]
   },
   'box-sizing': {
@@ -149,10 +314,25 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'inline-start', 'inline-end' ] ] }
     ]
   },
+  'clip': {
+    // https://drafts.fxtf.org/css-masking-1/#propdef-clip
+    types: [
+    ]
+  },
+  'clip-path': {
+    // https://drafts.fxtf.org/css-masking-1/#propdef-clip-path
+    types: [
+    ]
+  },
   'clip-rule': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-clip-rule
     types: [
       { type: 'discrete', options: [ [ 'evenodd', 'nonzero' ] ] }
+    ]
+  },
+  'color': {
+    // https://drafts.csswg.org/css-color/#propdef-color
+    types: [
     ]
   },
   'color-adjust': {
@@ -173,6 +353,21 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'sRGB', 'linearRGB' ] ] }
     ]
   },
+  'column-count': {
+    // https://drafts.csswg.org/css-multicol/#propdef-column-count
+    types: [
+    ]
+  },
+  'column-gap': {
+    // https://drafts.csswg.org/css-multicol/#propdef-column-gap
+    types: [
+    ]
+  },
+  'column-rule-color': {
+    // https://drafts.csswg.org/css-multicol/#propdef-column-rule-color
+    types: [
+    ]
+  },
   'column-fill': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-fill
     types: [
@@ -183,6 +378,16 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-style
     types: [
       { type: 'discrete', options: [ [ 'none', 'dotted' ] ] }
+    ]
+  },
+  'column-rule-width': {
+    // https://drafts.csswg.org/css-multicol/#propdef-column-rule-width
+    types: [
+    ]
+  },
+  'column-width': {
+    // https://drafts.csswg.org/css-multicol/#propdef-column-width
+    types: [
     ]
   },
   'contain': {
@@ -236,10 +441,25 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'show', 'hide' ] ] }
     ]
   },
+  'fill': {
+    // https://svgwg.org/svg2-draft/painting.html#FillProperty
+    types: [
+    ]
+  },
+  'fill-opacity': {
+    // https://svgwg.org/svg2-draft/painting.html#FillOpacityProperty
+    types: [
+    ]
+  },
   'fill-rule': {
     // https://svgwg.org/svg2-draft/painting.html#FillRuleProperty
     types: [
       { type: 'discrete', options: [ [ 'evenodd', 'nonzero' ] ] }
+    ]
+  },
+  'filter': {
+    // https://drafts.fxtf.org/filters/#propdef-filter
+    types: [
     ]
   },
   'flex-basis': {
@@ -267,6 +487,31 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-wrap
     types: [
       { type: 'discrete', options: [ [ 'nowrap', 'wrap' ] ] }
+    ]
+  },
+  'flood-color': {
+    // https://drafts.fxtf.org/filters/#FloodColorProperty
+    types: [
+    ]
+  },
+  'flood-opacity': {
+    // https://drafts.fxtf.org/filters/#propdef-flood-opacity
+    types: [
+    ]
+  },
+  'font-size': {
+    // https://drafts.csswg.org/css-fonts-3/#propdef-font-size
+    types: [
+    ]
+  },
+  'font-size-adjust': {
+    // https://drafts.csswg.org/css-fonts-3/#propdef-font-size-adjust
+    types: [
+    ]
+  },
+  'font-stretch': {
+    // https://drafts.csswg.org/css-fonts-3/#propdef-font-stretch
+    types: [
     ]
   },
   'font-style': {
@@ -355,6 +600,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'sub', 'super' ] ] }
     ]
   },
+  'font-weight': {
+    // https://drafts.csswg.org/css-fonts-3/#propdef-font-weight
+    types: [
+    ]
+  },
   'grid-auto-columns': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-auto-columns
     types: [
@@ -379,6 +629,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ '1', '5' ] ] }
     ]
   },
+  'grid-column-gap': {
+    // https://drafts.csswg.org/css-grid/#propdef-grid-column-gap
+    types: [
+    ]
+  },
   'grid-column-start': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-column-start
     types: [
@@ -389,6 +644,11 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-grid/#propdef-grid-row-end
     types: [
       { type: 'discrete', options: [ [ '1', '5' ] ] }
+    ]
+  },
+  'grid-row-gap': {
+    // https://drafts.csswg.org/css-grid/#propdef-grid-row-gap
+    types: [
     ]
   },
   'grid-row-start': {
@@ -415,6 +675,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ '1px', '5px' ] ] }
     ]
   },
+  'height': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-height
+    types: [
+    ]
+  },
   'hyphens': {
     // https://drafts.csswg.org/css-text-3/#propdef-hyphens
     types: [
@@ -427,6 +692,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ '0deg', '90deg' ] ] }
     ]
   },
+  'image-rendering': {
+    // https://drafts.csswg.org/css-images-3/#propdef-image-rendering
+    types: [
+    ]
+  },
   'ime-mode': {
     // https://drafts.csswg.org/css-ui/#input-method-editor
     types: [
@@ -437,6 +707,11 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-inline/#propdef-initial-letter
     types: [
       { type: 'discrete', options: [ [ '1 2', '3 4' ] ] }
+    ]
+  },
+  'inline-size': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-inline-size
+    types: [
     ]
   },
   'isolation': {
@@ -463,6 +738,26 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'baseline', 'last baseline' ] ] }
     ]
   },
+  'left': {
+    // https://drafts.csswg.org/css-position/#propdef-left
+    types: [
+    ]
+  },
+  'letter-spacing': {
+    // https://drafts.csswg.org/css-text-3/#propdef-letter-spacing
+    types: [
+    ]
+  },
+  'lighting-color': {
+    // https://drafts.fxtf.org/filters/#LightingColorProperty
+    types: [
+    ]
+  },
+  'line-height': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-line-height
+    types: [
+    ]
+  },
   'list-style-image': {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-image
     types: [
@@ -481,6 +776,46 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-type
     types: [
       { type: 'discrete', options: [ [ 'circle', 'square' ] ] }
+    ]
+  },
+  'margin-block-end': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-margin-block-end
+    types: [
+    ]
+  },
+  'margin-block-start': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-margin-block-start
+    types: [
+    ]
+  },
+  'margin-bottom': {
+    // https://drafts.csswg.org/css-box/#propdef-margin-bottom
+    types: [
+    ]
+  },
+  'margin-inline-end': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-margin-inline-end
+    types: [
+    ]
+  },
+  'margin-inline-start': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-margin-inline-start
+    types: [
+    ]
+  },
+  'margin-left': {
+    // https://drafts.csswg.org/css-box/#propdef-margin-left
+    types: [
+    ]
+  },
+  'margin-right': {
+    // https://drafts.csswg.org/css-box/#propdef-margin-right
+    types: [
+    ]
+  },
+  'margin-top': {
+    // https://drafts.csswg.org/css-box/#propdef-margin-top
+    types: [
     ]
   },
   'marker-end': {
@@ -547,16 +882,76 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'content-box', 'border-box' ] ] }
     ]
   },
+  'mask-position': {
+    // https://drafts.fxtf.org/css-masking-1/#propdef-mask-position
+    types: [
+    ]
+  },
+  'mask-position-x': {
+    // https://lists.w3.org/Archives/Public/www-style/2014Jun/0166.html
+    types: [
+    ]
+  },
+  'mask-position-y': {
+    // https://lists.w3.org/Archives/Public/www-style/2014Jun/0166.html
+    types: [
+    ]
+  },
   'mask-repeat': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-repeat
     types: [
       { type: 'discrete', options: [ [ 'space', 'round' ] ] }
     ]
   },
+  'mask-size': {
+    // https://drafts.fxtf.org/css-masking-1/#propdef-mask-size
+    types: [
+    ]
+  },
   'mask-type': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-type
     types: [
       { type: 'discrete', options: [ [ 'alpha', 'luminance' ] ] }
+    ]
+  },
+  'max-block-size': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-max-block-size
+    types: [
+    ]
+  },
+  'max-height': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-max-height
+    types: [
+    ]
+  },
+  'max-inline-size': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-max-inline-size
+    types: [
+    ]
+  },
+  'max-width': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-max-width
+    types: [
+    ]
+  },
+  'min-block-size': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-min-block-size
+    types: [
+    ]
+  },
+  'min-height': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-min-height
+    types: [
+    ]
+  },
+  'min-inline-size': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-min-inline-size
+    types: [
+    ]
+  },
+  'min-width': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-min-width
+    types: [
     ]
   },
   'mix-blend-mode': {
@@ -571,14 +966,64 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'fill', 'contain' ] ] }
     ]
   },
+  'object-position': {
+    // https://drafts.csswg.org/css-images-3/#propdef-object-position
+    types: [
+    ]
+  },
+  'offset-block-end': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-offset-block-end
+    types: [
+    ]
+  },
+  'offset-block-start': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-offset-block-start
+    types: [
+    ]
+  },
+  'offset-inline-end': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-offset-inline-end
+    types: [
+    ]
+  },
+  'offset-inline-start': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-offset-inline-start
+    types: [
+    ]
+  },
+  'opacity': {
+    // https://drafts.csswg.org/css-color/#propdef-opacity
+    types: [
+    ]
+  },
   'order': {
     // https://drafts.csswg.org/css-flexbox/#propdef-order
     types: [ 'integer' ]
+  },
+  'outline-color': {
+    // https://drafts.csswg.org/css-ui-3/#propdef-outline-color
+    types: [
+    ]
+  },
+  'outline-offset': {
+    // https://drafts.csswg.org/css-ui-3/#propdef-outline-offset
+    types: [
+    ]
   },
   'outline-style': {
     // https://drafts.csswg.org/css-ui/#propdef-outline-style
     types: [
       { type: 'discrete', options: [ [ 'none', 'dotted' ] ] }
+    ]
+  },
+  'outline-width': {
+    // https://drafts.csswg.org/css-ui-3/#propdef-outline-width
+    types: [
+    ]
+  },
+  'overflow': {
+    // https://drafts.csswg.org/css-overflow/#propdef-overflow
+    types: [
     ]
   },
   'overflow-clip-box': {
@@ -605,6 +1050,46 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'visible', 'hidden' ] ] }
     ]
   },
+  'padding-block-end': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-padding-block-end
+    types: [
+    ]
+  },
+  'padding-block-start': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-padding-block-start
+    types: [
+    ]
+  },
+  'padding-bottom': {
+    // https://drafts.csswg.org/css-box/#propdef-padding-bottom
+    types: [
+    ]
+  },
+  'padding-inline-end': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-padding-inline-end
+    types: [
+    ]
+  },
+  'padding-inline-start': {
+    // https://drafts.csswg.org/css-logical-props/#propdef-padding-inline-start
+    types: [
+    ]
+  },
+  'padding-left': {
+    // https://drafts.csswg.org/css-box/#propdef-padding-left
+    types: [
+    ]
+  },
+  'padding-right': {
+    // https://drafts.csswg.org/css-box/#propdef-padding-right
+    types: [
+    ]
+  },
+  'padding-top': {
+    // https://drafts.csswg.org/css-box/#propdef-padding-top
+    types: [
+    ]
+  },
   'page-break-after': {
     // https://drafts.csswg.org/css-break-3/#propdef-break-after
     types: [
@@ -629,6 +1114,16 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'fill', 'stroke' ] ] }
     ]
   },
+  'perspective': {
+    // https://drafts.csswg.org/css-transforms-1/#propdef-perspective
+    types: [
+    ]
+  },
+  'perspective-origin': {
+    // https://drafts.csswg.org/css-transforms-1/#propdef-perspective-origin
+    types: [
+    ]
+  },
   'pointer-events': {
     // https://svgwg.org/svg2-draft/interact.html#PointerEventsProperty
     types: [
@@ -651,6 +1146,11 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-ui/#propdef-resize
     types: [
       { type: 'discrete', options: [ [ 'both', 'horizontal' ] ] }
+    ]
+  },
+  'right': {
+    // https://drafts.csswg.org/css-position/#propdef-right
+    types: [
     ]
   },
   'ruby-align': {
@@ -700,6 +1200,31 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'optimizeSpeed', 'crispEdges' ] ] }
     ]
   },
+  'stop-color': {
+    // https://svgwg.org/svg2-draft/pservers.html#StopColorProperty
+    types: [
+    ]
+  },
+  'stop-opacity': {
+    // https://svgwg.org/svg2-draft/pservers.html#StopOpacityProperty
+    types: [
+    ]
+  },
+  'stroke': {
+    // https://svgwg.org/svg2-draft/painting.html#StrokeProperty
+    types: [
+    ]
+  },
+  'stroke-dasharray': {
+    // https://svgwg.org/svg2-draft/painting.html#StrokeDasharrayProperty
+    types: [
+    ]
+  },
+  'stroke-dashoffset': {
+    // https://svgwg.org/svg2-draft/painting.html#StrokeDashoffsetProperty
+    types: [
+    ]
+  },
   'stroke-linecap': {
     // https://svgwg.org/svg2-draft/painting.html#StrokeLinecapProperty
     types: [
@@ -714,6 +1239,21 @@ var gCSSProperties = {
     setup: t => {
       return createElement(t, 'rect');
     }
+  },
+  'stroke-miterlimit': {
+    // https://svgwg.org/svg2-draft/painting.html#StrokeMiterlimitProperty
+    types: [
+    ]
+  },
+  'stroke-opacity': {
+    // https://svgwg.org/svg2-draft/painting.html#StrokeOpacityProperty
+    types: [
+    ]
+  },
+  'stroke-width': {
+    // https://svgwg.org/svg2-draft/painting.html#StrokeWidthProperty
+    types: [
+    ]
   },
   'table-layout': {
     // https://drafts.csswg.org/css-tables/#propdef-table-layout
@@ -745,6 +1285,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'all', 'none' ] ] }
     ]
   },
+  'text-decoration-color': {
+    // https://drafts.csswg.org/css-text-decor-3/#propdef-text-decoration-color
+    types: [
+    ]
+  },
   'text-decoration-line': {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-decoration-line
     types: [
@@ -757,6 +1302,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'solid', 'dotted' ] ] }
     ]
   },
+  'text-emphasis-color': {
+    // https://drafts.csswg.org/css-text-decor-3/#propdef-text-emphasis-color
+    types: [
+    ]
+  },
   'text-emphasis-position': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-emphasis-position
     types: [
@@ -767,6 +1317,11 @@ var gCSSProperties = {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-emphasis-style
     types: [
       { type: 'discrete', options: [ [ 'filled circle', 'open dot' ] ] }
+    ]
+  },
+  'text-indent': {
+    // https://drafts.csswg.org/css-text-3/#propdef-text-indent
+    types: [
     ]
   },
   'text-orientation': {
@@ -787,6 +1342,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'optimizeSpeed', 'optimizeLegibility' ] ] }
     ]
   },
+  'text-shadow': {
+    // https://drafts.csswg.org/css-text-decor-3/#propdef-text-shadow
+    types: [
+    ]
+  },
   'text-transform': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-transform
     types: [
@@ -799,10 +1359,25 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'auto', 'none' ] ] }
     ]
   },
+  'top': {
+    // https://drafts.csswg.org/css-position/#propdef-top
+    types: [
+    ]
+  },
+  'transform': {
+    // https://drafts.csswg.org/css-transforms/#propdef-transform
+    types: [
+    ]
+  },
   'transform-box': {
     // https://drafts.csswg.org/css-transforms/#propdef-transform-box
     types: [
       { type: 'discrete', options: [ [ 'fill-box', 'border-box' ] ] }
+    ]
+  },
+  'transform-origin': {
+    // https://drafts.csswg.org/css-transforms/#propdef-transform-origin
+    types: [
     ]
   },
   'transform-style': {
@@ -823,6 +1398,11 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'none', 'non-scaling-stroke' ] ] },
     ]
   },
+  'vertical-align': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-vertical-align
+    types: [
+    ]
+  },
   'visibility': {
     // https://drafts.csswg.org/css2/visufx.html#propdef-visibility
     types: [ 'visibility' ]
@@ -833,10 +1413,20 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'pre', 'nowrap' ] ] }
     ]
   },
+  'width': {
+    // https://drafts.csswg.org/css21/visudet.html#propdef-width
+    types: [
+    ]
+  },
   'word-break': {
     // https://drafts.csswg.org/css-text-3/#propdef-word-break
     types: [
       { type: 'discrete', options: [ [ 'keep-all', 'break-all' ] ] }
+    ]
+  },
+  'word-spacing': {
+    // https://drafts.csswg.org/css-text-3/#propdef-word-spacing
+    types: [
     ]
   },
   'will-change': {
@@ -849,6 +1439,11 @@ var gCSSProperties = {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-writing-mode
     types: [
       { type: 'discrete', options: [ [ 'vertical-rl', 'sideways-rl' ] ] }
+    ]
+  },
+  'z-index': {
+    // https://drafts.csswg.org/css-position/#propdef-z-index
+    types: [
     ]
   },
 };
