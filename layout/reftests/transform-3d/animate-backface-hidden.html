@@ -17,7 +17,7 @@ body { padding: 50px }
   height: 200px; width: 200px;
   backface-visibility: hidden;
   /* use a -99.9s delay to start at 99.9% and then move to 0% */
-  animation: flip 100s -99.9s linear 2;
+  animation: flip 100s -99.9s linear 2 paused;
 }
 
 </style>
@@ -27,7 +27,13 @@ body { padding: 50px }
 
 <script>
 
-document.getElementById("test").addEventListener("animationiteration", IterationListener, false);
+document.getElementById("test").addEventListener("animationstart", StartListener, false);
+
+function StartListener(event) {
+  var test = document.getElementById("test");
+  test.style.animationPlayState = 'running';
+  test.addEventListener("animationiteration", IterationListener, false);
+}
 
 function IterationListener(event) {
   setTimeout(RemoveReftestWait, 0);
