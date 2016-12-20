@@ -95,13 +95,16 @@ IncrementalRunnable::SetDeadline(TimeStamp aDeadline)
 //-----------------------------------------------------------------------------
 
 nsresult
-NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
+NS_NewNamedThread(const nsACString& aName,
+                  nsIThread** aResult,
+                  nsIRunnable* aEvent,
+                  uint32_t aStackSize)
 {
   nsCOMPtr<nsIThread> thread;
 #ifdef MOZILLA_INTERNAL_API
   nsresult rv =
-    nsThreadManager::get().nsThreadManager::NewThread(0, aStackSize,
-                                                      getter_AddRefs(thread));
+    nsThreadManager::get().nsThreadManager::NewNamedThread(aName, aStackSize,
+                                                           getter_AddRefs(thread));
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
@@ -110,7 +113,7 @@ NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
     return rv;
   }
 
-  rv = mgr->NewThread(0, aStackSize, getter_AddRefs(thread));
+  rv = mgr->NewNamedThread(aName, aStackSize, getter_AddRefs(thread));
 #endif
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -126,6 +129,12 @@ NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
   *aResult = nullptr;
   thread.swap(*aResult);
   return NS_OK;
+}
+
+nsresult
+NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
+{
+  return NS_NewNamedThread(NS_LITERAL_CSTRING(""), aResult, aEvent, aStackSize);
 }
 
 nsresult
