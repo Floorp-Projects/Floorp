@@ -77,7 +77,8 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         # Once we require a new enough cargo to switch to workspaces, we can
         # just do this once on the workspace root crate.
         for crate_root in ('toolkit/library/rust/',
-                           'toolkit/library/gtest/rust'):
+                           'toolkit/library/gtest/rust',
+                           'js/src'):
             path = mozpath.join(self.topsrcdir, crate_root)
             self._run_command_in_srcdir(args=[cargo, 'generate-lockfile', '--manifest-path', mozpath.join(path, 'Cargo.toml')])
             self._run_command_in_srcdir(args=[cargo, 'vendor', '--sync', mozpath.join(path, 'Cargo.lock'), vendor_dir])
