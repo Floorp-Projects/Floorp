@@ -2027,7 +2027,7 @@ class Marionette(object):
         return self._send_message("getCookies", key="value" if self.protocol == 1 else None)
 
     def screenshot(self, element=None, highlights=None, format="base64",
-                   full=True):
+                   full=True, scroll=True):
         """Takes a screenshot of a web element or the current frame.
 
         The screen capture is returned as a lossless PNG image encoded
@@ -2050,6 +2050,10 @@ class Marionette(object):
         :param full: If True (the default), the capture area will be the
             complete frame. Else only the viewport is captured. Only applies
             when `element` is None.
+
+        :param scroll: When `element` is provided, scroll to it before
+            taking the screenshot (default).  Otherwise, avoid scrolling
+            `element` into view.
         """
 
         if element:
@@ -2061,7 +2065,8 @@ class Marionette(object):
         body = {"id": element,
                 "highlights": lights,
                 "full": full,
-                "hash": False}
+                "hash": False,
+                "scroll": scroll}
         if format == "hash":
             body["hash"] = True
         data = self._send_message("takeScreenshot", body, key="value")
