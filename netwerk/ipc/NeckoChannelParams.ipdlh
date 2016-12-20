@@ -130,6 +130,7 @@ struct HttpChannelOpenArgs
   bool                        allowStaleCacheContent;
   nsCString                   contentTypeHint;
   nsCString                   channelId;
+  uint64_t                    contentWindowId;
   nsCString                   preferredAlternativeType;
 };
 
