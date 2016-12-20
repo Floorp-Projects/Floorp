@@ -39,7 +39,8 @@ ALL_FLAVORS = {
         'enabled_apps': ('firefox', 'android'),
         'extra_args': {
             'flavor': 'plain',
-        }
+        },
+        'install_subdir': 'tests',
     },
     'chrome': {
         'suite': 'chrome',
