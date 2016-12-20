@@ -121,6 +121,16 @@ var gAdvancedPane = {
       return;
     var advancedPrefs = document.getElementById("advancedPrefs");
     var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
+
+    // tabSelectionChanged gets called twice due to the selectedIndex being set
+    // by both the selectedItem and selectedPanel callstacks. This guard is used
+    // to prevent double-counting in Telemetry.
+    if (preference.valueFromPreferences != advancedPrefs.selectedIndex) {
+      Services.telemetry
+              .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED")
+              .add(telemetryBucketForCategory("advanced"));
+    }
+
     preference.valueFromPreferences = advancedPrefs.selectedIndex;
   },
 
