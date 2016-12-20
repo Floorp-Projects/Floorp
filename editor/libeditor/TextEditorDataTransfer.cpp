@@ -28,7 +28,6 @@
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsIEditor.h"
-#include "nsIEditorIMESupport.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrincipal.h"

@@ -77,7 +77,6 @@
 #include "nsDOMStringMap.h"
 
 #include "nsIEditor.h"
-#include "nsIEditorIMESupport.h"
 #include "nsLayoutUtils.h"
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
@@ -1829,11 +1828,8 @@ nsGenericHTMLFormElement::GetDesiredIMEState()
   nsIEditor* editor = GetEditorInternal();
   if (!editor)
     return nsGenericHTMLElement::GetDesiredIMEState();
-  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(editor);
-  if (!imeEditor)
-    return nsGenericHTMLElement::GetDesiredIMEState();
   IMEState state;
-  nsresult rv = imeEditor->GetPreferredIMEState(&state);
+  nsresult rv = editor->GetPreferredIMEState(&state);
   if (NS_FAILED(rv))
     return nsGenericHTMLElement::GetDesiredIMEState();
   return state;

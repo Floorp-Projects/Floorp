@@ -21,6 +21,16 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
+%{C++
+namespace mozilla {
+namespace widget {
+struct IMEState;
+} // namespace widget
+} // namespace mozilla
+%}
+
+native IMEState(mozilla::widget::IMEState);
+
 [scriptable, uuid(094be624-f0bf-400f-89e2-6a84baab9474)]
 interface nsIEditor  : nsISupports
 {
@@ -564,4 +574,19 @@ interface nsIEditor  : nsISupports
    * or nsIEditorObserver::CancelEditAction().  Otherwise, false.
    */
   [noscript] readonly attribute boolean isInEditAction;
+
+  /**
+   * forceCompositionEnd() force the composition end
+   */
+  void forceCompositionEnd();
+
+  /**
+   * Get preferred IME status of current widget.
+   */
+  [noscript] IMEState getPreferredIMEState();
+
+  /**
+   * whether this editor has active IME transaction
+   */
+  readonly attribute boolean composing;
 };

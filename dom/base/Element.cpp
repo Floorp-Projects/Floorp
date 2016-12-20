@@ -102,7 +102,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIEditor.h"
-#include "nsIEditorIMESupport.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIControllers.h"
 #include "nsView.h"
