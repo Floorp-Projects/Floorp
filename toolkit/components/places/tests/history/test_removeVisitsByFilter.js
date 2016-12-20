@@ -24,15 +24,25 @@ add_task(function* test_removeVisitsByFilter() {
     // Populate the database.
     // Create `SAMPLE_SIZE` visits, from the oldest to the newest.
 
-    let bookmarks = new Set(options.bookmarks);
+    let bookmarkIndices = new Set(options.bookmarks);
     let visits = [];
-    let visitByURI = new Map();
+    let frecencyChangePromises = new Map();
+    let uriDeletePromises = new Map();
+    let getURL = options.url ?
+      i => "http://mozilla.com/test_browserhistory/test_removeVisitsByFilter/removeme/byurl/" + Math.floor(i / (SAMPLE_SIZE / 5)) + "/" :
+      i => "http://mozilla.com/test_browserhistory/test_removeVisitsByFilter/removeme/" + i + "/" + Math.random();
     for (let i = 0; i < SAMPLE_SIZE; ++i) {
-      let spec = "http://mozilla.com/test_browserhistory/test_removeVisitsByFilter/removeme/" + i + "/" + Math.random();
+      let spec = getURL(i);
       let uri = NetUtil.newURI(spec);
       let jsDate = new Date(Number(referenceDate) + 3600 * 1000 * i);
       let dbDate = jsDate * 1000;
-      let hasBookmark = bookmarks.has(i);
+      let hasBookmark = bookmarkIndices.has(i);
+      let hasOwnBookmark = hasBookmark;
+      if (!hasOwnBookmark && options.url) {
+        // Also mark as bookmarked if one of the earlier bookmarked items has the same URL.
+        hasBookmark =
+          options.bookmarks.filter(n => n < i).some(n => visits[n].uri.spec == spec && visits[n].test.hasBookmark);
+      }
       do_print("Generating " + uri.spec + ", " + dbDate);
       let visit = {
         uri,
@@ -53,8 +63,7 @@ add_task(function* test_removeVisitsByFilter() {
         },
       };
       visits.push(visit);
-      visitByURI.set(spec, visit);
-      if (hasBookmark) {
+      if (hasOwnBookmark) {
         do_print("Adding a bookmark to visit " + i);
         yield PlacesUtils.bookmarks.insert({
           url: uri,
@@ -83,14 +92,41 @@ add_task(function* test_removeVisitsByFilter() {
       filter.endDate = new Date(ms);
       endIndex = options.end;
     }
-    for (let i = beginIndex; i <= endIndex; ++i) {
-      let test = visits[i].test;
-      do_print("Marking visit " + i + " as expecting removal");
+    if ("limit" in options) {
+      endIndex = beginIndex + options.limit - 1; // -1 because the start index is inclusive.
+      filter.limit = options.limit;
+    }
+    let removedItems = visits.slice(beginIndex);
+    endIndex -= beginIndex;
+    if (options.url) {
+      let rawURL = "";
+      switch (options.url) {
+        case 1:
+          filter.url = new URL(removedItems[0].uri.spec);
+          rawURL = filter.url.href;
+          break;
+        case 2:
+          filter.url = removedItems[0].uri;
+          rawURL = filter.url.spec;
+          break;
+        case 3:
+          filter.url = removedItems[0].uri.spec;
+          rawURL = filter.url;
+          break;
+      }
+      endIndex = Math.min(endIndex, removedItems.findIndex((v, index) => v.uri.spec != rawURL) - 1);
+    }
+    removedItems.splice(endIndex + 1);
+    let remainingItems = visits.filter(v => !removedItems.includes(v));
+    for (let i = 0; i < removedItems.length; i++) {
+      let test = removedItems[i].test;
+      do_print("Marking visit " + (beginIndex + i) + " as expecting removal");
       test.toRemove = true;
-      if (test.hasBookmark) {
-        test.onFrecencyChanged = PromiseUtils.defer();
-      } else {
-        test.onDeleteURI = PromiseUtils.defer();
+      if (test.hasBookmark ||
+          (options.url && remainingItems.some(v => v.uri.spec == removedItems[i].uri.spec))) {
+        frecencyChangePromises.set(removedItems[i].uri.spec, PromiseUtils.defer());
+      } else if (!options.url || i == 0) {
+        uriDeletePromises.set(removedItems[i].uri.spec, PromiseUtils.defer());
       }
     }
 
@@ -112,23 +148,21 @@ add_task(function* test_removeVisitsByFilter() {
       },
       onFrecencyChanged: function(aURI) {
         do_print("onFrecencyChanged " + aURI.spec);
-        let visit = visitByURI.get(aURI.spec);
-        Assert.ok(!!visit.test.onFrecencyChanged, "Observing onFrecencyChanged");
-        visit.test.onFrecencyChanged.resolve();
+        let deferred = frecencyChangePromises.get(aURI.spec);
+        Assert.ok(!!deferred, "Observing onFrecencyChanged");
+        deferred.resolve();
       },
       onManyFrecenciesChanged: function() {
         do_print("Many frecencies changed");
-        for (let visit of visits) {
-          if (visit.onFrecencyChanged) {
-            visit.onFrecencyChanged.resolve();
-          }
+        for (let [, deferred] of frecencyChangePromises) {
+          deferred.resolve();
         }
       },
       onDeleteURI: function(aURI) {
         do_print("onDeleteURI " + aURI.spec);
-        let visit = visitByURI.get(aURI.spec);
-        Assert.ok(!!visit.test.onDeleteURI, "Observing onDeleteURI");
-        visit.test.onDeleteURI.resolve();
+        let deferred = uriDeletePromises.get(aURI.spec);
+        Assert.ok(!!deferred, "Observing onDeleteURI");
+        deferred.resolve();
       },
       onDeleteVisits: function(aURI) {
         // Not sure we can test anything.
@@ -166,9 +200,10 @@ add_task(function* test_removeVisitsByFilter() {
     for (let i = 0; i < visits.length; ++i) {
       let visit = visits[i];
       do_print("Controlling the results on visit " + i);
+      let remainingVisitsForURI = remainingItems.filter(v => visit.uri.spec == v.uri.spec).length;
       Assert.equal(
-        visits_in_database(visit.uri) == 0,
-        visit.test.toRemove,
+        visits_in_database(visit.uri),
+        remainingVisitsForURI,
         "Visit is still present iff expected");
       if (options.useCallback) {
         Assert.equal(
@@ -176,26 +211,18 @@ add_task(function* test_removeVisitsByFilter() {
           visit.test.announcedByOnRow,
           "Visit removal has been announced by onResult iff expected");
       }
-      if (visit.test.hasBookmark || !visit.test.toRemove) {
-        Assert.notEqual(page_in_database(visit.uri), 0, "The page is should still appear in the db");
+      if (visit.test.hasBookmark || remainingVisitsForURI) {
+        Assert.notEqual(page_in_database(visit.uri), 0, "The page should still appear in the db");
       } else {
         Assert.equal(page_in_database(visit.uri), 0, "The page should have been removed from the db");
       }
     }
 
     // Make sure that the observer has been called wherever applicable.
-    for (let visit of visits) {
-      do_print("Making sure that the observer has been called for " + visit.uri.spec);
-      let test = visit.test;
-      do_print("Checking onFrecencyChanged");
-      if (test.onFrecencyChanged) {
-        yield test.onFrecencyChanged.promise;
-      }
-      do_print("Checking onDeleteURI");
-      if (test.onDeleteURI) {
-        yield test.onDeleteURI.promise;
-      }
-    }
+    do_print("Checking URI delete promises.");
+    yield Promise.all(Array.from(uriDeletePromises.values()));
+    do_print("Checking frecency change promises.");
+    yield Promise.all(Array.from(frecencyChangePromises.values()));
     PlacesUtils.history.removeObserver(observer);
   });
 
@@ -205,6 +232,8 @@ add_task(function* test_removeVisitsByFilter() {
     {end: 19},
     {begin: 0, end: 10},
     {begin: 3, end: 4},
+    {begin: 5, end: 8, limit: 2},
+    {begin: 10, end: 18, limit: 5},
   ]) {
     for (let bookmarks of [[], [5, 6]]) {
       let options = {
@@ -217,6 +246,15 @@ add_task(function* test_removeVisitsByFilter() {
       if ("end" in range) {
         options.end = range.end;
       }
+      if ("limit" in range) {
+        options.limit = range.limit;
+      }
+      yield remover(options);
+      options.url = 1;
+      yield remover(options);
+      options.url = 2;
+      yield remover(options);
+      options.url = 3;
       yield remover(options);
     }
   }
@@ -248,6 +286,38 @@ add_task(function* test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.removeVisitsByFilter({beginDate: new Date()}, "obviously, not a callback"),
     /TypeError: Invalid function/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({beginDate: new Date(1000), endDate: new Date(0)}),
+    /TypeError: `beginDate` should be at least as old/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({limit: {}}),
+    /Expected a non-zero positive integer as a limit/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({limit: -1}),
+    /Expected a non-zero positive integer as a limit/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({limit: 0.1}),
+    /Expected a non-zero positive integer as a limit/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({limit: Infinity}),
+    /Expected a non-zero positive integer as a limit/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({url: {}}),
+    /Expected a valid URL for `url`/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({url: 0}),
+    /Expected a valid URL for `url`/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.removeVisitsByFilter({beginDate: new Date(1000), endDate: new Date(0)}),
+    /TypeError: `beginDate` should be at least as old/
   );
   Assert.throws(
     () => PlacesUtils.history.removeVisitsByFilter({beginDate: new Date(1000), endDate: new Date(0)}),
