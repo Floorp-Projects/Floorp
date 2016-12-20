@@ -365,6 +365,9 @@ interface WebGL2RenderingContextBase
                     GLenum format, GLenum type, HTMLVideoElement source); // May throw DOMException
     [Throws] // Another overhead throws.
     void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, ImageBitmap source);
+    [Throws] // Another overhead throws.
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
                     GLenum format, GLenum type, ImageData source);
 
     [Throws] // Another overhead throws.
@@ -380,6 +383,9 @@ interface WebGL2RenderingContextBase
     [Throws]
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, ImageBitmap source);
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, ImageData source);
@@ -400,6 +406,10 @@ interface WebGL2RenderingContextBase
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type,
                     HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLint border, GLenum format, GLenum type,
+                    ImageBitmap source);
     [Throws] // Another overhead throws.
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type,
@@ -424,6 +434,10 @@ interface WebGL2RenderingContextBase
     void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type,
                     HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLsizei depth, GLint border, GLenum format, GLenum type,
+                    ImageBitmap source);
     [Throws] // Another overhead throws.
     void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type,
@@ -454,6 +468,10 @@ interface WebGL2RenderingContextBase
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
                        GLsizei height, GLenum format, GLenum type,
+                       ImageBitmap source);
+    [Throws] // Another overhead throws.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                       GLsizei height, GLenum format, GLenum type,
                        ImageData source);
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
@@ -476,6 +494,10 @@ interface WebGL2RenderingContextBase
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
                        HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                       GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                       ImageBitmap source);
     [Throws] // Another overhead throws.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
