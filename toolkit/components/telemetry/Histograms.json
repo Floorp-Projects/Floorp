@@ -2324,6 +2324,15 @@
     "n_values": 32,
     "description": "H2: goaway reason from peer from rfc 7540. 31 is none received."
   },
+  "SPDY_CONTINUED_HEADERS": {
+    "expires_in_version": "59",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1324855],
+    "kind": "exponential",
+    "high": 32000000,
+    "n_buckets": 75,
+    "description": "Size of continued H2 headers in bytes."
+  },
   "HPACK_ELEMENTS_EVICTED_DECOMPRESSOR": {
     "expires_in_version": "never",
     "kind": "exponential",
