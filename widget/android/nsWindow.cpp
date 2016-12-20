@@ -1632,11 +1632,11 @@ nsWindow::RedrawAll()
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
     if ((nsIWidget*)mParent == aNewParent)
-        return NS_OK;
+        return;
 
     // If we had a parent before, remove ourselves from its list of
     // children.
@@ -1651,8 +1651,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     // if we are now in the toplevel window's hierarchy, schedule a redraw
     if (FindTopLevel() == nsWindow::TopWindow())
         RedrawAll();
-
-    return NS_OK;
 }
 
 nsIWidget*
@@ -1750,33 +1748,33 @@ nsWindow::ConstrainPosition(bool aAllowSlop,
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Move(double aX,
                double aY)
 {
     if (IsTopLevel())
-        return NS_OK;
+        return;
 
-    return Resize(aX,
-                  aY,
-                  mBounds.width,
-                  mBounds.height,
-                  true);
+    Resize(aX,
+           aY,
+           mBounds.width,
+           mBounds.height,
+           true);
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aWidth,
                  double aHeight,
                  bool aRepaint)
 {
-    return Resize(mBounds.x,
-                  mBounds.y,
-                  aWidth,
-                  aHeight,
-                  aRepaint);
+    Resize(mBounds.x,
+           mBounds.y,
+           aWidth,
+           aHeight,
+           aRepaint);
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aX,
                  double aY,
                  double aWidth,
@@ -1802,11 +1800,9 @@ nsWindow::Resize(double aX,
 
     nsIWidgetListener* listener = GetWidgetListener();
     if (mAwaitingFullScreen && listener) {
-      listener->FullscreenChanged(mIsFullScreen);
-      mAwaitingFullScreen = false;
+        listener->FullscreenChanged(mIsFullScreen);
+        mAwaitingFullScreen = false;
     }
-
-    return NS_OK;
 }
 
 void
@@ -1830,11 +1826,10 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Enable(bool aState)
 {
     ALOG("nsWindow[%p]::Enable %d ignored", (void*)this, aState);
-    return NS_OK;
 }
 
 bool

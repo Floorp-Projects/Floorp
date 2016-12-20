@@ -41,8 +41,6 @@ public class GeckoApplication extends Application
     implements ContextGetter {
     private static final String LOG_TAG = "GeckoApplication";
 
-    private static volatile GeckoApplication instance;
-
     private boolean mInBackground;
     private boolean mPausedGecko;
 
@@ -52,11 +50,6 @@ public class GeckoApplication extends Application
 
     public GeckoApplication() {
         super();
-        instance = this;
-    }
-
-    public static GeckoApplication get() {
-        return instance;
     }
 
     public static RefWatcher getRefWatcher(Context context) {

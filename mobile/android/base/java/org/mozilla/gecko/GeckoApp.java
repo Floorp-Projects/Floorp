@@ -77,6 +77,7 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
+import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
@@ -631,7 +632,7 @@ public abstract class GeckoApp
               rec.recordGeckoStartupTime(mGeckoReadyStartupTimer.getElapsed());
             }
 
-            GeckoApplication.get().onDelayedStartup();
+            ((GeckoApplication) getApplicationContext()).onDelayedStartup();
 
         } else if (event.equals("Gecko:Exited")) {
             // Gecko thread exited first; let GeckoApp die too.
@@ -2302,14 +2303,13 @@ public abstract class GeckoApp
     }
 
     // Get a temporary directory, may return null
-    public static File getTempDirectory() {
-        File dir = GeckoApplication.get().getExternalFilesDir("temp");
-        return dir;
+    public static File getTempDirectory(@NonNull Context context) {
+        return context.getApplicationContext().getExternalFilesDir("temp");
     }
 
     // Delete any files in our temporary directory
-    public static void deleteTempFiles() {
-        File dir = getTempDirectory();
+    public static void deleteTempFiles(Context context) {
+        File dir = getTempDirectory(context);
         if (dir == null)
             return;
         File[] files = dir.listFiles();

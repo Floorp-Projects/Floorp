@@ -10,6 +10,405 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
+  <binding id="date-input"
+           extends="chrome://global/content/bindings/datetimebox.xml#datetime-input-base">
+    <resources>
+      <stylesheet src="chrome://global/content/textbox.css"/>
+      <stylesheet src="chrome://global/skin/textbox.css"/>
+      <stylesheet src="chrome://global/content/bindings/datetimebox.css"/>
+    </resources>
+
+    <implementation>
+      <constructor>
+      <![CDATA[
+        // TODO: Bug 1320227 - [DateTimeInput] localization for
+        // <input type=date> input box
+        this.mMonthPlaceHolder = "mm";
+        this.mDayPlaceHolder = "dd";
+        this.mYearPlaceHolder = "yyyy";
+        this.mSeparatorText = "/";
+        this.mMinMonth = 1;
+        this.mMaxMonth = 12;
+        this.mMinDay = 1;
+        this.mMaxDay = 31;
+        this.mMinYear = 1;
+        // Maximum year limited by ECMAScript date object range, year <= 275760.
+        this.mMaxYear = 275760;
+        this.mMonthDayLength = 2;
+        this.mYearLength = 4;
+        this.mMonthPageUpDownInterval = 3;
+        this.mDayPageUpDownInterval = 7;
+        this.mYearPageUpDownInterval = 10;
+
+        // Default to en-US, month-day-year order.
+        this.mMonthField =
+          document.getAnonymousElementByAttribute(this, "anonid", "input-one");
+        this.mDayField =
+          document.getAnonymousElementByAttribute(this, "anonid", "input-two");
+        this.mYearField =
+          document.getAnonymousElementByAttribute(this, "anonid", "input-three");
+        this.mYearField.size = this.mYearLength;
+        this.mYearField.maxLength = this.mMaxYear.toString().length;
+
+        this.mMonthField.placeholder = this.mMonthPlaceHolder;
+        this.mDayField.placeholder = this.mDayPlaceHolder;
+        this.mYearField.placeholder = this.mYearPlaceHolder;
+
+        this.mMonthField.setAttribute("min", this.mMinMonth);
+        this.mMonthField.setAttribute("max", this.mMaxMonth);
+        this.mMonthField.setAttribute("pginterval",
+                                      this.mMonthPageUpDownInterval);
+        this.mDayField.setAttribute("min", this.mMinDay);
+        this.mDayField.setAttribute("max", this.mMaxDay);
+        this.mDayField.setAttribute("pginterval", this.mDayPageUpDownInterval);
+        this.mYearField.setAttribute("min", this.mMinYear);
+        this.mYearField.setAttribute("max", this.mMaxYear);
+        this.mYearField.setAttribute("pginterval",
+                                     this.mYearPageUpDownInterval);
+
+        this.mDaySeparator =
+           document.getAnonymousElementByAttribute(this, "anonid", "sep-first");
+        this.mDaySeparator.textContent = this.mSeparatorText;
+        this.mYearSeparator =
+          document.getAnonymousElementByAttribute(this, "anonid", "sep-second");
+        this.mYearSeparator.textContent = this.mSeparatorText;
+
+        if (this.mInputElement.value) {
+          this.setFieldsFromInputValue();
+        }
+      ]]>
+      </constructor>
+
+      <method name="clearInputFields">
+        <parameter name="aFromInputElement"/>
+        <body>
+        <![CDATA[
+          this.log("clearInputFields");
+
+          if (this.isDisabled() || this.isReadonly()) {
+            return;
+          }
+
+          if (this.mMonthField && !this.mMonthField.disabled &&
+              !this.mMonthField.readOnly) {
+            this.mMonthField.value = "";
+            this.mMonthField.setAttribute("typeBuffer", "");
+          }
+
+          if (this.mDayField && !this.mDayField.disabled &&
+              !this.mDayField.readOnly) {
+            this.mDayField.value = "";
+            this.mDayField.setAttribute("typeBuffer", "");
+          }
+
+          if (this.mYearField && !this.mYearField.disabled &&
+              !this.mYearField.readOnly) {
+            this.mYearField.value = "";
+            this.mYearField.setAttribute("typeBuffer", "");
+          }
+
+          if (!aFromInputElement) {
+            this.mInputElement.setUserInput("");
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="setFieldsFromInputValue">
+        <body>
+        <![CDATA[
+          let value = this.mInputElement.value;
+          if (!value) {
+            this.clearInputFields(true);
+            return;
+          }
+
+          this.log("setFieldsFromInputValue: " + value);
+          let [year, month, day] = value.split("-");
+
+          this.setFieldValue(this.mYearField, year);
+          this.setFieldValue(this.mMonthField, month);
+          this.setFieldValue(this.mDayField, day);
+
+          this.notifyPicker();
+        ]]>
+        </body>
+      </method>
+
+      <method name="getDaysInMonth">
+        <parameter name="aMonth"/>
+        <parameter name="aYear"/>
+        <body>
+        <![CDATA[
+          // Javascript's month is 0-based, so this means last day of the
+          // previous month.
+          return new Date(aYear, aMonth, 0).getDate();
+        ]]>
+        </body>
+      </method>
+
+      <method name="isFieldInvalid">
+        <parameter name="aField"/>
+        <body>
+          <![CDATA[
+            if (this.isEmpty(aField.value)) {
+              return true;
+            }
+
+            let min = Number(aField.getAttribute("min"));
+            let max = Number(aField.getAttribute("max"));
+
+            if (Number(aField.value) < min || Number(aField.value) > max) {
+              return true;
+            }
+
+            return false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="setInputValueFromFields">
+        <body>
+        <![CDATA[
+          if (this.isFieldInvalid(this.mYearField) ||
+              this.isFieldInvalid(this.mMonthField) ||
+              this.isFieldInvalid(this.mDayField)) {
+            // We still need to notify picker in case any of the field has
+            // changed. If we can set input element value, then notifyPicker
+            // will be called in setFieldsFromInputValue().
+            this.notifyPicker();
+            return;
+          }
+
+          let year = this.mYearField.value;
+          let month = this.mMonthField.value;
+          let day = this.mDayField.value;
+
+          if (day > this.getDaysInMonth(month, year)) {
+            // Don't set invalid date, otherwise input element's value will be
+            // set to empty.
+            return;
+          }
+
+          let date = [year, month, day].join("-");
+
+          this.log("setInputValueFromFields: " + date);
+          this.mInputElement.setUserInput(date);
+        ]]>
+        </body>
+      </method>
+
+      <method name="setFieldsFromPicker">
+        <body>
+        <![CDATA[
+          // TODO: Bug 1320225 - [DateTimeInput] Integration of input type=date
+          // input box with picker.
+        ]]>
+        </body>
+      </method>
+
+      <method name="handleKeypress">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (this.isDisabled() || this.isReadonly()) {
+            return;
+          }
+
+          let targetField = aEvent.originalTarget;
+          let key = aEvent.key;
+
+          if (targetField.classList.contains("numeric") && key.match(/[0-9]/)) {
+            let buffer = targetField.getAttribute("typeBuffer") || "";
+
+            buffer = buffer.concat(key);
+            this.setFieldValue(targetField, buffer);
+            targetField.select();
+
+            let n = Number(buffer);
+            let max = targetField.getAttribute("max");
+            if (buffer.length >= targetField.maxLength || n * 10 > max) {
+              buffer = "";
+              this.advanceToNextField();
+            }
+            targetField.setAttribute("typeBuffer", buffer);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="incrementFieldValue">
+        <parameter name="aTargetField"/>
+        <parameter name="aTimes"/>
+        <body>
+        <![CDATA[
+          let value;
+
+          // Use current date if field is empty.
+          if (this.isEmpty(aTargetField.value)) {
+            let now = new Date();
+
+            if (aTargetField == this.mYearField) {
+              value = now.getFullYear();
+            } else if (aTargetField == this.mMonthField) {
+              value = now.getMonth() + 1;
+            } else if (aTargetField == this.mDayField) {
+              value = now.getDate();
+            } else {
+              this.log("Field not supported in incrementFieldValue.");
+              return;
+            }
+          } else {
+            value = Number(aTargetField.value);
+          }
+
+          let min = Number(aTargetField.getAttribute("min"));
+          let max = Number(aTargetField.getAttribute("max"));
+
+          value += Number(aTimes);
+          if (value > max) {
+            value -= (max - min + 1);
+          } else if (value < min) {
+            value += (max - min + 1);
+          }
+          this.setFieldValue(aTargetField, value);
+          aTargetField.select();
+        ]]>
+        </body>
+      </method>
+
+      <method name="handleKeyboardNav">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (this.isDisabled() || this.isReadonly()) {
+            return;
+          }
+
+          let targetField = aEvent.originalTarget;
+          let key = aEvent.key;
+
+          switch (key) {
+            case "ArrowUp":
+              this.incrementFieldValue(targetField, 1);
+              break;
+            case "ArrowDown":
+              this.incrementFieldValue(targetField, -1);
+              break;
+            case "PageUp": {
+              let interval = targetField.getAttribute("pginterval");
+              this.incrementFieldValue(targetField, interval);
+              break;
+            }
+            case "PageDown": {
+              let interval = targetField.getAttribute("pginterval");
+              this.incrementFieldValue(targetField, 0 - interval);
+              break;
+            }
+            case "Home":
+              let min = targetField.getAttribute("min");
+              this.setFieldValue(targetField, min);
+              targetField.select();
+              break;
+            case "End":
+              let max = targetField.getAttribute("max");
+              this.setFieldValue(targetField, max);
+              targetField.select();
+              break;
+          }
+          this.setInputValueFromFields();
+        ]]>
+        </body>
+      </method>
+
+      <method name="getCurrentValue">
+        <body>
+        <![CDATA[
+          let year;
+          if (!this.isEmpty(this.mYearField.value)) {
+            year = Number(this.mYearField.value);
+          }
+
+          let month;
+          if (!this.isEmpty(this.mMonthField.value)) {
+            month = Number(this.mMonthField.value);
+          }
+
+          let day;
+          if (!this.isEmpty(this.mDayField.value)) {
+            day = Number(this.mDayField.value);
+          }
+
+          let date = { year, month, day };
+
+          this.log("getCurrentValue: " + JSON.stringify(date));
+          return date;
+        ]]>
+        </body>
+      </method>
+
+      <method name="setFieldValue">
+       <parameter name="aField"/>
+       <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          let value = Number(aValue);
+          if (isNaN(value)) {
+            this.log("NaN on setFieldValue!");
+            return;
+          }
+
+          if (aValue.length == aField.maxLength) {
+            let min = Number(aField.getAttribute("min"));
+            let max = Number(aField.getAttribute("max"));
+
+            if (aValue < min) {
+              value = min;
+            } else if (aValue > max) {
+              value = max;
+            }
+          }
+
+          if (aField == this.mMonthField ||
+              aField == this.mDayField) {
+            // prepend zero
+            if (value < 10) {
+              value = "0" + value;
+            }
+          } else {
+            // prepend zeroes
+            if (value < 10) {
+              value = "000" + value;
+            } else if (value < 100) {
+              value = "00" + value;
+            } else if (value < 1000) {
+              value = "0" + value;
+            }
+
+            if (value.toString().length > this.mYearLength &&
+                value.toString().length <= this.mMaxYear.toString().length) {
+              this.mYearField.size = value.toString().length;
+            }
+          }
+
+          aField.value = value;
+        ]]>
+        </body>
+      </method>
+
+      <method name="isValueAvailable">
+        <body>
+        <![CDATA[
+          return !this.isEmpty(this.mMonthField.value) ||
+                 !this.isEmpty(this.mDayField.value) ||
+                 !this.isEmpty(this.mYearField.value);
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
   <binding id="time-input"
            extends="chrome://global/content/bindings/datetimebox.xml#datetime-input-base">
     <resources>
@@ -745,6 +1144,12 @@
         </body>
       </method>
 
+      <method name="getCurrentValue">
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
       <method name="notifyPicker">
         <body>
         <![CDATA[
@@ -791,7 +1196,7 @@
               break;
             }
             case "blur": {
-              this.setInputValueFromFields();
+              this.onBlur(aEvent);
               break;
             }
             case "copy":
@@ -818,6 +1223,19 @@
             this.mLastFocusedField = target;
             target.select();
           }
+        ]]>
+        </body>
+      </method>
+
+      <method name="onBlur">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this.log("onBlur originalTarget: " + aEvent.originalTarget);
+
+          let target = aEvent.originalTarget;
+          target.setAttribute("typeBuffer", "");
+          this.setInputValueFromFields();
         ]]>
         </body>
       </method>
