@@ -921,7 +921,7 @@ private:
   // Last mouse event mRefPoint (the offset from the widget's origin in
   // device pixels) when mouse was locked, used to restore mouse position
   // after unlocking.
-  static LayoutDeviceIntPoint sPreLockPoint;
+  LayoutDeviceIntPoint mPreLockPoint;
 
   // Stores the mRefPoint of the last synthetic mouse move we dispatched
   // to re-center the mouse when we were pointer locked. If this is (-1,-1) it
@@ -1015,7 +1015,7 @@ public:
   void KillClickHoldTimer();
   void FireContextClick();
 
-  static void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
+  void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
 };
 
