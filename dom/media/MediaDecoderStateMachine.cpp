@@ -2185,8 +2185,6 @@ ShutdownState::Enter()
     master->StopPlayback();
   }
 
-  // To break the cycle-reference between MediaDecoderReaderWrapper and MDSM.
-  master->CancelMediaDecoderReaderWrapperCallback();
   master->mAudioDataRequest.DisconnectIfExists();
   master->mVideoDataRequest.DisconnectIfExists();
   master->mAudioWaitRequest.DisconnectIfExists();
@@ -2350,9 +2348,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
     mIsVisible.Connect(aDecoder->CanonicalIsVisible());
     mWatchManager.Watch(mIsVisible, &MediaDecoderStateMachine::VisibilityChanged);
   }
-
-  // Configure MediaDecoderReaderWrapper.
-  SetMediaDecoderReaderWrapperCallback();
 }
 
 void
@@ -2578,25 +2573,18 @@ void
 MediaDecoderStateMachine::OnAudioNotDecoded(const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
+  SAMPLE_LOG("OnAudioNotDecoded aError=%u", aError.Code());
   mAudioDataRequest.Complete();
-  OnNotDecoded(MediaData::AUDIO_DATA, aError);
+  mStateObj->HandleNotDecoded(MediaData::AUDIO_DATA, aError);
 }
 
 void
 MediaDecoderStateMachine::OnVideoNotDecoded(const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
+  SAMPLE_LOG("OnVideoNotDecoded aError=%u", aError.Code());
   mVideoDataRequest.Complete();
-  OnNotDecoded(MediaData::VIDEO_DATA, aError);
-}
-
-void
-MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
-                                       const MediaResult& aError)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("OnNotDecoded (aType=%u, aError=%u)", aType, aError.Code());
-  mStateObj->HandleNotDecoded(aType, aError);
+  mStateObj->HandleNotDecoded(MediaData::VIDEO_DATA, aError);
 }
 
 void
@@ -2711,18 +2699,6 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   }));
 
   return NS_OK;
-}
-
-void
-MediaDecoderStateMachine::SetMediaDecoderReaderWrapperCallback()
-{
-  MOZ_ASSERT(OnTaskQueue());
-}
-
-void
-MediaDecoderStateMachine::CancelMediaDecoderReaderWrapperCallback()
-{
-  MOZ_ASSERT(OnTaskQueue());
 }
 
 void MediaDecoderStateMachine::StopPlayback()
