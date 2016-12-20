@@ -310,6 +310,7 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
                                       mozIDOMWindow* aWindow,
                                       nsIPrincipal* aPrincipal,
                                       const nsAString& aDocumentURI,
+                                      bool aPrivate,
                                       nsIDOMStorage** aRetval)
 {
   nsresult rv;
@@ -360,7 +361,7 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
     nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
     nsCOMPtr<nsIDOMStorage> storage = new DOMStorage(
-      inner, this, cache, aDocumentURI, aPrincipal);
+      inner, this, cache, aDocumentURI, aPrincipal, aPrivate);
     storage.forget(aRetval);
   }
 
@@ -370,24 +371,29 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
 NS_IMETHODIMP
 DOMStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal)
 {
-  return GetStorageInternal(true, nullptr, aPrincipal, EmptyString(), nullptr);
+  return GetStorageInternal(true, nullptr, aPrincipal, EmptyString(), false,
+                            nullptr);
 }
 
 NS_IMETHODIMP
 DOMStorageManager::CreateStorage(mozIDOMWindow* aWindow,
                                  nsIPrincipal* aPrincipal,
                                  const nsAString& aDocumentURI,
+                                 bool aPrivate,
                                  nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(true, aWindow, aPrincipal, aDocumentURI, aRetval);
+  return GetStorageInternal(true, aWindow, aPrincipal, aDocumentURI, aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
 DOMStorageManager::GetStorage(mozIDOMWindow* aWindow,
                               nsIPrincipal* aPrincipal,
+                              bool aPrivate,
                               nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(false, aWindow, aPrincipal, EmptyString(), aRetval);
+  return GetStorageInternal(false, aWindow, aPrincipal, EmptyString(), aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
