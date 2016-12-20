@@ -71,7 +71,7 @@ parent:
                        GMPSessionMessageType aMessageType,
                        uint8_t[] aMessage);
 
-  async ExpirationChange(nsCString aSessionId, double aExpiryTime);
+  async ExpirationChange(nsCString aSessionId, double aSecondsSinceEpoch);
 
   async SessionClosed(nsCString aSessionId);
 
