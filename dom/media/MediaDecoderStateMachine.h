@@ -148,9 +148,6 @@ public:
 
   nsresult Init(MediaDecoder* aDecoder);
 
-  void SetMediaDecoderReaderWrapperCallback();
-  void CancelMediaDecoderReaderWrapperCallback();
-
   // Enumeration for the valid decoding states
   enum State {
     DECODER_STATE_DECODING_METADATA,
@@ -331,7 +328,6 @@ private:
   void OnVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStartTime);
   void OnAudioNotDecoded(const MediaResult& aError);
   void OnVideoNotDecoded(const MediaResult& aError);
-  void OnNotDecoded(MediaData::Type aType, const MediaResult& aError);
   void OnAudioWaited(MediaData::Type aType);
   void OnVideoWaited(MediaData::Type aType);
   void OnNotWaited(const WaitForDataRejectValue& aRejection);
@@ -469,11 +465,9 @@ protected:
   void EnsureVideoDecodeTaskQueued();
 
   // Start a task to decode audio.
-  // The decoder monitor must be held.
   void RequestAudioData();
 
   // Start a task to decode video.
-  // The decoder monitor must be held.
   void RequestVideoData(bool aSkipToNextKeyframe,
                         const media::TimeUnit& aCurrentTime);
 

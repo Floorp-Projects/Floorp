@@ -17,12 +17,6 @@
 
 namespace mozilla {
 
-typedef MozPromise<bool, bool, /* isExclusive = */ false> HaveStartTimePromise;
-
-typedef Variant<MediaData*, MediaResult> AudioCallbackData;
-typedef Variant<Tuple<MediaData*, TimeStamp>, MediaResult> VideoCallbackData;
-typedef Variant<MediaData::Type, WaitForDataRejectValue> WaitCallbackData;
-
 /**
  * A wrapper around MediaDecoderReader to offset the timestamps of Audio/Video
  * samples by the start time to ensure MDSM can always assume zero start time.
@@ -44,13 +38,11 @@ public:
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
 
-  // NOTE: please set callbacks before requesting audio/video data!
   RefPtr<MediaDataPromise> RequestAudioData();
 
   RefPtr<MediaDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
-  // NOTE: please set callbacks before invoking WaitForData()!
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
 
   RefPtr<SeekPromise> Seek(const SeekTarget& aTarget);
