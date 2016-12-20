@@ -12,14 +12,14 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ConstantSourceNode, AudioScheduledSourceNode,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ConstantSourceNode, AudioNode,
                                    mOffset)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ConstantSourceNode)
-NS_INTERFACE_MAP_END_INHERITING(AudioScheduledSourceNode)
+NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
-NS_IMPL_ADDREF_INHERITED(ConstantSourceNode, AudioScheduledSourceNode)
-NS_IMPL_RELEASE_INHERITED(ConstantSourceNode, AudioScheduledSourceNode)
+NS_IMPL_ADDREF_INHERITED(ConstantSourceNode, AudioNode)
+NS_IMPL_RELEASE_INHERITED(ConstantSourceNode, AudioNode)
 
 class ConstantSourceNodeEngine final : public AudioNodeEngine
 {
@@ -142,10 +142,10 @@ public:
 };
 
 ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
-  : AudioScheduledSourceNode(aContext,
-                             1,
-                             ChannelCountMode::Max,
-                             ChannelInterpretation::Speakers)
+  : AudioNode(aContext,
+              1,
+              ChannelCountMode::Max,
+              ChannelInterpretation::Speakers)
   , mOffset(new AudioParam(this, ConstantSourceNodeEngine::OFFSET,
                            1.0, "offset"))
   , mStartCalled(false)
