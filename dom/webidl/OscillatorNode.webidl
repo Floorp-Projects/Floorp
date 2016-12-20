@@ -26,7 +26,7 @@ dictionary OscillatorOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional OscillatorOptions options)]
+ Constructor(AudioContext context, optional OscillatorOptions options)]
 interface OscillatorNode : AudioNode {
 
     [SetterThrows]

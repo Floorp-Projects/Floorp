@@ -49,7 +49,7 @@ interface AudioNode : EventTarget {
     [Throws]
     void disconnect(AudioParam destination, unsigned long output);
 
-    readonly attribute BaseAudioContext context;
+    readonly attribute AudioContext context;
     readonly attribute unsigned long numberOfInputs;
     readonly attribute unsigned long numberOfOutputs;
 
