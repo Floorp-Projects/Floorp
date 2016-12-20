@@ -215,7 +215,7 @@ add_task(function* checkUndoRemoval() {
   let frecencyUpdatePromise = new Promise(resolve => {
     let expectedChanges = 2;
     let observer = {
-      onFrecencyChanged: function() {
+      onFrecencyChanged: function(aURI) {
         if (!--expectedChanges) {
           PlacesUtils.history.removeObserver(observer);
           resolve();
