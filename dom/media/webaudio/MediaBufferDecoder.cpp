@@ -7,7 +7,6 @@
 #include "MediaBufferDecoder.h"
 #include "BufferDecoder.h"
 #include "mozilla/dom/AudioContextBinding.h"
-#include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include <speex/speex_resampler.h>
