@@ -36,13 +36,13 @@ class TestUpdateWizard(PuppeteerMixin, MarionetteTestCase):
 
     def test_elements(self):
         """Test correct retrieval of elements."""
-        self.assertEqual(self.wizard.element.get_attribute('localName'), 'wizard')
+        self.assertEqual(self.wizard.element.get_property('localName'), 'wizard')
 
         buttons = ('cancel_button', 'extra1_button', 'extra2_button',
                    'finish_button', 'next_button', 'previous_button',
                    )
         for button in buttons:
-            self.assertEqual(getattr(self.wizard, button).get_attribute('localName'),
+            self.assertEqual(getattr(self.wizard, button).get_property('localName'),
                              'button')
 
         panels = ('checking', 'downloading', 'dummy', 'error_patching', 'error',
@@ -50,13 +50,13 @@ class TestUpdateWizard(PuppeteerMixin, MarionetteTestCase):
                   'manual_update', 'no_updates_found', 'updates_found_basic',
                   )
         for panel in panels:
-            self.assertEqual(getattr(self.wizard, panel).element.get_attribute('localName'),
+            self.assertEqual(getattr(self.wizard, panel).element.get_property('localName'),
                              'wizardpage')
 
         # elements of the checking panel
-        self.assertEqual(self.wizard.checking.progress.get_attribute('localName'),
+        self.assertEqual(self.wizard.checking.progress.get_property('localName'),
                          'progressmeter')
 
         # elements of the downloading panel
-        self.assertEqual(self.wizard.downloading.progress.get_attribute('localName'),
+        self.assertEqual(self.wizard.downloading.progress.get_property('localName'),
                          'progressmeter')

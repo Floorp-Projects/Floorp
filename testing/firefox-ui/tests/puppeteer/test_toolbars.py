@@ -26,11 +26,11 @@ class TestNavBar(PuppeteerMixin, MarionetteTestCase):
         """)
 
     def test_elements(self):
-        self.assertEqual(self.navbar.back_button.get_attribute('localName'), 'toolbarbutton')
-        self.assertEqual(self.navbar.forward_button.get_attribute('localName'), 'toolbarbutton')
-        self.assertEqual(self.navbar.home_button.get_attribute('localName'), 'toolbarbutton')
-        self.assertEqual(self.navbar.menu_button.get_attribute('localName'), 'toolbarbutton')
-        self.assertEqual(self.navbar.toolbar.get_attribute('localName'), 'toolbar')
+        self.assertEqual(self.navbar.back_button.get_property('localName'), 'toolbarbutton')
+        self.assertEqual(self.navbar.forward_button.get_property('localName'), 'toolbarbutton')
+        self.assertEqual(self.navbar.home_button.get_property('localName'), 'toolbarbutton')
+        self.assertEqual(self.navbar.menu_button.get_property('localName'), 'toolbarbutton')
+        self.assertEqual(self.navbar.toolbar.get_property('localName'), 'toolbar')
 
     def test_buttons(self):
         self.marionette.set_context('content')
@@ -85,24 +85,24 @@ class TestLocationBar(PuppeteerMixin, MarionetteTestCase):
         self.locationbar = self.browser.navbar.locationbar
 
     def test_elements(self):
-        self.assertEqual(self.locationbar.urlbar.get_attribute('localName'), 'textbox')
-        self.assertIn('urlbar-input', self.locationbar.urlbar_input.get_attribute('className'))
+        self.assertEqual(self.locationbar.urlbar.get_property('localName'), 'textbox')
+        self.assertIn('urlbar-input', self.locationbar.urlbar_input.get_property('className'))
 
-        self.assertEqual(self.locationbar.connection_icon.get_attribute('localName'), 'image')
-        self.assertEqual(self.locationbar.identity_box.get_attribute('localName'), 'box')
-        self.assertEqual(self.locationbar.identity_country_label.get_attribute('localName'),
+        self.assertEqual(self.locationbar.connection_icon.get_property('localName'), 'image')
+        self.assertEqual(self.locationbar.identity_box.get_property('localName'), 'box')
+        self.assertEqual(self.locationbar.identity_country_label.get_property('localName'),
                          'label')
-        self.assertEqual(self.locationbar.identity_organization_label.get_attribute('localName'),
+        self.assertEqual(self.locationbar.identity_organization_label.get_property('localName'),
                          'label')
-        self.assertEqual(self.locationbar.identity_icon.get_attribute('localName'), 'image')
-        self.assertEqual(self.locationbar.history_drop_marker.get_attribute('localName'),
+        self.assertEqual(self.locationbar.identity_icon.get_property('localName'), 'image')
+        self.assertEqual(self.locationbar.history_drop_marker.get_property('localName'),
                          'dropmarker')
-        self.assertEqual(self.locationbar.reload_button.get_attribute('localName'),
+        self.assertEqual(self.locationbar.reload_button.get_property('localName'),
                          'toolbarbutton')
-        self.assertEqual(self.locationbar.stop_button.get_attribute('localName'),
+        self.assertEqual(self.locationbar.stop_button.get_property('localName'),
                          'toolbarbutton')
 
-        self.assertEqual(self.locationbar.contextmenu.get_attribute('localName'), 'menupopup')
+        self.assertEqual(self.locationbar.contextmenu.get_property('localName'), 'menupopup')
         self.assertEqual(self.locationbar.get_contextmenu_entry('paste').get_attribute('cmd'),
                          'cmd_paste')
 
@@ -162,7 +162,7 @@ class TestAutoCompleteResults(PuppeteerMixin, MarionetteTestCase):
         visible_result_count = len(self.autocomplete_results.visible_results)
         self.assertTrue(visible_result_count > 0)
         self.assertEqual(visible_result_count,
-                         int(results.get_attribute('itemCount')))
+                         int(results.get_property('itemCount')))
 
     def test_close(self):
         self.browser.navbar.locationbar.urlbar.send_keys('a')
@@ -226,39 +226,39 @@ class TestIdentityPopup(PuppeteerMixin, MarionetteTestCase):
 
         # Test main view elements
         main = self.identity_popup.view.main
-        self.assertEqual(main.element.get_attribute('localName'), 'panelview')
+        self.assertEqual(main.element.get_property('localName'), 'panelview')
 
-        self.assertEqual(main.expander.get_attribute('localName'), 'button')
-        self.assertEqual(main.host.get_attribute('localName'), 'label')
-        self.assertEqual(main.insecure_connection_label.get_attribute('localName'),
+        self.assertEqual(main.expander.get_property('localName'), 'button')
+        self.assertEqual(main.host.get_property('localName'), 'label')
+        self.assertEqual(main.insecure_connection_label.get_property('localName'),
                          'description')
-        self.assertEqual(main.internal_connection_label.get_attribute('localName'),
+        self.assertEqual(main.internal_connection_label.get_property('localName'),
                          'description')
-        self.assertEqual(main.secure_connection_label.get_attribute('localName'),
+        self.assertEqual(main.secure_connection_label.get_property('localName'),
                          'description')
 
-        self.assertEqual(main.permissions.get_attribute('localName'), 'vbox')
+        self.assertEqual(main.permissions.get_property('localName'), 'vbox')
 
         # Test security view elements
         security = self.identity_popup.view.security
-        self.assertEqual(security.element.get_attribute('localName'), 'panelview')
+        self.assertEqual(security.element.get_property('localName'), 'panelview')
 
-        self.assertEqual(security.host.get_attribute('localName'), 'label')
-        self.assertEqual(security.insecure_connection_label.get_attribute('localName'),
+        self.assertEqual(security.host.get_property('localName'), 'label')
+        self.assertEqual(security.insecure_connection_label.get_property('localName'),
                          'description')
-        self.assertEqual(security.secure_connection_label.get_attribute('localName'),
+        self.assertEqual(security.secure_connection_label.get_property('localName'),
                          'description')
 
-        self.assertEqual(security.owner.get_attribute('localName'), 'description')
-        self.assertEqual(security.owner_location.get_attribute('localName'), 'description')
-        self.assertEqual(security.verifier.get_attribute('localName'), 'description')
+        self.assertEqual(security.owner.get_property('localName'), 'description')
+        self.assertEqual(security.owner_location.get_property('localName'), 'description')
+        self.assertEqual(security.verifier.get_property('localName'), 'description')
 
-        self.assertEqual(security.disable_mixed_content_blocking_button.get_attribute('localName'),
+        self.assertEqual(security.disable_mixed_content_blocking_button.get_property('localName'),
                          'button')
-        self.assertEqual(security.enable_mixed_content_blocking_button.get_attribute('localName'),
+        self.assertEqual(security.enable_mixed_content_blocking_button.get_property('localName'),
                          'button')
 
-        self.assertEqual(security.more_info_button.get_attribute('localName'), 'button')
+        self.assertEqual(security.more_info_button.get_property('localName'), 'button')
 
     def test_open_close(self):
         with self.marionette.using_context('content'):

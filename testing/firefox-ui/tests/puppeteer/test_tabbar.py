@@ -23,8 +23,8 @@ class TestTabBar(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(len(tabbar.tabs), 1)
         self.assertEqual(tabbar.tabs[0].handle, self.marionette.current_window_handle)
 
-        self.assertEqual(tabbar.newtab_button.get_attribute('localName'), 'toolbarbutton')
-        self.assertEqual(tabbar.toolbar.get_attribute('localName'), 'tabs')
+        self.assertEqual(tabbar.newtab_button.get_property('localName'), 'toolbarbutton')
+        self.assertEqual(tabbar.toolbar.get_property('localName'), 'tabs')
 
     def test_open_close(self):
         tabbar = self.browser.tabbar
@@ -127,8 +127,8 @@ class TestTab(PuppeteerMixin, MarionetteTestCase):
 
         self.assertEqual(tab.window, self.browser)
 
-        self.assertEqual(tab.tab_element.get_attribute('localName'), 'tab')
-        self.assertEqual(tab.close_button.get_attribute('localName'), 'toolbarbutton')
+        self.assertEqual(tab.tab_element.get_property('localName'), 'tab')
+        self.assertEqual(tab.close_button.get_property('localName'), 'toolbarbutton')
 
     def test_certificate(self):
         url = self.marionette.absolute_url('layout/mozilla.html')

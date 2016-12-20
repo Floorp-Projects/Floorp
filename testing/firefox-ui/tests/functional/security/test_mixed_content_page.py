@@ -25,7 +25,7 @@ class TestMixedContentPage(PuppeteerMixin, MarionetteTestCase):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.url)
 
-        self.assertEqual(self.locationbar.identity_box.get_attribute('className'),
+        self.assertEqual(self.locationbar.identity_box.get_property('className'),
                          'unknownIdentity mixedDisplayContent')
 
         # Open the identity popup
