@@ -16,128 +16,60 @@ html,body {
 div {
   display: grid;
   float: left;
-  grid-template-columns: auto auto;
-  grid-template-rows: 5px;
-  height: 5px;
   border: 1px solid;
   clear: left;
   align-content: start;
   justify-content: start;
+  margin: 3px;
 }
 
 span {
-  min-width: 10px;
   background: grey;
 }
+.c > span { width: 10px; }
+.r > span { height: 10px; }
+
 span:nth-child(2) { background:lime; }
 x { background: blue; }
 x:nth-child(2) { background:pink; }
 
-.g10  { grid-gap:10%; }
-.p1   { grid-template-columns: 10px; width: calc(10px / 0.9); }
-.p1a  { grid-template-columns: 10px; width: calc(10px / 0.9); }
-.p10  { grid-template-columns: 10px 10px; width: calc(10px / 0.8); }
-.p10a { grid-template-columns: calc((20px / 0.5) * 0.4) calc((20px / 0.5) * 0.1); width: calc(20px / 0.5); }
-.p10b { grid-template-columns: calc((110px / 0.6) * 0.4) 100px; width: calc(110px / 0.6); }
-.g10.p10b { grid-template-columns: calc((110px / 0.5) * 0.4) 100px; width: calc(110px / 0.5);  }
-.p10c { grid-template-columns: calc((110px / 0.6) * 0.2) 100px calc((110px / 0.6) * 0.2); width: calc(110px / 0.6); }
-.g10.p10c { grid-template-columns: calc((110px / 0.4) * 0.2) 100px calc((110px / 0.4) * 0.2); width: calc(110px / 0.4); }
-.c10  { grid-template-columns: 62.5px 62.5px; }
-.g10.c10  { grid-template-columns: 64.2833px 64.2833px; }
-.c10120  { grid-template-columns: calc(((170px / 0.8) * 0.1) + 50px) calc(((170px / 0.8) * 0.1) + 50px); width: calc(170px / 0.8); }
-.g10.c10120 { grid-template-columns: calc(((170px / 0.7) * 0.1) + 50px) calc(((170px / 0.7) * 0.1) + 50px); width: calc(170px / 0.7); }
-.c10a { grid-template-columns: calc(((170px / 0.8) * 0.1) + 50px) calc(((170px / 0.8) * 0.1) + 50px); width: calc(170px / 0.8); }
-.g10.c10a { grid-template-columns: calc(((170px / 0.7) * 0.1) + 50px) calc(((170px / 0.7) * 0.1) + 50px); width: calc(170px / 0.7); }
-.c10b { grid-template-columns: calc(50px - (170px * 0.1)) calc(50px - (170px * 0.1)); width: 170px; }
+.c { grid-auto-rows: 5px; }
+.c.p1   { grid-template-columns: 1px; width: 10px; }
+.c.p1a  { grid-template-columns: minmax(10%,auto); }
+.c.p2   { grid-template-columns: 10% 10%; grid-gap: 20%; }
+.c.p2a  { grid-template-columns: repeat(2,minmax(10%,auto)); grid-gap: 20%; }
+.c.c0  { grid-template-columns: 0; }
 
-.p1x   { grid-template-columns: 0; }
-.p1ax  { grid-template-columns: 0; }
-.p10x  { grid-template-columns: auto auto; }
-.p10ax { grid-template-columns: calc((10px / 0.5) * 0.4) calc((10px / 0.5) * 0.1); width: calc(10px / 0.5); }
-.g10.p10 { width: calc(10px / 0.7); }
-.g10.p10a  { grid-template-columns: calc((20px / 0.4) * 0.4) calc((20px / 0.4) * 0.1); width: calc(20px / 0.4); }
-.g10.p10ax { grid-template-columns: calc((10px / 0.4) * 0.4) calc((10px / 0.4) * 0.1); width: calc(10px / 0.4);  }
-.p10axx{ grid-template-columns: auto auto; }
-.p10bx { grid-template-columns: calc((110px / 0.6) * 0.4) 100px; width: calc(110px / 0.6); }
-.p10bx120 { grid-template-columns: calc((100px / 0.6) * 0.4) 100px; width: calc(100px / 0.6); }
-.g10.p10bx { grid-template-columns: calc((110px / 0.5) * 0.4) 100px; width: calc(110px / 0.5); }
-.g10.p10bx1 { grid-template-columns: calc((100px / 0.5) * 0.4) 100px; width: calc(100px / 0.5); }
-.p10bxx{ grid-template-columns: 66.66667px 100px; }
-.g10.p10bxx{ grid-template-columns: 80px 100px; }
-.p10cx { grid-template-columns: calc((110px / 0.6) * 0.2) 100px calc((110px / 0.6) * 0.2); width: calc(110px / 0.6); }
-.g10.p10cx { grid-template-columns: calc((110px / 0.4) * 0.2) 100px calc((110px / 0.4) * 0.2); width: calc(110px / 0.4); }
-.c10x  { grid-template-columns: 62.5px 62.5px; }
-.g10.c10xx  { grid-template-columns: 64.2833px 64.2833px; }
-.g10.c10x  { grid-template-columns: 64.2833px 64.2833px; }
-.c10xx { grid-template-columns: 62.5px 62.5px; }
-.c10ax { grid-template-columns: calc(((170px / 0.8) * 0.1) + 50px) calc(((170px / 0.8) * 0.1) + 50px) ; width: calc(170px / 0.8); }
-.g10.c10ax { grid-template-columns: calc(((170px / 0.7) * 0.1) + 50px) calc(((170px / 0.7) * 0.1) + 50px) ; width: calc(170px / 0.7); }
-.c10bx { grid-template-columns: calc(50px - (170px * 0.1)) calc(50px - (170px * 0.1)); width: 170px; }
+.r { grid-auto-columns: 5px; grid-auto-flow: column; }
+.r.p1   { grid-template-rows: 10%; }
+.r.p1a  { grid-template-rows: minmax(10%,auto); }
+.r.p2   { grid-template-rows: 10% 10%; grid-gap: 20%; }
+.r.p2a  { grid-template-rows: repeat(2,minmax(10%,auto)); grid-gap: 20%; }
+.r.r0   { grid-template-rows: 0; }
 
-.gneg { grid-gap: 0; grid-template-columns: 10px 10px; width:0; }
-.gneg.c10a { grid-template-columns: 50px 50px; }
-.gneg.p10b { grid-template-columns: 8px 100px; width: 20px; }
   </style>
 </head>
 <body>
 
-<!-- Note that some of the min-width cases below SHOULD overflow. -->
+<div class="c p1"><span></span><x></x></div>
+<div class="c c0"><x></x></div>
+<div class="c p1a"><span></span><x></x></div>
+<div class="c c0"><x></x></div>
 
-<div class="p1"><span></span></div>
-<div class="p1x"><x></x></div>
-<div class="p10"><span></span></div>
-<div class="p10x"><x></x></div>
-<div class="p1a"><span></span></div>
-<div class="p1ax"><x></x></div>
-<div class="p10a"><span></span><span></span></div>
-<div class="p10ax"><x></x><span></span></div>
-<div class="p10axx"><x></x><x></x></div>
-<div class="p10b"><span></span><span></span></div>
-<div class="p10bx"><span></span><x></x></div>
-<div class="p10bxx"><x></x><x></x></div>
-<div class="p10b"><span></span><span style="min-width:80px"></span></div>
-<div class="p10bx120"><x></x><span style="min-width:120px"></span></div>
-<div class="p10c"><span></span><span></span></div>
-<div class="p10cx"><span></span><x></x></div>
-<div class="c10"><span></span><span></span></div>
-<div class="c10xx"><x></x><x></x></div>
-<div class="c10120"><span></span><span style="min-width:120px"></span></div>
-<div class="c10x"><x></x><span></span></div>
-<div class="c10a"><span></span><span style="min-width:120px"></span></div>
-<div class="c10ax"><x></x><span style="min-width:120px"></span></div>
-<div class="c10b"><span></span><span style="min-width:120px"></span></div>
-<div class="c10bx"><x></x><span style="min-width:120px"></span></div>
+<div class="c p2"><span></span><span></span><x></x></div>
+<div class="c c0"><x></x></div>
+<div class="c p2a"><span></span><span></span><x></x></div>
+<div class="c c0"><x></x></div>
 
+<div class="r p1"><span></span><x></x></div>
+<div class="r r0"><x></x></div>
+<div class="r p1a"><span></span><x></x></div>
+<div class="r r0"><x></x></div>
 
-<div class="g10"><span></span><span></span></div>
-<div class="g10 p1"><span></span></div>
-<div class="g10 p1x"><x></x></div>
-<div class="g10 p10"><span></span></div>
-<div class="g10 p10x"><x></x></div>
-<div class="g10 p1a"><span></span></div>
-<div class="g10 p1ax"><x></x></div>
-<div class="g10 p10a"><span></span><span></span></div>
-<div class="g10 p10ax"><x></x><span></span></div>
-<div class="g10 p10axx"><x></x><x></x></div>
-<div class="g10 p10bx"><span></span><span></span></div>
-<div class="g10 p10bx"><span></span><x></x></div>
-<div class="g10 p10bxx"><x></x><x></x></div>
-<div class="g10 p10b"><span></span><span style="min-width:80px"></span></div>
-<div class="g10 p10bx1"><x></x><span style="min-width:120px"></span></div>
-<div class="g10 p10c"><span></span><span></span></div>
-<div class="g10 p10cx"><span></span><x></x></div>
-<div class="g10 c10"><span></span><span></span></div>
-<div class="g10 c10xx"><x></x><x></x></div>
-<div class="g10 c10120"><span></span><span style="min-width:120px"></span></div>
-<div class="g10 c10x"><x></x><span></span></div>
-<div class="g10 c10a"><span></span><span style="min-width:120px"></span></div>
-<div class="g10 c10ax"><x></x><span style="min-width:120px"></span></div>
-<div class="g10 c10b"><span></span><span style="min-width:120px"></span></div>
-<div class="g10 c10bx"><x></x><span style="min-width:120px"></span></div>
-
-<div class="gneg"><span></span><span></span></div>
-<div class="gneg c10a"><span></span><span></span></div>
-<div class="gneg p10b"><span></span><span></span></div>
+<div class="r p2"><span></span><span></span><x></x></div>
+<div class="r r0"><x></x></div>
+<div class="r p2a"><span></span><span></span><x></x></div>
+<div class="r r0"><x></x></div>
 
 </body>
 </html>
