@@ -116,10 +116,11 @@ SourceSurfaceSkia::GetData()
         }
       }
     }
-    if (!raster) {
+    if (raster) {
+      mImage = raster;
+    } else {
       gfxCriticalError() << "Failed making Skia raster image for GPU surface";
     }
-    mImage = raster;
   }
 #endif
   SkPixmap pixmap;
