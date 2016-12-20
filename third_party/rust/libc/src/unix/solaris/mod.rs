@@ -602,6 +602,7 @@ pub const EMLINK: ::c_int = 31;
 pub const EPIPE: ::c_int = 32;
 pub const EDOM: ::c_int = 33;
 pub const ERANGE: ::c_int = 34;
+pub const ENOTSUP: ::c_int = 48;
 pub const EAGAIN: ::c_int = 11;
 pub const EWOULDBLOCK: ::c_int = 11;
 pub const EINPROGRESS: ::c_int = 150;
@@ -650,6 +651,8 @@ pub const EBADMSG: ::c_int = 77;
 pub const EMULTIHOP: ::c_int = 74;
 pub const ENOLINK: ::c_int = 67;
 pub const EPROTO: ::c_int = 71;
+
+pub const EAI_SYSTEM: ::c_int = 11;
 
 pub const F_DUPFD: ::c_int = 0;
 pub const F_GETFD: ::c_int = 1;
@@ -953,6 +956,9 @@ f! {
 }
 
 extern {
+    pub fn getifaddrs(ifap: *mut *mut ::ifaddrs) -> ::c_int;
+    pub fn freeifaddrs(ifa: *mut ::ifaddrs);
+
     pub fn stack_getbounds(sp: *mut ::stack_t) -> ::c_int;
     pub fn mincore(addr: *const ::c_void, len: ::size_t,
                    vec: *mut c_char) -> ::c_int;
@@ -1037,4 +1043,6 @@ extern {
                                      clock_id: clockid_t) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
+    pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
+                                   abstime: *const ::timespec) -> ::c_int;
 }

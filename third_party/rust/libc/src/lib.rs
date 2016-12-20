@@ -75,6 +75,7 @@
 
 // Attributes needed when building as part of the standard library
 #![cfg_attr(stdbuild, feature(no_std, core, core_slice_ext, staged_api, custom_attribute, cfg_target_vendor))]
+#![cfg_attr(stdbuild, feature(link_cfg))]
 #![cfg_attr(stdbuild, no_std)]
 #![cfg_attr(stdbuild, staged_api)]
 #![cfg_attr(stdbuild, allow(warnings))]
@@ -265,6 +266,9 @@ cfg_if! {
     if #[cfg(windows)] {
         mod windows;
         pub use windows::*;
+    } else if #[cfg(target_os = "redox")] {
+        mod redox;
+        pub use redox::*;
     } else if #[cfg(unix)] {
         mod unix;
         pub use unix::*;
