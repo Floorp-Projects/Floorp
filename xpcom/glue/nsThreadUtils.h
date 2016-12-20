@@ -71,28 +71,11 @@ NS_NewThread(nsIThread** aResult,
 /**
  * Creates a named thread, otherwise the same as NS_NewThread
  */
-inline nsresult
+extern nsresult
 NS_NewNamedThread(const nsACString& aName,
                   nsIThread** aResult,
                   nsIRunnable* aInitialEvent = nullptr,
-                  uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
-{
-  // Hold a ref while dispatching the initial event to match NS_NewThread()
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewThread(getter_AddRefs(thread), nullptr, aStackSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  NS_SetThreadName(thread, aName);
-  if (aInitialEvent) {
-    rv = thread->Dispatch(aInitialEvent, NS_DISPATCH_NORMAL);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Initial event dispatch failed");
-  }
-
-  *aResult = nullptr;
-  thread.swap(*aResult);
-  return rv;
-}
+                  uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
 
 template<size_t LEN>
 inline nsresult
