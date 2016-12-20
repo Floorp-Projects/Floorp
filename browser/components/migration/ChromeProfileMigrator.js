@@ -448,7 +448,7 @@ function GetWindowsPasswordsResource(aProfileFolder) {
                     decryptData(crypto.arrayToString(row.getResultByName("password_value")),
                                                      null),
           hostname: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
-          formSubmitURL: null,
+          submitURL: null,
           httpRealm: null,
           usernameElement: row.getResultByName("username_element"),
           passwordElement: row.getResultByName("password_element"),
@@ -459,7 +459,7 @@ function GetWindowsPasswordsResource(aProfileFolder) {
         try {
           switch (row.getResultByName("scheme")) {
             case AUTH_TYPE.SCHEME_HTML:
-              loginInfo.formSubmitURL = NetUtil.newURI(row.getResultByName("action_url")).prePath;
+              loginInfo.submitURL = NetUtil.newURI(row.getResultByName("action_url")).prePath;
               break;
             case AUTH_TYPE.SCHEME_BASIC:
             case AUTH_TYPE.SCHEME_DIGEST:
