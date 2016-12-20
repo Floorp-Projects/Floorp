@@ -9,6 +9,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
+#include "xpc_make_class.h"
 
 #define JSREFLECT_CONTRACTID \
   "@mozilla.org/jsreflect;1"
