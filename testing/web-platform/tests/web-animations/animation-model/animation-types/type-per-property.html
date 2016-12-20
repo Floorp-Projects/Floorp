@@ -13,839 +13,839 @@ html {
 <body>
 <div id="log"></div>
 <script>
-"use strict";
+'use strict';
 
 var gCSSProperties = {
-  "align-content": {
+  'align-content': {
     // https://drafts.csswg.org/css-align/#propdef-align-content
     tests: [
-      discrete("flex-start", "flex-end")
+      discrete('flex-start', 'flex-end')
     ]
   },
-  "align-items": {
+  'align-items': {
     // https://drafts.csswg.org/css-align/#propdef-align-items
     tests: [
-      discrete("flex-start", "flex-end")
+      discrete('flex-start', 'flex-end')
     ]
   },
-  "align-self": {
+  'align-self': {
     // https://drafts.csswg.org/css-align/#propdef-align-self
     tests: [
-      discrete("flex-start", "flex-end")
+      discrete('flex-start', 'flex-end')
     ]
   },
-  "backface-visibility": {
+  'backface-visibility': {
     // https://drafts.csswg.org/css-transforms/#propdef-backface-visibility
     tests: [
-      discrete("visible", "hidden")
+      discrete('visible', 'hidden')
     ]
   },
-  "background-attachment": {
+  'background-attachment': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-attachment
     tests: [
-      discrete("fixed", "local")
+      discrete('fixed', 'local')
     ]
   },
-  "background-blend-mode": {
+  'background-blend-mode': {
     // https://drafts.fxtf.org/compositing-1/#propdef-background-blend-mode
     tests: [
-      discrete("multiply", "screen")
+      discrete('multiply', 'screen')
     ]
   },
-  "background-clip": {
+  'background-clip': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-clip
     tests: [
-      discrete("padding-box", "content-box")
+      discrete('padding-box', 'content-box')
     ]
   },
-  "background-image": {
+  'background-image': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-image
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "background-origin": {
+  'background-origin': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-origin
     tests: [
-      discrete("padding-box", "content-box")
+      discrete('padding-box', 'content-box')
     ]
   },
-  "background-repeat": {
+  'background-repeat': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-repeat
     tests: [
-      discrete("space", "round")
+      discrete('space', 'round')
     ]
   },
-  "border-bottom-style": {
+  'border-bottom-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-style
     tests: [
-      discrete("dotted", "solid")
+      discrete('dotted', 'solid')
     ]
   },
-  "border-collapse": {
+  'border-collapse': {
     // https://drafts.csswg.org/css-tables/#propdef-border-collapse
     tests: [
-      discrete("collapse", "separate")
+      discrete('collapse', 'separate')
     ]
   },
-  "border-image-outset": {
+  'border-image-outset': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-outset
     tests: [
-      discrete("1 1 1 1", "5 5 5 5")
+      discrete('1 1 1 1', '5 5 5 5')
     ]
   },
-  "border-image-repeat": {
+  'border-image-repeat': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-repeat
     tests: [
-      discrete("stretch stretch", "repeat repeat")
+      discrete('stretch stretch', 'repeat repeat')
     ]
   },
-  "border-image-slice": {
+  'border-image-slice': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-slice
     tests: [
-      discrete("1 1 1 1", "5 5 5 5")
+      discrete('1 1 1 1', '5 5 5 5')
     ]
   },
-  "border-image-source": {
+  'border-image-source': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-source
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "border-image-width": {
+  'border-image-width': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-width
     tests: [
-      discrete("1 1 1 1", "5 5 5 5")
+      discrete('1 1 1 1', '5 5 5 5')
     ]
   },
-  "border-left-style": {
+  'border-left-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-left-style
     tests: [
-      discrete("dotted", "solid")
+      discrete('dotted', 'solid')
     ]
   },
-  "border-right-style": {
+  'border-right-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-right-style
     tests: [
-      discrete("dotted", "solid")
+      discrete('dotted', 'solid')
     ]
   },
-  "border-top-style": {
+  'border-top-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-style
     tests: [
-      discrete("dotted", "solid")
+      discrete('dotted', 'solid')
     ]
   },
-  "box-decoration-break": {
+  'box-decoration-break': {
     // https://drafts.csswg.org/css-break/#propdef-box-decoration-break
     tests: [
-      discrete("slice", "clone")
+      discrete('slice', 'clone')
     ]
   },
-  "box-sizing": {
+  'box-sizing': {
     // https://drafts.csswg.org/css-ui-4/#box-sizing
     tests: [
-      discrete("content-box", "border-box")
+      discrete('content-box', 'border-box')
     ]
   },
-  "caption-side": {
+  'caption-side': {
     // https://drafts.csswg.org/css-tables/#propdef-caption-side
     tests: [
-      discrete("top", "bottom")
+      discrete('top', 'bottom')
     ]
   },
-  "clear": {
+  'clear': {
     // https://drafts.csswg.org/css-page-floats/#propdef-clear
     tests: [
-      discrete("inline-start", "inline-end")
+      discrete('inline-start', 'inline-end')
     ]
   },
-  "clip-rule": {
+  'clip-rule': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-clip-rule
     tests: [
-      discrete("evenodd", "nonzero")
+      discrete('evenodd', 'nonzero')
     ]
   },
-  "color-adjust": {
+  'color-adjust': {
     // https://drafts.csswg.org/css-color-4/#color-adjust
     tests: [
-      discrete("economy", "exact")
+      discrete('economy', 'exact')
     ]
   },
-  "color-interpolation": {
+  'color-interpolation': {
     // https://svgwg.org/svg2-draft/painting.html#ColorInterpolationProperty
     tests: [
-      discrete("linearRGB", "auto")
+      discrete('linearRGB', 'auto')
     ]
   },
-  "color-interpolation-filters": {
+  'color-interpolation-filters': {
     // https://drafts.fxtf.org/filters-1/#propdef-color-interpolation-filters
     tests: [
-      discrete("sRGB", "linearRGB")
+      discrete('sRGB', 'linearRGB')
     ]
   },
-  "column-fill": {
+  'column-fill': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-fill
     tests: [
-      discrete("auto", "balance")
+      discrete('auto', 'balance')
     ]
   },
-  "column-rule-style": {
+  'column-rule-style': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-style
     tests: [
-      discrete("none", "dotted")
+      discrete('none', 'dotted')
     ]
   },
-  "contain": {
+  'contain': {
     // https://drafts.csswg.org/css-containment/#propdef-contain
     tests: [
-      discrete("strict", "none")
+      discrete('strict', 'none')
     ]
   },
-  "content": {
+  'content': {
     // https://drafts.csswg.org/css-content-3/#propdef-content
     tests: [
-      discrete("\"a\"", "\"b\"")
+      discrete('"a"', '"b"')
     ],
-    tagName: "::before"
+    tagName: '::before'
   },
-  "counter-increment": {
+  'counter-increment': {
     // https://drafts.csswg.org/css-lists-3/#propdef-counter-increment
     tests: [
-      discrete("ident-1 1", "ident-2 2")
+      discrete('ident-1 1', 'ident-2 2')
     ]
   },
-  "counter-reset": {
+  'counter-reset': {
     // https://drafts.csswg.org/css-lists-3/#propdef-counter-reset
     tests: [
-      discrete("ident-1 1", "ident-2 2")
+      discrete('ident-1 1', 'ident-2 2')
     ]
   },
-  "cursor": {
+  'cursor': {
     // https://drafts.csswg.org/css2/ui.html#propdef-cursor
     tests: [
-      discrete("pointer", "wait")
+      discrete('pointer', 'wait')
     ]
   },
-  "direction": {
+  'direction': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-direction
     tests: [
-      discrete("ltr", "rtl")
+      discrete('ltr', 'rtl')
     ]
   },
-  "dominant-baseline": {
+  'dominant-baseline': {
     // https://drafts.csswg.org/css-inline/#propdef-dominant-baseline
     tests: [
-      discrete("ideographic", "alphabetic")
+      discrete('ideographic', 'alphabetic')
     ]
   },
-  "empty-cells": {
+  'empty-cells': {
     // https://drafts.csswg.org/css-tables/#propdef-empty-cells
     tests: [
-      discrete("show", "hide")
+      discrete('show', 'hide')
     ]
   },
-  "fill-rule": {
+  'fill-rule': {
     // https://svgwg.org/svg2-draft/painting.html#FillRuleProperty
     tests: [
-      discrete("evenodd", "nonzero")
+      discrete('evenodd', 'nonzero')
     ]
   },
-  "flex-basis": {
+  'flex-basis': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-basis
     tests: [
       lengthPercentageOrCalc(),
-      discrete("auto", "10px")
+      discrete('auto', '10px')
     ]
   },
-  "flex-direction": {
+  'flex-direction': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-direction
     tests: [
-      discrete("row", "row-reverse")
+      discrete('row', 'row-reverse')
     ]
   },
-  "flex-grow": {
+  'flex-grow': {
     // https://drafts.csswg.org/css-flexbox/#flex-grow-property
     tests: [
       positiveNumber()
     ]
   },
-  "flex-shrink": {
+  'flex-shrink': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-shrink
     tests: [
       positiveNumber()
     ]
   },
-  "flex-wrap": {
+  'flex-wrap': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-wrap
     tests: [
-      discrete("nowrap", "wrap")
+      discrete('nowrap', 'wrap')
     ]
   },
-  "font-style": {
+  'font-style': {
     // https://drafts.csswg.org/css-fonts/#propdef-font-style
     tests: [
-      discrete("italic", "oblique")
+      discrete('italic', 'oblique')
     ]
   },
-  "float": {
+  'float': {
     // https://drafts.csswg.org/css-page-floats/#propdef-float
     tests: [
-      discrete("left", "right")
+      discrete('left', 'right')
     ]
   },
-  "font-family": {
+  'font-family': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-family
     tests: [
-      discrete("helvetica", "verdana")
+      discrete('helvetica', 'verdana')
     ]
   },
-  "font-feature-settings": {
+  'font-feature-settings': {
     // https://drafts.csswg.org/css-fonts/#descdef-font-feature-settings
     tests: [
-      discrete("\"liga\" 5", "normal")
+      discrete('"liga" 5', 'normal')
     ]
   },
-  "font-kerning": {
+  'font-kerning': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-kerning
     tests: [
-      discrete("auto", "normal")
+      discrete('auto', 'normal')
     ]
   },
-  "font-language-override": {
+  'font-language-override': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-language-override
     tests: [
-      discrete("\"eng\"", "normal")
+      discrete('"eng"', 'normal')
     ]
   },
-  "font-style": {
+  'font-style': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-style
     tests: [
-      discrete("italic", "oblique")
+      discrete('italic', 'oblique')
     ]
   },
-  "font-synthesis": {
+  'font-synthesis': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-synthesis
     tests: [
-      discrete("none", "weight style")
+      discrete('none', 'weight style')
     ]
   },
-  "font-variant-alternates": {
+  'font-variant-alternates': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-alternates
     tests: [
-      discrete("swash(unknown)", "stylistic(unknown)")
+      discrete('swash(unknown)', 'stylistic(unknown)')
     ]
   },
-  "font-variant-caps": {
+  'font-variant-caps': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-caps
     tests: [
-      discrete("small-caps", "unicase")
+      discrete('small-caps', 'unicase')
     ]
   },
-  "font-variant-east-asian": {
+  'font-variant-east-asian': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-east-asian
     tests: [
-      discrete("full-width", "proportional-width")
+      discrete('full-width', 'proportional-width')
     ]
   },
-  "font-variant-ligatures": {
+  'font-variant-ligatures': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-ligatures
     tests: [
-      discrete("common-ligatures", "no-common-ligatures")
+      discrete('common-ligatures', 'no-common-ligatures')
     ]
   },
-  "font-variant-numeric": {
+  'font-variant-numeric': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-numeric
     tests: [
-      discrete("lining-nums", "oldstyle-nums")
+      discrete('lining-nums', 'oldstyle-nums')
     ]
   },
-  "font-variant-position": {
+  'font-variant-position': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-position
     tests: [
-      discrete("sub", "super")
+      discrete('sub', 'super')
     ]
   },
-  "grid-auto-columns": {
+  'grid-auto-columns': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-auto-columns
     tests: [
-      discrete("1px", "5px")
+      discrete('1px', '5px')
     ]
   },
-  "grid-auto-flow": {
+  'grid-auto-flow': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-auto-flow
     tests: [
-      discrete("row", "column")
+      discrete('row', 'column')
     ]
   },
-  "grid-auto-rows": {
+  'grid-auto-rows': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-auto-rows
     tests: [
-      discrete("1px", "5px")
+      discrete('1px', '5px')
     ]
   },
-  "grid-column-end": {
+  'grid-column-end': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-column-end
     tests: [
-      discrete("1", "5")
+      discrete('1', '5')
     ]
   },
-  "grid-column-start": {
+  'grid-column-start': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-column-start
     tests: [
-      discrete("1", "5")
+      discrete('1', '5')
     ]
   },
-  "grid-row-end": {
+  'grid-row-end': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-row-end
     tests: [
-      discrete("1", "5")
+      discrete('1', '5')
     ]
   },
-  "grid-row-start": {
+  'grid-row-start': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-row-start
     tests: [
-      discrete("1", "5")
+      discrete('1', '5')
     ]
   },
-  "grid-template-areas": {
+  'grid-template-areas': {
     // https://drafts.csswg.org/css-template/#grid-template-areas
     tests: [
-      discrete("\". . a b\" \". .a b\"", "none")
+      discrete('". . a b" ". .a b"', 'none')
     ]
   },
-  "grid-template-columns": {
+  'grid-template-columns': {
     // https://drafts.csswg.org/css-template/#grid-template-columns
     tests: [
-      discrete("1px", "5px")
+      discrete('1px', '5px')
     ]
   },
-  "grid-template-rows": {
+  'grid-template-rows': {
     // https://drafts.csswg.org/css-template/#grid-template-rows
     tests: [
-      discrete("1px", "5px")
+      discrete('1px', '5px')
     ]
   },
-  "hyphens": {
+  'hyphens': {
     // https://drafts.csswg.org/css-text-3/#propdef-hyphens
     tests: [
-      discrete("manual", "auto")
+      discrete('manual', 'auto')
     ]
   },
-  "image-orientation": {
+  'image-orientation': {
     // https://drafts.csswg.org/css-images-3/#propdef-image-orientation
     tests: [
-      discrete("0deg", "90deg")
+      discrete('0deg', '90deg')
     ]
   },
-  "ime-mode": {
+  'ime-mode': {
     // https://drafts.csswg.org/css-ui/#input-method-editor
     tests: [
-      discrete("disabled", "auto")
+      discrete('disabled', 'auto')
     ]
   },
-  "initial-letter": {
+  'initial-letter': {
     // https://drafts.csswg.org/css-inline/#propdef-initial-letter
     tests: [
-      discrete("1 2", "3 4")
+      discrete('1 2', '3 4')
     ]
   },
-  "isolation": {
+  'isolation': {
     // https://drafts.fxtf.org/compositing-1/#propdef-isolation
     tests: [
-      discrete("auto", "isolate")
+      discrete('auto', 'isolate')
     ]
   },
-  "justify-content": {
+  'justify-content': {
     // https://drafts.csswg.org/css-align/#propdef-justify-content
     tests: [
-      discrete("baseline", "last baseline")
+      discrete('baseline', 'last baseline')
     ]
   },
-  "justify-items": {
+  'justify-items': {
     // https://drafts.csswg.org/css-align/#propdef-justify-items
     tests: [
-      discrete("baseline", "last baseline")
+      discrete('baseline', 'last baseline')
     ]
   },
-  "justify-self": {
+  'justify-self': {
     // https://drafts.csswg.org/css-align/#propdef-justify-self
     tests: [
-      discrete("baseline", "last baseline")
+      discrete('baseline', 'last baseline')
     ]
   },
-  "list-style-image": {
+  'list-style-image': {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-image
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "list-style-position": {
+  'list-style-position': {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-position
     tests: [
-      discrete("inside", "outside")
+      discrete('inside', 'outside')
     ]
   },
-  "list-style-type": {
+  'list-style-type': {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-type
     tests: [
-      discrete("circle", "square")
+      discrete('circle', 'square')
     ]
   },
-  "marker-end": {
+  'marker-end': {
     // https://svgwg.org/specs/markers/#MarkerEndProperty
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "marker-mid": {
+  'marker-mid': {
     // https://svgwg.org/specs/markers/#MarkerMidProperty
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "marker-start": {
+  'marker-start': {
     // https://svgwg.org/specs/markers/#MarkerStartProperty
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "mask": {
+  'mask': {
     // https://drafts.fxtf.org/css-masking-1/#the-mask
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "mask-clip": {
+  'mask-clip': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-clip
     tests: [
-      discrete("content-box", "border-box")
+      discrete('content-box', 'border-box')
     ]
   },
-  "mask-composite": {
+  'mask-composite': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-composite
     tests: [
-      discrete("add", "subtract")
+      discrete('add', 'subtract')
     ]
   },
-  "mask-image": {
+  'mask-image': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-image
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "mask-mode": {
+  'mask-mode': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-mode
     tests: [
-      discrete("alpha", "luminance")
+      discrete('alpha', 'luminance')
     ]
   },
-  "mask-origin": {
+  'mask-origin': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-origin
     tests: [
-      discrete("content-box", "border-box")
+      discrete('content-box', 'border-box')
     ]
   },
-  "mask-repeat": {
+  'mask-repeat': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-repeat
     tests: [
-      discrete("space", "round")
+      discrete('space', 'round')
     ]
   },
-  "mask-type": {
+  'mask-type': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-type
     tests: [
-      discrete("alpha", "luminance")
+      discrete('alpha', 'luminance')
     ]
   },
-  "mix-blend-mode": {
+  'mix-blend-mode': {
     // https://drafts.fxtf.org/compositing-1/#propdef-mix-blend-mode
     tests: [
-      discrete("multiply", "screen")
+      discrete('multiply', 'screen')
     ]
   },
-  "object-fit": {
+  'object-fit': {
     // https://drafts.csswg.org/css-images-3/#propdef-object-fit
     tests: [
-      discrete("fill", "contain")
+      discrete('fill', 'contain')
     ]
   },
-  "order": {
+  'order': {
     // https://drafts.csswg.org/css-flexbox/#propdef-order
     tests: [
       integer()
     ]
   },
-  "outline-style": {
+  'outline-style': {
     // https://drafts.csswg.org/css-ui/#propdef-outline-style
     tests: [
-      discrete("none", "dotted")
+      discrete('none', 'dotted')
     ]
   },
-  "overflow-clip-box": {
+  'overflow-clip-box': {
     // https://developer.mozilla.org/en/docs/Web/CSS/overflow-clip-box
     tests: [
-      discrete("padding-box", "content-box")
+      discrete('padding-box', 'content-box')
     ]
   },
-  "overflow-wrap": {
+  'overflow-wrap': {
     // https://drafts.csswg.org/css-text-3/#propdef-overflow-wrap
     tests: [
-      discrete("normal", "break-word")
+      discrete('normal', 'break-word')
     ]
   },
-  "overflow-x": {
+  'overflow-x': {
     // https://drafts.csswg.org/css-overflow-3/#propdef-overflow-x
     tests: [
-      discrete("visible", "hidden")
+      discrete('visible', 'hidden')
     ]
   },
-  "overflow-y": {
+  'overflow-y': {
     // https://drafts.csswg.org/css-overflow-3/#propdef-overflow-y
     tests: [
-      discrete("visible", "hidden")
+      discrete('visible', 'hidden')
     ]
   },
-  "page-break-after": {
+  'page-break-after': {
     // https://drafts.csswg.org/css-break-3/#propdef-break-after
     tests: [
-      discrete("always", "auto")
+      discrete('always', 'auto')
     ]
   },
-  "page-break-before": {
+  'page-break-before': {
     // https://drafts.csswg.org/css-break-3/#propdef-break-before
     tests: [
-      discrete("always", "auto")
+      discrete('always', 'auto')
     ]
   },
-  "page-break-inside": {
+  'page-break-inside': {
     // https://drafts.csswg.org/css-break-3/#propdef-break-inside
     tests: [
-      discrete("auto", "avoid")
+      discrete('auto', 'avoid')
     ]
   },
-  "paint-order": {
+  'paint-order': {
     // https://svgwg.org/svg2-draft/painting.html#PaintOrderProperty
     tests: [
-      discrete("fill", "stroke")
+      discrete('fill', 'stroke')
     ]
   },
-  "pointer-events": {
+  'pointer-events': {
     // https://svgwg.org/svg2-draft/interact.html#PointerEventsProperty
     tests: [
-      discrete("fill", "none")
+      discrete('fill', 'none')
     ]
   },
-  "position": {
+  'position': {
     // https://drafts.csswg.org/css-position/#propdef-position
     tests: [
-      discrete("absolute", "fixed")
+      discrete('absolute', 'fixed')
     ]
   },
-  "quotes": {
+  'quotes': {
     // https://drafts.csswg.org/css-content-3/#propdef-quotes
     tests: [
-      discrete("\"“\" \"”\" \"‘\" \"’\"", "\"‘\" \"’\" \"“\" \"”\"")
+      discrete('"“" "”" "‘" "’"', '"‘" "’" "“" "”"')
     ]
   },
-  "resize": {
+  'resize': {
     // https://drafts.csswg.org/css-ui/#propdef-resize
     tests: [
-      discrete("both", "horizontal")
+      discrete('both', 'horizontal')
     ]
   },
-  "ruby-align": {
+  'ruby-align': {
     // https://drafts.csswg.org/css-ruby-1/#propdef-ruby-align
     tests: [
-      discrete("start", "center")
+      discrete('start', 'center')
     ]
   },
-  "ruby-position": {
+  'ruby-position': {
     // https://drafts.csswg.org/css-ruby-1/#propdef-ruby-position
     tests: [
-      discrete("under", "over")
+      discrete('under', 'over')
     ],
-    tagName: "ruby"
+    tagName: 'ruby'
   },
-  "scroll-behavior": {
+  'scroll-behavior': {
     // https://drafts.csswg.org/cssom-view/#propdef-scroll-behavior
     tests: [
-      discrete("auto", "smooth")
+      discrete('auto', 'smooth')
     ]
   },
-  "scroll-snap-type-x": {
+  'scroll-snap-type-x': {
     // https://developer.mozilla.org/en/docs/Web/CSS/scroll-snap-type-x
     tests: [
-      discrete("mandatory", "proximity")
+      discrete('mandatory', 'proximity')
     ]
   },
-  "scroll-snap-type-y": {
+  'scroll-snap-type-y': {
     // https://developer.mozilla.org/en/docs/Web/CSS/scroll-snap-type-y
     tests: [
-      discrete("mandatory", "proximity")
+      discrete('mandatory', 'proximity')
     ]
   },
-  "shape-outside": {
+  'shape-outside': {
     // http://dev.w3.org/csswg/css-shapes/#propdef-shape-outside
     tests: [
-      discrete("url(\"http://localhost/test-1\")", "url(\"http://localhost/test-2\")")
+      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
     ]
   },
-  "shape-rendering": {
+  'shape-rendering': {
     // https://svgwg.org/svg2-draft/painting.html#ShapeRenderingProperty
     tests: [
-      discrete("optimizeSpeed", "crispEdges")
+      discrete('optimizeSpeed', 'crispEdges')
     ]
   },
-  "stroke-linecap": {
+  'stroke-linecap': {
     // https://svgwg.org/svg2-draft/painting.html#StrokeLinecapProperty
     tests: [
-      discrete("round", "square")
+      discrete('round', 'square')
     ]
   },
-  "stroke-linejoin": {
+  'stroke-linejoin': {
     // https://svgwg.org/svg2-draft/painting.html#StrokeLinejoinProperty
     tests: [
-      discrete("round", "miter")
+      discrete('round', 'miter')
     ],
-    tagName: "rect"
+    tagName: 'rect'
   },
-  "table-layout": {
+  'table-layout': {
     // https://drafts.csswg.org/css-tables/#propdef-table-layout
     tests: [
-      discrete("auto", "fixed")
+      discrete('auto', 'fixed')
     ]
   },
-  "text-align": {
+  'text-align': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-align
     tests: [
-      discrete("start", "end")
+      discrete('start', 'end')
     ]
   },
-  "text-align-last": {
+  'text-align-last': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-align-last
     tests: [
-      discrete("start", "end")
+      discrete('start', 'end')
     ]
   },
-  "text-anchor": {
+  'text-anchor': {
     // https://svgwg.org/svg2-draft/text.html#TextAnchorProperty
     tests: [
-      discrete("middle", "end")
+      discrete('middle', 'end')
     ]
   },
-  "text-combine-upright": {
+  'text-combine-upright': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-text-combine-upright
     tests: [
-      discrete("all", "none")
+      discrete('all', 'none')
     ]
   },
-  "text-decoration-line": {
+  'text-decoration-line': {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-decoration-line
     tests: [
-      discrete("underline", "overline")
+      discrete('underline', 'overline')
     ]
   },
-  "text-decoration-style": {
+  'text-decoration-style': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-decoration-style
     tests: [
-      discrete("solid", "dotted")
+      discrete('solid', 'dotted')
     ]
   },
-  "text-emphasis-position": {
+  'text-emphasis-position': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-emphasis-position
     tests: [
-      discrete("over right", "under left")
+      discrete('over right', 'under left')
     ]
   },
-  "text-emphasis-style": {
+  'text-emphasis-style': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-emphasis-style
     tests: [
-      discrete("filled circle", "open dot")
+      discrete('filled circle', 'open dot')
     ]
   },
-  "text-orientation": {
+  'text-orientation': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-text-orientation
     tests: [
-      discrete("upright", "sideways")
+      discrete('upright', 'sideways')
     ]
   },
-  "text-overflow": {
+  'text-overflow': {
     // https://drafts.csswg.org/css-ui/#propdef-text-overflow
     tests: [
-      discrete("clip", "ellipsis")
+      discrete('clip', 'ellipsis')
     ]
   },
-  "text-rendering": {
+  'text-rendering': {
     // https://svgwg.org/svg2-draft/painting.html#TextRenderingProperty
     tests: [
-      discrete("optimizeSpeed", "optimizeLegibility")
+      discrete('optimizeSpeed', 'optimizeLegibility')
     ]
   },
-  "text-transform": {
+  'text-transform': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-transform
     tests: [
-      discrete("capitalize", "uppercase")
+      discrete('capitalize', 'uppercase')
     ]
   },
-  "touch-action": {
+  'touch-action': {
     // https://w3c.github.io/pointerevents/#the-touch-action-css-property
     tests: [
-      discrete("auto", "none")
+      discrete('auto', 'none')
     ]
   },
-  "transform-box": {
+  'transform-box': {
     // https://drafts.csswg.org/css-transforms/#propdef-transform-box
     tests: [
-      discrete("fill-box", "border-box")
+      discrete('fill-box', 'border-box')
     ]
   },
-  "transform-style": {
+  'transform-style': {
     // https://drafts.csswg.org/css-transforms/#propdef-transform-style
     tests: [
-      discrete("flat", "preserve-3d")
+      discrete('flat', 'preserve-3d')
     ]
   },
-  "unicode-bidi": {
+  'unicode-bidi': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-unicode-bidi
     tests: [
-      discrete("embed", "bidi-override")
+      discrete('embed', 'bidi-override')
     ]
   },
-  "vector-effect": {
+  'vector-effect': {
     // https://svgwg.org/svg2-draft/coords.html#VectorEffectProperty
     tests: [
-      discrete("none", "non-scaling-stroke")
+      discrete('none', 'non-scaling-stroke')
     ]
   },
-  "visibility": {
+  'visibility': {
     // https://drafts.csswg.org/css2/visufx.html#propdef-visibility
     tests: [
       visibility()
     ]
   },
-  "white-space": {
+  'white-space': {
     // https://drafts.csswg.org/css-text-4/#propdef-white-space
     tests: [
-      discrete("pre", "nowrap")
+      discrete('pre', 'nowrap')
     ]
   },
-  "word-break": {
+  'word-break': {
     // https://drafts.csswg.org/css-text-3/#propdef-word-break
     tests: [
-      discrete("keep-all", "break-all")
+      discrete('keep-all', 'break-all')
     ]
   },
-  "will-change": {
+  'will-change': {
     // http://dev.w3.org/csswg/css-will-change/#propdef-will-change
     tests: [
-      discrete("scroll-position", "contents")
+      discrete('scroll-position', 'contents')
     ]
   },
-  "writing-mode": {
+  'writing-mode': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-writing-mode
     tests: [
-      discrete("vertical-rl", "sideways-rl")
+      discrete('vertical-rl', 'sideways-rl')
     ]
   },
 }
@@ -866,14 +866,14 @@ function discrete(from, to) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
       var animation = target.animate({ [idlName]: [from, to] },
-                                     { duration: 1000, fill: "both" });
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: from.toLowerCase() },
                             { time: 499,  expected: from.toLowerCase() },
                             { time: 500,  expected: to.toLowerCase() },
                             { time: 1000, expected: to.toLowerCase() }]);
-    }, property + " uses discrete animation when animating between '"
-       + from + "' and '" + to + "' with linear easing");
+    }, property + ' uses discrete animation when animating between "'
+       + from + '" and "' + to + '" with linear easing');
 
     test(function(t) {
       // Easing: http://cubic-bezier.com/#.68,0,1,.01
@@ -883,14 +883,14 @@ function discrete(from, to) {
       var keyframes = {};
       var target = createTestElement(t, options.tagName);
       var animation = target.animate({ [idlName]: [from, to] },
-                                     { duration: 1000, fill: "both",
-                                       easing: "cubic-bezier(0.68,0,1,0.01)" });
+                                     { duration: 1000, fill: 'both',
+                                       easing: 'cubic-bezier(0.68,0,1,0.01)' });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: from.toLowerCase() },
                             { time: 940,  expected: from.toLowerCase() },
                             { time: 960,  expected: to.toLowerCase() }]);
-    }, property + " uses discrete animation when animating between '"
-       + from + "' and '" + to + "' with effect easing");
+    }, property + ' uses discrete animation when animating between "'
+       + from + '" and "' + to + '" with effect easing');
 
     test(function(t) {
       // Easing: http://cubic-bezier.com/#.68,0,1,.01
@@ -899,14 +899,14 @@ function discrete(from, to) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
       var animation = target.animate({ [idlName]: [from, to],
-                                       easing: "cubic-bezier(0.68,0,1,0.01)" },
-                                     { duration: 1000, fill: "both" });
+                                       easing: 'cubic-bezier(0.68,0,1,0.01)' },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,    expected: from.toLowerCase() },
                             { time: 940,  expected: from.toLowerCase() },
                             { time: 960,  expected: to.toLowerCase() }]);
-    }, property + " uses discrete animation when animating between '"
-       + from + "' and '" + to + "' with keyframe easing");
+    }, property + ' uses discrete animation when animating between "'
+       + from + '" and "' + to + '" with keyframe easing');
   }
 }
 
@@ -915,24 +915,24 @@ function length() {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["10px", "50px"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['10px', '50px'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "10px" },
-                            { time: 500,  expected: "30px" },
-                            { time: 1000, expected: "50px" }]);
-    }, property + " supports animating as a length");
+                           [{ time: 0,    expected: '10px' },
+                            { time: 500,  expected: '30px' },
+                            { time: 1000, expected: '50px' }]);
+    }, property + ' supports animating as a length');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["1rem", "5rem"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['1rem', '5rem'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "10px" },
-                            { time: 500,  expected: "30px" },
-                            { time: 1000, expected: "50px" }]);
-    }, property + " supports animating as a length of rem");
+                           [{ time: 0,    expected: '10px' },
+                            { time: 500,  expected: '30px' },
+                            { time: 1000, expected: '50px' }]);
+    }, property + ' supports animating as a length of rem');
   }
 }
 
@@ -941,13 +941,13 @@ function percentage() {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["10%", "50%"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['10%', '50%'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "10%" },
-                            { time: 500,  expected: "30%" },
-                            { time: 1000, expected: "50%" }]);
-    }, property + " supports animating as a percentage");
+                           [{ time: 0,    expected: '10%' },
+                            { time: 500,  expected: '30%' },
+                            { time: 1000, expected: '50%' }]);
+    }, property + ' supports animating as a percentage');
   }
 }
 
@@ -957,12 +957,12 @@ function integer() {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
       var animation = target.animate({ [idlName]: [-2, 2] },
-                                     { duration: 1000, fill: "both" });
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "-2" },
-                            { time: 500,  expected: "0" },
-                            { time: 1000, expected: "2" }]);
-    }, property + " supports animating as an integer");
+                           [{ time: 0,    expected: '-2' },
+                            { time: 500,  expected: '0' },
+                            { time: 1000, expected: '2' }]);
+    }, property + ' supports animating as an integer');
   }
 }
 
@@ -972,12 +972,12 @@ function positiveNumber() {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
       var animation = target.animate({ [idlName]: [1.1, 1.5] },
-                                     { duration: 1000, fill: "both" });
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "1.1" },
-                            { time: 500,  expected: "1.3" },
-                            { time: 1000, expected: "1.5" }]);
-    }, property + " supports animating as a positive number");
+                           [{ time: 0,    expected: '1.1' },
+                            { time: 500,  expected: '1.3' },
+                            { time: 1000, expected: '1.5' }]);
+    }, property + ' supports animating as a positive number');
   }
 }
 
@@ -989,61 +989,61 @@ function lengthPercentageOrCalc() {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["10px", "20%"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['10px', '20%'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "10px" },
-                            { time: 500,  expected: "calc(5px + 10%)" },
-                            { time: 1000, expected: "20%" }]);
-    }, property + " supports animating as combination units 'px' and '%'");
+                           [{ time: 0,    expected: '10px' },
+                            { time: 500,  expected: 'calc(5px + 10%)' },
+                            { time: 1000, expected: '20%' }]);
+    }, property + ' supports animating as combination units "px" and "%"');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["10%", "2em"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['10%', '2em'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "10%" },
-                            { time: 500,  expected: "calc(10px + 5%)" },
-                            { time: 1000, expected: "20px" }]);
-    }, property + " supports animating as combination units '%' and 'em'");
+                           [{ time: 0,    expected: '10%' },
+                            { time: 500,  expected: 'calc(10px + 5%)' },
+                            { time: 1000, expected: '20px' }]);
+    }, property + ' supports animating as combination units "%" and "em"');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["1em", "2rem"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['1em', '2rem'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "10px" },
-                            { time: 500,  expected: "15px" },
-                            { time: 1000, expected: "20px" }]);
-    }, property + " supports animating as combination units 'em' and 'rem'");
+                           [{ time: 0,    expected: '10px' },
+                            { time: 500,  expected: '15px' },
+                            { time: 1000, expected: '20px' }]);
+    }, property + ' supports animating as combination units "em" and "rem"');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["10px", "calc(1em + 20%)"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['10px', 'calc(1em + 20%)'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "10px" },
-                            { time: 500,  expected: "calc(10px + 10%)" },
-                            { time: 1000, expected: "calc(10px + 20%)" }]);
-    }, property + " supports animating as combination units 'px' and 'calc'");
+                           [{ time: 0,    expected: '10px' },
+                            { time: 500,  expected: 'calc(10px + 10%)' },
+                            { time: 1000, expected: 'calc(10px + 20%)' }]);
+    }, property + ' supports animating as combination units "px" and "calc"');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
       var animation = target.animate(
-        { [idlName]: ["calc(10px + 10%)", "calc(1em + 1rem + 20%)"] },
-        { duration: 1000, fill: "both" });
+        { [idlName]: ['calc(10px + 10%)', 'calc(1em + 1rem + 20%)'] },
+        { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
                            [{ time: 0,
-                              expected: "calc(10px + 10%)" },
+                              expected: 'calc(10px + 10%)' },
                             { time: 500,
-                              expected: "calc(15px + 15%)" },
+                              expected: 'calc(15px + 15%)' },
                             { time: 1000,
-                              expected: "calc(20px + 20%)" }]);
-    }, property + " supports animating as a calc");
+                              expected: 'calc(20px + 20%)' }]);
+    }, property + ' supports animating as a calc');
   }
 }
 
@@ -1052,39 +1052,39 @@ function visibility() {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["visible", "hidden"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['visible', 'hidden'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "visible" },
-                            { time: 999,  expected: "visible" },
-                            { time: 1000, expected: "hidden" }]);
-    }, property + " uses visibility animation when animating "
-       + "from 'visible' to 'hidden'");
+                           [{ time: 0,    expected: 'visible' },
+                            { time: 999,  expected: 'visible' },
+                            { time: 1000, expected: 'hidden' }]);
+    }, property + ' uses visibility animation when animating '
+       + 'from "visible" to "hidden"');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["hidden", "visible"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['hidden', 'visible'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "hidden" },
-                            { time: 1,    expected: "visible" },
-                            { time: 1000, expected: "visible" }]);
-    }, property + " uses visibility animation when animating "
-     + "from 'hidden' to 'visible'");
+                           [{ time: 0,    expected: 'hidden' },
+                            { time: 1,    expected: 'visible' },
+                            { time: 1000, expected: 'visible' }]);
+    }, property + ' uses visibility animation when animating '
+     + 'from "hidden" to "visible"');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: ["hidden", "collapse"] },
-                                     { duration: 1000, fill: "both" });
+      var animation = target.animate({ [idlName]: ['hidden', 'collapse'] },
+                                     { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "hidden" },
-                            { time: 499,  expected: "hidden" },
-                            { time: 500,  expected: "collapse" },
-                            { time: 1000, expected: "collapse" }]);
-    }, property + " uses visibility animation when animating "
-     + "from 'hidden' to 'collapse'");
+                           [{ time: 0,    expected: 'hidden' },
+                            { time: 499,  expected: 'hidden' },
+                            { time: 500,  expected: 'collapse' },
+                            { time: 1000, expected: 'collapse' }]);
+    }, property + ' uses visibility animation when animating '
+     + 'from "hidden" to "collapse"');
 
     test(function(t) {
       // Easing: http://cubic-bezier.com/#.68,-.55,.26,1.55
@@ -1093,19 +1093,19 @@ function visibility() {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, options.tagName);
       var animation =
-        target.animate({ [idlName]: ["visible", "hidden"] },
-                       { duration: 1000, fill: "both",
-                         easing: "cubic-bezier(0.68, -0.55, 0.26, 1.55)" });
+        target.animate({ [idlName]: ['visible', 'hidden'] },
+                       { duration: 1000, fill: 'both',
+                         easing: 'cubic-bezier(0.68, -0.55, 0.26, 1.55)' });
       testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: "visible" },
-                            { time: 1,    expected: "visible" },
-                            { time: 330,  expected: "visible" },
-                            { time: 340,  expected: "visible" },
-                            { time: 620,  expected: "visible" },
-                            { time: 630,  expected: "hidden" },
-                            { time: 1000, expected: "hidden" }]);
-    }, property + " uses visibility animation when animating "
-     + "from 'visible' to 'hidden' with easeInOutBack easing");
+                           [{ time: 0,    expected: 'visible' },
+                            { time: 1,    expected: 'visible' },
+                            { time: 330,  expected: 'visible' },
+                            { time: 340,  expected: 'visible' },
+                            { time: 620,  expected: 'visible' },
+                            { time: 630,  expected: 'hidden' },
+                            { time: 1000, expected: 'hidden' }]);
+    }, property + ' uses visibility animation when animating '
+     + 'from "visible" to "hidden" with easeInOutBack easing');
   }
 }
 
@@ -1118,13 +1118,13 @@ function testAnimationSamples(animation, idlName, testSamples) {
     animation.currentTime = testSample.time;
     assert_equals(getComputedStyle(target, type)[idlName],
                   testSample.expected,
-                  "The value should be " + testSample.expected +
-                  " at " + testSample.time + "ms");
+                  'The value should be ' + testSample.expected +
+                  ' at ' + testSample.time + 'ms');
   });
 }
 
 function createTestElement(t, tagName) {
-  return tagName && tagName.startsWith("::")
+  return tagName && tagName.startsWith('::')
          ? createPseudo(t, tagName.substring(2))
          : createElement(t, tagName);
 }
@@ -1134,7 +1134,7 @@ function isSupported(property) {
   try {
     // Since TestKeyframe returns 'undefined' for |property|,
     // the KeyframeEffect constructor will throw
-    // if the string "undefined" is not a valid value for the property.
+    // if the string 'undefined' is not a valid value for the property.
     new KeyframeEffect(null, testKeyframe);
   } catch(e) {}
   return testKeyframe.propAccessCount !== 0;
@@ -1155,8 +1155,8 @@ function TestKeyframe(testProp) {
 
 function propertyToIDL(property) {
   // https://w3c.github.io/web-animations/#animation-property-name-to-idl-attribute-name
-  if (property === "float") {
-    return "cssFloat";
+  if (property === 'float') {
+    return 'cssFloat';
   }
   return property.replace(/-[a-z]/gi,
                           function (str) {
