@@ -1,5 +1,3 @@
-pub type c_long = i64;
-pub type c_ulong = u64;
 pub type time_t = i64;
 pub type mode_t = u32;
 pub type nlink_t = ::uint32_t;
@@ -394,6 +392,8 @@ pub const SO_RCVLOWAT: ::c_int = 0x1004;
 pub const SO_ERROR: ::c_int = 0x1007;
 pub const SO_TYPE: ::c_int = 0x1008;
 
+pub const MSG_NOSIGNAL: ::c_int = 0x400;
+
 pub const IFF_LOOPBACK: ::c_int = 0x8;
 
 pub const SHUT_RD: ::c_int = 0;
@@ -529,18 +529,18 @@ extern {
                         abstime: *const ::timespec) -> ::c_int;
    pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
                                     clock_id: clockid_t) -> ::c_int;
+    pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
+    pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
+                                   abstime: *const ::timespec) -> ::c_int;
 }
 
 cfg_if! {
-    if #[cfg(target_os = "bitrig")] {
-        mod bitrig;
-        pub use self::bitrig::*;
-    } else if #[cfg(target_os = "netbsd")] {
+    if #[cfg(target_os = "netbsd")] {
         mod netbsd;
         pub use self::netbsd::*;
-    } else if #[cfg(target_os = "openbsd")] {
-        mod openbsd;
-        pub use self::openbsd::*;
+    } else if #[cfg(any(target_os = "openbsd", target_os = "bitrig"))] {
+        mod openbsdlike;
+        pub use self::openbsdlike::*;
     } else {
         // Unknown target_os
     }

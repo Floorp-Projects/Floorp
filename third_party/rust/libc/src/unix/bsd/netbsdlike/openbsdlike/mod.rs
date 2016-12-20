@@ -25,19 +25,17 @@ s! {
 
     pub struct glob_t {
         pub gl_pathc:   ::c_int,
-        __unused1:      ::c_int,
+        pub gl_matchc:  ::c_int,
         pub gl_offs:    ::c_int,
-        __unused2:      ::c_int,
+        pub gl_flags:   ::c_int,
         pub gl_pathv:   *mut *mut ::c_char,
-
+        __unused1: *mut ::c_void,
+        __unused2: *mut ::c_void,
         __unused3: *mut ::c_void,
-
         __unused4: *mut ::c_void,
         __unused5: *mut ::c_void,
         __unused6: *mut ::c_void,
         __unused7: *mut ::c_void,
-        __unused8: *mut ::c_void,
-        __unused9: *mut ::c_void,
     }
 
     pub struct kevent {
@@ -120,33 +118,6 @@ s! {
         pub dli_saddr: *mut ::c_void,
     }
 
-    pub struct lconv {
-        pub decimal_point: *mut ::c_char,
-        pub thousands_sep: *mut ::c_char,
-        pub grouping: *mut ::c_char,
-        pub int_curr_symbol: *mut ::c_char,
-        pub currency_symbol: *mut ::c_char,
-        pub mon_decimal_point: *mut ::c_char,
-        pub mon_thousands_sep: *mut ::c_char,
-        pub mon_grouping: *mut ::c_char,
-        pub positive_sign: *mut ::c_char,
-        pub negative_sign: *mut ::c_char,
-        pub int_frac_digits: ::c_char,
-        pub frac_digits: ::c_char,
-        pub p_cs_precedes: ::c_char,
-        pub p_sep_by_space: ::c_char,
-        pub n_cs_precedes: ::c_char,
-        pub n_sep_by_space: ::c_char,
-        pub p_sign_posn: ::c_char,
-        pub n_sign_posn: ::c_char,
-        pub int_p_cs_precedes: ::c_char,
-        pub int_p_sep_by_space: ::c_char,
-        pub int_n_cs_precedes: ::c_char,
-        pub int_n_sep_by_space: ::c_char,
-        pub int_p_sign_posn: ::c_char,
-        pub int_n_sign_posn: ::c_char,
-    }
-
     pub struct lastlog {
         ll_time: ::time_t,
         ll_line: [::c_char; UT_LINESIZE],
@@ -200,6 +171,8 @@ pub const MAP_HASSEMAPHORE : ::c_int = 0x0000;
 pub const EIPSEC : ::c_int = 82;
 pub const ENOMEDIUM : ::c_int = 85;
 pub const EMEDIUMTYPE : ::c_int = 86;
+
+pub const EAI_SYSTEM: ::c_int = -11;
 
 pub const RUSAGE_THREAD: ::c_int = 1;
 
@@ -360,7 +333,6 @@ pub const KERN_OSVERSION: ::c_int = 27;
 pub const KERN_SOMAXCONN: ::c_int = 28;
 pub const KERN_SOMINCONN: ::c_int = 29;
 pub const KERN_USERMOUNT: ::c_int = 30;
-pub const KERN_RND: ::c_int = 31;
 pub const KERN_NOSUIDCOREDUMP: ::c_int = 32;
 pub const KERN_FSYNC: ::c_int = 33;
 pub const KERN_SYSVMSG: ::c_int = 34;
@@ -459,4 +431,21 @@ extern {
                   newlen: ::size_t)
                   -> ::c_int;
     pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
+    pub fn pledge(promises: *const ::c_char,
+                  paths: *mut *const ::c_char) -> ::c_int;
 }
+
+cfg_if! {
+    if #[cfg(target_os = "openbsd")] {
+        mod openbsd;
+        pub use self::openbsd::*;
+    } else if #[cfg(target_os = "bitrig")] {
+        mod bitrig;
+        pub use self::bitrig::*;
+    } else {
+        // Unknown target_os
+    }
+}
+
+mod other;
+pub use self::other::*;
