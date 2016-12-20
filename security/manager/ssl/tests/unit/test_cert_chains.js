@@ -32,7 +32,7 @@ function test_cert_equals() {
 }
 
 function test_cert_list_serialization() {
-  let certList = build_cert_chain(['default-ee', 'expired-ee']);
+  let certList = build_cert_chain(["default-ee", "expired-ee"]);
 
   // Serialize the cert list to a string
   let serHelper = Cc["@mozilla.org/network/serialization-helper;1"]

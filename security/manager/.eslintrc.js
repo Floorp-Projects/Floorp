@@ -84,12 +84,6 @@ module.exports = { // eslint-disable-line no-undef
     // No duplicate cases in switch statements
     "no-duplicate-case": "error",
 
-    // Disallow use of eval().
-    "no-eval": "error",
-
-    // No labels
-    "no-labels": "error",
-
     // If an if block ends with a return no need for an else block
     "no-else-return": "error",
 
@@ -98,6 +92,9 @@ module.exports = { // eslint-disable-line no-undef
 
     // Disallow empty destructuring
     "no-empty-pattern": "error",
+
+    // Disallow use of eval().
+    "no-eval": "error",
 
     // No assigning to exception variable
     "no-ex-assign": "error",
@@ -119,6 +116,9 @@ module.exports = { // eslint-disable-line no-undef
 
     // No odd whitespace characters
     "no-irregular-whitespace": "error",
+
+    // No labels.
+    "no-labels": "error",
 
     // No single if block inside an else block
     "no-lonely-if": "error",
@@ -164,6 +164,12 @@ module.exports = { // eslint-disable-line no-undef
     // Disallow sparse arrays, eg. let arr = [,,"error"].
     "no-sparse-arrays": "error",
 
+    // Disallow tabs.
+    "no-tabs": "error",
+
+    // Disallow template literal placeholder syntax in regular strings.
+    "no-template-curly-in-string": "error",
+
     // Disallow throwing literals (eg. |throw "error"| instead of
     // |throw new Error("error")|)
     "no-throw-literal": "error",
@@ -185,6 +191,10 @@ module.exports = { // eslint-disable-line no-undef
 
     // No using with
     "no-with": "error",
+
+    // Require double quote strings to be used, except cases where another quote
+    // type is used to avoid escaping.
+    "quotes": ["error", "double", { "avoidEscape": true }],
 
     // Always require semicolon at end of statement
     "semi": ["error", "always"],
