@@ -168,7 +168,10 @@ GetPluginPaths(const nsAString& aPluginPath,
 
   // Mac sandbox rules expect paths to actual files and directories -- not
   // soft links.
+  libDirectory->Normalize();
   aPluginDirectoryPath = GetNativeTarget(libDirectory);
+
+  libFile->Normalize();
   aPluginFilePath = GetNativeTarget(libFile);
 
   return true;
