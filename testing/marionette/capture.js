@@ -17,6 +17,11 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 /** Provides primitives to capture screenshots. */
 this.capture = {};
 
+capture.Format = {
+  Base64: 0,
+  Hash: 1,
+};
+
 /**
  * Take a screenshot of a single element.
  *
