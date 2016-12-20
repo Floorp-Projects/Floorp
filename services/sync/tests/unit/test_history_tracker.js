@@ -18,17 +18,50 @@ var tracker = engine._tracker;
 // Don't write out by default.
 tracker.persistChangedIDs = false;
 
+// Places notifies history observers asynchronously, so `addVisits` might return
+// before the tracker receives the notification. This helper registers an
+// observer that resolves once the expected notification fires.
+async function promiseVisit(expectedType, expectedURI) {
+  return new Promise(resolve => {
+    function done(type, uri) {
+      if (uri.equals(expectedURI) && type == expectedType) {
+        PlacesUtils.history.removeObserver(observer);
+        resolve();
+      }
+    }
+    let observer = {
+      onVisit(uri) {
+        done("added", uri);
+      },
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onTitleChanged() {},
+      onFrecencyChanged() {},
+      onManyFrecenciesChanged() {},
+      onDeleteURI(uri) {
+        done("removed", uri);
+      },
+      onClearHistory() {},
+      onPageChanged() {},
+      onDeleteVisits() {},
+    };
+    PlacesUtils.history.addObserver(observer, false);
+  });
+}
+
 async function addVisit(suffix, referrer = null, transition = PlacesUtils.history.TRANSITION_LINK) {
   let uriString = "http://getfirefox.com/" + suffix;
   let uri = Utils.makeURI(uriString);
   _("Adding visit for URI " + uriString);
 
+  let visitAddedPromise = promiseVisit("added", uri);
   await PlacesTestUtils.addVisits({
     uri,
     visitDate: Date.now() * 1000,
     transition,
     referrer,
   });
+  await visitAddedPromise;
 
   return uri;
 }
@@ -100,13 +133,20 @@ add_task(async function test_not_tracking() {
 
 add_task(async function test_start_tracking() {
   _("Add hook for save completion.");
-  let savePromise = new Promise(resolve => {
+  let savePromise = new Promise((resolve, reject) => {
     tracker.persistChangedIDs = true;
-    tracker.onSavedChangedIDs = function () {
-      // Turn this back off.
-      tracker.persistChangedIDs = false;
-      delete tracker.onSavedChangedIDs;
-      resolve();
+    let save = tracker._storage._save;
+    tracker._storage._save = async function() {
+      try {
+        await save.call(this);
+        resolve();
+      } catch (ex) {
+        reject(ex);
+      } finally {
+        // Turn this back off.
+        tracker.persistChangedIDs = false;
+        tracker._storage._save = save;
+      }
     };
   });
 
@@ -156,9 +196,10 @@ add_task(async function test_track_delete() {
   await verifyTrackerEmpty();
 
   await startTracking();
+  let visitRemovedPromise = promiseVisit("removed", uri);
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
   PlacesUtils.history.removePage(uri);
-  await scorePromise;
+  await Promise.all([scorePromise, visitRemovedPromise]);
 
   await verifyTrackedItems([guid]);
   do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
@@ -177,6 +218,7 @@ add_task(async function test_dont_track_expiration() {
   await verifyTrackerEmpty();
 
   await startTracking();
+  let visitRemovedPromise = promiseVisit("removed", uriToRemove);
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
 
   // Observe expiration.
@@ -192,7 +234,7 @@ add_task(async function test_dont_track_expiration() {
     .getService(Ci.nsIObserver)
     .observe(null, "places-debug-start-expiration", 1);
 
-  await scorePromise;
+  await Promise.all([scorePromise, visitRemovedPromise]);
   await verifyTrackedItems([guidToRemove]);
 
   await cleanup();

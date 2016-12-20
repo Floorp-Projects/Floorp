@@ -94,10 +94,6 @@ ExtensionStorageTracker.prototype = {
 
   // Override a bunch of methods which don't do anything for us.
   // This is a performance hack.
-  saveChangedIDs: function() {
-  },
-  loadChangedIDs: function() {
-  },
   ignoreID: function() {
   },
   unignoreID: function() {
