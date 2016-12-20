@@ -12,8 +12,8 @@ import types
 
 
 SEARCH_PATHS = [
-    'marionette',
-    'marionette/marionette/runner/mixins/browsermob-proxy-py',
+    'marionette/harness',
+    'marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py',
     'marionette/client',
     'mochitest',
     'mozbase/manifestparser',
