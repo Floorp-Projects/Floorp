@@ -19,6 +19,65 @@
 namespace mozilla {
 namespace webgl {
 
+static bool
+IsPIValidForDOM(const webgl::PackingInfo& pi)
+{
+    // https://www.khronos.org/registry/webgl/specs/latest/2.0/#TEXTURE_TYPES_FORMATS_FROM_DOM_ELEMENTS_TABLE
+
+    // Just check for invalid individual formats and types, not combinations.
+    switch (pi.format) {
+    case LOCAL_GL_RGB:
+    case LOCAL_GL_RGBA:
+    case LOCAL_GL_LUMINANCE_ALPHA:
+    case LOCAL_GL_LUMINANCE:
+    case LOCAL_GL_ALPHA:
+    case LOCAL_GL_RED:
+    case LOCAL_GL_RED_INTEGER:
+    case LOCAL_GL_RG:
+    case LOCAL_GL_RG_INTEGER:
+    case LOCAL_GL_RGB_INTEGER:
+    case LOCAL_GL_RGBA_INTEGER:
+        break;
+
+    case LOCAL_GL_SRGB:
+    case LOCAL_GL_SRGB_ALPHA:
+        // Allowed in WebGL1+EXT_srgb
+        break;
+
+    default:
+        return false;
+    }
+
+    switch (pi.type) {
+    case LOCAL_GL_UNSIGNED_BYTE:
+    case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
+    case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
+    case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
+    case LOCAL_GL_HALF_FLOAT:
+    case LOCAL_GL_HALF_FLOAT_OES:
+    case LOCAL_GL_FLOAT:
+    case LOCAL_GL_UNSIGNED_INT_10F_11F_11F_REV:
+        break;
+
+    default:
+        return false;
+    }
+
+    return true;
+}
+
+static bool
+ValidatePIForDOM(WebGLContext* webgl, const char* funcName,
+                 const webgl::PackingInfo& pi)
+{
+    if (!IsPIValidForDOM(pi)) {
+        webgl->ErrorInvalidOperation("%s: Format or type is invalid for DOM sources.",
+                                     funcName);
+        return false;
+    }
+    return true;
+}
+
 static WebGLTexelFormat
 FormatForPackingInfo(const PackingInfo& pi)
 {
@@ -511,6 +570,9 @@ bool
 TexUnpackImage::Validate(WebGLContext* webgl, const char* funcName,
                          const webgl::PackingInfo& pi)
 {
+    if (!ValidatePIForDOM(webgl, funcName, pi))
+        return false;
+
     const auto& fullRows = mImage->GetSize().height;
     return ValidateUnpackPixels(webgl, funcName, fullRows, 0, this);
 }
@@ -674,6 +736,9 @@ bool
 TexUnpackSurface::Validate(WebGLContext* webgl, const char* funcName,
                            const webgl::PackingInfo& pi)
 {
+    if (!ValidatePIForDOM(webgl, funcName, pi))
+        return false;
+
     const auto& fullRows = mSurf->GetSize().height;
     return ValidateUnpackPixels(webgl, funcName, fullRows, 0, this);
 }
