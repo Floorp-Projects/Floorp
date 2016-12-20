@@ -307,23 +307,34 @@ nsNSSSocketInfo::GetNegotiatedNPN(nsACString& aNegotiatedNPN)
 NS_IMETHODIMP
 nsNSSSocketInfo::GetAlpnEarlySelection(nsACString& aAlpnSelected)
 {
+  aAlpnSelected.Truncate();
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown() || isPK11LoggedOut()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  SSLNextProtoState alpnState;
-  unsigned char chosenAlpn[MAX_ALPN_LENGTH];
-  unsigned int chosenAlpnLen;
-  SECStatus rv = SSL_GetNextProto(mFd, &alpnState, chosenAlpn, &chosenAlpnLen,
-                                  AssertedCast<unsigned int>(ArrayLength(chosenAlpn)));
 
-  if (rv != SECSuccess || alpnState != SSL_NEXT_PROTO_EARLY_VALUE ||
-      chosenAlpnLen == 0) {
+  SSLPreliminaryChannelInfo info;
+  SECStatus rv = SSL_GetPreliminaryChannelInfo(mFd, &info, sizeof(info));
+  if (rv != SECSuccess || !info.canSendEarlyData) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  aAlpnSelected.Assign(BitwiseCast<char*, unsigned char*>(chosenAlpn),
-                       chosenAlpnLen);
+  SSLNextProtoState alpnState;
+  unsigned char chosenAlpn[MAX_ALPN_LENGTH];
+  unsigned int chosenAlpnLen;
+  rv = SSL_GetNextProto(mFd, &alpnState, chosenAlpn, &chosenAlpnLen,
+                        AssertedCast<unsigned int>(ArrayLength(chosenAlpn)));
+
+  if (rv != SECSuccess) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (alpnState == SSL_NEXT_PROTO_EARLY_VALUE) {
+    aAlpnSelected.Assign(BitwiseCast<char*, unsigned char*>(chosenAlpn),
+                         chosenAlpnLen);
+  }
+
   return NS_OK;
 }
 
