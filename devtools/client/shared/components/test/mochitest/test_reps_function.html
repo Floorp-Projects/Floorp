@@ -16,7 +16,7 @@ Test Func rep
 <pre id="test">
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
-window.onload = function () {
+window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { Func } = browserRequire("devtools/client/shared/components/reps/function");
   const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
@@ -29,13 +29,13 @@ window.onload = function () {
     const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
     is(renderedRep.type, Func.rep, `Rep correctly selects ${Func.rep.displayName}`);
 
-    testNamed();
-    testVarNamed();
-    testAnon();
-    testLongName();
-    testAsyncFunction();
-    testAnonAsyncFunction();
-    testGeneratorFunction();
+    yield testNamed();
+    yield testVarNamed();
+    yield testAnon();
+    yield testLongName();
+    yield testAsyncFunction();
+    yield testAnonAsyncFunction();
+    yield testGeneratorFunction();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -386,7 +386,7 @@ window.onload = function () {
         };
     }
   }
-};
+});
 </script>
 </pre>
 </body>
