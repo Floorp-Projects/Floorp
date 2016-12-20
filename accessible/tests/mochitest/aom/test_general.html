@@ -35,7 +35,7 @@
   function createIframe() {
     return new Promise((resolve) => {
       let iframe = document.createElement("iframe");
-      iframe.src = `data:text/html,<html><body role='application'>hey</body></html>`;
+      iframe.src = "about:blank";
       iframe.onload = () => resolve(iframe.contentDocument);
       document.body.appendChild(iframe);
     });
@@ -80,17 +80,7 @@
     ok(anode.is('document', 'focusable'),
        'correct role and state on an accessible node');
 
-    function check_attrs_and_finish()
-    {
-      if (anode.get('xml-roles') == 'application') {
-        ok(true, 'correct object attribute value on an accessible node');
-        finish();
-        return;
-      }
-
-      window.setTimeout(check_attrs_and_finish, 100);
-    }
-    check_attrs_and_finish();
+    finish();
   }
   </script>
 </head>
