@@ -182,6 +182,14 @@ WebGL2Context::GetActiveUniforms(JSContext* cx, const WebGLProgram& program,
     if (!ValidateObject("getActiveUniforms: program", program))
         return;
 
+    const auto& numActiveUniforms = program.LinkInfo()->uniforms.size();
+    for (const auto& curIndex : uniformIndices) {
+        if (curIndex >= numActiveUniforms) {
+            ErrorInvalidValue("%s: Too-large active uniform index queried.", funcName);
+            return;
+        }
+    }
+
     const auto& count = uniformIndices.Length();
 
     JS::Rooted<JSObject*> array(cx, JS_NewArrayObject(cx, count));
