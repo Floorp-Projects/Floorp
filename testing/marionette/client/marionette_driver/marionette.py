@@ -983,10 +983,12 @@ class Marionette(object):
             pref_value = self.execute_script("""
                 Components.utils.import("resource://gre/modules/Preferences.jsm");
 
-                let [pref, defaultBranch, valueType] = arguments;
+                let pref = arguments[0];
+                let defaultBranch = arguments[1];
+                let valueType = arguments[2];
 
                 prefs = new Preferences({defaultBranch: defaultBranch});
-                return prefs.get(pref, null, valueType=Ci[valueType]);
+                return prefs.get(pref, null, Components.interfaces[valueType]);
                 """, script_args=(pref, default_branch, value_type))
             return pref_value
 
@@ -1014,7 +1016,9 @@ class Marionette(object):
             self.execute_script("""
                 Components.utils.import("resource://gre/modules/Preferences.jsm");
 
-                let [pref, value, defaultBranch] = arguments;
+                let pref = arguments[0];
+                let value = arguments[1];
+                let defaultBranch = arguments[2];
 
                 prefs = new Preferences({defaultBranch: defaultBranch});
                 prefs.set(pref, value);
