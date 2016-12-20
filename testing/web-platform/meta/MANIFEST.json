@@ -32194,6 +32194,10 @@
         "url": "/webaudio/the-audio-api/the-audionode-interface/audionode-connect-return-value.html"
       },
       {
+        "path": "webaudio/the-audio-api/the-audioparam-interface/idl-test.html",
+        "url": "/webaudio/the-audio-api/the-audioparam-interface/idl-test.html"
+      },
+      {
         "path": "webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueAtTime.html",
         "url": "/webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueAtTime.html"
       },
