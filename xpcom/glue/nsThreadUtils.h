@@ -33,24 +33,6 @@
 // for convenience.
 
 /**
- * Set name of the target thread.  This operation is asynchronous.
- */
-extern void NS_SetThreadName(nsIThread* aThread, const nsACString& aName);
-
-/**
- * Static length version of the above function checking length of the
- * name at compile time.
- */
-template<size_t LEN>
-inline void
-NS_SetThreadName(nsIThread* aThread, const char (&aName)[LEN])
-{
-  static_assert(LEN <= 16,
-                "Thread name must be no more than 16 characters");
-  NS_SetThreadName(aThread, nsDependentCString(aName));
-}
-
-/**
  * Create a new thread, and optionally provide an initial event for the thread.
  *
  * @param aResult
