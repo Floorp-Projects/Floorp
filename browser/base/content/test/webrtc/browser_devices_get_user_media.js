@@ -175,6 +175,24 @@ var gTests = [
 
     // the stream is already closed, but this will do some cleanup anyway
     yield closeStream(true);
+
+    // After stop sharing, gUM(audio+camera) causes a prompt.
+    promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true);
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
+    checkDeviceSelectors(true, true);
+
+    yield promiseMessage(permissionError, () => {
+      activateSecondaryAction(kActionDeny);
+    });
+
+    yield expectObserverCalled("getUserMedia:response:deny");
+    yield expectObserverCalled("recording-window-ended");
+    yield checkNotSharing();
+    SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+    SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+    SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
   }
 },
 
@@ -200,6 +218,24 @@ var gTests = [
     yield checkSharingUI({video: true, audio: true});
 
     yield reloadAndAssertClosedStreams();
+
+    // After the reload, gUM(audio+camera) causes a prompt.
+    promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true);
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
+    checkDeviceSelectors(true, true);
+
+    yield promiseMessage(permissionError, () => {
+      activateSecondaryAction(kActionDeny);
+    });
+
+    yield expectObserverCalled("getUserMedia:response:deny");
+    yield expectObserverCalled("recording-window-ended");
+    yield checkNotSharing();
+    SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+    SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+    SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
   }
 },
 
