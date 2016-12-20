@@ -73,7 +73,6 @@ UNIFIED_SOURCES += [
     'WebGL1ContextUniforms.cpp',
     'WebGL2Context.cpp',
     'WebGL2ContextBuffers.cpp',
-    'WebGL2ContextDraw.cpp',
     'WebGL2ContextFramebuffers.cpp',
     'WebGL2ContextMRTs.cpp',
     'WebGL2ContextPrograms.cpp',
