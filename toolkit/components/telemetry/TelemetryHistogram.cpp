@@ -40,6 +40,7 @@ using mozilla::StaticMutexAutoLock;
 using mozilla::StaticAutoPtr;
 using mozilla::Telemetry::Accumulation;
 using mozilla::Telemetry::KeyedAccumulation;
+using mozilla::Telemetry::Common::LogToBrowserConsole;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1554,6 +1555,9 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   Histogram::ClassType type = h->histogram_type();
 
   JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // This function should always return |undefined| and never fail but
+  // rather report failures using the console.
+  args.rval().setUndefined();
 
   if (!internal_CanRecordBase()) {
     return true;
@@ -1572,30 +1576,31 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     // For categorical histograms we allow passing a string argument that specifies the label.
     nsAutoJSString label;
     if (!label.init(cx, args[0])) {
-      JS_ReportErrorASCII(cx, "Invalid string parameter");
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Invalid string parameter"));
+      return true;
     }
 
     nsresult rv = gHistograms[id].label_id(NS_ConvertUTF16toUTF8(label).get(), &value);
     if (NS_FAILED(rv)) {
-      JS_ReportErrorASCII(cx, "Unknown label for categorical histogram");
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag,
+                          NS_LITERAL_STRING("Unknown label for categorical histogram"));
+      return true;
     }
   } else {
     // All other accumulations expect one numerical argument.
     if (!args.length()) {
-      JS_ReportErrorASCII(cx, "Expected one argument");
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Expected one argument"));
+      return true;
     }
 
     if (!(args[0].isNumber() || args[0].isBoolean())) {
-      JS_ReportErrorASCII(cx, "Not a number");
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Not a number"));
+      return true;
     }
 
     if (!JS::ToUint32(cx, args[0], &value)) {
-      JS_ReportErrorASCII(cx, "Failed to convert argument");
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Failed to convert argument"));
+      return true;
     }
   }
 
@@ -1818,15 +1823,18 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // This function should always return |undefined| and never fail but
+  // rather report failures using the console.
+  args.rval().setUndefined();
   if (args.length() < 1) {
-    JS_ReportErrorASCII(cx, "Expected one argument");
-    return false;
+    LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Expected one argument"));
+    return true;
   }
 
   nsAutoJSString key;
   if (!args[0].isString() || !key.init(cx, args[0])) {
-    JS_ReportErrorASCII(cx, "Not a string");
-    return false;
+    LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Not a string"));
+    return true;
   }
 
   const uint32_t type = keyed->GetHistogramType();
@@ -1836,17 +1844,19 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   int32_t value = 1;
   if ((type != base::CountHistogram::COUNT_HISTOGRAM) || (args.length() == 2)) {
     if (args.length() < 2) {
-      JS_ReportErrorASCII(cx, "Expected two arguments for this histogram type");
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag,
+                          NS_LITERAL_STRING("Expected two arguments for this histogram type"));
+      return true;
     }
 
     if (!(args[1].isNumber() || args[1].isBoolean())) {
-      JS_ReportErrorASCII(cx, "Not a number");
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Not a number"));
+      return true;
     }
 
     if (!JS::ToInt32(cx, args[1], &value)) {
-      return false;
+      LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Failed to convert argument"));
+      return true;
     }
   }
 
