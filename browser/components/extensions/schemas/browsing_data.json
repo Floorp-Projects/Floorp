@@ -374,7 +374,6 @@
         "description": "Clears the browser's stored passwords.",
         "type": "function",
         "async": "callback",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "RemovalOptions",
