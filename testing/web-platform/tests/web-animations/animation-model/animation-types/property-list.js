@@ -146,8 +146,12 @@ var gCSSProperties = {
   },
   'border-bottom-width': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-width
-    types: [
-    ]
+    types: [ 'length' ],
+    setup: t => {
+      var element = createElement(t);
+      element.style.borderBottomStyle = 'solid';
+      return element;
+    }
   },
   'border-collapse': {
     // https://drafts.csswg.org/css-tables/#propdef-border-collapse
@@ -230,8 +234,12 @@ var gCSSProperties = {
   },
   'border-left-width': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-left-width
-    types: [
-    ]
+    types: [ 'length' ],
+    setup: t => {
+      var element = createElement(t);
+      element.style.borderLeftStyle = 'solid';
+      return element;
+    }
   },
   'border-right-color': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-right-color
@@ -246,8 +254,12 @@ var gCSSProperties = {
   },
   'border-right-width': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-right-width
-    types: [
-    ]
+    types: [ 'length' ],
+    setup: t => {
+      var element = createElement(t);
+      element.style.borderRightStyle = 'solid';
+      return element;
+    }
   },
   'border-spacing': {
     // https://drafts.csswg.org/css-tables/#propdef-border-spacing
@@ -277,8 +289,12 @@ var gCSSProperties = {
   },
   'border-top-width': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-width
-    types: [
-    ]
+    types: [ 'length' ],
+    setup: t => {
+      var element = createElement(t);
+      element.style.borderTopStyle = 'solid';
+      return element;
+    }
   },
   'bottom': {
     // https://drafts.csswg.org/css-position/#propdef-bottom
@@ -360,8 +376,7 @@ var gCSSProperties = {
   },
   'column-gap': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-gap
-    types: [
-    ]
+    types: [ 'length' ]
   },
   'column-rule-color': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-color
@@ -382,12 +397,17 @@ var gCSSProperties = {
   },
   'column-rule-width': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-width
-    types: [
-    ]
+    types: [ 'length' ],
+    setup: t => {
+      var element = createElement(t);
+      element.style.columnRuleStyle = 'solid';
+      return element;
+    }
   },
   'column-width': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-width
-    types: [
+    types: [ 'length',
+      { type: 'discrete', options: [ [ 'auto', '1px' ] ] }
     ]
   },
   'contain': {
@@ -745,8 +765,7 @@ var gCSSProperties = {
   },
   'letter-spacing': {
     // https://drafts.csswg.org/css-text-3/#propdef-letter-spacing
-    types: [
-    ]
+    types: [ 'length' ]
   },
   'lighting-color': {
     // https://drafts.fxtf.org/filters/#LightingColorProperty
@@ -1007,8 +1026,7 @@ var gCSSProperties = {
   },
   'outline-offset': {
     // https://drafts.csswg.org/css-ui-3/#propdef-outline-offset
-    types: [
-    ]
+    types: [ 'length' ]
   },
   'outline-style': {
     // https://drafts.csswg.org/css-ui/#propdef-outline-style
@@ -1018,8 +1036,12 @@ var gCSSProperties = {
   },
   'outline-width': {
     // https://drafts.csswg.org/css-ui-3/#propdef-outline-width
-    types: [
-    ]
+    types: [ 'length' ],
+    setup: t => {
+      var element = createElement(t);
+      element.style.outlineStyle = 'solid';
+      return element;
+    }
   },
   'overflow': {
     // https://drafts.csswg.org/css-overflow/#propdef-overflow
@@ -1116,8 +1138,7 @@ var gCSSProperties = {
   },
   'perspective': {
     // https://drafts.csswg.org/css-transforms-1/#propdef-perspective
-    types: [
-    ]
+    types: [ 'length' ]
   },
   'perspective-origin': {
     // https://drafts.csswg.org/css-transforms-1/#propdef-perspective-origin
