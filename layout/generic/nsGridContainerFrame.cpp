@@ -2587,14 +2587,8 @@ nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
   if (aContentBox.BSize(mWM) == NS_AUTOHEIGHT) {
     aContentBox.BSize(mWM) =
       mRows.BackComputedIntrinsicSize(mRowFunctions, mGridStyle->mGridRowGap);
-    if ((mRows.mStateUnion & TrackSize::eIndefinitePercentMinSizing) ||
-        mGridStyle->mGridRowGap.HasPercent()) {
-      mRows.Initialize(mRowFunctions, mGridStyle->mGridRowGap,
-                       aGrid.mGridRowEnd, aContentBox.BSize(mWM));
-      mRows.CalculateSizes(*this, mGridItems, mRowFunctions,
-                           aContentBox.BSize(mWM), &GridArea::mRows,
-                           aConstraint);
-    }
+    mRows.mGridGap =
+      ::ResolveToDefiniteSize(mGridStyle->mGridRowGap, aContentBox.BSize(mWM));
   }
 }
 
