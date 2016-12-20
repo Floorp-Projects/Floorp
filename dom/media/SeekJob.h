@@ -15,21 +15,16 @@
 namespace mozilla {
 
 struct SeekJob {
-  SeekJob();
-
-  SeekJob(SeekJob&& aOther);
-
-  SeekJob& operator=(SeekJob&& aOther);
-
-  bool Exists() const;
-
-  void Resolve(const char* aCallSite);
-
-  void RejectIfExists(const char* aCallSite);
-
+  SeekJob() = default;
+  SeekJob(SeekJob&& aOther) = default;
+  SeekJob& operator=(SeekJob&& aOther) = default;
   ~SeekJob();
 
-  SeekTarget mTarget;
+  bool Exists() const;
+  void Resolve(const char* aCallSite);
+  void RejectIfExists(const char* aCallSite);
+
+  Maybe<SeekTarget> mTarget;
   MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;
 };
 
