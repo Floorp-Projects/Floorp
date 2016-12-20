@@ -21,32 +21,32 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
         self.assertNotEqual(page_info.dtds, [])
         self.assertNotEqual(page_info.properties, [])
 
-        self.assertEqual(page_info.deck.element.get_attribute('localName'), 'deck')
+        self.assertEqual(page_info.deck.element.get_property('localName'), 'deck')
 
         # feed panel
-        self.assertEqual(page_info.deck.feed.element.get_attribute('localName'), 'vbox')
+        self.assertEqual(page_info.deck.feed.element.get_property('localName'), 'vbox')
 
         # general panel
-        self.assertEqual(page_info.deck.general.element.get_attribute('localName'), 'vbox')
+        self.assertEqual(page_info.deck.general.element.get_property('localName'), 'vbox')
 
         # media panel
-        self.assertEqual(page_info.deck.media.element.get_attribute('localName'), 'vbox')
+        self.assertEqual(page_info.deck.media.element.get_property('localName'), 'vbox')
 
         # permissions panel
-        self.assertEqual(page_info.deck.permissions.element.get_attribute('localName'), 'vbox')
+        self.assertEqual(page_info.deck.permissions.element.get_property('localName'), 'vbox')
 
         # security panel
         panel = page_info.deck.select(page_info.deck.security)
 
-        self.assertEqual(panel.element.get_attribute('localName'), 'vbox')
+        self.assertEqual(panel.element.get_property('localName'), 'vbox')
 
-        self.assertEqual(panel.domain.get_attribute('localName'), 'textbox')
-        self.assertEqual(panel.owner.get_attribute('localName'), 'textbox')
-        self.assertEqual(panel.verifier.get_attribute('localName'), 'textbox')
+        self.assertEqual(panel.domain.get_property('localName'), 'textbox')
+        self.assertEqual(panel.owner.get_property('localName'), 'textbox')
+        self.assertEqual(panel.verifier.get_property('localName'), 'textbox')
 
-        self.assertEqual(panel.view_certificate.get_attribute('localName'), 'button')
-        self.assertEqual(panel.view_cookies.get_attribute('localName'), 'button')
-        self.assertEqual(panel.view_passwords.get_attribute('localName'), 'button')
+        self.assertEqual(panel.view_certificate.get_property('localName'), 'button')
+        self.assertEqual(panel.view_cookies.get_property('localName'), 'button')
+        self.assertEqual(panel.view_passwords.get_property('localName'), 'button')
 
     def test_select(self):
         """Test properties and methods for switching between panels."""

@@ -27,31 +27,31 @@ class TestAboutWindow(PuppeteerMixin, MarionetteTestCase):
         """Test correct retrieval of elements."""
         self.assertNotEqual(self.about_window.dtds, [])
 
-        self.assertEqual(self.deck.element.get_attribute('localName'), 'deck')
+        self.assertEqual(self.deck.element.get_property('localName'), 'deck')
 
         # apply panel
         panel = self.deck.apply
-        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(panel.button.get_attribute('localName'), 'button')
+        self.assertEqual(panel.element.get_property('localName'), 'hbox')
+        self.assertEqual(panel.button.get_property('localName'), 'button')
 
         # check_for_updates panel
         panel = self.deck.check_for_updates
-        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(panel.button.get_attribute('localName'), 'button')
+        self.assertEqual(panel.element.get_property('localName'), 'hbox')
+        self.assertEqual(panel.button.get_property('localName'), 'button')
 
         # checking_for_updates panel
-        self.assertEqual(self.deck.checking_for_updates.element.get_attribute('localName'), 'hbox')
+        self.assertEqual(self.deck.checking_for_updates.element.get_property('localName'), 'hbox')
 
         # download_and_install panel
         panel = self.deck.download_and_install
-        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(panel.button.get_attribute('localName'), 'button')
+        self.assertEqual(panel.element.get_property('localName'), 'hbox')
+        self.assertEqual(panel.button.get_property('localName'), 'button')
 
         # download_failed panel
-        self.assertEqual(self.deck.download_failed.element.get_attribute('localName'), 'hbox')
+        self.assertEqual(self.deck.download_failed.element.get_property('localName'), 'hbox')
 
         # downloading panel
-        self.assertEqual(self.deck.downloading.element.get_attribute('localName'), 'hbox')
+        self.assertEqual(self.deck.downloading.element.get_property('localName'), 'hbox')
 
     def test_open_window(self):
         """Test various opening strategies."""
