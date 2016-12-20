@@ -291,7 +291,9 @@ HttpServer::TransportProvider::MaybeNotify()
     RefPtr<TransportProvider> self = this;
     nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction([self, this] ()
     {
-      mListener->OnTransportAvailable(mTransport, mInput, mOutput);
+      DebugOnly<nsresult> rv = mListener->OnTransportAvailable(mTransport,
+                                                               mInput, mOutput);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     });
     NS_DispatchToCurrentThread(event);
   }

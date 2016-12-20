@@ -308,7 +308,7 @@ txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
     if (httpChannel) {
-        httpChannel->GetRequestSucceeded(&success);
+        Unused << httpChannel->GetRequestSucceeded(&success);
     }
 
     nsresult result = aStatusCode;
@@ -462,14 +462,17 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
 
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     if (httpChannel) {
-        httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                      NS_LITERAL_CSTRING("*/*"),
-                                      false);
+        DebugOnly<nsresult> rv;
+        rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                           NS_LITERAL_CSTRING("*/*"),
+                                           false);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
 
         nsCOMPtr<nsIURI> referrerURI;
         aReferrerPrincipal->GetURI(getter_AddRefs(referrerURI));
         if (referrerURI) {
-            httpChannel->SetReferrerWithPolicy(referrerURI, aReferrerPolicy);
+            rv = httpChannel->SetReferrerWithPolicy(referrerURI, aReferrerPolicy);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 

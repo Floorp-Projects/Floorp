@@ -1349,7 +1349,8 @@ Navigator::SendBeaconInternal(const nsAString& aUrl,
     aRv.Throw(NS_ERROR_DOM_BAD_URI);
     return false;
   }
-  httpChannel->SetReferrer(documentURI);
+  rv = httpChannel->SetReferrer(documentURI);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIInputStream> in;
   nsAutoCString contentTypeWithCharset;
@@ -1379,7 +1380,8 @@ Navigator::SendBeaconInternal(const nsAString& aUrl,
                                            NS_LITERAL_CSTRING("POST"),
                                            false);
   } else {
-    httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+    rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(channel);
