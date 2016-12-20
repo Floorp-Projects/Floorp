@@ -20,17 +20,15 @@ SimpleTest.waitForExplicitFinish();
 
 var gInputElement = document.getElementById("input");
 
-function getEditorIMESupport(aInputElement)
+function getEditor(aInputElement)
 {
   var editableElement = SpecialPowers.wrap(aInputElement).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
   ok(editableElement, "The input element doesn't have nsIDOMNSEditableElement interface");
   ok(editableElement.editor, "There is no editor for the input element");
-  var editorIMESupport = SpecialPowers.wrap(editableElement).editor.QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
-  ok(editorIMESupport, "The input element doesn't have nsIEditorIMESupport interface");
-  return editorIMESupport;
+  return editableElement.editor;
 }
 
-var gEditorIMESupport;
+var gEditor;
 
 function testNotGenerateCompositionByCreatedEvents(aEventInterface)
 {
@@ -41,7 +39,7 @@ function testNotGenerateCompositionByCreatedEvents(aEventInterface)
     compositionEvent.initMouseEvent("compositionstart", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
   }
   gInputElement.dispatchEvent(compositionEvent);
-  ok(!gEditorIMESupport.composing, "Composition shouldn't be started with a created compositionstart event (" + aEventInterface + ")");
+  ok(!gEditor.composing, "Composition shouldn't be started with a created compositionstart event (" + aEventInterface + ")");
 
   compositionEvent = document.createEvent(aEventInterface);
   if (compositionEvent.initCompositionEvent) {
@@ -50,7 +48,7 @@ function testNotGenerateCompositionByCreatedEvents(aEventInterface)
     compositionEvent.initMouseEvent("compositionupdate", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
   }
   gInputElement.dispatchEvent(compositionEvent);
-  ok(!gEditorIMESupport.composing, "Composition shouldn't be started with a created compositionupdate event (" + aEventInterface + ")");
+  ok(!gEditor.composing, "Composition shouldn't be started with a created compositionupdate event (" + aEventInterface + ")");
   is(gInputElement.value, "", "Input element shouldn't be modified with a created compositionupdate event (" + aEventInterface + ")");
 
   compositionEvent = document.createEvent(aEventInterface);
@@ -60,14 +58,14 @@ function testNotGenerateCompositionByCreatedEvents(aEventInterface)
     compositionEvent.initMouseEvent("compositionend", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
   }
   gInputElement.dispatchEvent(compositionEvent);
-  ok(!gEditorIMESupport.composing, "Composition shouldn't be committed with a created compositionend event (" + aEventInterface + ")");
+  ok(!gEditor.composing, "Composition shouldn't be committed with a created compositionend event (" + aEventInterface + ")");
   is(gInputElement.value, "", "Input element shouldn't be committed with a created compositionend event (" + aEventInterface + ")");
 }
 
 function doTests()
 {
   gInputElement.focus();
-  gEditorIMESupport = getEditorIMESupport(gInputElement);
+  gEditor = getEditor(gInputElement);
 
   testNotGenerateCompositionByCreatedEvents("CompositionEvent");
   testNotGenerateCompositionByCreatedEvents("MouseEvent");

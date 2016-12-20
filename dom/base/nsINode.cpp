@@ -61,7 +61,6 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIEditor.h"
-#include "nsIEditorIMESupport.h"
 #include "nsILinkHandler.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/NodeInfoInlines.h"
