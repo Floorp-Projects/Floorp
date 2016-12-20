@@ -307,16 +307,16 @@ GMPDecryptorParent::RecvSessionMessage(const nsCString& aSessionId,
 
 mozilla::ipc::IPCResult
 GMPDecryptorParent::RecvExpirationChange(const nsCString& aSessionId,
-                                         const double& aExpiryTime)
+                                         const double& aSecondsSinceEpoch)
 {
   LOGD(("GMPDecryptorParent[%p]::RecvExpirationChange(sessionId='%s', expiry=%lf)",
-        this, aSessionId.get(), aExpiryTime));
+        this, aSessionId.get(), aSecondsSinceEpoch));
 
   if (!mIsOpen) {
     NS_WARNING("Trying to use a dead GMP decrypter!");
     return IPC_FAIL_NO_REASON(this);
   }
-  mCallback->ExpirationChange(aSessionId, aExpiryTime);
+  mCallback->ExpirationChange(aSessionId, aSecondsSinceEpoch);
   return IPC_OK();
 }
 
