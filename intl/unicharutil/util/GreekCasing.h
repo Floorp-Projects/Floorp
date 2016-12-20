@@ -20,7 +20,6 @@ class GreekCasing {
 private:
   enum GreekStates {
     kStart,
-    kInWord,
     kAlpha,
     kEpsilon,
     kEta,
@@ -31,7 +30,6 @@ private:
     kAlphaAcc,
     kEpsilonAcc,
     kEtaAcc,
-    kEtaAccMarked,
     kIotaAcc,
     kOmicronAcc,
     kUpsilonAcc,
@@ -67,8 +65,7 @@ public:
     GreekStates mState;
   };
 
-  static uint32_t UpperCase(uint32_t aCh, State& aState,
-                            bool& aMarkEtaPos, bool& aUpdateMarkedEta);
+  static uint32_t UpperCase(uint32_t aCh, State& aState);
 };
 
 } // namespace mozilla
