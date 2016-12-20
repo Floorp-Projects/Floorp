@@ -12,11 +12,11 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(waitForFrame).then(function() {
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(waitForFrame).then(function() {
     assert_not_equals(getComputedStyle(div).marginLeft, '1000px',
                       'transform style is animated before cancelling');
-    animation.cancel();
+    transition.cancel();
     assert_equals(getComputedStyle(div).marginLeft, div.style.marginLeft,
                   'transform style is no longer animated after cancelling');
   });
@@ -29,17 +29,17 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    animation.cancel();
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    transition.cancel();
     assert_equals(getComputedStyle(div).marginLeft, '1000px',
                   'margin-left style is not animated after cancelling');
-    animation.play();
+    transition.play();
     assert_equals(getComputedStyle(div).marginLeft, '0px',
                   'margin-left style is animated after re-starting transition');
-    return animation.ready;
+    return transition.ready;
   }).then(function() {
-    assert_equals(animation.playState, 'running',
+    assert_equals(transition.playState, 'running',
                   'Transition succeeds in running after being re-started');
   });
 }, 'After canceling a transition, it can still be re-used');
@@ -51,18 +51,18 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    animation.finish();
-    animation.cancel();
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    transition.finish();
+    transition.cancel();
     assert_equals(getComputedStyle(div).marginLeft, '1000px',
                   'margin-left style is not animated after cancelling');
-    animation.play();
+    transition.play();
     assert_equals(getComputedStyle(div).marginLeft, '0px',
                   'margin-left style is animated after re-starting transition');
-    return animation.ready;
+    return transition.ready;
   }).then(function() {
-    assert_equals(animation.playState, 'running',
+    assert_equals(transition.playState, 'running',
                   'Transition succeeds in running after being re-started');
   });
 }, 'After cancelling a finished transition, it can still be re-used');
@@ -74,8 +74,8 @@ test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  animation.cancel();
+  var transition = div.getAnimations()[0];
+  transition.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '1000px',
                 'margin-left style is not animated after cancelling');
 
@@ -86,7 +86,7 @@ test(function(t) {
   assert_equals(getComputedStyle(div).marginLeft, '1000px',
                 'margin-left style is still not animated after updating'
                 + ' transition-duration');
-  assert_equals(animation.playState, 'idle',
+  assert_equals(transition.playState, 'idle',
                 'Transition is still idle after updating transition-duration');
 }, 'After cancelling a transition, updating transition properties doesn\'t make'
    + ' it live again');
@@ -98,13 +98,13 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    assert_equals(transition.playState, 'running');
     div.style.display = 'none';
     return waitForFrame();
   }).then(function() {
-    assert_equals(animation.playState, 'idle');
+    assert_equals(transition.playState, 'idle');
     assert_equals(getComputedStyle(div).marginLeft, '1000px');
   });
 }, 'Setting display:none on an element cancels its transitions');
@@ -120,13 +120,13 @@ promise_test(function(t) {
   childDiv.style.transition = 'margin-left 100s';
   childDiv.style.marginLeft = '1000px';
 
-  var animation = childDiv.getAnimations()[0];
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+  var transition = childDiv.getAnimations()[0];
+  return transition.ready.then(function() {
+    assert_equals(transition.playState, 'running');
     parentDiv.style.display = 'none';
     return waitForFrame();
   }).then(function() {
-    assert_equals(animation.playState, 'idle');
+    assert_equals(transition.playState, 'idle');
     assert_equals(getComputedStyle(childDiv).marginLeft, '1000px');
   });
 }, 'Setting display:none cancels transitions on a child element');
@@ -138,15 +138,15 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    assert_equals(transition.playState, 'running');
     // Set an unrecognized property value
     div.style.transitionProperty = 'none';
     flushComputedStyle(div);
     return waitForFrame();
   }).then(function() {
-    assert_equals(animation.playState, 'idle');
+    assert_equals(transition.playState, 'idle');
     assert_equals(getComputedStyle(div).marginLeft, '1000px');
   });
 }, 'Removing a property from transition-property cancels transitions on that '+
@@ -159,14 +159,14 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    assert_equals(transition.playState, 'running');
     div.style.transition = 'margin-top 10s -10s'; // combined duration is zero
     flushComputedStyle(div);
     return waitForFrame();
   }).then(function() {
-    assert_equals(animation.playState, 'idle');
+    assert_equals(transition.playState, 'idle');
     assert_equals(getComputedStyle(div).marginLeft, '1000px');
   });
 }, 'Setting zero combined duration');
@@ -178,14 +178,14 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    assert_equals(transition.playState, 'running');
     div.style.marginLeft = '2000px';
     flushComputedStyle(div);
     return waitForFrame();
   }).then(function() {
-    assert_equals(animation.playState, 'idle');
+    assert_equals(transition.playState, 'idle');
   });
 }, 'Changing style to another interpolable value cancels the original ' +
    'transition');
@@ -197,16 +197,16 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    assert_equals(transition.playState, 'running');
     div.style.marginLeft = 'auto';
     flushComputedStyle(div);
     return waitForFrame();
   }).then(function() {
     assert_equals(div.getAnimations().length, 0,
                   'There should be no transitions');
-    assert_equals(animation.playState, 'idle');
+    assert_equals(transition.playState, 'idle');
   });
 }, 'An after-change style value can\'t be interpolated');
 
@@ -217,14 +217,14 @@ promise_test(function(t) {
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '1000px';
 
-  var animation = div.getAnimations()[0];
-  return animation.ready.then(function() {
-    assert_equals(animation.playState, 'running');
+  var transition = div.getAnimations()[0];
+  return transition.ready.then(function() {
+    assert_equals(transition.playState, 'running');
     div.style.marginLeft = '0px';
     flushComputedStyle(div);
     return waitForFrame();
   }).then(function() {
-    assert_equals(animation.playState, 'idle');
+    assert_equals(transition.playState, 'idle');
   });
 }, 'Reversing a running transition cancels the original transition');
 
