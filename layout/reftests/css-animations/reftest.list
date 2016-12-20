@@ -15,7 +15,7 @@ test-pref(layers.offmainthreadcomposition.async-animations,false) fails-if(webre
 == no-stacking-context-opacity-removing-animation-in-delay.html no-stacking-context-animation-ref.html
 == no-stacking-context-transform-removing-animation-in-delay.html no-stacking-context-animation-ref.html
 == stacking-context-lose-opacity-1.html stacking-context-animation-ref.html
-fails-if(webrender) == stacking-context-lose-transform-none.html stacking-context-animation-ref.html
+== stacking-context-lose-transform-none.html stacking-context-animation-ref.html
 fails-if(webrender) == stacking-context-opacity-win-in-delay.html stacking-context-animation-ref.html
 fails-if(webrender) == stacking-context-opacity-win-in-delay-on-main-thread.html stacking-context-animation-ref.html
 fails-if(webrender) == stacking-context-opacity-wins-over-transition.html stacking-context-animation-ref.html
