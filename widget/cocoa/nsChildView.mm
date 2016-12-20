@@ -2644,7 +2644,8 @@ nsChildView::SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent)
     RoundedToInt(aSwipeStartEvent.mPanStartPoint * ScreenToLayoutDeviceScale(1));
   WidgetSimpleGestureEvent geckoEvent =
     SwipeTracker::CreateSwipeGestureEvent(eSwipeGestureMayStart, this,
-                                          position);
+                                          position,
+                                          aSwipeStartEvent.mTimeStamp);
   geckoEvent.mDirection = direction;
   geckoEvent.mDelta = 0.0;
   geckoEvent.mAllowedDirections = 0;
@@ -2661,7 +2662,7 @@ nsChildView::TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStart
   // If a swipe is currently being tracked kill it -- it's been interrupted
   // by another gesture event.
   if (mSwipeTracker) {
-    mSwipeTracker->CancelSwipe();
+    mSwipeTracker->CancelSwipe(aSwipeStartEvent.mTimeStamp);
     mSwipeTracker->Destroy();
     mSwipeTracker = nullptr;
   }
@@ -3542,6 +3543,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return [[self window] isOpaque];
 }
 
+// XXX Is this really used?
 - (void)sendFocusEvent:(EventMessage)eventMessage
 {
   if (!mGeckoChild)
@@ -3550,6 +3552,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetGUIEvent focusGuiEvent(true, eventMessage, mGeckoChild);
   focusGuiEvent.mTime = PR_IntervalNow();
+  focusGuiEvent.mTimeStamp = nsCocoaUtils::GetEventTimeStamp(0);
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
 }
 
