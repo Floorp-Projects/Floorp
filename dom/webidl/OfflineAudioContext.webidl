@@ -12,12 +12,13 @@
 
 [Constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate),
 Pref="dom.webaudio.enabled"]
-interface OfflineAudioContext : AudioContext {
+interface OfflineAudioContext : BaseAudioContext {
 
     [Throws]
     Promise<AudioBuffer> startRendering();
 
-    attribute EventHandler oncomplete;
-    readonly attribute unsigned long length;
+    // TODO: Promise<void>        suspend (double suspendTime);
 
+    readonly        attribute unsigned long length;
+                    attribute EventHandler  oncomplete;
 };

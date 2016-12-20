@@ -20,7 +20,7 @@ dictionary AudioBufferSourceOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional AudioBufferSourceOptions options)]
+ Constructor(BaseAudioContext context, optional AudioBufferSourceOptions options)]
 interface AudioBufferSourceNode : AudioNode {
 
     attribute AudioBuffer? buffer;
