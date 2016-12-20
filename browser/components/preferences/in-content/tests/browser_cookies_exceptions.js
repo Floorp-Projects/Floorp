@@ -331,10 +331,6 @@ var testRunner = {
         },
       };
 
-      registerCleanupFunction(function() {
-        Services.prefs.clearUserPref("privacy.history.custom");
-      });
-
       openPreferencesViaOpenPreferencesAPI("panePrivacy", null, {leaveOpen: true}).then(function() {
         let doc = gBrowser.contentDocument;
         let historyMode = doc.getElementById("historyMode");

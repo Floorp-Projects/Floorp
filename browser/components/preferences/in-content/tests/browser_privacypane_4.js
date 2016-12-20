@@ -14,12 +14,12 @@ let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 run_test_subset([
   test_custom_retention("acceptCookies", "remember"),
   test_custom_retention("acceptCookies", "custom"),
-  test_custom_retention("acceptThirdPartyMenu", "custom", "visited"),
+  test_custom_retention("acceptThirdPartyMenu", "remember", "visited"),
   test_custom_retention("acceptThirdPartyMenu", "custom", "always"),
-  test_custom_retention("keepCookiesUntil", "custom", 1),
+  test_custom_retention("keepCookiesUntil", "remember", 1),
   test_custom_retention("keepCookiesUntil", "custom", 2),
   test_custom_retention("keepCookiesUntil", "custom", 0),
+  test_custom_retention("alwaysClear", "remember"),
   test_custom_retention("alwaysClear", "custom"),
-  test_custom_retention("alwaysClear", "custom"),
-  test_historymode_retention("remember", "custom"),
+  test_historymode_retention("remember", "remember"),
 ]);

@@ -52,9 +52,6 @@
   <preference id="browser.formfill.enable"
               name="browser.formfill.enable"
               type="bool"/>
-  <preference id="privacy.history.custom"
-              name="privacy.history.custom"
-              type="bool"/>
   <!-- Cookies -->
   <preference id="network.cookie.cookieBehavior"
               name="network.cookie.cookieBehavior"
