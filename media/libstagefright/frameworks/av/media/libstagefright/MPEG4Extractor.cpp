@@ -1105,7 +1105,12 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                         < (ssize_t)sizeof(duration)) {
                     return ERROR_IO;
                 }
-                duration = ntoh64(duration);
+                // Avoid duration sets to -1, which is incorrect.
+                if (duration != -1) {
+                    duration = ntoh64(duration);
+                } else {
+                    duration = 0;
+                }
             } else {
                 uint32_t duration32;
                 if (mDataSource->readAt(
@@ -1116,6 +1121,8 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 // ffmpeg sets duration to -1, which is incorrect.
                 if (duration32 != 0xffffffff) {
                     duration = ntohl(duration32);
+                } else {
+                  duration = 0;
                 }
             }
             if (duration < 0) {

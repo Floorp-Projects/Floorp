@@ -19,3 +19,9 @@ if 'a' in CONFIG['GRE_MILESTONE']:
         'formautofill',
         'presentation',
     ]
+
+# Only include mortar system add-ons if we locally enable it
+if CONFIG['MOZ_MORTAR']:
+    DIRS += [
+        'mortar',
+    ]

@@ -75,6 +75,8 @@ browser/extensions/pdfjs/**
 browser/extensions/pocket/content/panels/js/tmpl.js
 browser/extensions/pocket/content/panels/js/vendor/**
 browser/locales/**
+# imported from chromium
+browser/extensions/mortar/**
 
 # devtools/ exclusions
 devtools/client/canvasdebugger/**
