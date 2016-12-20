@@ -18,903 +18,914 @@ html {
 var gCSSProperties = {
   'align-content': {
     // https://drafts.csswg.org/css-align/#propdef-align-content
-    tests: [
-      discrete('flex-start', 'flex-end')
+    types: [
+      { type: 'discrete' , options: [ [ 'flex-start', 'flex-end' ] ] }
     ]
   },
   'align-items': {
     // https://drafts.csswg.org/css-align/#propdef-align-items
-    tests: [
-      discrete('flex-start', 'flex-end')
+    types: [
+      { type: 'discrete', options: [ [ 'flex-start', 'flex-end' ] ] }
     ]
   },
   'align-self': {
     // https://drafts.csswg.org/css-align/#propdef-align-self
-    tests: [
-      discrete('flex-start', 'flex-end')
+    types: [
+      { type: 'discrete', options: [ [ 'flex-start', 'flex-end' ] ] }
     ]
   },
   'backface-visibility': {
     // https://drafts.csswg.org/css-transforms/#propdef-backface-visibility
-    tests: [
-      discrete('visible', 'hidden')
+    types: [
+      { type: 'discrete', options: [ [ 'visible', 'hidden' ] ] }
     ]
   },
   'background-attachment': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-attachment
-    tests: [
-      discrete('fixed', 'local')
+    types: [
+      { type: 'discrete', options: [ [ 'fixed', 'local' ] ] }
     ]
   },
   'background-blend-mode': {
     // https://drafts.fxtf.org/compositing-1/#propdef-background-blend-mode
-    tests: [
-      discrete('multiply', 'screen')
+    types: [
+      { type: 'discrete', options: [ [ 'multiply', 'screen' ] ] }
     ]
   },
   'background-clip': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-clip
-    tests: [
-      discrete('padding-box', 'content-box')
+    types: [
+      { type: 'discrete', options: [ [ 'padding-box', 'content-box' ] ] }
     ]
   },
   'background-image': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-image
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'background-origin': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-origin
-    tests: [
-      discrete('padding-box', 'content-box')
+    types: [
+      { type: 'discrete', options: [ [ 'padding-box', 'content-box' ] ] }
     ]
   },
   'background-repeat': {
     // https://drafts.csswg.org/css-backgrounds-3/#background-repeat
-    tests: [
-      discrete('space', 'round')
+    types: [
+      { type: 'discrete', options: [ [ 'space', 'round' ] ] }
     ]
   },
   'border-bottom-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-bottom-style
-    tests: [
-      discrete('dotted', 'solid')
+    types: [
+      { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
     ]
   },
   'border-collapse': {
     // https://drafts.csswg.org/css-tables/#propdef-border-collapse
-    tests: [
-      discrete('collapse', 'separate')
+    types: [
+      { type: 'discrete', options: [ [ 'collapse', 'separate' ] ] }
     ]
   },
   'border-image-outset': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-outset
-    tests: [
-      discrete('1 1 1 1', '5 5 5 5')
+    types: [
+      { type: 'discrete', options: [ [ '1 1 1 1', '5 5 5 5' ] ] }
     ]
   },
   'border-image-repeat': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-repeat
-    tests: [
-      discrete('stretch stretch', 'repeat repeat')
+    types: [
+      { type: 'discrete', options: [ [ 'stretch stretch', 'repeat repeat' ] ] }
     ]
   },
   'border-image-slice': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-slice
-    tests: [
-      discrete('1 1 1 1', '5 5 5 5')
+    types: [
+      { type: 'discrete', options: [ [ '1 1 1 1', '5 5 5 5' ] ] }
     ]
   },
   'border-image-source': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-source
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'border-image-width': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-image-width
-    tests: [
-      discrete('1 1 1 1', '5 5 5 5')
+    types: [
+      { type: 'discrete', options: [ [ '1 1 1 1', '5 5 5 5' ] ] }
     ]
   },
   'border-left-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-left-style
-    tests: [
-      discrete('dotted', 'solid')
+    types: [
+      { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
     ]
   },
   'border-right-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-right-style
-    tests: [
-      discrete('dotted', 'solid')
+    types: [
+      { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
     ]
   },
   'border-top-style': {
     // https://drafts.csswg.org/css-backgrounds-3/#border-top-style
-    tests: [
-      discrete('dotted', 'solid')
+    types: [
+      { type: 'discrete', options: [ [ 'dotted', 'solid' ] ] }
     ]
   },
   'box-decoration-break': {
     // https://drafts.csswg.org/css-break/#propdef-box-decoration-break
-    tests: [
-      discrete('slice', 'clone')
+    types: [
+      { type: 'discrete', options: [ [ 'slice', 'clone' ] ] }
     ]
   },
   'box-sizing': {
     // https://drafts.csswg.org/css-ui-4/#box-sizing
-    tests: [
-      discrete('content-box', 'border-box')
+    types: [
+      { type: 'discrete', options: [ [ 'content-box', 'border-box' ] ] }
     ]
   },
   'caption-side': {
     // https://drafts.csswg.org/css-tables/#propdef-caption-side
-    tests: [
-      discrete('top', 'bottom')
+    types: [
+      { type: 'discrete', options: [ [ 'top', 'bottom' ] ] }
     ]
   },
   'clear': {
     // https://drafts.csswg.org/css-page-floats/#propdef-clear
-    tests: [
-      discrete('inline-start', 'inline-end')
+    types: [
+      { type: 'discrete', options: [ [ 'inline-start', 'inline-end' ] ] }
     ]
   },
   'clip-rule': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-clip-rule
-    tests: [
-      discrete('evenodd', 'nonzero')
+    types: [
+      { type: 'discrete', options: [ [ 'evenodd', 'nonzero' ] ] }
     ]
   },
   'color-adjust': {
     // https://drafts.csswg.org/css-color-4/#color-adjust
-    tests: [
-      discrete('economy', 'exact')
+    types: [
+      { type: 'discrete', options: [ [ 'economy', 'exact' ] ] }
     ]
   },
   'color-interpolation': {
     // https://svgwg.org/svg2-draft/painting.html#ColorInterpolationProperty
-    tests: [
-      discrete('linearRGB', 'auto')
+    types: [
+      { type: 'discrete', options: [ [ 'linearRGB', 'auto' ] ] }
     ]
   },
   'color-interpolation-filters': {
     // https://drafts.fxtf.org/filters-1/#propdef-color-interpolation-filters
-    tests: [
-      discrete('sRGB', 'linearRGB')
+    types: [
+      { type: 'discrete', options: [ [ 'sRGB', 'linearRGB' ] ] }
     ]
   },
   'column-fill': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-fill
-    tests: [
-      discrete('auto', 'balance')
+    types: [
+      { type: 'discrete', options: [ [ 'auto', 'balance' ] ] }
     ]
   },
   'column-rule-style': {
     // https://drafts.csswg.org/css-multicol/#propdef-column-rule-style
-    tests: [
-      discrete('none', 'dotted')
+    types: [
+      { type: 'discrete', options: [ [ 'none', 'dotted' ] ] }
     ]
   },
   'contain': {
     // https://drafts.csswg.org/css-containment/#propdef-contain
-    tests: [
-      discrete('strict', 'none')
+    types: [
+      { type: 'discrete', options: [ [ 'strict', 'none' ] ] }
     ]
   },
   'content': {
     // https://drafts.csswg.org/css-content-3/#propdef-content
-    tests: [
-      discrete('"a"', '"b"')
+    types: [
+      { type: 'discrete', options: [ [ '"a"', '"b"' ] ] }
     ],
-    tagName: '::before'
+    setup: t => {
+      return createPseudo(t, 'before');
+    }
   },
   'counter-increment': {
     // https://drafts.csswg.org/css-lists-3/#propdef-counter-increment
-    tests: [
-      discrete('ident-1 1', 'ident-2 2')
+    types: [
+      { type: 'discrete', options: [ [ 'ident-1 1', 'ident-2 2' ] ] }
     ]
   },
   'counter-reset': {
     // https://drafts.csswg.org/css-lists-3/#propdef-counter-reset
-    tests: [
-      discrete('ident-1 1', 'ident-2 2')
+    types: [
+      { type: 'discrete', options: [ [ 'ident-1 1', 'ident-2 2' ] ] }
     ]
   },
   'cursor': {
     // https://drafts.csswg.org/css2/ui.html#propdef-cursor
-    tests: [
-      discrete('pointer', 'wait')
+    types: [
+      { type: 'discrete', options: [ [ 'pointer', 'wait' ] ] }
     ]
   },
   'direction': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-direction
-    tests: [
-      discrete('ltr', 'rtl')
+    types: [
+      { type: 'discrete', options: [ [ 'ltr', 'rtl' ] ] }
     ]
   },
   'dominant-baseline': {
     // https://drafts.csswg.org/css-inline/#propdef-dominant-baseline
-    tests: [
-      discrete('ideographic', 'alphabetic')
+    types: [
+      { type: 'discrete', options: [ [ 'ideographic', 'alphabetic' ] ] }
     ]
   },
   'empty-cells': {
     // https://drafts.csswg.org/css-tables/#propdef-empty-cells
-    tests: [
-      discrete('show', 'hide')
+    types: [
+      { type: 'discrete', options: [ [ 'show', 'hide' ] ] }
     ]
   },
   'fill-rule': {
     // https://svgwg.org/svg2-draft/painting.html#FillRuleProperty
-    tests: [
-      discrete('evenodd', 'nonzero')
+    types: [
+      { type: 'discrete', options: [ [ 'evenodd', 'nonzero' ] ] }
     ]
   },
   'flex-basis': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-basis
-    tests: [
-      lengthPercentageOrCalc(),
-      discrete('auto', '10px')
+    types: [
+      'lengthPercentageOrCalc',
+      { type: 'discrete', options: [ [ 'auto', '10px' ] ] }
     ]
   },
   'flex-direction': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-direction
-    tests: [
-      discrete('row', 'row-reverse')
+    types: [
+      { type: 'discrete', options: [ [ 'row', 'row-reverse' ] ] }
     ]
   },
   'flex-grow': {
     // https://drafts.csswg.org/css-flexbox/#flex-grow-property
-    tests: [
-      positiveNumber()
-    ]
+    types: [ 'positiveNumber' ]
   },
   'flex-shrink': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-shrink
-    tests: [
-      positiveNumber()
-    ]
+    types: [ 'positiveNumber' ]
   },
   'flex-wrap': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-wrap
-    tests: [
-      discrete('nowrap', 'wrap')
+    types: [
+      { type: 'discrete', options: [ [ 'nowrap', 'wrap' ] ] }
     ]
   },
   'font-style': {
     // https://drafts.csswg.org/css-fonts/#propdef-font-style
-    tests: [
-      discrete('italic', 'oblique')
+    types: [
+      { type: 'discrete', options: [ [ 'italic', 'oblique' ] ] }
     ]
   },
   'float': {
     // https://drafts.csswg.org/css-page-floats/#propdef-float
-    tests: [
-      discrete('left', 'right')
+    types: [
+      { type: 'discrete', options: [ [ 'left', 'right' ] ] }
     ]
   },
   'font-family': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-family
-    tests: [
-      discrete('helvetica', 'verdana')
+    types: [
+      { type: 'discrete', options: [ [ 'helvetica', 'verdana' ] ] }
     ]
   },
   'font-feature-settings': {
     // https://drafts.csswg.org/css-fonts/#descdef-font-feature-settings
-    tests: [
-      discrete('"liga" 5', 'normal')
+    types: [
+      { type: 'discrete', options: [ [ '"liga" 5', 'normal' ] ] }
     ]
   },
   'font-kerning': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-kerning
-    tests: [
-      discrete('auto', 'normal')
+    types: [
+      { type: 'discrete', options: [ [ 'auto', 'normal' ] ] }
     ]
   },
   'font-language-override': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-language-override
-    tests: [
-      discrete('"eng"', 'normal')
+    types: [
+      { type: 'discrete', options: [ [ '"eng"', 'normal' ] ] }
     ]
   },
   'font-style': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-style
-    tests: [
-      discrete('italic', 'oblique')
+    types: [
+      { type: 'discrete', options: [ [ 'italic', 'oblique' ] ] }
     ]
   },
   'font-synthesis': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-synthesis
-    tests: [
-      discrete('none', 'weight style')
+    types: [
+      { type: 'discrete', options: [ [ 'none', 'weight style' ] ] }
     ]
   },
   'font-variant-alternates': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-alternates
-    tests: [
-      discrete('swash(unknown)', 'stylistic(unknown)')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'swash(unknown)', 'stylistic(unknown)' ] ] }
     ]
   },
   'font-variant-caps': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-caps
-    tests: [
-      discrete('small-caps', 'unicase')
+    types: [
+      { type: 'discrete', options: [ [ 'small-caps', 'unicase' ] ] }
     ]
   },
   'font-variant-east-asian': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-east-asian
-    tests: [
-      discrete('full-width', 'proportional-width')
+    types: [
+      { type: 'discrete', options: [ [ 'full-width', 'proportional-width' ] ] }
     ]
   },
   'font-variant-ligatures': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-ligatures
-    tests: [
-      discrete('common-ligatures', 'no-common-ligatures')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'common-ligatures', 'no-common-ligatures' ] ] }
     ]
   },
   'font-variant-numeric': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-numeric
-    tests: [
-      discrete('lining-nums', 'oldstyle-nums')
+    types: [
+      { type: 'discrete', options: [ [ 'lining-nums', 'oldstyle-nums' ] ] }
     ]
   },
   'font-variant-position': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-variant-position
-    tests: [
-      discrete('sub', 'super')
+    types: [
+      { type: 'discrete', options: [ [ 'sub', 'super' ] ] }
     ]
   },
   'grid-auto-columns': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-auto-columns
-    tests: [
-      discrete('1px', '5px')
+    types: [
+      { type: 'discrete', options: [ [ '1px', '5px' ] ] }
     ]
   },
   'grid-auto-flow': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-auto-flow
-    tests: [
-      discrete('row', 'column')
+    types: [
+      { type: 'discrete', options: [ [ 'row', 'column' ] ] }
     ]
   },
   'grid-auto-rows': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-auto-rows
-    tests: [
-      discrete('1px', '5px')
+    types: [
+      { type: 'discrete', options: [ [ '1px', '5px' ] ] }
     ]
   },
   'grid-column-end': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-column-end
-    tests: [
-      discrete('1', '5')
+    types: [
+      { type: 'discrete', options: [ [ '1', '5' ] ] }
     ]
   },
   'grid-column-start': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-column-start
-    tests: [
-      discrete('1', '5')
+    types: [
+      { type: 'discrete', options: [ [ '1', '5' ] ] }
     ]
   },
   'grid-row-end': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-row-end
-    tests: [
-      discrete('1', '5')
+    types: [
+      { type: 'discrete', options: [ [ '1', '5' ] ] }
     ]
   },
   'grid-row-start': {
     // https://drafts.csswg.org/css-grid/#propdef-grid-row-start
-    tests: [
-      discrete('1', '5')
+    types: [
+      { type: 'discrete', options: [ [ '1', '5' ] ] }
     ]
   },
   'grid-template-areas': {
     // https://drafts.csswg.org/css-template/#grid-template-areas
-    tests: [
-      discrete('". . a b" ". .a b"', 'none')
+    types: [
+      { type: 'discrete', options: [ [ '". . a b" ". .a b"', 'none' ] ] }
     ]
   },
   'grid-template-columns': {
     // https://drafts.csswg.org/css-template/#grid-template-columns
-    tests: [
-      discrete('1px', '5px')
+    types: [
+      { type: 'discrete', options: [ [ '1px', '5px' ] ] }
     ]
   },
   'grid-template-rows': {
     // https://drafts.csswg.org/css-template/#grid-template-rows
-    tests: [
-      discrete('1px', '5px')
+    types: [
+      { type: 'discrete', options: [ [ '1px', '5px' ] ] }
     ]
   },
   'hyphens': {
     // https://drafts.csswg.org/css-text-3/#propdef-hyphens
-    tests: [
-      discrete('manual', 'auto')
+    types: [
+      { type: 'discrete', options: [ [ 'manual', 'auto' ] ] }
     ]
   },
   'image-orientation': {
     // https://drafts.csswg.org/css-images-3/#propdef-image-orientation
-    tests: [
-      discrete('0deg', '90deg')
+    types: [
+      { type: 'discrete', options: [ [ '0deg', '90deg' ] ] }
     ]
   },
   'ime-mode': {
     // https://drafts.csswg.org/css-ui/#input-method-editor
-    tests: [
-      discrete('disabled', 'auto')
+    types: [
+      { type: 'discrete', options: [ [ 'disabled', 'auto' ] ] }
     ]
   },
   'initial-letter': {
     // https://drafts.csswg.org/css-inline/#propdef-initial-letter
-    tests: [
-      discrete('1 2', '3 4')
+    types: [
+      { type: 'discrete', options: [ [ '1 2', '3 4' ] ] }
     ]
   },
   'isolation': {
     // https://drafts.fxtf.org/compositing-1/#propdef-isolation
-    tests: [
-      discrete('auto', 'isolate')
+    types: [
+      { type: 'discrete', options: [ [ 'auto', 'isolate' ] ] }
     ]
   },
   'justify-content': {
     // https://drafts.csswg.org/css-align/#propdef-justify-content
-    tests: [
-      discrete('baseline', 'last baseline')
+    types: [
+      { type: 'discrete', options: [ [ 'baseline', 'last baseline' ] ] }
     ]
   },
   'justify-items': {
     // https://drafts.csswg.org/css-align/#propdef-justify-items
-    tests: [
-      discrete('baseline', 'last baseline')
+    types: [
+      { type: 'discrete', options: [ [ 'baseline', 'last baseline' ] ] }
     ]
   },
   'justify-self': {
     // https://drafts.csswg.org/css-align/#propdef-justify-self
-    tests: [
-      discrete('baseline', 'last baseline')
+    types: [
+      { type: 'discrete', options: [ [ 'baseline', 'last baseline' ] ] }
     ]
   },
   'list-style-image': {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-image
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'list-style-position': {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-position
-    tests: [
-      discrete('inside', 'outside')
+    types: [
+      { type: 'discrete', options: [ [ 'inside', 'outside' ] ] }
     ]
   },
   'list-style-type': {
     // https://drafts.csswg.org/css-lists-3/#propdef-list-style-type
-    tests: [
-      discrete('circle', 'square')
+    types: [
+      { type: 'discrete', options: [ [ 'circle', 'square' ] ] }
     ]
   },
   'marker-end': {
     // https://svgwg.org/specs/markers/#MarkerEndProperty
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'marker-mid': {
     // https://svgwg.org/specs/markers/#MarkerMidProperty
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'marker-start': {
     // https://svgwg.org/specs/markers/#MarkerStartProperty
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'mask': {
     // https://drafts.fxtf.org/css-masking-1/#the-mask
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'mask-clip': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-clip
-    tests: [
-      discrete('content-box', 'border-box')
+    types: [
+      { type: 'discrete', options: [ [ 'content-box', 'border-box' ] ] }
     ]
   },
   'mask-composite': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-composite
-    tests: [
-      discrete('add', 'subtract')
+    types: [
+      { type: 'discrete', options: [ [ 'add', 'subtract' ] ] }
     ]
   },
   'mask-image': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-image
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'mask-mode': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-mode
-    tests: [
-      discrete('alpha', 'luminance')
+    types: [
+      { type: 'discrete', options: [ [ 'alpha', 'luminance' ] ] }
     ]
   },
   'mask-origin': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-origin
-    tests: [
-      discrete('content-box', 'border-box')
+    types: [
+      { type: 'discrete', options: [ [ 'content-box', 'border-box' ] ] }
     ]
   },
   'mask-repeat': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-repeat
-    tests: [
-      discrete('space', 'round')
+    types: [
+      { type: 'discrete', options: [ [ 'space', 'round' ] ] }
     ]
   },
   'mask-type': {
     // https://drafts.fxtf.org/css-masking-1/#propdef-mask-type
-    tests: [
-      discrete('alpha', 'luminance')
+    types: [
+      { type: 'discrete', options: [ [ 'alpha', 'luminance' ] ] }
     ]
   },
   'mix-blend-mode': {
     // https://drafts.fxtf.org/compositing-1/#propdef-mix-blend-mode
-    tests: [
-      discrete('multiply', 'screen')
+    types: [
+      { type: 'discrete', options: [ [ 'multiply', 'screen' ] ] }
     ]
   },
   'object-fit': {
     // https://drafts.csswg.org/css-images-3/#propdef-object-fit
-    tests: [
-      discrete('fill', 'contain')
+    types: [
+      { type: 'discrete', options: [ [ 'fill', 'contain' ] ] }
     ]
   },
   'order': {
     // https://drafts.csswg.org/css-flexbox/#propdef-order
-    tests: [
-      integer()
-    ]
+    types: [ 'integer' ]
   },
   'outline-style': {
     // https://drafts.csswg.org/css-ui/#propdef-outline-style
-    tests: [
-      discrete('none', 'dotted')
+    types: [
+      { type: 'discrete', options: [ [ 'none', 'dotted' ] ] }
     ]
   },
   'overflow-clip-box': {
     // https://developer.mozilla.org/en/docs/Web/CSS/overflow-clip-box
-    tests: [
-      discrete('padding-box', 'content-box')
+    types: [
+      { type: 'discrete', options: [ [ 'padding-box', 'content-box' ] ] }
     ]
   },
   'overflow-wrap': {
     // https://drafts.csswg.org/css-text-3/#propdef-overflow-wrap
-    tests: [
-      discrete('normal', 'break-word')
+    types: [
+      { type: 'discrete', options: [ [ 'normal', 'break-word' ] ] }
     ]
   },
   'overflow-x': {
     // https://drafts.csswg.org/css-overflow-3/#propdef-overflow-x
-    tests: [
-      discrete('visible', 'hidden')
+    types: [
+      { type: 'discrete', options: [ [ 'visible', 'hidden' ] ] }
     ]
   },
   'overflow-y': {
     // https://drafts.csswg.org/css-overflow-3/#propdef-overflow-y
-    tests: [
-      discrete('visible', 'hidden')
+    types: [
+      { type: 'discrete', options: [ [ 'visible', 'hidden' ] ] }
     ]
   },
   'page-break-after': {
     // https://drafts.csswg.org/css-break-3/#propdef-break-after
-    tests: [
-      discrete('always', 'auto')
+    types: [
+      { type: 'discrete', options: [ [ 'always', 'auto' ] ] }
     ]
   },
   'page-break-before': {
     // https://drafts.csswg.org/css-break-3/#propdef-break-before
-    tests: [
-      discrete('always', 'auto')
+    types: [
+      { type: 'discrete', options: [ [ 'always', 'auto' ] ] }
     ]
   },
   'page-break-inside': {
     // https://drafts.csswg.org/css-break-3/#propdef-break-inside
-    tests: [
-      discrete('auto', 'avoid')
+    types: [
+      { type: 'discrete', options: [ [ 'auto', 'avoid' ] ] }
     ]
   },
   'paint-order': {
     // https://svgwg.org/svg2-draft/painting.html#PaintOrderProperty
-    tests: [
-      discrete('fill', 'stroke')
+    types: [
+      { type: 'discrete', options: [ [ 'fill', 'stroke' ] ] }
     ]
   },
   'pointer-events': {
     // https://svgwg.org/svg2-draft/interact.html#PointerEventsProperty
-    tests: [
-      discrete('fill', 'none')
+    types: [
+      { type: 'discrete', options: [ [ 'fill', 'none' ] ] }
     ]
   },
   'position': {
     // https://drafts.csswg.org/css-position/#propdef-position
-    tests: [
-      discrete('absolute', 'fixed')
+    types: [
+      { type: 'discrete', options: [ [ 'absolute', 'fixed' ] ] }
     ]
   },
   'quotes': {
     // https://drafts.csswg.org/css-content-3/#propdef-quotes
-    tests: [
-      discrete('"“" "”" "‘" "’"', '"‘" "’" "“" "”"')
+    types: [
+      { type: 'discrete', options: [ [ '"“" "”" "‘" "’"', '"‘" "’" "“" "”"' ] ] }
     ]
   },
   'resize': {
     // https://drafts.csswg.org/css-ui/#propdef-resize
-    tests: [
-      discrete('both', 'horizontal')
+    types: [
+      { type: 'discrete', options: [ [ 'both', 'horizontal' ] ] }
     ]
   },
   'ruby-align': {
     // https://drafts.csswg.org/css-ruby-1/#propdef-ruby-align
-    tests: [
-      discrete('start', 'center')
+    types: [
+      { type: 'discrete', options: [ [ 'start', 'center' ] ] }
     ]
   },
   'ruby-position': {
     // https://drafts.csswg.org/css-ruby-1/#propdef-ruby-position
-    tests: [
-      discrete('under', 'over')
+    types: [
+      { type: 'discrete', options: [ [ 'under', 'over' ] ] }
     ],
-    tagName: 'ruby'
+    setup: t => {
+      return createElement(t, 'ruby');
+    }
   },
   'scroll-behavior': {
     // https://drafts.csswg.org/cssom-view/#propdef-scroll-behavior
-    tests: [
-      discrete('auto', 'smooth')
+    types: [
+      { type: 'discrete', options: [ [ 'auto', 'smooth' ] ] }
     ]
   },
   'scroll-snap-type-x': {
     // https://developer.mozilla.org/en/docs/Web/CSS/scroll-snap-type-x
-    tests: [
-      discrete('mandatory', 'proximity')
+    types: [
+      { type: 'discrete', options: [ [ 'mandatory', 'proximity' ] ] }
     ]
   },
   'scroll-snap-type-y': {
     // https://developer.mozilla.org/en/docs/Web/CSS/scroll-snap-type-y
-    tests: [
-      discrete('mandatory', 'proximity')
+    types: [
+      { type: 'discrete', options: [ [ 'mandatory', 'proximity' ] ] }
     ]
   },
   'shape-outside': {
     // http://dev.w3.org/csswg/css-shapes/#propdef-shape-outside
-    tests: [
-      discrete('url("http://localhost/test-1")', 'url("http://localhost/test-2")')
+    types: [
+      { type: 'discrete',
+        options: [ [ 'url("http://localhost/test-1")',
+                     'url("http://localhost/test-2")' ] ] }
     ]
   },
   'shape-rendering': {
     // https://svgwg.org/svg2-draft/painting.html#ShapeRenderingProperty
-    tests: [
-      discrete('optimizeSpeed', 'crispEdges')
+    types: [
+      { type: 'discrete', options: [ [ 'optimizeSpeed', 'crispEdges' ] ] }
     ]
   },
   'stroke-linecap': {
     // https://svgwg.org/svg2-draft/painting.html#StrokeLinecapProperty
-    tests: [
-      discrete('round', 'square')
+    types: [
+      { type: 'discrete', options: [ [ 'round', 'square' ] ] }
     ]
   },
   'stroke-linejoin': {
     // https://svgwg.org/svg2-draft/painting.html#StrokeLinejoinProperty
-    tests: [
-      discrete('round', 'miter')
+    types: [
+      { type: 'discrete', options: [ [ 'round', 'miter' ] ] }
     ],
-    tagName: 'rect'
+    setup: t => {
+      return createElement(t, 'rect');
+    }
   },
   'table-layout': {
     // https://drafts.csswg.org/css-tables/#propdef-table-layout
-    tests: [
-      discrete('auto', 'fixed')
+    types: [
+      { type: 'discrete', options: [ [ 'auto', 'fixed' ] ] }
     ]
   },
   'text-align': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-align
-    tests: [
-      discrete('start', 'end')
+    types: [
+      { type: 'discrete', options: [ [ 'start', 'end' ] ] }
     ]
   },
   'text-align-last': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-align-last
-    tests: [
-      discrete('start', 'end')
+    types: [
+      { type: 'discrete', options: [ [ 'start', 'end' ] ] }
     ]
   },
   'text-anchor': {
     // https://svgwg.org/svg2-draft/text.html#TextAnchorProperty
-    tests: [
-      discrete('middle', 'end')
+    types: [
+      { type: 'discrete', options: [ [ 'middle', 'end' ] ] }
     ]
   },
   'text-combine-upright': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-text-combine-upright
-    tests: [
-      discrete('all', 'none')
+    types: [
+      { type: 'discrete', options: [ [ 'all', 'none' ] ] }
     ]
   },
   'text-decoration-line': {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-decoration-line
-    tests: [
-      discrete('underline', 'overline')
+    types: [
+      { type: 'discrete', options: [ [ 'underline', 'overline' ] ] }
     ]
   },
   'text-decoration-style': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-decoration-style
-    tests: [
-      discrete('solid', 'dotted')
+    types: [
+      { type: 'discrete', options: [ [ 'solid', 'dotted' ] ] }
     ]
   },
   'text-emphasis-position': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-emphasis-position
-    tests: [
-      discrete('over right', 'under left')
+    types: [
+      { type: 'discrete', options: [ [ 'over right', 'under left' ] ] }
     ]
   },
   'text-emphasis-style': {
     // http://dev.w3.org/csswg/css-text-decor-3/#propdef-text-emphasis-style
-    tests: [
-      discrete('filled circle', 'open dot')
+    types: [
+      { type: 'discrete', options: [ [ 'filled circle', 'open dot' ] ] }
     ]
   },
   'text-orientation': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-text-orientation
-    tests: [
-      discrete('upright', 'sideways')
+    types: [
+      { type: 'discrete', options: [ [ 'upright', 'sideways' ] ] }
     ]
   },
   'text-overflow': {
     // https://drafts.csswg.org/css-ui/#propdef-text-overflow
-    tests: [
-      discrete('clip', 'ellipsis')
+    types: [
+      { type: 'discrete', options: [ [ 'clip', 'ellipsis' ] ] }
     ]
   },
   'text-rendering': {
     // https://svgwg.org/svg2-draft/painting.html#TextRenderingProperty
-    tests: [
-      discrete('optimizeSpeed', 'optimizeLegibility')
+    types: [
+      { type: 'discrete', options: [ [ 'optimizeSpeed', 'optimizeLegibility' ] ] }
     ]
   },
   'text-transform': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-transform
-    tests: [
-      discrete('capitalize', 'uppercase')
+    types: [
+      { type: 'discrete', options: [ [ 'capitalize', 'uppercase' ] ] }
     ]
   },
   'touch-action': {
     // https://w3c.github.io/pointerevents/#the-touch-action-css-property
-    tests: [
-      discrete('auto', 'none')
+    types: [
+      { type: 'discrete', options: [ [ 'auto', 'none' ] ] }
     ]
   },
   'transform-box': {
     // https://drafts.csswg.org/css-transforms/#propdef-transform-box
-    tests: [
-      discrete('fill-box', 'border-box')
+    types: [
+      { type: 'discrete', options: [ [ 'fill-box', 'border-box' ] ] }
     ]
   },
   'transform-style': {
     // https://drafts.csswg.org/css-transforms/#propdef-transform-style
-    tests: [
-      discrete('flat', 'preserve-3d')
+    types: [
+      { type: 'discrete', options: [ [ 'flat', 'preserve-3d' ] ] }
     ]
   },
   'unicode-bidi': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-unicode-bidi
-    tests: [
-      discrete('embed', 'bidi-override')
+    types: [
+      { type: 'discrete', options: [ [ 'embed', 'bidi-override' ] ] },
     ]
   },
   'vector-effect': {
     // https://svgwg.org/svg2-draft/coords.html#VectorEffectProperty
-    tests: [
-      discrete('none', 'non-scaling-stroke')
+    types: [
+      { type: 'discrete', options: [ [ 'none', 'non-scaling-stroke' ] ] },
     ]
   },
   'visibility': {
     // https://drafts.csswg.org/css2/visufx.html#propdef-visibility
-    tests: [
-      visibility()
-    ]
+    types: [ 'visibility' ]
   },
   'white-space': {
     // https://drafts.csswg.org/css-text-4/#propdef-white-space
-    tests: [
-      discrete('pre', 'nowrap')
+    types: [
+      { type: 'discrete', options: [ [ 'pre', 'nowrap' ] ] }
     ]
   },
   'word-break': {
     // https://drafts.csswg.org/css-text-3/#propdef-word-break
-    tests: [
-      discrete('keep-all', 'break-all')
+    types: [
+      { type: 'discrete', options: [ [ 'keep-all', 'break-all' ] ] }
     ]
   },
   'will-change': {
     // http://dev.w3.org/csswg/css-will-change/#propdef-will-change
-    tests: [
-      discrete('scroll-position', 'contents')
+    types: [
+      { type: 'discrete', options: [ [ 'scroll-position', 'contents' ] ] }
     ]
   },
   'writing-mode': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-writing-mode
-    tests: [
-      discrete('vertical-rl', 'sideways-rl')
+    types: [
+      { type: 'discrete', options: [ [ 'vertical-rl', 'sideways-rl' ] ] }
     ]
   },
-}
+};
 
-for (var property in gCSSProperties) {
-  if (!isSupported(property)) {
-    continue;
-  }
-  var testData = gCSSProperties[property];
-  testData.tests.forEach(function(testFunction) {
-    testFunction(property, testData);
-  });
-}
+const discreteType = {
+  testInterpolation: function(property, setup, options) {
+    options.forEach(function(keyframes) {
+      var [ from, to ] = keyframes;
+      test(function(t) {
+        var idlName = propertyToIDL(property);
+        var target = createTestElement(t, setup);
+        var animation = target.animate({ [idlName]: [from, to] },
+                                       { duration: 1000, fill: 'both' });
+        testAnimationSamples(animation, idlName,
+                             [{ time: 0,    expected: from.toLowerCase() },
+                              { time: 499,  expected: from.toLowerCase() },
+                              { time: 500,  expected: to.toLowerCase() },
+                              { time: 1000, expected: to.toLowerCase() }]);
+      }, property + ' uses discrete animation when animating between "'
+         + from + '" and "' + to + '" with linear easing');
 
-function discrete(from, to) {
-  return function(property, options) {
+      test(function(t) {
+        // Easing: http://cubic-bezier.com/#.68,0,1,.01
+        // With this curve, we don't reach the 50% point until about 95% of
+        // the time has expired.
+        var idlName = propertyToIDL(property);
+        var keyframes = {};
+        var target = createTestElement(t, setup);
+        var animation = target.animate({ [idlName]: [from, to] },
+                                       { duration: 1000, fill: 'both',
+                                         easing: 'cubic-bezier(0.68,0,1,0.01)' });
+        testAnimationSamples(animation, idlName,
+                             [{ time: 0,    expected: from.toLowerCase() },
+                              { time: 940,  expected: from.toLowerCase() },
+                              { time: 960,  expected: to.toLowerCase() }]);
+      }, property + ' uses discrete animation when animating between "'
+         + from + '" and "' + to + '" with effect easing');
+
+      test(function(t) {
+        // Easing: http://cubic-bezier.com/#.68,0,1,.01
+        // With this curve, we don't reach the 50% point until about 95% of
+        // the time has expired.
+        var idlName = propertyToIDL(property);
+        var target = createTestElement(t, setup);
+        var animation = target.animate({ [idlName]: [from, to],
+                                         easing: 'cubic-bezier(0.68,0,1,0.01)' },
+                                       { duration: 1000, fill: 'both' });
+        testAnimationSamples(animation, idlName,
+                             [{ time: 0,    expected: from.toLowerCase() },
+                              { time: 940,  expected: from.toLowerCase() },
+                              { time: 960,  expected: to.toLowerCase() }]);
+      }, property + ' uses discrete animation when animating between "'
+         + from + '" and "' + to + '" with keyframe easing');
+    });
+  },
+};
+
+const lengthType = {
+  testInterpolation: function(property, setup) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: [from, to] },
-                                     { duration: 1000, fill: 'both' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: from.toLowerCase() },
-                            { time: 499,  expected: from.toLowerCase() },
-                            { time: 500,  expected: to.toLowerCase() },
-                            { time: 1000, expected: to.toLowerCase() }]);
-    }, property + ' uses discrete animation when animating between "'
-       + from + '" and "' + to + '" with linear easing');
-
-    test(function(t) {
-      // Easing: http://cubic-bezier.com/#.68,0,1,.01
-      // With this curve, we don't reach the 50% point until about 95% of
-      // the time has expired.
-      var idlName = propertyToIDL(property);
-      var keyframes = {};
-      var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: [from, to] },
-                                     { duration: 1000, fill: 'both',
-                                       easing: 'cubic-bezier(0.68,0,1,0.01)' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: from.toLowerCase() },
-                            { time: 940,  expected: from.toLowerCase() },
-                            { time: 960,  expected: to.toLowerCase() }]);
-    }, property + ' uses discrete animation when animating between "'
-       + from + '" and "' + to + '" with effect easing');
-
-    test(function(t) {
-      // Easing: http://cubic-bezier.com/#.68,0,1,.01
-      // With this curve, we don't reach the 50% point until about 95% of
-      // the time has expired.
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: [from, to],
-                                       easing: 'cubic-bezier(0.68,0,1,0.01)' },
-                                     { duration: 1000, fill: 'both' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: from.toLowerCase() },
-                            { time: 940,  expected: from.toLowerCase() },
-                            { time: 960,  expected: to.toLowerCase() }]);
-    }, property + ' uses discrete animation when animating between "'
-       + from + '" and "' + to + '" with keyframe easing');
-  }
-}
-
-function length() {
-  return function(property, options) {
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10px', '50px'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -925,7 +936,7 @@ function length() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['1rem', '5rem'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -933,14 +944,14 @@ function length() {
                             { time: 500,  expected: '30px' },
                             { time: 1000, expected: '50px' }]);
     }, property + ' supports animating as a length of rem');
-  }
-}
+  },
+};
 
-function percentage() {
-  return function(property, options) {
+const percentageType = {
+  testInterpolation: function(property, setup) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10%', '50%'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -948,14 +959,14 @@ function percentage() {
                             { time: 500,  expected: '30%' },
                             { time: 1000, expected: '50%' }]);
     }, property + ' supports animating as a percentage');
-  }
-}
+  },
+};
 
-function integer() {
-  return function(property, options) {
+const integerType = {
+  testInterpolation: function(property, setup) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: [-2, 2] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -963,32 +974,17 @@ function integer() {
                             { time: 500,  expected: '0' },
                             { time: 1000, expected: '2' }]);
     }, property + ' supports animating as an integer');
-  }
-}
+  },
+};
 
-function positiveNumber() {
-  return function(property, options) {
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
-      var animation = target.animate({ [idlName]: [1.1, 1.5] },
-                                     { duration: 1000, fill: 'both' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: '1.1' },
-                            { time: 500,  expected: '1.3' },
-                            { time: 1000, expected: '1.5' }]);
-    }, property + ' supports animating as a positive number');
-  }
-}
-
-function lengthPercentageOrCalc() {
-  return function(property, options) {
-    length()(property, options);
-    percentage()(property, options);
+const lengthPercentageOrCalcType = {
+  testInterpolation: function(property, setup) {
+    lengthType.testInterpolation(property, setup);
+    percentageType.testInterpolation(property, setup);
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10px', '20%'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -999,7 +995,7 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10%', '2em'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -1010,7 +1006,7 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['1em', '2rem'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -1021,7 +1017,7 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['10px', 'calc(1em + 20%)'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -1032,7 +1028,7 @@ function lengthPercentageOrCalc() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate(
         { [idlName]: ['calc(10px + 10%)', 'calc(1em + 1rem + 20%)'] },
         { duration: 1000, fill: 'both' });
@@ -1044,14 +1040,29 @@ function lengthPercentageOrCalc() {
                             { time: 1000,
                               expected: 'calc(20px + 20%)' }]);
     }, property + ' supports animating as a calc');
-  }
-}
+  },
+};
 
-function visibility() {
-  return function(property, options) {
+const positiveNumberType = {
+  testInterpolation: function(property, setup) {
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: [1.1, 1.5] },
+                                     { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: '1.1' },
+                            { time: 500,  expected: '1.3' },
+                            { time: 1000, expected: '1.5' }]);
+    }, property + ' supports animating as a positive number');
+  },
+};
+
+const visibilityType = {
+  testInterpolation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['visible', 'hidden'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -1063,7 +1074,7 @@ function visibility() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hidden', 'visible'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -1075,7 +1086,7 @@ function visibility() {
 
     test(function(t) {
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation = target.animate({ [idlName]: ['hidden', 'collapse'] },
                                      { duration: 1000, fill: 'both' });
       testAnimationSamples(animation, idlName,
@@ -1091,7 +1102,7 @@ function visibility() {
       // With this curve, the value is less than 0 till about 34%
       // also more than 1 since about 63%
       var idlName = propertyToIDL(property);
-      var target = createTestElement(t, options.tagName);
+      var target = createTestElement(t, setup);
       var animation =
         target.animate({ [idlName]: ['visible', 'hidden'] },
                        { duration: 1000, fill: 'both',
@@ -1106,8 +1117,18 @@ function visibility() {
                             { time: 1000, expected: 'hidden' }]);
     }, property + ' uses visibility animation when animating '
      + 'from "visible" to "hidden" with easeInOutBack easing');
-  }
-}
+  },
+};
+
+const types = {
+  discrete: discreteType,
+  integer: integerType,
+  length: lengthType,
+  percentage: percentageType,
+  lengthPercentageOrCalc: lengthPercentageOrCalcType,
+  positiveNumber: positiveNumberType,
+  visibility: visibilityType,
+};
 
 function testAnimationSamples(animation, idlName, testSamples) {
   var type = animation.effect.target.type;
@@ -1123,10 +1144,8 @@ function testAnimationSamples(animation, idlName, testSamples) {
   });
 }
 
-function createTestElement(t, tagName) {
-  return tagName && tagName.startsWith('::')
-         ? createPseudo(t, tagName.substring(2))
-         : createElement(t, tagName);
+function createTestElement(t, setup) {
+  return setup ? setup(t) : createElement(t);
 }
 
 function isSupported(property) {
@@ -1163,4 +1182,41 @@ function propertyToIDL(property) {
                             return str.substr(1).toUpperCase(); });
 }
 
+for (var property in gCSSProperties) {
+  if (!isSupported(property)) {
+    continue;
+  }
+
+  var animationTypes = gCSSProperties[property].types;
+  var setupFunction = gCSSProperties[property].setup;
+  animationTypes.forEach(function(animationType) {
+    var typeObject;
+    var animationTypeString;
+    if (typeof animationType === 'string') {
+      typeObject = types[animationType];
+      animationTypeString = animationType;
+    } else if (typeof animationType === 'object' &&
+               animationType.type && typeof animationType.type === 'string') {
+      typeObject = types[animationType.type];
+      animationTypeString = animationType.type;
+    }
+
+    // First, test that the animation type object has 'testInterpolation'.
+    // We use test() function() here so that we can continue the remainder tests
+    // even if this test fails.
+    test(function(t) {
+      assert_own_property(typeObject, 'testInterpolation', animationTypeString +
+                          ' should have testInterpolation property');
+      assert_equals(typeof typeObject.testInterpolation, 'function',
+                    'testInterpolation method should be a function');
+    }, animationTypeString + ' has testInterpolation function');
+
+    if (typeObject.testInterpolation &&
+        typeof typeObject.testInterpolation === 'function') {
+      typeObject.testInterpolation(property,
+                                   setupFunction,
+                                   animationType.options);
+    }
+  });
+}
 </script>
