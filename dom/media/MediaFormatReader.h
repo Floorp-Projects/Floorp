@@ -141,7 +141,6 @@ private:
   void NotifyDrainComplete(TrackType aTrack);
   void NotifyError(TrackType aTrack, const MediaResult& aError);
   void NotifyWaitingForData(TrackType aTrack);
-  void NotifyWaitingForKey(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
 
   void ExtractCryptoInitData(nsTArray<uint8_t>& aInitData);
@@ -157,7 +156,6 @@ private:
   void Reset(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
   void DropDecodedSamples(TrackType aTrack);
-  void WaitingForKey(TrackType aTrack);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
@@ -192,10 +190,6 @@ private:
     bool OnReaderTaskQueue() override {
       return mReader->OnTaskQueue();
     }
-    void WaitingForKey() override {
-      mReader->WaitingForKey(mType);
-    }
-
   private:
     MediaFormatReader* mReader;
     TrackType mType;
@@ -212,7 +206,6 @@ private:
       , mUpdateScheduled(false)
       , mDemuxEOS(false)
       , mWaitingForData(false)
-      , mWaitingForKey(false)
       , mReceivedNewData(false)
       , mOutputRequested(false)
       , mDecodePending(false)
@@ -260,7 +253,6 @@ private:
     bool mUpdateScheduled;
     bool mDemuxEOS;
     bool mWaitingForData;
-    bool mWaitingForKey;
     bool mReceivedNewData;
 
     // Pending seek.
@@ -280,7 +272,7 @@ private:
     bool IsWaiting() const
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
-      return mWaitingForData || mWaitingForKey;
+      return mWaitingForData;
     }
 
     // MediaDataDecoder handler's variables.
@@ -383,7 +375,6 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mDemuxEOS = false;
       mWaitingForData = false;
-      mWaitingForKey = false;
       mQueuedSamples.Clear();
       mOutputRequested = false;
       mNeedDraining = false;

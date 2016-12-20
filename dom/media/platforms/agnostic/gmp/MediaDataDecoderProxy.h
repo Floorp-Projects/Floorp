@@ -95,11 +95,6 @@ public:
     return mProxyCallback->OnReaderTaskQueue();
   }
 
-  void WaitingForKey() override
-  {
-    mProxyCallback->WaitingForKey();
-  }
-
 private:
   MediaDataDecoderProxy* mProxyDecoder;
   MediaDataDecoderCallback* mProxyCallback;

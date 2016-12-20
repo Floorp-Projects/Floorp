@@ -40,7 +40,6 @@ SamplesWaitingForKey::WaitIfKeyNotUsable(MediaRawData* aSample)
       MutexAutoLock lock(mMutex);
       mSamples.AppendElement(aSample);
     }
-    mDecoderCallback->WaitingForKey();
     caps.NotifyWhenKeyIdUsable(aSample->mCrypto.mKeyId, this);
     return true;
   }
