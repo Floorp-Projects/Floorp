@@ -203,7 +203,11 @@ BaselineCacheIRCompiler::compile()
 bool
 BaselineCacheIRCompiler::emitGuardIsInt32()
 {
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    ValOperandId inputId = reader.valOperandId();
+    if (allocator.knownType(inputId) == JSVAL_TYPE_INT32)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
     AutoScratchRegister scratch(allocator, masm);
 
     FailurePath* failure;
@@ -233,8 +237,13 @@ BaselineCacheIRCompiler::emitGuardIsInt32()
 bool
 BaselineCacheIRCompiler::emitGuardType()
 {
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    ValOperandId inputId = reader.valOperandId();
     JSValueType type = reader.valueType();
+
+    if (allocator.knownType(inputId) == type)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
