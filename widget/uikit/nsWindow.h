@@ -70,7 +70,7 @@ public:
     }
     virtual int32_t         RoundsWidgetCoordinatesTo() override;
 
-    NS_IMETHOD              SetTitle(const nsAString& aTitle) override {
+    virtual nsresult        SetTitle(const nsAString& aTitle) override {
         return NS_OK;
     }
 

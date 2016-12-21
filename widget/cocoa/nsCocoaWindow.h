@@ -299,7 +299,7 @@ public:
       return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
     }
 
-    NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
+    virtual nsresult        SetTitle(const nsAString& aTitle) override;
 
     virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;

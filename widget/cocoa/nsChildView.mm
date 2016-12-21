@@ -1610,7 +1610,8 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
 
-NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
+nsresult
+nsChildView::SetTitle(const nsAString& title)
 {
   // child views don't have titles
   return NS_OK;

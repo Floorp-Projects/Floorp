@@ -161,7 +161,7 @@ public:
   virtual void*           GetNativeData(uint32_t aDataType) override;
   void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType) override;
-  NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
+  virtual nsresult        SetTitle(const nsAString& aTitle) override;
   virtual void            SetIcon(const nsAString& aIconSpec) override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual LayoutDeviceIntSize ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) override;
