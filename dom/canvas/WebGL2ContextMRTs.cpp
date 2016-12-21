@@ -83,6 +83,8 @@ WebGL2Context::ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32Arr& 
     if (!ValidateClearBuffer(funcName, buffer, drawBuffer, src.elemCount, srcElemOffset))
         return;
 
+    ScopedDrawCallWrapper wrapper(*this);
+
     const auto ptr = src.elemBytes + srcElemOffset;
     gl->fClearBufferfv(buffer, drawBuffer, ptr);
 }
@@ -95,17 +97,21 @@ WebGL2Context::ClearBufferiv(GLenum buffer, GLint drawBuffer, const Int32Arr& sr
     if (!ValidateClearBuffer(funcName, buffer, drawBuffer, src.elemCount, srcElemOffset))
         return;
 
+    ScopedDrawCallWrapper wrapper(*this);
+
     const auto ptr = src.elemBytes + srcElemOffset;
     gl->fClearBufferiv(buffer, drawBuffer, ptr);
 }
 
 void
 WebGL2Context::ClearBufferuiv(GLenum buffer, GLint drawBuffer, const Uint32Arr& src,
-                             GLuint srcElemOffset)
+                              GLuint srcElemOffset)
 {
     const char funcName[] = "clearBufferuiv";
     if (!ValidateClearBuffer(funcName, buffer, drawBuffer, src.elemCount, srcElemOffset))
         return;
+
+    ScopedDrawCallWrapper wrapper(*this);
 
     const auto ptr = src.elemBytes + srcElemOffset;
     gl->fClearBufferuiv(buffer, drawBuffer, ptr);
@@ -123,6 +129,8 @@ WebGL2Context::ClearBufferfi(GLenum buffer, GLint drawBuffer, GLfloat depth,
 
     if (buffer != LOCAL_GL_DEPTH_STENCIL)
         return ErrorInvalidEnumInfo(funcName, buffer);
+
+    ScopedDrawCallWrapper wrapper(*this);
 
     gl->fClearBufferfi(buffer, drawBuffer, depth, stencil);
 }
