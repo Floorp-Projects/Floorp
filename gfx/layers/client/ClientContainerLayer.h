@@ -131,11 +131,6 @@ public:
 
   void SetSupportsComponentAlphaChildren(bool aSupports) { mSupportsComponentAlphaChildren = aSupports; }
 
-  virtual void Disconnect() override
-  {
-    ClientLayer::Disconnect();
-  }
-
 protected:
   ClientLayerManager* ClientManager()
   {
@@ -161,11 +156,6 @@ protected:
 public:
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
-
-  virtual void Disconnect()
-  {
-    ClientLayer::Disconnect();
-  }
 
   virtual void RenderLayer() { }
 

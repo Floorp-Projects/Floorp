@@ -105,7 +105,6 @@ public:
   virtual void Disconnect() override
   {
     mContentClient = nullptr;
-    ClientLayer::Disconnect();
   }
 
 protected:

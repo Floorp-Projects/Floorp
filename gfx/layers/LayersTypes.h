@@ -26,6 +26,10 @@
 
 #define INVALID_OVERLAY -1
 
+namespace IPC {
+template <typename T> struct ParamTraits;
+} // namespace IPC
+
 namespace android {
 class MOZ_EXPORT GraphicBuffer;
 } // namespace android
@@ -245,6 +249,35 @@ typedef gfx::Matrix4x4Typed<CSSTransformedLayerPixel, ParentLayerPixel> AsyncTra
 typedef Array<gfx::Color, 4> BorderColors;
 typedef Array<LayerSize, 4> BorderCorners;
 typedef Array<LayerCoord, 4> BorderWidths;
+
+// This is used to communicate Layers across IPC channels. The Handle is valid
+// for layers in the same PLayerTransaction. Handles are created by ClientLayerManager,
+// and are cached in LayerTransactionParent on first use.
+class LayerHandle
+{
+  friend struct IPC::ParamTraits<mozilla::layers::LayerHandle>;
+public:
+  LayerHandle() : mHandle(0)
+  {}
+  LayerHandle(const LayerHandle& aOther) : mHandle(aOther.mHandle)
+  {}
+  explicit LayerHandle(uint64_t aHandle) : mHandle(aHandle)
+  {}
+  bool IsValid() const {
+    return mHandle != 0;
+  }
+  explicit operator bool() const {
+    return IsValid();
+  }
+  bool operator ==(const LayerHandle& aOther) const {
+    return mHandle == aOther.mHandle;
+  }
+  uint64_t Value() const {
+    return mHandle;
+  }
+private:
+  uint64_t mHandle;
+};
 
 } // namespace layers
 } // namespace mozilla
