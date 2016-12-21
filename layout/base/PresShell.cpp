@@ -767,12 +767,6 @@ PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell)
   return false;
 }
 
-/* static */ bool
-PresShell::IsTargetIframe(nsINode* aTarget)
-{
-  return aTarget && aTarget->IsHTMLElement(nsGkAtoms::iframe);
-}
-
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
 {
@@ -7040,98 +7034,6 @@ PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const
   return rv;
 }
 
-void
-PresShell::HandleKeyboardEvent(nsINode* aTarget,
-                               WidgetKeyboardEvent& aEvent,
-                               bool aEmbeddedCancelled,
-                               nsEventStatus* aStatus,
-                               EventDispatchingCallback* aEventCB)
-{
-  MOZ_ASSERT(aTarget);
-  
-  // return true if the event target is in its child process
-  bool targetIsIframe = IsTargetIframe(aTarget);
-
-  ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
-                                       aStatus, aEventCB);
-}
-
-#ifdef MOZ_B2G
-bool
-PresShell::ForwardKeyToInputMethodApp(nsINode* aTarget,
-                                      WidgetKeyboardEvent& aEvent,
-                                      nsEventStatus* aStatus)
-{
-  if (!XRE_IsParentProcess() || aEvent.mIsSynthesizedByTIP ||
-      aEvent.IsKeyEventOnPlugin()) {
-    return false;
-  }
-
-  if (!mHardwareKeyHandler) {
-    nsresult rv;
-    mHardwareKeyHandler =
-      do_GetService("@mozilla.org/HardwareKeyHandler;1", &rv);
-    if (!NS_SUCCEEDED(rv) || !mHardwareKeyHandler) {
-      return false;
-    }
-  }
-
-  if (mHardwareKeyHandler->ForwardKeyToInputMethodApp(aTarget,
-                                                      aEvent.AsKeyboardEvent(),
-                                                      aStatus)) {
-    // No need to dispatch the forwarded keyboard event to it's child process
-    aEvent.mFlags.mNoCrossProcessBoundaryForwarding = true;
-    return true;
-  }
-
-  return false;
-}
-#endif // MOZ_B2G
-
-bool
-PresShell::ForwardKeyToInputMethodAppOrDispatch(bool aIsTargetRemote,
-                                                nsINode* aTarget,
-                                                WidgetKeyboardEvent& aEvent,
-                                                nsEventStatus* aStatus,
-                                                EventDispatchingCallback* aEventCB)
-{
-#ifndef MOZ_B2G
-  // No need to forward to input-method-app if the platform isn't run on B2G.
-  EventDispatcher::Dispatch(aTarget, mPresContext,
-                            &aEvent, nullptr, aStatus, aEventCB);
-  return false;
-#else
-  // In-process case: the event target is in the current process
-  if (!aIsTargetRemote) {
-    if(ForwardKeyToInputMethodApp(aTarget, aEvent, aStatus)) {
-      return true;
-    }
-
-    // If the keyboard event isn't forwarded to the input-method-app,
-    // then it should be dispatched to its event target directly.
-    EventDispatcher::Dispatch(aTarget, mPresContext,
-                              &aEvent, nullptr, aStatus, aEventCB);
-
-    return false;
-  }
-
-  // OOP case: the event target is in its child process.
-  // Dispatch the keyboard event to the iframe that embeds the remote
-  // event target first.
-  EventDispatcher::Dispatch(aTarget, mPresContext,
-                            &aEvent, nullptr, aStatus, aEventCB);
-
-  // If the event is defaultPrevented, then there is no need to forward it
-  // to the input-method-app.
-  if (aEvent.mFlags.mDefaultPrevented) {
-    return false;
-  }
-
-  // Try forwarding to the input-method-app.
-  return ForwardKeyToInputMethodApp(aTarget, aEvent, aStatus);
-#endif // MOZ_B2G
-}
-
 nsresult
 PresShell::HandleEvent(nsIFrame* aFrame,
                        WidgetGUIEvent* aEvent,
@@ -8216,9 +8118,6 @@ PresShell::DispatchEventToDOM(WidgetEvent* aEvent,
       IMEStateManager::DispatchCompositionEvent(eventTarget, mPresContext,
                                                 aEvent->AsCompositionEvent(),
                                                 aStatus, eventCBPtr);
-    } else if (aEvent->mClass == eKeyboardEventClass) {
-      HandleKeyboardEvent(eventTarget, *(aEvent->AsKeyboardEvent()),
-                          false, aStatus, eventCBPtr);
     } else {
       EventDispatcher::Dispatch(eventTarget, mPresContext,
                                 aEvent, nullptr, aStatus, eventCBPtr);
