@@ -24,7 +24,7 @@
 #include "AudioNodeExternalInputStream.h"
 #include "MediaStreamListener.h"
 #include "MediaStreamVideoSink.h"
-#include "mozilla/dom/AudioContextBinding.h"
+#include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
 #include "GeckoProfiler.h"
