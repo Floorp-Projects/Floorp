@@ -191,7 +191,7 @@ public class VideoPlayer extends FrameLayout {
             LinearLayout buttons = (LinearLayout) child.getChildAt(0);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                                                             LayoutParams.FILL_PARENT);
+                                                                             LayoutParams.MATCH_PARENT);
             params.gravity = Gravity.CENTER_VERTICAL;
 
             if (mButton.getParent() != null) {
