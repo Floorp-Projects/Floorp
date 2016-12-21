@@ -272,7 +272,6 @@ WEBIDL_FILES = [
     'ImageData.webidl',
     'ImageDocument.webidl',
     'InputEvent.webidl',
-    'InputMethod.webidl',
     'InspectorUtils.webidl',
     'IntersectionObserver.webidl',
     'IterableIterator.webidl',

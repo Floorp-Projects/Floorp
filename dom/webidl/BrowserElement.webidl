@@ -147,11 +147,6 @@ interface BrowserElementPrivileged {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    ChromeOnly]
-  DOMRequest setInputMethodActive(boolean isActive);
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   ChromeOnly]
   void findAll(DOMString searchString, BrowserFindCaseSensitivity caseSensitivity);
 
   [Throws,
