@@ -2122,23 +2122,15 @@ CodeGenerator::visitOutOfLineRegExpPrototypeOptimizable(OutOfLineRegExpPrototype
     LRegExpPrototypeOptimizable* ins = ool->ins();
     Register object = ToRegister(ins->object());
     Register output = ToRegister(ins->output());
-    Register temp = ToRegister(ins->temp());
 
     saveVolatile(output);
-
-    masm.reserveStack(sizeof(void*));
-    masm.moveStackPtrTo(temp);
 
     masm.setupUnalignedABICall(output);
     masm.loadJSContext(output);
     masm.passABIArg(output);
     masm.passABIArg(object);
-    masm.passABIArg(temp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpPrototypeOptimizableRaw));
-    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
-
-    masm.load8ZeroExtend(Address(masm.getStackPointer(), 0), output);
-    masm.freeStack(sizeof(void*));
+    masm.storeCallResult(output);
 
     restoreVolatile(output);
 
@@ -2192,24 +2184,16 @@ CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOp
     Register object = ToRegister(ins->object());
     Register proto = ToRegister(ins->proto());
     Register output = ToRegister(ins->output());
-    Register temp = ToRegister(ins->temp());
 
     saveVolatile(output);
-
-    masm.reserveStack(sizeof(void*));
-    masm.moveStackPtrTo(temp);
 
     masm.setupUnalignedABICall(output);
     masm.loadJSContext(output);
     masm.passABIArg(output);
     masm.passABIArg(object);
     masm.passABIArg(proto);
-    masm.passABIArg(temp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpInstanceOptimizableRaw));
-    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
-
-    masm.load8ZeroExtend(Address(masm.getStackPointer(), 0), output);
-    masm.freeStack(sizeof(void*));
+    masm.storeCallResult(output);
 
     restoreVolatile(output);
 
