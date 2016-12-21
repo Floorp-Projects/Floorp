@@ -20,7 +20,6 @@ const METHODS = {
   getCanGoBack: {},
   getCanGoForward: {},
   getContentDimensions: {},
-  setInputMethodActive: {},
   findAll: {},
   findNext: {},
   clearMatch: {},
