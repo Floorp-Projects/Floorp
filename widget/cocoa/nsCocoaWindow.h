@@ -268,7 +268,7 @@ public:
                                              nsIRunnable* aCallback) override;
     virtual nsresult MakeFullScreen(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
-    NS_IMETHOD MakeFullScreenWithNativeTransition(
+    virtual nsresult MakeFullScreenWithNativeTransition(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
     NSAnimation* FullscreenTransitionAnimation() const { return mFullscreenTransitionAnimation; }
     void ReleaseFullscreenTransitionAnimation()

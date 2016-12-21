@@ -444,7 +444,7 @@ nsWindow::SetFocus(bool aRaise)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>&)
 {
     return NS_OK;
