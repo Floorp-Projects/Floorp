@@ -22,8 +22,7 @@ scopes:
 #                   the repo url)
 # - level:          SCM level of the destination repository
 #                   (1 = try, 3 = core)
-# - revision:       (short) hg revision of the head of the push
-# - revision_hash:  (long) hg revision of the head of the push
+# - revision:       hg revision of the head of the push
 # - comment:        comment of the push
 # - pushlog_id:     id in the pushlog table of the repository
 #
@@ -105,7 +104,6 @@ tasks:
               --head-repository='{{{url}}}'
               --head-ref='{{revision}}'
               --head-rev='{{revision}}'
-              --revision-hash='{{revision_hash}}'
 
         artifacts:
           'public':
