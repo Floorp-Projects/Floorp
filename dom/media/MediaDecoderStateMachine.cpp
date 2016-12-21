@@ -2549,6 +2549,23 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
 }
 
 void
+MediaDecoderStateMachine::PushAudio(MediaData* aSample)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aSample);
+  AudioQueue().Push(aSample);
+}
+
+void
+MediaDecoderStateMachine::PushVideo(MediaData* aSample)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aSample);
+  aSample->As<VideoData>()->mFrameID = ++mCurrentFrameID;
+  VideoQueue().Push(aSample);
+}
+
+void
 MediaDecoderStateMachine::Push(MediaData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
