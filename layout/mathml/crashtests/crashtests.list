@@ -28,7 +28,7 @@ load 370862-1.xhtml
 load 372483-1.xhtml
 load 373472-1.xhtml
 load 373472-2.xhtml
-load 375562-1.xhtml
+asserts-if(stylo,1) load 375562-1.xhtml # bug 1324663
 load 377824-1.xhtml
 load 379418-1.xhtml
 load 385226-1.xhtml
@@ -55,7 +55,7 @@ skip-if(stylo) load 477740-1.xhtml # bug 1323702
 load 541620-1.xhtml
 load 557474-1.html
 load 654928-1.html
-load 655451-1.xhtml
+asserts-if(stylo,12) load 655451-1.xhtml # bug 1324660
 load 713606-1.html
 load 716349-1.html
 load 848725-1.html

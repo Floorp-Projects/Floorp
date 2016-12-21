@@ -9,6 +9,6 @@ load 570884.html
 # Plugin arch is going to change anyway with OOP content so skipping
 # this test for now is OK.
 skip-if(!haveTestPlugin||http.platform!="X11") load 598862.html
-skip-if(Android) load 626602-1.html # bug 908363
+asserts-if(stylo,20) skip-if(Android) load 626602-1.html # bug 1324663 # bug 908363
 load 752340.html
-load 843086.xhtml
+asserts-if(stylo,1) load 843086.xhtml # bug 1324647

@@ -10,96 +10,29 @@
  * liability, trademark and document use rules apply.
  */
 
-callback DecodeSuccessCallback = void (AudioBuffer decodedData);
-callback DecodeErrorCallback = void (DOMException error);
-
-enum AudioContextState {
-    "suspended",
-    "running",
-    "closed"
-};
-
-dictionary PeriodicWaveConstraints {
-  boolean disableNormalization = false;
-};
-
 [Constructor,
  Constructor(AudioChannel audioChannelType),
  Pref="dom.webaudio.enabled"]
-interface AudioContext : EventTarget {
+interface AudioContext : BaseAudioContext {
 
-    readonly attribute AudioDestinationNode destination;
-    readonly attribute float sampleRate;
-    readonly attribute double currentTime;
-    readonly attribute AudioListener listener;
-    readonly attribute AudioContextState state;
+    // Bug 1324545: readonly        attribute double outputLatency;
+    // Bug 1324545: AudioTimestamp                  getOutputTimestamp ();
+
     [Throws]
     Promise<void> suspend();
     [Throws]
-    Promise<void> resume();
-    [Throws]
     Promise<void> close();
-    attribute EventHandler onstatechange;
 
-    [NewObject, Throws]
-    AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
+    [NewObject, Throws, UnsafeInPrerendering]
+    MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement);
 
-    [Throws]
-    Promise<AudioBuffer> decodeAudioData(ArrayBuffer audioData,
-                                         optional DecodeSuccessCallback successCallback,
-                                         optional DecodeErrorCallback errorCallback);
+    [NewObject, Throws, UnsafeInPrerendering]
+    MediaStreamAudioSourceNode createMediaStreamSource(MediaStream mediaStream);
 
-    // AudioNode creation
-    [NewObject, Throws]
-    AudioBufferSourceNode createBufferSource();
-
-    [NewObject, Throws]
-    ConstantSourceNode createConstantSource();
+    // Bug 1324548: MediaStreamTrackAudioSourceNode createMediaStreamTrackSource (AudioMediaStreamTrack mediaStreamTrack);
 
     [NewObject, Throws]
     MediaStreamAudioDestinationNode createMediaStreamDestination();
-
-    [NewObject, Throws]
-    ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
-                                              optional unsigned long numberOfInputChannels = 2,
-                                              optional unsigned long numberOfOutputChannels = 2);
-
-    [NewObject, Throws]
-    StereoPannerNode createStereoPanner();
-    [NewObject, Throws]
-    AnalyserNode createAnalyser();
-    [NewObject, Throws, UnsafeInPrerendering]
-    MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement);
-    [NewObject, Throws, UnsafeInPrerendering]
-    MediaStreamAudioSourceNode createMediaStreamSource(MediaStream mediaStream);
-    [NewObject, Throws]
-    GainNode createGain();
-    [NewObject, Throws]
-    DelayNode createDelay(optional double maxDelayTime = 1);
-    [NewObject, Throws]
-    BiquadFilterNode createBiquadFilter();
-    [NewObject, Throws]
-    IIRFilterNode createIIRFilter(sequence<double> feedforward, sequence<double> feedback);
-    [NewObject, Throws]
-    WaveShaperNode createWaveShaper();
-    [NewObject, Throws]
-    PannerNode createPanner();
-    [NewObject, Throws]
-    ConvolverNode createConvolver();
-
-    [NewObject, Throws]
-    ChannelSplitterNode createChannelSplitter(optional unsigned long numberOfOutputs = 6);
-    [NewObject, Throws]
-    ChannelMergerNode createChannelMerger(optional unsigned long numberOfInputs = 6);
-
-    [NewObject, Throws]
-    DynamicsCompressorNode createDynamicsCompressor();
-
-    [NewObject, Throws]
-    OscillatorNode createOscillator();
-    [NewObject, Throws]
-    PeriodicWave createPeriodicWave(Float32Array real, Float32Array imag, optional PeriodicWaveConstraints constraints);
-
 };
 
 // Mozilla extensions

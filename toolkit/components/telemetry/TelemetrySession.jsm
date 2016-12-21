@@ -477,7 +477,6 @@ var TelemetryScheduler = {
     const shouldSendDaily = this._isDailyPingDue(nowDate);
 
     if (shouldSendDaily) {
-      Telemetry.getHistogramById("TELEMETRY_SCHEDULER_SEND_DAILY").add(1);
       this._log.trace("_schedulerTickLogic - Daily ping due.");
       this._lastDailyPingTime = now;
       return Impl._sendDailyPing();
