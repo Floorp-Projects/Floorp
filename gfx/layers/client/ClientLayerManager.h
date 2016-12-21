@@ -351,16 +351,6 @@ public:
 
   ~ClientLayer();
 
-  virtual void Disconnect()
-  {
-    // This is an "emergency Disconnect()", called when the compositing
-    // process has died.  |mShadow| and our Shmem buffers are
-    // automatically managed by IPDL, so we don't need to explicitly
-    // free them here (it's hard to get that right on emergency
-    // shutdown anyway).
-    SetShadow(nullptr);
-  }
-
   virtual void ClearCachedResources() { }
 
   // Shrink memory usage.
@@ -397,12 +387,12 @@ CreateShadowFor(ClientLayer* aLayer,
                 ClientLayerManager* aMgr,
                 CreatedMethod aMethod)
 {
-  PLayerChild* shadow = aMgr->AsShadowForwarder()->ConstructShadowFor(aLayer);
+  LayerHandle shadow = aMgr->AsShadowForwarder()->ConstructShadowFor(aLayer);
   if (!shadow) {
     return;
   }
 
-  aLayer->SetShadow(shadow);
+  aLayer->SetShadow(aMgr->AsShadowForwarder(), shadow);
   (aMgr->AsShadowForwarder()->*aMethod)(aLayer);
   aMgr->Hold(aLayer->AsLayer());
 }

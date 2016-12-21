@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include protocol PCompositable;
 include protocol PCompositorBridge;
-include protocol PLayer;
 include protocol PImageContainer;
 include protocol PRenderFrame;
 include protocol PTexture;
@@ -51,6 +50,7 @@ using mozilla::gfx::Glyph from "Layers.h";
 using mozilla::layers::BorderColors from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::BorderCorners from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -63,22 +63,22 @@ struct TargetConfig {
 };
 
 // Create a shadow layer for |layer|
-struct OpCreatePaintedLayer    { PLayer layer; };
-struct OpCreateContainerLayer  { PLayer layer; };
-struct OpCreateImageLayer      { PLayer layer; };
-struct OpCreateColorLayer      { PLayer layer; };
-struct OpCreateTextLayer       { PLayer layer; };
-struct OpCreateBorderLayer       { PLayer layer; };
-struct OpCreateCanvasLayer     { PLayer layer; };
-struct OpCreateRefLayer        { PLayer layer; };
+struct OpCreatePaintedLayer    { LayerHandle layer; };
+struct OpCreateContainerLayer  { LayerHandle layer; };
+struct OpCreateImageLayer      { LayerHandle layer; };
+struct OpCreateColorLayer      { LayerHandle layer; };
+struct OpCreateTextLayer       { LayerHandle layer; };
+struct OpCreateBorderLayer       { LayerHandle layer; };
+struct OpCreateCanvasLayer     { LayerHandle layer; };
+struct OpCreateRefLayer        { LayerHandle layer; };
 
 struct OpAttachCompositable {
-  PLayer layer;
+  LayerHandle layer;
   PCompositable compositable;
 };
 
 struct OpAttachAsyncCompositable {
-  PLayer layer;
+  LayerHandle layer;
   uint64_t containerID;
 };
 
@@ -263,8 +263,8 @@ struct CommonLayerAttributes {
   bool isScrollbarContainer;
   int8_t mixBlendMode;
   bool forceIsolatedGroup;
-  nullable PLayer maskLayer;
-  PLayer[] ancestorMaskLayers;
+  LayerHandle maskLayer;
+  LayerHandle[] ancestorMaskLayers;
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
   nsIntRegion invalidRegion;
@@ -336,17 +336,17 @@ struct PluginWindowData {
 };
 
 struct OpSetLayerAttributes {
-  PLayer layer;
+  LayerHandle layer;
   LayerAttributes attrs;
 };
 
 // Monkey with the tree structure
-struct OpSetRoot          { PLayer root; };
-struct OpInsertAfter      { PLayer container; PLayer childLayer; PLayer after; };
-struct OpPrependChild     { PLayer container; PLayer childLayer; };
-struct OpRemoveChild      { PLayer container; PLayer childLayer; };
-struct OpRepositionChild  { PLayer container; PLayer childLayer; PLayer after; };
-struct OpRaiseToTopChild  { PLayer container; PLayer childLayer; };
+struct OpSetRoot          { LayerHandle root; };
+struct OpInsertAfter      { LayerHandle container; LayerHandle childLayer; LayerHandle after; };
+struct OpPrependChild     { LayerHandle container; LayerHandle childLayer; };
+struct OpRemoveChild      { LayerHandle container; LayerHandle childLayer; };
+struct OpRepositionChild  { LayerHandle container; LayerHandle childLayer; LayerHandle after; };
+struct OpRaiseToTopChild  { LayerHandle container; LayerHandle childLayer; };
 
 struct OpSetDiagnosticTypes { DiagnosticTypes diagnostics; };
 struct OpWindowOverlayChanged { };

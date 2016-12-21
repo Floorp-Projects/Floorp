@@ -75,6 +75,8 @@ public:
     return mEffectiveTransformForBuffer;
   }
 
+  virtual ImageLayer* AsImageLayer() override { return this; }
+
 protected:
   ImageLayer(LayerManager* aManager, void* aImplData);
   ~ImageLayer();

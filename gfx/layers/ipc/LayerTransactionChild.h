@@ -57,9 +57,6 @@ protected:
   {}
   ~LayerTransactionChild() { }
 
-  virtual PLayerChild* AllocPLayerChild() override;
-  virtual bool DeallocPLayerChild(PLayerChild* actor) override;
-
   virtual PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo) override;
   virtual bool DeallocPCompositableChild(PCompositableChild* actor) override;
 
