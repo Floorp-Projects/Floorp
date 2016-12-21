@@ -88,11 +88,12 @@ checkReceivedEvents("animationend", targets);
 
 targets.forEach(div => { div.remove(); });
 
-// 2. Test CSS Transition event handlers.
+// 2a. Test CSS Transition event handlers (without transitioncancel)
 
 var targets = createAndRegisterTargets([ 'ontransitionrun',
                                          'ontransitionstart',
-                                         'ontransitionend' ]);
+                                         'ontransitionend',
+                                         'ontransitioncancel' ]);
 targets.forEach(div => {
   div.style.transition = 'margin-left 100ms 200ms';
   getComputedStyle(div).marginLeft; // flush
@@ -108,6 +109,31 @@ checkReceivedEvents("transitionstart", targets);
 
 advance_clock(100);
 checkReceivedEvents("transitionend", targets);
+
+targets.forEach(div => { div.remove(); });
+
+// 2b. Test CSS Transition cancel event handler.
+
+var targets = createAndRegisterTargets([ 'ontransitioncancel' ]);
+targets.forEach(div => {
+  div.style.transition = 'margin-left 100ms 200ms';
+  getComputedStyle(div).marginLeft; // flush
+  div.style.marginLeft = "200px";
+  getComputedStyle(div).marginLeft; // flush
+});
+
+advance_clock(200);
+
+targets.forEach(div => {
+  div.style.display = "none"
+});
+getComputedStyle(targets[0]).display; // flush
+
+advance_clock(0);
+checkReceivedEvents("transitioncancel", targets);
+
+advance_clock(100);
+targets.forEach( div => { is(div.receivedEventType, undefined); });
 
 targets.forEach(div => { div.remove(); });
 

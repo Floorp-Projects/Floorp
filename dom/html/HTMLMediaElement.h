@@ -965,6 +965,14 @@ protected:
   void NoSupportedMediaSourceError(const nsACString& aErrorDetails = nsCString());
 
   /**
+   * Per spec, Failed with elements: Queue a task, using the DOM manipulation
+   * task source, to fire a simple event named error at the candidate element.
+   * So dispatch |QueueLoadFromSourceTask| to main thread to make sure the task
+   * will be executed later than loadstart event.
+   */
+  void DealWithFailedElement(nsIContent* aSourceElement);
+
+  /**
    * Attempts to load resources from the <source> children. This is a
    * substep of the resource selection algorithm. Do not call this directly,
    * call QueueLoadFromSourceTask() instead.
