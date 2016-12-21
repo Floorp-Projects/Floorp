@@ -65,10 +65,6 @@ function ContentSearchUIController(inputElement, tableParent, healthReportKey,
 
 ContentSearchUIController.prototype = {
 
-  // The timeout (ms) of the remote suggestions.  Corresponds to
-  // SearchSuggestionController.remoteTimeout.  Uses
-  // SearchSuggestionController's default timeout if falsey.
-  remoteTimeout: undefined,
   _oneOffButtons: [],
   // Setting up the one off buttons causes an uninterruptible reflow. If we
   // receive the list of engines while the newtab page is loading, this reflow
@@ -716,7 +712,6 @@ ContentSearchUIController.prototype = {
       this._sendMsg("GetSuggestions", {
         engineName: this.defaultEngine.name,
         searchString: this.input.value,
-        remoteTimeout: this.remoteTimeout,
       });
     }
   },

@@ -51,6 +51,7 @@ TEST_HARNESS_FILES.gtest += [
     'short-zero-in-moov.mp4',
     'short-zero-inband.mov',
     'small-shot-false-positive.mp3',
+    'small-shot-partial-xing.mp3',
     'small-shot.mp3',
     'test.webm',
     'test_case_1224361.vp8.ivf',

@@ -83,6 +83,24 @@ public:
 
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override;
 
+  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                nscoord* aBaseline) const override
+  {
+    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst, aBaseline);
+  }
+
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord*             aBaseline) const override
+  {
+    if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
+      return false;
+    }
+    *aBaseline = aBaselineGroup == BaselineSharingGroup::eFirst ?
+                   mBaselineFromLastReflow : mLastBaselineFromLastReflow;
+    return true;
+  }
+
   // nsContainerFrame overrides
   uint16_t CSSAlignmentForAbsPosChild(
             const ReflowInput& aChildRI,
@@ -116,6 +134,7 @@ protected:
   explicit nsFlexContainerFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext)
     , mBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
+    , mLastBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
   virtual ~nsFlexContainerFrame();
 
@@ -301,6 +320,8 @@ protected:
                                    // to satisfy their 'order' values?
 
   nscoord mBaselineFromLastReflow;
+  // Note: the last baseline is a distance from our border-box end edge.
+  nscoord mLastBaselineFromLastReflow;
 };
 
 #endif /* nsFlexContainerFrame_h___ */
