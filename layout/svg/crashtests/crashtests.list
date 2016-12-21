@@ -20,34 +20,34 @@ load 327711-1.svg
 load 328137-1.svg
 load 329848-1.svg
 load 337408-1.xul
-load 338301-1.xhtml
-load 338312-1.xhtml
+asserts-if(stylo,2) load 338301-1.xhtml # bug 1324669
+asserts-if(stylo,4) load 338312-1.xhtml # bug 1324669
 load 340083-1.svg
-load 340945-1.svg
+asserts-if(stylo,1) load 340945-1.svg # bug 1324647
 load 342923-1.html
-load 343221-1.xhtml
+asserts-if(stylo,2) load 343221-1.xhtml # bug 1324669
 load 344749-1.svg
 load 344887-1.svg
 load 344892-1.svg
 load 344898-1.svg
 load 344904-1.svg
 load 345418-1.svg
-load 348982-1.xhtml
-load 354777-1.xhtml
+asserts-if(stylo,2) load 348982-1.xhtml # bug 1324669
+asserts-if(stylo,1) load 354777-1.xhtml # bug 1324669
 load 359516-1.svg
 load 361015-1.svg
-load 361587-1.svg
-load 363611-1.xhtml
+asserts-if(stylo,0-2) load 361587-1.svg # bug 1324677
+asserts-if(stylo,2) load 363611-1.xhtml # bug 1324669
 load 364688-1.svg
 load 366956-1.svg
 load 366956-2.svg
 load 367111-1.svg
-load 367368-1.xhtml
+asserts-if(stylo,2) load 367368-1.xhtml # bug 1324669
 load 369233-1.svg
 load 369438-1.svg
 load 369438-2.svg
-load 371463-1.xhtml
-load 371563-1.xhtml
+asserts-if(stylo,2) load 371463-1.xhtml # bug 1324669
+asserts-if(stylo,2) load 371563-1.xhtml # bug 1324669
 load 375775-1.svg
 load 378716.svg
 load 380691-1.svg
@@ -61,13 +61,13 @@ load 385552-1.svg
 load 385552-2.svg
 load 385840-1.svg
 load 385852-1.svg
-load 386475-1.xhtml
+asserts-if(stylo,2) load 386475-1.xhtml # bug 1324669
 load 386566-1.svg
 load 386690-1.svg
 load 387290-1.svg
 load 402408-1.svg
-load 404677-1.xhtml
-load 409565-1.xhtml
+asserts-if(stylo,2) load 404677-1.xhtml # bug 1324669
+asserts-if(stylo,2) load 409565-1.xhtml # bug 1324669
 load 409573-1.svg
 load 420697-1.svg
 load 420697-2.svg
@@ -105,7 +105,7 @@ load 587336-1.html
 load 590291-1.svg
 load 601999-1.html
 load 605626-1.svg
-load 610594-1.html
+asserts-if(stylo,2) load 610594-1.html # bug 1324669
 load 610954-1.html
 load 612662-1.svg
 load 612662-2.svg
@@ -137,13 +137,13 @@ load 757704-1.svg
 load 757718-1.svg
 load 757751-1.svg
 load 767056-1.svg
-load 767535-1.xhtml
-load 768087-1.html
+asserts-if(stylo,3) load 767535-1.xhtml # bug 1324669
+asserts-if(stylo,2) load 768087-1.html # bug 1324669
 load 768351.svg
 load 778492-1.svg
 load 779971-1.svg
 load 780764-1.svg
-load 780963-1.html
+asserts-if(stylo,2) load 780963-1.html # bug 1324669
 load 782141-1.svg
 load 784061-1.svg
 load 788831-1.svg
@@ -179,7 +179,7 @@ load 897342-1.svg
 load 898909-1.svg
 load 898951-1.svg
 load 913990.html
-load 919371-1.xhtml
+asserts-if(stylo,2) load 919371-1.xhtml # bug 1324669
 load 950324-1.svg
 load 952270-1.svg
 load 963086-1.svg
@@ -193,7 +193,7 @@ load 1028512.svg
 load 1140080-1.svg
 load 1149542-1.svg
 load 1156581-1.svg
-load 1182496-1.html
+asserts-if(stylo,1) load 1182496-1.html # bug 1324669
 load 1209525-1.svg
 load 1223281-1.svg
 load extref-test-1.xhtml
