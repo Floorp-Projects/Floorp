@@ -360,6 +360,13 @@
                   </description>
                 </hbox>
               </vbox>
+              <vbox id="getthemes-container" class="alert-container">
+                <hbox class="alert">
+                  <description>&getThemes.description; &#160;
+                    <label class="text-link plain" id="getthemes-learnmore-link">&getThemes.learnMore;</label>
+                  </description>
+                </hbox>
+              </vbox>
               <hbox class="view-header global-warning-container">
                 <!-- global warnings -->
                 <hbox class="global-warning" flex="1">

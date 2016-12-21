@@ -23,7 +23,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
-#include "nsIEditorIMESupport.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -642,12 +641,11 @@ IMEContentObserver::IsEditorComposing() const
   // whether the editor already started to handle composition because
   // web contents can change selection, text content and/or something from
   // compositionstart event listener which is run before EditorBase handles it.
-  nsCOMPtr<nsIEditorIMESupport> editorIMESupport = do_QueryInterface(mEditor);
-  if (NS_WARN_IF(!editorIMESupport)) {
+  if (NS_WARN_IF(!mEditor)) {
     return false;
   }
   bool isComposing = false;
-  nsresult rv = editorIMESupport->GetComposing(&isComposing);
+  nsresult rv = mEditor->GetComposing(&isComposing);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

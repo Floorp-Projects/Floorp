@@ -13,7 +13,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
 
 Cu.import("chrome://marionette/content/accessibility.js");
-Cu.import("chrome://marionette/content/legacyaction.js");
+Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
@@ -22,6 +22,7 @@ Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
+Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/navigate.js");
 Cu.import("chrome://marionette/content/proxy.js");
@@ -59,7 +60,7 @@ var SUPPORTED_STRATEGIES = new Set([
 
 var capabilities = {};
 
-var actions = new action.Chain(checkForInterrupted);
+var legacyactions = new legacyaction.Chain(checkForInterrupted);
 
 // the unload handler
 var onunload;
@@ -141,7 +142,7 @@ function registerSelf() {
 
 function emitTouchEventForIFrame(message) {
   message = message.json;
-  let identifier = actions.nextTouchId;
+  let identifier = legacyactions.nextTouchId;
 
   let domWindowUtils = curContainer.frame.
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
@@ -239,6 +240,8 @@ var getCookiesFn = dispatch(getCookies);
 var singleTapFn = dispatch(singleTap);
 var takeScreenshotFn = dispatch(takeScreenshot);
 var getScreenshotHashFn = dispatch(getScreenshotHash);
+var performActionsFn = dispatch(performActions);
+var releaseActionsFn = dispatch(releaseActions);
 var actionChainFn = dispatch(actionChain);
 var multiActionFn = dispatch(multiAction);
 var addCookieFn = dispatch(addCookie);
@@ -258,6 +261,8 @@ function startListeners() {
   addMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
   addMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
   addMessageListenerId("Marionette:singleTap", singleTapFn);
+  addMessageListenerId("Marionette:performActions", performActionsFn);
+  addMessageListenerId("Marionette:releaseActions", releaseActionsFn);
   addMessageListenerId("Marionette:actionChain", actionChainFn);
   addMessageListenerId("Marionette:multiAction", multiActionFn);
   addMessageListenerId("Marionette:get", get);
@@ -328,7 +333,7 @@ function newSession(msg) {
     // events being the result of a physical mouse action.
     // This is especially important for the touch event shim,
     // in order to prevent creating touch event for these fake mouse events.
-    actions.inputSource = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
+    legacyactions.inputSource = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
   }
 }
 
@@ -362,6 +367,8 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
   removeMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
   removeMessageListenerId("Marionette:singleTap", singleTapFn);
+  removeMessageListenerId("Marionette:performActions", performActionsFn);
+  removeMessageListenerId("Marionette:releaseActions", releaseActionsFn);
   removeMessageListenerId("Marionette:actionChain", actionChainFn);
   removeMessageListenerId("Marionette:multiAction", multiActionFn);
   removeMessageListenerId("Marionette:get", get);
@@ -408,7 +415,13 @@ function deleteSession(msg) {
   // reset container frame to the top-most frame
   curContainer = { frame: content, shadowRoot: null };
   curContainer.frame.focus();
-  actions.touchIds = {};
+  legacyactions.touchIds = {};
+  if (action.inputStateMap !== undefined) {
+    action.inputStateMap.clear();
+  }
+  if (action.inputsToCancel !== undefined) {
+    action.inputsToCancel.length = 0;
+  }
 }
 
 /**
@@ -476,7 +489,9 @@ function sendLog(msg) {
 function resetValues() {
   sandboxes.clear();
   curContainer = {frame: content, shadowRoot: null};
-  actions.mouseEventsOnly = false;
+  legacyactions.mouseEventsOnly = false;
+  action.inputStateMap = new Map();
+  action.inputsToCancel = [];
 }
 
 /**
@@ -506,7 +521,7 @@ function checkForInterrupted() {
     if (wasInterrupted()) {
       if (previousContainer) {
         // if previousContainer is set, then we're in a single process environment
-        curContainer = actions.container = previousContainer;
+        curContainer = legacyactions.container = previousContainer;
         previousContainer = null;
       }
       else {
@@ -595,7 +610,7 @@ function emitTouchEvent(type, touch) {
                    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                    getInterface(Components.interfaces.nsIWebNavigation).
                    QueryInterface(Components.interfaces.nsIDocShell);
-    if (docShell.asyncPanZoomEnabled && actions.scrolling) {
+    if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
       // if we're in APZ and we're scrolling, we must use sendNativeTouchPoint to dispatch our touchmove events
       let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
       // only call emitTouchEventForIFrame if we're inside an iframe.
@@ -639,16 +654,16 @@ function singleTap(id, corx, cory) {
     a11y.assertVisible(acc, el, visible);
     a11y.assertActionable(acc, el);
     if (!curContainer.frame.document.createTouch) {
-      actions.mouseEventsOnly = true;
+      legacyactions.mouseEventsOnly = true;
     }
     let c = element.coordinates(el, corx, cory);
-    if (!actions.mouseEventsOnly) {
-      let touchId = actions.nextTouchId++;
+    if (!legacyactions.mouseEventsOnly) {
+      let touchId = legacyactions.nextTouchId++;
       let touch = createATouch(el, c.x, c.y, touchId);
       emitTouchEvent('touchstart', touch);
       emitTouchEvent('touchend', touch);
     }
-    actions.mouseTap(el.ownerDocument, c.x, c.y);
+    legacyactions.mouseTap(el.ownerDocument, c.x, c.y);
   });
 }
 
@@ -660,9 +675,33 @@ function createATouch(el, corx, cory, touchId) {
   let doc = el.ownerDocument;
   let win = doc.defaultView;
   let [clientX, clientY, pageX, pageY, screenX, screenY] =
-    actions.getCoordinateInfo(el, corx, cory);
+   legacyactions.getCoordinateInfo(el, corx, cory);
   let atouch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
   return atouch;
+}
+
+/**
+ * Perform a series of grouped actions at the specified points in time.
+ *
+ * @param {obj} msg
+ *      Object with an |actions| attribute that is an Array of objects
+ *      each of which represents an action sequence.
+ */
+function performActions(msg) {
+  let chain = action.Chain.fromJson(msg.actions);
+  action.dispatch(chain, seenEls, curContainer);
+}
+
+/**
+ * The Release Actions command is used to release all the keys and pointer
+ * buttons that are currently depressed. This causes events to be fired as if
+ * the state was released by an explicit series of actions. It also clears all
+ * the internal state of the virtual devices.
+ */
+function releaseActions() {
+  action.dispatchTickActions(action.inputsToCancel.reverse(), 0, seenEls, curContainer);
+  action.inputsToCancel.length = 0;
+  action.inputStateMap.clear();
 }
 
 /**
@@ -673,7 +712,7 @@ function actionChain(chain, touchId) {
   touchProvider.createATouch = createATouch;
   touchProvider.emitTouchEvent = emitTouchEvent;
 
-  return actions.dispatchActions(
+  return legacyactions.dispatchActions(
       chain,
       touchId,
       curContainer,

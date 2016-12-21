@@ -4851,9 +4851,8 @@ var FormAssistant = {
         // If we have an active composition string, commit it before sending
         // the autocomplete event with the text that will replace it.
         try {
-          let imeEditor = editableElement.editor.QueryInterface(Ci.nsIEditorIMESupport);
-          if (imeEditor.composing)
-            imeEditor.forceCompositionEnd();
+          if (editableElement.editor.composing)
+            editableElement.editor.forceCompositionEnd();
         } catch (e) {}
 
         editableElement.setUserInput(aData);

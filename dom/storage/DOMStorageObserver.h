@@ -54,6 +54,8 @@ public:
 private:
   virtual ~DOMStorageObserver() {}
 
+  static void TestingPrefChanged(const char* aPrefName, void* aClosure);
+
   static DOMStorageObserver* sSelf;
 
   // Weak references

@@ -484,12 +484,12 @@ event.isKeypressFiredKey = function (key) {
  *
  * @param {string} key
  *     Key to synthesise.  Should either be a character or a key code
- *     starting with "VK_" such as VK_RETURN.
+ *     starting with "VK_" such as VK_RETURN, or a normalized key value.
  * @param {Object.<string, ?>} event
  *     Object which may contain the properties shiftKey, ctrlKey, altKey,
- *     metaKey, accessKey, type.  If the type is specified, a key event
- *    of that type is fired.  Otherwise, a keydown, a keypress, and then a
- *     keyup event are fired in sequence.
+ *     metaKey, accessKey, type.  If the type is specified (keydown or keyup),
+ *     a key event of that type is fired.  Otherwise, a keydown, a keypress,
+ *     and then a keyup event are fired in sequence.
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  *
@@ -594,7 +594,10 @@ function createKeyboardEventDictionary_(key, keyEvent, win = window) {
     if (!keyCode) {
       result.flags |= Ci.nsITextInputProcessor.KEY_KEEP_KEYCODE_ZERO;
     }
-    result.flags |= Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
+    // keyName was already determined in keyEvent so no fall-back needed
+    if (!("key" in keyEvent && keyName == keyEvent.key)) {
+      result.flags |= Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
+    }
   }
   var locationIsDefined = "location" in keyEvent;
   if (locationIsDefined && keyEvent.location === 0) {
@@ -1209,6 +1212,8 @@ function getKeyCode(c) {
 event.sendKeyDown = function (keyToSend, modifiers, document) {
   modifiers.type = "keydown";
   event.sendSingleKey(keyToSend, modifiers, document);
+  // TODO This doesn't do anything since |synthesizeKeyEvent| ignores explicit
+  // keypress request, and instead figures out itself when to send keypress
   if (["VK_SHIFT", "VK_CONTROL", "VK_ALT", "VK_META"].indexOf(getKeyCode(keyToSend)) < 0) {
     modifiers.type = "keypress";
     event.sendSingleKey(keyToSend, modifiers, document);
@@ -1222,12 +1227,27 @@ event.sendKeyUp = function (keyToSend, modifiers, window = undefined) {
   delete modifiers.type;
 };
 
+/**
+ * Synthesize a key event for a single key.
+ *
+ * @param {string} keyToSend
+ *     Code point or normalized key value
+ * @param {?} modifiers
+ *     Object with properties used in KeyboardEvent (shiftkey, repeat, ...)
+ *     as well as, the event |type| such as keydown. All properties are optional.
+ * @param {Window=} window
+ *     Window object.  If |window| is undefined, the event is synthesized in
+ *     current window.
+ */
 event.sendSingleKey = function (keyToSend, modifiers, window = undefined) {
   let keyCode = getKeyCode(keyToSend);
   if (keyCode in KEYCODES_LOOKUP) {
+    // We assume that if |keyToSend| is a raw code point (like "\uE009") then
+    // |modifiers| does not already have correct value for corresponding
+    // |modName| attribute (like ctrlKey), so that value needs to be flipped
     let modName = KEYCODES_LOOKUP[keyCode];
     modifiers[modName] = !modifiers[modName];
-  } else if (modifiers.shiftKey) {
+  } else if (modifiers.shiftKey && keyCode != "Shift") {
     keyCode = keyCode.toUpperCase();
   }
   event.synthesizeKey(keyCode, modifiers, window);

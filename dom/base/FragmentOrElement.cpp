@@ -93,7 +93,6 @@
 #include "nsICategoryManager.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIEditor.h"
-#include "nsIEditorIMESupport.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIControllers.h"
 #include "nsView.h"
@@ -264,12 +263,11 @@ nsIContent::GetDesiredIMEState()
     return IMEState(IMEState::DISABLED);
   }
   nsIEditor* editor = nsContentUtils::GetHTMLEditor(pc);
-  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(editor);
-  if (!imeEditor) {
+  if (!editor) {
     return IMEState(IMEState::DISABLED);
   }
   IMEState state;
-  imeEditor->GetPreferredIMEState(&state);
+  editor->GetPreferredIMEState(&state);
   return state;
 }
 

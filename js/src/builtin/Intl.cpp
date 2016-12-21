@@ -11,6 +11,7 @@
 
 #include "builtin/Intl.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 
@@ -25,6 +26,7 @@
 #include "builtin/IntlTimeZoneData.h"
 #include "ds/Sort.h"
 #if ENABLE_INTL_API
+#include "unicode/plurrule.h"
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
 #include "unicode/udat.h"
@@ -32,6 +34,7 @@
 #include "unicode/uenum.h"
 #include "unicode/unum.h"
 #include "unicode/unumsys.h"
+#include "unicode/upluralrules.h"
 #include "unicode/ustring.h"
 #endif
 #include "vm/DateTime.h"
@@ -47,6 +50,7 @@
 
 using namespace js;
 
+using mozilla::AssertedCast;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
@@ -79,14 +83,45 @@ using mozilla::RangedPtr;
 
 namespace {
 
-typedef bool UBool;
-typedef char16_t UChar;
-typedef double UDate;
-
 enum UErrorCode {
     U_ZERO_ERROR,
     U_BUFFER_OVERFLOW_ERROR,
 };
+
+}
+
+namespace icu {
+
+class StringEnumeration {
+    public:
+        explicit StringEnumeration();
+};
+
+StringEnumeration::StringEnumeration()
+{
+    MOZ_CRASH("StringEnumeration::StringEnumeration: Intl API disabled");
+}
+
+class PluralRules {
+public:
+
+    StringEnumeration* getKeywords(UErrorCode& status) const;
+
+};
+
+StringEnumeration*
+PluralRules::getKeywords(UErrorCode& status) const
+{
+    MOZ_CRASH("PluralRules::getKeywords: Intl API disabled");
+}
+
+} // icu namespace
+
+namespace {
+
+typedef bool UBool;
+typedef char16_t UChar;
+typedef double UDate;
 
 inline UBool
 U_FAILURE(UErrorCode code)
@@ -118,6 +153,32 @@ UCharToChar16(const UChar* chars)
     MOZ_CRASH("UCharToChar16: Intl API disabled");
 }
 
+const char*
+uloc_getAvailable(int32_t n)
+{
+    MOZ_CRASH("uloc_getAvailable: Intl API disabled");
+}
+
+int32_t
+uloc_countAvailable()
+{
+    MOZ_CRASH("uloc_countAvailable: Intl API disabled");
+}
+
+struct UFormattable;
+
+void
+ufmt_close(UFormattable* fmt)
+{
+    MOZ_CRASH("ufmt_close: Intl API disabled");
+}
+
+double
+ufmt_getDouble(UFormattable* fmt, UErrorCode *status)
+{
+    MOZ_CRASH("ufmt_getDouble: Intl API disabled");
+}
+
 struct UEnumeration;
 
 int32_t
@@ -136,6 +197,12 @@ void
 uenum_close(UEnumeration* en)
 {
     MOZ_CRASH("uenum_close: Intl API disabled");
+}
+
+UEnumeration*
+uenum_openFromStringEnumeration(icu::StringEnumeration* adopted, UErrorCode* ec)
+{
+    MOZ_CRASH("uenum_openFromStringEnumeration: Intl API disabled");
 }
 
 struct UCollator;
@@ -315,6 +382,17 @@ unum_setTextAttribute(UNumberFormat* fmt, UNumberFormatTextAttribute tag, const 
                       int32_t newValueLength, UErrorCode* status)
 {
     MOZ_CRASH("unum_setTextAttribute: Intl API disabled");
+}
+
+UFormattable*
+unum_parseToUFormattable(const UNumberFormat* fmt,
+                         UFormattable *result,
+                         const UChar* text,
+                         int32_t textLength,
+                         int32_t* parsePos, /* 0 = start */
+                         UErrorCode* status)
+{
+    MOZ_CRASH("unum_parseToUFormattable: Intl API disabled");
 }
 
 typedef void* UNumberingSystem;
@@ -679,6 +757,34 @@ udat_getSymbols(const UDateFormat *fmt, UDateFormatSymbolType type, int32_t symb
                 UChar *result, int32_t resultLength, UErrorCode *status)
 {
     MOZ_CRASH("udat_getSymbols: Intl API disabled");
+}
+
+typedef void* UPluralRules;
+
+enum UPluralType {
+  UPLURAL_TYPE_CARDINAL,
+  UPLURAL_TYPE_ORDINAL
+};
+
+void
+uplrules_close(UPluralRules *uplrules)
+{
+    MOZ_CRASH("uplrules_close: Intl API disabled");
+}
+
+UPluralRules*
+uplrules_openForType(const char *locale, UPluralType type, UErrorCode *status)
+{
+    MOZ_CRASH("uplrules_openForType: Intl API disabled");
+}
+
+int32_t
+uplrules_select(const UPluralRules *uplrules,
+               double number,
+               UChar *keyword, int32_t capacity,
+               UErrorCode *status)
+{
+    MOZ_CRASH("uplrules_select: Intl API disabled");
 }
 
 } // anonymous namespace
@@ -1612,6 +1718,100 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+
+/**
+ *
+ * This creates new UNumberFormat with calculated digit formatting
+ * properties for PluralRules.
+ *
+ * This is similar to NewUNumberFormat but doesn't allow for currency or
+ * percent types.
+ *
+ */
+static UNumberFormat*
+NewUNumberFormatForPluralRules(JSContext* cx, HandleObject pluralRules)
+{
+    RootedObject internals(cx, GetInternals(cx, pluralRules));
+    if (!internals)
+       return nullptr;
+
+    RootedValue value(cx);
+
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
+        return nullptr;
+    JSAutoByteString locale(cx, value.toString());
+    if (!locale)
+        return nullptr;
+
+    uint32_t uMinimumIntegerDigits = 1;
+    uint32_t uMinimumFractionDigits = 0;
+    uint32_t uMaximumFractionDigits = 3;
+    int32_t uMinimumSignificantDigits = -1;
+    int32_t uMaximumSignificantDigits = -1;
+
+    RootedId id(cx, NameToId(cx->names().minimumSignificantDigits));
+    bool hasP;
+    if (!HasProperty(cx, internals, id, &hasP))
+        return nullptr;
+    if (hasP) {
+        if (!GetProperty(cx, internals, internals, cx->names().minimumSignificantDigits,
+                         &value))
+        {
+            return nullptr;
+        }
+        uMinimumSignificantDigits = value.toInt32();
+
+        if (!GetProperty(cx, internals, internals, cx->names().maximumSignificantDigits,
+                         &value))
+        {
+            return nullptr;
+        }
+        uMaximumSignificantDigits = value.toInt32();
+    } else {
+        if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
+                         &value))
+        {
+            return nullptr;
+        }
+        uMinimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
+
+        if (!GetProperty(cx, internals, internals, cx->names().minimumFractionDigits,
+                         &value))
+        {
+            return nullptr;
+        }
+        uMinimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
+
+        if (!GetProperty(cx, internals, internals, cx->names().maximumFractionDigits,
+                         &value))
+        {
+            return nullptr;
+        }
+        uMaximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    UNumberFormat* nf = unum_open(UNUM_DECIMAL, nullptr, 0, icuLocale(locale.ptr()), nullptr, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return nullptr;
+    }
+    ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
+
+    if (uMinimumSignificantDigits != -1) {
+        unum_setAttribute(nf, UNUM_SIGNIFICANT_DIGITS_USED, true);
+        unum_setAttribute(nf, UNUM_MIN_SIGNIFICANT_DIGITS, uMinimumSignificantDigits);
+        unum_setAttribute(nf, UNUM_MAX_SIGNIFICANT_DIGITS, uMaximumSignificantDigits);
+    } else {
+        unum_setAttribute(nf, UNUM_MIN_INTEGER_DIGITS, uMinimumIntegerDigits);
+        unum_setAttribute(nf, UNUM_MIN_FRACTION_DIGITS, uMinimumFractionDigits);
+        unum_setAttribute(nf, UNUM_MAX_FRACTION_DIGITS, uMaximumFractionDigits);
+    }
+
+    return toClose.forget();
+}
+
+
 /**
  * Returns a new UNumberFormat with the locale and number formatting options
  * of the given NumberFormat.
@@ -1695,32 +1895,32 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
         {
             return nullptr;
         }
-        uMinimumSignificantDigits = int32_t(value.toNumber());
+        uMinimumSignificantDigits = value.toInt32();
         if (!GetProperty(cx, internals, internals, cx->names().maximumSignificantDigits,
                          &value))
         {
             return nullptr;
         }
-        uMaximumSignificantDigits = int32_t(value.toNumber());
+        uMaximumSignificantDigits = value.toInt32();
     } else {
         if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
                          &value))
         {
             return nullptr;
         }
-        uMinimumIntegerDigits = int32_t(value.toNumber());
+        uMinimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
         if (!GetProperty(cx, internals, internals, cx->names().minimumFractionDigits,
                          &value))
         {
             return nullptr;
         }
-        uMinimumFractionDigits = int32_t(value.toNumber());
+        uMinimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
         if (!GetProperty(cx, internals, internals, cx->names().maximumFractionDigits,
                          &value))
         {
             return nullptr;
         }
-        uMaximumFractionDigits = int32_t(value.toNumber());
+        uMaximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
     }
 
     if (!GetProperty(cx, internals, internals, cx->names().useGrouping, &value))
@@ -3427,6 +3627,381 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+/**************** PluralRules *****************/
+
+static void pluralRules_finalize(FreeOp* fop, JSObject* obj);
+
+static const uint32_t UPLURAL_RULES_SLOT = 0;
+static const uint32_t PLURAL_RULES_SLOTS_COUNT = 1;
+
+static const ClassOps PluralRulesClassOps = {
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    pluralRules_finalize
+};
+
+static const Class PluralRulesClass = {
+    js_Object_str,
+    JSCLASS_HAS_RESERVED_SLOTS(PLURAL_RULES_SLOTS_COUNT) |
+    JSCLASS_FOREGROUND_FINALIZE,
+    &PluralRulesClassOps
+};
+
+#if JS_HAS_TOSOURCE
+static bool
+pluralRules_toSource(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(cx->names().PluralRules);
+    return true;
+}
+#endif
+
+static const JSFunctionSpec pluralRules_static_methods[] = {
+    JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_PluralRules_supportedLocalesOf", 1, 0),
+    JS_FS_END
+};
+
+static const JSFunctionSpec pluralRules_methods[] = {
+    JS_SELF_HOSTED_FN("resolvedOptions", "Intl_PluralRules_resolvedOptions", 0, 0),
+    JS_SELF_HOSTED_FN("select", "Intl_PluralRules_select", 1, 0),
+#if JS_HAS_TOSOURCE
+    JS_FN(js_toSource_str, pluralRules_toSource, 0, 0),
+#endif
+    JS_FS_END
+};
+
+/**
+ * PluralRules constructor.
+ * Spec: ECMAScript 402 API, PluralRules, 1.1
+ */
+static bool
+PluralRules(JSContext* cx, const CallArgs& args, bool construct)
+{
+    RootedObject obj(cx);
+
+    if (!construct) {
+        JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
+        if (!intl)
+            return false;
+        RootedValue self(cx, args.thisv());
+        if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
+            obj = ToObject(cx, self);
+            if (!obj)
+                return false;
+
+            bool extensible;
+            if (!IsExtensible(cx, obj, &extensible))
+                return false;
+            if (!extensible)
+                return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
+        } else {
+            construct = true;
+        }
+    }
+    if (construct) {
+        RootedObject proto(cx, cx->global()->getOrCreatePluralRulesPrototype(cx));
+        if (!proto)
+            return false;
+        obj = NewObjectWithGivenProto(cx, &PluralRulesClass, proto);
+        if (!obj)
+            return false;
+
+        obj->as<NativeObject>().setReservedSlot(UPLURAL_RULES_SLOT, PrivateValue(nullptr));
+    }
+
+    RootedValue locales(cx, args.get(0));
+    RootedValue options(cx, args.get(1));
+
+    if (!IntlInitialize(cx, obj, cx->names().InitializePluralRules, locales, options))
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+PluralRules(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return PluralRules(cx, args, args.isConstructing());
+}
+
+bool
+js::intl_PluralRules(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    return PluralRules(cx, args, true);
+}
+
+static void
+pluralRules_finalize(FreeOp* fop, JSObject* obj)
+{
+    MOZ_ASSERT(fop->onMainThread());
+
+    // This is-undefined check shouldn't be necessary, but for internal
+    // brokenness in object allocation code.  For the moment, hack around it by
+    // explicitly guarding against the possibility of the reserved slot not
+    // containing a private.  See bug 949220.
+    const Value& slot = obj->as<NativeObject>().getReservedSlot(UPLURAL_RULES_SLOT);
+    if (!slot.isUndefined()) {
+        if (UPluralRules* pr = static_cast<UPluralRules*>(slot.toPrivate()))
+            uplrules_close(pr);
+    }
+}
+
+static JSObject*
+CreatePluralRulesPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global)
+{
+    RootedFunction ctor(cx);
+    ctor = global->createConstructor(cx, &PluralRules, cx->names().PluralRules, 0);
+    if (!ctor)
+        return nullptr;
+
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &PluralRulesClass));
+    if (!proto)
+        return nullptr;
+    proto->setReservedSlot(UPLURAL_RULES_SLOT, PrivateValue(nullptr));
+
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
+        return nullptr;
+
+    if (!JS_DefineFunctions(cx, ctor, pluralRules_static_methods))
+        return nullptr;
+
+    if (!JS_DefineFunctions(cx, proto, pluralRules_methods))
+        return nullptr;
+
+    RootedValue options(cx);
+    if (!CreateDefaultOptions(cx, &options))
+        return nullptr;
+
+    if (!IntlInitialize(cx, proto, cx->names().InitializePluralRules, UndefinedHandleValue,
+                        options))
+    {
+        return nullptr;
+    }
+
+    RootedValue ctorValue(cx, ObjectValue(*ctor));
+    if (!DefineProperty(cx, Intl, cx->names().PluralRules, ctorValue, nullptr, nullptr, 0))
+        return nullptr;
+
+    return proto;
+}
+
+bool
+js::intl_PluralRules_availableLocales(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    RootedValue result(cx);
+    // We're going to use ULocale availableLocales as per ICU recommendation:
+    // https://ssl.icu-project.org/trac/ticket/12756
+    if (!intl_availableLocales(cx, uloc_countAvailable, uloc_getAvailable, &result))
+        return false;
+    args.rval().set(result);
+    return true;
+}
+
+bool
+js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject pluralRules(cx, &args[0].toObject());
+
+    UNumberFormat* nf = NewUNumberFormatForPluralRules(cx, pluralRules);
+    if (!nf)
+        return false;
+
+    ScopedICUObject<UNumberFormat, unum_close> closeNumberFormat(nf);
+
+    RootedObject internals(cx, GetInternals(cx, pluralRules));
+    if (!internals)
+        return false;
+
+    RootedValue value(cx);
+
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
+        return false;
+    JSAutoByteString locale(cx, value.toString());
+    if (!locale)
+        return false;
+
+    if (!GetProperty(cx, internals, internals, cx->names().type, &value))
+        return false;
+    JSAutoByteString type(cx, value.toString());
+    if (!type)
+        return false;
+
+    double x = args[1].toNumber();
+
+    // We need a NumberFormat in order to format the number
+    // using the number formatting options (minimum/maximum*Digits)
+    // before we push the result to PluralRules
+    //
+    // This should be fixed in ICU 59 and we'll be able to switch to that
+    // API: http://bugs.icu-project.org/trac/ticket/12763
+    //
+    RootedValue fmtNumValue(cx);
+    if (!intl_FormatNumber(cx, nf, x, &fmtNumValue))
+        return false;
+    RootedString fmtNumValueString(cx, fmtNumValue.toString());
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, fmtNumValueString))
+        return false;
+
+    const UChar* uFmtNumValue = Char16ToUChar(stableChars.twoByteRange().begin().get());
+
+    UErrorCode status = U_ZERO_ERROR;
+
+    UFormattable* fmt = unum_parseToUFormattable(nf, nullptr, uFmtNumValue,
+                                                 stableChars.twoByteRange().length(), 0, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    ScopedICUObject<UFormattable, ufmt_close> closeUFormattable(fmt);
+
+    double y = ufmt_getDouble(fmt, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    UPluralType category;
+
+    if (equal(type, "cardinal")) {
+        category = UPLURAL_TYPE_CARDINAL;
+    } else {
+        MOZ_ASSERT(equal(type, "ordinal"));
+        category = UPLURAL_TYPE_ORDINAL;
+    }
+
+    UPluralRules* pr = uplrules_openForType(icuLocale(locale.ptr()), category, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
+
+    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
+        return false;
+
+    int size = uplrules_select(pr, y, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE, &status);
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+        if (!chars.resize(size))
+            return false;
+        status = U_ZERO_ERROR;
+        uplrules_select(pr, y, Char16ToUChar(chars.begin()), size, &status);
+    }
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
+}
+
+bool
+js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+
+    JSAutoByteString type(cx, args[1].toString());
+    if (!type)
+        return false;
+
+    UErrorCode status = U_ZERO_ERROR;
+
+    UPluralType category;
+
+    if (equal(type, "cardinal")) {
+        category = UPLURAL_TYPE_CARDINAL;
+    } else {
+        MOZ_ASSERT(equal(type, "ordinal"));
+        category = UPLURAL_TYPE_ORDINAL;
+    }
+
+    UPluralRules* pr = uplrules_openForType(
+        icuLocale(locale.ptr()),
+        category,
+        &status
+    );
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
+
+    // We should get a C API for that in ICU 59 and switch to it
+    // https://ssl.icu-project.org/trac/ticket/12772
+    //
+    icu::StringEnumeration* kwenum =
+        reinterpret_cast<icu::PluralRules*>(pr)->getKeywords(status);
+    UEnumeration* ue = uenum_openFromStringEnumeration(kwenum, &status);
+
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    ScopedICUObject<UEnumeration, uenum_close> closeEnum(ue);
+
+    RootedObject res(cx, NewDenseEmptyArray(cx));
+    if (!res)
+        return false;
+
+    RootedValue element(cx);
+    uint32_t i = 0;
+    int32_t catSize;
+    const char* cat;
+
+    do {
+        cat = uenum_next(ue, &catSize, &status);
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return false;
+        }
+
+        if (!cat)
+            break;
+
+        JSString* str = NewStringCopyN<CanGC>(cx, cat, catSize);
+        if (!str)
+            return false;
+
+        element.setString(str);
+        if (!DefineElement(cx, res, i, element))
+            return false;
+        i++;
+    } while (true);
+
+    args.rval().setObject(*res);
+    return true;
+}
+
 bool
 js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -3916,6 +4491,9 @@ GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global)
     RootedObject numberFormatProto(cx, CreateNumberFormatPrototype(cx, intl, global));
     if (!numberFormatProto)
         return false;
+    RootedObject pluralRulesProto(cx, CreatePluralRulesPrototype(cx, intl, global));
+    if (!pluralRulesProto)
+        return false;
 
     // The |Intl| object is fully set up now, so define the global property.
     RootedValue intlValue(cx, ObjectValue(*intl));
@@ -3937,6 +4515,7 @@ GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global)
     global->setReservedSlot(COLLATOR_PROTO, ObjectValue(*collatorProto));
     global->setReservedSlot(DATE_TIME_FORMAT_PROTO, ObjectValue(*dateTimeFormatProto));
     global->setReservedSlot(NUMBER_FORMAT_PROTO, ObjectValue(*numberFormatProto));
+    global->setReservedSlot(PLURAL_RULES_PROTO, ObjectValue(*pluralRulesProto));
 
     // Also cache |Intl| to implement spec language that conditions behavior
     // based on values being equal to "the standard built-in |Intl| object".
