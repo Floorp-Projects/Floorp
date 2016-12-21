@@ -4671,7 +4671,7 @@ QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCString suffix;
-  BasePrincipal::Cast(aPrincipal)->OriginAttributesRef().CreateSuffix(suffix);
+  aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
 
   if (aSuffix)
   {

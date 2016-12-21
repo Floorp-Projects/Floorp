@@ -1067,8 +1067,8 @@ bool
 nsTreeSanitizer::SanitizeStyleDeclaration(mozilla::css::Declaration* aDeclaration,
                                           nsAutoString& aRuleText)
 {
-  bool didSanitize = aDeclaration->HasProperty(eCSSProperty_binding);
-  aDeclaration->RemovePropertyByID(eCSSProperty_binding);
+  bool didSanitize = aDeclaration->HasProperty(eCSSProperty__moz_binding);
+  aDeclaration->RemovePropertyByID(eCSSProperty__moz_binding);
   aDeclaration->ToString(aRuleText);
   return didSanitize;
 }

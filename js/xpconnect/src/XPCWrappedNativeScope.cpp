@@ -297,7 +297,7 @@ XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx)
     principalAsArray.AppendElement(principal);
     nsCOMPtr<nsIExpandedPrincipal> ep =
         new nsExpandedPrincipal(principalAsArray,
-                                BasePrincipal::Cast(principal)->OriginAttributesRef());
+                                principal->OriginAttributesRef());
 
     // Create the sandbox.
     RootedValue v(cx);

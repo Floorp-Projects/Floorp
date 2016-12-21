@@ -753,7 +753,7 @@ NewImageChannel(nsIChannel** aResult,
       // loadingPrincipal as the channel's originAttributes. This allows the favicon
       // loading from XUL will use the correct originAttributes.
       NeckoOriginAttributes neckoAttrs;
-      neckoAttrs.InheritFromDocToNecko(BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef());
+      neckoAttrs.InheritFromDocToNecko(aLoadingPrincipal->OriginAttributesRef());
 
       nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->GetLoadInfo();
       rv = loadInfo->SetOriginAttributes(neckoAttrs);
@@ -783,7 +783,7 @@ NewImageChannel(nsIChannel** aResult,
     // has asked us to perform.
     NeckoOriginAttributes neckoAttrs;
     if (aLoadingPrincipal) {
-      neckoAttrs.InheritFromDocToNecko(BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef());
+      neckoAttrs.InheritFromDocToNecko(aLoadingPrincipal->OriginAttributesRef());
     }
     neckoAttrs.mPrivateBrowsingId = aRespectPrivacy ? 1 : 0;
 
@@ -1352,7 +1352,7 @@ imgLoader::FindEntryProperties(nsIURI* uri,
   if (doc) {
     nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
     if (principal) {
-      attrs = BasePrincipal::Cast(principal)->OriginAttributesRef();
+      attrs = principal->OriginAttributesRef();
     }
   }
 
@@ -2114,7 +2114,7 @@ imgLoader::LoadImage(nsIURI* aURI,
   // of post data.
   PrincipalOriginAttributes attrs;
   if (aLoadingPrincipal) {
-    attrs = BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef();
+    attrs = aLoadingPrincipal->OriginAttributesRef();
   }
   ImageCacheKey key(aURI, attrs, aLoadingDocument, rv);
   NS_ENSURE_SUCCESS(rv, rv);

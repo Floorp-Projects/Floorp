@@ -9,7 +9,7 @@ load 339501-1.xhtml
 load 339501-2.xhtml
 load 378993-1.xhtml
 load 382568-1.html
-load 383137.xhtml
+asserts-if(stylo,1) load 383137.xhtml # bug 1324704
 load 388183-1.html
 skip-if(stylo) load 395340-1.html # bug 1323652
 load 399694-1.html
@@ -51,19 +51,19 @@ load 680922-1.xul
 load 682058.xhtml
 load 682460.html
 load 738744.xhtml
-load 741218.json
+asserts-if(stylo,6) load 741218.json # bug 1324634
 load 741250.xhtml
 load 795221-1.html
-load 795221-2.html
+asserts-if(stylo,1) load 795221-2.html # bug 1324702
 load 795221-3.html
-load 795221-4.html
+asserts-if(stylo,2) load 795221-4.html # bug 1324669
 load 795221-5.xml
 load 811226.html
 load 819745.html
 load 828180.html
 pref(dom.experimental_forms,true) load 828472.html
 load 837033.html
-load 838256-1.html
+asserts-if(stylo,3) load 838256-1.html # bug 1324671
 load 862084.html
 load 865147.html
 load 877910.html

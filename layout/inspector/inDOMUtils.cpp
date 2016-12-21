@@ -795,17 +795,17 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
       case eCSSProperty_scroll_snap_destination:
       case eCSSProperty_transform_origin:
       case eCSSProperty_perspective_origin:
-      case eCSSProperty__moz_outline_radius_topLeft:
-      case eCSSProperty__moz_outline_radius_topRight:
-      case eCSSProperty__moz_outline_radius_bottomLeft:
-      case eCSSProperty__moz_outline_radius_bottomRight:
+      case eCSSProperty__moz_outline_radius_topleft:
+      case eCSSProperty__moz_outline_radius_topright:
+      case eCSSProperty__moz_outline_radius_bottomleft:
+      case eCSSProperty__moz_outline_radius_bottomright:
         supported = VARIANT_LP;
         break;
 
-      case eCSSProperty_border_bottom_colors:
-      case eCSSProperty_border_left_colors:
-      case eCSSProperty_border_right_colors:
-      case eCSSProperty_border_top_colors:
+      case eCSSProperty__moz_border_bottom_colors:
+      case eCSSProperty__moz_border_left_colors:
+      case eCSSProperty__moz_border_right_colors:
+      case eCSSProperty__moz_border_top_colors:
         supported = VARIANT_COLOR;
         break;
 

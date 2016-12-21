@@ -16,12 +16,6 @@
   width: 25em;
 }
 
-.popup-notification-body description,
-.popup-notification-body label {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-
 .popup-notification-closebutton {
   margin-inline-end: -8px;
   margin-top: -8px;
