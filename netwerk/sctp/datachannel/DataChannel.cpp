@@ -2326,8 +2326,9 @@ DataChannelConnection::SendBlob(uint16_t stream, nsIInputStream *aBlob)
   NS_ENSURE_TRUE(channel, 0);
   // Spawn a thread to send the data
   if (!mInternalIOThread) {
-    nsresult res = NS_NewThread(getter_AddRefs(mInternalIOThread));
-    if (NS_FAILED(res)) {
+    nsresult rv = NS_NewNamedThread("DataChannel IO",
+                                    getter_AddRefs(mInternalIOThread));
+    if (NS_FAILED(rv)) {
       return -1;
     }
   }
