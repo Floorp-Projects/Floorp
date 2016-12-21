@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SelectContentHelper",
+  "resource://gre/modules/SelectContentHelper.jsm");
 
 var global = this;
 
@@ -1825,3 +1827,22 @@ let TelemetryScrollTracker = {
 };
 
 TelemetryScrollTracker.init();
+
+addEventListener("mozshowdropdown", event => {
+  if (!event.isTrusted)
+    return;
+
+  if (!SelectContentHelper.open) {
+    new SelectContentHelper(event.target, {isOpenedViaTouch: false}, this);
+  }
+});
+
+addEventListener("mozshowdropdown-sourcetouch", event => {
+  if (!event.isTrusted)
+    return;
+
+  if (!SelectContentHelper.open) {
+    new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this);
+  }
+});
+

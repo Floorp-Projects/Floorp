@@ -62,7 +62,6 @@ toolkit.jar:
    content/global/resetProfile.js
    content/global/resetProfile.xul
    content/global/resetProfileProgress.xul
-   content/global/select-child.js
    content/global/TopLevelVideoDocument.js
    content/global/timepicker.xhtml
    content/global/treeUtils.js
