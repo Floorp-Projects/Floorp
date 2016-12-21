@@ -175,7 +175,7 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
               2,
               ChannelCountMode::Clamped_max,
               ChannelInterpretation::Speakers)
-  , mPan(new AudioParam(this, StereoPannerNodeEngine::PAN, 0.f, "pan"))
+  , mPan(new AudioParam(this, StereoPannerNodeEngine::PAN, "pan", 0.f, -1.f, 1.f))
 {
   StereoPannerNodeEngine* engine = new StereoPannerNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
