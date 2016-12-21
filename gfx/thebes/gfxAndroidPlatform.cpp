@@ -421,7 +421,7 @@ private:
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxAndroidPlatform::CreateHardwareVsyncSource()
 {
-    if (java::VsyncSource::IsVsyncSupported()) {
+    if (jni::IsAvailable() && java::VsyncSource::IsVsyncSupported()) {
         RefPtr<AndroidVsyncSource> vsyncSource = new AndroidVsyncSource();
         return vsyncSource.forget();
     }
