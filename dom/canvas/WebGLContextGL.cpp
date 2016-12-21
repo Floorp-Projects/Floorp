@@ -692,9 +692,6 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         }
         return JS::Int32Value(LOCAL_GL_FRAMEBUFFER_DEFAULT);
 
-    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-        return JS::NullValue();
-
     ////////////////
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
@@ -947,6 +944,8 @@ WebGLContext::Hint(GLenum target, GLenum mode)
 
     switch (target) {
     case LOCAL_GL_GENERATE_MIPMAP_HINT:
+        mGenerateMipmapHint = mode;
+
         // Deprecated and removed in desktop GL Core profiles.
         if (gl->IsCoreProfile())
             return;
@@ -1465,7 +1464,7 @@ ValidateReadPixelsFormatAndType(const webgl::FormatInfo* srcFormat,
     }
 
     MOZ_ASSERT(gl->IsCurrent());
-    if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+    if (gl->IsGLES()) {
         const auto auxFormat = gl->GetIntAs<GLenum>(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT);
         const auto auxType = gl->GetIntAs<GLenum>(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE);
 

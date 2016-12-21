@@ -111,7 +111,9 @@ class WidgetRenderingContext;
 #ifdef ACCESSIBILITY
                               mozAccessible,
 #endif
-                              mozView, NSTextInputClient>
+                              mozView, NSTextInputClient,
+                              NSDraggingSource, NSDraggingDestination,
+                              NSPasteboardItemDataProvider>
 {
 @private
   // the nsChildView that created the view. It retains this NSView, so
