@@ -350,7 +350,7 @@
     <tabpanel id="updatePanel" orient="vertical">
 #ifdef MOZ_UPDATER
       <groupbox id="updateApp" align="start">
-        <caption><label>&updateApp.label;</label></caption>
+        <caption><label>&updateApplication.label;</label></caption>
         <radiogroup id="updateRadioGroup" align="start">
           <radio id="autoDesktop"
                  value="auto"
@@ -380,7 +380,7 @@
       </groupbox>
 #endif
       <groupbox id="updateOthers" align="start">
-        <caption><label>&updateOthers.label;</label></caption>
+        <caption><label>&autoUpdateOthers.label;</label></caption>
         <checkbox id="enableSearchUpdate"
                   label="&enableSearchUpdate.label;"
                   accesskey="&enableSearchUpdate.accesskey;"
