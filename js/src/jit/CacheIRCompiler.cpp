@@ -40,6 +40,13 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
         return reg;
       }
 
+      case OperandLocation::Constant: {
+        ValueOperand reg = allocateValueRegister(masm);
+        masm.moveValue(loc.constant(), reg);
+        loc.setValueReg(reg);
+        return reg;
+      }
+
       // The operand should never be unboxed.
       case OperandLocation::PayloadStack:
       case OperandLocation::PayloadReg:
@@ -106,6 +113,19 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
         return reg;
       }
 
+      case OperandLocation::Constant: {
+        Value v = loc.constant();
+        Register reg = allocateRegister(masm);
+        if (v.isString())
+            masm.movePtr(ImmGCPtr(v.toString()), reg);
+        else if (v.isSymbol())
+            masm.movePtr(ImmGCPtr(v.toSymbol()), reg);
+        else
+            MOZ_CRASH("Unexpected Value");
+        loc.setPayloadReg(reg, v.extractNonDoubleType());
+        return reg;
+      }
+
       case OperandLocation::Uninitialized:
         break;
     }
@@ -156,6 +176,7 @@ CacheRegisterAllocator::freeDeadOperandRegisters()
           case OperandLocation::Uninitialized:
           case OperandLocation::PayloadStack:
           case OperandLocation::ValueStack:
+          case OperandLocation::Constant:
             break;
         }
         loc.setUninitialized();
@@ -305,6 +326,11 @@ CacheRegisterAllocator::knownType(ValOperandId val) const
       case OperandLocation::PayloadStack:
       case OperandLocation::PayloadReg:
         return loc.payloadType();
+
+      case OperandLocation::Constant:
+        return loc.constant().isDouble()
+               ? JSVAL_TYPE_DOUBLE
+               : loc.constant().extractNonDoubleType();
 
       case OperandLocation::Uninitialized:
         break;
@@ -545,6 +571,8 @@ OperandLocation::operator==(const OperandLocation& other) const
         return payloadStack() == other.payloadStack() && payloadType() == other.payloadType();
       case ValueStack:
         return valueStack() == other.valueStack();
+      case Constant:
+        return constant() == other.constant();
     }
 
     MOZ_CRASH("Invalid OperandLocation kind");
@@ -617,28 +645,31 @@ CacheIRCompiler::emitFailurePath(size_t i)
                     masm.pushValue(laterSource.valueReg());
                     laterSource.setValueStack(stackPushed);
                 }
-                break;
+                continue;
               case OperandLocation::PayloadReg:
                 if (orig.aliasesReg(laterSource.payloadReg())) {
                     stackPushed += sizeof(uintptr_t);
                     masm.push(laterSource.payloadReg());
                     laterSource.setPayloadStack(stackPushed, laterSource.payloadType());
                 }
-                break;
+                continue;
               case OperandLocation::PayloadStack:
               case OperandLocation::ValueStack:
+              case OperandLocation::Constant:
+                continue;
               case OperandLocation::Uninitialized:
                 break;
             }
+            MOZ_CRASH("Invalid kind");
         }
 
         switch (cur.kind()) {
           case OperandLocation::ValueReg:
             masm.moveValue(cur.valueReg(), orig.valueReg());
-            break;
+            continue;
           case OperandLocation::PayloadReg:
             masm.tagValue(cur.payloadType(), cur.payloadReg(), orig.valueReg());
-            break;
+            continue;
           case OperandLocation::PayloadStack: {
             MOZ_ASSERT(stackPushed >= sizeof(uintptr_t));
             Register scratch = orig.valueReg().scratchReg();
@@ -651,7 +682,7 @@ CacheIRCompiler::emitFailurePath(size_t i)
                              scratch);
             }
             masm.tagValue(cur.payloadType(), scratch, orig.valueReg());
-            break;
+            continue;
           }
           case OperandLocation::ValueStack:
             MOZ_ASSERT(stackPushed >= sizeof(js::Value));
@@ -663,10 +694,13 @@ CacheIRCompiler::emitFailurePath(size_t i)
                 masm.loadValue(Address(masm.getStackPointer(), stackPushed - cur.valueStack()),
                                orig.valueReg());
             }
+            continue;
+          case OperandLocation::Constant:
+            continue;
+          case OperandLocation::Uninitialized:
             break;
-          default:
-            MOZ_CRASH();
         }
+        MOZ_CRASH("Invalid kind");
     }
 
     allocator.discardStack(masm);
