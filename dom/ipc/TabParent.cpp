@@ -164,7 +164,6 @@ TabParent::TabParent(nsIContentParent* aManager,
 #endif
   , mLayerTreeEpoch(0)
   , mPreserveLayers(false)
-  , mFirstActivate(true)
 {
   MOZ_ASSERT(aManager);
 }
@@ -2699,12 +2698,8 @@ TabParent::SetDocShellIsActive(bool isActive)
   // Ask the child to repaint using the PHangMonitor channel/thread (which may
   // be less congested).
   if (isActive) {
-    if (mFirstActivate) {
-      mFirstActivate = false;
-    } else {
-      ContentParent* cp = Manager()->AsContentParent();
-      cp->ForceTabPaint(this, mLayerTreeEpoch);
-    }
+    ContentParent* cp = Manager()->AsContentParent();
+    cp->ForceTabPaint(this, mLayerTreeEpoch);
   }
 
   return NS_OK;
