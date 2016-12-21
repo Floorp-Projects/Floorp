@@ -8367,6 +8367,10 @@ struct ScopedCacheEntryOpenedForRead
 static JS::AsmJSCacheResult
 StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* cx)
 {
+    // Disable asm.js caching in FF51 until it is fixed properly in FF52.
+    // See bug 1322881.
+    return JS::AsmJSCache_Bug;
+
     ModuleCharsForStore moduleChars;
     if (!moduleChars.init(parser))
         return JS::AsmJSCache_InternalError;
@@ -8403,6 +8407,10 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     int64_t before = PRMJ_Now();
 
     *loadedFromCache = false;
+
+    // Disable asm.js caching in FF51 until it is fixed properly in FF52.
+    // See bug 1322881.
+    return true;
 
     JS::OpenAsmJSCacheEntryForReadOp open = cx->asmJSCacheOps().openEntryForRead;
     if (!open)
@@ -8547,6 +8555,9 @@ BuildConsoleMessage(ExclusiveContext* cx, unsigned time, JS::AsmJSCacheResult ca
         break;
       case JS::AsmJSCache_Disabled_PrivateBrowsing:
         cacheString = "caching disabled by private browsing mode";
+        break;
+      case JS::AsmJSCache_Bug:
+        cacheString = "caching disabled in FF51 due to bug; will be reenabled in FF52";
         break;
       case JS::AsmJSCache_LIMIT:
         MOZ_CRASH("bad AsmJSCacheResult");

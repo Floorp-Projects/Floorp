@@ -12,7 +12,7 @@ var m = new Function(body1);
 assertEq(isAsmJSModule(m), true);
 assertEq(m()(), 42);
 var m = new Function(body1);
-assertEq(isAsmJSModuleLoadedFromCache(m), true);
+assertEq(isAsmJSModuleLoadedFromCache(m), false);
 assertEq(m()(), 42);
 
 var f = m();
@@ -25,7 +25,7 @@ var m = new Function(body1);
 assertEq(isAsmJSModule(m), true);
 assertEq(m()(), 42);
 var m = new Function(body1);
-assertEq(isAsmJSModuleLoadedFromCache(m), true);
+assertEq(isAsmJSModuleLoadedFromCache(m), false);
 assertEq(m()(), 42);
 
 var f = m();

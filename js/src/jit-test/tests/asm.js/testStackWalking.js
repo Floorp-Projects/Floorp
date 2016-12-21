@@ -34,7 +34,7 @@ for (var i = 0; i < 15; i++) {
 
 if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
     var callFFI = asmCompile('global', 'ffis', USE_ASM + "var ffi=ffis.ffi; function f() { return ffi()|0 } return f");
-    assertEq(isAsmJSModuleLoadedFromCache(callFFI), true);
+    assertEq(isAsmJSModuleLoadedFromCache(callFFI), false);
     stack = null;
     f();
     matchStack(stack, ['dumpStack', 'f']);
