@@ -128,9 +128,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--message',
                      required=True,
                      help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
-    @CommandArgument('--revision-hash',
-                     required=True,
-                     help='Treeherder revision hash (long revision id) to attach results to')
     @CommandArgument('--project',
                      required=True,
                      help='Project to use for creating task graph. Example: --project=try')
