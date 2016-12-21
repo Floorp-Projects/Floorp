@@ -37,5 +37,7 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra);
 SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group);
+SECStatus SSLInt_EnableShortHeaders(PRFileDesc *fd);
+SECStatus SSLInt_UsingShortHeaders(PRFileDesc *fd, PRBool *result);
 
 #endif  // ndef libssl_internals_h_

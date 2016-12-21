@@ -210,6 +210,14 @@ TEST_P(TlsConnectTls13, AlertWrongLevel) {
   client_->WaitForErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT, 2000);
 }
 
+TEST_F(TlsConnectStreamTls13, NegotiateShortHeaders) {
+  client_->SetShortHeadersEnabled();
+  server_->SetShortHeadersEnabled();
+  client_->ExpectShortHeaders();
+  server_->ExpectShortHeaders();
+  Connect();
+}
+
 INSTANTIATE_TEST_CASE_P(GenericStream, TlsConnectGeneric,
                         ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
                                            TlsConnectTestBase::kTlsVAll));
