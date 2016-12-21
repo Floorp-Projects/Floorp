@@ -179,6 +179,10 @@ class MOZ_RAII CacheRegisterAllocator
     OperandLocation operandLocation(size_t i) const {
         return operandLocations_[i];
     }
+    void setOperandLocation(size_t i, const OperandLocation& loc) {
+        operandLocations_[i] = loc;
+    }
+
     OperandLocation origInputLocation(size_t i) const {
         return origInputLocations_[i];
     }
@@ -194,6 +198,9 @@ class MOZ_RAII CacheRegisterAllocator
 
     uint32_t stackPushed() const {
         return stackPushed_;
+    }
+    void setStackPushed(uint32_t pushed) {
+        stackPushed_ = pushed;
     }
 
     bool isAllocatable(Register reg) const {
@@ -226,6 +233,10 @@ class MOZ_RAII CacheRegisterAllocator
 
     // Returns |val|'s JSValueType or JSVAL_TYPE_UNKNOWN.
     JSValueType knownType(ValOperandId val) const;
+
+    // Emits code to restore registers and stack to the state at the start of
+    // the stub.
+    void restoreInputState(MacroAssembler& masm);
 };
 
 // RAII class to allocate a scratch register and release it when we're done
@@ -341,7 +352,7 @@ class MOZ_RAII CacheIRCompiler
 
     MOZ_MUST_USE bool addFailurePath(FailurePath** failure);
 
-    void emitFailurePath(size_t i);
+    void emitFailurePath(size_t index);
 
 #define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
     CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
