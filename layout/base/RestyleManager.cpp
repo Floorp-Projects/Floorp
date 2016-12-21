@@ -1530,9 +1530,6 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
 void
 ElementRestyler::AddLayerChangesForAnimation()
 {
-  // Bug 847286 - We should have separate animation generation counters
-  // on layers for transitions and animations and use != comparison below
-  // rather than a > comparison.
   uint64_t frameGeneration =
     RestyleManager::GetAnimationGenerationForFrame(mFrame);
 
@@ -1541,7 +1538,7 @@ ElementRestyler::AddLayerChangesForAnimation()
          LayerAnimationInfo::sRecords) {
     Layer* layer =
       FrameLayerBuilder::GetDedicatedLayer(mFrame, layerInfo.mLayerType);
-    if (layer && frameGeneration > layer->GetAnimationGeneration()) {
+    if (layer && frameGeneration != layer->GetAnimationGeneration()) {
       // If we have a transform layer but don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
       // yet. In this case we will add the appropriate change hint
