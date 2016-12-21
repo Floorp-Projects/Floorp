@@ -1340,10 +1340,9 @@ class nsIWidget : public nsISupports
 
     /**
      * Dispatches an event to the widget
-     *
      */
-    NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* event,
-                             nsEventStatus & aStatus) = 0;
+    virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* event,
+                                   nsEventStatus & aStatus) = 0;
 
     /**
      * Dispatches an event to APZ only.
