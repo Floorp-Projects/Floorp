@@ -233,6 +233,35 @@ add_task(function* test_categorical_histogram()
   Assert.deepEqual(snapshot.counts, [3, 2, 1, 1, 0]);
 });
 
+add_task(function* test_add_error_behaviour() {
+  const PLAIN_HISTOGRAMS_TO_TEST = [
+    "TELEMETRY_TEST_FLAG",
+    "TELEMETRY_TEST_EXPONENTIAL",
+    "TELEMETRY_TEST_LINEAR",
+    "TELEMETRY_TEST_BOOLEAN"
+  ];
+
+  const KEYED_HISTOGRAMS_TO_TEST = [
+    "TELEMETRY_TEST_KEYED_FLAG",
+    "TELEMETRY_TEST_KEYED_COUNT",
+    "TELEMETRY_TEST_KEYED_BOOLEAN"
+  ];
+
+  // Check that |add| doesn't throw for plain histograms.
+  for (let hist of PLAIN_HISTOGRAMS_TO_TEST) {
+    const returnValue = Telemetry.getHistogramById(hist).add("unexpected-value");
+    Assert.strictEqual(returnValue, undefined,
+                       "Adding to an histogram must return 'undefined'.");
+  }
+
+  // And for keyed histograms.
+  for (let hist of KEYED_HISTOGRAMS_TO_TEST) {
+    const returnValue = Telemetry.getKeyedHistogramById(hist).add("some-key", "unexpected-value");
+    Assert.strictEqual(returnValue, undefined,
+                       "Adding to a keyed histogram must return 'undefined'.");
+  }
+});
+
 add_task(function* test_getHistogramById() {
   try {
     Telemetry.getHistogramById("nonexistent");
