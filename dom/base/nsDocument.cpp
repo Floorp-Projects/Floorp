@@ -12469,8 +12469,7 @@ nsDocument::ScheduleIntersectionObserverNotification()
 void
 nsDocument::NotifyIntersectionObservers()
 {
-  nsTArray<RefPtr<DOMIntersectionObserver>> observers(mIntersectionObservers);
-  for (const auto& observer : observers) {
+  for (const auto& observer : mIntersectionObservers) {
     observer->Notify();
   }
 }
