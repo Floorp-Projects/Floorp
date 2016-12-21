@@ -77,7 +77,6 @@ public:
   bool IsWaitForDataSupported() const { return mReader->IsWaitForDataSupported(); }
   bool IsAsync() const { return mReader->IsAsync(); }
   bool UseBufferingHeuristics() const { return mReader->UseBufferingHeuristics(); }
-  bool ForceZeroStartTime() const { return mReader->ForceZeroStartTime(); }
 
   bool VideoIsHardwareAccelerated() const {
     return mReader->VideoIsHardwareAccelerated();
