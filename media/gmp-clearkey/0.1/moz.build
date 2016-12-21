@@ -8,7 +8,7 @@ SharedLibrary('clearkey')
 
 FINAL_TARGET = 'dist/bin/gmp-clearkey/0.1'
 
-FINAL_TARGET_PP_FILES += ['clearkey.info.in']
+FINAL_TARGET_PP_FILES += ['manifest.json.in']
 
 UNIFIED_SOURCES += [
     'ClearKeyAsyncShutdown.cpp',
