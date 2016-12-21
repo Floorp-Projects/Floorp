@@ -694,6 +694,26 @@ WebGLContext::DrawElements_check(const char* funcName, GLenum mode, GLsizei vert
     return true;
 }
 
+static void
+HandleDrawElementsErrors(WebGLContext* webgl, const char* funcName,
+                         gl::GLContext::LocalErrorScope& errorScope)
+{
+    const auto err = errorScope.GetError();
+    if (err == LOCAL_GL_INVALID_OPERATION) {
+        webgl->ErrorInvalidOperation("%s: Driver rejected indexed draw call, possibly"
+                                     " due to out-of-bounds indices.", funcName);
+        return;
+    }
+
+    MOZ_ASSERT(!err);
+    if (err) {
+        webgl->ErrorImplementationBug("%s: Unexpected driver error during indexed draw"
+                                      " call. Please file a bug.",
+                                      funcName);
+        return;
+    }
+}
+
 void
 WebGLContext::DrawElements(GLenum mode, GLsizei vertCount, GLenum type,
                            WebGLintptr byteOffset, const char* funcName)
@@ -723,8 +743,20 @@ WebGLContext::DrawElements(GLenum mode, GLsizei vertCount, GLenum type,
 
     {
         ScopedDrawCallWrapper wrapper(*this);
-        gl->fDrawElements(mode, vertCount, type,
-                          reinterpret_cast<GLvoid*>(byteOffset));
+        {
+            UniquePtr<gl::GLContext::LocalErrorScope> errorScope;
+
+            if (gl->IsANGLE()) {
+                errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));
+            }
+
+            gl->fDrawElements(mode, vertCount, type,
+                              reinterpret_cast<GLvoid*>(byteOffset));
+
+            if (errorScope) {
+                HandleDrawElementsErrors(this, funcName, *errorScope);
+            }
+        }
     }
 
     Draw_cleanup(funcName);
@@ -758,9 +790,20 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei vertCount, GLenum type,
 
     {
         ScopedDrawCallWrapper wrapper(*this);
-        gl->fDrawElementsInstanced(mode, vertCount, type,
-                                   reinterpret_cast<GLvoid*>(byteOffset),
-                                   instanceCount);
+        {
+            UniquePtr<gl::GLContext::LocalErrorScope> errorScope;
+
+            if (gl->IsANGLE()) {
+                errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));
+            }
+
+            gl->fDrawElementsInstanced(mode, vertCount, type,
+                                       reinterpret_cast<GLvoid*>(byteOffset),
+                                       instanceCount);
+            if (errorScope) {
+                HandleDrawElementsErrors(this, funcName, *errorScope);
+            }
+        }
     }
 
     Draw_cleanup(funcName);
