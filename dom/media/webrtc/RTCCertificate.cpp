@@ -13,6 +13,7 @@
 #include "mozilla/dom/RTCCertificateBinding.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
+#include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
 
 #include <cstdio>
@@ -333,9 +334,9 @@ RTCCertificate::CreateDtlsIdentity() const
   if (isAlreadyShutDown() || !mPrivateKey || !mCertificate) {
     return nullptr;
   }
-  SECKEYPrivateKey* key = SECKEY_CopyPrivateKey(mPrivateKey.get());
-  CERTCertificate* cert = CERT_DupCertificate(mCertificate.get());
-  RefPtr<DtlsIdentity> id = new DtlsIdentity(key, cert, mAuthType);
+  UniqueSECKEYPrivateKey key(SECKEY_CopyPrivateKey(mPrivateKey.get()));
+  UniqueCERTCertificate cert(CERT_DupCertificate(mCertificate.get()));
+  RefPtr<DtlsIdentity> id = new DtlsIdentity(Move(key), Move(cert), mAuthType);
   return id;
 }
 
