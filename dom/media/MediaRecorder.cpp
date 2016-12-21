@@ -283,8 +283,6 @@ class MediaRecorder::Session: public nsIObserver,
       } else {
         // Flush out remaining encoded data.
         mSession->Extract(true);
-        if (mSession->mIsRegisterProfiler)
-           profiler_unregister_thread();
         if (NS_FAILED(NS_DispatchToMainThread(
                         new DestroyRunnable(mSession)))) {
           MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
@@ -419,7 +417,6 @@ public:
     , mTimeSlice(aTimeSlice)
     , mStopIssued(false)
     , mIsStartEventFired(false)
-    , mIsRegisterProfiler(false)
     , mNeedSessionEndTask(true)
     , mSelectedVideoTrackID(TRACK_NONE)
   {
@@ -606,12 +603,6 @@ private:
   {
     MOZ_ASSERT(NS_GetCurrentThread() == mReadThread);
     LOG(LogLevel::Debug, ("Session.Extract %p", this));
-
-    if (!mIsRegisterProfiler) {
-      char aLocal;
-      profiler_register_thread("Media_Encoder", &aLocal);
-      mIsRegisterProfiler = true;
-    }
 
     PROFILER_LABEL("MediaRecorder", "Session Extract",
       js::ProfileEntry::Category::OTHER);
@@ -922,8 +913,6 @@ private:
   bool mStopIssued;
   // Indicate the session had fire start event. Encoding thread only.
   bool mIsStartEventFired;
-  // The register flag for "Media_Encoder" thread to profiler
-  bool mIsRegisterProfiler;
   // False if the InitEncoder called successfully, ensure the
   // ExtractRunnable/DestroyRunnable will end the session.
   // Main thread only.
