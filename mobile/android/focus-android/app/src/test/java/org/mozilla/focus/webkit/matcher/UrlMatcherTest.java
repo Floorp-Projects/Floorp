@@ -13,23 +13,24 @@ public class UrlMatcherTest {
     @Test
     public void matches() throws Exception {
         final UrlMatcher matcher = new UrlMatcher(new String[] {
-                "bcd"
+                "bcd.random"
         });
 
-        assertTrue(matcher.matches("bcd", ""));
-        assertTrue(matcher.matches("abcd", ""));
-        assertTrue(matcher.matches("bcde", ""));
-        assertTrue(matcher.matches("abcde", ""));
+        assertTrue(matcher.matches("http://bcd.random/something", "http://mozilla.org"));
+        assertTrue(matcher.matches("http://bcd.random", "http://mozilla.org"));
+        assertTrue(matcher.matches("http://www.bcd.random", "http://mozilla.org"));
+        assertTrue(matcher.matches("http://www.bcd.random/something", "http://mozilla.org"));
+        assertTrue(matcher.matches("http://foobar.bcd.random", "http://mozilla.org"));
+        assertTrue(matcher.matches("http://foobar.bcd.random/something", "http://mozilla.org"));
 
-        assertTrue(!matcher.matches("a", ""));
-        assertTrue(!matcher.matches("b", ""));
-        assertTrue(!matcher.matches("c", ""));
-        assertTrue(!matcher.matches("d", ""));
-        assertTrue(!matcher.matches("e", ""));
-        assertTrue(!matcher.matches("abc", ""));
-        assertTrue(!matcher.matches("cde", ""));
-        assertTrue(!matcher.matches("dcb", ""));
-        assertTrue(!matcher.matches("edcba", ""));
+        assertTrue(!matcher.matches("http://other.random", "http://mozilla.org"));
+        assertTrue(!matcher.matches("http://other.random/something", "http://mozilla.org"));
+        assertTrue(!matcher.matches("http://www.other.random", "http://mozilla.org"));
+        assertTrue(!matcher.matches("http://www.other.random/something", "http://mozilla.org"));
+        assertTrue(!matcher.matches("http://bcd.specific", "http://mozilla.org"));
+        assertTrue(!matcher.matches("http://bcd.specific/something", "http://mozilla.org"));
+        assertTrue(!matcher.matches("http://www.bcd.specific", "http://mozilla.org"));
+        assertTrue(!matcher.matches("http://www.bcd.specific/something", "http://mozilla.org"));
     }
 
 }

@@ -13,6 +13,8 @@ import org.mozilla.focus.webkit.matcher.util.FocusString;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashSet;
 
 public class UrlMatcher {
@@ -61,12 +63,12 @@ public class UrlMatcher {
     private void buildMatcher(String[] patterns) {
         // TODO: metrics for load time?
         for (final String pattern : patterns) {
-            rootTrie.put(FocusString.create(pattern));
+            putURL(pattern);
         }
     }
 
     /* package-private */ void putURL(final String url) {
-        rootTrie.put(FocusString.create(url));
+        rootTrie.put(FocusString.create(url).reverse());
     }
 
     public boolean matches(final String resourceURLString, final String pageURLString) {
@@ -90,11 +92,17 @@ public class UrlMatcher {
             return true;
         }
 
-        for (int i = 0; i < resourceURLString.length() - 1; i++) {
-            if (rootTrie.findNode(FocusString.create(resourceURLString.substring(i))) != null) {
+        try {
+            final String host = new URL(resourceURLString).getHost().toString();
+            final FocusString revhost = FocusString.create(host).reverse();
+            if (rootTrie.findNode(revhost) != null) {
                 previouslyMatched.add(resourceURLString);
                 return true;
             }
+        } catch (MalformedURLException e) {
+            // In reality this should never happen - unless webkit were to pass us an invalid URL.
+            // If we ever hit this in the wild, we might want to think our approach...
+            throw new IllegalArgumentException("Unable to handle malformed resource URL");
         }
 
         previouslyUnmatched.add(resourceURLString);
