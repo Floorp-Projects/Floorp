@@ -30,6 +30,7 @@ class OperandLocation
         ValueReg,
         PayloadStack,
         ValueStack,
+        Constant,
     };
 
   private:
@@ -46,6 +47,7 @@ class OperandLocation
             JSValueType type;
         } payloadStack;
         uint32_t valueStackPushed;
+        Value constant;
 
         Data() : valueStackPushed(0) {}
     };
@@ -82,6 +84,11 @@ class OperandLocation
         MOZ_ASSERT(kind_ == PayloadStack);
         return data_.payloadStack.type;
     }
+    Value constant() const {
+        MOZ_ASSERT(kind_ == Constant);
+        return data_.constant;
+    }
+
     void setPayloadReg(Register reg, JSValueType type) {
         kind_ = PayloadReg;
         data_.payloadReg.reg = reg;
@@ -99,6 +106,10 @@ class OperandLocation
     void setValueStack(uint32_t stackPushed) {
         kind_ = ValueStack;
         data_.valueStackPushed = stackPushed;
+    }
+    void setConstant(const Value& v) {
+        kind_ = Constant;
+        data_.constant = v;
     }
 
     bool aliasesReg(Register reg) {
@@ -297,7 +308,7 @@ class FailurePath
     void setStackPushed(uint32_t i) { stackPushed_ = i; }
     uint32_t stackPushed() const { return stackPushed_; }
 
-    bool appendInput(OperandLocation loc) {
+    bool appendInput(const OperandLocation& loc) {
         return inputs_.append(loc);
     }
     OperandLocation input(size_t i) const {
