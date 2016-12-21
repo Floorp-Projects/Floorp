@@ -463,9 +463,13 @@ ToStringForStringFunction(JSContext* cx, HandleValue thisv)
         RootedObject obj(cx, &thisv.toObject());
         if (obj->is<StringObject>()) {
             StringObject* nobj = &obj->as<StringObject>();
-            Rooted<jsid> id(cx, NameToId(cx->names().toString));
-            if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString))
+            // We have to make sure that the ToPrimitive call from ToString
+            // would be unobservable.
+            if (HasNoToPrimitiveMethodPure(nobj, cx) &&
+                HasNativeMethodPure(nobj, cx->names().toString, str_toString, cx))
+            {
                 return nobj->unbox();
+            }
         }
     } else if (thisv.isNullOrUndefined()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,

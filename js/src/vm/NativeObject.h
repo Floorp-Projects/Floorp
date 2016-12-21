@@ -1467,19 +1467,6 @@ NativeGetExistingProperty(JSContext* cx, HandleObject receiver, HandleNativeObje
 
 /* * */
 
-/*
- * If obj has an already-resolved data property for id, return true and
- * store the property value in *vp.
- */
-extern bool
-HasDataProperty(JSContext* cx, NativeObject* obj, jsid id, Value* vp);
-
-inline bool
-HasDataProperty(JSContext* cx, NativeObject* obj, PropertyName* name, Value* vp)
-{
-    return HasDataProperty(cx, obj, NameToId(name), vp);
-}
-
 extern bool
 GetPropertyForNameLookup(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
