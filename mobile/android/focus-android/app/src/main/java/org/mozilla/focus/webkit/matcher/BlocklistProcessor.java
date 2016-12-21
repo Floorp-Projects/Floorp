@@ -64,16 +64,24 @@ public class BlocklistProcessor {
         final String siteName = reader.nextName();
         {
             reader.beginObject();
-            final String siteURL = reader.nextName();
-            {
-                reader.beginArray();
 
-                while (reader.hasNext()) {
-                    final String blockURL = reader.nextString();
-                    matcher.putURL(blockURL);
+            while (reader.hasNext()) {
+                final String siteURL = reader.nextName();
+                JsonToken nextToken = reader.peek();
+
+                if (nextToken.name().equals("STRING")) {
+                    // Sometimes there's a "dnt" entry, with unspecified purpose.
+                    reader.skipValue();
+                } else {
+                    reader.beginArray();
+
+                    while (reader.hasNext()) {
+                        final String blockURL = reader.nextString();
+                        matcher.putURL(blockURL);
+                    }
+
+                    reader.endArray();
                 }
-
-                reader.endArray();
             }
 
             reader.endObject();
