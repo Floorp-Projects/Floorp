@@ -473,6 +473,7 @@ signed_data(struct signOptionsStr *signOptions)
         fprintf(stderr,
                 "Created CMS message, added signed data w/ signerinfo\n");
     }
+    signerinfo->cmsg->pwfn_arg = pwcb_arg;
     /* we want the cert chain included for this one */
     if (NSS_CMSSignerInfo_IncludeCerts(signerinfo, NSSCMSCM_CertChain,
                                        signOptions->options->certUsage) !=

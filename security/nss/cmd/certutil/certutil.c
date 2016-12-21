@@ -49,7 +49,7 @@
 char *progName;
 
 static CERTCertificateRequest *
-GetCertRequest(const SECItem *reqDER)
+GetCertRequest(const SECItem *reqDER, void *pwarg)
 {
     CERTCertificateRequest *certReq = NULL;
     CERTSignedData signedData;
@@ -83,7 +83,7 @@ GetCertRequest(const SECItem *reqDER)
             break;
         }
         rv = CERT_VerifySignedDataWithPublicKeyInfo(&signedData,
-                                                    &certReq->subjectPublicKeyInfo, NULL /* wincx */);
+                                                    &certReq->subjectPublicKeyInfo, pwarg);
     } while (0);
 
     if (rv) {
@@ -2000,7 +2000,7 @@ CreateCert(
 
     do {
         /* Create a certrequest object from the input cert request der */
-        certReq = GetCertRequest(certReqDER);
+        certReq = GetCertRequest(certReqDER, pwarg);
         if (certReq == NULL) {
             GEN_BREAK(SECFailure)
         }
