@@ -115,7 +115,7 @@ public:
   virtual bool IsEnabled() const override
   { return mEnabled; }
 
-  NS_IMETHOD SetFocus(bool aRaise = false) override;
+  virtual nsresult SetFocus(bool aRaise = false) override;
 
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
 

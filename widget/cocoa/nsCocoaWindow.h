@@ -245,7 +245,7 @@ public:
     virtual void            SetFakeModal(bool aState) override;
     virtual bool            IsRunningAppModal() override;
     virtual bool            IsVisible() const override;
-    NS_IMETHOD              SetFocus(bool aState=false) override;
+    virtual nsresult        SetFocus(bool aState=false) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
     virtual LayoutDeviceIntPoint GetClientOffset() override;
     virtual LayoutDeviceIntSize
@@ -318,7 +318,7 @@ public:
     virtual void SetWindowAnimationType(WindowAnimationType aType) override;
     virtual void SetDrawsTitle(bool aDrawTitle) override;
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) override;
-    NS_IMETHOD SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+    virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
     virtual void SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
     virtual void SetDrawsInTitlebar(bool aState) override;
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;

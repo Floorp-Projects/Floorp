@@ -859,7 +859,7 @@ class nsIWidget : public nsISupports
      *               the case of popups may not be this widget's toplevel
      *               window) is already active.
      */
-    NS_IMETHOD SetFocus(bool aRaise = false) = 0;
+    virtual nsresult SetFocus(bool aRaise = false) = 0;
 
     /**
      * Get this widget's outside dimensions relative to its parent widget. For
@@ -913,9 +913,8 @@ class nsIWidget : public nsISupports
      *  Windows: shrinking top non-client height will remove application
      *  icon and window title text. Glass desktops will refuse to set
      *  dimensions between zero and size < system default.
-     *
      */
-    NS_IMETHOD SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
+    virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
 
     /**
      * Get the client offset from the window origin.

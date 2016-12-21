@@ -130,7 +130,7 @@ public:
     void               SetZIndex(int32_t aZIndex) override;
     virtual void       SetSizeMode(nsSizeMode aMode) override;
     virtual void       Enable(bool aState) override;
-    NS_IMETHOD         SetFocus(bool aRaise = false) override;
+    virtual nsresult   SetFocus(bool aRaise = false) override;
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     virtual LayoutDeviceIntRect GetClientBounds() override;
     virtual LayoutDeviceIntSize GetClientSize() override;
