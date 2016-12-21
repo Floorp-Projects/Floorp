@@ -111,15 +111,15 @@ WebRenderCanvasLayer::RenderLayer()
       clip = rect;
   }
   if (gfxPrefs::LayersDump()) printf_stderr("CanvasLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
-  WRBridge()->AddWebRenderCommand(OpPushDLBuilder());
+  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
+  WRBridge()->AddWebRenderCommand(
+      OpPushDLBuilder(toWrRect(relBounds), toWrRect(overflow), transform, FrameMetrics::NULL_SCROLL_ID));
   WRBridge()->AddWebRenderCommand(OpDPPushImage(toWrRect(rect), toWrRect(clip), Nothing(), key));
   Manager()->AddImageKeyForDiscard(key);
 
-  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   if (gfxPrefs::LayersDump()) printf_stderr("CanvasLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
-  WRBridge()->AddWebRenderCommand(
-    OpPopDLBuilder(toWrRect(relBounds), toWrRect(overflow), transform, FrameMetrics::NULL_SCROLL_ID));
+  WRBridge()->AddWebRenderCommand(OpPopDLBuilder());
 }
 
 } // namespace layers
