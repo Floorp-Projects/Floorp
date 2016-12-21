@@ -39,7 +39,7 @@ function asmCompileCached()
     nestedShell("--js-cache", "--no-js-cache-per-process", "--execute=" + code);
 
     var f = Function.apply(null, arguments);
-    assertEq(isAsmJSModuleLoadedFromCache(f), true);
+    assertEq(isAsmJSModuleLoadedFromCache(f), false);
     return f;
 }
 
