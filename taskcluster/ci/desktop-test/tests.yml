@@ -576,6 +576,23 @@ mochitest-webgl:
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
 
+mochitest-stylo:
+    description: "Mochitest run for Stylo"
+    suite: mochitest/mochitest-stylo
+    treeherder-symbol: tc-M(s)
+    loopback-video: true
+    e10s: false
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=mochitest-stylo
+
 reftest:
     description: "Reftest run"
     suite: reftest/reftest
