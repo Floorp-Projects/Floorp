@@ -195,8 +195,19 @@ class MOZ_RAII CacheRegisterAllocator
     }
     void initInputLocation(size_t i, ValueOperand reg) {
         origInputLocations_[i].setValueReg(reg);
-        operandLocations_[i] = origInputLocations_[i];
+        operandLocations_[i].setValueReg(reg);
     }
+    void initInputLocation(size_t i, Register reg, JSValueType type) {
+        origInputLocations_[i].setPayloadReg(reg, type);
+        operandLocations_[i].setPayloadReg(reg, type);
+    }
+    void initInputLocation(size_t i, const Value& v) {
+        origInputLocations_[i].setConstant(v);
+        operandLocations_[i].setConstant(v);
+    }
+
+    void initInputLocation(size_t i, const TypedOrValueRegister& reg);
+    void initInputLocation(size_t i, const ConstantOrRegister& value);
 
     void nextOp() {
         currentOpRegs_.clear();

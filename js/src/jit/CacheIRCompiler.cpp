@@ -313,6 +313,26 @@ CacheRegisterAllocator::knownType(ValOperandId val) const
 }
 
 void
+CacheRegisterAllocator::initInputLocation(size_t i, const TypedOrValueRegister& reg)
+{
+    if (reg.hasValue()) {
+        initInputLocation(i, reg.valueReg());
+    } else {
+        MOZ_ASSERT(!reg.typedReg().isFloat());
+        initInputLocation(i, reg.typedReg().gpr(), ValueTypeFromMIRType(reg.type()));
+    }
+}
+
+void
+CacheRegisterAllocator::initInputLocation(size_t i, const ConstantOrRegister& value)
+{
+    if (value.constant())
+        initInputLocation(i, value.value());
+    else
+        initInputLocation(i, value.reg());
+}
+
+void
 CacheRegisterAllocator::spillOperand(MacroAssembler& masm, OperandLocation* loc)
 {
     MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
