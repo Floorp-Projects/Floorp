@@ -8,8 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jit/BaselineCacheIR.h"
 #include "jit/BaselineIC.h"
+#include "jit/CacheIRCompiler.h"
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/ObjectGroup-inl.h"
