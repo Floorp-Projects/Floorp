@@ -209,11 +209,10 @@ struct Statistics
     // currently tracked phase stack, at which time the caller is free to do
     // other tracked operations.
     //
-    // This also happens internally with PHASE_GC_BEGIN and other "non-GC"
-    // phases. While in these phases, any beginPhase will automatically suspend
-    // the non-GC phase, until that inner stack is complete, at which time it
-    // will automatically resume the non-GC phase. Explicit suspensions do not
-    // get auto-resumed.
+    // This also happens internally with the PHASE_MUTATOR "phase". While in
+    // this phase, any beginPhase will automatically suspend the non-GC phase,
+    // until that inner stack is complete, at which time it will automatically
+    // resume the non-GC phase. Explicit suspensions do not get auto-resumed.
     void suspendPhases(Phase suspension = PHASE_EXPLICIT_SUSPENSION);
 
     // Resume a suspended stack of phases.
@@ -329,12 +328,6 @@ struct Statistics
 
     /* File pointer used for MOZ_GCTIMER output. */
     FILE* fp;
-
-    /*
-     * GCs can't really nest, but a second GC can be triggered from within the
-     * JSGC_END callback.
-     */
-    int gcDepth;
 
     ZoneGCStats zoneStats;
 
