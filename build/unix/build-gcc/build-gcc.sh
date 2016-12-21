@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gcc_version=4.8.5
+gcc_version=4.9.4
 binutils_version=2.25.1
 this_path=$(readlink -f $(dirname $0))
 make_flags='-j12'
