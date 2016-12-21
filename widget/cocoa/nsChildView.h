@@ -378,13 +378,13 @@ public:
   virtual MOZ_MUST_USE nsresult
                     GetSelectionAsPlaintext(nsAString& aResult) override;
 
-  NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                    const InputContextAction& aAction) override;
-  NS_IMETHOD_(InputContext) GetInputContext() override;
-  NS_IMETHOD_(TextEventDispatcherListener*)
+  virtual void SetInputContext(const InputContext& aContext,
+                               const InputContextAction& aAction) override;
+  virtual InputContext GetInputContext() override;
+  virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;
   virtual MOZ_MUST_USE nsresult AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override;
-  NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+  virtual bool ExecuteNativeKeyBinding(
                       NativeKeyBindingsType aType,
                       const mozilla::WidgetKeyboardEvent& aEvent,
                       DoCommandCallback aCallback,

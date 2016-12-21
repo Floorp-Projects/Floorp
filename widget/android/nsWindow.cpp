@@ -3349,7 +3349,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
@@ -3368,7 +3368,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     top->mGeckoViewSupport->SetInputContext(aContext, aAction);
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 nsWindow::GetInputContext()
 {
     nsWindow* top = FindTopLevel();

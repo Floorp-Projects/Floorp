@@ -200,10 +200,10 @@ public:
                                                            uint32_t aModifierFlags,
                                                            uint32_t aAdditionalFlags,
                                                            nsIObserver* aObserver) override;
-  NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
+  virtual void            SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction) override;
-  NS_IMETHOD_(InputContext) GetInputContext() override;
-  NS_IMETHOD_(TextEventDispatcherListener*)
+  virtual InputContext    GetInputContext() override;
+  virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode) override;
