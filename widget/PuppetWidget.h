@@ -78,7 +78,7 @@ public:
 
   virtual void Destroy() override;
 
-  NS_IMETHOD Show(bool aState) override;
+  virtual void Show(bool aState) override;
 
   virtual bool IsVisible() const override
   { return mVisible; }

@@ -54,7 +54,7 @@ public:
                                          nsWidgetInitData* aInitData) override;
     virtual void Destroy();
 
-    NS_IMETHOD Show(bool aState);
+    virtual void Show(bool aState);
     virtual bool IsVisible() const;
     virtual void Move(double aX,
                       double aY);

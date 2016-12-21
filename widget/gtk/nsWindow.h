@@ -116,7 +116,7 @@ public:
     virtual void       SetSizeConstraints(const SizeConstraints& aConstraints) override;
     virtual void       Move(double aX,
                             double aY) override;
-    NS_IMETHOD         Show             (bool aState) override;
+    virtual void       Show             (bool aState) override;
     virtual void       Resize           (double aWidth,
                                          double aHeight,
                                          bool   aRepaint) override;
