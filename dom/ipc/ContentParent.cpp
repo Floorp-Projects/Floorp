@@ -2420,6 +2420,12 @@ bool
 ContentParent::RecvReadDataStorageArray(const nsString& aFilename,
                                         InfallibleTArray<DataStorageItem>* aValues)
 {
+  // If we're shutting down, the DataStorage object may have been cleared
+  // already, and setting it up is pointless anyways since we're about to die.
+  if (mShutdownPending) {
+    return true;
+  }
+
   // Ensure the SSS is initialized before we try to use its storage.
   nsCOMPtr<nsISiteSecurityService> sss = do_GetService("@mozilla.org/ssservice;1");
 
