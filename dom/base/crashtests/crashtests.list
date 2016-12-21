@@ -208,3 +208,4 @@ load xhr_html_nullresponse.html
 load 1230422.html
 load 1251361.html
 load 1304437.html
+pref(dom.IntersectionObserver.enabled,true) load 1324209.html
