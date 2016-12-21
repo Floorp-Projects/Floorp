@@ -1383,16 +1383,12 @@ namespace {
 class AutoNotifyGCActivity {
   public:
     explicit AutoNotifyGCActivity(GCRuntime& gc) : gc_(gc) {
-        if (!gc_.isIncrementalGCInProgress()) {
-            gcstats::AutoPhase ap(gc_.stats, gcstats::PHASE_GC_BEGIN);
+        if (!gc_.isIncrementalGCInProgress())
             gc_.callGCCallback(JSGC_BEGIN);
-        }
     }
     ~AutoNotifyGCActivity() {
-        if (!gc_.isIncrementalGCInProgress()) {
-            gcstats::AutoPhase ap(gc_.stats, gcstats::PHASE_GC_END);
+        if (!gc_.isIncrementalGCInProgress())
             gc_.callGCCallback(JSGC_END);
-        }
     }
 
   private:
