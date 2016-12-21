@@ -518,7 +518,7 @@ bool TransportLayerDtls::Setup() {
     MOZ_MTLOG(ML_INFO, "Setting up DTLS as server");
     // Server side
     rv = SSL_ConfigSecureServer(ssl_fd.get(), identity_->cert().get(),
-                                identity_->privkey(),
+                                identity_->privkey().get(),
                                 identity_->auth_type());
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, "Couldn't set identity");
@@ -1090,7 +1090,7 @@ SECStatus TransportLayerDtls::GetClientAuthDataHook(void *arg, PRFileDesc *fd,
     return SECFailure;
   }
 
-  *pRetKey = SECKEY_CopyPrivateKey(stream->identity_->privkey());
+  *pRetKey = SECKEY_CopyPrivateKey(stream->identity_->privkey().get());
   if (!*pRetKey) {
     CERT_DestroyCertificate(*pRetCert);
     *pRetCert = nullptr;
