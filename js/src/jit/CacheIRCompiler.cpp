@@ -397,57 +397,74 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm)
     MOZ_ASSERT(writer_.numInputOperands() == numInputOperands);
 
     for (size_t j = 0; j < numInputOperands; j++) {
-        OperandLocation orig = origInputLocation(j);
-        OperandLocation cur = operandLocation(j);
-
-        MOZ_ASSERT(orig.kind() == OperandLocation::ValueReg);
+        const OperandLocation& dest = origInputLocations_[j];
+        OperandLocation& cur = operandLocations_[j];
+        if (dest == cur)
+            continue;
 
         // We have a cycle if a destination register will be used later
         // as source register. If that happens, just push the current value
         // on the stack and later get it from there.
         for (size_t k = j + 1; k < numInputOperands; k++) {
             OperandLocation& laterSource = operandLocations_[k];
-            if (orig.aliasesReg(laterSource))
+            if (dest.aliasesReg(laterSource))
                 spillOperand(masm, &laterSource);
         }
 
-        switch (cur.kind()) {
-          case OperandLocation::ValueReg:
-            masm.moveValue(cur.valueReg(), orig.valueReg());
-            continue;
-          case OperandLocation::PayloadReg:
-            masm.tagValue(cur.payloadType(), cur.payloadReg(), orig.valueReg());
-            continue;
-          case OperandLocation::PayloadStack: {
-            MOZ_ASSERT(stackPushed_ >= sizeof(uintptr_t));
-            Register scratch = orig.valueReg().scratchReg();
-            if (cur.payloadStack() == stackPushed_) {
-                masm.pop(scratch);
-                stackPushed_ -= sizeof(uintptr_t);
-            } else {
-                MOZ_ASSERT(cur.payloadStack() < stackPushed_);
-                masm.loadPtr(Address(masm.getStackPointer(), stackPushed_ - cur.payloadStack()),
-                             scratch);
+        if (dest.kind() == OperandLocation::ValueReg) {
+            // We have to restore a Value register.
+            switch (cur.kind()) {
+              case OperandLocation::ValueReg:
+                masm.moveValue(cur.valueReg(), dest.valueReg());
+                continue;
+              case OperandLocation::PayloadReg:
+                masm.tagValue(cur.payloadType(), cur.payloadReg(), dest.valueReg());
+                continue;
+              case OperandLocation::PayloadStack: {
+                Register scratch = dest.valueReg().scratchReg();
+                popPayload(masm, &cur, scratch);
+                masm.tagValue(cur.payloadType(), scratch, dest.valueReg());
+                continue;
+              }
+              case OperandLocation::ValueStack:
+                popValue(masm, &cur, dest.valueReg());
+                continue;
+              case OperandLocation::Constant:
+              case OperandLocation::Uninitialized:
+                break;
             }
-            masm.tagValue(cur.payloadType(), scratch, orig.valueReg());
-            continue;
-          }
-          case OperandLocation::ValueStack:
-            MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
-            if (cur.valueStack() == stackPushed_) {
-                masm.popValue(orig.valueReg());
-                stackPushed_ -= sizeof(js::Value);
-            } else {
-                MOZ_ASSERT(cur.valueStack() < stackPushed_);
-                masm.loadValue(Address(masm.getStackPointer(), stackPushed_ - cur.valueStack()),
-                               orig.valueReg());
+        } else if (dest.kind() == OperandLocation::PayloadReg) {
+            // We have to restore a payload register.
+            switch (cur.kind()) {
+              case OperandLocation::ValueReg:
+                MOZ_ASSERT(dest.payloadType() != JSVAL_TYPE_DOUBLE);
+                masm.unboxNonDouble(cur.valueReg(), dest.payloadReg());
+                continue;
+              case OperandLocation::PayloadReg:
+                MOZ_ASSERT(cur.payloadType() == dest.payloadType());
+                masm.mov(cur.payloadReg(), dest.payloadReg());
+                continue;
+              case OperandLocation::PayloadStack: {
+                MOZ_ASSERT(cur.payloadType() == dest.payloadType());
+                popPayload(masm, &cur, dest.payloadReg());
+                continue;
+              }
+              case OperandLocation::ValueStack:
+                MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
+                MOZ_ASSERT(cur.valueStack() <= stackPushed_);
+                MOZ_ASSERT(dest.payloadType() != JSVAL_TYPE_DOUBLE);
+                masm.unboxNonDouble(Address(masm.getStackPointer(), stackPushed_ - cur.valueStack()),
+                                    dest.payloadReg());
+                continue;
+              case OperandLocation::Constant:
+              case OperandLocation::Uninitialized:
+                break;
             }
+        } else if (dest.kind() == OperandLocation::Constant) {
+            // Nothing to do.
             continue;
-          case OperandLocation::Constant:
-            continue;
-          case OperandLocation::Uninitialized:
-            break;
         }
+
         MOZ_CRASH("Invalid kind");
     }
 
