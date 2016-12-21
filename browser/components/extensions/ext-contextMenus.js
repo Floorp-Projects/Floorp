@@ -324,6 +324,7 @@ function MenuItem(extension, createProperties, isRoot = false) {
 
   this.setDefaults();
   this.setProps(createProperties);
+
   if (!this.hasOwnProperty("_id")) {
     this.id = gNextMenuItemID++;
   }
@@ -350,6 +351,12 @@ MenuItem.prototype = {
 
     if (createProperties.targetUrlPatterns != null) {
       this.targetUrlMatchPattern = new MatchPattern(this.targetUrlPatterns);
+    }
+
+    // If a child MenuItem does not specify any contexts, then it should
+    // inherit the contexts specified from its parent.
+    if (createProperties.parentId && !createProperties.contexts) {
+      this.contexts = this.parent.contexts;
     }
   },
 
