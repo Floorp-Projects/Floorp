@@ -146,11 +146,13 @@ class MachCommands(MachCommandBase):
 
             try:
                 for future in as_completed(futures):
-                    output, ret = future.result()
+                    output, ret, test_path = future.result()
 
                     for line in output:
                         self.log(logging.INFO, 'python-test', {'line': line.rstrip()}, '{line}')
 
+                    if ret and not return_code:
+                        self.log(logging.ERROR, 'python-test', {'test_path': test_path, 'ret': ret}, 'Setting retcode to {ret} from {test_path}')
                     return_code = return_code or ret
             except KeyboardInterrupt:
                 # Hack to force stop currently running threads.
@@ -159,6 +161,7 @@ class MachCommands(MachCommandBase):
                 thread._threads_queues.clear()
                 raise
 
+        self.log(logging.INFO, 'python-test', {'return_code': return_code}, 'Return code from mach python-test: {return_code}')
         return return_code
 
     def _run_python_test(self, test_path):
@@ -204,4 +207,4 @@ class MachCommands(MachCommandBase):
             else:
                 _log('Test passed: {}'.format(test_path))
 
-        return output, return_code
+        return output, return_code, test_path
