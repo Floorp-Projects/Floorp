@@ -350,6 +350,7 @@ public:
 protected:
     bool EnsureImageDataInitialized(const char* funcName, TexImageTarget target,
                                     uint32_t level);
+    bool EnsureLevelInitialized(const char* funcName, uint32_t level);
 
     bool CheckFloatTextureFilterParams() const {
         // Without OES_texture_float_linear, only NEAREST and
@@ -376,11 +377,13 @@ public:
 
     bool AreAllLevel0ImageInfosEqual() const;
 
-    bool IsMipmapComplete(uint32_t texUnit) const;
+    bool IsMipmapComplete(const char* funcName, uint32_t texUnit,
+                          bool* const out_initFailed);
 
     bool IsCubeComplete() const;
 
-    bool IsComplete(uint32_t texUnit, const char** const out_reason) const;
+    bool IsComplete(const char* funcName, uint32_t texUnit, const char** const out_reason,
+                    bool* const out_initFailed);
 
     bool IsMipmapCubeComplete() const;
 
