@@ -129,8 +129,22 @@
       <property name="label" readonly="true" onget="return this.getAttribute('label');"/>
       <property name="description" onset="this.setAttribute('description',val); return val;"
                                    onget="return this.getAttribute('description');"/>
-      <property name="editable"  onset="this.setAttribute('editable',val); return val;"
-                                 onget="return this.getAttribute('editable') == 'true';"/>
+
+      <property name="editable" onget="return this.getAttribute('editable') == 'true';">
+        <setter>
+          <![CDATA[
+            if (!val && this.editable) {
+              // If we were focused and transition from editable to not editable,
+              // focus the parent menulist so that the focus does not get stuck.
+              if (this.inputField == document.activeElement)
+                window.setTimeout(() => this.focus(), 0);
+            }
+
+            this.setAttribute("editable", val);
+            return val;
+          ]]>
+        </setter>
+      </property>
 
       <property name="open" onset="this.menuBoxObject.openMenu(val);
                                    return val;"
