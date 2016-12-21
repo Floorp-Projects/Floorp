@@ -18,7 +18,6 @@
 #include "nsXPCOMPrivate.h"
 #include "mozilla/Services.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsIXULAppInfo.h"
 #include "nsIConsoleService.h"
 #include "mozilla/Unused.h"
 #include "GMPDecryptorParent.h"
@@ -152,17 +151,6 @@ GeckoMediaPluginService::GeckoMediaPluginService()
   , mShuttingDownOnGMPThread(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
-  if (appInfo) {
-    nsAutoCString version;
-    nsAutoCString buildID;
-    if (NS_SUCCEEDED(appInfo->GetVersion(version)) &&
-        NS_SUCCEEDED(appInfo->GetAppBuildID(buildID))) {
-      LOGD(("GeckoMediaPluginService created; Gecko version=%s buildID=%s",
-            version.get(), buildID.get()));
-    }
-  }
 }
 
 GeckoMediaPluginService::~GeckoMediaPluginService()
