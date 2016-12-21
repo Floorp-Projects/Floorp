@@ -44,7 +44,6 @@ extern  {
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: PipelineId,
     pub root_dl_builder: webrender_traits::DisplayListBuilder,
-    pub dl_builder: Vec<webrender_traits::DisplayListBuilder>,
 }
 
 impl WebRenderFrameBuilder {
@@ -52,7 +51,6 @@ impl WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
             root_dl_builder: webrender_traits::DisplayListBuilder::new(root_pipeline_id),
-            dl_builder: vec![],
         }
     }
 }
@@ -246,8 +244,6 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
     assert!( unsafe { is_in_compositor_thread() });
     state.size = (width, height);
     state.frame_builder.root_dl_builder.list.clear();
-    state.frame_builder.dl_builder.clear();
-    state.frame_builder.dl_builder.push(webrender_traits::DisplayListBuilder::new(state.pipeline_id));
     state.z_index = 0;
 
     if state.pipeline_id == window.root_pipeline_id {
@@ -269,26 +265,15 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
 }
 
 #[no_mangle]
-pub extern fn wr_push_dl_builder(state:&mut WrState)
+pub extern fn wr_push_dl_builder(state:&mut WrState, bounds: WrRect, overflow: WrRect, transform: &LayoutTransform)
 {
     assert!( unsafe { is_in_compositor_thread() });
-    state.frame_builder.dl_builder.push(webrender_traits::DisplayListBuilder::new(state.pipeline_id));
-}
-
-#[no_mangle]
-pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &LayoutTransform)
-{
-    assert!( unsafe { is_in_compositor_thread() });
-    // 
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
     let overflow = overflow.to_rect();
 
-    let mut dl = state.frame_builder.dl_builder.pop().unwrap();
-    let mut prev_dl = state.frame_builder.dl_builder.last_mut().unwrap();
-
-    prev_dl.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
+    state.frame_builder.root_dl_builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
                                   ClipRegion::simple(&overflow),
                                   state.z_index,
@@ -296,8 +281,15 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: W
                                   &LayoutTransform::identity(),
                                   webrender_traits::MixBlendMode::Normal,
                                   Vec::new());
-    prev_dl.list.append(&mut dl.list);
-    prev_dl.pop_stacking_context()
+
+}
+
+#[no_mangle]
+pub extern fn wr_pop_dl_builder(state: &mut WrState)
+{
+    assert!( unsafe { is_in_compositor_thread() });
+    // 
+    state.frame_builder.root_dl_builder.pop_stacking_context()
 }
 
 fn wait_for_epoch(window: &mut WrWindowState) {
@@ -360,11 +352,6 @@ pub extern fn wr_dp_end(window: &mut WrWindowState,
     if let Some(epoch) = window.pipeline_epoch_map.get_mut(&pipeline_id) {
         (*epoch).0 += 1;
 
-        // Should be the root one
-        assert!(state.frame_builder.dl_builder.len() == 1);
-        let mut dl = state.frame_builder.dl_builder.pop().unwrap();
-        state.frame_builder.root_dl_builder.list.append(&mut dl.list);
-
         state.frame_builder.root_dl_builder.pop_stacking_context();
 
         let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
@@ -415,10 +402,9 @@ pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
     assert!( unsafe { is_in_compositor_thread() });
-    assert!(!state.frame_builder.dl_builder.is_empty());
-    let clip_region = state.frame_builder.dl_builder.last_mut().unwrap().new_clip_region(&clip.to_rect(), Vec::new(), None);
+    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
-    state.frame_builder.dl_builder.last_mut().unwrap().push_rect(
+    state.frame_builder.root_dl_builder.push_rect(
                                     rect.to_rect(),
                                     clip_region,
                                     ColorF::new(r, g, b, a));
@@ -427,14 +413,13 @@ pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r
 #[no_mangle]
 pub extern fn wr_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
     assert!( unsafe { is_in_compositor_thread() });
-    assert!(!state.frame_builder.dl_builder.is_empty());
 
-    let clip_region = state.frame_builder.dl_builder.last_mut().unwrap().new_clip_region(&clip.to_rect(),
+    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip.to_rect(),
                                                                      Vec::new(),
                                                                      None);
     let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
     window.pipeline_sync_list.push(pipeline_id);
-    state.frame_builder.dl_builder.last_mut().unwrap().push_iframe(rect.to_rect(),
+    state.frame_builder.root_dl_builder.push_iframe(rect.to_rect(),
                                                                    clip_region,
                                                                    pipeline_id);
 }
@@ -467,7 +452,6 @@ impl WrRect
 #[no_mangle]
 pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, key: ImageKey) {
     assert!( unsafe { is_in_compositor_thread() });
-    assert!(!state.frame_builder.dl_builder.is_empty());
 
     let bounds = bounds.to_rect();
     let clip = clip.to_rect();
@@ -475,8 +459,8 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
     // convert from the C type to the Rust type
     let mask = unsafe { mask.as_ref().map(|&WrImageMask{image, ref rect,repeat}| ImageMask{image: image, rect: rect.to_rect(), repeat: repeat}) };
 
-    let clip_region = state.frame_builder.dl_builder.last_mut().unwrap().new_clip_region(&clip, Vec::new(), mask);
-    state.frame_builder.dl_builder.last_mut().unwrap().push_image(
+    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip, Vec::new(), mask);
+    state.frame_builder.root_dl_builder.push_image(
         bounds,
         clip_region,
         bounds.size,
