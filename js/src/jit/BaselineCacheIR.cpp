@@ -59,6 +59,11 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     }
 };
 
+#define DEFINE_SHARED_OP(op) \
+    bool BaselineCacheIRCompiler::emit##op() { return CacheIRCompiler::emit##op(); }
+    CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
+#undef DEFINE_SHARED_OP
+
 // Instructions that have to perform a callVM require a stub frame. Use
 // AutoStubFrame before allocating any registers, then call its enter() and
 // leave() methods to enter/leave the stub frame.
@@ -193,39 +198,6 @@ BaselineCacheIRCompiler::compile()
         newStubCode->togglePreBarriers(true, DontReprotect);
 
     return newStubCode;
-}
-
-bool
-BaselineCacheIRCompiler::emitGuardIsObject()
-{
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-    masm.branchTestObject(Assembler::NotEqual, input, failure->label());
-    return true;
-}
-
-bool
-BaselineCacheIRCompiler::emitGuardIsString()
-{
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-    masm.branchTestString(Assembler::NotEqual, input, failure->label());
-    return true;
-}
-
-bool
-BaselineCacheIRCompiler::emitGuardIsSymbol()
-{
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-    masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
-    return true;
 }
 
 bool

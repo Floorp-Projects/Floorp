@@ -12,6 +12,13 @@
 namespace js {
 namespace jit {
 
+// The ops below are defined in CacheIRCompiler and codegen is shared between
+// BaselineCacheIRCompiler and IonCacheIRCompiler.
+#define CACHE_IR_SHARED_OPS(_)            \
+    _(GuardIsObject)                      \
+    _(GuardIsString)                      \
+    _(GuardIsSymbol)
+
 // OperandLocation represents the location of an OperandId. The operand is
 // either in a register or on the stack, and is either boxed or unboxed.
 class OperandLocation
@@ -321,6 +328,10 @@ class MOZ_RAII CacheIRCompiler
     MOZ_MUST_USE bool addFailurePath(FailurePath** failure);
 
     void emitFailurePath(size_t i);
+
+#define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
+    CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
+#undef DEFINE_SHARED_OP
 };
 
 // See the 'Sharing Baseline stub code' comment in CacheIR.h for a description
