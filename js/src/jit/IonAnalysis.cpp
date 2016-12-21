@@ -923,6 +923,42 @@ jit::FoldTests(MIRGraph& graph)
     return true;
 }
 
+bool
+jit::FoldEmptyBlocks(MIRGraph& graph)
+{
+    for (MBasicBlockIterator iter(graph.begin()); iter != graph.end(); ) {
+        MBasicBlock* block = *iter;
+        iter++;
+
+        if (block->numPredecessors() != 1 || block->numSuccessors() != 1)
+            continue;
+
+        if (!block->phisEmpty())
+            continue;
+
+        if (block->outerResumePoint())
+            continue;
+
+        if (*block->begin() != *block->rbegin())
+            continue;
+
+        MBasicBlock* succ = block->getSuccessor(0);
+        MBasicBlock* pred = block->getPredecessor(0);
+
+        if (succ->numPredecessors() != 1)
+            continue;
+
+        size_t pos = pred->getSuccessorIndex(block);
+        pred->lastIns()->replaceSuccessor(pos, succ);
+
+        graph.removeBlock(block);
+
+        succ->addPredecessorSameInputsAs(pred, block);
+        succ->removePredecessor(block);
+    }
+    return true;
+}
+
 static void
 EliminateTriviallyDeadResumePointOperands(MIRGraph& graph, MResumePoint* rp)
 {

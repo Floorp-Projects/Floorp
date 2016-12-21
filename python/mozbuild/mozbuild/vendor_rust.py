@@ -105,10 +105,15 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         mozfile.remove(vendor_dir)
         # Once we require a new enough cargo to switch to workspaces, we can
         # just do this once on the workspace root crate.
-        for crate_root in ('toolkit/library/rust/',
-                           'toolkit/library/gtest/rust'):
+        crates_and_roots = (
+            ('gkrust', 'toolkit/library/rust'),
+            ('gkrust-gtest', 'toolkit/library/gtest/rust'),
+            ('mozjs_sys', 'js/src'),
+        )
+        for (lib, crate_root) in crates_and_roots:
             path = mozpath.join(self.topsrcdir, crate_root)
-            self._run_command_in_srcdir(args=[cargo, 'generate-lockfile', '--manifest-path', mozpath.join(path, 'Cargo.toml')])
+            # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
+            self._run_command_in_srcdir(args=[cargo, 'update', '--manifest-path', mozpath.join(path, 'Cargo.toml'), '-p', lib])
             self._run_command_in_srcdir(args=[cargo, 'vendor', '--sync', mozpath.join(path, 'Cargo.lock'), vendor_dir])
         #TODO: print stats on size of files added/removed, warn or error
         # when adding very large files (bug 1306078)

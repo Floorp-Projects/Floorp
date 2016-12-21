@@ -25,6 +25,9 @@ MOZ_MUST_USE bool
 FoldTests(MIRGraph& graph);
 
 MOZ_MUST_USE bool
+FoldEmptyBlocks(MIRGraph& graph);
+
+MOZ_MUST_USE bool
 SplitCriticalEdges(MIRGraph& graph);
 
 bool

@@ -653,8 +653,12 @@ Gecko_SetMozBinding(nsStyleDisplay* aDisplay,
                     ThreadSafeURIHolder* aReferrer,
                     ThreadSafePrincipalHolder* aPrincipal)
 {
+  if (!aURLString) {
+    aDisplay->mBinding = nullptr;
+    return;
+  }
+
   MOZ_ASSERT(aDisplay);
-  MOZ_ASSERT(aURLString);
   MOZ_ASSERT(aBaseURI);
   MOZ_ASSERT(aReferrer);
   MOZ_ASSERT(aPrincipal);

@@ -16,8 +16,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NS_ASSERT", "resource://gre/modules/deb
 const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
 const DEFAULT_FORM_HISTORY_PARAM      = "searchbar-history";
 const HTTP_OK            = 200;
-const REMOTE_TIMEOUT     = 500; // maximum time (ms) to wait before giving up on a remote suggestions
 const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
+const REMOTE_TIMEOUT_PREF = "browser.search.suggest.timeout";
+const REMOTE_TIMEOUT_DEFAULT = 500; // maximum time (ms) to wait before giving up on a remote suggestions
 
 /**
  * Remote search suggestions will be shown if gRemoteSuggestionsEnabled
@@ -58,11 +59,6 @@ this.SearchSuggestionController.prototype = {
    * maxRemoteResults - <displayed local results count> remote results.
    */
   maxRemoteResults: 10,
-
-  /**
-   * The maximum time (ms) to wait before giving up on a remote suggestions.
-   */
-  remoteTimeout: REMOTE_TIMEOUT,
 
   /**
    * The additional parameter used when searching form history.
@@ -192,8 +188,7 @@ this.SearchSuggestionController.prototype = {
           this._remoteResultTimer = Cc["@mozilla.org/timer;1"].
                                     createInstance(Ci.nsITimer);
           this._remoteResultTimer.initWithCallback(this._onRemoteTimeout.bind(this),
-                                                   this.remoteTimeout || REMOTE_TIMEOUT,
-                                                   Ci.nsITimer.TYPE_ONE_SHOT);
+                                                   this.remoteTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
         }
 
         switch (result.searchResult) {
@@ -396,3 +391,9 @@ this.SearchSuggestionController.prototype = {
 this.SearchSuggestionController.engineOffersSuggestions = function(engine) {
  return engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON);
 };
+
+/**
+ * The maximum time (ms) to wait before giving up on a remote suggestions.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(this.SearchSuggestionController.prototype, "remoteTimeout",
+                                      REMOTE_TIMEOUT_PREF, REMOTE_TIMEOUT_DEFAULT);

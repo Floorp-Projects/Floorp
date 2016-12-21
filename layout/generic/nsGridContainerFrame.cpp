@@ -198,7 +198,7 @@ struct nsGridContainerFrame::TrackSize
     eMaxContentMinSizing =        0x4,
     eMinOrMaxContentMinSizing = eMinContentMinSizing | eMaxContentMinSizing,
     eIntrinsicMinSizing = eMinOrMaxContentMinSizing | eAutoMinSizing,
-    eIndefinitePercentMinSizing = 0x8,
+    // 0x8 is unused, feel free to take it!
     eAutoMaxSizing =             0x10,
     eMinContentMaxSizing =       0x20,
     eMaxContentMaxSizing =       0x40,
@@ -269,7 +269,6 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
     // "If the inline or block size of the grid container is indefinite,
     //  <percentage> values relative to that size are treated as 'auto'."
     minSizeUnit = eStyleUnit_Auto;
-    mState |= eIndefinitePercentMinSizing;
   }
   if (::IsPercentOfIndefiniteSize(aMaxCoord, aPercentageBasis)) {
     maxSizeUnit = eStyleUnit_Auto;
@@ -1162,10 +1161,8 @@ struct nsGridContainerFrame::TrackSizingFunctions
       return 1;
     }
     nscoord repeatTrackSize = 0;
-    float repeatTrackPercent = 0.0f;
     // Note that the repeat() track size is included in |sum| in this loop.
     nscoord sum = 0;
-    float percentSum = 0.0f;
     const nscoord percentBasis = aSize;
     for (uint32_t i = 0; i < numTracks; ++i) {
       // "treating each track as its max track sizing function if that is
@@ -1179,9 +1176,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
           return 1;
         }
       }
-      float trackPercent;
-      nscoord trackSize;
-      ResolvePercentSizeParts(*coord, percentBasis, &trackSize, &trackPercent);
+      nscoord trackSize = ::ResolveToDefiniteSize(*coord, percentBasis);
       if (i == mRepeatAutoStart) {
         if (percentBasis != NS_UNCONSTRAINEDSIZE) {
           // Use a minimum 1px for the repeat() track-size.
@@ -1190,18 +1185,17 @@ struct nsGridContainerFrame::TrackSizingFunctions
           }
         }
         repeatTrackSize = trackSize;
-        repeatTrackPercent = trackPercent;
       }
       sum += trackSize;
-      percentSum += trackPercent;
     }
     nscoord gridGap;
+    float percentSum = 0.0f;
     float gridGapPercent;
     ResolvePercentSizeParts(aGridGap, percentBasis, &gridGap, &gridGapPercent);
     if (numTracks > 1) {
       // Add grid-gaps for all the tracks including the repeat() track.
       sum += gridGap * (numTracks - 1);
-      percentSum += gridGapPercent * (numTracks - 1);
+      percentSum = gridGapPercent * (numTracks - 1);
     }
     // Calculate the max number of tracks that fits without overflow.
     nscoord available = maxFill != NS_UNCONSTRAINEDSIZE ? maxFill : aMinSize;
@@ -1214,7 +1208,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
     bool exactFit = false;
     while (true) {
       sum += gridGap + repeatTrackSize;
-      percentSum += gridGapPercent + repeatTrackPercent;
+      percentSum += gridGapPercent;
       nscoord newSize = nsLayoutUtils::AddPercents(sum, percentSum);
       if (newSize <= size) {
         // Adding more repeat-tracks won't make forward progress.
@@ -2587,14 +2581,8 @@ nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
   if (aContentBox.BSize(mWM) == NS_AUTOHEIGHT) {
     aContentBox.BSize(mWM) =
       mRows.BackComputedIntrinsicSize(mRowFunctions, mGridStyle->mGridRowGap);
-    if ((mRows.mStateUnion & TrackSize::eIndefinitePercentMinSizing) ||
-        mGridStyle->mGridRowGap.HasPercent()) {
-      mRows.Initialize(mRowFunctions, mGridStyle->mGridRowGap,
-                       aGrid.mGridRowEnd, aContentBox.BSize(mWM));
-      mRows.CalculateSizes(*this, mGridItems, mRowFunctions,
-                           aContentBox.BSize(mWM), &GridArea::mRows,
-                           aConstraint);
-    }
+    mRows.mGridGap =
+      ::ResolveToDefiniteSize(mGridStyle->mGridRowGap, aContentBox.BSize(mWM));
   }
 }
 
@@ -4958,31 +4946,21 @@ nsGridContainerFrame::Tracks::BackComputedIntrinsicSize(
   const nsStyleCoord& aGridGap) const
 {
   // Sum up the current sizes (where percentage tracks were treated as 'auto')
-  // in 'size' and a sum of percentages in 'percent'.
+  // in 'size'.
   nscoord size = 0;
-  float percent = 0.0f;
-  bool hasPercent = mStateUnion & TrackSize::eIndefinitePercentMinSizing;
   for (size_t i = 0, len = mSizes.Length(); i < len; ++i) {
-    const nscoord trackSize = mSizes[i].mBase;
-    nscoord length;
-    float p;
-    if (hasPercent &&
-        ::GetPercentSizeParts(aFunctions.MinSizingFor(i), &length, &p)) {
-      size += std::max(length, trackSize);
-      percent += p;
-    } else {
-      size += trackSize;
-    }
+    size += mSizes[i].mBase;
   }
 
-  // Add grid-gap contributions to 'size' and 'percent'.
+  // Add grid-gap contributions to 'size' and calculate a 'percent' sum.
+  float percent = 0.0f;
   size_t numTracks = mSizes.Length();
   if (numTracks > 1) {
     const size_t gridGapCount = numTracks - 1;
     nscoord gridGapLength;
     float gridGapPercent;
     if (::GetPercentSizeParts(aGridGap, &gridGapLength, &gridGapPercent)) {
-      percent += gridGapCount * gridGapPercent;
+      percent = gridGapCount * gridGapPercent;
     } else {
       gridGapLength = aGridGap.ToLength();
     }
@@ -6118,6 +6096,12 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   } else {
     RemoveStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER);
   }
+  if (gridReflowInput.mIter.AtEnd()) {
+    // We have no grid items, our parent should synthesize a baseline if needed.
+    AddStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE);
+  } else {
+    RemoveStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE);
+  }
   const nscoord computedBSize = aReflowInput.ComputedBSize();
   const nscoord computedISize = aReflowInput.ComputedISize();
   const WritingMode& wm = gridReflowInput.mWM;
@@ -6738,11 +6722,8 @@ nsGridContainerFrame::SynthesizeBaseline(
     if (grid && aGridOrderItem.mIsInEdgeTrack) {
       isOrthogonal ? grid->GetIBaseline(aGroup, &baseline) :
                      grid->GetBBaseline(aGroup, &baseline);
-    } else if (!isOrthogonal && aGridOrderItem.mIsInEdgeTrack &&
-               GetBBaseline(aGroup, childWM, child, &baseline)) {
-      if (aGroup == BaselineSharingGroup::eLast) {
-        baseline = size - baseline; // convert to distance from border-box end
-      }
+    } else if (!isOrthogonal && aGridOrderItem.mIsInEdgeTrack) {
+      baseline = child->BaselineBOffset(childWM, aGroup, AlignmentContext::eGrid);
     } else {
       baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
     }

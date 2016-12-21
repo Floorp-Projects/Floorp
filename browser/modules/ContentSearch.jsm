@@ -41,7 +41,7 @@ const MAX_SUGGESTIONS = 6;
  *     data: the entry, a string
  *   GetSuggestions
  *     Retrieves an array of search suggestions given a search string.
- *     data: { engineName, searchString, [remoteTimeout] }
+ *     data: { engineName, searchString }
  *   GetState
  *     Retrieves the current search engine state.
  *     data: null
@@ -259,7 +259,7 @@ this.ContentSearch = {
     return;
   },
 
-  getSuggestions: Task.async(function* (engineName, searchString, browser, remoteTimeout = null) {
+  getSuggestions: Task.async(function* (engineName, searchString, browser) {
     let engine = Services.search.getEngineByName(engineName);
     if (!engine) {
       throw new Error("Unknown engine name: " + engineName);
@@ -270,7 +270,6 @@ this.ContentSearch = {
     let ok = SearchSuggestionController.engineOffersSuggestions(engine);
     controller.maxLocalResults = ok ? MAX_LOCAL_SUGGESTIONS : MAX_SUGGESTIONS;
     controller.maxRemoteResults = ok ? MAX_SUGGESTIONS : 0;
-    controller.remoteTimeout = remoteTimeout || undefined;
     let priv = PrivateBrowsingUtils.isBrowserPrivate(browser);
     // fetch() rejects its promise if there's a pending request, but since we
     // process our event queue serially, there's never a pending request.

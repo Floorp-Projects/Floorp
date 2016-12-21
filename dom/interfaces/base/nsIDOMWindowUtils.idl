@@ -1973,6 +1973,12 @@ interface nsIDOMWindowUtils : nsISupports {
     */
   readonly attribute int32_t gpuProcessPid;
 
+  /**
+   * Returns true if the given timeout ID is in the list of tracking
+   * timeouts.
+   */
+  boolean isTimeoutTracking(in unsigned long timeoutId);
+
   // Match WidgetMouseEventBase::buttonType.
   const long MOUSE_BUTTON_LEFT_BUTTON   = 0;
   const long MOUSE_BUTTON_MIDDLE_BUTTON = 1;

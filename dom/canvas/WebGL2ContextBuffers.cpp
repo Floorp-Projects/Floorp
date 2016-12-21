@@ -131,13 +131,13 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
     gl->MakeCurrent();
     const ScopedLazyBind readBind(gl, target, buffer);
 
-    const auto mappedBytes = gl->fMapBufferRange(target, srcByteOffset, glByteLen,
-                                                 LOCAL_GL_MAP_READ_BIT);
-    // Warning: Possibly shared memory.  See bug 1225033.
     if (byteLen) {
+        const auto mappedBytes = gl->fMapBufferRange(target, srcByteOffset, glByteLen,
+                                                     LOCAL_GL_MAP_READ_BIT);
+        // Warning: Possibly shared memory.  See bug 1225033.
         memcpy(bytes, mappedBytes, byteLen);
+        gl->fUnmapBuffer(target);
     }
-    gl->fUnmapBuffer(target);
 }
 
 } // namespace mozilla
