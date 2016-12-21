@@ -5252,12 +5252,14 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether the browser we migrated from was the browser with the most recent data. Keyed by that browser's identifier (e.g. 'ie', 'edge', 'safari', etc.)."
   },
-  "FX_STARTUP_EXTERNAL_CONTENT_HANDLER": {
-    "bug_numbers": [1276027],
+  "FX_PREFERENCES_CATEGORY_OPENED": {
+    "bug_numbers": [1324167],
     "alert_emails": ["jaws@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "count",
-    "description": "Count how often the browser is opened as an external app handler. This is generally used when the browser is set as the default browser."
+    "expires_in_version": "56",
+    "kind": "categorical",
+    "labels": ["unknown", "general", "search", "content", "applications", "privacy", "security", "sync", "advancedGeneral", "advancedDataChoices", "advancedNetwork", "advancedUpdates", "advancedCerts"],
+    "releaseChannelCollection": "opt-out",
+    "description": "Count how often each preference category is opened."
   },
   "INPUT_EVENT_RESPONSE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],

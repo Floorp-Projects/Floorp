@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
 Cu.import("chrome://marionette/content/accessibility.js");
-Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
@@ -139,7 +138,7 @@ this.GeckoDriver = function (appName, server) {
   this.importedScripts = new evaluate.ScriptStorageService(
       [Context.CHROME, Context.CONTENT]);
   this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
-  this.actions = new action.Chain();
+  this.legacyactions = new legacyaction.Chain();
 
   this.timer = null;
   this.inactivityTimer = null;
@@ -179,8 +178,6 @@ this.GeckoDriver = function (appName, server) {
     this.dialog = new modal.Dialog(() => this.curBrowser, winr);
   };
   modal.addHandler(handleDialog);
-
-  this.actions = new action.Chain();
 };
 
 Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
@@ -1630,6 +1627,32 @@ GeckoDriver.prototype.singleTap = function*(cmd, resp) {
 };
 
 /**
+ * Perform a series of grouped actions at the specified points in time.
+ *
+ * @param {Array.<?>} actions
+ *     Array of objects that each represent an action sequence.
+ *
+ * @throws {UnsupportedOperationError}
+ *     If the command is made in chrome context.
+ */
+GeckoDriver.prototype.performActions = function(cmd, resp) {
+  switch (this.context) {
+    case Context.CHROME:
+      throw new UnsupportedOperationError(
+          "Command 'performActions' is not available in chrome context");
+    case Context.CONTENT:
+      return this.listener.performActions({"actions": cmd.parameters.actions});
+  }
+};
+
+/**
+ * Release all the keys and pointer buttons that are currently depressed.
+ */
+GeckoDriver.prototype.releaseActions = function(cmd, resp) {
+  return this.listener.releaseActions();
+};
+
+/**
  * An action chain.
  *
  * @param {Object} value
@@ -1652,7 +1675,7 @@ GeckoDriver.prototype.actionChain = function*(cmd, resp) {
       }
 
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.actions.dispatchActions(
+      resp.body.value = yield this.legacyactions.dispatchActions(
           chain, nextId, {frame: win}, this.curBrowser.seenEls);
       break;
 
@@ -2842,8 +2865,10 @@ GeckoDriver.prototype.commands = {
   "timeouts": GeckoDriver.prototype.setTimeouts,  // deprecated until Firefox 55
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
   "singleTap": GeckoDriver.prototype.singleTap,
-  "actionChain": GeckoDriver.prototype.actionChain,
-  "multiAction": GeckoDriver.prototype.multiAction,
+  "performActions": GeckoDriver.prototype.performActions,
+  "releaseActions": GeckoDriver.prototype.releaseActions,
+  "actionChain": GeckoDriver.prototype.actionChain, // deprecated
+  "multiAction": GeckoDriver.prototype.multiAction, // deprecated
   "executeAsyncScript": GeckoDriver.prototype.executeAsyncScript,
   "executeJSScript": GeckoDriver.prototype.executeJSScript,
   "findElement": GeckoDriver.prototype.findElement,

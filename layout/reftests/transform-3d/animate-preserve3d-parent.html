@@ -18,7 +18,7 @@ body { padding: 50px }
   border: 1px solid black;
   transform-style: preserve-3d;
   /* use a -99.9s delay to start at 99.9% and then move to 0% */
-  animation: spin 100s -99.9s linear 2;
+  animation: spin 100s -99.9s linear 2 paused;
 }
 
 #child {
@@ -39,7 +39,13 @@ body { padding: 50px }
 
 <script>
 
-document.getElementById("parent").addEventListener("animationiteration", IterationListener, false);
+document.getElementById("parent").addEventListener("animationstart", StartListener, false);
+
+function StartListener(event) {
+  var test = document.getElementById("parent");
+  test.style.animationPlayState = 'running';
+  test.addEventListener("animationiteration", IterationListener, false);
+}
 
 function IterationListener(event) {
   setTimeout(RemoveReftestWait, 0);

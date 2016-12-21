@@ -13,7 +13,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIEditor.h"
-#include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -1207,11 +1206,9 @@ nsTextControlFrame::GetPhonetic(nsAString& aPhonetic)
   nsresult rv = GetEditor(getter_AddRefs(editor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(editor);
-  if (imeSupport) {
-    nsCOMPtr<nsIPhonetic> phonetic = do_QueryInterface(imeSupport);
-    if (phonetic)
-      phonetic->GetPhonetic(aPhonetic);
+  nsCOMPtr<nsIPhonetic> phonetic = do_QueryInterface(editor);
+  if (phonetic) {
+    phonetic->GetPhonetic(aPhonetic);
   }
   return NS_OK;
 }

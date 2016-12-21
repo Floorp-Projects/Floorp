@@ -2764,6 +2764,13 @@ var gListView = {
     } else {
       document.getElementById("plugindeprecation-notice").hidden = true;
     }
+
+    if (Preferences.get("extensions.getAddons.themes.browseURL", "")) {
+      document.getElementById("getthemes-learnmore-link")
+        .setAttribute("href", Services.urlFormatter.formatURLPref("extensions.getAddons.themes.browseURL"));
+    } else {
+      document.getElementById("getthemes-container").hidden = true;
+    }
   },
 
   show: function(aType, aRequest) {
