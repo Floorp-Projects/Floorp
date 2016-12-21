@@ -2163,18 +2163,9 @@ void HTMLMediaElement::LoadFromSourceChildren()
         return;
       }
     }
-    nsAutoString media;
     HTMLSourceElement *childSrc = HTMLSourceElement::FromContent(child);
-    MOZ_ASSERT(childSrc, "Expect child to be HTMLSourceElement");
-    if (childSrc && !childSrc->MatchesCurrentMedia()) {
-      const char16_t* params[] = { media.get(), src.get() };
-      ReportLoadError("MediaLoadSourceMediaNotMatched", params, ArrayLength(params));
-      DealWithFailedElement(child);
-      return;
-    }
-    LOG(LogLevel::Debug, ("%p Trying load from <source>=%s type=%s media=%s", this,
-      NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get(),
-      NS_ConvertUTF16toUTF8(media).get()));
+    LOG(LogLevel::Debug, ("%p Trying load from <source>=%s type=%s", this,
+      NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get()));
 
     nsCOMPtr<nsIURI> uri;
     NewURIFromString(src, getter_AddRefs(uri));
