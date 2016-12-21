@@ -212,6 +212,9 @@ class MOZ_RAII CacheRegisterAllocator
     // Allocates an output register for the given operand.
     Register defineRegister(MacroAssembler& masm, TypedOperandId typedId);
     ValueOperand defineValueRegister(MacroAssembler& masm, ValOperandId val);
+
+    // Returns |val|'s JSValueType or JSVAL_TYPE_UNKNOWN.
+    JSValueType knownType(ValOperandId val) const;
 };
 
 // RAII class to allocate a scratch register and release it when we're done

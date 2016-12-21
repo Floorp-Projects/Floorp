@@ -292,6 +292,27 @@ CacheRegisterAllocator::init(const AllocatableGeneralRegisterSet& available)
     return true;
 }
 
+JSValueType
+CacheRegisterAllocator::knownType(ValOperandId val) const
+{
+    const OperandLocation& loc = operandLocations_[val.id()];
+
+    switch (loc.kind()) {
+      case OperandLocation::ValueReg:
+      case OperandLocation::ValueStack:
+        return JSVAL_TYPE_UNKNOWN;
+
+      case OperandLocation::PayloadStack:
+      case OperandLocation::PayloadReg:
+        return loc.payloadType();
+
+      case OperandLocation::Uninitialized:
+        break;
+    }
+
+    MOZ_CRASH("Invalid kind");
+}
+
 size_t
 CacheIRStubInfo::stubDataSize() const
 {
@@ -654,7 +675,11 @@ CacheIRCompiler::emitFailurePath(size_t i)
 bool
 CacheIRCompiler::emitGuardIsObject()
 {
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    ValOperandId inputId = reader.valOperandId();
+    if (allocator.knownType(inputId) == JSVAL_TYPE_OBJECT)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
@@ -665,7 +690,11 @@ CacheIRCompiler::emitGuardIsObject()
 bool
 CacheIRCompiler::emitGuardIsString()
 {
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    ValOperandId inputId = reader.valOperandId();
+    if (allocator.knownType(inputId) == JSVAL_TYPE_STRING)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
@@ -676,7 +705,11 @@ CacheIRCompiler::emitGuardIsString()
 bool
 CacheIRCompiler::emitGuardIsSymbol()
 {
-    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    ValOperandId inputId = reader.valOperandId();
+    if (allocator.knownType(inputId) == JSVAL_TYPE_SYMBOL)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
