@@ -268,6 +268,7 @@ bool EventStateManager::sNormalLMouseEventInProcess = false;
 EventStateManager* EventStateManager::sActiveESM = nullptr;
 nsIDocument* EventStateManager::sMouseOverDocument = nullptr;
 nsWeakFrame EventStateManager::sLastDragOverFrame = nullptr;
+LayoutDeviceIntPoint EventStateManager::sPreLockPoint = LayoutDeviceIntPoint(0, 0);
 LayoutDeviceIntPoint EventStateManager::sLastRefPoint = kInvalidRefPoint;
 CSSIntPoint EventStateManager::sLastScreenPoint = CSSIntPoint(0, 0);
 LayoutDeviceIntPoint EventStateManager::sSynthCenteringPoint = kInvalidRefPoint;
@@ -290,7 +291,6 @@ EventStateManager::DeltaAccumulator*
 EventStateManager::EventStateManager()
   : mLockCursor(0)
   , mLastFrameConsumedSetCursor(false)
-  , mPreLockPoint(0,0)
   , mCurrentTarget(nullptr)
     // init d&d gesture state machine variables
   , mGestureDownPoint(0,0)
@@ -4357,7 +4357,7 @@ EventStateManager::GetWrapperByEventID(WidgetMouseEvent* aEvent)
   return helper;
 }
 
-void
+/* static */ void
 EventStateManager::SetPointerLock(nsIWidget* aWidget,
                                   nsIContent* aElement)
 {
@@ -4375,7 +4375,7 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     MOZ_ASSERT(aWidget, "Locking pointer requires a widget");
 
     // Store the last known ref point so we can reposition the pointer after unlock.
-    mPreLockPoint = sLastRefPoint;
+    sPreLockPoint = sLastRefPoint;
 
     // Fire a synthetic mouse move to ensure event state is updated. We first
     // set the mouse to the center of the window, so that the mouse event
@@ -4393,13 +4393,13 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     // synthetic mouse event. We first reset sLastRefPoint to its
     // pre-pointerlock position, so that the synthetic mouse event reports
     // no movement.
-    sLastRefPoint = mPreLockPoint;
+    sLastRefPoint = sPreLockPoint;
     // Reset SynthCenteringPoint to invalid so that next time we start
     // locking pointer, it has its initial value.
     sSynthCenteringPoint = kInvalidRefPoint;
     if (aWidget) {
       aWidget->SynthesizeNativeMouseMove(
-        mPreLockPoint + aWidget->WidgetToScreenOffset(), nullptr);
+        sPreLockPoint + aWidget->WidgetToScreenOffset(), nullptr);
     }
 
     // Unsuppress DnD
