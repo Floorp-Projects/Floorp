@@ -9,68 +9,13 @@
 
 #include "gc/Barrier.h"
 #include "jit/CacheIR.h"
+#include "jit/CacheIRCompiler.h"
 
 namespace js {
 namespace jit {
 
 class ICFallbackStub;
 class ICStub;
-
-// See the 'Sharing Baseline stub code' comment in CacheIR.h for a description
-// of this class.
-class CacheIRStubInfo
-{
-    // These fields don't require 8 bits, but GCC complains if these fields are
-    // smaller than the size of the enums.
-    CacheKind kind_ : 8;
-    ICStubEngine engine_ : 8;
-    bool makesGCCalls_ : 1;
-    uint8_t stubDataOffset_;
-
-    const uint8_t* code_;
-    uint32_t length_;
-    const uint8_t* fieldTypes_;
-
-    CacheIRStubInfo(CacheKind kind, ICStubEngine engine, bool makesGCCalls,
-                    uint32_t stubDataOffset, const uint8_t* code, uint32_t codeLength,
-                    const uint8_t* fieldTypes)
-      : kind_(kind),
-        engine_(engine),
-        makesGCCalls_(makesGCCalls),
-        stubDataOffset_(stubDataOffset),
-        code_(code),
-        length_(codeLength),
-        fieldTypes_(fieldTypes)
-    {
-        MOZ_ASSERT(kind_ == kind, "Kind must fit in bitfield");
-        MOZ_ASSERT(engine_ == engine, "Engine must fit in bitfield");
-        MOZ_ASSERT(stubDataOffset_ == stubDataOffset, "stubDataOffset must fit in uint8_t");
-    }
-
-    CacheIRStubInfo(const CacheIRStubInfo&) = delete;
-    CacheIRStubInfo& operator=(const CacheIRStubInfo&) = delete;
-
-  public:
-    CacheKind kind() const { return kind_; }
-    ICStubEngine engine() const { return engine_; }
-    bool makesGCCalls() const { return makesGCCalls_; }
-
-    const uint8_t* code() const { return code_; }
-    uint32_t codeLength() const { return length_; }
-    uint32_t stubDataOffset() const { return stubDataOffset_; }
-
-    size_t stubDataSize() const;
-
-    StubField::Type fieldType(uint32_t i) const { return (StubField::Type)fieldTypes_[i]; }
-
-    static CacheIRStubInfo* New(CacheKind kind, ICStubEngine engine, bool canMakeCalls,
-                                uint32_t stubDataOffset, const CacheIRWriter& writer);
-
-    template <class T>
-    js::GCPtr<T>& getStubField(ICStub* stub, uint32_t field) const;
-
-    void copyStubData(ICStub* src, ICStub* dest) const;
-};
 
 void TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo* stubInfo);
 
