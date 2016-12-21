@@ -388,6 +388,49 @@ KeyframeEffectReadOnly::CompositeValue(
 }
 
 void
+KeyframeEffectReadOnly::EnsureBaseStylesForCompositor(
+  const nsCSSPropertyIDSet& aPropertiesToSkip)
+{
+  if (!mTarget) {
+    return;
+  }
+
+  RefPtr<nsStyleContext> styleContext;
+
+  for (const AnimationProperty& property : mProperties) {
+    if (!nsCSSProps::PropHasFlags(property.mProperty,
+                                  CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
+      continue;
+    }
+
+    if (aPropertiesToSkip.HasProperty(property.mProperty)) {
+      continue;
+    }
+
+    for (const AnimationPropertySegment& segment : property.mSegments) {
+      if (segment.mFromComposite == dom::CompositeOperation::Replace &&
+          segment.mToComposite == dom::CompositeOperation::Replace) {
+        continue;
+      }
+
+      if (!styleContext) {
+        styleContext = GetTargetStyleContext();
+      }
+      MOZ_RELEASE_ASSERT(styleContext);
+
+      Unused << EffectCompositor::GetBaseStyle(property.mProperty,
+                                               styleContext,
+                                               *mTarget->mElement,
+                                               mTarget->mPseudoType);
+      // Make this property as needing a base style so that we send the (now
+      // cached) base style to the compositor.
+      SetNeedsBaseStyle(property.mProperty);
+      break;
+    }
+  }
+}
+
+void
 KeyframeEffectReadOnly::ComposeStyle(
   RefPtr<AnimValuesStyleRule>& aStyleRule,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
@@ -406,6 +449,19 @@ KeyframeEffectReadOnly::ComposeStyle(
   // If the progress is null, we don't have fill data for the current
   // time so we shouldn't animate.
   if (computedTiming.mProgress.IsNull()) {
+    // If we are not in-effect, this effect might still be sent to the
+    // compositor and later become in-effect (e.g. if it is in the delay phase).
+    // In that case, we might need the base style in order to perform
+    // additive/accumulative animation on the compositor.
+
+    // In case of properties that can be run on the compositor, we need the base
+    // styles for such properties because those animation will be sent to
+    // compositor while they are in delay phase so that we can composite this
+    // animation on the compositor once the animation is out of the delay phase
+    // on the compositor.
+    if (computedTiming.mPhase == ComputedTiming::AnimationPhase::Before) {
+      EnsureBaseStylesForCompositor(aPropertiesToSkip);
+    }
     return;
   }
 

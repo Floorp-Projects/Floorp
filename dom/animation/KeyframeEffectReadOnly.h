@@ -427,6 +427,11 @@ protected:
   // compositor.
   void SetNeedsBaseStyle(nsCSSPropertyID aProperty);
 
+  // Ensure the base styles is available for any properties that can be run on
+  // the compositor and which are not includes in |aPropertiesToSkip|.
+  void EnsureBaseStylesForCompositor(
+    const nsCSSPropertyIDSet& aPropertiesToSkip);
+
   Maybe<OwningAnimationTarget> mTarget;
 
   KeyframeEffectParams mEffectOptions;

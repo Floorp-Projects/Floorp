@@ -923,10 +923,6 @@ Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
     return;
   }
 
-  if (!IsInEffect()) {
-    return;
-  }
-
   // In order to prevent flicker, there are a few cases where we want to use
   // a different time for rendering that would otherwise be returned by
   // GetCurrentTime. These are:
