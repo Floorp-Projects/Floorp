@@ -683,12 +683,18 @@ ServiceWorkerGlobalScope::AddEventListener(
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  DOMEventTargetHelper::AddEventListener(aType, aListener, aOptions,
+                                         aWantsUntrusted, aRv);
+
+  if (!aType.EqualsLiteral("fetch")) {
+    return;
+  }
+
   if (mWorkerPrivate->WorkerScriptExecutedSuccessfully()) {
     RefPtr<Runnable> r = new ReportFetchListenerWarningRunnable(mScope);
     mWorkerPrivate->DispatchToMainThread(r.forget());
   }
-  DOMEventTargetHelper::AddEventListener(aType, aListener, aOptions,
-                                         aWantsUntrusted, aRv);
+
   if (!aRv.Failed()) {
     mWorkerPrivate->SetFetchHandlerWasAdded();
   }
