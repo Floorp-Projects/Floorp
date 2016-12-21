@@ -53,8 +53,6 @@ protected:
   void UpdateBuffered() override;
 
 public:
-  bool ForceZeroStartTime() const override;
-
   // For Media Resource Management
   void ReleaseResources() override;
 
