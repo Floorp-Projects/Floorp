@@ -272,8 +272,6 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext,
                                 SourceSurface* aExtraMask,
                                 const Matrix& aExtraMasksTransform)
 {
-  MOZ_ASSERT(!IsTrivial(), "Caller needs to use ApplyClipPath");
-
   IntPoint offset;
   RefPtr<DrawTarget> maskDT = CreateClipMask(aReferenceContext, offset);
   if (!maskDT) {

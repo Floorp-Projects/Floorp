@@ -84,7 +84,6 @@ using namespace mozilla::media;
 #define SLOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (SFMT(x, ##__VA_ARGS__)))
 #define SWARN(x, ...) NS_WARNING(nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get())
 #define SDUMP(x, ...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get(), nullptr, nullptr, -1)
-#define SSAMPLELOG(x, ...) MOZ_LOG(gMediaSampleLog, LogLevel::Debug, (SFMT(x, ##__VA_ARGS__)))
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -772,8 +771,6 @@ public:
       Reader()->SetVideoBlankDecode(false);
     }
 
-    CreateSeekTask();
-
     // Don't stop playback for a video-only seek since audio is playing.
     if (!mSeekJob.mTarget->IsVideoOnly()) {
       mMaster->StopPlayback();
@@ -787,8 +784,6 @@ public:
       // So we only notify the change when the seek request is from the user.
       mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
     }
-
-    ResetMDSM();
 
     DoSeek();
 
@@ -831,10 +826,6 @@ protected:
   void SeekCompleted();
 
 private:
-  virtual void CreateSeekTask() = 0;
-
-  virtual void ResetMDSM() = 0;
-
   virtual void DoSeek() = 0;
 
   virtual int64_t CalculateNewCurrentTime() const = 0;
@@ -852,6 +843,7 @@ public:
                                           EventVisibility aVisibility)
   {
     MOZ_ASSERT(aSeekJob.mTarget->IsAccurate() || aSeekJob.mTarget->IsFast());
+    mCurrentTimeBeforeSeek = TimeUnit::FromMicroseconds(mMaster->GetMediaTime());
     return SeekingState::Enter(Move(aSeekJob), aVisibility);
   }
 
@@ -994,24 +986,17 @@ public:
   }
 
 private:
-  void CreateSeekTask() override
+  void DoSeek() override
   {
-    mCurrentTimeBeforeSeek = TimeUnit::FromMicroseconds(mMaster->GetMediaTime());
     mDoneAudioSeeking = !Info().HasAudio() || mSeekJob.mTarget->IsVideoOnly();
     mDoneVideoSeeking = !Info().HasVideo();
-  }
 
-  void ResetMDSM() override
-  {
     if (mSeekJob.mTarget->IsVideoOnly()) {
       mMaster->Reset(TrackInfo::kVideoTrack);
     } else {
       mMaster->Reset();
     }
-  }
 
-  void DoSeek() override
-  {
     // Request the demuxer to perform seek.
     mSeekRequest.Begin(Reader()->Seek(mSeekJob.mTarget.ref())
       ->Then(OwnerThread(), __func__,
@@ -1271,6 +1256,8 @@ public:
                                           EventVisibility aVisibility)
   {
     MOZ_ASSERT(aSeekJob.mTarget->IsNextFrame());
+    mCurrentTime = mMaster->GetMediaTime();
+    mDuration = mMaster->Duration();
     return SeekingState::Enter(Move(aSeekJob), aVisibility);
   }
 
@@ -1284,12 +1271,19 @@ public:
   }
 
 private:
-  // VisualStudio does not allow inner class to access protected member of the
-  // enclosing class' parent class. Redefine AudioQueue()/VideoQueue() here so
-  // that AysncNextFrameSeekTask could use these version instead of
-  // StateObject::{Audio,Video}Queue().
-  MediaQueue<MediaData>& AudioQueue() const { return mMaster->mAudioQueue; }
-  MediaQueue<MediaData>& VideoQueue() const { return mMaster->mVideoQueue; }
+  void DoSeekInternal()
+  {
+    auto currentTime = mCurrentTime;
+    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
+      return aSampleTime <= currentTime;
+    });
+
+    if (!IsVideoRequestPending() && NeedMoreVideo()) {
+      RequestVideoData();
+    }
+
+    MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
+  }
 
   class AysncNextFrameSeekTask : public Runnable
   {
@@ -1299,43 +1293,19 @@ private:
     {
     }
 
-    ~AysncNextFrameSeekTask() {}
+    void Cancel() { mStateObj = nullptr; }
 
-    void Cancel() { mIsCancelled = true; }
-
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() override
     {
-      if (!mIsCancelled) {
-        auto currentTime = mStateObj->mCurrentTime;
-        DiscardFrames(mStateObj->VideoQueue(), [currentTime] (int64_t aSampleTime) {
-          return aSampleTime <= currentTime;
-        });
-
-        if (!mStateObj->IsVideoRequestPending() && mStateObj->NeedMoreVideo()) {
-          mStateObj->RequestVideoData();
-        }
-
-        mStateObj->MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
+      if (mStateObj) {
+        mStateObj->DoSeekInternal();
       }
-
       return NS_OK;
     }
 
   private:
-    bool mIsCancelled = false;
     NextFrameSeekingState* mStateObj;
   };
-
-  void CreateSeekTask() override
-  {
-    mCurrentTime = mMaster->GetMediaTime();
-    mDuration = mMaster->Duration();
-  }
-
-  void ResetMDSM() override
-  {
-    // Do nothing.
-  }
 
   void DoSeek() override
   {
@@ -1358,15 +1328,7 @@ private:
   {
     MOZ_ASSERT(aAudio);
     MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-
-    // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
-    // resolved.
-
-    SSAMPLELOG("OnAudioDecoded [%lld,%lld]", aAudio->mTime, aAudio->GetEndTime());
-
-    // We accept any audio data here.
-    mSeekedAudioData = aAudio;
-
+    mMaster->Push(aAudio);
     MaybeFinishSeek();
   }
 
@@ -1375,13 +1337,8 @@ private:
     MOZ_ASSERT(aVideo);
     MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
 
-    // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
-    // resolved.
-
-    SSAMPLELOG("OnVideoDecoded [%lld,%lld]", aVideo->mTime, aVideo->GetEndTime());
-
     if (aVideo->mTime > mCurrentTime) {
-      mSeekedVideoData = aVideo;
+      mMaster->Push(aVideo);
     }
 
     if (NeedMoreVideo()) {
@@ -1399,8 +1356,6 @@ private:
     switch (aType) {
     case MediaData::AUDIO_DATA:
     {
-      SSAMPLELOG("OnAudioNotDecoded (aError=%u)", aError.Code());
-
       // We don't really handle audio deocde error here. Let MDSM to trigger further
       // audio decoding tasks if it needs to play audio, and MDSM will then receive
       // the decoding state from MediaDecoderReader.
@@ -1410,10 +1365,8 @@ private:
     }
     case MediaData::VIDEO_DATA:
     {
-      SSAMPLELOG("OnVideoNotDecoded (aError=%u)", aError.Code());
-
       if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-        mIsVideoQueueFinished = true;
+        VideoQueue().Finish();
       }
 
       // Video seek not finished.
@@ -1429,8 +1382,8 @@ private:
             MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
             break;
           default:
-            // Reject the promise since we can't finish video seek anyway.
-            OnSeekTaskRejected(aError);
+            // Raise an error since we can't finish video seek anyway.
+            mMaster->DecodeError(aError);
             break;
         }
         return;
@@ -1479,8 +1432,8 @@ private:
     case MediaData::VIDEO_DATA:
     {
       if (NeedMoreVideo()) {
-        // Reject if we can't finish video seeking.
-        OnSeekTaskRejected(NS_ERROR_DOM_MEDIA_CANCELED);
+        // Error out if we can't finish video seeking.
+        mMaster->DecodeError(NS_ERROR_DOM_MEDIA_CANCELED);
         return;
       }
       MaybeFinishSeek();
@@ -1498,44 +1451,6 @@ private:
     return mSeekJob.mTarget->GetTime().ToMicroseconds();
   }
 
-  void OnSeekTaskResolved()
-  {
-    if (mSeekedAudioData) {
-      mMaster->Push(mSeekedAudioData);
-      mMaster->mDecodedAudioEndTime = std::max(
-        mSeekedAudioData->GetEndTime(), mMaster->mDecodedAudioEndTime);
-    }
-
-    if (mSeekedVideoData) {
-      mMaster->Push(mSeekedVideoData);
-      mMaster->mDecodedVideoEndTime = std::max(
-        mSeekedVideoData->GetEndTime(), mMaster->mDecodedVideoEndTime);
-    }
-
-    if (mIsAudioQueueFinished) {
-      AudioQueue().Finish();
-    }
-
-    if (mIsVideoQueueFinished) {
-      VideoQueue().Finish();
-    }
-
-    SeekCompleted();
-  }
-
-  void OnSeekTaskRejected(MediaResult aError)
-  {
-    if (mIsAudioQueueFinished) {
-      AudioQueue().Finish();
-    }
-
-    if (mIsVideoQueueFinished) {
-      VideoQueue().Finish();
-    }
-
-    mMaster->DecodeError(aError);
-  }
-
   void RequestVideoData()
   {
     Reader()->RequestVideoData(false, media::TimeUnit());
@@ -1545,9 +1460,7 @@ private:
   {
     // Need to request video when we have none and video queue is not finished.
     return VideoQueue().GetSize() == 0 &&
-           !mSeekedVideoData &&
-           !VideoQueue().IsFinished() &&
-           !mIsVideoQueueFinished;
+           !VideoQueue().IsFinished();
   }
 
   bool IsVideoRequestPending() const
@@ -1576,9 +1489,7 @@ private:
     RefPtr<MediaData> data = VideoQueue().PeekFront();
     if (data) {
       mSeekJob.mTarget->SetTime(TimeUnit::FromMicroseconds(data->mTime));
-    } else if (mSeekedVideoData) {
-      mSeekJob.mTarget->SetTime(TimeUnit::FromMicroseconds(mSeekedVideoData->mTime));
-    } else if (mIsVideoQueueFinished || VideoQueue().AtEndOfStream()) {
+    } else if (VideoQueue().AtEndOfStream()) {
       mSeekJob.mTarget->SetTime(mDuration);
     } else {
       MOZ_ASSERT(false, "No data!");
@@ -1595,7 +1506,7 @@ private:
         return aSampleTime < time;
       });
 
-      OnSeekTaskResolved();
+      SeekCompleted();
     }
   }
 
@@ -1605,14 +1516,6 @@ private:
   int64_t mCurrentTime;
   media::TimeUnit mDuration;
   RefPtr<AysncNextFrameSeekTask> mAsyncSeekTask;
-
-  /*
-   * Information which are going to be returned to MDSM.
-   */
-  RefPtr<MediaData> mSeekedAudioData;
-  RefPtr<MediaData> mSeekedVideoData;
-  bool mIsAudioQueueFinished = false;
-  bool mIsVideoQueueFinished = false;
 };
 
 /**

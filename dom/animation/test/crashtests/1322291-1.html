@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+document.addEventListener("DOMContentLoaded", boom);
+function boom(){
+  let o1 = (function(){
+    let e=document.createElement("frameset");
+    document.documentElement.appendChild(e);
+    return e;
+  })();
+  let a1 = o1.animate({ "transform": "rotate3d(22,73,26,374grad)" },
+                      { duration: 10, delay: 100 });
+
+  // We need to wait the end of the delay to ensure that the animation is
+  // composited on the compositor, but there is no event for script animation
+  // that fires after the delay phase finished. So we wait for finished promise
+  // instead.
+  a1.finished.then(function() {
+    document.documentElement.className = "";
+  });
+}
+</script>
+</body>
+</html>
