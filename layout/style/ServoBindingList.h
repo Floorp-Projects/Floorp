@@ -39,14 +39,15 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
-                   RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet)
+                   RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet, bool flush)
 SERVO_BINDING_FUNC(Servo_StyleSet_PrependStyleSheet, void,
-                   RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet)
+                   RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet, bool flush)
 SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
-                   RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet)
+                   RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet, bool flush)
 SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet,
-                   RawServoStyleSheetBorrowed reference)
+                   RawServoStyleSheetBorrowed reference, bool flush)
+SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
                    RawServoStyleSetBorrowed set)
 
