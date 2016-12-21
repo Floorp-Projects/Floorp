@@ -112,20 +112,22 @@ class OperandLocation
         data_.constant = v;
     }
 
-    bool aliasesReg(Register reg) {
+    bool aliasesReg(Register reg) const {
         if (kind_ == PayloadReg)
             return payloadReg() == reg;
         if (kind_ == ValueReg)
             return valueReg().aliases(reg);
         return false;
     }
-    bool aliasesReg(ValueOperand reg) {
+    bool aliasesReg(ValueOperand reg) const {
 #if defined(JS_NUNBOX32)
         return aliasesReg(reg.typeReg()) || aliasesReg(reg.payloadReg());
 #else
         return aliasesReg(reg.valueReg());
 #endif
     }
+
+    bool aliasesReg(const OperandLocation& other) const;
 
     bool operator==(const OperandLocation& other) const;
     bool operator!=(const OperandLocation& other) const { return !operator==(other); }
@@ -162,6 +164,11 @@ class MOZ_RAII CacheRegisterAllocator
     CacheRegisterAllocator& operator=(const CacheRegisterAllocator&) = delete;
 
     void freeDeadOperandRegisters();
+
+    void spillOperand(MacroAssembler& masm, OperandLocation* loc);
+
+    void popPayload(MacroAssembler& masm, OperandLocation* loc, Register dest);
+    void popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest);
 
   public:
     friend class AutoScratchRegister;
