@@ -125,14 +125,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "listAbbr"},
             {"string": "cellInfoAbbr", "args": [ 1, 1]}]]
         }, {
-          accOrElmOrID: "date",
-          expectedUtterance: [[{"string": "textInputType_date"},
-            {"string": "entry"}, "2011-09-29"], ["2011-09-29",
-            {"string": "textInputType_date"}, {"string": "entry"}]],
-          expectedBraille: [[{"string": "textInputType_date"},
-            {"string": "entryAbbr"}, "2011-09-29"], ["2011-09-29",
-            {"string": "textInputType_date"}, {"string": "entryAbbr"}]]
-        }, {
           accOrElmOrID: "email",
           expectedUtterance: [[{"string": "textInputType_email"},
             {"string": "entry"}, "test@example.com"], ["test@example.com",
@@ -619,7 +611,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <label for="password">Secret Password</label><input id="password" type="password"></input>
       <label for="radio_unselected">any old radio button</label><input id="radio_unselected" type="radio"></input>
       <label for="radio_selected">a unique radio button</label><input id="radio_selected" type="radio" checked></input>
-      <input id="date" type="date" value="2011-09-29" />
       <input id="email" type="email" value="test@example.com" />
       <input id="search" type="search" value="This is a search" />
       <input id="tel" type="tel" value="555-5555" />

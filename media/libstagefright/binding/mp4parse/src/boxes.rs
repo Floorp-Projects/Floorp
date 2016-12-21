@@ -60,4 +60,8 @@ box_database!(
     MovieExtendsHeaderBox             0x6d656864, // "mehd"
     QTWaveAtom                        0x77617665, // "wave" - quicktime atom
     ProtectionSystemSpecificHeaderBox 0x70737368, // "pssh"
+    SchemeInformationBox              0x73636869, // "schi"
+    TrackEncryptionBox                0x74656e63, // "tenc"
+    ProtectionSchemeInformationBox    0x73696e66, // "sinf"
+    OriginalFormatBox                 0x66726d61, // "frma"
 );

@@ -363,6 +363,54 @@ intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
 
+/******************** PluralRules ********************/
+
+/**
+ * Returns a new PluralRules instance.
+ * Self-hosted code cannot cache this constructor (as it does for others in
+ * Utilities.js) because it is initialized after self-hosted code is compiled.
+ *
+ * Usage: pluralRules = intl_PluralRules(locales, options)
+ */
+extern MOZ_MUST_USE bool
+intl_PluralRules(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * Returns an object indicating the supported locales for plural rules
+ * by having a true-valued property for each such locale with the
+ * canonicalized language tag as the property name. The object has no
+ * prototype.
+ *
+ * Usage: availableLocales = intl_PluralRules_availableLocales()
+ */
+extern MOZ_MUST_USE bool
+intl_PluralRules_availableLocales(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * Returns a plural rule for the number x according to the effective
+ * locale and the formatting options of the given PluralRules.
+ *
+ * A plural rule is a grammatical category that expresses count distinctions
+ * (such as "one", "two", "few" etc.).
+ *
+ * Usage: rule = intl_SelectPluralRule(pluralRules, x)
+ */
+extern MOZ_MUST_USE bool
+intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * Returns an array of plural rules categories for a given
+ * locale and type.
+ *
+ * Usage: categories = intl_GetPluralCategories(locale, type)
+ *
+ * Example:
+ *
+ * intl_getPluralCategories('pl', 'cardinal'); // ['one', 'few', 'many', 'other']
+ */
+extern MOZ_MUST_USE bool
+intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp);
+
 /**
  * Returns a plain object with calendar information for a single valid locale
  * (callers must perform this validation).  The object will have these

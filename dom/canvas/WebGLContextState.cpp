@@ -386,12 +386,15 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_BLEND_DST_RGB:
         case LOCAL_GL_BLEND_DST_ALPHA:
         case LOCAL_GL_BLEND_EQUATION_RGB:
-        case LOCAL_GL_BLEND_EQUATION_ALPHA:
-        case LOCAL_GL_GENERATE_MIPMAP_HINT: {
+        case LOCAL_GL_BLEND_EQUATION_ALPHA: {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
             return JS::NumberValue(uint32_t(i));
         }
+
+        case LOCAL_GL_GENERATE_MIPMAP_HINT:
+            return JS::NumberValue(mGenerateMipmapHint);
+
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
             const webgl::FormatUsageInfo* usage;
             uint32_t width, height;
@@ -399,12 +402,14 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
                 return JS::NullValue();
 
             GLint i = 0;
-            if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+            if (gl->IsGLES()) {
+                // ES2_compatibility always returns UNSIGNED_BYTE here, so
+                // branch on actual IsGLES().
+                // Also OSX+NV generates an error here.
                 gl->fGetIntegerv(pname, &i);
             } else {
                 i = LOCAL_GL_UNSIGNED_BYTE;
             }
-
             return JS::NumberValue(uint32_t(i));
         }
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT: {
@@ -414,7 +419,10 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
                 return JS::NullValue();
 
             GLint i = 0;
-            if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+            if (gl->IsGLES()) {
+                // ES2_compatibility always returns UNSIGNED_BYTE here, so
+                // branch on actual IsGLES().
+                // Also OSX+NV generates an error here.
                 gl->fGetIntegerv(pname, &i);
             } else {
                 i = LOCAL_GL_RGBA;

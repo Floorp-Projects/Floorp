@@ -188,14 +188,10 @@ KeyboardEvent::CharCode()
   }
 
   switch (mEvent->mMessage) {
-  case eBeforeKeyDown:
   case eKeyDown:
   case eKeyDownOnPlugin:
-  case eAfterKeyDown:
-  case eBeforeKeyUp:
   case eKeyUp:
   case eKeyUpOnPlugin:
-  case eAfterKeyUp:
     return 0;
   case eKeyPress:
   case eAccessKeyNotFound:
@@ -237,14 +233,10 @@ KeyboardEvent::Which()
   }
 
   switch (mEvent->mMessage) {
-    case eBeforeKeyDown:
     case eKeyDown:
     case eKeyDownOnPlugin:
-    case eAfterKeyDown:
-    case eBeforeKeyUp:
     case eKeyUp:
     case eKeyUpOnPlugin:
-    case eAfterKeyUp:
       return KeyCode();
     case eKeyPress:
       //Special case for 4xp bug 62878.  Try to make value of which

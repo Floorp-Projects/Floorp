@@ -18,7 +18,6 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Telemetry = require("devtools/client/shared/telemetry");
 const { gDevTools } = require("./devtools");
-const { when: unload } = require("sdk/system/unload");
 
 // Load target and toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
@@ -140,6 +139,16 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
           for (let win of this._trackedBrowserWindows) {
             this.updateCommandAvailability(win);
           }
+        }
+        break;
+      case "quit-application":
+        gDevToolsBrowser.destroy({ shuttingDown: true });
+        break;
+      case "sdk:loader:destroy":
+        // This event is fired when the devtools loader unloads, which happens
+        // only when the add-on workflow ask devtools to be reloaded.
+        if (subject.wrappedJSObject == require('@loader/unload')) {
+          gDevToolsBrowser.destroy({ shuttingDown: false });
         }
         break;
     }
@@ -730,12 +739,19 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * All browser windows have been closed, tidy up remaining objects.
+   * Either the SDK Loader has been destroyed by the add-on contribution
+   * workflow, or firefox is shutting down.
+
+   * @param {boolean} shuttingDown
+   *        True if firefox is currently shutting down. We may prevent doing
+   *        some cleanups to speed it up. Otherwise everything need to be
+   *        cleaned up in order to be able to load devtools again.
    */
-  destroy: function () {
+  destroy: function ({ shuttingDown }) {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
-    Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
+    Services.obs.removeObserver(gDevToolsBrowser, "quit-application");
+    Services.obs.removeObserver(gDevToolsBrowser, "sdk:loader:destroy");
 
     gDevToolsBrowser._pingTelemetry();
     gDevToolsBrowser._telemetry = null;
@@ -743,6 +759,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
       gDevToolsBrowser._forgetBrowserWindow(win);
     }
+
+    gDevTools.destroy({ shuttingDown });
   },
 };
 
@@ -766,8 +784,10 @@ gDevTools.on("tool-unregistered", function (ev, toolId) {
 gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);
 gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
-Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
+Services.obs.addObserver(gDevToolsBrowser, "quit-application", false);
 Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", false);
+// Watch for module loader unload. Fires when the tools are reloaded.
+Services.obs.addObserver(gDevToolsBrowser, "sdk:loader:destroy", false);
 
 // Fake end of browser window load event for all already opened windows
 // that is already fully loaded.
@@ -778,8 +798,3 @@ while (enumerator.hasMoreElements()) {
     gDevToolsBrowser._registerBrowserWindow(win);
   }
 }
-
-// Watch for module loader unload. Fires when the tools are reloaded.
-unload(function () {
-  gDevToolsBrowser.destroy();
-});

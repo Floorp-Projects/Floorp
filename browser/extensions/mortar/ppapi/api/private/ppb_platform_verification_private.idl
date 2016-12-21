@@ -1,0 +1,85 @@
+/* Copyright 2013 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/**
+ * This file defines the API for platform verification. Currently, it only
+ * supports Chrome OS.
+ */
+
+[generate_thunk]
+
+label Chrome {
+  M32 = 0.2
+};
+
+/**
+ * The <code>PPB_PlatformVerification_Private</code> interface allows authorized
+ * services to verify that the underlying platform is trusted. An example of a
+ * trusted platform is a Chrome OS device in verified boot mode.
+ */
+
+interface PPB_PlatformVerification_Private {
+  /**
+   * Create() creates a <code>PPB_PlatformVerification_Private</code> object.
+   *
+   * @pram[in] instance A <code>PP_Instance</code> identifying one instance of
+   * a module.
+   *
+   * @return A <code>PP_Resource</code> corresponding to a
+   * <code>PPB_PlatformVerification_Private</code> if successful, 0 if creation
+   * failed.
+   */
+  PP_Resource Create([in] PP_Instance instance);
+
+  /**
+   * IsPlatformVerification() determines if the provided resource is a
+   * <code>PPB_PlatformVerification_Private</code>.
+   *
+   * @param[in] resource A <code>PP_Resource</code> corresponding to a
+   * <code>PPB_PlatformVerification_Private</code>.
+   *
+   * @return <code>PP_TRUE</code> if the resource is a
+   * <code>PPB_PlatformVerification_Private</code>, <code>PP_FALSE</code> if the
+   * resource is invalid or some type other than
+   * <code>PPB_PlatformVerification_Private</code>.
+   */
+  PP_Bool IsPlatformVerification([in] PP_Resource resource);
+
+  /**
+   * Requests a platform challenge for a given service id.
+   *
+   * @param[in] service_id A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> containing the service_id for the challenge.
+   *
+   * @param[in] challenge A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_ARRAY_BUFFER</code> that contains the challenge data.
+   *
+   * @param[out] signed_data A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_ARRAY_BUFFER</code> that contains the data signed by the
+   * platform.
+   *
+   * @param[out] signed_data_signature A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_ARRAY_BUFFER</code> that contains the signature of the
+   * signed data block.
+   *
+   * @param[out] platform_key_certificate A <code>PP_Var</code> of type
+   * <code>PP_VARTYPE_STRING</code> that contains the device specific
+   * certificate for the requested service_id.
+   *
+   * @param[in] callback A <code>PP_CompletionCallback</code> to be called after
+   * the platform challenge has been completed. This callback will only run if
+   * the return code is <code>PP_OK_COMPLETIONPENDING</code>.
+   *
+   * @return An int32_t containing an error code from <code>pp_errors.h</code>.
+   */
+  int32_t ChallengePlatform(
+      [in] PP_Resource instance,
+      [in] PP_Var service_id,
+      [in] PP_Var challenge,
+      [out] PP_Var signed_data,
+      [out] PP_Var signed_data_signature,
+      [out] PP_Var platform_key_certificate,
+      [in] PP_CompletionCallback callback);
+};

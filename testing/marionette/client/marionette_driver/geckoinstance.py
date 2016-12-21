@@ -32,9 +32,6 @@ class GeckoInstance(object):
         # Do not show datareporting policy notifications which can interfer with tests
         "datareporting.policy.dataSubmissionPolicyBypassNotification": True,
 
-        # Until Bug 1238095 is fixed, we have to enable CPOWs in order
-        # for Marionette tests to work properly.
-        "dom.ipc.cpows.forbid-unsafe-from-browser": False,
         "dom.ipc.reportProcessHangs": False,
 
         # No slow script dialogs
