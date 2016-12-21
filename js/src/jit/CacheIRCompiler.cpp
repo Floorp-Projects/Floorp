@@ -24,19 +24,8 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
         return loc.valueReg();
 
       case OperandLocation::ValueStack: {
-        // The Value is on the stack. If it's on top of the stack, unbox and
-        // then pop it. If we need the registers later, we can always spill
-        // back. If it's not on the top of the stack, just unbox.
         ValueOperand reg = allocateValueRegister(masm);
-        if (loc.valueStack() == stackPushed_) {
-            masm.popValue(reg);
-            MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
-            stackPushed_ -= sizeof(js::Value);
-        } else {
-            MOZ_ASSERT(loc.valueStack() < stackPushed_);
-            masm.loadValue(Address(masm.getStackPointer(), stackPushed_ - loc.valueStack()), reg);
-        }
-        loc.setValueReg(reg);
+        popValue(masm, &loc, reg);
         return reg;
       }
 
@@ -80,18 +69,8 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
       }
 
       case OperandLocation::PayloadStack: {
-        // The payload is on the stack. If it's on top of the stack we can just
-        // pop it, else we emit a load.
         Register reg = allocateRegister(masm);
-        if (loc.payloadStack() == stackPushed_) {
-            masm.pop(reg);
-            MOZ_ASSERT(stackPushed_ >= sizeof(uintptr_t));
-            stackPushed_ -= sizeof(uintptr_t);
-        } else {
-            MOZ_ASSERT(loc.payloadStack() < stackPushed_);
-            masm.loadPtr(Address(masm.getStackPointer(), stackPushed_ - loc.payloadStack()), reg);
-        }
-        loc.setPayloadReg(reg, loc.payloadType());
+        popPayload(masm, &loc, reg);
         return reg;
       }
 
@@ -214,9 +193,7 @@ CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
                 if (currentOpRegs_.has(reg))
                     continue;
 
-                masm.push(reg);
-                stackPushed_ += sizeof(uintptr_t);
-                loc.setPayloadStack(stackPushed_, loc.payloadType());
+                spillOperand(masm, &loc);
                 availableRegs_.add(reg);
                 break; // We got a register, so break out of the loop.
             }
@@ -225,9 +202,7 @@ CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
                 if (currentOpRegs_.aliases(reg))
                     continue;
 
-                masm.pushValue(reg);
-                stackPushed_ += sizeof(js::Value);
-                loc.setValueStack(stackPushed_);
+                spillOperand(masm, &loc);
                 availableRegs_.add(reg);
                 break; // Break out of the loop.
             }
@@ -266,9 +241,7 @@ CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg
             if (loc.payloadReg() != reg)
                 continue;
 
-            masm.push(reg);
-            stackPushed_ += sizeof(uintptr_t);
-            loc.setPayloadStack(stackPushed_, loc.payloadType());
+            spillOperand(masm, &loc);
             currentOpRegs_.add(reg);
             return;
         }
@@ -276,10 +249,10 @@ CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg
             if (!loc.valueReg().aliases(reg))
                 continue;
 
-            masm.pushValue(loc.valueReg());
-            stackPushed_ += sizeof(js::Value);
-            loc.setValueStack(stackPushed_);
-            availableRegs_.add(loc.valueReg());
+            ValueOperand valueReg = loc.valueReg();
+            spillOperand(masm, &loc);
+
+            availableRegs_.add(valueReg);
             availableRegs_.take(reg);
             currentOpRegs_.add(reg);
             return;
@@ -340,6 +313,84 @@ CacheRegisterAllocator::knownType(ValOperandId val) const
 }
 
 void
+CacheRegisterAllocator::spillOperand(MacroAssembler& masm, OperandLocation* loc)
+{
+    MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
+
+    if (loc->kind() == OperandLocation::ValueReg) {
+        stackPushed_ += sizeof(js::Value);
+        masm.pushValue(loc->valueReg());
+        loc->setValueStack(stackPushed_);
+        return;
+    }
+
+    MOZ_ASSERT(loc->kind() == OperandLocation::PayloadReg);
+
+    stackPushed_ += sizeof(uintptr_t);
+    masm.push(loc->payloadReg());
+    loc->setPayloadStack(stackPushed_, loc->payloadType());
+}
+
+void
+CacheRegisterAllocator::popPayload(MacroAssembler& masm, OperandLocation* loc, Register dest)
+{
+    MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
+    MOZ_ASSERT(stackPushed_ >= sizeof(uintptr_t));
+
+    // The payload is on the stack. If it's on top of the stack we can just
+    // pop it, else we emit a load.
+    if (loc->payloadStack() == stackPushed_) {
+        masm.pop(dest);
+        stackPushed_ -= sizeof(uintptr_t);
+    } else {
+        MOZ_ASSERT(loc->payloadStack() < stackPushed_);
+        masm.loadPtr(Address(masm.getStackPointer(), stackPushed_ - loc->payloadStack()), dest);
+    }
+
+    loc->setPayloadReg(dest, loc->payloadType());
+}
+
+void
+CacheRegisterAllocator::popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest)
+{
+    MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
+    MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
+
+    // The Value is on the stack. If it's on top of the stack we can just
+    // pop it, else we emit a load.
+    if (loc->valueStack() == stackPushed_) {
+        masm.popValue(dest);
+        stackPushed_ -= sizeof(js::Value);
+    } else {
+        MOZ_ASSERT(loc->valueStack() < stackPushed_);
+        masm.loadValue(Address(masm.getStackPointer(), stackPushed_ - loc->valueStack()), dest);
+    }
+
+    loc->setValueReg(dest);
+}
+
+bool
+OperandLocation::aliasesReg(const OperandLocation& other) const
+{
+    MOZ_ASSERT(&other != this);
+
+    switch (other.kind_) {
+      case PayloadReg:
+        return aliasesReg(other.payloadReg());
+      case ValueReg:
+        return aliasesReg(other.valueReg());
+      case PayloadStack:
+      case ValueStack:
+      case Constant:
+        return false;
+      case Uninitialized:
+        break;
+    }
+
+    MOZ_CRASH("Invalid kind");
+}
+
+void
 CacheRegisterAllocator::restoreInputState(MacroAssembler& masm)
 {
     size_t numInputOperands = origInputLocations_.length();
@@ -355,30 +406,9 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm)
         // as source register. If that happens, just push the current value
         // on the stack and later get it from there.
         for (size_t k = j + 1; k < numInputOperands; k++) {
-            OperandLocation laterSource = operandLocation(k);
-            switch (laterSource.kind()) {
-              case OperandLocation::ValueReg:
-                if (orig.aliasesReg(laterSource.valueReg())) {
-                    stackPushed_ += sizeof(js::Value);
-                    masm.pushValue(laterSource.valueReg());
-                    laterSource.setValueStack(stackPushed_);
-                }
-                continue;
-              case OperandLocation::PayloadReg:
-                if (orig.aliasesReg(laterSource.payloadReg())) {
-                    stackPushed_ += sizeof(uintptr_t);
-                    masm.push(laterSource.payloadReg());
-                    laterSource.setPayloadStack(stackPushed_, laterSource.payloadType());
-                }
-                continue;
-              case OperandLocation::PayloadStack:
-              case OperandLocation::ValueStack:
-              case OperandLocation::Constant:
-                continue;
-              case OperandLocation::Uninitialized:
-                break;
-            }
-            MOZ_CRASH("Invalid kind");
+            OperandLocation& laterSource = operandLocations_[k];
+            if (orig.aliasesReg(laterSource))
+                spillOperand(masm, &laterSource);
         }
 
         switch (cur.kind()) {
