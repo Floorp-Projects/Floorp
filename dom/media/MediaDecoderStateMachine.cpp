@@ -579,13 +579,15 @@ public:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    mMaster->Push(aAudio);
+    mMaster->PushAudio(aAudio);
+    mMaster->DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
-    mMaster->Push(aVideo);
+    mMaster->PushVideo(aVideo);
+    mMaster->DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
     CheckSlowDecoding(aDecodeStart);
   }
