@@ -180,11 +180,6 @@ LazyIdleThread::EnsureThread()
 void
 LazyIdleThread::InitThread()
 {
-  char aLocal;
-  profiler_register_thread(mName.get(), &aLocal);
-
-  PR_SetCurrentThreadName(mName.get());
-
   // Happens on mThread but mThread may not be set yet...
 
   nsCOMPtr<nsIThreadInternal> thread(do_QueryInterface(NS_GetCurrentThread()));
@@ -211,8 +206,6 @@ LazyIdleThread::CleanupThread()
     MOZ_ASSERT(!mThreadIsShuttingDown, "Shouldn't be true ever!");
     mThreadIsShuttingDown = true;
   }
-
-  profiler_unregister_thread();
 }
 
 void
