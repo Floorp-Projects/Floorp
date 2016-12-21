@@ -64,7 +64,7 @@ ToHexString(const uint8_t * aBytes, uint32_t aLength)
   nsCString str;
   for (uint32_t i = 0; i < aLength; i++) {
     char buf[3];
-    buf[0] = hex[aBytes[i] & 0xf0 >> 4];
+    buf[0] = hex[(aBytes[i] & 0xf0) >> 4];
     buf[1] = hex[aBytes[i] & 0x0f];
     buf[2] = 0;
     str.AppendASCII(buf);
