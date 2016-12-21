@@ -8,7 +8,7 @@
 #include "CompositableHost.h"
 #include "GLContext.h"                  // for GLContext
 #include "GLUploadHelpers.h"
-#include "mozilla/layers/CompositorVsyncScheduler.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/TextureHost.h"  // for TextureSource, etc
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureSourceOGL, etc
 
@@ -19,8 +19,10 @@ using namespace gl;
 
 namespace layers {
 
-WebRenderCompositorOGL::WebRenderCompositorOGL(GLContext* aGLContext)
+WebRenderCompositorOGL::WebRenderCompositorOGL(CompositorBridgeParent* aCompositorBridge,
+                                               GLContext* aGLContext)
   : Compositor(nullptr, nullptr)
+  , mCompositorBridge(aCompositorBridge)
   , mGLContext(aGLContext)
   , mDestroyed(false)
 {
@@ -39,7 +41,7 @@ WebRenderCompositorOGL::Destroy()
   Compositor::Destroy();
 
   mCompositableHosts.Clear();
-  mCompositorScheduler = nullptr;
+  mCompositorBridge = nullptr;
 
   if (!mDestroyed) {
     mDestroyed = true;
@@ -142,13 +144,8 @@ WebRenderCompositorOGL::UpdateExternalImages()
 void
 WebRenderCompositorOGL::ScheduleComposition()
 {
-  mCompositorScheduler->ScheduleComposition();
-}
-
-void
-WebRenderCompositorOGL::SetVsyncScheduler(CompositorVsyncScheduler* aScheduler)
-{
-  mCompositorScheduler = aScheduler;
+  MOZ_ASSERT(mCompositorBridge);
+  mCompositorBridge->ScheduleComposition();
 }
 
 } // namespace layers
