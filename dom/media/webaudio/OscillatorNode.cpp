@@ -15,14 +15,14 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(OscillatorNode, AudioNode,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(OscillatorNode, AudioScheduledSourceNode,
                                    mPeriodicWave, mFrequency, mDetune)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(OscillatorNode)
-NS_INTERFACE_MAP_END_INHERITING(AudioNode)
+NS_INTERFACE_MAP_END_INHERITING(AudioScheduledSourceNode)
 
-NS_IMPL_ADDREF_INHERITED(OscillatorNode, AudioNode)
-NS_IMPL_RELEASE_INHERITED(OscillatorNode, AudioNode)
+NS_IMPL_ADDREF_INHERITED(OscillatorNode, AudioScheduledSourceNode)
+NS_IMPL_RELEASE_INHERITED(OscillatorNode, AudioScheduledSourceNode)
 
 class OscillatorNodeEngine final : public AudioNodeEngine
 {
@@ -408,16 +408,18 @@ public:
 };
 
 OscillatorNode::OscillatorNode(AudioContext* aContext)
-  : AudioNode(aContext,
-              2,
-              ChannelCountMode::Max,
-              ChannelInterpretation::Speakers)
+  : AudioScheduledSourceNode(aContext,
+                             2,
+                             ChannelCountMode::Max,
+                             ChannelInterpretation::Speakers)
   , mType(OscillatorType::Sine)
-  , mFrequency(new AudioParam(this, OscillatorNodeEngine::FREQUENCY,
-                              440.0f, "frequency"))
-  , mDetune(new AudioParam(this, OscillatorNodeEngine::DETUNE, 0.0f, "detune"))
+  , mFrequency(
+    new AudioParam(this, OscillatorNodeEngine::FREQUENCY, "frequency", 440.0f,
+                   -(aContext->SampleRate() / 2), aContext->SampleRate() / 2))
+  , mDetune(new AudioParam(this, OscillatorNodeEngine::DETUNE, "detune", 0.0f))
   , mStartCalled(false)
 {
+
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NEED_MAIN_THREAD_FINISHED,

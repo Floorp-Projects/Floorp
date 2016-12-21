@@ -244,11 +244,6 @@ if CONFIG['MOZ_ALSA']:
 if CONFIG['HAVE_CLOCK_MONOTONIC']:
     OS_LIBS += CONFIG['REALTIME_LIBS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    OS_LIBS += [
-        'GLESv2',
-    ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     OS_LIBS += [
         'ui',

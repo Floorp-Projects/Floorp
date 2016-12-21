@@ -11553,10 +11553,10 @@ static const nsCSSPropertyID kBorderRadiusIDs[] = {
   eCSSProperty_border_bottom_left_radius
 };
 static const nsCSSPropertyID kOutlineRadiusIDs[] = {
-  eCSSProperty__moz_outline_radius_topLeft,
-  eCSSProperty__moz_outline_radius_topRight,
-  eCSSProperty__moz_outline_radius_bottomRight,
-  eCSSProperty__moz_outline_radius_bottomLeft
+  eCSSProperty__moz_outline_radius_topleft,
+  eCSSProperty__moz_outline_radius_topright,
+  eCSSProperty__moz_outline_radius_bottomright,
+  eCSSProperty__moz_outline_radius_bottomleft
 };
 
 void
@@ -11835,10 +11835,10 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
     return ParseBorderSide(kBorderRightIDs, false);
   case eCSSProperty_border_top:
     return ParseBorderSide(kBorderTopIDs, false);
-  case eCSSProperty_border_bottom_colors:
-  case eCSSProperty_border_left_colors:
-  case eCSSProperty_border_right_colors:
-  case eCSSProperty_border_top_colors:
+  case eCSSProperty__moz_border_bottom_colors:
+  case eCSSProperty__moz_border_left_colors:
+  case eCSSProperty__moz_border_right_colors:
+  case eCSSProperty__moz_border_top_colors:
     return ParseBorderColors(aPropID);
   case eCSSProperty_border_image_slice:
     return ParseBorderImageSlice(true, nullptr);
@@ -11861,10 +11861,10 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
   case eCSSProperty_border_top_right_radius:
   case eCSSProperty_border_bottom_right_radius:
   case eCSSProperty_border_bottom_left_radius:
-  case eCSSProperty__moz_outline_radius_topLeft:
-  case eCSSProperty__moz_outline_radius_topRight:
-  case eCSSProperty__moz_outline_radius_bottomRight:
-  case eCSSProperty__moz_outline_radius_bottomLeft:
+  case eCSSProperty__moz_outline_radius_topleft:
+  case eCSSProperty__moz_outline_radius_topright:
+  case eCSSProperty__moz_outline_radius_bottomright:
+  case eCSSProperty__moz_outline_radius_bottomleft:
     return ParseBoxCornerRadius(aPropID);
 
   case eCSSProperty_box_shadow:
@@ -11923,8 +11923,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
     return ParseGridArea();
   case eCSSProperty_grid_gap:
     return ParseGridGap();
-  case eCSSProperty_image_region:
-    return ParseRect(eCSSProperty_image_region);
+  case eCSSProperty__moz_image_region:
+    return ParseRect(eCSSProperty__moz_image_region);
   case eCSSProperty_align_content:
   case eCSSProperty_justify_content:
     return ParseAlignJustifyContent(aPropID);
@@ -13637,10 +13637,10 @@ CSSParserImpl::ParseBorderSide(const nsCSSPropertyID aPropIDs[],
     }
 
     static const nsCSSPropertyID kBorderColorsProps[] = {
-      eCSSProperty_border_top_colors,
-      eCSSProperty_border_right_colors,
-      eCSSProperty_border_bottom_colors,
-      eCSSProperty_border_left_colors
+      eCSSProperty__moz_border_top_colors,
+      eCSSProperty__moz_border_right_colors,
+      eCSSProperty__moz_border_bottom_colors,
+      eCSSProperty__moz_border_left_colors
     };
 
     // Set the other properties that the border shorthand sets to their

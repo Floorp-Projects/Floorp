@@ -110,8 +110,8 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches)
   }
 
   // Compare their OriginAttributes
-  const mozilla::PrincipalOriginAttributes& theirAttrs = mozilla::BasePrincipal::Cast(principal)->OriginAttributesRef();
-  const mozilla::PrincipalOriginAttributes& ourAttrs = mozilla::BasePrincipal::Cast(mPrincipal)->OriginAttributesRef();
+  const mozilla::PrincipalOriginAttributes& theirAttrs = principal->OriginAttributesRef();
+  const mozilla::PrincipalOriginAttributes& ourAttrs = mPrincipal->OriginAttributesRef();
 
   if (theirAttrs != ourAttrs) {
       return NS_OK;

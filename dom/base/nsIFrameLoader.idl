@@ -171,6 +171,11 @@ interface nsIFrameLoader : nsISupports
              in nsIWebProgressListener aProgressListener);
 
   /**
+   * Ensure that the current nsIFrameLoader has a GroupedSHistory.
+   */
+  nsIGroupedSHistory ensureGroupedSHistory();
+
+  /**
    * The default event mode automatically forwards the events
    * handled in EventStateManager::HandleCrossProcessEvent to
    * the child content process when these events are targeted to

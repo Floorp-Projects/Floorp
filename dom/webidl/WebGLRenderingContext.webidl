@@ -102,10 +102,12 @@ interface WebGLShaderPrecisionFormat {
 typedef (Float32Array or sequence<GLfloat>) Float32List;
 typedef (Int32Array or sequence<GLint>) Int32List;
 
-[Exposed=(Window,Worker),
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
-interface WebGLRenderingContext {
-
+// Shared interface for the things that WebGLRenderingContext and
+// WebGL2RenderingContext have in common.  This doesn't have all the things they
+// have in common, because we don't support splitting multiple overloads of the
+// same method across separate interfaces and pulling them in with "implements".
+[Exposed=(Window, Worker), NoInterfaceObject]
+interface WebGLRenderingContextBase {
     /* ClearBufferMask */
     const GLenum DEPTH_BUFFER_BIT               = 0x00000100;
     const GLenum STENCIL_BUFFER_BIT             = 0x00000400;
@@ -553,12 +555,6 @@ interface WebGLRenderingContext {
     void blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
                            GLenum srcAlpha, GLenum dstAlpha);
 
-    void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
-    void bufferData(GLenum target, ArrayBuffer? data, GLenum usage);
-    void bufferData(GLenum target, ArrayBufferView data, GLenum usage);
-    void bufferSubData(GLenum target, GLintptr offset, ArrayBuffer data);
-    void bufferSubData(GLenum target, GLintptr offset, ArrayBufferView data);
-
     [WebGLHandlesContextLoss] GLenum checkFramebufferStatus(GLenum target);
     void clear(GLbitfield mask);
     void clearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
@@ -566,14 +562,6 @@ interface WebGLRenderingContext {
     void clearStencil(GLint s);
     void colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
     void compileShader(WebGLShader shader);
-
-    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
-                              GLsizei width, GLsizei height, GLint border,
-                              ArrayBufferView data);
-    void compressedTexSubImage2D(GLenum target, GLint level,
-                                 GLint xoffset, GLint yoffset,
-                                 GLsizei width, GLsizei height, GLenum format,
-                                 ArrayBufferView data);
 
     void copyTexImage2D(GLenum target, GLint level, GLenum internalformat,
                         GLint x, GLint y, GLsizei width, GLsizei height,
@@ -674,10 +662,6 @@ interface WebGLRenderingContext {
     void pixelStorei(GLenum pname, GLint param);
     void polygonOffset(GLfloat factor, GLfloat units);
 
-    [Throws]
-    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                    GLenum format, GLenum type, ArrayBufferView? pixels);
-
     void renderbufferStorage(GLenum target, GLenum internalformat,
                              GLsizei width, GLsizei height);
     void sampleCoverage(GLclampf value, GLboolean invert);
@@ -692,44 +676,8 @@ interface WebGLRenderingContext {
     void stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
     void stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
 
-
-    // Overloads must share [Throws].
-    [Throws] // Can't actually throw.
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLsizei width, GLsizei height, GLint border, GLenum format,
-                    GLenum type, ArrayBufferView? pixels);
-    [Throws] // Can't actually throw.
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, ImageData pixels);
-    [Throws]
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
-    [Throws]
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
-    [Throws]
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
-
     void texParameterf(GLenum target, GLenum pname, GLfloat param);
     void texParameteri(GLenum target, GLenum pname, GLint param);
-
-    [Throws] // Can't actually throw.
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLsizei width, GLsizei height,
-                       GLenum format, GLenum type, ArrayBufferView? pixels);
-    [Throws] // Can't actually throw.
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, ImageData pixels);
-    [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
-    [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
-    [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
 
     void uniform1f(WebGLUniformLocation? location, GLfloat x);
     void uniform2f(WebGLUniformLocation? location, GLfloat x, GLfloat y);
@@ -740,20 +688,6 @@ interface WebGLRenderingContext {
     void uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
     void uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
     void uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
-
-    void uniform1fv(WebGLUniformLocation? location, Float32List data);
-    void uniform2fv(WebGLUniformLocation? location, Float32List data);
-    void uniform3fv(WebGLUniformLocation? location, Float32List data);
-    void uniform4fv(WebGLUniformLocation? location, Float32List data);
-
-    void uniform1iv(WebGLUniformLocation? location, Int32List data);
-    void uniform2iv(WebGLUniformLocation? location, Int32List data);
-    void uniform3iv(WebGLUniformLocation? location, Int32List data);
-    void uniform4iv(WebGLUniformLocation? location, Int32List data);
-
-    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
-    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
-    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
 
     void useProgram(WebGLProgram? program);
     void validateProgram(WebGLProgram program);
@@ -775,6 +709,99 @@ interface WebGLRenderingContext {
 
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 };
+
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
+interface WebGLRenderingContext {
+    // bufferData has WebGL2 overloads.
+    void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
+    void bufferData(GLenum target, ArrayBuffer? data, GLenum usage);
+    void bufferData(GLenum target, ArrayBufferView data, GLenum usage);
+    // bufferSubData has WebGL2 overloads.
+    void bufferSubData(GLenum target, GLintptr offset, ArrayBuffer data);
+    void bufferSubData(GLenum target, GLintptr offset, ArrayBufferView data);
+
+    // compressedTexImage2D has WebGL2 overloads.
+    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                              GLsizei width, GLsizei height, GLint border,
+                              ArrayBufferView data);
+    // compressedTexSubImage2D has WebGL2 overloads.
+    void compressedTexSubImage2D(GLenum target, GLint level,
+                                 GLint xoffset, GLint yoffset,
+                                 GLsizei width, GLsizei height, GLenum format,
+                                 ArrayBufferView data);
+
+    // readPixels has WebGL2 overloads.
+    [Throws]
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                    GLenum format, GLenum type, ArrayBufferView? pixels);
+
+    // texImage2D has WebGL2 overloads.
+    // Overloads must share [Throws].
+    [Throws] // Can't actually throw.
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLint border, GLenum format,
+                    GLenum type, ArrayBufferView? pixels);
+    [Throws] // Can't actually throw.
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, ImageBitmap pixels);
+    [Throws] // Can't actually throw.
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, ImageData pixels);
+    [Throws]
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
+    [Throws]
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
+    [Throws]
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
+
+    // texSubImage2D has WebGL2 overloads.
+    [Throws] // Can't actually throw.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height,
+                       GLenum format, GLenum type, ArrayBufferView? pixels);
+    [Throws] // Can't actually throw.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, ImageBitmap pixels);
+    [Throws] // Can't actually throw.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, ImageData pixels);
+    [Throws]
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
+    [Throws]
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
+    [Throws]
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
+
+    // uniform*fv have WebGL2 overloads, or rather extensions, that are not
+    // distinguishable from the WebGL1 versions when called with two arguments.
+    void uniform1fv(WebGLUniformLocation? location, Float32List data);
+    void uniform2fv(WebGLUniformLocation? location, Float32List data);
+    void uniform3fv(WebGLUniformLocation? location, Float32List data);
+    void uniform4fv(WebGLUniformLocation? location, Float32List data);
+
+    // uniform*iv have WebGL2 overloads, or rather extensions, that are not
+    // distinguishable from the WebGL1 versions when called with two arguments.
+    void uniform1iv(WebGLUniformLocation? location, Int32List data);
+    void uniform2iv(WebGLUniformLocation? location, Int32List data);
+    void uniform3iv(WebGLUniformLocation? location, Int32List data);
+    void uniform4iv(WebGLUniformLocation? location, Int32List data);
+
+    // uniformMatrix*fv have WebGL2 overloads, or rather extensions, that are
+    // not distinguishable from the WebGL1 versions when called with two
+    // arguments.
+    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+};
+
+WebGLRenderingContext implements WebGLRenderingContextBase;
 
 // For OffscreenCanvas
 // Reference: https://wiki.whatwg.org/wiki/OffscreenCanvas

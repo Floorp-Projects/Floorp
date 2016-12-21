@@ -137,6 +137,8 @@ class Assembler : public AssemblerShared
 
     static Condition InvertCondition(Condition) { MOZ_CRASH(); }
 
+    static DoubleCondition InvertCondition(DoubleCondition) { MOZ_CRASH(); }
+
     template <typename T, typename S>
     static void PatchDataWithValueCheck(CodeLocationLabel, T, S) { MOZ_CRASH(); }
     static void PatchWrite_Imm32(CodeLocationLabel, Imm32) { MOZ_CRASH(); }

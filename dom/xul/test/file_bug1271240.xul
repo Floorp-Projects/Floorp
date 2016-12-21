@@ -71,7 +71,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1271240
   }
 
   function makePrerenderedBrowserActive(browser) {
-    browser.makePrerenderedBrowserActive();
+    browser.frameLoader.makePrerenderedLoaderActive();
     return browser;
   }
 

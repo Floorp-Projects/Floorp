@@ -572,7 +572,7 @@ QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCString suffix;
-  BasePrincipal::Cast(aPrincipal)->OriginAttributesRef().CreateSuffix(suffix);
+  aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
 
   if (NS_WARN_IF(aClearAll && !suffix.IsEmpty())) {
     // The originAttributes should be default originAttributes when the

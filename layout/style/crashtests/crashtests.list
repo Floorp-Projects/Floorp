@@ -1,4 +1,4 @@
-load 105619-1.html
+asserts-if(stylo,1) load 105619-1.html # bug 1324663
 load 147777-1.html
 load 187671-1.html
 load 192408-1.html
@@ -14,11 +14,11 @@ load 383979-1.xhtml
 skip-if(stylo) load 383979-2.html # bug 1323671
 load 386939-1.html
 load 391034-1.xhtml
-load 397022-1.html
+asserts-if(stylo,1) load 397022-1.html # bug 1324704
 load 399289-1.svg
 load 404470-1.html
 load 411603-1.html
-load 412588-1.html
+asserts-if(stylo,2) load 412588-1.html # bug 1324634
 load 413274-1.xhtml
 load 416461-1.xul
 load 418007-1.xhtml
@@ -37,8 +37,8 @@ load 452150-1.xhtml
 skip-if(stylo) load 456196.html # bug 132652
 load 460209-1.html
 load 460217-1.html
-load 460323-1.html
-load 466845-1.html
+asserts-if(stylo,2) load 460323-1.html # bug 1324634
+asserts-if(stylo,2) load 466845-1.html # bug 1324705
 skip-if(stylo) load 469432-1.xhtml # bug 1323649
 load 472195-1.html
 load 472237-1.html # will fail, test for leak (474704)
@@ -48,8 +48,8 @@ load 473892-1.html
 load 473914-1.html
 load 474377-1.xhtml
 load 478321-1.xhtml
-load 495269-1.html
-load 495269-2.html
+asserts-if(stylo,3) load 495269-1.html # bug 1324634
+asserts-if(stylo,3) load 495269-2.html # bug 1324634
 load 498036-1.html
 load 509155-1.html
 load 509156-1.html
@@ -58,7 +58,7 @@ load 512851-1.xhtml
 load 524252-1.html
 load 536789-1.html
 load 539613-1.xhtml
-load 558943-1.xhtml
+asserts-if(stylo,3) load 558943-1.xhtml # bug 1324663
 load 559491.html
 load 565248-1.html
 load 571105-1.xhtml
@@ -76,7 +76,7 @@ load 621596-1.html
 load 622314-1.xhtml
 load 637242.xhtml
 load 645142.html
-== 645951-1.html 645951-1-ref.html
+fails-if(stylo) asserts-if(stylo,3-4) == 645951-1.html 645951-1-ref.html # bug 1324621
 load 652976-1.svg
 load 665209-1.html
 load 671799-1.html
@@ -84,7 +84,7 @@ load 671799-2.html
 skip-if(stylo) load 690990-1.html # bug 1323708
 load 696188-1.html
 load 696869-1.html
-load 700116.html
+asserts-if(stylo,4) load 700116.html # bug 1324635
 load 729126-1.html
 load 729126-2.html
 load 786108-1.html
@@ -100,9 +100,9 @@ load 840898.html
 load 842134.html
 load 861489-1.html
 load 862113.html
-load 867487.html
+asserts-if(stylo,5) load 867487.html # bug 1324634
 load 873222.html
-load 880862.html
+asserts-if(stylo,2) load 880862.html # bug 1324701
 load 915440.html
 load 927734-1.html
 load 930270-1.html
@@ -118,7 +118,7 @@ skip-if(stylo) load 1074651-1.html # bug 1323652
 load 1135534.html
 skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1089463-1.html # bug 1323649
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1136010-1.html
-pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1146101-1.html
+asserts-if(stylo,0-2) pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1146101-1.html # bug 1324677
 load 1153693-1.html
 load 1161320-1.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1161320-2.html # bug 1323712
@@ -138,8 +138,8 @@ skip-if(stylo) load 1233135-1.html # bug 1323716
 skip-if(stylo) load 1233135-2.html # bug 1323716
 load 1238660-1.html
 load 1245260-1.html
-load 1247865-1.html
-load 1264396-1.html
+asserts-if(stylo,18) load 1247865-1.html # bug 1324660
+asserts-if(stylo,0-1) load 1264396-1.html # bug 1324677
 # The following test relies on -webkit-text-fill-color being behind the
 # layout.css.prefixes.webkit pref
 pref(layout.css.prefixes.webkit,false) load 1265611-1.html
@@ -153,15 +153,15 @@ pref(layout.css.background-clip-text.enabled,true) load 1275026.html
 load 1278463-1.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1277908-1.html # bug 1323652
 load 1277908-2.html
-load 1282076-1.html
-pref(dom.animations-api.core.enabled,true) load 1282076-2.html
-pref(dom.animations-api.core.enabled,true) load 1290994-1.html
-pref(dom.animations-api.core.enabled,true) load 1290994-2.html
-pref(dom.animations-api.core.enabled,true) load 1290994-3.html
+asserts-if(stylo,2-62) load 1282076-1.html # bug 1324669
+asserts-if(stylo,4-64) pref(dom.animations-api.core.enabled,true) load 1282076-2.html # bug 1324686
+asserts-if(stylo,2) pref(dom.animations-api.core.enabled,true) load 1290994-1.html # bug 1324690
+asserts-if(stylo,2) pref(dom.animations-api.core.enabled,true) load 1290994-2.html # bug 1324690
+asserts-if(stylo,1) pref(dom.animations-api.core.enabled,true) load 1290994-3.html # bug 1324690
 skip-if(stylo) load 1290994-4.html # bug 1323717
 load 1314531.html
 load 1315889-1.html
 load 1315894-1.html
 skip-if(stylo) load 1319072-1.html # bug 1323733
 HTTP load 1320423-1.html
-load 1321357-1.html
+asserts-if(stylo,5-9) load 1321357-1.html # bug 1324669
