@@ -1038,6 +1038,17 @@ public:
   nsThreadPoolNaming() : mCounter(0) {}
 
   /**
+   * Returns a thread name as "<aPoolName> #<n>" and increments the counter.
+   */
+  nsCString GetNextThreadName(const nsACString& aPoolName);
+
+  template<size_t LEN>
+  nsCString GetNextThreadName(const char (&aPoolName)[LEN])
+  {
+    return GetNextThreadName(nsDependentCString(aPoolName, LEN - 1));
+  }
+
+  /**
    * Creates and sets next thread name as "<aPoolName> #<n>"
    * on the specified thread.  If no thread is specified (aThread
    * is null) then the name is synchronously set on the current thread.
