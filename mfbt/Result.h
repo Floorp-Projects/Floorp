@@ -220,6 +220,37 @@ public:
     MOZ_ASSERT(isErr());
     return mImpl.unwrapErr();
   }
+
+  /**
+   * Map a function V -> W over this result's success variant. If this result is
+   * an error, do not invoke the function and return a copy of the error.
+   *
+   * Mapping over success values invokes the function to produce a new success
+   * value:
+   *
+   *     // Map Result<int, E> to another Result<int, E>
+   *     Result<int, E> res(5);
+   *     Result<int, E> res2 = res.map([](int x) { return x * x; });
+   *     MOZ_ASSERT(res2.unwrap() == 25);
+   *
+   *     // Map Result<const char*, E> to Result<size_t, E>
+   *     Result<const char*, E> res("hello, map!");
+   *     Result<size_t, E> res2 = res.map(strlen);
+   *     MOZ_ASSERT(res2.unwrap() == 11);
+   *
+   * Mapping over an error does not invoke the function and copies the error:
+   *
+   *     Result<V, int> res(5);
+   *     MOZ_ASSERT(res.isErr());
+   *     Result<W, int> res2 = res.map([](V v) { ... });
+   *     MOZ_ASSERT(res2.isErr());
+   *     MOZ_ASSERT(res2.unwrapErr() == 5);
+   */
+  template<typename F>
+  auto map(F f) const -> Result<decltype(f(*((V*) nullptr))), E> {
+      using RetResult = Result<decltype(f(*((V*) nullptr))), E>;
+      return isOk() ? RetResult(f(unwrap())) : RetResult(unwrapErr());
+  }
 };
 
 /**
