@@ -2354,9 +2354,18 @@ js::LookupOwnPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Shape** 
 }
 
 static inline bool
-NativeGetPureInline(NativeObject* pobj, Shape* shape, Value* vp)
+NativeGetPureInline(NativeObject* pobj, jsid id, Shape* shape, Value* vp)
 {
-    /* Fail if we have a custom getter. */
+    if (IsImplicitDenseOrTypedArrayElement(shape)) {
+        // For simplicity we ignore the TypedArray with string index case.
+        if (!JSID_IS_INT(id))
+            return false;
+
+        *vp = pobj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
+        return true;
+    }
+
+    // Fail if we have a custom getter.
     if (!shape->hasDefaultGetter())
         return false;
 
@@ -2383,13 +2392,13 @@ js::GetPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Value* vp)
         return true;
     }
 
-    return pobj->isNative() && NativeGetPureInline(&pobj->as<NativeObject>(), shape, vp);
+    return pobj->isNative() && NativeGetPureInline(&pobj->as<NativeObject>(), id, shape, vp);
 }
 
 static inline bool
 NativeGetGetterPureInline(Shape* shape, JSFunction** fp)
 {
-    if (shape->hasGetterObject()) {
+    if (!IsImplicitDenseOrTypedArrayElement(shape) && shape->hasGetterObject()) {
         if (shape->getterObject()->is<JSFunction>()) {
             *fp = &shape->getterObject()->as<JSFunction>();
             return true;
