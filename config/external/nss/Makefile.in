@@ -280,6 +280,9 @@ ifeq (WINNT,$(OS_TARGET))
 NSS_XCFLAGS += $(filter -arch:%,$(CFLAGS))
 endif
 
+# Enable short header experiment. Firefox only.
+NSS_XCFLAGS += -DNSS_ENABLE_TLS13_SHORT_HEADERS
+
 # Export accumulated XCFLAGS to modify nss defaults.
 DEFAULT_GMAKE_FLAGS += XCFLAGS='$(NSS_XCFLAGS)'
 
