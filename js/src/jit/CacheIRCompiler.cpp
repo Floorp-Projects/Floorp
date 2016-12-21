@@ -6,6 +6,8 @@
 
 #include "jit/CacheIRCompiler.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -647,4 +649,37 @@ CacheIRCompiler::emitFailurePath(size_t i)
     }
 
     allocator.discardStack(masm);
+}
+
+bool
+CacheIRCompiler::emitGuardIsObject()
+{
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+    masm.branchTestObject(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardIsString()
+{
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+    masm.branchTestString(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardIsSymbol()
+{
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+    masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
+    return true;
 }
