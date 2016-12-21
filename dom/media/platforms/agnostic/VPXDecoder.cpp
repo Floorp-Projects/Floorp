@@ -198,17 +198,38 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
                          RESULT_DETAIL("VPX Unknown image format"));
     }
 
-    RefPtr<VideoData> v =
-      VideoData::CreateAndCopyData(mInfo,
-                                   mImageContainer,
-                                   aSample->mOffset,
-                                   aSample->mTime,
-                                   aSample->mDuration,
-                                   b,
-                                   aSample->mKeyframe,
-                                   aSample->mTimecode,
-                                   mInfo.ScaledImageRect(img->d_w,
-                                                         img->d_h));
+    RefPtr<VideoData> v;
+    if (!img_alpha) {
+      v = VideoData::CreateAndCopyData(mInfo,
+                                       mImageContainer,
+                                       aSample->mOffset,
+                                       aSample->mTime,
+                                       aSample->mDuration,
+                                       b,
+                                       aSample->mKeyframe,
+                                       aSample->mTimecode,
+                                       mInfo.ScaledImageRect(img->d_w,
+                                                             img->d_h));
+    } else {
+      VideoData::YCbCrBuffer::Plane alpha_plane;
+      alpha_plane.mData = img_alpha->planes[0];
+      alpha_plane.mStride = img_alpha->stride[0];
+      alpha_plane.mHeight = img_alpha->d_h;
+      alpha_plane.mWidth = img_alpha->d_w;
+      alpha_plane.mOffset = alpha_plane.mSkip = 0;
+      v = VideoData::CreateAndCopyData(mInfo,
+                                       mImageContainer,
+                                       aSample->mOffset,
+                                       aSample->mTime,
+                                       aSample->mDuration,
+                                       b,
+                                       alpha_plane,
+                                       aSample->mKeyframe,
+                                       aSample->mTimecode,
+                                       mInfo.ScaledImageRect(img->d_w,
+                                                             img->d_h));
+
+    }
 
     if (!v) {
       LOG("Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
