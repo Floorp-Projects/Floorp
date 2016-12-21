@@ -44,7 +44,7 @@ DocAccessibleChild::Shutdown()
   DetachDocument();
 }
 
-ipc::IPCResult
+bool
 DocAccessibleChild::RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy)
 {
   MOZ_ASSERT(!mParentProxy && !aParentCOMProxy.IsNull());
@@ -57,7 +57,7 @@ DocAccessibleChild::RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy)
 
   mDeferredEvents.Clear();
 
-  return IPC_OK();
+  return true;
 }
 
 void
