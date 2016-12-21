@@ -7,6 +7,7 @@
 #ifndef mozilla_DataStorage_h
 #define mozilla_DataStorage_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
@@ -186,7 +187,7 @@ private:
   uint32_t mTimerDelay; // in milliseconds
   bool mPendingWrite; // true if a write is needed but hasn't been dispatched
   bool mShuttingDown;
-  bool mInitCalled; // Indicates that Init() has been called.
+  mozilla::Atomic<bool> mInitCalled; // Indicates that Init() has been called.
   // (End list of members protected by mMutex)
 
   Monitor mReadyMonitor; // Do not acquire this at the same time as mMutex.
