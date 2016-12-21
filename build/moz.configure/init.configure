@@ -228,12 +228,20 @@ def early_options():
 
 early_options = early_options()
 
-@depends(mozconfig, '--help')
+@depends(mozconfig, 'MOZ_AUTOMATION', '--help')
 # This gives access to the sandbox. Don't copy this blindly.
 @imports('__sandbox__')
 @imports('os')
-def mozconfig_options(mozconfig, help):
+def mozconfig_options(mozconfig, automation, help):
     if mozconfig['path']:
+        if 'MOZ_AUTOMATION_MOZCONFIG' in mozconfig['env']['added']:
+            if not automation:
+                log.error('%s directly or indirectly includes an in-tree '
+                          'mozconfig.', mozconfig['path'])
+                log.error('In-tree mozconfigs make strong assumptions about '
+                          'and are only meant to be used by Mozilla'
+                          'automation.')
+                die("Please don't use them.")
         helper = __sandbox__._helper
         log.info('Adding configure options from %s' % mozconfig['path'])
         for arg in mozconfig['configure_args']:
