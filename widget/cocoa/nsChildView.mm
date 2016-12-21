@@ -717,9 +717,10 @@ ManipulateViewWithoutNeedingDisplay(NSView* aView, void (^aCallback)())
 }
 
 // Hide or show this component
-NS_IMETHODIMP nsChildView::Show(bool aState)
+void
+nsChildView::Show(bool aState)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (aState != mVisible) {
     // Provide an autorelease pool because this gets called during startup
@@ -733,9 +734,8 @@ NS_IMETHODIMP nsChildView::Show(bool aState)
 
     mVisible = aState;
   }
-  return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Change the parent of this widget

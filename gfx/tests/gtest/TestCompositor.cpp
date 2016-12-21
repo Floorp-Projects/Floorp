@@ -66,7 +66,7 @@ public:
                                  nsNativeWidget aNativeParent,
                                  const DesktopIntRect& aRect,
                                  nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
-  NS_IMETHOD              Show(bool aState) override { return NS_OK; }
+  virtual void            Show(bool aState) override {}
   virtual bool            IsVisible() const override { return true; }
   virtual void            Move(double aX, double aY) override {}
   virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override {}

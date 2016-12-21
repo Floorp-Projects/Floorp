@@ -636,7 +636,7 @@ class nsIWidget : public nsISupports
      * @param aState true to show the Widget, false to hide it
      *
      */
-    NS_IMETHOD Show(bool aState) = 0;
+    virtual void Show(bool aState) = 0;
 
     /**
      * Make the window modal.

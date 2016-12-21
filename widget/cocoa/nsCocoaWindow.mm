@@ -733,21 +733,22 @@ nsCocoaWindow::IsRunningAppModal()
 }
 
 // Hide or show this window
-NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
+void
+nsCocoaWindow::Show(bool bState)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow)
-    return NS_OK;
+    return;
 
   // We need to re-execute sometimes in order to bring already-visible
   // windows forward.
   if (!mSheetNeedsShow && !bState && ![mWindow isVisible])
-    return NS_OK;
+    return;
 
   // Protect against re-entering.
   if (bState && [mWindow isBeingShown])
-    return NS_OK;
+    return;
 
   [mWindow setBeingShown:bState];
 
@@ -760,7 +761,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
     // Don't try to show a popup when the parent isn't visible or is minimized.
     if (mWindowType == eWindowType_popup && nativeParentWindow) {
       if (![nativeParentWindow isVisible] || [nativeParentWindow isMiniaturized]) {
-        return NS_OK;
+        return;
       }
     }
 
@@ -772,7 +773,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
     if (mWindowType == eWindowType_sheet) {
       // bail if no parent window (its basically what we do in Carbon)
       if (!nativeParentWindow || !piParentWidget)
-        return NS_ERROR_FAILURE;
+        return;
 
       NSWindow* topNonSheetWindow = nativeParentWindow;
       
@@ -983,9 +984,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
 
   [mWindow setBeingShown:NO];
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 struct ShadowParams {
@@ -1338,9 +1337,8 @@ nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   if (isVisible) {
     bool wasAnimationSuppressed = mIsAnimationSuppressed;
     mIsAnimationSuppressed = true;
-    rv = Show(true);
+    Show(true);
     mIsAnimationSuppressed = wasAnimationSuppressed;
-    NS_ENSURE_SUCCESS_VOID(rv);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
