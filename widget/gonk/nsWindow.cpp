@@ -523,7 +523,7 @@ nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
     }
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 {
     if (mWidgetListener) {

@@ -4002,8 +4002,8 @@ nsWindow::CurrentMessageWidgetEventTime() const
 
 // Main event dispatch. Invokes callback and ProcessEvent method on
 // Event Listener object. Part of nsIWidget.
-NS_IMETHODIMP nsWindow::DispatchEvent(WidgetGUIEvent* event,
-                                      nsEventStatus& aStatus)
+nsresult
+nsWindow::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef WIDGET_DEBUG_OUTPUT
   debug_DumpEvent(stdout,

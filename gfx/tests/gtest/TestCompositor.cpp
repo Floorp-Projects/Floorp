@@ -80,7 +80,7 @@ public:
   virtual void            Invalidate(const LayoutDeviceIntRect& aRect) override {}
   virtual nsresult        SetTitle(const nsAString& title) override { return NS_OK; }
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
-  NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+  virtual nsresult        DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override { return NS_OK; }
   NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction) override {}

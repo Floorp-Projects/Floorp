@@ -1395,8 +1395,8 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
 }
 
 // Invokes callback and ProcessEvent methods on Event Listener object
-NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
-                                         nsEventStatus& aStatus)
+nsresult
+nsChildView::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
   RefPtr<nsChildView> kungFuDeathGrip(this);
 
