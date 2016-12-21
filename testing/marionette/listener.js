@@ -123,11 +123,10 @@ function registerSelf() {
   if (register[0]) {
     let {id, remotenessChange} = register[0][0];
     capabilities = register[0][2];
-    isB2G = capabilities.platformName == "b2g";
     listenerId = id;
     if (typeof id != "undefined") {
       // check if we're the main process
-      if (register[0][1] == true) {
+      if (register[0][1]) {
         addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
       }
       startListeners();
