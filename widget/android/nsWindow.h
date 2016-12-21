@@ -203,9 +203,9 @@ public:
     virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
     virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
 
-    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                      const InputContextAction& aAction) override;
-    NS_IMETHOD_(InputContext) GetInputContext() override;
+    virtual void SetInputContext(const InputContext& aContext,
+                                 const InputContextAction& aAction) override;
+    virtual InputContext GetInputContext() override;
     virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
     void SetSelectionDragState(bool aState);

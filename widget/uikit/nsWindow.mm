@@ -770,7 +770,7 @@ nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
@@ -778,7 +778,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     mInputContext = aContext;
 }
 
-NS_IMETHODIMP_(mozilla::widget::InputContext)
+mozilla::widget::InputContext
 nsWindow::GetInputContext()
 {
     return mInputContext;

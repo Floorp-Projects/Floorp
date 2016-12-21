@@ -149,7 +149,7 @@ public:
                              const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
   bool AsyncPanZoomEnabled() const override;
 
-  NS_IMETHOD_(bool)
+  virtual bool
   ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                           const mozilla::WidgetKeyboardEvent& aEvent,
                           DoCommandCallback aCallback,
@@ -178,10 +178,10 @@ public:
   // This is used after a compositor reset.
   LayerManager* RecreateLayerManager(PLayerTransactionChild* aShadowManager);
 
-  NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                    const InputContextAction& aAction) override;
-  NS_IMETHOD_(InputContext) GetInputContext() override;
-  NS_IMETHOD_(NativeIMEContext) GetNativeIMEContext() override;
+  virtual void SetInputContext(const InputContext& aContext,
+                               const InputContextAction& aAction) override;
+  virtual InputContext GetInputContext() override;
+  virtual NativeIMEContext GetNativeIMEContext() override;
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
   virtual void SetCursor(nsCursor aCursor) override;

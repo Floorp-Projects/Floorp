@@ -86,12 +86,11 @@ public:
 
     //virtual nsresult
     //NotifyIME(const IMENotification& aIMENotification) override;
-    NS_IMETHOD_(void) SetInputContext(
-                        const InputContext& aContext,
-                        const InputContextAction& aAction);
-    NS_IMETHOD_(InputContext) GetInputContext();
+    virtual void SetInputContext(const InputContext& aContext,
+                                 const InputContextAction& aAction);
+    virtual InputContext GetInputContext();
     /*
-    NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+    virtual bool ExecuteNativeKeyBinding(
                         NativeKeyBindingsType aType,
                         const mozilla::WidgetKeyboardEvent& aEvent,
                         DoCommandCallback aCallback,

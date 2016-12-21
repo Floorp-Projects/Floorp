@@ -1783,20 +1783,20 @@ public:
     /*
      * Notifies the input context changes.
      */
-    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                      const InputContextAction& aAction) = 0;
+    virtual void SetInputContext(const InputContext& aContext,
+                                 const InputContextAction& aAction) = 0;
 
     /*
      * Get current input context.
      */
-    NS_IMETHOD_(InputContext) GetInputContext() = 0;
+    virtual InputContext GetInputContext() = 0;
 
     /**
      * Get native IME context.  This is different from GetNativeData() with
      * NS_RAW_NATIVE_IME_CONTEXT, the result is unique even if in a remote
      * process.
      */
-    NS_IMETHOD_(NativeIMEContext) GetNativeIMEContext();
+    virtual NativeIMEContext GetNativeIMEContext();
 
     /*
      * Given a WidgetKeyboardEvent, this method synthesizes a corresponding
@@ -1817,7 +1817,7 @@ public:
       NativeKeyBindingsForMultiLineEditor,
       NativeKeyBindingsForRichTextEditor
     };
-    NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+    virtual bool ExecuteNativeKeyBinding(
                         NativeKeyBindingsType aType,
                         const mozilla::WidgetKeyboardEvent& aEvent,
                         DoCommandCallback aCallback,
@@ -1957,14 +1957,14 @@ public:
      * GetTextEventDispatcher() returns TextEventDispatcher belonging to the
      * widget.  Note that this never returns nullptr.
      */
-    NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() = 0;
+    virtual TextEventDispatcher* GetTextEventDispatcher() = 0;
 
     /**
      * GetNativeTextEventDispatcherListener() returns a
      * TextEventDispatcherListener instance which is used when the widget
      * instance handles native IME and/or keyboard events.
      */
-    NS_IMETHOD_(TextEventDispatcherListener*)
+    virtual TextEventDispatcherListener*
       GetNativeTextEventDispatcherListener() = 0;
 
     virtual void ZoomToRect(const uint32_t& aPresShellId,

@@ -529,7 +529,7 @@ PuppetWidget::AsyncPanZoomEnabled() const
   return mTabChild && mTabChild->AsyncPanZoomEnabled();
 }
 
-NS_IMETHODIMP_(bool)
+bool
 PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                       const mozilla::WidgetKeyboardEvent& aEvent,
                                       DoCommandCallback aCallback,
@@ -708,7 +708,7 @@ PuppetWidget::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
   mTabChild->SendDefaultProcOfPluginEvent(aEvent);
 }
 
-NS_IMETHODIMP_(void)
+void
 PuppetWidget::SetInputContext(const InputContext& aContext,
                               const InputContextAction& aAction)
 {
@@ -735,7 +735,7 @@ PuppetWidget::SetInputContext(const InputContext& aContext,
     static_cast<int32_t>(aAction.mFocusChange));
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 PuppetWidget::GetInputContext()
 {
 #ifndef MOZ_CROSS_PROCESS_IME
@@ -768,7 +768,7 @@ PuppetWidget::GetInputContext()
   return context;
 }
 
-NS_IMETHODIMP_(NativeIMEContext)
+NativeIMEContext
 PuppetWidget::GetNativeIMEContext()
 {
   return mNativeIMEContext;

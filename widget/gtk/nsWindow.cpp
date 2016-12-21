@@ -6388,7 +6388,7 @@ nsChildWindow::nsChildWindow() = default;
 
 nsChildWindow::~nsChildWindow() = default;
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
@@ -6398,7 +6398,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     mIMContext->SetInputContext(this, &aContext, &aAction);
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 nsWindow::GetInputContext()
 {
   InputContext context;
@@ -6420,7 +6420,7 @@ nsWindow::GetIMEUpdatePreference()
     return mIMContext->GetIMEUpdatePreference();
 }
 
-NS_IMETHODIMP_(TextEventDispatcherListener*)
+TextEventDispatcherListener*
 nsWindow::GetNativeTextEventDispatcherListener()
 {
     if (NS_WARN_IF(!mIMContext)) {
@@ -6446,7 +6446,7 @@ nsWindow::ExecuteNativeKeyBindingRemapped(NativeKeyBindingsType aType,
     return keyBindings->Execute(modifiedEvent, aCallback, aCallbackData);
 }
 
-NS_IMETHODIMP_(bool)
+bool
 nsWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                   const WidgetKeyboardEvent& aEvent,
                                   DoCommandCallback aCallback,
