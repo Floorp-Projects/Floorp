@@ -1009,6 +1009,7 @@ nsSOCKSSocketInfo::ReadV5ConnectResponseTop()
                 break;
             case 0x04:
                 LOGERROR(("socks5: connect failed: 04, Host unreachable."));
+                c = PR_BAD_ADDRESS_ERROR;
                 break;
             case 0x05:
                 LOGERROR(("socks5: connect failed: 05, Connection refused."));
