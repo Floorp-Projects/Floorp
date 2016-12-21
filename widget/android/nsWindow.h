@@ -157,7 +157,7 @@ public:
                                          const LayoutDeviceIntRect& aRect,
                                          nsWidgetInitData* aInitData) override;
     virtual void Destroy() override;
-    NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
+    virtual nsresult ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
     virtual void SetParent(nsIWidget* aNewParent) override;
     virtual nsIWidget *GetParent(void) override;
     virtual float GetDPI() override;
@@ -196,8 +196,6 @@ public:
     virtual void SetCursor(nsCursor aCursor) override {}
     virtual nsresult SetCursor(imgIContainer* aCursor, uint32_t aHotspotX,
                                uint32_t aHotspotY) override { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD SetHasTransparentBackground(bool aTransparent) { return NS_OK; }
-    NS_IMETHOD GetHasTransparentBackground(bool& aTransparent) { aTransparent = false; return NS_OK; }
     void* GetNativeData(uint32_t aDataType) override;
     void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }

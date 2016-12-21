@@ -69,7 +69,7 @@ public:
     virtual void Enable(bool aState);
     virtual bool IsEnabled() const;
     virtual nsresult SetFocus(bool aRaise = false);
-    NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
+    virtual nsresult ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
     virtual void Invalidate(const LayoutDeviceIntRect& aRect);
     virtual void* GetNativeData(uint32_t aDataType);
     virtual void SetNativeData(uint32_t aDataType, uintptr_t aVal);

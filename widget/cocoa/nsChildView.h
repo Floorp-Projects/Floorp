@@ -373,8 +373,8 @@ public:
 
   virtual bool HasPendingInputEvent() override;
 
-  NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString) override;
-  NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString) override;
+  virtual nsresult  ActivateNativeMenuItemAt(const nsAString& indexString) override;
+  virtual nsresult  ForceUpdateNativeMenuAt(const nsAString& indexString) override;
   virtual MOZ_MUST_USE nsresult
                     GetSelectionAsPlaintext(nsAString& aResult) override;
 
