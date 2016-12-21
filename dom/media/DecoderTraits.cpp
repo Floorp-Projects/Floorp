@@ -7,7 +7,6 @@
 #include "DecoderTraits.h"
 #include "MediaContentType.h"
 #include "MediaDecoder.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -180,21 +179,11 @@ CanHandleCodecsType(const MediaContentType& aType,
 
   // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
   // of the 'codecs' parameter
-  nsCharSeparatedTokenizer
-    tokenizer(aType.ExtendedType().Codecs().AsString(), ',');
-  bool expectMoreTokens = false;
-  while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& token = tokenizer.nextToken();
-
+  for (const auto& token : aType.ExtendedType().Codecs().Range()) {
     if (!CodecListContains(codecList, token)) {
       // Totally unsupported codec
       return CANPLAY_NO;
     }
-    expectMoreTokens = tokenizer.separatorAfterCurrentToken();
-  }
-  if (expectMoreTokens) {
-    // Last codec name was empty
-    return CANPLAY_NO;
   }
 
   return CANPLAY_YES;
