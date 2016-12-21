@@ -4397,6 +4397,28 @@
     "description": "Total disk space used by items in the reader view cache (KB)",
     "bug_numbers": [1246159]
   },
+  "FENNEC_LOOP_UI_LATENCY": {
+    "expires_in_version": "55",
+    "alert_emails": ["mobile-platform@mozilla.org"],
+    "kind": "exponential",
+    "low": 10,
+    "high": 10485760,
+    "n_buckets": 22,
+    "description": "Latency in microseconds of UI events in the Android event loop between posting and processing",
+    "bug_numbers": [1322574],
+    "cpp_guard": "MOZ_WIDGET_ANDROID"
+  },
+  "FENNEC_LOOP_OTHER_LATENCY": {
+    "expires_in_version": "55",
+    "alert_emails": ["mobile-platform@mozilla.org"],
+    "kind": "exponential",
+    "low": 10,
+    "high": 10485760,
+    "n_buckets": 22,
+    "description": "Latency in microseconds of non-UI events in the Android event loop between posting and processing",
+    "bug_numbers": [1322574],
+    "cpp_guard": "MOZ_WIDGET_ANDROID"
+  },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "expires_in_version": "never",
     "kind": "linear",
