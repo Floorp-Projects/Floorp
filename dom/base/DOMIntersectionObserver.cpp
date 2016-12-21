@@ -207,7 +207,9 @@ DOMIntersectionObserver::Disconnect()
   mObservationTargets.Clear();
   if (mOwner) {
     nsIDocument* document = mOwner->GetExtantDoc();
-    document->RemoveIntersectionObserver(this);
+    if (document) {
+      document->RemoveIntersectionObserver(this);
+    }
   }
 }
 
