@@ -11,6 +11,7 @@
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/FloatingPoint.h" // For IsFinite
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
@@ -391,6 +392,13 @@ KeyframeEffectReadOnly::ComposeStyle(
   RefPtr<AnimValuesStyleRule>& aStyleRule,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
+  if (mIsComposingStyle) {
+    return;
+  }
+
+  AutoRestore<bool> isComposingStyle(mIsComposingStyle);
+  mIsComposingStyle = true;
+
   ComputedTiming computedTiming = GetComputedTiming();
   mProgressOnLastCompose = computedTiming.mProgress;
   mCurrentIterationOnLastCompose = computedTiming.mCurrentIteration;
