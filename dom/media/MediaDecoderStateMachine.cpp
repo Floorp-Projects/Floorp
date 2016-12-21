@@ -867,7 +867,7 @@ public:
     // requests when AccurateSeekTask::Seek() begins. We will just store the data
     // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
     if (mSeekJob.mTarget->IsVideoOnly()) {
-      mMaster->Push(aAudio);
+      mMaster->PushAudio(aAudio);
       return;
     }
 
@@ -875,7 +875,7 @@ public:
 
     if (mSeekJob.mTarget->IsFast()) {
       // Non-precise seek; we can stop the seek at the first sample.
-      mMaster->Push(aAudio);
+      mMaster->PushAudio(aAudio);
       mDoneAudioSeeking = true;
     } else {
       nsresult rv = DropAudioUpToSeekTarget(aAudio->As<AudioData>());
@@ -901,7 +901,7 @@ public:
 
     if (mSeekJob.mTarget->IsFast()) {
       // Non-precise seek. We can stop the seek at the first sample.
-      mMaster->Push(aVideo);
+      mMaster->PushVideo(aVideo);
       mDoneVideoSeeking = true;
     } else {
       nsresult rv = DropVideoUpToSeekTarget(aVideo);
@@ -948,13 +948,13 @@ public:
         AudioQueue().Finish();
         mDoneAudioSeeking = true;
       } else {
-        VideoQueue().Finish();
-        mDoneVideoSeeking = true;
         if (mFirstVideoFrameAfterSeek) {
           // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
           // mSeekedVideoData so we have something to display after seeking.
-          mMaster->Push(mFirstVideoFrameAfterSeek);
+          mMaster->PushVideo(mFirstVideoFrameAfterSeek);
         }
+        VideoQueue().Finish();
+        mDoneVideoSeeking = true;
       }
       MaybeFinishSeek();
       return;
@@ -1149,7 +1149,7 @@ private:
       // silence to cover the gap. Typically this happens in poorly muxed
       // files.
       SWARN("Audio not synced after seek, maybe a poorly muxed file?");
-      mMaster->Push(aAudio);
+      mMaster->PushAudio(aAudio);
       mDoneAudioSeeking = true;
       return NS_OK;
     }
@@ -1195,7 +1195,7 @@ private:
                                          channels,
                                          aAudio->mRate));
     MOZ_ASSERT(AudioQueue().GetSize() == 0, "Should be the 1st sample after seeking");
-    mMaster->Push(data);
+    mMaster->PushAudio(data);
     mDoneAudioSeeking = true;
 
     return NS_OK;
@@ -1227,7 +1227,7 @@ private:
                   video->mTime, video->GetEndTime(), target);
 
       MOZ_ASSERT(VideoQueue().GetSize() == 0, "Should be the 1st sample after seeking");
-      mMaster->Push(video);
+      mMaster->PushVideo(video);
       mDoneVideoSeeking = true;
     }
 
