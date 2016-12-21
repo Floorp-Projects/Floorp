@@ -84,7 +84,7 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
   }
 
   if (!mThread) {
-    rv = NS_NewThread(getter_AddRefs(mThread), this);
+    rv = NS_NewNamedThread("Wifi Monitor", getter_AddRefs(mThread), this);
     if (NS_FAILED(rv))
       return rv;
   }
@@ -154,8 +154,6 @@ NS_IMETHODIMP nsPassErrorToWifiListeners::Run()
 NS_IMETHODIMP nsWifiMonitor::Run()
 {
   LOG(("@@@@@ wifi monitor run called\n"));
-
-  PR_SetCurrentThreadName("Wifi Monitor");
 
   nsresult rv = DoScan();
   LOG(("@@@@@ wifi monitor run::doscan complete %x\n", rv));
