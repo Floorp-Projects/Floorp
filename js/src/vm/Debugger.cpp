@@ -7769,6 +7769,10 @@ DebuggerFrame::setOnPopHandler(OnPopHandler* handler)
 {
     MOZ_ASSERT(isLive());
 
+    OnPopHandler* prior = onPopHandler();
+    if (prior && prior != handler)
+        prior->drop();
+
     setReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER,
                     handler ? PrivateValue(handler) : UndefinedValue());
 }
