@@ -16,6 +16,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 XPCOMUtils.defineLazyModuleGetter(this, "AutoMigrate",
                                   "resource:///modules/AutoMigrate.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
@@ -37,6 +39,9 @@ var gMigrators = null;
 var gProfileStartup = null;
 var gMigrationBundle = null;
 var gPreviousDefaultBrowserKey = "";
+
+let gKeepUndoData = false;
+let gUndoData = null;
 
 XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
   if (AppConstants.platform == "win") {
@@ -948,17 +953,104 @@ this.MigrationUtils = Object.freeze({
 
   insertBookmarkWrapper(bookmark) {
     this._importQuantities.bookmarks++;
-    return PlacesUtils.bookmarks.insert(bookmark);
+    let insertionPromise = PlacesUtils.bookmarks.insert(bookmark);
+    if (!gKeepUndoData) {
+      return insertionPromise;
+    }
+    // If we keep undo data, add a promise handler that stores the undo data once
+    // the bookmark has been inserted in the DB, and then returns the bookmark.
+    let {parentGuid} = bookmark;
+    return insertionPromise.then(bm => {
+      let {guid, lastModified, type} = bm;
+      gUndoData.get("bookmarks").push({
+        parentGuid, guid, lastModified, type
+      });
+      return bm;
+    });
   },
 
   insertVisitsWrapper(places, options) {
     this._importQuantities.history += places.length;
+    if (gKeepUndoData) {
+      this._updateHistoryUndo(places);
+    }
     return PlacesUtils.asyncHistory.updatePlaces(places, options);
   },
 
   insertLoginWrapper(login) {
     this._importQuantities.logins++;
-    return LoginHelper.maybeImportLogin(login);
+    let insertedLogin = LoginHelper.maybeImportLogin(login);
+    // Note that this means that if we import a login that has a newer password
+    // than we know about, we will update the login, and an undo of the import
+    // will not revert this. This seems preferable over removing the login
+    // outright or storing the old password in the undo file.
+    if (insertedLogin && gKeepUndoData) {
+      let {guid, timePasswordChanged} = insertedLogin;
+      gUndoData.get("logins").push({guid, timePasswordChanged});
+    }
+  },
+
+  initializeUndoData() {
+    gKeepUndoData = true;
+    gUndoData = new Map([["bookmarks", []], ["visits", []], ["logins", []]]);
+  },
+
+  _postProcessUndoData: Task.async(function*(state) {
+    if (!state) {
+      return state;
+    }
+    let bookmarkFolders = state.get("bookmarks").filter(b => b.type == PlacesUtils.bookmarks.TYPE_FOLDER);
+
+    let bookmarkFolderData = [];
+    let bmPromises = bookmarkFolders.map(({guid}) => {
+      // Ignore bookmarks where the promise doesn't resolve (ie that are missing)
+      // Also check that the bookmark fetch returns isn't null before adding it.
+      return PlacesUtils.bookmarks.fetch(guid).then(bm => bm && bookmarkFolderData.push(bm), () => {});
+    });
+
+    yield Promise.all(bmPromises);
+    let folderLMMap = new Map(bookmarkFolderData.map(b => [b.guid, b.lastModified]));
+    for (let bookmark of bookmarkFolders) {
+      let lastModified = folderLMMap.get(bookmark.guid);
+      // If the bookmark was deleted, the map will be returning null, so check:
+      if (lastModified) {
+        bookmark.lastModified = lastModified;
+      }
+    }
+    return state;
+  }),
+
+  stopAndRetrieveUndoData() {
+    let undoData = gUndoData;
+    gUndoData = null;
+    gKeepUndoData = false;
+    return this._postProcessUndoData(undoData);
+  },
+
+  _updateHistoryUndo(places) {
+    let visits = gUndoData.get("visits");
+    let visitMap = new Map(visits.map(v => [v.url, v]));
+    for (let place of places) {
+      let visitCount = place.visits.length;
+      let first = Math.min.apply(Math, place.visits.map(v => v.visitDate));
+      let last = Math.max.apply(Math, place.visits.map(v => v.visitDate));
+      let url = place.uri.spec;
+      try {
+        new URL(url);
+      } catch (ex) {
+        // This won't save and we won't need to 'undo' it, so ignore this URL.
+        continue;
+      }
+      if (!visitMap.has(url)) {
+        visitMap.set(url, {url, visitCount, first, last});
+      } else {
+        let currentData = visitMap.get(url);
+        currentData.visitCount += visitCount;
+        currentData.first = Math.min(currentData.first, first);
+        currentData.last = Math.max(currentData.last, last);
+      }
+    }
+    gUndoData.set("visits", Array.from(visitMap.values()));
   },
 
   /**

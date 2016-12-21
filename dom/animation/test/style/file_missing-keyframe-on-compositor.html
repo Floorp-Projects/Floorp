@@ -471,6 +471,25 @@ promise_test(t => {
    'composed onto a underlying animation with fill:forwards during positive ' +
    'endDelay');
 
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+  div.animate({ transform: 'translateX(200px)' },
+              { duration: 100 * MS_PER_SEC, delay: 50 * MS_PER_SEC });
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 150, 0)',
+      'Transform value for animation with positive delay should be composed ' +
+      'onto the base style');
+  });
+}, 'Transform value for animation with no keyframe at offset 0 and with ' +
+   'positive delay');
+
 done();
 </script>
 </body>
