@@ -7,7 +7,7 @@
 #ifndef OscillatorNode_h_
 #define OscillatorNode_h_
 
-#include "AudioNode.h"
+#include "AudioScheduledSourceNode.h"
 #include "AudioParam.h"
 #include "PeriodicWave.h"
 #include "mozilla/dom/OscillatorNodeBinding.h"
@@ -18,8 +18,8 @@ namespace dom {
 class AudioContext;
 struct OscillatorOptions;
 
-class OscillatorNode final : public AudioNode,
-                             public MainThreadMediaStreamListener
+class OscillatorNode final : public AudioScheduledSourceNode
+                           , public MainThreadMediaStreamListener
 {
 public:
   static already_AddRefed<OscillatorNode>
@@ -27,7 +27,7 @@ public:
          ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OscillatorNode, AudioNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OscillatorNode, AudioScheduledSourceNode)
 
   static already_AddRefed<OscillatorNode>
   Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
@@ -70,8 +70,9 @@ public:
     return mDetune;
   }
 
-  void Start(double aWhen, ErrorResult& aRv);
-  void Stop(double aWhen, ErrorResult& aRv);
+  void Start(double aWhen, ErrorResult& aRv) override;
+  void Stop(double aWhen, ErrorResult& aRv) override;
+
   void SetPeriodicWave(PeriodicWave& aPeriodicWave)
   {
     mPeriodicWave = &aPeriodicWave;
@@ -79,8 +80,6 @@ public:
     mType = OscillatorType::Custom;
     SendTypeToStream();
   }
-
-  IMPL_EVENT_HANDLER(ended)
 
   void NotifyMainThreadStreamFinished() override;
 

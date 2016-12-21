@@ -21,7 +21,7 @@ dictionary AudioBufferSourceOptions {
 
 [Pref="dom.webaudio.enabled",
  Constructor(BaseAudioContext context, optional AudioBufferSourceOptions options)]
-interface AudioBufferSourceNode : AudioNode {
+interface AudioBufferSourceNode : AudioScheduledSourceNode {
 
     attribute AudioBuffer? buffer;
 
@@ -35,10 +35,6 @@ interface AudioBufferSourceNode : AudioNode {
     [Throws, UnsafeInPrerendering]
     void start(optional double when = 0, optional double grainOffset = 0,
                optional double grainDuration);
-    [Throws, UnsafeInPrerendering]
-    void stop(optional double when = 0);
-
-    attribute EventHandler onended;
 };
 
 // Mozilla extensions
