@@ -8,6 +8,7 @@
 #include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxUtils.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Telemetry.h"
@@ -148,6 +149,10 @@ static bool
 IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                       nsACString* const out_failureId)
 {
+    if (CompositorThreadHolder::IsInCompositorThread()) {
+        MOZ_ASSERT(gfxPrefs::WebRenderEnabled());
+        return true;
+    }
     int32_t angleSupport;
     nsCString failureId;
     gfxUtils::ThreadSafeGetFeatureStatus(gfxInfo,

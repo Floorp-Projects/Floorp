@@ -736,8 +736,12 @@ GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated
         return nullptr;
     }
 
+    CreateContextFlags flags = CreateContextFlags::NONE;
+    if (gfxPrefs::WebRenderEnabled()) {
+        flags |= CreateContextFlags::PREFER_ES3;
+    }
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(CreateContextFlags::NONE,
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags,
                                                             caps, nullptr, false, config,
                                                             surface, &discardFailureId);
     if (!gl) {
