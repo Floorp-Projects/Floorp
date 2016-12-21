@@ -195,6 +195,14 @@ function* doSelectTests(contentType, dtd) {
   yield BrowserTestUtils.removeTab(tab);
 }
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.select_popup_in_parent.enabled", true],
+    ]
+  });
+});
+
 add_task(function*() {
   yield doSelectTests("text/html", "");
 });
