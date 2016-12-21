@@ -10,6 +10,10 @@
  * liability, trademark and document use rules apply.
  */
 
+dictionary PeriodicWaveConstraints {
+  boolean disableNormalization = false;
+};
+
 dictionary PeriodicWaveOptions : PeriodicWaveConstraints {
              sequence<float> real;
              sequence<float> imag;
@@ -19,6 +23,6 @@ dictionary PeriodicWaveOptions : PeriodicWaveConstraints {
  // XXXbz The second arg is not optional in the spec, but that looks
  // like a spec bug to me.  See
  // <https://github.com/WebAudio/web-audio-api/issues/1116>.
- Constructor(AudioContext context, optional PeriodicWaveOptions options)]
+ Constructor(BaseAudioContext context, optional PeriodicWaveOptions options)]
 interface PeriodicWave {
 };

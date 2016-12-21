@@ -108,8 +108,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1069772
 
   function makePrerenderedBrowserActive(browser) {
     let promise = waitForVisibilityChange(browser);
-    browser.setAttribute('prerendered', false);
-    browser.makePrerenderedBrowserActive();
+    browser.removeAttribute('prerendered');
+    browser.frameLoader.makePrerenderedLoaderActive();
     return promise.then(() => browser);
   }
 

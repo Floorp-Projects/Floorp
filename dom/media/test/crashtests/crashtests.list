@@ -4,11 +4,11 @@ load 466607-1.html
 load 466945-1.html
 load 468763-1.html
 load 474744-1.html
-HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file?
+asserts-if(stylo,8) HTTP load 481136-1.html # bug 1324671 # needs to be HTTP to recognize the ogg as an audio file?
 load 492286-1.xhtml
 load 493915-1.html
 load 495794-1.html
-skip-if(stylo) load 576612-1.html # bug 1323890
+ load 576612-1.html # bug 1323890
 load 752784-1.html
 load 789075-1.html
 HTTP load 795892-1.html
@@ -71,7 +71,7 @@ load 995289.html
 load 1012609.html
 load 1015662.html
 load 1020205.html
-skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
+asserts-if(stylo,8) skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1324671 # bug 1048863
 load 1041466.html
 load 1045650.html
 load 1080986.html
