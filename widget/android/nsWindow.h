@@ -193,10 +193,9 @@ public:
                                     nsIScreen* aTargetScreen = nullptr)
                                     override;
 
-    NS_IMETHOD SetCursor(nsCursor aCursor) override { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                         uint32_t aHotspotX,
-                         uint32_t aHotspotY) override { return NS_ERROR_NOT_IMPLEMENTED; }
+    virtual void SetCursor(nsCursor aCursor) override {}
+    virtual nsresult SetCursor(imgIContainer* aCursor, uint32_t aHotspotX,
+                               uint32_t aHotspotY) override { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetHasTransparentBackground(bool aTransparent) { return NS_OK; }
     NS_IMETHOD GetHasTransparentBackground(bool& aTransparent) { aTransparent = false; return NS_OK; }
     void* GetNativeData(uint32_t aDataType) override;

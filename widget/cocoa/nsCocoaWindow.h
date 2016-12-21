@@ -285,8 +285,10 @@ public:
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     void                    ReportMoveEvent();
     void                    ReportSizeEvent();
-    NS_IMETHOD              SetCursor(nsCursor aCursor) override;
-    NS_IMETHOD              SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY) override;
+    virtual void            SetCursor(nsCursor aCursor) override;
+    virtual nsresult        SetCursor(imgIContainer* aCursor,
+                                      uint32_t aHotspotX, uint32_t aHotspotY)
+                                      override;
 
     CGFloat                 BackingScaleFactor();
     void                    BackingScaleFactorChanged();

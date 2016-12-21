@@ -135,8 +135,8 @@ public:
     virtual LayoutDeviceIntRect GetClientBounds() override;
     virtual LayoutDeviceIntSize GetClientSize() override;
     virtual LayoutDeviceIntPoint GetClientOffset() override;
-    NS_IMETHOD         SetCursor(nsCursor aCursor) override;
-    NS_IMETHOD         SetCursor(imgIContainer* aCursor,
+    virtual void       SetCursor(nsCursor aCursor) override;
+    virtual nsresult   SetCursor(imgIContainer* aCursor,
                                  uint32_t aHotspotX, uint32_t aHotspotY) override;
     virtual void       Invalidate(const LayoutDeviceIntRect& aRect) override;
     virtual void*      GetNativeData(uint32_t aDataType) override;
