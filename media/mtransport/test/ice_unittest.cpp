@@ -645,7 +645,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     std::vector<std::string> candidates = GetCandidates(stream);
 
     int host_net = 0;
-    for (auto c : candidates) {
+    for (const auto& c : candidates) {
       if (c.find("typ host") != std::string::npos) {
         nr_transport_addr addr;
         std::vector<std::string> tokens = split(c, ' ');
@@ -1629,7 +1629,7 @@ class WebRtcIceGatherTest : public StunTest {
     std::cerr << "Candidates for stream " << stream << "->"
               << candidates.size() << std::endl;
 
-    for (auto c : candidates) {
+    for (const auto& c : candidates) {
       std::cerr << "Candidate: " << c << std::endl;
     }
   }
