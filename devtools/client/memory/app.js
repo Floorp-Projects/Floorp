@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { appinfo } = require("Services");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
@@ -54,8 +56,22 @@ const MemoryApp = createClass({
 
   propTypes: appModel,
 
+  childContextTypes: {
+    front: PropTypes.any,
+    heapWorker: PropTypes.any,
+    toolbox: PropTypes.any,
+  },
+
   getDefaultProps() {
     return {};
+  },
+
+  getChildContext() {
+    return {
+      front: this.props.front,
+      heapWorker: this.props.heapWorker,
+      toolbox: this.props.toolbox,
+    };
   },
 
   componentDidMount() {
@@ -67,20 +83,6 @@ const MemoryApp = createClass({
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.onKeyDown);
-  },
-
-  childContextTypes: {
-    front: PropTypes.any,
-    heapWorker: PropTypes.any,
-    toolbox: PropTypes.any,
-  },
-
-  getChildContext() {
-    return {
-      front: this.props.front,
-      heapWorker: this.props.heapWorker,
-      toolbox: this.props.toolbox,
-    };
   },
 
   onKeyDown(e) {
@@ -219,7 +221,8 @@ const MemoryApp = createClass({
           Heap({
             snapshot: selectedSnapshot,
             diffing,
-            onViewSourceInDebugger: frame => toolbox.viewSourceInDebugger(frame.source, frame.line),
+            onViewSourceInDebugger: frame =>
+              toolbox.viewSourceInDebugger(frame.source, frame.line),
             onSnapshotClick: () =>
               dispatch(takeSnapshotAndCensus(front, heapWorker)),
             onLoadMoreSiblings: lazyChildren =>
@@ -249,7 +252,8 @@ const MemoryApp = createClass({
                 dispatch(expandDiffingCensusNode(node));
               } else {
                 assert(selectedSnapshot && selectedSnapshot.census === census,
-                       "If not diffing, should be expanding on selected snapshot's census");
+                       "If not diffing, " +
+                       "should be expanding on selected snapshot's census");
                 dispatch(expandCensusNode(selectedSnapshot.id, node));
               }
             },
@@ -260,7 +264,8 @@ const MemoryApp = createClass({
                 dispatch(collapseDiffingCensusNode(node));
               } else {
                 assert(selectedSnapshot && selectedSnapshot.census === census,
-                       "If not diffing, should be collapsing on selected snapshot's census");
+                       "If not diffing, " +
+                       "should be collapsing on selected snapshot's census");
                 dispatch(collapseCensusNode(selectedSnapshot.id, node));
               }
             },
@@ -271,13 +276,15 @@ const MemoryApp = createClass({
                 dispatch(focusDiffingCensusNode(node));
               } else {
                 assert(selectedSnapshot && selectedSnapshot.census === census,
-                       "If not diffing, should be focusing on nodes in selected snapshot's census");
+                       "If not diffing, " +
+                       "should be focusing on nodes in selected snapshot's census");
                 dispatch(focusCensusNode(selectedSnapshot.id, node));
               }
             },
             onDominatorTreeExpand: node => {
               assert(view.state === viewState.DOMINATOR_TREE,
-                     "If expanding dominator tree nodes, should be in dominator tree view");
+                     "If expanding dominator tree nodes, " +
+                     "should be in dominator tree view");
               assert(selectedSnapshot, "...and we should have a selected snapshot");
               assert(selectedSnapshot.dominatorTree,
                      "...and that snapshot should have a dominator tree");
@@ -285,7 +292,8 @@ const MemoryApp = createClass({
             },
             onDominatorTreeCollapse: node => {
               assert(view.state === viewState.DOMINATOR_TREE,
-                     "If collapsing dominator tree nodes, should be in dominator tree view");
+                     "If collapsing dominator tree nodes, " +
+                     "should be in dominator tree view");
               assert(selectedSnapshot, "...and we should have a selected snapshot");
               assert(selectedSnapshot.dominatorTree,
                      "...and that snapshot should have a dominator tree");
@@ -293,7 +301,8 @@ const MemoryApp = createClass({
             },
             onDominatorTreeFocus: node => {
               assert(view.state === viewState.DOMINATOR_TREE,
-                     "If focusing dominator tree nodes, should be in dominator tree view");
+                     "If focusing dominator tree nodes, " +
+                     "should be in dominator tree view");
               assert(selectedSnapshot, "...and we should have a selected snapshot");
               assert(selectedSnapshot.dominatorTree,
                      "...and that snapshot should have a dominator tree");

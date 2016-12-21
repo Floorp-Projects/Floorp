@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that we recompute census diffs at the appropriate times.
 
 const {
@@ -50,9 +52,8 @@ add_task(function* () {
   dispatch(readSnapshot(heapWorker, s1));
   dispatch(readSnapshot(heapWorker, s2));
   dispatch(readSnapshot(heapWorker, s3));
-  yield waitUntilSnapshotState(store, [snapshotState.READ,
-                                       snapshotState.READ,
-                                       snapshotState.READ]);
+  yield waitUntilSnapshotState(store,
+    [snapshotState.READ, snapshotState.READ, snapshotState.READ]);
 
   yield dispatch(toggleDiffing());
   dispatch(selectSnapshotForDiffingAndRefresh(heapWorker,

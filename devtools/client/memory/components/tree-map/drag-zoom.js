@@ -238,7 +238,6 @@ function setScrollHandlers(container, dragZoom, emitChanged, update) {
     let scrollDelta = getScrollDelta(event, window);
     let prevZoom = dragZoom.zoom;
     dragZoom.zoom = Math.max(0, dragZoom.zoom - scrollDelta * ZOOM_SPEED);
-    let deltaZoom = dragZoom.zoom - prevZoom;
 
     // Calculate the updated width and height
     let prevZoomedWidth = container.offsetWidth * (1 + prevZoom);

@@ -111,7 +111,9 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   // Find the most up-to-date version of the node whose children we just
   // incrementally fetched.
 
-  const newDeepest = (function findNewDeepest(node = getState().snapshots[0].dominatorTree.root) {
+  const newDeepest = (function findNewDeepest(node = getState().snapshots[0]
+                                                               .dominatorTree
+                                                               .root) {
     if (node.nodeId === deepest.nodeId) {
       return node;
     }

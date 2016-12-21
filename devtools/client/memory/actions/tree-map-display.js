@@ -28,7 +28,8 @@ const setTreeMap = exports.setTreeMap = function (display) {
          && display
          && display.breakdown
          && display.breakdown.by,
-    `Breakdowns must be an object with a \`by\` property, attempted to set: ${uneval(display)}`);
+    "Breakdowns must be an object with a \`by\` property, attempted to set: " +
+    uneval(display));
 
   return {
     type: actions.SET_TREE_MAP_DISPLAY,

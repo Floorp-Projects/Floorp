@@ -7,7 +7,6 @@
 
 const {
   dominatorTreeState,
-  snapshotState,
   viewState,
   censusState,
 } = require("devtools/client/memory/constants");
@@ -17,9 +16,8 @@ const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser
 
 this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
-  const front = panel.panelWin.gFront;
   const store = panel.panelWin.gStore;
-  const { getState, dispatch } = store;
+  const { dispatch } = store;
   const doc = panel.panelWin.document;
 
   dispatch(changeView(viewState.CENSUS));
@@ -49,7 +47,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   let nameElem = doc.querySelector(".heap-tree-item-field.heap-tree-item-name");
   ok(nameElem, "Should get a tree item row with a name");
-  is(nameElem.textContent.trim(), "js::Shape", "the tree item should be the one we filtered for");
+  is(nameElem.textContent.trim(), "js::Shape",
+    "the tree item should be the one we filtered for");
   is(filterInput.value, "js::Shape",
     "and filter input contains the user value");
 

@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {
@@ -29,7 +30,8 @@ function stringifyLabel(label, id) {
 
     if (isSavedFrame(piece)) {
       const { short } = getSourceNames(piece.source);
-      sanitized[i] = `${piece.functionDisplayName} @ ${short}:${piece.line}:${piece.column}`;
+      sanitized[i] = `${piece.functionDisplayName} @ ` +
+                     `${short}:${piece.line}:${piece.column}`;
     } else if (piece === NO_STACK) {
       sanitized[i] = L10N.getStr("tree-item.nostack");
     } else if (piece === NO_FILENAME) {
@@ -62,14 +64,14 @@ module.exports = createClass({
     return { zoom: null };
   },
 
-  shouldComponentUpdate(nextProps) {
-    return this.props.graph != nextProps.graph;
-  },
-
   componentDidMount() {
     if (this.props.graph) {
       this._renderGraph(this.refs.container, this.props.graph);
     }
+  },
+
+  shouldComponentUpdate(nextProps) {
+    return this.props.graph != nextProps.graph;
   },
 
   componentDidUpdate() {
@@ -82,44 +84,6 @@ module.exports = createClass({
     if (this.state.zoom) {
       this.state.zoom.on("zoom", null);
     }
-  },
-
-  render() {
-    let contents;
-    if (this.props.graph) {
-      // Let the componentDidMount or componentDidUpdate method draw the graph
-      // with DagreD3. We just provide the container for the graph here.
-      contents = dom.div({
-        ref: "container",
-        style: {
-          flex: 1,
-          height: "100%",
-          width: "100%",
-        }
-      });
-    } else {
-      contents = dom.div(
-        {
-          id: "shortest-paths-select-node-msg"
-        },
-        L10N.getStr("shortest-paths.select-node")
-      );
-    }
-
-    return dom.div(
-      {
-        id: "shortest-paths",
-        className: "vbox",
-      },
-      dom.label(
-        {
-          id: "shortest-paths-header",
-          className: "header",
-        },
-        L10N.getStr("shortest-paths.header")
-      ),
-      contents
-    );
   },
 
   _renderGraph(container, { nodes, edges }) {
@@ -180,5 +144,43 @@ module.exports = createClass({
 
     const layout = dagreD3.layout();
     renderer.layout(layout).run(graph, target);
+  },
+
+  render() {
+    let contents;
+    if (this.props.graph) {
+      // Let the componentDidMount or componentDidUpdate method draw the graph
+      // with DagreD3. We just provide the container for the graph here.
+      contents = dom.div({
+        ref: "container",
+        style: {
+          flex: 1,
+          height: "100%",
+          width: "100%",
+        }
+      });
+    } else {
+      contents = dom.div(
+        {
+          id: "shortest-paths-select-node-msg"
+        },
+        L10N.getStr("shortest-paths.select-node")
+      );
+    }
+
+    return dom.div(
+      {
+        id: "shortest-paths",
+        className: "vbox",
+      },
+      dom.label(
+        {
+          id: "shortest-paths-header",
+          className: "header",
+        },
+        L10N.getStr("shortest-paths.header")
+      ),
+      contents
+    );
   },
 });

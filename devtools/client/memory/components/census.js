@@ -2,14 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+"use strict";
+
+const { createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("devtools/client/shared/components/tree"));
 const CensusTreeItem = createFactory(require("./census-tree-item"));
-const { createParentMap } = require("../utils");
 const { TREE_ROW_HEIGHT } = require("../constants");
 const { censusModel, diffingModel } = require("../models");
 
-const Census = module.exports = createClass({
+module.exports = createClass({
   displayName: "Census",
 
   propTypes: {

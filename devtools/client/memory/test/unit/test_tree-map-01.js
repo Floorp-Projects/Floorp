@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const { drawBox } = require("devtools/client/memory/components/tree-map/draw");
 
 function run_test() {
@@ -10,8 +12,12 @@ function run_test() {
 add_task(function* () {
   let fillRectValues, strokeRectValues;
   let ctx = {
-    fillRect: (...args) => fillRectValues = args,
-    strokeRect: (...args) => strokeRectValues = args
+    fillRect: (...args) => {
+      fillRectValues = args;
+    },
+    strokeRect: (...args) => {
+      strokeRectValues = args;
+    }
   };
   let node = {
     x: 20,
@@ -35,7 +41,6 @@ add_task(function* () {
   equal(ctx.lineWidth, 1, "The lineWidth is set");
   deepEqual(fillRectValues, [10.5, 20.5, 49, 69], "Draws a filled rectangle");
   deepEqual(strokeRectValues, [10.5, 20.5, 49, 69], "Draws a stroked rectangle");
-
 
   dragZoom.zoom = 0.5;
 

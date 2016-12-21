@@ -9,7 +9,7 @@ const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 
-const CensusTreeItem = module.exports = createClass({
+module.exports = createClass({
   displayName: "CensusTreeItem",
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -18,6 +18,31 @@ const CensusTreeItem = module.exports = createClass({
       || this.props.expanded != nextProps.expanded
       || this.props.focused != nextProps.focused
       || this.props.diffing != nextProps.diffing;
+  },
+
+  toLabel(name, linkToDebugger) {
+    if (isSavedFrame(name)) {
+      return Frame({
+        frame: name,
+        onClick: () => linkToDebugger(name),
+        showFunctionName: true,
+        showHost: true,
+      });
+    }
+
+    if (name === null) {
+      return L10N.getStr("tree-item.root");
+    }
+
+    if (name === "noStack") {
+      return L10N.getStr("tree-item.nostack");
+    }
+
+    if (name === "noFilename") {
+      return L10N.getStr("tree-item.nofilename");
+    }
+
+    return String(name);
   },
 
   render() {
@@ -105,30 +130,5 @@ const CensusTreeItem = module.exports = createClass({
         this.toLabel(item.name, onViewSourceInDebugger)
       )
     );
-  },
-
-  toLabel(name, linkToDebugger) {
-    if (isSavedFrame(name)) {
-      return Frame({
-        frame: name,
-        onClick: () => linkToDebugger(name),
-        showFunctionName: true,
-        showHost: true,
-      });
-    }
-
-    if (name === null) {
-      return L10N.getStr("tree-item.root");
-    }
-
-    if (name === "noStack") {
-      return L10N.getStr("tree-item.nostack");
-    }
-
-    if (name === "noFilename") {
-      return L10N.getStr("tree-item.nofilename");
-    }
-
-    return String(name);
   },
 });
