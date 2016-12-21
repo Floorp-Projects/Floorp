@@ -497,10 +497,8 @@ public:
     MaybeFinishDecodeFirstFrame();
   }
 
-  void HandleEndOfStream() override
-  {
-    MaybeFinishDecodeFirstFrame();
-  }
+  void HandleAudioNotDecoded(const MediaResult& aError) override;
+  void HandleVideoNotDecoded(const MediaResult& aError) override;
 
   void HandleVideoSuspendTimeout() override
   {
@@ -1900,6 +1898,46 @@ DecodingFirstFrameState::Enter()
 
   // Dispatch tasks to decode first frames.
   mMaster->DispatchDecodeTasksIfNeeded();
+}
+
+void
+MediaDecoderStateMachine::
+DecodingFirstFrameState::HandleAudioNotDecoded(const MediaResult& aError)
+{
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::AUDIO_DATA);
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      mMaster->RequestAudioData();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      AudioQueue().Finish();
+      MaybeFinishDecodeFirstFrame();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
+}
+
+void
+MediaDecoderStateMachine::
+DecodingFirstFrameState::HandleVideoNotDecoded(const MediaResult& aError)
+{
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::VIDEO_DATA);
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      mMaster->RequestVideoData(false, media::TimeUnit());
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      VideoQueue().Finish();
+      MaybeFinishDecodeFirstFrame();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
 }
 
 void
