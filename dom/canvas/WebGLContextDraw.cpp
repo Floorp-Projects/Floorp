@@ -629,7 +629,7 @@ WebGLContext::DrawElements_check(const char* funcName, GLenum mode, GLsizei vert
         if (mPrimRestartTypeBytes != bytesPerElem) {
             mPrimRestartTypeBytes = bytesPerElem;
 
-            const uint32_t ones = UINT32_MAX >> (4 - mPrimRestartTypeBytes);
+            const uint32_t ones = UINT32_MAX >> (32 - 8*mPrimRestartTypeBytes);
             gl->fEnable(LOCAL_GL_PRIMITIVE_RESTART);
             gl->fPrimitiveRestartIndex(ones);
         }
