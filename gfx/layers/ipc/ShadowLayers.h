@@ -449,7 +449,7 @@ class CompositableClient;
 class ShadowableLayer
 {
 public:
-  virtual ~ShadowableLayer() {}
+  virtual ~ShadowableLayer();
 
   virtual Layer* AsLayer() = 0;
 
@@ -464,10 +464,17 @@ public:
    */
   PLayerChild* GetShadow() { return mShadow; }
 
+  void SetShadow(PLayerChild* aShadow) {
+    MOZ_ASSERT(!mShadow || !aShadow, "can't have two shadows (yet)");
+    mShadow = aShadow;
+  }
+
   virtual CompositableClient* GetCompositableClient() { return nullptr; }
+
 protected:
   ShadowableLayer() : mShadow(nullptr) {}
 
+private:
   PLayerChild* mShadow;
 };
 
