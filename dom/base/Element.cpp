@@ -2146,17 +2146,20 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   event.mRefPoint = aSourceEvent->mRefPoint;
   uint32_t clickCount = 1;
   float pressure = 0;
+  uint32_t pointerId = 0; // Use the default value here.
   uint16_t inputSource = 0;
   WidgetMouseEvent* sourceMouseEvent = aSourceEvent->AsMouseEvent();
   if (sourceMouseEvent) {
     clickCount = sourceMouseEvent->mClickCount;
     pressure = sourceMouseEvent->pressure;
+    pointerId = sourceMouseEvent->pointerId;
     inputSource = sourceMouseEvent->inputSource;
   } else if (aSourceEvent->mClass == eKeyboardEventClass) {
     inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
   event.mClickCount = clickCount;
+  event.pointerId = pointerId;
   event.inputSource = inputSource;
   event.mModifiers = aSourceEvent->mModifiers;
   if (aExtraEventFlags) {
