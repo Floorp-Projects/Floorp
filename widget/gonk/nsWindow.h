@@ -73,7 +73,7 @@ public:
     virtual void Invalidate(const LayoutDeviceIntRect& aRect);
     virtual void* GetNativeData(uint32_t aDataType);
     virtual void SetNativeData(uint32_t aDataType, uintptr_t aVal);
-    NS_IMETHOD SetTitle(const nsAString& aTitle)
+    virtual nsresult SetTitle(const nsAString& aTitle)
     {
         return NS_OK;
     }

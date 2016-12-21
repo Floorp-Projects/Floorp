@@ -366,7 +366,7 @@ public:
   virtual nsresult  SetCursor(imgIContainer* aCursor,
                               uint32_t aHotspotX, uint32_t aHotspotY) override;
 
-  NS_IMETHOD        SetTitle(const nsAString& title) override;
+  virtual nsresult  SetTitle(const nsAString& title) override;
 
   virtual MOZ_MUST_USE nsresult
                     GetAttention(int32_t aCycleCount) override;

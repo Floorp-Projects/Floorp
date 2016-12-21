@@ -1311,7 +1311,7 @@ class nsIWidget : public nsISupports
      *
      * @param aTitle string displayed as the title of the widget
      */
-    NS_IMETHOD SetTitle(const nsAString& aTitle) = 0;
+    virtual nsresult SetTitle(const nsAString& aTitle) = 0;
 
     /**
      * Set the widget's icon.

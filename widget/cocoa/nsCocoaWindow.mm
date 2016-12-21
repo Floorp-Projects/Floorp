@@ -1797,7 +1797,8 @@ nsCocoaWindow::SetCursor(imgIContainer* aCursor,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
+nsresult
+nsCocoaWindow::SetTitle(const nsAString& aTitle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
