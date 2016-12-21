@@ -78,7 +78,7 @@ public:
   virtual nsresult        SetFocus(bool aRaise) override { return NS_OK; }
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override { return NS_OK; }
   virtual void            Invalidate(const LayoutDeviceIntRect& aRect) override {}
-  NS_IMETHOD              SetTitle(const nsAString& title) override { return NS_OK; }
+  virtual nsresult        SetTitle(const nsAString& title) override { return NS_OK; }
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override { return NS_OK; }
