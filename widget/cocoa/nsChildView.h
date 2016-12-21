@@ -375,7 +375,8 @@ public:
 
   NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString) override;
   NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString) override;
-  NS_IMETHOD        GetSelectionAsPlaintext(nsAString& aResult) override;
+  virtual MOZ_MUST_USE nsresult
+                    GetSelectionAsPlaintext(nsAString& aResult) override;
 
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                     const InputContextAction& aAction) override;
