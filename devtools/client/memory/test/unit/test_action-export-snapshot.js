@@ -32,7 +32,7 @@ add_task(function* () {
   dispatch(exportSnapshot(getState().snapshots[0], destPath));
   yield exportEvents;
 
-  stat = yield OS.File.stat(destPath);
+  let stat = yield OS.File.stat(destPath);
   do_print(stat.size);
   ok(stat.size > 0, "destination file is more than 0 bytes");
 
