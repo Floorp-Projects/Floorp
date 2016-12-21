@@ -270,13 +270,12 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
 
     switch (cmd.type()) {
       case WebRenderCommand::TOpPushDLBuilder: {
-        wr_push_dl_builder(mWRState);
+        const OpPushDLBuilder& op = cmd.get_OpPushDLBuilder();
+        wr_push_dl_builder(mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]));
         break;
       }
       case WebRenderCommand::TOpPopDLBuilder: {
-        const OpPopDLBuilder& op = cmd.get_OpPopDLBuilder();
-        // XXX overflow is not used for now.
-        wr_pop_dl_builder(mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]));
+        wr_pop_dl_builder(mWRState);
         break;
       }
       case WebRenderCommand::TOpDPPushRect: {

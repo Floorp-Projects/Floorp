@@ -95,23 +95,10 @@ WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
         WebRenderLayer* aLayer)
   : mLayer(aLayer)
 {
+  Matrix4x4 identity;
   Layer* layer = mLayer->GetLayer();
   for (size_t i = layer->GetScrollMetadataCount(); i > 0; i--) {
     const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
-    if (!fm.IsScrollable()) {
-      continue;
-    }
-    if (gfxPrefs::LayersDump()) printf_stderr("Pushing stacking context id %" PRIu64"\n", fm.GetScrollId());
-    mLayer->WRBridge()->AddWebRenderCommand(OpPushDLBuilder());
-  }
-}
-
-WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
-{
-  Matrix4x4 identity;
-  Layer* layer = mLayer->GetLayer();
-  for (size_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-    const FrameMetrics& fm = layer->GetFrameMetrics(i);
     if (!fm.IsScrollable()) {
       continue;
     }
@@ -126,11 +113,25 @@ WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
     // on the scroll offset, we'd fail those checks.
     overflow.MoveBy(bounds.x - scrollPos.x, bounds.y - scrollPos.y);
     if (gfxPrefs::LayersDump()) {
-      printf_stderr("Popping stacking context id %" PRIu64 " with bounds=%s overflow=%s\n",
+      printf_stderr("Pushing stacking context id %" PRIu64 " with bounds=%s overflow=%s\n",
         fm.GetScrollId(), Stringify(bounds).c_str(), Stringify(overflow).c_str());
     }
+
     mLayer->WRBridge()->AddWebRenderCommand(
-      OpPopDLBuilder(toWrRect(bounds), toWrRect(overflow), identity, fm.GetScrollId()));
+      OpPushDLBuilder(toWrRect(bounds), toWrRect(overflow), identity, fm.GetScrollId()));
+  }
+}
+
+WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
+{
+  Layer* layer = mLayer->GetLayer();
+  for (size_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
+    const FrameMetrics& fm = layer->GetFrameMetrics(i);
+    if (!fm.IsScrollable()) {
+      continue;
+    }
+    if (gfxPrefs::LayersDump()) printf_stderr("Popping stacking context id %" PRIu64"\n", fm.GetScrollId());
+    mLayer->WRBridge()->AddWebRenderCommand(OpPopDLBuilder());
   }
 }
 
