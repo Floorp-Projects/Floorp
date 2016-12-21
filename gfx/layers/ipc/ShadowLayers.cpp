@@ -1059,5 +1059,12 @@ ShadowLayerForwarder::SyncWithCompositor()
   }
 }
 
+ShadowableLayer::~ShadowableLayer()
+{
+  if (HasShadow()) {
+    PLayerChild::Send__delete__(GetShadow());
+  }
+}
+
 } // namespace layers
 } // namespace mozilla

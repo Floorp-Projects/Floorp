@@ -351,12 +351,6 @@ public:
 
   ~ClientLayer();
 
-  void SetShadow(PLayerChild* aShadow)
-  {
-    MOZ_ASSERT(!mShadow, "can't have two shadows (yet)");
-    mShadow = aShadow;
-  }
-
   virtual void Disconnect()
   {
     // This is an "emergency Disconnect()", called when the compositing
@@ -364,7 +358,7 @@ public:
     // automatically managed by IPDL, so we don't need to explicitly
     // free them here (it's hard to get that right on emergency
     // shutdown anyway).
-    mShadow = nullptr;
+    SetShadow(nullptr);
   }
 
   virtual void ClearCachedResources() { }
