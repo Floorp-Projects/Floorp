@@ -103,6 +103,9 @@ public:
   bool GetReturnInParagraphCreatesNewParagraph();
   Element* GetSelectionContainer();
 
+  // nsIEditor overrides
+  NS_IMETHOD GetPreferredIMEState(widget::IMEState* aState) override;
+
   // TextEditor overrides
   NS_IMETHOD GetIsDocumentEditable(bool* aIsDocumentEditable) override;
   NS_IMETHOD BeginningOfDocument() override;
@@ -123,9 +126,6 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
-  // nsIEditorIMESupport overrides
-  NS_IMETHOD GetPreferredIMEState(widget::IMEState* aState) override;
 
   // nsIHTMLEditor methods
   NS_DECL_NSIHTMLEDITOR

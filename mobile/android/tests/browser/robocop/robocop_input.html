@@ -109,21 +109,19 @@
         },
 
         test_reflush_changes: function() {
-          let inputIme = getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
-          do_check_true(inputIme.composing);
+          do_check_true(getEditor().composing);
 
           // Ending the composition then setting the input value triggers the bug.
-          inputIme.forceCompositionEnd();
+          getEditor().forceCompositionEnd();
           setValue("good"); // Value that testInputConnection.java expects.
           setSelection(4);
         },
 
         test_set_selection: function() {
-          let inputIme = getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
-          do_check_true(inputIme.composing);
+          do_check_true(getEditor().composing);
 
           // Ending the composition then setting the selection triggers the bug.
-          inputIme.forceCompositionEnd();
+          getEditor().forceCompositionEnd();
           setSelection(3); // Offsets that testInputConnection.java expects.
         },
 

@@ -51,7 +51,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
-#include "nsIEditorIMESupport.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditRules.h"
 #include "nsIFile.h"

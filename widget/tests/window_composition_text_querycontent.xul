@@ -101,7 +101,6 @@ var textareaInFrame;
 
 const nsITextInputProcessorCallback = Components.interfaces.nsITextInputProcessorCallback;
 const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
-const nsIEditorIMESupport = Components.interfaces.nsIEditorIMESupport;
 const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 const nsIDocShell = Components.interfaces.nsIDocShell;
@@ -115,11 +114,9 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
-function getEditorIMESupport(aNode)
+function getEditor(aNode)
 {
-  return aNode.QueryInterface(nsIDOMNSEditableElement).
-               editor.
-               QueryInterface(nsIEditorIMESupport);
+  return aNode.QueryInterface(nsIDOMNSEditableElement).editor;
 }
 
 function getHTMLEditorIMESupport(aWindow)
@@ -4763,7 +4760,7 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #2");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #2");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #2");
   is(textarea.value, "\u306E",
      "runForceCommitTest: the textarea doesn't have the committed text #2");
@@ -4803,9 +4800,9 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #3");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #3");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #3");
-  ok(!getEditorIMESupport(input).isComposing,
+  ok(!getEditor(input).isComposing,
      "runForceCommitTest: the input has composition #3");
   is(textarea.value, "\u306E",
      "runForceCommitTest: the textarea doesn't have the committed text #3");
@@ -4846,7 +4843,7 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #4");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #4");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #4");
   is(textarea.value, "\u306E",
      "runForceCommitTest: the textarea doesn't have the committed text #4");
@@ -4886,9 +4883,9 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #5");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #5");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #5");
-  ok(!getEditorIMESupport(input).isComposing,
+  ok(!getEditor(input).isComposing,
      "runForceCommitTest: the input has composition #5");
   is(textarea.value, "\u306E",
      "runForceCommitTest: the textarea doesn't have the committed text #5");
@@ -4930,9 +4927,9 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #6");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #6");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #6");
-  ok(!getEditorIMESupport(textareaInFrame).isComposing,
+  ok(!getEditor(textareaInFrame).isComposing,
      "runForceCommitTest: the textarea in frame has composition #6");
   is(textarea.value, "\u306E",
      "runForceCommitTest: the textarea doesn't have the committed text #6");
@@ -4974,9 +4971,9 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #7");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #7");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #7");
-  ok(!getEditorIMESupport(textareaInFrame).isComposing,
+  ok(!getEditor(textareaInFrame).isComposing,
      "runForceCommitTest: the textarea in frame has composition #7");
   is(textarea.value, "\u306E",
      "runForceCommitTest: the textarea doesn't have the committed text #7");
@@ -5019,7 +5016,7 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #8");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #8");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #8");
   ok(!getHTMLEditorIMESupport(iframe2.contentWindow).isComposing,
      "runForceCommitTest: the editable document has composition #8");
@@ -5107,7 +5104,7 @@ function runForceCommitTest()
      "runForceCommitTest: The 3rd event was fired on wrong event target #10");
   ok(!getHTMLEditorIMESupport(iframe2.contentWindow).isComposing,
      "runForceCommitTest: the editable document still has composition #10");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea has composition #10");
   ok(iframe2.contentDocument.body.innerHTML != iframe2BodyInnerHTML &&
      iframe2.contentDocument.body.innerHTML.indexOf("\u306E") >= 0,
@@ -5195,7 +5192,7 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #12");
   is(events[2].target, input,
      "runForceCommitTest: The 3rd event was fired on wrong event target #12");
-  ok(!getEditorIMESupport(input).isComposing,
+  ok(!getEditor(input).isComposing,
      "runForceCommitTest: the input still has composition #12");
   is(input.value, "set value",
      "runForceCommitTest: the input doesn't have the set text #12");
@@ -5233,7 +5230,7 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #13");
   is(events[2].target, textarea,
      "runForceCommitTest: The 3rd event was fired on wrong event target #13");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runForceCommitTest: the textarea still has composition #13");
   is(textarea.value, "set value",
      "runForceCommitTest: the textarea doesn't have the set text #13");
@@ -5271,7 +5268,7 @@ function runForceCommitTest()
      "runForceCommitTest: The 2nd event was fired on wrong event target #14");
   is(events[2].target, input,
      "runForceCommitTest: The 3rd event was fired on wrong event target #14");
-  ok(!getEditorIMESupport(input).isComposing,
+  ok(!getEditor(input).isComposing,
      "runForceCommitTest: the input still has composition #14");
   is(input.value, "\u306E appended value",
      "runForceCommitTest: the input should have both composed text and appended text #14");
@@ -5383,7 +5380,7 @@ function runNestedSettingValue()
      "runNestedSettingValue: The 2nd event was fired on wrong event target #1");
   is(events[2].target, textarea,
      "runNestedSettingValue: The 3rd event was fired on wrong event target #1");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runNestedSettingValue: the textarea still has composition #1");
   is(textarea.value, "first setting value, text, compositionend, input, ",
      "runNestedSettingValue: the textarea should have all string set to value attribute");
@@ -5423,7 +5420,7 @@ function runNestedSettingValue()
      "runNestedSettingValue: The 2nd event was fired on wrong event target #2");
   is(events[2].target, input,
      "runNestedSettingValue: The 3rd event was fired on wrong event target #2");
-  ok(!getEditorIMESupport(input).isComposing,
+  ok(!getEditor(input).isComposing,
      "runNestedSettingValue: the input still has composition #2");
   is(textarea.value, "first setting value, text, compositionend, input, ",
      "runNestedSettingValue: the input should have all string set to value attribute #2");
@@ -5463,7 +5460,7 @@ function runNestedSettingValue()
      "runNestedSettingValue: The 2nd event was fired on wrong event target #3");
   is(events[2].target, textarea,
      "runNestedSettingValue: The 3rd event was fired on wrong event target #3");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runNestedSettingValue: the textarea still has composition #3");
   is(textarea.value, "\u306Efirst setting value, text, compositionend, input, ",
      "runNestedSettingValue: the textarea should have appended by setRangeText() and all string set to value attribute #3");
@@ -5503,7 +5500,7 @@ function runNestedSettingValue()
      "runNestedSettingValue: The 2nd event was fired on wrong event target #4");
   is(events[2].target, input,
      "runNestedSettingValue: The 3rd event was fired on wrong event target #4");
-  ok(!getEditorIMESupport(input).isComposing,
+  ok(!getEditor(input).isComposing,
      "runNestedSettingValue: the input still has composition #4");
   is(textarea.value, "\u306Efirst setting value, text, compositionend, input, ",
      "runNestedSettingValue: the input should have all string appended by setRangeText() and set to value attribute #4");
@@ -5610,7 +5607,7 @@ function runAsyncForceCommitTest(aNextTest)
      "runAsyncForceCommitTest: The 2nd event was fired on wrong event target #2");
   is(events[2].target, textarea,
      "runAsyncForceCommitTest: The 3rd event was fired on wrong event target #2");
-  ok(!getEditorIMESupport(textarea).isComposing,
+  ok(!getEditor(textarea).isComposing,
      "runAsyncForceCommitTest: the textarea still has composition #2");
   is(textarea.value, "\u306E",
      "runAsyncForceCommitTest: the textarea doesn't have the committed text #2");
@@ -6095,7 +6092,7 @@ function runRemoveContentTest(aCallback)
        "runRemoveContentTest: The 2nd event was fired on wrong event target #1");
     is(events[2].target, textarea,
        "runRemoveContentTest: The 3rd event was fired on wrong event target #1");
-    ok(!getEditorIMESupport(textarea).isComposing,
+    ok(!getEditor(textarea).isComposing,
        "runRemoveContentTest: the textarea still has composition #1");
     todo_is(textarea.value, "",
        "runRemoveContentTest: the textarea has the committed text? #1");
@@ -6120,7 +6117,7 @@ function runRemoveContentTest(aCallback)
          "runRemoveContentTest: compositionupdate has wrong data #2");
       is(events[0].target, textarea,
          "runRemoveContentTest: The 1st event was fired on wrong event target #2");
-      ok(!getEditorIMESupport(textarea).isComposing,
+      ok(!getEditor(textarea).isComposing,
          "runRemoveContentTest: the textarea still has composition #2");
       is(textarea.value, "",
          "runRemoveContentTest: the textarea has the committed text? #2");

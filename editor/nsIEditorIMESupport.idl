@@ -3,38 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
-#include "domstubs.idl"
-
-%{C++
-namespace mozilla {
-namespace widget {
-struct IMEState;
-} // namespace widget
-} // namespace mozilla
-%}
-
-native IMEState(mozilla::widget::IMEState);
+#include "nsIEditor.idl"
 
 [scriptable, uuid(0ba7f490-afb8-46dd-87fc-bc6137fbc899)]
-
-interface nsIEditorIMESupport : nsISupports
+interface nsIEditorIMESupport : nsIEditor
 {
-  /**
-   * forceCompositionEnd() force the composition end
-   */
-
-  void forceCompositionEnd();
-
-  /**
-   * Get preferred IME status of current widget.
-   */
-
-  [noscript] IMEState getPreferredIMEState();
-
-  /**
-   * whether this editor has active IME transaction
-   */
-  readonly attribute boolean composing;
 };
-

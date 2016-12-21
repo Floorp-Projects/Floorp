@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<style>
+div {
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+  transform: rotate(45deg);
+}
+</style>
+<div id="div"></div>
+<script>
+addEventListener('DOMContentLoaded', function (){
+  var target = document.getElementById('div');
+  target.animate([{ transform: 'translateX(100px)', composite: 'accumulate' },
+                  { transform: 'none' }],
+                 1000);
+});
+</script>

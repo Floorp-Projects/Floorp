@@ -40,7 +40,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIEditorIMESupport.h"
 #include "nsIEditRules.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
