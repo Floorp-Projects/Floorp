@@ -164,9 +164,6 @@ public:
     mIgnoreAudioOutputFormat = true;
   }
 
-  // MediaSourceReader opts out of the start-time-guessing mechanism.
-  virtual bool ForceZeroStartTime() const { return false; }
-
   // The MediaDecoderStateMachine uses various heuristics that assume that
   // raw media data is arriving sequentially from a network channel. This
   // makes sense in the <video src="foo"> case, but not for more advanced use

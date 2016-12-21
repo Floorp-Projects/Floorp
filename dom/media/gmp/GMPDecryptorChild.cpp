@@ -129,10 +129,11 @@ GMPDecryptorChild::SessionMessage(const char* aSessionId,
 void
 GMPDecryptorChild::ExpirationChange(const char* aSessionId,
                                     uint32_t aSessionIdLength,
-                                    GMPTimestamp aExpiryTime)
+                                    GMPTimestamp aMillisecondsSinceEpoch)
 {
   CALL_ON_GMP_THREAD(SendExpirationChange,
-                     nsCString(aSessionId, aSessionIdLength), aExpiryTime);
+                     nsCString(aSessionId, aSessionIdLength),
+                     aMillisecondsSinceEpoch / 1e3);
 }
 
 void
