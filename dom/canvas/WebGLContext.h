@@ -974,6 +974,7 @@ private:
     realGLboolean mScissorTestEnabled;
     realGLboolean mDepthTestEnabled;
     realGLboolean mStencilTestEnabled;
+    GLenum mGenerateMipmapHint;
 
     bool ValidateCapabilityEnum(GLenum cap, const char* info);
     realGLboolean* GetStateTrackingSlot(GLenum cap);

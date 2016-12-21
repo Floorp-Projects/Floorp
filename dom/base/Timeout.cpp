@@ -98,13 +98,13 @@ Timeout::InitTimer(nsIEventTarget* aTarget, uint32_t aDelay)
     TimerCallback, this, aDelay, nsITimer::TYPE_ONE_SHOT, TimerNameCallback);
 }
 
-// Return true if this timeout has a refcount of 1. This is used to check
+// Return true if this timeout has a refcount of aCount. This is used to check
 // that dummy_timeout doesn't leak from nsGlobalWindow::RunTimeout.
 #ifdef DEBUG
 bool
-Timeout::HasRefCntOne() const
+Timeout::HasRefCnt(uint32_t aCount) const
 {
-  return mRefCnt.get() == 1;
+  return mRefCnt.get() == aCount;
 }
 #endif // DEBUG
 

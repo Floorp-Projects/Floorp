@@ -270,8 +270,12 @@ public:
     void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instanceCount);
     void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei instanceCount);
     */
-    void DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, GLintptr offset);
 
+    void DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
+                           GLenum type, WebGLintptr byteOffset)
+    {
+        DrawElements(mode, count, type, byteOffset);
+    }
 
     // ------------------------------------------------------------------------
     // Multiple Render Targets - WebGL2ContextMRTs.cpp
@@ -324,6 +328,8 @@ public:
 
     // -------------------------------------------------------------------------
     // Sync objects - WebGL2ContextSync.cpp
+
+    const GLuint64 kMaxClientWaitSyncTimeoutNS = 1000 * 1000 * 1000; // 1000ms in ns.
 
     already_AddRefed<WebGLSync> FenceSync(GLenum condition, GLbitfield flags);
     bool IsSync(const WebGLSync* sync);

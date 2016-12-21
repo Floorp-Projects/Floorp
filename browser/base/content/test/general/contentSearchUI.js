@@ -27,7 +27,6 @@ var messageHandlers = {
         ack("init");
       }
     });
-    gController.remoteTimeout = 5000;
   },
 
   key: function(arg) {
