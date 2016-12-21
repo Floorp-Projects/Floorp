@@ -190,7 +190,7 @@ PuppetWidget::Destroy()
   mTabChild = nullptr;
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::Show(bool aState)
 {
   NS_ASSERTION(mEnabled,
@@ -216,8 +216,6 @@ PuppetWidget::Show(bool aState)
     Resize(mBounds.width, mBounds.height, false);
     Invalidate(mBounds);
   }
-
-  return NS_OK;
 }
 
 void

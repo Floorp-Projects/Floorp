@@ -558,7 +558,7 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Show(bool aState)
 {
   if (aState != mVisible) {
@@ -570,7 +570,6 @@ nsWindow::Show(bool aState)
       }
       mVisible = aState;
   }
-  return NS_OK;
 }
 
 void

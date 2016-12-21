@@ -345,20 +345,23 @@ nsWindow::Destroy()
     nsBaseWidget::OnDestroy();
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Show(bool aState)
 {
     if (mWindowType == eWindowType_invisible) {
-        return NS_OK;
+        return;
     }
 
     if (mVisible == aState) {
-        return NS_OK;
+        return;
     }
 
     mVisible = aState;
     if (!IS_TOPLEVEL()) {
-        return mParent ? mParent->Show(aState) : NS_OK;
+        if (mParent) {
+            mParent->Show(aState);
+        }
+        return;
     }
 
     if (aState) {
@@ -375,8 +378,6 @@ nsWindow::Show(bool aState)
             break;
         }
     }
-
-    return NS_OK;
 }
 
 bool

@@ -237,7 +237,7 @@ public:
 
     virtual void            Destroy() override;
 
-    NS_IMETHOD              Show(bool aState) override;
+    virtual void            Show(bool aState) override;
     virtual nsIWidget*      GetSheetWindowParent(void) override;
     virtual void            Enable(bool aState) override;
     virtual bool            IsEnabled() const override;

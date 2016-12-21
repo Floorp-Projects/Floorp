@@ -119,7 +119,7 @@ public:
     }
   }
 
-  NS_IMETHOD              Show(bool bState) override;
+  virtual void            Show(bool aState) override;
   virtual bool            IsVisible() const override;
   virtual void            ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY) override;
   virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;

@@ -1677,18 +1677,18 @@ nsWindow::GetDefaultScaleInternal()
     return screenAndroid->GetDensity();
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Show(bool aState)
 {
     ALOG("nsWindow[%p]::Show %d", (void*)this, aState);
 
     if (mWindowType == eWindowType_invisible) {
         ALOG("trying to show invisible window! ignoring..");
-        return NS_ERROR_FAILURE;
+        return;
     }
 
     if (aState == mIsVisible)
-        return NS_OK;
+        return;
 
     mIsVisible = aState;
 
@@ -1724,8 +1724,6 @@ nsWindow::Show(bool aState)
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
-
-    return NS_OK;
 }
 
 bool
