@@ -51,6 +51,20 @@ function promiseEvent(aTarget, aEventName, aPreventDefault) {
   return BrowserTestUtils.waitForEvent(aTarget, aEventName, false, cancelEvent);
 }
 
+/**
+ * Adds a new search engine to the search service and confirms it completes.
+ *
+ * @param {String} basename  The file to load that contains the search engine
+ *                           details.
+ * @param {Object} [options] Options for the test:
+ *   - {String} [iconURL]       The icon to use for the search engine.
+ *   - {Boolean} [setAsCurrent] Whether to set the new engine to be the
+ *                              current engine or not.
+ *   - {String} [testPath]      Used to override the current test path if this
+ *                              file is used from a different directory.
+ * @returns {Promise} The promise is resolved once the engine is added, or
+ *                    rejected if the addition failed.
+ */
 function promiseNewEngine(basename, options = {}) {
   return new Promise((resolve, reject) => {
     // Default the setAsCurrent option to true.
@@ -59,7 +73,7 @@ function promiseNewEngine(basename, options = {}) {
     info("Waiting for engine to be added: " + basename);
     Services.search.init({
       onInitComplete() {
-        let url = getRootDirectory(gTestPath) + basename;
+        let url = getRootDirectory(options.testPath || gTestPath) + basename;
         let current = Services.search.currentEngine;
         Services.search.addEngine(url, null, options.iconURL || "", false, {
           onSuccess(engine) {

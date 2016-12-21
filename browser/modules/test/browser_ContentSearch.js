@@ -7,6 +7,24 @@ const CONTENT_SEARCH_MSG = "ContentSearch";
 const TEST_CONTENT_SCRIPT_BASENAME = "contentSearch.js";
 
 var gMsgMan;
+/* eslint no-undef:"error" */
+/* import-globals-from ../../components/search/test/head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/search/test/head.js",
+  this);
+
+let originalEngine = Services.search.currentEngine;
+
+add_task(function* setup() {
+  yield promiseNewEngine("testEngine.xml", {
+    setAsCurrent: true,
+    testPath: "chrome://mochitests/content/browser/browser/components/search/test/",
+  });
+
+  registerCleanupFunction(() => {
+    Services.search.currentEngine = originalEngine;
+  });
+});
 
 add_task(function* GetState() {
   yield addTab();
