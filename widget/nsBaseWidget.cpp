@@ -741,14 +741,15 @@ nsCursor nsBaseWidget::GetCursor()
   return mCursor;
 }
 
-NS_IMETHODIMP nsBaseWidget::SetCursor(nsCursor aCursor)
+void
+nsBaseWidget::SetCursor(nsCursor aCursor)
 {
   mCursor = aCursor;
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseWidget::SetCursor(imgIContainer* aCursor,
-                                      uint32_t aHotspotX, uint32_t aHotspotY)
+nsresult
+nsBaseWidget::SetCursor(imgIContainer* aCursor,
+                        uint32_t aHotspotX, uint32_t aHotspotY)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -843,22 +843,24 @@ nsChildView::SetFocus(bool aRaise)
 }
 
 // Override to set the cursor on the mac
-NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
+void
+nsChildView::SetCursor(nsCursor aCursor)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if ([mView isDragInProgress])
-    return NS_OK; // Don't change the cursor during dragging.
+    return; // Don't change the cursor during dragging.
 
   nsBaseWidget::SetCursor(aCursor);
-  return [[nsCursorManager sharedInstance] setCursor:aCursor];
+  [[nsCursorManager sharedInstance] setCursor:aCursor];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // implement to fix "hidden virtual function" warning
-NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
-                                      uint32_t aHotspotX, uint32_t aHotspotY)
+nsresult
+nsChildView::SetCursor(imgIContainer* aCursor,
+                       uint32_t aHotspotX, uint32_t aHotspotY)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

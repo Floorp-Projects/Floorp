@@ -975,13 +975,13 @@ PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::SetCursor(nsCursor aCursor)
 {
   // Don't cache on windows, Windowless flash breaks this via async cursor updates.
 #if !defined(XP_WIN)
   if (mCursor == aCursor && !mCustomCursor && !mUpdateCursor) {
-    return NS_OK;
+    return;
   }
 #endif
 
@@ -989,16 +989,14 @@ PuppetWidget::SetCursor(nsCursor aCursor)
 
   if (mTabChild &&
       !mTabChild->SendSetCursor(aCursor, mUpdateCursor)) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   mCursor = aCursor;
   mUpdateCursor = false;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 PuppetWidget::SetCursor(imgIContainer* aCursor,
                         uint32_t aHotspotX, uint32_t aHotspotY)
 {

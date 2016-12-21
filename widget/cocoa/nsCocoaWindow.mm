@@ -1779,16 +1779,17 @@ nsCocoaWindow::RoundsWidgetCoordinatesTo()
   return 1;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetCursor(nsCursor aCursor)
+void
+nsCocoaWindow::SetCursor(nsCursor aCursor)
 {
-  if (mPopupContentView)
-    return mPopupContentView->SetCursor(aCursor);
-
-  return NS_OK;
+  if (mPopupContentView) {
+    mPopupContentView->SetCursor(aCursor);
+  }
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetCursor(imgIContainer* aCursor,
-                                       uint32_t aHotspotX, uint32_t aHotspotY)
+nsresult
+nsCocoaWindow::SetCursor(imgIContainer* aCursor,
+                         uint32_t aHotspotX, uint32_t aHotspotY)
 {
   if (mPopupContentView)
     return mPopupContentView->SetCursor(aCursor, aHotspotX, aHotspotY);
