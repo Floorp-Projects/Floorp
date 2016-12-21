@@ -43,7 +43,7 @@ public:
     virtual bool            IsVisible() const override {
         return mVisible;
     }
-    NS_IMETHOD              SetFocus(bool aState=false) override;
+    virtual nsresult        SetFocus(bool aState=false) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
 
     virtual void SetBackgroundColor(const nscolor &aColor) override;

@@ -669,7 +669,7 @@ nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
   [mNativeView setNeedsDisplayInRect:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetFocus(bool aRaise)
 {
   [[mNativeView window] makeKeyWindow];
