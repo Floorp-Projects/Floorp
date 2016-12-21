@@ -41,10 +41,6 @@
 <!ENTITY cmd.restoreFromFile.label      "Choose File…">
 <!ENTITY cmd.restoreFromFile.accesskey  "C">
 
-<!ENTITY cmd.bookmarkLink.label         "Bookmark This Page…">
-<!ENTITY cmd.bookmarkLink.accesskey     "B">
-<!ENTITY cmd.delete.label               "Delete This Page">
-<!ENTITY cmd.delete.accesskey           "D">
 <!ENTITY cmd.deleteDomainData.label     "Forget About This Site">
 <!ENTITY cmd.deleteDomainData.accesskey "F">
 
