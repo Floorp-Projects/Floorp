@@ -1,9 +1,9 @@
 use fnv::FnvHasher;
 use std::collections::HashMap;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::hash::BuildHasherDefault;
 use std::{mem, slice};
-use std::os::raw::c_void;
+use std::os::raw::{c_void, c_char};
 use gleam::gl;
 use euclid::{Size2D, Point2D, Rect, Matrix4D};
 use webrender_traits::{PipelineId, ClipRegion};
@@ -17,158 +17,25 @@ use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSour
 use std::sync::{Arc, Mutex, Condvar};
 extern crate webrender_traits;
 
-#[cfg(target_os = "linux")]
-mod linux {
-    use std::mem;
-    use std::os::raw::{c_void, c_char, c_int};
-    use std::ffi::CString;
+fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 
-    //pub const RTLD_LAZY: c_int = 0x001;
-    pub const RTLD_NOW: c_int = 0x002;
-
-    #[link="dl"]
-    extern {
-        fn dlopen(filename: *const c_char, flag: c_int) -> *mut c_void;
-        //fn dlerror() -> *mut c_char;
-        fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
-        fn dlclose(handle: *mut c_void) -> c_int;
+    extern  {
+        fn get_proc_address_from_glcontext(glcontext_ptr: *mut c_void, procname: *const c_char) -> *const c_void;
     }
 
-    pub struct Library {
-        handle: *mut c_void,
-        load_fun: extern "system" fn(*const u8) -> *const c_void,
+    let symbol_name = CString::new(name).unwrap();
+    let mut symbol = unsafe {
+        get_proc_address_from_glcontext(glcontext_ptr, symbol_name.as_ptr())
+    };
+
+    // For now panic, not sure we should be though or if we can recover
+    if symbol.is_null() {
+        // XXX Bug 1322949 Make whitelist for extensions
+        println!("Could not find symbol {:?} by glcontext", symbol_name);
     }
 
-    impl Drop for Library {
-        fn drop(&mut self) {
-            unsafe { dlclose(self.handle) };
-        }
-    }
-
-    impl Library {
-        pub fn new() -> Library {
-            let mut libglx = unsafe { dlopen(b"libGL.so.1\0".as_ptr() as *const _, RTLD_NOW) };
-            if libglx.is_null() {
-                libglx = unsafe { dlopen(b"libGL.so\0".as_ptr() as *const _, RTLD_NOW) };
-            }
-            let fun = unsafe { dlsym(libglx, b"glXGetProcAddress\0".as_ptr() as *const _) };
-            Library {
-                handle: libglx,
-                load_fun: unsafe { mem::transmute(fun) },
-            }
-        }
-        pub fn query(&self, name: &str) -> *const c_void {
-            let string = CString::new(name).unwrap();
-            let address = (self.load_fun)(string.as_ptr() as *const _);
-            address as *const _
-        }
-    }
+    symbol as *const _
 }
-
-#[cfg(target_os="macos")]
-mod macos {
-    use std::str::FromStr;
-    use std::os::raw::c_void;
-    use core_foundation::base::TCFType;
-    use core_foundation::string::CFString;
-    use core_foundation::bundle::{CFBundleRef, CFBundleGetBundleWithIdentifier, CFBundleGetFunctionPointerForName};
-
-    pub struct Library(CFBundleRef);
-
-    impl Library {
-        pub fn new() -> Library {
-            let framework_name: CFString = FromStr::from_str("com.apple.opengl").unwrap();
-            let framework = unsafe {
-                CFBundleGetBundleWithIdentifier(framework_name.as_concrete_TypeRef())
-            };
-            Library(framework)
-        }
-        pub fn query(&self, name: &str) -> *const c_void {
-            let symbol_name: CFString = FromStr::from_str(name).unwrap();
-            let symbol = unsafe {
-                CFBundleGetFunctionPointerForName(self.0, symbol_name.as_concrete_TypeRef())
-            };
-
-            if symbol.is_null() {
-                println!("Could not find symbol for {:?}", symbol_name);
-            }
-            symbol as *const _
-        }
-    }
-}
-
-#[cfg(target_os="windows")]
-mod win {
-    use winapi;
-    use kernel32;
-    use std::ffi::CString;
-    use std::os::raw::c_void;
-    use std::mem::transmute;
-
-    #[allow(non_camel_case_types)] // Because this is what the actual func name by MSFT is named
-    type wglGetProcAddress = extern "system" fn (lpszProc : winapi::winnt::LPCSTR) -> winapi::minwindef::PROC;
-
-    // This is a tuple struct
-    pub struct Library {
-        ogl_lib: winapi::HMODULE,
-        ogl_ext_lib: wglGetProcAddress,
-    }
-
-    // TODO: Maybe switch this out with crate libloading for a safer alternative
-    impl Library {
-        pub fn new() -> Library {
-            let system_ogl_lib = unsafe {
-                kernel32::LoadLibraryA(b"opengl32.dll\0".as_ptr() as *const _)
-            };
-
-            if system_ogl_lib.is_null() {
-                panic!("Could not load opengl32 library");
-            }
-
-            let wgl_lookup_func_name = CString::new("wglGetProcAddress").unwrap();
-            let wgl_lookup_func = unsafe {
-                kernel32::GetProcAddress(system_ogl_lib, wgl_lookup_func_name.as_ptr())
-            };
-
-            if wgl_lookup_func.is_null() {
-                panic!("Could not load wglGetProcAddress from Opengl32.dll");
-            }
-
-            Library {
-                ogl_lib: system_ogl_lib,
-                ogl_ext_lib: unsafe {
-                    transmute::<*const c_void, wglGetProcAddress>(wgl_lookup_func)
-                },
-            }
-        }
-        pub fn query(&self, name: &str) -> *const c_void {
-            let symbol_name = CString::new(name).unwrap();
-            let mut symbol = unsafe {
-                // Try opengl32.dll first
-                kernel32::GetProcAddress(self.ogl_lib, symbol_name.as_ptr())
-            };
-
-            if symbol.is_null() {
-                // Then try through wglGetProcAddress, which is what Gecko does
-                symbol = (self.ogl_ext_lib)(symbol_name.as_ptr());
-            }
-
-            // For now panic, not sure we should be though or if we can recover
-            if symbol.is_null() {
-                panic!("Could not find symbol {:?} in Opengl32.dll or wglGetProcAddress", symbol_name);
-            }
-
-            symbol as *const _
-        }
-    }
-}
-
-#[cfg(target_os = "linux")]
-use self::linux::Library as GlLibrary;
-#[cfg(target_os = "macos")]
-use self::macos::Library as GlLibrary;
-#[cfg(target_os = "windows")]
-use self::win::Library as GlLibrary;
 
 extern  {
     fn is_in_compositor_thread() -> bool;
@@ -214,7 +81,6 @@ impl webrender_traits::RenderNotifier for Notifier {
 pub struct WrWindowState {
     renderer: Renderer,
     api: webrender_traits::RenderApi,
-    _gl_library: GlLibrary,
     root_pipeline_id: PipelineId,
     size: DeviceUintSize,
     render_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
@@ -288,11 +154,11 @@ impl ExternalImageHandler for WrExternalImageHandler {
 
 #[no_mangle]
 pub extern fn wr_init_window(root_pipeline_id: u64,
+                             glcontext_ptr: *mut c_void,
                              enable_profiler: bool,
                              external_image_handler: *mut WrExternalImageHandler) -> *mut WrWindowState {
     assert!( unsafe { is_in_compositor_thread() });
-    let library = GlLibrary::new();
-    gl::load_with(|symbol| library.query(symbol));
+    gl::load_with(|symbol| get_proc_address(glcontext_ptr, symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
 
     let version = unsafe {
@@ -344,7 +210,6 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
     let state = Box::new(WrWindowState {
         renderer: renderer,
         api: api,
-        _gl_library: library,
         root_pipeline_id: pipeline_id,
         size: DeviceUintSize::new(0, 0),
         render_notifier_lock: notification_lock_clone,
