@@ -279,7 +279,7 @@ public:
                             const mozilla::WidgetPluginEvent& aEvent) override
                           { }
   virtual MOZ_MUST_USE nsresult AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD_(bool)       ExecuteNativeKeyBinding(
+  virtual bool            ExecuteNativeKeyBinding(
                             NativeKeyBindingsType aType,
                             const mozilla::WidgetKeyboardEvent& aEvent,
                             DoCommandCallback aCallback,
@@ -297,8 +297,8 @@ public:
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
   virtual void               SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) override;
-  NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() override final;
-  NS_IMETHOD_(TextEventDispatcherListener*)
+  virtual TextEventDispatcher* GetTextEventDispatcher() override final;
+  virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;
   virtual void ZoomToRect(const uint32_t& aPresShellId,
                           const FrameMetrics::ViewID& aViewId,

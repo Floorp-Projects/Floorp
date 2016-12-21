@@ -107,9 +107,9 @@ public:
                         LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT);
     virtual void DestroyCompositor();
 
-    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                      const InputContextAction& aAction);
-    NS_IMETHOD_(InputContext) GetInputContext();
+    virtual void SetInputContext(const InputContext& aContext,
+                                 const InputContextAction& aAction);
+    virtual InputContext GetInputContext();
 
     virtual uint32_t GetGLFrameBufferFormat() override;
 
