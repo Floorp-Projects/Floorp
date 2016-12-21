@@ -169,7 +169,7 @@ LazyIdleThread::EnsureThread()
     return NS_ERROR_UNEXPECTED;
   }
 
-  rv = NS_NewThread(getter_AddRefs(mThread), runnable);
+  rv = NS_NewNamedThread("Lazy Idle", getter_AddRefs(mThread), runnable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
