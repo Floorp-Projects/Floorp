@@ -1839,7 +1839,7 @@ js::intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     RootedValue v(cx);
-    if (HasDataProperty(cx, nobj, AtomToId(atom), v.address()) && v.isString())
+    if (GetPropertyPure(cx, nobj, AtomToId(atom), v.address()) && v.isString())
         args.rval().set(v);
     else
         args.rval().setUndefined();
