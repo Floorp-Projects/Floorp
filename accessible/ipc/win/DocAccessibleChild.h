@@ -27,7 +27,7 @@ public:
 
   virtual void Shutdown() override;
 
-  virtual ipc::IPCResult
+  virtual bool
   RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy) override;
 
   IAccessible* GetParentIAccessible() const { return mParentProxy.get(); }
