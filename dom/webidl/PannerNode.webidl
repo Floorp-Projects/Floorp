@@ -39,7 +39,7 @@ dictionary PannerOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional PannerOptions options)]
+ Constructor(BaseAudioContext context, optional PannerOptions options)]
 interface PannerNode : AudioNode {
 
     // Default for stereo is equalpower

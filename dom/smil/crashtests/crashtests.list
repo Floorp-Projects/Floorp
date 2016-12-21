@@ -23,13 +23,13 @@ load 572938-3.svg
 load 572938-4.svg
 load 588287-1.svg
 load 588287-2.svg
-load 590425-1.html
-load 592477-1.xhtml
+asserts-if(stylo,2) load 590425-1.html # bug 1324669
+asserts-if(stylo,8-11) load 592477-1.xhtml # bug 1324669
 load 594653-1.svg
 load 596796-1.svg
 load 605345-1.svg
 load 606101-1.svg
-load 608295-1.html
+asserts-if(stylo,2) load 608295-1.html # bug 1324689
 load 608549-1.svg
 load 611927-1.svg
 load 615002-1.svg

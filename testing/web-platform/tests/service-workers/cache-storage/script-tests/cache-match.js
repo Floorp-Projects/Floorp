@@ -37,6 +37,14 @@ prepopulated_cache_test(simple_entries, function(cache, entries) {
   }, 'Cache.match with new Request');
 
 prepopulated_cache_test(simple_entries, function(cache, entries) {
+    return cache.match(new Request(entries.a.request.url, {method: 'HEAD'}))
+      .then(function(result) {
+          assert_equals(result, undefined,
+                        'Cache.match should not match HEAD Request.');
+        });
+  }, 'Cache.match with HEAD');
+
+prepopulated_cache_test(simple_entries, function(cache, entries) {
     return cache.match(entries.a.request,
                        {ignoreSearch: true})
       .then(function(result) {

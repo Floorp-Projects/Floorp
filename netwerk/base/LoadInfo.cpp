@@ -32,7 +32,7 @@ static void
 InheritOriginAttributes(nsIPrincipal* aLoadingPrincipal, NeckoOriginAttributes& aAttrs)
 {
   const PrincipalOriginAttributes attrs =
-    BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef();
+    aLoadingPrincipal->OriginAttributesRef();
   aAttrs.InheritFromDocToNecko(attrs);
 }
 
