@@ -29,6 +29,7 @@ HTTP(..) != small-caps-turkish-1.html small-caps-turkish-1-notref.html
 == greek-uppercase-1a.html greek-uppercase-1-ref.html
 == greek-uppercase-1b.html greek-uppercase-1-ref.html
 == greek-uppercase-2.html greek-uppercase-2-ref.html
+== greek-uppercase-3.html greek-uppercase-3-ref.html
 HTTP(..) == greek-small-caps-1.html greek-small-caps-1-ref.html
 == irish-uppercase-1.html irish-uppercase-1-ref.html
 == irish-lowercase-1a.html irish-lowercase-1-ref.html

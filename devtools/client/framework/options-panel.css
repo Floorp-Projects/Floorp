@@ -15,7 +15,7 @@
 
 .options-vertical-pane {
   display: inline;
-  float: left;
+  float: inline-start;
 }
 
 .options-vertical-pane {

@@ -25,8 +25,6 @@
 #include <vector>
 
 #ifdef MOZ_RUST_MP4PARSE
-// OpusDecoder header is really needed only by MP4 in rust
-#include "OpusDecoder.h"
 #include "mp4parse.h"
 
 struct FreeMP4Parser { void operator()(mp4parse_parser* aPtr) { mp4parse_free(aPtr); } };
@@ -294,6 +292,10 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     MOZ_DIAGNOSTIC_ASSERT(infoRust->mMimeType == info->mMimeType);
     MOZ_DIAGNOSTIC_ASSERT(infoRust->mDuration == info->mDuration);
     MOZ_DIAGNOSTIC_ASSERT(infoRust->mMediaTime == info->mMediaTime);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mCrypto.mValid == info->mCrypto.mValid);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mCrypto.mMode == info->mCrypto.mMode);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mCrypto.mIVSize == info->mCrypto.mIVSize);
+    MOZ_DIAGNOSTIC_ASSERT(infoRust->mCrypto.mKeyId == info->mCrypto.mKeyId);
     switch (aType) {
     case mozilla::TrackInfo::kAudioTrack: {
       AudioInfo *audioRust = infoRust->GetAsAudioInfo(), *audio = info->GetAsAudioInfo();
@@ -302,7 +304,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       MOZ_DIAGNOSTIC_ASSERT(audioRust->mBitDepth == audio->mBitDepth);
       // TODO: These fields aren't implemented in the Rust demuxer yet.
       //MOZ_DIAGNOSTIC_ASSERT(audioRust->mProfile != audio->mProfile);
-      //MOZ_DIAGNOSTIC_ASSERT(audioRust->mExtendedProfile != audio->mExtendedProfile);
+      MOZ_DIAGNOSTIC_ASSERT(audioRust->mExtendedProfile == audio->mExtendedProfile);
       break;
     }
     case mozilla::TrackInfo::kVideoTrack: {
@@ -799,36 +801,8 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
         MOZ_LOG(sLog, LogLevel::Warning, ("mp4parse_get_track_audio_info returned error %d", rv));
         return nullptr;
       }
-      auto track = mozilla::MakeUnique<mozilla::AudioInfo>();
-      if (info.codec == MP4PARSE_CODEC_OPUS) {
-        track->mMimeType = NS_LITERAL_CSTRING("audio/opus");
-        // The Opus decoder expects the container's codec delay or
-        // pre-skip value, in microseconds, as a 64-bit int at the
-        // start of the codec-specific config blob.
-        MOZ_ASSERT(audio.codec_specific_config.data);
-        MOZ_ASSERT(audio.codec_specific_config.length >= 12);
-        uint16_t preskip =
-          LittleEndian::readUint16(audio.codec_specific_config.data + 10);
-        MOZ_LOG(sLog, LogLevel::Debug,
-            ("Copying opus pre-skip value of %d as CodecDelay.",(int)preskip));
-        OpusDataDecoder::AppendCodecDelay(track->mCodecSpecificConfig,
-            mozilla::FramesToUsecs(preskip, 48000).value());
-      } else if (info.codec == MP4PARSE_CODEC_AAC) {
-        track->mMimeType = MEDIA_MIMETYPE_AUDIO_AAC;
-      } else if (info.codec == MP4PARSE_CODEC_FLAC) {
-        track->mMimeType = MEDIA_MIMETYPE_AUDIO_FLAC;
-      } else if (info.codec == MP4PARSE_CODEC_MP3) {
-        track->mMimeType = MEDIA_MIMETYPE_AUDIO_MPEG;
-      }
-      track->mCodecSpecificConfig->AppendElements(
-          audio.codec_specific_config.data,
-          audio.codec_specific_config.length);
-      track->mRate = audio.sample_rate;
-      track->mChannels = audio.channels;
-      track->mBitDepth = audio.bit_depth;
-      track->mDuration = info.duration;
-      track->mMediaTime = info.media_time;
-      track->mTrackId = info.track_id;
+      auto track = mozilla::MakeUnique<MP4AudioInfo>();
+      track->Update(&info, &audio);
       e = Move(track);
     }
     break;

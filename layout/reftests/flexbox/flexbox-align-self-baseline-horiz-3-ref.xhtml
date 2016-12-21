@@ -23,24 +23,29 @@
       div   { display: inline-block; }
       table { display: inline-table; }
 
-      .big {
-        height: 100px;
-        font: 24px sans-serif;
-        margin-top: 20px;
-      }
-
       .lime   { background: lime;   }
       .pink   { background: pink;   }
       .aqua   { background: aqua;   }
+
+      i { display:inline-block; width:20px; height:2px; background:black; }
+      .ref {
+            -moz-appearance:none;
+             -ms-appearance:none;
+         -webkit-appearance:none;
+                 appearance:none;
+         border:none;
+         margin:0;
+         padding:0;
+         border-bottom:2px solid black;
+         width:20px;
+      }
    </style>
   </head>
   <body>
     <div class="flexbox">
       <div class="lime">text</div
       ><button>btn</button
-      ><input type="radio"
-     /><input type="checkbox"
-     /><label class="pink">label</label
+      ><label class="pink">label</label
       ><table cellspacing="0" cellpadding="0"  class="aqua">
         <label>lab<br/>el</label>
       </table
@@ -54,5 +59,8 @@
         <fieldset><legend>leg<br/>end</legend>field<br/>set</fieldset>
       </table>
     </div>
+    <div class="flexbox" style="font-size:0"><input type="radio"
+     /><input type="checkbox"
+     /><input type="checkbox" class="ref"/></div>
   </body>
 </html>

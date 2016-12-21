@@ -125,11 +125,6 @@ add_task(function* () {
   yield searchEventsPromise;
   yield* checkCurrentEngine(ENGINE_SUGGESTIONS);
 
-  // Avoid intermittent failures.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    content.gSearch._contentSearchController.remoteTimeout = 5000;
-  });
-
   // Type an X in the search input.  This is only a smoke test.  See
   // browser_searchSuggestionUI.js for comprehensive content search suggestion
   // UI tests.

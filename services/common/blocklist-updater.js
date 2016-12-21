@@ -13,7 +13,6 @@ const BlocklistClients = Cu.import("resource://services-common/blocklist-clients
 
 const PREF_SETTINGS_SERVER              = "services.settings.server";
 const PREF_BLOCKLIST_CHANGES_PATH       = "services.blocklist.changes.path";
-const PREF_BLOCKLIST_BUCKET             = "services.blocklist.bucket";
 const PREF_BLOCKLIST_LAST_UPDATE        = "services.blocklist.last_update_seconds";
 const PREF_BLOCKLIST_LAST_ETAG          = "services.blocklist.last_etag";
 const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
@@ -23,7 +22,8 @@ const gBlocklistClients = {
   [BlocklistClients.OneCRLBlocklistClient.collectionName]: BlocklistClients.OneCRLBlocklistClient,
   [BlocklistClients.AddonBlocklistClient.collectionName]: BlocklistClients.AddonBlocklistClient,
   [BlocklistClients.GfxBlocklistClient.collectionName]: BlocklistClients.GfxBlocklistClient,
-  [BlocklistClients.PluginBlocklistClient.collectionName]: BlocklistClients.PluginBlocklistClient
+  [BlocklistClients.PluginBlocklistClient.collectionName]: BlocklistClients.PluginBlocklistClient,
+  [BlocklistClients.PinningPreloadClient.collectionName]: BlocklistClients.PinningPreloadClient
 };
 
 // Add a blocklist client for testing purposes. Do not use for any other purpose
@@ -44,7 +44,6 @@ this.checkVersions = function() {
     // Right now, we only use the collection name and the last modified info
     let kintoBase = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
     let changesEndpoint = kintoBase + Services.prefs.getCharPref(PREF_BLOCKLIST_CHANGES_PATH);
-    let blocklistsBucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
 
     // Use ETag to obtain a `304 Not modified` when no change occurred.
     const headers = {};
@@ -82,14 +81,11 @@ this.checkVersions = function() {
 
     let firstError;
     for (let collectionInfo of versionInfo.data) {
-      // Skip changes that don't concern configured blocklist bucket.
-      if (collectionInfo.bucket != blocklistsBucket) {
-        continue;
-      }
-
       let collection = collectionInfo.collection;
       let client = gBlocklistClients[collection];
-      if (client && client.maybeSync) {
+      if (client &&
+          client.bucketName == collectionInfo.bucket &&
+          client.maybeSync) {
         let lastModified = 0;
         if (collectionInfo.last_modified) {
           lastModified = collectionInfo.last_modified;

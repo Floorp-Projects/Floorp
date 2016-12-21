@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1301306
+-->
+<head>
+<title>Test for Bug 1301306</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1301306">Mozilla Bug 722599</a>
+<p id="display"></p>
+<div id="content">
+<input type="time" id="input_time" onfocus="++focusEvents[0]"
+       onblur="++blurEvents[0]" onfocusin="++focusInEvents[0]"
+       onfocusout="++focusOutEvents[0]">
+<input type="date" id="input_date" onfocus="++focusEvents[1]"
+       onblur="++blurEvents[1]" onfocusin="++focusInEvents[1]"
+       onfocusout="++focusOutEvents[1]">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ * Test for Bug 1301306.
+ * This test checks that when moving inside the time input element, e.g. jumping
+ * through the inner text boxes, does not fire extra focus/blur events.
+ **/
+
+var inputTypes = ["time", "date"];
+var focusEvents = [0, 0];
+var focusInEvents = [0, 0];
+var focusOutEvents = [0, 0];
+var blurEvents = [0, 0];
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function test() {
+  for (var i = 0; i < inputTypes.length; i++) {
+    var input = document.getElementById("input_" + inputTypes[i]);
+
+    input.focus();
+    is(focusEvents[i], 1, inputTypes[i] + " input element should have dispatched focus event.");
+    is(focusInEvents[i], 1, inputTypes[i] + " input element should have dispatched focusin event.");
+    is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
+    is(blurEvents[i], 0, inputTypes[i] + " input element should not have dispatched blur event.");
+
+    // Move around inside the input element's input box.
+    synthesizeKey("VK_TAB", {});
+    is(focusEvents[i], 1, inputTypes[i] + " input element should not have dispatched focus event.");
+    is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
+    is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
+    is(blurEvents[i], 0, inputTypes[i] + " time input element should not have dispatched blur event.");
+
+    synthesizeKey("VK_RIGHT", {});
+    is(focusEvents[i], 1, inputTypes[i] + " input element should not have dispatched focus event.");
+    is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
+    is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
+    is(blurEvents[i], 0, inputTypes[i] + " input element should not have dispatched blur event.");
+
+    synthesizeKey("VK_LEFT", {});
+    is(focusEvents[i], 1,inputTypes[i] + " input element should not have dispatched focus event.");
+    is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
+    is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
+    is(blurEvents[i], 0, inputTypes[i] + " input element should not have dispatched blur event.");
+
+    synthesizeKey("VK_RIGHT", {});
+    is(focusEvents[i], 1, inputTypes[i] + " input element should not have dispatched focus event.");
+    is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
+    is(focusOutEvents[i], 0, inputTypes[i] + " input element should not have dispatched focusout event.");
+    is(blurEvents[i], 0, inputTypes[i] + " input element should not have dispatched blur event.");
+
+    input.blur();
+    is(focusEvents[i], 1, inputTypes[i] + " input element should not have dispatched focus event.");
+    is(focusInEvents[i], 1, inputTypes[i] + " input element should not have dispatched focusin event.");
+    is(focusOutEvents[i], 1, inputTypes[i] + " input element should have dispatched focusout event.");
+    is(blurEvents[i], 1, inputTypes[i] + " input element should have dispatched blur event.");
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -28,3 +28,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     shared_library = '!%sjsctypes-test%s' % (CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'])
     TEST_HARNESS_FILES.xpcshell.toolkit.components.ctypes.tests.unit += [shared_library]
     TEST_HARNESS_FILES.testing.mochitest.chrome.toolkit.components.ctypes.tests.chrome += [shared_library]
+
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    CXXFLAGS += ['-Wno-varargs']

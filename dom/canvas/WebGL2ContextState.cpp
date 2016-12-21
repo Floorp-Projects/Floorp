@@ -112,13 +112,13 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
     /* GLint64 */
     case LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
-      return JS::NumberValue(0); // TODO
+      return JS::NumberValue(kMaxClientWaitSyncTimeoutNS);
 
     case LOCAL_GL_MAX_ELEMENT_INDEX:
       // GL_MAX_ELEMENT_INDEX becomes available in GL 4.3 or via ES3
       // compatibility
       if (!gl->IsSupported(gl::GLFeature::ES3_compatibility))
-        return JS::NumberValue(0);
+        return JS::NumberValue(UINT32_MAX);
 
       /*** fall through to fGetInteger64v ***/
       MOZ_FALLTHROUGH;

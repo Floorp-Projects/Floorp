@@ -70,6 +70,7 @@ RequestsMenuView.prototype = {
     this.store = store;
 
     this.contextMenu = new RequestListContextMenu();
+    this.contextMenu.initialize(store);
 
     Prefs.filters.forEach(type => store.dispatch(Actions.toggleFilterType(type)));
 
@@ -86,8 +87,6 @@ RequestsMenuView.prototype = {
       () => this.store.getState().ui.sidebarOpen,
       () => this.onResize()
     ));
-
-    this._onContextPerfCommand = () => NetMonitorView.toggleFrontendMode();
 
     this.sendCustomRequestEvent = this.sendCustomRequest.bind(this);
     this.closeCustomRequestEvent = this.closeCustomRequest.bind(this);
@@ -127,9 +126,6 @@ RequestsMenuView.prototype = {
     } else {
       $("#headers-summary-resend").hidden = true;
     }
-
-    $("#network-statistics-back-button")
-      .addEventListener("command", this._onContextPerfCommand, false);
   },
 
   /**
@@ -142,8 +138,6 @@ RequestsMenuView.prototype = {
 
     // this.flushRequestsTask.disarm();
 
-    $("#network-statistics-back-button")
-      .removeEventListener("command", this._onContextPerfCommand, false);
     $("#custom-request-send-button")
       .removeEventListener("click", this.sendCustomRequestEvent, false);
     $("#custom-request-close-button")

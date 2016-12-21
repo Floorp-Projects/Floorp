@@ -10,8 +10,6 @@
 
 createHTML({title: "Detect screensharing sources that are firefox", bug: "1311048"});
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.jsm');
 
 let observe = topic => new Promise(r => Services.obs.addObserver(function o(...args) {
@@ -28,36 +26,32 @@ let getDevices = async constraints => {
   let devices = await new Promise((resolve, reject) =>
       window.navigator.mozGetUserMediaDevices({}, resolve, reject,
                                               innerWindowID, callID));
-  return devices.map(d => d.QueryInterface(Ci.nsIMediaDevice));
+  return devices.map(SpecialPowers.wrapCallback(d => d.QueryInterface(Ci.nsIMediaDevice)));
 };
 
 runTest(async () => {
-  try {
-    const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
-    if (IsMacOSX10_6orOlder() || isWinXP) {
-      ok(true, "Screensharing disabled for OSX10.6 and WinXP");
-      return;
-    }
-
-    await pushPrefs(["media.navigator.permission.disabled", true],
-                    ["media.navigator.permission.fake", true],
-                    ["media.navigator.permission.force", true]);
-    let devices = await getDevices({video: { mediaSource: "window" }});
-    ok(devices.length, "Found one or more windows.");
-    devices = devices.filter(d => d.scary);
-    ok(devices.length, "Found one or more scary windows (our own counts).");
-    devices.filter(d => d.name.includes("MochiTest"));
-    ok(devices.length,
-       "Our own window is among the scary: " + devices.map(d => `"${d.name}"`));
-
-    devices = await getDevices({video: { mediaSource: "screen" }});
-    let numScreens = devices.length;
-    ok(numScreens, "Found one or more screens.");
-    devices = devices.filter(d => d.scary);
-    is(devices.length, numScreens, "All screens are scary.");
-  } catch(e) {
-    ok(false, e);
+  const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+  if (IsMacOSX10_6orOlder() || isWinXP) {
+    ok(true, "Screensharing disabled for OSX10.6 and WinXP");
+    return;
   }
+
+  await pushPrefs(["media.navigator.permission.disabled", true],
+                  ["media.navigator.permission.fake", true],
+                  ["media.navigator.permission.force", true]);
+  let devices = await getDevices({video: { mediaSource: "window" }});
+  ok(devices.length, "Found one or more windows.");
+  devices = devices.filter(d => d.scary);
+  ok(devices.length, "Found one or more scary windows (our own counts).");
+  devices.filter(d => d.name.includes("MochiTest"));
+  ok(devices.length,
+     "Our own window is among the scary: " + devices.map(d => `"${d.name}"`));
+
+  devices = await getDevices({video: { mediaSource: "screen" }});
+  let numScreens = devices.length;
+  ok(numScreens, "Found one or more screens.");
+  devices = devices.filter(d => d.scary);
+  is(devices.length, numScreens, "All screens are scary.");
 });
 
 </script>

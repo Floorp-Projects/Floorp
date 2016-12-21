@@ -13,7 +13,8 @@ add_task(function* () {
   info("Starting test... ");
 
   let panel = monitor.panelWin;
-  let { EVENTS, NetMonitorView } = panel;
+  let { $, $all, EVENTS, NetMonitorView, gStore, windowRequire } = panel;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   is(NetMonitorView.currentFrontendMode, "network-inspector-view",
       "The initial frontend mode is correct.");
 
@@ -23,7 +24,7 @@ add_task(function* () {
   ]);
 
   info("Displaying statistics view");
-  NetMonitorView.toggleFrontendMode();
+  gStore.dispatch(Actions.openStatistics(true));
   yield onChartDisplayed;
   is(NetMonitorView.currentFrontendMode, "network-statistics-view",
         "The frontend mode is currently in the statistics view.");

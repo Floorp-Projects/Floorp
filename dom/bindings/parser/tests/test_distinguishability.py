@@ -264,7 +264,6 @@ def WebIDLTest(parser, harness):
           callback Callback2 = long(short arg);
           dictionary Dict {};
           dictionary Dict2 {};
-          interface _Promise {};
           interface TestInterface {%s
           };
         """

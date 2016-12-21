@@ -270,6 +270,44 @@ protected:
       mTargets.push_back(streamRes);
     }
 
+    {
+      MP3Resource res;
+      res.mFilePath = "small-shot-partial-xing.mp3";
+      res.mIsVBR = true;
+      res.mFileSize = 6825;
+      res.mMPEGLayer = 3;
+      res.mMPEGVersion = 1;
+      res.mID3MajorVersion = 4;
+      res.mID3MinorVersion = 0;
+      res.mID3Flags = 0;
+      res.mID3Size = 24;
+      res.mDuration = 336686;
+      res.mDurationError = 0.01f;
+      res.mSeekError = 0.2f;
+      res.mSampleRate = 44100;
+      res.mSamplesPerFrame = 1152;
+      res.mNumSamples = 12;
+      res.mNumTrailingFrames = 0;
+      res.mBitrate = 256000;
+      res.mSlotSize = 1;
+      res.mPrivate = 0;
+      const int syncs[] = { 34, 556, 1078, 1601, 2123, 2646, 3168, 3691, 4213,
+                            4736, 5258, 5781, 6303 };
+      res.mSyncOffsets.insert(res.mSyncOffsets.begin(), syncs, syncs + 13);
+
+      // No content length can be estimated for CBR stream resources.
+      MP3Resource streamRes = res;
+      streamRes.mFileSize = -1;
+
+      res.mResource = new MockMP3MediaResource(res.mFilePath);
+      res.mDemuxer = new MP3TrackDemuxer(res.mResource);
+      mTargets.push_back(res);
+
+      streamRes.mResource = new MockMP3StreamMediaResource(streamRes.mFilePath);
+      streamRes.mDemuxer = new MP3TrackDemuxer(streamRes.mResource);
+      mTargets.push_back(streamRes);
+    }
+
     for (auto& target: mTargets) {
       ASSERT_EQ(NS_OK, target.mResource->Open(nullptr));
       ASSERT_TRUE(target.mDemuxer->Init());
