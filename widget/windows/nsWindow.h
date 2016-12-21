@@ -135,7 +135,7 @@ public:
   virtual void            SetSizeMode(nsSizeMode aMode) override;
   virtual void            Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
-  NS_IMETHOD              SetFocus(bool aRaise) override;
+  virtual nsresult        SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
@@ -211,7 +211,7 @@ public:
   virtual void            UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) override;
 #endif // MOZ_XUL
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
-  NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  virtual nsresult        SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   void                    SetDrawsInTitlebar(bool aState) override;
   virtual void            UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
 

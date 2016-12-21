@@ -322,7 +322,7 @@ public:
 
   virtual void            Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
-  NS_IMETHOD              SetFocus(bool aRaise) override;
+  virtual nsresult        SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;

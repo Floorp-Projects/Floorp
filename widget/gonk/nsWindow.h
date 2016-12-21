@@ -68,7 +68,7 @@ public:
                         bool aRepaint);
     virtual void Enable(bool aState);
     virtual bool IsEnabled() const;
-    NS_IMETHOD SetFocus(bool aRaise = false);
+    virtual nsresult SetFocus(bool aRaise = false);
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
     virtual void Invalidate(const LayoutDeviceIntRect& aRect);
     virtual void* GetNativeData(uint32_t aDataType);

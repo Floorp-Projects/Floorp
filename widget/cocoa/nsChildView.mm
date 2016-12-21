@@ -829,7 +829,8 @@ bool nsChildView::IsEnabled() const
   return true;
 }
 
-NS_IMETHODIMP nsChildView::SetFocus(bool aRaise)
+nsresult
+nsChildView::SetFocus(bool aRaise)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

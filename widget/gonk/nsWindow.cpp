@@ -429,7 +429,7 @@ nsWindow::IsEnabled() const
     return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetFocus(bool aRaise)
 {
     if (aRaise) {
