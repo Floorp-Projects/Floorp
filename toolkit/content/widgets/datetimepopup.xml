@@ -20,6 +20,8 @@
       </field>
       <field name="TIME_PICKER_WIDTH" readonly="true">"12em"</field>
       <field name="TIME_PICKER_HEIGHT" readonly="true">"21em"</field>
+      <field name="DATE_PICKER_WIDTH" readonly="true">"23.1em"</field>
+      <field name="DATE_PICKER_HEIGHT" readonly="true">"20.7em"</field>
       <method name="loadPicker">
         <parameter name="type"/>
         <parameter name="detail"/>
@@ -38,6 +40,14 @@
               this.dateTimePopupFrame.style.height = this.TIME_PICKER_HEIGHT;
               break;
             }
+            case "date": {
+              this.detail = detail;
+              this.dateTimePopupFrame.addEventListener("load", this, true);
+              this.dateTimePopupFrame.setAttribute("src", "chrome://global/content/datepicker.xhtml");
+              this.dateTimePopupFrame.style.width = this.DATE_PICKER_WIDTH;
+              this.dateTimePopupFrame.style.height = this.DATE_PICKER_HEIGHT;
+              break;
+            }
           }
         ]]></body>
       </method>
@@ -48,7 +58,7 @@
           this.pickerState = {};
           this.type = undefined;
           this.dateTimePopupFrame.removeEventListener("load", this, true);
-          this.dateTimePopupFrame.contentDocument.removeEventListener("TimePickerPopupChanged", this, false);
+          this.dateTimePopupFrame.contentDocument.removeEventListener("message", this, false);
           this.dateTimePopupFrame.setAttribute("src", "");
         ]]></body>
       </method>
@@ -58,8 +68,21 @@
           switch (this.type) {
             case "time": {
               this.postMessageToPicker({
-                name: "TimePickerSetValue",
+                name: "PickerSetValue",
                 detail: data.value
+              });
+              break;
+            }
+            case "date": {
+              const { year, month, day } = data.value;
+              this.postMessageToPicker({
+                name: "PickerSetValue",
+                detail: {
+                  year,
+                  // Month value from input box starts from 1 instead of 0
+                  month: month == undefined ? undefined : month - 1,
+                  day
+                }
               });
               break;
             }
@@ -69,14 +92,15 @@
       <method name="initPicker">
         <parameter name="detail"/>
         <body><![CDATA[
+          const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global");
+
           switch (this.type) {
             case "time": {
               const { hour, minute } = detail.value;
               const format = detail.format || "12";
-              const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global");
 
               this.postMessageToPicker({
-                name: "TimePickerInit",
+                name: "PickerInit",
                 detail: {
                   hour,
                   minute,
@@ -85,6 +109,20 @@
                   min: detail.min,
                   max: detail.max,
                   step: detail.step,
+                }
+              });
+              break;
+            }
+            case "date": {
+              const { year, month, day } = detail.value;
+              this.postMessageToPicker({
+                name: "PickerInit",
+                detail: {
+                  year,
+                  // Month value from input box starts from 1 instead of 0
+                  month: month == undefined ? undefined : month - 1,
+                  day,
+                  locale
                 }
               });
               break;
@@ -112,6 +150,10 @@
               }
               break;
             }
+            case "date": {
+              this.sendPickerValueChanged(this.pickerState);
+              break;
+            }
           }
         ]]></body>
       </method>
@@ -124,6 +166,17 @@
                 detail: {
                   hour: value.hour,
                   minute: value.minute
+                }
+              }));
+              break;
+            }
+            case "date": {
+              this.dispatchEvent(new CustomEvent("DateTimePickerValueChanged", {
+                detail: {
+                  year: value.year,
+                  // Month value from input box starts from 1 instead of 0
+                  month: value.month == undefined ? undefined : value.month + 1,
+                  day: value.day
                 }
               }));
               break;
@@ -155,9 +208,13 @@
           }
 
           switch (aEvent.data.name) {
-            case "TimePickerPopupChanged": {
+            case "PickerPopupChanged": {
               this.pickerState = aEvent.data.detail;
               this.setInputBoxValue();
+              break;
+            }
+            case "ClosePopup": {
+              this.closePicker();
               break;
             }
           }
