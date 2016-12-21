@@ -6,6 +6,7 @@ package org.mozilla.focus.webkit.matcher;
 
 
 import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
+import org.mozilla.focus.webkit.matcher.util.FocusString;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -18,7 +19,7 @@ import java.net.URL;
         rootNode = WhiteListTrie.createRootNode();
     }
 
-    public void putWhiteList(final String revhost, final Trie whitelist) {
+    public void putWhiteList(final FocusString revhost, final Trie whitelist) {
         rootNode.putWhiteList(revhost, whitelist);
     }
 
@@ -29,8 +30,8 @@ import java.net.URL;
         }
 
         try {
-            final String revSitehost = new StringBuilder(new URL(site).getHost()).reverse().toString();
-            final String revResourcehost = new StringBuilder(new URL(resource).getHost()).reverse().toString();
+            final FocusString revSitehost = FocusString.create(new URL(site).getHost()).reverse();
+            final FocusString revResourcehost = FocusString.create(new URL(resource).getHost()).reverse();
 
             return isWhiteListed(revSitehost, revResourcehost, rootNode);
         } catch (MalformedURLException e) {
@@ -38,7 +39,7 @@ import java.net.URL;
         }
     }
 
-    private boolean isWhiteListed(final String site, final String resource, final Trie revHostTrie) {
+    private boolean isWhiteListed(final FocusString site, final FocusString resource, final Trie revHostTrie) {
         final WhiteListTrie next = (WhiteListTrie) revHostTrie.children.get(site.charAt(0));
 
         if (next == null) {

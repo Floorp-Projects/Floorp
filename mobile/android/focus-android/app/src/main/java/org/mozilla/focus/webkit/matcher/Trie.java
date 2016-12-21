@@ -7,6 +7,8 @@ package org.mozilla.focus.webkit.matcher;
 import android.util.Pair;
 import android.util.SparseArray;
 
+import org.mozilla.focus.webkit.matcher.util.FocusString;
+
 /* package-private */ class Trie {
 
     /**
@@ -29,7 +31,7 @@ import android.util.SparseArray;
         }
 
         /* Convenience method so that clients aren't forced to do their own casting. */
-        public void putWhiteList(final String string, final Trie whitelist) {
+        public void putWhiteList(final FocusString string, final Trie whitelist) {
             WhiteListTrie node = (WhiteListTrie) super.put(string);
 
             if (node.whitelist != null) {
@@ -44,7 +46,7 @@ import android.util.SparseArray;
     public final SparseArray<Trie> children = new SparseArray<>();
     public boolean terminator = false;
 
-    public Trie findNode(final String string) {
+    public Trie findNode(final FocusString string) {
         if (terminator) {
             // Match achieved
             return this;
@@ -62,7 +64,7 @@ import android.util.SparseArray;
         return next.findNode(string.substring(1));
     }
 
-    public Trie put(final String string) {
+    public Trie put(final FocusString string) {
         if (string.length() == 0) {
             terminator = true;
             return this;

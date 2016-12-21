@@ -7,6 +7,8 @@ package org.mozilla.focus.webkit.matcher;
 
 import android.util.JsonReader;
 
+import org.mozilla.focus.webkit.matcher.util.FocusString;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -56,7 +58,7 @@ import java.util.ArrayList;
                 reader.beginArray();
 
                 while (reader.hasNext()) {
-                    final String revhost = new StringBuilder(reader.nextString()).reverse().toString();
+                    final FocusString revhost = FocusString.create(reader.nextString()).reverse();
 
                     whitelist.put(revhost);
                 }
@@ -66,8 +68,7 @@ import java.util.ArrayList;
         }
 
         for (final String property : propertyList) {
-            // TODO: process String back to front, instead of doing a copy?
-            final String revhost = new StringBuilder(property).reverse().toString();
+            final FocusString revhost = FocusString.create(property).reverse();
 
             entityMap.putWhiteList(revhost, whitelist);
         }

@@ -2,6 +2,7 @@ package org.mozilla.focus.webkit.matcher;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.focus.webkit.matcher.util.FocusString;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
@@ -30,13 +31,13 @@ public class EntityListTest {
         // Thus mozilla.org can only use foo.com, but foo.mozilla.org can use foo.com and bar.com
 
         final Trie fooComTrie = Trie.createRootNode();
-        fooComTrie.put(new StringBuilder(fooCom).reverse().toString());
+        fooComTrie.put(FocusString.create(fooCom).reverse());
 
         final Trie barComTrie = Trie.createRootNode();
-        barComTrie.put(new StringBuilder(barCom).reverse().toString());
+        barComTrie.put(FocusString.create(barCom).reverse());
 
-        entityList.putWhiteList(new StringBuilder(mozillaOrg).reverse().toString(), fooComTrie);
-        entityList.putWhiteList(new StringBuilder(fooMozillaOrg).reverse().toString(), barComTrie);
+        entityList.putWhiteList(FocusString.create(mozillaOrg).reverse(), fooComTrie);
+        entityList.putWhiteList(FocusString.create(fooMozillaOrg).reverse(), barComTrie);
 
         assertTrue(entityList.isWhiteListed("http://" + mozillaOrg, "http://" + fooCom));
         assertFalse(entityList.isWhiteListed("http://" + mozillaOrg, "http://" + barCom));

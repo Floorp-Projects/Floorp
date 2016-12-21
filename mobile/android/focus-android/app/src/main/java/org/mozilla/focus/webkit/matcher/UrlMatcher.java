@@ -8,6 +8,8 @@ package org.mozilla.focus.webkit.matcher;
 import android.content.Context;
 import android.util.JsonReader;
 
+import org.mozilla.focus.webkit.matcher.util.FocusString;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -59,12 +61,12 @@ public class UrlMatcher {
     private void buildMatcher(String[] patterns) {
         // TODO: metrics for load time?
         for (final String pattern : patterns) {
-            rootTrie.put(pattern);
+            rootTrie.put(FocusString.create(pattern));
         }
     }
 
     /* package-private */ void putURL(final String url) {
-        rootTrie.put(url);
+        rootTrie.put(FocusString.create(url));
     }
 
     public boolean matches(final String resourceURLString, final String pageURLString) {
@@ -89,7 +91,7 @@ public class UrlMatcher {
         }
 
         for (int i = 0; i < resourceURLString.length() - 1; i++) {
-            if (rootTrie.findNode(resourceURLString.substring(i)) != null) {
+            if (rootTrie.findNode(FocusString.create(resourceURLString.substring(i))) != null) {
                 previouslyMatched.add(resourceURLString);
                 return true;
             }

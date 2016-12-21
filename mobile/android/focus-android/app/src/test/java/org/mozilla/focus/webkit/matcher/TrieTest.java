@@ -3,6 +3,7 @@ package org.mozilla.focus.webkit.matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
+import org.mozilla.focus.webkit.matcher.util.FocusString;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
@@ -14,26 +15,26 @@ public class TrieTest {
     public void findNode() throws Exception {
         final Trie trie = Trie.createRootNode();
 
-        assertNull(trie.findNode("hello"));
+        assertNull(trie.findNode(FocusString.create("hello")));
 
-        final Trie putNode = trie.put("hello");
-        final Trie foundNode = trie.findNode("hello");
+        final Trie putNode = trie.put(FocusString.create("hello"));
+        final Trie foundNode = trie.findNode(FocusString.create("hello"));
 
         assertNotNull(putNode);
         assertNotNull(foundNode);
         assertEquals(putNode, foundNode);
 
         // Substring matching: only works in one direction
-        assertNull(trie.findNode("hell"));
-        assertNotNull(trie.findNode("hellohello"));
+        assertNull(trie.findNode(FocusString.create("hell")));
+        assertNotNull(trie.findNode(FocusString.create("hellohello")));
 
-        trie.put("hellohello");
+        trie.put(FocusString.create("hellohello"));
 
         // Ensure both old and new overlapping strings can still be found
-        assertNotNull(trie.findNode("hello"));
-        assertNotNull(trie.findNode("hellohello"));
-        assertNull(trie.findNode("hell"));
-        assertNull(trie.findNode("hella"));
+        assertNotNull(trie.findNode(FocusString.create("hello")));
+        assertNotNull(trie.findNode(FocusString.create("hellohello")));
+        assertNull(trie.findNode(FocusString.create("hell")));
+        assertNull(trie.findNode(FocusString.create("hella")));
     }
 
     @Test
@@ -43,20 +44,20 @@ public class TrieTest {
         {
             final Trie whitelist = Trie.createRootNode();
 
-            whitelist.put("abc");
+            whitelist.put(FocusString.create("abc"));
 
             trie = WhiteListTrie.createRootNode();
-            trie.putWhiteList("def", whitelist);
+            trie.putWhiteList(FocusString.create("def"), whitelist);
         }
 
-        assertNull(trie.findNode("abc"));
+        assertNull(trie.findNode(FocusString.create("abc")));
 
         // In practice EntityList uses it's own search in order to cover all possible matching notes
         // (e.g. in case we have separate whitelists for mozilla.org and foo.mozilla.org), however
         // we don't need to test that here yet.
-        final Trie foundWhitelist = trie.findNode("def");
+        final Trie foundWhitelist = trie.findNode(FocusString.create("def"));
         assertNotNull(foundWhitelist);
 
-        assertNotNull(foundWhitelist.findNode("abc"));
+        assertNotNull(foundWhitelist.findNode(FocusString.create("abc")));
     }
 }
