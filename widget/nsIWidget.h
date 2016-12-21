@@ -954,8 +954,7 @@ class nsIWidget : public nsISupports
      *
      * @param aCursor the new cursor for this widget
      */
-
-    NS_IMETHOD SetCursor(nsCursor aCursor) = 0;
+    virtual void SetCursor(nsCursor aCursor) = 0;
 
     /**
      * If a cursor type is currently cached locally for this widget, clear the
@@ -973,8 +972,8 @@ class nsIWidget : public nsISupports
      * @retval NS_ERROR_NOT_IMPLEMENTED if setting images as cursors is not
      *         supported
      */
-    NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                         uint32_t aHotspotX, uint32_t aHotspotY) = 0;
+    virtual nsresult SetCursor(imgIContainer* aCursor,
+                               uint32_t aHotspotX, uint32_t aHotspotY) = 0;
 
     /**
      * Get the window type of this widget.

@@ -183,9 +183,9 @@ public:
   NS_IMETHOD_(NativeIMEContext) GetNativeIMEContext() override;
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
-  NS_IMETHOD SetCursor(nsCursor aCursor) override;
-  NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                       uint32_t aHotspotX, uint32_t aHotspotY) override;
+  virtual void SetCursor(nsCursor aCursor) override;
+  virtual nsresult SetCursor(imgIContainer* aCursor,
+                             uint32_t aHotspotX, uint32_t aHotspotY) override;
 
   virtual void ClearCachedCursor() override;
 

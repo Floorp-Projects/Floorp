@@ -1590,7 +1590,7 @@ nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget, GdkEventProperty* aEvent)
   return FALSE;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetCursor(nsCursor aCursor)
 {
     // if we're not the toplevel window pass up the cursor request to
@@ -1598,9 +1598,10 @@ nsWindow::SetCursor(nsCursor aCursor)
     if (!mContainer && mGdkWindow) {
         nsWindow *window = GetContainerWindow();
         if (!window)
-            return NS_ERROR_FAILURE;
+            return;
 
-        return window->SetCursor(aCursor);
+        window->SetCursor(aCursor);
+        return;
     }
 
     // Only change cursor if it's actually been changed
@@ -1614,16 +1615,14 @@ nsWindow::SetCursor(nsCursor aCursor)
             mCursor = aCursor;
 
             if (!mContainer)
-                return NS_OK;
+                return;
 
             gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)), newCursor);
         }
     }
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetCursor(imgIContainer* aCursor,
                     uint32_t aHotspotX, uint32_t aHotspotY)
 {
