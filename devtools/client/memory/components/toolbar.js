@@ -260,7 +260,8 @@ module.exports = createClass({
           dom.button(
             {
               id: "diff-snapshots",
-              className: "devtools-button devtools-monospace" + (!!diffing ? " checked" : ""),
+              className: "devtools-button devtools-monospace" +
+                         (diffing ? " checked" : ""),
               disabled: snapshots.length < 2,
               onClick: onToggleDiffing,
               title: L10N.getStr("diff-snapshots.tooltip"),

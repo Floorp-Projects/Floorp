@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
 /**
@@ -9,7 +11,7 @@ const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/ven
  * the children nodes as `itemComponent`, and a list of items to render
  * as that component with a click handler.
  */
-const List = module.exports = createClass({
+module.exports = createClass({
   displayName: "List",
 
   propTypes: {

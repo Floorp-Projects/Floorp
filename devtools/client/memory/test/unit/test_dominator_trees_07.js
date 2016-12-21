@@ -1,17 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that we can incrementally fetch two subtrees in the same dominator tree
 // concurrently. This exercises the activeFetchRequestCount machinery.
 
 const {
-  snapshotState: states,
   dominatorTreeState,
   viewState,
 } = require("devtools/client/memory/constants");
 const {
   takeSnapshotAndCensus,
-  selectSnapshotAndRefresh,
   fetchImmediatelyDominated,
 } = require("devtools/client/memory/actions/snapshot");
 const DominatorTreeLazyChildren

@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /**
@@ -7,7 +8,7 @@
  * displays.
  */
 
-let { snapshotState: states, censusState, viewState } = require("devtools/client/memory/constants");
+let { censusState, viewState } = require("devtools/client/memory/constants");
 let { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 let { changeView } = require("devtools/client/memory/actions/view");
@@ -48,6 +49,7 @@ add_task(function* () {
   ok(getState().snapshots[0].census.report.children.every(c => !c.count),
      "Census used CUSTOM display without counts");
   // Ensure we do have `bytes` in the results
-  ok(getState().snapshots[0].census.report.children.every(c => typeof c.bytes === "number"),
+  ok(getState().snapshots[0].census.report.children
+               .every(c => typeof c.bytes === "number"),
      "Census used CUSTOM display with bytes");
 });

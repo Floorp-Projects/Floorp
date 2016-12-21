@@ -2,19 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
-const { assert } = require("devtools/shared/DevToolsUtils");
-const { createParentMap } = require("devtools/shared/heapsnapshot/CensusUtils");
+"use strict";
+
+const { createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("devtools/client/shared/components/tree"));
 const DominatorTreeItem = createFactory(require("./dominator-tree-item"));
-const { L10N } = require("../utils");
 const { TREE_ROW_HEIGHT } = require("../constants");
 const models = require("../models");
 
 /**
  * The list of individuals in a census group.
  */
-const Individuals = module.exports = createClass({
+module.exports = createClass({
   displayName: "Individuals",
 
   propTypes: {

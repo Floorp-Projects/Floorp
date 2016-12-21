@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* global ChromeUtils */
+
 // Test that refreshing the page with devtools open does not leak the old
 // windows from previous navigations.
 //
@@ -9,7 +11,6 @@
 
 "use strict";
 
-const HeapSnapshotFileUtils = require("devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 const { getLabelAndShallowSize } = require("devtools/shared/heapsnapshot/DominatorTreeNode");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_empty.html";
@@ -50,14 +51,11 @@ const DESCRIPTION = {
 };
 
 this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
-  const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const front = panel.panelWin.gFront;
-  const store = panel.panelWin.gStore;
-  const { getState, dispatch } = store;
-  const doc = panel.panelWin.document;
 
   const startWindows = yield getWindowsInSnapshot(front);
-  dumpn("Initial windows found = " + startWindows.map(w => "0x" + w.toString(16)).join(", "));
+  dumpn("Initial windows found = " + startWindows.map(w => "0x" +
+                                     w.toString(16)).join(", "));
   is(startWindows.length, 1);
 
   yield refreshTab(tab);
@@ -84,7 +82,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const paths = snapshot.computeShortestPaths(dominatorTree.root, startWindows, 50);
 
   for (let i = 0; i < startWindows.length; i++) {
-    dumpn("Shortest retaining paths for leaking Window 0x" + startWindows[i].toString(16) + " =========================");
+    dumpn("Shortest retaining paths for leaking Window 0x" +
+          startWindows[i].toString(16) + " =========================");
     let j = 0;
     for (let retainingPath of paths.get(startWindows[i])) {
       if (retainingPath.find(part => part.predecessor === startWindows[i])) {
@@ -92,7 +91,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
         continue;
       }
 
-      dumpn("    Path #" + (++j) + ": --------------------------------------------------------------------");
+      dumpn("    Path #" + (++j) +
+            ": --------------------------------------------------------------------");
       for (let part of retainingPath) {
         const { label } = getLabelAndShallowSize(part.predecessor, snapshot, DESCRIPTION);
         dumpn("        0x" + part.predecessor.toString(16) +

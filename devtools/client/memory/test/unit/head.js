@@ -26,7 +26,8 @@ var HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClien
 var { addDebuggerToGlobal } = require("resource://gre/modules/jsdebugger.jsm");
 var Store = require("devtools/client/memory/store");
 var { L10N } = require("devtools/client/memory/utils");
-var SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+var SYSTEM_PRINCIPAL =
+  Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
@@ -59,17 +60,20 @@ StubbedMemoryFront.prototype.detach = Task.async(function* () {
   this.state = "detached";
 });
 
-StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached", Task.async(function* () {
-  return ThreadSafeChromeUtils.saveHeapSnapshot({ runtime: true });
-}), "saveHeapSnapshot");
+StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached",
+  Task.async(function* () {
+    return ThreadSafeChromeUtils.saveHeapSnapshot({ runtime: true });
+  }), "saveHeapSnapshot");
 
-StubbedMemoryFront.prototype.startRecordingAllocations = expectState("attached", Task.async(function* () {
-  this.recordingAllocations = true;
-}));
+StubbedMemoryFront.prototype.startRecordingAllocations = expectState("attached",
+  Task.async(function* () {
+    this.recordingAllocations = true;
+  }));
 
-StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached", Task.async(function* () {
-  this.recordingAllocations = false;
-}));
+StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached",
+  Task.async(function* () {
+    this.recordingAllocations = false;
+  }));
 
 function waitUntilSnapshotState(store, expected) {
   let predicate = () => {
