@@ -18,12 +18,6 @@ content.addEventListener(SERVICE_EVENT_TYPE, event => {
 
 // Forward messages from the test to the in-content service.
 addMessageListener(TEST_MSG, msg => {
-  content.dispatchEvent(
-    new content.CustomEvent(CLIENT_EVENT_TYPE, {
-      detail: msg.data,
-    })
-  );
-
   // If the message is a search, stop the page from loading and then tell the
   // test that it loaded.
   if (msg.data.type == "Search") {
@@ -34,6 +28,12 @@ addMessageListener(TEST_MSG, msg => {
       });
     });
   }
+
+  content.dispatchEvent(
+    new content.CustomEvent(CLIENT_EVENT_TYPE, {
+      detail: msg.data,
+    })
+  );
 });
 
 function waitForLoadAndStopIt(expectedURL, callback) {
