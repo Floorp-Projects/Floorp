@@ -71,9 +71,8 @@ NS_NewThread(nsIThread** aResult,
 /**
  * Creates a named thread, otherwise the same as NS_NewThread
  */
-template<size_t LEN>
 inline nsresult
-NS_NewNamedThread(const char (&aName)[LEN],
+NS_NewNamedThread(const nsACString& aName,
                   nsIThread** aResult,
                   nsIRunnable* aInitialEvent = nullptr,
                   uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
@@ -84,7 +83,7 @@ NS_NewNamedThread(const char (&aName)[LEN],
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  NS_SetThreadName<LEN>(thread, aName);
+  NS_SetThreadName(thread, aName);
   if (aInitialEvent) {
     rv = thread->Dispatch(aInitialEvent, NS_DISPATCH_NORMAL);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Initial event dispatch failed");
@@ -93,6 +92,19 @@ NS_NewNamedThread(const char (&aName)[LEN],
   *aResult = nullptr;
   thread.swap(*aResult);
   return rv;
+}
+
+template<size_t LEN>
+inline nsresult
+NS_NewNamedThread(const char (&aName)[LEN],
+                  nsIThread** aResult,
+                  nsIRunnable* aInitialEvent = nullptr,
+                  uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
+{
+  static_assert(LEN <= 16,
+                "Thread name must be no more than 16 characters");
+  return NS_NewNamedThread(nsDependentCString(aName, LEN - 1),
+                           aResult, aInitialEvent, aStackSize);
 }
 
 /**
