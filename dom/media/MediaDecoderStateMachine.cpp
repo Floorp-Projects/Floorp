@@ -236,8 +236,8 @@ protected:
     // We are expecting more data if either the resource states so, or if we
     // have a waiting promise pending (such as with non-MSE EME).
     return Resource()->IsExpectingMoreData() ||
-           (Reader()->IsWaitForDataSupported() &&
-            (mMaster->IsWaitingAudioData() || mMaster->IsWaitingVideoData()));
+           mMaster->IsWaitingAudioData() ||
+           mMaster->IsWaitingVideoData();
   }
   MediaQueue<MediaData>& AudioQueue() const { return mMaster->mAudioQueue; }
   MediaQueue<MediaData>& VideoQueue() const { return mMaster->mVideoQueue; }
@@ -1746,8 +1746,6 @@ StateObject::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
   // If the decoder is waiting for data, we tell it to call us back when the
   // data arrives.
   if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
-    MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
-               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     mMaster->WaitForData(aType);
     HandleWaitingForData();
     return;
@@ -2077,7 +2075,6 @@ DecodingState::MaybeStartBuffering()
                    mMaster->HasLowDecodedData() &&
                    mMaster->HasLowBufferedData();
   } else {
-    MOZ_ASSERT(Reader()->IsWaitForDataSupported());
     shouldBuffer =
       (mMaster->OutOfDecodedAudio() && mMaster->IsWaitingAudioData()) ||
       (mMaster->OutOfDecodedVideo() && mMaster->IsWaitingVideoData());
@@ -2165,8 +2162,6 @@ BufferingState::Step()
       return;
     }
   } else if (mMaster->OutOfDecodedAudio() || mMaster->OutOfDecodedVideo()) {
-    MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
-               "Don't yet have a strategy for non-heuristic + non-WaitForData");
     mMaster->DispatchDecodeTasksIfNeeded();
     MOZ_ASSERT(mMaster->mMinimizePreroll ||
                !mMaster->OutOfDecodedAudio() ||
