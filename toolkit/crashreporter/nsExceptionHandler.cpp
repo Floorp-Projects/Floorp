@@ -3609,7 +3609,7 @@ InjectCrashReporterIntoProcess(DWORD processID, InjectorCrashCallback* cb)
     OOPInit();
 
   if (!sInjectorThread) {
-    if (NS_FAILED(NS_NewThread(&sInjectorThread)))
+    if (NS_FAILED(NS_NewNamedThread("CrashRep Inject", &sInjectorThread)))
       return;
   }
 

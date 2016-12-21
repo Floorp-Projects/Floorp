@@ -375,7 +375,7 @@ ResourceSocketListener::OnSocketAccepted(nsIServerSocket* aServ,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIThread> thread;
-  rv = NS_NewThread(getter_AddRefs(thread));
+  rv = NS_NewNamedThread("ServeResource", getter_AddRefs(thread));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRunnable> event = new ServeResourceEvent(input.get(), output.get(), mServer);
