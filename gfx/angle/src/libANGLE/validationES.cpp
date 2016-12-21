@@ -3219,7 +3219,7 @@ bool ValidateDrawElements(ValidationContext *context,
         return false;
     }
 
-    if (!ValidateDrawAttribs(context, primcount, static_cast<GLint>(indexRangeOut->vertexCount())))
+    if (!ValidateDrawAttribs(context, primcount, static_cast<GLint>(indexRangeOut->end + 1)))
     {
         return false;
     }
