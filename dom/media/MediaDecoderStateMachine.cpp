@@ -1361,7 +1361,7 @@ private:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    mMaster->Push(aAudio);
+    mMaster->PushAudio(aAudio);
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
@@ -1371,7 +1371,7 @@ private:
     MOZ_ASSERT(NeedMoreVideo());
 
     if (aVideo->mTime > mCurrentTime) {
-      mMaster->Push(aVideo);
+      mMaster->PushVideo(aVideo);
       FinishSeek();
     } else {
       RequestVideoData();
