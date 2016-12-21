@@ -15,14 +15,14 @@ namespace mozilla {
 namespace layers {
 
 class CompositableHost;
-class CompositorVsyncScheduler;
+class CompositorBridgeParent;
 
 class WebRenderCompositorOGL final : public Compositor
 {
   typedef mozilla::gl::GLContext GLContext;
 
 public:
-  explicit WebRenderCompositorOGL(GLContext* aGLContext);
+  explicit WebRenderCompositorOGL(CompositorBridgeParent* aCompositorBridge, GLContext* aGLContext);
 
 protected:
   virtual ~WebRenderCompositorOGL();
@@ -121,12 +121,11 @@ public:
   void UpdateExternalImages();
 
   void ScheduleComposition();
-  void SetVsyncScheduler(CompositorVsyncScheduler* aScheduler);
 private:
   void CleanupResources();
 
+  CompositorBridgeParent* MOZ_NON_OWNING_REF mCompositorBridge;
   RefPtr<GLContext> mGLContext;
-  RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   // Holds CompositableHosts that are bound to external image ids.
   nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost> > mCompositableHosts;
 
