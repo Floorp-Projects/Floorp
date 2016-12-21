@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_UTILS_H_
-#define MOZILLA_GFX_UTILS_H_
+#ifndef Y_CB_CR_UTILS_H_
+#define Y_CB_CR_UTILS_H_
 
 #include "mozilla/gfx/Types.h"
 #include "ImageContainer.h"
@@ -24,7 +24,17 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                   unsigned char* aDestBuffer,
                   int32_t aStride);
 
+// Currently this function only has support for I420 type.
+void
+ConvertYCbCrAToARGB(const uint8_t* aSrcY,
+                    const uint8_t* aSrcU,
+                    const uint8_t* aSrcV,
+                    const uint8_t* aSrcA,
+                    int aSrcStrideYA, int aSrcStrideUV,
+                    uint8_t* aDstARGB, int aDstStrideARGB,
+                    int aWidth, int aHeight);
+
 } // namespace gfx
 } // namespace mozilla
 
-#endif /* MOZILLA_GFX_UTILS_H_ */
+#endif /* Y_CB_CR_UTILS_H_ */
