@@ -64,8 +64,7 @@ private:
 };
 
 // BoxReader takes a copy of a box contents and serves through an AutoByteReader.
-MOZ_RAII
-class BoxReader
+class MOZ_RAII BoxReader
 {
 public:
   explicit BoxReader(Box& aBox)

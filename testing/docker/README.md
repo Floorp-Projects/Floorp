@@ -89,10 +89,25 @@ convenience method in task definitions.
 Example:
   image: {#docker_image}builder{/docker_image}
 
-Each image has a version, given by its `VERSION` file.  This should be bumped when any changes are made that will be deployed into taskcluster.
-Then, older tasks which were designed to run on an older version of the image can still be executed in taskcluster, while new tasks can use the new version.
+Each image has a hash and a version, given by its `HASH` and `VERSION` files.
+When rebuilding a prebuilt image the `VERSION` should be bumped. Once a new
+version of the image has been built the `HASH` file should be updated with the
+hash of the image.
 
-Each image also has a `REGISTRY`, defaulting to the `REGISTRY` in this directory, and specifying the image registry to which the completed image should be uploaded.
+The `HASH` file is the image hash as computed by docker, this is always on the
+format `sha256:<digest>`. In production images will be referenced by image hash.
+This mitigates attacks against the registry as well as simplifying validate of
+correctness. The `VERSION` file only serves to provide convenient names, such
+that old versions are easy to discover in the registry (and ensuring old
+versions aren't deleted by garbage-collection).
+
+This way, older tasks which were designed to run on an older version of the image
+can still be executed in taskcluster, while new tasks can use the new version.
+Further more, this mitigates attacks against the registry as docker will verify
+the image hash when loading the image.
+
+Each image also has a `REGISTRY`, defaulting to the `REGISTRY` in this directory,
+and specifying the image registry to which the completed image should be uploaded.
 
 ## Building images
 
@@ -100,22 +115,20 @@ Generally, images can be pulled from the [registry](./REGISTRY) rather than
 built locally, however, for developing new images it's often helpful to hack on
 them locally.
 
-To build an image, invoke `build.sh` with the name of the folder (without a trailing slash):
+To build an image, invoke `mach taskcluster-build-image` with the name of the
+folder (without a trailing slash):
 ```sh
-./build.sh base
+./mach taskcluster-build-image <image-name>
 ```
 
-This is a tiny wrapper around building the docker images via `docker
-build -t $REGISTRY/$FOLDER:$FOLDER_VERSION`
+This is a tiny wrapper around `docker build -t $REGISTRY/$FOLDER:$VERSION`.
+Once a new version image has been built and pushed to the remote registry using
+`docker push $REGISTRY/$FOLDER:$VERSION` the `HASH` file must be updated for the
+change to effect in production.
 
 Note: If no "VERSION" file present in the image directory, the tag 'latest' will be used and no
-registry user will be defined.  The image is only meant to run locally and will overwrite
+registry will be defined. The image is only meant to run locally and will overwrite
 any existing image with the same name and tag.
-
-On completion, if the image has been tagged with a version and registry, `build.sh` gives a
-command to upload the image to the registry, but this is not necessary until the image
-is ready for production usage. Docker will successfully find the local, tagged image
-while you continue to hack on the image definitions.
 
 ## Adding a new image
 

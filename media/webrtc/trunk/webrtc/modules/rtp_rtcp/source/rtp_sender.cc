@@ -1431,7 +1431,12 @@ uint8_t RTPSender::BuildRIDExtension(
   size_t pos = 0;
   // RID value is not null-terminated in header, so no +1
   const uint8_t len = strlen(rid_);
-  data_buffer[pos++] = (id << 4) + len;
+  if (len > 16 || len == 0) {
+    LOG(LS_ERROR) << "Failed to add RID header because of unsupported RID"
+                    " length: " << len;
+    return 0;
+  }
+  data_buffer[pos++] = (id << 4) + (len - 1);
   memcpy(data_buffer + pos, rid_, len);
   pos += len;
   return pos;

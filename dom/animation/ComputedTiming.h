@@ -29,6 +29,8 @@ struct ComputedTiming
   // Will equal StickyTimeDuration::Forever() if the animation repeats
   // indefinitely.
   StickyTimeDuration  mActiveDuration;
+  // The time within the active interval.
+  StickyTimeDuration mActiveTime;
   // The effect end time in local time (i.e. an offset from the effect's
   // start time). Will equal StickyTimeDuration::Forever() if the animation
   // plays indefinitely.
@@ -71,6 +73,7 @@ struct ComputedTiming
 
   ComputedTimingFunction::BeforeFlag mBeforeFlag =
     ComputedTimingFunction::BeforeFlag::Unset;
+
 };
 
 } // namespace mozilla
