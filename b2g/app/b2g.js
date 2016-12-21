@@ -684,9 +684,6 @@ pref("dom.ipc.systemMessageCPULockTimeoutSec", 30);
 // Ignore the "dialog=1" feature in window.open.
 pref("dom.disable_window_open_dialog_feature", true);
 
-// Enable before keyboard events and after keyboard events.
-pref("dom.beforeAfterKeyboardEvent.enabled", true);
-
 // Screen reader support
 pref("accessibility.accessfu.activate", 2);
 pref("accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement,Landmark,ListItem");
@@ -845,10 +842,6 @@ pref("media.webspeech.synth.enabled", true);
 
 // Enable Web Speech recognition API
 pref("media.webspeech.recognition.enable", true);
-
-// Downloads API
-pref("dom.mozDownloads.enabled", true);
-pref("dom.downloads.max_retention_days", 7);
 
 // External Helper Application Handling
 //

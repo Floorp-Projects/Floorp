@@ -270,8 +270,8 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, uint32_t aType)
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
          // On Android/B2G, date/time input appears as a normal text box.
          aType == NS_FORM_INPUT_TIME ||
-#endif
          aType == NS_FORM_INPUT_DATE ||
+#endif
          aType == NS_FORM_INPUT_MONTH ||
          aType == NS_FORM_INPUT_WEEK ||
          aType == NS_FORM_INPUT_DATETIME_LOCAL ||

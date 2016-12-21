@@ -1936,7 +1936,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
 
   if (tmp->mTimeoutManager) {
-    tmp->mTimeoutManager->ForEachTimeout([&cb](Timeout* timeout) {
+    tmp->mTimeoutManager->ForEachUnorderedTimeout([&cb](Timeout* timeout) {
       cb.NoteNativeChild(timeout, NS_CYCLE_COLLECTION_PARTICIPANT(Timeout));
     });
   }

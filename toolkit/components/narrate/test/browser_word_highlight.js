@@ -39,12 +39,13 @@ add_task(function* testNarrate() {
       details = (yield promiseEvent).detail;
     } while (details.tag != "p");
 
-    let boundaryPat = /(\s+)\S/g;
+    let boundaryPat = /(\S+)/g;
     let position = { left: 0, top: 0 };
     let text = details.paragraph;
     for (let res = boundaryPat.exec(text); res; res = boundaryPat.exec(text)) {
       promiseEvent = ContentTaskUtils.waitForEvent(content, "wordhighlight");
-      NarrateTestUtils.sendBoundaryEvent(content, "word", res.index);
+      NarrateTestUtils.sendBoundaryEvent(content, "word",
+        res.index, res[0].length);
       let { start, end } = (yield promiseEvent).detail;
       let nodes = NarrateTestUtils.getWordHighlights(content);
       for (let node of nodes) {

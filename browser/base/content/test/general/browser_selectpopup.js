@@ -79,7 +79,11 @@ function openSelectPopup(selectPopup, withMouse, selector = "select",  win = win
 
 function hideSelectPopup(selectPopup, mode = "enter", win = window)
 {
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
+  let browser = win.gBrowser.selectedBrowser;
+  let selectClosedPromise = ContentTask.spawn(browser, null, function*() {
+    Cu.import("resource://gre/modules/SelectContentHelper.jsm");
+    return ContentTaskUtils.waitForCondition(() => !SelectContentHelper.open);
+  });
 
   if (mode == "escape") {
     EventUtils.synthesizeKey("KEY_Escape", { code: "Escape" }, win);
@@ -91,7 +95,7 @@ function hideSelectPopup(selectPopup, mode = "enter", win = window)
     EventUtils.synthesizeMouseAtCenter(selectPopup.lastChild, { }, win);
   }
 
-  return popupHiddenPromise;
+  return selectClosedPromise;
 }
 
 function getInputEvents()
@@ -559,3 +563,4 @@ add_task(function* test_somehidden() {
   yield hideSelectPopup(selectPopup, "escape");
   yield BrowserTestUtils.removeTab(tab);
 });
+

@@ -73,9 +73,9 @@
     macro(currencyDisplay, currencyDisplay, "currencyDisplay") \
     macro(DateTimeFormat, DateTimeFormat, "DateTimeFormat") \
     macro(DateTimeFormatFormatGet, DateTimeFormatFormatGet, "Intl_DateTimeFormat_format_get") \
-    macro(DateTimeFormatFormatToParts, DateTimeFormatFormatToParts, "Intl_DateTimeFormat_formatToParts") \
     macro(day, day, "day") \
     macro(dayPeriod, dayPeriod, "dayPeriod") \
+    macro(decimal, decimal, "decimal") \
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
     macro(DefaultBaseClassConstructor, DefaultBaseClassConstructor, "DefaultBaseClassConstructor") \
@@ -122,6 +122,8 @@
     macro(forceInterpreter, forceInterpreter, "forceInterpreter") \
     macro(forEach, forEach, "forEach") \
     macro(format, format, "format") \
+    macro(formatToParts, formatToParts, "formatToParts") \
+    macro(fraction, fraction, "fraction") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
     macro(fulfilled, fulfilled, "fulfilled") \
@@ -139,6 +141,7 @@
     macro(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
     macro(getPrototypeOf, getPrototypeOf, "getPrototypeOf") \
     macro(global, global, "global") \
+    macro(group, group, "group") \
     macro(Handle, Handle, "Handle") \
     macro(has, has, "has") \
     macro(hasOwn, hasOwn, "hasOwn") \
@@ -149,10 +152,12 @@
     macro(includes, includes, "includes") \
     macro(incumbentGlobal, incumbentGlobal, "incumbentGlobal") \
     macro(index, index, "index") \
+    macro(infinity, infinity, "infinity") \
     macro(Infinity, Infinity, "Infinity") \
     macro(InitializeCollator, InitializeCollator, "InitializeCollator") \
     macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "InitializeDateTimeFormat") \
     macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
+    macro(InitializePluralRules, InitializePluralRules, "InitializePluralRules") \
     macro(innermost, innermost, "innermost") \
     macro(inNursery, inNursery, "inNursery") \
     macro(input, input, "input") \
@@ -162,6 +167,7 @@
     macro(Int8x16, Int8x16, "Int8x16") \
     macro(Int16x8, Int16x8, "Int16x8") \
     macro(Int32x4, Int32x4, "Int32x4") \
+    macro(integer, integer, "integer") \
     macro(InterpretGeneratorResume, InterpretGeneratorResume, "InterpretGeneratorResume") \
     macro(isEntryPoint, isEntryPoint, "isEntryPoint") \
     macro(isExtensible, isExtensible, "isExtensible") \
@@ -195,6 +201,7 @@
     macro(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
     macro(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits") \
     macro(minimumSignificantDigits, minimumSignificantDigits, "minimumSignificantDigits") \
+    macro(minusSign, minusSign, "minusSign") \
     macro(minute, minute, "minute") \
     macro(missingArguments, missingArguments, "missingArguments") \
     macro(module, module, "module") \
@@ -204,6 +211,7 @@
     macro(month, month, "month") \
     macro(multiline, multiline, "multiline") \
     macro(name, name, "name") \
+    macro(nan, nan, "nan") \
     macro(NaN, NaN, "NaN") \
     macro(NegativeInfinity, NegativeInfinity, "-Infinity") \
     macro(new, new_, "new") \
@@ -217,6 +225,7 @@
     macro(noStack, noStack, "noStack") \
     macro(NumberFormat, NumberFormat, "NumberFormat") \
     macro(NumberFormatFormatGet, NumberFormatFormatGet, "Intl_NumberFormat_format_get") \
+    macro(NumberFormatFormatToParts, NumberFormatFormatToParts, "Intl_NumberFormat_formatToParts") \
     macro(numeric, numeric, "numeric") \
     macro(objectArguments, objectArguments, "[object Arguments]") \
     macro(objectArray, objectArray, "[object Array]") \
@@ -240,6 +249,10 @@
     macro(parseInt, parseInt, "parseInt") \
     macro(pattern, pattern, "pattern") \
     macro(pending, pending, "pending") \
+    macro(PluralRules, PluralRules, "PluralRules") \
+    macro(PluralRulesSelect, PluralRulesSelect, "Intl_PluralRules_Select") \
+    macro(percentSign, percentSign, "percentSign") \
+    macro(plusSign, plusSign, "plusSign") \
     macro(preventExtensions, preventExtensions, "preventExtensions") \
     macro(promise, promise, "promise") \
     macro(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable") \

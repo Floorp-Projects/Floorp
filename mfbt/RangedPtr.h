@@ -284,7 +284,6 @@ public:
 
 private:
   RangedPtr() = delete;
-  T* operator&() = delete;
 };
 
 } /* namespace mozilla */

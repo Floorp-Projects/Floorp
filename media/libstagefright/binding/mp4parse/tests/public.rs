@@ -9,10 +9,14 @@ extern crate mp4parse as mp4;
 use std::io::{Cursor, Read};
 use std::fs::File;
 
+static MINI_MP4: &'static str = "tests/minimal.mp4";
+static AUDIO_EME_MP4: &'static str = "tests/bipbop-cenc-audioinit.mp4";
+static VIDEO_EME_MP4: &'static str = "tests/bipbop_480wp_1001kbps-cenc-video-key1-init.mp4";
+
 // Taken from https://github.com/GuillaumeGomez/audio-video-metadata/blob/9dff40f565af71d5502e03a2e78ae63df95cfd40/src/metadata.rs#L53
 #[test]
 fn public_api() {
-    let mut fd = File::open("tests/minimal.mp4").expect("Unknown file");
+    let mut fd = File::open(MINI_MP4).expect("Unknown file");
     let mut buf = Vec::new();
     fd.read_to_end(&mut buf).expect("File error");
 
@@ -73,6 +77,7 @@ fn public_api() {
                     mp4::AudioCodecSpecific::ES_Descriptor(esds) => {
                         assert_eq!(esds.audio_codec, mp4::CodecType::AAC);
                         assert_eq!(esds.audio_sample_rate.unwrap(), 48000);
+                        assert_eq!(esds.audio_object_type.unwrap(), 2);
                         "ES"
                     }
                     mp4::AudioCodecSpecific::FLACSpecificBox(flac) => {
@@ -97,8 +102,65 @@ fn public_api() {
 }
 
 #[test]
-fn public_cenc() {
-    let mut fd = File::open("tests/bipbop_480wp_1001kbps-cenc-video-key1-init.mp4").expect("Unknown file");
+fn public_audio_tenc() {
+    let kid =
+        vec![0x7e, 0x57, 0x1d, 0x04, 0x7e, 0x57, 0x1d, 0x04,
+             0x7e, 0x57, 0x1d, 0x04, 0x7e, 0x57, 0x1d, 0x04];
+
+    let mut fd = File::open(AUDIO_EME_MP4).expect("Unknown file");
+    let mut buf = Vec::new();
+    fd.read_to_end(&mut buf).expect("File error");
+
+    let mut c = Cursor::new(&buf);
+    let mut context = mp4::MediaContext::new();
+    mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
+    for track in context.tracks {
+        assert_eq!(track.codec_type, mp4::CodecType::EncryptedAudio);
+        match track.data {
+            Some(mp4::SampleEntry::Audio(a)) => {
+                match a.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
+                    Some(ref p) => {
+                        assert_eq!(p.code_name, "mp4a");
+                        if let Some(ref tenc) = p.tenc {
+                            assert!(tenc.is_encrypted > 0);
+                            assert!(tenc.iv_size ==  16);
+                            assert!(tenc.kid == kid);
+                        } else {
+                            assert!(false, "Invalid test condition");
+                        }
+                    },
+                    _=> {
+                        assert!(false, "Invalid test condition");
+                    },
+                }
+            },
+            _ => {
+                assert!(false, "Invalid test condition");
+            }
+        }
+    }
+}
+
+#[test]
+fn public_video_cenc() {
+    let system_id =
+        vec![0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02,
+             0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b];
+
+    let kid =
+        vec![0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x03,
+             0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x11];
+
+    let pssh_box =
+        vec![0x00, 0x00, 0x00, 0x34, 0x70, 0x73, 0x73, 0x68,
+             0x01, 0x00, 0x00, 0x00, 0x10, 0x77, 0xef, 0xec,
+             0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e,
+             0x52, 0xe2, 0xfb, 0x4b, 0x00, 0x00, 0x00, 0x01,
+             0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x03,
+             0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x11,
+             0x00, 0x00, 0x00, 0x00];
+
+    let mut fd = File::open(VIDEO_EME_MP4).expect("Unknown file");
     let mut buf = Vec::new();
     fd.read_to_end(&mut buf).expect("File error");
 
@@ -107,16 +169,29 @@ fn public_cenc() {
     mp4::read_mp4(&mut c, &mut context).expect("read_mp4 failed");
     for track in context.tracks {
         assert_eq!(track.codec_type, mp4::CodecType::EncryptedVideo);
+        match track.data {
+            Some(mp4::SampleEntry::Video(v)) => {
+                match v.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
+                    Some(ref p) => {
+                        assert_eq!(p.code_name, "avc1");
+                        if let Some(ref tenc) = p.tenc {
+                            assert!(tenc.is_encrypted > 0);
+                            assert!(tenc.iv_size ==  16);
+                            assert!(tenc.kid == kid);
+                        } else {
+                            assert!(false, "Invalid test condition");
+                        }
+                    },
+                    _=> {
+                        assert!(false, "Invalid test condition");
+                    },
+                }
+            },
+            _ => {
+                assert!(false, "Invalid test condition");
+            }
+        }
     }
-
-    let system_id = vec![0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b];
-
-    let kid = vec![0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x11];
-
-    let pssh_box = vec![0x00, 0x00, 0x00, 0x34, 0x70, 0x73, 0x73, 0x68, 0x01, 0x00, 0x00, 0x00, 0x10, 0x77,
-                        0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2, 0xfb, 0x4b, 0x00, 0x00,
-                        0x00, 0x01, 0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57, 0x1d, 0x03, 0x7e, 0x57,
-                        0x1d, 0x11, 0x00, 0x00, 0x00, 0x00];
 
     for pssh in context.psshs {
         assert_eq!(pssh.system_id, system_id);

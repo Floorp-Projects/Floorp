@@ -120,10 +120,6 @@ public:
     return mGlobal;
   }
 
-  bool
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-             JS::MutableHandle<JSObject*> aWrapper);
-
   // Do the equivalent of Promise.resolve in the current compartment of aCx.
   // Errorrs are reported on the ErrorResult; if aRv comes back !Failed(), this
   // function MUST return a non-null value.

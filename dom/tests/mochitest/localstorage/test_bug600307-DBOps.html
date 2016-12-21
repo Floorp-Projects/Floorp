@@ -29,6 +29,9 @@ Case 3: set | set | clear | reload | count ?= 0
 
 function startTest()
 {
+  // Enable testing observer notifications
+  localStorageEnableTestingMode(function() {
+
   // Have an untouched land
   localStorage.clear();
 
@@ -136,6 +139,7 @@ function startTest()
 
   SimpleTest.finish();
 
+  });
   });
   });
   });

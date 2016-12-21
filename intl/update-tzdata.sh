@@ -12,8 +12,9 @@ set -e
 # so that this script's behavior is consistent when run from any time zone.
 export TZ=UTC
 
-# Also ensure SVN-INFO isn't localized.
-export LANG=C
+# Also ensure SVN-INFO is consistently English.
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 # Path to icupkg executable, typically located at $ICU_DIR/bin/icupkg.
 icu_pkg=
@@ -161,7 +162,7 @@ if [ $dry = false ]; then
     update_icu_data "be" "${icudata_file_be}"
   fi
 
-  hg addremove "${tzdata_dir}" "${icudata_file_le}"
+  hg addremove "${tzdata_dir}/source" "${tzdata_dir}/SVN-INFO" "${icudata_file_le}"
   if [ -n "${icudata_file_be}" ]; then
     hg addremove "${icudata_file_be}"
   fi

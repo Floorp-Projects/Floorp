@@ -3154,8 +3154,11 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                         // These are handled by using the full-size font with the
                         // uppercasing transform.
                         mozilla::GreekCasing::State state;
-                        uint32_t ch2 = mozilla::GreekCasing::UpperCase(ch, state);
-                        if (ch != ch2 && !aSyntheticUpper) {
+                        bool markEta, updateEta;
+                        uint32_t ch2 =
+                            mozilla::GreekCasing::UpperCase(ch, state, markEta,
+                                                            updateEta);
+                        if ((ch != ch2 || markEta) && !aSyntheticUpper) {
                             chAction = kUppercase;
                         }
                     }

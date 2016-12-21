@@ -451,4 +451,13 @@ TEST(MP4Demuxer, ZeroInMoovQuickTime)
   });
 }
 
+TEST(MP4Demuxer, IgnoreMinus1Duration)
+{
+  RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("negative_duration.mp4");
+  binding->RunTestAndWait([binding] () {
+    // It demuxes without error. That is sufficient.
+    binding->mTaskQueue->BeginShutdown();
+  });
+}
+
 #undef DO_FAIL
