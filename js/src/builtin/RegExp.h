@@ -113,13 +113,13 @@ extern MOZ_MUST_USE bool
 RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp);
 
 extern MOZ_MUST_USE bool
-RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto);
+RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* result);
 
 extern MOZ_MUST_USE bool
 RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp);
 
 extern MOZ_MUST_USE bool
-RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto);
+RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto, uint8_t* result);
 
 extern MOZ_MUST_USE bool
 RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
