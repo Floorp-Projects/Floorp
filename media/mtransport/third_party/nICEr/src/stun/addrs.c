@@ -243,7 +243,9 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
     _status = 0;
 
   abort:
-    RFREE(AdapterAddresses);
+    if (AdapterAddresses) {
+      RFREE(AdapterAddresses);
+    }
     return _status;
 }
 
