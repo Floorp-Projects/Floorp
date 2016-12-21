@@ -45,7 +45,7 @@ public:
   enum class Reason { eTimeoutOrInterval, eIdleCallbackTimeout };
 
 #ifdef DEBUG
-  bool HasRefCntOne() const;
+  bool HasRefCnt(uint32_t aCount) const;
 #endif // DEBUG
 
   // Window for which this timeout fires

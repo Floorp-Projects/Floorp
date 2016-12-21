@@ -38,7 +38,7 @@ extern PRLogModuleInfo* sCocoaLog;
 extern void EnsureLogInitialized();
 
 extern NSPasteboard* globalDragPboard;
-extern NSView* gLastDragView;
+extern ChildView* gLastDragView;
 extern NSEvent* gLastDragMouseDownEvent;
 extern bool gUserCancelledDrag;
 
@@ -46,11 +46,14 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 nsIArray *gDraggedTransferables = nullptr;
 
-NSString* const kWildcardPboardType = @"MozillaWildcard";
-NSString* const kCorePboardType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
-NSString* const kCorePboardType_urld = @"CorePasteboardFlavorType 0x75726C64"; // 'urld'  desc
-NSString* const kCorePboardType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
-NSString* const kUTTypeURLName = @"public.url-name";
+NSString* const kWildcardPboardType    = @"org.mozilla.MozillaWildcard";
+NSString* const kCorePboardType_url    =
+  @"org.mozilla.CorePasteboardFlavorType0x75726C20"; // 'url '  url
+NSString* const kCorePboardType_urld   =
+  @"org.mozilla.CorePasteboardFlavorType0x75726C64"; // 'urld'  desc
+NSString* const kCorePboardType_urln   =
+  @"org.mozilla.CorePasteboardFlavorType0x75726C6E"; // 'urln'  title
+NSString* const kUTTypeURLName         = @"public.url-name";
 NSString* const kCustomTypesPboardType = @"org.mozilla.custom-clipdata";
 
 nsDragService::nsDragService()
@@ -63,65 +66,6 @@ nsDragService::nsDragService()
 
 nsDragService::~nsDragService()
 {
-}
-
-static nsresult SetUpDragClipboard(nsIArray* aTransferableArray)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  if (!aTransferableArray)
-    return NS_ERROR_FAILURE;
-
-  uint32_t count = 0;
-  aTransferableArray->GetLength(&count);
-
-  NSPasteboard* dragPBoard = [NSPasteboard pasteboardWithName:NSDragPboard];
-
-  for (uint32_t j = 0; j < count; j++) {
-    nsCOMPtr<nsITransferable> currentTransferable = do_QueryElementAt(aTransferableArray, j);
-    if (!currentTransferable)
-      return NS_ERROR_FAILURE;
-
-    // Transform the transferable to an NSDictionary
-    NSDictionary* pasteboardOutputDict = nsClipboard::PasteboardDictFromTransferable(currentTransferable);
-    if (!pasteboardOutputDict)
-      return NS_ERROR_FAILURE;
-
-    // write everything out to the general pasteboard
-    unsigned int typeCount = [pasteboardOutputDict count];
-    NSMutableArray* types = [NSMutableArray arrayWithCapacity:typeCount + 1];
-    [types addObjectsFromArray:[pasteboardOutputDict allKeys]];
-    // Gecko is initiating this drag so we always want its own views to consider
-    // it. Add our wildcard type to the pasteboard to accomplish this.
-    [types addObject:kWildcardPboardType]; // we don't increase the count for the loop below on purpose
-    [dragPBoard declareTypes:types owner:nil];
-    for (unsigned int k = 0; k < typeCount; k++) {
-      NSString* currentKey = [types objectAtIndex:k];
-      id currentValue = [pasteboardOutputDict valueForKey:currentKey];
-      if (currentKey == NSStringPboardType ||
-          currentKey == kCorePboardType_url ||
-          currentKey == kCorePboardType_urld ||
-          currentKey == kCorePboardType_urln) {
-        [dragPBoard setString:currentValue forType:currentKey];
-      }
-      else if (currentKey == NSHTMLPboardType) {
-        [dragPBoard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
-                      forType:currentKey];
-      }
-      else if (currentKey == NSTIFFPboardType ||
-               currentKey == kCustomTypesPboardType) {
-        [dragPBoard setData:currentValue forType:currentKey];
-      }
-      else if (currentKey == NSFilesPromisePboardType ||
-               currentKey == NSFilenamesPboardType) {
-        [dragPBoard setPropertyList:currentValue forType:currentKey];        
-      }
-    }
-  }
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NSImage*
@@ -303,9 +247,49 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
 
   mDataItems = aTransferableArray;
 
-  // put data on the clipboard
-  if (NS_FAILED(SetUpDragClipboard(aTransferableArray)))
-    return NS_ERROR_FAILURE;
+  // Save the transferables away in case a promised file callback is invoked.
+  gDraggedTransferables = aTransferableArray;
+
+  nsBaseDragService::StartDragSession();
+  nsBaseDragService::OpenDragPopup();
+
+  // We need to retain the view and the event during the drag in case either
+  // gets destroyed.
+  mNativeDragView = [gLastDragView retain];
+  mNativeDragEvent = [gLastDragMouseDownEvent retain];
+
+  gUserCancelledDrag = false;
+
+  NSPasteboardItem* pbItem = [NSPasteboardItem new];
+  NSMutableArray* types = [NSMutableArray arrayWithCapacity:5];
+
+  if (gDraggedTransferables) {
+    uint32_t count = 0;
+    gDraggedTransferables->GetLength(&count);
+
+    for (uint32_t j = 0; j < count; j++) {
+      nsCOMPtr<nsITransferable> currentTransferable =
+        do_QueryElementAt(aTransferableArray, j);
+      if (!currentTransferable) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Transform the transferable to an NSDictionary
+      NSDictionary* pasteboardOutputDict =
+        nsClipboard::PasteboardDictFromTransferable(currentTransferable);
+      if (!pasteboardOutputDict) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // write everything out to the general pasteboard
+      [types addObjectsFromArray:[pasteboardOutputDict allKeys]];
+      // Gecko is initiating this drag so we always want its own views to
+      // consider it. Add our wildcard type to the pasteboard to accomplish
+      // this.
+      [types addObject:kWildcardPboardType];
+    }
+  }
+  [pbItem setDataProvider:mNativeDragView forTypes:types];
 
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
 
@@ -330,36 +314,28 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
     [image unlockFocus];
   }
 
+  // Make drag image appear in the right place under the cursor.
   LayoutDeviceIntPoint pt(dragRect.x, dragRect.YMost());
   NSPoint point = nsCocoaUtils::DevPixelsToCocoaPoints(pt, scaleFactor);
   point.y = nsCocoaUtils::FlippedScreenY(point.y);
-
   point = nsCocoaUtils::ConvertPointFromScreen([gLastDragView window], point);
   NSPoint localPoint = [gLastDragView convertPoint:point fromView:nil];
- 
-  // Save the transferables away in case a promised file callback is invoked.
-  gDraggedTransferables = aTransferableArray;
+  NSRect localDragRect = image.alignmentRect;
+  localDragRect.origin.x = localPoint.x;
+  localDragRect.origin.y = localPoint.y - localDragRect.size.height;
 
-  nsBaseDragService::StartDragSession();
-  nsBaseDragService::OpenDragPopup();
+  NSDraggingItem* dragItem =
+    [[NSDraggingItem alloc] initWithPasteboardWriter:pbItem];
+  [pbItem release];
+  [dragItem setDraggingFrame:localDragRect contents:image];
 
-  // We need to retain the view and the event during the drag in case either gets destroyed.
-  mNativeDragView = [gLastDragView retain];
-  mNativeDragEvent = [gLastDragMouseDownEvent retain];
+  NSDraggingSession* draggingSession =
+    [mNativeDragView beginDraggingSessionWithItems:
+        [NSArray arrayWithObject:[dragItem autorelease]]
+                                             event:mNativeDragEvent
+                                            source:mNativeDragView];
+  draggingSession.animatesToStartingPositionsOnCancelOrFail = YES;
 
-  gUserCancelledDrag = false;
-  [mNativeDragView dragImage:image
-                          at:localPoint
-                      offset:NSZeroSize
-                       event:mNativeDragEvent
-                  pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
-                      source:mNativeDragView
-                   slideBack:YES];
-  gUserCancelledDrag = false;
-
-  if (mDoingDrag)
-    nsBaseDragService::EndDragSession(false);
-  
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

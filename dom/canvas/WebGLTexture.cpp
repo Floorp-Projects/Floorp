@@ -238,16 +238,26 @@ WebGLTexture::IsMipmapComplete(uint32_t texUnit) const
 
         // GLES 3.0.4, p158:
         // "[...] until the last array is reached with dimension 1 x 1 x 1."
-        if (refWidth == 1 &&
-            refHeight == 1 &&
-            refDepth == 1)
-        {
-            break;
+        if (mTarget == LOCAL_GL_TEXTURE_3D) {
+            if (refWidth == 1 &&
+                refHeight == 1 &&
+                refDepth == 1)
+            {
+                break;
+            }
+
+            refDepth = std::max(uint32_t(1), refDepth / 2);
+        } else {
+            // TEXTURE_2D_ARRAY may have depth != 1, but that's normal.
+            if (refWidth == 1 &&
+                refHeight == 1)
+            {
+                break;
+            }
         }
 
         refWidth  = std::max(uint32_t(1), refWidth  / 2);
         refHeight = std::max(uint32_t(1), refHeight / 2);
-        refDepth  = std::max(uint32_t(1), refDepth  / 2);
     }
 
     return true;
@@ -1014,7 +1024,7 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
 {
     MOZ_ASSERT(maybeIntParam || maybeFloatParam);
 
-    GLint   intParam   = maybeIntParam   ? *maybeIntParam   : GLint(*maybeFloatParam);
+    GLint   intParam   = maybeIntParam   ? *maybeIntParam   : GLint(roundf(*maybeFloatParam));
     GLfloat floatParam = maybeFloatParam ? *maybeFloatParam : GLfloat(*maybeIntParam);
 
     bool isPNameValid = false;

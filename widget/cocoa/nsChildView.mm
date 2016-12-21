@@ -3187,8 +3187,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // Inform the OS about the types of services (from the "Services" menu)
     // that we can handle.
 
-    NSArray *sendTypes = [[NSArray alloc] initWithObjects:NSStringPboardType,NSHTMLPboardType,nil];
-    NSArray *returnTypes = [[NSArray alloc] initWithObjects:NSStringPboardType,NSHTMLPboardType,nil];
+    NSArray* sendTypes =
+      [[NSArray alloc] initWithObjects:NSPasteboardTypeString,
+                                       NSPasteboardTypeHTML,
+                                       nil];
+    NSArray* returnTypes =
+      [[NSArray alloc] initWithObjects:NSPasteboardTypeString,
+                                       NSPasteboardTypeHTML,
+                                       nil];
 
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:returnTypes];
 
@@ -3201,16 +3207,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 + (void)registerViewForDraggedTypes:(NSView*)aView
 {
-  [aView registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType,
-                                                           NSStringPboardType,
-                                                           NSHTMLPboardType,
-                                                           NSURLPboardType,
-                                                           NSFilesPromisePboardType,
-                                                           kWildcardPboardType,
-                                                           kCorePboardType_url,
-                                                           kCorePboardType_urld,
-                                                           kCorePboardType_urln,
-                                                           nil]];
+  [aView registerForDraggedTypes:[NSArray arrayWithObjects:
+                                    NSFilenamesPboardType,
+                                    NSPasteboardTypeString,
+                                    NSPasteboardTypeHTML,
+                                    NSURLPboardType,
+                                    kPasteboardTypeFileURLPromise,
+                                    kWildcardPboardType,
+                                    kCorePboardType_url,
+                                    kCorePboardType_urld,
+                                    kCorePboardType_urln,
+                                    nil]];
 }
 
 // initWithFrame:geckoChild:
@@ -5722,6 +5729,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSDragOperationNone);
 }
 
+// NSDraggingDestination
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -5742,13 +5750,14 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSDragOperationNone);
 }
 
+// NSDraggingDestination
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
 {
   MOZ_LOG(sCocoaLog, LogLevel::Info, ("ChildView draggingUpdated: entered\n"));
-
   return [self doDragAction:eDragOver sender:sender];
 }
 
+// NSDraggingDestination
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
   MOZ_LOG(sCocoaLog, LogLevel::Info, ("ChildView draggingExited: entered\n"));
@@ -5758,6 +5767,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   NS_IF_RELEASE(mDragService);
 }
 
+// NSDraggingDestination
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -5767,32 +5777,29 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 }
 
 // NSDraggingSource
-- (void)draggedImage:(NSImage *)anImage movedTo:(NSPoint)aPoint
+// This is just implemented so we comply with the NSDraggingSource protocol.
+- (NSDragOperation)draggingSession:(NSDraggingSession*)session
+  sourceOperationMaskForDraggingContext:(NSDraggingContext)context
 {
-  // Get the drag service if it isn't already cached. The drag service
-  // isn't cached when dragging over a different application.
-  nsCOMPtr<nsIDragService> dragService = mDragService;
-  if (!dragService) {
-    dragService = do_GetService(kDragServiceContractID);
-  }
-
-  if (dragService) {
-    NSPoint pnt = [NSEvent mouseLocation];
-    FlipCocoaScreenCoordinate(pnt);
-
-    LayoutDeviceIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(pnt);
-    dragService->DragMoved(devPoint.x, devPoint.y);
-  }
+  return UINT_MAX;
 }
 
 // NSDraggingSource
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
+- (BOOL)ignoreModifierKeysForDraggingSession:(NSDraggingSession*)session
+{
+  return YES;
+}
+
+// NSDraggingSource
+- (void)draggingSession:(NSDraggingSession*)aSession
+           endedAtPoint:(NSPoint)aPoint
+              operation:(NSDragOperation)aOperation
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   gDraggedTransferables = nullptr;
 
-  NSEvent *currentEvent = [NSApp currentEvent];
+  NSEvent* currentEvent = [NSApp currentEvent];
   gUserCancelledDrag = ([currentEvent type] == NSKeyDown &&
                         [currentEvent keyCode] == kVK_Escape);
 
@@ -5808,15 +5815,15 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     FlipCocoaScreenCoordinate(pnt);
     dragService->SetDragEndPoint(gfx::IntPoint::Round(pnt.x, pnt.y));
 
-    // XXX: dropEffect should be updated per |operation|.
-    // As things stand though, |operation| isn't well handled within "our"
+    // XXX: dropEffect should be updated per |aOperation|.
+    // As things stand though, |aOperation| isn't well handled within "our"
     // events, that is, when the drop happens within the window: it is set
     // either to NSDragOperationGeneric or to NSDragOperationNone.
     // For that reason, it's not yet possible to override dropEffect per the
     // given OS value, and it's also unclear what's the correct dropEffect
     // value for NSDragOperationGeneric that is passed by other applications.
     // All that said, NSDragOperationNone is still reliable.
-    if (operation == NSDragOperationNone) {
+    if (aOperation == NSDragOperationNone) {
       nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
       dragService->GetDataTransfer(getter_AddRefs(dataTransfer));
       if (dataTransfer)
@@ -5836,10 +5843,45 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 }
 
 // NSDraggingSource
-// this is just implemented so we comply with the NSDraggingSource informal protocol
-- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal
+- (void)draggingSession:(NSDraggingSession*)aSession
+           movedToPoint:(NSPoint)aPoint
 {
-  return UINT_MAX;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Get the drag service if it isn't already cached. The drag service
+  // isn't cached when dragging over a different application.
+  nsCOMPtr<nsIDragService> dragService = mDragService;
+  if (!dragService) {
+    dragService = do_GetService(kDragServiceContractID);
+  }
+
+  if (dragService) {
+    NSPoint pnt = [NSEvent mouseLocation];
+    FlipCocoaScreenCoordinate(pnt);
+
+    LayoutDeviceIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(pnt);
+    dragService->DragMoved(devPoint.x, devPoint.y);
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// NSDraggingSource
+- (void)draggingSession:(NSDraggingSession*)aSession
+       willBeginAtPoint:(NSPoint)aPoint
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // there should never be a globalDragPboard when "willBeginAtPoint:" is
+  // called, but just in case we'll take care of it here.
+  [globalDragPboard release];
+
+  // Set the global drag pasteboard that will be used for this drag session.
+  // This will be set back to nil when the drag session ends (mouse exits
+  // the view or a drop happens within the view).
+  globalDragPboard = [[aSession draggingPasteboard] retain];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // This method is a callback typically invoked in response to a drag ending on the desktop
@@ -5903,6 +5945,68 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+// NSPasteboardItemDataProvider
+- (void)pasteboard:(NSPasteboard*)aPasteboard
+              item:(NSPasteboardItem*)aItem
+provideDataForType:(NSString*)aType
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!gDraggedTransferables) {
+    return;
+  }
+
+  uint32_t count = 0;
+  gDraggedTransferables->GetLength(&count);
+
+  for (uint32_t j = 0; j < count; j++) {
+    nsCOMPtr<nsITransferable> currentTransferable =
+      do_QueryElementAt(gDraggedTransferables, j);
+    if (!currentTransferable) {
+      return;
+    }
+
+    // Transform the transferable to an NSDictionary.
+    NSDictionary* pasteboardOutputDict =
+      nsClipboard::PasteboardDictFromTransferable(currentTransferable);
+    if (!pasteboardOutputDict) {
+      return;
+    }
+
+    // Write everything out to the pasteboard.
+    unsigned int typeCount = [pasteboardOutputDict count];
+    NSMutableArray* types = [NSMutableArray arrayWithCapacity:typeCount + 1];
+    [types addObjectsFromArray:[pasteboardOutputDict allKeys]];
+    [types addObject:kWildcardPboardType];
+    for (unsigned int k = 0; k < typeCount; k++) {
+      NSString* curType = [types objectAtIndex:k];
+      if ([curType isEqualToString:NSPasteboardTypeString] ||
+          [curType isEqualToString:kCorePboardType_url] ||
+          [curType isEqualToString:kCorePboardType_urld] ||
+          [curType isEqualToString:kCorePboardType_urln]) {
+        [aPasteboard setString:[pasteboardOutputDict valueForKey:curType]
+                       forType:curType];
+      } else if ([curType isEqualToString:NSPasteboardTypeHTML]) {
+        [aPasteboard setString:
+          (nsClipboard::WrapHtmlForSystemPasteboard(
+            [pasteboardOutputDict valueForKey:curType]))
+                      forType:curType];
+      } else if ([curType isEqualToString:NSPasteboardTypeTIFF] ||
+                 [curType isEqualToString:kCustomTypesPboardType]) {
+        [aPasteboard setData:[pasteboardOutputDict valueForKey:curType]
+                     forType:curType];
+      } else if (
+        [curType isEqualToString:(NSString*)kPasteboardTypeFileURLPromise] ||
+        [curType isEqualToString:NSFilenamesPboardType]) {
+        [aPasteboard setPropertyList:[pasteboardOutputDict valueForKey:curType]
+                             forType:curType];
+      }
+    }
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 #pragma mark -
 
 // Support for the "Services" menu. We currently only support sending strings
@@ -5925,7 +6029,9 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   // or HTML from us or no data at all AND when the service will either not
   // send back any data to us or will send a string or HTML back to us.
 
-#define IsSupportedType(typeStr) ([typeStr isEqual:NSStringPboardType] || [typeStr isEqual:NSHTMLPboardType])
+#define IsSupportedType(typeStr) \
+  ([typeStr isEqualToString:NSPasteboardTypeString] || \
+   [typeStr isEqualToString:NSPasteboardTypeHTML])
 
   id result = nil;
 
@@ -5977,8 +6083,8 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   // Make sure that the service will accept strings or HTML.
-  if ([types containsObject:NSStringPboardType] == NO &&
-      [types containsObject:NSHTMLPboardType] == NO)
+  if ([types containsObject:NSPasteboardTypeString] == NO &&
+      [types containsObject:NSPasteboardTypeHTML] == NO)
     return NO;
 
   // Bail out if there is no Gecko object.
@@ -6005,16 +6111,18 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     NSString* currentKey = [declaredTypes objectAtIndex:i];
     id currentValue = [pasteboardOutputDict valueForKey:currentKey];
 
-    if (currentKey == NSStringPboardType ||
-        currentKey == kCorePboardType_url ||
-        currentKey == kCorePboardType_urld ||
-        currentKey == kCorePboardType_urln) {
+    if ([currentKey isEqualToString:NSPasteboardTypeString] ||
+        [currentKey isEqualToString:kCorePboardType_url] ||
+        [currentKey isEqualToString:kCorePboardType_urld] ||
+        [currentKey isEqualToString:kCorePboardType_urln]) {
       [pboard setString:currentValue forType:currentKey];
-    } else if (currentKey == NSHTMLPboardType) {
-      [pboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue)) forType:currentKey];
-    } else if (currentKey == NSTIFFPboardType) {
+    } else if ([currentKey isEqualToString:NSPasteboardTypeHTML]) {
+      [pboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
+                forType:currentKey];
+    } else if ([currentKey isEqualToString:NSPasteboardTypeTIFF]) {
       [pboard setData:currentValue forType:currentKey];
-    } else if (currentKey == NSFilesPromisePboardType) {
+    } else if ([currentKey isEqualToString:
+                 (NSString*)kPasteboardTypeFileURLPromise]) {
       [pboard setPropertyList:currentValue forType:currentKey];
     }
   }
