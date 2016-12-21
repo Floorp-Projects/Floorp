@@ -567,6 +567,8 @@ InitGCPtr(uintptr_t* ptr, V val)
 void
 CacheIRWriter::copyStubData(uint8_t* dest) const
 {
+    MOZ_ASSERT(!failed());
+
     uintptr_t* destWords = reinterpret_cast<uintptr_t*>(dest);
 
     for (const StubField& field : stubFields_) {
@@ -608,6 +610,8 @@ CacheIRWriter::copyStubData(uint8_t* dest) const
 bool
 CacheIRWriter::stubDataEquals(const uint8_t* stubData) const
 {
+    MOZ_ASSERT(!failed());
+
     const uintptr_t* stubDataWords = reinterpret_cast<const uintptr_t*>(stubData);
 
     for (const StubField& field : stubFields_) {
