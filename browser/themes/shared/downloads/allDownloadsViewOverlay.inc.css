@@ -61,7 +61,10 @@
 }
 
 .downloadDetailsNormal,
-.downloadDetailsHover {
+.downloadDetailsHover,
+.downloadOpenFile,
+.downloadShowMoreInfo,
+.downloadButtonLabels {
   display: none;
 }
 
