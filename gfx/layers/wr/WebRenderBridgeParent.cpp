@@ -23,6 +23,18 @@ bool is_in_compositor_thread()
   return mozilla::layers::CompositorThreadHolder::IsInCompositorThread();
 }
 
+void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
+{
+  MOZ_ASSERT(glcontext_ptr);
+
+  mozilla::gl::GLContext* glcontext = reinterpret_cast<mozilla::gl::GLContext*>(glcontext_ptr);
+  if (!glcontext) {
+    return nullptr;
+  }
+  PRFuncPtr p = glcontext->LookupSymbol(procname);
+  return reinterpret_cast<void*>(p);
+}
+
 namespace mozilla {
 namespace layers {
 
@@ -82,6 +94,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
     // CrossProcessCompositorBridgeParent
     MOZ_ASSERT(mWidget);
     mWRWindowState = wr_init_window(mPipelineId,
+                                    aGlContext,
                                     gfxPrefs::WebRenderProfilerEnabled());
   }
   if (mWidget) {

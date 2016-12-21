@@ -8,6 +8,7 @@
 #define WR_h
 extern "C" {
 bool is_in_compositor_thread();
+void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
 enum WRImageFormat {
     Invalid,
@@ -98,6 +99,7 @@ struct wrstate;
 
 WR_INLINE wrwindowstate*
 wr_init_window(uint64_t root_pipeline_id,
+               void* webrender_bridge_ptr,
                bool enable_profiler,
                WRExternalImageHandler* handler = nullptr)
 WR_FUNC;
