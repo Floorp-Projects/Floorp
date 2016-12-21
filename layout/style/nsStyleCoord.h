@@ -8,6 +8,9 @@
 #ifndef nsStyleCoord_h___
 #define nsStyleCoord_h___
 
+#include <type_traits>
+
+#include "mozilla/EnumTypeTraits.h"
 #include "nsCoord.h"
 #include "nsStyleConsts.h"
 
@@ -214,6 +217,14 @@ public:
   float       GetFlexFractionValue() const;
   Calc*       GetCalcValue() const;
   uint32_t    HashValue(uint32_t aHash) const;
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  T GetEnumValue() const
+  {
+    MOZ_ASSERT(GetUnit() == eStyleUnit_Enumerated,
+               "The unit must be eStyleUnit_Enumerated!");
+    return static_cast<T>(GetIntValue());
+  }
 
   // Sets to null and releases any refcounted objects.  Only use this if the
   // object is initialized (i.e. don't use it in nsStyleCoord constructors).
@@ -229,6 +240,14 @@ public:
   void  SetAutoValue();
   void  SetNoneValue();
   void  SetCalcValue(Calc* aValue);
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  void SetEnumValue(T aValue)
+  {
+    static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
+                  "aValue must be an enum that fits within mValue.mInt!");
+    SetIntValue(static_cast<int32_t>(aValue), eStyleUnit_Enumerated);
+  }
 
   // Resets a coord represented by a unit/value pair.
   static inline void Reset(nsStyleUnit& aUnit, nsStyleUnion& aValue);
