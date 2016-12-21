@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests the async reducer responding to the action `takeSnapshot(front)`
  */
@@ -31,8 +33,7 @@ add_task(function* () {
       ok(foundPendingState, "Got state change for pending heap snapshot request");
       ok(!lastSnapshot.path, "Snapshot does not yet have a path");
       ok(!lastSnapshot.census, "Has no census data when loading");
-    }
-    else if (lastSnapshot.state === states.SAVED) {
+    } else if (lastSnapshot.state === states.SAVED) {
       foundDoneState = true;
       ok(foundDoneState, "Got state change for completed heap snapshot request");
       ok(foundPendingState, "SAVED state occurs after SAVING state");

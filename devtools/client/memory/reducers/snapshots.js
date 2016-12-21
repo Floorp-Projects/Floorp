@@ -240,23 +240,24 @@ handlers[actions.COMPUTE_DOMINATOR_TREE_START] = function (snapshots, { id }) {
   });
 };
 
-handlers[actions.COMPUTE_DOMINATOR_TREE_END] = function (snapshots, { id, dominatorTreeId }) {
-  return snapshots.map(snapshot => {
-    if (snapshot.id !== id) {
-      return snapshot;
-    }
+handlers[actions.COMPUTE_DOMINATOR_TREE_END] =
+  function (snapshots, { id, dominatorTreeId }) {
+    return snapshots.map(snapshot => {
+      if (snapshot.id !== id) {
+        return snapshot;
+      }
 
-    assert(snapshot.dominatorTree, "Should have a dominator tree model");
-    assert(snapshot.dominatorTree.state == dominatorTreeState.COMPUTING,
-           "Should be in the COMPUTING state");
+      assert(snapshot.dominatorTree, "Should have a dominator tree model");
+      assert(snapshot.dominatorTree.state == dominatorTreeState.COMPUTING,
+            "Should be in the COMPUTING state");
 
-    const dominatorTree = immutableUpdate(snapshot.dominatorTree, {
-      state: dominatorTreeState.COMPUTED,
-      dominatorTreeId,
+      const dominatorTree = immutableUpdate(snapshot.dominatorTree, {
+        state: dominatorTreeState.COMPUTED,
+        dominatorTreeId,
+      });
+      return immutableUpdate(snapshot, { dominatorTree });
     });
-    return immutableUpdate(snapshot, { dominatorTree });
-  });
-};
+  };
 
 handlers[actions.FETCH_DOMINATOR_TREE_START] = function (snapshots, { id, display }) {
   return snapshots.map(snapshot => {
@@ -267,7 +268,8 @@ handlers[actions.FETCH_DOMINATOR_TREE_START] = function (snapshots, { id, displa
     assert(snapshot.dominatorTree, "Should have a dominator tree model");
     assert(snapshot.dominatorTree.state !== dominatorTreeState.COMPUTING &&
            snapshot.dominatorTree.state !== dominatorTreeState.ERROR,
-           `Should have already computed the dominator tree, found state = ${snapshot.dominatorTree.state}`);
+           "Should have already computed the dominator tree, found state = " +
+           snapshot.dominatorTree.state);
 
     const dominatorTree = immutableUpdate(snapshot.dominatorTree, {
       state: dominatorTreeState.FETCHING,

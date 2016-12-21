@@ -4,16 +4,14 @@
 "use strict";
 
 const { immutableUpdate, reportException, assert } = require("devtools/shared/DevToolsUtils");
-const { snapshotState: states, actions, viewState } = require("../constants");
+const { snapshotState: states, actions} = require("../constants");
 const { L10N, openFilePicker, createSnapshot } = require("../utils");
 const telemetry = require("../telemetry");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const {
   selectSnapshot,
   computeSnapshotData,
-  readSnapshot,
-  takeCensus,
-  takeTreeMap
+  readSnapshot
 } = require("./snapshot");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ];
 
@@ -54,7 +52,7 @@ const exportSnapshot = exports.exportSnapshot = function (snapshot, dest) {
   };
 };
 
-const pickFileAndImportSnapshotAndCensus = exports.pickFileAndImportSnapshotAndCensus = function (heapWorker) {
+exports.pickFileAndImportSnapshotAndCensus = function (heapWorker) {
   return function* (dispatch, getState) {
     let input = yield openFilePicker({
       title: L10N.getFormatStr("snapshot.io.import.window"),
@@ -70,7 +68,7 @@ const pickFileAndImportSnapshotAndCensus = exports.pickFileAndImportSnapshotAndC
   };
 };
 
-const importSnapshotAndCensus = exports.importSnapshotAndCensus = function (heapWorker, path) {
+const importSnapshotAndCensus = function (heapWorker, path) {
   return function* (dispatch, getState) {
     telemetry.countImportSnapshot();
 
@@ -95,3 +93,4 @@ const importSnapshotAndCensus = exports.importSnapshotAndCensus = function (heap
     dispatch({ type: actions.IMPORT_SNAPSHOT_END, id });
   };
 };
+exports.importSnapshotAndCensus = importSnapshotAndCensus;

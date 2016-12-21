@@ -122,7 +122,10 @@ actions.RESIZE_SHORTEST_PATHS = "resize-shortest-paths";
 
 const COUNT = Object.freeze({ by: "count", count: true, bytes: true });
 const INTERNAL_TYPE = Object.freeze({ by: "internalType", then: COUNT });
-const ALLOCATION_STACK = Object.freeze({ by: "allocationStack", then: COUNT, noStack: COUNT });
+const ALLOCATION_STACK = Object.freeze({
+  by: "allocationStack", then: COUNT,
+  noStack: COUNT
+});
 const OBJECT_CLASS = Object.freeze({ by: "objectClass", then: COUNT, other: COUNT });
 const COARSE_TYPE = Object.freeze({
   by: "coarseType",

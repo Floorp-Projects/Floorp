@@ -10,7 +10,6 @@ const {
   clearSnapshots
 } = require("devtools/client/memory/actions/snapshot");
 const {
-  snapshotState: states,
   actions,
   treeMapState
 } = require("devtools/client/memory/constants");

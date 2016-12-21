@@ -6,7 +6,6 @@
 "use strict";
 
 const {
-  snapshotState,
   viewState,
   censusState
 } = require("devtools/client/memory/constants");

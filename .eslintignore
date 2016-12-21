@@ -86,7 +86,6 @@ devtools/client/framework/**
 !devtools/client/framework/selection.js
 !devtools/client/framework/toolbox.js
 devtools/client/jsonview/lib/**
-devtools/client/memory/**
 devtools/client/netmonitor/test/**
 devtools/client/netmonitor/har/test/**
 devtools/client/projecteditor/**

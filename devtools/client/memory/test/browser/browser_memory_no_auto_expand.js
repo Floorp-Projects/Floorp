@@ -27,7 +27,9 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   EventUtils.synthesizeMouseAtCenter(recordingCheckbox, {}, panel.panelWin);
   is(getState().allocations.recording, true);
 
-  const nameElems = [...doc.querySelectorAll(".heap-tree-item-field.heap-tree-item-name")];
+  const nameElems = [
+    ...doc.querySelectorAll(".heap-tree-item-field.heap-tree-item-name")
+  ];
 
   for (let el of nameElems) {
     dumpn(`Found ${el.textContent.trim()}`);

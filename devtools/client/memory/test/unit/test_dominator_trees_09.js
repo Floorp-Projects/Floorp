@@ -1,11 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that we can change the display with which we describe a dominator tree
 // while the dominator tree is in the middle of being fetched.
 
 const {
-  snapshotState: states,
   dominatorTreeState,
   viewState,
   labelDisplays,
@@ -19,7 +20,6 @@ const {
 } = require("devtools/client/memory/actions/view");
 const {
   takeSnapshotAndCensus,
-  computeAndFetchDominatorTree,
 } = require("devtools/client/memory/actions/snapshot");
 
 function run_test() {

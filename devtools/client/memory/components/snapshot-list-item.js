@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { assert } = require("devtools/shared/DevToolsUtils");
+"use strict";
+
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 const {
   L10N,
@@ -12,15 +13,10 @@ const {
   snapshotIsDiffable,
   getSavedCensus
 } = require("../utils");
-const {
-  snapshotState: states,
-  diffingState,
-  censusState,
-  treeMapState
-} = require("../constants");
+const { diffingState } = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
 
-const SnapshotListItem = module.exports = createClass({
+module.exports = createClass({
   displayName: "SnapshotListItem",
 
   propTypes: {
@@ -32,7 +28,7 @@ const SnapshotListItem = module.exports = createClass({
   },
 
   render() {
-    let { index, item: snapshot, onClick, onSave, onDelete, diffing } = this.props;
+    let { item: snapshot, onClick, onSave, onDelete, diffing } = this.props;
     let className = `snapshot-list-item ${snapshot.selected ? " selected" : ""}`;
     let statusText = getStatusText(snapshot.state);
     let wantThrobber = !!statusText;
@@ -75,7 +71,8 @@ const SnapshotListItem = module.exports = createClass({
       // If there is census data, fill in the total bytes.
       if (census) {
         let { bytes } = getSnapshotTotals(census);
-        let formatBytes = L10N.getFormatStr("aggregate.mb", L10N.numberWithDecimals(bytes / 1000000, 2));
+        let formatBytes = L10N.getFormatStr("aggregate.mb",
+          L10N.numberWithDecimals(bytes / 1000000, 2));
 
         details = dom.span({ className: "snapshot-totals" },
           dom.span({ className: "total-bytes" }, formatBytes)
@@ -99,7 +96,9 @@ const SnapshotListItem = module.exports = createClass({
 
     return (
       dom.li({ className, onClick },
-        dom.span({ className: `snapshot-title ${wantThrobber ? " devtools-throbber" : ""}` },
+        dom.span({
+          className: `snapshot-title ${wantThrobber ? " devtools-throbber" : ""}`
+        },
           checkbox,
           title,
           deleteButton

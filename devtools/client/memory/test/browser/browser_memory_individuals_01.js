@@ -11,15 +11,13 @@ const {
   viewState,
   censusState,
 } = require("devtools/client/memory/constants");
-const { changeViewAndRefresh, changeView } = require("devtools/client/memory/actions/view");
+const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
-  const heapWorker = panel.panelWin.gHeapAnalysesClient;
-  const front = panel.panelWin.gFront;
   const store = panel.panelWin.gStore;
-  const { getState, dispatch } = store;
+  const { dispatch } = store;
   const doc = panel.panelWin.document;
 
   dispatch(changeView(viewState.CENSUS));
