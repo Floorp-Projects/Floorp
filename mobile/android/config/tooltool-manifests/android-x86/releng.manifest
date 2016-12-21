@@ -40,9 +40,9 @@
 "unpack": true
 },
 {
-"version": "gcc 4.8.5 + PR64905",
-"size": 80160264,
-"digest": "c1a9dc9da289b8528874d16300b9d13a997cec99195bb0bc46ff665216d8535d6d6cb5af6b4b1f2749af6815dab12e703fdb3849014e5c23a70eff351a0baf4e",
+"version": "gcc 4.9.4 + PR64905",
+"size": 101297752,
+"digest": "42aa2e3fdd232b5e390472a788e7f7db71a1fee4221e260b6cb58c9a1d73e6cdd10afcbac137f7844290169cd6b561b424ecc92b159e9726b0ad5de3f478a8be",
 "algorithm": "sha512",
 "filename": "gcc.tar.xz",
 "unpack": true
