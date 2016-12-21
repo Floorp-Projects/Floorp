@@ -1724,7 +1724,7 @@ public:
      * @param aResult - the current text selection. Is empty if no selection.
      * @return nsresult - whether or not aResult was assigned the selected text.
      */
-    NS_IMETHOD
+    virtual MOZ_MUST_USE nsresult
     GetSelectionAsPlaintext(nsAString& aResult)
     {
       return NS_ERROR_NOT_IMPLEMENTED;
