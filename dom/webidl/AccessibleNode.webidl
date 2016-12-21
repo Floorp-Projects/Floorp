@@ -12,4 +12,6 @@ interface AccessibleNode {
   readonly attribute Node? DOMNode;
 
   boolean is(DOMString... states);
+  [Throws]
+  any get(DOMString attribute);
 };
