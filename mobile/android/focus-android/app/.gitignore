@@ -1,1 +1,4 @@
 /build
+
+src/main/res/raw/blocklist.json
+src/main/res/raw/entitylist.json

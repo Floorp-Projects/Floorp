@@ -29,3 +29,13 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.1.4"
 }
+
+task buildBlocklists(type:Exec) {
+    workingDir '..'
+
+    commandLine 'python', 'build-disconnect.py'
+}
+
+project.afterEvaluate{
+    prepareDebugDependencies.dependsOn("buildBlocklists")
+}
