@@ -1576,11 +1576,14 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
   MOZ_ASSERT(aPipelineId == mRootLayerTreeID);
   MOZ_ASSERT(!mWRBridge);
   MOZ_ASSERT(!mCompositor);
+  MOZ_ASSERT(!mCompositorScheduler);
 
   RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
-  mCompositor = new WebRenderCompositorOGL(glc.get());
+  mCompositor = new WebRenderCompositorOGL(this, glc.get());
   mWRBridge = new WebRenderBridgeParent(this, aPipelineId,
         mWidget, glc.get(), nullptr, mCompositor.get());
+  mCompositorScheduler = mWRBridge->CompositorScheduler();
+  MOZ_ASSERT(mCompositorScheduler);
   mWRBridge.get()->AddRef(); // IPDL reference
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWRBridge == nullptr);

@@ -46,6 +46,7 @@ public:
   gl::GLContext* GLContext() { return mGLContext.get(); }
   wrwindowstate* WindowState() { return mWRWindowState; }
   layers::Compositor* Compositor() { return mCompositor.get(); }
+  CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
   mozilla::ipc::IPCResult RecvCreate(const uint32_t& aWidth,
                                      const uint32_t& aHeight) override;
@@ -119,7 +120,7 @@ private:
   bool ShouldParentObserveEpoch();
 
 private:
-  CompositorBridgeParentBase* mCompositorBridge;
+  CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   uint64_t mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   wrstate* mWRState;
