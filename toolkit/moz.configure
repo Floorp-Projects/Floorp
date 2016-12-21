@@ -773,9 +773,9 @@ option('--disable-skia', help='Disable use of Skia')
 
 @depends('--disable-skia', target)
 def skia(value, target):
-    if value.origin == 'default' and target.endianness == 'big':
-        return None
-    if value:
+    if not value:
+        die('--disable-skia is not supported anymore')
+    else:
         return True
 
 set_config('MOZ_ENABLE_SKIA', skia)
