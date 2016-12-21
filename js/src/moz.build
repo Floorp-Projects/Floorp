@@ -210,7 +210,7 @@ UNIFIED_SOURCES += [
     'jit/BacktrackingAllocator.cpp',
     'jit/Bailouts.cpp',
     'jit/BaselineBailouts.cpp',
-    'jit/BaselineCacheIR.cpp',
+    'jit/BaselineCacheIRCompiler.cpp',
     'jit/BaselineCompiler.cpp',
     'jit/BaselineDebugModeOSR.cpp',
     'jit/BaselineFrame.cpp',
