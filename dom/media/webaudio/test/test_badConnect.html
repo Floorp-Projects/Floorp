@@ -12,11 +12,12 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  var context1 = new AudioContext();
-  var context2 = new AudioContext();
+  var context1 = new OfflineAudioContext(1, 128, 44100);
+  var context2 = new OfflineAudioContext(1, 128, 44100);
 
   var destination1 = context1.destination;
   var destination2 = context2.destination;
+  var gain1 = new GainNode(context2);
 
   isnot(destination1, destination2, "Destination nodes should not be the same");
   isnot(destination1.context, destination2.context, "Destination nodes should not have the same context");
@@ -31,7 +32,10 @@ addLoadEvent(function() {
   }, DOMException.INDEX_SIZE_ERR);
   expectException(function() {
     source1.connect(destination2);
-  }, DOMException.SYNTAX_ERR);
+  }, DOMException.INVALID_ACCESS_ERR);
+  expectException(function() {
+    source1.connect(gain1.gain);
+  }, DOMException.INVALID_ACCESS_ERR);
 
   source1.connect(destination1);
 
