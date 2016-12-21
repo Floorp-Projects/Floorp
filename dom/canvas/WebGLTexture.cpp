@@ -191,8 +191,10 @@ WebGLTexture::SetImageInfosAtLevel(uint32_t level, const ImageInfo& newInfo)
 }
 
 bool
-WebGLTexture::IsMipmapComplete(uint32_t texUnit) const
+WebGLTexture::IsMipmapComplete(const char* funcName, uint32_t texUnit,
+                               bool* const out_initFailed)
 {
+    *out_initFailed = false;
     MOZ_ASSERT(DoesMinFilterRequireMipmap());
     // GLES 3.0.4, p161
 
@@ -214,6 +216,11 @@ WebGLTexture::IsMipmapComplete(uint32_t texUnit) const
     MOZ_ASSERT(refWidth && refHeight && refDepth);
 
     for (uint32_t level = mBaseMipmapLevel; level <= maxLevel; level++) {
+        if (!EnsureLevelInitialized(funcName, level)) {
+            *out_initFailed = true;
+            return false;
+        }
+
         // "A cube map texture is mipmap complete if each of the six texture images,
         //  considered individually, is mipmap complete."
 
@@ -301,8 +308,16 @@ WebGLTexture::IsCubeComplete() const
 }
 
 bool
-WebGLTexture::IsComplete(uint32_t texUnit, const char** const out_reason) const
+WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
+                         const char** const out_reason, bool* const out_initFailed)
 {
+    *out_initFailed = false;
+
+    if (!EnsureLevelInitialized(funcName, mBaseMipmapLevel)) {
+        *out_initFailed = true;
+        return false;
+    }
+
     // Texture completeness is established at GLES 3.0.4, p160-161.
     // "[A] texture is complete unless any of the following conditions hold true:"
 
@@ -334,7 +349,10 @@ WebGLTexture::IsComplete(uint32_t texUnit, const char** const out_reason) const
     //    the texture is not mipmap complete."
     const bool requiresMipmap = (minFilter != LOCAL_GL_NEAREST &&
                                  minFilter != LOCAL_GL_LINEAR);
-    if (requiresMipmap && !IsMipmapComplete(texUnit)) {
+    if (requiresMipmap && !IsMipmapComplete(funcName, texUnit, out_initFailed)) {
+        if (*out_initFailed)
+            return false;
+
         *out_reason = "Because the minification filter requires mipmapping, the texture"
                       " must be \"mipmap complete\".";
         return false;
@@ -457,7 +475,14 @@ WebGLTexture::GetFakeBlackType(const char* funcName, uint32_t texUnit,
                                FakeBlackType* const out_fakeBlack)
 {
     const char* incompleteReason;
-    if (!IsComplete(texUnit, &incompleteReason)) {
+    bool initFailed = false;
+    if (!IsComplete(funcName, texUnit, &incompleteReason, &initFailed)) {
+        if (initFailed) {
+            mContext->ErrorOutOfMemory("%s: Failed to initialize texture data.",
+                                       funcName);
+            return false; // The world just exploded.
+        }
+
         if (incompleteReason) {
             mContext->GenerateWarning("%s: Active texture %u for target 0x%04x is"
                                       " 'incomplete', and will be rendered as"
@@ -469,62 +494,6 @@ WebGLTexture::GetFakeBlackType(const char* funcName, uint32_t texUnit,
         return true;
     }
 
-    // We may still want FakeBlack as an optimization for uninitialized image data.
-    bool hasUninitializedData = false;
-    bool hasInitializedData = false;
-
-    uint32_t maxLevel;
-    MOZ_ALWAYS_TRUE( MaxEffectiveMipmapLevel(texUnit, &maxLevel) );
-
-    MOZ_ASSERT(mBaseMipmapLevel <= maxLevel);
-    for (uint32_t level = mBaseMipmapLevel; level <= maxLevel; level++) {
-        for (uint8_t face = 0; face < mFaceCount; face++) {
-            const auto& cur = ImageInfoAtFace(face, level);
-            if (cur.IsDataInitialized())
-                hasInitializedData = true;
-            else
-                hasUninitializedData = true;
-        }
-    }
-    MOZ_ASSERT(hasUninitializedData || hasInitializedData);
-
-    if (!hasUninitializedData) {
-        *out_fakeBlack = FakeBlackType::None;
-        return true;
-    }
-
-    if (!hasInitializedData) {
-        const auto format = ImageInfoAtFace(0, mBaseMipmapLevel).mFormat->format;
-        if (format->IsColorFormat()) {
-            *out_fakeBlack = (format->a ? FakeBlackType::RGBA0000
-                                        : FakeBlackType::RGBA0001);
-            return true;
-        }
-
-        mContext->GenerateWarning("%s: Active texture %u for target 0x%04x is"
-                                  " uninitialized, and will be (perhaps slowly) cleared"
-                                  " by the implementation.",
-                                  funcName, texUnit, mTarget.get());
-    } else {
-        mContext->GenerateWarning("%s: Active texture %u for target 0x%04x contains"
-                                  " TexImages with uninitialized data along with"
-                                  " TexImages with initialized data, forcing the"
-                                  " implementation to (slowly) initialize the"
-                                  " uninitialized TexImages.",
-                                  funcName, texUnit, mTarget.get());
-    }
-
-    GLenum baseImageTarget = mTarget.get();
-    if (baseImageTarget == LOCAL_GL_TEXTURE_CUBE_MAP)
-        baseImageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-
-    for (uint32_t level = mBaseMipmapLevel; level <= maxLevel; level++) {
-        for (uint8_t face = 0; face < mFaceCount; face++) {
-            TexImageTarget imageTarget = baseImageTarget + face;
-            if (!EnsureImageDataInitialized(funcName, imageTarget, level))
-                return false; // The world just exploded.
-        }
-    }
 
     *out_fakeBlack = FakeBlackType::None;
     return true;
@@ -585,12 +554,29 @@ WebGLTexture::EnsureImageDataInitialized(const char* funcName, TexImageTarget ta
                                          uint32_t level)
 {
     auto& imageInfo = ImageInfoAt(target, level);
-    MOZ_ASSERT(imageInfo.IsDefined());
+    if (!imageInfo.IsDefined())
+        return true;
 
     if (imageInfo.IsDataInitialized())
         return true;
 
     return InitializeImageData(funcName, target, level);
+}
+
+bool
+WebGLTexture::EnsureLevelInitialized(const char* funcName, uint32_t level)
+{
+    if (mTarget != LOCAL_GL_TEXTURE_CUBE_MAP)
+        return EnsureImageDataInitialized(funcName, mTarget.get(), level);
+
+    for (GLenum texImageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+         texImageTarget <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+         ++texImageTarget)
+    {
+        if (!EnsureImageDataInitialized(funcName, texImageTarget, level))
+            return false;
+    }
+    return true;
 }
 
 static void
