@@ -65,3 +65,23 @@ def verify_task_graph_symbol(task, taskgraph, scratch_pad):
                 )
             else:
                 scratch_pad[key] = task.label
+
+
+def verify_gecko_v2_routes(task, taskgraph, scratch_pad):
+    """
+        This function ensures that any two
+        tasks have distinct index.v2.routes
+    """
+    route_prefix = "index.gecko.v2"
+    task_dict = task.task
+    routes = task_dict.get('routes', [])
+
+    for route in routes:
+        if route.startswith(route_prefix):
+            if route in scratch_pad:
+                raise Exception(
+                    "conflict between {}:{} for route: {}"
+                    .format(task.label, scratch_pad[route], route)
+                )
+            else:
+                scratch_pad[route] = task.label
