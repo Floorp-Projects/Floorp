@@ -356,7 +356,7 @@ public:
 
   static  bool            ConvertStatus(nsEventStatus aStatus)
                           { return aStatus == nsEventStatus_eConsumeNoDefault; }
-  NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+  virtual nsresult        DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override;
 
   virtual bool            WidgetTypeSupportsAcceleration() override;

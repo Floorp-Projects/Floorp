@@ -165,7 +165,7 @@ public:
   virtual void            SetIcon(const nsAString& aIconSpec) override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual LayoutDeviceIntSize ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) override;
-  NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+  virtual nsresult        DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override;
   virtual void            EnableDragDrop(bool aEnable) override;
   virtual void            CaptureMouse(bool aCapture) override;

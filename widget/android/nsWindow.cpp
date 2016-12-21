@@ -1929,7 +1929,7 @@ nsWindow::WidgetToScreenOffset()
     return p;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
                         nsEventStatus& aStatus)
 {

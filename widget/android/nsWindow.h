@@ -185,8 +185,8 @@ public:
     virtual nsresult SetFocus(bool aRaise = false) override;
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
-    NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                             nsEventStatus& aStatus) override;
+    virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                   nsEventStatus& aStatus) override;
     nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent);
     virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
     virtual nsresult MakeFullScreen(bool aFullScreen,

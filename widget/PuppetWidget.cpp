@@ -317,7 +317,7 @@ PuppetWidget::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
   event.mTime = PR_Now() / 1000;
 }
 
-NS_IMETHODIMP
+nsresult
 PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
