@@ -771,11 +771,11 @@ add_old_configure_assignment('NECKO_PROTOCOLS', necko_protocols)
 # ==============================================================
 option('--disable-skia', help='Disable use of Skia')
 
-@depends('--disable-skia', target)
-def skia(value, target):
-    if value.origin == 'default' and target.endianness == 'big':
-        return None
-    if value:
+@depends('--disable-skia')
+def skia(value):
+    if not value:
+        die('--disable-skia is not supported anymore')
+    else:
         return True
 
 set_config('MOZ_ENABLE_SKIA', skia)
