@@ -367,12 +367,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return currentInstruction > operandLastUsed_[operandId];
     }
     const uint8_t* codeStart() const {
+        MOZ_ASSERT(!failed());
         return buffer_.buffer();
     }
     const uint8_t* codeEnd() const {
+        MOZ_ASSERT(!failed());
         return buffer_.buffer() + buffer_.length();
     }
     uint32_t codeLength() const {
+        MOZ_ASSERT(!failed());
         return buffer_.length();
     }
 
@@ -661,7 +664,6 @@ class MOZ_RAII GetPropIRGenerator
     jsbytecode* pc_;
     HandleValue val_;
     HandleValue idVal_;
-    MutableHandleValue res_;
     ICStubEngine engine_;
     CacheKind cacheKind_;
     bool* isTemporarilyUnoptimizable_;
@@ -710,7 +712,7 @@ class MOZ_RAII GetPropIRGenerator
   public:
     GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine, CacheKind cacheKind,
                        bool* isTemporarilyUnoptimizable,
-                       HandleValue val, HandleValue idVal, MutableHandleValue res);
+                       HandleValue val, HandleValue idVal);
 
     bool tryAttachStub();
 

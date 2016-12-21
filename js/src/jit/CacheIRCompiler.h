@@ -355,7 +355,9 @@ class MOZ_RAII CacheIRCompiler
         reader(writer),
         writer_(writer),
         allocator(writer_)
-    {}
+    {
+        MOZ_ASSERT(!writer.failed());
+    }
 
     MOZ_MUST_USE bool addFailurePath(FailurePath** failure);
 

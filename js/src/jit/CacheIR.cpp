@@ -21,14 +21,12 @@ using mozilla::Maybe;
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine,
                                        CacheKind cacheKind,
                                        bool* isTemporarilyUnoptimizable,
-                                       HandleValue val, HandleValue idVal,
-                                       MutableHandleValue res)
+                                       HandleValue val, HandleValue idVal)
   : writer(cx),
     cx_(cx),
     pc_(pc),
     val_(val),
     idVal_(idVal),
-    res_(res),
     engine_(engine),
     cacheKind_(cacheKind),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
