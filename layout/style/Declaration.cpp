@@ -742,13 +742,13 @@ Declaration::GetPropertyValueInternal(
           !data->HasDefaultBorderImageWidth() ||
           !data->HasDefaultBorderImageOutset() ||
           !data->HasDefaultBorderImageRepeat() ||
-          data->ValueFor(eCSSProperty_border_top_colors)->GetUnit() !=
+          data->ValueFor(eCSSProperty__moz_border_top_colors)->GetUnit() !=
             eCSSUnit_None ||
-          data->ValueFor(eCSSProperty_border_right_colors)->GetUnit() !=
+          data->ValueFor(eCSSProperty__moz_border_right_colors)->GetUnit() !=
             eCSSUnit_None ||
-          data->ValueFor(eCSSProperty_border_bottom_colors)->GetUnit() !=
+          data->ValueFor(eCSSProperty__moz_border_bottom_colors)->GetUnit() !=
             eCSSUnit_None ||
-          data->ValueFor(eCSSProperty_border_left_colors)->GetUnit() !=
+          data->ValueFor(eCSSProperty__moz_border_left_colors)->GetUnit() !=
             eCSSUnit_None) {
         break;
       }

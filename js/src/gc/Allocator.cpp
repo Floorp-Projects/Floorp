@@ -39,8 +39,12 @@ js::Allocate(ExclusiveContext* cx, AllocKind kind, size_t nDynamicSlots, Initial
     MOZ_ASSERT_IF(nDynamicSlots != 0, clasp->isNative() || clasp->isProxy());
 
     // Off-main-thread alloc cannot trigger GC or make runtime assertions.
-    if (!cx->isJSContext())
-        return GCRuntime::tryNewTenuredObject<NoGC>(cx, kind, thingSize, nDynamicSlots);
+    if (!cx->isJSContext()) {
+        JSObject* obj = GCRuntime::tryNewTenuredObject<NoGC>(cx, kind, thingSize, nDynamicSlots);
+        if (MOZ_UNLIKELY(allowGC && !obj))
+            ReportOutOfMemory(cx);
+        return obj;
+    }
 
     JSContext* ncx = cx->asJSContext();
     JSRuntime* rt = ncx->runtime();

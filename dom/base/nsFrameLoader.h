@@ -351,7 +351,6 @@ private:
   mozilla::ScreenIntSize mLazySize;
 
   nsCOMPtr<nsIPartialSHistory> mPartialSessionHistory;
-  nsCOMPtr<nsIGroupedSHistory> mGroupedSessionHistory;
 
   // A stack-maintained reference to an array of promises which are blocking
   // grouped history navigation

@@ -2427,7 +2427,7 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
     MOZ_ASSERT(aLoadInfo->mPrincipal);
     nsAutoCString key;
     GenerateSharedWorkerKey(scriptSpec, aName,
-        BasePrincipal::Cast(aLoadInfo->mPrincipal)->OriginAttributesRef(), key);
+        aLoadInfo->mPrincipal->OriginAttributesRef(), key);
 
     if (mDomainMap.Get(aLoadInfo->mDomain, &domainInfo) &&
         domainInfo->mSharedWorkerInfos.Get(key, &sharedWorkerInfo)) {

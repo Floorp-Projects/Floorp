@@ -123,7 +123,7 @@ public:
                          nsWrapperCache::FlagsType aRequestedFlag);
 
   // This is called by HTMLLinkElement.
-  void TryDNSPrefetchPreconnectOrPrefetch();
+  void TryDNSPrefetchPreconnectOrPrefetchOrPrerender();
   void CancelPrefetch();
 
 protected:

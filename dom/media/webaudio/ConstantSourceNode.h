@@ -7,7 +7,7 @@
 #ifndef ConstantSourceNode_h_
 #define ConstantSourceNode_h_
 
-#include "AudioNode.h"
+#include "AudioScheduledSourceNode.h"
 #include "AudioParam.h"
 #include "mozilla/dom/ConstantSourceNodeBinding.h"
 
@@ -16,14 +16,14 @@ namespace dom {
 
 class AudioContext;
 
-class ConstantSourceNode final : public AudioNode,
-                                 public MainThreadMediaStreamListener
+class ConstantSourceNode final : public AudioScheduledSourceNode
+                               , public MainThreadMediaStreamListener
 {
 public:
   explicit ConstantSourceNode(AudioContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ConstantSourceNode, AudioNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ConstantSourceNode, AudioScheduledSourceNode)
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -45,10 +45,8 @@ public:
     return mOffset;
   }
 
-  void Start(double aWhen, ErrorResult& rv);
-  void Stop(double aWhen, ErrorResult& rv);
-
-  IMPL_EVENT_HANDLER(ended)
+  void Start(double aWhen, ErrorResult& rv) override;
+  void Stop(double aWhen, ErrorResult& rv) override;
 
   void NotifyMainThreadStreamFinished() override;
 

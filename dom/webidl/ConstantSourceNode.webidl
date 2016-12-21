@@ -15,12 +15,7 @@ dictionary ConstantSourceOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional ConstantSourceOptions options)]
-interface ConstantSourceNode : AudioNode {
+ Constructor(BaseAudioContext context, optional ConstantSourceOptions options)]
+interface ConstantSourceNode :  AudioScheduledSourceNode {
     readonly        attribute AudioParam   offset;
-                    attribute EventHandler onended;
-    [Throws, UnsafeInPrerendering]
-    void start (optional double when = 0);
-    [Throws, UnsafeInPrerendering]
-    void stop (optional double when = 0);
 };

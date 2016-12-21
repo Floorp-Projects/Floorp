@@ -17,7 +17,7 @@ dictionary AudioBufferOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, AudioBufferOptions options)]
+ Constructor(BaseAudioContext context, AudioBufferOptions options)]
 interface AudioBuffer {
 
     readonly attribute float sampleRate;

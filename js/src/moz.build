@@ -222,6 +222,7 @@ UNIFIED_SOURCES += [
     'jit/BytecodeAnalysis.cpp',
     'jit/C1Spewer.cpp',
     'jit/CacheIR.cpp',
+    'jit/CacheIRCompiler.cpp',
     'jit/CodeGenerator.cpp',
     'jit/CompileWrappers.cpp',
     'jit/Disassembler.cpp',

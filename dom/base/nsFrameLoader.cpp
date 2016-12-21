@@ -141,8 +141,7 @@ NS_IMPL_CYCLE_COLLECTION(nsFrameLoader,
                          mMessageManager,
                          mChildMessageManager,
                          mOpener,
-                         mPartialSessionHistory,
-                         mGroupedSessionHistory)
+                         mPartialSessionHistory)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -378,12 +377,38 @@ nsFrameLoader::GetPartialSessionHistory(nsIPartialSHistory** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::EnsureGroupedSHistory(nsIGroupedSHistory** aResult)
+{
+  nsCOMPtr<nsIPartialSHistory> partialHistory;
+  GetPartialSessionHistory(getter_AddRefs(partialHistory));
+  MOZ_ASSERT(partialHistory);
+
+  nsCOMPtr<nsIGroupedSHistory> groupedHistory;
+  partialHistory->GetGroupedSHistory(getter_AddRefs(groupedHistory));
+  if (!groupedHistory) {
+    groupedHistory = new GroupedSHistory();
+    groupedHistory->AppendPartialSessionHistory(partialHistory);
+
+#ifdef DEBUG
+    nsCOMPtr<nsIGroupedSHistory> test;
+    GetGroupedSessionHistory(getter_AddRefs(test));
+    MOZ_ASSERT(test == groupedHistory, "GroupedHistory must match");
+#endif
+  }
+
+  groupedHistory.forget(aResult);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFrameLoader::GetGroupedSessionHistory(nsIGroupedSHistory** aResult)
 {
-  nsCOMPtr<nsIGroupedSHistory> groupedHistory(mGroupedSessionHistory);
-  groupedHistory.forget(aResult);
+  nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
+  if (mPartialSessionHistory) {
+    mPartialSessionHistory->GetGroupedSHistory(getter_AddRefs(groupedSHistory));
+  }
+  groupedSHistory.forget(aResult);
   return NS_OK;
 }
 
@@ -406,9 +431,6 @@ nsFrameLoader::SwapBrowsersAndNotify(nsFrameLoader* aOther)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-
-  // Swap the GroupedSessionHistory
-  mGroupedSessionHistory.swap(aOther->mGroupedSessionHistory);
 
   // Dispatch the BrowserChangedProcess event to tell JS that the process swap
   // has occurred.
@@ -452,21 +474,17 @@ public:
 
     // Append ourselves.
     nsresult rv;
-    if (!mThis->mGroupedSessionHistory) {
-      mThis->mGroupedSessionHistory = new GroupedSHistory();
-      nsCOMPtr<nsIPartialSHistory> partialSHistory;
-      MOZ_ALWAYS_SUCCEEDS(mThis->GetPartialSessionHistory(getter_AddRefs(partialSHistory)));
-      rv = mThis->mGroupedSessionHistory->AppendPartialSessionHistory(partialSHistory);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mPromise->MaybeRejectWithUndefined();
-        return;
-      }
+    nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
+    rv = mThis->EnsureGroupedSHistory(getter_AddRefs(groupedSHistory));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
     }
 
     // Append the other.
     nsCOMPtr<nsIPartialSHistory> otherPartialSHistory;
     MOZ_ALWAYS_SUCCEEDS(mOther->GetPartialSessionHistory(getter_AddRefs(otherPartialSHistory)));
-    rv = mThis->mGroupedSessionHistory->AppendPartialSessionHistory(otherPartialSHistory);
+    rv = groupedSHistory->AppendPartialSessionHistory(otherPartialSHistory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mPromise->MaybeRejectWithUndefined();
       return;
@@ -520,10 +538,16 @@ public:
       return;
     }
 
+    nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
+    mThis->GetGroupedSessionHistory(getter_AddRefs(groupedSHistory));
+    if (NS_WARN_IF(!groupedSHistory)) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
     // Navigate the loader to the new index
     nsCOMPtr<nsIFrameLoader> otherLoader;
-    nsresult rv = mThis->mGroupedSessionHistory->
-                    GotoIndex(mGlobalIndex, getter_AddRefs(otherLoader));
+    nsresult rv = groupedSHistory->GotoIndex(mGlobalIndex, getter_AddRefs(otherLoader));
 
     // Check if the gotoIndex failed because the target frameloader is dead. We
     // need to perform a navigateAndRestoreByIndex and then return to recover.
@@ -686,9 +710,6 @@ nsFrameLoader::AppendPartialSessionHistoryAndSwap(nsIFrameLoader* aOther, nsISup
 NS_IMETHODIMP
 nsFrameLoader::RequestGroupedHistoryNavigation(uint32_t aGlobalIndex, nsISupports** aPromise)
 {
-  if (!mGroupedSessionHistory) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
   RefPtr<Promise> ready = FireWillChangeProcessEvent();
   if (NS_WARN_IF(!ready)) {
@@ -1989,8 +2010,15 @@ nsFrameLoader::StartDestroy()
   }
 
   // Destroy the other frame loader owners now that we are being destroyed.
-  if (mGroupedSessionHistory) {
-    mGroupedSessionHistory->CloseInactiveFrameLoaderOwners();
+  if (mPartialSessionHistory &&
+      mPartialSessionHistory->GetActiveState() == nsIPartialSHistory::STATE_ACTIVE) {
+    nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
+    GetGroupedSessionHistory(getter_AddRefs(groupedSHistory));
+    if (groupedSHistory) {
+      NS_DispatchToCurrentThread(NS_NewRunnableFunction([groupedSHistory] () {
+        groupedSHistory->CloseInactiveFrameLoaderOwners();
+      }));
+    }
   }
 
   nsCOMPtr<nsIRunnable> destroyRunnable = new nsFrameLoaderDestroyRunnable(this);
@@ -2386,7 +2414,7 @@ nsFrameLoader::MaybeCreateDocShell()
   if (parentType == nsIDocShellTreeItem::typeContent &&
       !nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()) &&
       !OwnerIsMozBrowserFrame()) {
-    PrincipalOriginAttributes poa = BasePrincipal::Cast(doc->NodePrincipal())->OriginAttributesRef();
+    PrincipalOriginAttributes poa = doc->NodePrincipal()->OriginAttributesRef();
 
     // Assert on the firstPartyDomain from top-level docshell should be empty
     if (mIsTopLevelContent) {

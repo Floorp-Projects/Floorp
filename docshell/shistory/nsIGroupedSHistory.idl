@@ -22,6 +22,11 @@ interface nsIGroupedSHistory : nsISupports
   [infallible] readonly attribute unsigned long count;
 
   /**
+   * The currently active frameloader controlled by this nsIGroupedSHistory.
+   */
+  readonly attribute nsIFrameLoader activeFrameLoader;
+
+  /**
    * Remove all partial histories after currently active one (if any) and then
    * append the given partial session history to the end of the list.
    */
@@ -57,4 +62,22 @@ interface nsIGroupedSHistory : nsISupports
    * This does not remove the PartialSHistories from the GroupedSHistory.
    */
   void closeInactiveFrameLoaderOwners();
+
+  /**
+   * Add a partialSHistory as a "prerendering" partialSHistory. This
+   * partialSHistory's tab will have its lifetime managed by the
+   * GroupedSHistory, and will be closed when closeInactiveFrameLoaderOwners is
+   * called, or whenever a SHistory update is received.
+   */
+  void addPrerenderingPartialSHistory(in nsIPartialSHistory aPrerendering, in long aId);
+
+  /**
+   * Switch to the prerendering partialSHistory identified by aId, appending it after the current partialSHistory.
+   */
+  [implicit_jscontext] nsISupports activatePrerendering(in long aId);
+
+  /**
+   * Cancel the prerendering with the given ID.
+   */
+  void cancelPrerendering(in long aId);
 };
