@@ -200,6 +200,27 @@ MapTest()
   MOZ_RELEASE_ASSERT(res6.unwrap() == 5);
 }
 
+static void
+AndThenTest()
+{
+  // `andThen`ing over success results.
+  Result<int, const char*> r1(10);
+  Result<int, const char*> r2 = r1.andThen([](int x) {
+    return Result<int, const char*>(x + 1);
+  });
+  MOZ_RELEASE_ASSERT(r2.isOk());
+  MOZ_RELEASE_ASSERT(r2.unwrap() == 11);
+
+  // `andThen`ing over error results.
+  Result<int, const char*> r3("error");
+  Result<int, const char*> r4 = r3.andThen([](int x) {
+    MOZ_RELEASE_ASSERT(false);
+    return Result<int, const char*>(1);
+  });
+  MOZ_RELEASE_ASSERT(r4.isErr());
+  MOZ_RELEASE_ASSERT(r3.unwrapErr() == r4.unwrapErr());
+}
+
 /* * */
 
 int main()
@@ -209,5 +230,6 @@ int main()
   EmptyValueTest();
   ReferenceTest();
   MapTest();
+  AndThenTest();
   return 0;
 }
