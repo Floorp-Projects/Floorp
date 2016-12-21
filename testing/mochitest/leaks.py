@@ -48,12 +48,12 @@ class ShutdownLeaks(object):
 
     def process(self):
         if not self.seenShutdown:
-            self.logger.warning(
+            self.logger.error(
                 "TEST-UNEXPECTED-FAIL | ShutdownLeaks | process() called before end of test suite")
 
         for test in self._parseLeakingTests():
             for url, count in self._zipLeakedWindows(test["leakedWindows"]):
-                self.logger.warning(
+                self.logger.error(
                     "TEST-UNEXPECTED-FAIL | %s | leaked %d window(s) until shutdown "
                     "[url = %s]" % (test["fileName"], count, url))
 
@@ -62,9 +62,9 @@ class ShutdownLeaks(object):
                                  (test["fileName"], test["leakedWindowsString"]))
 
             if test["leakedDocShells"]:
-                self.logger.warning("TEST-UNEXPECTED-FAIL | %s | leaked %d docShell(s) until "
-                                    "shutdown" %
-                                    (test["fileName"], len(test["leakedDocShells"])))
+                self.logger.error("TEST-UNEXPECTED-FAIL | %s | leaked %d docShell(s) until "
+                                  "shutdown" %
+                                  (test["fileName"], len(test["leakedDocShells"])))
                 self.logger.info("TEST-INFO | %s | docShell(s) leaked: %s" %
                                  (test["fileName"], ', '.join(["[pid = %s] [id = %s]" %
                                                                x for x in test["leakedDocShells"]]
@@ -77,7 +77,7 @@ class ShutdownLeaks(object):
 
         # log line has invalid format
         if not pid or not serial:
-            self.logger.warning(
+            self.logger.error(
                 "TEST-UNEXPECTED-FAIL | ShutdownLeaks | failed to parse line <%s>" % line)
             return
 
@@ -99,7 +99,7 @@ class ShutdownLeaks(object):
 
         # log line has invalid format
         if not pid or not id:
-            self.logger.warning(
+            self.logger.error(
                 "TEST-UNEXPECTED-FAIL | ShutdownLeaks | failed to parse line <%s>" % line)
             return
 
@@ -233,8 +233,8 @@ class LSANLeaks(object):
 
     def process(self):
         if self.fatalError:
-            self.logger.warning("TEST-UNEXPECTED-FAIL | LeakSanitizer | LeakSanitizer "
-                                "has encountered a fatal error.")
+            self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer | LeakSanitizer "
+                              "has encountered a fatal error.")
 
         if self.foundFrames:
             self.logger.info("TEST-INFO | LeakSanitizer | To show the "
@@ -243,7 +243,7 @@ class LSANLeaks(object):
                              "in testing/mozbase/mozrunner/mozrunner/utils.py")
 
         for f in self.foundFrames:
-            self.logger.warning(
+            self.logger.error(
                 "TEST-UNEXPECTED-FAIL | LeakSanitizer | leak at " + f)
 
     def _finishStack(self):
