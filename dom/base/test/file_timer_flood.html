@@ -3,15 +3,25 @@
 <body>
 <script>
 let count = 0;
-function cb() {
+let last_timer_set = 0;
+let last_timer_observed = 0;
+function cb(timer_observed) {
+  if (timer_observed > last_timer_observed) {
+    // In order to make the test more efficient, we don't use the SimpleTest
+    // ok() function to avoid generating one test assertion per one of these
+    // checks.  We only send a message to the parent which fails the test if
+    // we detect out of order firing of timeouts.
+    window.parent.postMessage('OUT_OF_ORDER', '*');
+  }
+  last_timer_observed = timer_observed;
   count += 1;
   // Notify our parent that we are ready once the timer flood has
   // warmed up.
   if (count === 10000) {
     window.parent.postMessage('STARTED', '*');
   }
-  setTimeout(cb, 0);
-  setTimeout(cb, 0);
+  last_timer_set = setTimeout(cb.bind(last_timer_set), 0);
+  last_timer_set = setTimeout(cb.bind(last_timer_set), 0);
 }
 addEventListener('load', cb);
 </script>
