@@ -161,8 +161,6 @@
     <menuseparator id="placesContext_newSeparator"/>
     <menuitem id="placesContext_createBookmark"
               command="placesCmd_createBookmark"
-              label="&cmd.bookmarkLink.label;"
-              accesskey="&cmd.bookmarkLink.accesskey;"
               selection="link"
               forcehideselection="bookmark|tagChild"/>
     <menuitem id="placesContext_cut"
@@ -194,8 +192,6 @@
               selection="bookmark|tagChild|folder|query|dynamiccontainer|separator|host"/>
     <menuitem id="placesContext_delete_history"
               command="placesCmd_delete"
-              label="&cmd.delete.label;"
-              accesskey="&cmd.delete.accesskey;"
               closemenu="single"
               selection="link"
               forcehideselection="bookmark"/>
