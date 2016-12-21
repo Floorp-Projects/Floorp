@@ -156,7 +156,7 @@ MediaKeySession::UpdateKeyStatusMap()
                       this, NS_ConvertUTF16toUTF8(mSessionId).get()));
     using IntegerType = typename std::underlying_type<MediaKeyStatus>::type;
     for (const CDMCaps::KeyStatus& status : keyStatuses) {
-      message.Append(nsPrintfCString(" (%s,%s)", ToHexString(status.mId).get(),
+      message.Append(nsPrintfCString(" (%s,%s)", ToBase64(status.mId).get(),
         MediaKeyStatusValues::strings[static_cast<IntegerType>(status.mStatus)].value));
     }
     message.Append(" }");
@@ -318,10 +318,10 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
   Telemetry::Accumulate(Telemetry::VIDEO_CDM_GENERATE_REQUEST_CALLED,
                         ToCDMTypeTelemetryEnum(mKeySystem));
 
-  // Convert initData to hex for easier logging.
+  // Convert initData to base64 for easier logging.
   // Note: CreateSession() Move()s the data out of the array, so we have
   // to copy it here.
-  nsAutoCString hexInitData(ToHexString(data));
+  nsAutoCString base64InitData(ToBase64(data));
   PromiseId pid = mKeys->StorePromise(promise);
   mKeys->ConnectPendingPromiseIdWithToken(pid, Token());
   mKeys->GetCDMProxy()->CreateSession(Token(),
@@ -330,11 +330,11 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
                                       aInitDataType, data);
 
   EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() sent, "
-          "promiseId=%d initData='%s' initDataType='%s'",
+          "promiseId=%d initData(base64)='%s' initDataType='%s'",
           this,
           NS_ConvertUTF16toUTF8(mSessionId).get(),
           pid,
-          hexInitData.get(),
+          base64InitData.get(),
           NS_ConvertUTF16toUTF8(aInitDataType).get());
 
   return promise.forget();
@@ -447,10 +447,10 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
   }
 
 
-  // Convert response to hex for easier logging.
+  // Convert response to base64 for easier logging.
   // Note: UpdateSession() Move()s the data out of the array, so we have
   // to copy it here.
-  nsAutoCString hexResponse(ToHexString(data));
+  nsAutoCString base64Response(ToBase64(data));
 
   PromiseId pid = mKeys->StorePromise(promise);
   mKeys->GetCDMProxy()->UpdateSession(mSessionId,
@@ -458,11 +458,11 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
                                       data);
 
   EME_LOG("MediaKeySession[%p,'%s'] Update() sent to CDM, "
-          "promiseId=%d Response='%s'",
+          "promiseId=%d Response(base64)='%s'",
            this,
            NS_ConvertUTF16toUTF8(mSessionId).get(),
            pid,
-           hexResponse.get());
+           base64Response.get());
 
   return promise.forget();
 }
@@ -579,10 +579,10 @@ MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
                                     const nsTArray<uint8_t>& aMessage)
 {
   if (EME_LOG_ENABLED()) {
-    EME_LOG("MediaKeySession[%p,'%s'] DispatchKeyMessage() type=%s message='%s'",
+    EME_LOG("MediaKeySession[%p,'%s'] DispatchKeyMessage() type=%s message(base64)='%s'",
             this, NS_ConvertUTF16toUTF8(mSessionId).get(),
             MediaKeyMessageTypeValues::strings[uint32_t(aMessageType)].value,
-            ToHexString(aMessage).get());
+            ToBase64(aMessage).get());
   }
 
   RefPtr<MediaKeyMessageEvent> event(
@@ -639,11 +639,10 @@ MediaKeySession::MakePromise(ErrorResult& aRv, const nsACString& aName)
 void
 MediaKeySession::SetExpiration(double aSecondsSinceEpoch)
 {
-  EME_LOG("MediaKeySession[%p,'%s'] SetExpiry(%.12lf) (%.2lf hours from now)",
+  EME_LOG("MediaKeySession[%p,'%s'] SetExpiry(%lf)",
           this,
           NS_ConvertUTF16toUTF8(mSessionId).get(),
-          aSecondsSinceEpoch,
-          aSecondsSinceEpoch - double(time(0)) / (60 * 60));
+          aSecondsSinceEpoch);
   mExpiration = aSecondsSinceEpoch;
 }
 
