@@ -408,17 +408,17 @@ public:
     void ErrorOutOfMemory(const char* fmt = 0, ...);
     void ErrorImplementationBug(const char* fmt = 0, ...);
 
+    void ErrorInvalidEnumArg(const char* funcName, const char* argName, GLenum val);
+
     const char* ErrorName(GLenum error);
 
     /**
      * Return displayable name for GLenum.
      * This version is like gl::GLenumToStr but with out the GL_ prefix to
      * keep consistency with how errors are reported from WebGL.
+     * Returns hex formatted version of glenum if glenum is unknown.
      */
-    // Returns nullptr if glenum is unknown.
-    static const char* EnumName(GLenum glenum);
-    // Returns hex formatted version of glenum if glenum is unknown.
-    static void EnumName(GLenum glenum, nsACString* out_name);
+    static void EnumName(GLenum val, nsCString* out_name);
 
     void DummyReadFramebufferOperation(const char* funcName);
 
@@ -1286,43 +1286,64 @@ public:
 
     WebGLsizeiptr GetVertexAttribOffset(GLuint index, GLenum pname);
 
-    void VertexAttrib1f(GLuint index, GLfloat x0);
-    void VertexAttrib2f(GLuint index, GLfloat x0, GLfloat x1);
-    void VertexAttrib3f(GLuint index, GLfloat x0, GLfloat x1, GLfloat x2);
-    void VertexAttrib4f(GLuint index, GLfloat x0, GLfloat x1, GLfloat x2,
-                        GLfloat x3);
+    ////
 
-    void VertexAttrib1fv(GLuint idx, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        VertexAttrib1fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
-    }
-    void VertexAttrib1fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
-        VertexAttrib1fv_base(idx, arr.Length(), arr.Elements());
-    }
+    void VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w,
+                        const char* funcName = nullptr);
 
-    void VertexAttrib2fv(GLuint idx, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        VertexAttrib2fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
+    ////
+
+    void VertexAttrib1f(GLuint index, GLfloat x) {
+        VertexAttrib4f(index, x, 0, 0, 1, "vertexAttrib1f");
     }
-    void VertexAttrib2fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
-        VertexAttrib2fv_base(idx, arr.Length(), arr.Elements());
+    void VertexAttrib2f(GLuint index, GLfloat x, GLfloat y) {
+        VertexAttrib4f(index, x, y, 0, 1, "vertexAttrib2f");
+    }
+    void VertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z) {
+        VertexAttrib4f(index, x, y, z, 1, "vertexAttrib3f");
     }
 
-    void VertexAttrib3fv(GLuint idx, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        VertexAttrib3fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
-    }
-    void VertexAttrib3fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
-        VertexAttrib3fv_base(idx, arr.Length(), arr.Elements());
+    ////
+
+    void VertexAttrib1fv(GLuint index, const Float32ListU& list) {
+        const char funcName[] = "vertexAttrib1fv";
+        const auto& arr = Float32Arr::From(list);
+        if (!ValidateAttribArraySetter(funcName, 1, arr.elemCount))
+            return;
+
+        VertexAttrib4f(index, arr.elemBytes[0], 0, 0, 1, funcName);
     }
 
-    void VertexAttrib4fv(GLuint idx, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        VertexAttrib4fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
+    void VertexAttrib2fv(GLuint index, const Float32ListU& list) {
+        const char funcName[] = "vertexAttrib2fv";
+        const auto& arr = Float32Arr::From(list);
+        if (!ValidateAttribArraySetter(funcName, 2, arr.elemCount))
+            return;
+
+        VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], 0, 1, funcName);
     }
-    void VertexAttrib4fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
-        VertexAttrib4fv_base(idx, arr.Length(), arr.Elements());
+
+    void VertexAttrib3fv(GLuint index, const Float32ListU& list) {
+        const char funcName[] = "vertexAttrib3fv";
+        const auto& arr = Float32Arr::From(list);
+        if (!ValidateAttribArraySetter(funcName, 3, arr.elemCount))
+            return;
+
+        VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], arr.elemBytes[2], 1,
+                       funcName);
     }
+
+    void VertexAttrib4fv(GLuint index, const Float32ListU& list) {
+        const char funcName[] = "vertexAttrib4fv";
+        const auto& arr = Float32Arr::From(list);
+        if (!ValidateAttribArraySetter(funcName, 4, arr.elemCount))
+            return;
+
+        VertexAttrib4f(index, arr.elemBytes[0], arr.elemBytes[1], arr.elemBytes[2],
+                       arr.elemBytes[3], funcName);
+    }
+
+    ////
 
     void VertexAttribPointer(GLuint index, GLint size, GLenum type,
                              WebGLboolean normalized, GLsizei stride,
@@ -1361,8 +1382,8 @@ private:
 // -----------------------------------------------------------------------------
 // PROTECTED
 protected:
-    WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need();
-    bool DoFakeVertexAttrib0(GLuint vertexCount);
+    WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need() const;
+    bool DoFakeVertexAttrib0(const char* funcName, GLuint vertexCount);
     void UndoFakeVertexAttrib0();
 
     inline void InvalidateBufferFetching()
@@ -1409,7 +1430,7 @@ protected:
     webgl::ShaderValidator* CreateShaderValidator(GLenum shaderType) const;
 
     // some GL constants
-    int32_t mGLMaxVertexAttribs;
+    uint32_t mGLMaxVertexAttribs;
     int32_t mGLMaxTextureUnits;
     int32_t mGLMaxTextureImageUnits;
     int32_t mGLMaxVertexTextureImageUnits;
@@ -1873,16 +1894,17 @@ public:
 
 protected:
     // Generic Vertex Attributes
-    UniquePtr<GLenum[]> mVertexAttribType;
-    GLfloat mVertexAttrib0Vector[4];
-    GLfloat mFakeVertexAttrib0BufferObjectVector[4];
-    size_t mFakeVertexAttrib0BufferObjectSize;
-    GLuint mFakeVertexAttrib0BufferObject;
-    WebGLVertexAttrib0Status mFakeVertexAttrib0BufferStatus;
+    // Though CURRENT_VERTEX_ATTRIB is listed under "Vertex Shader State" in the spec
+    // state tables, this isn't vertex shader /object/ state. This array is merely state
+    // useful to vertex shaders, but is global state.
+    UniquePtr<GLenum[]> mGenericVertexAttribTypes;
+    uint8_t mGenericVertexAttrib0Data[sizeof(float) * 4];
 
-    void GetVertexAttribFloat(GLuint index, GLfloat* out_result);
-    void GetVertexAttribInt(GLuint index, GLint* out_result);
-    void GetVertexAttribUint(GLuint index, GLuint* out_result);
+    GLuint mFakeVertexAttrib0BufferObject;
+    size_t mFakeVertexAttrib0BufferObjectSize;
+    bool mFakeVertexAttrib0DataDefined;
+    uint8_t mFakeVertexAttrib0Data[sizeof(float) * 4];
+
     JSObject* GetVertexAttribFloat32Array(JSContext* cx, GLuint index);
     JSObject* GetVertexAttribInt32Array(JSContext* cx, GLuint index);
     JSObject* GetVertexAttribUint32Array(JSContext* cx, GLuint index);
