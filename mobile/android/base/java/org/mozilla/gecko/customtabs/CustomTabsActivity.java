@@ -81,7 +81,10 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onBackPressed();
+                final Tabs tabs = Tabs.getInstance();
+                final Tab tab = tabs.getSelectedTab();
+                tabs.closeTab(tab);
+                finish();
             }
         });
 
