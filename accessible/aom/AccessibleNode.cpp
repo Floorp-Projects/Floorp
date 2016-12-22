@@ -104,6 +104,23 @@ AccessibleNode::Is(const Sequence<nsString>& aFlavors)
   return true;
 }
 
+bool
+AccessibleNode::Has(const Sequence<nsString>& aAttributes)
+{
+  if (!mIntl) {
+    return false;
+  }
+  nsCOMPtr<nsIPersistentProperties> attrs = mIntl->Attributes();
+  for (const auto& attr : aAttributes) {
+    bool has = false;
+    attrs->Has(NS_ConvertUTF16toUTF8(attr).get(), &has);
+    if (!has) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void
 AccessibleNode::Get(JSContext* aCX, const nsAString& aAttribute,
                     JS::MutableHandle<JS::Value> aValue,

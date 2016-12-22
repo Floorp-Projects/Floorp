@@ -41,6 +41,7 @@ public:
   nsINode* GetDOMNode();
 
   bool Is(const Sequence<nsString>& aFlavors);
+  bool Has(const Sequence<nsString>& aAttributes);
   void Get(JSContext* cx, const nsAString& aAttribute,
            JS::MutableHandle<JS::Value> aValue,
            ErrorResult& aRv);

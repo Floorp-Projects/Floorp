@@ -83,6 +83,9 @@
     is(anode.get('explicit-name'), 'true',
        'correct object attribute value on an accessible node');
 
+    ok(anode.has('explicit-name'),
+       'object attributes are present');
+
     finish();
   }
   </script>
