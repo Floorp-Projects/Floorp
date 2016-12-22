@@ -242,17 +242,15 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
                    pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mImplMaxDrawBuffers))
         {
-            GLint iv = 0;
-            gl->fGetIntegerv(pname, &iv);
-
-            if (mBoundDrawFramebuffer)
-                return JS::Int32Value(iv);
-
-            const GLint index = (pname - LOCAL_GL_DRAW_BUFFER0);
-            if (iv == LOCAL_GL_COLOR_ATTACHMENT0 + index)
-                return JS::Int32Value(LOCAL_GL_BACK);
-
-            return JS::Int32Value(LOCAL_GL_NONE);
+            GLint ret = LOCAL_GL_NONE;
+            if (!mBoundDrawFramebuffer) {
+                if (pname == LOCAL_GL_DRAW_BUFFER0) {
+                    ret = gl->Screen()->GetDrawBufferMode();
+                }
+            } else {
+                gl->fGetIntegerv(pname, &ret);
+            }
+            return JS::Int32Value(ret);
         }
     }
 
