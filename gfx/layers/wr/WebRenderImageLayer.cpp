@@ -27,7 +27,7 @@ WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
   if (mExternalImageId) {
-    WRBridge()->DeallocExternalImageId(mExternalImageId);
+    Manager()->AddExternalImageIdForDiscard(mExternalImageId);
   }
 }
 
@@ -76,6 +76,9 @@ WebRenderImageLayer::RenderLayer()
     mImageClient->Connect();
   }
 
+  gfx::IntSize size = surface->GetSize();
+  SurfaceFormat format = surface->GetFormat();
+
   // XXX Enable external image id for async image container.
 
   // XXX update async ImageContainer rendering path
@@ -84,15 +87,21 @@ WebRenderImageLayer::RenderLayer()
   //  MOZ_ASSERT(mImageId);
   //}
 
-  if (!mExternalImageId) {
-    mExternalImageId = WRBridge()->AllocExternalImageIdForCompositable(mImageClient);
-    MOZ_ASSERT(mExternalImageId);
+  // XXX: async(video) case should only call AllocExternalImage and DeallocExternalImageId once.
+  MOZ_ASSERT(!mContainer->IsAsync());
+  // If we already have previous frame's mExternalImageId, remove that id here.
+  if (mExternalImageId) {
+    Manager()->AddExternalImageIdForDiscard(mExternalImageId);
   }
+  // Try to use different image id for each imageLayer updates.
+  mExternalImageId = WRBridge()->AllocExternalImageIdForCompositable(mImageClient,
+                                                                     size,
+                                                                     format);
+  MOZ_ASSERT(mExternalImageId);
 
-  gfx::IntSize size = surface->GetSize();
 
   RefPtr<TextureClient> texture = mImageClient->GetTextureClientRecycler()
-    ->CreateOrRecycle(surface->GetFormat(),
+    ->CreateOrRecycle(format,
                       size,
                       BackendSelector::Content,
                       TextureFlags::DEFAULT);
@@ -123,8 +132,8 @@ WebRenderImageLayer::RenderLayer()
   WRScrollFrameStackingContextGenerator scrollFrames(this);
 
   //XXX
-  MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-                     surface->GetFormat() == SurfaceFormat::B8G8R8A8, "bad format");
+  MOZ_RELEASE_ASSERT(format == SurfaceFormat::B8G8R8X8 ||
+                     format == SurfaceFormat::B8G8R8A8, "bad format");
 
   Rect rect(0, 0, size.width, size.height);
 
