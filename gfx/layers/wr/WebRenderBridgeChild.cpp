@@ -99,17 +99,22 @@ WebRenderBridgeChild::GetNextExternalImageId()
 }
 
 uint64_t
-WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
+WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID,
+                                           gfx::IntSize aSize,
+                                           SurfaceFormat aFormat)
 {
   MOZ_ASSERT(!mDestroyed);
 
+  // XXX use the correct image format.
   uint64_t imageId = GetNextExternalImageId();
-  SendAddExternalImageId(imageId, aAsyncContainerID);
+  SendAddExternalImageId(imageId, aAsyncContainerID, aSize.width, aSize.height, RGBA8);
   return imageId;
 }
 
 uint64_t
-WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable)
+WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable,
+                                                          gfx::IntSize aSize,
+                                                          SurfaceFormat aFormat)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
@@ -118,8 +123,13 @@ WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aC
     return 0;
   }
 
+  // XXX use the correct image format.
   uint64_t imageId = GetNextExternalImageId();
-  SendAddExternalImageIdForCompositable(imageId, aCompositable->GetIPDLActor());
+  SendAddExternalImageIdForCompositable(imageId,
+                                        aCompositable->GetIPDLActor(),
+                                        aSize.width,
+                                        aSize.height,
+                                        RGBA8);
   return imageId;
 }
 

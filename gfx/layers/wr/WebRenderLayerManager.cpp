@@ -176,6 +176,7 @@ WebRenderLayerManager::Destroy()
   }
 
   LayerManager::Destroy();
+  DiscardExternalImages();
   DiscardImages();
   WRBridge()->Destroy();
 
@@ -234,8 +235,6 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       void* aCallbackData,
                                       EndTransactionFlags aFlags)
 {
-  DiscardImages();
-
   mPaintedLayerCallback = aCallback;
   mPaintedLayerCallbackData = aCallbackData;
 
@@ -257,6 +256,11 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
   WRBridge()->DPEnd(sync, mLatestTransactionId);
+  // The images will be referenced in DPEnd() message. After the DPEnd() message,
+  // the images should not be used again. So, we could just discard these images
+  // just after DPEnd() message.
+  DiscardExternalImages();
+  DiscardImages();
 
   MakeSnapshotIfRequired(size);
 }
@@ -336,6 +340,21 @@ WebRenderLayerManager::DiscardImages()
       WRBridge()->SendDeleteImage(key);
   }
   mImageKeys.clear();
+}
+
+void
+WebRenderLayerManager::AddExternalImageIdForDiscard(uint64_t aId)
+{
+  mExternalImageIds.push_back(aId);
+}
+
+void
+WebRenderLayerManager::DiscardExternalImages()
+{
+  for (auto id : mExternalImageIds) {
+      WRBridge()->DeallocExternalImageId(id);
+  }
+  mExternalImageIds.clear();
 }
 
 void
