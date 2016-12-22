@@ -439,9 +439,9 @@ ScreenOrientation::GetType(CallerType aCallerType, ErrorResult& aRv) const
 }
 
 uint16_t
-ScreenOrientation::GetAngle(ErrorResult& aRv) const
+ScreenOrientation::GetAngle(CallerType aCallerType, ErrorResult& aRv) const
 {
-  if (ShouldResistFingerprinting()) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0;
   }
 
