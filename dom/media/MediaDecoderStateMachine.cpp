@@ -2515,22 +2515,6 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
 }
 
 void
-MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudio)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aAudio);
-
-  mAudioDataRequest.Complete();
-
-  // audio->GetEndTime() is not always mono-increasing in chained ogg.
-  mDecodedAudioEndTime = std::max(aAudio->GetEndTime(), mDecodedAudioEndTime);
-
-  SAMPLE_LOG("OnAudioDecoded [%lld,%lld]", aAudio->mTime, aAudio->GetEndTime());
-
-  mStateObj->HandleAudioDecoded(aAudio);
-}
-
-void
 MediaDecoderStateMachine::Push(MediaData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2567,64 +2551,6 @@ MediaDecoderStateMachine::OnVideoPopped(const RefPtr<MediaData>& aSample)
   MOZ_ASSERT(OnTaskQueue());
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
   DispatchVideoDecodeTaskIfNeeded();
-}
-
-void
-MediaDecoderStateMachine::OnAudioNotDecoded(const MediaResult& aError)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("OnAudioNotDecoded aError=%u", aError.Code());
-  mAudioDataRequest.Complete();
-  mStateObj->HandleNotDecoded(MediaData::AUDIO_DATA, aError);
-}
-
-void
-MediaDecoderStateMachine::OnVideoNotDecoded(const MediaResult& aError)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("OnVideoNotDecoded aError=%u", aError.Code());
-  mVideoDataRequest.Complete();
-  mStateObj->HandleNotDecoded(MediaData::VIDEO_DATA, aError);
-}
-
-void
-MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideo,
-                                         TimeStamp aDecodeStartTime)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aVideo);
-
-  mVideoDataRequest.Complete();
-
-  // Handle abnormal or negative timestamps.
-  mDecodedVideoEndTime = std::max(mDecodedVideoEndTime, aVideo->GetEndTime());
-
-  SAMPLE_LOG("OnVideoDecoded [%lld,%lld]", aVideo->mTime, aVideo->GetEndTime());
-
-  mStateObj->HandleVideoDecoded(aVideo, aDecodeStartTime);
-}
-
-void
-MediaDecoderStateMachine::OnAudioWaited(MediaData::Type aType)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aType == MediaData::AUDIO_DATA);
-  mStateObj->HandleAudioWaited(aType);
-}
-
-void
-MediaDecoderStateMachine::OnVideoWaited(MediaData::Type aType)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aType == MediaData::VIDEO_DATA);
-  mStateObj->HandleVideoWaited(aType);
-}
-
-void
-MediaDecoderStateMachine::OnNotWaited(const WaitForDataRejectValue& aRejection)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  mStateObj->HandleNotWaited(aRejection);
 }
 
 bool
@@ -3044,9 +2970,20 @@ MediaDecoderStateMachine::RequestAudioData()
 
   mAudioDataRequest.Begin(
     mReader->RequestAudioData()->Then(
-      OwnerThread(), __func__, this,
-      &MediaDecoderStateMachine::OnAudioDecoded,
-      &MediaDecoderStateMachine::OnAudioNotDecoded)
+      OwnerThread(), __func__,
+      [this] (MediaData* aAudio) {
+        MOZ_ASSERT(aAudio);
+        mAudioDataRequest.Complete();
+        // audio->GetEndTime() is not always mono-increasing in chained ogg.
+        mDecodedAudioEndTime = std::max(aAudio->GetEndTime(), mDecodedAudioEndTime);
+        SAMPLE_LOG("OnAudioDecoded [%lld,%lld]", aAudio->mTime, aAudio->GetEndTime());
+        mStateObj->HandleAudioDecoded(aAudio);
+      },
+      [this] (const MediaResult& aError) {
+        SAMPLE_LOG("OnAudioNotDecoded aError=%u", aError.Code());
+        mAudioDataRequest.Complete();
+        mStateObj->HandleNotDecoded(MediaData::AUDIO_DATA, aError);
+      })
   );
 }
 
@@ -3098,10 +3035,17 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
     mReader->RequestVideoData(aSkipToNextKeyframe, aCurrentTime)->Then(
       OwnerThread(), __func__,
       [this, videoDecodeStartTime] (MediaData* aVideo) {
-        OnVideoDecoded(aVideo, videoDecodeStartTime);
+        MOZ_ASSERT(aVideo);
+        mVideoDataRequest.Complete();
+        // Handle abnormal or negative timestamps.
+        mDecodedVideoEndTime = std::max(mDecodedVideoEndTime, aVideo->GetEndTime());
+        SAMPLE_LOG("OnVideoDecoded [%lld,%lld]", aVideo->mTime, aVideo->GetEndTime());
+        mStateObj->HandleVideoDecoded(aVideo, videoDecodeStartTime);
       },
       [this] (const MediaResult& aError) {
-        OnVideoNotDecoded(aError);
+        SAMPLE_LOG("OnVideoNotDecoded aError=%u", aError.Code());
+        mVideoDataRequest.Complete();
+        mStateObj->HandleNotDecoded(MediaData::VIDEO_DATA, aError);
       })
   );
 }
@@ -3117,11 +3061,12 @@ MediaDecoderStateMachine::WaitForData(MediaData::Type aType)
         OwnerThread(), __func__,
         [this] (MediaData::Type aType) {
           mAudioWaitRequest.Complete();
-          OnAudioWaited(aType);
+          MOZ_ASSERT(aType == MediaData::AUDIO_DATA);
+          mStateObj->HandleAudioWaited(aType);
         },
         [this] (const WaitForDataRejectValue& aRejection) {
           mAudioWaitRequest.Complete();
-          OnNotWaited(aRejection);
+          mStateObj->HandleNotWaited(aRejection);
         })
     );
   } else {
@@ -3130,11 +3075,12 @@ MediaDecoderStateMachine::WaitForData(MediaData::Type aType)
         OwnerThread(), __func__,
         [this] (MediaData::Type aType) {
           mVideoWaitRequest.Complete();
-          OnVideoWaited(aType);
+          MOZ_ASSERT(aType == MediaData::VIDEO_DATA);
+          mStateObj->HandleVideoWaited(aType);
         },
         [this] (const WaitForDataRejectValue& aRejection) {
           mVideoWaitRequest.Complete();
-          OnNotWaited(aRejection);
+          mStateObj->HandleNotWaited(aRejection);
         })
     );
   }
