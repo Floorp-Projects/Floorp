@@ -696,9 +696,12 @@ WebGLContext::DrawElements_check(const char* funcName, GLenum mode, GLsizei vert
 
 void
 WebGLContext::DrawElements(GLenum mode, GLsizei vertCount, GLenum type,
-                           WebGLintptr byteOffset)
+                           WebGLintptr byteOffset, const char* funcName)
 {
-    const char funcName[] = "drawElements";
+    if (!funcName) {
+        funcName = "drawElements";
+    }
+
     if (IsContextLost())
         return;
 
