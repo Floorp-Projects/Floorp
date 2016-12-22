@@ -67,7 +67,7 @@ public:
   // order to bound how many timers must be examined.
   nsresult ResetTimersForThrottleReduction();
 
-  int32_t DOMMinTimeoutValue() const;
+  int32_t DOMMinTimeoutValue(bool aIsTracking) const;
 
   // aTimeout is the timeout that we're about to start running.  This function
   // returns the current timeout.
@@ -129,7 +129,7 @@ private:
     };
     void Insert(mozilla::dom::Timeout* aTimeout, SortBy aSortBy);
     nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
-                                             int32_t aMinTimeoutValueMS,
+                                             const TimeoutManager& aTimeoutManager,
                                              SortBy aSortBy,
                                              nsIEventTarget* aQueue);
 
