@@ -40,9 +40,7 @@ python/**
 rdf/**
 startupcache/**
 testing/**
-!tools/lint/eslint/eslint-plugin-mozilla/
-tools/lint/eslint/eslint-plugin-mozilla/node_modules/**
-tools/**
+tools/update-packaging/**
 uriloader/**
 view/**
 widget/**
