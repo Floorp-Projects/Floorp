@@ -107,6 +107,8 @@ private:
   virtual ~CustomElementData() {}
 };
 
+#define ALEADY_CONSTRUCTED_MARKER nullptr
+
 // The required information for a custom element as defined in:
 // https://html.spec.whatwg.org/multipage/scripting.html#custom-element-definition
 struct CustomElementDefinition
@@ -133,8 +135,8 @@ struct CustomElementDefinition
   // The lifecycle callbacks to call for this custom element.
   UniquePtr<mozilla::dom::LifecycleCallbacks> mCallbacks;
 
-  // A construction stack.
-  // TODO: Bug 1287348 - Implement construction stack for upgrading an element
+  // A construction stack. Use nullptr to represent an "already constructed marker".
+  nsTArray<RefPtr<nsGenericHTMLElement>> mConstructionStack;
 
   // The document custom element order.
   uint32_t mDocOrder;
