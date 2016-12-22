@@ -54,6 +54,33 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
 '''.format(files='\n'.join(sorted(modified))))
             sys.exit(1)
 
+    def check_openssl(self):
+        '''
+        Set environment flags for building with openssl.
+
+        MacOS doesn't include openssl, but the openssl-sys crate used by
+        mach-vendor expects one of the system. It's common to have one
+        installed in /usr/local/opt/openssl by homebrew, but custom link
+        flags are necessary to build against it.
+        '''
+
+        test_paths = ['/usr/include', '/usr/local/include']
+        if any([os.path.exists(os.path.join(path, 'openssl/ssl.h')) for path in test_paths]):
+            # Assume we can use one of these system headers.
+            return None
+
+        if os.path.exists('/usr/local/opt/openssl/include/openssl/ssl.h'):
+            # Found a likely homebrew install.
+            self.log(logging.INFO, 'openssl', {},
+                    'Using OpenSSL in /usr/local/opt/openssl')
+            return {
+                 'OPENSSL_INCLUDE_DIR': '/usr/local/opt/openssl/include',
+                 'DEP_OPENSSL_INCLUDE': '/usr/local/opt/openssl/include',
+            }
+
+        self.log(logging.ERROR, 'openssl', {}, "OpenSSL not found!")
+        return None
+
     def vendor(self, ignore_modified=False):
         self.populate_logger()
         self.log_manager.enable_unstructured()
@@ -68,7 +95,9 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         have_vendor = any(l.strip() == 'vendor' for l in subprocess.check_output([cargo, '--list']).splitlines())
         if not have_vendor:
             self.log(logging.INFO, 'installing', {}, 'Installing cargo-vendor')
-            self.run_process(args=[cargo, 'install', 'cargo-vendor'])
+            env = self.check_openssl()
+            self.run_process(args=[cargo, 'install', 'cargo-vendor'],
+                             append_env=env)
         else:
             self.log(logging.DEBUG, 'cargo_vendor', {}, 'cargo-vendor already intalled')
         vendor_dir = mozpath.join(self.topsrcdir, 'third_party/rust')
@@ -76,10 +105,15 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         mozfile.remove(vendor_dir)
         # Once we require a new enough cargo to switch to workspaces, we can
         # just do this once on the workspace root crate.
-        for crate_root in ('toolkit/library/rust/',
-                           'toolkit/library/gtest/rust'):
+        crates_and_roots = (
+            ('gkrust', 'toolkit/library/rust'),
+            ('gkrust-gtest', 'toolkit/library/gtest/rust'),
+            ('mozjs_sys', 'js/src'),
+        )
+        for (lib, crate_root) in crates_and_roots:
             path = mozpath.join(self.topsrcdir, crate_root)
-            self._run_command_in_srcdir(args=[cargo, 'generate-lockfile', '--manifest-path', mozpath.join(path, 'Cargo.toml')])
+            # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
+            self._run_command_in_srcdir(args=[cargo, 'update', '--manifest-path', mozpath.join(path, 'Cargo.toml'), '-p', lib])
             self._run_command_in_srcdir(args=[cargo, 'vendor', '--sync', mozpath.join(path, 'Cargo.lock'), vendor_dir])
         #TODO: print stats on size of files added/removed, warn or error
         # when adding very large files (bug 1306078)

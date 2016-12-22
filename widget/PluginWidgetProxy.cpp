@@ -86,7 +86,7 @@ PluginWidgetProxy::Create(nsIWidget* aParent,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PluginWidgetProxy::SetParent(nsIWidget* aNewParent)
 {
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -98,7 +98,6 @@ PluginWidgetProxy::SetParent(nsIWidget* aNewParent)
     aNewParent->AddChild(this);
   }
   mParent = aNewParent;
-  return NS_OK;
 }
 
 nsIWidget*

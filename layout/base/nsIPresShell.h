@@ -867,13 +867,6 @@ public:
                                                         nsEventStatus* aStatus) = 0;
 
   /**
-   * Dispatch AfterKeyboardEvent with specific target.
-   */
-  virtual void DispatchAfterKeyboardEvent(nsINode* aTarget,
-                                          const mozilla::WidgetKeyboardEvent& aEvent,
-                                          bool aEmbeddedCancelled) = 0;
-
-  /**
    * Return whether or not the event is valid to be dispatched
    */
   virtual bool CanDispatchEvent(

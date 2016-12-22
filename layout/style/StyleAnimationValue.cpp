@@ -130,6 +130,22 @@ ToPrimitive(nsCSSKeyword aKeyword)
 }
 
 static bool
+HasAccumulateMatrix(const nsCSSValueList* aList)
+{
+  const nsCSSValueList *item = aList;
+  do {
+    nsCSSKeyword func =
+      nsStyleTransformMatrix::TransformFunctionOf(item->mValue.GetArrayValue());
+    if (func == eCSSKeyword_accumulatematrix) {
+      return true;
+    }
+    item = item->mNext;
+  } while (item);
+
+  return false;
+}
+
+static bool
 TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
 {
   // Handle eCSSKeyword_accumulatematrix as different function to be calculated
@@ -3139,12 +3155,21 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
           if (result) {
             result->mValue.SetNoneValue();
           }
+        } else if (HasAccumulateMatrix(list2)) {
+          result = AddDifferentTransformLists(0, list2, aCoeff2, list2,
+                                              eCSSKeyword_interpolatematrix);
         } else {
           result = AddTransformLists(0, list2, aCoeff2, list2);
         }
       } else {
         if (list2->mValue.GetUnit() == eCSSUnit_None) {
-          result = AddTransformLists(0, list1, aCoeff1, list1);
+          if (HasAccumulateMatrix(list1)) {
+            result = AddDifferentTransformLists(0, list1,
+                                                aCoeff1, list1,
+                                                eCSSKeyword_interpolatematrix);
+          } else {
+            result = AddTransformLists(0, list1, aCoeff1, list1);
+          }
         } else if (TransformFunctionListsMatch(list1, list2)) {
           result = AddTransformLists(aCoeff1, list1, aCoeff2, list2,
                                      eCSSKeyword_interpolatematrix);

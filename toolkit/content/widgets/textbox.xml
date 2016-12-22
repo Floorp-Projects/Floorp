@@ -196,10 +196,7 @@
                 this.mIgnoreFocus = false;
               } else if (this.clickSelectsAll) {
                 try {
-                  const nsIEditorIMESupport =
-                          Components.interfaces.nsIEditorIMESupport;
-                  let imeEditor = this.editor.QueryInterface(nsIEditorIMESupport);
-                  if (!imeEditor || !imeEditor.composing)
+                  if (!this.editor || !this.editor.composing)
                     this.editor.selectAll();
                 } catch (e) {}
               }

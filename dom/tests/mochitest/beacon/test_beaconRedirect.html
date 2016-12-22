@@ -47,13 +47,8 @@ function runTest() {
   navigator.sendBeacon(BEACON_URL, data);
 
   // we have to make sure the channel did follow the redirect hence
-  // we have to wait for a few seconds before we can query the result.
-  interval = 4000;
-  if (navigator.appVersion.indexOf("Android") >= 0) {
-    // Android Debug on an emulator can be very slow
-    interval = 10000;
-  }
-  intervalID = setInterval(queryIfRedirectSucceeded, interval);
+  // we have to wait for 4 seconds before we can query the result.
+  intervalID = setInterval(queryIfRedirectSucceeded, 4000);
 }
 
 </script>

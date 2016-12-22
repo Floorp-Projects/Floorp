@@ -54,14 +54,6 @@ private:
   nsresult InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto);
   nsresult VerifyChecksum(const nsACString& aChecksum);
 
-  enum UPDATE_ERROR_TYPES {
-    DUPLICATE_PREFIX = 0,
-    INFINITE_LOOP = 1,
-    WRONG_REMOVAL_INDICES = 2,
-    CHECKSUM_MISMATCH = 3,
-    MISSING_CHECKSUM = 4,
-  };
-
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
 };
 

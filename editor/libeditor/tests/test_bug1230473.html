@@ -34,14 +34,12 @@ SimpleTest.waitForFocus(()=>{
       return isNSEditableElement() ?  SpecialPowers.wrap(aEditor)
                                                    .QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
                                                    .editor
-                                                   .QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport)
                                                    .composing :
                                       SpecialPowers.wrap(window)
                                                    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
                                                    .getInterface(SpecialPowers.Ci.nsIWebNavigation)
                                                    .QueryInterface(SpecialPowers.Ci.nsIDocShell)
                                                    .editor
-                                                   .QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport)
                                                    .composing;
     }
     function clear() {

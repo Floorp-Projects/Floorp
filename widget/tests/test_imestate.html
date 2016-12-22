@@ -1250,8 +1250,6 @@ function runEditorFlagChangeTests()
     window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIWebNavigation).
       QueryInterface(Components.interfaces.nsIDocShell).editor;
-  var editorIMESupport =
-    editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
   var flags = editor.flags;
 
   // input characters
@@ -1267,19 +1265,19 @@ function runEditorFlagChangeTests()
     });
 
   editor.flags &= ~kIMEStateChangeFlags;
-  ok(editorIMESupport.composing,
+  ok(editor.composing,
      description + "#1 IME composition was committed unexpectedly");
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
      description + "#1 IME isn't enabled on HTML editor");
 
   editor.flags |= ~kIMEStateChangeFlags;
-  ok(editorIMESupport.composing,
+  ok(editor.composing,
      description + "#2 IME composition was committed unexpectedly");
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
      description + "#2 IME isn't enabled on HTML editor");
 
   editor.flags = flags;
-  ok(editorIMESupport.composing,
+  ok(editor.composing,
      description + "#3 IME composition was committed unexpectedly");
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
      description + "#3 IME isn't enabled on HTML editor");

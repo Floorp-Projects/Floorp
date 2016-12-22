@@ -860,6 +860,10 @@
 
 /* Performance analysis view */
 
+#network-statistics-view {
+  display: -moz-box;
+}
+
 #network-statistics-toolbar {
   border: none;
   margin: 0;

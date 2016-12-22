@@ -43,3 +43,11 @@ function notify(top)
 {
   os().notifyObservers(null, top, null);
 }
+
+/**
+ * Enable testing observer notifications in DOMStorageObserver.cpp.
+ */
+function localStorageEnableTestingMode(cb)
+{
+  SpecialPowers.pushPrefEnv({ "set": [["dom.storage.testing", true]] }, cb);
+}

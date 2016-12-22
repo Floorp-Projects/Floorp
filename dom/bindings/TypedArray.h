@@ -343,7 +343,7 @@ typedef TypedArray<uint8_t, js::UnwrapSharedArrayBuffer, JS_GetSharedArrayBuffer
 // A class for converting an nsTArray to a TypedArray
 // Note: A TypedArrayCreator must not outlive the nsTArray it was created from.
 //       So this is best used to pass from things that understand nsTArray to
-//       things that understand TypedArray, as with Promise::ArgumentToJSValue.
+//       things that understand TypedArray, as with ToJSValue.
 template<typename TypedArrayType>
 class TypedArrayCreator
 {

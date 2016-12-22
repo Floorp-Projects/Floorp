@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
 Cu.import("chrome://marionette/content/accessibility.js");
-Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
@@ -139,7 +138,7 @@ this.GeckoDriver = function (appName, server) {
   this.importedScripts = new evaluate.ScriptStorageService(
       [Context.CHROME, Context.CONTENT]);
   this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
-  this.actions = new action.Chain();
+  this.legacyactions = new legacyaction.Chain();
 
   this.timer = null;
   this.inactivityTimer = null;
@@ -156,7 +155,6 @@ this.GeckoDriver = function (appName, server) {
     "acceptInsecureCerts": !this.secureTLS,
 
     // supported features
-    "raisesAccessibilityExceptions": false,
     "rotatable": this.appName == "B2G",
     "proxy": {},
 
@@ -164,6 +162,7 @@ this.GeckoDriver = function (appName, server) {
     "specificationLevel": 0,
     "moz:processID": Services.appinfo.processID,
     "moz:profile": Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+    "moz:accessibilityChecks": false,
   };
 
   this.mm = globalMessageManager;
@@ -179,9 +178,11 @@ this.GeckoDriver = function (appName, server) {
     this.dialog = new modal.Dialog(() => this.curBrowser, winr);
   };
   modal.addHandler(handleDialog);
-
-  this.actions = new action.Chain();
 };
+
+Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
+  get: function () { return this.sessionCapabilities["moz:accessibilityChecks"]; }
+});
 
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
   Ci.nsIMessageListener,
@@ -209,48 +210,61 @@ GeckoDriver.prototype.switchToGlobalMessageManager = function() {
 /**
  * Helper method to send async messages to the content listener.
  * Correct usage is to pass in the name of a function in listener.js,
- * a message object consisting of JSON serialisable primitives,
- * and the current command's ID.
+ * a serialisable object, and optionally the current command's ID
+ * when not using the modern dispatching technique.
  *
  * @param {string} name
- *     Suffix of the targetted message listener ({@code Marionette:<suffix>}).
+ *     Suffix of the targetted message listener
+ *     ({@code Marionette:<suffix>}).
  * @param {Object=} msg
- *     JSON serialisable object to send to the listener.
- * @param {number=} cmdId
- *     Command ID to ensure synchronisity.
+ *     Optional JSON serialisable object to send to the listener.
+ * @param {number=} commandID
+ *     Optional command ID to ensure synchronisity.
  */
-GeckoDriver.prototype.sendAsync = function (name, msg, cmdId) {
-  let curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
+GeckoDriver.prototype.sendAsync = function (name, data, commandID) {
   name = "Marionette:" + name;
+  let payload = copy(data);
 
   // TODO(ato): When proxy.AsyncMessageChannel
   // is used for all chrome <-> content communication
   // this can be removed.
-  if (cmdId) {
-    msg.command_id = cmdId;
+  if (commandID) {
+    payload.command_id = commandID;
   }
 
-  if (curRemoteFrame === null) {
-    this.curBrowser.executeWhenReady(() => {
-      if (this.curBrowser.curFrameId) {
-        this.mm.broadcastAsyncMessage(name + this.curBrowser.curFrameId, msg);
-      } else {
-        throw new NoSuchWindowError(
-            "No such content frame; perhaps the listener was not registered?");
-      }
-    });
+  if (!this.curBrowser.frameManager.currentRemoteFrame) {
+    this.broadcastDelayedAsyncMessage_(name, payload);
   } else {
-    let remoteFrameId = curRemoteFrame.targetFrameId;
-    try {
-      this.mm.sendAsyncMessage(name + remoteFrameId, msg);
-    } catch (e) {
-      switch(e.result) {
-        case Cr.NS_ERROR_FAILURE:
-        case Cr.NS_ERROR_NOT_INITIALIZED:
-          throw new NoSuchWindowError();
-        default:
-          throw new WebDriverError(e.toString());
-      }
+    this.sendTargettedAsyncMessage_(name, payload);
+  }
+};
+
+GeckoDriver.prototype.broadcastDelayedAsyncMessage_ = function (name, payload) {
+  this.curBrowser.executeWhenReady(() => {
+    if (this.curBrowser.curFrameId) {
+      const target = name + this.curBrowser.curFrameId;
+      this.mm.broadcastAsyncMessage(target, payload);
+    } else {
+      throw new NoSuchWindowError(
+          "No such content frame; perhaps the listener was not registered?");
+    }
+  });
+};
+
+GeckoDriver.prototype.sendTargettedAsyncMessage_ = function (name, payload) {
+  const curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
+  const target = name + curRemoteFrame.targetFrameId;
+
+  try {
+    this.mm.sendAsyncMessage(target, payload);
+  } catch (e) {
+    switch (e.result) {
+      case Cr.NS_ERROR_FAILURE:
+      case Cr.NS_ERROR_NOT_INITIALIZED:
+        throw new NoSuchWindowError();
+
+      default:
+        throw new WebDriverError(e);
     }
   }
 };
@@ -462,8 +476,8 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
 GeckoDriver.prototype.registerPromise = function() {
   const li = "Marionette:register";
 
-  return new Promise((resolve) => {
-    let cb = (msg) => {
+  return new Promise(resolve => {
+    let cb = msg => {
       let wid = msg.json.value;
       let be = msg.target;
       let rv = this.registerBrowser(wid, be);
@@ -486,7 +500,7 @@ GeckoDriver.prototype.registerPromise = function() {
 
 GeckoDriver.prototype.listeningPromise = function() {
   const li = "Marionette:listenersAttached";
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let cb = () => {
       this.mm.removeMessageListener(li, cb);
       resolve();
@@ -519,8 +533,7 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   // If we are testing accessibility with marionette, start a11y service in
   // chrome first. This will ensure that we do not have any content-only
   // services hanging around.
-  if (this.sessionCapabilities.raisesAccessibilityExceptions &&
-      accessibility.service) {
+  if (this.a11yChecks && accessibility.service) {
     logger.info("Preemptively starting accessibility service in Chrome");
   }
 
@@ -584,8 +597,10 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   yield registerBrowsers;
   yield browserListening;
 
-  resp.body.sessionId = this.sessionId;
-  resp.body.capabilities = this.sessionCapabilities;
+  return {
+    sessionId: this.sessionId,
+    capabilities: this.sessionCapabilities,
+  };
 };
 
 /**
@@ -671,7 +686,6 @@ GeckoDriver.prototype.setSessionCapabilities = function (newCaps) {
   let caps = copy(this.sessionCapabilities);
   caps = copy(newCaps, caps);
   logger.config("Changing capabilities: " + JSON.stringify(caps));
-
   this.sessionCapabilities = caps;
 };
 
@@ -1023,44 +1037,9 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
       break;
 
     case Context.CHROME:
-      // At least on desktop, navigating in chrome scope does not
-      // correspond to something a user can do, and leaves marionette
-      // and the browser in an unusable state. Return a generic error insted.
-      // TODO: Error codes need to be refined as a part of bug 1100545 and
-      // bug 945729.
-      if (this.appName == "Firefox") {
-        throw new UnknownError("Cannot navigate in chrome context");
-      }
-
-      this.getCurrentWindow().location.href = url;
-      yield this.pageLoadPromise();
+      throw new UnsupportedOperationError("Cannot navigate in chrome context");
       break;
   }
-};
-
-GeckoDriver.prototype.pageLoadPromise = function() {
-  let win = this.getCurrentWindow();
-  let timeout = this.pageTimeout;
-  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  let start = new Date().getTime();
-  let end = null;
-
-  return new Promise((resolve) => {
-    let checkLoad = function() {
-      end = new Date().getTime();
-      let elapse = end - start;
-      if (timeout === null || elapse <= timeout) {
-        if (win.document.readyState == "complete") {
-          resolve();
-        } else {
-          checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-        }
-      } else {
-        throw new UnknownError("Error loading page");
-      }
-    };
-    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-  });
 };
 
 /**
@@ -1648,6 +1627,32 @@ GeckoDriver.prototype.singleTap = function*(cmd, resp) {
 };
 
 /**
+ * Perform a series of grouped actions at the specified points in time.
+ *
+ * @param {Array.<?>} actions
+ *     Array of objects that each represent an action sequence.
+ *
+ * @throws {UnsupportedOperationError}
+ *     If the command is made in chrome context.
+ */
+GeckoDriver.prototype.performActions = function(cmd, resp) {
+  switch (this.context) {
+    case Context.CHROME:
+      throw new UnsupportedOperationError(
+          "Command 'performActions' is not available in chrome context");
+    case Context.CONTENT:
+      return this.listener.performActions({"actions": cmd.parameters.actions});
+  }
+};
+
+/**
+ * Release all the keys and pointer buttons that are currently depressed.
+ */
+GeckoDriver.prototype.releaseActions = function(cmd, resp) {
+  return this.listener.releaseActions();
+};
+
+/**
  * An action chain.
  *
  * @param {Object} value
@@ -1670,7 +1675,7 @@ GeckoDriver.prototype.actionChain = function*(cmd, resp) {
       }
 
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.actions.dispatchActions(
+      resp.body.value = yield this.legacyactions.dispatchActions(
           chain, nextId, {frame: win}, this.curBrowser.seenEls);
       break;
 
@@ -1805,8 +1810,7 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
-      yield interaction.clickElement(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+      yield interaction.clickElement(el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -1936,7 +1940,7 @@ GeckoDriver.prototype.isElementDisplayed = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementDisplayed(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -1985,7 +1989,7 @@ GeckoDriver.prototype.isElementEnabled = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementEnabled(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -2009,7 +2013,7 @@ GeckoDriver.prototype.isElementSelected = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementSelected(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -2057,7 +2061,7 @@ GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
       yield interaction.sendKeysToElement(
-          el, value, true, this.sessionCapabilities.raisesAccessibilityExceptions);
+          el, value, true, this.a11yChecks);
       break;
 
     case Context.CONTENT:
@@ -2861,8 +2865,10 @@ GeckoDriver.prototype.commands = {
   "timeouts": GeckoDriver.prototype.setTimeouts,  // deprecated until Firefox 55
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
   "singleTap": GeckoDriver.prototype.singleTap,
-  "actionChain": GeckoDriver.prototype.actionChain,
-  "multiAction": GeckoDriver.prototype.multiAction,
+  "performActions": GeckoDriver.prototype.performActions,
+  "releaseActions": GeckoDriver.prototype.releaseActions,
+  "actionChain": GeckoDriver.prototype.actionChain, // deprecated
+  "multiAction": GeckoDriver.prototype.multiAction, // deprecated
   "executeAsyncScript": GeckoDriver.prototype.executeAsyncScript,
   "executeJSScript": GeckoDriver.prototype.executeJSScript,
   "findElement": GeckoDriver.prototype.findElement,
@@ -2930,3 +2936,12 @@ GeckoDriver.prototype.commands = {
   "addon:install": GeckoDriver.prototype.installAddon,
   "addon:uninstall": GeckoDriver.prototype.uninstallAddon,
 };
+
+function copy (obj) {
+  if (Array.isArray(obj)) {
+    return obj.slice();
+  } else if (typeof obj == "object") {
+    return Object.assign({}, obj);
+  }
+  return obj;
+}

@@ -1380,6 +1380,11 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     return;
   }
 
+  if (!pat->mStops) {
+    // Draw nothing because of no color stops
+    return;
+  }
+
   RefPtr<ID2D1Effect> radialGradientEffect;
 
   HRESULT hr = mDC->CreateEffect(CLSID_RadialGradientEffect, getter_AddRefs(radialGradientEffect));

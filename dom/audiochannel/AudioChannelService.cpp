@@ -1054,6 +1054,11 @@ AudioChannelService::AudioChannelWindow::RequestAudioFocus(AudioChannelAgent* aA
 {
   MOZ_ASSERT(aAgent);
 
+  // Don't need to check audio focus for window-less agent.
+  if (!aAgent->Window()) {
+    return;
+  }
+
   // We already have the audio focus. No operation is needed.
   if (mOwningAudioFocus) {
     return;

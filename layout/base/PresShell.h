@@ -91,9 +91,6 @@ public:
 
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
-  // BeforeAfterKeyboardEvent preference
-  static bool BeforeAfterKeyboardEventEnabled();
-
   static bool IsTargetIframe(nsINode* aTarget);
 
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
@@ -415,10 +412,6 @@ public:
 
 
   virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) override;
-
-  virtual void DispatchAfterKeyboardEvent(nsINode* aTarget,
-                                          const mozilla::WidgetKeyboardEvent& aEvent,
-                                          bool aEmbeddedCancelled) override;
 
   virtual bool CanDispatchEvent(
       const mozilla::WidgetGUIEvent* aEvent = nullptr) const override;
@@ -788,7 +781,7 @@ protected:
 
 
   //////////////////////////////////////////////////////////////////////////////
-  // Methods for dispatching KeyboardEvent and BeforeAfterKeyboardEvent.
+  // Methods for dispatching KeyboardEvent.
   //////////////////////////////////////////////////////////////////////////////
 
   void HandleKeyboardEvent(nsINode* aTarget,
@@ -796,16 +789,6 @@ protected:
                            bool aEmbeddedCancelled,
                            nsEventStatus* aStatus,
                            mozilla::EventDispatchingCallback* aEventCB);
-  void DispatchBeforeKeyboardEventInternal(
-         const nsTArray<nsCOMPtr<mozilla::dom::Element> >& aChain,
-         const mozilla::WidgetKeyboardEvent& aEvent,
-         size_t& aChainIndex,
-         bool& aDefaultPrevented);
-  void DispatchAfterKeyboardEventInternal(
-         const nsTArray<nsCOMPtr<mozilla::dom::Element> >& aChain,
-         const mozilla::WidgetKeyboardEvent& aEvent,
-         bool aEmbeddedCancelled,
-         size_t aChainIndex = 0);
 
 #ifdef MOZ_B2G
   // This method is used to forward the keyboard event to the input-method-app

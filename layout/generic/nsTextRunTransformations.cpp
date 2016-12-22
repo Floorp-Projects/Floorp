@@ -313,6 +313,9 @@ nsCaseTransformTextRunFactory::TransformString(
   uint32_t irishMarkSrc = uint32_t(-1); // corresponding location in source
                                         // string (may differ from output due to
                                         // expansions like eszet -> 'SS')
+  uint32_t greekMark = uint32_t(-1); // location of uppercase ETA that may need
+                                     // tonos added (if it is disjunctive eta)
+  const char16_t kGreekUpperEta = 0x0397;
 
   for (uint32_t i = 0; i < length; ++i, ++aOffsetInTextRun) {
     uint32_t ch = str[i];
@@ -333,6 +336,7 @@ nsCaseTransformTextRunFactory::TransformString(
         irishState.Reset();
         irishMark = uint32_t(-1);
         irishMarkSrc = uint32_t(-1);
+        greekMark = uint32_t(-1);
       }
     }
 
@@ -454,7 +458,21 @@ nsCaseTransformTextRunFactory::TransformString(
       }
 
       if (languageSpecificCasing == eLSCB_Greek) {
-        ch = mozilla::GreekCasing::UpperCase(ch, greekState);
+        bool markEta;
+        bool updateEta;
+        ch = mozilla::GreekCasing::UpperCase(ch, greekState,
+                                             markEta, updateEta);
+        if (markEta) {
+          greekMark = aConvertedString.Length();
+        } else if (updateEta) {
+          // Remove the TONOS from an uppercase ETA-TONOS that turned out
+          // not to be disjunctive-eta.
+          MOZ_ASSERT(aConvertedString.Length() > 0 &&
+                     greekMark < aConvertedString.Length(),
+                     "bad greekMark!");
+          aConvertedString.SetCharAt(kGreekUpperEta, greekMark);
+          greekMark = uint32_t(-1);
+        }
         break;
       }
 

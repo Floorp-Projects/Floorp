@@ -113,6 +113,8 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
 
   static bool addedShowPreviousPage = false;
   if (!addedShowPreviousPage) {
+    // If layout.show_previous_page is true then during loading of a new page we
+    // will draw the previous page if the new page has painting suppressed.
     Preferences::AddBoolVarCache(&sShowPreviousPage, "layout.show_previous_page", true);
     addedShowPreviousPage = true;
   }

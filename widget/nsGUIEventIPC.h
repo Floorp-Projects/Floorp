@@ -483,37 +483,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
 };
 
 template<>
-struct ParamTraits<mozilla::InternalBeforeAfterKeyboardEvent>
-{
-  typedef mozilla::InternalBeforeAfterKeyboardEvent paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, static_cast<mozilla::WidgetKeyboardEvent>(aParam));
-    WriteParam(aMsg, aParam.mEmbeddedCancelled.IsNull());
-    WriteParam(aMsg, aParam.mEmbeddedCancelled.Value());
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    bool isNull;
-    bool value;
-    bool rv =
-      ReadParam(aMsg, aIter,
-                static_cast<mozilla::WidgetKeyboardEvent*>(aResult)) &&
-      ReadParam(aMsg, aIter, &isNull) &&
-      ReadParam(aMsg, aIter, &value);
-
-    aResult->mEmbeddedCancelled = Nullable<bool>();
-    if (rv && !isNull) {
-      aResult->mEmbeddedCancelled.SetValue(value);
-    }
-
-    return rv;
-  }
-};
-
-template<>
 struct ParamTraits<mozilla::TextRangeStyle>
 {
   typedef mozilla::TextRangeStyle paramType;

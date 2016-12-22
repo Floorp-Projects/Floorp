@@ -57,11 +57,19 @@ typedef struct mp4parse_pssh_info {
 	mp4parse_byte_data data;
 } mp4parse_pssh_info;
 
+typedef struct mp4parser_sinf_info {
+	uint32_t is_encrypted;
+	uint8_t iv_size;
+	mp4parse_byte_data kid;
+} mp4parser_sinf_info;
+
 typedef struct mp4parse_track_audio_info {
 	uint16_t channels;
 	uint16_t bit_depth;
 	uint32_t sample_rate;
+	uint16_t profile;
 	mp4parse_byte_data codec_specific_config;
+	mp4parser_sinf_info protected_data;
 } mp4parse_track_audio_info;
 
 typedef struct mp4parse_track_video_info {
@@ -70,6 +78,7 @@ typedef struct mp4parse_track_video_info {
 	uint16_t image_width;
 	uint16_t image_height;
 	mp4parse_byte_data extra_data;
+	mp4parser_sinf_info protected_data;
 } mp4parse_track_video_info;
 
 typedef struct mp4parse_fragment_info {

@@ -316,9 +316,6 @@ add_task(function* () {
     yield p;
 
     yield ContentTask.spawn(browser, null, function* () {
-      // Avoid intermittent failures.
-      content.wrappedJSObject.gContentSearchController.remoteTimeout = 5000;
-
       // Type an X in the search input.
       let input = content.document.getElementById("searchText");
       input.focus();
