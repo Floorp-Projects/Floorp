@@ -211,62 +211,48 @@ GeckoDriver.prototype.switchToGlobalMessageManager = function() {
 /**
  * Helper method to send async messages to the content listener.
  * Correct usage is to pass in the name of a function in listener.js,
- * a serialisable object, and optionally the current command's ID
- * when not using the modern dispatching technique.
+ * a message object consisting of JSON serialisable primitives,
+ * and the current command's ID.
  *
  * @param {string} name
- *     Suffix of the targetted message listener
- *     ({@code Marionette:<suffix>}).
+ *     Suffix of the targetted message listener ({@code Marionette:<suffix>}).
  * @param {Object=} msg
- *     Optional JSON serialisable object to send to the listener.
- * @param {number=} commandID
- *     Optional command ID to ensure synchronisity.
+ *     JSON serialisable object to send to the listener.
+ * @param {number=} cmdId
+ *     Command ID to ensure synchronisity.
  */
-GeckoDriver.prototype.sendAsync = function (name, msg, cmdId) {
+GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
   let curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
   name = "Marionette:" + name;
-  let payload = copy(data);
 
   // TODO(ato): When proxy.AsyncMessageChannel
   // is used for all chrome <-> content communication
   // this can be removed.
-  if (commandID) {
-    payload.command_id = commandID;
+  if (cmdId) {
+    msg.command_id = cmdId;
   }
 
-  if (!this.curBrowser.frameManager.currentRemoteFrame) {
-    this.broadcastDelayedAsyncMessage_(name, payload);
+  if (curRemoteFrame === null) {
+    this.curBrowser.executeWhenReady(() => {
+      if (this.curBrowser.curFrameId) {
+        this.mm.broadcastAsyncMessage(name + this.curBrowser.curFrameId, msg);
+      } else {
+        throw new NoSuchWindowError(
+            "No such content frame; perhaps the listener was not registered?");
+      }
+    });
   } else {
-    this.sendTargettedAsyncMessage_(name, payload);
-  }
-};
-
-GeckoDriver.prototype.broadcastDelayedAsyncMessage_ = function (name, payload) {
-  this.curBrowser.executeWhenReady(() => {
-    if (this.curBrowser.curFrameId) {
-      const target = name + this.curBrowser.curFrameId;
-      this.mm.broadcastAsyncMessage(target, payload);
-    } else {
-      throw new NoSuchWindowError(
-          "No such content frame; perhaps the listener was not registered?");
-    }
-  });
-};
-
-GeckoDriver.prototype.sendTargettedAsyncMessage_ = function (name, payload) {
-  const curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
-  const target = name + curRemoteFrame.targetFrameId;
-
-  try {
-    this.mm.sendAsyncMessage(target, payload);
-  } catch (e) {
-    switch (e.result) {
-      case Cr.NS_ERROR_FAILURE:
-      case Cr.NS_ERROR_NOT_INITIALIZED:
-        throw new NoSuchWindowError();
-
-      default:
-        throw new WebDriverError(e);
+    let remoteFrameId = curRemoteFrame.targetFrameId;
+    try {
+      this.mm.sendAsyncMessage(name + remoteFrameId, msg);
+    } catch (e) {
+      switch(e.result) {
+        case Cr.NS_ERROR_FAILURE:
+        case Cr.NS_ERROR_NOT_INITIALIZED:
+          throw new NoSuchWindowError();
+        default:
+          throw new WebDriverError(e.toString());
+      }
     }
   }
 };
@@ -472,8 +458,8 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
 GeckoDriver.prototype.registerPromise = function() {
   const li = "Marionette:register";
 
-  return new Promise(resolve => {
-    let cb = msg => {
+  return new Promise((resolve) => {
+    let cb = (msg) => {
       let wid = msg.json.value;
       let be = msg.target;
       let rv = this.registerBrowser(wid, be);
@@ -496,7 +482,7 @@ GeckoDriver.prototype.registerPromise = function() {
 
 GeckoDriver.prototype.listeningPromise = function() {
   const li = "Marionette:listenersAttached";
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     let cb = () => {
       this.mm.removeMessageListener(li, cb);
       resolve();
@@ -593,10 +579,8 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   yield registerBrowsers;
   yield browserListening;
 
-  return {
-    sessionId: this.sessionId,
-    capabilities: this.sessionCapabilities,
-  };
+  resp.body.sessionId = this.sessionId;
+  resp.body.capabilities = this.sessionCapabilities;
 };
 
 /**
@@ -682,6 +666,7 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
   let caps = copy(this.sessionCapabilities);
   caps = copy(newCaps, caps);
   logger.config("Changing capabilities: " + JSON.stringify(caps));
+
   this.sessionCapabilities = caps;
 };
 
@@ -2904,12 +2889,3 @@ GeckoDriver.prototype.commands = {
   "addon:install": GeckoDriver.prototype.installAddon,
   "addon:uninstall": GeckoDriver.prototype.uninstallAddon,
 };
-
-function copy (obj) {
-  if (Array.isArray(obj)) {
-    return obj.slice();
-  } else if (typeof obj == "object") {
-    return Object.assign({}, obj);
-  }
-  return obj;
-}
