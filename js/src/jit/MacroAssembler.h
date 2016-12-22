@@ -423,6 +423,12 @@ class MacroAssembler : public MacroAssemblerSpecific
                             DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
     void PushRegsInMask(LiveGeneralRegisterSet set);
 
+    // Like PushRegsInMask, but instead of pushing the registers, store them to
+    // |dest|. |dest| should point to the end of the reserved space, so the
+    // first register will be stored at |dest.offset - sizeof(register)|.
+    void storeRegsInMask(LiveRegisterSet set, Address dest, Register scratch)
+        DEFINED_ON(arm, arm64, x86_shared);
+
     void PopRegsInMask(LiveRegisterSet set);
     void PopRegsInMask(LiveGeneralRegisterSet set);
     void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
