@@ -6723,7 +6723,7 @@ nsGridContainerFrame::SynthesizeBaseline(
       isOrthogonal ? grid->GetIBaseline(aGroup, &baseline) :
                      grid->GetBBaseline(aGroup, &baseline);
     } else if (!isOrthogonal && aGridOrderItem.mIsInEdgeTrack) {
-      baseline = child->GetBaseline(childWM, aGroup, AlignmentContext::eGrid);
+      baseline = child->BaselineBOffset(childWM, aGroup, AlignmentContext::eGrid);
     } else {
       baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
     }
