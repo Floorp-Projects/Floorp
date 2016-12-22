@@ -283,8 +283,10 @@ partial interface Window {
 
   [ChromeOnly, Throws] readonly attribute Element? realFrameElement;
 
-  [Throws] readonly attribute float               mozInnerScreenX;
-  [Throws] readonly attribute float               mozInnerScreenY;
+  [Throws, NeedsCallerType]
+  readonly attribute float mozInnerScreenX;
+  [Throws, NeedsCallerType]
+  readonly attribute float mozInnerScreenY;
   [Replaceable, Throws] readonly attribute float  devicePixelRatio;
 
   /* The maximum offset that the window can be scrolled to

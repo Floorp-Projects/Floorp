@@ -1112,10 +1112,12 @@ public:
   nsresult GetControllers(nsIControllers** aControllers) override;
   mozilla::dom::Element* GetRealFrameElementOuter();
   mozilla::dom::Element* GetRealFrameElement(mozilla::ErrorResult& aError);
-  float GetMozInnerScreenXOuter();
-  float GetMozInnerScreenX(mozilla::ErrorResult& aError);
-  float GetMozInnerScreenYOuter();
-  float GetMozInnerScreenY(mozilla::ErrorResult& aError);
+  float GetMozInnerScreenXOuter(mozilla::dom::CallerType aCallerType);
+  float GetMozInnerScreenX(mozilla::dom::CallerType aCallerType,
+                           mozilla::ErrorResult& aError);
+  float GetMozInnerScreenYOuter(mozilla::dom::CallerType aCallerType);
+  float GetMozInnerScreenY(mozilla::dom::CallerType aCallerType,
+                           mozilla::ErrorResult& aError);
   float GetDevicePixelRatioOuter();
   float GetDevicePixelRatio(mozilla::ErrorResult& aError);
   nsresult GetDevicePixelRatio(float* aRatio) override;
