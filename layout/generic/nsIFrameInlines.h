@@ -144,9 +144,9 @@ nsIFrame::SynthesizeBaselineBOffsetFromBorderBox(
 }
 
 nscoord
-nsIFrame::GetBaseline(mozilla::WritingMode aWM,
-                      BaselineSharingGroup aBaselineGroup,
-                      AlignmentContext     aAlignmentContext) const
+nsIFrame::BaselineBOffset(mozilla::WritingMode aWM,
+                          BaselineSharingGroup aBaselineGroup,
+                          AlignmentContext     aAlignmentContext) const
 {
   MOZ_ASSERT(!aWM.IsOrthogonalTo(GetWritingMode()));
   nscoord baseline;
