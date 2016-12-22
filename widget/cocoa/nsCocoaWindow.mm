@@ -757,6 +757,13 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
     (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW) : nil;
 
   if (bState && !mBounds.IsEmpty()) {
+    // Don't try to show a popup when the parent isn't visible or is minimized.
+    if (mWindowType == eWindowType_popup && nativeParentWindow) {
+      if (![nativeParentWindow isVisible] || [nativeParentWindow isMiniaturized]) {
+        return NS_OK;
+      }
+    }
+
     if (mPopupContentView) {
       // Ensure our content view is visible. We never need to hide it.
       mPopupContentView->Show(true);
