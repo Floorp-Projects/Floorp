@@ -14,14 +14,14 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
     virtual ~nsMIMEInfoWin();
 
   public:
-    nsMIMEInfoWin(const char* aType = "") : nsMIMEInfoBase(aType) {}
-    nsMIMEInfoWin(const nsACString& aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
+    explicit nsMIMEInfoWin(const char* aType = "") : nsMIMEInfoBase(aType) {}
+    explicit nsMIMEInfoWin(const nsACString& aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
     nsMIMEInfoWin(const nsACString& aType, HandlerClass aClass) :
       nsMIMEInfoBase(aType, aClass) {}
 
     NS_IMETHOD LaunchWithFile(nsIFile* aFile);
     NS_IMETHOD GetHasDefaultHandler(bool * _retval);
-    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval); 
+    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval);
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPROPERTYBAG

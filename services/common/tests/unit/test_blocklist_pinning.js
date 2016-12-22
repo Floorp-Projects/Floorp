@@ -95,6 +95,7 @@ add_task(function* test_something(){
   ok(!sss.isSecureHost(sss.HEADER_HPKP, "one.example.com", 0));
   ok(!sss.isSecureHost(sss.HEADER_HPKP, "two.example.com", 0));
   ok(!sss.isSecureHost(sss.HEADER_HPKP, "three.example.com", 0));
+  ok(!sss.isSecureHost(sss.HEADER_HSTS, "five.example.com", 0));
 
   // Test an empty db populates
   let result = yield PinningPreloadClient.maybeSync(2000, Date.now());
@@ -114,10 +115,10 @@ add_task(function* test_something(){
   result = yield PinningPreloadClient.maybeSync(4000, Date.now());
 
   // Open the collection, verify it's been updated:
-  // Our data now has three new records; all should be in the local collection
+  // Our data now has four new records; all should be in the local collection
   collection = do_get_kinto_collection(connection, COLLECTION_NAME);
   list = yield collection.list();
-  do_check_eq(list.data.length, 4);
+  do_check_eq(list.data.length, 5);
   yield connection.close();
 
   // check that a pin exists for two.example.com and three.example.com
@@ -144,12 +145,21 @@ add_task(function* test_something(){
   let newValue = Services.prefs.getIntPref("services.blocklist.pinning.checked");
   do_check_neq(newValue, 0);
 
+  // Check that the HSTS preload added to the collection works...
+  ok(sss.isSecureHost(sss.HEADER_HSTS, "five.example.com", 0));
+  // ...and that includeSubdomains is honored
+  ok(!sss.isSecureHost(sss.HEADER_HSTS, "subdomain.five.example.com", 0));
+
   // Check that a sync completes even when there's bad data in the
   // collection. This will throw on fail, so just calling maybeSync is an
   // acceptible test (the data below with last_modified of 300 is nonsense).
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${server.identity.primaryPort}/v1`);
   yield PinningPreloadClient.maybeSync(5000, Date.now());
+
+  // The STS entry for five.example.com now has includeSubdomains set;
+  // ensure that the new includeSubdomains value is honored.
+  ok(sss.isSecureHost(sss.HEADER_HSTS, "subdomain.five.example.com", 0));
 });
 
 function run_test() {
@@ -255,6 +265,14 @@ function getSampleResponse(req, port) {
         "versions" : ["some version that won't match"],
         "id":"dabafde9-df4a-ddba-2548-748da04cc02e",
         "last_modified":4000
+      },{
+        "pinType": "STSPin",
+        "hostName": "five.example.com",
+        "includeSubdomains": false,
+        "expires": new Date().getTime() + 1000000,
+        "versions" : [appInfo.version, "some version that won't match"],
+        "id":"dabafde9-df4a-ddba-2548-748da04cc032",
+        "last_modified":4000
       }]})
     },
     "GET:/v1/buckets/pinning/collections/pins/records?_sort=-last_modified&_since=4000": {
@@ -288,6 +306,14 @@ function getSampleResponse(req, port) {
         "expires": new Date().getTime() + 1000000,
         "versions" : [appInfo.version],
         "id":"dabafde9-df4a-ddba-2548-748da04cc031",
+        "last_modified":5000
+      },{
+        "pinType": "STSPin",
+        "hostName": "five.example.com",
+        "includeSubdomains": true,
+        "expires": new Date().getTime() + 1000000,
+        "versions" : [appInfo.version, "some version that won't match"],
+        "id":"dabafde9-df4a-ddba-2548-748da04cc032",
         "last_modified":5000
       }]})
     }

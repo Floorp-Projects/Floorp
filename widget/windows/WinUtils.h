@@ -592,7 +592,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  AsyncDeleteIconFromDisk(const nsAString &aIconPath);
+  explicit AsyncDeleteIconFromDisk(const nsAString &aIconPath);
 
 private:
   virtual ~AsyncDeleteIconFromDisk();
@@ -606,7 +606,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  AsyncDeleteAllFaviconsFromDisk(bool aIgnoreRecent = false);
+  explicit AsyncDeleteAllFaviconsFromDisk(bool aIgnoreRecent = false);
 
 private:
   virtual ~AsyncDeleteAllFaviconsFromDisk();

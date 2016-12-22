@@ -199,7 +199,7 @@ function compareCertificatesByHash(certA, certB) {
 
 function certToPEM(cert) {
   let der = cert.getRawDER({});
-  let derString = '';
+  let derString = "";
   for (let i = 0; i < der.length; i++) {
     derString += String.fromCharCode(der[i]);
   }

@@ -214,7 +214,6 @@ def old_configure_options(*options):
     '--enable-readline',
     '--enable-reflow-perf',
     '--enable-release',
-    '--enable-require-all-d3dc-versions',
     '--enable-safe-browsing',
     '--enable-sandbox',
     '--enable-signmar',

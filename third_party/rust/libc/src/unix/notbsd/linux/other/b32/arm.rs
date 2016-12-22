@@ -53,6 +53,23 @@ s! {
         __unused4: ::c_ulong,
         __unused5: ::c_ulong
     }
+
+    pub struct msqid_ds {
+        pub msg_perm: ::ipc_perm,
+        pub msg_stime: ::time_t,
+        __glibc_reserved1: ::c_ulong,
+        pub msg_rtime: ::time_t,
+        __glibc_reserved2: ::c_ulong,
+        pub msg_ctime: ::time_t,
+        __glibc_reserved3: ::c_ulong,
+        __msg_cbytes: ::c_ulong,
+        pub msg_qnum: ::msgqnum_t,
+        pub msg_qbytes: ::msglen_t,
+        pub msg_lspid: ::pid_t,
+        pub msg_lrpid: ::pid_t,
+        __glibc_reserved4: ::c_ulong,
+        __glibc_reserved5: ::c_ulong,
+    }
 }
 
 pub const O_DIRECT: ::c_int = 0x10000;

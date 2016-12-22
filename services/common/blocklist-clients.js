@@ -281,13 +281,19 @@ function* updatePinningList(records) {
     for (let item of records) {
       try {
         const {pinType, pins=[], versions} = item;
-        if (pinType == "KeyPin" && pins.length &&
-            versions.indexOf(appInfo.version) != -1) {
-          siteSecurityService.setKeyPins(item.hostName,
-              item.includeSubdomains,
-              item.expires,
-              pins.length,
-              pins, true);
+        if (versions.indexOf(appInfo.version) != -1) {
+          if (pinType == "KeyPin" && pins.length) {
+            siteSecurityService.setKeyPins(item.hostName,
+                item.includeSubdomains,
+                item.expires,
+                pins.length,
+                pins, true);
+          }
+          if (pinType == "STSPin") {
+            siteSecurityService.setHSTSPreload(item.hostName,
+                                               item.includeSubdomains,
+                                               item.expires);
+          }
         }
       } catch (e) {
         // prevent errors relating to individual preload entries from causing

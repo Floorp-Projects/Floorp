@@ -93,7 +93,7 @@ protected:
   nsCOMPtr<nsIThread> mIOThread;
 
   public: // construction, destruction
-    nsDataObj(nsIURI *uri = nullptr);
+    explicit nsDataObj(nsIURI *uri = nullptr);
     virtual ~nsDataObj();
 
 	public: // IUnknown methods - see iunknown.h for documentation

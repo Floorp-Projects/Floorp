@@ -6,13 +6,21 @@ set -ex
 run() {
     echo $1
     docker build -t libc ci/docker/$1
+    mkdir -p target
     docker run \
-      -v `rustc --print sysroot`:/rust:ro \
-      -v `pwd`:/checkout:ro \
-      -e CARGO_TARGET_DIR=/tmp/target \
-      -w /checkout \
+      --user `id -u`:`id -g` \
+      --rm \
+      --volume $HOME/.cargo:/cargo \
+      --env CARGO_HOME=/cargo \
+      --volume `rustc --print sysroot`:/rust:ro \
+      --volume `pwd`:/checkout:ro \
+      --volume `pwd`/target:/checkout/target \
+      --env CARGO_TARGET_DIR=/checkout/target \
+      --workdir /checkout \
       --privileged \
-      -it libc \
+      --interactive \
+      --tty \
+      libc \
       ci/run.sh $1
 }
 

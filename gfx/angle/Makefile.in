@@ -9,10 +9,6 @@ ifdef MOZ_D3DCOMPILER_VISTA_DLL_PATH
 	cp -fp "$(MOZ_D3DCOMPILER_VISTA_DLL_PATH)" "$(DIST)/bin"
 endif
 
-ifdef MOZ_D3DCOMPILER_XP_CAB
-	expand '$(MOZ_D3DCOMPILER_XP_CAB)' -F:$(MOZ_D3DCOMPILER_XP_DLL) '$(DIST)/bin'
-endif
-
 endif
 
 include $(topsrcdir)/config/rules.mk
