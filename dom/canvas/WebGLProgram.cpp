@@ -459,7 +459,7 @@ WebGLProgram::WebGLProgram(WebGLContext* webgl)
     : WebGLRefCountedObject(webgl)
     , mGLName(CreateProgram(webgl->GL()))
     , mNumActiveTFOs(0)
-    , mNextLink_TransformFeedbackBufferMode(LOCAL_GL_SEPARATE_ATTRIBS)
+    , mNextLink_TransformFeedbackBufferMode(LOCAL_GL_INTERLEAVED_ATTRIBS)
 {
     mContext->mPrograms.insertBack(this);
 }
