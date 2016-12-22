@@ -4800,7 +4800,8 @@ ContentParent::RecvPURLClassifierConstructor(PURLClassifierParent* aActor,
   auto* actor = static_cast<URLClassifierParent*>(aActor);
   nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   if (!principal) {
-    return IPC_FAIL_NO_REASON(this);
+    actor->ClassificationFailed();
+    return IPC_OK();
   }
   return actor->StartClassify(principal, aUseTrackingProtection, aSuccess);
 }
