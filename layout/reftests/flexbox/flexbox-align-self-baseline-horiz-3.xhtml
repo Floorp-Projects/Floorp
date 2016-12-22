@@ -30,19 +30,24 @@
       .lime   { background: lime;   }
       .pink   { background: pink;   }
       .aqua   { background: aqua;   }
+
+      i { display:inline-block; width:20px; height:2px; background:black; }
    </style>
   </head>
   <body>
     <div class="flexbox">
       <div class="lime">text</div>
       <button>btn</button>
-      <input type="radio"/>
-      <input type="checkbox"/>
       <label class="pink">label</label>
       <label class="aqua">lab<br/>el</label>
       <fieldset>field<br/>set</fieldset>
       <fieldset><legend>leg</legend>field<br/>set</fieldset>
       <fieldset><legend>leg<br/>end</legend>field<br/>set</fieldset>
+    </div>
+    <div class="flexbox" style="font-size:0">
+      <input type="radio"/>
+      <input type="checkbox"/>
+      <i></i>
     </div>
   </body>
 </html>
