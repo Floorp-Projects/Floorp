@@ -3779,54 +3779,35 @@ nsTableFrame::GetRowSpacing(int32_t aStartRowIndex,
 }
 
 /* virtual */ nscoord
-nsTableFrame::GetLogicalBaseline(WritingMode aWM) const
+nsTableFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
-  nscoord baseline;
-  if (!GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst, &baseline)) {
-    baseline = BSize(aWM);
-  }
-  return baseline;
-}
-
-/* virtual */ bool
-nsTableFrame::GetNaturalBaselineBOffset(WritingMode aWM,
-                                        BaselineSharingGroup aBaselineGroup,
-                                        nscoord*             aBaseline) const
-{
+  nscoord ascent = 0;
   RowGroupArray orderedRowGroups;
   OrderRowGroups(orderedRowGroups);
+  nsTableRowFrame* firstRow = nullptr;
   // XXX not sure if this should be the size of the containing block instead.
   nsSize containerSize = mRect.Size();
-  auto TableBaseline = [aWM, containerSize] (nsTableRowGroupFrame* aRowGroup,
-                                             nsTableRowFrame* aRow) {
-    nscoord rgBStart = LogicalRect(aWM, aRowGroup->GetNormalRect(),
-                                   containerSize).BStart(aWM);
-    nscoord rowBStart = LogicalRect(aWM, aRow->GetNormalRect(),
-                                    containerSize).BStart(aWM);
-    return rgBStart + rowBStart + aRow->GetRowBaseline(aWM);
-  };
-  if (aBaselineGroup == BaselineSharingGroup::eFirst) {
-    for (uint32_t rgIndex = 0; rgIndex < orderedRowGroups.Length(); rgIndex++) {
-      nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgIndex];
-      nsTableRowFrame* row = rgFrame->GetFirstRow();
-      if (row) {
-        *aBaseline = TableBaseline(rgFrame, row);
-        return true;
-      }
-    }
-  } else {
-    for (uint32_t rgIndex = orderedRowGroups.Length(); rgIndex-- > 0;) {
-      nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgIndex];
-      nsTableRowFrame* row = rgFrame->GetLastRow();
-      if (row) {
-        *aBaseline = BSize(aWM) - TableBaseline(rgFrame, row);
-        return true;
-      }
+  for (uint32_t rgIndex = 0; rgIndex < orderedRowGroups.Length(); rgIndex++) {
+    nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgIndex];
+    if (rgFrame->GetRowCount()) {
+      firstRow = rgFrame->GetFirstRow();
+
+      nscoord rgNormalBStart =
+        LogicalRect(aWritingMode, rgFrame->GetNormalRect(), containerSize)
+        .Origin(aWritingMode).B(aWritingMode);
+      nscoord firstRowNormalBStart =
+        LogicalRect(aWritingMode, firstRow->GetNormalRect(), containerSize)
+        .Origin(aWritingMode).B(aWritingMode);
+
+      ascent = rgNormalBStart + firstRowNormalBStart +
+               firstRow->GetRowBaseline(aWritingMode);
+      break;
     }
   }
-  return false;
+  if (!firstRow)
+    ascent = BSize(aWritingMode);
+  return ascent;
 }
-
 /* ----- global methods ----- */
 
 nsTableFrame*
