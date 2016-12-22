@@ -25,8 +25,8 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, JS::HandleObject obj,
                                         JS::HandleId id,
                                         JS::ObjectOpResult& result);
 bool
-XPC_WN_CantDeletePropertyStub(JSContext* cx, JS::HandleObject obj,
-                              JS::HandleId id, JS::ObjectOpResult& result);
+XPC_WN_CannotDeletePropertyStub(JSContext* cx, JS::HandleObject obj,
+                                JS::HandleId id, JS::ObjectOpResult& result);
 
 bool
 XPC_WN_Helper_GetProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
@@ -89,7 +89,7 @@ extern const js::ObjectOps XPC_WN_ObjectOpsWithEnumerate;
     ? nullptr \
     : ((_flags) & nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE) \
       ? XPC_WN_MaybeResolvingDeletePropertyStub \
-      : XPC_WN_CantDeletePropertyStub, \
+      : XPC_WN_CannotDeletePropertyStub, \
     \
     /* getProperty */ \
     ((_flags) & nsIXPCScriptable::WANT_GETPROPERTY) \
