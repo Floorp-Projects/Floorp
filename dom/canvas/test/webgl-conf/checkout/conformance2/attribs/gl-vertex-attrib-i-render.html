@@ -40,6 +40,14 @@ void main()
     gl_Position = vec4(p.x + a.x + a.y + a.z + a.w, p.y, 0.0, 10.0);
 }
 </script>
+<script id='vshader_unsigned' type='x-shader/x-vertex'>#version 300 es
+layout(location=0) in ivec2 p;
+layout(location=1) in uvec4 a;
+void main()
+{
+    gl_Position = vec4(p.x + int(a.x + a.y + a.z + a.w), p.y, 0.0, 10.0);
+}
+</script>
 <script id='fshader' type='x-shader/x-fragment'>#version 300 es
 precision mediump float;
 layout(location=0) out vec4 oColor;
@@ -69,7 +77,8 @@ function runTest() {
         testFailed('could not create context');
         return;
     }
-    var program = wtu.setupProgram(gl, ['vshader', 'fshader'])
+    var program = wtu.setupProgram(gl, ['vshader', 'fshader']);
+    var program_unsigned = wtu.setupProgram(gl, ['vshader_unsigned', 'fshader']);
 
     gl.enableVertexAttribArray(0);
     var pos = gl.createBuffer();
@@ -83,6 +92,11 @@ function runTest() {
     var tests = ['vertexAttribI4i', 'vertexAttribI4ui', 'vertexAttribI4iv', 'vertexAttribI4uiv'];
 
     for (var ii = 0; ii < 4; ++ii) {
+        if (ii % 2 == 0) {
+            gl.useProgram(program);
+        } else {
+            gl.useProgram(program_unsigned);
+        }
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         if (ii < 2) {
             gl[tests[ii]](1, vals[ii][0], vals[ii][1], vals[ii][2], vals[ii][3]);

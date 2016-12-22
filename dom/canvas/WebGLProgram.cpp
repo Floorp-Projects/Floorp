@@ -83,7 +83,49 @@ AssembleName(const nsCString& baseName, bool isArray, size_t arrayIndex,
     }
 }
 
-//////////
+////
+
+static GLenum
+AttribBaseType(GLenum attribType)
+{
+    switch (attribType) {
+    case LOCAL_GL_FLOAT:
+    case LOCAL_GL_FLOAT_VEC2:
+    case LOCAL_GL_FLOAT_VEC3:
+    case LOCAL_GL_FLOAT_VEC4:
+
+    case LOCAL_GL_FLOAT_MAT2:
+    case LOCAL_GL_FLOAT_MAT2x3:
+    case LOCAL_GL_FLOAT_MAT2x4:
+
+    case LOCAL_GL_FLOAT_MAT3x2:
+    case LOCAL_GL_FLOAT_MAT3:
+    case LOCAL_GL_FLOAT_MAT3x4:
+
+    case LOCAL_GL_FLOAT_MAT4x2:
+    case LOCAL_GL_FLOAT_MAT4x3:
+    case LOCAL_GL_FLOAT_MAT4:
+        return LOCAL_GL_FLOAT;
+
+    case LOCAL_GL_INT:
+    case LOCAL_GL_INT_VEC2:
+    case LOCAL_GL_INT_VEC3:
+    case LOCAL_GL_INT_VEC4:
+        return LOCAL_GL_INT;
+
+    case LOCAL_GL_UNSIGNED_INT:
+    case LOCAL_GL_UNSIGNED_INT_VEC2:
+    case LOCAL_GL_UNSIGNED_INT_VEC3:
+    case LOCAL_GL_UNSIGNED_INT_VEC4:
+        return LOCAL_GL_UNSIGNED_INT;
+
+    default:
+        MOZ_ASSERT(false, "unexpected attrib elemType");
+        return 0;
+    }
+}
+
+////
 
 /*static*/ const webgl::UniformInfo::TexListT*
 webgl::UniformInfo::GetTexList(WebGLActiveInfo* activeInfo)
@@ -225,7 +267,8 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
                                                                        elemType, isArray,
                                                                        userName,
                                                                        mappedName);
-        const webgl::AttribInfo attrib = {activeInfo, uint32_t(loc)};
+        const GLenum baseType = AttribBaseType(elemType);
+        const webgl::AttribInfo attrib = {activeInfo, uint32_t(loc), baseType};
         info->attribs.push_back(attrib);
     }
 
