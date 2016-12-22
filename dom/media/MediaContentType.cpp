@@ -10,6 +10,12 @@
 
 namespace mozilla {
 
+size_t
+MediaContentType::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return mExtendedMIMEType.SizeOfExcludingThis(aMallocSizeOf);
+}
+
 Maybe<MediaContentType>
 MakeMediaContentType(const nsAString& aType)
 {

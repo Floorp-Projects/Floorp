@@ -87,6 +87,8 @@ public:
   // (e.g., "video/webm" could contain a vorbis audio track.)
   bool HasVideoMajorType() const;
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 private:
   friend Maybe<MediaMIMEType> MakeMediaMIMEType(const nsAString& aType);
   friend class MediaExtendedMIMEType;
@@ -133,6 +135,8 @@ public:
   bool Contains(const nsAString& aCodec) const;
   bool ContainsAll(const MediaCodecs& aCodecs) const;
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 private:
   // UTF16 comma-separated list of codecs.
   // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
@@ -162,6 +166,8 @@ public:
   Maybe<int32_t> GetHeight() const { return GetMaybeNumber(mHeight); }
   Maybe<int32_t> GetFramerate() const { return GetMaybeNumber(mFramerate); }
   Maybe<int32_t> GetBitrate() const { return GetMaybeNumber(mBitrate); }
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   friend Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType);
