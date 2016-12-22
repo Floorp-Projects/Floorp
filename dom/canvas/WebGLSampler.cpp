@@ -133,12 +133,11 @@ ValidateSamplerParameterParams(WebGLContext* webgl, const char* funcName, GLenum
         break;
 
     default:
-        webgl->ErrorInvalidEnum("%s: invalid pname: %s", funcName,
-                                webgl->EnumName(pname));
+        webgl->ErrorInvalidEnumArg(funcName, "pname", pname);
         return false;
     }
 
-    webgl->ErrorInvalidEnum("%s: invalid param: %s", funcName, webgl->EnumName(paramInt));
+    webgl->ErrorInvalidEnumArg(funcName, "param", paramInt);
     return false;
 }
 

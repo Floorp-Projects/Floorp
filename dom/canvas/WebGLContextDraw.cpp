@@ -346,7 +346,7 @@ public:
         ////
 
         const size_t requiredVerts = firstVertex + vertCount;
-        if (!mWebGL->DoFakeVertexAttrib0(requiredVerts)) {
+        if (!mWebGL->DoFakeVertexAttrib0(funcName, requiredVerts)) {
             *out_error = true;
             return;
         }
@@ -387,6 +387,33 @@ public:
                                               " both transform feedback and as a uniform"
                                               " buffer.",
                                               funcName);
+                *out_error = true;
+                return;
+            }
+        }
+
+        ////
+
+        for (const auto& progAttrib : mWebGL->mActiveProgramLinkInfo->attribs) {
+            const auto& loc = progAttrib.mLoc;
+
+            const auto& attribData = mWebGL->mBoundVertexArray->mAttribs[loc];
+
+            GLenum attribDataBaseType;
+            if (attribData.mEnabled) {
+                attribDataBaseType = attribData.BaseType();
+            } else {
+                attribDataBaseType = mWebGL->mGenericVertexAttribTypes[loc];
+            }
+
+            if (attribDataBaseType != progAttrib.mBaseType) {
+                nsCString progType, dataType;
+                WebGLContext::EnumName(progAttrib.mBaseType, &progType);
+                WebGLContext::EnumName(attribDataBaseType, &dataType);
+                mWebGL->ErrorInvalidOperation("%s: Vertex attrib %u requires data of type"
+                                              " %s, but is being supplied with type %s.",
+                                              funcName, loc, progType.BeginReading(),
+                                              dataType.BeginReading());
                 *out_error = true;
                 return;
             }
@@ -686,9 +713,11 @@ WebGLContext::DrawElements_check(const char* funcName, GLenum mode, GLsizei vert
 
     // Bug 1008310 - Check if buffer has been used with a different previous type
     if (elemArrayBuffer.IsElementArrayUsedWithMultipleTypes()) {
+        nsCString typeName;
+        WebGLContext::EnumName(type, &typeName);
         GenerateWarning("%s: bound element array buffer previously used with a type other than "
                         "%s, this will affect performance.",
-                        funcName, WebGLContext::EnumName(type));
+                        funcName, typeName.BeginReading());
     }
 
     return true;
@@ -957,23 +986,25 @@ WebGLContext::ValidateBufferFetching(const char* info)
 }
 
 WebGLVertexAttrib0Status
-WebGLContext::WhatDoesVertexAttrib0Need()
+WebGLContext::WhatDoesVertexAttrib0Need() const
 {
     MOZ_ASSERT(mCurrentProgram);
     MOZ_ASSERT(mActiveProgramLinkInfo);
 
+    const auto& isAttribArray0Enabled = mBoundVertexArray->mAttribs[0].mEnabled;
+
     // work around Mac OSX crash, see bug 631420
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
-        mBoundVertexArray->IsAttribArrayEnabled(0) &&
+        isAttribArray0Enabled &&
         !mBufferFetch_IsAttrib0Active)
     {
         return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
     }
 #endif
 
-    if (MOZ_LIKELY(gl->IsGLES() ||
-                   mBoundVertexArray->IsAttribArrayEnabled(0)))
+    if (MOZ_LIKELY(!gl->IsCompatibilityProfile() ||
+                   isAttribArray0Enabled))
     {
         return WebGLVertexAttrib0Status::Default;
     }
@@ -984,10 +1015,13 @@ WebGLContext::WhatDoesVertexAttrib0Need()
 }
 
 bool
-WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
+WebGLContext::DoFakeVertexAttrib0(const char* funcName, GLuint vertexCount)
 {
-    WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
+    if (!vertexCount) {
+        vertexCount = 1;
+    }
 
+    const auto whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
     if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
         return true;
 
@@ -1000,88 +1034,101 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
         mAlreadyWarnedAboutFakeVertexAttrib0 = true;
     }
 
-    CheckedUint32 checked_dataSize = CheckedUint32(vertexCount) * 4 * sizeof(GLfloat);
+    if (!mFakeVertexAttrib0BufferObject) {
+        gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);
+        mFakeVertexAttrib0BufferObjectSize = 0;
+    }
+    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
 
+    ////
+
+    switch (mGenericVertexAttribTypes[0]) {
+    case LOCAL_GL_FLOAT:
+        gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, false, 0, 0);
+        break;
+
+    case LOCAL_GL_INT:
+        gl->fVertexAttribIPointer(0, 4, LOCAL_GL_INT, 0, 0);
+        break;
+
+    case LOCAL_GL_UNSIGNED_INT:
+        gl->fVertexAttribIPointer(0, 4, LOCAL_GL_UNSIGNED_INT, 0, 0);
+        break;
+
+    default:
+        MOZ_CRASH();
+    }
+
+    ////
+
+    const auto bytesPerVert = sizeof(mFakeVertexAttrib0Data);
+    const auto checked_dataSize = CheckedUint32(vertexCount) * bytesPerVert;
     if (!checked_dataSize.isValid()) {
         ErrorOutOfMemory("Integer overflow trying to construct a fake vertex attrib 0 array for a draw-operation "
                          "with %d vertices. Try reducing the number of vertices.", vertexCount);
         return false;
     }
+    const auto dataSize = checked_dataSize.value();
 
-    GLuint dataSize = checked_dataSize.value();
-
-    if (!mFakeVertexAttrib0BufferObject) {
-        gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);
+    if (mFakeVertexAttrib0BufferObjectSize < dataSize) {
+        gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nullptr, LOCAL_GL_DYNAMIC_DRAW);
+        mFakeVertexAttrib0BufferObjectSize = dataSize;
+        mFakeVertexAttrib0DataDefined = false;
     }
 
-    // if the VBO status is already exactly what we need, or if the only difference is that it's initialized and
-    // we don't need it to be, then consider it OK
-    bool vertexAttrib0BufferStatusOK =
-        mFakeVertexAttrib0BufferStatus == whatDoesAttrib0Need ||
-        (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray &&
-         whatDoesAttrib0Need == WebGLVertexAttrib0Status::EmulatedUninitializedArray);
+    if (whatDoesAttrib0Need == WebGLVertexAttrib0Status::EmulatedUninitializedArray)
+        return true;
 
-    if (!vertexAttrib0BufferStatusOK ||
-        mFakeVertexAttrib0BufferObjectSize < dataSize ||
-        mFakeVertexAttrib0BufferObjectVector[0] != mVertexAttrib0Vector[0] ||
-        mFakeVertexAttrib0BufferObjectVector[1] != mVertexAttrib0Vector[1] ||
-        mFakeVertexAttrib0BufferObjectVector[2] != mVertexAttrib0Vector[2] ||
-        mFakeVertexAttrib0BufferObjectVector[3] != mVertexAttrib0Vector[3])
+    ////
+
+    if (mFakeVertexAttrib0DataDefined &&
+        memcmp(mFakeVertexAttrib0Data, mGenericVertexAttrib0Data, bytesPerVert) == 0)
     {
-        mFakeVertexAttrib0BufferStatus = whatDoesAttrib0Need;
-        mFakeVertexAttrib0BufferObjectSize = dataSize;
-        mFakeVertexAttrib0BufferObjectVector[0] = mVertexAttrib0Vector[0];
-        mFakeVertexAttrib0BufferObjectVector[1] = mVertexAttrib0Vector[1];
-        mFakeVertexAttrib0BufferObjectVector[2] = mVertexAttrib0Vector[2];
-        mFakeVertexAttrib0BufferObjectVector[3] = mVertexAttrib0Vector[3];
+        return true;
+    }
 
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
+    ////
 
-        GetAndFlushUnderlyingGLErrors();
+    const UniqueBuffer data(malloc(dataSize));
+    if (!data) {
+        ErrorOutOfMemory("%s: Failed to allocate fake vertex attrib 0 array.",
+                         funcName);
+        return false;
+    }
+    auto itr = (uint8_t*)data.get();
+    const auto itrEnd = itr + dataSize;
+    while (itr != itrEnd) {
+        memcpy(itr, mGenericVertexAttrib0Data, bytesPerVert);
+        itr += bytesPerVert;
+    }
 
-        if (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray) {
-            auto array = MakeUniqueFallible<GLfloat[]>(4 * vertexCount);
-            if (!array) {
-                ErrorOutOfMemory("Fake attrib0 array.");
-                return false;
-            }
-            for(size_t i = 0; i < vertexCount; ++i) {
-                array[4 * i + 0] = mVertexAttrib0Vector[0];
-                array[4 * i + 1] = mVertexAttrib0Vector[1];
-                array[4 * i + 2] = mVertexAttrib0Vector[2];
-                array[4 * i + 3] = mVertexAttrib0Vector[3];
-            }
-            gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, array.get(), LOCAL_GL_DYNAMIC_DRAW);
-        } else {
-            gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nullptr, LOCAL_GL_DYNAMIC_DRAW);
-        }
-        GLenum error = GetAndFlushUnderlyingGLErrors();
+    {
+        gl::GLContext::LocalErrorScope errorScope(*gl);
 
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0);
+        gl->fBufferSubData(LOCAL_GL_ARRAY_BUFFER, 0, dataSize, data.get());
 
-        // note that we do this error checking and early return AFTER having restored the buffer binding above
-        if (error) {
-            ErrorOutOfMemory("Ran out of memory trying to construct a fake vertex attrib 0 array for a draw-operation "
-                             "with %d vertices. Try reducing the number of vertices.", vertexCount);
+        const auto err = errorScope.GetError();
+        if (err) {
+            ErrorOutOfMemory("%s: Failed to upload fake vertex attrib 0 data.", funcName);
             return false;
         }
     }
 
-    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
-    gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0);
+    ////
 
+    memcpy(mFakeVertexAttrib0Data, mGenericVertexAttrib0Data, bytesPerVert);
+    mFakeVertexAttrib0DataDefined = true;
     return true;
 }
 
 void
 WebGLContext::UndoFakeVertexAttrib0()
 {
-    WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
-
+    const auto whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
     if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
         return;
 
-    if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].mBuf) {
+    if (mBoundVertexArray->mAttribs[0].mBuf) {
         const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.mBuf->mGLName);
         attrib0.DoVertexAttribPointer(gl, 0);

@@ -20,50 +20,15 @@
 
 namespace mozilla {
 
-void
-WebGLContext::GetVertexAttribFloat(GLuint index, GLfloat* out_result)
-{
-    if (index) {
-        gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, out_result);
-    } else {
-        out_result[0] = mVertexAttrib0Vector[0];
-        out_result[1] = mVertexAttrib0Vector[1];
-        out_result[2] = mVertexAttrib0Vector[2];
-        out_result[3] = mVertexAttrib0Vector[3];
-    }
-}
-
-void
-WebGLContext::GetVertexAttribInt(GLuint index, GLint* out_result)
-{
-    if (index) {
-        gl->fGetVertexAttribIiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, out_result);
-    } else {
-        out_result[0] = BitwiseCast<GLint>(mVertexAttrib0Vector[0]);
-        out_result[1] = BitwiseCast<GLint>(mVertexAttrib0Vector[1]);
-        out_result[2] = BitwiseCast<GLint>(mVertexAttrib0Vector[2]);
-        out_result[3] = BitwiseCast<GLint>(mVertexAttrib0Vector[3]);
-    }
-}
-
-void
-WebGLContext::GetVertexAttribUint(GLuint index, GLuint* out_result)
-{
-    if (index) {
-        gl->fGetVertexAttribIuiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, out_result);
-    } else {
-        out_result[0] = BitwiseCast<GLuint>(mVertexAttrib0Vector[0]);
-        out_result[1] = BitwiseCast<GLuint>(mVertexAttrib0Vector[1]);
-        out_result[2] = BitwiseCast<GLuint>(mVertexAttrib0Vector[2]);
-        out_result[3] = BitwiseCast<GLuint>(mVertexAttrib0Vector[3]);
-    }
-}
-
 JSObject*
 WebGLContext::GetVertexAttribFloat32Array(JSContext* cx, GLuint index)
 {
     GLfloat attrib[4];
-    GetVertexAttribFloat(index, &attrib[0]);
+    if (index) {
+        gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, attrib);
+    } else {
+        memcpy(attrib, mGenericVertexAttrib0Data, sizeof(mGenericVertexAttrib0Data));
+    }
     return dom::Float32Array::Create(cx, this, 4, attrib);
 }
 
@@ -71,218 +36,122 @@ JSObject*
 WebGLContext::GetVertexAttribInt32Array(JSContext* cx, GLuint index)
 {
     GLint attrib[4];
-    GetVertexAttribInt(index, &attrib[0]);
+    if (index) {
+        gl->fGetVertexAttribIiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, attrib);
+    } else {
+        memcpy(attrib, mGenericVertexAttrib0Data, sizeof(mGenericVertexAttrib0Data));
+    }
     return dom::Int32Array::Create(cx, this, 4, attrib);
 }
 
 JSObject*
-WebGLContext::GetVertexAttribUint32Array(JSContext* cx, GLuint index) {
+WebGLContext::GetVertexAttribUint32Array(JSContext* cx, GLuint index)
+{
     GLuint attrib[4];
-    GetVertexAttribUint(index, &attrib[0]);
+    if (index) {
+        gl->fGetVertexAttribIuiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, attrib);
+    } else {
+        memcpy(attrib, mGenericVertexAttrib0Data, sizeof(mGenericVertexAttrib0Data));
+    }
     return dom::Uint32Array::Create(cx, this, 4, attrib);
 }
 
+////////////////////////////////////////
+
 void
-WebGLContext::VertexAttrib1f(GLuint index, GLfloat x0)
+WebGLContext::VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w,
+                             const char* funcName)
 {
+    if (!funcName) {
+        funcName = "vertexAttrib4f";
+    }
+
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(index, "vertexAttrib1f"))
+    if (!ValidateAttribIndex(index, funcName))
         return;
 
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
+    ////
 
-    MakeContextCurrent();
+    gl->MakeCurrent();
+    if (index || !gl->IsCompatibilityProfile()) {
+        gl->fVertexAttrib4f(index, x, y, z, w);
+    }
 
-    if (index) {
-        gl->fVertexAttrib1f(index, x0);
-    } else {
-        mVertexAttrib0Vector[0] = x0;
-        mVertexAttrib0Vector[1] = 0;
-        mVertexAttrib0Vector[2] = 0;
-        mVertexAttrib0Vector[3] = 1;
-        if (gl->IsGLES())
-            gl->fVertexAttrib1f(index, x0);
+    ////
+
+    mGenericVertexAttribTypes[index] = LOCAL_GL_FLOAT;
+
+    if (!index) {
+        const float data[4] = { x, y, z, w };
+        memcpy(mGenericVertexAttrib0Data, data, sizeof(data));
     }
 }
 
 void
-WebGLContext::VertexAttrib2f(GLuint index, GLfloat x0, GLfloat x1)
+WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w,
+                               const char* funcName)
 {
+    if (!funcName) {
+        funcName = "vertexAttribI4i";
+    }
+
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(index, "vertexAttrib2f"))
+    if (!ValidateAttribIndex(index, funcName))
         return;
 
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
+    ////
 
-    MakeContextCurrent();
+    gl->MakeCurrent();
+    if (index || !gl->IsCompatibilityProfile()) {
+        gl->fVertexAttribI4i(index, x, y, z, w);
+    }
 
-    if (index) {
-        gl->fVertexAttrib2f(index, x0, x1);
-    } else {
-        mVertexAttrib0Vector[0] = x0;
-        mVertexAttrib0Vector[1] = x1;
-        mVertexAttrib0Vector[2] = 0;
-        mVertexAttrib0Vector[3] = 1;
-        if (gl->IsGLES())
-            gl->fVertexAttrib2f(index, x0, x1);
+    ////
+
+    mGenericVertexAttribTypes[index] = LOCAL_GL_INT;
+
+    if (!index) {
+        const int32_t data[4] = { x, y, z, w };
+        memcpy(mGenericVertexAttrib0Data, data, sizeof(data));
     }
 }
 
 void
-WebGLContext::VertexAttrib3f(GLuint index, GLfloat x0, GLfloat x1, GLfloat x2)
+WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w,
+                                const char* funcName)
 {
+    if (!funcName) {
+        funcName = "vertexAttribI4ui";
+    }
+
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(index, "vertexAttrib3f"))
+    if (!ValidateAttribIndex(index, funcName))
         return;
 
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
+    ////
 
-    MakeContextCurrent();
+    gl->MakeCurrent();
+    if (index || !gl->IsCompatibilityProfile()) {
+        gl->fVertexAttribI4ui(index, x, y, z, w);
+    }
 
-    if (index) {
-        gl->fVertexAttrib3f(index, x0, x1, x2);
-    } else {
-        mVertexAttrib0Vector[0] = x0;
-        mVertexAttrib0Vector[1] = x1;
-        mVertexAttrib0Vector[2] = x2;
-        mVertexAttrib0Vector[3] = 1;
-        if (gl->IsGLES())
-            gl->fVertexAttrib3f(index, x0, x1, x2);
+    ////
+
+    mGenericVertexAttribTypes[index] = LOCAL_GL_UNSIGNED_INT;
+
+    if (!index) {
+        const uint32_t data[4] = { x, y, z, w };
+        memcpy(mGenericVertexAttrib0Data, data, sizeof(data));
     }
 }
 
-void
-WebGLContext::VertexAttrib4f(GLuint index, GLfloat x0, GLfloat x1,
-                             GLfloat x2, GLfloat x3)
-{
-    if (IsContextLost())
-        return;
-
-    if (!ValidateAttribIndex(index, "vertexAttrib4f"))
-        return;
-
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
-
-    MakeContextCurrent();
-
-    if (index) {
-        gl->fVertexAttrib4f(index, x0, x1, x2, x3);
-    } else {
-        mVertexAttrib0Vector[0] = x0;
-        mVertexAttrib0Vector[1] = x1;
-        mVertexAttrib0Vector[2] = x2;
-        mVertexAttrib0Vector[3] = x3;
-        if (gl->IsGLES())
-            gl->fVertexAttrib4f(index, x0, x1, x2, x3);
-    }
-}
-
-
-void
-WebGLContext::VertexAttrib1fv_base(GLuint index, uint32_t arrayLength,
-                                   const GLfloat* ptr)
-{
-    if (!ValidateAttribArraySetter("VertexAttrib1fv", 1, arrayLength))
-        return;
-
-    if (!ValidateAttribIndex(index, "vertexAttrib1fv"))
-        return;
-
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
-
-    MakeContextCurrent();
-    if (index) {
-        gl->fVertexAttrib1fv(index, ptr);
-    } else {
-        mVertexAttrib0Vector[0] = ptr[0];
-        mVertexAttrib0Vector[1] = GLfloat(0);
-        mVertexAttrib0Vector[2] = GLfloat(0);
-        mVertexAttrib0Vector[3] = GLfloat(1);
-        if (gl->IsGLES())
-            gl->fVertexAttrib1fv(index, ptr);
-    }
-}
-
-void
-WebGLContext::VertexAttrib2fv_base(GLuint index, uint32_t arrayLength,
-                                   const GLfloat* ptr)
-{
-    if (!ValidateAttribArraySetter("VertexAttrib2fv", 2, arrayLength))
-        return;
-
-    if (!ValidateAttribIndex(index, "vertexAttrib2fv"))
-        return;
-
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
-
-    MakeContextCurrent();
-    if (index) {
-        gl->fVertexAttrib2fv(index, ptr);
-    } else {
-        mVertexAttrib0Vector[0] = ptr[0];
-        mVertexAttrib0Vector[1] = ptr[1];
-        mVertexAttrib0Vector[2] = GLfloat(0);
-        mVertexAttrib0Vector[3] = GLfloat(1);
-        if (gl->IsGLES())
-            gl->fVertexAttrib2fv(index, ptr);
-    }
-}
-
-void
-WebGLContext::VertexAttrib3fv_base(GLuint index, uint32_t arrayLength,
-                                   const GLfloat* ptr)
-{
-    if (!ValidateAttribArraySetter("VertexAttrib3fv", 3, arrayLength))
-        return;
-
-    if (!ValidateAttribIndex(index, "vertexAttrib3fv"))
-        return;
-
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
-
-    MakeContextCurrent();
-    if (index) {
-        gl->fVertexAttrib3fv(index, ptr);
-    } else {
-        mVertexAttrib0Vector[0] = ptr[0];
-        mVertexAttrib0Vector[1] = ptr[1];
-        mVertexAttrib0Vector[2] = ptr[2];
-        mVertexAttrib0Vector[3] = GLfloat(1);
-        if (gl->IsGLES())
-            gl->fVertexAttrib3fv(index, ptr);
-    }
-}
-
-void
-WebGLContext::VertexAttrib4fv_base(GLuint index, uint32_t arrayLength,
-                                   const GLfloat* ptr)
-{
-    if (!ValidateAttribArraySetter("VertexAttrib4fv", 4, arrayLength))
-        return;
-
-    if (!ValidateAttribIndex(index, "vertexAttrib4fv"))
-        return;
-
-    mVertexAttribType[index] = LOCAL_GL_FLOAT;
-
-    MakeContextCurrent();
-    if (index) {
-        gl->fVertexAttrib4fv(index, ptr);
-    } else {
-        mVertexAttrib0Vector[0] = ptr[0];
-        mVertexAttrib0Vector[1] = ptr[1];
-        mVertexAttrib0Vector[2] = ptr[2];
-        mVertexAttrib0Vector[3] = ptr[3];
-        if (gl->IsGLES())
-            gl->fVertexAttrib4fv(index, ptr);
-    }
-}
+////////////////////////////////////////
 
 void
 WebGLContext::EnableVertexAttribArray(GLuint index)
@@ -299,7 +168,6 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
     gl->fEnableVertexAttribArray(index);
 
     MOZ_ASSERT(mBoundVertexArray);
-    mBoundVertexArray->EnsureAttrib(index);
     mBoundVertexArray->mAttribs[index].mEnabled = true;
 }
 
@@ -315,12 +183,11 @@ WebGLContext::DisableVertexAttribArray(GLuint index)
     MakeContextCurrent();
     InvalidateBufferFetching();
 
-    if (index || gl->IsGLES()) {
+    if (index || !gl->IsCompatibilityProfile()) {
         gl->fDisableVertexAttribArray(index);
     }
 
     MOZ_ASSERT(mBoundVertexArray);
-    mBoundVertexArray->EnsureAttrib(index);
     mBoundVertexArray->mAttribs[index].mEnabled = false;
 }
 
@@ -328,14 +195,14 @@ JS::Value
 WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                               ErrorResult& rv)
 {
+    const char funcName[] = "getVertexAttrib";
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateAttribIndex(index, "getVertexAttrib"))
+    if (!ValidateAttribIndex(index, funcName))
         return JS::NullValue();
 
     MOZ_ASSERT(mBoundVertexArray);
-    mBoundVertexArray->EnsureAttrib(index);
 
     MakeContextCurrent();
 
@@ -369,7 +236,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
     case LOCAL_GL_CURRENT_VERTEX_ATTRIB:
         {
             JS::RootedObject obj(cx);
-            switch (mVertexAttribType[index]) {
+            switch (mGenericVertexAttribTypes[index]) {
             case LOCAL_GL_FLOAT:
                 obj = GetVertexAttribFloat32Array(cx, index);
                 break;
@@ -417,7 +284,6 @@ WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname)
     }
 
     MOZ_ASSERT(mBoundVertexArray);
-    mBoundVertexArray->EnsureAttrib(index);
     return mBoundVertexArray->mAttribs[index].ByteOffset();
 }
 
@@ -436,7 +302,6 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
         return;
 
     MOZ_ASSERT(mBoundVertexArray);
-    mBoundVertexArray->EnsureAttrib(index);
 
     InvalidateBufferFetching();
 
@@ -465,7 +330,6 @@ WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
         return;
 
     MOZ_ASSERT(mBoundVertexArray);
-    mBoundVertexArray->EnsureAttrib(index);
 
     WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
     vd.mDivisor = divisor;
