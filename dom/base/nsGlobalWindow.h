@@ -1118,9 +1118,9 @@ public:
   float GetMozInnerScreenYOuter(mozilla::dom::CallerType aCallerType);
   float GetMozInnerScreenY(mozilla::dom::CallerType aCallerType,
                            mozilla::ErrorResult& aError);
-  float GetDevicePixelRatioOuter();
-  float GetDevicePixelRatio(mozilla::ErrorResult& aError);
-  nsresult GetDevicePixelRatio(float* aRatio) override;
+  float GetDevicePixelRatioOuter(mozilla::dom::CallerType aCallerType);
+  float GetDevicePixelRatio(mozilla::dom::CallerType aCallerType,
+                            mozilla::ErrorResult& aError);
   int32_t GetScrollMinX(mozilla::ErrorResult& aError);
   int32_t GetScrollMinY(mozilla::ErrorResult& aError);
   int32_t GetScrollMaxX(mozilla::ErrorResult& aError);

@@ -5572,7 +5572,7 @@ nsGlobalWindow::GetMozInnerScreenY(CallerType aCallerType, ErrorResult& aError)
 }
 
 float
-nsGlobalWindow::GetDevicePixelRatioOuter()
+nsGlobalWindow::GetDevicePixelRatioOuter(CallerType aCallerType)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -5586,7 +5586,7 @@ nsGlobalWindow::GetDevicePixelRatioOuter()
     return 1.0;
   }
 
-  if (nsContentUtils::ShouldResistFingerprinting(mDocShell)) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 1.0;
   }
 
@@ -5601,20 +5601,15 @@ nsGlobalWindow::GetDevicePixelRatioOuter()
 }
 
 float
-nsGlobalWindow::GetDevicePixelRatio(ErrorResult& aError)
+nsGlobalWindow::GetDevicePixelRatio(CallerType aCallerType, ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(GetDevicePixelRatioOuter, (), aError, 0.0);
+  FORWARD_TO_OUTER_OR_THROW(GetDevicePixelRatioOuter, (aCallerType), aError, 0.0);
 }
 
-nsresult
-nsGlobalWindow::GetDevicePixelRatio(float* aRatio)
+float
+nsPIDOMWindowOuter::GetDevicePixelRatio(CallerType aCallerType)
 {
-  FORWARD_TO_INNER(GetDevicePixelRatio, (aRatio), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  *aRatio = GetDevicePixelRatio(rv);
-
-  return rv.StealNSResult();
+  return nsGlobalWindow::Cast(this)->GetDevicePixelRatioOuter(aCallerType);
 }
 
 uint64_t
