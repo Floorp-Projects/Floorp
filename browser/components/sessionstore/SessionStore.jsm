@@ -3641,7 +3641,7 @@ var SessionStoreInternal = {
     // process, or we have a browser with a grouped session history (as we don't
     // support restoring into browsers with grouped session histories directly).
     let newFrameloader =
-      aReloadInFreshProcess || !!browser.frameLoader.groupedSessionHistory;
+      aReloadInFreshProcess || !!browser.frameLoader.groupedSHistory;
     let isRemotenessUpdate =
       tabbrowser.updateBrowserRemotenessByURL(browser, uri, {
         freshProcess: aReloadInFreshProcess,

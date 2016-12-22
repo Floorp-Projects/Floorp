@@ -884,7 +884,7 @@ child:
      * @param aOffset           The number of entries in the grouped session
      *                          history before this session history object.
      */
-    async NotifyAttachGroupedSessionHistory(uint32_t aOffset);
+    async NotifyAttachGroupedSHistory(uint32_t aOffset);
 
     /**
      * Notify that the session history associated to this PBrowser has become
@@ -894,14 +894,14 @@ child:
      *                           session history.
      * @param aTargetLocalIndex  The target local index to navigate to.
      */
-    async NotifyPartialSessionHistoryActive(uint32_t aGlobalLength,
-                                            uint32_t aTargetLocalIndex);
+    async NotifyPartialSHistoryActive(uint32_t aGlobalLength,
+                                      uint32_t aTargetLocalIndex);
 
     /**
      * Notify that the session history asssociates to this PBrowser has become
      * an inactive history in the grouped session history.
      */
-    async NotifyPartialSessionHistoryDeactive();
+    async NotifyPartialSHistoryDeactive();
 
     /**
      * Tell the child that it is a fresh process created for a Large-Allocation

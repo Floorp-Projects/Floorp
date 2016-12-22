@@ -49,8 +49,7 @@ interface nsIPartialSHistory : nsISupports
    * @param aOffset                The number of entries in preceding partial
    *                               session histories.
    */
-  void onAttachGroupedSessionHistory(in nsIGroupedSHistory aGroup,
-                                     in unsigned long aOffset);
+  void onAttachGroupedSHistory(in nsIGroupedSHistory aGroup, in unsigned long aOffset);
 
   /**
    * This method is used by the TabParent to notify the PartialSHistory

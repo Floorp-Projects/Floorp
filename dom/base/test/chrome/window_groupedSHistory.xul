@@ -560,7 +560,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1310768
     promises.push(Promise.resolve().then(() => {
       let f1 = b1.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
       let f2 = b2.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
-      return f1.appendPartialSessionHistoryAndSwap(f2);
+      return f1.appendPartialSHistoryAndSwap(f2);
     }));
 
     return Promise.all(promises);
@@ -611,7 +611,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1310768
     is(browser.canGoForward, canGoForward, 'check browser.canGoForward');
     if (partial) {
       let frameLoader = browser.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
-      is(frameLoader.groupedSessionHistory.count, globalLength, 'check groupedSHistory.count');
+      is(frameLoader.groupedSHistory.count, globalLength, 'check groupedSHistory.count');
     }
 
     return ContentTask.spawn(browser,

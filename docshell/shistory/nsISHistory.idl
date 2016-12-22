@@ -224,13 +224,13 @@ interface nsISHistory: nsISupports
    *                          session history.
    * @param targetIndex       The local index to navigate to.
    */
-   void onPartialSessionHistoryActive(in long globalLength, in long targetIndex);
+   void onPartialSHistoryActive(in long globalLength, in long targetIndex);
 
   /**
    * Called when this nsISHistory has became inactive history of a grouped
    * session history.
    */
-   void onPartialSessionHistoryDeactive();
+   void onPartialSHistoryDeactive();
 
   /**
    * Called when it's attached to a nsIGroupedSHistory instance.
@@ -238,5 +238,5 @@ interface nsISHistory: nsISupports
    * @param offset            The number of entries in the grouped session
    *                          history before this session history object.
    */
-   void onAttachGroupedSessionHistory(in long offset);
+   void onAttachGroupedSHistory(in long offset);
 };
