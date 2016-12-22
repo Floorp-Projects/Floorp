@@ -16,7 +16,7 @@ use device::{TextureFilter, VAOId, VertexUsageHint, FileWatcherHandler, TextureT
 use euclid::Matrix4D;
 use fnv::FnvHasher;
 use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
-use internal_types::{ExternalImageUpdateList, TextureUpdateList, PackedVertex, RenderTargetMode};
+use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, SourceTexture};
 use internal_types::{BatchTextures, TextureSampler, GLContextHandleWrapper};
 use profiler::{Profiler, BackendProfileCounters};
@@ -740,12 +740,10 @@ impl Renderer {
         // Pull any pending results and return the most recent.
         while let Ok(msg) = self.result_rx.try_recv() {
             match msg {
-                ResultMsg::NewFrame(frame, texture_update_list, external_image_update_list, profile_counters) => {
-                    self.pending_texture_updates.push(texture_update_list);
-
-                    // When a new frame is ready, we could start to update all pending external image requests here.
-                    self.release_external_images(external_image_update_list);
-
+                ResultMsg::UpdateTextureCache(update_list) => {
+                    self.pending_texture_updates.push(update_list);
+                }
+                ResultMsg::NewFrame(frame, profile_counters) => {
                     self.backend_profile_counters = profile_counters;
 
                     // Update the list of available epochs for use during reftests.
@@ -1265,7 +1263,7 @@ impl Renderer {
                 let props = &deferred_resolve.image_properties;
                 let external_id = props.external_id
                                        .expect("BUG: Deferred resolves must be external images!");
-                let image = handler.lock(external_id);
+                let image = handler.get(external_id);
 
                 let texture_id = match image.source {
                     ExternalImageSource::NativeTexture(texture_id) => TextureId::new(texture_id),
@@ -1280,25 +1278,13 @@ impl Renderer {
         }
     }
 
-    fn unlock_external_images(&mut self) {
+    fn release_external_textures(&mut self) {
         if !self.external_images.is_empty() {
             let handler = self.external_image_handler
                               .as_mut()
                               .expect("Found external image, but no handler set!");
 
             for (external_id, _) in self.external_images.drain() {
-                handler.unlock(external_id);
-            }
-        }
-    }
-
-    fn release_external_images(&mut self, mut pending_external_image_updates: ExternalImageUpdateList) {
-        if !pending_external_image_updates.is_empty() {
-            let handler = self.external_image_handler
-                              .as_mut()
-                              .expect("found external image updates, but no handler set!");
-
-            for external_id in pending_external_image_updates.drain(..) {
                 handler.release(external_id);
             }
         }
@@ -1423,7 +1409,7 @@ impl Renderer {
                                       &projection);
         }
 
-        self.unlock_external_images();
+        self.release_external_textures();
     }
 
     pub fn debug_renderer<'a>(&'a mut self) -> &'a mut DebugRenderer {
@@ -1462,19 +1448,10 @@ pub struct ExternalImage {
     pub source: ExternalImageSource,
 }
 
-/// The interfaces that an application can implement to support providing
-/// external image buffers.
-/// When the the application passes an external image to WR, it should kepp that
-/// external image life time untile the release() call.
+/// Interface that an application can implement
+/// to support providing external image buffers.
 pub trait ExternalImageHandler {
-    /// Lock the external image. Then, WR could start to read the image content.
-    /// The WR client should not change the image content until the unlock()
-    /// call.
-    fn lock(&mut self, key: ExternalImageId) -> ExternalImage;
-    /// Unlock the external image. The WR should not read the image content
-    /// after this call.
-    fn unlock(&mut self, key: ExternalImageId);
-    /// Tell the WR client that it could start to release this external image.
+    fn get(&mut self, key: ExternalImageId) -> ExternalImage;
     fn release(&mut self, key: ExternalImageId);
 }
 

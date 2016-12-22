@@ -8,7 +8,6 @@
 
 #include "GLContextTypes.h"             // for GLContext, etc
 #include "GLDefs.h"                     // for GLuint, LOCAL_GL_TEXTURE_2D, etc
-#include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, Compositor, etc
 #include "nsDataHashtable.h"
 
@@ -20,14 +19,15 @@ class CompositorBridgeParent;
 
 class WebRenderCompositorOGL final : public Compositor
 {
-  friend WRExternalImage LockExternalImage(void* aObj, WRExternalImageId aId);
-  friend void UnlockExternalImage(void* aObj, WRExternalImageId aId);
-  friend void ReleaseExternalImage(void* aObj, WRExternalImageId aId);
-
   typedef mozilla::gl::GLContext GLContext;
 
 public:
   explicit WebRenderCompositorOGL(CompositorBridgeParent* aCompositorBridge, GLContext* aGLContext);
+
+protected:
+  virtual ~WebRenderCompositorOGL();
+
+public:
   virtual WebRenderCompositorOGL* AsWebRenderCompositorOGL() override { return this; }
 
   virtual already_AddRefed<DataTextureSource>
@@ -118,19 +118,16 @@ public:
 
   void AddExternalImageId(uint64_t aExternalImageId, CompositableHost* aHost);
   void RemoveExternalImageId(uint64_t aExternalImageId);
-
-  WRExternalImageHandler GetExternalImageHandler();
+  void UpdateExternalImages();
 
   void ScheduleComposition();
-
 private:
-  virtual ~WebRenderCompositorOGL();
   void CleanupResources();
 
   CompositorBridgeParent* MOZ_NON_OWNING_REF mCompositorBridge;
   RefPtr<GLContext> mGLContext;
   // Holds CompositableHosts that are bound to external image ids.
-  nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mCompositableHosts;
+  nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost> > mCompositableHosts;
 
   bool mDestroyed;
 };

@@ -7,8 +7,6 @@
 #ifndef mozilla_layers_WebRenderBridgeParent_h
 #define mozilla_layers_WebRenderBridgeParent_h
 
-#include <utility>
-#include <set>
 #include "GLContextProvider.h"
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
@@ -79,15 +77,9 @@ public:
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
-                                                 const uint64_t& aAsyncContainerId,
-                                                 const uint32_t& aWidth,
-                                                 const uint32_t& aHeight,
-                                                 const WRImageFormat& aFormat) override;
+                                                 const uint64_t& aAsyncContainerId) override;
   mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const uint64_t& aImageId,
-                                                                PCompositableParent* aCompositable,
-                                                                const uint32_t& aWidth,
-                                                                const uint32_t& aHeight,
-                                                                const WRImageFormat& aFormat) override;
+                                                                PCompositableParent* aCompositable) override;
   mozilla::ipc::IPCResult RecvRemoveExternalImageId(const uint64_t& aImageId) override;
   mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
 
@@ -136,8 +128,8 @@ private:
   wrwindowstate* mWRWindowState;
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
-  std::set<WRImageKey> mImages;
-  nsDataHashtable<nsUint64HashKey, std::pair<WRImageKey, RefPtr<CompositableHost>>> mExternalImageIds;
+  std::vector<WRImageKey> mKeysToDelete;
+  nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
 
   // These fields keep track of the latest layer observer epoch values in the child and the
   // parent. mChildLayerObserverEpoch is the latest epoch value received from the child.
