@@ -80,16 +80,16 @@ IsHttpLiveStreamingType(const nsACString& aType)
 
 #ifdef MOZ_ANDROID_OMX
 static bool
-IsAndroidMediaType(const nsACString& aType)
+IsAndroidMediaType(const MediaContentType& aType)
 {
   if (!MediaDecoder::IsAndroidMediaPluginEnabled()) {
     return false;
   }
 
-  static const char* supportedTypes[] = {
-    "audio/mpeg", "audio/mp4", "video/mp4", "video/x-m4v", nullptr
-  };
-  return CodecListContains(supportedTypes, aType);
+  return aType.Type() == MEDIAMIMETYPE("audio/mpeg")
+         || aType.Type() == MEDIAMIMETYPE("audio/mp4")
+         || aType.Type() == MEDIAMIMETYPE("video/mp4")
+         || aType.Type() == MEDIAMIMETYPE("video/x-m4v");
 }
 #endif
 
@@ -455,7 +455,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     OggDecoder::IsSupportedType(*type) ||
     WebMDecoder::IsSupportedType(*type) ||
 #ifdef MOZ_ANDROID_OMX
-    (MediaDecoder::IsAndroidMediaPluginEnabled() && IsAndroidMediaType(aType)) ||
+    (MediaDecoder::IsAndroidMediaPluginEnabled() && IsAndroidMediaType(*type)) ||
 #endif
 #ifdef MOZ_FMP4
     MP4Decoder::IsSupportedType(*type, /* DecoderDoctorDiagnostics* */ nullptr) ||
