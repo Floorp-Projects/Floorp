@@ -1,22 +1,22 @@
 /*
- * Copyright (c) 2008-2014 Mozilla Foundation
+ * Copyright (c) 2008-2016 Mozilla Foundation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
@@ -283,6 +283,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_CANVAS;
     static nsHtml5ElementName* ELT_DIVIDE;
     static nsHtml5ElementName* ELT_DEGREE;
+    static nsHtml5ElementName* ELT_DIALOG;
     static nsHtml5ElementName* ELT_DOMAIN;
     static nsHtml5ElementName* ELT_EXISTS;
     static nsHtml5ElementName* ELT_FETILE;
@@ -359,9 +360,9 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_MACTION;
     static nsHtml5ElementName* ELT_MSUBSUP;
     static nsHtml5ElementName* ELT_NOEMBED;
+    static nsHtml5ElementName* ELT_PICTURE;
     static nsHtml5ElementName* ELT_POLYGON;
     static nsHtml5ElementName* ELT_PATTERN;
-    static nsHtml5ElementName* ELT_PICTURE;
     static nsHtml5ElementName* ELT_PRODUCT;
     static nsHtml5ElementName* ELT_SETDIFF;
     static nsHtml5ElementName* ELT_SECTION;
