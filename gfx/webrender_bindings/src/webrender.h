@@ -77,12 +77,14 @@ struct WRExternalImage {
   //// size_t size;
 };
 
-typedef WRExternalImage (*GetExternalImageCallback)(void*, WRExternalImageId);
+typedef WRExternalImage (*LockExternalImageCallback)(void*, WRExternalImageId);
+typedef void (*UnlockExternalImageCallback)(void*, WRExternalImageId);
 typedef void (*ReleaseExternalImageCallback)(void*, WRExternalImageId);
 
 struct WRExternalImageHandler {
   void* ExternalImageObj;
-  GetExternalImageCallback get_func;
+  LockExternalImageCallback lock_func;
+  UnlockExternalImageCallback unlock_func;
   ReleaseExternalImageCallback release_func;
 };
 
