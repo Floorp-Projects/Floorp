@@ -25,6 +25,7 @@
 namespace mozilla {
 class ErrorResult;
 class WebGLContext;
+struct FloatOrInt;
 struct TexImageSource;
 
 namespace dom {
@@ -226,8 +227,7 @@ public:
     void GenerateMipmap(TexTarget texTarget);
     JS::Value GetTexParameter(TexTarget texTarget, GLenum pname);
     bool IsTexture() const;
-    void TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntParam,
-                      GLfloat* maybeFloatParam);
+    void TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& param);
 
     ////////////////////////////////////
     // WebGLTextureUpload.cpp
