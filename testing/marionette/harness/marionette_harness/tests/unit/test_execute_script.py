@@ -262,17 +262,6 @@ class TestExecuteContent(MarionetteTestCase):
             content_timeout_triggered,
             message="Scheduled setTimeout event was cancelled by call to execute_script")
 
-    def test_privileged_code_inspection(self):
-        # test permission denied on toString of unload event handler
-        self.marionette.navigate(inline("""
-            <script>
-            window.addEventListener = (type, handler) => handler.toString();
-            </script>"""))
-        self.marionette.execute_script("", sandbox=None)
-
-        # test inspection of arguments
-        self.marionette.execute_script("__webDriverArguments.toString()")
-
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
 
@@ -333,9 +322,6 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         pass
 
     def test_window_set_timeout_is_not_cancelled(self):
-        pass
-
-    def test_privileged_code_inspection(self):
         pass
 
 
