@@ -8,6 +8,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsGlobalWindow.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDocShell.h"
@@ -284,7 +285,7 @@ MediaEngineTabVideoSource::Draw() {
   {
     float pixelRatio;
     if (mWindow) {
-      mWindow->GetDevicePixelRatio(&pixelRatio);
+      pixelRatio = mWindow->GetDevicePixelRatio(CallerType::System);
     } else {
       pixelRatio = 1.0f;
     }

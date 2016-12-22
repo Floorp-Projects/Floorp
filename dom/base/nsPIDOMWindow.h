@@ -50,6 +50,7 @@ class Performance;
 class ServiceWorkerRegistration;
 class Timeout;
 class CustomElementRegistry;
+enum class CallerType : uint32_t;
 } // namespace dom
 } // namespace mozilla
 
@@ -560,7 +561,6 @@ public:
                               nsISupports* aExtraArgument,
                               nsPIDOMWindowOuter** _retval) = 0;
 
-  virtual nsresult GetDevicePixelRatio(float* aRatio) = 0;
   virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
   virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
   virtual already_AddRefed<nsICSSDeclaration>
@@ -933,6 +933,8 @@ public:
 
   void SetServiceWorkersTestingEnabled(bool aEnabled);
   bool GetServiceWorkersTestingEnabled();
+
+  float GetDevicePixelRatio(mozilla::dom::CallerType aCallerType);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)
