@@ -1263,7 +1263,7 @@ impl Renderer {
                 let props = &deferred_resolve.image_properties;
                 let external_id = props.external_id
                                        .expect("BUG: Deferred resolves must be external images!");
-                let image = handler.get(external_id);
+                let image = handler.lock(external_id);
 
                 let texture_id = match image.source {
                     ExternalImageSource::NativeTexture(texture_id) => TextureId::new(texture_id),
@@ -1448,10 +1448,19 @@ pub struct ExternalImage {
     pub source: ExternalImageSource,
 }
 
-/// Interface that an application can implement
-/// to support providing external image buffers.
+/// The interfaces that an application can implement to support providing
+/// external image buffers.
+/// When the the application passes an external image to WR, it should kepp that
+/// external image life time untile the release() call.
 pub trait ExternalImageHandler {
-    fn get(&mut self, key: ExternalImageId) -> ExternalImage;
+    /// Lock the external image. Then, WR could start to read the image content.
+    /// The WR client should not change the image content until the unlock()
+    /// call.
+    fn lock(&mut self, key: ExternalImageId) -> ExternalImage;
+    /// Unlock the external image. The WR should not read the image content
+    /// after this call.
+    fn unlock(&mut self, key: ExternalImageId);
+    /// Tell the WR client that it could start to release this external image.
     fn release(&mut self, key: ExternalImageId);
 }
 
