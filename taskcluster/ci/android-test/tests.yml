@@ -27,7 +27,7 @@ cppunit:
 
 crashtest:
     description: "Crashtest run"
-    suite: crashtest
+    suite: reftest/crashtest
     treeherder-symbol: tc-R(C)
     instance-size: xlarge
     chunks:
@@ -141,7 +141,7 @@ mochitest-chrome:
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
-    suite: mochitest/plain-clipboard
+    suite: mochitest/clipboard
     treeherder-symbol: tc-M(cl)
     instance-size: xlarge
     loopback-video: true
@@ -158,7 +158,7 @@ mochitest-clipboard:
 
 mochitest-gpu:
     description: "Mochitest gpu run"
-    suite: mochitest/plain-gpu
+    suite: mochitest/gpu
     treeherder-symbol: tc-M(gpu)
     loopback-video: true
     e10s: false
