@@ -14,6 +14,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -21,6 +22,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -46,6 +49,8 @@ import java.util.concurrent.Future;
 import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
 
 public abstract class StreamItem extends RecyclerView.ViewHolder {
+    private static final String LOGTAG = "GeckoStreamItem";
+
     public StreamItem(View itemView) {
         super(itemView);
     }
@@ -141,6 +146,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
         String title;
         String url;
+        JSONObject metadata;
 
         @Nullable Boolean isPinned;
         @Nullable Boolean isBookmarked;
@@ -212,6 +218,15 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
             source = Utils.highlightSource(cursor);
 
+            try {
+                final String rawMetadata = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.METADATA));
+                if (rawMetadata != null) {
+                    metadata = new JSONObject(rawMetadata);
+                }
+            } catch (JSONException e) {
+                Log.w(LOGTAG, "JSONException while parsing page metadata", e);
+            }
+
             vLabel.setText(title);
             vTimeSince.setText(ago);
 
@@ -222,7 +237,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
             updateStateForSource(source);
             updateUiForSource(source);
-            updatePage(url);
+            updatePage(metadata, url);
 
             if (ongoingIconLoad != null) {
                 ongoingIconLoad.cancel(true);
@@ -272,7 +287,20 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             }
         }
 
-        private void updatePage(final String url) {
+        private void updatePage(final JSONObject metadata, final String url) {
+            // First try to set the provider name from the page's metadata.
+
+            try {
+                if (metadata != null && metadata.has("provider")) {
+                    vPageView.setText(metadata.getString("provider"));
+                    return;
+                }
+            } catch (JSONException e) {
+                // Broken JSON? Continue with fallback.
+            }
+
+            // If there's no provider name available then let's try to extract one from the URL.
+
             extractLabel(itemView.getContext(), url, false, new LabelCallback() {
                 @Override
                 public void onLabelExtracted(String label) {
