@@ -24,6 +24,7 @@ WebGLVertexArray::WebGLVertexArray(WebGLContext* webgl)
     : WebGLRefCountedObject(webgl)
     , mGLName(0)
 {
+    mAttribs.SetLength(mContext->mGLMaxVertexAttribs);
     mContext->mVertexArrays.insertBack(this);
 }
 
@@ -53,16 +54,6 @@ bool
 WebGLVertexArray::IsVertexArray() const
 {
     return IsVertexArrayImpl();
-}
-
-void
-WebGLVertexArray::EnsureAttrib(GLuint index)
-{
-    MOZ_ASSERT(index < GLuint(mContext->mGLMaxVertexAttribs));
-
-    if (index >= mAttribs.Length()) {
-        mAttribs.SetLength(index + 1);
-    }
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLVertexArray,

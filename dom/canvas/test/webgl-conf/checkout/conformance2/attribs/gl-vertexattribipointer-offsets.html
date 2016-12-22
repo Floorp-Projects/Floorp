@@ -51,6 +51,17 @@ void main()
 }
 </script>
 
+<script id="vshader_unsigned" type="x-shader/x-vertex">#version 300 es
+layout(location=0) in uvec4 aPosition;
+layout(location=1) in vec4 aColor;
+out vec4 vColor;
+void main()
+{
+    gl_Position = vec4(aPosition);
+    vColor = aColor;
+}
+
+</script>
 <script id="fshader" type="x-shader/x-fragment">#version 300 es
 precision mediump float;
 in vec4 vColor;
@@ -70,6 +81,7 @@ function init()
     var wtu = WebGLTestUtils;
     var gl = wtu.create3DContext("example", undefined, 2);
     var program = wtu.setupProgram(gl, ["vshader", "fshader"], ["vPosition"]);
+    var program_unsigned = wtu.setupProgram(gl, ["vshader_unsigned", "fshader"], ["vPosition"]);
 
     var tests = [
       { data: new Int32Array([ 0, 1, 0, 1, 0, 0, 0, 0, 0 ]),
@@ -116,6 +128,11 @@ function init()
                 var stride = test.componentSize * kNumComponents + test.componentSize * ss;
                 debug("");
                 debug("check with " + wtu.glEnumToString(gl, test.type) + " at offset: " + offset + " with stride:" + stride);
+                if (test.type == gl.INT || test.type == gl.SHORT || test.type == gl.BYTE) {
+                    gl.useProgram(program);
+                } else {
+                    gl.useProgram(program_unsigned);
+                }
                 gl.vertexAttrib4fv(1, color);
                 var data = new Uint8Array(test.componentSize * kNumVerts * kNumComponents + stride * (kNumVerts - 1));
                 var view = new Uint8Array(test.data.buffer);

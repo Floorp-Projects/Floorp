@@ -33,14 +33,6 @@ public:
         BindVertexArrayImpl();
     };
 
-    void EnsureAttrib(GLuint index);
-    bool HasAttrib(GLuint index) const {
-        return index < mAttribs.Length();
-    }
-    bool IsAttribArrayEnabled(GLuint index) const {
-        return HasAttrib(index) && mAttribs[index].mEnabled;
-    }
-
     // Implement parent classes:
     void Delete();
     bool IsVertexArray() const;
@@ -72,6 +64,7 @@ protected:
     nsTArray<WebGLVertexAttribData> mAttribs;
     WebGLRefPtr<WebGLBuffer> mElementArrayBuffer;
 
+    friend class ScopedDrawHelper;
     friend class WebGLContext;
     friend class WebGLVertexArrayFake;
     friend class WebGL2Context;

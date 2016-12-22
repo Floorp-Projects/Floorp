@@ -38,7 +38,8 @@ namespace webgl {
 struct AttribInfo final
 {
     const RefPtr<WebGLActiveInfo> mActiveInfo;
-    uint32_t mLoc;
+    const uint32_t mLoc;
+    const GLenum mBaseType;
 };
 
 struct UniformInfo final
@@ -122,6 +123,7 @@ class WebGLProgram final
     , public LinkedListElement<WebGLProgram>
 {
     friend class WebGLTransformFeedback;
+    friend struct webgl::LinkedProgramInfo;
 
 public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLProgram)
