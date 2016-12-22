@@ -153,12 +153,12 @@ part of the documentation.
 
 following ``run-using`` are available
 
-  ``hazard``
-  ``mach``
-  ``mozharness``
-  ``run-task``
-  ``spidermonkey`` or ``spidermonkey-package`` or ``spidermonkey-mozjs-crate``
-  ``toolchain-script``
+  * ``hazard``
+  * ``mach``
+  * ``mozharness``
+  * ``run-task``
+  * ``spidermonkey`` or ``spidermonkey-package`` or ``spidermonkey-mozjs-crate``
+  * ``toolchain-script``
 
 
 Task Descriptions
