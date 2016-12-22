@@ -121,6 +121,19 @@ public:
   virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
+  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                nscoord* aBaseline) const override
+  {
+    nscoord lastBaseline;
+    if (GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eLast, &lastBaseline)) {
+      *aBaseline = BSize() - lastBaseline;
+      return true;
+    }
+    return false;
+  }
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord*             aBaseline) const override;
   virtual nscoord GetCaretBaseline() const override;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual nsSplittableType GetSplittableType() const override;
