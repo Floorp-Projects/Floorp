@@ -31,9 +31,7 @@ typedef nsresult (*nsDOMConstructorFunc)(nsISupports** aNewObject);
 
 struct nsDOMClassInfoData
 {
-  // XXX: mName is the same as the name gettable from the callback. This
-  // redundancy should be removed eventually.
-  const char *mName;
+  // The ASCII name is available as mClass.name.
   const char16_t *mNameUTF16;
   const js::ClassOps mClassOps;
   const js::Class mClass;
