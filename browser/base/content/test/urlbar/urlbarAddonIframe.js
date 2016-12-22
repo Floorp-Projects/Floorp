@@ -41,7 +41,7 @@ function expectEvent(detail) {
 }
 
 // Sends an ack to the test.
-function ack(originalEventDetail, ackData=null, ackIndex=0) {
+function ack(originalEventDetail, ackData = null, ackIndex = 0) {
   dispatchEvent(new CustomEvent("TestEventAck", {
     detail: {
       messageID: originalEventDetail.messageID,
