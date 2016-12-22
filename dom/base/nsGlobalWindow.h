@@ -1010,10 +1010,18 @@ public:
                                                             mozilla::ErrorResult& aError);
   nsScreen* GetScreen(mozilla::ErrorResult& aError);
   nsIDOMScreen* GetScreen() override;
-  void MoveToOuter(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError, bool aCallerIsChrome);
-  void MoveTo(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError);
-  void MoveByOuter(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError, bool aCallerIsChrome);
-  void MoveBy(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError);
+  void MoveToOuter(int32_t aXPos, int32_t aYPos,
+                   mozilla::dom::CallerType aCallerType,
+                   mozilla::ErrorResult& aError);
+  void MoveTo(int32_t aXPos, int32_t aYPos,
+              mozilla::dom::CallerType aCallerType,
+              mozilla::ErrorResult& aError);
+  void MoveByOuter(int32_t aXDif, int32_t aYDif,
+                   mozilla::dom::CallerType aCallerType,
+                   mozilla::ErrorResult& aError);
+  void MoveBy(int32_t aXDif, int32_t aYDif,
+              mozilla::dom::CallerType aCallerType,
+              mozilla::ErrorResult& aError);
   nsresult MoveBy(int32_t aXDif, int32_t aYDif) override;
   void ResizeToOuter(int32_t aWidth, int32_t aHeight,
                      mozilla::dom::CallerType aCallerType,
@@ -1575,7 +1583,6 @@ public:
   void EnsureReflowFlushAndPaint();
   void CheckSecurityWidthAndHeight(int32_t* width, int32_t* height,
                                    mozilla::dom::CallerType aCallerType);
-  void CheckSecurityLeftAndTop(int32_t* left, int32_t* top, bool aCallerIsChrome);
   void CheckSecurityLeftAndTop(int32_t* left, int32_t* top,
                                mozilla::dom::CallerType aCallerType);
 

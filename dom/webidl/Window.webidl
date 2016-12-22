@@ -156,8 +156,8 @@ partial interface Window {
   //[Throws] void moveBy(double x, double y);
   //[Throws] void resizeTo(double x, double y);
   //[Throws] void resizeBy(double x, double y);
-  [Throws, UnsafeInPrerendering] void moveTo(long x, long y);
-  [Throws, UnsafeInPrerendering] void moveBy(long x, long y);
+  [Throws, UnsafeInPrerendering, NeedsCallerType] void moveTo(long x, long y);
+  [Throws, UnsafeInPrerendering, NeedsCallerType] void moveBy(long x, long y);
   [Throws, UnsafeInPrerendering, NeedsCallerType] void resizeTo(long x, long y);
   [Throws, UnsafeInPrerendering, NeedsCallerType] void resizeBy(long x, long y);
 
