@@ -34,8 +34,7 @@ add_task(function* () {
       isPrerendered: true,
     });
     yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
-    browser1.frameLoader.appendPartialSessionHistoryAndSwap(
-      tab2.linkedBrowser.frameLoader);
+    browser1.frameLoader.appendPartialSHistoryAndSwap(tab2.linkedBrowser.frameLoader);
     yield awaitProcessChange(browser1);
 
     // Load a URI which will involve loading in the parent process
@@ -47,7 +46,7 @@ add_task(function* () {
     is(docshell.canGoForward, false, "canGoForward is correct");
     is(docshell.canGoBack, true, "canGoBack is correct");
     is(docshell.sessionHistory.count, 3, "Count is correct");
-    is(browser1.frameLoader.groupedSessionHistory, null,
+    is(browser1.frameLoader.groupedSHistory, null,
        "browser1's session history is now complete");
     yield tabClose;
   });

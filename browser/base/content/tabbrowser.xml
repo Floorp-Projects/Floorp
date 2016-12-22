@@ -4848,13 +4848,13 @@
                 relatedToCurrent: true,
                 isPrerendered: true,
               });
-              let partialSHistory = newTab.linkedBrowser.frameLoader.partialSessionHistory;
+              let partialSHistory = newTab.linkedBrowser.frameLoader.partialSHistory;
               groupedSHistory.addPrerenderingPartialSHistory(partialSHistory, data.id);
               break;
             }
 
             case "Prerender:Cancel": {
-              let groupedSHistory = browser.frameLoader.groupedSessionHistory;
+              let groupedSHistory = browser.frameLoader.groupedSHistory;
               if (groupedSHistory) {
                 groupedSHistory.cancelPrerendering(data.id);
               }
@@ -4863,7 +4863,7 @@
 
             case "Prerender:Swap": {
               let frameloader = browser.frameLoader;
-              let groupedSHistory = browser.frameLoader.groupedSessionHistory;
+              let groupedSHistory = browser.frameLoader.groupedSHistory;
               if (groupedSHistory) {
                 groupedSHistory.activatePrerendering(data.id).then(
                   () => frameloader.messageManager.sendAsyncMessage("Prerender:Swapped", data),
