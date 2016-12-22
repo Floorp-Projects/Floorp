@@ -87,8 +87,7 @@ Possible values for "item" key (names of menu items), in no particular order:
 - "unpin"
 - "copy"
 - "homescreen"
-- "newtab"
-- "privatetab"
+- "newtab" (private tab actions are collapsed into "newtab" telemetry due to our privacy guidelines)
 - "dismiss"
 - "delete"
 
