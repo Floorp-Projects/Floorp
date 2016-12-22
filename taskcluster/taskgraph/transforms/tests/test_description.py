@@ -9,7 +9,7 @@ transforms do not generate invalid tests.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from taskgraph.transforms.base import validate_schema
+from taskgraph.transforms.base import validate_schema, optionally_keyed_by
 from voluptuous import (
     Any,
     Optional,
@@ -32,10 +32,7 @@ test_description_schema = Schema({
     'description': basestring,
 
     # test suite name, or <suite>/<flavor>
-    Required('suite'): Any(
-        basestring,
-        {'by-test-platform': {basestring: basestring}},
-    ),
+    Required('suite'): optionally_keyed_by('test-platform', basestring),
 
     # the name by which this test suite is addressed in try syntax; defaults to
     # the test-name
@@ -60,10 +57,9 @@ test_description_schema = Schema({
     # The `run_on_projects` attribute, defaulting to "all".  This dictates the
     # projects on which this task should be included in the target task set.
     # See the attributes documentation for details.
-    Optional('run-on-projects', default=['all']): Any(
-        [basestring],
-        {'by-test-platform': {basestring: [basestring]}},
-    ),
+    Optional('run-on-projects', default=['all']): optionally_keyed_by(
+        'test-platform',
+        [basestring]),
 
     # the sheriffing tier for this task (default: set based on test platform)
     Optional('tier'): Any(
@@ -74,10 +70,7 @@ test_description_schema = Schema({
     # number of chunks to create for this task.  This can be keyed by test
     # platform by passing a dictionary in the `by-test-platform` key.  If the
     # test platform is not found, the key 'default' will be tried.
-    Required('chunks', default=1): Any(
-        int,
-        {'by-test-platform': {basestring: int}},
-    ),
+    Required('chunks', default=1): optionally_keyed_by('test-platform', int),
 
     # the time (with unit) after which this task is deleted; default depends on
     # the branch (see below)
@@ -87,16 +80,14 @@ test_description_schema = Schema({
     # without e10s; if true, run with e10s; if 'both', run one task with and
     # one task without e10s.  E10s tasks have "-e10s" appended to the test name
     # and treeherder group.
-    Required('e10s', default='both'): Any(
-        bool, 'both',
-        {'by-test-platform': {basestring: Any(bool, 'both')}},
-    ),
+    Required('e10s', default='both'): optionally_keyed_by(
+        'test-platform',
+        Any(bool, 'both')),
 
     # The EC2 instance size to run these tests on.
-    Required('instance-size', default='default'): Any(
-        Any('default', 'large', 'xlarge', 'legacy'),
-        {'by-test-platform': {basestring: Any('default', 'large', 'xlarge', 'legacy')}},
-    ),
+    Required('instance-size', default='default'): optionally_keyed_by(
+        'test-platform',
+        Any('default', 'large', 'xlarge', 'legacy')),
 
     # Whether the task requires loopback audio or video (whatever that may mean
     # on the platform)
@@ -132,10 +123,7 @@ test_description_schema = Schema({
 
     # seconds of runtime after which the task will be killed.  Like 'chunks',
     # this can be keyed by test pltaform.
-    Required('max-run-time', default=3600): Any(
-        int,
-        {'by-test-platform': {basestring: int}},
-    ),
+    Required('max-run-time', default=3600): optionally_keyed_by('test-platform', int),
 
     # the exit status code that indicates the task should be retried
     Optional('retry-exit-status'): int,
@@ -149,20 +137,16 @@ test_description_schema = Schema({
         Required('script'): basestring,
 
         # the config files required for the task
-        Required('config'): Any(
-            [basestring],
-            {'by-test-platform': {basestring: [basestring]}},
-        ),
+        Required('config'): optionally_keyed_by('test-platform', [basestring]),
 
         # any additional actions to pass to the mozharness command
         Optional('actions'): [basestring],
 
         # additional command-line options for mozharness, beyond those
         # automatically added
-        Required('extra-options', default=[]): Any(
-            [basestring],
-            {'by-test-platform': {basestring: [basestring]}},
-        ),
+        Required('extra-options', default=[]): optionally_keyed_by(
+            'test-platform',
+            [basestring]),
 
         # the artifact name (including path) to test on the build task; this is
         # generally set in a per-kind transformation
@@ -211,11 +195,9 @@ test_description_schema = Schema({
 
     # os user groups for test task workers; required scopes, will be
     # added automatically
-    Optional('os-groups', default=[]): Any(
-        [basestring],
-        # todo: create a dedicated elevated worker group and name here
-        {'by-test-platform': {basestring: [basestring]}},
-    ),
+    Optional('os-groups', default=[]): optionally_keyed_by(
+        'test-platform',
+        [basestring]),
 
     # -- values supplied by the task-generation infrastructure
 
