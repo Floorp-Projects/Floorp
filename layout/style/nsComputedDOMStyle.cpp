@@ -4138,6 +4138,14 @@ nsComputedDOMStyle::DoGetUnicodeBidi()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetCaretColor()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  SetValueFromComplexColor(val, StyleUserInterface()->mCaretColor);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetCursor()
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
