@@ -37,7 +37,6 @@
 #include "jsalloc.h"
 
 #include "jit/arm/Simulator-arm.h"
-#include "jit/arm64/vixl/Cpu-vixl.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
 #include "js/GCAPI.h"
@@ -300,7 +299,7 @@ class ExecutableAllocator
 #elif defined(JS_CODEGEN_ARM64) && (defined(__linux__) || defined(ANDROID)) && defined(__GNUC__)
     static void cacheFlush(void* code, size_t size)
     {
-        vixl::CPU::EnsureIAndDCacheCoherency(code, size);
+	__clear_cache(code, (void *)((size_t)code + size));
     }
 #elif defined(__sparc__)
     static void cacheFlush(void* code, size_t size)
