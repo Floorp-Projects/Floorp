@@ -41,12 +41,8 @@ public:
   TextureForwarder* GetTextureForwarder() override;
   LayersIPCActor* GetLayersIPCActor() override;
 
-  uint64_t AllocExternalImageId(uint64_t aAsyncContainerID,
-                                gfx::IntSize aSize,
-                                SurfaceFormat aFormat);
-  uint64_t AllocExternalImageIdForCompositable(CompositableClient* aCompositable,
-                                               gfx::IntSize aSize,
-                                               SurfaceFormat aFormat);
+  uint64_t AllocExternalImageId(uint64_t aAsyncContainerID);
+  uint64_t AllocExternalImageIdForCompositable(CompositableClient* aCompositable);
   void DeallocExternalImageId(uint64_t aImageId);
 
   /**

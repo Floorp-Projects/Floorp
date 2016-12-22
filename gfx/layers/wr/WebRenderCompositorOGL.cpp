@@ -10,10 +10,7 @@
 #include "GLUploadHelpers.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/TextureHost.h"  // for TextureSource, etc
-#include "mozilla/layers/TextureHostWebRenderOGL.h"
-
-#include <sstream>
-#include <stdio.h>
+#include "mozilla/layers/TextureHostOGL.h"  // for TextureSourceOGL, etc
 
 namespace mozilla {
 
@@ -21,70 +18,6 @@ using namespace gfx;
 using namespace gl;
 
 namespace layers {
-
-WRExternalImage LockExternalImage(void* aObj, WRExternalImageId aId)
-{
-  MOZ_ASSERT(aObj);
-  WebRenderCompositorOGL* compositor = static_cast<WebRenderCompositorOGL*>(aObj);
-  CompositableHost* compositable = compositor->mCompositableHosts.Get(aId.id).get();
-  TextureSource* textureSource = compositable->BindTextureSource();
-
-  // XXX: the textureSource should ready here.
-  MOZ_RELEASE_ASSERT(textureSource);
-  // XXX: the textureSource should be TextureImageTextureSourceWebRenderOGL.
-  MOZ_RELEASE_ASSERT(textureSource->AsSourceWebRenderOGL());
-  MOZ_RELEASE_ASSERT(textureSource->AsSourceWebRenderOGL()->AsTextureImageTextureSource());
-  // XXX: the textureImage should be ready.
-  MOZ_RELEASE_ASSERT(textureSource->AsSourceWebRenderOGL()->AsTextureImageTextureSource()->GetTextureImage());
-
-  TextureImageTextureSourceWebRenderOGL* source = textureSource->AsSourceWebRenderOGL()->AsTextureImageTextureSource();
-  gl::TextureImage* image = source->GetTextureImage();
-
-#if 0
-  // dump external image to file
-  TextureHost* textureHost = compositable->GetAsTextureHost();
-  RefPtr<DataSourceSurface> dSurf = textureHost->GetAsSurface();
-  static int count = 0;
-  ++count;
-
-  std::stringstream sstream;
-  sstream << "/tmp/img/" << count << '_' <<
-      dSurf->GetSize().width << '_' << dSurf->GetSize().height << ".data";
-
-  FILE *pWritingFile = fopen(sstream.str().c_str(), "wb+");
-  if (pWritingFile) {
-    printf_stderr("gecko write DT(%d,%d) to file",dSurf->GetSize().width,dSurf->GetSize().height);
-    fwrite(dSurf->GetData(), dSurf->GetSize().width*dSurf->GetSize().height*4, 1, pWritingFile);
-    fclose(pWritingFile);
-  }
-#endif
-
-  if (image) {
-    return WRExternalImage {
-      TEXTURE_HANDLE,
-      0.0f, 0.0f,
-      static_cast<float>(image->GetSize().width), static_cast<float>(image->GetSize().height),
-      image->GetTextureID()
-    };
-  }
-
-  return WRExternalImage { TEXTURE_HANDLE, 0.0f, 0.0f, 0.0f, 0.0f, 0 };
-}
-
-void UnlockExternalImage(void* aObj, WRExternalImageId aId)
-{
-  MOZ_ASSERT(aObj);
-  WebRenderCompositorOGL* compositor = static_cast<WebRenderCompositorOGL*>(aObj);
-  CompositableHost* compositable = compositor->mCompositableHosts.Get(aId.id).get();
-  compositable->UnbindTextureSource();
-}
-
-void ReleaseExternalImage(void* aObj, WRExternalImageId aId)
-{
-  MOZ_ASSERT(aObj);
-  WebRenderCompositorOGL* compositor = static_cast<WebRenderCompositorOGL*>(aObj);
-  compositor->RemoveExternalImageId(aId.id);
-}
 
 WebRenderCompositorOGL::WebRenderCompositorOGL(CompositorBridgeParent* aCompositorBridge,
                                                GLContext* aGLContext)
@@ -143,7 +76,7 @@ WebRenderCompositorOGL::Initialize(nsCString* const out_failureReason)
 already_AddRefed<DataTextureSource>
 WebRenderCompositorOGL::CreateDataTextureSource(TextureFlags aFlags)
 {
-  return MakeAndAddRef<TextureImageTextureSourceWebRenderOGL>(this, aFlags);
+  return nullptr;
 }
 
 bool
@@ -199,21 +132,20 @@ WebRenderCompositorOGL::RemoveExternalImageId(uint64_t aExternalImageId)
 }
 
 void
+WebRenderCompositorOGL::UpdateExternalImages()
+{
+  for (auto iter = mCompositableHosts.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<CompositableHost>& host = iter.Data();
+    // XXX Change to correct TextrueSource handling here.
+    host->BindTextureSource();
+  }
+}
+
+void
 WebRenderCompositorOGL::ScheduleComposition()
 {
   MOZ_ASSERT(mCompositorBridge);
   mCompositorBridge->ScheduleComposition();
-}
-
-WRExternalImageHandler
-WebRenderCompositorOGL::GetExternalImageHandler()
-{
-  return WRExternalImageHandler {
-    this,
-    LockExternalImage,
-    UnlockExternalImage,
-    ReleaseExternalImage,
-  };
 }
 
 } // namespace layers

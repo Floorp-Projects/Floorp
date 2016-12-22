@@ -241,19 +241,7 @@ public:
   /// is is destroyed.
   virtual void CleanupResources() {}
 
-  // Used for WR
-  // This call will call the Lock() function and return a TextureSource for WR
-  // composition.
-  virtual TextureSource* BindTextureSource()
-  {
-    MOZ_RELEASE_ASSERT(true, "No implementation for BindTextureSource()");
-
-    return nullptr;
-  }
-  virtual void UnbindTextureSource()
-  {
-    MOZ_RELEASE_ASSERT(true, "No implementation for UnindTextureSource()");
-  }
+  virtual void BindTextureSource() {}
 
 protected:
   TextureInfo mTextureInfo;
