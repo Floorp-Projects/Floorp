@@ -72,7 +72,7 @@ WebGL2Context::BindSampler(GLuint unit, WebGLSampler* sampler)
 }
 
 void
-WebGL2Context::SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint paramInt)
+WebGL2Context::SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint param)
 {
     const char funcName[] = "samplerParameteri";
     if (IsContextLost())
@@ -81,11 +81,11 @@ WebGL2Context::SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint para
     if (!ValidateObject(funcName, sampler))
         return;
 
-    sampler.SamplerParameter(funcName, pname, paramInt);
+    sampler.SamplerParameter(funcName, pname, FloatOrInt(param));
 }
 
 void
-WebGL2Context::SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat paramFloat)
+WebGL2Context::SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat param)
 {
     const char funcName[] = "samplerParameterf";
     if (IsContextLost())
@@ -94,7 +94,7 @@ WebGL2Context::SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat pa
     if (!ValidateObject(funcName, sampler))
         return;
 
-    sampler.SamplerParameter(funcName, pname, WebGLIntOrFloat(paramFloat).AsInt());
+    sampler.SamplerParameter(funcName, pname, FloatOrInt(param));
 }
 
 void
