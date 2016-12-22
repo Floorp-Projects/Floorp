@@ -13791,9 +13791,9 @@ nsGlobalWindow::IsModalContentWindow(JSContext* aCx, JSObject* aGlobal)
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 int16_t
-nsGlobalWindow::Orientation() const
+nsGlobalWindow::Orientation(CallerType aCallerType) const
 {
-  return nsContentUtils::ShouldResistFingerprinting(mDocShell) ?
+  return nsContentUtils::ResistFingerprinting(aCallerType) ?
            0 : WindowOrientationObserver::OrientationAngle();
 }
 #endif
