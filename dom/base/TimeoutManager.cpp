@@ -167,6 +167,27 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   timeout->mScriptHandler = aHandler;
   timeout->mReason = aReason;
 
+  switch (gTimeoutBucketingStrategy) {
+  default:
+  case TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY: {
+    const char* filename = nullptr;
+    uint32_t dummyLine = 0, dummyColumn = 0;
+    aHandler->GetLocation(&filename, &dummyLine, &dummyColumn);
+    timeout->mIsTracking = doc->IsScriptTracking(nsDependentCString(filename));
+    break;
+  }
+  case ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY:
+    // timeout->mIsTracking is already false!
+    MOZ_DIAGNOSTIC_ASSERT(!timeout->mIsTracking);
+    break;
+  case ALTERNATE_TIMEOUT_BUCKETING_STRATEGY:
+    timeout->mIsTracking = (mTimeoutIdCounter % 2) == 0;
+    break;
+  case RANDOM_TIMEOUT_BUCKETING_STRATEGY:
+    timeout->mIsTracking = (rand() % 2) == 0;
+    break;
+  }
+
   // Now clamp the actual interval we will use for the timer based on
   uint32_t nestingLevel = sNestingLevel + 1;
   uint32_t realInterval = interval;
@@ -229,30 +250,9 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     }
   }
 
-  bool isTracking = false;
-  switch (gTimeoutBucketingStrategy) {
-  default:
-  case TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY: {
-    const char* filename = nullptr;
-    uint32_t dummyLine = 0, dummyColumn = 0;
-    aHandler->GetLocation(&filename, &dummyLine, &dummyColumn);
-    isTracking = doc->IsScriptTracking(nsDependentCString(filename));
-    break;
-  }
-  case ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY:
-    // isTracking is already false!
-    break;
-  case ALTERNATE_TIMEOUT_BUCKETING_STRATEGY:
-    isTracking = (mTimeoutIdCounter % 2) == 0;
-    break;
-  case RANDOM_TIMEOUT_BUCKETING_STRATEGY:
-    isTracking = (rand() % 2) == 0;
-    break;
-  }
-
   Timeouts::SortBy sort(mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
                                            : Timeouts::SortBy::TimeWhen);
-  if (isTracking) {
+  if (timeout->mIsTracking) {
     mTrackingTimeouts.Insert(timeout, sort);
   } else {
     mNormalTimeouts.Insert(timeout, sort);
