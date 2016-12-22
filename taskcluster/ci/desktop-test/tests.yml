@@ -349,7 +349,7 @@ mochitest-chrome:
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
-    suite: mochitest/plain-clipboard,chrome-clipboard,browser-chrome-clipboard,jetpack-package-clipboard
+    suite: mochitest/clipboard
     treeherder-symbol: tc-M(cl)
     loopback-video: true
     instance-size: xlarge
@@ -429,7 +429,7 @@ mochitest-devtools-chrome:
 
 mochitest-gpu:
     description: "Mochitest GPU run"
-    suite: mochitest/plain-gpu,chrome-gpu,browser-chrome-gpu
+    suite: mochitest/gpu
     treeherder-symbol: tc-M(gpu)
     loopback-video: true
     e10s:
