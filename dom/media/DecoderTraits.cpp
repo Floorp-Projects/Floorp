@@ -114,7 +114,6 @@ CanHandleCodecsType(const MediaContentType& aType,
   // Content type with the the MIME type, no codecs.
   const MediaContentType mimeType(aType.Type());
 
-  char const* const* codecList = nullptr;
   if (OggDecoder::IsSupportedType(mimeType)) {
     if (OggDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
@@ -165,25 +164,23 @@ CanHandleCodecsType(const MediaContentType& aType,
   if (FlacDecoder::IsSupportedType(aType)) {
     return CANPLAY_YES;
   }
+
+  MediaCodecs supportedCodecs;
 #ifdef MOZ_DIRECTSHOW
-  DirectShowDecoder::GetSupportedCodecs(aType, &codecList);
+  DirectShowDecoder::GetSupportedCodecs(aType, &supportedCodecs);
 #endif
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled()) {
-    EnsureAndroidMediaPluginHost()->FindDecoder(aType, &codecList);
+    EnsureAndroidMediaPluginHost()->FindDecoder(aType, &supportedCodecs);
   }
 #endif
-  if (!codecList) {
+  if (supportedCodecs.IsEmpty()) {
     return CANPLAY_MAYBE;
   }
 
-  // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
-  // of the 'codecs' parameter
-  for (const auto& token : aType.ExtendedType().Codecs().Range()) {
-    if (!CodecListContains(codecList, token)) {
-      // Totally unsupported codec
-      return CANPLAY_NO;
-    }
+  if (!supportedCodecs.ContainsAll(aType.ExtendedType().Codecs())) {
+    // At least one requested codec is not supported.
+    return CANPLAY_NO;
   }
 
   return CANPLAY_YES;
@@ -413,7 +410,7 @@ DecoderTraits::CreateReader(const MediaContentType& aType,
       new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()));
   } else
 #ifdef MOZ_DIRECTSHOW
-  if (DirectShowDecoder::GetSupportedCodecs(*type, nullptr)) {
+  if (DirectShowDecoder::GetSupportedCodecs(aType, nullptr)) {
     decoderReader = new DirectShowReader(aDecoder);
   } else
 #endif
@@ -451,7 +448,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     ADTSDecoder::IsSupportedType(*type) ||
     FlacDecoder::IsSupportedType(*type) ||
 #ifdef MOZ_DIRECTSHOW
-	  DirectShowDecoder::GetSupportedCodecs(*type, nullptr) ||
+    DirectShowDecoder::GetSupportedCodecs(*type, nullptr) ||
 #endif
     false;
 }
