@@ -32,8 +32,6 @@ jobs:
                 JOB_SCRIPT: "taskcluster/scripts/tester/harness-test-linux.sh"
                 MOZHARNESS_SCRIPT: "testing/mozharness/scripts/marionette_harness_tests.py"
                 TOOLS_DISABLE: "true"
-                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
-                TOOLTOOL_REV: "master"
             artifacts:
               - name: public/logs/
                 path: /home/worker/workspace/mozharness_workspace/upload/logs/
