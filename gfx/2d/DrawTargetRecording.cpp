@@ -75,31 +75,6 @@ EnsureSurfaceStored(DrawEventRecorderPrivate *aRecorder, SourceSurface *aSurface
   return;
 }
 
-class SourceSurfaceRecording : public SourceSurface
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceRecording)
-  SourceSurfaceRecording(SourceSurface *aFinalSurface, DrawEventRecorderPrivate *aRecorder)
-    : mFinalSurface(aFinalSurface), mRecorder(aRecorder)
-  {
-    mRecorder->AddStoredObject(this);
-  }
-
-  ~SourceSurfaceRecording()
-  {
-    mRecorder->RemoveStoredObject(this);
-    mRecorder->RecordEvent(RecordedSourceSurfaceDestruction(this));
-  }
-
-  virtual SurfaceType GetType() const { return SurfaceType::RECORDING; }
-  virtual IntSize GetSize() const { return mFinalSurface->GetSize(); }
-  virtual SurfaceFormat GetFormat() const { return mFinalSurface->GetFormat(); }
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() { return mFinalSurface->GetDataSurface(); }
-
-  RefPtr<SourceSurface> mFinalSurface;
-  RefPtr<DrawEventRecorderPrivate> mRecorder;
-};
-
 class GradientStopsRecording : public GradientStops
 {
 public:
