@@ -807,10 +807,9 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     SetupContextMatrix(frame, aParams, offsetToBoundingBox,
                        offsetToUserSpace);
     nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
-    // XXX Bug 1323912.
-    MOZ_ASSERT(maskUsage.opacity == 1.0,
-               "nsSVGIntegrationUtils::PaintMask can not handle opacity now.");
-    result = PaintMaskSurface(aParams, maskTarget, 1.0,
+    bool opacityApplied = !HasNonSVGMask(maskFrames);
+    result = PaintMaskSurface(aParams, maskTarget,
+                              opacityApplied ? maskUsage.opacity : 1.0,
                               firstFrame->StyleContext(), maskFrames,
                               ctx.CurrentMatrix(), offsetToUserSpace);
     if (result != DrawResult::SUCCESS) {
