@@ -276,7 +276,16 @@ public:
     void DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
                            GLenum type, WebGLintptr byteOffset)
     {
-        DrawElements(mode, count, type, byteOffset);
+        const char funcName[] = "drawRangeElements";
+        if (IsContextLost())
+            return;
+
+        if (end < start) {
+            ErrorInvalidValue("%s: end must be >= start.", funcName);
+            return;
+        }
+
+        DrawElements(mode, count, type, byteOffset, funcName);
     }
 
     // ------------------------------------------------------------------------
