@@ -83,6 +83,8 @@ def config_status(config):
         if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
             fh.write(textwrap.dedent('''
                 if __name__ == '__main__':
+                    from mozbuild.util import patch_main
+                    patch_main()
                     from mozbuild.config_status import config_status
                     args = dict([(name, globals()[name]) for name in __all__])
                     config_status(**args)
