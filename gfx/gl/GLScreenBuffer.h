@@ -241,9 +241,8 @@ public:
     void SetReadBuffer(GLenum userMode);
     void SetDrawBuffer(GLenum userMode);
 
-    GLenum GetReadBufferMode() const {
-        return mUserReadBufferMode;
-    }
+    GLenum GetReadBufferMode() const { return mUserReadBufferMode; }
+    GLenum GetDrawBufferMode() const { return mUserDrawBufferMode; }
 
     /**
      * Attempts to read pixels from the current bound framebuffer, if
