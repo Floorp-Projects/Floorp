@@ -160,6 +160,9 @@ WebRenderBridgeParent::RecvAddImage(const uint32_t& aWidth,
   MOZ_ASSERT(mWRWindowState);
   *aOutImageKey = wr_add_image(mWRWindowState, aWidth, aHeight, aStride, aFormat,
                                aBuffer.mData, aBuffer.mLength);
+  auto result = mImages.insert(*aOutImageKey);
+  MOZ_ASSERT(result.second);
+
   return IPC_OK();
 }
 
@@ -186,7 +189,9 @@ WebRenderBridgeParent::RecvDeleteImage(const WRImageKey& aImageKey)
     return IPC_OK();
   }
   MOZ_ASSERT(mWRWindowState);
-  mKeysToDelete.push_back(aImageKey);
+  MOZ_ASSERT(mImages.count(aImageKey) != 0);
+  mImages.erase(aImageKey);
+  wr_delete_image(mWRWindowState, aImageKey);
   return IPC_OK();
 }
 
@@ -265,8 +270,6 @@ void
 WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands)
 {
   MOZ_ASSERT(mWRState);
-  // XXX remove it when external image key is used.
-  std::vector<WRImageKey> keysToDelete;
 
   for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderCommand& cmd = aCommands[i];
@@ -293,25 +296,16 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpDPPushExternalImageId: {
         const OpDPPushExternalImageId& op = cmd.get_OpDPPushExternalImageId();
-        MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
+        MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId(), nullptr));
+        std::pair<WRImageKey, RefPtr<CompositableHost>> imageData =
+            mExternalImageIds.Get(op.externalImageId());
 
-        RefPtr<CompositableHost> host = mExternalImageIds.Get(op.externalImageId());
-        if (!host) {
+        if (!imageData.second) {
           break;
         }
-        RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
-        if (!dSurf) {
-          break;
-        }
-        DataSourceSurface::MappedSurface map;
-        if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
-          break;
-        }
-        gfx::IntSize size = dSurf->GetSize();
-        WRImageKey key = wr_add_image(mWRWindowState, size.width, size.height, map.mStride, RGBA8, map.mData, size.height * map.mStride);
-        wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), key);
-        keysToDelete.push_back(key);
-        dSurf->Unmap();
+        // Let the compositor holds this compositable for later composition.
+        mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(op.externalImageId(), imageData.second);
+        wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), imageData.first);
         break;
       }
       case WebRenderCommand::TOpDPPushIframe: {
@@ -333,12 +327,6 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
   }
   wr_dp_end(mWRWindowState, mWRState);
   ScheduleComposition();
-  DeleteOldImages();
-
-  // XXX remove it when external image key is used.
-  if (!keysToDelete.empty()) {
-    mKeysToDelete.swap(keysToDelete);
-  }
 
   if (ShouldParentObserveEpoch()) {
     mCompositorBridge->ObserveLayerUpdate(mPipelineId, GetChildLayerObserverEpoch(), true);
@@ -392,12 +380,15 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
-                                              const uint64_t& aAsyncContainerId)
+                                              const uint64_t& aAsyncContainerId,
+                                              const uint32_t& aWidth,
+                                              const uint32_t& aHeight,
+                                              const WRImageFormat& aFormat)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
+  MOZ_ASSERT(!mExternalImageIds.Get(aImageId, nullptr));
 
   PCompositableParent* compositableParent = CompositableMap::Get(aAsyncContainerId);
   if (!compositableParent) {
@@ -412,19 +403,27 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
   }
 
   host->SetCompositor(mCompositor);
-  mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
-  mExternalImageIds.Put(aImageId, host);
+  WRImageKey key = wr_add_external_image_texture(mWRWindowState,
+                                                 aWidth,
+                                                 aHeight,
+                                                 aFormat,
+                                                 aImageId);
+  mExternalImageIds.Put(aImageId, std::make_pair(key, host));
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aImageId,
-                                                             PCompositableParent* aCompositable)
+                                                             PCompositableParent* aCompositable,
+                                                             const uint32_t& aWidth,
+                                                             const uint32_t& aHeight,
+                                                             const WRImageFormat& aFormat)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
+  MOZ_ASSERT(!mExternalImageIds.Get(aImageId, nullptr));
 
   CompositableHost* host = CompositableHost::FromIPDLActor(aCompositable);
   if (host->GetType() != CompositableType::IMAGE) {
@@ -433,8 +432,13 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
   }
 
   host->SetCompositor(mCompositor);
-  mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
-  mExternalImageIds.Put(aImageId, host);
+  WRImageKey key = wr_add_external_image_texture(mWRWindowState,
+                                                 aWidth,
+                                                 aHeight,
+                                                 aFormat,
+                                                 aImageId);
+  mExternalImageIds.Put(aImageId, std::make_pair(key, host));
+
   return IPC_OK();
 }
 
@@ -444,9 +448,14 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mExternalImageIds.Get(aImageId).get());
-  mExternalImageIds.Remove(aImageId);
-  mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(aImageId);
+  MOZ_ASSERT(mExternalImageIds.Get(aImageId, nullptr));
+
+  std::pair<WRImageKey, RefPtr<CompositableHost>> imageData;
+  if (mExternalImageIds.Get(aImageId, &imageData)) {
+    mExternalImageIds.Remove(aImageId);
+    wr_delete_image(mWRWindowState, imageData.first);
+  }
+
   return IPC_OK();
 }
 
@@ -517,15 +526,6 @@ WebRenderBridgeParent::~WebRenderBridgeParent()
 }
 
 void
-WebRenderBridgeParent::DeleteOldImages()
-{
-  for (WRImageKey key : mKeysToDelete) {
-    wr_delete_image(mWRWindowState, key);
-  }
-  mKeysToDelete.clear();
-}
-
-void
 WebRenderBridgeParent::ScheduleComposition()
 {
   mCompositor->AsWebRenderCompositorOGL()->ScheduleComposition();
@@ -534,12 +534,15 @@ WebRenderBridgeParent::ScheduleComposition()
 void
 WebRenderBridgeParent::ClearResources()
 {
-  DeleteOldImages();
+  // TODO(Jerry): wait for WR's rendering task done before clean the external images.
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
-    uint64_t externalImageId = iter.Key();
-    mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
+    wr_delete_image(mWRWindowState, iter.Data().first);
   }
   mExternalImageIds.Clear();
+  for (WRImageKey key : mImages) {
+    wr_delete_image(mWRWindowState, key);
+  }
+  mImages.clear();
 
   if (mWRState) {
     wr_destroy(mWRWindowState, mWRState);
