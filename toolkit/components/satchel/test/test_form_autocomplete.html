@@ -172,7 +172,7 @@ function setupFormHistory(aCallback) {
     { op : "add", fieldname : "field8", value : "value" },
     { op : "add", fieldname : "field9", value : "value" },
     { op : "add", fieldname : "field10", value : "42" },
-    { op : "add", fieldname : "field11", value : "2010-10-10" },
+    { op : "add", fieldname : "field11", value : "2010-10-10" }, // not used, since type=date doesn't have autocomplete currently
     { op : "add", fieldname : "field12", value : "21:21" }, // not used, since type=time doesn't have autocomplete currently
     { op : "add", fieldname : "field13", value : "32" },  // not used, since type=range doesn't have a drop down menu
     { op : "add", fieldname : "field14", value : "#ffffff" }, // not used, since type=color doesn't have autocomplete currently
@@ -899,15 +899,13 @@ function runTest() {
 
         input = $_(14, "field11");
         restoreForm();
-        expectPopup();
-        doKey("down");
+        waitForMenuChange(0);
         break;
 
     case 405:
-        checkMenuEntries(["2010-10-10"]);
-        doKey("down");
-        doKey("return");
-        checkForm("2010-10-10");
+        checkMenuEntries([]); // type=date with it's own control frame does not
+                              // have a drop down menu for now
+        checkForm("");
 
         input = $_(15, "field12");
         restoreForm();

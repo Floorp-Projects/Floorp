@@ -158,7 +158,7 @@ public:
                                          nsWidgetInitData* aInitData) override;
     virtual void Destroy() override;
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
-    NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
+    virtual void SetParent(nsIWidget* aNewParent) override;
     virtual nsIWidget *GetParent(void) override;
     virtual float GetDPI() override;
     virtual double GetDefaultScaleInternal() override;
@@ -167,19 +167,19 @@ public:
     virtual void ConstrainPosition(bool aAllowSlop,
                                    int32_t *aX,
                                    int32_t *aY) override;
-    NS_IMETHOD Move(double aX,
-                    double aY) override;
-    NS_IMETHOD Resize(double aWidth,
-                      double aHeight,
-                      bool   aRepaint) override;
-    NS_IMETHOD Resize(double aX,
-                      double aY,
-                      double aWidth,
-                      double aHeight,
-                      bool aRepaint) override;
+    virtual void Move(double aX,
+                      double aY) override;
+    virtual void Resize(double aWidth,
+                        double aHeight,
+                        bool   aRepaint) override;
+    virtual void Resize(double aX,
+                        double aY,
+                        double aWidth,
+                        double aHeight,
+                        bool aRepaint) override;
     void SetZIndex(int32_t aZIndex) override;
     virtual void SetSizeMode(nsSizeMode aMode) override;
-    NS_IMETHOD Enable(bool aState) override;
+    virtual void Enable(bool aState) override;
     virtual bool IsEnabled() const override;
     NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
     NS_IMETHOD SetFocus(bool aRaise = false) override;
@@ -199,18 +199,10 @@ public:
                          uint32_t aHotspotY) override { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetHasTransparentBackground(bool aTransparent) { return NS_OK; }
     NS_IMETHOD GetHasTransparentBackground(bool& aTransparent) { aTransparent = false; return NS_OK; }
-    NS_IMETHOD HideWindowChrome(bool aShouldHide) override { return NS_ERROR_NOT_IMPLEMENTED; }
     void* GetNativeData(uint32_t aDataType) override;
     void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD SetTitle(const nsAString& aTitle) override { return NS_OK; }
-    NS_IMETHOD SetIcon(const nsAString& aIconSpec) override { return NS_OK; }
-    NS_IMETHOD GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                               int32_t aHorizontal,
-                               int32_t aVertical) override
-    {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
+    virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction) override;

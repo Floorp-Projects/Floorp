@@ -1952,28 +1952,6 @@ TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& event)
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
-{
-  NS_ENSURE_TRUE(mFrameElement, IPC_OK());
-
-  WidgetKeyboardEvent localEvent(aEvent);
-  localEvent.mWidget = GetWidget();
-
-  nsIDocument* doc = mFrameElement->OwnerDoc();
-  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
-  NS_ENSURE_TRUE(presShell, IPC_OK());
-
-  if (mFrameElement &&
-      PresShell::BeforeAfterKeyboardEventEnabled() &&
-      localEvent.mMessage != eKeyPress) {
-    presShell->DispatchAfterKeyboardEvent(mFrameElement, localEvent,
-                                          aEvent.DefaultPrevented());
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 TabParent::RecvAccessKeyNotHandled(const WidgetKeyboardEvent& aEvent)
 {
   NS_ENSURE_TRUE(mFrameElement, IPC_OK());
@@ -2148,10 +2126,10 @@ TabParent::RecvStartPluginIME(const WidgetKeyboardEvent& aKeyboardEvent,
   if (!widget) {
     return IPC_OK();
   }
-  widget->StartPluginIME(aKeyboardEvent,
-                         (int32_t&)aPanelX,
-                         (int32_t&)aPanelY,
-                         *aCommitted);
+  Unused << widget->StartPluginIME(aKeyboardEvent,
+                                   (int32_t&)aPanelX,
+                                   (int32_t&)aPanelY,
+                                   *aCommitted);
   return IPC_OK();
 }
 

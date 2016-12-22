@@ -1,0 +1,228 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1286182
+-->
+<head>
+  <title>Test key events for time control</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1286182">Mozilla Bug 1286182</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="date">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
+    test();
+    SimpleTest.finish();
+  });
+});
+
+var testData = [
+  /**
+   * keys: keys to send to the input element.
+   * initialVal: initial value set to the input element.
+   * expectedVal: expected value of the input element after sending the keys.
+   */
+  {
+    // Type 11222016, default order is month, day, year.
+    keys: ["11222016"],
+    initialVal: "",
+    expectedVal: "2016-11-22"
+  },
+  {
+    // Type 3 in the month field will automatically advance to the day field,
+    // then type 5 in the day field will automatically advance to the year
+    // field.
+    keys: ["352016"],
+    initialVal: "",
+    expectedVal: "2016-03-05"
+  },
+  {
+    // Type 13 in the month field  will set it to the maximum month, which is
+    // 12.
+    keys: ["13012016"],
+    initialVal: "",
+    expectedVal: "2016-12-01"
+  },
+  {
+    // Type 00 in the month field will set it to the minimum month, which is 1.
+    keys: ["00012016"],
+    initialVal: "",
+    expectedVal: "2016-01-01"
+  },
+  {
+    // Type 33 in the day field will set it to the maximum day, which is 31.
+    keys: ["12332016"],
+    initialVal: "",
+    expectedVal: "2016-12-31"
+  },
+  {
+    // Type 00 in the day field will set it to the minimum day, which is 1.
+    keys: ["12002016"],
+    initialVal: "",
+    expectedVal: "2016-12-01"
+  },
+  {
+    // Type 275769 in the year field will set it to the maximum year, which is
+    // 275760.
+    keys: ["0101275769"],
+    initialVal: "",
+    expectedVal: "275760-01-01"
+  },
+  {
+    // Type 000000 in the year field will set it to the minimum year, which is
+    // 0001.
+    keys: ["0101000000"],
+    initialVal: "",
+    expectedVal: "0001-01-01"
+  },
+  {
+    // Advance to year field and decrement.
+    keys: ["VK_TAB", "VK_TAB", "VK_DOWN"],
+    initialVal: "2016-11-25",
+    expectedVal: "2015-11-25"
+  },
+  {
+    // Right key should do the same thing as TAB key.
+    keys: ["VK_RIGHT", "VK_RIGHT", "VK_DOWN"],
+    initialVal: "2016-11-25",
+    expectedVal: "2015-11-25"
+  },
+  {
+    // Advance to day field then back to month field and decrement.
+    keys: ["VK_RIGHT", "VK_LEFT", "VK_DOWN"],
+    initialVal: "2000-05-01",
+    expectedVal: "2000-04-01"
+  },
+  {
+    // Focus starts on the first field, month in this case, and increment.
+    keys: ["VK_UP"],
+    initialVal: "2000-03-01",
+    expectedVal: "2000-04-01"
+  },
+  {
+    // Advance to day field and decrement.
+    keys: ["VK_TAB", "VK_DOWN"],
+    initialVal: "1234-01-01",
+    expectedVal: "1234-01-31"
+  },
+  {
+    // Advance to day field and increment.
+    keys: ["VK_TAB", "VK_UP"],
+    initialVal: "1234-01-01",
+    expectedVal: "1234-01-02"
+  },
+  {
+    // PageUp on month field increments month by 3.
+    keys: ["VK_PAGE_UP"],
+    initialVal: "1999-01-01",
+    expectedVal: "1999-04-01"
+  },
+  {
+    // PageDown on month field decrements month by 3.
+    keys: ["VK_PAGE_DOWN"],
+    initialVal: "1999-01-01",
+    expectedVal: "1999-10-01"
+  },
+  {
+    // PageUp on day field increments day by 7.
+    keys: ["VK_TAB", "VK_PAGE_UP"],
+    initialVal: "1999-01-01",
+    expectedVal: "1999-01-08"
+  },
+  {
+    // PageDown on day field decrements day by 7.
+    keys: ["VK_TAB", "VK_PAGE_DOWN"],
+    initialVal: "1999-01-01",
+    expectedVal: "1999-01-25"
+  },
+  {
+    // PageUp on year field increments year by 10.
+    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_UP"],
+    initialVal: "1999-01-01",
+    expectedVal: "2009-01-01"
+  },
+  {
+    // PageDown on year field decrements year by 10.
+    keys: ["VK_TAB", "VK_TAB", "VK_PAGE_DOWN"],
+    initialVal: "1999-01-01",
+    expectedVal: "1989-01-01"
+  },
+  {
+    // Home key on month field sets it to the minimum month, which is 01.
+    keys: ["VK_HOME"],
+    initialVal: "2016-06-01",
+    expectedVal: "2016-01-01"
+  },
+  {
+    // End key on month field sets it to the maximum month, which is 12.
+    keys: ["VK_END"],
+    initialVal: "2016-06-01",
+    expectedVal: "2016-12-01"
+  },
+  {
+    // Home key on day field sets it to the minimum day, which is 01.
+    keys: ["VK_TAB", "VK_HOME"],
+    initialVal: "2016-01-10",
+    expectedVal: "2016-01-01"
+  },
+  {
+    // End key on day field sets it to the maximum day, which is 31.
+    keys: ["VK_TAB", "VK_END"],
+    initialVal: "2016-01-10",
+    expectedVal: "2016-01-31"
+  },
+  {
+    // Home key on year field sets it to the minimum year, which is 0001.
+    keys: ["VK_TAB", "VK_TAB", "VK_HOME"],
+    initialVal: "2016-01-01",
+    expectedVal: "0001-01-01"
+  },
+  {
+    // End key on year field sets it to the maximum year, which is 275760.
+    keys: ["VK_TAB", "VK_TAB", "VK_END"],
+    initialVal: "2016-01-01",
+    expectedVal: "275760-01-01"
+  },
+];
+
+function sendKeys(aKeys) {
+  for (let i = 0; i < aKeys.length; i++) {
+    let key = aKeys[i];
+    if (key.startsWith("VK")) {
+      synthesizeKey(key, {});
+    } else {
+      sendString(key);
+    }
+  }
+}
+
+function test() {
+  var elem = document.getElementById("input");
+
+  for (let { keys, initialVal, expectedVal } of testData) {
+    elem.focus();
+    elem.value = initialVal;
+    sendKeys(keys);
+    elem.blur();
+    is(elem.value, expectedVal,
+       "Test with " + keys + ", result should be " + expectedVal);
+    elem.value = "";
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

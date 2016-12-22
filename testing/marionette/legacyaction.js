@@ -13,11 +13,11 @@ Cu.import("chrome://marionette/content/event.js");
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750;  // ms
 
-this.EXPORTED_SYMBOLS = ["action"];
+this.EXPORTED_SYMBOLS = ["legacyaction"];
 
 const logger = Log.repository.getLogger("Marionette");
 
-this.action = {};
+this.legacyaction = this.action = {};
 
 /**
  * Functionality for (single finger) action chains.

@@ -30,8 +30,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
       return false;
     }
     if (mTiles[0].mDrawTarget->GetFormat() != mTiles.back().mDrawTarget->GetFormat() ||
-        mTiles[0].mDrawTarget->GetBackendType() != mTiles.back().mDrawTarget->GetBackendType() ||
-        mTiles[0].mDrawTarget->GetPermitSubpixelAA() != mTiles.back().mDrawTarget->GetPermitSubpixelAA()) {
+        mTiles[0].mDrawTarget->GetBackendType() != mTiles.back().mDrawTarget->GetBackendType()) {
       return false;
     }
     uint32_t newXMost = max(mRect.XMost(),
@@ -46,7 +45,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
                                                             mTiles[i].mTileOrigin.y));
   }
   mFormat = mTiles[0].mDrawTarget->GetFormat();
-  mPermitSubpixelAA = mTiles[0].mDrawTarget->GetPermitSubpixelAA();
+  SetPermitSubpixelAA(IsOpaque(mFormat));
   return true;
 }
 

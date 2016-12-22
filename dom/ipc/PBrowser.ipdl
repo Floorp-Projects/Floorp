@@ -511,8 +511,6 @@ parent:
 
     async ReplyKeyEvent(WidgetKeyboardEvent event);
 
-    async DispatchAfterKeyboardEvent(WidgetKeyboardEvent event);
-
     sync RequestNativeKeyBindings(WidgetKeyboardEvent event)
         returns (MaybeNativeKeyBinding bindings);
 

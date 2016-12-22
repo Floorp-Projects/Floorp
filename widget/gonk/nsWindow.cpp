@@ -385,22 +385,21 @@ nsWindow::IsVisible() const
     return mVisible;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Move(double aX,
                double aY)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aWidth,
                  double aHeight,
                  bool   aRepaint)
 {
-    return Resize(0, 0, aWidth, aHeight, aRepaint);
+    Resize(0, 0, aWidth, aHeight, aRepaint);
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Resize(double aX,
                  double aY,
                  double aWidth,
@@ -416,14 +415,11 @@ nsWindow::Resize(double aX,
     if (aRepaint) {
         Invalidate(mBounds);
     }
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Enable(bool aState)
 {
-    return NS_OK;
 }
 
 bool

@@ -282,13 +282,12 @@
 
     </vbox>
 
-    <box id="network-statistics-view">
-      <toolbar id="network-statistics-toolbar"
+    <html:div id="network-statistics-view">
+      <html:div id="network-statistics-toolbar"
                class="devtools-toolbar">
-        <button id="network-statistics-back-button"
-                class="devtools-toolbarbutton"
-                data-localization="label=netmonitor.backButton"/>
-      </toolbar>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-statistics-back-hook"/>
+      </html:div>
       <box id="network-statistics-charts"
            class="devtools-responsive-container"
            flex="1">
@@ -297,8 +296,7 @@
                   class="devtools-side-splitter"/>
         <vbox id="empty-cache-chart" pack="center" flex="1"/>
       </box>
-    </box>
-
+    </html:div>
   </deck>
 
 </window>

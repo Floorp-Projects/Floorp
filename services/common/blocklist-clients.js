@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["AddonBlocklistClient",
                          "GfxBlocklistClient",
                          "OneCRLBlocklistClient",
                          "PluginBlocklistClient",
+                         "PinningBlocklistClient",
                          "FILENAME_ADDONS_JSON",
                          "FILENAME_GFX_JSON",
                          "FILENAME_PLUGINS_JSON"];
@@ -32,6 +33,10 @@ const PREF_BLOCKLIST_ADDONS_COLLECTION       = "services.blocklist.addons.collec
 const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS  = "services.blocklist.addons.checked";
 const PREF_BLOCKLIST_PLUGINS_COLLECTION      = "services.blocklist.plugins.collection";
 const PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS = "services.blocklist.plugins.checked";
+const PREF_BLOCKLIST_PINNING_ENABLED         = "services.blocklist.pinning.enabled";
+const PREF_BLOCKLIST_PINNING_BUCKET          = "services.blocklist.pinning.bucket";
+const PREF_BLOCKLIST_PINNING_COLLECTION      = "services.blocklist.pinning.collection";
+const PREF_BLOCKLIST_PINNING_CHECKED_SECONDS = "services.blocklist.pinning.checked";
 const PREF_BLOCKLIST_GFX_COLLECTION          = "services.blocklist.gfx.collection";
 const PREF_BLOCKLIST_GFX_CHECKED_SECONDS     = "services.blocklist.gfx.checked";
 const PREF_BLOCKLIST_ENFORCE_SIGNING         = "services.blocklist.signing.enforced";
@@ -82,9 +87,8 @@ function fetchRemoteCollection(collection) {
  * URL and bucket name. It uses the `FirefoxAdapter` which relies on SQLite to
  * persist the local DB.
  */
-function kintoClient(connection) {
+function kintoClient(connection, bucket) {
   let base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-  let bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
 
   let config = {
     remote: base,
@@ -99,10 +103,11 @@ function kintoClient(connection) {
 
 class BlocklistClient {
 
-  constructor(collectionName, lastCheckTimePref, processCallback, signerName) {
+  constructor(collectionName, lastCheckTimePref, processCallback, bucketName, signerName) {
     this.collectionName = collectionName;
     this.lastCheckTimePref = lastCheckTimePref;
     this.processCallback = processCallback;
+    this.bucketName = bucketName;
     this.signerName = signerName;
   }
 
@@ -168,7 +173,7 @@ class BlocklistClient {
       let connection;
       try {
         connection = yield FirefoxAdapter.openConnection({path: KINTO_STORAGE_PATH});
-        let db = kintoClient(connection);
+        let db = kintoClient(connection, this.bucketName);
         let collection = db.collection(this.collectionName, opts);
 
         let collectionLastModified = yield collection.db.getLastModified();
@@ -247,12 +252,52 @@ function* updateCertBlocklist(records) {
       }
     } catch (e) {
       // prevent errors relating to individual blocklist entries from
-      // causing sync to fail. At some point in the future, we may want to
-      // accumulate telemetry on these failures.
+      // causing sync to fail. We will accumulate telemetry on these failures in
+      // bug 1254099.
       Cu.reportError(e);
     }
   }
   certList.saveEntries();
+}
+
+/**
+ * Modify the appropriate security pins based on records from the remote
+ * collection.
+ *
+ * @param {Object} records   current records in the local db.
+ */
+function* updatePinningList(records) {
+  if (Services.prefs.getBoolPref(PREF_BLOCKLIST_PINNING_ENABLED)) {
+    const appInfo = Cc["@mozilla.org/xre/app-info;1"]
+        .getService(Ci.nsIXULAppInfo);
+
+    const siteSecurityService = Cc["@mozilla.org/ssservice;1"]
+        .getService(Ci.nsISiteSecurityService);
+
+    // clear the current preload list
+    siteSecurityService.clearPreloads();
+
+    // write each KeyPin entry to the preload list
+    for (let item of records) {
+      try {
+        const {pinType, pins=[], versions} = item;
+        if (pinType == "KeyPin" && pins.length &&
+            versions.indexOf(appInfo.version) != -1) {
+          siteSecurityService.setKeyPins(item.hostName,
+              item.includeSubdomains,
+              item.expires,
+              pins.length,
+              pins, true);
+        }
+      } catch (e) {
+        // prevent errors relating to individual preload entries from causing
+        // sync to fail. We will accumulate telemetry for such failures in bug
+        // 1254099.
+      }
+    }
+  } else {
+    return;
+  }
 }
 
 /**
@@ -276,28 +321,39 @@ function* updateJSONBlocklist(filename, records) {
   }
 }
 
-
 this.OneCRLBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION),
   PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS,
   updateCertBlocklist,
+  Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
   "onecrl.content-signature.mozilla.org"
 );
 
 this.AddonBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION),
   PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
-  updateJSONBlocklist.bind(undefined, FILENAME_ADDONS_JSON)
+  updateJSONBlocklist.bind(undefined, FILENAME_ADDONS_JSON),
+  Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET)
 );
 
 this.GfxBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION),
   PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
-  updateJSONBlocklist.bind(undefined, FILENAME_GFX_JSON)
+  updateJSONBlocklist.bind(undefined, FILENAME_GFX_JSON),
+  Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET)
 );
 
 this.PluginBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION),
   PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
-  updateJSONBlocklist.bind(undefined, FILENAME_PLUGINS_JSON)
+  updateJSONBlocklist.bind(undefined, FILENAME_PLUGINS_JSON),
+  Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET)
+);
+
+this.PinningPreloadClient = new BlocklistClient(
+  Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION),
+  PREF_BLOCKLIST_PINNING_CHECKED_SECONDS,
+  updatePinningList,
+  Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_BUCKET),
+  "pinning-preload.content-signature.mozilla.org"
 );

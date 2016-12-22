@@ -221,7 +221,7 @@ PuppetWidget::Show(bool aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::Resize(double aWidth,
                      double aHeight,
                      bool   aRepaint)
@@ -231,7 +231,8 @@ PuppetWidget::Resize(double aWidth,
                                      NSToIntRound(aHeight)));
 
   if (mChild) {
-    return mChild->Resize(aWidth, aHeight, aRepaint);
+    mChild->Resize(aWidth, aHeight, aRepaint);
+    return;
   }
 
   // XXX: roc says that |aRepaint| dictates whether or not to
@@ -252,8 +253,6 @@ PuppetWidget::Resize(double aWidth,
     }
     mAttachedWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -690,7 +689,7 @@ PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 PuppetWidget::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                              int32_t aPanelX, int32_t aPanelY,
                              nsString& aCommitted)

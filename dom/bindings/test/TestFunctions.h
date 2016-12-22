@@ -14,10 +14,21 @@
 namespace mozilla {
 namespace dom {
 
+class Promise;
+class PromiseReturner;
+
 class TestFunctions : public NonRefcountedDOMObject {
 public:
   static void
   ThrowUncatchableException(GlobalObject& aGlobal, ErrorResult& aRv);
+
+  static Promise*
+  PassThroughPromise(GlobalObject& aGlobal, Promise& aPromise);
+
+  static already_AddRefed<Promise>
+  PassThroughCallbackPromise(GlobalObject& aGlobal,
+                             PromiseReturner& aCallback,
+                             ErrorResult& aRv);
 };
 
 } // namespace dom

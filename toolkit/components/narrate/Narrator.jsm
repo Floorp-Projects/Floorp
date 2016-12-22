@@ -220,18 +220,12 @@ Narrator.prototype = {
           return;
         }
 
-        // Match non-whitespace. This isn't perfect, but the most universal
-        // solution for now.
-        let reWordBoundary = /\S+/g;
-        // Match the first word from the boundary event offset.
-        reWordBoundary.lastIndex = e.charIndex;
-        let firstIndex = reWordBoundary.exec(paragraph.textContent);
-        if (firstIndex) {
-          highlighter.highlight(firstIndex.index, reWordBoundary.lastIndex);
+        if (e.charLength) {
+          highlighter.highlight(e.charIndex, e.charLength);
           if (this._inTest) {
             this._sendTestEvent("wordhighlight", {
-              start: firstIndex.index,
-              end: reWordBoundary.lastIndex
+              start: e.charIndex,
+              end: e.charIndex + e.charLength
             });
           }
         }
@@ -320,11 +314,11 @@ Highlighter.prototype = {
    * Highlight the range within offsets relative to the container.
    *
    * @param {Number} startOffset the start offset
-   * @param {Number} endOffset the end offset
+   * @param {Number} length the length in characters of the range
    */
-  highlight: function(startOffset, endOffset) {
+  highlight: function(startOffset, length) {
     let containerRect = this.container.getBoundingClientRect();
-    let range = this._getRange(startOffset, endOffset);
+    let range = this._getRange(startOffset, startOffset + length);
     let rangeRects = range.getClientRects();
     let win = this.container.ownerDocument.defaultView;
     let computedStyle = win.getComputedStyle(range.endContainer.parentNode);

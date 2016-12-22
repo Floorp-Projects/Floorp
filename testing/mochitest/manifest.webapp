@@ -26,7 +26,6 @@
     "network-events":{},
     "audio-channel-content":{},
     "audio-channel-alarm":{},
-    "before-after-keyboard-event":{}
   },
   "locales": {
     "en-US": {

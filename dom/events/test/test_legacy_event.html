@@ -73,22 +73,15 @@ function triggerShortAnimation(node) {
   node.style.animation = "anim1 1ms linear";
 }
 
-// This function triggers a long animation with two iterations, which is
-// *nearly* at the end of its first iteration.  It will hit the end of that
-// iteration (firing an event) almost immediately, 1ms in the future.
+// This function triggers a very short (10ms long) animation with many
+// iterations, which will cause a start event followed by an iteration event
+// on each subsequent tick, to fire.
 //
-// NOTE: It's important that this animation have a *long* duration.  If it were
-// short (e.g. 1ms duration), then we might jump past all its iterations in
-// a single refresh-driver tick. And if that were to happens, we'd *never* fire
-// any animationiteration events -- the CSS Animations spec says this event
-// must not be fired "...when an animationend event would fire at the same time"
-// (which would be the case in this example with a 1ms duration). So, to make
-// sure our event does fire, we use a long duration and a nearly-as-long
-// negative delay. This ensures we hit the end of the first iteration right
-// away, and that we don't risk hitting the end of the second iteration at the
-// same time.
+// NOTE: We need the many iterations since if an animation frame coincides
+// with the animation starting or ending we dispatch only the start or end
+// event and not the iteration event.
 function triggerAnimationIteration(node) {
-  node.style.animation = "anim1 300s -299.999s linear 2";
+  node.style.animation = "anim1 10ms linear 20000";
 }
 
 // GENERAL UTILITY FUNCTIONS

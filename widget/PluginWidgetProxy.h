@@ -42,7 +42,7 @@ public:
                                        override;
   virtual void Destroy() override;
   NS_IMETHOD SetFocus(bool aRaise = false) override;
-  NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
+  virtual void SetParent(nsIWidget* aNewParent) override;
 
   virtual nsIWidget* GetParent(void) override;
   virtual void* GetNativeData(uint32_t aDataType) override;

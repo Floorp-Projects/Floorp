@@ -38,10 +38,6 @@ const kEventConstructors = {
                                              },
   AudioProcessingEvent:                      { create: null, // Cannot create untrusted event from JS.
                                              },
-  BeforeAfterKeyboardEvent:                  { create: function (aName, aProps) {
-                                                         return new BeforeAfterKeyboardEvent(aName, aProps);
-                                                       },
-                                             },
   BeforeUnloadEvent:                         { create: function (aName, aProps) {
                                                          var e = document.createEvent("beforeunloadevent");
                                                          e.initEvent(aName, aProps.bubbles, aProps.cancelable);
@@ -293,7 +289,14 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  OfflineAudioCompletionEvent:               { create: null, // Cannot create untrusted event from JS.
+  OfflineAudioCompletionEvent:               { create: "AudioContext" in self
+                                                        ? function (aName, aProps) {
+                                                            var ac = new AudioContext();
+                                                            var ab = new AudioBuffer(ac, { length: 42 });
+                                                            aProps.renderedBuffer = ab;
+                                                            return new OfflineAudioCompletionEvent(aName, aProps);
+                                                          }
+                                                        : null,
                                              },
   PageTransitionEvent:                       { create: function (aName, aProps) {
                                                          return new PageTransitionEvent(aName, aProps);
