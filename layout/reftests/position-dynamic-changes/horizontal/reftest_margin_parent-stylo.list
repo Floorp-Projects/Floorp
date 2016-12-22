@@ -18,10 +18,9 @@
 == toauto-leftA-widthN-rightN.html?margin_parent toauto-leftA-widthN-rightN.html?margin_parent
 == toauto-leftA-widthA-rightN.html?margin_parent toauto-leftA-widthA-rightN.html?margin_parent
 == fromauto-leftN-widthA-rightA.html?margin_parent fromauto-leftN-widthA-rightA.html?margin_parent
-random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?margin_parent fromauto-leftN-widthA-rightA-2.html?margin_parent
-# Bug 688545
+== fromauto-leftN-widthA-rightA-2.html?margin_parent fromauto-leftN-widthA-rightA-2.html?margin_parent
 == fromauto-leftN-widthA-rightN.html?margin_parent fromauto-leftN-widthA-rightN.html?margin_parent
-skip == fromauto-leftN-widthA-rightN-2.html?margin_parent fromauto-leftN-widthA-rightN-2.html?margin_parent
+== fromauto-leftN-widthA-rightN-2.html?margin_parent fromauto-leftN-widthA-rightN-2.html?margin_parent
 == fromauto-leftA-widthN-rightA.html?margin_parent fromauto-leftA-widthN-rightA.html?margin_parent
 == fromauto-leftN-widthN-rightA.html?margin_parent fromauto-leftN-widthN-rightA.html?margin_parent
 == fromauto-leftA-widthN-rightN.html?margin_parent fromauto-leftA-widthN-rightN.html?margin_parent

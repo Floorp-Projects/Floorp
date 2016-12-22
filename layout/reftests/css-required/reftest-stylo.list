@@ -1,29 +1,29 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # Checking if these types/elements support :required
-# == css-required-textarea.html css-required-textarea.html
+fails == css-required-textarea.html css-required-textarea.html
 == css-required-radio.html css-required-radio.html
-== css-required-text.html css-required-text.html
+fails == css-required-text.html css-required-text.html
 == css-required-checkbox.html css-required-checkbox.html
-== css-required-file.html css-required-file.html
-== css-required-password.html css-required-password.html
-== css-required-tel.html css-required-tel.html
-== css-required-search.html css-required-search.html
-== css-required-select.html css-required-select.html
+fails == css-required-file.html css-required-file.html
+fails == css-required-password.html css-required-password.html
+fails == css-required-tel.html css-required-tel.html
+fails == css-required-search.html css-required-search.html
+fails == css-required-select.html css-required-select.html
 
 # Checking dynamic behavior with <input type='text'>
-== css-required-dyn-1.html css-required-dyn-1.html
-== css-required-dyn-2.html css-required-dyn-2.html
-== css-required-dyn-3.html css-required-dyn-3.html
+fails == css-required-dyn-1.html css-required-dyn-1.html
+fails == css-required-dyn-2.html css-required-dyn-2.html
+fails == css-required-dyn-3.html css-required-dyn-3.html
 == css-required-dyn-4.html css-required-dyn-4.html
-== css-required-dyn-5.html css-required-dyn-5.html
+fails == css-required-dyn-5.html css-required-dyn-5.html
 == css-required-dyn-6.html css-required-dyn-6.html
 
 # Following input types do not support :required
 == css-required-hidden.html css-required-hidden.html
 == css-required-button.html css-required-button.html
-== css-required-submit.html css-required-submit.html
+fails == css-required-submit.html css-required-submit.html
 == css-required-image.html css-required-image.html
-== css-required-reset.html css-required-reset.html
+fails == css-required-reset.html css-required-reset.html
 
 # Following elements can be optional but can't be required
 == css-required-button-element.html css-required-button-element.html

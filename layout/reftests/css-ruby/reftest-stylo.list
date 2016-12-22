@@ -1,59 +1,58 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == bidi-1.html bidi-1.html
-== bidi-2.html bidi-2.html
-== box-generation-1.html box-generation-1.html
-== box-generation-2.html box-generation-2.html
-== box-generation-3.html box-generation-3.html
-== box-generation-4.html box-generation-4.html
-== box-generation-5.html box-generation-5.html
-== box-properties-1.html box-properties-1.html
-== box-properties-2.html box-properties-2.html
-== box-properties-3.html box-properties-3.html
-== box-properties-4.html box-properties-4.html
-== dynamic-insertion-1.html dynamic-insertion-1.html
-== dynamic-insertion-2.html dynamic-insertion-2.html
-== dynamic-insertion-3.html dynamic-insertion-3.html
-== dynamic-removal-1.html dynamic-removal-1.html
-== dynamic-removal-2.html dynamic-removal-2.html
-== dynamic-removal-3.html dynamic-removal-3.html
-== float-handling.html float-handling.html
+fails == bidi-2.html bidi-2.html
+fails == box-generation-1.html box-generation-1.html
+fails == box-generation-2.html box-generation-2.html
+fails == box-generation-3.html box-generation-3.html
+fails == box-generation-4.html box-generation-4.html
+fails == box-generation-5.html box-generation-5.html
+fails == box-properties-1.html box-properties-1.html
+fails == box-properties-2.html box-properties-2.html
+fails == box-properties-3.html box-properties-3.html
+fails == box-properties-4.html box-properties-4.html
+fails == dynamic-insertion-1.html dynamic-insertion-1.html
+fails == dynamic-insertion-2.html dynamic-insertion-2.html
+fails == dynamic-insertion-3.html dynamic-insertion-3.html
+fails == dynamic-removal-1.html dynamic-removal-1.html
+fails == dynamic-removal-2.html dynamic-removal-2.html
+fails == dynamic-removal-3.html dynamic-removal-3.html
+fails == float-handling.html float-handling.html
 fails test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == inflated-ruby-1.html inflated-ruby-1.html
-== intra-level-whitespace-1.html intra-level-whitespace-1.html
-== intra-level-whitespace-2.html intra-level-whitespace-2.html
-== intra-level-whitespace-3.html intra-level-whitespace-3.html
-== intrinsic-isize-1.html intrinsic-isize-1.html
-== intrinsic-isize-2.html intrinsic-isize-2.html
-== justification-1.html justification-1.html
-== justification-2.html justification-2.html
-fuzzy-if(winWidget,255,792) == lang-specific-style-1.html lang-specific-style-1.html
-# bug 1134947
-== line-breaking-1.html line-breaking-1.html
-== line-breaking-2.html line-breaking-2.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) == line-break-suppression-1.html line-break-suppression-1.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) == line-break-suppression-2.html line-break-suppression-2.html
-== line-break-suppression-3.html line-break-suppression-3.html
-== line-break-suppression-4.html line-break-suppression-4.html
-== line-break-suppression-5.html line-break-suppression-5.html
-== line-height-1.html line-height-1.html
-== line-height-2.html line-height-2.html
-== line-height-3.html line-height-3.html
-== line-height-4.html line-height-4.html
-test-pref(font.minimum-size.ja,16) == min-font-size-1.html min-font-size-1.html
+fails == intra-level-whitespace-1.html intra-level-whitespace-1.html
+fails == intra-level-whitespace-2.html intra-level-whitespace-2.html
+fails == intra-level-whitespace-3.html intra-level-whitespace-3.html
+fails == intrinsic-isize-1.html intrinsic-isize-1.html
+fails == intrinsic-isize-2.html intrinsic-isize-2.html
+fails == justification-1.html justification-1.html
+fails == justification-2.html justification-2.html
+fails == lang-specific-style-1.html lang-specific-style-1.html
+fails == line-breaking-1.html line-breaking-1.html
+fails == line-breaking-2.html line-breaking-2.html
+fails == line-break-suppression-1.html line-break-suppression-1.html
+fails == line-break-suppression-2.html line-break-suppression-2.html
+fails == line-break-suppression-3.html line-break-suppression-3.html
+fails == line-break-suppression-4.html line-break-suppression-4.html
+fails == line-break-suppression-5.html line-break-suppression-5.html
+fails == line-height-1.html line-height-1.html
+fails == line-height-2.html line-height-2.html
+fails == line-height-3.html line-height-3.html
+fails == line-height-4.html line-height-4.html
+fails test-pref(font.minimum-size.ja,16) == min-font-size-1.html min-font-size-1.html
 skip load nested-ruby-1.html
-== no-transform.html no-transform.html
-== relative-positioning-1.html relative-positioning-1.html
-== relative-positioning-2.html relative-positioning-2.html
-== ruby-align-1.html ruby-align-1.html
-== ruby-align-1a.html ruby-align-1a.html
-== ruby-align-2.html ruby-align-2.html
-== ruby-align-2a.html ruby-align-2a.html
-== ruby-position-horizontal.html ruby-position-horizontal.html
-== ruby-position-vertical-lr.html ruby-position-vertical-lr.html
-== ruby-position-vertical-rl.html ruby-position-vertical-rl.html
-== ruby-reflow-1-opaqueruby.html ruby-reflow-1-opaqueruby.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),13,1) == ruby-reflow-1-transparentruby.html ruby-reflow-1-transparentruby.html
-== ruby-span-1.html ruby-span-1.html
-== ruby-whitespace-1.html ruby-whitespace-1.html
-== ruby-whitespace-2.html ruby-whitespace-2.html
-== bug1181890.html bug1181890.html
-== bug1181890.html bug1181890.html
+fails == no-transform.html no-transform.html
+fails == relative-positioning-1.html relative-positioning-1.html
+fails == relative-positioning-2.html relative-positioning-2.html
+fails == ruby-align-1.html ruby-align-1.html
+fails == ruby-align-1a.html ruby-align-1a.html
+fails == ruby-align-2.html ruby-align-2.html
+fails == ruby-align-2a.html ruby-align-2a.html
+fails == ruby-position-horizontal.html ruby-position-horizontal.html
+fails == ruby-position-vertical-lr.html ruby-position-vertical-lr.html
+fails == ruby-position-vertical-rl.html ruby-position-vertical-rl.html
+fails == ruby-reflow-1-opaqueruby.html ruby-reflow-1-opaqueruby.html
+fails == ruby-reflow-1-transparentruby.html ruby-reflow-1-transparentruby.html
+fails == ruby-span-1.html ruby-span-1.html
+fails == ruby-whitespace-1.html ruby-whitespace-1.html
+fails == ruby-whitespace-2.html ruby-whitespace-2.html
+# == bug1181890.html bug1181890.html
+# == bug1181890.html bug1181890.html

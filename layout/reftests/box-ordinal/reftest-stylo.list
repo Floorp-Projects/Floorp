@@ -1,15 +1,8 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== box-ordinal-with-out-of-flow-1.html box-ordinal-with-out-of-flow-1.html
-skip-if((B2G&&browserIsRemote)||Mulet) == dynamic-1-remove-to-none-grouped.xul dynamic-1-remove-to-none-grouped.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == dynamic-1-add-to-one-grouped.xul dynamic-1-add-to-one-grouped.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == dynamic-1-remove-to-one-grouped-1.xul dynamic-1-remove-to-one-grouped-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == dynamic-1-remove-to-one-grouped-2.xul dynamic-1-remove-to-one-grouped-2.xul
-# bug 575500
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == dynamic-1-add-to-two-grouped-1.xul dynamic-1-add-to-two-grouped-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == dynamic-1-add-to-two-grouped-2.xul dynamic-1-add-to-two-grouped-2.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == box-ordinal-with-out-of-flow-1.html box-ordinal-with-out-of-flow-1.html
+== dynamic-1-remove-to-none-grouped.xul dynamic-1-remove-to-none-grouped.xul
+== dynamic-1-add-to-one-grouped.xul dynamic-1-add-to-one-grouped.xul
+== dynamic-1-remove-to-one-grouped-1.xul dynamic-1-remove-to-one-grouped-1.xul
+== dynamic-1-remove-to-one-grouped-2.xul dynamic-1-remove-to-one-grouped-2.xul
+== dynamic-1-add-to-two-grouped-1.xul dynamic-1-add-to-two-grouped-1.xul
+== dynamic-1-add-to-two-grouped-2.xul dynamic-1-add-to-two-grouped-2.xul

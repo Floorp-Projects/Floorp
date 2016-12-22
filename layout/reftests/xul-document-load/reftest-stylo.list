@@ -1,46 +1,24 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if((B2G&&browserIsRemote)||Mulet) == test001.xul test001.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test002.xul test002.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test003.xul test003.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test004.xul test004.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test005.xul test005.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test006.xul test006.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test007.xul test007.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test008.xul test008.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test009.xul test009.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test010.xul test010.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test011.xul test011.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test012.xul test012.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-# skip-if((B2G&&browserIsRemote)||Mulet) == test013.xul test013.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test014.xul test014.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
+== test001.xul test001.xul
+== test002.xul test002.xul
+== test003.xul test003.xul
+== test004.xul test004.xul
+== test005.xul test005.xul
+== test006.xul test006.xul
+== test007.xul test007.xul
+== test008.xul test008.xul
+== test009.xul test009.xul
+== test010.xul test010.xul
+== test011.xul test011.xul
+== test012.xul test012.xul
+== test013.xul test013.xul
+== test014.xul test014.xul
 # Disabled due to compartments for now.
-#skip-if((B2G&&browserIsRemote)||Mulet) == test015.xul test015.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test016.xul test016.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test017.xul test017.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test018.xul test018.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test019.xul test019.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test020.xul test020.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test021.xul test021.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == test022.xul test022.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
+#== test015.xul test015.xul
+== test016.xul test016.xul
+== test017.xul test017.xul
+== test018.xul test018.xul
+== test019.xul test019.xul
+== test020.xul test020.xul
+== test021.xul test021.xul
+== test022.xul test022.xul

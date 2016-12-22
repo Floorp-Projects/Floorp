@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== input.html input.html
-== button.html button.html
-== textarea.html textarea.html
-== select.html select.html
-== fieldset.html fieldset.html
+fails == input.html input.html
+fails == button.html button.html
+fails == textarea.html textarea.html
+fails == select.html select.html
+# == fieldset.html fieldset.html

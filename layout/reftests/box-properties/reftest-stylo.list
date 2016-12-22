@@ -1,37 +1,31 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== outline-radius-percent-1.html outline-radius-percent-1.html
-== min-width-1.html min-width-1.html
-== min-height-1.html min-height-1.html
-== max-width-1.html max-width-1.html
-== max-height-1.html max-height-1.html
-== width-special-values-block.html width-special-values-block.html
-== width-special-values-float.html width-special-values-float.html
-random == width-special-values-image-block.html width-special-values-image-block.html
-== width-special-values-image.html width-special-values-image.html
-== width-special-values-block-intrinsic.html width-special-values-block-intrinsic.html
-== width-special-values-float-intrinsic.html width-special-values-float-intrinsic.html
-skip == minmax-width-special-values-block-intrinsic.html minmax-width-special-values-block-intrinsic.html
-skip == width-special-values-cell-auto.html width-special-values-cell-auto.html
-== width-special-values-cell-fixed.html width-special-values-cell-fixed.html
-== box-sizing-1.html box-sizing-1.html
-== box-sizing-2.html box-sizing-2.html
-== box-sizing-3.html box-sizing-3.html
-== box-sizing-4.html box-sizing-4.html
-== box-sizing-minmax-height.html box-sizing-minmax-height.html
-== box-sizing-minmax-width.html box-sizing-minmax-width.html
-== box-sizing-mozbox-minmax-height.html box-sizing-mozbox-minmax-height.html
-skip == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) HTTP(..) == CSS21-t100301.xhtml CSS21-t100301.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(B2G||Mulet) == CSS21-t100303.xhtml CSS21-t100303.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(B2G||Mulet) == CSS21-t100303-simple.xhtml CSS21-t100303-simple.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(B2G||Mulet) == CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == outline-radius-percent-1.html outline-radius-percent-1.html
+fails == min-width-1.html min-width-1.html
+fails == min-height-1.html min-height-1.html
+fails == max-width-1.html max-width-1.html
+fails == max-height-1.html max-height-1.html
+fails == width-special-values-block.html width-special-values-block.html
+fails == width-special-values-float.html width-special-values-float.html
+fails == width-special-values-image-block.html width-special-values-image-block.html
+fails == width-special-values-image.html width-special-values-image.html
+fails == width-special-values-block-intrinsic.html width-special-values-block-intrinsic.html
+fails == width-special-values-float-intrinsic.html width-special-values-float-intrinsic.html
+fails == minmax-width-special-values-block-intrinsic.html minmax-width-special-values-block-intrinsic.html
+fails == width-special-values-cell-auto.html width-special-values-cell-auto.html
+fails == width-special-values-cell-fixed.html width-special-values-cell-fixed.html
+fails == box-sizing-1.html box-sizing-1.html
+fails == box-sizing-2.html box-sizing-2.html
+fails == box-sizing-3.html box-sizing-3.html
+fails == box-sizing-4.html box-sizing-4.html
+# == box-sizing-minmax-height.html box-sizing-minmax-height.html
+fails == box-sizing-minmax-width.html box-sizing-minmax-width.html
+# == box-sizing-mozbox-minmax-height.html box-sizing-mozbox-minmax-height.html
+fails == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin.html
+fails == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin.html
+fails HTTP(..) == CSS21-t100301.xhtml CSS21-t100301.xhtml
+== CSS21-t100303.xhtml CSS21-t100303.xhtml
+== CSS21-t100303-simple.xhtml CSS21-t100303-simple.xhtml
+== CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align.xhtml
 == clip-auto.html clip-auto.html
-== clip-rect-auto.html clip-rect-auto.html
+fails == clip-rect-auto.html clip-rect-auto.html
 == width-rounding.html width-rounding.html
