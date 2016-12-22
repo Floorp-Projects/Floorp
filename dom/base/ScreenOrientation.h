@@ -8,6 +8,7 @@
 #define mozilla_dom_ScreenOrientation_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ScreenOrientationBinding.h"
 #include "mozilla/HalScreenConfiguration.h"
 
@@ -51,7 +52,7 @@ public:
   void Unlock(ErrorResult& aRv);
 
   // DeviceType and DeviceAngle gets the current type and angle of the device.
-  OrientationType DeviceType() const;
+  OrientationType DeviceType(CallerType aCallerType) const;
   uint16_t DeviceAngle() const;
 
   // GetType and GetAngle gets the type and angle of the responsible document
