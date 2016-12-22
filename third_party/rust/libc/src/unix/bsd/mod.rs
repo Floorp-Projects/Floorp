@@ -321,6 +321,8 @@ f! {
 }
 
 extern {
+    pub fn getifaddrs(ifap: *mut *mut ::ifaddrs) -> ::c_int;
+    pub fn freeifaddrs(ifa: *mut ::ifaddrs);
     pub fn setgroups(ngroups: ::c_int,
                      ptr: *const ::gid_t) -> ::c_int;
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
@@ -355,8 +357,8 @@ cfg_if! {
         pub use self::apple::*;
     } else if #[cfg(any(target_os = "openbsd", target_os = "netbsd",
                         target_os = "bitrig"))] {
-        mod openbsdlike;
-        pub use self::openbsdlike::*;
+        mod netbsdlike;
+        pub use self::netbsdlike::*;
     } else if #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))] {
         mod freebsdlike;
         pub use self::freebsdlike::*;

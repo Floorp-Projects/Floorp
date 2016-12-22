@@ -28,8 +28,8 @@ install:
 build: false
 
 test_script:
-  - cargo test
-  - cargo test --features parallel
-  - cargo test --manifest-path gcc-test/Cargo.toml
-  - cargo test --manifest-path gcc-test/Cargo.toml --features parallel
-  - cargo test --manifest-path gcc-test/Cargo.toml --release
+  - cargo test --target %TARGET%
+  - cargo test --features parallel --target %TARGET%
+  - cargo test --manifest-path gcc-test/Cargo.toml --target %TARGET%
+  - cargo test --manifest-path gcc-test/Cargo.toml --features parallel --target %TARGET%
+  - cargo test --manifest-path gcc-test/Cargo.toml --release --target %TARGET%

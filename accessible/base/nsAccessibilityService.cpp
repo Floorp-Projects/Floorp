@@ -406,7 +406,7 @@ class PluginTimerCallBack final : public nsITimerCallback
   ~PluginTimerCallBack() {}
 
 public:
-  PluginTimerCallBack(nsIContent* aContent) : mContent(aContent) {}
+  explicit PluginTimerCallBack(nsIContent* aContent) : mContent(aContent) {}
 
   NS_DECL_ISUPPORTS
 

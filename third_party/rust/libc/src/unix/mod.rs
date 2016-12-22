@@ -119,6 +119,11 @@ s! {
         pub l_onoff: ::c_int,
         pub l_linger: ::c_int,
     }
+
+    pub struct sigval {
+        // Actually a union of an int and a void*
+        pub sival_ptr: *mut ::c_void
+    }
 }
 
 pub const SIG_DFL: sighandler_t = 0 as sighandler_t;
@@ -205,7 +210,8 @@ cfg_if! {
         // cargo build, don't pull in anything extra as the libstd  dep
         // already pulls in all libs.
     } else if #[cfg(any(all(target_env = "musl", not(target_arch = "mips"))))] {
-        #[link(name = "c", kind = "static")]
+        #[link(name = "c", kind = "static", cfg(target_feature = "crt-static"))]
+        #[link(name = "c", cfg(not(target_feature = "crt-static")))]
         extern {}
     } else if #[cfg(target_os = "emscripten")] {
         #[link(name = "c")]
@@ -223,6 +229,14 @@ cfg_if! {
                         target_os = "bitrig"))] {
         #[link(name = "c")]
         #[link(name = "m")]
+        extern {}
+    } else if #[cfg(target_os = "haiku")] {
+        #[link(name = "root")]
+        #[link(name = "network")]
+        extern {}
+    } else if #[cfg(target_os = "fuchsia")] {
+        #[link(name = "c")]
+        #[link(name = "mxio")]
         extern {}
     } else {
         #[link(name = "c")]
@@ -251,6 +265,8 @@ extern {
     pub fn fscanf(stream: *mut ::FILE, format: *const ::c_char, ...) -> ::c_int;
     pub fn scanf(format: *const ::c_char, ...) -> ::c_int;
     pub fn sscanf(s: *const ::c_char, format: *const ::c_char, ...) -> ::c_int;
+    pub fn getchar_unlocked() -> ::c_int;
+    pub fn putchar_unlocked(c: ::c_int) -> ::c_int;
 
     #[cfg_attr(target_os = "netbsd", link_name = "__socket30")]
     pub fn socket(domain: ::c_int, ty: ::c_int, protocol: ::c_int) -> ::c_int;
@@ -415,6 +431,7 @@ extern {
     pub fn nanosleep(rqtp: *const timespec,
                      rmtp: *mut timespec) -> ::c_int;
     pub fn tcgetpgrp(fd: ::c_int) -> pid_t;
+    pub fn tcsetpgrp(fd: ::c_int, pgrp: ::pid_t) -> ::c_int;
     pub fn ttyname(fd: ::c_int) -> *mut c_char;
     pub fn unlink(c: *const c_char) -> ::c_int;
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
@@ -643,6 +660,10 @@ extern {
                link_name = "mktime$UNIX2003")]
     #[cfg_attr(target_os = "netbsd", link_name = "__mktime50")]
     pub fn mktime(tm: *mut tm) -> time_t;
+    #[cfg_attr(target_os = "netbsd", link_name = "__time50")]
+    pub fn time(time: *mut time_t) -> time_t;
+    #[cfg_attr(target_os = "netbsd", link_name = "__locatime50")]
+    pub fn localtime(time: *const time_t) -> *mut tm;
 
     #[cfg_attr(target_os = "netbsd", link_name = "__mknod50")]
     pub fn mknod(pathname: *const ::c_char, mode: ::mode_t,
@@ -720,8 +741,6 @@ extern {
 // TODO: get rid of this cfg(not(...))
 #[cfg(not(target_os = "android"))] // " if " -- appease style checker
 extern {
-    pub fn getifaddrs(ifap: *mut *mut ifaddrs) -> ::c_int;
-    pub fn freeifaddrs(ifa: *mut ifaddrs);
     #[cfg_attr(target_os = "macos", link_name = "glob$INODE64")]
     #[cfg_attr(target_os = "netbsd", link_name = "__glob30")]
     pub fn glob(pattern: *const c_char,
@@ -825,12 +844,18 @@ extern {
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
                link_name = "nice$UNIX2003")]
     pub fn nice(incr: ::c_int) -> ::c_int;
+
+    pub fn grantpt(fd: ::c_int) -> ::c_int;
+    pub fn posix_openpt(flags: ::c_int) -> ::c_int;
+    pub fn ptsname(fd: ::c_int) -> *mut ::c_char;
+    pub fn unlockpt(fd: ::c_int) -> ::c_int;
 }
 
 cfg_if! {
     if #[cfg(any(target_os = "linux",
                  target_os = "android",
-                 target_os = "emscripten"))] {
+                 target_os = "emscripten",
+                 target_os = "fuchsia"))] {
         mod notbsd;
         pub use self::notbsd::*;
     } else if #[cfg(any(target_os = "macos",
@@ -845,6 +870,9 @@ cfg_if! {
     } else if #[cfg(target_os = "solaris")] {
         mod solaris;
         pub use self::solaris::*;
+    } else if #[cfg(target_os = "haiku")] {
+        mod haiku;
+        pub use self::haiku::*;
     } else {
         // Unknown target_os
     }

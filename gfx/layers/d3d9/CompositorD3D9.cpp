@@ -899,7 +899,7 @@ CreateDataSurfaceForTexture(IDirect3DDevice9* aDevice,
 class AutoSurfaceLock
 {
  public:
-  AutoSurfaceLock(IDirect3DSurface9* aSurface, DWORD aFlags = 0) {
+  explicit AutoSurfaceLock(IDirect3DSurface9* aSurface, DWORD aFlags = 0) {
     PodZero(&mRect);
 
     HRESULT hr = aSurface->LockRect(&mRect, nullptr, aFlags);

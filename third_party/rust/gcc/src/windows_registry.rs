@@ -211,6 +211,11 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
             let sub = otry!(vc_lib_subdir(target));
             tool.libs.push(path.join("lib").join(sub));
             tool.include.push(path.join("include"));
+            let atlmfc_path = path.join("atlmfc");
+            if atlmfc_path.exists() {
+                tool.libs.push(atlmfc_path.join("lib").join(sub));
+                tool.include.push(atlmfc_path.join("include"));
+            }
             Some(tool)
         }).next()
     }
@@ -314,7 +319,9 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
     fn bin_subdir(target: &str) -> Vec<(&'static str, &'static str)> {
         let arch = target.split('-').next().unwrap();
         match (arch, host_arch()) {
+            ("i586", X86) |
             ("i686", X86) => vec![("", "")],
+            ("i586", X86_64) |
             ("i686", X86_64) => vec![("amd64_x86", "amd64"), ("", "")],
             ("x86_64", X86) => vec![("x86_amd64", "")],
             ("x86_64", X86_64) => vec![("amd64", "amd64"), ("x86_amd64", "")],
@@ -327,7 +334,7 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
     fn lib_subdir(target: &str) -> Option<&'static str> {
         let arch = target.split('-').next().unwrap();
         match arch {
-            "i686" => Some("x86"),
+            "i586" | "i686" => Some("x86"),
             "x86_64" => Some("x64"),
             "arm" => Some("arm"),
             _ => None,
@@ -338,7 +345,7 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
     fn vc_lib_subdir(target: &str) -> Option<&'static str> {
         let arch = target.split('-').next().unwrap();
         match arch {
-            "i686" => Some(""),
+            "i586" | "i686" => Some(""),
             "x86_64" => Some("amd64"),
             "arm" => Some("arm"),
             _ => None,

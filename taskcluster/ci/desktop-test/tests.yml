@@ -576,6 +576,23 @@ mochitest-webgl:
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
 
+mochitest-stylo:
+    description: "Mochitest run for Stylo"
+    suite: mochitest/mochitest-stylo
+    treeherder-symbol: tc-M(s)
+    loopback-video: true
+    e10s: false
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=mochitest-stylo
+
 reftest:
     description: "Reftest run"
     suite: reftest/reftest
@@ -641,6 +658,168 @@ reftest-stylo:
                     - remove_executables.py
         extra-options:
             - --reftest-suite=reftest-stylo
+
+talos-chrome:
+    description: "Talos chrome"
+    suite: talos
+    talos-try-name: chromez
+    treeherder-symbol: tc-T(c)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=chromez
+
+talos-dromaeojs:
+    description: "Talos dromaeojs"
+    suite: talos
+    talos-try-name: dromaeojs
+    treeherder-symbol: tc-T(d)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=dromaeojs
+
+talos-g1:
+    description: "Talos g1"
+    suite: talos
+    talos-try-name: g1
+    treeherder-symbol: tc-T(g1)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=g1
+
+talos-g2:
+    description: "Talos g2"
+    suite: talos
+    talos-try-name: g2
+    treeherder-symbol: tc-T(g2)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=g2
+
+talos-g3:
+    description: "Talos g3"
+    suite: talos
+    talos-try-name: g3
+    treeherder-symbol: tc-T(g3)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=g3
+
+talos-g4:
+    description: "Talos g4"
+    suite: talos
+    talos-try-name: g4
+    treeherder-symbol: tc-T(g4)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=g4
+
+talos-other:
+    description: "Talos other"
+    suite: talos
+    talos-try-name: other
+    treeherder-symbol: tc-T(o)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=other
+
+talos-svgr:
+    description: "Talos svgr"
+    suite: talos
+    talos-try-name: svgr
+    treeherder-symbol: tc-T(s)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=svgr
+
+talos-tp5o:
+    description: "Talos tp5o"
+    suite: talos
+    talos-try-name: tp5o
+    treeherder-symbol: tc-T(tp)
+    run-on-projects: []
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=tp5o
 
 web-platform-tests:
     description: "Web platform test run"

@@ -381,7 +381,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, int32_t specLen,
             const char *p = nullptr;
             if (specLen > 2) {
                 // looks like there is an authority section
-#if defined(XP_WIN)
+
                 // if the authority looks like a drive number then we
                 // really want to treat it as part of the path
                 // [a-zA-Z][:|]{/\}
@@ -391,8 +391,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, int32_t specLen,
                     ((specLen == 4) || (spec[4] == '/') || (spec[4] == '\\'))) {
                     pos = 1;
                     break;  
-                } 
-#endif
+                }
                 // Ignore apparent authority; path is everything after it
                 for (p = spec + 2; p < spec + specLen; ++p) {
                     if (*p == '/' || *p == '?' || *p == '#')

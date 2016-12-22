@@ -106,7 +106,7 @@ function process()
        }
 
        // Select first password field
-       document.getElementById('pw1').focus();
+       document.getElementById("pw1").focus();
      } else {
        // Select old password field
        oldpwbox.setAttribute("hidden", "false");

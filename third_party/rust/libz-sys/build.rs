@@ -3,7 +3,8 @@ extern crate gcc;
 
 use std::env;
 use std::ffi::OsString;
-use std::fs;
+use std::fs::{self, File};
+use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -33,6 +34,8 @@ fn main() {
     // one of those sole platforms that doesn't!
     if target.contains("msvc") {
         build_msvc_zlib(&target);
+    } else if target.contains("pc-windows-gnu") {
+        build_zlib_mingw();
     } else if (target.contains("musl") ||
                target != host ||
                want_static) &&
@@ -59,16 +62,59 @@ fn build_zlib() {
     run(Command::new("./configure")
                 .current_dir(&build)
                 .env("CC", compiler.path())
-                .env("CFLAGS", cflags));
+                .env("CFLAGS", cflags)
+                .arg(format!("--prefix={}", dst.display())));
     run(Command::new("make")
                 .current_dir(&build)
                 .arg("libz.a"));
 
-    t!(fs::create_dir_all(dst.join("lib")));
+    t!(fs::create_dir_all(dst.join("lib/pkgconfig")));
     t!(fs::create_dir_all(dst.join("include")));
     t!(fs::copy(build.join("libz.a"), dst.join("lib/libz.a")));
     t!(fs::copy(build.join("zlib.h"), dst.join("include/zlib.h")));
     t!(fs::copy(build.join("zconf.h"), dst.join("include/zconf.h")));
+    t!(fs::copy(build.join("zlib.pc"), dst.join("lib/pkgconfig/zlib.pc")));
+
+    println!("cargo:rustc-link-lib=static=z");
+    println!("cargo:rustc-link-search={}/lib", dst.to_string_lossy());
+    println!("cargo:root={}", dst.to_string_lossy());
+    println!("cargo:include={}/include", dst.to_string_lossy());
+}
+
+fn build_zlib_mingw() {
+    let src = env::current_dir().unwrap().join("src/zlib-1.2.8");
+    let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    let build = dst.join("build");
+    t!(fs::create_dir_all(&build));
+    cp_r(&src, &build);
+    let compiler = gcc::Config::new().get_compiler();
+    let mut cflags = OsString::new();
+    for arg in compiler.args() {
+        cflags.push(arg);
+        cflags.push(" ");
+    }
+    let gcc = compiler.path().to_str().unwrap();
+    let mut cmd = Command::new("make");
+    cmd.arg("-f").arg("win32/Makefile.gcc")
+       .current_dir(&build)
+       .arg("install")
+       .arg(format!("prefix={}", dst.display()))
+       .arg(format!("INCLUDE_PATH={}", dst.join("include").display()))
+       .arg(format!("LIBRARY_PATH={}", dst.join("lib").display()))
+       .arg(format!("BINARY_PATH={}", dst.join("bin").display()));
+
+    if gcc != "gcc" {
+        match gcc.find("gcc") {
+            Some(0) => {}
+            Some(i) => {
+                cmd.arg(format!("PREFIX={}", &gcc[..i]));
+            }
+            None => {}
+        }
+    }
+    run(&mut cmd);
+
+    t!(fs::create_dir_all(dst.join("lib/pkgconfig")));
 
     println!("cargo:rustc-link-lib=static=z");
     println!("cargo:rustc-link-search={}/lib", dst.to_string_lossy());
@@ -99,12 +145,22 @@ fn build_msvc_zlib(target: &str) {
     t!(fs::create_dir_all(dst.join("build")));
     cp_r(&src, &dst.join("build"));
 
+    let features = env::var("CARGO_CFG_TARGET_FEATURE")
+                      .unwrap_or(String::new());
+    if features.contains("crt-static") {
+        let mut makefile = String::new();
+        let makefile_path = dst.join("build/win32/Makefile.msc");
+        t!(t!(File::open(&makefile_path)).read_to_string(&mut makefile));
+        let new_makefile = makefile.replace(" -MD ", " -MT ");
+        t!(t!(File::create(&makefile_path)).write_all(new_makefile.as_bytes()));
+    }
+
     let nmake = gcc::windows_registry::find(target, "nmake.exe");
     let mut nmake = nmake.unwrap_or(Command::new("nmake.exe"));
     run(nmake.current_dir(dst.join("build"))
              .arg("/nologo")
              .arg("/f")
-             .arg(src.join("win32/Makefile.msc"))
+             .arg(dst.join("build/win32/Makefile.msc"))
              .arg("zlib.lib"));
 
     for file in t!(fs::read_dir(&dst.join("build"))) {

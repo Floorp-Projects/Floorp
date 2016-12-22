@@ -81,7 +81,7 @@ private:
       , mTargetInterface(aTargetInterface)
     {}
     IID               mIID;
-    IUnknown*         mInterceptor;
+    RefPtr<IUnknown>  mInterceptor;
     IUnknown*         mTargetInterface;
   };
 

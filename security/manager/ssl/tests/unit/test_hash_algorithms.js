@@ -46,7 +46,7 @@ function doHash(algo, value, cmp) {
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = 'utf8';
+  converter.charset = "utf8";
   value = converter.convertToByteArray(value);
   hash.update(value, value.length);
   equal(hexdigest(hash.finish(false)), cmp,
@@ -64,7 +64,7 @@ function doHashStream(algo, value, cmp) {
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = 'utf8';
+  converter.charset = "utf8";
   let stream = converter.convertToInputStream(value);
   hash.updateFromStream(stream, stream.available());
   equal(hexdigest(hash.finish(false)), cmp,
