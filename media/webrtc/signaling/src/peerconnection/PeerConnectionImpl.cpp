@@ -334,6 +334,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mSTSThread(nullptr)
   , mAllowIceLoopback(false)
   , mAllowIceLinkLocal(false)
+  , mForceIceTcp(false)
   , mMedia(nullptr)
   , mUuidGen(MakeUnique<PCUuidGenerator>())
   , mNumAudioStreams(0)
@@ -364,6 +365,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
     "media.peerconnection.ice.loopback", false);
   mAllowIceLinkLocal = Preferences::GetBool(
     "media.peerconnection.ice.link_local", false);
+  mForceIceTcp = Preferences::GetBool(
+    "media.peerconnection.ice.force_ice_tcp", false);
 #endif
   memset(mMaxReceiving, 0, sizeof(mMaxReceiving));
   memset(mMaxSending, 0, sizeof(mMaxSending));
@@ -2235,6 +2238,11 @@ NS_IMETHODIMP
 PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, unsigned short aLevel) {
   PC_AUTO_ENTER_API_CALL(true);
 
+  if (mForceIceTcp && std::string::npos != std::string(aCandidate).find(" UDP ")) {
+    CSFLogError(logTag, "Blocking remote UDP candidate: %s", aCandidate);
+    return NS_OK;
+  }
+
   JSErrorResult rv;
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
@@ -3170,7 +3178,7 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
     mNegotiationNeeded = false;
     // If we're rolling back a local offer, we might need to remove some
     // transports, but nothing further needs to be done.
-    mMedia->ActivateOrRemoveTransports(*mJsepSession);
+    mMedia->ActivateOrRemoveTransports(*mJsepSession, mForceIceTcp);
     if (!rollback) {
       if (NS_FAILED(mMedia->UpdateMediaPipelines(*mJsepSession))) {
         CSFLogError(logTag, "Error Updating MediaPipelines");
@@ -3338,6 +3346,11 @@ void
 PeerConnectionImpl::CandidateReady(const std::string& candidate,
                                    uint16_t level) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
+
+  if (mForceIceTcp && std::string::npos != candidate.find(" UDP ")) {
+    CSFLogError(logTag, "Blocking local UDP candidate: %s", candidate.c_str());
+    return;
+  }
 
   std::string mid;
   bool skipped = false;
