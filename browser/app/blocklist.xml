@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1480349195955" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1480349215711" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -810,18 +810,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
-    <emItem blockID="i872" id="search-snacks@search-snacks.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i966" id="{5C655500-E712-41e7-9349-CE462F844B19}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="1.0.1-signed" severity="1"/>
-    </emItem>
-    <emItem blockID="i90" id="videoplugin@player.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*"/>
-    </emItem>
     <emItem blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
@@ -1352,6 +1340,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="i1425" id="/^(pdftoword@addingapps.com|jid0-EYTXLS0GyfQME5irGbnD4HksnbQ@jetpack|jid1-ZjJ7t75BAcbGCX@jetpack)$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
     <emItem blockID="i674" id="crossriderapp12555@crossrider.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
@@ -1524,6 +1516,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
+    <emItem blockID="i1423" id="/^(@pluginscribens_firefox|extension@vidscrab.com|firefox@jjj.ee|firefox@shop-reward.de|FxExtPasteNGoHtk@github.lostdj|himanshudotrai@gmail.com|jid0-bigoD0uivzAMmt07zrf3OHqa418@jetpack|jid0-iXbAR01tjT2BsbApyS6XWnjDhy8@jetpack)$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
     <emItem blockID="i68" id="flashupdate@adobe.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*"/>
@@ -1674,6 +1670,10 @@
     <emItem blockID="i1119" id="/^(test3@test.org|test2@test.org|test@test.org|support@mozilla.org)$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i1424" id="/^(jid0-S9kkzfTvEmC985BVmf8ZOzA5nLM@jetpack|jid0-xGZYdxpAkROWMUMfWKINyrXigBA@jetpack|jid1-qps14pkDB6UDvA@jetpack|jid1-Tsr09YnAqIWL0Q@jetpack|shole@ats.ext|voipgrid@jetpack|{38a64ef0-7181-11e3-981f-0800200c9a66}|eochoa@ualberta.ca)$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i519" id="703db0db-5fe9-44b6-9f53-c6a91a0ad5bd@7314bc82-969e-4d2a-921b-e5edd0b02cf1.com">
       <prefs/>
@@ -1990,6 +1990,18 @@
     <emItem blockID="i548" id="/^firefox@(jumpflip|webconnect|browsesmart|mybuzzsearch|outobox|greygray|lemurleap|divapton|secretsauce|batbrowse|whilokii|linkswift|qualitink|browsefox|kozaka|diamondata|glindorus|saltarsmart|bizzybolt|websparkle)\.(com?|net|org|info|biz)$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i872" id="search-snacks@search-snacks.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i966" id="{5C655500-E712-41e7-9349-CE462F844B19}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.1-signed" severity="1"/>
+    </emItem>
+    <emItem blockID="i90" id="videoplugin@player.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*"/>
     </emItem>
   </emItems>
   <pluginItems>
