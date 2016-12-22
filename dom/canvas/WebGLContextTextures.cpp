@@ -297,11 +297,9 @@ WebGLContext::IsTexture(WebGLTexture* tex)
 }
 
 void
-WebGLContext::TexParameter_base(GLenum rawTexTarget, GLenum pname, GLint* maybeIntParam,
-                                GLfloat* maybeFloatParam)
+WebGLContext::TexParameter_base(GLenum rawTexTarget, GLenum pname,
+                                const FloatOrInt& param)
 {
-    MOZ_ASSERT(maybeIntParam || maybeFloatParam);
-
     const char funcName[] = "texParameter";
     const uint8_t funcDims = 0;
 
@@ -310,7 +308,7 @@ WebGLContext::TexParameter_base(GLenum rawTexTarget, GLenum pname, GLint* maybeI
     if (!ValidateTexTarget(this, funcName, funcDims, rawTexTarget, &texTarget, &tex))
         return;
 
-    tex->TexParameter(texTarget, pname, maybeIntParam, maybeFloatParam);
+    tex->TexParameter(texTarget, pname, param);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

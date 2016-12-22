@@ -1005,14 +1005,8 @@ WebGLTexture::IsTexture() const
 // See this discussion:
 //   https://www.khronos.org/webgl/public-mailing-list/archives/1008/msg00014.html
 void
-WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntParam,
-                           GLfloat* maybeFloatParam)
+WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& param)
 {
-    MOZ_ASSERT(maybeIntParam || maybeFloatParam);
-
-    GLint   intParam   = maybeIntParam   ? *maybeIntParam   : GLint(roundf(*maybeFloatParam));
-    GLfloat floatParam = maybeFloatParam ? *maybeFloatParam : GLfloat(*maybeIntParam);
-
     bool isPNameValid = false;
     switch (pname) {
     // GLES 2.0.25 p76:
@@ -1055,16 +1049,16 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
     switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-        paramBadValue = (intParam < 0);
+        paramBadValue = (param.i < 0);
         break;
 
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
-        paramBadValue = (intParam != LOCAL_GL_NONE &&
-                         intParam != LOCAL_GL_COMPARE_REF_TO_TEXTURE);
+        paramBadValue = (param.i != LOCAL_GL_NONE &&
+                         param.i != LOCAL_GL_COMPARE_REF_TO_TEXTURE);
         break;
 
     case LOCAL_GL_TEXTURE_COMPARE_FUNC:
-        switch (intParam) {
+        switch (param.i) {
         case LOCAL_GL_LEQUAL:
         case LOCAL_GL_GEQUAL:
         case LOCAL_GL_LESS:
@@ -1082,7 +1076,7 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
         break;
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
-        switch (intParam) {
+        switch (param.i) {
         case LOCAL_GL_NEAREST:
         case LOCAL_GL_LINEAR:
         case LOCAL_GL_NEAREST_MIPMAP_NEAREST:
@@ -1098,7 +1092,7 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
         break;
 
     case LOCAL_GL_TEXTURE_MAG_FILTER:
-        switch (intParam) {
+        switch (param.i) {
         case LOCAL_GL_NEAREST:
         case LOCAL_GL_LINEAR:
             break;
@@ -1112,7 +1106,7 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
     case LOCAL_GL_TEXTURE_WRAP_S:
     case LOCAL_GL_TEXTURE_WRAP_T:
     case LOCAL_GL_TEXTURE_WRAP_R:
-        switch (intParam) {
+        switch (param.i) {
         case LOCAL_GL_CLAMP_TO_EDGE:
         case LOCAL_GL_MIRRORED_REPEAT:
         case LOCAL_GL_REPEAT:
@@ -1125,34 +1119,32 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
         break;
 
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-        if (maybeFloatParam && floatParam < 1.0f)
-            paramBadValue = true;
-        else if (maybeIntParam && intParam < 1)
+        if (param.f < 1.0f)
             paramBadValue = true;
 
         break;
     }
 
     if (paramBadEnum) {
-        if (maybeIntParam) {
+        if (!param.isFloat) {
             mContext->ErrorInvalidEnum("texParameteri: pname 0x%04x: Invalid param"
                                        " 0x%04x.",
-                                       pname, intParam);
+                                       pname, param.i);
         } else {
             mContext->ErrorInvalidEnum("texParameterf: pname 0x%04x: Invalid param %g.",
-                                       pname, floatParam);
+                                       pname, param.f);
         }
         return;
     }
 
     if (paramBadValue) {
-        if (maybeIntParam) {
+        if (!param.isFloat) {
             mContext->ErrorInvalidValue("texParameteri: pname 0x%04x: Invalid param %i"
                                         " (0x%x).",
-                                        pname, intParam, intParam);
+                                        pname, param.i, param.i);
         } else {
             mContext->ErrorInvalidValue("texParameterf: pname 0x%04x: Invalid param %g.",
-                                        pname, floatParam);
+                                        pname, param.f);
         }
         return;
     }
@@ -1160,37 +1152,38 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
     ////////////////
     // Store any needed values
 
+    FloatOrInt clamped = param;
     switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
-        mBaseMipmapLevel = intParam;
+        mBaseMipmapLevel = clamped.i;
         ClampLevelBaseAndMax();
-        intParam = mBaseMipmapLevel;
+        clamped = FloatOrInt(GLint(mBaseMipmapLevel));
         break;
 
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-        mMaxMipmapLevel = intParam;
+        mMaxMipmapLevel = clamped.i;
         ClampLevelBaseAndMax();
-        intParam = mMaxMipmapLevel;
+        clamped = FloatOrInt(GLint(mMaxMipmapLevel));
         break;
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
-        mMinFilter = intParam;
+        mMinFilter = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_MAG_FILTER:
-        mMagFilter = intParam;
+        mMagFilter = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_WRAP_S:
-        mWrapS = intParam;
+        mWrapS = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_WRAP_T:
-        mWrapT = intParam;
+        mWrapT = clamped.i;
         break;
 
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
-        mTexCompareMode = intParam;
+        mTexCompareMode = clamped.i;
         break;
 
     // We don't actually need to store the WRAP_R, since it doesn't change texture
@@ -1211,10 +1204,10 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
     ////////////////
 
     mContext->MakeContextCurrent();
-    if (maybeIntParam)
-        mContext->gl->fTexParameteri(texTarget.get(), pname, intParam);
+    if (!clamped.isFloat)
+        mContext->gl->fTexParameteri(texTarget.get(), pname, clamped.i);
     else
-        mContext->gl->fTexParameterf(texTarget.get(), pname, floatParam);
+        mContext->gl->fTexParameterf(texTarget.get(), pname, clamped.f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
