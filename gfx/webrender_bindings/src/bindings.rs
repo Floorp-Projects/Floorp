@@ -119,19 +119,21 @@ struct WrExternalImageStruct {
     //// size: usize,
 }
 
-type GetExternalImageCallback = fn(*mut c_void, ExternalImageId) -> WrExternalImageStruct;
+type LockExternalImageCallback = fn(*mut c_void, ExternalImageId) -> WrExternalImageStruct;
+type UnlockExternalImageCallback = fn(*mut c_void, ExternalImageId);
 type ReleaseExternalImageCallback = fn(*mut c_void, ExternalImageId);
 
 #[repr(C)]
 pub struct WrExternalImageHandler {
     external_image_obj: *mut c_void,
-    get_func: GetExternalImageCallback,
+    lock_func: LockExternalImageCallback,
+    unlock_func: UnlockExternalImageCallback,
     release_func: ReleaseExternalImageCallback,
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
-    fn get(&mut self, id: ExternalImageId) -> ExternalImage {
-        let image = (self.get_func)(self.external_image_obj, id);
+    fn lock(&mut self, id: ExternalImageId) -> ExternalImage {
+        let image = (self.lock_func)(self.external_image_obj, id);
 
         match image.image_type {
             WrExternalImageType::TEXTURE_HANDLE =>
@@ -143,6 +145,10 @@ impl ExternalImageHandler for WrExternalImageHandler {
                     source: ExternalImageSource::NativeTexture(image.handle)
                 },
         }
+    }
+
+    fn unlock(&mut self, id: ExternalImageId) {
+        (self.unlock_func)(self.external_image_obj, id);
     }
 
     fn release(&mut self, id: ExternalImageId) {
@@ -196,7 +202,8 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
             unsafe {
                 WrExternalImageHandler {
                     external_image_obj: (*external_image_handler).external_image_obj,
-                    get_func: (*external_image_handler).get_func,
+                    lock_func: (*external_image_handler).lock_func,
+                    unlock_func: (*external_image_handler).unlock_func,
                     release_func: (*external_image_handler).release_func,
                 }
             }));
