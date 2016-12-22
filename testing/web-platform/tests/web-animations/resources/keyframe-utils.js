@@ -259,7 +259,7 @@ var gKeyframeSequenceTests = [
                left: "10px" }] },
   { desc:   "a single keyframe sequence with string offset",
     input:  [{ offset: '0.5', left: "10px" }],
-    output: [{ offset: 0.5, computedOffset: 1, easing: "linear",
+    output: [{ offset: 0.5, computedOffset: 0.5, easing: "linear",
                left: "10px" }] },
   { desc:   "a one property keyframe sequence with some omitted offsets",
     input:  [{ offset: 0.00, left: "10px" },
