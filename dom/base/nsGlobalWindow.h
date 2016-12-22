@@ -338,8 +338,6 @@ public:
   void ReleaseEvents();
   void Dump(const nsAString& aStr);
   void SetResizable(bool aResizable) const;
-  nsresult GetScriptableContent(JSContext* aCx,
-                                JS::MutableHandle<JS::Value> aVal);
 
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
@@ -1173,31 +1171,33 @@ public:
   mozilla::ThrottledEventQueue* GetThrottledEventQueue() override;
 
   already_AddRefed<nsPIDOMWindowOuter>
-    GetContentInternal(mozilla::ErrorResult& aError, bool aUnprivilegedCaller);
+  GetContentInternal(mozilla::ErrorResult& aError,
+                     mozilla::dom::CallerType aCallerType);
   void GetContentOuter(JSContext* aCx,
                        JS::MutableHandle<JSObject*> aRetval,
                        mozilla::ErrorResult& aError);
   void GetContent(JSContext* aCx,
                   JS::MutableHandle<JSObject*> aRetval,
+                  mozilla::dom::CallerType aCallerType,
                   mozilla::ErrorResult& aError);
   already_AddRefed<nsPIDOMWindowOuter> GetContent()
   {
     MOZ_ASSERT(IsOuterWindow());
-    mozilla::ErrorResult ignored;
+    mozilla::IgnoredErrorResult ignored;
     nsCOMPtr<nsPIDOMWindowOuter> win =
-      GetContentInternal(ignored, /* aUnprivilegedCaller = */ false);
-    ignored.SuppressException();
+      GetContentInternal(ignored, mozilla::dom::CallerType::System);
     return win.forget();
   }
 
   void Get_content(JSContext* aCx,
                    JS::MutableHandle<JSObject*> aRetval,
+                   mozilla::dom::CallerType aCallerType,
                    mozilla::ErrorResult& aError)
   {
     if (mDoc) {
       mDoc->WarnOnceAbout(nsIDocument::eWindow_Content);
     }
-    GetContent(aCx, aRetval, aError);
+    GetContent(aCx, aRetval, aCallerType, aError);
   }
 
   already_AddRefed<mozilla::dom::Promise>

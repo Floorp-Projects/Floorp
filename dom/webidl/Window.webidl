@@ -374,9 +374,9 @@ partial interface Window {
                                                                    optional DOMString options = "",
                                                                    any... extraArguments);
 
-  [Replaceable, Throws] readonly attribute object? content;
+  [Replaceable, Throws, NeedsCallerType] readonly attribute object? content;
 
-  [ChromeOnly, Throws] readonly attribute object? __content;
+  [ChromeOnly, Throws, NeedsCallerType] readonly attribute object? __content;
 
   [Throws, ChromeOnly] any getInterface(IID iid);
 
