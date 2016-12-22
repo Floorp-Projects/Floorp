@@ -479,6 +479,27 @@ SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
   SANDBOX_ENSURE_SUCCESS(result,
                          "With these static arguments AddRule should never fail, what happened?");
 
+  // The following rules were added to allow a GMP to be loaded when any
+  // AppLocker DLL rules are specified. If the rules specifically block the DLL
+  // then it will not load.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                            L"\\Device\\SrpDevice");
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "With these static arguments AddRule should never fail, what happened?");
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
+                            sandbox::TargetPolicy::REG_ALLOW_READONLY,
+                            L"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Srp\\GP\\");
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "With these static arguments AddRule should never fail, what happened?");
+  // On certain Windows versions there is a double slash before GP in the path.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_REGISTRY,
+                            sandbox::TargetPolicy::REG_ALLOW_READONLY,
+                            L"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Srp\\\\GP\\");
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "With these static arguments AddRule should never fail, what happened?");
+
+
   return true;
 }
 #undef SANDBOX_ENSURE_SUCCESS
