@@ -316,7 +316,7 @@ static bool
 GetMaxGCPauseSinceClear(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.getMaxGCPauseSinceClear()));
+    args.rval().setNumber(cx->runtime()->gc.stats.getMaxGCPauseSinceClear().ToMicroseconds());
     return true;
 }
 
@@ -324,7 +324,7 @@ static bool
 ClearMaxGCPauseAccumulator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.clearMaxGCPauseAccumulator()));
+    args.rval().setNumber(cx->runtime()->gc.stats.clearMaxGCPauseAccumulator().ToMicroseconds());
     return true;
 }
 
