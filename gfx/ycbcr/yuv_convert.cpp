@@ -505,6 +505,27 @@ void ScaleYCbCrToRGB32_deprecated(const uint8* y_buf,
   if (has_mmx)
     EMMS();
 }
+void ConvertYCbCrAToARGB32(const uint8* y_buf,
+                           const uint8* u_buf,
+                           const uint8* v_buf,
+                           const uint8* a_buf,
+                           uint8* argb_buf,
+                           int pic_width,
+                           int pic_height,
+                           int ya_pitch,
+                           int uv_pitch,
+                           int argb_pitch) {
+
+  // The downstream graphics stack expects an attenuated input, hence why the
+  // attenuation parameter is set.
+  DebugOnly<int> err = libyuv::I420AlphaToARGB(y_buf, ya_pitch,
+                                               u_buf, uv_pitch,
+                                               v_buf, uv_pitch,
+                                               a_buf, ya_pitch,
+                                               argb_buf, argb_pitch,
+                                               pic_width, pic_height, 1);
+  MOZ_ASSERT(!err);
+}
 
 } // namespace gfx
 } // namespace mozilla

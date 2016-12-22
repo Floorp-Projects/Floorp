@@ -117,26 +117,6 @@ struct ActorHandle
     int mId;
 };
 
-// Used internally to represent a "trigger" that might cause a state
-// transition.  Triggers are normalized across parent+child to Send
-// and Recv (instead of child-in, child-out, parent-in, parent-out) so
-// that they can share the same state machine implementation.  To
-// further normalize, |Send| is used for 'call', |Recv| for 'answer'.
-struct Trigger
-{
-    enum Action { Send, Recv };
-
-    Trigger(Action action, int32_t msg) :
-        mAction(action),
-        mMessage(msg)
-    {
-      MOZ_ASSERT(0 <= msg && msg < INT32_MAX);
-    }
-
-    uint32_t mAction : 1;
-    uint32_t mMessage : 31;
-};
-
 // What happens if Interrupt calls race?
 enum RacyInterruptPolicy {
     RIPError,

@@ -26,7 +26,7 @@ namespace mozilla {
 class Signal {
 public:
 
-  Signal(CriticalSection* aLock)
+  explicit Signal(CriticalSection* aLock)
     : mLock(aLock)
   {
     CriticalSectionAutoEnter lock(*mLock);

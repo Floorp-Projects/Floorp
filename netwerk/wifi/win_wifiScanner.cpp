@@ -12,7 +12,7 @@
 
 class InterfaceScanCallbackData {
 public:
-  InterfaceScanCallbackData(uint32_t numInterfaces)
+  explicit InterfaceScanCallbackData(uint32_t numInterfaces)
     : mCurrentlyScanningInterfaces(numInterfaces)
   {
     mAllInterfacesDoneScanningEvent =

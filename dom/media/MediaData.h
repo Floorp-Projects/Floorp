@@ -479,6 +479,17 @@ public:
                                                        int64_t aTimecode,
                                                        const IntRect& aPicture);
 
+  static already_AddRefed<VideoData> CreateAndCopyData(const VideoInfo& aInfo,
+                                                       ImageContainer* aContainer,
+                                                       int64_t aOffset,
+                                                       int64_t aTime,
+                                                       int64_t aDuration,
+                                                       const YCbCrBuffer &aBuffer,
+                                                       const YCbCrBuffer::Plane &aAlphaPlane,
+                                                       bool aKeyframe,
+                                                       int64_t aTimecode,
+                                                       const IntRect& aPicture);
+
   static already_AddRefed<VideoData> CreateAndCopyIntoTextureClient(const VideoInfo& aInfo,
                                                                     int64_t aOffset,
                                                                     int64_t aTime,

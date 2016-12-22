@@ -81,7 +81,7 @@ private:
 class DeferredUpdateMessage : public DeferredMessage
 {
 public:
-  DeferredUpdateMessage(HWND aHWnd);
+  explicit DeferredUpdateMessage(HWND aHWnd);
 
   virtual void Run();
 

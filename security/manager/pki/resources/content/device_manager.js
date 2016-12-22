@@ -144,7 +144,7 @@ var selected_module;
 /* get the slot selected by the user (can only be one-at-a-time) */
 function getSelectedItem()
 {
-  var tree = document.getElementById('device_tree');
+  var tree = document.getElementById("device_tree");
   if (tree.currentIndex < 0) return;
   var item = tree.contentView.getItemAtIndex(tree.currentIndex);
   selected_slot = null;
@@ -202,17 +202,14 @@ function enableButtons()
     }
     showSlotInfo();
   }
-  var thebutton = document.getElementById('login_button');
-  thebutton.setAttribute("disabled", login_toggle);
-  thebutton = document.getElementById('logout_button');
-  thebutton.setAttribute("disabled", logout_toggle);
-  thebutton = document.getElementById('change_pw_button');
-  thebutton.setAttribute("disabled", pw_toggle);
-  thebutton = document.getElementById('unload_button');
-  thebutton.setAttribute("disabled", unload_toggle);
-  // not implemented
-  //thebutton = document.getElementById('change_slotname_button');
-  //thebutton.setAttribute("disabled", toggle);
+  document.getElementById("login_button")
+          .setAttribute("disabled", login_toggle);
+  document.getElementById("logout_button")
+          .setAttribute("disabled", logout_toggle);
+  document.getElementById("change_pw_button")
+          .setAttribute("disabled", pw_toggle);
+  document.getElementById("unload_button")
+          .setAttribute("disabled", unload_toggle);
 }
 
 // clear the display of information for the slot
@@ -229,7 +226,7 @@ function ClearDeviceList()
   ClearInfoList();
 
   skip_enable_buttons = true;
-  var tree = document.getElementById('device_tree');
+  var tree = document.getElementById("device_tree");
   tree.view.selection.clearSelection();
   skip_enable_buttons = false;
 
@@ -402,7 +399,7 @@ function doUnload()
 // handle card insertion and removal
 function onSmartCardChange()
 {
-  var tree = document.getElementById('device_tree');
+  var tree = document.getElementById("device_tree");
   var index = tree.currentIndex;
   tree.currentIndex = 0;
   ClearDeviceList();

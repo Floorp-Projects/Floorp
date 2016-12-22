@@ -30,7 +30,7 @@ class TimeStampValue
   MFBT_API uint64_t CheckQPC(const TimeStampValue& aOther) const;
 
   struct _SomethingVeryRandomHere;
-  constexpr TimeStampValue(_SomethingVeryRandomHere* aNullValue)
+  constexpr MOZ_IMPLICIT TimeStampValue(_SomethingVeryRandomHere* aNullValue)
     : mGTC(0)
     , mQPC(0)
     , mHasQPC(false)

@@ -173,7 +173,7 @@ MemoryDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   // The host will release this ref when it receives the surface descriptor.
   // We AddRef in case we die before the host receives the pointer.
   aOutDescriptor = SurfaceDescriptorDIB(reinterpret_cast<uintptr_t>(mSurface.get()));
-  mSurface->AddRef();
+  mSurface.get()->AddRef();
   return true;
 }
 

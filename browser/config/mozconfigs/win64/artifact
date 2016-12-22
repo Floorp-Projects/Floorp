@@ -10,5 +10,5 @@ export MOZILLA_OFFICIAL=1
 . "$topsrcdir/build/win64/mozconfig.vs-latest"
 . "$topsrcdir/build/mozconfig.common.override"
 
-ac_add_options --enable-artifact-builds
+. "$topsrcdir/build/mozconfig.artifact"
 ac_add_options --enable-artifact-build-symbols

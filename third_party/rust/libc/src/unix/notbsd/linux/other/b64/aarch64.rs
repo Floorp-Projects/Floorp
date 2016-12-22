@@ -60,10 +60,9 @@ s! {
         pub gid: ::gid_t,
         pub cuid: ::uid_t,
         pub cgid: ::gid_t,
-        pub mode: ::c_ushort,
-        __pad1: ::c_ushort,
+        pub mode: ::c_uint,
         pub __seq: ::c_ushort,
-        __pad2: ::c_ushort,
+        __pad1: ::c_ushort,
         __unused1: ::c_ulong,
         __unused2: ::c_ulong
     }
@@ -110,7 +109,7 @@ pub const SYS_perf_event_open: ::c_long = 241;
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 
-pub const SIGSTKSZ: ::size_t = 8192;
+pub const SIGSTKSZ: ::size_t = 16384;
 pub const CBAUD: ::tcflag_t = 0o0010017;
 pub const TAB1: ::c_int = 0x00000800;
 pub const TAB2: ::c_int = 0x00001000;

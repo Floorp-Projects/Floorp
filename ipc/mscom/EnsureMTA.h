@@ -38,7 +38,7 @@ public:
   }
 
   template <typename FuncT>
-  EnsureMTA(const FuncT& aClosure)
+  explicit EnsureMTA(const FuncT& aClosure)
   {
     MOZ_ASSERT(NS_IsMainThread());
     if (IsCurrentThreadMTA()) {
