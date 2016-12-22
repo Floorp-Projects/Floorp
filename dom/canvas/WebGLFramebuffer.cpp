@@ -501,8 +501,12 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
     }
 
     const auto usage = Format();
-    if (!usage)
+    if (!usage) {
+        if (pname == LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING)
+            return JS::NumberValue(LOCAL_GL_LINEAR);
+
         return JS::NullValue();
+    }
 
     auto format = usage->format;
 
