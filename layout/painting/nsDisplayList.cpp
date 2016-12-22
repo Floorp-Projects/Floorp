@@ -7353,8 +7353,6 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
 
-  // XXX Bug 1323912. nsSVGIntegrationUtils::PaintMask can not handle opacity
-  // correctly. Turn it off before bug fixed.
   if (maskUsage.opacity != 1.0) {
     return false;
   }
