@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1309866 moving files from jar.mn to modules left duplicated files on at least Mac static analysis builds
+CLOBBER the graphics branch because going through bug 1324537 seems to require it, and we're doing a reset through that bug.
