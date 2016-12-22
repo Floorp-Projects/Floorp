@@ -443,8 +443,8 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
   int32_t selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   nsresult rv =
-    mTextEditor->GetStartNodeAndOffset(aSelection,
-                                       getter_AddRefs(selNode), &selOffset);
+    EditorBase::GetStartNodeAndOffset(aSelection,
+                                      getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(selNode);
@@ -887,10 +887,9 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
   } else {
     nsCOMPtr<nsIDOMNode> startNode;
     int32_t startOffset;
-    NS_ENSURE_STATE(mTextEditor);
     nsresult rv =
-      mTextEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),
-                                         &startOffset);
+      EditorBase::GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),
+                                        &startOffset);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
@@ -932,14 +931,14 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
 {
   nsCOMPtr<nsIDOMNode> startNode;
   int32_t startOffset;
-  NS_ENSURE_STATE(mTextEditor);
   nsresult rv =
-    mTextEditor->GetStartNodeAndOffset(aSelection,
-                                       getter_AddRefs(startNode), &startOffset);
+    EditorBase::GetStartNodeAndOffset(aSelection,
+                                      getter_AddRefs(startNode), &startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
   // delete empty text nodes at selection
+  NS_ENSURE_STATE(mTextEditor);
   if (mTextEditor->IsTextNode(startNode)) {
     nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(startNode);
     uint32_t strLength;
