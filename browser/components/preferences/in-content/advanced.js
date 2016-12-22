@@ -57,6 +57,11 @@ var gAdvancedPane = {
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
       Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
+      let unload = () => {
+        window.removeEventListener("unload", unload);
+        Services.obs.removeObserver(this, "sitedatamanager:sites-updated");
+      };
+      window.addEventListener("unload", unload);
       SiteDataManager.updateSites();
       setEventListener("clearSiteDataButton", "command",
                        gAdvancedPane.clearSiteData);
