@@ -19,7 +19,7 @@ scopes:
   # Bug 1269443: cache scopes, etc. must be listed explicitly
   - "docker-worker:cache:tooltool-cache"
   - "secrets:get:project/taskcluster/gecko/hgfingerprint"
-  - "assume:repo:hg.mozilla.org/{{project}}:*"
+  - {{repo_scope}}
 
 routes:
   - "tc-treeherder.v2.{{project}}.{{head_rev}}.{{pushlog_id}}"
