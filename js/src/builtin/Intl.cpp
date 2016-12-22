@@ -3648,43 +3648,30 @@ static bool
 PluralRules(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    bool construct = args.isConstructing();
 
-    RootedObject obj(cx);
+    // Step 1 (Handled by OrdinaryCreateFromConstructor fallback code).
 
-    if (!construct) {
-        JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
-        if (!intl)
-            return false;
-        RootedValue self(cx, args.thisv());
-        if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            obj = ToObject(cx, self);
-            if (!obj)
-                return false;
+    // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+    RootedObject proto(cx);
+    if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
+        return false;
 
-            bool extensible;
-            if (!IsExtensible(cx, obj, &extensible))
-                return false;
-            if (!extensible)
-                return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
-        } else {
-            construct = true;
-        }
-    }
-    if (construct) {
-        RootedObject proto(cx, cx->global()->getOrCreatePluralRulesPrototype(cx));
+    if (!proto) {
+        proto = cx->global()->getOrCreatePluralRulesPrototype(cx);
         if (!proto)
             return false;
-        obj = NewObjectWithGivenProto(cx, &PluralRulesClass, proto);
-        if (!obj)
-            return false;
-
-        obj->as<NativeObject>().setReservedSlot(UPLURAL_RULES_SLOT, PrivateValue(nullptr));
     }
+
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &PluralRulesClass, proto));
+    if (!obj)
+        return false;
+
+    obj->as<NativeObject>().setReservedSlot(UPLURAL_RULES_SLOT, PrivateValue(nullptr));
 
     RootedValue locales(cx, args.get(0));
     RootedValue options(cx, args.get(1));
 
+    // Step 3.
     if (!IntlInitialize(cx, obj, cx->names().InitializePluralRules, locales, options))
         return false;
 
