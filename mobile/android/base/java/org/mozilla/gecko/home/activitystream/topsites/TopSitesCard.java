@@ -17,6 +17,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
@@ -103,13 +104,22 @@ class TopSitesCard extends RecyclerView.ViewHolder
 
     @Override
     public void onClick(View clickedView) {
+        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
+                .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_TOPSITES)
+                .forTopSiteType(type);
+
         if (clickedView == itemView) {
             onUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
 
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "as_top_sites");
+            Telemetry.sendUIEvent(
+                    TelemetryContract.Event.LOAD_URL,
+                    TelemetryContract.Method.LIST_ITEM,
+                    extras.build()
+            );
         } else if (clickedView == menuButton) {
             ActivityStreamContextMenu.show(clickedView.getContext(),
                     menuButton,
+                    extras,
                     ActivityStreamContextMenu.MenuMode.TOPSITE,
                     title.getText().toString(), url,
 
@@ -118,11 +128,15 @@ class TopSitesCard extends RecyclerView.ViewHolder
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     faviconView.getWidth(), faviconView.getHeight());
 
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.CONTEXT_MENU, "as_top_sites");
+            Telemetry.sendUIEvent(
+                    TelemetryContract.Event.SHOW,
+                    TelemetryContract.Method.CONTEXT_MENU,
+                    extras.build()
+            );
         }
     }
 
-    private static boolean isPinned(int type) {
+    private boolean isPinned(int type) {
         return type == BrowserContract.TopSites.TYPE_PINNED;
     }
 }
