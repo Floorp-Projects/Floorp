@@ -43,9 +43,6 @@ var advance = function() { tests.next(); };
  */
 var tests = (function*() {
   SimpleTest.requestLongerTimeout(4);
-  yield SpecialPowers.pushPrefEnv({"set": [['security.mixed_content.block_active_content', false]]}, advance);
-  yield SpecialPowers.pushPrefEnv({"set": [['security.mixed_content.send_hsts_priming', false]]}, advance);
-  yield SpecialPowers.pushPrefEnv({"set": [['security.mixed_content.use_hsts', false]]}, advance);
   var iframe = document.getElementById("testframe");
   iframe.onload = function() {
      advance();
