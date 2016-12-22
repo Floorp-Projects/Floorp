@@ -204,6 +204,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     import mach.main
     from mozboot.util import get_state_dir
 
+    from mozbuild.util import patch_main
+    patch_main()
+
     def telemetry_handler(context, data):
         # We have not opted-in to telemetry
         if 'BUILD_SYSTEM_TELEMETRY' not in os.environ:
