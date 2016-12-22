@@ -39,20 +39,20 @@ public abstract class ActivityStreamContextMenu
         TOPSITE
     }
 
-    final Context context;
+    private final Context context;
 
-    final String title;
-    final String url;
+    private final String title;
+    private final String url;
 
     private final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder;
 
     // We might not know bookmarked/pinned states, so we allow for null values.
+    // If we aren't told what these are in the constructor, we look them up in postInit.
     private @Nullable Boolean isBookmarked;
     private @Nullable Boolean isPinned;
 
-    final HomePager.OnUrlOpenListener onUrlOpenListener;
-    final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
-
+    private final HomePager.OnUrlOpenListener onUrlOpenListener;
+    private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
     public abstract MenuItem getItemByID(int id);
 
@@ -60,7 +60,7 @@ public abstract class ActivityStreamContextMenu
 
     public abstract void dismiss();
 
-    final MenuMode mode;
+    private final MenuMode mode;
 
     /* package-private */ ActivityStreamContextMenu(final Context context,
                                                     final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
@@ -88,7 +88,7 @@ public abstract class ActivityStreamContextMenu
      * Your implementation must be ready to return items from getItemByID() before postInit() is
      * called, i.e. you should probably inflate your menu items before this call.
      */
-    protected void postInit() {
+    /* package-local */ void postInit() {
         final MenuItem bookmarkItem = getItemByID(R.id.bookmark);
         if (Boolean.TRUE.equals(this.isBookmarked)) {
             bookmarkItem.setTitle(R.string.bookmark_remove);
@@ -111,19 +111,19 @@ public abstract class ActivityStreamContextMenu
             // Disable the bookmark item until we know its bookmark state
             bookmarkItem.setEnabled(false);
 
-            (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
+            (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
                 @Override
-                protected Void doInBackground() {
-                    isBookmarked = BrowserDB.from(context).isBookmark(context.getContentResolver(), url);
-                    return null;
+                protected Boolean doInBackground() {
+                    return BrowserDB.from(context).isBookmark(context.getContentResolver(), url);
                 }
 
                 @Override
-                protected void onPostExecute(Void aVoid) {
-                    if (isBookmarked) {
+                protected void onPostExecute(Boolean hasBookmark) {
+                    if (hasBookmark) {
                         bookmarkItem.setTitle(R.string.bookmark_remove);
                     }
 
+                    isBookmarked = hasBookmark;
                     bookmarkItem.setEnabled(true);
                 }
             }).execute();
@@ -133,19 +133,19 @@ public abstract class ActivityStreamContextMenu
             // Disable the pin item until we know its pinned state
             pinItem.setEnabled(false);
 
-            (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
+            (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
                 @Override
-                protected Void doInBackground() {
-                    isPinned = BrowserDB.from(context).isPinnedForAS(context.getContentResolver(), url);
-                    return null;
+                protected Boolean doInBackground() {
+                    return BrowserDB.from(context).isPinnedForAS(context.getContentResolver(), url);
                 }
 
                 @Override
-                protected void onPostExecute(Void aVoid) {
-                    if (isPinned) {
+                protected void onPostExecute(Boolean hasPin) {
+                    if (hasPin) {
                         pinItem.setTitle(R.string.contextmenu_top_sites_unpin);
                     }
 
+                    isPinned = hasPin;
                     pinItem.setEnabled(true);
                 }
             }).execute();
@@ -155,29 +155,25 @@ public abstract class ActivityStreamContextMenu
         final MenuItem deleteHistoryItem = getItemByID(R.id.delete);
         deleteHistoryItem.setVisible(false);
 
-        (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
-            boolean hasHistory;
-
+        (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            protected Void doInBackground() {
+            protected Boolean doInBackground() {
                 final Cursor cursor = BrowserDB.from(context).getHistoryForURL(context.getContentResolver(), url);
+                // It's tempting to throw here, but crashing because of a (hopefully) inconsequential
+                // oddity is somewhat questionable.
                 if (cursor == null) {
-                    hasHistory = false;
-                    return null;
+                    return false;
                 }
                 try {
-                    hasHistory = cursor.getCount() == 1;
+                    return cursor.getCount() == 1;
                 } finally {
                     cursor.close();
                 }
-                return null;
             }
 
             @Override
-            protected void onPostExecute(Void aVoid) {
-                if (hasHistory) {
-                    deleteHistoryItem.setVisible(true);
-                }
+            protected void onPostExecute(Boolean hasHistory) {
+                deleteHistoryItem.setVisible(hasHistory);
             }
         }).execute();
     }

@@ -270,9 +270,6 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     vSourceIconView.setImageResource(0);
                     break;
             }
-
-            // TODO Why?
-            // vSourceView.setText(vSourceView.getText());
         }
 
         private void updatePage(final String url) {
