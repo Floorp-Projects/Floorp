@@ -525,6 +525,14 @@ nsFormFillController::GetSearchCount(uint32_t *aSearchCount)
 NS_IMETHODIMP
 nsFormFillController::GetSearchAt(uint32_t index, nsACString & _retval)
 {
+  if (mAutofillInputs.Get(mFocusedInputNode)) {
+    nsCOMPtr<nsIAutoCompleteSearch> profileSearch = do_GetService("@mozilla.org/autocomplete/search;1?name=autofill-profiles");
+    if (profileSearch) {
+      _retval.AssignLiteral("autofill-profiles");
+      return NS_OK;
+    }
+  }
+
   _retval.AssignLiteral("form-history");
   return NS_OK;
 }
