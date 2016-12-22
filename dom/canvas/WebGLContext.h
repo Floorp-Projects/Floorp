@@ -195,6 +195,32 @@ struct IndexedBufferBinding
     uint64_t ByteCount() const;
 };
 
+////
+
+struct FloatOrInt final // For TexParameter[fi] and friends.
+{
+    const bool isFloat;
+    const GLfloat f;
+    const GLint i;
+
+    explicit FloatOrInt(GLint x)
+        : isFloat(false)
+        , f(x)
+        , i(x)
+    { }
+
+    explicit FloatOrInt(GLfloat x)
+        : isFloat(true)
+        , f(x)
+        , i(roundf(x))
+    { }
+
+    FloatOrInt& operator =(const FloatOrInt& x) {
+        memcpy(this, &x, sizeof(x));
+        return *this;
+    }
+};
+
 ////////////////////////////////////
 
 struct TexImageSource
@@ -1002,17 +1028,16 @@ public:
     bool IsTexture(WebGLTexture* tex);
 
     void TexParameterf(GLenum texTarget, GLenum pname, GLfloat param) {
-        TexParameter_base(texTarget, pname, nullptr, &param);
+        TexParameter_base(texTarget, pname, FloatOrInt(param));
     }
 
     void TexParameteri(GLenum texTarget, GLenum pname, GLint param) {
-        TexParameter_base(texTarget, pname, &param, nullptr);
+        TexParameter_base(texTarget, pname, FloatOrInt(param));
     }
 
 protected:
     JS::Value GetTexParameter(GLenum texTarget, GLenum pname);
-    void TexParameter_base(GLenum texTarget, GLenum pname, GLint* maybeIntParam,
-                           GLfloat* maybeFloatParam);
+    void TexParameter_base(GLenum texTarget, GLenum pname, const FloatOrInt& param);
 
     virtual bool IsTexParamValid(GLenum pname) const;
 
