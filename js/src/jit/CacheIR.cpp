@@ -48,6 +48,10 @@ EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderOp, NativeObject* h
 bool
 GetPropIRGenerator::tryAttachStub()
 {
+    // pc_ should only be null for idempotent ICs, and idempotent ICs should
+    // call tryAttachIdempotentStub instead.
+    MOZ_ASSERT(pc_);
+
     AutoAssertNoPendingException aanpe(cx_);
 
     ValOperandId valId(writer.setInputOperandId(0));
@@ -127,6 +131,27 @@ GetPropIRGenerator::tryAttachStub()
     return false;
 }
 
+bool
+GetPropIRGenerator::tryAttachIdempotentStub()
+{
+    // For idempotent ICs, only attach stubs for plain data properties.
+    // This ensures (1) the lookup has no side-effects and (2) Ion has complete
+    // static type information and we don't have to monitor the result. Because
+    // of (2), we don't support for instance missing properties or array
+    // lengths, as TI does not account for these cases.
+
+    // No pc if idempotent, as there can be multiple bytecode locations
+    // due to GVN.
+    MOZ_ASSERT(!pc_);
+
+    RootedObject obj(cx_, &val_.toObject());
+    RootedId id(cx_, NameToId(idVal_.toString()->asAtom().asPropertyName()));
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    ObjOperandId objId = writer.guardIsObject(valId);
+    return tryAttachNative(obj, objId, id);
+}
+
 static bool
 IsCacheableNoProperty(JSContext* cx, JSObject* obj, JSObject* holder, Shape* shape, jsid id,
                       jsbytecode* pc)
@@ -135,6 +160,12 @@ IsCacheableNoProperty(JSContext* cx, JSObject* obj, JSObject* holder, Shape* sha
         return false;
 
     MOZ_ASSERT(!holder);
+
+    if (!pc) {
+        // This is an idempotent IC, don't attach a missing-property stub.
+        // See tryAttachStub.
+        return false;
+    }
 
     // If we're doing a name lookup, we have to throw a ReferenceError.
     if (*pc == JSOP_GETXPROP)
@@ -350,6 +381,13 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
 
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_,
                                                             engine_, isTemporarilyUnoptimizable_);
+    if (!pc_) {
+        // Idempotent ICs only support plain data properties.
+        if (type != CanAttachReadSlot)
+            return false;
+        MOZ_ASSERT(holder);
+    }
+
     switch (type) {
       case CanAttachNone:
         return false;
