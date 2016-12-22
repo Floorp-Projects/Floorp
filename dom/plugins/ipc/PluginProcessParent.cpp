@@ -27,17 +27,33 @@ using mozilla::plugins::LaunchCompleteTask;
 using mozilla::plugins::PluginProcessParent;
 using base::ProcessArchitecture;
 
+#ifdef XP_WIN
+PluginProcessParent::PidSet* PluginProcessParent::sPidSet = nullptr;
+#endif
+
 PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
-    GeckoChildProcessHost(GeckoProcessType_Plugin),
-    mPluginFilePath(aPluginFilePath),
-    mTaskFactory(this),
-    mMainMsgLoop(MessageLoop::current()),
-    mRunCompleteTaskImmediately(false)
+      GeckoChildProcessHost(GeckoProcessType_Plugin)
+    , mPluginFilePath(aPluginFilePath)
+    , mTaskFactory(this)
+    , mMainMsgLoop(MessageLoop::current())
+    , mRunCompleteTaskImmediately(false)
+#ifdef XP_WIN
+    , mChildPid(0)
+#endif
 {
 }
 
 PluginProcessParent::~PluginProcessParent()
 {
+#ifdef XP_WIN
+    if (sPidSet && mChildPid) {
+        sPidSet->RemoveEntry(mChildPid);
+        if (sPidSet->IsEmpty()) {
+            delete sPidSet;
+            sPidSet = nullptr;
+        }
+    }
+#endif
 }
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
@@ -230,6 +246,14 @@ PluginProcessParent::WaitUntilConnected(int32_t aTimeoutMs)
 void
 PluginProcessParent::OnChannelConnected(int32_t peer_pid)
 {
+#ifdef XP_WIN
+    mChildPid = static_cast<uint32_t>(peer_pid);
+    if (!sPidSet) {
+        sPidSet = new PluginProcessParent::PidSet();
+    }
+    sPidSet->PutEntry(mChildPid);
+#endif
+
     GeckoChildProcessHost::OnChannelConnected(peer_pid);
     if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
         mLaunchCompleteTask->SetLaunchSucceeded();
@@ -255,3 +279,13 @@ PluginProcessParent::IsConnected()
     return mProcessState == PROCESS_CONNECTED;
 }
 
+bool
+PluginProcessParent::IsPluginProcessId(base::ProcessId procId) {
+#ifdef XP_WIN
+    MOZ_ASSERT(XRE_IsParentProcess());
+    return sPidSet && sPidSet->Contains(static_cast<uint32_t>(procId));
+#else
+    NS_ERROR("IsPluginProcessId not available on this platform.");
+    return false;
+#endif
+}
