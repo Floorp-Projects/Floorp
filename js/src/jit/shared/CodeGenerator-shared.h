@@ -438,7 +438,7 @@ class CodeGeneratorShared : public LElementVisitor
     }
 
     void storeResultTo(Register reg) {
-        masm.storeCallResult(reg);
+        masm.storeCallWordResult(reg);
     }
 
     void storeFloatResultTo(FloatRegister reg) {

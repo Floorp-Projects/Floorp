@@ -765,6 +765,16 @@ MacroAssembler::assertStackAlignment(uint32_t alignment, int32_t offset /* = 0 *
 }
 
 void
+MacroAssembler::storeCallBoolResult(Register reg)
+{
+    if (reg != ReturnReg)
+        mov(ReturnReg, reg);
+    // C++ compilers like to only use the bottom byte for bools, but we
+    // need to maintain the entire register.
+    and32(Imm32(0xFF), reg);
+}
+
+void
 MacroAssembler::storeCallResultValue(AnyRegister dest)
 {
     unboxValue(JSReturnOperand, dest);
