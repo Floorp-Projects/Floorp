@@ -243,8 +243,10 @@ public:
     ////////////////
 
     // GL 3.0 & ES 3.0
-    void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
-    void VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
+    void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w,
+                         const char* funcName = nullptr);
+    void VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w,
+                          const char* funcName = nullptr);
 
     void VertexAttribI4iv(GLuint index, const Int32ListU& list) {
         const auto& arr = Int32Arr::From(list);

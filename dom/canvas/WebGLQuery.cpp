@@ -136,8 +136,7 @@ WebGLQuery::GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const
         break;
 
     default:
-        mContext->ErrorInvalidEnum("%s: Invalid pname: %s", funcName,
-                                   mContext->EnumName(pname));
+        mContext->ErrorInvalidEnumArg(funcName, "pname", pname);
         return;
     }
 

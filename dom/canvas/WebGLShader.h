@@ -89,6 +89,7 @@ public:
 public:
     const GLuint mGLName;
     const GLenum mType;
+
 protected:
     nsString mSource;
     nsCString mCleanSource;
