@@ -36,7 +36,7 @@ interface ScreenOrientation : EventTarget {
   void unlock();
   [Throws, NeedsCallerType]
   readonly attribute OrientationType type;
-  [Throws]
+  [Throws, NeedsCallerType]
   readonly attribute unsigned short angle;
   attribute EventHandler onchange;
 };
