@@ -83,6 +83,7 @@ EXTRA_JS_MODULES += [
     'secondscreen/SimpleServiceDiscovery.jsm',
     'SelectContentHelper.jsm',
     'SelectParentHelper.jsm',
+    'ServiceRequest.jsm',
     'Services.jsm',
     'SessionRecorder.jsm',
     'sessionstore/FormData.jsm',
