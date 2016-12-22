@@ -877,7 +877,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool)
             masm.callWithABI(wasm::SymbolicAddress::ToInt32);
         else
             masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
-        masm.storeCallResult(output);
+        masm.storeCallWordResult(output);
 
         restoreVolatile(output);
     }
@@ -962,7 +962,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool)
         else
             masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
 
-        masm.storeCallResult(output);
+        masm.storeCallWordResult(output);
         masm.pop(input);
 
         restoreVolatile(output);
