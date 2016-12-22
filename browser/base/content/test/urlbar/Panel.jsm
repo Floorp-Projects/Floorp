@@ -12,7 +12,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Timer.jsm");
 
-this.Panel = function (panelElt, iframeURL) {
+this.Panel = function(panelElt, iframeURL) {
   this.p = panelElt;
   this.iframeURL = iframeURL;
   this._initPanel();
@@ -163,7 +163,7 @@ this.Panel.prototype = {
     return this._emit(event.type, detail);
   },
 
-  _emit(eventName, detailObj=null) {
+  _emit(eventName, detailObj = null) {
     this._emitQueue.push({
       name: eventName,
       detail: detailObj,
@@ -205,7 +205,7 @@ this.Panel.prototype = {
     // More events may be queued up, so recurse.  Do it after a turn of the
     // event loop to avoid growing the stack as big as the queue, and to let the
     // caller handle the returned event first.
-    let recurseTimer = setTimeout(() => {
+    setTimeout(() => {
       this._processEmitQueue();
     }, 100);
 
