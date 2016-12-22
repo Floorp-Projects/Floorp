@@ -307,6 +307,10 @@ FRAME_STATE_GROUP(FlexContainer, nsFlexContainerFrame)
 // (Means that we have to be more thorough about checking them for sortedness.)
 FRAME_STATE_BIT(FlexContainer, 20, NS_STATE_FLEX_CHILDREN_REORDERED)
 
+// True if the container has no flex items; may lie if there is a pending reflow
+// XXX not used yet...
+FRAME_STATE_BIT(FlexContainer, 22, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
+
 // == Frame state bits that apply to grid container frames ====================
 
 FRAME_STATE_GROUP(GridContainer, nsGridContainerFrame)
@@ -323,6 +327,9 @@ FRAME_STATE_BIT(GridContainer, 21, NS_STATE_GRID_DID_PUSH_ITEMS)
 
 // True iff computed grid values should be generated on the next reflow
 FRAME_STATE_BIT(GridContainer, 22, NS_STATE_GRID_GENERATE_COMPUTED_VALUES)
+
+// True if the container has no grid items; may lie if there is a pending reflow
+FRAME_STATE_BIT(GridContainer, 23, NS_STATE_GRID_SYNTHESIZE_BASELINE)
 
 // == Frame state bits that apply to SVG frames ===============================
 

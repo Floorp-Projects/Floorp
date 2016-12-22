@@ -111,6 +111,10 @@ public:
 
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override
   {
+    if (HasAnyStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE)) {
+      // Return a baseline synthesized from our margin-box.
+      return nsContainerFrame::GetLogicalBaseline(aWM);
+    }
     nscoord b;
     GetBBaseline(BaselineSharingGroup::eFirst, &b);
     return b;
