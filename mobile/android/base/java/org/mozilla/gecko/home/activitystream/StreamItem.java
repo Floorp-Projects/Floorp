@@ -23,7 +23,11 @@ import android.widget.TextView;
 
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.activitystream.ActivityStream.LabelCallback;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
@@ -135,16 +139,13 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
     public static class HighlightItem extends StreamItem implements IconCallback {
         public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
-        enum HighlightSource {
-            VISITED,
-            BOOKMARKED
-        }
-
         String title;
         String url;
 
         @Nullable Boolean isPinned;
         @Nullable Boolean isBookmarked;
+
+        Utils.HighlightSource source;
 
         final FaviconView vIconView;
         final TextView vLabel;
@@ -180,12 +181,23 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             menuButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
+                        .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
+                        .forHighlightSource(source);
+
                     ActivityStreamContextMenu.show(v.getContext(),
                             menuButton,
+                            extras,
                             ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
                             title, url, isBookmarked, isPinned,
                             onUrlOpenListener, onUrlOpenInBackgroundListener,
                             vIconView.getWidth(), vIconView.getHeight());
+
+                    Telemetry.sendUIEvent(
+                            TelemetryContract.Event.SHOW,
+                            TelemetryContract.Method.CONTEXT_MENU,
+                            extras.build()
+                    );
                 }
             });
 
@@ -193,12 +205,12 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         }
 
         public void bind(Cursor cursor, int tilesWidth, int tilesHeight) {
-
             final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
             final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
 
             title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE));
             url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+            source = Utils.highlightSource(cursor);
 
             vLabel.setText(title);
             vTimeSince.setText(ago);
@@ -208,9 +220,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             layoutParams.height = tilesHeight;
             vIconView.setLayoutParams(layoutParams);
 
-            final HighlightSource source = highlightSource(cursor);
-
-            updateStateForSource(source, cursor);
+            updateStateForSource(source);
             updateUiForSource(source);
             updatePage(url);
 
@@ -225,7 +235,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                     .execute(this);
         }
 
-        private void updateStateForSource(HighlightSource source, Cursor cursor) {
+        private void updateStateForSource(Utils.HighlightSource source) {
             // We can only be certain of bookmark state if an item is a bookmark item.
             // Otherwise, due to the underlying highlights query, we have to look up states when
             // menus are displayed.
@@ -243,7 +253,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             }
         }
 
-        private void updateUiForSource(HighlightSource source) {
+        private void updateUiForSource(Utils.HighlightSource source) {
             switch (source) {
                 case BOOKMARKED:
                     vSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
@@ -278,17 +288,5 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         public void onIconResponse(IconResponse response) {
             vIconView.updateImage(response);
         }
-    }
-
-    private static HighlightItem.HighlightSource highlightSource(final Cursor cursor) {
-        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID))) {
-            return HighlightItem.HighlightSource.BOOKMARKED;
-        }
-
-        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID))) {
-            return HighlightItem.HighlightSource.VISITED;
-        }
-
-        throw new IllegalArgumentException("Unknown highlight source.");
     }
 }

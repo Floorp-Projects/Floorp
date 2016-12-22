@@ -7,7 +7,6 @@ package org.mozilla.gecko.home.activitystream.menu;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.view.LayoutInflater;
@@ -18,6 +17,7 @@ import android.widget.TextView;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
@@ -35,6 +35,7 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
     private final NavigationView navigationView;
 
     public BottomSheetContextMenu(final Context context,
+                                  final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                   final MenuMode mode,
                                   final String title, @NonNull final String url,
                                   @Nullable final Boolean isBookmarked, @Nullable final Boolean isPinned,
@@ -43,6 +44,7 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
                                   final int tilesWidth, final int tilesHeight) {
 
         super(context,
+                telemetryExtraBuilder,
                 mode,
                 title,
                 url,

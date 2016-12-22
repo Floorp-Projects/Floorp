@@ -10,6 +10,8 @@ import android.view.View;
 import com.robotium.solo.Condition;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.activitystream.ActivityStream;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
 
@@ -61,7 +63,8 @@ public class testActivityStreamContextMenu extends BaseTest {
     private void testMenuForUrl(final String url, final Boolean isBookmarkedKnownState, final boolean isBookmarked, final Boolean isPinnedKnownState, final boolean isPinned, final boolean isVisited) {
         final View anchor = new View(getActivity());
 
-        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(getActivity(), anchor, ActivityStreamContextMenu.MenuMode.HIGHLIGHT, "foobar", url, isBookmarkedKnownState, isPinnedKnownState, null, null, 100, 100);
+        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(
+                getActivity(), anchor, ActivityStreamTelemetry.Extras.builder(), ActivityStreamContextMenu.MenuMode.HIGHLIGHT, "foobar", url, isBookmarkedKnownState, isPinnedKnownState, null, null, 100, 100);
 
         final int expectedBookmarkString;
         if (isBookmarked) {
