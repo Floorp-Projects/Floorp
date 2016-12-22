@@ -167,8 +167,8 @@ partial interface Window {
   // like a [Replaceable] attribute would, which needs the original JS value.
   //[Replaceable, Throws] readonly attribute double innerWidth;
   //[Replaceable, Throws] readonly attribute double innerHeight;
-  [Throws] attribute any innerWidth;
-  [Throws] attribute any innerHeight;
+  [Throws, NeedsCallerType] attribute any innerWidth;
+  [Throws, NeedsCallerType] attribute any innerHeight;
 
   // viewport scrolling
   void scroll(unrestricted double x, unrestricted double y);
@@ -201,10 +201,10 @@ partial interface Window {
   //[Replaceable, Throws] readonly attribute double screenY;
   //[Replaceable, Throws] readonly attribute double outerWidth;
   //[Replaceable, Throws] readonly attribute double outerHeight;
-  [Throws] attribute any screenX;
-  [Throws] attribute any screenY;
-  [Throws] attribute any outerWidth;
-  [Throws] attribute any outerHeight;
+  [Throws, NeedsCallerType] attribute any screenX;
+  [Throws, NeedsCallerType] attribute any screenY;
+  [Throws, NeedsCallerType] attribute any outerWidth;
+  [Throws, NeedsCallerType] attribute any outerHeight;
 };
 
 /**
