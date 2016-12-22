@@ -53,7 +53,7 @@ public:
 
   // DeviceType and DeviceAngle gets the current type and angle of the device.
   OrientationType DeviceType(CallerType aCallerType) const;
-  uint16_t DeviceAngle() const;
+  uint16_t DeviceAngle(CallerType aCallerType) const;
 
   // GetType and GetAngle gets the type and angle of the responsible document
   // (as defined in specification).
