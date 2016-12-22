@@ -142,6 +142,8 @@ public:
   // transaction or destruction
   void AddImageKeyForDiscard(WRImageKey);
   void DiscardImages();
+  void AddExternalImageIdForDiscard(uint64_t);
+  void DiscardExternalImages();
 
   WebRenderBridgeChild* WRBridge() const { return mWRChild; }
 
@@ -157,6 +159,7 @@ private:
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   std::vector<WRImageKey> mImageKeys;
+  std::vector<uint64_t> mExternalImageIds;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */
