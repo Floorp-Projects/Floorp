@@ -1181,11 +1181,11 @@ TraceJitStubFrame(JSTracer* trc, const JitFrameIterator& frame)
 }
 
 static void
-TraceIonAccessorICFrame(JSTracer* trc, const JitFrameIterator& frame)
+TraceIonICCallFrame(JSTracer* trc, const JitFrameIterator& frame)
 {
-    MOZ_ASSERT(frame.type() == JitFrame_IonAccessorIC);
-    IonAccessorICFrameLayout* layout = (IonAccessorICFrameLayout*)frame.fp();
-    TraceRoot(trc, layout->stubCode(), "ion-ic-accessor-code");
+    MOZ_ASSERT(frame.type() == JitFrame_IonICCall);
+    IonICCallFrameLayout* layout = (IonICCallFrameLayout*)frame.fp();
+    TraceRoot(trc, layout->stubCode(), "ion-ic-call-code");
 }
 
 #ifdef JS_CODEGEN_MIPS32
@@ -1443,8 +1443,8 @@ TraceJitActivation(JSTracer* trc, const JitActivationIterator& activations)
           case JitFrame_Rectifier:
             TraceRectifierFrame(trc, frames);
             break;
-          case JitFrame_IonAccessorIC:
-            TraceIonAccessorICFrame(trc, frames);
+          case JitFrame_IonICCall:
+            TraceIonICCallFrame(trc, frames);
             break;
           default:
             MOZ_CRASH("unexpected frame type");
@@ -1502,11 +1502,11 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
             MOZ_ASSERT(it.isBaselineStub() || it.isBaselineJS() || it.isIonJS());
         }
 
-        // Skip Baseline/Ion stub and accessor IC frames.
+        // Skip Baseline/Ion stub and IC call frames.
         if (it.isBaselineStub()) {
             ++it;
             MOZ_ASSERT(it.isBaselineJS());
-        } else if (it.isIonStub() || it.isIonAccessorIC()) {
+        } else if (it.isIonStub() || it.isIonICCall()) {
             ++it;
             MOZ_ASSERT(it.isIonJS());
         }
@@ -2683,8 +2683,8 @@ JitFrameIterator::dump() const
         fprintf(stderr, " Rectifier frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
-      case JitFrame_IonAccessorIC:
-        fprintf(stderr, " Ion scripted accessor IC\n");
+      case JitFrame_IonICCall:
+        fprintf(stderr, " Ion IC call\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
       case JitFrame_Exit:
@@ -3041,14 +3041,14 @@ JitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame)
         MOZ_CRASH("Bad frame type prior to rectifier frame.");
     }
 
-    if (prevType == JitFrame_IonAccessorIC) {
-        IonAccessorICFrameLayout* accessorFrame =
-            GetPreviousRawFrame<IonAccessorICFrameLayout*>(frame);
+    if (prevType == JitFrame_IonICCall) {
+        IonICCallFrameLayout* callFrame =
+            GetPreviousRawFrame<IonICCallFrameLayout*>(frame);
 
-        MOZ_ASSERT(accessorFrame->prevType() == JitFrame_IonJS);
+        MOZ_ASSERT(callFrame->prevType() == JitFrame_IonJS);
 
-        returnAddressToFp_ = accessorFrame->returnAddress();
-        fp_ = GetPreviousRawFrame<uint8_t*>(accessorFrame);
+        returnAddressToFp_ = callFrame->returnAddress();
+        fp_ = GetPreviousRawFrame<uint8_t*>(callFrame);
         type_ = JitFrame_IonJS;
         return;
     }
