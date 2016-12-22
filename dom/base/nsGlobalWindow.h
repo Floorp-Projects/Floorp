@@ -905,7 +905,7 @@ public:
   already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() override;
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-  int16_t Orientation() const;
+  int16_t Orientation(mozilla::dom::CallerType aCallerType) const;
 #endif
 
   mozilla::dom::Console* GetConsole(mozilla::ErrorResult& aRv);
