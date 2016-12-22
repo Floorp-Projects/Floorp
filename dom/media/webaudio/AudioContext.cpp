@@ -461,7 +461,7 @@ AudioContext::CreatePeriodicWave(const Float32Array& aRealData,
 
   if (aRealData.Length() != aImagData.Length() ||
       aRealData.Length() == 0) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
 
