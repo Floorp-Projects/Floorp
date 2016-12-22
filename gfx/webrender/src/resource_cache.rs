@@ -275,6 +275,14 @@ impl ResourceCache {
                                  bytes: Vec<u8>) {
         let next_epoch = match self.image_templates.get(&image_key) {
             Some(image) => {
+                // This image should not be an external image.
+                match image.data {
+                    ImageData::External(id) => {
+                        panic!("Update an external image with buffer, id={} image_key={:?}", id.0, image_key);
+                    },
+                    _ => {},
+                }
+
                 let Epoch(current_epoch) = image.epoch;
                 Epoch(current_epoch + 1)
             }
