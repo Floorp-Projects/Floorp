@@ -1015,11 +1015,17 @@ public:
   void MoveByOuter(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void MoveBy(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError);
   nsresult MoveBy(int32_t aXDif, int32_t aYDif) override;
-  void ResizeToOuter(int32_t aWidth, int32_t aHeight, mozilla::ErrorResult& aError, bool aCallerIsChrome);
+  void ResizeToOuter(int32_t aWidth, int32_t aHeight,
+                     mozilla::dom::CallerType aCallerType,
+                     mozilla::ErrorResult& aError);
   void ResizeTo(int32_t aWidth, int32_t aHeight,
+                mozilla::dom::CallerType aCallerType,
                 mozilla::ErrorResult& aError);
-  void ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif, mozilla::ErrorResult& aError, bool aCallerIsChrome);
+  void ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
+                     mozilla::dom::CallerType aCallerType,
+                     mozilla::ErrorResult& aError);
   void ResizeBy(int32_t aWidthDif, int32_t aHeightDif,
+                mozilla::dom::CallerType aCallerType,
                 mozilla::ErrorResult& aError);
   void Scroll(double aXScroll, double aYScroll);
   void Scroll(const mozilla::dom::ScrollToOptions& aOptions);
@@ -1101,8 +1107,10 @@ public:
     GetDefaultComputedStyle(mozilla::dom::Element& aElt,
                             const nsAString& aPseudoElt,
                             mozilla::ErrorResult& aError);
-  void SizeToContentOuter(mozilla::ErrorResult& aError, bool aCallerIsChrome);
-  void SizeToContent(mozilla::ErrorResult& aError);
+  void SizeToContentOuter(mozilla::dom::CallerType aCallerType,
+                          mozilla::ErrorResult& aError);
+  void SizeToContent(mozilla::dom::CallerType aCallerType,
+                     mozilla::ErrorResult& aError);
   mozilla::dom::Crypto* GetCrypto(mozilla::ErrorResult& aError);
   mozilla::dom::U2F* GetU2f(mozilla::ErrorResult& aError);
   nsIControllers* GetControllersOuter(mozilla::ErrorResult& aError);
@@ -1565,7 +1573,6 @@ public:
 
   // Outer windows only.
   void EnsureReflowFlushAndPaint();
-  void CheckSecurityWidthAndHeight(int32_t* width, int32_t* height, bool aCallerIsChrome);
   void CheckSecurityWidthAndHeight(int32_t* width, int32_t* height,
                                    mozilla::dom::CallerType aCallerType);
   void CheckSecurityLeftAndTop(int32_t* left, int32_t* top, bool aCallerIsChrome);
