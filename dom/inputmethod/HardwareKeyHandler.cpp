@@ -212,15 +212,9 @@ HardwareKeyHandler::OnHandledByInputMethodApp(const nsAString& aType,
 
   // Check whether the event is still valid to be fired
   if (CanDispatchEvent(keyInfo->mTarget, keyInfo->mEvent)) {
-    // If the key's defaultPrevented is true, it means that the
-    // input-method-app has already consumed this key,
-    // so we can dispatch |mozbrowserafterkey*| directly if
-    // preference "dom.beforeAfterKeyboardEvent.enabled" is enabled.
-    if (keyInfo->mEvent.mFlags.mDefaultPrevented) {
-      DispatchAfterKeyEvent(keyInfo->mTarget, keyInfo->mEvent);
-    // Otherwise, it means that input-method-app doesn't handle this key,
+    // If input-method-app doesn't handle this key,
     // so we need to dispatch it to its current event target.
-    } else {
+    if (!keyInfo->mEvent.mFlags.mDefaultPrevented) {
       DispatchToTargetApp(keyInfo->mTarget,
                           keyInfo->mEvent,
                           keyInfo->mStatus);
@@ -297,25 +291,6 @@ HardwareKeyHandler::DispatchKeyPress(nsINode* aTarget,
   return ret;
 }
 
-void
-HardwareKeyHandler::DispatchAfterKeyEvent(nsINode* aTarget,
-                                          WidgetKeyboardEvent& aEvent)
-{
-  MOZ_ASSERT(aTarget, "No target provided");
-
-  if (!PresShell::BeforeAfterKeyboardEventEnabled() ||
-      aEvent.mMessage == eKeyPress) {
-    return;
-  }
-
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell(aTarget);
-  if (NS_WARN_IF(presShell)) {
-    presShell->DispatchAfterKeyboardEvent(aTarget,
-                                          aEvent,
-                                          aEvent.mFlags.mDefaultPrevented);
-  }
-}
-
 bool
 HardwareKeyHandler::DispatchToTargetApp(nsINode* aTarget,
                                         WidgetKeyboardEvent& aEvent,
@@ -354,22 +329,11 @@ HardwareKeyHandler::DispatchToTargetApp(nsINode* aTarget,
   // In-process case: the event target is in the current process
   if (!PresShell::IsTargetIframe(currentTarget)) {
     DispatchToCurrentProcess(presShell, currentTarget, aEvent, aStatus);
-
-    if (presShell->CanDispatchEvent(&aEvent)) {
-      DispatchAfterKeyEvent(aTarget, aEvent);
-    }
-
     return true;
   }
 
   // OOP case: the event target is in the child process
   return DispatchToCrossProcess(aTarget, aEvent);
-
-  // After the oop target receives the event from TabChild::RecvRealKeyEvent
-  // and return the result through TabChild::SendDispatchAfterKeyboardEvent,
-  // the |mozbrowserafterkey*| will be fired from
-  // TabParent::RecvDispatchAfterKeyboardEvent, so we don't need to dispatch
-  // |mozbrowserafterkey*| by ourselves in this module.
 }
 
 void

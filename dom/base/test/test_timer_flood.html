@@ -13,6 +13,8 @@
 <pre id="test">
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+// This test takes a long time to run and it times out on Android debug as a result.
+SimpleTest.requestLongerTimeout(5);
 
 function onLoad() {
   return new Promise(resolve => {
@@ -20,15 +22,24 @@ function onLoad() {
   });
 }
 
+function setPrefs() {
+  // Put timeouts randomly in the tracking or normal buffer.  We do this in order to
+  // test to ensure that by default, this will not change the scheduling of timeouts.
+  return SpecialPowers.pushPrefEnv({"set": [["dom.timeout_bucketing_strategy", 3]]});
+}
+
 // Create a frame that executes a timer flood.  The frame signals
 // that is ready once the flood has had a chance to warm up.
 function withFloodFrame() {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     let frame = document.createElement('iframe');
     addEventListener('message', function onMsg(evt) {
       if (evt.data === 'STARTED') {
         removeEventListener('message', onMsg);
         resolve(frame);
+      } else if (evt.data == 'OUT_OF_ORDER') {
+        ok(false, "Out of order timeout observed");
+        reject();
       }
     });
     frame.src = 'file_timer_flood.html';
@@ -75,7 +86,9 @@ function testRequestAnimationFrame() {
 
 let floodFrame;
 
-onLoad().then(_ => {
+onLoad()
+.then(setPrefs)
+.then(_ => {
   // Start a timer flood in a frame.
   return withFloodFrame();
 }).then(frame => {
@@ -108,6 +121,8 @@ onLoad().then(_ => {
 }).then(_ => {
   ok(true, 'completed tests without timing out');
   floodFrame.remove();
+  SimpleTest.finish();
+}).catch(_ => {
   SimpleTest.finish();
 });
 </script>

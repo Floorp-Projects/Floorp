@@ -1466,8 +1466,7 @@ nsRefreshDriver::ArrayFor(mozFlushType aFlushType)
     case Flush_Display:
       return mObservers[2];
     default:
-      MOZ_ASSERT(false, "bad flush type");
-      return *static_cast<ObserverArray*>(nullptr);
+      MOZ_CRASH("We don't track refresh observers for this flush type");
   }
 }
 

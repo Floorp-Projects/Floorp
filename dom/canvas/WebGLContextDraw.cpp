@@ -270,11 +270,11 @@ WebGLContext::DrawArrays_check(const char* funcName, GLenum mode, GLint first,
 
     if (IsWebGL2() && !gl->IsSupported(gl::GLFeature::prim_restart_fixed)) {
         MOZ_ASSERT(gl->IsSupported(gl::GLFeature::prim_restart));
-        if (mPrimRestartTypeBytes != 4) {
-            mPrimRestartTypeBytes = 4;
+        if (mPrimRestartTypeBytes != 0) {
+            mPrimRestartTypeBytes = 0;
 
-            // OSX has issues leaving this as 0.
-            gl->fPrimitiveRestartIndex(UINT32_MAX);
+            // OSX appears to have severe perf issues with leaving this enabled.
+            gl->fDisable(LOCAL_GL_PRIMITIVE_RESTART);
         }
     }
 
@@ -630,6 +630,7 @@ WebGLContext::DrawElements_check(const char* funcName, GLenum mode, GLsizei vert
             mPrimRestartTypeBytes = bytesPerElem;
 
             const uint32_t ones = UINT32_MAX >> (4 - mPrimRestartTypeBytes);
+            gl->fEnable(LOCAL_GL_PRIMITIVE_RESTART);
             gl->fPrimitiveRestartIndex(ones);
         }
     }

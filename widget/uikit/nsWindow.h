@@ -36,9 +36,7 @@ public:
                                          override;
     virtual void Destroy() override;
     NS_IMETHOD Show(bool aState) override;
-    NS_IMETHOD              Enable(bool aState) override {
-        return NS_OK;
-    }
+    virtual void            Enable(bool aState) override {}
     virtual bool            IsEnabled() const override {
         return true;
     }
@@ -51,11 +49,11 @@ public:
     virtual void SetBackgroundColor(const nscolor &aColor) override;
     virtual void* GetNativeData(uint32_t aDataType) override;
 
-    NS_IMETHOD              Move(double aX, double aY) override;
+    virtual void            Move(double aX, double aY) override;
     virtual void            SetSizeMode(nsSizeMode aMode) override;
     void                    EnteredFullScreen(bool aFullScreen);
-    NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
-    NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+    virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override;
+    virtual void            Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     void                    ReportMoveEvent();
     void                    ReportSizeEvent();

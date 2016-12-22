@@ -125,8 +125,8 @@ this.NarrateTestUtils = {
     });
   },
 
-  sendBoundaryEvent: function(window, name, charIndex) {
-    let detail = { type: "boundary", args: { name, charIndex } };
+  sendBoundaryEvent: function(window, name, charIndex, charLength) {
+    let detail = { type: "boundary", args: { name, charIndex, charLength } };
     window.dispatchEvent(new window.CustomEvent("testsynthevent",
       { detail: detail }));
   },

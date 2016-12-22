@@ -1384,9 +1384,8 @@ nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY,
     // We also need to resize our widget then.
     if (mInternalWidget) {
       doc_x = doc_y = 0;
-      NS_ENSURE_SUCCESS(mInternalWidget->Resize(aX, aY, aCX, aCY,
-                                                !!(aFlags & nsIBaseWindow::eRepaint)),
-                        NS_ERROR_FAILURE);
+      mInternalWidget->Resize(aX, aY, aCX, aCY,
+                              !!(aFlags & nsIBaseWindow::eRepaint));
     }
     // Now reposition/ resize the doc
     NS_ENSURE_SUCCESS(
@@ -1547,7 +1546,8 @@ NS_IMETHODIMP
 nsWebBrowser::SetEnabled(bool aEnabled)
 {
   if (mInternalWidget) {
-    return mInternalWidget->Enable(aEnabled);
+    mInternalWidget->Enable(aEnabled);
+    return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }

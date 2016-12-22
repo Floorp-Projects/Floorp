@@ -76,7 +76,8 @@ public:
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
     , mNeedsNewAnimationIndexWhenRun(false)
-    , mPreviousPhaseOrIteration(PREVIOUS_PHASE_BEFORE)
+    , mPreviousPhase(ComputedTiming::AnimationPhase::Null)
+    , mPreviousIteration(0)
   {
     // We might need to drop this assertion once we add a script-accessible
     // constructor but for animations generated from CSS markup the
@@ -257,13 +258,10 @@ protected:
   // its animation index should be updated.
   bool mNeedsNewAnimationIndexWhenRun;
 
-  enum {
-    PREVIOUS_PHASE_BEFORE = uint64_t(-1),
-    PREVIOUS_PHASE_AFTER = uint64_t(-2)
-  };
-  // One of the PREVIOUS_PHASE_* constants, or an integer for the iteration
-  // whose start we last notified on.
-  uint64_t mPreviousPhaseOrIteration;
+  // Phase and current iteration from the previous time we queued events.
+  // This is used to determine what new events to dispatch.
+  ComputedTiming::AnimationPhase mPreviousPhase;
+  uint64_t mPreviousIteration;
 };
 
 } /* namespace dom */

@@ -39339,7 +39339,9 @@
     ]
   },
   "local_changes": {
-    "deleted": [],
+    "deleted": [
+      "web-animations/animation-model/animation-types/type-per-property.html"
+    ],
     "deleted_reftests": {},
     "items": {
       "testharness": {
@@ -39561,10 +39563,22 @@
             "url": "/html/semantics/forms/the-select-element/select-validity.html"
           }
         ],
+        "selection/setBaseAndExtent.html": [
+          {
+            "path": "selection/setBaseAndExtent.html",
+            "url": "/selection/setBaseAndExtent.html"
+          }
+        ],
         "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html": [
           {
             "path": "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html",
             "url": "/uievents/order-of-events/focus-events/focus-automated-blink-webkit.html"
+          }
+        ],
+        "web-animations/animation-model/animation-types/interpolation-per-property.html": [
+          {
+            "path": "web-animations/animation-model/animation-types/interpolation-per-property.html",
+            "url": "/web-animations/animation-model/animation-types/interpolation-per-property.html"
           }
         ],
         "web-animations/animation-model/animation-types/spacing-keyframes-filters.html": [

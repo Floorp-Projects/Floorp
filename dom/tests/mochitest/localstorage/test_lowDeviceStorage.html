@@ -3,7 +3,6 @@
 <title>Test localStorage usage while in a low device storage situation</title>
 
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-<script type="text/javascript" src="localStorageCommon.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
@@ -23,7 +22,7 @@ This test does the following:
 
 function lowDeviceStorage(lowStorage) {
   var data = lowStorage ? "full" : "free";
-  os().notifyObservers(null, "disk-space-watcher", data);
+  SpecialPowers.Services.obs.notifyObservers(null, "disk-space-watcher", data);
 }
 
 function startTest() {
