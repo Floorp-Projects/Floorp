@@ -38,6 +38,12 @@ MediaMIMEType::HasVideoMajorType() const
   return StartsWith(mMIMEType, "video/");
 }
 
+size_t
+MediaMIMEType::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return mMIMEType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
 MediaMIMEType::MediaMIMEType(const nsACString& aType)
   : mMIMEType(aType)
 {
@@ -100,6 +106,13 @@ MediaCodecs::ContainsAll(const MediaCodecs& aCodecs) const
   }
   return true;
 }
+
+size_t
+MediaCodecs::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return mCodecs.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
 
 static int32_t
 GetParameterAsNumber(const nsContentTypeParser& aParser,
@@ -173,6 +186,13 @@ MakeMediaExtendedMIMEType(const nsAString& aType)
                                     haveCodecs, codecs,
                                     width, height,
                                     framerate, bitrate));
+}
+
+size_t
+MediaExtendedMIMEType::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return mMIMEType.SizeOfExcludingThis(aMallocSizeOf)
+         + mCodecs.SizeOfExcludingThis(aMallocSizeOf);
 }
 
 Maybe<MediaExtendedMIMEType>
