@@ -68,6 +68,25 @@ public:
 
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord*             aBaseline) const override
+  {
+    auto innerTable = InnerTableFrame();
+    nscoord offset;
+    if (innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup, &offset)) {
+      auto bStart = innerTable->BStart(aWM, mRect.Size());
+      if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+        *aBaseline = offset + bStart;
+      } else {
+        auto bEnd = bStart + innerTable->BSize(aWM);
+        *aBaseline = BSize(aWM) - (bEnd - offset);
+      }
+      return true;
+    }
+    return false;
+  }
+
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
