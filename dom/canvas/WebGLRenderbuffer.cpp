@@ -278,7 +278,7 @@ WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
 
     case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
         {
-            GLenum ret = 0;
+            GLenum ret = LOCAL_GL_RGBA4;
             if (mFormat) {
                 ret = mFormat->format->sizedFormat;
 
