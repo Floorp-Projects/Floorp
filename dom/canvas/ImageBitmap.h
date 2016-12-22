@@ -12,7 +12,6 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
 #include "nsCycleCollectionParticipant.h"
 
 struct JSContext;
@@ -116,8 +115,8 @@ public:
   already_AddRefed<layers::Image>
   TransferAsImage();
 
-  UniquePtr<ImageBitmapCloneData>
-  ToCloneData() const;
+  ImageBitmapCloneData*
+  ToCloneData();
 
   static already_AddRefed<ImageBitmap>
   CreateFromCloneData(nsIGlobalObject* aGlobal, ImageBitmapCloneData* aData);
