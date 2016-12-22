@@ -287,7 +287,8 @@ partial interface Window {
   readonly attribute float mozInnerScreenX;
   [Throws, NeedsCallerType]
   readonly attribute float mozInnerScreenY;
-  [Replaceable, Throws] readonly attribute float  devicePixelRatio;
+  [Replaceable, Throws, NeedsCallerType]
+  readonly attribute float devicePixelRatio;
 
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */
