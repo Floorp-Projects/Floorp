@@ -1310,12 +1310,14 @@ protected:
   nsresult GetInnerHeight(int32_t* aHeight) override;
   void SetInnerHeightOuter(int32_t aInnerHeight, mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void SetInnerHeight(int32_t aInnerHeight, mozilla::ErrorResult& aError);
-  int32_t GetScreenXOuter(mozilla::ErrorResult& aError);
+  int32_t GetScreenXOuter(mozilla::dom::CallerType aCallerType,
+                          mozilla::ErrorResult& aError);
   int32_t GetScreenX(mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aError);
   void SetScreenXOuter(int32_t aScreenX, mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void SetScreenX(int32_t aScreenX, mozilla::ErrorResult& aError);
-  int32_t GetScreenYOuter(mozilla::ErrorResult& aError);
+  int32_t GetScreenYOuter(mozilla::dom::CallerType aCallerType,
+                          mozilla::ErrorResult& aError);
   int32_t GetScreenY(mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aError);
   void SetScreenYOuter(int32_t aScreenY, mozilla::ErrorResult& aError, bool aCallerIsChrome);
@@ -1656,7 +1658,8 @@ protected:
   void PreloadLocalStorage();
 
   // Returns CSS pixels based on primary screen.  Outer windows only.
-  mozilla::CSSIntPoint GetScreenXY(mozilla::ErrorResult& aError);
+  mozilla::CSSIntPoint GetScreenXY(mozilla::dom::CallerType aCallerType,
+                                   mozilla::ErrorResult& aError);
 
   nsGlobalWindow* InnerForSetTimeoutOrInterval(mozilla::ErrorResult& aError);
 

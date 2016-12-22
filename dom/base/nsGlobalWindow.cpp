@@ -5430,12 +5430,12 @@ nsGlobalWindow::SetOuterHeight(JSContext* aCx, JS::Handle<JS::Value> aValue,
 }
 
 CSSIntPoint
-nsGlobalWindow::GetScreenXY(ErrorResult& aError)
+nsGlobalWindow::GetScreenXY(CallerType aCallerType, ErrorResult& aError)
 {
   MOZ_ASSERT(IsOuterWindow());
 
   // When resisting fingerprinting, always return (0,0)
-  if (nsContentUtils::ShouldResistFingerprinting(mDocShell)) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return CSSIntPoint(0, 0);
   }
 
@@ -5478,18 +5478,17 @@ nsGlobalWindow::GetScreenXY(ErrorResult& aError)
 }
 
 int32_t
-nsGlobalWindow::GetScreenXOuter(ErrorResult& aError)
+nsGlobalWindow::GetScreenXOuter(CallerType aCallerType, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
-  return GetScreenXY(aError).x;
+  return GetScreenXY(aCallerType, aError).x;
 }
 
 int32_t
 nsGlobalWindow::GetScreenX(CallerType aCallerType, ErrorResult& aError)
 {
-  // Need to actually use aCallerType here.  Next changeset.
-  FORWARD_TO_OUTER_OR_THROW(GetScreenXOuter, (aError), aError, 0);
+  FORWARD_TO_OUTER_OR_THROW(GetScreenXOuter, (aCallerType, aError), aError, 0);
 }
 
 void
@@ -5731,18 +5730,17 @@ nsGlobalWindow::SetScreenX(JSContext* aCx, JS::Handle<JS::Value> aValue,
 }
 
 int32_t
-nsGlobalWindow::GetScreenYOuter(ErrorResult& aError)
+nsGlobalWindow::GetScreenYOuter(CallerType aCallerType, ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
-  return GetScreenXY(aError).y;
+  return GetScreenXY(aCallerType, aError).y;
 }
 
 int32_t
 nsGlobalWindow::GetScreenY(CallerType aCallerType, ErrorResult& aError)
 {
-  // Need to actually use aCallerType here.  Next changeset.
-  FORWARD_TO_OUTER_OR_THROW(GetScreenYOuter, (aError), aError, 0);
+  FORWARD_TO_OUTER_OR_THROW(GetScreenYOuter, (aCallerType, aError), aError, 0);
 }
 
 void
