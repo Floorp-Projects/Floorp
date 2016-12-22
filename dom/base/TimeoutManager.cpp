@@ -23,7 +23,7 @@ static int32_t              gRunningTimeoutDepth       = 0;
 static int32_t gMinTimeoutValue;
 static int32_t gMinBackgroundTimeoutValue;
 int32_t
-TimeoutManager::DOMMinTimeoutValue() const {
+TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
   // First apply any back pressure delay that might be in effect.
   int32_t value = std::max(mBackPressureDelayMS, 0);
   // Don't use the background timeout value when there are audio contexts
@@ -195,7 +195,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
       mBackPressureDelayMS > 0 || mWindow.IsBackgroundInternal()) {
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
-    realInterval = std::max(realInterval, uint32_t(DOMMinTimeoutValue()));
+    realInterval = std::max(realInterval,
+                            uint32_t(DOMMinTimeoutValue(timeout->mIsTracking)));
   }
 
   timeout->mWindow = &mWindow;
@@ -680,8 +681,9 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
   // Compute time to next timeout for interval timer.
   // Make sure nextInterval is at least DOMMinTimeoutValue().
   TimeDuration nextInterval =
-    TimeDuration::FromMilliseconds(std::max(aTimeout->mInterval,
-                                          uint32_t(DOMMinTimeoutValue())));
+    TimeDuration::FromMilliseconds(
+        std::max(aTimeout->mInterval,
+                 uint32_t(DOMMinTimeoutValue(aTimeout->mIsTracking))));
 
   // If we're running pending timeouts, set the next interval to be
   // relative to "now", and not to when the timeout that was pending
@@ -752,18 +754,17 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
     return NS_OK;
   }
 
-  auto minTimeout = DOMMinTimeoutValue();
   Timeouts::SortBy sortBy = mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
                                                : Timeouts::SortBy::TimeWhen;
 
   nsCOMPtr<nsIEventTarget> queue = mWindow.EventTargetFor(TaskCategory::Timer);
   nsresult rv = mNormalTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
-                                                                minTimeout,
+                                                                *this,
                                                                 sortBy,
                                                                 queue);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mTrackingTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
-                                                         minTimeout,
+                                                         *this,
                                                          sortBy,
                                                          queue);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -773,7 +774,7 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
 
 nsresult
 TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
-                                                          int32_t aMinTimeoutValueMS,
+                                                          const TimeoutManager& aTimeoutManager,
                                                           SortBy aSortBy,
                                                           nsIEventTarget* aQueue)
 {
@@ -809,8 +810,10 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
     // Compute the interval the timer should have had if it had not been set in a
     // background window
     TimeDuration interval =
-      TimeDuration::FromMilliseconds(std::max(timeout->mInterval,
-                                            uint32_t(aMinTimeoutValueMS)));
+      TimeDuration::FromMilliseconds(
+          std::max(timeout->mInterval,
+                   uint32_t(aTimeoutManager.
+                                DOMMinTimeoutValue(timeout->mIsTracking))));
     uint32_t oldIntervalMillisecs = 0;
     timeout->mTimer->GetDelay(&oldIntervalMillisecs);
     TimeDuration oldInterval = TimeDuration::FromMilliseconds(oldIntervalMillisecs);
@@ -1014,7 +1017,7 @@ TimeoutManager::Resume()
     if (aTimeout->When() > now) {
       remaining = static_cast<int32_t>((aTimeout->When() - now).ToMilliseconds());
     }
-    uint32_t delay = std::max(remaining, DOMMinTimeoutValue());
+    uint32_t delay = std::max(remaining, DOMMinTimeoutValue(aTimeout->mIsTracking));
 
     aTimeout->mTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (!aTimeout->mTimer) {
