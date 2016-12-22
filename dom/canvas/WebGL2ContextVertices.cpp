@@ -76,7 +76,6 @@ WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsiz
   }
 
   MOZ_ASSERT(mBoundVertexArray);
-  mBoundVertexArray->EnsureAttrib(index);
 
   InvalidateBufferFetching();
 
@@ -88,58 +87,6 @@ WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsiz
   const bool normalized = false;
   vd.VertexAttribPointer(integerFunc, mBoundArrayBuffer, size, type, normalized, stride,
                          offset);
-}
-
-void
-WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
-{
-  if (IsContextLost())
-    return;
-
-  if (!ValidateAttribIndex(index, "vertexAttribI4i"))
-    return;
-
-  mVertexAttribType[index] = LOCAL_GL_INT;
-
-  MakeContextCurrent();
-
-  if (index) {
-    gl->fVertexAttribI4i(index, x, y, z, w);
-  } else {
-    mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(x);
-    mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(y);
-    mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(z);
-    mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(w);
-    if (gl->IsGLES()) {
-      gl->fVertexAttribI4i(index, x, y, z, w);
-    }
-  }
-}
-
-void
-WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
-{
-  if (IsContextLost())
-    return;
-
-  if (!ValidateAttribIndex(index, "vertexAttribI4ui"))
-    return;
-
-  mVertexAttribType[index] = LOCAL_GL_UNSIGNED_INT;
-
-  MakeContextCurrent();
-
-  if (index) {
-    gl->fVertexAttribI4ui(index, x, y, z, w);
-  } else {
-    mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(x);
-    mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(y);
-    mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(z);
-    mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(w);
-    if (gl->IsGLES()) {
-      gl->fVertexAttribI4ui(index, x, y, z, w);
-    }
-  }
 }
 
 } // namespace mozilla

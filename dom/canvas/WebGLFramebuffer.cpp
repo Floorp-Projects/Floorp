@@ -423,13 +423,14 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
         default:
             break;
         }
-
+        nsCString attachmentName;
+        WebGLContext::EnumName(attachment, &attachmentName);
         if (webgl->IsWebGL2()) {
             webgl->ErrorInvalidOperation("%s: No attachment at %s.", funcName,
-                                         webgl->EnumName(attachment));
+                                         attachmentName.BeginReading());
         } else {
             webgl->ErrorInvalidEnum("%s: No attachment at %s.", funcName,
-                                    webgl->EnumName(attachment));
+                                    attachmentName.BeginReading());
         }
         return JS::NullValue();
     }
