@@ -2046,7 +2046,7 @@ WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
     const auto func = kFuncList[3*(A-2) + (B-2)];
 
     MakeContextCurrent();
-    (gl->*func)(loc->mLoc, numElementsToUpload, false, elemBytes);
+    (gl->*func)(loc->mLoc, numElementsToUpload, transpose, elemBytes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
