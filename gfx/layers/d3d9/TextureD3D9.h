@@ -298,7 +298,7 @@ public:
   virtual bool HasIntermediateBuffer() const override { return true; }
 
 protected:
-  TextureHostD3D9(TextureFlags aFlags);
+  explicit TextureHostD3D9(TextureFlags aFlags);
   IDirect3DDevice9* GetDevice();
 
   virtual void UpdatedInternal(const nsIntRegion* aRegion) override;

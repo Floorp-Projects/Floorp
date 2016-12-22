@@ -1,0 +1,12 @@
+# Common options for testing artifact builds in automation.
+
+# Enable the artifact build.
+ac_add_options --enable-artifact-builds
+
+# Override any toolchain defines we've inherited from other mozconfigs.
+unset CC
+unset CXX
+unset HOST_CC
+unset HOST_CXX
+unset RUSTC
+unset CARGO

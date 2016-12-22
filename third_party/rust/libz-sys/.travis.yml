@@ -17,7 +17,8 @@ notifications:
     on_success: never
 env:
   global:
-    secure: AEw7peNq5yyhDlGod702HScsujYFaFWvdOaZKiyVwUMNHkou1U4BiziBGekBqTmrPOW8+iNSS5J7MDPu8I7RAtkrlOvsBKIjmGbBYkzodkMFjR6TNNAnfAXhjqUzHh77wL5qWtNh+bz/PL4RVyjdo1Swnc6mqz5Unu9rP9S2LeE=
+    secure: "eq1KPWs3sNmvrQj6ayLRrY2Jqwpx4p9CNU5gRU6LCdx2otIQqKXY1Jj9E6uvQIspL6ZpCNzYDMDUSsRdNahdx59WQGD/mxdrFWStUonJ4t0al2FIQ97NaEy57r4vw36oViDCzqZudDlsacHZnpCpI8ei6AB73rGXfxc3g3fxk6o="
+
 os:
   - linux
   - osx

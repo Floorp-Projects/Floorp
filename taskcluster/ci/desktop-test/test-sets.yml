@@ -65,11 +65,21 @@ all-tests-opt:
     - web-platform-tests-wdspec
     - xpcshell
     - mochitest-valgrind
+    - talos-chrome
+    - talos-dromaeojs
+    - talos-g1
+    - talos-g2
+    - talos-g3
+    - talos-g4
+    - talos-other
+    - talos-svgr
+    - talos-tp5o
 
 stylo-tests:
     - cppunit
     - crashtest
     - reftest-stylo
+    - mochitest-stylo
 
 asan-tests:
     - cppunit

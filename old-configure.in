@@ -3273,9 +3273,6 @@ MOZ_D3D_CPU_SUFFIX=
 MOZ_HAS_WINSDK_WITH_D3D=
 MOZ_D3DCOMPILER_VISTA_DLL=
 MOZ_D3DCOMPILER_VISTA_DLL_PATH=
-MOZ_DIRECTX_SDK_PATH=
-MOZ_D3DCOMPILER_XP_DLL=
-MOZ_D3DCOMPILER_XP_CAB=
 
 if test "$COMPILE_ENVIRONMENT" ; then
 case "$target_os" in
@@ -3293,11 +3290,6 @@ x86_64)
   MOZ_D3D_CPU_SUFFIX=x64
   ;;
 esac
-
-MOZ_ARG_ENABLE_BOOL(require-all-d3dc-versions,
-[  --enable-require-all-d3dc-versions Require all versions of the D3D compiler needed for supported Windows systems.],
-    MOZ_REQUIRE_ALL_D3DCS=1,
-    MOZ_REQUIRE_ALL_D3DCS=)
 
 # This is potentially set in external mozconfig files; if it's set,
 # then the build exposes the "webgl" context name, which is reserved
@@ -3357,87 +3349,17 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
   fi
 
   ######################################
-  # Find _43 for use by XP.
-
-  if test "$HAVE_64BIT_BUILD"; then
-    AC_MSG_RESULT([We are building a 64-bit binary, skip checking d3dcompiler_43.])
-  else
-    # Get the SDK path from the registry.
-    # First try to get the June 2010 SDK
-    MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK (June 2010)' | head -n 1`
-    if test -z "$MOZ_DIRECTX_SDK_REG_KEY" ; then
-      # Otherwise just take whatever comes first
-      MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
-    fi
-    MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/' | sed 's,\\\\,/,g'`
-
-    if test -n "$MOZ_DIRECTX_SDK_PATH" &&
-       test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_D3D_CPU_SUFFIX/dxguid.lib ; then
-      AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
-    else
-      AC_MSG_RESULT([DirectX SDK not found.])
-      MOZ_DIRECTX_SDK_PATH=
-    fi
-
-    # Check that our DirectX SDK is acceptable.
-    if test -n "$MOZ_DIRECTX_SDK_PATH"; then
-      if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
-        AC_MSG_RESULT([Found the February 2010 DirectX SDK, which is unacceptable to ANGLE.])
-        MOZ_DIRECTX_SDK_PATH=
-      fi
-    fi
-
-    if test -n "$MOZ_DIRECTX_SDK_PATH"; then
-      # Find a D3D compiler DLL in the DirectX SDK, if we didn't find one already.
-      # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
-      MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_D3D_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
-
-      if test -n "$MOZ_D3DX9_VERSION" ; then
-        MOZ_D3DCOMPILER_XP_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_D3D_CPU_SUFFIX}.cab | head -n1`
-
-        if test -n "$MOZ_D3DCOMPILER_XP_CAB"; then
-          MOZ_D3DCOMPILER_XP_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
-        else
-          AC_MSG_RESULT([Couldn't find a CAB containing the D3D compiler DLL.])
-          AC_MSG_ERROR([DirectX SDK at "$MOZ_DIRECTX_SDK_PATH" appears broken.])
-          MOZ_DIRECTX_SDK_PATH=
-        fi
-      else
-        AC_MSG_RESULT([Couldn't determine the D3DX9 version for the DirectX SDK.])
-        MOZ_DIRECTX_SDK_PATH=
-      fi
-    else
-      AC_MSG_RESULT([Couldn't find an acceptable DirectX SDK for ANGLE, needed for d3dcompiler_43.])
-    fi
-  fi
-
-  ######################################
   # Check that we found what we needed.
   MOZ_FOUND_A_D3D_COMPILER=
-  MOZ_FOUND_BOTH_D3D_COMPILERS=1
 
   if test -n "$MOZ_D3DCOMPILER_VISTA_DLL"; then
     MOZ_FOUND_A_D3D_COMPILER=1
     AC_MSG_RESULT([Found d3dcompiler DLL for Vista+: $MOZ_D3DCOMPILER_VISTA_DLL])
-  else
-    MOZ_FOUND_BOTH_D3D_COMPILERS=
-  fi
-
-  if test -n "$MOZ_D3DCOMPILER_XP_DLL"; then
-    MOZ_FOUND_A_D3D_COMPILER=1
-    AC_MSG_RESULT([Found d3dcompiler DLL for XP: $MOZ_D3DCOMPILER_XP_DLL])
-  else
-    MOZ_FOUND_BOTH_D3D_COMPILERS=
   fi
 
   if test -z "$CROSS_COMPILE"; then
     if test -z "MOZ_FOUND_A_D3D_COMPILER"; then
       AC_MSG_ERROR([Couldn't find an acceptable D3D compiler DLL.])
-    fi
-
-    if test -n "$MOZ_REQUIRE_ALL_D3DCS" -a -z "$MOZ_FOUND_BOTH_D3D_COMPILERS"; then
-      AC_MSG_ERROR([Both D3D compilers _43 and _46+ are required by --enable-require-d3d-compilers.])
-      AC_MSG_ERROR([  Install Windows SDK 8.0+, as well as DirectX SDK (June 2010 version or newer), or reconfigure without this flag.])
     fi
   fi
 fi # MOZ_ANGLE_RENDERER
@@ -5266,9 +5188,6 @@ AC_SUBST(MOZ_D3D_CPU_SUFFIX)
 AC_SUBST(MOZ_HAS_WINSDK_WITH_D3D)
 AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL_PATH)
-AC_SUBST(MOZ_DIRECTX_SDK_PATH)
-AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
-AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)

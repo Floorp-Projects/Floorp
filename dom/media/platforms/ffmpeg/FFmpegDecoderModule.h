@@ -33,6 +33,13 @@ public:
   already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const CreateDecoderParams& aParams) override
   {
+    // Temporary - forces use of VPXDecoder when alpha is present.
+    // Bug 1263836 will handle alpha scenario once implemented. It will shift
+    // the check for alpha to PDMFactory but not itself remove the need for a
+    // check.
+    if (aParams.VideoConfig().HasAlpha()) {
+      return nullptr;
+    }
     RefPtr<MediaDataDecoder> decoder =
       new FFmpegVideoDecoder<V>(mLib,
                                 aParams.mTaskQueue,

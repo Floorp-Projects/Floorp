@@ -65,7 +65,7 @@ BuildKeyNameFromFontName(nsAString &aName)
 
 class WinUserFontData : public gfxUserFontData {
 public:
-    WinUserFontData(HANDLE aFontRef)
+    explicit WinUserFontData(HANDLE aFontRef)
         : mFontRef(aFontRef)
     { }
 
@@ -818,7 +818,7 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
     // so we set up a stack object to ensure it is freed even if we take an
     // early exit
     struct FontDataDeleter {
-        FontDataDeleter(const uint8_t* aFontData)
+        explicit FontDataDeleter(const uint8_t* aFontData)
             : mFontData(aFontData) { }
         ~FontDataDeleter() { free((void*)mFontData); }
         const uint8_t *mFontData;
