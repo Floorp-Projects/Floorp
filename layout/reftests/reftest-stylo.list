@@ -20,6 +20,9 @@ include w3c-css/received/reftest-stylo.list
 include abs-pos/reftest-stylo.list
 include position-relative/reftest-stylo.list
 
+# apng-mime
+include apng-mime/reftest-stylo.list
+
 include async-scrolling/reftest-stylo.list
 
 # backgrounds/
@@ -57,8 +60,7 @@ include canvas/reftest-stylo.list
 include ../../dom/canvas/test/reftest/reftest-stylo.list
 
 # css animations
-# disabled due to timeouts
-# include css-animations/reftest-stylo.list
+include css-animations/reftest-stylo.list
 
 # blending/
 include css-blending/reftest-stylo.list
@@ -187,16 +189,13 @@ include css-grid/reftest-stylo.list
 include floats/reftest-stylo.list
 
 # font-face
-# Lots of Stylo intermittents
-# include font-face/reftest-stylo.list
+include font-face/reftest-stylo.list
 
 # font features (opentype)
 include font-features/reftest-stylo.list
 
 # mobile font size inflation
-skip-if((B2G&&browserIsRemote)||Mulet) include font-inflation/reftest-stylo.list
-# Bug 972697
-# Initial mulet triage: parity with B2G/B2G Desktop
+include font-inflation/reftest-stylo.list
 
 # CSS Font Loading API
 include font-loading-api/reftest-stylo.list
@@ -253,9 +252,8 @@ include margin-collapsing/reftest-stylo.list
 include marquee/reftest-stylo.list
 
 # native-theme/
-# skipping for B2G since something around radio-nonnative.html makes the whole suite hang
-skip-if(B2G||Android||Mulet) include native-theme/reftest-stylo.list
-# Initial mulet triage: parity with B2G/B2G Desktop
+# (no XUL theme on Android)
+skip-if(Android) include native-theme/reftest-stylo.list
 
 # netwerk/
 include ../../netwerk/test/reftest/reftest-stylo.list
@@ -263,16 +261,16 @@ include ../../netwerk/test/reftest/reftest-stylo.list
 include outline/reftest-stylo.list
 
 # object/
-# include object/reftest-stylo.list
+include object/reftest-stylo.list
 
 # ogg-video/
-skip-if(!B2G&&browserIsRemote) include ogg-video/reftest-stylo.list
+skip-if(browserIsRemote) include ogg-video/reftest-stylo.list
 
 # webm-video/
-# skip-if(!B2G&&browserIsRemote) include webm-video/reftest-stylo.list
+skip-if(browserIsRemote) include webm-video/reftest-stylo.list
 
 # mp4-video/
-skip-if(!B2G&&browserIsRemote) include mp4-video/reftest-stylo.list
+skip-if(browserIsRemote) include mp4-video/reftest-stylo.list
 
 # parser/
 include ../../parser/htmlparser/tests/reftest/reftest-stylo.list
@@ -284,7 +282,7 @@ include percent-overflow-sizing/reftest-stylo.list
 include pixel-rounding/reftest-stylo.list
 
 # plugin/
-# include ../../dom/plugins/test/reftest/reftest-stylo.list
+include ../../dom/plugins/test/reftest/reftest-stylo.list
 
 # position-dynamic-changes/
 include position-dynamic-changes/reftest-stylo.list

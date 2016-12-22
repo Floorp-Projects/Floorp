@@ -18,8 +18,7 @@
 == toauto-leftA-widthN-rightN.html?padding_abspos toauto-leftA-widthN-rightN.html?padding_abspos
 == toauto-leftA-widthA-rightN.html?padding_abspos toauto-leftA-widthA-rightN.html?padding_abspos
 == fromauto-leftN-widthA-rightA.html?padding_abspos fromauto-leftN-widthA-rightA.html?padding_abspos
-random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?padding_abspos fromauto-leftN-widthA-rightA-2.html?padding_abspos
-# Bug 688545
+== fromauto-leftN-widthA-rightA-2.html?padding_abspos fromauto-leftN-widthA-rightA-2.html?padding_abspos
 == fromauto-leftN-widthA-rightN.html?padding_abspos fromauto-leftN-widthA-rightN.html?padding_abspos
 == fromauto-leftN-widthA-rightN-2.html?padding_abspos fromauto-leftN-widthA-rightN-2.html?padding_abspos
 == fromauto-leftA-widthN-rightA.html?padding_abspos fromauto-leftA-widthN-rightA.html?padding_abspos

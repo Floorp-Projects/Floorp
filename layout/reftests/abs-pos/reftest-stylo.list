@@ -1,69 +1,63 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== font-size-wrap.html font-size-wrap.html
-== abs-pos-auto-margin-1.html abs-pos-auto-margin-1.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) == auto-offset-inline-block-1.html auto-offset-inline-block-1.html
-# bug 696670
-== fieldset-1.html fieldset-1.html
+fails == font-size-wrap.html font-size-wrap.html
+fails == abs-pos-auto-margin-1.html abs-pos-auto-margin-1.html
+fails == auto-offset-inline-block-1.html auto-offset-inline-block-1.html
+fails == fieldset-1.html fieldset-1.html
 == table-1.html table-1.html
-== table-2.html table-2.html
+fails == table-2.html table-2.html
 == table-3.html table-3.html
-== table-caption-1.html table-caption-1.html
-== table-caption-2.html table-caption-2.html
-== table-caption-3.html table-caption-3.html
-== table-caption-4.html table-caption-4.html
-skip-if((B2G&&browserIsRemote)||Mulet) == table-caption-5.html table-caption-5.html
-# TODO: change to == when bug 967870 is is
-# Initial mulet triage: parity with B2G/B2G Desktop
-== table-cell-1.html table-cell-1.html
-== table-cell-2.html table-cell-2.html
-== table-cell-3.html table-cell-3.html
-== table-cell-4.html table-cell-4.html
-== table-cell-5.html table-cell-5.html
-== table-cell-6.html table-cell-6.html
-== table-cell-7.html table-cell-7.html
-skip-if((B2G&&browserIsRemote)||Mulet) == table-cell-8.html table-cell-8.html
-# TODO: change to == when bug 967870 is is
-# Initial mulet triage: parity with B2G/B2G Desktop
-== table-row-1.html table-row-1.html
-== table-row-2.html table-row-2.html
-== table-row-3.html table-row-3.html
-== table-row-4.html table-row-4.html
-== table-row-5.html table-row-5.html
-== table-row-6.html table-row-6.html
-== table-row-7.html table-row-7.html
-== table-row-group-1.html table-row-group-1.html
-== table-row-group-2.html table-row-group-2.html
-== table-row-group-3.html table-row-group-3.html
-== table-row-group-4.html table-row-group-4.html
-== table-row-group-5.html table-row-group-5.html
-== table-row-group-6.html table-row-group-6.html
-== table-row-group-7.html table-row-group-7.html
-== table-header-group-1.html table-header-group-1.html
-== table-header-group-2.html table-header-group-2.html
-== table-header-group-3.html table-header-group-3.html
-== table-header-group-4.html table-header-group-4.html
-== table-header-group-5.html table-header-group-5.html
-== table-header-group-6.html table-header-group-6.html
-== table-header-group-7.html table-header-group-7.html
-# == table-footer-group-1.html table-footer-group-1.html
-== table-footer-group-2.html table-footer-group-2.html
-== table-footer-group-3.html table-footer-group-3.html
-== table-footer-group-4.html table-footer-group-4.html
-== table-footer-group-5.html table-footer-group-5.html
-== table-footer-group-6.html table-footer-group-6.html
-== table-footer-group-7.html table-footer-group-7.html
-== continuation-positioned-inline-1.html continuation-positioned-inline-1.html
-== continuation-positioned-inline-2.html continuation-positioned-inline-2.html
-== scrollframe-1.html scrollframe-1.html
-fails == scrollframe-2.html scrollframe-2-ref.html #bug #bug
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(gtkWidget,1,8) == select-1.html select-1.html
-fails fuzzy-if(gtkWidget,1,8) == select-1-dynamic.html select-1-dynamic.html
-== select-2.html select-2.html
-fuzzy-if(gtkWidget,1,19) fuzzy-if(Android||B2G,17,726) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,98) fuzzy-if(browserIsRemote&&winWidget,102,107) == select-3.html select-3.html
-== multi-column-1.html multi-column-1.html
+fails == table-caption-1.html table-caption-1.html
+fails == table-caption-2.html table-caption-2.html
+fails == table-caption-3.html table-caption-3.html
+fails == table-caption-4.html table-caption-4.html
+fails == table-caption-5.html table-caption-5.html
+fails == table-cell-1.html table-cell-1.html
+fails == table-cell-2.html table-cell-2.html
+fails == table-cell-3.html table-cell-3.html
+fails == table-cell-4.html table-cell-4.html
+fails == table-cell-5.html table-cell-5.html
+fails == table-cell-6.html table-cell-6.html
+fails == table-cell-7.html table-cell-7.html
+fails == table-cell-8.html table-cell-8.html
+fails == table-row-1.html table-row-1.html
+fails == table-row-2.html table-row-2.html
+fails == table-row-3.html table-row-3.html
+fails == table-row-4.html table-row-4.html
+fails == table-row-5.html table-row-5.html
+fails == table-row-6.html table-row-6.html
+fails == table-row-7.html table-row-7.html
+fails == table-row-group-1.html table-row-group-1.html
+fails == table-row-group-2.html table-row-group-2.html
+fails == table-row-group-3.html table-row-group-3.html
+fails == table-row-group-4.html table-row-group-4.html
+fails == table-row-group-5.html table-row-group-5.html
+fails == table-row-group-6.html table-row-group-6.html
+fails == table-row-group-7.html table-row-group-7.html
+fails == table-header-group-1.html table-header-group-1.html
+fails == table-header-group-2.html table-header-group-2.html
+fails == table-header-group-3.html table-header-group-3.html
+fails == table-header-group-4.html table-header-group-4.html
+fails == table-header-group-5.html table-header-group-5.html
+fails == table-header-group-6.html table-header-group-6.html
+fails == table-header-group-7.html table-header-group-7.html
+fails == table-footer-group-1.html table-footer-group-1.html
+fails == table-footer-group-2.html table-footer-group-2.html
+fails == table-footer-group-3.html table-footer-group-3.html
+fails == table-footer-group-4.html table-footer-group-4.html
+fails == table-footer-group-5.html table-footer-group-5.html
+fails == table-footer-group-6.html table-footer-group-6.html
+fails == table-footer-group-7.html table-footer-group-7.html
+fails == continuation-positioned-inline-1.html continuation-positioned-inline-1.html
+fails == continuation-positioned-inline-2.html continuation-positioned-inline-2.html
+fails == scrollframe-1.html scrollframe-1.html
+fails == scrollframe-2.html scrollframe-2.html
+fails == select-1.html select-1.html
+fails == select-1-dynamic.html select-1-dynamic.html
+fails == select-2.html select-2.html
+fails == select-3.html select-3.html
+fails == multi-column-1.html multi-column-1.html
 == button-1.html button-1.html
 == button-2.html button-2.html
-== relative-row-animation-1.html relative-row-animation-1.html
-fuzzy-if(Android,12,50) == fixed-pos-auto-offset-1a.html fixed-pos-auto-offset-1a.html
-fuzzy-if(Android,12,50) == fixed-pos-auto-offset-1b.html fixed-pos-auto-offset-1b.html
+fails == relative-row-animation-1.html relative-row-animation-1.html
+fails == fixed-pos-auto-offset-1a.html fixed-pos-auto-offset-1a.html
+fails == fixed-pos-auto-offset-1b.html fixed-pos-auto-offset-1b.html

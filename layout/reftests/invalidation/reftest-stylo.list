@@ -1,19 +1,15 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== table-repaint-a.html table-repaint-a.html
-== table-repaint-b.html table-repaint-b.html
-== table-repaint-c.html table-repaint-c.html
-== table-repaint-d.html table-repaint-d.html
-skip-if((B2G&&browserIsRemote)||Mulet) == 540247-1.xul 540247-1.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == 543681-1.html 543681-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== 1243409-1.html 1243409-1.html
-== test-image-layers.html test-image-layers.html
-random-if(B2G||Mulet) == test-image-layers-multiple-displayitem.html test-image-layers-multiple-displayitem.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == table-repaint-a.html table-repaint-a.html
+fails == table-repaint-b.html table-repaint-b.html
+fails == table-repaint-c.html table-repaint-c.html
+fails == table-repaint-d.html table-repaint-d.html
+== 540247-1.xul 540247-1.xul
+fails == 543681-1.html 543681-1.html
+fails == 1243409-1.html 1243409-1.html
+fails == test-image-layers.html test-image-layers.html
+fails == test-image-layers-multiple-displayitem.html test-image-layers-multiple-displayitem.html
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers.html test-animated-image-layers.html
-fails pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers-background.html test-animated-image-layers-background.html
+# == test-animated-image-layers-background.html test-animated-image-layers-background.html
 == box-shadow-border-radius.html box-shadow-border-radius.html
 == filter-userspace-offset.svg?offsetContainer=rect filter-userspace-offset.svg?offsetContainer=rect
 == filter-userspace-offset.svg?offsetContainer=use filter-userspace-offset.svg?offsetContainer=use
@@ -45,41 +41,54 @@ fails pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget
 == filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100 filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100 filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100
-== scroll-inactive-layers.html scroll-inactive-layers.html
-== scroll-inactive-layers-2.html scroll-inactive-layers-2.html
-== inactive-layertree-visible-region-1.html inactive-layertree-visible-region-1.html
-== inactive-layertree-visible-region-2.html inactive-layertree-visible-region-2.html
-== transform-floating-point-invalidation.html transform-floating-point-invalidation.html
-== transform-floating-point-invalidation.html?reverse transform-floating-point-invalidation.html?reverse
-== nudge-to-integer-invalidation.html nudge-to-integer-invalidation.html
-== nudge-to-integer-invalidation.html?reverse nudge-to-integer-invalidation.html?reverse
-== clipped-animated-transform-1.html clipped-animated-transform-1.html
-== paintedlayer-recycling-1.html paintedlayer-recycling-1.html
-== paintedlayer-recycling-2.html paintedlayer-recycling-2.html
-pref(layers.single-tile.enabled,false) == paintedlayer-recycling-3.html paintedlayer-recycling-3.html
-== paintedlayer-recycling-4.html paintedlayer-recycling-4.html
-== paintedlayer-recycling-5.html paintedlayer-recycling-5.html
-== paintedlayer-recycling-6.html paintedlayer-recycling-6.html
-== paintedlayer-recycling-7.html paintedlayer-recycling-7.html
+fails == scroll-inactive-layers.html scroll-inactive-layers.html
+fails == scroll-inactive-layers-2.html scroll-inactive-layers-2.html
+fails == inactive-layertree-visible-region-1.html inactive-layertree-visible-region-1.html
+fails == inactive-layertree-visible-region-2.html inactive-layertree-visible-region-2.html
+fails == transform-floating-point-invalidation.html transform-floating-point-invalidation.html
+fails == transform-floating-point-invalidation.html?reverse transform-floating-point-invalidation.html?reverse
+fails == nudge-to-integer-invalidation.html nudge-to-integer-invalidation.html
+fails == nudge-to-integer-invalidation.html?reverse nudge-to-integer-invalidation.html?reverse
+fails == clipped-animated-transform-1.html clipped-animated-transform-1.html
+# == paintedlayer-recycling-1.html paintedlayer-recycling-1.html
+fails == paintedlayer-recycling-2.html paintedlayer-recycling-2.html
+fails pref(layers.single-tile.enabled,false) == paintedlayer-recycling-3.html paintedlayer-recycling-3.html
+fails == paintedlayer-recycling-4.html paintedlayer-recycling-4.html
+fails == paintedlayer-recycling-5.html paintedlayer-recycling-5.html
+fails == paintedlayer-recycling-6.html paintedlayer-recycling-6.html
+fails == paintedlayer-recycling-7.html paintedlayer-recycling-7.html
 == masklayer-1.html masklayer-1.html
-== masklayer-2.html masklayer-2.html
-random == layer-splitting-1.html layer-splitting-1.html
-random == layer-splitting-2.html layer-splitting-2.html
-random == layer-splitting-3.html layer-splitting-3.html
+fails == masklayer-2.html masklayer-2.html
+fails == layer-splitting-1.html layer-splitting-1.html
+fails == layer-splitting-2.html layer-splitting-2.html
+fails == layer-splitting-3.html layer-splitting-3.html
 fails == layer-splitting-4.html layer-splitting-4.html
-== layer-splitting-5.html layer-splitting-5.html
-== layer-splitting-6.html layer-splitting-6.html
-== layer-splitting-7.html layer-splitting-7.html
-fuzzy-if(gtkWidget,2,4) fuzzy-if(asyncPan,2,3955) fuzzy-if(OSX,179,30) fuzzy-if(skiaContent,16,3230) == image-scrolling-zoom-1.html image-scrolling-zoom-1.html
-== image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-ref.html
-pref(layers.single-tile.enabled,false) == fast-scrolling.html fast-scrolling.html
+fails == layer-splitting-5.html layer-splitting-5.html
+fails == layer-splitting-6.html layer-splitting-6.html
+fails == layer-splitting-7.html layer-splitting-7.html
+fails == image-scrolling-zoom-1.html image-scrolling-zoom-1.html
+fails == image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-ref.html
+fails pref(layers.single-tile.enabled,false) == fast-scrolling.html fast-scrolling.html
 == background-position-1.html background-position-1.html
 == background-position-2a.html background-position-2a.html
 == background-position-2b.html background-position-2b.html
-== background-position-2c.html background-position-2c.html
-== background-position-2d.html background-position-2d.html
+# == background-position-2c.html background-position-2c.html
+# == background-position-2d.html background-position-2d.html
 == background-position-2e.html background-position-2e.html
 == background-position-2f.html background-position-2f.html
 == zero-opacity-animation.html zero-opacity-animation.html
 == zero-opacity-text.html zero-opacity-text.html
-== negative-w-component.html negative-w-component.html
+fails == negative-w-component.html negative-w-component.html
+
+fails == mask-invalidation-1a.html mask-invalidation-1a.html
+fails == mask-invalidation-1b.html mask-invalidation-1b.html
+
+fails == mask-invalidation-2a.html mask-invalidation-2a.html
+fails == mask-invalidation-2b.html mask-invalidation-2b.html
+fails == mask-invalidation-2c.html mask-invalidation-2c.html
+fails == mask-invalidation-2d.html mask-invalidation-2d.html
+
+fails == clip-path-invalidation-1a.html clip-path-invalidation-1a.html
+fails == clip-path-invalidation-1b.html clip-path-invalidation-1b.html
+fails == clip-path-invalidation-1c.html clip-path-invalidation-1c.html
+fails == clip-path-invalidation-1d.html clip-path-invalidation-1d.html
