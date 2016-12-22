@@ -30,7 +30,7 @@ namespace mozilla {
  * Then returns true, with
  *     `out_baseName`: "foo"
  *     `out_isArray`: false
- *     `out_index`: <not written>
+ *     `out_index`: 0
  */
 static bool
 ParseName(const nsCString& name, nsCString* const out_baseName,
@@ -42,6 +42,7 @@ ParseName(const nsCString& name, nsCString* const out_baseName,
     {
         *out_baseName = name;
         *out_isArray = false;
+        *out_arrayIndex = 0;
         return true;
     }
 
@@ -68,6 +69,18 @@ ParseName(const nsCString& name, nsCString* const out_baseName,
     *out_isArray = true;
     *out_arrayIndex = indexNum;
     return true;
+}
+
+static void
+AssembleName(const nsCString& baseName, bool isArray, size_t arrayIndex,
+             nsCString* const out_name)
+{
+    *out_name = baseName;
+    if (isArray) {
+        out_name->Append('[');
+        out_name->AppendInt(uint64_t(arrayIndex));
+        out_name->Append(']');
+    }
 }
 
 //////////
@@ -651,14 +664,11 @@ WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
 
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
     nsCString mappedName;
-
-    if (!LinkInfo()->FindFragData(userName, &mappedName)) {
-        mappedName = userName;
-    }
+    if (!LinkInfo()->MapFragDataName(userName, &mappedName))
+        return -1;
 
     gl::GLContext* gl = mContext->GL();
     gl->MakeCurrent();
-
     return gl->fGetFragDataLocation(mGLName, mappedName.BeginReading());
 }
 
@@ -735,23 +745,9 @@ WebGLProgram::GetUniformBlockIndex(const nsAString& userName_wide) const
 
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
 
-    nsDependentCString baseUserName;
-    bool isArray;
-    size_t arrayIndex;
-    if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
+    nsCString mappedName;
+    if (!LinkInfo()->MapUniformBlockName(userName, &mappedName))
         return LOCAL_GL_INVALID_INDEX;
-
-    const webgl::UniformBlockInfo* info;
-    if (!LinkInfo()->FindUniformBlock(baseUserName, &info)) {
-        return LOCAL_GL_INVALID_INDEX;
-    }
-
-    nsAutoCString mappedName(info->mBaseMappedName);
-    if (isArray) {
-        mappedName.AppendLiteral("[");
-        mappedName.AppendInt(uint32_t(arrayIndex));
-        mappedName.AppendLiteral("]");
-    }
 
     gl::GLContext* gl = mContext->GL();
     gl->MakeCurrent();
@@ -867,28 +863,15 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
 
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
 
-    nsDependentCString baseUserName;
-    bool isArray = false;
     // GLES 2.0.25, Section 2.10, p35
     // If the the uniform location is an array, then the location of the first
     // element of that array can be retrieved by either using the name of the
     // uniform array, or the name of the uniform array appended with "[0]".
-    // The ParseName() can't recognize this rule. So always initialize
-    // arrayIndex with 0.
-    size_t arrayIndex = 0;
-    if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
-        return nullptr;
-
+    nsCString mappedName;
+    size_t arrayIndex;
     webgl::UniformInfo* info;
-    if (!LinkInfo()->FindUniform(baseUserName, &info))
+    if (!LinkInfo()->FindUniform(userName, &mappedName, &arrayIndex, &info))
         return nullptr;
-
-    nsAutoCString mappedName(info->mActiveInfo->mBaseMappedName);
-    if (isArray) {
-        mappedName.AppendLiteral("[");
-        mappedName.AppendInt(uint32_t(arrayIndex));
-        mappedName.AppendLiteral("]");
-    }
 
     gl::GLContext* gl = mContext->GL();
     gl->MakeCurrent();
@@ -921,35 +904,21 @@ WebGLProgram::GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
     for (size_t i = 0; i < count; i++) {
         const NS_LossyConvertUTF16toASCII userName(uniformNames[i]);
 
-        nsDependentCString baseUserName;
-        bool isArray;
+        nsCString mappedName;
         size_t arrayIndex;
-        if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex)) {
-            arr.AppendElement(LOCAL_GL_INVALID_INDEX);
-            continue;
-        }
-
         webgl::UniformInfo* info;
-        if (!LinkInfo()->FindUniform(baseUserName, &info)) {
+        if (!LinkInfo()->FindUniform(userName, &mappedName, &arrayIndex, &info)) {
             arr.AppendElement(LOCAL_GL_INVALID_INDEX);
             continue;
         }
 
-        nsAutoCString mappedName(info->mActiveInfo->mBaseMappedName);
-        if (isArray) {
-            mappedName.AppendLiteral("[");
-            mappedName.AppendInt(uint32_t(arrayIndex));
-            mappedName.AppendLiteral("]");
-        }
+        const GLchar* const mappedNameBegin = mappedName.get();
 
-        const GLchar* mappedNameBytes = mappedName.BeginReading();
-
-        GLuint index = 0;
-        gl->fGetUniformIndices(mGLName, 1, &mappedNameBytes, &index);
+        GLuint index = LOCAL_GL_INVALID_INDEX;
+        gl->fGetUniformIndices(mGLName, 1, &mappedNameBegin, &index);
         arr.AppendElement(index);
     }
 }
-
 
 void
 WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex,
@@ -1511,11 +1480,22 @@ WebGLProgram::EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_Fra
 ////////////////////////////////////////////////////////////////////////////////
 
 bool
-webgl::LinkedProgramInfo::FindAttrib(const nsCString& baseUserName,
+IsBaseName(const nsCString& name)
+{
+    if (!name.Length())
+        return true;
+
+    return name[name.Length() - 1] != ']'; // Doesn't end in ']'.
+}
+
+bool
+webgl::LinkedProgramInfo::FindAttrib(const nsCString& userName,
                                      const webgl::AttribInfo** const out) const
 {
+    // VS inputs cannot be arrays or structures.
+    // `userName` is thus always `baseUserName`.
     for (const auto& attrib : attribs) {
-        if (attrib.mActiveInfo->mBaseUserName == baseUserName) {
+        if (attrib.mActiveInfo->mBaseUserName == userName) {
             *out = &attrib;
             return true;
         }
@@ -1525,31 +1505,85 @@ webgl::LinkedProgramInfo::FindAttrib(const nsCString& baseUserName,
 }
 
 bool
-webgl::LinkedProgramInfo::FindUniform(const nsCString& baseUserName,
-                                      webgl::UniformInfo** const out) const
+webgl::LinkedProgramInfo::FindUniform(const nsCString& userName,
+                                      nsCString* const out_mappedName,
+                                      size_t* const out_arrayIndex,
+                                      webgl::UniformInfo** const out_info) const
 {
+    nsCString baseUserName;
+    bool isArray;
+    size_t arrayIndex;
+    if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
+        return false;
+
+    webgl::UniformInfo* info = nullptr;
     for (const auto& uniform : uniforms) {
         if (uniform->mActiveInfo->mBaseUserName == baseUserName) {
-            *out = uniform;
-            return true;
+            info = uniform;
+            break;
         }
     }
+    if (!info)
+        return false;
 
-    return false;
+    const auto& baseMappedName = info->mActiveInfo->mBaseMappedName;
+    AssembleName(baseMappedName, isArray, arrayIndex, out_mappedName);
+
+    *out_arrayIndex = arrayIndex;
+    *out_info = info;
+    return true;
 }
 
 bool
-webgl::LinkedProgramInfo::FindUniformBlock(const nsCString& baseUserName,
-                                           const webgl::UniformBlockInfo** const out) const
+webgl::LinkedProgramInfo::MapUniformBlockName(const nsCString& userName,
+                                              nsCString* const out_mappedName) const
 {
+    nsCString baseUserName;
+    bool isArray;
+    size_t arrayIndex;
+    if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
+        return false;
+
+    const webgl::UniformBlockInfo* info = nullptr;
     for (const auto& block : uniformBlocks) {
         if (block->mBaseUserName == baseUserName) {
-            *out = block;
-            return true;
+            info = block;
+            break;
         }
     }
+    if (!info)
+        return false;
 
-    return false;
+    const auto& baseMappedName = info->mBaseMappedName;
+    AssembleName(baseMappedName, isArray, arrayIndex, out_mappedName);
+    return true;
+}
+
+bool
+webgl::LinkedProgramInfo::MapFragDataName(const nsCString& userName,
+                                          nsCString* const out_mappedName) const
+{
+    // FS outputs can be arrays, but not structures.
+
+    if (!fragDataMap.size()) {
+        // No mappings map from validation, so just forward it.
+        *out_mappedName = userName;
+        return true;
+    }
+
+    nsCString baseUserName;
+    bool isArray;
+    size_t arrayIndex;
+    if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
+        return false;
+
+    const auto itr = fragDataMap.find(baseUserName);
+    if (itr == fragDataMap.end())
+        return false;
+
+    const auto& baseMappedName = itr->second;
+    AssembleName(baseMappedName, isArray, arrayIndex, out_mappedName);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
