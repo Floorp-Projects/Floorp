@@ -104,7 +104,7 @@ GetFindFlagName(DWORD aFindFlag)
 class GetACPFromPointFlagName : public nsAutoCString
 {
 public:
-  GetACPFromPointFlagName(DWORD aFlags)
+  explicit GetACPFromPointFlagName(DWORD aFlags)
   {
     if (!aFlags) {
       AppendLiteral("no flags (0)");
@@ -648,7 +648,7 @@ GetModifiersName(Modifiers aModifiers)
 class GetWritingModeName : public nsAutoCString
 {
 public:
-  GetWritingModeName(const WritingMode& aWritingMode)
+  explicit GetWritingModeName(const WritingMode& aWritingMode)
   {
     if (!aWritingMode.IsVertical()) {
       AssignLiteral("Horizontal");
@@ -700,7 +700,7 @@ class InputScopeImpl final : public ITfInputScope
   ~InputScopeImpl() {}
 
 public:
-  InputScopeImpl(const nsTArray<InputScope>& aList)
+  explicit InputScopeImpl(const nsTArray<InputScope>& aList)
     : mInputScopes(aList)
   {
     MOZ_LOG(sTextStoreLog, LogLevel::Info,

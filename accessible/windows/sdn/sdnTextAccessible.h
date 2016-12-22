@@ -17,11 +17,11 @@ struct nsPoint;
 
 namespace mozilla {
 namespace a11y {
- 
+
 class sdnTextAccessible final : public ISimpleDOMText
 {
 public:
-  sdnTextAccessible(AccessibleWrap* aAccessible) : mAccessible(aAccessible) {};
+  explicit sdnTextAccessible(AccessibleWrap* aAccessible) : mAccessible(aAccessible) {};
   ~sdnTextAccessible() {}
 
   DECL_IUNKNOWN

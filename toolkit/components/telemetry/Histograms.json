@@ -5473,7 +5473,7 @@
     "kind": "enumerated",
     "n_values": 14,
     "bug_numbers": [775825],
-    "description": "Firefox: The type of the selected result in the URL bar popup. See nsBrowserGlue.js::_handleURLBarTelemetry for the result types."
+    "description": "Firefox: The type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
@@ -10556,9 +10556,9 @@
     "n_buckets": 10,
     "description": "Percentage of time taken by phases in expensive content paints."
   },
-  "NARRATE_CONTENT_BY_LANGUAGE": {
+  "NARRATE_CONTENT_BY_LANGUAGE_2": {
     "alert_emails": ["eisaacson@mozilla.com"],
-    "bug_numbers": [1308030],
+    "bug_numbers": [1308030, 1324868],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "56",
     "kind": "enumerated",

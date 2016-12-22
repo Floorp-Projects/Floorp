@@ -2298,8 +2298,8 @@ const KTableEntry nsCSSProps::kClipPathGeometryBoxKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kShapeRadiusKTable[] = {
-  { eCSSKeyword_closest_side, NS_RADIUS_CLOSEST_SIDE },
-  { eCSSKeyword_farthest_side, NS_RADIUS_FARTHEST_SIDE },
+  { eCSSKeyword_closest_side, StyleShapeRadius::ClosestSide },
+  { eCSSKeyword_farthest_side, StyleShapeRadius::FarthestSide },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

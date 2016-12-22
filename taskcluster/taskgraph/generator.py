@@ -12,7 +12,11 @@ from .graph import Graph
 from .taskgraph import TaskGraph
 from .optimize import optimize_task_graph
 from .util.python_path import find_object
-from .util.verify import verify_docs, verify_task_graph_symbol
+from .util.verify import (
+    verify_docs,
+    verify_task_graph_symbol,
+    verify_gecko_v2_routes,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -218,6 +222,7 @@ class TaskGraphGenerator(object):
             {l: all_tasks[l] for l in target_graph.nodes},
             target_graph)
         target_task_graph.for_each_task(verify_task_graph_symbol, scratch_pad={})
+        target_task_graph.for_each_task(verify_gecko_v2_routes, scratch_pad={})
         yield 'target_task_graph', target_task_graph
 
         logger.info("Generating optimized task graph")

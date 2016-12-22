@@ -22,7 +22,8 @@
   const Cc = Components.classes;
   const Ci = Components.interfaces;
   const Cu = Components.utils;
-  const STSPATH = "/tests/security/manager/ssl/tests/mochitest/stricttransportsecurity";
+  const STSPATH =
+    "tests/security/manager/ssl/tests/mochitest/stricttransportsecurity";
   const NUM_TEST_FRAMES = 4;
   const CONTENT_PAGE =
     "http://mochi.test:8888/chrome/security/manager/ssl/tests/mochitest/stricttransportsecurity/page_blank.html";
@@ -44,26 +45,22 @@
   SpecialPowers.Services.prefs.setIntPref("browser.startup.page", 0);
 
   var testframes = {
-    'samedom':
-      {'url':     "http://example.com" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'SECURE',
-                     'subdom': 'SECURE',
-                     'nosts': 'INSECURE'}},
-    'subdom':
-      {'url':     "http://test1.example.com" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'INSECURE',
-                     'subdom': 'SECURE',
-                     'nosts': 'INSECURE'}},
-    'otherdom':
-      {'url':     "http://example.org" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'INSECURE',
-                     'subdom': 'INSECURE',
-                     'nosts': 'INSECURE'}},
-    'alreadysecure':
-      {'url':     "https://test2.example.com" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'SECURE',
-                     'subdom': 'SECURE',
-                     'nosts': 'SECURE'}},
+    samedom: {
+      url: `http://example.com/${STSPATH}/verify.sjs`,
+      expected: {plain: "SECURE", subdom: "SECURE", nosts: "INSECURE"}
+    },
+    subdom: {
+      url: `http://test1.example.com/${STSPATH}/verify.sjs`,
+      expected: {plain: "INSECURE", subdom: "SECURE", nosts: "INSECURE"}
+    },
+    otherdom: {
+      url: `http://example.org/${STSPATH}/verify.sjs`,
+      expected: {plain: "INSECURE", subdom: "INSECURE", nosts: "INSECURE"}
+    },
+    alreadysecure: {
+      url: `https://test2.example.com/${STSPATH}/verify.sjs`,
+      expected: {plain: "SECURE", subdom: "SECURE", nosts: "SECURE"}
+    },
   };
 
   function whenDelayedStartupFinished(aWindow, aCallback) {
@@ -95,12 +92,12 @@
     SimpleTest.info("TESTS LEFT IN ROUND " + currentround + ": " + testsleftinround);
 
     let browser = win.gBrowser.selectedBrowser;
-    let src = "https://example.com" + STSPATH + "/" + round + "_bootstrap.html";
+    let src = `https://example.com/${STSPATH}/${round}_bootstrap.html`;
 
     ContentTask.spawn(browser, src, function* (contentSrc) {
       let frame = content.document.createElement("iframe");
-      frame.setAttribute('id', 'ifr_bootstrap');
-      frame.setAttribute('src', contentSrc);
+      frame.setAttribute("id", "ifr_bootstrap");
+      frame.setAttribute("src", contentSrc);
 
       return new Promise(resolve => {
         frame.addEventListener("load", resolve);
@@ -112,24 +109,24 @@
   }
 
   function loadVerifyFrames(win, isPrivate, round) {
-    loadVerifyFrame(win, isPrivate, testframes.samedom, 'samedom', function() {
-      loadVerifyFrame(win, isPrivate, testframes.subdom, 'subdom', function() {
-        loadVerifyFrame(win, isPrivate, testframes.otherdom, 'otherdom', function() {
-          loadVerifyFrame(win, isPrivate, testframes.alreadysecure, 'alreadysecure');
+    loadVerifyFrame(win, isPrivate, testframes.samedom, "samedom", function() {
+      loadVerifyFrame(win, isPrivate, testframes.subdom, "subdom", function() {
+        loadVerifyFrame(win, isPrivate, testframes.otherdom, "otherdom", function() {
+          loadVerifyFrame(win, isPrivate, testframes.alreadysecure, "alreadysecure");
         });
       });
     });
   }
 
   function loadVerifyFrame(win, isPrivate, test, testName, aCallback) {
-    let id = 'ifr_' + testName;
-    let src = test.url + '?id=' + testName;
+    let id = "ifr_" + testName;
+    let src = test.url + "?id=" + testName;
     let browser = win.gBrowser.selectedBrowser;
 
     ContentTask.spawn(browser, [id, src], function* ([contentId, contentSrc]) {
       let frame = content.document.createElement("iframe");
-      frame.setAttribute('id', contentId);
-      frame.setAttribute('src', contentSrc);
+      frame.setAttribute("id", contentId);
+      frame.setAttribute("src", contentSrc);
 
       return new Promise(resolve => {
         frame.addEventListener("load", () => {
@@ -139,7 +136,7 @@
         content.document.body.appendChild(frame);
       });
     }).then(scheme => {
-      if (scheme == 'https:') {
+      if (scheme == "https:") {
         onMessageReceived(win, isPrivate, "SECURE " + testName);
       } else {
         onMessageReceived(win, isPrivate, "INSECURE " + testName);
@@ -184,10 +181,10 @@
       let browser = win.gBrowser.selectedBrowser;
       ContentTask.spawn(browser, testframes, function* (contentTestFrames) {
         content.document.body.removeChild(
-          content.document.getElementById('ifr_bootstrap'));
+          content.document.getElementById("ifr_bootstrap"));
         for (let test in contentTestFrames) {
           content.document.body.removeChild(
-            content.document.getElementById('ifr_' + test));
+            content.document.getElementById("ifr_" + test));
         }
       }).then(() => {
         currentround = "";
@@ -208,7 +205,7 @@
     testOnWindow(false, function(win) {
       SimpleTest.info("In public window");
       dump_STSState(false);
-      startRound(win, false, 'plain');
+      startRound(win, false, "plain");
     });
   }
 
@@ -216,7 +213,7 @@
     testOnWindow(true, function(win) {
       SimpleTest.info("In private window");
       dump_STSState(true);
-      startRound(win, true, 'subdom');
+      startRound(win, true, "subdom");
     });
   }
 
@@ -224,7 +221,7 @@
     testOnWindow(false, function(win) {
       SimpleTest.info("In a new public window");
       dump_STSState(false);
-      startRound(win, false, 'nosts');
+      startRound(win, false, "nosts");
     });
   }
 
@@ -265,7 +262,7 @@
   function nextTest() {
     SimpleTest.executeSoon(tests.length ? tests.shift() : finish);
   }
-  window.addEventListener('load', nextTest, false);
+  window.addEventListener("load", nextTest, false);
   </script>
 </head>
 

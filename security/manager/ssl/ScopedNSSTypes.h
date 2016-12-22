@@ -62,19 +62,9 @@ MapSECStatus(SECStatus rv)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertificate,
                                           CERTCertificate,
                                           CERT_DestroyCertificate)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertificateRequest,
-                                          CERTCertificateRequest,
-                                          CERT_DestroyCertificateRequest)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTName,
-                                          CERTName,
-                                          CERT_DestroyName)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTSubjectPublicKeyInfo,
                                           CERTSubjectPublicKeyInfo,
                                           SECKEY_DestroySubjectPublicKeyInfo)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTValidity,
-                                          CERTValidity,
-                                          CERT_DestroyValidity)
-// Deprecated: use the equivalent UniquePtr templates instead.
 
 namespace internal {
 

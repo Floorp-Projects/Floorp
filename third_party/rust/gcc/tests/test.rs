@@ -32,6 +32,20 @@ fn gnu_opt_level_1() {
 }
 
 #[test]
+fn gnu_opt_level_s() {
+    let test = Test::gnu();
+    test.gcc()
+        .opt_level_str("s")
+        .file("foo.c").compile("libfoo.a");
+
+    test.cmd(0).must_have("-Os")
+               .must_not_have("-O1")
+               .must_not_have("-O2")
+               .must_not_have("-O3")
+               .must_not_have("-Oz");
+}
+
+#[test]
 fn gnu_debug() {
     let test = Test::gnu();
     test.gcc()

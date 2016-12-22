@@ -32,9 +32,6 @@ if CONFIG['GNU_CXX']:
             '-Wno-shadow-local',
         ]
 
-if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
-    LOCAL_INCLUDES += ['%' + '%s/include/' % CONFIG['MOZ_DIRECTX_SDK_PATH']]
-
 DEFINES['_CRT_SECURE_NO_DEPRECATE'] = True
 DEFINES['_HAS_EXCEPTIONS'] = 0
 
@@ -67,11 +64,6 @@ DEFINES['ANGLE_ENABLE_KEYEDMUTEX'] = "1"
 
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
   OS_LIBS += [ 'd3d9', 'dxguid' ]
-else:
-  EXTRA_DSO_LDOPTS += [
-    '\'%s/lib/%s/d3d9.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
-    '\'%s/lib/%s/dxguid.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
-  ]
 
 
 GeckoSharedLibrary('libEGL', linkage=None)

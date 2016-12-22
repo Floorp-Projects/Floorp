@@ -11,11 +11,11 @@ into Firefox.
 
 .. important::
 
-   Rust code is not currently enabled by default in Firefox builds.
-   This should change soon (`bug 1283898 <https://bugzilla.mozilla.org/show_bug.cgi?id=1283898>`_),
-   but the option to build without Rust code will likely last a little longer
-   (`bug 1284816 <https://bugzilla.mozilla.org/show_bug.cgi?id=1284816>`_),
-   so Rust code cannot currently be used for required components.
+   Rust code is enabled by default in Firefox builds. Until we have
+   a required component written in Rust, you can build without by
+   setting ``ac_add_options --disable-rust`` in your mozconfig.
+   This option will be around for a little longer
+   (`bug 1284816 <https://bugzilla.mozilla.org/show_bug.cgi?id=1284816>`_).
 
 
 Linking Rust Crates into libxul

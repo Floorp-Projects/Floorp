@@ -596,7 +596,7 @@ protected:
   class MOZ_STACK_CLASS AutoSetTemporarySelection final
   {
   public:
-    AutoSetTemporarySelection(Selection& aSelection)
+    explicit AutoSetTemporarySelection(Selection& aSelection)
       : mSelection(aSelection)
     {
       mDirty = mSelection.IsDirty();
@@ -712,7 +712,7 @@ protected:
   class MOZ_STACK_CLASS AutoPendingActionAndContentFlusher final
   {
   public:
-    AutoPendingActionAndContentFlusher(TSFTextStore* aTextStore)
+    explicit AutoPendingActionAndContentFlusher(TSFTextStore* aTextStore)
       : mTextStore(aTextStore)
     {
       MOZ_ASSERT(!mTextStore->mIsRecordingActionsWithoutLock);
