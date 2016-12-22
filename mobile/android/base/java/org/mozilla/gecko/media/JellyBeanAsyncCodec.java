@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.media;
 
+import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
+
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.os.Handler;
@@ -298,6 +300,11 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         assertCallbacks();
 
         mCodec.configure(format, surface, null, flags);
+    }
+
+    @Override
+    public boolean isAdaptivePlaybackSupported(String mimeType) {
+        return HardwareCodecCapabilityUtils.checkSupportsAdaptivePlayback(mCodec, mimeType);
     }
 
     private void assertCallbacks() {

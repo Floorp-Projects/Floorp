@@ -615,6 +615,9 @@ pref("media.cache_readahead_limit", 30);
 // of at least 4.
 pref("media.video-queue.default-size", 3);
 
+// Allow to check if the decoder supports recycling only on Fennec nightly build.
+pref("media.decoder.recycle.enabled", true);
+
 // Enable the MediaCodec PlatformDecoderModule by default.
 pref("media.android-media-codec.enabled", true);
 pref("media.android-media-codec.preferred", true);
