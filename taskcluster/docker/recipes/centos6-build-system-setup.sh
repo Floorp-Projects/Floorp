@@ -7,5 +7,6 @@ cd /setup
 
 . /setup/common.sh
 . /setup/install-mercurial.sh
+. /setup/install-make.sh
 
 rm -rf /setup
