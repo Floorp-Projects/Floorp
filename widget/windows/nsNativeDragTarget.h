@@ -29,7 +29,7 @@ class nsIWidget;
 class nsNativeDragTarget final : public IDropTarget
 {
 public:
-  nsNativeDragTarget(nsIWidget * aWidget);
+  explicit nsNativeDragTarget(nsIWidget * aWidget);
   ~nsNativeDragTarget();
 
   // IUnknown members - see iunknown.h for documentation

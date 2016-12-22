@@ -37,17 +37,17 @@ public:
 
   bool HasSubstitution(const nsACString& aRoot) const { return mSubstitutions.Get(aRoot, nullptr); }
 
-  nsresult CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aResources);
+  MOZ_MUST_USE nsresult CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aResources);
 
 protected:
   virtual ~SubstitutingProtocolHandler() {}
   void ConstructInternal();
 
-  nsresult SendSubstitution(const nsACString& aRoot, nsIURI* aBaseURI);
+  MOZ_MUST_USE nsresult SendSubstitution(const nsACString& aRoot, nsIURI* aBaseURI);
 
   // Override this in the subclass to try additional lookups after checking
   // mSubstitutions.
-  virtual nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult)
+  virtual MOZ_MUST_USE nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult)
   {
     *aResult = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
@@ -55,17 +55,17 @@ protected:
 
   // Override this in the subclass to check for special case when resolving URIs
   // _before_ checking substitutions.
-  virtual bool ResolveSpecialCases(const nsACString& aHost,
-                                   const nsACString& aPath,
-                                   const nsACString& aPathname,
-                                   nsACString& aResult)
+  virtual MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
+                                                const nsACString& aPath,
+                                                const nsACString& aPathname,
+                                                nsACString& aResult)
   {
     return false;
   }
 
   // Override this in the subclass to check for special case when opening
   // channels.
-  virtual nsresult SubstituteChannel(nsIURI* uri, nsILoadInfo* aLoadInfo, nsIChannel** result)
+  virtual MOZ_MUST_USE nsresult SubstituteChannel(nsIURI* uri, nsILoadInfo* aLoadInfo, nsIChannel** result)
   {
     return NS_OK;
   }
@@ -97,7 +97,7 @@ class SubstitutingURL : public nsStandardURL
 public:
   SubstitutingURL() : nsStandardURL(true) {}
   virtual nsStandardURL* StartClone();
-  virtual nsresult EnsureFile();
+  virtual MOZ_MUST_USE nsresult EnsureFile();
   NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
 };
 

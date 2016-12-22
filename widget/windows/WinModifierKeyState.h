@@ -20,7 +20,7 @@ class MOZ_STACK_CLASS ModifierKeyState final
 public:
   ModifierKeyState();
   ModifierKeyState(bool aIsShiftDown, bool aIsControlDown, bool aIsAltDown);
-  ModifierKeyState(Modifiers aModifiers);
+  explicit ModifierKeyState(Modifiers aModifiers);
 
   void Update();
 

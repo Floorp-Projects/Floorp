@@ -278,79 +278,16 @@ Sanitizer.prototype = {
         }
 
         // Clear plugin data.
-        // As evidenced in bug 1253204, clearing plugin data can sometimes be
-        // very, very long, for mysterious reasons. Unfortunately, this is not
-        // something actionable by Mozilla, so crashing here serves no purpose.
-        //
-        // For this reason, instead of waiting for sanitization to always
-        // complete, we introduce a soft timeout. Once this timeout has
-        // elapsed, we proceed with the shutdown of Firefox.
-        let promiseClearPluginCookies;
         try {
-          // We don't want to wait for this operation to complete...
-          promiseClearPluginCookies = this.promiseClearPluginCookies(range);
-
-          // ... at least, not for more than 10 seconds.
-          yield Promise.race([
-            promiseClearPluginCookies,
-            new Promise(resolve => setTimeout(resolve, 10000 /* 10 seconds */))
-          ]);
+          yield Sanitizer.clearPluginData(range);
         } catch (ex) {
           seenException = ex;
         }
-
-        // Detach waiting for plugin cookies to be cleared.
-        promiseClearPluginCookies.catch(() => {
-          // If this exception is raised before the soft timeout, it
-          // will appear in `seenException`. Otherwise, it's too late
-          // to do anything about it.
-        });
 
         if (seenException) {
           throw seenException;
         }
       }),
-
-      promiseClearPluginCookies: Task.async(function* (range) {
-        const FLAG_CLEAR_ALL = Ci.nsIPluginHost.FLAG_CLEAR_ALL;
-        let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-
-        // Determine age range in seconds. (-1 means clear all.) We don't know
-        // that range[1] is actually now, so we compute age range based
-        // on the lower bound. If range results in a negative age, do nothing.
-        let age = range ? (Date.now() / 1000 - range[0] / 1000000) : -1;
-        if (!range || age >= 0) {
-          let tags = ph.getPluginTags();
-          for (let tag of tags) {
-            let refObj = {};
-            let probe = "";
-            if (/\bFlash\b/.test(tag.name)) {
-              probe = tag.loaded ? "FX_SANITIZE_LOADED_FLASH"
-                                 : "FX_SANITIZE_UNLOADED_FLASH";
-              TelemetryStopwatch.start(probe, refObj);
-            }
-            try {
-              let rv = yield new Promise(resolve =>
-                ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, resolve)
-              );
-              // If the plugin doesn't support clearing by age, clear everything.
-              if (rv == Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
-                yield new Promise(resolve =>
-                  ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, resolve)
-                );
-              }
-              if (probe) {
-                TelemetryStopwatch.finish(probe, refObj);
-              }
-            } catch (ex) {
-              // Ignore errors from plug-ins
-              if (probe) {
-                TelemetryStopwatch.cancel(probe, refObj);
-              }
-            }
-          }
-        }
-      })
     },
 
     offlineApps: {
@@ -705,6 +642,12 @@ Sanitizer.prototype = {
         yield promiseReady;
       })
     },
+
+    pluginData: {
+      clear: Task.async(function* (range) {
+        yield Sanitizer.clearPluginData(range);
+      }),
+    },
   }
 };
 
@@ -773,6 +716,83 @@ Sanitizer.getClearRange = function(ts) {
   }
   return [startDate, endDate];
 };
+
+Sanitizer.clearPluginData = Task.async(function* (range) {
+  // Clear plugin data.
+  // As evidenced in bug 1253204, clearing plugin data can sometimes be
+  // very, very long, for mysterious reasons. Unfortunately, this is not
+  // something actionable by Mozilla, so crashing here serves no purpose.
+  //
+  // For this reason, instead of waiting for sanitization to always
+  // complete, we introduce a soft timeout. Once this timeout has
+  // elapsed, we proceed with the shutdown of Firefox.
+  let seenException;
+
+  let promiseClearPluginData = Task.async(function* () {
+    const FLAG_CLEAR_ALL = Ci.nsIPluginHost.FLAG_CLEAR_ALL;
+    let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+
+    // Determine age range in seconds. (-1 means clear all.) We don't know
+    // that range[1] is actually now, so we compute age range based
+    // on the lower bound. If range results in a negative age, do nothing.
+    let age = range ? (Date.now() / 1000 - range[0] / 1000000) : -1;
+    if (!range || age >= 0) {
+      let tags = ph.getPluginTags();
+      for (let tag of tags) {
+        let refObj = {};
+        let probe = "";
+        if (/\bFlash\b/.test(tag.name)) {
+          probe = tag.loaded ? "FX_SANITIZE_LOADED_FLASH"
+                             : "FX_SANITIZE_UNLOADED_FLASH";
+          TelemetryStopwatch.start(probe, refObj);
+        }
+        try {
+          let rv = yield new Promise(resolve =>
+            ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, resolve)
+          );
+          // If the plugin doesn't support clearing by age, clear everything.
+          if (rv == Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
+            yield new Promise(resolve =>
+              ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, resolve)
+            );
+          }
+          if (probe) {
+            TelemetryStopwatch.finish(probe, refObj);
+          }
+        } catch (ex) {
+          // Ignore errors from plug-ins
+          if (probe) {
+            TelemetryStopwatch.cancel(probe, refObj);
+          }
+        }
+      }
+    }
+  });
+
+  try {
+    // We don't want to wait for this operation to complete...
+    promiseClearPluginData = promiseClearPluginData(range);
+
+    // ... at least, not for more than 10 seconds.
+    yield Promise.race([
+      promiseClearPluginData,
+      new Promise(resolve => setTimeout(resolve, 10000 /* 10 seconds */))
+    ]);
+  } catch (ex) {
+    seenException = ex;
+  }
+
+  // Detach waiting for plugin data to be cleared.
+  promiseClearPluginData.catch(() => {
+    // If this exception is raised before the soft timeout, it
+    // will appear in `seenException`. Otherwise, it's too late
+    // to do anything about it.
+  });
+
+  if (seenException) {
+    throw seenException;
+  }
+});
 
 Sanitizer._prefs = null;
 Sanitizer.__defineGetter__("prefs", function()

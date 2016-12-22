@@ -19,7 +19,7 @@ namespace a11y {
 class sdnAccessible final : public ISimpleDOMNode
 {
 public:
-  sdnAccessible(nsINode* aNode) :
+  explicit sdnAccessible(nsINode* aNode) :
     mNode(aNode)
   {
     if (!mNode)

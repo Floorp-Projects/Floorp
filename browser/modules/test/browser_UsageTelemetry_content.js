@@ -33,6 +33,7 @@ add_task(function* setup() {
     Services.search.currentEngine = originalEngine;
     Services.search.removeEngine(engineDefault);
     Services.search.removeEngine(engineOneOff);
+    yield PlacesTestUtils.clearHistory();
   });
 });
 

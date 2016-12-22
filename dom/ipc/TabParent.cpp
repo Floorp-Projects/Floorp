@@ -1248,8 +1248,9 @@ public:
                      const char* aTopic,
                      const char16_t* aData) override
   {
-    if (!mTabParent) {
-      // We already sent the notification
+    if (!mTabParent || !mObserverId) {
+      // We already sent the notification, or we don't actually need to
+      // send any notification at all.
       return NS_OK;
     }
 

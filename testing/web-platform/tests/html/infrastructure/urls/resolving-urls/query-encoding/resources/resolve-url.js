@@ -14,7 +14,7 @@ onload = function() {
     'utf-16be':'%C3%A5',
     'utf-16le':'%C3%A5',
     'windows-1252':'%E5',
-    'windows-1251':'%3F'
+    'windows-1251':'&%23229;'
   };
   var expected_current = expected_obj[encoding];
   var expected_utf8 = expected_obj['utf-8'];

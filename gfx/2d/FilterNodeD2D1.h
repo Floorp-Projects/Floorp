@@ -75,7 +75,7 @@ class FilterNodeConvolveD2D1 : public FilterNodeD2D1
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveD2D1, override)
-  FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC);
+  explicit FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC);
 
   virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override;
 

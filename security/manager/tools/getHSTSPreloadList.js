@@ -321,7 +321,7 @@ function output(sortedStatuses, currentList) {
       // lengths of string literals, and the preload list is large enough
       // that it runs into said limits.
       for (let c of status.name) {
-	writeTo("'" + c + "', ", fos);
+        writeTo("'" + c + "', ", fos);
       }
       writeTo("'\\0',\n", fos);
     }

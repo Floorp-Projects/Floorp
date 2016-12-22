@@ -16,7 +16,7 @@
 class DriveMapping
 {
 public:
-  DriveMapping(const nsAString& aRemoteUNCPath);
+  explicit DriveMapping(const nsAString& aRemoteUNCPath);
   ~DriveMapping();
 
   bool

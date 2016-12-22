@@ -125,6 +125,7 @@ def rust_triple_alias(host_or_target):
             ('x86', 'Linux'): 'i686-unknown-linux-gnu',
             # Linux
             ('x86_64', 'Linux'): 'x86_64-unknown-linux-gnu',
+            ('aarch64', 'Linux'): 'aarch64-unknown-linux-gnu',
             # OS X and iOS
             ('x86', 'OSX'): 'i686-apple-darwin',
             ('x86', 'iOS'): 'i386-apple-ios',
@@ -132,6 +133,7 @@ def rust_triple_alias(host_or_target):
             # Android
             ('x86', 'Android'): 'i686-linux-android',
             ('arm', 'Android'): 'armv7-linux-androideabi',
+            ('aarch64', 'Android'): 'aarch64-linux-android',
             # Windows
             # XXX better detection of CXX needed here, to figure out whether
             # we need i686-pc-windows-gnu instead, since mingw32 builds work.

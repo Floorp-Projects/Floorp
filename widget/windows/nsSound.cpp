@@ -62,7 +62,7 @@ protected:
 
   class SoundReleaser: public mozilla::Runnable {
   public:
-    SoundReleaser(nsSound* aSound) :
+    explicit SoundReleaser(nsSound* aSound) :
       mSound(aSound)
     {
     }
