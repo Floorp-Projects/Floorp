@@ -20,8 +20,12 @@ static int32_t              gRunningTimeoutDepth       = 0;
 // The default shortest interval/timeout we permit
 #define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
-static int32_t gMinTimeoutValue;
-static int32_t gMinBackgroundTimeoutValue;
+#define DEFAULT_MIN_TRACKING_TIMEOUT_VALUE 4 // 4ms
+#define DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
+static int32_t gMinTimeoutValue = 0;
+static int32_t gMinBackgroundTimeoutValue = 0;
+static int32_t gMinTrackingTimeoutValue = 0;
+static int32_t gMinTrackingBackgroundTimeoutValue = 0;
 int32_t
 TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
   // First apply any back pressure delay that might be in effect.
@@ -30,8 +34,11 @@ TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
   // present, so that background audio can keep running smoothly. (bug 1181073)
   bool isBackground = !mWindow.AsInner()->HasAudioContexts() &&
     mWindow.IsBackgroundInternal();
-  return
-    std::max(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, value);
+  auto minValue = aIsTracking ? (isBackground ? gMinTrackingBackgroundTimeoutValue
+                                              : gMinTrackingTimeoutValue)
+                              : (isBackground ? gMinBackgroundTimeoutValue
+                                              : gMinTimeoutValue);
+  return std::max(minValue, value);
 }
 
 #define TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY 0 // Consider all timeouts coming from tracking scripts as tracking
@@ -119,6 +126,12 @@ TimeoutManager::Initialize()
                               DEFAULT_MIN_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
                               "dom.min_background_timeout_value",
+                              DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
+  Preferences::AddIntVarCache(&gMinTrackingTimeoutValue,
+                              "dom.min_tracking_timeout_value",
+                              DEFAULT_MIN_TRACKING_TIMEOUT_VALUE);
+  Preferences::AddIntVarCache(&gMinTrackingBackgroundTimeoutValue,
+                              "dom.min_tracking_background_timeout_value",
                               DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gTimeoutBucketingStrategy,
                               "dom.timeout_bucketing_strategy",
