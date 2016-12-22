@@ -13,8 +13,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 include('common.build')
 
 USE_LIBS += [
-    '/media/webrtc/signalingtest/signaling_ecc/ecc',
-    'mtransport_s',
 ]
 
 if CONFIG['GNU_CXX']:
