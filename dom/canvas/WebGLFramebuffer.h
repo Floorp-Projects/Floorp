@@ -238,6 +238,8 @@ public:
     void DetachTexture(const WebGLTexture* tex);
     void DetachRenderbuffer(const WebGLRenderbuffer* rb);
     bool ValidateAndInitAttachments(const char* funcName);
+    bool ValidateClearBufferType(const char* funcName, GLenum buffer, uint32_t drawBuffer,
+                                 GLenum funcType) const;
 
     bool ValidateForRead(const char* info,
                          const webgl::FormatUsageInfo** const out_format,

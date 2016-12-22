@@ -296,7 +296,7 @@ public:
 
 private:
     bool ValidateClearBuffer(const char* funcName, GLenum buffer, GLint drawBuffer,
-                             size_t availElemCount, GLuint elemOffset);
+                             size_t availElemCount, GLuint elemOffset, GLenum funcType);
 
     void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32Arr& src,
                        GLuint srcElemOffset);
