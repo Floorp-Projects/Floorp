@@ -433,6 +433,7 @@ public:
     RefPtr<MediaDecoder::SeekPromise> x = mPendingSeek.mPromise.Ensure(__func__);
 
     mMaster->Reset();
+    mMaster->StopMediaSink();
     mMaster->mReader->ReleaseResources();
   }
 
@@ -979,6 +980,7 @@ private:
       mMaster->Reset(TrackInfo::kVideoTrack);
     } else {
       mMaster->Reset();
+      mMaster->StopMediaSink();
     }
 
     DemuxerSeek();
@@ -2285,7 +2287,7 @@ ShutdownState::Enter()
   master->mVideoWaitRequest.DisconnectIfExists();
 
   master->Reset();
-
+  master->StopMediaSink();
   master->mMediaSink->Shutdown();
 
   // Prevent dangling pointers by disconnecting the listeners.
@@ -3392,14 +3394,6 @@ MediaDecoderStateMachine::Reset(TrackSet aTracks)
   // Assert that aTracks specifies to reset the video track because we
   // don't currently support resetting just the audio track.
   MOZ_ASSERT(aTracks.contains(TrackInfo::kVideoTrack));
-
-  if (aTracks.contains(TrackInfo::kAudioTrack) &&
-      aTracks.contains(TrackInfo::kVideoTrack)) {
-    // Stop the audio thread. Otherwise, MediaSink might be accessing AudioQueue
-    // outside of the decoder monitor while we are clearing the queue and causes
-    // crash for no samples to be popped.
-    StopMediaSink();
-  }
 
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
     mDecodedVideoEndTime = 0;
