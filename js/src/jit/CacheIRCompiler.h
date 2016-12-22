@@ -17,7 +17,18 @@ namespace jit {
 #define CACHE_IR_SHARED_OPS(_)            \
     _(GuardIsObject)                      \
     _(GuardIsString)                      \
-    _(GuardIsSymbol)
+    _(GuardIsSymbol)                      \
+    _(GuardType)                          \
+    _(GuardClass)                         \
+    _(GuardIsProxy)                       \
+    _(GuardNotDOMProxy)                   \
+    _(GuardMagicValue)                    \
+    _(GuardNoUnboxedExpando)              \
+    _(GuardAndLoadUnboxedExpando)         \
+    _(GuardNoDetachedTypedObjects)        \
+    _(GuardNoDenseElements)               \
+    _(LoadProto)                          \
+    _(LoadDOMExpandoValue)
 
 // OperandLocation represents the location of an OperandId. The operand is
 // either in a register or on the stack, and is either boxed or unboxed.
