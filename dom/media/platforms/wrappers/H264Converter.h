@@ -39,6 +39,13 @@ public:
     return "H264Converter decoder (pending)";
   }
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
+  bool SupportDecoderRecycling() const override
+  {
+    if (mDecoder) {
+      return mDecoder->SupportDecoderRecycling();
+    }
+    return false;
+  }
 
   nsresult GetLastError() const { return mLastError; }
 
