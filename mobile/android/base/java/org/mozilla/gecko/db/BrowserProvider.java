@@ -1192,11 +1192,16 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.POSITION) + " AS " + Bookmarks.POSITION + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TITLE) + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " AS " + Highlights.DATE + " " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " AS " + Highlights.DATE + ", " +
+                DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.JSON) + " AS " + Highlights.METADATA + " " +
                 "FROM " + Bookmarks.TABLE_NAME + " " +
                 "LEFT JOIN " + History.TABLE_NAME + " ON " +
                     DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " = " +
                     DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " " +
+                // 1:1 relationship (Metadata is added via INSERT OR REPLACE)
+                "LEFT JOIN " + PageMetadata.TABLE_NAME + " ON " +
+                    DBUtils.qualifyColumn(History.TABLE_NAME, History.GUID) + " = " +
+                    DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.HISTORY_GUID) + " " +
                 "WHERE " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " > " + threeDaysAgo + " " +
                 "AND (" + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " <= 3 " +
                   "OR " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " IS NULL) " +
@@ -1218,11 +1223,16 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.POSITION) + " AS " + Bookmarks.POSITION + ", " +
                 DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + ", " +
                 DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + ", " +
-                DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " AS " + Highlights.DATE + " " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " AS " + Highlights.DATE + ", " +
+                DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.JSON) + " AS " + Highlights.METADATA + " " +
                 "FROM " + History.TABLE_NAME + " " +
                 "LEFT JOIN " + Bookmarks.TABLE_NAME + " ON " +
                     DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " = " +
                     DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " " +
+                // 1:1 relationship (Metadata is added via INSERT OR REPLACE)
+                "LEFT JOIN " + PageMetadata.TABLE_NAME + " ON " +
+                    DBUtils.qualifyColumn(History.TABLE_NAME, History.GUID) + " = " +
+                    DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.HISTORY_GUID) + " " +
                 "WHERE " + DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " < " + last30Minutes + " " +
                 "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " <= 3 " +
                 "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + " NOT NULL AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + " != '' " +
