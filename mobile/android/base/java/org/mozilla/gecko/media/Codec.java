@@ -196,6 +196,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     private volatile boolean mFlushing = false;
     private SamplePool mSamplePool;
     private Queue<Sample> mSentOutputs = new ConcurrentLinkedQueue<>();
+    // Value will be updated after configure called.
+    private volatile boolean mIsAdaptivePlaybackSupported = false;
 
     public synchronized void setCallbacks(ICodecCallbacks callbacks) throws RemoteException {
         mCallbacks = callbacks;
@@ -237,6 +239,18 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         try {
             AsyncCodec codec = AsyncCodecFactory.create(codecName);
             codec.setCallbacks(new Callbacks(mCallbacks), null);
+
+            // Video decoder should config with adaptive playback capability.
+            if (surface != null) {
+                mIsAdaptivePlaybackSupported = codec.isAdaptivePlaybackSupported(
+                                                   fmt.getString(MediaFormat.KEY_MIME));
+                if (mIsAdaptivePlaybackSupported) {
+                    if (DEBUG) Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported);
+                    // TODO: may need to find a way to not use hard code to decide the max w/h.
+                    fmt.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920);
+                    fmt.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080);
+                }
+            }
             codec.configure(fmt, surface, flags);
             mCodec = codec;
             mInputProcessor = new InputProcessor();
@@ -248,6 +262,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public synchronized boolean isAdaptivePlaybackSupported() {
+        return mIsAdaptivePlaybackSupported;
     }
 
     private void releaseCodec() {
