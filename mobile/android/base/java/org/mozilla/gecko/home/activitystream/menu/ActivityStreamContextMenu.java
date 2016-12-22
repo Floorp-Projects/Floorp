@@ -18,6 +18,7 @@ import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
@@ -43,6 +44,8 @@ public abstract class ActivityStreamContextMenu
     final String title;
     final String url;
 
+    private final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder;
+
     // We might not know bookmarked/pinned states, so we allow for null values.
     private @Nullable Boolean isBookmarked;
     private @Nullable Boolean isPinned;
@@ -60,12 +63,14 @@ public abstract class ActivityStreamContextMenu
     final MenuMode mode;
 
     /* package-private */ ActivityStreamContextMenu(final Context context,
+                                                    final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                                     final MenuMode mode,
                                                     final String title, @NonNull final String url,
                                                     @Nullable final Boolean isBookmarked, @Nullable final Boolean isPinned,
                                                     HomePager.OnUrlOpenListener onUrlOpenListener,
                                                     HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.context = context;
+        this.telemetryExtraBuilder = telemetryExtraBuilder;
 
         this.mode = mode;
 
@@ -156,13 +161,12 @@ public abstract class ActivityStreamContextMenu
             @Override
             protected Void doInBackground() {
                 final Cursor cursor = BrowserDB.from(context).getHistoryForURL(context.getContentResolver(), url);
+                if (cursor == null) {
+                    hasHistory = false;
+                    return null;
+                }
                 try {
-                    if (cursor != null &&
-                            cursor.getCount() == 1) {
-                        hasHistory = true;
-                    } else {
-                        hasHistory = false;
-                    }
+                    hasHistory = cursor.getCount() == 1;
                 } finally {
                     cursor.close();
                 }
@@ -181,49 +185,76 @@ public abstract class ActivityStreamContextMenu
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+        final int menuItemId = item.getItemId();
+
+        // Sets extra telemetry which doesn't require additional state information.
+        // Pin and bookmark items are handled separately below, since they do require state
+        // information to handle correctly.
+        telemetryExtraBuilder.fromMenuItemId(menuItemId);
+
         switch (item.getItemId()) {
             case R.id.share:
+                // NB: Generic menu item action event will be sent at the end of this function.
+                // We have a seemingly duplicate telemetry event here because we want to emit
+                // a concrete event in case it is used by other queries to estimate feature usage.
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "as_contextmenu");
 
                 IntentHelper.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, title, false);
                 break;
 
             case R.id.bookmark:
+                final TelemetryContract.Event telemetryEvent;
+                final String telemetryExtra;
+                SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(context);
+                final boolean isReaderViewPage = rch.isURLCached(url);
+
+                // While isBookmarked is nullable, behaviour of postInit - disabling 'bookmark' item
+                // until we know value of isBookmarked - guarantees that it will be set when we get here.
+                if (isBookmarked) {
+                    telemetryEvent = TelemetryContract.Event.UNSAVE;
+
+                    if (isReaderViewPage) {
+                        telemetryExtra = "as_bookmark_reader";
+                    } else {
+                        telemetryExtra = "as_bookmark";
+                    }
+                    telemetryExtraBuilder.set(ActivityStreamTelemetry.Contract.ITEM, ActivityStreamTelemetry.Contract.ITEM_REMOVE_BOOKMARK);
+                } else {
+                    telemetryEvent = TelemetryContract.Event.SAVE;
+                    telemetryExtra = "as_bookmark";
+                    telemetryExtraBuilder.set(ActivityStreamTelemetry.Contract.ITEM, ActivityStreamTelemetry.Contract.ITEM_ADD_BOOKMARK);
+                }
+                // NB: Generic menu item action event will be sent at the end of this function.
+                // We have a seemingly duplicate telemetry event here because we want to emit
+                // a concrete event in case it is used by other queries to estimate feature usage.
+                Telemetry.sendUIEvent(telemetryEvent, TelemetryContract.Method.CONTEXT_MENU, telemetryExtra);
+
                 ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
                         final BrowserDB db = BrowserDB.from(context);
 
-                        final TelemetryContract.Event telemetryEvent;
-                        final String telemetryExtra;
                         if (isBookmarked) {
                             db.removeBookmarksWithURL(context.getContentResolver(), url);
 
-                            SavedReaderViewHelper rch = SavedReaderViewHelper.getSavedReaderViewHelper(context);
-                            final boolean isReaderViewPage = rch.isURLCached(url);
-
-                            telemetryEvent = TelemetryContract.Event.UNSAVE;
-
-                            if (isReaderViewPage) {
-                                telemetryExtra = "as_bookmark_reader";
-                            } else {
-                                telemetryExtra = "as_bookmark";
-                            }
                         } else {
                             // We only store raw URLs in history (and bookmarks), hence we won't ever show about:reader
                             // URLs in AS topsites or highlights. Therefore we don't need to do any special about:reader handling here.
                             db.addBookmark(context.getContentResolver(), title, url);
-
-                            telemetryEvent = TelemetryContract.Event.SAVE;
-                            telemetryExtra = "as_bookmark";
                         }
-
-                        Telemetry.sendUIEvent(telemetryEvent, TelemetryContract.Method.CONTEXT_MENU, telemetryExtra);
                     }
                 });
                 break;
 
             case R.id.pin:
+                // While isPinned is nullable, behaviour of postInit - disabling 'pin' item
+                // until we know value of isPinned - guarantees that it will be set when we get here.
+                if (isPinned) {
+                    telemetryExtraBuilder.set(ActivityStreamTelemetry.Contract.ITEM, ActivityStreamTelemetry.Contract.ITEM_UNPIN);
+                } else {
+                    telemetryExtraBuilder.set(ActivityStreamTelemetry.Contract.ITEM, ActivityStreamTelemetry.Contract.ITEM_PIN);
+                }
+
                 ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
@@ -236,6 +267,7 @@ public abstract class ActivityStreamContextMenu
                         }
                     }
                 });
+                break;
 
             case R.id.copy_url:
                 Clipboard.setText(url);
@@ -243,20 +275,14 @@ public abstract class ActivityStreamContextMenu
 
             case R.id.add_homescreen:
                 GeckoAppShell.createShortcut(title, url);
-
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "as_add_to_launcher");
                 break;
 
             case R.id.open_new_tab:
                 onUrlOpenInBackgroundListener.onUrlOpenInBackground(url, EnumSet.noneOf(HomePager.OnUrlOpenInBackgroundListener.Flags.class));
-
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.CONTEXT_MENU, "as_new_tab");
                 break;
 
             case R.id.open_new_private_tab:
                 onUrlOpenInBackgroundListener.onUrlOpenInBackground(url, EnumSet.of(HomePager.OnUrlOpenInBackgroundListener.Flags.PRIVATE));
-
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.CONTEXT_MENU, "as_private_tab");
                 break;
 
             case R.id.dismiss:
@@ -285,6 +311,12 @@ public abstract class ActivityStreamContextMenu
                 throw new IllegalArgumentException("Menu item with ID=" + item.getItemId() + " not handled");
         }
 
+        Telemetry.sendUIEvent(
+                TelemetryContract.Event.ACTION,
+                TelemetryContract.Method.CONTEXT_MENU,
+                telemetryExtraBuilder.build()
+        );
+
         dismiss();
         return true;
     }
@@ -292,7 +324,7 @@ public abstract class ActivityStreamContextMenu
 
     @RobocopTarget
     public static ActivityStreamContextMenu show(Context context,
-                                                      View anchor,
+                                                      View anchor, ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                                       final MenuMode menuMode,
                                                       final String title, @NonNull final String url,
                                                       @Nullable final Boolean isBookmarked, @Nullable final Boolean isPinned,
@@ -303,14 +335,14 @@ public abstract class ActivityStreamContextMenu
 
         if (!HardwareUtils.isTablet()) {
             menu = new BottomSheetContextMenu(context,
-                    menuMode,
+                    telemetryExtraBuilder, menuMode,
                     title, url, isBookmarked, isPinned,
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     tilesWidth, tilesHeight);
         } else {
             menu = new PopupContextMenu(context,
                     anchor,
-                    menuMode,
+                    telemetryExtraBuilder, menuMode,
                     title, url, isBookmarked, isPinned,
                     onUrlOpenListener, onUrlOpenInBackgroundListener);
         }

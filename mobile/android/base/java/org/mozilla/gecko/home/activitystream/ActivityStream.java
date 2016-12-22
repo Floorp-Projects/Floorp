@@ -11,20 +11,17 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
-import android.support.v4.graphics.ColorUtils;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.util.TypedValue;
 import android.widget.FrameLayout;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
-import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 public class ActivityStream extends FrameLayout {
@@ -62,6 +59,11 @@ public class ActivityStream extends FrameLayout {
         desiredTileWidth = resources.getDimensionPixelSize(R.dimen.activity_stream_desired_tile_width);
         desiredTilesHeight = resources.getDimensionPixelSize(R.dimen.activity_stream_desired_tile_height);
         tileMargin = resources.getDimensionPixelSize(R.dimen.activity_stream_base_margin);
+
+        ActivityStreamTelemetry.Extras.setGlobal(
+                ActivityStreamTelemetry.Contract.FX_ACCOUNT_PRESENT,
+                FirefoxAccounts.firefoxAccountsExist(context)
+        );
     }
 
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
