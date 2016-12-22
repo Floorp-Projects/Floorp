@@ -1260,7 +1260,7 @@ public:
     void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count,
                              GLsizei primcount);
     void DrawElements(GLenum mode, GLsizei count, GLenum type,
-                      WebGLintptr byteOffset);
+                      WebGLintptr byteOffset, const char* funcName = nullptr);
     void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                                WebGLintptr byteOffset, GLsizei primcount);
 
