@@ -324,10 +324,10 @@ private:
   // be held.
   bool IsPlaying() const;
 
-  // Resets all state related to decoding and playback, emptying all buffers
-  // and aborting all pending operations on the decode task queue.
-  void Reset(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
-                                         TrackInfo::kVideoTrack));
+  // Resets all states related to decoding and aborts all pending requests
+  // to the decoders.
+  void ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
+                                               TrackInfo::kVideoTrack));
 
 protected:
   virtual ~MediaDecoderStateMachine();
