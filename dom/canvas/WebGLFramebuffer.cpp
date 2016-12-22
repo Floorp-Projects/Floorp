@@ -871,6 +871,44 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
 }
 
 bool
+WebGLFramebuffer::ValidateClearBufferType(const char* funcName, GLenum buffer,
+                                          uint32_t drawBuffer, GLenum funcType) const
+{
+    if (buffer != LOCAL_GL_COLOR)
+        return true;
+
+    const auto& attach = mColorAttachments[drawBuffer];
+    if (!count(mResolvedCompleteData->colorDrawBuffers.begin(),
+               mResolvedCompleteData->colorDrawBuffers.end(),
+               &attach))
+    {
+        return true; // DRAW_BUFFERi set to NONE.
+    }
+
+    GLenum attachType;
+    switch (attach.Format()->format->componentType) {
+    case webgl::ComponentType::Int:
+        attachType = LOCAL_GL_INT;
+        break;
+    case webgl::ComponentType::UInt:
+        attachType = LOCAL_GL_UNSIGNED_INT;
+        break;
+    default:
+        attachType = LOCAL_GL_FLOAT;
+        break;
+    }
+
+    if (attachType != funcType) {
+        mContext->ErrorInvalidOperation("%s: This attachment is of type 0x%04x, but"
+                                        " this function is of type 0x%04x.",
+                                        funcName, attachType, funcType);
+        return false;
+    }
+
+    return true;
+}
+
+bool
 WebGLFramebuffer::ValidateForRead(const char* funcName,
                                   const webgl::FormatUsageInfo** const out_format,
                                   uint32_t* const out_width, uint32_t* const out_height)
