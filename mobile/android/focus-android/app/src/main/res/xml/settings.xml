@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="Privacy" />
+
+    <SwitchPreference
+        android:title="Block ad trackers"
+        android:defaultValue="true" />
+
+    <SwitchPreference
+        android:title="Block analytic trackers"
+        android:defaultValue="true"/>
+
+
+    <SwitchPreference
+        android:title="Block social trackers"
+        android:defaultValue="true"/>
+
+
+    <SwitchPreference
+        android:title="Block other content trackers"
+        android:summary="May break some videos and Web pages"/>
+
+    <PreferenceCategory
+        android:title="Performance" />
+
+    <SwitchPreference
+        android:title="Block Web fonts" />
+
+    <PreferenceCategory
+        android:title="Mozilla" />
+
+    <SwitchPreference
+        android:title="Send anonymous usage data"
+        android:defaultValue="true"
+        android:summary="Learn more"/>
+
+</PreferenceScreen>

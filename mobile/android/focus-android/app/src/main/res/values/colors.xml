@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <color name="colorPrimary">#b961cf</color>
+    <color name="colorPrimary">#FF363B40</color>
     <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorAccent">#FFCF68FF</color>
 
@@ -15,4 +15,6 @@
     <color name="colorUrlBarGradientEnd">#FF3E4B89</color>
 
     <color name="colorAutocompleteHighlight">#FFCF68FF</color>
+
+    <color name="colorTitleBar">#FF363B40</color>
 </resources>

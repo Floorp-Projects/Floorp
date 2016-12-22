@@ -6,6 +6,15 @@
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="#ff363b40"
+        android:elevation="4dp"/>
+    
+    <fragment
+        android:id="@+id/settings"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:name="org.mozilla.focus.settings.SettingsFragment" />
 
 </LinearLayout>
