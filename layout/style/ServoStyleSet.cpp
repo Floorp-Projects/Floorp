@@ -182,7 +182,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
+ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                                          CSSPseudoElementType aType,
                                          nsStyleContext* aParentContext,
                                          Element* aPseudoElement)
@@ -190,14 +190,16 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   if (aPseudoElement) {
     NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
   }
-  MOZ_ASSERT(aParentContext);
+
+  // NB: We ignore aParentContext, on the assumption that pseudo element styles
+  // should just inherit from aOriginatingElement's primary style, which Servo
+  // already knows.
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_GetForPseudoElement(
-      aParentContext->StyleSource().AsServoComputedValues(),
-      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false).Consume();
+    Servo_ResolvePseudoStyle(aOriginatingElement, pseudoTag,
+                             /* is_probe = */ false, mRawSet.get()).Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
@@ -385,19 +387,19 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
+ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
                                        CSSPseudoElementType aType,
                                        nsStyleContext* aParentContext)
 {
-  MOZ_ASSERT(aParentContext);
+  // NB: We ignore aParentContext, on the assumption that pseudo element styles
+  // should just inherit from aOriginatingElement's primary style, which Servo
+  // already knows.
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_GetForPseudoElement(
-      aParentContext->StyleSource().AsServoComputedValues(),
-      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true).Consume();
-
+    Servo_ResolvePseudoStyle(aOriginatingElement, pseudoTag,
+                             /* is_probe = */ true, mRawSet.get()).Consume();
   if (!computedValues) {
     return nullptr;
   }
@@ -421,7 +423,7 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
+ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
                                        CSSPseudoElementType aType,
                                        nsStyleContext* aParentContext,
                                        TreeMatchContext& aTreeMatchContext,
@@ -430,7 +432,7 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   if (aPseudoElement) {
     NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
   }
-  return ProbePseudoElementStyle(aParentElement, aType, aParentContext);
+  return ProbePseudoElementStyle(aOriginatingElement, aType, aParentContext);
 }
 
 nsRestyleHint
