@@ -42,14 +42,14 @@ var gSyncPane = {
     return Weave.Svc.Prefs.isSet("serverURL");
   },
 
-  needsUpdate: function() {
+  needsUpdate() {
     this.page = PAGE_NEEDS_UPDATE;
     let label = document.getElementById("loginError");
     label.textContent = Weave.Utils.getErrorString(Weave.Status.login);
     label.className = "error";
   },
 
-  init: function() {
+  init() {
     this._setupEventListeners();
 
     // If the Service hasn't finished initializing, wait for it.
@@ -85,7 +85,7 @@ var gSyncPane = {
     xps.ensureLoaded();
   },
 
-  _showLoadPage: function(xps) {
+  _showLoadPage(xps) {
     let username;
     try {
       username = Services.prefs.getCharPref("services.sync.username");
@@ -109,7 +109,7 @@ var gSyncPane = {
     }
   },
 
-  _init: function() {
+  _init() {
     let topics = ["weave:service:login:error",
                   "weave:service:login:finish",
                   "weave:service:start-over:finish",
@@ -161,7 +161,7 @@ var gSyncPane = {
     this._initProfileImageUI();
   },
 
-  _toggleComputerNameControls: function(editMode) {
+  _toggleComputerNameControls(editMode) {
     let textbox = document.getElementById("fxaSyncComputerName");
     textbox.disabled = !editMode;
     document.getElementById("fxaChangeDeviceName").hidden = editMode;
@@ -169,25 +169,25 @@ var gSyncPane = {
     document.getElementById("fxaSaveChangeDeviceName").hidden = !editMode;
   },
 
-  _focusComputerNameTextbox: function() {
+  _focusComputerNameTextbox() {
     let textbox = document.getElementById("fxaSyncComputerName");
     let valLength = textbox.value.length;
     textbox.focus();
     textbox.setSelectionRange(valLength, valLength);
   },
 
-  _blurComputerNameTextbox: function() {
+  _blurComputerNameTextbox() {
     document.getElementById("fxaSyncComputerName").blur();
   },
 
-  _focusAfterComputerNameTextbox: function() {
+  _focusAfterComputerNameTextbox() {
     // Focus the most appropriate element that's *not* the "computer name" box.
     Services.focus.moveFocus(window,
                              document.getElementById("fxaSyncComputerName"),
                              Services.focus.MOVEFOCUS_FORWARD, 0);
   },
 
-  _updateComputerNameValue: function(save) {
+  _updateComputerNameValue(save) {
     if (save) {
       let textbox = document.getElementById("fxaSyncComputerName");
       Weave.Service.clientsEngine.localName = textbox.value;
@@ -195,7 +195,7 @@ var gSyncPane = {
     this._populateComputerName(Weave.Service.clientsEngine.localName);
   },
 
-  _setupEventListeners: function() {
+  _setupEventListeners() {
     function setEventListener(aId, aEventType, aCallback)
     {
       document.getElementById(aId)
@@ -294,7 +294,7 @@ var gSyncPane = {
     });
   },
 
-  _initProfileImageUI: function() {
+  _initProfileImageUI() {
     try {
       if (Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled")) {
         document.getElementById("fxaProfileImage").hidden = false;
@@ -302,7 +302,7 @@ var gSyncPane = {
     } catch (e) { }
   },
 
-  updateWeavePrefs: function() {
+  updateWeavePrefs() {
     let service = Components.classes["@mozilla.org/weave/service;1"]
                   .getService(Components.interfaces.nsISupports)
                   .wrappedJSObject;
@@ -427,7 +427,7 @@ var gSyncPane = {
     }
   },
 
-  startOver: function(showDialog) {
+  startOver(showDialog) {
     if (showDialog) {
       let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
                   Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
@@ -449,26 +449,26 @@ var gSyncPane = {
     this.updateWeavePrefs();
   },
 
-  updatePass: function() {
+  updatePass() {
     if (Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED)
       gSyncUtils.changePassword();
     else
       gSyncUtils.updatePassphrase();
   },
 
-  resetPass: function() {
+  resetPass() {
     if (Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED)
       gSyncUtils.resetPassword();
     else
       gSyncUtils.resetPassphrase();
   },
 
-  _getEntryPoint: function() {
+  _getEntryPoint() {
     let params = new URLSearchParams(document.URL.split("#")[0].split("?")[1] || "");
     return params.get("entrypoint") || "preferences";
   },
 
-  _openAboutAccounts: function(action) {
+  _openAboutAccounts(action) {
     let entryPoint = this._getEntryPoint();
     let params = new URLSearchParams();
     if (action) {
@@ -488,7 +488,7 @@ var gSyncPane = {
    *          "pair"  -- pair a device first
    *          "reset" -- reset sync
    */
-  openSetup: function(wizardType) {
+  openSetup(wizardType) {
     let service = Components.classes["@mozilla.org/weave/service;1"]
                   .getService(Components.interfaces.nsISupports)
                   .wrappedJSObject;
@@ -507,7 +507,7 @@ var gSyncPane = {
     }
   },
 
-  openContentInBrowser: function(url, options) {
+  openContentInBrowser(url, options) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (!win) {
       // no window to use, so use _openLink to create a new one.  We don't
@@ -530,20 +530,20 @@ var gSyncPane = {
     browser.loadURI(url);
   },
 
-  signUp: function() {
+  signUp() {
     this._openAboutAccounts("signup");
   },
 
-  signIn: function() {
+  signIn() {
     this._openAboutAccounts("signin");
   },
 
-  reSignIn: function() {
+  reSignIn() {
     this._openAboutAccounts("reauth");
   },
 
 
-  clickOrSpaceOrEnterPressed: function(event) {
+  clickOrSpaceOrEnterPressed(event) {
     // Note: charCode is deprecated, but 'char' not yet implemented.
     // Replace charCode with char when implemented, see Bug 680830
     return ((event.type == "click" && event.button == 0) ||
@@ -551,7 +551,7 @@ var gSyncPane = {
              (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN)));
   },
 
-  openChangeProfileImage: function(event) {
+  openChangeProfileImage(event) {
     if (this.clickOrSpaceOrEnterPressed(event)) {
       fxAccounts.promiseAccountsChangeProfileURI(this._getEntryPoint(), "avatar")
           .then(url => {
@@ -564,7 +564,7 @@ var gSyncPane = {
     }
   },
 
-  openManageFirefoxAccount: function(event) {
+  openManageFirefoxAccount(event) {
     if (this.clickOrSpaceOrEnterPressed(event)) {
       this.manageFirefoxAccount();
       // Prevent page from scrolling on the space key.
@@ -572,7 +572,7 @@ var gSyncPane = {
     }
   },
 
-  manageFirefoxAccount: function() {
+  manageFirefoxAccount() {
     fxAccounts.promiseAccountsManageURI(this._getEntryPoint())
       .then(url => {
         this.openContentInBrowser(url, {
@@ -581,7 +581,7 @@ var gSyncPane = {
       });
   },
 
-  verifyFirefoxAccount: function() {
+  verifyFirefoxAccount() {
     let showVerifyNotification = (data) => {
       let isError = !data;
       let maybeNot = isError ? "Not" : "";
@@ -609,12 +609,12 @@ var gSyncPane = {
       .then(onSuccess, onError);
   },
 
-  openOldSyncSupportPage: function() {
+  openOldSyncSupportPage() {
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "old-sync";
     this.openContentInBrowser(url);
   },
 
-  unlinkFirefoxAccount: function(confirm) {
+  unlinkFirefoxAccount(confirm) {
     if (confirm) {
       // We use a string bundle shared with aboutAccounts.
       let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
@@ -646,7 +646,7 @@ var gSyncPane = {
     });
   },
 
-  openAddDevice: function() {
+  openAddDevice() {
     if (!Weave.Utils.ensureMPUnlocked())
       return;
 
@@ -658,7 +658,7 @@ var gSyncPane = {
                         "syncAddDevice", "centerscreen,chrome,resizable=no");
   },
 
-  resetSync: function() {
+  resetSync() {
     this.openSetup("reset");
   },
 

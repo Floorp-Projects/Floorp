@@ -42,7 +42,7 @@ function init_category_if_required(category) {
 function register_module(categoryName, categoryObject) {
   gCategoryInits.set(categoryName, {
     inited: false,
-    init: function() {
+    init() {
       categoryObject.init();
       this.inited = true;
     }
