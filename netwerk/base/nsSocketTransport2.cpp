@@ -740,6 +740,7 @@ nsSocketTransport::nsSocketTransport()
     , mProxyTransparentResolvesHost(false)
     , mHttpsProxy(false)
     , mConnectionFlags(0)
+    , mReuseAddrPort(false)
     , mState(STATE_CLOSED)
     , mAttached(false)
     , mInputClosed(true)
@@ -1353,6 +1354,32 @@ nsSocketTransport::InitiateSocket()
     opt.value.non_blocking = true;
     status = PR_SetSocketOption(fd, &opt);
     NS_ASSERTION(status == PR_SUCCESS, "unable to make socket non-blocking");
+
+    if (mReuseAddrPort) {
+        SOCKET_LOG(("  Setting port/addr reuse socket options\n"));
+
+        // Set ReuseAddr for TCP sockets to enable having several
+        // sockets bound to same local IP and port
+        PRSocketOptionData opt_reuseaddr;
+        opt_reuseaddr.option = PR_SockOpt_Reuseaddr;
+        opt_reuseaddr.value.reuse_addr = PR_TRUE;
+        status = PR_SetSocketOption(fd, &opt_reuseaddr);
+        if (status != PR_SUCCESS) {
+            SOCKET_LOG(("  Couldn't set reuse addr socket option: %d\n",
+                        status));
+        }
+
+        // And also set ReusePort for platforms supporting this socket option
+        PRSocketOptionData opt_reuseport;
+        opt_reuseport.option = PR_SockOpt_Reuseport;
+        opt_reuseport.value.reuse_port = PR_TRUE;
+        status = PR_SetSocketOption(fd, &opt_reuseport);
+        if (status != PR_SUCCESS
+            && PR_GetError() != PR_OPERATION_NOT_SUPPORTED_ERROR) {
+            SOCKET_LOG(("  Couldn't set reuse port socket option: %d\n",
+                        status));
+        }
+    }
 
     // disable the nagle algorithm - if we rely on it to coalesce writes into
     // full packets the final packet of a multi segment POST/PUT or pipeline
@@ -2536,6 +2563,13 @@ nsSocketTransport::SetTimeout(uint32_t type, uint32_t value)
     mTimeouts[type] = (uint16_t) std::min<uint32_t>(value, UINT16_MAX);
     PostEvent(MSG_TIMEOUT_CHANGED);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetReuseAddrPort(bool reuseAddrPort)
+{
+  mReuseAddrPort = reuseAddrPort;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
