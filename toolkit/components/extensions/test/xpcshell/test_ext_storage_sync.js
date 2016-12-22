@@ -128,12 +128,26 @@ class KintoServer {
 
       let postResponse = {
         responses: body.requests.map(req => {
+          let oneBody;
+          if (req.method == "DELETE") {
+            let id = req.path.match(/^\/buckets\/default\/collections\/.+\/records\/(.+)$/)[1];
+            oneBody = {
+              "data": {
+                "deleted": true,
+                "id": id,
+                "last_modified": this.etag,
+              },
+            };
+          } else {
+            oneBody = {"data": Object.assign({}, req.body.data, {last_modified: this.etag}),
+                    "permissions": []};
+          }
+
           return {
             path: req.path,
             status: 201,   // FIXME -- only for new posts??
             headers: {"ETag": 3000},   // FIXME???
-            body: {"data": Object.assign({}, req.body.data, {last_modified: this.etag}),
-                   "permissions": []},
+            body: oneBody,
           };
         }),
       };
@@ -960,6 +974,96 @@ add_task(function* test_storage_sync_pushes_changes() {
          "pushing an updated value should not have any plaintext visible");
       equal(updateEncrypted.id, "key-my_2D_key",
             "pushing an updated value should maintain the same ID");
+    });
+  });
+});
+
+add_task(function* test_storage_sync_pulls_deletes() {
+  const collectionId = defaultCollectionId;
+  const extension = defaultExtension;
+  yield* withContextAndServer(function* (context, server) {
+    yield* withSignedInUser(loggedInUser, function* () {
+      server.installCollection(collectionId);
+      server.installCollection("storage-sync-crypto");
+
+      yield ExtensionStorageSync.set(extension, {"my-key": 5}, context);
+      yield ExtensionStorageSync.syncAll();
+      server.clearPosts();
+
+      let calls = [];
+      yield ExtensionStorageSync.addOnChangedListener(extension, function() {
+        calls.push(arguments);
+      }, context);
+
+      yield server.addRecord(collectionId, {
+        "id": "key-my_2D_key",
+        "deleted": true,
+      });
+
+      yield ExtensionStorageSync.syncAll();
+      const remoteValues = (yield ExtensionStorageSync.get(extension, "my-key", context));
+      ok(!remoteValues["my-key"],
+         "ExtensionStorageSync.get() shows value was deleted by sync");
+
+      equal(server.getPosts().length, 0,
+            "pulling the delete shouldn't cause posts");
+
+      equal(calls.length, 1,
+            "syncing calls on-changed listener");
+      deepEqual(calls[0][0], {"my-key": {oldValue: 5}});
+      calls = [];
+
+      // Syncing again doesn't do anything
+      yield ExtensionStorageSync.syncAll();
+
+      equal(calls.length, 0,
+            "syncing again shouldn't call on-changed listener");
+    });
+  });
+});
+
+add_task(function* test_storage_sync_pushes_deletes() {
+  const extensionId = uuid();
+  const collectionId = extensionIdToCollectionId(loggedInUser, extensionId);
+  const extension = {id: extensionId};
+  yield cryptoCollection._clear();
+  yield* withContextAndServer(function* (context, server) {
+    yield* withSignedInUser(loggedInUser, function* () {
+      server.installCollection(collectionId);
+      server.installCollection("storage-sync-crypto");
+      server.etag = 1000;
+
+      yield ExtensionStorageSync.set(extension, {"my-key": 5}, context);
+
+      let calls = [];
+      ExtensionStorageSync.addOnChangedListener(extension, function() {
+        calls.push(arguments);
+      }, context);
+
+      yield ExtensionStorageSync.syncAll();
+      let posts = server.getPosts();
+      equal(posts.length, 2,
+            "pushing a non-deleted value should post keys and post the value to the server");
+
+      yield ExtensionStorageSync.remove(extension, ["my-key"], context);
+      equal(calls.length, 1,
+            "deleting a value should call the on-changed listener");
+
+      yield ExtensionStorageSync.syncAll();
+      equal(calls.length, 1,
+            "pushing a deleted value shouldn't call the on-changed listener");
+
+      // Doesn't push keys because keys were pushed by a previous test.
+      posts = server.getPosts();
+      equal(posts.length, 3,
+            "deleting a value should trigger another push");
+      const post = posts[2];
+      assertPostedUpdatedRecord(post, 1000);
+      equal(post.path, collectionRecordsPath(collectionId) + "/key-my_2D_key",
+            "pushing a deleted value should go to the same path");
+      ok(post.method, "DELETE");
+      ok(!post.body,
+         "deleting a value shouldn't have a body");
     });
   });
 });
