@@ -57,7 +57,7 @@ public:
 
   // GetType and GetAngle gets the type and angle of the responsible document
   // (as defined in specification).
-  OrientationType GetType(ErrorResult& aRv) const;
+  OrientationType GetType(CallerType aCallerType, ErrorResult& aRv) const;
   uint16_t GetAngle(ErrorResult& aRv) const;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

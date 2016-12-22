@@ -34,7 +34,7 @@ interface ScreenOrientation : EventTarget {
   Promise<void> lock(OrientationLockType orientation);
   [Throws]
   void unlock();
-  [Throws]
+  [Throws, NeedsCallerType]
   readonly attribute OrientationType type;
   [Throws]
   readonly attribute unsigned short angle;
