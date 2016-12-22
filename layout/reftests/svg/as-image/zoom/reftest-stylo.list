@@ -2,11 +2,11 @@
 # Tests related to SVG being used as an image, with zooming
 
 # Simple <img> tests
-fuzzy-if(skiaContent,1,408) == img-zoomIn-1.html img-zoomIn-1.html
-fuzzy-if(skiaContent,1,74) == img-zoomOut-1.html img-zoomOut-1.html
+== img-zoomIn-1.html img-zoomIn-1.html
+== img-zoomOut-1.html img-zoomOut-1.html
 
 # Ensure that scaled SVG images aren't fuzzy when tiled.
 == img-fuzzy-zoomOut-1.html img-fuzzy-zoomOut-1.html
 == img-fuzzy-zoomIn-1.html img-fuzzy-zoomIn-1.html
-== img-fuzzy-transform-zoomOut-1.html img-fuzzy-transform-zoomOut-1.html
-== img-fuzzy-transform-zoomIn-1.html img-fuzzy-transform-zoomIn-1.html
+fails == img-fuzzy-transform-zoomOut-1.html img-fuzzy-transform-zoomOut-1.html
+fails == img-fuzzy-transform-zoomIn-1.html img-fuzzy-transform-zoomIn-1.html

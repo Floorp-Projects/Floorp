@@ -76,7 +76,6 @@ include event/reftest-stylo.list
 == anim-indefinite-to-4.svg anim-indefinite-to-4.svg
 
 == anim-fillcolor-1.svg anim-fillcolor-1.svg
-# bug 436296
 == anim-fillopacity-1none.svg anim-fillopacity-1none.svg
 == anim-fillopacity-1css.svg anim-fillopacity-1css.svg
 == anim-fillopacity-1xml.svg anim-fillopacity-1xml.svg
@@ -144,7 +143,7 @@ fuzzy-if(skiaContent,1,600) == anim-feGaussianBlur-01.svg anim-feGaussianBlur-01
 fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg anim-svg-viewBox-01.svg
 == anim-svg-viewBox-02.svg anim-svg-viewBox-02.svg
 == anim-svg-viewBox-03.svg anim-svg-viewBox-03.svg
-skip == anim-view-01.svg#view anim-view-01.svg#view
+# == anim-view-01.svg#view anim-view-01.svg#view
 
 # animate some preserveAspectRatio attributes
 == anim-feImage-preserveAspectRatio-01.svg anim-feImage-preserveAspectRatio-01.svg
@@ -174,14 +173,14 @@ skip == anim-view-01.svg#view anim-view-01.svg#view
 == anim-fill-overpaintserver-2.svg anim-fill-overpaintserver-2.svg
 
 # animate where we fallback from 'additive' animation to non-additive
-skip == anim-additive-fallback-1.svg anim-additive-fallback-1.svg
+== anim-additive-fallback-1.svg anim-additive-fallback-1.svg
 
 == anim-remove-1.svg anim-remove-1.svg
 == anim-remove-2.svg anim-remove-2.svg
 == anim-remove-3.svg anim-remove-3.svg
 == anim-remove-4.svg anim-remove-4.svg
 == anim-remove-5.svg anim-remove-5.svg
-skip == anim-remove-6.svg anim-remove-6.svg
+== anim-remove-6.svg anim-remove-6.svg
 == anim-remove-7.svg anim-remove-7.svg
 == anim-remove-8css.svg anim-remove-8css.svg
 == anim-remove-8xml.svg anim-remove-8xml.svg
@@ -196,7 +195,6 @@ skip == anim-remove-6.svg anim-remove-6.svg
 == anim-retarget-8.svg anim-retarget-8.svg
 
 == anim-strokecolor-1.svg anim-strokecolor-1.svg
-# bug 436296
 == anim-strokewidth-1xml.svg anim-strokewidth-1xml.svg
 
 == anim-targethref-1.svg anim-targethref-1.svg
@@ -210,11 +208,9 @@ skip == anim-remove-6.svg anim-remove-6.svg
 == anim-targethref-9.svg anim-targethref-9.svg
 
 skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == anim-text-rotate-01.svg anim-text-rotate-01.svg
-# Bug 645104 for skip failure on WinXP
 == anim-feFuncR-tableValues-01.svg anim-feFuncR-tableValues-01.svg
 
-skip == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01.svg
-# bug 579588
+== anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01.svg
 
 == anim-width-done-1a.svg anim-width-done-1a.svg
 == anim-width-done-1b.svg anim-width-done-1b.svg
@@ -246,20 +242,20 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 
 == api-sanity-1.svg api-sanity-1.svg
 
-skip == freeze-applied-late-1.svg freeze-applied-late-1.svg
-skip == freeze-applied-late-2.svg freeze-applied-late-2.svg
-skip == freeze-applied-late-3.svg freeze-applied-late-3.svg
-skip == freeze-applied-late-4.svg freeze-applied-late-4.svg
+== freeze-applied-late-1.svg freeze-applied-late-1.svg
+== freeze-applied-late-2.svg freeze-applied-late-2.svg
+== freeze-applied-late-3.svg freeze-applied-late-3.svg
+== freeze-applied-late-4.svg freeze-applied-late-4.svg
 == frozen-to-anim-1.svg frozen-to-anim-1.svg
 
 == inactivate-with-active-unchanged-1.svg inactivate-with-active-unchanged-1.svg
 == inactivate-with-active-unchanged-2.svg inactivate-with-active-unchanged-2.svg
 
-skip == mapped-attr-long-url-1.svg mapped-attr-long-url-1.svg
-skip == mapped-attr-long-url-2.svg mapped-attr-long-url-2.svg
+== mapped-attr-long-url-1.svg mapped-attr-long-url-1.svg
+== mapped-attr-long-url-2.svg mapped-attr-long-url-2.svg
 
 # interaction between xml mapped attributes and their css equivalents
-skip == mapped-attr-vs-css-prop-1.svg mapped-attr-vs-css-prop-1.svg
+== mapped-attr-vs-css-prop-1.svg mapped-attr-vs-css-prop-1.svg
 
 == min-1.svg min-1.svg
 
@@ -284,3 +280,5 @@ skip == mapped-attr-vs-css-prop-1.svg mapped-attr-vs-css-prop-1.svg
 # Test animation that changes 'display' attribute
 == anim-display.svg anim-display.svg
 == anim-display-in-g-element.svg anim-display-in-g-element.svg
+
+pref(layout.css.clip-path-shapes.enabled,true) fuzzy(63,146) == anim-clipPath-viewBox.svg anim-clipPath-viewBox.svg

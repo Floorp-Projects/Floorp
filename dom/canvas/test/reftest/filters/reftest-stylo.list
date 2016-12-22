@@ -1,21 +1,31 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 default-preferences pref(canvas.filters.enabled,true)
 
-== default-color.html default-color.html
-== drop-shadow.html drop-shadow.html
-== drop-shadow-transformed.html drop-shadow-transformed.html
-fuzzy-if(azureSkia,1,1500) == global-alpha.html global-alpha.html
-== global-composite-operation.html global-composite-operation.html
-== liveness.html liveness.html
-== multiple-drop-shadows.html multiple-drop-shadows.html
-== shadow.html shadow.html
-== subregion-fill-paint.html subregion-fill-paint.html
-== subregion-stroke-paint.html subregion-stroke-paint.html
-== svg-bbox.html svg-bbox.html
-== svg-inline.html svg-inline.html
-== svg-liveness.html svg-liveness.html
-== svg-off-screen.html svg-off-screen.html
-== units.html units.html
-== units-em.html units-em.html
-== units-ex.html units-ex.html
-== units-off-screen.html units-off-screen.html
+fails == default-color.html default-color.html
+fails == drop-shadow.html drop-shadow.html
+fails == drop-shadow-transformed.html drop-shadow-transformed.html
+fails == global-alpha.html global-alpha.html
+fails == global-composite-operation.html global-composite-operation.html
+fails == liveness.html liveness.html
+fails == multiple-drop-shadows.html multiple-drop-shadows.html
+fails == shadow.html shadow.html
+fails == subregion-fill-paint.html subregion-fill-paint.html
+fails == subregion-stroke-paint.html subregion-stroke-paint.html
+fails == svg-bbox.html svg-bbox.html
+fails == svg-inline.html svg-inline.html
+fails == svg-liveness.html svg-liveness.html
+fails == svg-off-screen.html svg-off-screen.html
+fails == units.html units.html
+fails == units-em.html units-em.html
+fails == units-ex.html units-ex.html
+fails == units-off-screen.html units-off-screen.html
+fails == fillText-with-filter-opacity-1.html fillText-with-filter-opacity-1.html
+fails == fillText-with-filter-opacity-2.html fillText-with-filter-opacity-2.html
+fails == strokeText-with-filter-grayscale-1.html strokeText-with-filter-grayscale-1.html
+fails == strokeText-with-filter-grayscale-2.html strokeText-with-filter-grayscale-2.html
+fails == fillText-with-shadow-1.html fillText-with-shadow-1.html
+fails == fillText-with-shadow-2.html fillText-with-shadow-2.html
+fails == fillText-with-filter-grayscale-1.html fillText-with-filter-grayscale-1.html
+fails == fillText-with-filter-grayscale-2.html fillText-with-filter-grayscale-2.html
+fails == strokeText-with-shadow-1.html strokeText-with-shadow-1.html
+fails == strokeText-with-shadow-2.html strokeText-with-shadow-2.html

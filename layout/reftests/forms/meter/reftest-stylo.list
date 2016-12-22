@@ -1,20 +1,18 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fuzzy-if(Android,128,16) == values.html values.html
-== values-rtl.html values-rtl.html
-== margin-padding.html margin-padding.html
-== margin-padding-rtl.html margin-padding-rtl.html
-skip-if(B2G||Mulet) == bar-pseudo-element.html bar-pseudo-element.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== bar-pseudo-element-rtl.html bar-pseudo-element-rtl.html
+# == values.html values.html
+# fails == values-rtl.html values-rtl.html
+# fails == margin-padding.html margin-padding.html
+# fails == margin-padding-rtl.html margin-padding-rtl.html
+# fails == bar-pseudo-element.html bar-pseudo-element.html
+# fails == bar-pseudo-element-rtl.html bar-pseudo-element-rtl.html
 
 # vertical tests
-== values-vertical.html values-vertical.html
-== values-vertical-rtl.html values-vertical-rtl.html
-== margin-padding-vertical.html margin-padding-vertical.html
-== margin-padding-vertical-rtl.html margin-padding-vertical-rtl.html
-skip-if(B2G||Mulet) == bar-pseudo-element-vertical.html bar-pseudo-element-vertical.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== bar-pseudo-element-vertical-rtl.html bar-pseudo-element-vertical-rtl.html
+# fails == values-vertical.html values-vertical.html
+# fails == values-vertical-rtl.html values-vertical-rtl.html
+# fails == margin-padding-vertical.html margin-padding-vertical.html
+# fails == margin-padding-vertical-rtl.html margin-padding-vertical-rtl.html
+# fails == bar-pseudo-element-vertical.html bar-pseudo-element-vertical.html
+# fails == bar-pseudo-element-vertical-rtl.html bar-pseudo-element-vertical-rtl.html
 
 # The following test is disabled but kept in the repository because the
 # transformations will not behave exactly the same for <meter> and two divs.
@@ -25,25 +23,22 @@ skip-if(B2G||Mulet) == bar-pseudo-element-vertical.html bar-pseudo-element-verti
 include default-style/reftest-stylo.list
 
 # Tests for bugs:
-== block-invalidate.html block-invalidate.html
-== in-cells.html in-cells.html
-== max-height.html max-height.html
+# fails == block-invalidate.html block-invalidate.html
+# fails == in-cells.html in-cells.html
+# == max-height.html max-height.html
 
 # Tests for block and inline orientation in combination with writing-mode
-# XXX Remove default-preferences setting here after bug 1138384 makes
-#     it the default for all channels
-
-== meter-orient-vertical.html meter-orient-vertical.html
-== meter-orient-horizontal.html meter-orient-horizontal.html
-== meter-orient-block.html meter-orient-block.html
-== meter-orient-inline.html meter-orient-inline.html
-== meter-vlr.html meter-vlr.html
-== meter-vlr-orient-block.html meter-vlr-orient-block.html
-== meter-vlr-orient-inline.html meter-vlr-orient-inline.html
-== meter-vlr-orient-horizontal.html meter-vlr-orient-horizontal.html
-skip == meter-vlr-orient-vertical.html meter-vlr-orient-vertical.html
-== meter-vrl.html meter-vrl.html
-== meter-vrl-orient-block.html meter-vrl-orient-block.html
-== meter-vrl-orient-inline.html meter-vrl-orient-inline.html
-== meter-vrl-orient-horizontal.html meter-vrl-orient-horizontal.html
-== meter-vrl-orient-vertical.html meter-vrl-orient-vertical.html
+# == meter-orient-vertical.html meter-orient-vertical.html
+# == meter-orient-horizontal.html meter-orient-horizontal.html
+# == meter-orient-block.html meter-orient-block.html
+# == meter-orient-inline.html meter-orient-inline.html
+# == meter-vlr.html meter-vlr.html
+# == meter-vlr-orient-block.html meter-vlr-orient-block.html
+# == meter-vlr-orient-inline.html meter-vlr-orient-inline.html
+# == meter-vlr-orient-horizontal.html meter-vlr-orient-horizontal.html
+# == meter-vlr-orient-vertical.html meter-vlr-orient-vertical.html
+# == meter-vrl.html meter-vrl.html
+# == meter-vrl-orient-block.html meter-vrl-orient-block.html
+# == meter-vrl-orient-inline.html meter-vrl-orient-inline.html
+# == meter-vrl-orient-horizontal.html meter-vrl-orient-horizontal.html
+# == meter-vrl-orient-vertical.html meter-vrl-orient-vertical.html

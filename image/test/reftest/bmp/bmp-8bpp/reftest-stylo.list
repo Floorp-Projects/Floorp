@@ -18,8 +18,8 @@ fails == bmp-size-31x31-8bpp.bmp bmp-size-31x31-8bpp.bmp
 fails == bmp-size-32x32-8bpp.bmp bmp-size-32x32-8bpp.bmp
 fails == bmp-size-33x33-8bpp.bmp bmp-size-33x33-8bpp.bmp
 fails == bmp-not-square-8bpp.bmp bmp-not-square-8bpp.bmp
-random == rle-bmp-not-square-8bpp.bmp rle-bmp-not-square-8bpp.bmp
+fails == rle-bmp-not-square-8bpp.bmp rle-bmp-not-square-8bpp.bmp
 fails == os2-bmp-size-32x32-8bpp.bmp os2-bmp-size-32x32-8bpp.bmp
-random == rle-bmp-size-32x32-8bpp.bmp rle-bmp-size-32x32-8bpp.bmp
-== top-to-bottom-rle-bmp-size-32x32-8bpp.bmp top-to-bottom-rle-bmp-size-32x32-8bpp.bmp
+fails == rle-bmp-size-32x32-8bpp.bmp rle-bmp-size-32x32-8bpp.bmp
+fails == top-to-bottom-rle-bmp-size-32x32-8bpp.bmp top-to-bottom-rle-bmp-size-32x32-8bpp.bmp
 fails == top-to-bottom-16x16-8bpp.bmp top-to-bottom-16x16-8bpp.bmp

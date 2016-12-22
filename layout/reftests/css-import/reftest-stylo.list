@@ -1,16 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(B2G||Mulet) == 290018-1.html 290018-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== 436261-1.html 436261-1.html
-== 436261-2.html 436261-2.html
-== 436261-3.html 436261-3.html
-== 444723-1.html 444723-1.html
-== 444723-2.html 444723-2.html
-== 445415-1a.xhtml 445415-1a.xhtml
-== 445415-1b.xhtml 445415-1b.xhtml
-skip-if(B2G||Mulet) == 445415-2a.xhtml 445415-2a.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 445415-2b.xhtml 445415-2b.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == 290018-1.html 290018-1.html
+fails == 436261-1.html 436261-1.html
+fails == 436261-2.html 436261-2.html
+fails == 436261-3.html 436261-3.html
+fails == 444723-1.html 444723-1.html
+fails == 444723-2.html 444723-2.html
+fails == 445415-1a.xhtml 445415-1a.xhtml
+fails == 445415-1b.xhtml 445415-1b.xhtml
+fails == 445415-2a.xhtml 445415-2a.xhtml
+fails == 445415-2b.xhtml 445415-2b.xhtml

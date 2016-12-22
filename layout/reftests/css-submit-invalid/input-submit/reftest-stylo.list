@@ -1,18 +1,17 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== static-valid.html static-valid.html
-== dynamic-valid.html dynamic-valid.html
-== static-invalid.html static-invalid.html
-skip-if(B2G||Mulet) == dynamic-invalid.html dynamic-invalid.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== dynamic-invalid-barred.html dynamic-invalid-barred.html
-== dynamic-invalid-barred-2.html dynamic-invalid-barred-2.html
-== dynamic-invalid-not-barred.html dynamic-invalid-not-barred.html
-== static-invalid-barred.html static-invalid-barred.html
-== remove-invalid-element.html remove-invalid-element.html
-== add-invalid-element.html add-invalid-element.html
-== add-submit-control.html add-submit-control.html
-== remove-submit-control.html remove-submit-control.html
-== change-type-submit-control.html change-type-submit-control.html
-== change-type-not-submit-control.html change-type-not-submit-control.html
-== self-invalid.html self-invalid.html
-== remove-form.html remove-form.html
+fails == static-valid.html static-valid.html
+fails == dynamic-valid.html dynamic-valid.html
+fails == static-invalid.html static-invalid.html
+fails == dynamic-invalid.html dynamic-invalid.html
+fails == dynamic-invalid-barred.html dynamic-invalid-barred.html
+fails == dynamic-invalid-barred-2.html dynamic-invalid-barred-2.html
+fails == dynamic-invalid-not-barred.html dynamic-invalid-not-barred.html
+fails == static-invalid-barred.html static-invalid-barred.html
+fails == remove-invalid-element.html remove-invalid-element.html
+fails == add-invalid-element.html add-invalid-element.html
+fails == add-submit-control.html add-submit-control.html
+fails == remove-submit-control.html remove-submit-control.html
+fails == change-type-submit-control.html change-type-submit-control.html
+fails == change-type-not-submit-control.html change-type-not-submit-control.html
+# == self-invalid.html self-invalid.html
+fails == remove-form.html remove-form.html

@@ -1,100 +1,63 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # these could be moved to crashtests
-== backgr_border-table-cell.html backgr_border-table-cell.html
-== backgr_border-table-column-group.html backgr_border-table-column-group.html
+fails == backgr_border-table-cell.html backgr_border-table-cell.html
+fails == backgr_border-table-column-group.html backgr_border-table-column-group.html
 # This seems to be caused by bug 527825
-asserts-if(gtkWidget,0-12) == backgr_border-table-column.html backgr_border-table-column.html
-asserts-if(gtkWidget,0-6) == backgr_border-table-quirks.html backgr_border-table-quirks.html
-== backgr_border-table-row-group.html backgr_border-table-row-group.html
-== backgr_border-table-row.html backgr_border-table-row.html
-== backgr_border-table.html backgr_border-table.html
-== backgr_fixed-bg.html backgr_fixed-bg.html
-skip == backgr_index.html backgr_index.html
-== backgr_layers-hide.html backgr_layers-hide.html
-== backgr_layers-opacity.html backgr_layers-opacity.html
-random == backgr_layers-show.html backgr_layers-show.html
-== backgr_position-table-cell.html backgr_position-table-cell.html
-== backgr_position-table-column-group.html backgr_position-table-column-group.html
-== backgr_position-table-column.html backgr_position-table-column.html
-== backgr_position-table-row-group.html backgr_position-table-row-group.html
-== backgr_position-table-row.html backgr_position-table-row.html
-== backgr_position-table.html backgr_position-table.html
-== backgr_simple-table-cell.html backgr_simple-table-cell.html
-== backgr_simple-table-column-group.html backgr_simple-table-column-group.html
-== backgr_simple-table-column.html backgr_simple-table-column.html
-== backgr_simple-table-row-group.html backgr_simple-table-row-group.html
-== backgr_simple-table-row.html backgr_simple-table-row.html
-== backgr_simple-table.html backgr_simple-table.html
+fails == backgr_border-table-column.html backgr_border-table-column.html
+fails == backgr_border-table-quirks.html backgr_border-table-quirks.html
+fails == backgr_border-table-row-group.html backgr_border-table-row-group.html
+fails == backgr_border-table-row.html backgr_border-table-row.html
+fails == backgr_border-table.html backgr_border-table.html
+fails == backgr_fixed-bg.html backgr_fixed-bg.html
+fails == backgr_index.html backgr_index.html
+fails == backgr_layers-hide.html backgr_layers-hide.html
+fails == backgr_layers-opacity.html backgr_layers-opacity.html
+fails == backgr_layers-show.html backgr_layers-show.html
+fails == backgr_position-table-cell.html backgr_position-table-cell.html
+fails == backgr_position-table-column-group.html backgr_position-table-column-group.html
+fails == backgr_position-table-column.html backgr_position-table-column.html
+fails == backgr_position-table-row-group.html backgr_position-table-row-group.html
+fails == backgr_position-table-row.html backgr_position-table-row.html
+fails == backgr_position-table.html backgr_position-table.html
+fails == backgr_simple-table-cell.html backgr_simple-table-cell.html
+fails == backgr_simple-table-column-group.html backgr_simple-table-column-group.html
+fails == backgr_simple-table-column.html backgr_simple-table-column.html
+fails == backgr_simple-table-row-group.html backgr_simple-table-row-group.html
+fails == backgr_simple-table-row.html backgr_simple-table-row.html
+fails == backgr_simple-table.html backgr_simple-table.html
 
 # would also be good to test table-header-group and table-footer-group
 # (and rows and row groups in the presence of their reordering)
 # Also need to test different values of background-origin and background-clip.
-skip-if(B2G||Mulet) == border-separate-table-cell.html border-separate-table-cell.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-separate-table-column-group.html border-separate-table-column-group.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-separate-table-column.html border-separate-table-column.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-separate-table-row-group.html border-separate-table-row-group.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== border-separate-table-cell.html border-separate-table-cell.html
+== border-separate-table-column-group.html border-separate-table-column-group.html
+== border-separate-table-column.html border-separate-table-column.html
+== border-separate-table-row-group.html border-separate-table-row-group.html
 == border-separate-table-row.html border-separate-table-row.html
-skip-if(B2G||Mulet) == border-separate-table.html border-separate-table.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-collapse-table-cell.html border-collapse-table-cell.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-collapse-table-column-group.html border-collapse-table-column-group.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-collapse-table-column.html border-collapse-table-column.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-collapse-table-row-group.html border-collapse-table-row-group.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== border-separate-table.html border-separate-table.html
+== border-collapse-table-cell.html border-collapse-table-cell.html
+== border-collapse-table-column-group.html border-collapse-table-column-group.html
+== border-collapse-table-column.html border-collapse-table-column.html
+== border-collapse-table-row-group.html border-collapse-table-row-group.html
 == border-collapse-table-row.html border-collapse-table-row.html
 == border-collapse-table.html border-collapse-table.html
-skip-if(B2G||Mulet) fuzzy-if(d2d,1,1083) fuzzy-if(skiaContent,1,2200) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell.html
 == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group.html
-# bug 424274
 == border-collapse-opacity-table-column.html border-collapse-opacity-table-column.html
-# bug 424274
-fails skip-if(B2G||Mulet) fuzzy-if(d2d,1,16359) fuzzy-if(skiaContent,1,17000) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(d2d,1,5453) fuzzy-if(skiaContent,1,5500) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(d2d,1,29973) fuzzy-if(skiaContent,1,60000) == border-collapse-opacity-table.html border-collapse-opacity-table.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(d2d,1,2478) fuzzy-if(skiaContent,1,2500) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(d2d,1,16359) fuzzy-if(skiaContent,1,17000) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group.html
+fuzzy-if(d2d,1,5453) fuzzy-if(skiaContent,1,11000) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row.html
+fuzzy-if(d2d||skiaContent,1,60000) == border-collapse-opacity-table.html border-collapse-opacity-table.html
+== border-separate-opacity-table-cell.html border-separate-opacity-table-cell.html
 == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group.html
-# bug 424274
 == border-separate-opacity-table-column.html border-separate-opacity-table-column.html
-# bug 424274
-fails fuzzy-if(d2d,1,37170) fuzzy-if(skiaContent,1,38000) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group.html
-fails skip-if(B2G||Mulet) fuzzy-if(d2d,1,12390) fuzzy-if(skiaContent,1,13000) == border-separate-opacity-table-row.html border-separate-opacity-table-row.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,95000) == border-separate-opacity-table.html border-separate-opacity-table.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-background.html
-== scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-border.html
-== scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-background.html
-== scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-border.html
-# scrolling rowgroups were removed in bug 28800
+fuzzy-if(d2d,1,37170) fuzzy-if(skiaContent,1,38000) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group.html
+fuzzy-if(d2d,1,12390) fuzzy-if(skiaContent,1,13000) == border-separate-opacity-table-row.html border-separate-opacity-table-row.html
+fuzzy-if(d2d||skiaContent,1,95000) == border-separate-opacity-table.html border-separate-opacity-table.html
+# == scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-background.html
+fails == scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-border.html
+# == scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-background.html
+fails == scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-border.html
 == empty-cells-default-1.html empty-cells-default-1.html
 == empty-cells-default-2.html empty-cells-default-2.html
-fuzzy-if(OSX,1,113) fuzzy-if(winWidget,1,12) fuzzy-if(Android,1,39) fuzzy-if(winWidget&&!layersGPUAccelerated,82,116) fuzzy-if(skiaContent,77,5400) == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1.html
-random == table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2.html
+== table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1.html
+# == table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2.html
