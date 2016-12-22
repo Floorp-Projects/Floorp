@@ -91,7 +91,8 @@ public:
 
   virtual void CleanupResources() override;
 
-  virtual void BindTextureSource() override;
+  virtual TextureSource* BindTextureSource() override;
+  virtual void UnbindTextureSource() override;
 
   int32_t GetFrameID()
   {
