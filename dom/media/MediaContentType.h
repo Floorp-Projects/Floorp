@@ -35,6 +35,8 @@ public:
   const MediaMIMEType& Type() const { return mExtendedMIMEType.Type(); }
   const MediaExtendedMIMEType& ExtendedType() const { return mExtendedMIMEType; }
 
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 private:
   MediaExtendedMIMEType mExtendedMIMEType;
 };
