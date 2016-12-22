@@ -49,7 +49,6 @@ class ISurfaceAllocator;
 class TextureHostOGL;
 class TextureReadLock;
 class TextureSourceOGL;
-class TextureSourceWebRenderOGL;
 class TextureSourceD3D9;
 class TextureSourceD3D11;
 class TextureSourceBasic;
@@ -117,14 +116,8 @@ public:
   /**
    * Cast to a TextureSource for for each backend..
    */
-  virtual TextureSourceOGL* AsSourceOGL()
-  {
+  virtual TextureSourceOGL* AsSourceOGL() {
     gfxCriticalNote << "Failed to cast " << Name() << " into a TextureSourceOGL";
-    return nullptr;
-  }
-  virtual TextureSourceWebRenderOGL* AsSourceWebRenderOGL()
-  {
-    gfxCriticalNote << "Failed to cast " << Name() << " into a TextureSourceWebRenderOGL";
     return nullptr;
   }
   virtual TextureSourceD3D9* AsSourceD3D9() { return nullptr; }

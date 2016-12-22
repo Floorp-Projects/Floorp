@@ -9,10 +9,6 @@
 #include "Layers.h"
 #include "WebRenderLayerManager.h"
 
-#include "mozilla/layers/ImageClient.h"
-#include "mozilla/layers/TextureClientRecycleAllocator.h"
-#include "mozilla/layers/TextureWrapperImage.h"
-
 namespace mozilla {
 namespace layers {
 
@@ -22,11 +18,21 @@ public:
 
   explicit WebRenderPaintedLayer(WebRenderLayerManager* aLayerManager)
     : PaintedLayer(aLayerManager, static_cast<WebRenderLayer*>(this), LayerManager::NONE)
-    , mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderPaintedLayer);
   }
 
+protected:
+  virtual ~WebRenderPaintedLayer()
+  {
+    MOZ_COUNT_DTOR(WebRenderPaintedLayer);
+  }
+  WebRenderLayerManager* Manager()
+  {
+    return static_cast<WebRenderLayerManager*>(mManager);
+  }
+
+public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override
   {
     mInvalidRegion.Add(aRegion);
@@ -35,18 +41,6 @@ public:
 
   Layer* GetLayer() override { return this; }
   void RenderLayer() override;
-
-private:
-  virtual ~WebRenderPaintedLayer();
-
-  WebRenderLayerManager* Manager()
-  {
-    return static_cast<WebRenderLayerManager*>(mManager);
-  }
-
-  uint64_t mExternalImageId;
-  RefPtr<ImageContainer> mImageContainer;
-  RefPtr<ImageClient> mImageClient;
 };
 
 } // namespace layers

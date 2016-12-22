@@ -25,10 +25,6 @@ struct WRImageKey {
   bool operator==(const WRImageKey& aRhs) const {
     return a == aRhs.a && b == aRhs.b;
   }
-
-  bool operator<(const WRImageKey& aRhs) const {
-    return (a < aRhs.a) || ((a == aRhs.a) && (b < aRhs.b));
-  }
 };
 
 struct WRRect {
@@ -57,14 +53,6 @@ struct WRImageMask
 typedef uint64_t WRImageIdType;
 struct WRExternalImageId {
   WRImageIdType id;
-
-  bool operator==(const WRExternalImageId& aRhs) const {
-    return id == aRhs.id;
-  }
-
-  bool operator<(const WRExternalImageId& aRhs) const {
-    return id < aRhs.id;
-  }
 };
 
 enum WRExternalImageType {
@@ -89,14 +77,12 @@ struct WRExternalImage {
   //// size_t size;
 };
 
-typedef WRExternalImage (*LockExternalImageCallback)(void*, WRExternalImageId);
-typedef void (*UnlockExternalImageCallback)(void*, WRExternalImageId);
+typedef WRExternalImage (*GetExternalImageCallback)(void*, WRExternalImageId);
 typedef void (*ReleaseExternalImageCallback)(void*, WRExternalImageId);
 
 struct WRExternalImageHandler {
   void* ExternalImageObj;
-  LockExternalImageCallback lock_func;
-  UnlockExternalImageCallback unlock_func;
+  GetExternalImageCallback get_func;
   ReleaseExternalImageCallback release_func;
 };
 
@@ -153,13 +139,13 @@ wr_delete_image(wrwindowstate* wrWindow, WRImageKey key)
 WR_FUNC;
 
 WR_INLINE void
-wr_push_dl_builder(wrstate *wrState, WRRect bounds,
-                   WRRect overflow, const float* matrix)
+wr_push_dl_builder(wrstate *wrState)
 WR_FUNC;
 
 //XXX: matrix should use a proper type
 WR_INLINE void
-wr_pop_dl_builder(wrstate *wrState)
+wr_pop_dl_builder(wrstate *wrState, WRRect bounds,
+                  WRRect overflow, const float* matrix)
 WR_FUNC;
 
 WR_INLINE void
