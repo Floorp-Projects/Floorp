@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Synthesized flex container baseline.</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1313811">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font:16px/1 monospace; padding:0; margin:0;
+}
+.ib {
+  display: inline-block;
+}
+.ig {
+  display: inline-grid;
+}
+.ib, .ig {
+  border-style: solid;
+  border-width: 3px 1px 5px 1px;
+  padding: 7px 10px 3px 8px;
+  margin: 5px 3px 2px 1px;
+}
+</style>
+
+</head><body>
+
+<pre>Inline-level context:</pre>
+Flexbox:<div class="ib"></div>
+Block:<div class="ig"></div>
+
+<pre>Grid-level context:</pre>
+<div style="display:inline-grid; grid-auto-flow:column; align-items:baseline; justify-items:start">
+Flexbox:<div class="ib"></div>
+Block:<div class="ig"></div>
+</div>
+
+<pre>Flexbox-level context:</pre>
+<div style="display:inline-flex; align-items:baseline; justify-items:start">
+Flexbox:<div class="ib" style="margin-bottom:0"></div>
+Block:<div class="ig"></div>
+</div>
+
+</body></html>
