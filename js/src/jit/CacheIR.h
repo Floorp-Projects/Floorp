@@ -715,6 +715,7 @@ class MOZ_RAII GetPropIRGenerator
                        HandleValue val, HandleValue idVal);
 
     bool tryAttachStub();
+    bool tryAttachIdempotentStub();
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
