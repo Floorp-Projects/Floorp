@@ -432,7 +432,7 @@ public:
     // need to create the promise even it is not used at all.
     RefPtr<MediaDecoder::SeekPromise> x = mPendingSeek.mPromise.Ensure(__func__);
 
-    mMaster->Reset();
+    mMaster->ResetDecode();
     mMaster->StopMediaSink();
     mMaster->mReader->ReleaseResources();
   }
@@ -977,9 +977,9 @@ private:
     mDoneVideoSeeking = !Info().HasVideo();
 
     if (mSeekJob.mTarget->IsVideoOnly()) {
-      mMaster->Reset(TrackInfo::kVideoTrack);
+      mMaster->ResetDecode(TrackInfo::kVideoTrack);
     } else {
-      mMaster->Reset();
+      mMaster->ResetDecode();
       mMaster->StopMediaSink();
     }
 
@@ -2286,7 +2286,7 @@ ShutdownState::Enter()
   master->mAudioWaitRequest.DisconnectIfExists();
   master->mVideoWaitRequest.DisconnectIfExists();
 
-  master->Reset();
+  master->ResetDecode();
   master->StopMediaSink();
   master->mMediaSink->Shutdown();
 
@@ -3378,7 +3378,7 @@ MediaDecoderStateMachine::RunStateMachine()
 }
 
 void
-MediaDecoderStateMachine::Reset(TrackSet aTracks)
+MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("MediaDecoderStateMachine::Reset");
