@@ -193,7 +193,7 @@ CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
                 if (currentOpRegs_.has(reg))
                     continue;
 
-                spillOperand(masm, &loc);
+                spillOperandToStack(masm, &loc);
                 availableRegs_.add(reg);
                 break; // We got a register, so break out of the loop.
             }
@@ -202,7 +202,7 @@ CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
                 if (currentOpRegs_.aliases(reg))
                     continue;
 
-                spillOperand(masm, &loc);
+                spillOperandToStack(masm, &loc);
                 availableRegs_.add(reg);
                 break; // Break out of the loop.
             }
@@ -241,7 +241,7 @@ CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg
             if (loc.payloadReg() != reg)
                 continue;
 
-            spillOperand(masm, &loc);
+            spillOperandToStackOrRegister(masm, &loc);
             currentOpRegs_.add(reg);
             return;
         }
@@ -250,7 +250,7 @@ CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg
                 continue;
 
             ValueOperand valueReg = loc.valueReg();
-            spillOperand(masm, &loc);
+            spillOperandToStackOrRegister(masm, &loc);
 
             availableRegs_.add(valueReg);
             availableRegs_.take(reg);
@@ -260,6 +260,17 @@ CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg
     }
 
     MOZ_CRASH("Invalid register");
+}
+
+void
+CacheRegisterAllocator::allocateFixedValueRegister(MacroAssembler& masm, ValueOperand reg)
+{
+#ifdef JS_NUNBOX32
+    allocateFixedRegister(masm, reg.payloadReg());
+    allocateFixedRegister(masm, reg.typeReg());
+#else
+    allocateFixedRegister(masm, reg.valueReg());
+#endif
 }
 
 ValueOperand
@@ -333,7 +344,7 @@ CacheRegisterAllocator::initInputLocation(size_t i, const ConstantOrRegister& va
 }
 
 void
-CacheRegisterAllocator::spillOperand(MacroAssembler& masm, OperandLocation* loc)
+CacheRegisterAllocator::spillOperandToStack(MacroAssembler& masm, OperandLocation* loc)
 {
     MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
 
@@ -349,6 +360,34 @@ CacheRegisterAllocator::spillOperand(MacroAssembler& masm, OperandLocation* loc)
     stackPushed_ += sizeof(uintptr_t);
     masm.push(loc->payloadReg());
     loc->setPayloadStack(stackPushed_, loc->payloadType());
+}
+
+void
+CacheRegisterAllocator::spillOperandToStackOrRegister(MacroAssembler& masm, OperandLocation* loc)
+{
+    MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
+
+    // If enough registers are available, use them.
+    if (loc->kind() == OperandLocation::ValueReg) {
+        static const size_t BoxPieces = sizeof(Value) / sizeof(uintptr_t);
+        if (availableRegs_.set().size() >= BoxPieces) {
+            ValueOperand reg = availableRegs_.takeAnyValue();
+            masm.moveValue(loc->valueReg(), reg);
+            loc->setValueReg(reg);
+            return;
+        }
+    } else {
+        MOZ_ASSERT(loc->kind() == OperandLocation::PayloadReg);
+        if (!availableRegs_.empty()) {
+            Register reg = availableRegs_.takeAny();
+            masm.movePtr(loc->payloadReg(), reg);
+            loc->setPayloadReg(reg, loc->payloadType());
+            return;
+        }
+    }
+
+    // Not enough registers available, spill to the stack.
+    spillOperandToStack(masm, loc);
 }
 
 void
@@ -428,7 +467,7 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm)
         for (size_t k = j + 1; k < numInputOperands; k++) {
             OperandLocation& laterSource = operandLocations_[k];
             if (dest.aliasesReg(laterSource))
-                spillOperand(masm, &laterSource);
+                spillOperandToStack(masm, &laterSource);
         }
 
         if (dest.kind() == OperandLocation::ValueReg) {
@@ -734,6 +773,24 @@ OperandLocation::operator==(const OperandLocation& other) const
     MOZ_CRASH("Invalid OperandLocation kind");
 }
 
+AutoOutputRegister::AutoOutputRegister(CacheIRCompiler& compiler)
+  : output_(compiler.outputUnchecked_.ref()),
+    alloc_(compiler.allocator)
+{
+    if (output_.hasValue())
+        alloc_.allocateFixedValueRegister(compiler.masm, output_.valueReg());
+    else if (!output_.typedReg().isFloat())
+        alloc_.allocateFixedRegister(compiler.masm, output_.typedReg().gpr());
+}
+
+AutoOutputRegister::~AutoOutputRegister()
+{
+    if (output_.hasValue())
+        alloc_.releaseValueRegister(output_.valueReg());
+    else if (!output_.typedReg().isFloat())
+        alloc_.releaseRegister(output_.typedReg().gpr());
+}
+
 bool
 FailurePath::canShareFailurePath(const FailurePath& other) const
 {
@@ -829,6 +886,57 @@ CacheIRCompiler::emitGuardIsSymbol()
     if (!addFailurePath(&failure))
         return false;
     masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardIsInt32()
+{
+    ValOperandId inputId = reader.valOperandId();
+    if (allocator.knownType(inputId) == JSVAL_TYPE_INT32)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    if (cx_->runtime()->jitSupportsFloatingPoint) {
+        Label done;
+        masm.branchTestInt32(Assembler::Equal, input, &done);
+        {
+            // If the value is a double, try to convert it to int32 in place.
+            // It's fine to modify |input| in this case, as the difference is not
+            // observable.
+
+            masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
+
+            // If we're compiling a Baseline IC, FloatReg0 is always available.
+            Label failurePopReg;
+            if (mode_ != Mode::Baseline)
+                masm.push(FloatReg0);
+
+            masm.unboxDouble(input, FloatReg0);
+            masm.convertDoubleToInt32(FloatReg0, scratch,
+                                      (mode_ == Mode::Baseline) ? failure->label() : &failurePopReg);
+            masm.tagValue(JSVAL_TYPE_INT32, scratch, input);
+
+            if (mode_ != Mode::Baseline) {
+                masm.pop(FloatReg0);
+                masm.jump(&done);
+
+                masm.bind(&failurePopReg);
+                masm.pop(FloatReg0);
+                masm.jump(failure->label());
+            }
+        }
+        masm.bind(&done);
+    } else {
+        masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
+    }
+
     return true;
 }
 
@@ -1026,5 +1134,338 @@ CacheIRCompiler::emitLoadDOMExpandoValue()
     masm.loadValue(Address(val.scratchReg(),
                            ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot())),
                    val);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadUndefinedResult()
+{
+    AutoOutputRegister output(*this);
+    if (output.hasValue())
+        masm.moveValue(UndefinedValue(), output.valueReg());
+    else
+        masm.assumeUnreachable("Should have monitored undefined result");
+    return true;
+}
+
+static void
+EmitStoreResult(MacroAssembler& masm, Register reg, JSValueType type,
+                const AutoOutputRegister& output)
+{
+    if (output.hasValue()) {
+        masm.tagValue(type, reg, output.valueReg());
+        return;
+    }
+    if (type == JSVAL_TYPE_INT32 && output.typedReg().isFloat()) {
+        masm.convertInt32ToDouble(reg, output.typedReg().fpu());
+        return;
+    }
+    if (type == output.type()) {
+        masm.mov(reg, output.typedReg().gpr());
+        return;
+    }
+    masm.assumeUnreachable("Should have monitored result");
+}
+
+bool
+CacheIRCompiler::emitLoadInt32ArrayLengthResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+    masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
+
+    // Guard length fits in an int32.
+    masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
+    EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadUnboxedArrayLengthResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    masm.load32(Address(obj, UnboxedArrayObject::offsetOfLength()), scratch);
+    EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadArgumentsObjectLengthResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Get initial length value.
+    masm.unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), scratch);
+
+    // Test if length has been overridden.
+    masm.branchTest32(Assembler::NonZero,
+                      scratch,
+                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT),
+                      failure->label());
+
+    // Shift out arguments length and return it. No need to type monitor
+    // because this stub always returns int32.
+    masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
+    EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadStringLengthResult()
+{
+    AutoOutputRegister output(*this);
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    masm.loadStringLength(str, scratch);
+    EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadStringCharResult()
+{
+    AutoOutputRegister output(*this);
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchIfRope(str, failure->label());
+
+    // Bounds check, load string char.
+    masm.branch32(Assembler::BelowOrEqual, Address(str, JSString::offsetOfLength()),
+                  index, failure->label());
+    masm.loadStringChar(str, index, scratch1);
+
+    // Load StaticString for this char.
+    masm.branch32(Assembler::AboveOrEqual, scratch1, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
+                  failure->label());
+    masm.movePtr(ImmPtr(&cx_->staticStrings().unitStaticTable), scratch2);
+    masm.loadPtr(BaseIndex(scratch2, scratch1, ScalePointer), scratch2);
+
+    EmitStoreResult(masm, scratch2, JSVAL_TYPE_STRING, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadArgumentsObjectArgResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Get initial length value.
+    masm.unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), scratch);
+
+    // Ensure no overridden length/element.
+    masm.branchTest32(Assembler::NonZero,
+                      scratch,
+                      Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT |
+                            ArgumentsObject::ELEMENT_OVERRIDDEN_BIT),
+                      failure->label());
+
+    // Bounds check.
+    masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
+    masm.branch32(Assembler::AboveOrEqual, index, scratch, failure->label());
+
+    // Load ArgumentsData.
+    masm.loadPrivate(Address(obj, ArgumentsObject::getDataSlotOffset()), scratch);
+
+    // Fail if we have a RareArgumentsData (elements were deleted).
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(scratch, offsetof(ArgumentsData, rareData)),
+                   ImmWord(0),
+                   failure->label());
+
+    // Guard the argument is not a FORWARD_TO_CALL_SLOT MagicValue.
+    BaseValueIndex argValue(scratch, index, ArgumentsData::offsetOfArgs());
+    masm.branchTestMagic(Assembler::Equal, argValue, failure->label());
+    masm.loadValue(argValue, output.valueReg());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadDenseElementResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Bounds check.
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, index, failure->label());
+
+    // Hole check.
+    BaseObjectElementIndex element(scratch, index);
+    masm.branchTestMagic(Assembler::Equal, element, failure->label());
+    masm.loadTypedOrValue(element, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadDenseElementHoleResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    if (!output.hasValue()) {
+        masm.assumeUnreachable("Should have monitored undefined value after attaching stub");
+        return true;
+    }
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Make sure the index is nonnegative.
+    masm.branch32(Assembler::LessThan, index, Imm32(0), failure->label());
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Guard on the initialized length.
+    Label hole;
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, index, &hole);
+
+    // Load the value.
+    Label done;
+    masm.loadValue(BaseObjectElementIndex(scratch, index), output.valueReg());
+    masm.branchTestMagic(Assembler::NotEqual, output.valueReg(), &done);
+
+    // Load undefined for the hole.
+    masm.bind(&hole);
+    masm.moveValue(UndefinedValue(), output.valueReg());
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadUnboxedArrayElementResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    JSValueType elementType = reader.valueType();
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    if (!output.hasValue() &&
+        elementType != output.type() &&
+        !(elementType == JSVAL_TYPE_INT32 && output.type() == JSVAL_TYPE_DOUBLE))
+    {
+        masm.assumeUnreachable("Should have monitored unboxed property type");
+        return true;
+    }
+
+    // Bounds check.
+    masm.load32(Address(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()),
+                scratch);
+    masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), scratch);
+    masm.branch32(Assembler::BelowOrEqual, scratch, index, failure->label());
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, UnboxedArrayObject::offsetOfElements()), scratch);
+
+    // Load value.
+    size_t width = UnboxedTypeSize(elementType);
+    BaseIndex addr(scratch, index, ScaleFromElemWidth(width));
+    masm.loadUnboxedProperty(addr, elementType, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadTypedElementResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    TypedThingLayout layout = reader.typedThingLayout();
+    Scalar::Type type = reader.scalarType();
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    if (!output.hasValue()) {
+        if (type == Scalar::Float32 || type == Scalar::Float64) {
+            if (output.type() != JSVAL_TYPE_DOUBLE) {
+                masm.assumeUnreachable("Should have monitored double after attaching stub");
+                return true;
+            }
+        } else {
+            if (output.type() != JSVAL_TYPE_INT32 && output.type() != JSVAL_TYPE_DOUBLE) {
+                masm.assumeUnreachable("Should have monitored int32 after attaching stub");
+                return true;
+            }
+        }
+    }
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Bounds check.
+    LoadTypedThingLength(masm, layout, obj, scratch);
+    masm.branch32(Assembler::BelowOrEqual, scratch, index, failure->label());
+
+    // Load the elements vector.
+    LoadTypedThingData(masm, layout, obj, scratch);
+
+    // Load the value.
+    BaseIndex source(scratch, index, ScaleFromElemWidth(Scalar::byteSize(type)));
+    if (output.hasValue()) {
+        masm.loadFromTypedArray(type, source, output.valueReg(), false, scratch,
+                                failure->label());
+    } else {
+        bool needGpr = (type == Scalar::Int8 || type == Scalar::Uint8 ||
+                        type == Scalar::Int16 || type == Scalar::Uint16 ||
+                        type == Scalar::Uint8Clamped || type == Scalar::Int32);
+        if (needGpr && output.type() == JSVAL_TYPE_DOUBLE) {
+            // Load the element as integer, then convert it to double.
+            masm.loadFromTypedArray(type, source, AnyRegister(scratch), scratch, failure->label());
+            masm.convertInt32ToDouble(source, output.typedReg().fpu());
+        } else {
+            masm.loadFromTypedArray(type, source, output.typedReg(), scratch, failure->label());
+        }
+    }
     return true;
 }
