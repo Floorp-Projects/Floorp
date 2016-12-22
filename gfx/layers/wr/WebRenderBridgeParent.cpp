@@ -93,9 +93,12 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
     // i.e. the one created by the CompositorBridgeParent as opposed to the
     // CrossProcessCompositorBridgeParent
     MOZ_ASSERT(mWidget);
+    WRExternalImageHandler handler = mCompositor->AsWebRenderCompositorOGL()
+                                                ->GetExternalImageHandler();
     mWRWindowState = wr_init_window(mPipelineId,
                                     aGlContext,
-                                    gfxPrefs::WebRenderProfilerEnabled());
+                                    gfxPrefs::WebRenderProfilerEnabled(),
+                                    &handler);
   }
   if (mWidget) {
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
@@ -481,7 +484,6 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   TimeStamp start = TimeStamp::Now();
 
   mCompositor->SetCompositionTime(TimeStamp::Now());
-  mCompositor->AsWebRenderCompositorOGL()->UpdateExternalImages();
 
   MOZ_ASSERT(mWRState);
   mozilla::widget::WidgetRenderingContext widgetContext;
