@@ -9,6 +9,7 @@ import subprocess
 import sys
 from datetime import datetime
 
+SOURCESTAMP_FILENAME = 'sourcestamp.txt'
 
 def buildid_header(output):
     buildid = os.environ.get('MOZ_BUILD_DATE')
@@ -44,6 +45,26 @@ def get_hg_info(workdir):
 def get_hg_changeset(path):
     return get_program_output('hg', '-R', path, 'parent', '--template={node}')
 
+def get_info_from_sourcestamp(sourcestamp_path):
+    """Read the repository and changelog information from the sourcestamp
+    file. This assumes that the file exists and returns the results as a list
+    (either strings or None in case of error).
+    """
+
+    # Load the content of the file.
+    lines = None
+    with open(sourcestamp_path) as f:
+        lines = f.read().splitlines()
+
+    # Parse the repo and the changeset. The sourcestamp file is supposed to
+    # contain two lines: the first is the build id and the second is the source
+    # URL.
+    if len(lines) != 2 or not lines[1].startswith('http'):
+        # Just return if the file doesn't contain what we expect.
+        return None, None
+
+    # Return the repo and the changeset.
+    return lines[1].split('/rev/')
 
 def source_repo_header(output):
     # We allow the source repo and changeset to be specified via the
@@ -54,8 +75,11 @@ def source_repo_header(output):
     source = ''
 
     if not repo:
+        sourcestamp_path = os.path.join(buildconfig.topsrcdir, SOURCESTAMP_FILENAME)
         if os.path.exists(os.path.join(buildconfig.topsrcdir, '.hg')):
             repo, changeset = get_hg_info(buildconfig.topsrcdir)
+        elif os.path.exists(sourcestamp_path):
+            repo, changeset = get_info_from_sourcestamp(sourcestamp_path)
     elif not changeset:
         changeset = get_hg_changeset(buildconfig.topsrcdir)
         if not changeset:
