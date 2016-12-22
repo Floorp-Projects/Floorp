@@ -9,6 +9,10 @@
 #include "Layers.h"
 #include "WebRenderLayerManager.h"
 
+#include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
+#include "mozilla/layers/TextureWrapperImage.h"
+
 namespace mozilla {
 namespace layers {
 
