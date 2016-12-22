@@ -324,14 +324,6 @@ private:
   // be held.
   bool IsPlaying() const;
 
-  void OnAudioDecoded(MediaData* aAudio);
-  void OnVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStartTime);
-  void OnAudioNotDecoded(const MediaResult& aError);
-  void OnVideoNotDecoded(const MediaResult& aError);
-  void OnAudioWaited(MediaData::Type aType);
-  void OnVideoWaited(MediaData::Type aType);
-  void OnNotWaited(const WaitForDataRejectValue& aRejection);
-
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
   void Reset(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
