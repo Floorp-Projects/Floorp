@@ -74,8 +74,6 @@ def docker_worker_hazard(config, job, taskdesc):
         'docker-worker:relengapi-proxy:tooltool.download.public',
     ])
     env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
-    env['TOOLTOOL_REPO'] = 'https://github.com/mozilla/build-tooltool'
-    env['TOOLTOOL_REV'] = 'master'
 
     # build-haz-linux.sh needs this otherwise it assumes the checkout is in
     # the workspace.
