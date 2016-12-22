@@ -179,7 +179,7 @@ let gNextMessageID = 1;
  * Returns an array of promises, one per ack.  Each is resolved when the content
  * JS acks the message.  numExpectedAcks is the number of acks you expect.
  */
-function promiseMessage(type, data, numExpectedAcks=1) {
+function promiseMessage(type, data, numExpectedAcks = 1) {
   let testMsgName = "TestMessage";
   let ackMsgName = "TestMessageAck";
   let msgID = gNextMessageID++;
