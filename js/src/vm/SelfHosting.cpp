@@ -1915,12 +1915,6 @@ intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc, Value* vp)
     uint32_t id = uint32_t(args[0].toInt32());
     MOZ_ASSERT(id < STRING_GENERICS_METHODS_LIMIT);
 
-    NonBuiltinScriptFrameIter iter(cx);
-    if (!iter.done()) {
-        const char* filename = iter.filename();
-        iter.compartment()->addTelemetry(filename, JSCompartment::DeprecatedStringGenerics);
-    }
-
     uint32_t mask = (1 << id);
     if (!(cx->compartment()->warnedAboutStringGenericsMethods & mask)) {
         JSFlatString* name = args[1].toString()->ensureFlat(cx);
