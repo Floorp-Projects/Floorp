@@ -185,9 +185,10 @@ nsScreen::Orientation() const
 }
 
 void
-nsScreen::GetMozOrientation(nsString& aOrientation) const
+nsScreen::GetMozOrientation(nsString& aOrientation,
+                            CallerType aCallerType) const
 {
-  switch (mScreenOrientation->DeviceType()) {
+  switch (mScreenOrientation->DeviceType(aCallerType)) {
   case OrientationType::Portrait_primary:
     aOrientation.AssignLiteral("portrait-primary");
     break;

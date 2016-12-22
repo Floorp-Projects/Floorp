@@ -34,6 +34,7 @@ interface Screen : EventTarget {
    * Can be: landscape-primary, landscape-secondary,
    *         portrait-primary or portrait-secondary.
    */
+  [NeedsCallerType]
   readonly attribute DOMString mozOrientation;
 
   attribute EventHandler onmozorientationchange;
