@@ -507,19 +507,7 @@ nsTableRowFrame*
 nsTableRowGroupFrame::GetFirstRow()
 {
   for (nsIFrame* childFrame : mFrames) {
-    nsTableRowFrame* rowFrame = do_QueryFrame(childFrame);
-    if (rowFrame) {
-      return rowFrame;
-    }
-  }
-  return nullptr;
-}
-
-nsTableRowFrame*
-nsTableRowGroupFrame::GetLastRow()
-{
-  for (auto iter = mFrames.rbegin(), end = mFrames.rend(); iter != end; ++iter) {
-    nsTableRowFrame* rowFrame = do_QueryFrame(*iter);
+    nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
     if (rowFrame) {
       return rowFrame;
     }

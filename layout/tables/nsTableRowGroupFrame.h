@@ -103,7 +103,6 @@ public:
   virtual nsIAtom* GetType() const override;
 
   nsTableRowFrame* GetFirstRow();
-  nsTableRowFrame* GetLastRow();
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
