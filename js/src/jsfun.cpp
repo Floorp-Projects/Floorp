@@ -129,6 +129,11 @@ IsFunctionInStrictMode(JSFunction* fun)
     return IsAsmJSStrictModeModuleOrFunction(fun);
 }
 
+static bool
+IsNewerTypeFunction(JSFunction* fun) {
+    return fun->isArrow() || fun->isGenerator() || fun->isAsync() || fun->isMethod();
+}
+
 // Beware: this function can be invoked on *any* function! That includes
 // natives, strict mode functions, bound functions, arrow functions,
 // self-hosted functions and constructors, asm.js functions, functions with
@@ -142,7 +147,9 @@ ArgumentsRestrictions(JSContext* cx, HandleFunction fun)
     // a strict mode function, or a bound function.
     // TODO (bug 1057208): ensure semantics are correct for all possible
     // pairings of callee/caller.
-    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) || fun->isBoundFunction()) {
+    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) ||
+        fun->isBoundFunction() || IsNewerTypeFunction(fun))
+    {
         ThrowTypeErrorBehavior(cx);
         return false;
     }
@@ -229,7 +236,9 @@ CallerRestrictions(JSContext* cx, HandleFunction fun)
     // a strict mode function, or a bound function.
     // TODO (bug 1057208): ensure semantics are correct for all possible
     // pairings of callee/caller.
-    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) || fun->isBoundFunction()) {
+    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) ||
+        fun->isBoundFunction() || IsNewerTypeFunction(fun))
+    {
         ThrowTypeErrorBehavior(cx);
         return false;
     }
