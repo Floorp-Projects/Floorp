@@ -831,3 +831,200 @@ CacheIRCompiler::emitGuardIsSymbol()
     masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
     return true;
 }
+
+bool
+CacheIRCompiler::emitGuardType()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType type = reader.valueType();
+
+    if (allocator.knownType(inputId) == type)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    switch (type) {
+      case JSVAL_TYPE_STRING:
+        masm.branchTestString(Assembler::NotEqual, input, failure->label());
+        break;
+      case JSVAL_TYPE_SYMBOL:
+        masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
+        break;
+      case JSVAL_TYPE_DOUBLE:
+        masm.branchTestNumber(Assembler::NotEqual, input, failure->label());
+        break;
+      case JSVAL_TYPE_BOOLEAN:
+        masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
+        break;
+      case JSVAL_TYPE_UNDEFINED:
+        masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
+        break;
+      default:
+        MOZ_CRASH("Unexpected type");
+    }
+
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardClass()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    const Class* clasp = nullptr;
+    switch (reader.guardClassKind()) {
+      case GuardClassKind::Array:
+        clasp = &ArrayObject::class_;
+        break;
+      case GuardClassKind::UnboxedArray:
+        clasp = &UnboxedArrayObject::class_;
+        break;
+      case GuardClassKind::MappedArguments:
+        clasp = &MappedArgumentsObject::class_;
+        break;
+      case GuardClassKind::UnmappedArguments:
+        clasp = &UnmappedArgumentsObject::class_;
+        break;
+      case GuardClassKind::WindowProxy:
+        clasp = cx_->maybeWindowProxyClass();
+        break;
+    }
+
+    MOZ_ASSERT(clasp);
+    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardIsProxy()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestObjectIsProxy(false, obj, scratch, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardNotDOMProxy()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestProxyHandlerFamily(Assembler::Equal, obj, scratch,
+                                      GetDOMProxyHandlerFamily(), failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardMagicValue()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    JSWhyMagic magic = reader.whyMagic();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestMagicValue(Assembler::NotEqual, val, magic, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardNoUnboxedExpando()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address expandoAddr(obj, UnboxedPlainObject::offsetOfExpando());
+    masm.branchPtr(Assembler::NotEqual, expandoAddr, ImmWord(0), failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardAndLoadUnboxedExpando()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register output = allocator.defineRegister(masm, reader.objOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address expandoAddr(obj, UnboxedPlainObject::offsetOfExpando());
+    masm.loadPtr(expandoAddr, output);
+    masm.branchTestPtr(Assembler::Zero, output, output, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardNoDetachedTypedObjects()
+{
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    CheckForTypedObjectWithDetachedStorage(cx_, masm, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardNoDenseElements()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Make sure there are no dense elements.
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::NotEqual, initLength, Imm32(0), failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadProto()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register reg = allocator.defineRegister(masm, reader.objOperandId());
+    masm.loadObjProto(obj, reg);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadDOMExpandoValue()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand val = allocator.defineValueRegister(masm, reader.valOperandId());
+
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), val.scratchReg());
+    masm.loadValue(Address(val.scratchReg(),
+                           ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot())),
+                   val);
+    return true;
+}
