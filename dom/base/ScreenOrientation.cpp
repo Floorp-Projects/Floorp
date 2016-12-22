@@ -423,9 +423,9 @@ ScreenOrientation::DeviceAngle(CallerType aCallerType) const
 }
 
 OrientationType
-ScreenOrientation::GetType(ErrorResult& aRv) const
+ScreenOrientation::GetType(CallerType aCallerType, ErrorResult& aRv) const
 {
-  if (ShouldResistFingerprinting()) {
+  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return OrientationType::Landscape_primary;
   }
 
