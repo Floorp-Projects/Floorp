@@ -1140,13 +1140,12 @@ SetComplexColor(const nsCSSValue& aValue,
   } else if (unit == eCSSUnit_ComplexColor) {
     aResult = aValue.GetStyleComplexColorValue();
   } else {
-    nscolor resultColor;
     if (!SetColor(aValue, aParentColor.mColor, aPresContext,
-                  nullptr, resultColor, aConditions)) {
+                  nullptr, aResult.mColor, aConditions)) {
       MOZ_ASSERT_UNREACHABLE("Unknown color value");
       return;
     }
-    aResult = StyleComplexColor::FromColor(resultColor);
+    aResult.mForegroundRatio = 0;
   }
 }
 
