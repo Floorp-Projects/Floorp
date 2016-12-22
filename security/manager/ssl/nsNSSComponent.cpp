@@ -65,6 +65,11 @@
 #include "nsIWindowsRegKey.h"
 #endif
 
+#ifdef ANDROID
+#include "mozilla/PodOperations.h"
+#include "nsPrintfCString.h"
+#endif // ANDROID
+
 using namespace mozilla;
 using namespace mozilla::psm;
 
@@ -1685,6 +1690,10 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
   return NS_OK;
 }
 
+#ifdef ANDROID
+static char sCrashReasonBuffer[1024];
+#endif // ANDROID
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -1756,6 +1765,17 @@ nsNSSComponent::InitializeNSS()
   // pref has been set to "true", attempt to initialize with no DB.
   if (nocertdb || init_rv != SECSuccess) {
     init_rv = NSS_NoDB_Init(nullptr);
+#ifdef ANDROID
+    if (init_rv != SECSuccess) {
+      nsPrintfCString message("NSS_NoDB_Init failed with PRErrorCode %d",
+                              PR_GetError());
+      mozilla::PodArrayZero(sCrashReasonBuffer);
+      strncpy(sCrashReasonBuffer, message.get(),
+              sizeof(sCrashReasonBuffer) - 1);
+      MOZ_CRASH_ANNOTATE(sCrashReasonBuffer);
+      MOZ_REALLY_CRASH();
+    }
+#endif // ANDROID
   }
   if (init_rv != SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("could not initialize NSS - panicking\n"));
