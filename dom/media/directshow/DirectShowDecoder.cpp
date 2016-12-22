@@ -22,20 +22,16 @@ MediaDecoderStateMachine* DirectShowDecoder::CreateStateMachine()
 /* static */
 bool
 DirectShowDecoder::GetSupportedCodecs(const MediaContentType& aType,
-                                      char const *const ** aCodecList)
+                                      MediaCodecs* aOutCodecs)
 {
   if (!IsEnabled()) {
     return false;
   }
 
-  static char const *const mp3AudioCodecs[] = {
-    "mp3",
-    nullptr
-  };
   if (aType.Type() == MEDIAMIMETYPE("audio/mpeg")
       || aType.Type() == MEDIAMIMETYPE("audio/mp3")) {
-    if (aCodecList) {
-      *aCodecList = mp3AudioCodecs;
+    if (aOutCodecs) {
+      *aOutCodecs = MediaCodecs("mp3");
     }
     return true;
   }
