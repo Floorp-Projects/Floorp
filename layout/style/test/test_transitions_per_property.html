@@ -1379,6 +1379,21 @@ function test_true_currentcolor_transition(prop, get_color=(x => x), is_shorthan
   div.style.removeProperty("color");
 }
 
+function test_auto_color_transition(prop, get_color=(x => x), is_shorthand=false) {
+  const msg_prefix = `color-valued property ${prop}: `;
+  const test_color = "rgb(51, 102, 153)";
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "auto", "");
+  let used_value_of_auto = get_color(cs.getPropertyValue(prop));
+  isnot(used_value_of_auto, test_color,
+        msg_prefix + "ensure used auto value is different than our test color");
+
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, test_color, "");
+  is(get_color(cs.getPropertyValue(prop)), test_color,
+     msg_prefix + "not interpolatable between auto and rgb color");
+}
+
 function get_color_from_shorthand_value(value) {
   var m = value.match(/rgba?\([^, ]*, [^, ]*, [^, ]*(?:, [^, ]*)?\)/);
   isnot(m, null, "shorthand property value should contain color");
