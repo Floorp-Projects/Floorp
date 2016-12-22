@@ -417,9 +417,9 @@ ScreenOrientation::DeviceType(CallerType aCallerType) const
 }
 
 uint16_t
-ScreenOrientation::DeviceAngle() const
+ScreenOrientation::DeviceAngle(CallerType aCallerType) const
 {
-  return ShouldResistFingerprinting() ? 0 : mAngle;
+  return nsContentUtils::ResistFingerprinting(aCallerType) ? 0 : mAngle;
 }
 
 OrientationType
@@ -629,7 +629,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   if (doc->CurrentOrientationType() != orientation->DeviceType(CallerType::System)) {
     doc->SetCurrentOrientation(orientation->DeviceType(CallerType::System),
-			       orientation->DeviceAngle());
+			       orientation->DeviceAngle(CallerType::System));
 
     Promise* pendingPromise = doc->GetOrientationPendingPromise();
     if (pendingPromise) {
