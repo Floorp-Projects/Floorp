@@ -1598,7 +1598,7 @@ public:
                                     nsIPrincipal* aSubjectPrincipal);
 
   // Outer windows only.
-  bool CanMoveResizeWindows(bool aCallerIsChrome);
+  bool CanMoveResizeWindows(mozilla::dom::CallerType aCallerType);
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.
