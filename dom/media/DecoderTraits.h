@@ -48,7 +48,7 @@ public:
 
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
-  static MediaDecoderReader* CreateReader(const nsACString& aType,
+  static MediaDecoderReader* CreateReader(const MediaContentType& aType,
                                           AbstractMediaDecoder* aDecoder);
 
   // Returns true if MIME type aType is supported in video documents,
