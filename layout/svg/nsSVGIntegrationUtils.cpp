@@ -614,13 +614,10 @@ ValidateSVGFrame(nsIFrame* aFrame)
  *        and the bounding box of aFrame.
  * @oaram aOffsetToUserSpace returns the offset between the reference frame and
  *        the user space coordinate of aFrame.
- * @param aClipCtx indicate whether clip aParams.ctx by visual overflow rect of
- *        aFrame or not.
  */
 static void
 SetupContextMatrix(nsIFrame* aFrame, const PaintFramesParams& aParams,
-                   nsPoint& aOffsetToBoundingBox, nsPoint& aOffsetToUserSpace,
-                   bool aClipCtx)
+                   nsPoint& aOffsetToBoundingBox, nsPoint& aOffsetToUserSpace)
 {
   aOffsetToBoundingBox = aParams.builder->ToReferenceFrame(aFrame) -
                          nsSVGIntegrationUtils::GetOffsetToBoundingBox(aFrame);
@@ -662,14 +659,6 @@ SetupContextMatrix(nsIFrame* aFrame, const PaintFramesParams& aParams,
                                    aFrame->PresContext()->AppUnitsPerDevPixel());
   gfxContext& context = aParams.ctx;
   context.SetMatrix(context.CurrentMatrix().Translate(devPixelOffsetToUserSpace));
-
-  if (aClipCtx) {
-    nsRect clipRect =
-      aParams.frame->GetVisualOverflowRectRelativeToSelf() + toUserSpace;
-    context.Clip(NSRectToSnappedRect(clipRect,
-                                  aFrame->PresContext()->AppUnitsPerDevPixel(),
-                                  *context.GetDrawTarget()));
-  }
 }
 
 bool
@@ -729,7 +718,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   nsPoint offsetToBoundingBox;
   nsPoint offsetToUserSpace;
   SetupContextMatrix(frame, aParams, offsetToBoundingBox,
-                     offsetToUserSpace, false);
+                     offsetToUserSpace);
 
   return PaintMaskSurface(aParams, ctx.GetDrawTarget(),
                             opacityApplied ? maskUsage.opacity : 1.0,
@@ -810,7 +799,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       // so we setup context matrix by the position of the current frame,
       // instead of the first continuation frame.
       SetupContextMatrix(frame, aParams, offsetToBoundingBox,
-                         offsetToUserSpace, false);
+                         offsetToUserSpace);
       result = CreateAndPaintMaskSurface(aParams, maskUsage.opacity,
                                          firstFrame->StyleContext(),
                                          maskFrames, offsetToUserSpace,
@@ -827,7 +816,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       matSR.SetContext(&context);
 
       SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
-                         offsetToUserSpace, false);
+                         offsetToUserSpace);
       Matrix clippedMaskTransform;
       RefPtr<SourceSurface> clipMaskSurface =
         clipPathFrame->GetClipMask(context, frame, cssPxToDevPxMatrix,
@@ -851,7 +840,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
       matSR.SetContext(&context);
       SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
-                         offsetToUserSpace, false);
+                         offsetToUserSpace);
     }
 
     if (aParams.layerManager->GetRoot()->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) {
@@ -874,7 +863,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
     gfxContextMatrixAutoSaveRestore matSR(&context);
 
     SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
-                       offsetToUserSpace, false);
+                       offsetToUserSpace);
 
     MOZ_ASSERT(!maskUsage.shouldApplyClipPath ||
                !maskUsage.shouldApplyBasicShape);
@@ -952,7 +941,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 
   gfxContextAutoSaveRestore autoSR(&context);
   SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
-                     offsetToUserSpace, true);
+                     offsetToUserSpace);
 
   if (opacity != 1.0f) {
     context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity,
