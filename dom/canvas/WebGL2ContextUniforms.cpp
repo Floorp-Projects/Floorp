@@ -161,7 +161,7 @@ ValidateUniformEnum(WebGLContext* webgl, GLenum pname, const char* info)
         return true;
 
     default:
-        webgl->ErrorInvalidEnum("%s: invalid pname: %s", info, webgl->EnumName(pname));
+        webgl->ErrorInvalidEnumArg(info, "pname", pname);
         return false;
     }
 }
