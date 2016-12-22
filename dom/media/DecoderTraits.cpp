@@ -370,7 +370,9 @@ DecoderTraits::CreateDecoder(const nsACString& aType,
 }
 
 /* static */
-MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, AbstractMediaDecoder* aDecoder)
+MediaDecoderReader*
+DecoderTraits::CreateReader(const MediaContentType& aType,
+                            AbstractMediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MediaDecoderReader* decoderReader = nullptr;
@@ -378,39 +380,35 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (!aDecoder) {
     return decoderReader;
   }
-  Maybe<MediaContentType> type = MakeMediaContentType(aType);
-  if (!type) {
-    return decoderReader;
-  }
 
 #ifdef MOZ_FMP4
-  if (MP4Decoder::IsSupportedType(*type,
+  if (MP4Decoder::IsSupportedType(aType,
                                   /* DecoderDoctorDiagnostics* */ nullptr)) {
     decoderReader = new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()));
   } else
 #endif
-  if (MP3Decoder::IsSupportedType(*type)) {
+  if (MP3Decoder::IsSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new mp3::MP3Demuxer(aDecoder->GetResource()));
   } else
-  if (ADTSDecoder::IsSupportedType(*type)) {
+  if (ADTSDecoder::IsSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new ADTSDemuxer(aDecoder->GetResource()));
   } else
-  if (WaveDecoder::IsSupportedType(*type)) {
+  if (WaveDecoder::IsSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new WAVDemuxer(aDecoder->GetResource()));
   } else
-  if (FlacDecoder::IsSupportedType(*type)) {
+  if (FlacDecoder::IsSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new FlacDemuxer(aDecoder->GetResource()));
   } else
-  if (OggDecoder::IsSupportedType(*type)) {
+  if (OggDecoder::IsSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()));
   } else
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
-    decoderReader = new AndroidMediaReader(aDecoder, *type);
+    decoderReader = new AndroidMediaReader(aDecoder, aType);
   } else
 #endif
-  if (WebMDecoder::IsSupportedType(*type)) {
+  if (WebMDecoder::IsSupportedType(aType)) {
     decoderReader =
       new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()));
   } else
