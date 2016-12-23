@@ -1250,6 +1250,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                 visibleHeight + this._rlbPadding + "px";
             }
 
+            // The class `forceHandleUnderflow` is for the item might need to
+            // handle OverUnderflow or Overflow when the height of an item will
+            // be changed dynamically.
+            for (let i = 0; i < numRows; i++) {
+              if (rows[i].classList.contains("forceHandleUnderflow")) {
+                rows[i].handleOverUnderflow();
+              }
+            }
+
             let lastRowRect = rows[numRows - 1].getBoundingClientRect();
             // Calculate the height to have the first row to last row shown
             height = lastRowRect.bottom - firstRowRect.top +
@@ -1511,8 +1520,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       <constructor><![CDATA[
         // Unlike other autocomplete items, the height of the insecure warning
-        // increases by wrapping.
-        this._handleOverflow();
+        // increases by wrapping. So "forceHandleUnderflow" is for container to
+        // recalculate an item's height and width.
+        this.classList.add("forceHandleUnderflow");
       ]]></constructor>
     </implementation>
   </binding>
