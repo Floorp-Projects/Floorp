@@ -5,7 +5,6 @@ use std::hash::BuildHasherDefault;
 use std::{mem, slice};
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
-use euclid::{Size2D, Point2D, Rect, Matrix4D};
 use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
@@ -24,7 +23,7 @@ fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
     }
 
     let symbol_name = CString::new(name).unwrap();
-    let mut symbol = unsafe {
+    let symbol = unsafe {
         get_proc_address_from_glcontext(glcontext_ptr, symbol_name.as_ptr())
     };
 
@@ -478,16 +477,6 @@ pub extern fn wr_destroy(window: &mut WrWindowState, state:*mut WrState) {
         window.pipeline_epoch_map.remove(&((*state).pipeline_id));
         Box::from_raw(state);
     }
-}
-
-fn wait_for_render_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
-    let &(ref lock, ref cvar) = &**notifier;
-    let mut finished = lock.lock().unwrap();
-    while !*finished {
-        finished = cvar.wait(finished).unwrap();
-    }
-    // For the next sync one
-    *finished = false;
 }
 
 #[no_mangle]
