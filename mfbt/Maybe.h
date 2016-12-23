@@ -157,13 +157,7 @@ public:
     if (&aOther != this) {
       if (aOther.mIsSome) {
         if (mIsSome) {
-          // XXX(seth): The correct code for this branch, below, can't be used
-          // due to a bug in Visual Studio 2010. See bug 1052940.
-          /*
           ref() = aOther.ref();
-          */
-          reset();
-          emplace(*aOther);
         } else {
           emplace(*aOther);
         }
