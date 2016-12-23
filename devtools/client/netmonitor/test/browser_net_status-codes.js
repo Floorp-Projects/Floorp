@@ -57,7 +57,7 @@ add_task(function* () {
         statusText: "See Other",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
         time: true
       }
     },
