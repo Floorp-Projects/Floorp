@@ -6,6 +6,7 @@ import merge from "./merge";
 import * as queue from "./queue";
 
 const LINUX_IMAGE = {name: "linux", path: "automation/taskcluster/docker"};
+const FUZZ_IMAGE = {name: "fuzz", path: "automation/taskcluster/docker-fuzz"};
 
 const WINDOWS_CHECKOUT_CMD =
   "bash -c \"hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || " +
@@ -270,7 +271,7 @@ async function scheduleFuzzing() {
     },
     platform: "linux64",
     collection: "fuzz",
-    image: LINUX_IMAGE
+    image: FUZZ_IMAGE
   };
 
   // Build base definition.
@@ -279,7 +280,7 @@ async function scheduleFuzzing() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz --ubsan"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz"
     ],
     artifacts: {
       public: {

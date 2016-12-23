@@ -2577,11 +2577,23 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec,
                   const SSL3Opaque *pIn, PRUint32 contentLen, sslBuffer *wrBuf)
 {
     const ssl3BulkCipherDef *cipher_def = cwSpec->cipher_def;
-    PRUint16 headerLen = IS_DTLS(ss) ? DTLS_RECORD_HEADER_LENGTH : SSL3_RECORD_HEADER_LENGTH;
-    sslBuffer protBuf = { wrBuf->buf + headerLen, 0, wrBuf->space - headerLen };
+    PRUint16 headerLen;
+    sslBuffer protBuf;
     SSL3ProtocolVersion version = cwSpec->version;
     PRBool isTLS13;
+    PRUint8 *ptr = wrBuf->buf;
     SECStatus rv;
+
+    if (ss->ssl3.hs.shortHeaders) {
+        PORT_Assert(!IS_DTLS(ss));
+        PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+        headerLen = TLS13_RECORD_HEADER_LENGTH_SHORT;
+    } else {
+        headerLen = IS_DTLS(ss) ? DTLS_RECORD_HEADER_LENGTH : SSL3_RECORD_HEADER_LENGTH;
+    }
+    protBuf.buf = wrBuf->buf + headerLen;
+    protBuf.len = 0;
+    protBuf.space = wrBuf->space - headerLen;
 
     PORT_Assert(cipher_def->max_records <= RECORD_SEQ_MAX);
     if ((cwSpec->write_seq_num & RECORD_SEQ_MAX) >= cipher_def->max_records) {
@@ -2612,29 +2624,32 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec,
     PORT_Assert(protBuf.len <= MAX_FRAGMENT_LENGTH + (isTLS13 ? 256 : 1024));
     wrBuf->len = protBuf.len + headerLen;
 
-#ifndef UNSAFE_FUZZER_MODE
-    if (isTLS13 && cipher_def->calg != ssl_calg_null) {
-        wrBuf->buf[0] = content_application_data;
-    } else
-#endif
-    {
-        wrBuf->buf[0] = type;
-    }
-
-    if (IS_DTLS(ss)) {
-        version = isTLS13 ? SSL_LIBRARY_VERSION_TLS_1_1 : version;
-        version = dtls_TLSVersionToDTLSVersion(version);
-
-        (void)ssl_EncodeUintX(version, 2, &wrBuf->buf[1]);
-        (void)ssl_EncodeUintX(cwSpec->write_seq_num, 8, &wrBuf->buf[3]);
-        (void)ssl_EncodeUintX(protBuf.len, 2, &wrBuf->buf[11]);
+    if (ss->ssl3.hs.shortHeaders) {
+        PORT_Assert(!IS_DTLS(ss)); /* Decoder not yet implemented. */
+        (void)ssl_EncodeUintX(0x8000 | protBuf.len, 2, ptr);
     } else {
-        if (capRecordVersion || isTLS13) {
-            version = PR_MIN(SSL_LIBRARY_VERSION_TLS_1_0, version);
+#ifndef UNSAFE_FUZZER_MODE
+        if (isTLS13 && cipher_def->calg != ssl_calg_null) {
+            *ptr++ = content_application_data;
+        } else
+#endif
+        {
+            *ptr++ = type;
         }
 
-        (void)ssl_EncodeUintX(version, 2, &wrBuf->buf[1]);
-        (void)ssl_EncodeUintX(protBuf.len, 2, &wrBuf->buf[3]);
+        if (IS_DTLS(ss)) {
+            version = isTLS13 ? SSL_LIBRARY_VERSION_TLS_1_1 : version;
+            version = dtls_TLSVersionToDTLSVersion(version);
+
+            ptr = ssl_EncodeUintX(version, 2, ptr);
+            ptr = ssl_EncodeUintX(cwSpec->write_seq_num, 8, ptr);
+        } else {
+            if (capRecordVersion || isTLS13) {
+                version = PR_MIN(SSL_LIBRARY_VERSION_TLS_1_0, version);
+            }
+            ptr = ssl_EncodeUintX(version, 2, ptr);
+        }
+        (void)ssl_EncodeUintX(protBuf.len, 2, ptr);
     }
     ++cwSpec->write_seq_num;
 

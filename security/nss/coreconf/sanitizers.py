@@ -9,7 +9,9 @@ def main():
 
     sanitizer = sys.argv[1]
     if sanitizer == "ubsan":
-        print('-fsanitize=undefined -fno-sanitize-recover=undefined ', end='')
+        if len(sys.argv) < 3:
+            raise Exception('ubsan requires another argument.')
+        print('-fsanitize='+sys.argv[2]+' -fno-sanitize-recover=undefined ', end='')
         return
     if sanitizer == "asan":
         print('-fsanitize=address ', end='')

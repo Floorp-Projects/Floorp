@@ -9,6 +9,9 @@
 == test-async-print.html 272830-1-ref.html
 == 129941-1a.html 129941-1-ref.html
 == 129941-1b.html 129941-1-ref.html
+== 129941-1c.html 129941-1-ref.html
+== 129941-1d.html 129941-1-ref.html
+== 129941-1e.html 129941-1-ref.html
 == 609227-1.html 609227-1-ref.html
 == 609227-2a.html 609227-2-ref.html
 == 609227-2b.html 609227-2-ref.html
@@ -33,3 +36,4 @@ fuzzy-if(cocoaWidget,1,5000) == 745025-1.html 745025-1-ref.html
 == 966419-1.html 966419-1-ref.html
 == 966419-2.html 966419-2-ref.html
 # asserts(3) HTTP(..) fails 1108104.html 1108104-ref.html # bug 1067755, 1135556
+== 1321803-1a.html 1321803-1-ref.html
