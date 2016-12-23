@@ -191,8 +191,6 @@ namespace jit {
 // Defined in JitFrames.h
 enum ExitFrameTokenValues;
 
-class AutoSaveLiveRegisters;
-
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
@@ -2117,8 +2115,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     AfterICSaveLive icSaveLive(LiveRegisterSet& liveRegs);
     MOZ_MUST_USE bool icBuildOOLFakeExitFrame(void* fakeReturnAddr, AfterICSaveLive& aic);
     void icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic);
-
-    MOZ_MUST_USE bool icBuildOOLFakeExitFrame(void* fakeReturnAddr, AutoSaveLiveRegisters& save);
 
     // Align the stack pointer based on the number of arguments which are pushed
     // on the stack, such that the JitFrameLayout would be correctly aligned on
