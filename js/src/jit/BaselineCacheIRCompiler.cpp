@@ -181,7 +181,8 @@ BaselineCacheIRCompiler::compile()
 
     // Done emitting the main IC code. Now emit the failure paths.
     for (size_t i = 0; i < failurePaths.length(); i++) {
-        emitFailurePath(i);
+        if (!emitFailurePath(i))
+            return nullptr;
         EmitStubGuardFailure(masm);
     }
 
@@ -575,39 +576,8 @@ BaselineCacheIRCompiler::emitLoadTypedObjectResult()
     masm.load32(fieldOffset, scratch2);
     masm.addPtr(scratch2, scratch1);
 
-    if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
-        Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
-        masm.loadFromTypedArray(type, Address(scratch1, 0), output.valueReg(),
-                                /* allowDouble = */ true, scratch2, nullptr);
-    } else {
-        ReferenceTypeDescr::Type type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
-        switch (type) {
-          case ReferenceTypeDescr::TYPE_ANY:
-            masm.loadValue(Address(scratch1, 0), output.valueReg());
-            break;
-
-          case ReferenceTypeDescr::TYPE_OBJECT: {
-            Label notNull, done;
-            masm.loadPtr(Address(scratch1, 0), scratch1);
-            masm.branchTestPtr(Assembler::NonZero, scratch1, scratch1, &notNull);
-            masm.moveValue(NullValue(), output.valueReg());
-            masm.jump(&done);
-            masm.bind(&notNull);
-            masm.tagValue(JSVAL_TYPE_OBJECT, scratch1, output.valueReg());
-            masm.bind(&done);
-            break;
-          }
-
-          case ReferenceTypeDescr::TYPE_STRING:
-            masm.loadPtr(Address(scratch1, 0), scratch1);
-            masm.tagValue(JSVAL_TYPE_STRING, scratch1, output.valueReg());
-            break;
-
-          default:
-            MOZ_CRASH("Invalid ReferenceTypeDescr");
-        }
-    }
-
+    Address fieldAddr(scratch1, 0);
+    emitLoadTypedObjectResultShared(fieldAddr, scratch2, layout, typeDescr, output);
     return true;
 }
 
@@ -718,6 +688,9 @@ BaselineCacheIRCompiler::init(CacheKind kind)
     if (!allocator.init(ICStubCompiler::availableGeneralRegs(numInputs)))
         return false;
 
+    // Baseline ICs monitor values when needed, so returning doubles is fine.
+    allowDoubleResult_.emplace(true);
+
     if (numInputs >= 1) {
         allocator.initInputLocation(0, R0);
         if (numInputs >= 2)
@@ -819,52 +792,6 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     writer.copyStubData(newStub->stubDataStart());
     stub->addNewStub(newStub);
     return newStub;
-}
-
-void
-jit::TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo* stubInfo)
-{
-    uint32_t field = 0;
-    size_t offset = 0;
-    while (true) {
-        StubField::Type fieldType = stubInfo->fieldType(field);
-        switch (fieldType) {
-          case StubField::Type::RawWord:
-          case StubField::Type::RawInt64:
-            break;
-          case StubField::Type::Shape:
-            TraceNullableEdge(trc, &stubInfo->getStubField<Shape*>(stub, offset),
-                              "baseline-cacheir-shape");
-            break;
-          case StubField::Type::ObjectGroup:
-            TraceNullableEdge(trc, &stubInfo->getStubField<ObjectGroup*>(stub, offset),
-                              "baseline-cacheir-group");
-            break;
-          case StubField::Type::JSObject:
-            TraceNullableEdge(trc, &stubInfo->getStubField<JSObject*>(stub, offset),
-                              "baseline-cacheir-object");
-            break;
-          case StubField::Type::Symbol:
-            TraceNullableEdge(trc, &stubInfo->getStubField<JS::Symbol*>(stub, offset),
-                              "baseline-cacheir-symbol");
-            break;
-          case StubField::Type::String:
-            TraceNullableEdge(trc, &stubInfo->getStubField<JSString*>(stub, offset),
-                              "baseline-cacheir-string");
-            break;
-          case StubField::Type::Id:
-            TraceEdge(trc, &stubInfo->getStubField<jsid>(stub, offset), "baseline-cacheir-id");
-            break;
-          case StubField::Type::Value:
-            TraceEdge(trc, &stubInfo->getStubField<JS::Value>(stub, offset),
-                      "baseline-cacheir-value");
-            break;
-          case StubField::Type::Limit:
-            return; // Done.
-        }
-        field++;
-        offset += StubField::sizeInBytes(fieldType);
-    }
 }
 
 uint8_t*
