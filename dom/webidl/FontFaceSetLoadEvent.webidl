@@ -17,5 +17,5 @@ dictionary FontFaceSetLoadEventInit : EventInit {
 [Constructor(DOMString type, optional FontFaceSetLoadEventInit eventInitDict),
  Pref="layout.css.font-loading-api.enabled"]
 interface FontFaceSetLoadEvent : Event {
-  [Cached, Constant] readonly attribute sequence<FontFace> fontfaces;
+  [Cached, Constant, Frozen] readonly attribute sequence<FontFace> fontfaces;
 };
