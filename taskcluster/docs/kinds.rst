@@ -114,21 +114,14 @@ files named in ``kind.yml``:
     It is up to a later stage of the task-graph generation (the target set) to
     select the tests that will actually be performed.
 
-desktop-test
-............
+test
+....
 
-The ``desktop-test`` kind defines tests for Desktop builds.  Its ``tests.yml``
-defines the full suite of desktop tests and their particulars, leaving it to
-the transforms to determine how those particulars apply to Linux, OS X, and
-Windows.
+The ``desktop-test`` kind defines tests for builds.  Its ``tests.yml`` defines
+the full suite of desktop tests and their particulars, leaving it to the
+transforms to determine how those particulars apply to the various platforms.
 
-android-test
-............
-
-The ``android-test`` kind defines tests for Android builds.
-
-It is very similar to ``desktop-test``, but the details of running the tests
-differ substantially, so they are defined separately.
+This kind includes both unit tests and talos.
 
 docker-image
 ------------

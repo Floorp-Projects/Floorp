@@ -1,8 +1,0 @@
-implementation: taskgraph.task.test:TestTask
-
-kind-dependencies:
-    - build
-
-transforms:
-   - taskgraph.transforms.tests:transforms
-   - taskgraph.transforms.task:transforms
