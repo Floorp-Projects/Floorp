@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global setConsoleEventHandler, retrieveConsoleEvents */
+
 "use strict";
 
 // This file is loaded on the server side for worker debugging.
@@ -18,18 +20,17 @@ function ConsoleAPIListener(window, owner, consoleID) {
   this.observe = this.observe.bind(this);
 }
 
-ConsoleAPIListener.prototype =
-{
+ConsoleAPIListener.prototype = {
   init: function () {
     setConsoleEventHandler(this.observe);
   },
   destroy: function () {
     setConsoleEventHandler(null);
   },
-  observe: function(message) {
+  observe: function (message) {
     this.owner.onConsoleAPICall(message.wrappedJSObject);
   },
-  getCachedMessages: function() {
+  getCachedMessages: function () {
     return retrieveConsoleEvents();
   }
 };
