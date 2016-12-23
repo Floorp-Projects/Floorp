@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=dialog-element
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test dialog pref</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+href="https://bugzilla.mozilla.org/show_bug.cgi?id=dialog-element">Test dialog element pref</a>
+<div id="testDiv">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for dom.dialog_element.enabled **/
+
+SimpleTest.waitForExplicitFinish();
+
+function testPref() {
+  is(typeof HTMLDialogElement, "undefined",
+     "HTMLDialogElement should not be exposed with pref disabled");
+
+  info("Testing if createElement doesn't expose HTMLDialogElement with pref disabled");
+  let newElement = document.createElement("dialog");
+  testElement(newElement);
+
+  info("Testing if HTML Parser doesn't expose HTMLDialogElement with pref disabled");
+  let testDiv = document.getElementById("testDiv");
+  testDiv.innerHTML = "<dialog></dialog>";
+  testElement(testDiv.firstChild);
+
+  SimpleTest.finish();
+}
+
+function testElement(element) {
+  ok(element instanceof HTMLUnknownElement,
+     "New <dialog> should be instances of HTMLUnknownElement when pref is disabled");
+}
+addLoadEvent(testPref);
+
+</script>
+</pre>
+</body>
+</html>
