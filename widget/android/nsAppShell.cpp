@@ -61,7 +61,6 @@
 #endif
 
 #include "AndroidAlerts.h"
-#include "AndroidUiThread.h"
 #include "ANRReporter.h"
 #include "GeckoBatteryManager.h"
 #include "GeckoNetworkManager.h"
@@ -396,8 +395,6 @@ nsAppShell::nsAppShell()
         }
 
         java::GeckoThread::SetState(java::GeckoThread::State::JNI_READY());
-
-        CreateAndroidUiThread();
     }
 
     sPowerManagerService = do_GetService(POWERMANAGERSERVICE_CONTRACTID);
@@ -411,8 +408,6 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
-    DestroyAndroidUiThread();
-
     {
         MutexAutoLock lock(*sAppShellLock);
         sAppShell = nullptr;

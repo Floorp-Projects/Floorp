@@ -130,12 +130,6 @@ MessageLoop::MessageLoop(Type type, nsIThread* aThread)
     pump_ = new mozilla::ipc::MessagePumpForNonMainUIThreads(aThread);
     return;
 #endif
-#if defined(MOZ_WIDGET_ANDROID)
-  case TYPE_MOZILLA_ANDROID_UI:
-    MOZ_RELEASE_ASSERT(aThread);
-    pump_ = new mozilla::ipc::MessagePumpForAndroidUI(aThread);
-    return;
-#endif // defined(MOZ_WIDGET_ANDROID)
   default:
     // Create one of Chromium's standard MessageLoop types below.
     break;
