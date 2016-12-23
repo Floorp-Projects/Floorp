@@ -180,8 +180,7 @@ public:
     TYPE_MOZILLA_CHILD,
     TYPE_MOZILLA_PARENT,
     TYPE_MOZILLA_NONMAINTHREAD,
-    TYPE_MOZILLA_NONMAINUITHREAD,
-    TYPE_MOZILLA_ANDROID_UI
+    TYPE_MOZILLA_NONMAINUITHREAD
   };
 
   // Normally, it is not necessary to instantiate a MessageLoop.  Instead, it
