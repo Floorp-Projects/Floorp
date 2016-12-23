@@ -19,11 +19,20 @@ for example - use `all_tests.py` instead.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence, get_keyed_by
+from taskgraph.util.treeherder import split_symbol, join_symbol
 from taskgraph.transforms.job.common import (
     docker_worker_support_vcs_checkout,
 )
+from taskgraph.transforms.base import validate_schema, optionally_keyed_by
+from voluptuous import (
+    Any,
+    Optional,
+    Required,
+    Schema,
+)
 
+import copy
 import logging
 import os.path
 
@@ -63,6 +72,478 @@ BUILDER_NAME_PREFIX = {
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
+
+# Schema for a test description
+#
+# *****WARNING*****
+#
+# This is a great place for baffling cruft to accumulate, and that makes
+# everyone move more slowly.  Be considerate of your fellow hackers!
+# See the warnings in taskcluster/docs/how-tos.rst
+#
+# *****WARNING*****
+test_description_schema = Schema({
+    # description of the suite, for the task metadata
+    'description': basestring,
+
+    # test suite name, or <suite>/<flavor>
+    Required('suite'): Any(
+        basestring,
+        {'by-test-platform': {basestring: basestring}},
+    ),
+
+    # the name by which this test suite is addressed in try syntax; defaults to
+    # the test-name
+    Optional('unittest-try-name'): basestring,
+
+    # the name by which this talos test is addressed in try syntax
+    Optional('talos-try-name'): basestring,
+
+    # the symbol, or group(symbol), under which this task should appear in
+    # treeherder.
+    'treeherder-symbol': basestring,
+
+    # the value to place in task.extra.treeherder.machine.platform; ideally
+    # this is the same as build-platform, and that is the default, but in
+    # practice it's not always a match.
+    Optional('treeherder-machine-platform'): basestring,
+
+    # attributes to appear in the resulting task (later transforms will add the
+    # common attributes)
+    Optional('attributes'): {basestring: object},
+
+    # The `run_on_projects` attribute, defaulting to "all".  This dictates the
+    # projects on which this task should be included in the target task set.
+    # See the attributes documentation for details.
+    Optional('run-on-projects', default=['all']): Any(
+        [basestring],
+        {'by-test-platform': {basestring: [basestring]}},
+    ),
+
+    # the sheriffing tier for this task (default: set based on test platform)
+    Optional('tier'): Any(
+        int,
+        {'by-test-platform': {basestring: int}},
+    ),
+
+    # number of chunks to create for this task.  This can be keyed by test
+    # platform by passing a dictionary in the `by-test-platform` key.  If the
+    # test platform is not found, the key 'default' will be tried.
+    Required('chunks', default=1): Any(
+        int,
+        {'by-test-platform': {basestring: int}},
+    ),
+
+    # the time (with unit) after which this task is deleted; default depends on
+    # the branch (see below)
+    Optional('expires-after'): basestring,
+
+    # Whether to run this task with e10s (desktop-test only).  If false, run
+    # without e10s; if true, run with e10s; if 'both', run one task with and
+    # one task without e10s.  E10s tasks have "-e10s" appended to the test name
+    # and treeherder group.
+    Required('e10s', default='both'): Any(
+        bool, 'both',
+        {'by-test-platform': {basestring: Any(bool, 'both')}},
+    ),
+
+    # The EC2 instance size to run these tests on.
+    Required('instance-size', default='default'): Any(
+        Any('default', 'large', 'xlarge', 'legacy'),
+        {'by-test-platform': {basestring: Any('default', 'large', 'xlarge', 'legacy')}},
+    ),
+
+    # Whether the task requires loopback audio or video (whatever that may mean
+    # on the platform)
+    Required('loopback-audio', default=False): bool,
+    Required('loopback-video', default=False): bool,
+
+    # Whether the test can run using a software GL implementation on Linux
+    # using the GL compositor. May not be used with "legacy" sized instances
+    # due to poor LLVMPipe performance (bug 1296086).  Defaults to true for
+    # linux platforms and false otherwise
+    Optional('allow-software-gl-layers'): bool,
+
+    # The worker implementation for this test, as dictated by policy and by the
+    # test platform.
+    Optional('worker-implementation'): Any(
+        'docker-worker',
+        'macosx-engine',
+        'generic-worker',
+        # coming soon:
+        'docker-engine',
+        'buildbot-bridge',
+    ),
+
+    # For tasks that will run in docker-worker or docker-engine, this is the
+    # name of the docker image or in-tree docker image to run the task in.  If
+    # in-tree, then a dependency will be created automatically.  This is
+    # generally `desktop-test`, or an image that acts an awful lot like it.
+    Required('docker-image', default={'in-tree': 'desktop-test'}): Any(
+        # a raw Docker image path (repo/image:tag)
+        basestring,
+        # an in-tree generated docker image (from `taskcluster/docker/<name>`)
+        {'in-tree': basestring}
+    ),
+
+    # seconds of runtime after which the task will be killed.  Like 'chunks',
+    # this can be keyed by test pltaform.
+    Required('max-run-time', default=3600): Any(
+        int,
+        {'by-test-platform': {basestring: int}},
+    ),
+
+    # the exit status code that indicates the task should be retried
+    Optional('retry-exit-status'): int,
+
+    # Whether to perform a gecko checkout.
+    Required('checkout', default=False): bool,
+
+    # What to run
+    Required('mozharness'): Any({
+        # the mozharness script used to run this task
+        Required('script'): basestring,
+
+        # the config files required for the task
+        Required('config'): Any(
+            [basestring],
+            {'by-test-platform': {basestring: [basestring]}},
+        ),
+
+        # any additional actions to pass to the mozharness command
+        Optional('actions'): [basestring],
+
+        # additional command-line options for mozharness, beyond those
+        # automatically added
+        Required('extra-options', default=[]): Any(
+            [basestring],
+            {'by-test-platform': {basestring: [basestring]}},
+        ),
+
+        # the artifact name (including path) to test on the build task; this is
+        # generally set in a per-kind transformation
+        Optional('build-artifact-name'): basestring,
+
+        # If true, tooltool downloads will be enabled via relengAPIProxy.
+        Required('tooltool-downloads', default=False): bool,
+
+        # This mozharness script also runs in Buildbot and tries to read a
+        # buildbot config file, so tell it not to do so in TaskCluster
+        Required('no-read-buildbot-config', default=False): bool,
+
+        # Add --blob-upload-branch=<project> mozharness parameter
+        Optional('include-blob-upload-branch'): bool,
+
+        # The setting for --download-symbols (if omitted, the option will not
+        # be passed to mozharness)
+        Optional('download-symbols'): Any(True, 'ondemand'),
+
+        # If set, then MOZ_NODE_PATH=/usr/local/bin/node is included in the
+        # environment.  This is more than just a helpful path setting -- it
+        # causes xpcshell tests to start additional servers, and runs
+        # additional tests.
+        Required('set-moz-node-path', default=False): bool,
+
+        # If true, include chunking information in the command even if the number
+        # of chunks is 1
+        Required('chunked', default=False): bool,
+
+        # The chunking argument format to use
+        Required('chunking-args', default='this-chunk'): Any(
+            # Use the usual --this-chunk/--total-chunk arguments
+            'this-chunk',
+            # Use --test-suite=<suite>-<chunk-suffix>; see chunk-suffix, below
+            'test-suite-suffix',
+        ),
+
+        # the string to append to the `--test-suite` arugment when
+        # chunking-args = test-suite-suffix; "<CHUNK>" in this string will
+        # be replaced with the chunk number.
+        Optional('chunk-suffix'): basestring,
+    }),
+
+    # The current chunk; this is filled in by `all_kinds.py`
+    Optional('this-chunk'): int,
+
+    # os user groups for test task workers; required scopes, will be
+    # added automatically
+    Optional('os-groups', default=[]): Any(
+        [basestring],
+        # todo: create a dedicated elevated worker group and name here
+        {'by-test-platform': {basestring: [basestring]}},
+    ),
+
+    # -- values supplied by the task-generation infrastructure
+
+    # the platform of the build this task is testing
+    'build-platform': basestring,
+
+    # the label of the build task generating the materials to test
+    'build-label': basestring,
+
+    # the platform on which the tests will run
+    'test-platform': basestring,
+
+    # the name of the test (the key in tests.yml)
+    'test-name': basestring,
+
+    # the product name, defaults to firefox
+    Optional('product'): basestring,
+
+}, required=True)
+
+
+@transforms.add
+def validate(config, tests):
+    for test in tests:
+        yield validate_schema(test_description_schema, test,
+                              "In test {!r}:".format(test['test-name']))
+
+
+@transforms.add
+def set_defaults(config, tests):
+    for test in tests:
+        build_platform = test['build-platform']
+        if build_platform.startswith('android'):
+            # all Android test tasks download internal objects from tooltool
+            test['mozharness']['tooltool-downloads'] = True
+            test['mozharness']['actions'] = ['get-secrets']
+            # Android doesn't do e10s
+            test['e10s'] = False
+        else:
+            # all non-android tests want to run the bits that require node
+            test['mozharness']['set-moz-node-path'] = True
+
+        # software-gl-layers is only meaningful on linux, where it defaults to True
+        if test['test-platform'].startswith('linux'):
+            test.setdefault('allow-software-gl-layers', True)
+        else:
+            test['allow-software-gl-layers'] = False
+
+        test.setdefault('e10s', 'both')
+        test.setdefault('os-groups', [])
+        test.setdefault('chunks', 1)
+        test.setdefault('run-on-projects', ['all'])
+        test.setdefault('instance-size', 'default')
+        test.setdefault('max-run-time', 3600)
+        test['mozharness'].setdefault('extra-options', [])
+        yield test
+
+
+@transforms.add
+def set_target(config, tests):
+    for test in tests:
+        build_platform = test['build-platform']
+        if build_platform.startswith('macosx'):
+            target = 'target.dmg'
+        elif build_platform.startswith('android'):
+            target = 'target.apk'
+        else:
+            target = 'target.tar.bz2'
+        test['mozharness']['build-artifact-name'] = 'public/build/' + target
+        yield test
+
+
+@transforms.add
+def set_treeherder_machine_platform(config, tests):
+    """Set the appropriate task.extra.treeherder.machine.platform"""
+    translation = {
+        # Linux64 build platforms for asan and pgo are specified differently to
+        # treeherder.
+        'linux64-asan/opt': 'linux64/asan',
+        'linux64-pgo/opt': 'linux64/pgo',
+        'macosx64/debug': 'osx-10-10/debug',
+        'macosx64/opt': 'osx-10-10/opt',
+        # The build names for Android platforms have partially evolved over the
+        # years and need to be translated.
+        'android-api-15/debug': 'android-4-3-armv7-api15/debug',
+        'android-api-15/opt': 'android-4-3-armv7-api15/opt',
+        'android-x86/opt': 'android-4-2-x86/opt',
+        'android-api-15-gradle/opt': 'android-api-15-gradle/opt',
+    }
+    for test in tests:
+        test['treeherder-machine-platform'] = translation.get(test['build-platform'], test['test-platform'])
+        yield test
+
+
+@transforms.add
+def set_asan_docker_image(config, tests):
+    """Set the appropriate task.extra.treeherder.docker-image"""
+    # Linux64-asan has many leaks with running mochitest-media jobs
+    # on Ubuntu 16.04, please remove this when bug 1289209 is resolved
+    for test in tests:
+        if test['suite'] == 'mochitest/mochitest-media' and \
+           test['build-platform'] == 'linux64-asan/opt':
+            test['docker-image'] = {"in-tree": "desktop-test"}
+        yield test
+
+
+@transforms.add
+def set_worker_implementation(config, tests):
+    """Set the worker implementation based on the test platform."""
+    for test in tests:
+        if test.get('suite', '') == 'talos':
+            test['worker-implementation'] = 'buildbot-bridge'
+        elif test['test-platform'].startswith('win'):
+            test['worker-implementation'] = 'generic-worker'
+        elif test['test-platform'].startswith('macosx'):
+            test['worker-implementation'] = 'macosx-engine'
+        else:
+            test['worker-implementation'] = 'docker-worker'
+        yield test
+
+
+@transforms.add
+def set_tier(config, tests):
+    """Set the tier based on policy for all test descriptions that do not
+    specify a tier otherwise."""
+    for test in tests:
+        # only override if not set for the test
+        if 'tier' not in test:
+            if test['test-platform'] in ['linux64/debug',
+                                         'linux64-asan/opt',
+                                         'android-4.3-arm7-api-15/debug',
+                                         'android-x86/opt']:
+                test['tier'] = 1
+            elif test['test-platform'].startswith('windows'):
+                test['tier'] = 3
+            else:
+                test['tier'] = 2
+        yield test
+
+
+@transforms.add
+def set_expires_after(config, tests):
+    """Try jobs expire after 2 weeks; everything else lasts 1 year.  This helps
+    keep storage costs low."""
+    for test in tests:
+        if 'expires-after' not in test:
+            if config.params['project'] == 'try':
+                test['expires-after'] = "14 days"
+            else:
+                test['expires-after'] = "1 year"
+        yield test
+
+
+@transforms.add
+def set_download_symbols(config, tests):
+    """In general, we download symbols immediately for debug builds, but only
+    on demand for everything else. ASAN builds shouldn't download
+    symbols since they don't product symbol zips see bug 1283879"""
+    for test in tests:
+        if test['test-platform'].split('/')[-1] == 'debug':
+            test['mozharness']['download-symbols'] = True
+        elif test['build-platform'] == 'linux64-asan/opt':
+            if 'download-symbols' in test['mozharness']:
+                del test['mozharness']['download-symbols']
+        else:
+            test['mozharness']['download-symbols'] = 'ondemand'
+        yield test
+
+
+@transforms.add
+def resolve_keyed_by(config, tests):
+    """Resolve fields that can be keyed by platform, etc."""
+    fields = [
+        'instance-size',
+        'max-run-time',
+        'chunks',
+        'e10s',
+        'suite',
+        'run-on-projects',
+        'os-groups',
+        'tier',
+    ]
+    mozharness_fields = [
+        'config',
+        'extra-options',
+    ]
+    for test in tests:
+        for field in fields:
+            test[field] = get_keyed_by(item=test, field=field, item_name=test['test-name'])
+        for subfield in mozharness_fields:
+            test['mozharness'][subfield] = get_keyed_by(
+                item=test, field='mozharness', subfield=subfield, item_name=test['test-name'])
+        yield test
+
+
+@transforms.add
+def split_e10s(config, tests):
+    for test in tests:
+        e10s = test['e10s']
+
+        test.setdefault('attributes', {})
+        test['e10s'] = False
+        test['attributes']['e10s'] = False
+
+        if e10s == 'both':
+            yield copy.deepcopy(test)
+            e10s = True
+        if e10s:
+            test['test-name'] += '-e10s'
+            test['e10s'] = True
+            test['attributes']['e10s'] = True
+            group, symbol = split_symbol(test['treeherder-symbol'])
+            if group != '?':
+                group += '-e10s'
+            test['treeherder-symbol'] = join_symbol(group, symbol)
+            test['mozharness']['extra-options'] = get_keyed_by(item=test,
+                                                               field='mozharness',
+                                                               subfield='extra-options',
+                                                               item_name=test['test-name'])
+            test['mozharness']['extra-options'].append('--e10s')
+        yield test
+
+
+@transforms.add
+def split_chunks(config, tests):
+    """Based on the 'chunks' key, split tests up into chunks by duplicating
+    them and assigning 'this-chunk' appropriately and updating the treeherder
+    symbol."""
+    for test in tests:
+        if test['chunks'] == 1:
+            test['this-chunk'] = 1
+            yield test
+            continue
+
+        for this_chunk in range(1, test['chunks'] + 1):
+            # copy the test and update with the chunk number
+            chunked = copy.deepcopy(test)
+            chunked['this-chunk'] = this_chunk
+
+            # add the chunk number to the TH symbol
+            group, symbol = split_symbol(chunked['treeherder-symbol'])
+            symbol += str(this_chunk)
+            chunked['treeherder-symbol'] = join_symbol(group, symbol)
+
+            yield chunked
+
+
+@transforms.add
+def allow_software_gl_layers(config, tests):
+    """
+    Handle the "allow-software-gl-layers" property for platforms where it
+    applies.
+    """
+    for test in tests:
+        if test.get('allow-software-gl-layers'):
+            assert test['instance-size'] != 'legacy',\
+                   'Software GL layers on a legacy instance is disallowed (bug 1296086).'
+
+            # This should be set always once bug 1296086 is resolved.
+            test['mozharness'].setdefault('extra-options', [])\
+                              .append("--allow-software-gl-layers")
+
+        yield test
+
+
+@transforms.add
+def set_retry_exit_status(config, tests):
+    """Set the retry exit status to TBPL_RETRY, the value returned by mozharness
+       scripts to indicate a transient failure that should be retried."""
+    for test in tests:
+        test['retry-exit-status'] = 4
+        yield test
 
 
 @transforms.add

@@ -4,9 +4,5 @@ kind-dependencies:
     - build
 
 transforms:
-   - taskgraph.transforms.tests.test_description:validate
-   - taskgraph.transforms.tests.desktop_test:transforms
-   - taskgraph.transforms.tests.all_kinds:transforms
-   - taskgraph.transforms.tests.test_description:validate
-   - taskgraph.transforms.tests.make_task_description:transforms
+   - taskgraph.transforms.tests:transforms
    - taskgraph.transforms.task:transforms
