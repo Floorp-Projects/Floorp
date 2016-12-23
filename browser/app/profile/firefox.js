@@ -654,12 +654,6 @@ pref("plugin.defaultXpi.state", 2);
 pref("plugin.state.flash", 2);
 pref("plugin.state.java", 1);
 
-#ifdef XP_MACOSX
-pref("browser.preferences.animateFadeIn", true);
-#else
-pref("browser.preferences.animateFadeIn", false);
-#endif
-
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else

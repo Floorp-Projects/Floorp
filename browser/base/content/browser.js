@@ -6,12 +6,34 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cc = Components.classes;
+var Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ContextualIdentityService.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 
 // lazy module getters
+
+/* global AboutHome:false, AddonWatcher:false, AppConstants: false,
+          BrowserUITelemetry:false, BrowserUsageTelemetry:false, BrowserUtils:false,
+          CastingApps:false, CharsetMenu:false, Color:false, ContentSearch:false,
+          Deprecated:false, E10SUtils:false, FormValidationHandler:false,
+          GMPInstallManager:false, LightweightThemeManager:false, Log:false,
+          LoginManagerParent:false, NewTabUtils:false, PageThumbs:false,
+          PluralForm:false, Preferences:false, PrivateBrowsingUtils:false,
+          ProcessHangMonitor:false, PromiseUtils:false, ReaderMode:false,
+          ReaderParent:false, RecentWindow:false, SessionStore:false,
+          ShortcutUtils:false, SimpleServiceDiscovery:false, SitePermissions:false,
+          Social:false, TabCrashHandler:false, Task:false, TelemetryStopwatch:false,
+          Translation:false, UITour:false, UpdateUtils:false, Weave:false,
+          fxAccounts:false, gDevTools:false, gDevToolsBrowser:false, webrtcUI:false
+ */
+
+/**
+ * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
+ * XXX Bug 1325373 is for making eslint detect these automatically.
+ */
 [
   ["AboutHome", "resource:///modules/AboutHome.jsm"],
   ["AddonWatcher", "resource://gre/modules/AddonWatcher.jsm"],
@@ -67,6 +89,14 @@ if (AppConstants.MOZ_CRASHREPORTER) {
 }
 
 // lazy service getters
+
+/* global Favicons:false, WindowsUIUtils:false, gAboutNewTabService:false,
+          gDNSService:false
+*/
+/**
+ * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
+ * XXX Bug 1325373 is for making eslint detect these automatically.
+ */
 [
   ["Favicons", "@mozilla.org/browser/favicon-service;1", "mozIAsyncFavicons"],
   ["WindowsUIUtils", "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
