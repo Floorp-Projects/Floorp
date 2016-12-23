@@ -313,7 +313,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_LINUX,
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_LINUX,
     }
-    GCC_4_7_RESULT = ('Only GCC 4.8 or newer is supported '
+    GCC_4_7_RESULT = ('Only GCC 4.9 or newer is supported '
                       '(found version 4.7.3).')
     GXX_4_7_RESULT = GCC_4_7_RESULT
     GCC_4_9_RESULT = CompilerResult(
