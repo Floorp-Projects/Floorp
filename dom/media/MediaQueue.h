@@ -50,13 +50,6 @@ public:
     mPushEvent.Notify(RefPtr<T>(aItem));
   }
 
-  inline void PushFront(T* aItem) {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    MOZ_ASSERT(aItem);
-    NS_ADDREF(aItem);
-    nsDeque::PushFront(aItem);
-  }
-
   inline already_AddRefed<T> PopFront() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     RefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
@@ -64,11 +57,6 @@ public:
       mPopEvent.Notify(rv);
     }
     return rv.forget();
-  }
-
-  inline RefPtr<T> Peek() const {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return static_cast<T*>(nsDeque::Peek());
   }
 
   inline RefPtr<T> PeekFront() const {
