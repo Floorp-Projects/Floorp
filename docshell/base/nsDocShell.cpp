@@ -10952,7 +10952,8 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     if (aBaseURI) {
         nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(channel);
         if (vsc) {
-            vsc->SetBaseURI(aBaseURI);
+            rv = vsc->SetBaseURI(aBaseURI);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
   } else {
