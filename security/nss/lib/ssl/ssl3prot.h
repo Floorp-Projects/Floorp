@@ -32,6 +32,7 @@ typedef PRUint16 ssl3CipherSuite;
 #define SSL3_RANDOM_LENGTH 32
 
 #define SSL3_RECORD_HEADER_LENGTH 5
+#define TLS13_RECORD_HEADER_LENGTH_SHORT 2
 
 /* SSL3_RECORD_HEADER_LENGTH + epoch/sequence_number */
 #define DTLS_RECORD_HEADER_LENGTH 13

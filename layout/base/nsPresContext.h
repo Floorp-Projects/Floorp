@@ -77,6 +77,9 @@ namespace layers {
 class ContainerLayer;
 class LayerManager;
 } // namespace layers
+namespace dom {
+class Element;
+} // namespace dom
 } // namespace mozilla
 
 // supported values for cached bool types
@@ -720,6 +723,12 @@ public:
   {
     return mViewportStyleScrollbar;
   }
+
+  /**
+   * Check whether the given element would propagate its scrollbar styles to the
+   * viewport in non-paginated mode.  Must only be called if IsPaginated().
+   */
+  bool ElementWouldPropagateScrollbarStyles(mozilla::dom::Element* aElement);
 
   /**
    * Set and get methods for controlling the background drawing
