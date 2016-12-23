@@ -908,7 +908,7 @@ fi
 dnl Configure JIT support
 
 case "$CPU_ARCH" in
-x86|x86_64|arm|mips*)
+x86|x86_64|arm|aarch64|mips*)
     ENABLE_ION=1
     ;;
 esac
@@ -1728,6 +1728,9 @@ elif test "$CPU_ARCH" = "arm"; then
 
     dnl ARM platforms may trap on unaligned accesses; catch the signal and
     dnl recover.
+elif test "$CPU_ARCH" = "aarch64"; then
+    AC_DEFINE(JS_CODEGEN_ARM64)
+    JS_CODEGEN_ARM64=1
 elif test "$CPU_ARCH" = "mips32"; then
     AC_DEFINE(JS_CODEGEN_MIPS32)
     JS_CODEGEN_MIPS32=1
