@@ -754,7 +754,7 @@ root{
                 "<🏳‍🌈 = 🏳️‍🌈"
                 "<*🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"
             }
-            Version{"30.0.2"}
+            Version{"30.0.3"}
         }
         eor{
             Sequence{
@@ -1294,7 +1294,7 @@ root{
                 "&ք"
                 "<և"
             }
-            Version{"30.0.2"}
+            Version{"30.0.3"}
         }
         private-unihan{
             Sequence{
@@ -1537,7 +1537,7 @@ root{
                 "&龟=\uFDD0龟"
                 "&龠=\uFDD0龠"
             }
-            Version{"30.0.2"}
+            Version{"30.0.3"}
         }
         search{
             Sequence{
@@ -1654,11 +1654,11 @@ root{
                 "&ᅮᅵ"
                 "=ᅱ"
             }
-            Version{"30.0.2"}
+            Version{"30.0.3"}
         }
         standard{
             Sequence{""}
-            Version{"30.0.2"}
+            Version{"30.0.3"}
         }
     }
     depends:process(dependency){"ucadata.icu"}

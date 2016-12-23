@@ -17,7 +17,30 @@ namespace jit {
 #define CACHE_IR_SHARED_OPS(_)            \
     _(GuardIsObject)                      \
     _(GuardIsString)                      \
-    _(GuardIsSymbol)
+    _(GuardIsSymbol)                      \
+    _(GuardIsInt32)                       \
+    _(GuardType)                          \
+    _(GuardClass)                         \
+    _(GuardIsProxy)                       \
+    _(GuardNotDOMProxy)                   \
+    _(GuardMagicValue)                    \
+    _(GuardNoUnboxedExpando)              \
+    _(GuardAndLoadUnboxedExpando)         \
+    _(GuardNoDetachedTypedObjects)        \
+    _(GuardNoDenseElements)               \
+    _(LoadProto)                          \
+    _(LoadDOMExpandoValue)                \
+    _(LoadUndefinedResult)                \
+    _(LoadInt32ArrayLengthResult)         \
+    _(LoadUnboxedArrayLengthResult)       \
+    _(LoadArgumentsObjectLengthResult)    \
+    _(LoadStringLengthResult)             \
+    _(LoadStringCharResult)               \
+    _(LoadArgumentsObjectArgResult)       \
+    _(LoadDenseElementResult)             \
+    _(LoadDenseElementHoleResult)         \
+    _(LoadUnboxedArrayElementResult)      \
+    _(LoadTypedElementResult)
 
 // OperandLocation represents the location of an OperandId. The operand is
 // either in a register or on the stack, and is either boxed or unboxed.
@@ -112,20 +135,22 @@ class OperandLocation
         data_.constant = v;
     }
 
-    bool aliasesReg(Register reg) {
+    bool aliasesReg(Register reg) const {
         if (kind_ == PayloadReg)
             return payloadReg() == reg;
         if (kind_ == ValueReg)
             return valueReg().aliases(reg);
         return false;
     }
-    bool aliasesReg(ValueOperand reg) {
+    bool aliasesReg(ValueOperand reg) const {
 #if defined(JS_NUNBOX32)
         return aliasesReg(reg.typeReg()) || aliasesReg(reg.payloadReg());
 #else
         return aliasesReg(reg.valueReg());
 #endif
     }
+
+    bool aliasesReg(const OperandLocation& other) const;
 
     bool operator==(const OperandLocation& other) const;
     bool operator!=(const OperandLocation& other) const { return !operator==(other); }
@@ -163,6 +188,12 @@ class MOZ_RAII CacheRegisterAllocator
 
     void freeDeadOperandRegisters();
 
+    void spillOperandToStack(MacroAssembler& masm, OperandLocation* loc);
+    void spillOperandToStackOrRegister(MacroAssembler& masm, OperandLocation* loc);
+
+    void popPayload(MacroAssembler& masm, OperandLocation* loc, Register dest);
+    void popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest);
+
   public:
     friend class AutoScratchRegister;
     friend class AutoScratchRegisterExcluding;
@@ -179,13 +210,28 @@ class MOZ_RAII CacheRegisterAllocator
     OperandLocation operandLocation(size_t i) const {
         return operandLocations_[i];
     }
+    void setOperandLocation(size_t i, const OperandLocation& loc) {
+        operandLocations_[i] = loc;
+    }
+
     OperandLocation origInputLocation(size_t i) const {
         return origInputLocations_[i];
     }
     void initInputLocation(size_t i, ValueOperand reg) {
         origInputLocations_[i].setValueReg(reg);
-        operandLocations_[i] = origInputLocations_[i];
+        operandLocations_[i].setValueReg(reg);
     }
+    void initInputLocation(size_t i, Register reg, JSValueType type) {
+        origInputLocations_[i].setPayloadReg(reg, type);
+        operandLocations_[i].setPayloadReg(reg, type);
+    }
+    void initInputLocation(size_t i, const Value& v) {
+        origInputLocations_[i].setConstant(v);
+        operandLocations_[i].setConstant(v);
+    }
+
+    void initInputLocation(size_t i, const TypedOrValueRegister& reg);
+    void initInputLocation(size_t i, const ConstantOrRegister& value);
 
     void nextOp() {
         currentOpRegs_.clear();
@@ -195,6 +241,9 @@ class MOZ_RAII CacheRegisterAllocator
     uint32_t stackPushed() const {
         return stackPushed_;
     }
+    void setStackPushed(uint32_t pushed) {
+        stackPushed_ = pushed;
+    }
 
     bool isAllocatable(Register reg) const {
         return allocatableRegs_.has(reg);
@@ -203,12 +252,22 @@ class MOZ_RAII CacheRegisterAllocator
     // Allocates a new register.
     Register allocateRegister(MacroAssembler& masm);
     ValueOperand allocateValueRegister(MacroAssembler& masm);
+
     void allocateFixedRegister(MacroAssembler& masm, Register reg);
+    void allocateFixedValueRegister(MacroAssembler& masm, ValueOperand reg);
 
     // Releases a register so it can be reused later.
     void releaseRegister(Register reg) {
         MOZ_ASSERT(currentOpRegs_.has(reg));
         availableRegs_.add(reg);
+    }
+    void releaseValueRegister(ValueOperand reg) {
+#ifdef JS_NUNBOX32
+        releaseRegister(reg.payloadReg());
+        releaseRegister(reg.typeReg());
+#else
+        releaseRegister(reg.valueReg());
+#endif
     }
 
     // Removes spilled values from the native stack. This should only be
@@ -226,6 +285,10 @@ class MOZ_RAII CacheRegisterAllocator
 
     // Returns |val|'s JSValueType or JSVAL_TYPE_UNKNOWN.
     JSValueType knownType(ValOperandId val) const;
+
+    // Emits code to restore registers and stack to the state at the start of
+    // the stub.
+    void restoreInputState(MacroAssembler& masm);
 };
 
 // RAII class to allocate a scratch register and release it when we're done
@@ -324,6 +387,10 @@ class FailurePath
 class MOZ_RAII CacheIRCompiler
 {
   protected:
+    friend class AutoOutputRegister;
+
+    enum class Mode { Baseline, Ion };
+
     JSContext* cx_;
     CacheIRReader reader;
     const CacheIRWriter& writer_;
@@ -332,20 +399,82 @@ class MOZ_RAII CacheIRCompiler
     CacheRegisterAllocator allocator;
     Vector<FailurePath, 4, SystemAllocPolicy> failurePaths;
 
-    CacheIRCompiler(JSContext* cx, const CacheIRWriter& writer)
+    Maybe<TypedOrValueRegister> outputUnchecked_;
+    Mode mode_;
+
+    CacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, Mode mode)
       : cx_(cx),
         reader(writer),
         writer_(writer),
-        allocator(writer_)
-    {}
+        allocator(writer_),
+        mode_(mode)
+    {
+        MOZ_ASSERT(!writer.failed());
+    }
 
     MOZ_MUST_USE bool addFailurePath(FailurePath** failure);
 
-    void emitFailurePath(size_t i);
+    void emitFailurePath(size_t index);
 
 #define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
     CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
 #undef DEFINE_SHARED_OP
+};
+
+// Ensures the IC's output register is available for writing.
+class MOZ_RAII AutoOutputRegister
+{
+    TypedOrValueRegister output_;
+    CacheRegisterAllocator& alloc_;
+
+    AutoOutputRegister(const AutoOutputRegister&) = delete;
+    void operator=(const AutoOutputRegister&) = delete;
+
+  public:
+    explicit AutoOutputRegister(CacheIRCompiler& compiler);
+    ~AutoOutputRegister();
+
+    Register maybeReg() const {
+        if (output_.hasValue())
+            return output_.valueReg().scratchReg();
+        if (!output_.typedReg().isFloat())
+            return output_.typedReg().gpr();
+        return InvalidReg;
+    }
+
+    bool hasValue() const { return output_.hasValue(); }
+    ValueOperand valueReg() const { return output_.valueReg(); }
+    AnyRegister typedReg() const { return output_.typedReg(); }
+
+    JSValueType type() const {
+        MOZ_ASSERT(!hasValue());
+        return ValueTypeFromMIRType(output_.type());
+    }
+
+    operator TypedOrValueRegister() const { return output_; }
+};
+
+// Like AutoScratchRegister, but reuse a register of |output| if possible.
+class MOZ_RAII AutoScratchRegisterMaybeOutput
+{
+    mozilla::Maybe<AutoScratchRegister> scratch_;
+    Register scratchReg_;
+
+    AutoScratchRegisterMaybeOutput(const AutoScratchRegisterMaybeOutput&) = delete;
+    void operator=(const AutoScratchRegisterMaybeOutput&) = delete;
+
+  public:
+    AutoScratchRegisterMaybeOutput(CacheRegisterAllocator& alloc, MacroAssembler& masm,
+                                   const AutoOutputRegister& output)
+    {
+        scratchReg_ = output.maybeReg();
+        if (scratchReg_ == InvalidReg) {
+            scratch_.emplace(alloc, masm);
+            scratchReg_ = scratch_.ref();
+        }
+    }
+
+    operator Register() const { return scratchReg_; }
 };
 
 // See the 'Sharing Baseline stub code' comment in CacheIR.h for a description

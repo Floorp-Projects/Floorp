@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /**
@@ -7,7 +8,7 @@
  * in `utils.getSnapshotTotals(snapshot)`
  */
 
-const { censusDisplays, snapshotState: states, viewState, censusState } = require("devtools/client/memory/constants");
+const { censusDisplays, viewState, censusState } = require("devtools/client/memory/constants");
 const { getSnapshotTotals } = require("devtools/client/memory/utils");
 const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 const { setCensusDisplayAndRefresh } = require("devtools/client/memory/actions/census-display");

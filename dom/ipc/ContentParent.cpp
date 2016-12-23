@@ -2076,6 +2076,12 @@ mozilla::ipc::IPCResult
 ContentParent::RecvReadDataStorageArray(const nsString& aFilename,
                                         InfallibleTArray<DataStorageItem>* aValues)
 {
+  // If we're shutting down, the DataStorage object may have been cleared
+  // already, and setting it up is pointless anyways since we're about to die.
+  if (mShutdownPending) {
+    return IPC_OK();
+  }
+
   // Ensure the SSS is initialized before we try to use its storage.
   nsCOMPtr<nsISiteSecurityService> sss = do_GetService("@mozilla.org/ssservice;1");
 
@@ -4794,7 +4800,8 @@ ContentParent::RecvPURLClassifierConstructor(PURLClassifierParent* aActor,
   auto* actor = static_cast<URLClassifierParent*>(aActor);
   nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   if (!principal) {
-    return IPC_FAIL_NO_REASON(this);
+    actor->ClassificationFailed();
+    return IPC_OK();
   }
   return actor->StartClassify(principal, aUseTrackingProtection, aSuccess);
 }

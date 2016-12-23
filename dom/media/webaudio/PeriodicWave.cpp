@@ -26,6 +26,7 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
   , mDisableNormalization(aDisableNormalization)
 {
   MOZ_ASSERT(aContext);
+  MOZ_ASSERT(aRealData || aImagData);
 
   // Caller should have checked this and thrown.
   MOZ_ASSERT(aLength > 0);
@@ -38,9 +39,21 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  PodCopy(buffer, aRealData, aLength);
+
+  if (aRealData) {
+    PodCopy(buffer, aRealData, aLength);
+  } else {
+    PodZero(buffer, aLength);
+  }
+
   mCoefficients->SetData(0, buffer, free, buffer);
-  PodCopy(buffer+aLength, aImagData, aLength);
+
+  if (aImagData) {
+    PodCopy(buffer+aLength, aImagData, aLength);
+  } else {
+    PodZero(buffer+aLength, aLength);
+  }
+
   mCoefficients->SetData(1, nullptr, free, buffer+aLength);
 }
 
@@ -50,19 +63,32 @@ PeriodicWave::Constructor(const GlobalObject& aGlobal,
                           const PeriodicWaveOptions& aOptions,
                           ErrorResult& aRv)
 {
-  if (!aOptions.mReal.WasPassed() || !aOptions.mImag.WasPassed() ||
-      aOptions.mReal.Value().Length() != aOptions.mImag.Value().Length() ||
-      aOptions.mReal.Value().Length() == 0) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  if (!aOptions.mReal.WasPassed() && !aOptions.mImag.WasPassed()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
 
+  if (aOptions.mReal.WasPassed() && aOptions.mImag.WasPassed() &&
+      aOptions.mReal.Value().Length() != aOptions.mImag.Value().Length()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
+  }
+
+  uint32_t length =
+    aOptions.mReal.WasPassed() ? aOptions.mReal.Value().Length() : aOptions.mImag.Value().Length();
+  if (length == 0) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
+  }
+
+  const float* realData =
+    aOptions.mReal.WasPassed() ? aOptions.mReal.Value().Elements() : nullptr;
+  const float* imagData =
+    aOptions.mImag.WasPassed() ? aOptions.mImag.Value().Elements() : nullptr;
+
   RefPtr<PeriodicWave> wave =
-    new PeriodicWave(&aAudioContext, aOptions.mReal.Value().Elements(),
-                     aOptions.mImag.Value().Elements(),
-                     aOptions.mReal.Value().Length(),
-                     aOptions.mDisableNormalization,
-                     aRv);
+    new PeriodicWave(&aAudioContext, realData, imagData, length,
+                     aOptions.mDisableNormalization, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

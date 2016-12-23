@@ -92,16 +92,10 @@ nsScreen::GetPixelDepth(ErrorResult& aRv)
 
 FORWARD_LONG_GETTER(AvailWidth)
 FORWARD_LONG_GETTER(AvailHeight)
-FORWARD_LONG_GETTER(Width)
-FORWARD_LONG_GETTER(Height)
 
 FORWARD_LONG_GETTER(Top)
-FORWARD_LONG_GETTER(Left)
 FORWARD_LONG_GETTER(AvailTop)
 FORWARD_LONG_GETTER(AvailLeft)
-
-FORWARD_LONG_GETTER(PixelDepth)
-FORWARD_LONG_GETTER(ColorDepth)
 
 nsPIDOMWindowOuter*
 nsScreen::GetOuter() const
@@ -191,9 +185,10 @@ nsScreen::Orientation() const
 }
 
 void
-nsScreen::GetMozOrientation(nsString& aOrientation) const
+nsScreen::GetMozOrientation(nsString& aOrientation,
+                            CallerType aCallerType) const
 {
-  switch (mScreenOrientation->DeviceType()) {
+  switch (mScreenOrientation->DeviceType(aCallerType)) {
   case OrientationType::Portrait_primary:
     aOrientation.AssignLiteral("portrait-primary");
     break;
@@ -209,15 +204,6 @@ nsScreen::GetMozOrientation(nsString& aOrientation) const
   default:
     MOZ_CRASH("Unacceptable screen orientation type.");
   }
-}
-
-NS_IMETHODIMP
-nsScreen::GetSlowMozOrientation(nsAString& aOrientation)
-{
-  nsString orientation;
-  GetMozOrientation(orientation);
-  aOrientation = orientation;
-  return NS_OK;
 }
 
 static void

@@ -5,6 +5,7 @@
 from __future__ import print_function, unicode_literals
 
 import codecs
+import itertools
 import os
 import subprocess
 import sys
@@ -14,6 +15,8 @@ import textwrap
 base_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(base_dir, 'python', 'mozbuild'))
 from mozbuild.configure import ConfigureSandbox
+from mozbuild.makeutil import Makefile
+from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import (
     indented_repr,
     encode,
@@ -46,7 +49,8 @@ def config_status(config):
     sanitized_config = {}
     sanitized_config['substs'] = {
         k: sanitized_bools(v) for k, v in config.iteritems()
-        if k not in ('DEFINES', 'non_global_defines', 'TOPSRCDIR', 'TOPOBJDIR')
+        if k not in ('DEFINES', 'non_global_defines', 'TOPSRCDIR', 'TOPOBJDIR',
+                     'ALL_CONFIGURE_PATHS')
     }
     sanitized_config['defines'] = {
         k: sanitized_bools(v) for k, v in config['DEFINES'].iteritems()
@@ -79,10 +83,23 @@ def config_status(config):
         if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
             fh.write(textwrap.dedent('''
                 if __name__ == '__main__':
+                    from mozbuild.util import patch_main
+                    patch_main()
                     from mozbuild.config_status import config_status
                     args = dict([(name, globals()[name]) for name in __all__])
                     config_status(**args)
             '''))
+
+    # Write out a depfile so Make knows to re-run configure when relevant Python
+    # changes.
+    mk = Makefile()
+    rule = mk.create_rule()
+    rule.add_targets(["$(OBJDIR)/config.status"])
+    rule.add_dependencies(itertools.chain(config['ALL_CONFIGURE_PATHS'],
+                                          iter_modules_in_path(config['TOPOBJDIR'],
+                                                               config['TOPSRCDIR'])))
+    with open('configure.d', 'w') as fh:
+        mk.dump(fh)
 
     # Other things than us are going to run this file, so we need to give it
     # executable permissions.

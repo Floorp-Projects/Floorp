@@ -1579,116 +1579,88 @@ js::RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
 
-    uint8_t result = false;
-    if (!RegExpPrototypeOptimizableRaw(cx, &args[0].toObject(), &result))
-        return false;
-
-    args.rval().setBoolean(result);
+    args.rval().setBoolean(RegExpPrototypeOptimizableRaw(cx, &args[0].toObject()));
     return true;
 }
 
 bool
-js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* result)
+js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto)
 {
     JS::AutoCheckCannotGC nogc;
-    if (!proto->isNative()) {
-        *result = false;
-        return true;
-    }
+    AutoAssertNoPendingException aanpe(cx);
+    if (!proto->isNative())
+        return false;
 
     NativeObject* nproto = static_cast<NativeObject*>(proto);
 
     Shape* shape = cx->compartment()->regExps.getOptimizableRegExpPrototypeShape();
-    if (shape == nproto->lastProperty()) {
-        *result = true;
+    if (shape == nproto->lastProperty())
         return true;
-    }
 
     JSFunction* flagsGetter;
     if (!GetOwnGetterPure(cx, proto, NameToId(cx->names().flags), &flagsGetter))
         return false;
 
-    if (!flagsGetter) {
-        *result = false;
-        return true;
-    }
+    if (!flagsGetter)
+        return false;
 
-    if (!IsSelfHostedFunctionWithName(flagsGetter, cx->names().RegExpFlagsGetter)) {
-        *result = false;
-        return true;
-    }
+    if (!IsSelfHostedFunctionWithName(flagsGetter, cx->names().RegExpFlagsGetter))
+        return false;
 
     JSNative globalGetter;
     if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().global), &globalGetter))
         return false;
 
-    if (globalGetter != regexp_global) {
-        *result = false;
-        return true;
-    }
+    if (globalGetter != regexp_global)
+        return false;
 
     JSNative ignoreCaseGetter;
     if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().ignoreCase), &ignoreCaseGetter))
         return false;
 
-    if (ignoreCaseGetter != regexp_ignoreCase) {
-        *result = false;
-        return true;
-    }
+    if (ignoreCaseGetter != regexp_ignoreCase)
+        return false;
 
     JSNative multilineGetter;
     if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().multiline), &multilineGetter))
         return false;
 
-    if (multilineGetter != regexp_multiline) {
-        *result = false;
-        return true;
-    }
+    if (multilineGetter != regexp_multiline)
+        return false;
 
     JSNative stickyGetter;
     if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().sticky), &stickyGetter))
         return false;
 
-    if (stickyGetter != regexp_sticky) {
-        *result = false;
-        return true;
-    }
+    if (stickyGetter != regexp_sticky)
+        return false;
 
     JSNative unicodeGetter;
     if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().unicode), &unicodeGetter))
         return false;
 
-    if (unicodeGetter != regexp_unicode) {
-        *result = false;
-        return true;
-    }
+    if (unicodeGetter != regexp_unicode)
+        return false;
 
     // Check if @@match, @@search, and exec are own data properties,
     // those values should be tested in selfhosted JS.
     bool has = false;
     if (!HasOwnDataPropertyPure(cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().match), &has))
         return false;
-    if (!has) {
-        *result = false;
-        return true;
-    }
+    if (!has)
+        return false;
 
     if (!HasOwnDataPropertyPure(cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().search), &has))
         return false;
-    if (!has) {
-        *result = false;
-        return true;
-    }
+    if (!has)
+        return false;
 
     if (!HasOwnDataPropertyPure(cx, proto, NameToId(cx->names().exec), &has))
         return false;
-    if (!has) {
-        *result = false;
-        return true;
-    }
+    if (!has)
+        return false;
 
     cx->compartment()->regExps.setOptimizableRegExpPrototypeShape(nproto->lastProperty());
-    *result = true;
     return true;
 }
 
@@ -1699,44 +1671,33 @@ js::RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
 
-    uint8_t result = false;
-    if (!RegExpInstanceOptimizableRaw(cx, &args[0].toObject(), &args[1].toObject(), &result))
-        return false;
-
-    args.rval().setBoolean(result);
+    args.rval().setBoolean(RegExpInstanceOptimizableRaw(cx, &args[0].toObject(),
+                                                        &args[1].toObject()));
     return true;
 }
 
 bool
-js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto, uint8_t* result)
+js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto)
 {
     JS::AutoCheckCannotGC nogc;
+    AutoAssertNoPendingException aanpe(cx);
 
     RegExpObject* rx = &obj->as<RegExpObject>();
 
     Shape* shape = cx->compartment()->regExps.getOptimizableRegExpInstanceShape();
-    if (shape == rx->lastProperty()) {
-        *result = true;
+    if (shape == rx->lastProperty())
         return true;
-    }
 
-    if (!rx->hasStaticPrototype()) {
-        *result = false;
-        return true;
-    }
+    if (!rx->hasStaticPrototype())
+        return false;
 
-    if (rx->staticPrototype() != proto) {
-        *result = false;
-        return true;
-    }
+    if (rx->staticPrototype() != proto)
+        return false;
 
-    if (!RegExpObject::isInitialShape(rx)) {
-        *result = false;
-        return true;
-    }
+    if (!RegExpObject::isInitialShape(rx))
+        return false;
 
     cx->compartment()->regExps.setOptimizableRegExpInstanceShape(rx->lastProperty());
-    *result = true;
     return true;
 }
 
@@ -1839,7 +1800,7 @@ js::intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     RootedValue v(cx);
-    if (HasDataProperty(cx, nobj, AtomToId(atom), v.address()) && v.isString())
+    if (GetPropertyPure(cx, nobj, AtomToId(atom), v.address()) && v.isString())
         args.rval().set(v);
     else
         args.rval().setUndefined();

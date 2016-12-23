@@ -483,7 +483,7 @@ nsSHistory::GetGlobalIndexOffset(int32_t* aResult)
 }
 
 NS_IMETHODIMP
-nsSHistory::OnPartialSessionHistoryActive(int32_t aGlobalLength, int32_t aTargetIndex)
+nsSHistory::OnPartialSHistoryActive(int32_t aGlobalLength, int32_t aTargetIndex)
 {
   NS_ENSURE_TRUE(mRootDocShell && mIsPartial, NS_ERROR_UNEXPECTED);
 
@@ -498,7 +498,7 @@ nsSHistory::OnPartialSessionHistoryActive(int32_t aGlobalLength, int32_t aTarget
 }
 
 NS_IMETHODIMP
-nsSHistory::OnPartialSessionHistoryDeactive()
+nsSHistory::OnPartialSHistoryDeactive()
 {
   NS_ENSURE_TRUE(mRootDocShell && mIsPartial, NS_ERROR_UNEXPECTED);
 
@@ -1921,7 +1921,7 @@ nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
 }
 
 NS_IMETHODIMP
-nsSHistory::OnAttachGroupedSessionHistory(int32_t aOffset)
+nsSHistory::OnAttachGroupedSHistory(int32_t aOffset)
 {
   NS_ENSURE_TRUE(!mIsPartial && mRootDocShell, NS_ERROR_UNEXPECTED);
   NS_ENSURE_TRUE(aOffset >= 0, NS_ERROR_ILLEGAL_VALUE);

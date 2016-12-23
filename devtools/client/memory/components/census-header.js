@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const { DOM: dom, createClass } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils");
 const models = require("../models");
 
-const CensusHeader = module.exports = createClass({
+module.exports = createClass({
   displayName: "CensusHeader",
 
   propTypes: {

@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /**
@@ -61,13 +62,19 @@ add_task(function* () {
   let unsubscribe = subscribe(expectStates);
   dispatch(importSnapshotAndCensus(heapWorker, destPath));
 
-  yield waitUntilState(store, () => { return snapshotI === snapshotStates.length &&
-                                      censusI === censusStates.length; });
+  yield waitUntilState(store, () => {
+    return snapshotI === snapshotStates.length &&
+           censusI === censusStates.length;
+  });
   unsubscribe();
-  equal(snapshotI, snapshotStates.length, "importSnapshotAndCensus() produces the correct sequence of states in a snapshot");
-  equal(getState().snapshots[1].state, states.READ, "imported snapshot is in READ state");
-  equal(censusI, censusStates.length, "importSnapshotAndCensus() produces the correct sequence of states in a census");
-  equal(getState().snapshots[1].treeMap.state, treeMapState.SAVED, "imported snapshot is in READ state");
+  equal(snapshotI, snapshotStates.length,
+    "importSnapshotAndCensus() produces the correct sequence of states in a snapshot");
+  equal(getState().snapshots[1].state, states.READ,
+    "imported snapshot is in READ state");
+  equal(censusI, censusStates.length,
+    "importSnapshotAndCensus() produces the correct sequence of states in a census");
+  equal(getState().snapshots[1].treeMap.state, treeMapState.SAVED,
+    "imported snapshot is in READ state");
   ok(getState().snapshots[1].selected, "imported snapshot is selected");
 
   // Check snapshot data
@@ -82,7 +89,8 @@ add_task(function* () {
   let census1 = stripUnique(JSON.parse(JSON.stringify(snapshot1.treeMap.report)));
   let census2 = stripUnique(JSON.parse(JSON.stringify(snapshot2.treeMap.report)));
 
-  equal(JSON.stringify(census1), JSON.stringify(census2), "Imported snapshot has correct census");
+  equal(JSON.stringify(census1), JSON.stringify(census2),
+    "Imported snapshot has correct census");
 
   function stripUnique(obj) {
     let children = obj.children || [];

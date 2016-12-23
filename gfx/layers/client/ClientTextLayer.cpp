@@ -63,11 +63,6 @@ public:
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
 
-  virtual void Disconnect()
-  {
-    ClientLayer::Disconnect();
-  }
-
 protected:
   ClientLayerManager* ClientManager()
   {

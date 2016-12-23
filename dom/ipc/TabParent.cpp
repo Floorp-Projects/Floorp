@@ -3219,7 +3219,7 @@ TabParent::RecvSHistoryUpdate(const uint32_t& aCount, const uint32_t& aLocalInde
   }
 
   nsCOMPtr<nsIPartialSHistory> partialHistory;
-  frameLoader->GetPartialSessionHistory(getter_AddRefs(partialHistory));
+  frameLoader->GetPartialSHistory(getter_AddRefs(partialHistory));
   if (!partialHistory) {
     // PartialSHistory is not enabled
     return IPC_OK();

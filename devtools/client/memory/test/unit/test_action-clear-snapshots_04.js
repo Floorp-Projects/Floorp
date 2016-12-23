@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test clearSnapshots deletes several snapshots
 
 let { takeSnapshotAndCensus, clearSnapshots } = require("devtools/client/memory/actions/snapshot");
@@ -22,8 +24,7 @@ add_task(function* () {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilCensusState(store, snapshot => snapshot.treeMap,
-                             [treeMapState.SAVED, treeMapState.SAVED,
-                              treeMapState.SAVED]);
+    [treeMapState.SAVED, treeMapState.SAVED, treeMapState.SAVED]);
   ok(true, "snapshots created with a saved census");
 
   ok(true, "set first snapshot state to error");

@@ -366,6 +366,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void unboxDouble(T, FloatRegister) { MOZ_CRASH(); }
     void unboxValue(const ValueOperand&, AnyRegister) { MOZ_CRASH(); }
     void unboxNonDouble(const ValueOperand&, Register ) { MOZ_CRASH();}
+    void unboxNonDouble(const Address&, Register ) { MOZ_CRASH();}
     void notBoolean(ValueOperand) { MOZ_CRASH(); }
     Register extractObject(Address, Register) { MOZ_CRASH(); }
     Register extractObject(ValueOperand, Register) { MOZ_CRASH(); }

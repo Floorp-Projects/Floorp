@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const { combineReducers } = require("../shared/vendor/redux");
 const createStore = require("../shared/redux/create-store");
 const reducers = require("./reducers");
-const { viewState } = require("./constants");
 const flags = require("devtools/shared/flags");
 
 module.exports = function () {

@@ -62,8 +62,9 @@ public:
    * itself to make this decision; @see IDecodingTask::ShouldPreferSyncRun(). If
    * @aTask doesn't prefer it, just run @aTask asynchronously and return
    * immediately.
+   * @return true if the task was run sync, false otherwise.
    */
-  void SyncRunIfPreferred(IDecodingTask* aTask);
+  bool SyncRunIfPreferred(IDecodingTask* aTask);
 
   /**
    * Run @aTask synchronously. This does not guarantee that @aTask will complete

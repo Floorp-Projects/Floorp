@@ -329,6 +329,10 @@ CONFIG_STATUS_DEPS := \
   $(OBJDIR)/.mozconfig.json \
   $(NULL)
 
+# Include a dep file emitted by configure to track Python files that
+# may influence the result of configure.
+-include $(OBJDIR)/configure.d
+
 CONFIGURE_ENV_ARGS += \
   MAKE='$(MAKE)' \
   $(NULL)

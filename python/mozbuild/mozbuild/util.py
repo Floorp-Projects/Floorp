@@ -1262,3 +1262,86 @@ def encode(obj, encoding='utf-8'):
     if isinstance(obj, Iterable):
         return [encode(i, encoding) for i in obj]
     return obj
+
+
+def patch_main():
+    '''This is a hack to work around the fact that Windows multiprocessing needs
+    to import the original main module, and assumes that it corresponds to a file
+    ending in .py.
+
+    We do this by a sort of two-level function interposing. The first
+    level interposes forking.get_command_line() with our version defined
+    in my_get_command_line(). Our version of get_command_line will
+    replace the command string with the contents of the fork_interpose()
+    function to be used in the subprocess.
+
+    The subprocess then gets an interposed imp.find_module(), which we
+    hack up to find the main module name multiprocessing will assume, since we
+    know what this will be based on the main module in the parent. If we're not
+    looking for our main module, then the original find_module will suffice.
+
+    See also: http://bugs.python.org/issue19946
+    And: https://bugzilla.mozilla.org/show_bug.cgi?id=914563
+    '''
+    if sys.platform == 'win32':
+        import inspect
+        import os
+        from multiprocessing import forking
+        global orig_command_line
+
+        # Figure out what multiprocessing will assume our main module
+        # is called (see python/Lib/multiprocessing/forking.py).
+        main_path = getattr(sys.modules['__main__'], '__file__', None)
+        if main_path is None:
+            # If someone deleted or modified __main__, there's nothing left for
+            # us to do.
+            return
+        main_file_name = os.path.basename(main_path)
+        main_module_name, ext = os.path.splitext(main_file_name)
+        if ext == '.py':
+            # If main is a .py file, everything ought to work as expected.
+            return
+
+        def fork_interpose():
+            import imp
+            import os
+            import sys
+            orig_find_module = imp.find_module
+            def my_find_module(name, dirs):
+                if name == main_module_name:
+                    path = os.path.join(dirs[0], main_file_name)
+                    f = open(path)
+                    return (f, path, ('', 'r', imp.PY_SOURCE))
+                return orig_find_module(name, dirs)
+
+            # Don't allow writing bytecode file for the main module.
+            orig_load_module = imp.load_module
+            def my_load_module(name, file, path, description):
+                # multiprocess.forking invokes imp.load_module manually and
+                # hard-codes the name __parents_main__ as the module name.
+                if name == '__parents_main__':
+                    old_bytecode = sys.dont_write_bytecode
+                    sys.dont_write_bytecode = True
+                    try:
+                        return orig_load_module(name, file, path, description)
+                    finally:
+                        sys.dont_write_bytecode = old_bytecode
+
+                return orig_load_module(name, file, path, description)
+
+            imp.find_module = my_find_module
+            imp.load_module = my_load_module
+            from multiprocessing.forking import main; main()
+
+        def my_get_command_line():
+            fork_code, lineno = inspect.getsourcelines(fork_interpose)
+            # Remove the first line (for 'def fork_interpose():') and the three
+            # levels of indentation (12 spaces), add our relevant globals.
+            fork_string = ("main_file_name = '%s'\n" % main_file_name +
+                           "main_module_name = '%s'\n" % main_module_name +
+                           ''.join(x[12:] for x in fork_code[1:]))
+            cmdline = orig_command_line()
+            cmdline[2] = fork_string
+            return cmdline
+        orig_command_line = forking.get_command_line
+        forking.get_command_line = my_get_command_line

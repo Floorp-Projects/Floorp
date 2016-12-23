@@ -25,7 +25,7 @@ ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 
 def load_image_by_name(image_name, tag=None):
-    context_path = os.path.join(GECKO, 'testing', 'docker', image_name)
+    context_path = os.path.join(GECKO, 'taskcluster', 'docker', image_name)
     context_hash = docker.generate_context_hash(GECKO, context_path, image_name)
 
     image_index_url = INDEX_URL.format('level-3', image_name, context_hash)
