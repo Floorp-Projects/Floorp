@@ -808,6 +808,19 @@ nsBaseDragService::UpdateDragEffect()
 }
 
 NS_IMETHODIMP
+nsBaseDragService::UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY)
+{
+  // Don't change the image if this is a drag from another source or if there
+  // is a drag popup.
+  if (!mSourceNode || mDragPopup)
+    return NS_OK;
+
+  mImage = aImage;
+  mImageOffset = CSSIntPoint(aImageX, aImageY);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBaseDragService::DragEventDispatchedToChildProcess()
 {
   mDragEventDispatchedToChildProcess = true;
