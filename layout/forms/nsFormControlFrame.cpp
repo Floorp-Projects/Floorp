@@ -101,6 +101,19 @@ nsFormControlFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   NS_ASSERTION(!NS_SUBTREE_DIRTY(this),
                "frame must not be dirty");
+
+// NOTE: on Android we use appearance:none by default for checkbox/radio,
+// so the different layout for appearance:none we have on other platforms
+// doesn't work there. *shrug*
+#if !defined(MOZ_WIDGET_ANDROID)
+  // For appearance:none we use a standard CSS baseline, i.e. synthesized from
+  // our margin-box.
+  if (StyleDisplay()->mAppearance == NS_THEME_NONE) {
+    return nsAtomicContainerFrame::GetLogicalBaseline(aWritingMode);
+  }
+#endif
+
+  // This is for compatibility with Chrome, Safari and Edge (Dec 2016).
   // Treat radio buttons and checkboxes as having an intrinsic baseline
   // at the block-end of the control (use the block-end content edge rather
   // than the margin edge).
