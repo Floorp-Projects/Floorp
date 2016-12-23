@@ -550,11 +550,6 @@ private:
   bool GetFollowingCharMessage(MSG& aCharMsg);
 
   /**
-   * Whether the key event can compute virtual keycode from the scancode value.
-   */
-  bool CanComputeVirtualKeyCodeFromScanCode() const;
-
-  /**
    * Wraps MapVirtualKeyEx() with MAPVK_VSC_TO_VK.
    */
   uint8_t ComputeVirtualKeyCodeFromScanCode() const;

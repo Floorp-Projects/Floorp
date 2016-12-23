@@ -1358,34 +1358,6 @@ NativeKey::InitWithKeyChar()
         break;
       }
 
-      if (!CanComputeVirtualKeyCodeFromScanCode()) {
-        // The right control key and the right alt key are extended keys.
-        // Therefore, we never get VK_RCONTRL and VK_RMENU for the result of
-        // MapVirtualKeyEx() on WinXP or WinServer2003.
-        //
-        // If VK_SHIFT, VK_CONTROL or VK_MENU key message is caused by well
-        // known scan code, we should decide it as Right key.  Otherwise,
-        // decide it as Left key.
-        switch (mOriginalVirtualKeyCode) {
-          case VK_CONTROL:
-            mVirtualKeyCode =
-              mIsExtended && mScanCode == 0x1D ? VK_RCONTROL : VK_LCONTROL;
-            break;
-          case VK_MENU:
-            mVirtualKeyCode =
-              mIsExtended && mScanCode == 0x38 ? VK_RMENU : VK_LMENU;
-            break;
-          case VK_SHIFT:
-            // Neither left shift nor right shift is an extended key,
-            // let's use VK_LSHIFT for unknown mapping.
-            mVirtualKeyCode = VK_LSHIFT;
-            break;
-          default:
-            MOZ_CRASH("Unsupported mOriginalVirtualKeyCode");
-        }
-        break;
-      }
-
       NS_ASSERTION(!mVirtualKeyCode,
                    "mVirtualKeyCode has been computed already");
 
@@ -1442,11 +1414,6 @@ NativeKey::InitWithKeyChar()
       //       scancode, we cannot compute virtual keycode.  I.e., with such
       //       applications, we cannot generate proper KeyboardEvent.code value.
 
-      // We cannot compute the virtual key code from WM_CHAR message on WinXP
-      // if it's caused by an extended key.
-      if (!CanComputeVirtualKeyCodeFromScanCode()) {
-        break;
-      }
       mVirtualKeyCode = mOriginalVirtualKeyCode =
         ComputeVirtualKeyCodeFromScanCodeEx();
       NS_ASSERTION(mVirtualKeyCode, "Failed to compute virtual keycode");
@@ -1864,18 +1831,6 @@ NativeKey::GetKeyLocation() const
   }
 }
 
-bool
-NativeKey::CanComputeVirtualKeyCodeFromScanCode() const
-{
-  // Vista or later supports ScanCodeEx.
-  if (IsVistaOrLater()) {
-    return true;
-  }
-  // Otherwise, MapVirtualKeyEx() can compute virtual keycode only with
-  // non-extended key.
-  return !mIsExtended;
-}
-
 uint8_t
 NativeKey::ComputeVirtualKeyCodeFromScanCode() const
 {
@@ -1889,12 +1844,6 @@ NativeKey::ComputeVirtualKeyCodeFromScanCodeEx() const
   // MapVirtualKeyEx() has been improved for supporting extended keys since
   // Vista.  When we call it for mapping a scancode of an extended key and
   // a virtual keycode, we need to add 0xE000 to the scancode.
-  // On the other hand, neither WinXP nor WinServer2003 doesn't support 0xE000.
-  // Therefore, we have no way to get virtual keycode from scan code of
-  // extended keys.
-  if (NS_WARN_IF(!CanComputeVirtualKeyCodeFromScanCode())) {
-    return 0;
-  }
   return static_cast<uint8_t>(
            ::MapVirtualKeyEx(GetScanCodeWithExtendedFlag(), MAPVK_VSC_TO_VK_EX,
                              mKeyboardLayout));
@@ -1905,8 +1854,7 @@ NativeKey::ComputeScanCodeExFromVirtualKeyCode(UINT aVirtualKeyCode) const
 {
   return static_cast<uint16_t>(
            ::MapVirtualKeyEx(aVirtualKeyCode,
-                             IsVistaOrLater() ? MAPVK_VK_TO_VSC_EX :
-                                                MAPVK_VK_TO_VSC,
+                             MAPVK_VK_TO_VSC_EX,
                              mKeyboardLayout));
 }
 
@@ -4006,8 +3954,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 
   if (MOZ_LOG_TEST(sKeyboardLayoutLogger, LogLevel::Verbose)) {
     static const UINT kExtendedScanCode[] = { 0x0000, 0xE000 };
-    static const UINT kMapType =
-      IsVistaOrLater() ? MAPVK_VSC_TO_VK_EX : MAPVK_VSC_TO_VK;
+    static const UINT kMapType = MAPVK_VSC_TO_VK_EX;
     MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Verbose,
       ("Logging virtual keycode values for scancode (0x%p)...",
        mKeyboardLayout));
@@ -4018,11 +3965,6 @@ KeyboardLayout::LoadLayout(HKL aLayout)
           ::MapVirtualKeyEx(scanCode, kMapType, mKeyboardLayout);
         MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Verbose,
           ("0x%04X, %s", scanCode, kVirtualKeyName[virtualKeyCode]));
-      }
-      // XP and Server 2003 don't support 0xE0 prefix of the scancode.
-      // Therefore, we don't need to continue on them.
-      if (!IsVistaOrLater()) {
-        break;
       }
     }
   }
