@@ -42,6 +42,9 @@ const PERSIST_FILES = {
 
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
+  "resource://gre/modules/ServiceRequest.jsm");
+
 
 XPCOMUtils.defineLazyGetter(this, "_prefs", () => {
   return Services.prefs.getBranch("lightweightThemes.");
@@ -254,8 +257,7 @@ this.LightweightThemeManager = {
     if (!theme || !theme.updateURL)
       return;
 
-    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .createInstance(Ci.nsIXMLHttpRequest);
+    var req = new ServiceRequest();
 
     req.mozBackgroundRequest = true;
     req.overrideMimeType("text/plain");
