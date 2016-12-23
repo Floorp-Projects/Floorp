@@ -200,7 +200,9 @@ AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
                                           format,
                                           aParams.mCallback,
                                           aParams.mImageContainer,
-                                          drmStubId) :
+                                          drmStubId,
+                                          mProxy,
+                                          aParams.mTaskQueue) :
     MediaCodecDataDecoder::CreateVideoDecoder(config,
                                               format,
                                               aParams.mCallback,
@@ -236,7 +238,12 @@ AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
     drmStubId = mProxy->GetMediaDrmStubId();
   }
   RefPtr<MediaDataDecoder> decoder = MediaPrefs::PDMAndroidRemoteCodecEnabled() ?
-      RemoteDataDecoder::CreateAudioDecoder(config, format, aParams.mCallback, drmStubId) :
+      RemoteDataDecoder::CreateAudioDecoder(config,
+                                            format,
+                                            aParams.mCallback,
+                                            drmStubId,
+                                            mProxy,
+                                            aParams.mTaskQueue) :
       MediaCodecDataDecoder::CreateAudioDecoder(config,
                                                 format,
                                                 aParams.mCallback,
