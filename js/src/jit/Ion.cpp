@@ -31,6 +31,7 @@
 #include "jit/InstructionReordering.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonBuilder.h"
+#include "jit/IonIC.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCommon.h"
@@ -877,6 +878,8 @@ IonScript::IonScript()
     runtimeSize_(0),
     cacheIndex_(0),
     cacheEntries_(0),
+    icIndex_(0),
+    icEntries_(0),
     safepointIndexOffset_(0),
     safepointIndexEntries_(0),
     safepointsStart_(0),
@@ -907,7 +910,7 @@ IonScript::New(JSContext* cx, RecompileInfo recompileInfo,
                size_t snapshotsListSize, size_t snapshotsRVATableSize,
                size_t recoversSize, size_t bailoutEntries,
                size_t constants, size_t safepointIndices,
-               size_t osiIndices, size_t cacheEntries,
+               size_t osiIndices, size_t cacheEntries, size_t icEntries,
                size_t runtimeSize,  size_t safepointsSize,
                size_t backedgeEntries, size_t sharedStubEntries,
                OptimizationLevel optimizationLevel)
@@ -931,6 +934,7 @@ IonScript::New(JSContext* cx, RecompileInfo recompileInfo,
     size_t paddedSafepointIndicesSize = AlignBytes(safepointIndices * sizeof(SafepointIndex), DataAlignment);
     size_t paddedOsiIndicesSize = AlignBytes(osiIndices * sizeof(OsiIndex), DataAlignment);
     size_t paddedCacheEntriesSize = AlignBytes(cacheEntries * sizeof(uint32_t), DataAlignment);
+    size_t paddedICEntriesSize = AlignBytes(icEntries * sizeof(uint32_t), DataAlignment);
     size_t paddedRuntimeSize = AlignBytes(runtimeSize, DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
     size_t paddedBackedgeSize = AlignBytes(backedgeEntries * sizeof(PatchableBackedge), DataAlignment);
@@ -943,6 +947,7 @@ IonScript::New(JSContext* cx, RecompileInfo recompileInfo,
                    paddedSafepointIndicesSize +
                    paddedOsiIndicesSize +
                    paddedCacheEntriesSize +
+                   paddedICEntriesSize +
                    paddedRuntimeSize +
                    paddedSafepointSize +
                    paddedBackedgeSize +
@@ -961,6 +966,10 @@ IonScript::New(JSContext* cx, RecompileInfo recompileInfo,
     script->cacheIndex_ = offsetCursor;
     script->cacheEntries_ = cacheEntries;
     offsetCursor += paddedCacheEntriesSize;
+
+    script->icIndex_ = offsetCursor;
+    script->icEntries_ = icEntries;
+    offsetCursor += paddedICEntriesSize;
 
     script->safepointIndexOffset_ = offsetCursor;
     script->safepointIndexEntries_ = safepointIndices;
@@ -1038,6 +1047,9 @@ IonScript::trace(JSTracer* trc)
     // Trace caches so that the JSScript pointer can be updated if moved.
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).trace(trc);
+
+    for (size_t i = 0; i < numICs(); i++)
+        getICFromIndex(i).trace(trc);
 }
 
 /* static */ void
@@ -1148,6 +1160,18 @@ IonScript::copyCacheEntries(const uint32_t* caches, MacroAssembler& masm)
     // final code address now.
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).updateBaseAddress(method_, masm);
+}
+
+void
+IonScript::copyICEntries(const uint32_t* icEntries, MacroAssembler& masm)
+{
+    memcpy(icIndex(), icEntries, numICs() * sizeof(uint32_t));
+
+    // Jumps in the caches reflect the offset of those jumps in the compiled
+    // code, not the absolute positions of the jumps. Update according to the
+    // final code address now.
+    for (size_t i = 0; i < numICs(); i++)
+        getICFromIndex(i).updateBaseAddress(method_, masm);
 }
 
 const SafepointIndex*
@@ -1338,6 +1362,13 @@ IonScript::purgeCaches()
     AutoWritableJitCode awjc(method());
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).reset(DontReprotect);
+}
+
+void
+IonScript::purgeICs(Zone* zone)
+{
+    for (size_t i = 0; i < numICs(); i++)
+        getICFromIndex(i).reset(zone);
 }
 
 void
@@ -3095,6 +3126,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         // prevent lastJump_ from appearing to be a bogus pointer, just
         // in case anyone tries to read it.
         ionScript->purgeCaches();
+        ionScript->purgeICs(script->zone());
         ionScript->purgeOptimizedStubs(script->zone());
 
         // Clean up any pointers from elsewhere in the runtime to this IonScript

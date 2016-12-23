@@ -383,7 +383,8 @@ IonCache::updateBaseAddress(JitCode* code, MacroAssembler& masm)
     rejoinLabel_.repoint(code, &masm);
 }
 
-void IonCache::trace(JSTracer* trc)
+void
+IonCache::trace(JSTracer* trc)
 {
     if (script_)
         TraceManuallyBarrieredEdge(trc, &script_, "IonCache::script_");
