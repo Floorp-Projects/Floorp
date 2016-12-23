@@ -42,7 +42,6 @@ class OutOfLineUnboxFloatingPoint;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
 class OutOfLineUpdateCache;
-class OutOfLineICFallback;
 class OutOfLineCallPostWriteBarrier;
 class OutOfLineCallPostWriteElementBarrier;
 class OutOfLineIsCallable;
@@ -403,7 +402,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
 
     // Inline caches visitors.
     void visitOutOfLineCache(OutOfLineUpdateCache* ool);
-    void visitOutOfLineICFallback(OutOfLineICFallback* ool);
 
     void visitGetPropertyCacheV(LGetPropertyCacheV* ins);
     void visitGetPropertyCacheT(LGetPropertyCacheT* ins);
@@ -450,7 +448,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
   private:
     void addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                              const ConstantOrRegister& id, TypedOrValueRegister output,
-                             Register maybeTemp, bool monitoredResult, bool allowDoubleResult,
+                             bool monitoredResult, bool allowDoubleResult,
                              jsbytecode* profilerLeavePc);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                              Register temp, Register tempUnbox, FloatRegister tempDouble,

@@ -169,7 +169,6 @@ class SafepointWriter;
 class SafepointIndex;
 class OsiIndex;
 class IonCache;
-class IonIC;
 struct PatchableBackedgeInfo;
 struct CacheLocation;
 
@@ -217,16 +216,10 @@ struct IonScript
     uint32_t runtimeSize_;
 
     // State for polymorphic caches in the compiled code. All caches are stored
-    // in the runtimeData buffer and indexed by the cacheIndex which gives a
+    // in the runtimeData buffer and indexed by the cacheIndex which give a
     // relative offset in the runtimeData array.
     uint32_t cacheIndex_;
     uint32_t cacheEntries_;
-
-    // State for polymorphic caches in the compiled code. All caches are stored
-    // in the runtimeData buffer and indexed by the icIndex which gives a
-    // relative offset in the runtimeData array.
-    uint32_t icIndex_;
-    uint32_t icEntries_;
 
     // Map code displacement to safepoint / OSI-patch-delta.
     uint32_t safepointIndexOffset_;
@@ -325,9 +318,6 @@ struct IonScript
     uint32_t* cacheIndex() {
         return (uint32_t*) &bottomBuffer()[cacheIndex_];
     }
-    uint32_t* icIndex() {
-        return (uint32_t*) &bottomBuffer()[icIndex_];
-    }
     uint8_t* runtimeData() {
         return  &bottomBuffer()[runtimeData_];
     }
@@ -353,7 +343,7 @@ struct IonScript
                           size_t snapshotsListSize, size_t snapshotsRVATableSize,
                           size_t recoversSize, size_t bailoutEntries,
                           size_t constants, size_t safepointIndexEntries,
-                          size_t osiIndexEntries, size_t cacheEntries, size_t icEntries,
+                          size_t osiIndexEntries, size_t cacheEntries,
                           size_t runtimeSize, size_t safepointsSize,
                           size_t backedgeEntries, size_t sharedStubEntries,
                           OptimizationLevel optimizationLevel);
@@ -513,18 +503,6 @@ struct IonScript
     size_t numCaches() const {
         return cacheEntries_;
     }
-    IonIC& getICFromIndex(uint32_t index) {
-        MOZ_ASSERT(index < icEntries_);
-        uint32_t offset = icIndex()[index];
-        return getIC(offset);
-    }
-    inline IonIC& getIC(uint32_t offset) {
-        MOZ_ASSERT(offset < runtimeSize_);
-        return *(IonIC*) &runtimeData()[offset];
-    }
-    size_t numICs() const {
-        return icEntries_;
-    }
     IonICEntry* sharedStubList() {
         return (IonICEntry*) &bottomBuffer()[sharedStubList_];
     }
@@ -540,7 +518,6 @@ struct IonScript
     }
     void toggleBarriers(bool enabled, ReprotectCode reprotect = Reprotect);
     void purgeCaches();
-    void purgeICs(Zone* zone);
     void unlinkFromRuntime(FreeOp* fop);
     void copySnapshots(const SnapshotWriter* writer);
     void copyRecovers(const RecoverWriter* writer);
@@ -550,7 +527,6 @@ struct IonScript
     void copyOsiIndices(const OsiIndex* firstOsiIndex, MacroAssembler& masm);
     void copyRuntimeData(const uint8_t* data);
     void copyCacheEntries(const uint32_t* caches, MacroAssembler& masm);
-    void copyICEntries(const uint32_t* caches, MacroAssembler& masm);
     void copySafepoints(const SafepointWriter* writer);
     void copyPatchableBackedges(JSContext* cx, JitCode* code,
                                 PatchableBackedgeInfo* backedges,
