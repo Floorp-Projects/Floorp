@@ -19,14 +19,14 @@
 namespace mozilla {
 
 RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
-  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
     return nullptr;
   }
 
   uint8_t random_name[16];
 
-  SECStatus rv = PK11_GenerateRandomOnSlot(slot, random_name,
+  SECStatus rv = PK11_GenerateRandomOnSlot(slot.get(), random_name,
                                            sizeof(random_name));
   if (rv != SECSuccess)
     return nullptr;
@@ -39,7 +39,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   }
 
   std::string subject_name_string = "CN=" + name;
-  ScopedCERTName subject_name(CERT_AsciiToName(subject_name_string.c_str()));
+  UniqueCERTName subject_name(CERT_AsciiToName(subject_name_string.c_str()));
   if (!subject_name) {
     return nullptr;
   }
@@ -55,26 +55,24 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   memcpy(ecdsaParams.data + 2, oidData->oid.data, oidData->oid.len);
   ecdsaParams.len = oidData->oid.len + 2;
 
-  ScopedSECKEYPrivateKey private_key;
-  ScopedSECKEYPublicKey public_key;
   SECKEYPublicKey *pubkey;
-
-  private_key =
-      PK11_GenerateKeyPair(slot,
+  UniqueSECKEYPrivateKey private_key(
+      PK11_GenerateKeyPair(slot.get(),
                            CKM_EC_KEY_PAIR_GEN, &ecdsaParams, &pubkey,
-                           PR_FALSE, PR_TRUE, nullptr);
+                           PR_FALSE, PR_TRUE, nullptr));
   if (private_key == nullptr)
     return nullptr;
-  public_key = pubkey;
+  UniqueSECKEYPublicKey public_key(pubkey);
+  pubkey = nullptr;
 
-  ScopedCERTSubjectPublicKeyInfo spki(
-      SECKEY_CreateSubjectPublicKeyInfo(pubkey));
+  UniqueCERTSubjectPublicKeyInfo spki(
+      SECKEY_CreateSubjectPublicKeyInfo(public_key.get()));
   if (!spki) {
     return nullptr;
   }
 
-  ScopedCERTCertificateRequest certreq(
-      CERT_CreateCertificateRequest(subject_name, spki, nullptr));
+  UniqueCERTCertificateRequest certreq(
+      CERT_CreateCertificateRequest(subject_name.get(), spki.get(), nullptr));
   if (!certreq) {
     return nullptr;
   }
@@ -94,22 +92,23 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   PRTime notBefore = now - oneDay;
   PRTime notAfter = now + (PRTime(30) * oneDay);
 
-  ScopedCERTValidity validity(CERT_CreateValidity(notBefore, notAfter));
+  UniqueCERTValidity validity(CERT_CreateValidity(notBefore, notAfter));
   if (!validity) {
     return nullptr;
   }
 
   unsigned long serial;
   // Note: This serial in principle could collide, but it's unlikely
-  rv = PK11_GenerateRandomOnSlot(slot,
+  rv = PK11_GenerateRandomOnSlot(slot.get(),
                                  reinterpret_cast<unsigned char *>(&serial),
                                  sizeof(serial));
   if (rv != SECSuccess) {
     return nullptr;
   }
 
-  ScopedCERTCertificate certificate(
-      CERT_CreateCertificate(serial, subject_name, validity, certreq));
+  UniqueCERTCertificate certificate(
+      CERT_CreateCertificate(serial, subject_name.get(), validity.get(),
+                             certreq.get()));
   if (!certificate) {
     return nullptr;
   }
@@ -129,7 +128,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   innerDER.len = 0;
   innerDER.data = nullptr;
 
-  if (!SEC_ASN1EncodeItem(arena, &innerDER, certificate,
+  if (!SEC_ASN1EncodeItem(arena, &innerDER, certificate.get(),
                           SEC_ASN1_GET(CERT_CertificateTemplate))) {
     return nullptr;
   }
@@ -140,15 +139,16 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   }
 
   rv = SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len,
-                       private_key,
+                       private_key.get(),
                        SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE);
   if (rv != SECSuccess) {
     return nullptr;
   }
   certificate->derCert = *signedCert;
 
-  RefPtr<DtlsIdentity> identity =
-      new DtlsIdentity(private_key.forget(), certificate.forget(), ssl_kea_ecdh);
+  RefPtr<DtlsIdentity> identity = new DtlsIdentity(Move(private_key),
+                                                   Move(certificate),
+                                                   ssl_kea_ecdh);
   return identity.forget();
 }
 

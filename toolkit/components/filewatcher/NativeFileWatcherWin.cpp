@@ -258,7 +258,7 @@ private:
 class NativeFileWatcherIOTask : public Runnable
 {
 public:
-  NativeFileWatcherIOTask(HANDLE aIOCompletionPort)
+  explicit NativeFileWatcherIOTask(HANDLE aIOCompletionPort)
     : mIOCompletionPort(aIOCompletionPort)
     , mShuttingDown(false)
   {

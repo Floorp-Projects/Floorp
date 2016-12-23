@@ -79,27 +79,27 @@ function LoadCerts()
   caTreeView = Components.classes[nsCertTree]
                     .createInstance(nsICertTree);
   caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
-  document.getElementById('ca-tree').view = caTreeView;
+  document.getElementById("ca-tree").view = caTreeView;
 
   serverTreeView = Components.classes[nsCertTree]
                         .createInstance(nsICertTree);
   serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
-  document.getElementById('server-tree').view = serverTreeView;
+  document.getElementById("server-tree").view = serverTreeView;
 
   emailTreeView = Components.classes[nsCertTree]
                        .createInstance(nsICertTree);
   emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
-  document.getElementById('email-tree').view = emailTreeView;
+  document.getElementById("email-tree").view = emailTreeView;
 
   userTreeView = Components.classes[nsCertTree]
                       .createInstance(nsICertTree);
   userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
-  document.getElementById('user-tree').view = userTreeView;
+  document.getElementById("user-tree").view = userTreeView;
 
   orphanTreeView = Components.classes[nsCertTree]
                       .createInstance(nsICertTree);
   orphanTreeView.loadCertsFromCache(certcache, nsIX509Cert.UNKNOWN_CERT);
-  document.getElementById('orphan-tree').view = orphanTreeView;
+  document.getElementById("orphan-tree").view = orphanTreeView;
 
   enableBackupAllButton();
 }
@@ -372,7 +372,7 @@ function restoreCerts()
     // If this is an X509 user certificate, import it as one.
 
     var isX509FileType = false;
-    var fileTypesList = gCertFileTypes.slice(1).split('; *');
+    var fileTypesList = gCertFileTypes.slice(1).split("; *");
     for (var type of fileTypesList) {
       if (fp.file.path.endsWith(type)) {
         isX509FileType = true;
@@ -532,8 +532,8 @@ function addEmailCert()
 
 function addException()
 {
-  window.openDialog('chrome://pippki/content/exceptionDialog.xul', "",
-                    'chrome,centerscreen,modal');
+  window.openDialog("chrome://pippki/content/exceptionDialog.xul", "",
+                    "chrome,centerscreen,modal");
   var certcache = certdb.getCerts();
   serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
   serverTreeView.selection.clearSelection();

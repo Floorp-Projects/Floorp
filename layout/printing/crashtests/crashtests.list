@@ -1,4 +1,4 @@
 load 509839-1.html
 load 509839-2.html
-asserts-if(browserIsRemote,4) load 576878.xhtml
+asserts-if(browserIsRemote,4) asserts-if(stylo,2) load 576878.xhtml # bug 1324645
 load 793844.html

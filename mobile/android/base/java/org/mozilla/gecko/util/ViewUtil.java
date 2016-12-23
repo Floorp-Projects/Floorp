@@ -5,7 +5,10 @@
 package org.mozilla.gecko.util;
 
 import android.content.res.TypedArray;
+import android.os.Build;
+import android.support.v4.view.MarginLayoutParamsCompat;
 import android.view.View;
+import android.view.ViewGroup;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
@@ -29,5 +32,23 @@ public class ViewUtil {
         // This call is deprecated, but the replacement setBackground(Drawable) isn't available
         // until API 16.
         view.setBackgroundDrawable(backgroundDrawableArray.getDrawable(0));
+    }
+
+    /**
+     * Android framework have a bug margin start/end for RTL between 19~22. We can only use MarginLayoutParamsCompat before 17 and after 23.
+     * @param layoutParams
+     * @param marginStart
+     * @param isLayoutRtl
+     */
+    public static void setMarginStart(ViewGroup.MarginLayoutParams layoutParams, int marginStart, boolean isLayoutRtl) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            if (isLayoutRtl) {
+                layoutParams.rightMargin = marginStart;
+            } else {
+                layoutParams.leftMargin = marginStart;
+            }
+        } else {
+            MarginLayoutParamsCompat.setMarginStart(layoutParams, marginStart);
+        }
     }
 }

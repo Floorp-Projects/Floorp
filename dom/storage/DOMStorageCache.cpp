@@ -133,7 +133,7 @@ DOMStorageCache::Init(DOMStorageManager* aManager,
 
   mInitialized = true;
   mPrincipal = aPrincipal;
-  BasePrincipal::Cast(aPrincipal)->OriginAttributesRef().CreateSuffix(mOriginSuffix);
+  aPrincipal->OriginAttributesRef().CreateSuffix(mOriginSuffix);
   mPersistent = aPersistent;
   if (aQuotaOriginScope.IsEmpty()) {
     mQuotaOriginScope = Origin();

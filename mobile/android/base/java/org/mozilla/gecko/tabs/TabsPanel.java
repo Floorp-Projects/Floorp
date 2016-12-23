@@ -7,6 +7,7 @@ package org.mozilla.gecko.tabs;
 
 import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -42,6 +43,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+
+import com.keepsafe.switchboard.SwitchBoard;
+
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
 public class TabsPanel extends LinearLayout
@@ -85,7 +89,8 @@ public class TabsPanel extends LinearLayout
             return new AutoFitTabsGridLayout(context, attrs);
         } else {
             // Phone in portrait mode.
-            if (GeckoSharedPrefs.forApp(context).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS, false)) {
+            if (GeckoSharedPrefs.forApp(context).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS,
+                    SwitchBoard.isInExperiment(context, Experiments.COMPACT_TABS))) {
                 return new CompactTabsGridLayout(context, attrs);
             } else {
                 return new TabsListLayout(context, attrs);

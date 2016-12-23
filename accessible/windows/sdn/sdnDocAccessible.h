@@ -18,7 +18,7 @@ namespace a11y {
 class sdnDocAccessible final : public ISimpleDOMDocument
 {
 public:
-  sdnDocAccessible(DocAccessibleWrap* aAccessible) : mAccessible(aAccessible) {};
+  explicit sdnDocAccessible(DocAccessibleWrap* aAccessible) : mAccessible(aAccessible) {};
   ~sdnDocAccessible() { };
 
   DECL_IUNKNOWN

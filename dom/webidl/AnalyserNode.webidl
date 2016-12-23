@@ -18,7 +18,7 @@ dictionary AnalyserOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional AnalyserOptions options)]
+ Constructor(BaseAudioContext context, optional AnalyserOptions options)]
 interface AnalyserNode : AudioNode {
 
     // Real-time frequency-domain data

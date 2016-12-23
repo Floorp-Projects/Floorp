@@ -695,12 +695,12 @@ protected:
   virtual mozilla::ipc::IPCResult RecvMenuKeyboardListenerInstalled(
     const bool& aInstalled) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyAttachGroupedSessionHistory(const uint32_t& aOffset) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyAttachGroupedSHistory(const uint32_t& aOffset) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyPartialSessionHistoryActive(const uint32_t& aGlobalLength,
-                                                                        const uint32_t& aTargetLocalIndex) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyPartialSHistoryActive(const uint32_t& aGlobalLength,
+                                                                  const uint32_t& aTargetLocalIndex) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyPartialSessionHistoryDeactive() override;
+  virtual mozilla::ipc::IPCResult RecvNotifyPartialSHistoryDeactive() override;
 
   virtual mozilla::ipc::IPCResult RecvSetFreshProcess() override;
 

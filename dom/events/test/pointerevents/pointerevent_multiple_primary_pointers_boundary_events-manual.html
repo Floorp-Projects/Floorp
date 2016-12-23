@@ -7,9 +7,8 @@
     <meta name="assert" content="When more than one primary pointers are active, each will have an independent sequence of pointer boundary events but the compatibilty mouse boundary events have their own sequence."/>
     <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
     <script src="/resources/testharness.js"></script>
-    <!--script src="/resources/testharnessreport.js"></script-->
+    <script src="/resources/testharnessreport.js"></script>
     <script type="text/javascript" src="pointerevent_support.js"></script>
-    <script type="text/javascript" src="mochitest_support_internal.js"></script>
     <script type="text/javascript">
       var test_pointerEvent = async_test("Multi-pointer boundary compat events");
       add_completion_callback(end_of_test);
@@ -118,7 +117,6 @@
   </head>
   <body onload="run()">
     <h1>Pointer Event: Boundary compatibility events for multiple primary pointers</h1>
-	<!--
     <h4>
       When more than one primary pointers are active, each will have an independent sequence of pointer boundary events but the compatibilty mouse boundary events have their own sequence.
     </h4>
@@ -129,7 +127,6 @@
       <li>Move the mouse into Target0 (if not there already) and move inside it.</li>
       <li>Click Done (without passing over Target1).</li>
     </ol>
-	-->
     <div id="done">
       Done
     </div>

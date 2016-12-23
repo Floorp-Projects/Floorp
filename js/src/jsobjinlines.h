@@ -574,48 +574,31 @@ IsNativeFunction(const js::Value& v, JSNative native)
     return IsFunctionObject(v, &fun) && fun->maybeNative() == native;
 }
 
-/*
- * When we have an object of a builtin class, we don't quite know what its
- * valueOf/toString methods are, since these methods may have been overwritten
- * or shadowed. However, we can still do better than the general case by
- * hard-coding the necessary properties for us to find the native we expect.
- *
- * TODO: a per-thread shape-based cache would be faster and simpler.
- */
-static MOZ_ALWAYS_INLINE bool
-ClassMethodIsNative(JSContext* cx, NativeObject* obj, const Class* clasp, jsid methodid, JSNative native)
-{
-    MOZ_ASSERT(obj->getClass() == clasp);
 
+// Return whether looking up a method on 'obj' definitely resolves to the
+// original specified native function. The method may conservatively return
+// 'false' in the case of proxies or other non-native objects.
+static MOZ_ALWAYS_INLINE bool
+HasNativeMethodPure(JSObject* obj, PropertyName* name, JSNative native, JSContext* cx)
+{
     Value v;
-    if (!HasDataProperty(cx, obj, methodid, &v)) {
-        JSObject* proto = obj->staticPrototype();
-        if (!proto || proto->getClass() != clasp || !HasDataProperty(cx, &proto->as<NativeObject>(), methodid, &v))
-            return false;
-    }
+    if (!GetPropertyPure(cx, obj, NameToId(name), &v))
+        return false;
 
     return IsNativeFunction(v, native);
 }
 
-// Return whether looking up 'valueOf' on 'obj' definitely resolves to the
-// original Object.prototype.valueOf. The method may conservatively return
-// 'false' in the case of proxies or other non-native objects.
+// Return whether 'obj' definitely has no @@toPrimitive method.
 static MOZ_ALWAYS_INLINE bool
-HasObjectValueOf(JSObject* obj, JSContext* cx)
+HasNoToPrimitiveMethodPure(JSObject* obj, JSContext* cx)
 {
-    if (obj->is<ProxyObject>() || !obj->isNative())
+    jsid id = SYMBOL_TO_JSID(cx->wellKnownSymbols().toPrimitive);
+    JSObject* pobj;
+    Shape* shape;
+    if (!LookupPropertyPure(cx, obj, id, &pobj, &shape))
         return false;
 
-    jsid valueOf = NameToId(cx->names().valueOf);
-
-    Value v;
-    while (!HasDataProperty(cx, &obj->as<NativeObject>(), valueOf, &v)) {
-        obj = obj->staticPrototype();
-        if (!obj || obj->is<ProxyObject>() || !obj->isNative())
-            return false;
-    }
-
-    return IsNativeFunction(v, obj_valueOf);
+    return !shape;
 }
 
 /* ES6 draft rev 28 (2014 Oct 14) 7.1.14 */

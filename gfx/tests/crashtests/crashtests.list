@@ -31,7 +31,7 @@ load 385423-1.html
 load 385423-2.html
 load 385719-1.html
 load 389326-1.html
-load 390476.html
+asserts-if(stylo,1) load 390476.html # bug 1324700
 load 393746-1.xhtml
 load 393749-1.html
 load 393822-1.html
@@ -103,18 +103,18 @@ load 693143-1.html
 load 696936-1.html
 load 699563-1.html
 load 710149-1.html
-load 766452-1.html
+asserts-if(stylo,1) load 766452-1.html # bug 1324700
 load 766452-2.html
 load 768079-1.html
-load 783041-1.html
+asserts-if(stylo,5) load 783041-1.html # bug 1324661
 load 783041-2.html
-load 783041-3.html
+asserts-if(stylo,1) load 783041-3.html # bug 1324671
 load 783041-4.html
 load 798853.html # bug 868792
 load 805760-1.html
 skip-if(Android) load 815489.html # bug 1216304
 load 836225-1.html
-load 839745-1.html
+asserts-if(stylo,2) load 839745-1.html # bug 1324669
 load 856784-1.html
 load 893572-1.html
 load 893572-2.html
@@ -122,13 +122,13 @@ load 893572-3.html
 load 893572-4.html
 pref(layers.force-active,true) load 914457-1.html
 load 944579.svg
-load 944579.html
-pref(security.fileuri.strict_origin_policy,false) load 950000.html
+asserts-if(stylo,2) load 944579.html # bug 1324669
+asserts-if(stylo,1) pref(security.fileuri.strict_origin_policy,false) load 950000.html # bug 1324700
 load 1034403-1.html
 load 1205900.html
 load 1134549-1.svg
 load balinese-letter-spacing.html
 load 1216832-1.html
 load 1225125-1.html
-load 1308394.html
+asserts-if(stylo,2) load 1308394.html # bug 1324669
 load 1317403-1.html

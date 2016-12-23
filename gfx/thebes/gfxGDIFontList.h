@@ -283,7 +283,7 @@ protected:
 class GDIFontFamily : public gfxFontFamily
 {
 public:
-    GDIFontFamily(nsAString &aName) :
+    explicit GDIFontFamily(nsAString &aName) :
         gfxFontFamily(aName) {}
 
     virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);

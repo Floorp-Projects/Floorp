@@ -1120,8 +1120,8 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
   MOZ_ASSERT(aConn);
   MOZ_ASSERT(aMaxResults > 0);
 
-  if (!aParams.ignoreMethod() && !aRequest.method().LowerCaseEqualsLiteral("get")
-                              && !aRequest.method().LowerCaseEqualsLiteral("head"))
+  if (!aParams.ignoreMethod() &&
+      !aRequest.method().LowerCaseEqualsLiteral("get"))
   {
     return NS_OK;
   }

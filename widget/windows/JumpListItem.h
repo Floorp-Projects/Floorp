@@ -33,7 +33,7 @@ public:
    mItemType(nsIJumpListItem::JUMPLIST_ITEM_EMPTY)
   {}
 
-  JumpListItemBase(int32_t type) :
+  explicit JumpListItemBase(int32_t type) :
    mItemType(type)
   {}
 

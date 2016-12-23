@@ -14,39 +14,45 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  const STSPATH = "/tests/security/manager/ssl/tests/mochitest/stricttransportsecurity";
+  const STSPATH =
+    "tests/security/manager/ssl/tests/mochitest/stricttransportsecurity";
 
   // initialized manually here
-  var testsleft = {'plain': 4, 'subdom': 4};
+  var testsleft = {plain: 4, subdom: 4};
   var roundsLeft = 2;
 
   var testframes = {
-    'samedom':
-      {'url':     "http://example.com" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'SECURE', 'subdom': 'SECURE'}},
-    'subdom':
-      {'url':     "http://test1.example.com" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'INSECURE', 'subdom': 'SECURE'}},
-    'otherdom':
-      {'url':     "http://example.org" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'INSECURE', 'subdom': 'INSECURE'}},
-    'alreadysecure':
-      {'url':     "https://test2.example.com" + STSPATH + "/verify.sjs",
-        'expected': {'plain': 'SECURE', 'subdom': 'SECURE'}},
+    samedom: {
+      url: `http://example.com/${STSPATH}/verify.sjs`,
+      expected: {plain: "SECURE", subdom: "SECURE"}
+    },
+    subdom: {
+      url: `http://test1.example.com/${STSPATH}/verify.sjs`,
+      expected: {plain: "INSECURE", subdom: "SECURE"}
+    },
+    otherdom: {
+      url: `http://example.org/${STSPATH}/verify.sjs`,
+      expected: {plain: "INSECURE", subdom: "INSECURE"}
+    },
+    alreadysecure: {
+      url: `https://test2.example.com/${STSPATH}/verify.sjs`,
+      expected: {plain: "SECURE", subdom: "SECURE"}
+    },
   };
 
   function startRound(round) {
     let frame = document.createElement("iframe");
-    frame.setAttribute('id', 'ifr_bootstrap');
-    frame.setAttribute('src', "https://example.com" + STSPATH + "/" + round + "_bootstrap.html");
+    frame.setAttribute("id", "ifr_bootstrap");
+    frame.setAttribute("src",
+                       `https://example.com/${STSPATH}/${round}_bootstrap.html`);
     document.body.appendChild(frame);
   }
 
   function endRound(round) {
     // remove all the iframes in the document
-    document.body.removeChild(document.getElementById('ifr_bootstrap'));
+    document.body.removeChild(document.getElementById("ifr_bootstrap"));
     for (let test in testframes) {
-      document.body.removeChild(document.getElementById('ifr_' + test));
+      document.body.removeChild(document.getElementById("ifr_" + test));
     }
 
     // clean up the STS state
@@ -56,8 +62,8 @@
   function loadVerifyFrames(round) {
     for (let test in testframes) {
       let frame = document.createElement("iframe");
-      frame.setAttribute('id', 'ifr_' + test);
-      frame.setAttribute('src', testframes[test].url + '?id=' + test);
+      frame.setAttribute("id", "ifr_" + test);
+      frame.setAttribute("src", testframes[test].url + "?id=" + test);
       document.body.appendChild(frame);
     }
   }

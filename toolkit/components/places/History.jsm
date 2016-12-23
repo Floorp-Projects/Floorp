@@ -328,6 +328,9 @@ this.History = Object.freeze({
    *                been added since this date (inclusive).
    *          - endDate: (Date) Remove visits that have
    *                been added before this date (inclusive).
+   *          - limit: (Number) Limit the number of visits
+   *                we remove to this number
+   *          - url: (URL) Only remove visits to this URL
    *      If both `beginDate` and `endDate` are specified,
    *      visits between `beginDate` (inclusive) and `end`
    *      (inclusive) are removed.
@@ -352,6 +355,8 @@ this.History = Object.freeze({
 
     let hasBeginDate = "beginDate" in filter;
     let hasEndDate = "endDate" in filter;
+    let hasURL = "url" in filter;
+    let hasLimit = "limit" in filter;
     if (hasBeginDate) {
       ensureDate(filter.beginDate);
     }
@@ -361,8 +366,20 @@ this.History = Object.freeze({
     if (hasBeginDate && hasEndDate && filter.beginDate > filter.endDate) {
       throw new TypeError("`beginDate` should be at least as old as `endDate`");
     }
-    if (!hasBeginDate && !hasEndDate) {
+    if (!hasBeginDate && !hasEndDate && !hasURL && !hasLimit) {
       throw new TypeError("Expected a non-empty filter");
+    }
+
+    if (hasURL && !(filter.url instanceof URL) && typeof filter.url != "string" &&
+        !(filter.url instanceof Ci.nsIURI)) {
+      throw new TypeError("Expected a valid URL for `url`");
+    }
+
+    if (hasLimit &&
+        (typeof filter.limit != "number" ||
+         filter.limit <= 0 ||
+         !Number.isInteger(filter.limit))) {
+      throw new TypeError("Expected a non-zero positive integer as a limit");
     }
 
     if (onResult && typeof onResult != "function") {
@@ -780,27 +797,43 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
   // 1. Determine visits that took place during the interval.  Note
   // that the database uses microseconds, while JS uses milliseconds,
   // so we need to *1000 one way and /1000 the other way.
-  let dates = {
-    conditions: [],
-    args: {},
-  };
+  let conditions = [];
+  let args = {};
   if ("beginDate" in filter) {
-    dates.conditions.push("visit_date >= :begin * 1000");
-    dates.args.begin = Number(filter.beginDate);
+    conditions.push("v.visit_date >= :begin * 1000");
+    args.begin = Number(filter.beginDate);
   }
   if ("endDate" in filter) {
-    dates.conditions.push("visit_date <= :end * 1000");
-    dates.args.end = Number(filter.endDate);
+    conditions.push("v.visit_date <= :end * 1000");
+    args.end = Number(filter.endDate);
   }
+  if ("limit" in filter) {
+    args.limit = Number(filter.limit);
+  }
+
+  let optionalJoin = "";
+  if ("url" in filter) {
+    let url = filter.url;
+    if (url instanceof Ci.nsIURI) {
+      url = filter.url.spec;
+    } else {
+      url = new URL(url).href;
+    }
+    optionalJoin = `JOIN moz_places h ON h.id = v.place_id`;
+    conditions.push("h.url_hash = hash(:url)", "h.url = :url");
+    args.url = url;
+  }
+
 
   let visitsToRemove = [];
   let pagesToInspect = new Set();
   let onResultData = onResult ? [] : null;
 
   yield db.executeCached(
-    `SELECT id, place_id, visit_date / 1000 AS date, visit_type FROM moz_historyvisits
-     WHERE ${ dates.conditions.join(" AND ") }`,
-     dates.args,
+     `SELECT v.id, place_id, visit_date / 1000 AS date, visit_type FROM moz_historyvisits v
+             ${optionalJoin}
+             WHERE ${ conditions.join(" AND ") }${ args.limit ? " LIMIT :limit" : "" }`,
+     args,
      row => {
        let id = row.getResultByName("id");
        let place_id = row.getResultByName("place_id");

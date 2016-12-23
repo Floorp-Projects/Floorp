@@ -1217,7 +1217,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
       return;
     }
 
-    oa = BasePrincipal::Cast(principal)->OriginAttributesRef();
+    oa = principal->OriginAttributesRef();
 
 #ifdef DEBUG
     if (!nsContentUtils::IsSystemPrincipal(principal)) {

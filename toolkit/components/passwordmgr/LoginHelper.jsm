@@ -551,12 +551,15 @@ this.LoginHelper = {
    * Add the login to the password manager if a similar one doesn't already exist. Merge it
    * otherwise with the similar existing ones.
    * @param {Object} loginData - the data about the login that needs to be added.
+   * @returns {nsILoginInfo} the newly added login, or null if no login was added.
+   *                          Note that we will also return null if an existing login
+   *                          was modified.
    */
   maybeImportLogin(loginData) {
     // create a new login
     let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
     login.init(loginData.hostname,
-               loginData.submitURL || (typeof(loginData.httpRealm) == "string" ? null : ""),
+               loginData.formSubmitURL || (typeof(loginData.httpRealm) == "string" ? null : ""),
                typeof(loginData.httpRealm) == "string" ? loginData.httpRealm : null,
                loginData.username,
                loginData.password,
@@ -573,25 +576,22 @@ this.LoginHelper = {
     let existingLogins = Services.logins.findLogins({}, login.hostname,
                                                     login.formSubmitURL,
                                                     login.httpRealm);
-    // Add the login only if it doesn't already exist
-    // if the login is not already available, it's going to be added or merged with other
-    // logins
-    if (existingLogins.some(l => login.matches(l, true))) {
-      return;
+    // Check for an existing login that matches *including* the password.
+    // If such a login exists, we do not need to add a new login.
+    if (existingLogins.some(l => login.matches(l, false /* ignorePassword */))) {
+      return null;
     }
-    // the login is just an update for an old one or the login is older than an existing one
+    // Now check for a login with the same username, where it may be that we have an
+    // updated password.
     let foundMatchingLogin = false;
     for (let existingLogin of existingLogins) {
       if (login.username == existingLogin.username) {
-        // Bug 1187190: Password changes should be propagated depending on timestamps.
-        // this an old login or a just an update, so make sure not to add it
         foundMatchingLogin = true;
+        existingLogin.QueryInterface(Ci.nsILoginMetaInfo);
         if (login.password != existingLogin.password &
            login.timePasswordChanged > existingLogin.timePasswordChanged) {
           // if a login with the same username and different password already exists and it's older
-          // than the current one, that login needs to be updated using the current one details
-
-          // the existing login password and timestamps should be updated
+          // than the current one, update its password and timestamp.
           let propBag = Cc["@mozilla.org/hash-property-bag;1"].
                         createInstance(Ci.nsIWritablePropertyBag);
           propBag.setProperty("password", login.password);
@@ -602,9 +602,9 @@ this.LoginHelper = {
     }
     // if the new login is an update or is older than an exiting login, don't add it.
     if (foundMatchingLogin) {
-      return;
+      return null;
     }
-    Services.logins.addLogin(login);
+    return Services.logins.addLogin(login);
   },
 
   /**

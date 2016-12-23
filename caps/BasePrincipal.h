@@ -7,8 +7,6 @@
 #ifndef mozilla_BasePrincipal_h
 #define mozilla_BasePrincipal_h
 
-#include "nsIPrincipal.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 
 #include "mozilla/Attributes.h"
@@ -300,7 +298,7 @@ public:
   CreateCodebasePrincipal(nsIURI* aURI, const PrincipalOriginAttributes& aAttrs);
   static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(const nsACString& aOrigin);
 
-  const PrincipalOriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
+  const PrincipalOriginAttributes& OriginAttributesRef() override { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   uint32_t PrivateBrowsingId() const { return mOriginAttributes.mPrivateBrowsingId; }

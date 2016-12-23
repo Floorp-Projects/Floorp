@@ -10,10 +10,9 @@ http://www.w3.org/wiki/PointerEvents/TestAssertions
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
-        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script>
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerId of an active pointer is the same across iframes");
@@ -67,12 +66,10 @@ http://www.w3.org/wiki/PointerEvents/TestAssertions
     <body onload="run()">
         <h1>Pointer Events pointerdown tests</h1>
         Complete the following actions:
-        <!--
         <ol>
             <li>Start with your pointing device outside of black box, then move it into black box. If using touch just press in black box and don't release.
             <li>Move your pointing device into purple box (without leaving the digitizer range if you are using hover supported pen or without releasing touch if using touch). Then move it out of the purple box.
         </ol>
-        -->
         <div id="target0" class="touchActionNone">
         </div>
         <iframe src="resources/pointerevent_pointerId_scope-iframe.html" id="innerframe"></iframe>

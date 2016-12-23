@@ -38,6 +38,7 @@ default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 == clip-path-circle-018.html clip-path-circle-010-ref.html
 == clip-path-circle-019.html clip-path-circle-002-ref.html
 == clip-path-circle-020.html clip-path-circle-002-ref.html
+== clip-path-circle-021.html clip-path-circle-021-ref.html
 
 == clip-path-ellipse-001.html clip-path-ellipse-001-ref.html
 == clip-path-ellipse-002.html clip-path-ellipse-001-ref.html

@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gChromeRegistry",
                                    "@mozilla.org/chrome/chrome-registry;1", Ci.nsIXULChromeRegistry);
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 var gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
@@ -752,11 +753,16 @@ AboutReader.prototype = {
   },
 
   _formatReadTime(slowEstimate, fastEstimate) {
+    let displayStringKey = "aboutReader.estimatedReadTimeRange1";
+
+    // only show one reading estimate when they are the same value
     if (slowEstimate == fastEstimate) {
-      return gStrings.formatStringFromName("aboutReader.estimatedReadTimeValue", [slowEstimate], 1);
+      displayStringKey = "aboutReader.estimatedReadTimeValue1";
     }
 
-    return gStrings.formatStringFromName("aboutReader.estimatedReadTimeRange", [fastEstimate, slowEstimate], 2);
+    return PluralForm.get(slowEstimate, gStrings.GetStringFromName(displayStringKey))
+      .replace("#1", fastEstimate)
+      .replace("#2", slowEstimate);
   },
 
   _showError: function() {

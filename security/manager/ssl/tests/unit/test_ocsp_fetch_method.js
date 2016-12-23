@@ -29,8 +29,8 @@ function check_cert_err(cert_name, expected_error) {
 }
 
 function run_test() {
-  addCertFromFile(certdb, "test_ocsp_fetch_method/ca.pem", 'CTu,CTu,CTu');
-  addCertFromFile(certdb, "test_ocsp_fetch_method/int.pem", ',,');
+  addCertFromFile(certdb, "test_ocsp_fetch_method/ca.pem", "CTu,CTu,CTu");
+  addCertFromFile(certdb, "test_ocsp_fetch_method/int.pem", ",,");
 
   // Enabled so that we can force ocsp failure responses.
   Services.prefs.setBoolPref("security.OCSP.require", true);

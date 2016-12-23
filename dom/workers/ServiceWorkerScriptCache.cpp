@@ -20,6 +20,7 @@
 
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"

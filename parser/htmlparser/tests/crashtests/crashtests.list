@@ -1,6 +1,6 @@
 load 30885-1.html
 load 30956-1.html
-load 31392-1.html
+asserts-if(stylo,2) load 31392-1.html # bug 1324634
 load 31694-1.html
 load 31940-1.html
 load 32613-1.html
@@ -13,7 +13,7 @@ load 50134-1.html
 load 50994-1.html
 load 58455-1.html
 load 60110-1.html
-load 73331-1.html
+asserts-if(stylo,6) load 73331-1.html # bug 1324663
 load 92647-1.html
 load 92788-1.html
 load 121591-1.html
@@ -36,7 +36,7 @@ load 423373-1.html
 load 445171-1.html
 load 468538-1.xhtml
 load 502103.html
-load 502869.html
+asserts-if(stylo,1) load 502869.html # bug 1324683
 load 515278-1.html
 load 515533-1.html
 load 515816-1.html
@@ -45,13 +45,13 @@ load 525229-1.html
 load 536097-1.html
 load 555462.html
 load 563514-1.html
-load 574884-1.html
+asserts-if(stylo,2) load 574884-1.html # bug 1324669
 load 574884-2.html
 load 591330-1.html
 load 650501-1.xhtml
-load 696651-1.html
-load view-source:699347-1.xml
+asserts-if(stylo,1) load 696651-1.html # bug 1324683
+asserts-if(stylo,2) load view-source:699347-1.xml # bug 1324704
 load 721313-1.html
-load view-source:742414-1.html
+asserts-if(stylo,5) load view-source:742414-1.html # bug 1324704
 load 981279-1.html
 load 982285-1.html

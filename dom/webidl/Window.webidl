@@ -156,10 +156,10 @@ partial interface Window {
   //[Throws] void moveBy(double x, double y);
   //[Throws] void resizeTo(double x, double y);
   //[Throws] void resizeBy(double x, double y);
-  [Throws, UnsafeInPrerendering] void moveTo(long x, long y);
-  [Throws, UnsafeInPrerendering] void moveBy(long x, long y);
-  [Throws, UnsafeInPrerendering] void resizeTo(long x, long y);
-  [Throws, UnsafeInPrerendering] void resizeBy(long x, long y);
+  [Throws, UnsafeInPrerendering, NeedsCallerType] void moveTo(long x, long y);
+  [Throws, UnsafeInPrerendering, NeedsCallerType] void moveBy(long x, long y);
+  [Throws, UnsafeInPrerendering, NeedsCallerType] void resizeTo(long x, long y);
+  [Throws, UnsafeInPrerendering, NeedsCallerType] void resizeBy(long x, long y);
 
   // viewport
   // These are writable because we allow chrome to write them.  And they need
@@ -167,8 +167,8 @@ partial interface Window {
   // like a [Replaceable] attribute would, which needs the original JS value.
   //[Replaceable, Throws] readonly attribute double innerWidth;
   //[Replaceable, Throws] readonly attribute double innerHeight;
-  [Throws] attribute any innerWidth;
-  [Throws] attribute any innerHeight;
+  [Throws, NeedsCallerType] attribute any innerWidth;
+  [Throws, NeedsCallerType] attribute any innerHeight;
 
   // viewport scrolling
   void scroll(unrestricted double x, unrestricted double y);
@@ -201,10 +201,10 @@ partial interface Window {
   //[Replaceable, Throws] readonly attribute double screenY;
   //[Replaceable, Throws] readonly attribute double outerWidth;
   //[Replaceable, Throws] readonly attribute double outerHeight;
-  [Throws] attribute any screenX;
-  [Throws] attribute any screenY;
-  [Throws] attribute any outerWidth;
-  [Throws] attribute any outerHeight;
+  [Throws, NeedsCallerType] attribute any screenX;
+  [Throws, NeedsCallerType] attribute any screenY;
+  [Throws, NeedsCallerType] attribute any outerWidth;
+  [Throws, NeedsCallerType] attribute any outerHeight;
 };
 
 /**
@@ -276,16 +276,19 @@ partial interface Window {
   /**
    * Method for sizing this window to the content in the window.
    */
-  [Throws, UnsafeInPrerendering] void             sizeToContent();
+  [Throws, UnsafeInPrerendering, NeedsCallerType] void sizeToContent();
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   [ChromeOnly, Replaceable, Throws] readonly attribute MozControllers controllers;
 
   [ChromeOnly, Throws] readonly attribute Element? realFrameElement;
 
-  [Throws] readonly attribute float               mozInnerScreenX;
-  [Throws] readonly attribute float               mozInnerScreenY;
-  [Replaceable, Throws] readonly attribute float  devicePixelRatio;
+  [Throws, NeedsCallerType]
+  readonly attribute float mozInnerScreenX;
+  [Throws, NeedsCallerType]
+  readonly attribute float mozInnerScreenY;
+  [Replaceable, Throws, NeedsCallerType]
+  readonly attribute float devicePixelRatio;
 
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */
@@ -371,9 +374,9 @@ partial interface Window {
                                                                    optional DOMString options = "",
                                                                    any... extraArguments);
 
-  [Replaceable, Throws] readonly attribute object? content;
+  [Replaceable, Throws, NeedsCallerType] readonly attribute object? content;
 
-  [ChromeOnly, Throws] readonly attribute object? __content;
+  [ChromeOnly, Throws, NeedsCallerType] readonly attribute object? __content;
 
   [Throws, ChromeOnly] any getInterface(IID iid);
 
@@ -391,6 +394,7 @@ Window implements OnErrorEventHandlerForWindow;
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 // https://compat.spec.whatwg.org/#windoworientation-interface
 partial interface Window {
+  [NeedsCallerType]
   readonly attribute short orientation;
            attribute EventHandler onorientationchange;
 };

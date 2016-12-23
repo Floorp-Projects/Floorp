@@ -5,9 +5,8 @@
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <script src="pointerevent_support.js"></script>
-        <script src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             add_completion_callback(showPointerTypes);
@@ -21,7 +20,7 @@
                     detected_pointertypes[event.pointerType] = true;
                     target0.setPointerCapture(event.pointerId);
                     target0.releasePointerCapture(event.pointerId);
-                    assert_equals(target0.hasPointerCapture(e.pointerId), false, "After target0.releasePointerCapture, target0.hasPointerCapture should be false");
+                    assert_equals(target0.hasPointerCapture(event.pointerId), false, "After target0.releasePointerCapture, target0.hasPointerCapture should be false");
                 });
 
                 on_event(target0, "gotpointercapture", function (event) {
@@ -44,7 +43,6 @@
     </head>
     <body onload="run()">
         <h1>Release pointer capture right after setpointercapture</h1>
-        <!--
         <h4>Test Description:
             When calling releasePointer right after setPointerCapture method is invoked, the pending pointer capture should be cleared and no element should receive gotpointercapture and lostpointercapture events
             <ol>
@@ -52,7 +50,6 @@
                 <li>Move mouse and release mouse button
             </ol>
         </h4>
-        -->
         <br>
         <div id="target0" touch-action:none></div>
         <div id="target1" touch-action:none></div>

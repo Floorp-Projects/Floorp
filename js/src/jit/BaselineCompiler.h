@@ -42,6 +42,7 @@ namespace jit {
     _(JSOP_DUP2)               \
     _(JSOP_SWAP)               \
     _(JSOP_PICK)               \
+    _(JSOP_UNPICK)             \
     _(JSOP_GOTO)               \
     _(JSOP_IFEQ)               \
     _(JSOP_IFNE)               \

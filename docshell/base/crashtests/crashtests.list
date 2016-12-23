@@ -10,6 +10,6 @@ asserts(0-1) load 436900-2.html # bug 566159
 load 500328-1.html
 load 514779-1.xhtml
 load 614499-1.html
-load 678872-1.html
+asserts-if(stylo,1) load 678872-1.html # bug 1324683
 skip-if(Android) pref(dom.disable_open_during_load,false) load 914521.html
 pref(browser.send_pings,true) load 1257730-1.html

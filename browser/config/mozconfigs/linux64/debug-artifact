@@ -4,12 +4,8 @@ MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/unix/mozconfig.linux"
 . "$topsrcdir/build/mozconfig.common.override"
 
-ac_add_options --enable-artifact-builds
+. "$topsrcdir/build/mozconfig.artifact"
 ac_add_options --enable-artifact-build-symbols
-unset CC
-unset CXX
-unset RUSTC
-unset CARGO
 
 ac_add_options --enable-debug
 

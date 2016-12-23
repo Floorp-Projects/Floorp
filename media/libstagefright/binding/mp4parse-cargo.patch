@@ -2,7 +2,7 @@ diff --git a/media/libstagefright/binding/mp4parse/Cargo.toml b/media/libstagefr
 index ff9422c..814c4c6 100644
 --- a/media/libstagefright/binding/mp4parse/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse/Cargo.toml
-@@ -18,17 +18,11 @@ exclude = [
+@@ -18,18 +18,12 @@ exclude = [
  ]
  
  [dependencies]
@@ -10,8 +10,10 @@ index ff9422c..814c4c6 100644
 -afl = { version = "0.1.1", optional = true }
 -afl-plugin = { version = "0.1.1", optional = true }
 -abort_on_panic = { version = "1.0.0", optional = true }
+-bitreader = { version = "0.1.0" }
 +byteorder = "0.5.0"
- 
++bitreader = { version = "0.1.0" }
+
  [dev-dependencies]
  test-assembler = "0.1.2"
  

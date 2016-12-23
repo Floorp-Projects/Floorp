@@ -15,6 +15,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsPrincipal.h"
 #include "nsNetUtil.h"

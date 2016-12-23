@@ -66,7 +66,7 @@ Events capture key occurrences. They should be brief and simple, and should not 
   Used for user actions that can be performed in many ways. This field specifies the method by which the action was performed. For example, users can add an item to their reading list either by long-tapping the reader icon in the address bar, or from within reader mode. We would use the same event name for both user actions but specify two methods: ``addressbar`` and ``readermode``.
 
 ``extras`` (Optional)
-  For extra information that may be useful in understanding the event. Make an effort to keep this brief.
+  For extra information that may be useful in understanding the event (such as a short string, a json blob, etc).
 
 ``timestamp`` (Optional)
   The time at which the event occurred. If not specified, this field defaults to the current value of the realtime clock.

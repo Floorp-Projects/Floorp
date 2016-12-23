@@ -207,7 +207,9 @@ add_task(function* test_categorical_histogram()
     h1.add(v);
   }
   for (let s of ["", "Label4", "1234"]) {
-    Assert.throws(() => h1.add(s));
+    // The |add| method should not throw for unexpected values, but rather
+    // print an error message in the console.
+    h1.add(s);
   }
 
   let snapshot = h1.snapshot();
@@ -220,13 +222,44 @@ add_task(function* test_categorical_histogram()
     h2.add(v);
   }
   for (let s of ["", "Label3", "1234"]) {
-    Assert.throws(() => h2.add(s));
+    // The |add| method should not throw for unexpected values, but rather
+    // print an error message in the console.
+    h2.add(s);
   }
 
   snapshot = h2.snapshot();
   Assert.equal(snapshot.sum, 7);
   Assert.deepEqual(snapshot.ranges, [0, 1, 2, 3, 4]);
   Assert.deepEqual(snapshot.counts, [3, 2, 1, 1, 0]);
+});
+
+add_task(function* test_add_error_behaviour() {
+  const PLAIN_HISTOGRAMS_TO_TEST = [
+    "TELEMETRY_TEST_FLAG",
+    "TELEMETRY_TEST_EXPONENTIAL",
+    "TELEMETRY_TEST_LINEAR",
+    "TELEMETRY_TEST_BOOLEAN"
+  ];
+
+  const KEYED_HISTOGRAMS_TO_TEST = [
+    "TELEMETRY_TEST_KEYED_FLAG",
+    "TELEMETRY_TEST_KEYED_COUNT",
+    "TELEMETRY_TEST_KEYED_BOOLEAN"
+  ];
+
+  // Check that |add| doesn't throw for plain histograms.
+  for (let hist of PLAIN_HISTOGRAMS_TO_TEST) {
+    const returnValue = Telemetry.getHistogramById(hist).add("unexpected-value");
+    Assert.strictEqual(returnValue, undefined,
+                       "Adding to an histogram must return 'undefined'.");
+  }
+
+  // And for keyed histograms.
+  for (let hist of KEYED_HISTOGRAMS_TO_TEST) {
+    const returnValue = Telemetry.getKeyedHistogramById(hist).add("some-key", "unexpected-value");
+    Assert.strictEqual(returnValue, undefined,
+                       "Adding to a keyed histogram must return 'undefined'.");
+  }
 });
 
 add_task(function* test_getHistogramById() {

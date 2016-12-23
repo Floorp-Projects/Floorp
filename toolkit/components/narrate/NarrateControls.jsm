@@ -192,9 +192,9 @@ NarrateControls.prototype = {
       }
 
       let narrateToggle = win.document.getElementById("narrate-toggle");
-      let histogram =
-        Services.telemetry.getKeyedHistogramById("NARRATE_CONTENT_BY_LANGUAGE");
-      let initial = !!this._voicesInitialized;
+      let histogram = Services.telemetry.getKeyedHistogramById(
+        "NARRATE_CONTENT_BY_LANGUAGE_2");
+      let initial = !this._voicesInitialized;
       this._voicesInitialized = true;
 
       if (initial) {
