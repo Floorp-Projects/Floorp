@@ -87,10 +87,9 @@ test_description_schema = Schema({
     'description': basestring,
 
     # test suite name, or <suite>/<flavor>
-    Required('suite'): Any(
-        basestring,
-        {'by-test-platform': {basestring: basestring}},
-    ),
+    Required('suite'): optionally_keyed_by(
+        'test-platform',
+        basestring),
 
     # the name by which this test suite is addressed in try syntax; defaults to
     # the test-name
@@ -115,24 +114,21 @@ test_description_schema = Schema({
     # The `run_on_projects` attribute, defaulting to "all".  This dictates the
     # projects on which this task should be included in the target task set.
     # See the attributes documentation for details.
-    Optional('run-on-projects', default=['all']): Any(
-        [basestring],
-        {'by-test-platform': {basestring: [basestring]}},
-    ),
+    Optional('run-on-projects', default=['all']): optionally_keyed_by(
+        'test-platform',
+        [basestring]),
 
     # the sheriffing tier for this task (default: set based on test platform)
-    Optional('tier'): Any(
-        int,
-        {'by-test-platform': {basestring: int}},
-    ),
+    Optional('tier'): optionally_keyed_by(
+        'test-platform',
+        Any(int, 'default')),
 
     # number of chunks to create for this task.  This can be keyed by test
     # platform by passing a dictionary in the `by-test-platform` key.  If the
     # test platform is not found, the key 'default' will be tried.
-    Required('chunks', default=1): Any(
-        int,
-        {'by-test-platform': {basestring: int}},
-    ),
+    Required('chunks', default=1): optionally_keyed_by(
+        'test-platform',
+        int),
 
     # the time (with unit) after which this task is deleted; default depends on
     # the branch (see below)
@@ -142,16 +138,14 @@ test_description_schema = Schema({
     # without e10s; if true, run with e10s; if 'both', run one task with and
     # one task without e10s.  E10s tasks have "-e10s" appended to the test name
     # and treeherder group.
-    Required('e10s', default='both'): Any(
-        bool, 'both',
-        {'by-test-platform': {basestring: Any(bool, 'both')}},
-    ),
+    Required('e10s', default='both'): optionally_keyed_by(
+        'test-platform',
+        Any(bool, 'both')),
 
     # The EC2 instance size to run these tests on.
-    Required('instance-size', default='default'): Any(
-        Any('default', 'large', 'xlarge', 'legacy'),
-        {'by-test-platform': {basestring: Any('default', 'large', 'xlarge', 'legacy')}},
-    ),
+    Required('instance-size', default='default'): optionally_keyed_by(
+        'test-platform',
+        Any('default', 'large', 'xlarge', 'legacy')),
 
     # Whether the task requires loopback audio or video (whatever that may mean
     # on the platform)
@@ -179,19 +173,21 @@ test_description_schema = Schema({
     # name of the docker image or in-tree docker image to run the task in.  If
     # in-tree, then a dependency will be created automatically.  This is
     # generally `desktop-test`, or an image that acts an awful lot like it.
-    Required('docker-image', default={'in-tree': 'desktop-test'}): Any(
-        # a raw Docker image path (repo/image:tag)
-        basestring,
-        # an in-tree generated docker image (from `taskcluster/docker/<name>`)
-        {'in-tree': basestring}
+    Required('docker-image', default={'in-tree': 'desktop-test'}): optionally_keyed_by(
+        'test-platform', 'test-platform-phylum',
+        Any(
+            # a raw Docker image path (repo/image:tag)
+            basestring,
+            # an in-tree generated docker image (from `taskcluster/docker/<name>`)
+            {'in-tree': basestring}
+        )
     ),
 
     # seconds of runtime after which the task will be killed.  Like 'chunks',
     # this can be keyed by test pltaform.
-    Required('max-run-time', default=3600): Any(
-        int,
-        {'by-test-platform': {basestring: int}},
-    ),
+    Required('max-run-time', default=3600): optionally_keyed_by(
+        'test-platform',
+        int),
 
     # the exit status code that indicates the task should be retried
     Optional('retry-exit-status'): int,
@@ -200,25 +196,24 @@ test_description_schema = Schema({
     Required('checkout', default=False): bool,
 
     # What to run
-    Required('mozharness'): Any({
+    Required('mozharness'): optionally_keyed_by(
+        'test-platform', 'test-platform-phylum', {
         # the mozharness script used to run this task
         Required('script'): basestring,
 
         # the config files required for the task
-        Required('config'): Any(
-            [basestring],
-            {'by-test-platform': {basestring: [basestring]}},
-        ),
+        Required('config'): optionally_keyed_by(
+            'test-platform',
+            [basestring]),
 
         # any additional actions to pass to the mozharness command
         Optional('actions'): [basestring],
 
         # additional command-line options for mozharness, beyond those
         # automatically added
-        Required('extra-options', default=[]): Any(
-            [basestring],
-            {'by-test-platform': {basestring: [basestring]}},
-        ),
+        Required('extra-options', default=[]): optionally_keyed_by(
+            'test-platform',
+            [basestring]),
 
         # the artifact name (including path) to test on the build task; this is
         # generally set in a per-kind transformation
@@ -267,11 +262,9 @@ test_description_schema = Schema({
 
     # os user groups for test task workers; required scopes, will be
     # added automatically
-    Optional('os-groups', default=[]): Any(
-        [basestring],
-        # todo: create a dedicated elevated worker group and name here
-        {'by-test-platform': {basestring: [basestring]}},
-    ),
+    Optional('os-groups', default=[]): optionally_keyed_by(
+        'test-platform',
+        [basestring]),
 
     # -- values supplied by the task-generation infrastructure
 
@@ -301,6 +294,14 @@ def validate(config, tests):
 
 
 @transforms.add
+def resolve_keyed_by_mozharness(config, tests):
+    """Resolve a mozharness field if it is keyed by something"""
+    for test in tests:
+        test['mozharness'] = get_keyed_by(item=test, field='mozharness', item_name=test['test-name'])
+        yield test
+
+
+@transforms.add
 def set_defaults(config, tests):
     for test in tests:
         build_platform = test['build-platform']
@@ -310,9 +311,13 @@ def set_defaults(config, tests):
             test['mozharness']['actions'] = ['get-secrets']
             # Android doesn't do e10s
             test['e10s'] = False
+            # loopback-video is always true for Android, but false for other
+            # platform phyla
+            test['loopback-video'] = True
         else:
             # all non-android tests want to run the bits that require node
             test['mozharness']['set-moz-node-path'] = True
+            test.setdefault('e10s', 'both')
 
         # software-gl-layers is only meaningful on linux, where it defaults to True
         if test['test-platform'].startswith('linux'):
@@ -320,7 +325,6 @@ def set_defaults(config, tests):
         else:
             test['allow-software-gl-layers'] = False
 
-        test.setdefault('e10s', 'both')
         test.setdefault('os-groups', [])
         test.setdefault('chunks', 1)
         test.setdefault('run-on-projects', ['all'])
@@ -398,8 +402,11 @@ def set_tier(config, tests):
     """Set the tier based on policy for all test descriptions that do not
     specify a tier otherwise."""
     for test in tests:
+        if 'tier' in test:
+            test['tier'] = get_keyed_by(item=test, field='tier', item_name=test['test-name'])
+
         # only override if not set for the test
-        if 'tier' not in test:
+        if 'tier' not in test or test['tier'] == 'default':
             if test['test-platform'] in ['linux64/debug',
                                          'linux64-asan/opt',
                                          'android-4.3-arm7-api-15/debug',
@@ -446,13 +453,13 @@ def resolve_keyed_by(config, tests):
     """Resolve fields that can be keyed by platform, etc."""
     fields = [
         'instance-size',
+        'docker-image',
         'max-run-time',
         'chunks',
         'e10s',
         'suite',
         'run-on-projects',
         'os-groups',
-        'tier',
     ]
     mozharness_fields = [
         'config',
