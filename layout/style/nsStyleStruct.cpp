@@ -2257,17 +2257,18 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
   return true;
 }
 
-nsresult
+bool
 nsStyleImage::StartDecoding() const
 {
   if (mType == eStyleImageType_Image) {
     imgRequestProxy* req = GetImageData();
     if (!req) {
-      return NS_ERROR_FAILURE;
+      return false;
     }
-    return req->StartDecoding(imgIContainer::FLAG_NONE);
+    return req->StartDecodingWithResult(imgIContainer::FLAG_NONE);
   }
-  return NS_OK;
+  // null image types always return false from IsComplete, so we do the same here.
+  return mType != eStyleImageType_Null ? true : false;
 }
 
 bool
