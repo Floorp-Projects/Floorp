@@ -149,8 +149,9 @@ var parsers = [
       const MAX_NESTED_HANDLER_COUNT = 2;
       for (let i = 0; i < MAX_NESTED_HANDLER_COUNT; i++) {
         let funcDO = getFirstFunctionVariable(handlerDO);
-        if (!funcDO)
+        if (!funcDO) {
           return handlerDO;
+        }
 
         handlerDO = funcDO;
         if (isFunctionInProxy(handlerDO)) {
