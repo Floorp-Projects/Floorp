@@ -420,6 +420,11 @@ const ProductAddonChecker = {
    *         exception in case of error.
    */
   getProductAddonList: function(url, allowNonBuiltIn = false, allowedCerts = null) {
+    if (!GMPPrefs.get(GMPPrefs.KEY_UPDATE_ENABLED, true)) {
+      logger.info("Updates are disabled via media.gmp-manager.updateEnabled");
+      return Promise.resolve({usedFallback: true, gmpAddons: []});
+    }
+
     return downloadXML(url, allowNonBuiltIn, allowedCerts)
       .then(parseXML)
       .catch(downloadLocalConfig);
