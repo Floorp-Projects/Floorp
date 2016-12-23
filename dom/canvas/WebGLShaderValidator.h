@@ -61,8 +61,8 @@ public:
     bool FindUniformByMappedName(const std::string& mappedName,
                                  std::string* const out_userName,
                                  bool* const out_isArray) const;
-    bool FindUniformBlockByMappedName(const std::string& mappedName,
-                                      std::string* const out_userName) const;
+    bool UnmapUniformBlockName(const nsACString& baseMappedName,
+                               nsCString* const out_baseUserName) const;
 
     void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
 
