@@ -889,6 +889,12 @@ WebGLFramebuffer::ValidateForRead(const char* funcName,
         return false;
     }
 
+    if (mColorReadBuffer->Samples()) {
+        mContext->ErrorInvalidOperation("%s: The READ_BUFFER attachment is multisampled.",
+                                        funcName);
+        return false;
+    }
+
     *out_format = mColorReadBuffer->Format();
     mColorReadBuffer->Size(out_width, out_height);
     return true;
@@ -1241,6 +1247,15 @@ WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>&
             const auto& attach = mColorAttachments[i];
             newColorDrawBuffers.push_back(&attach);
         } else if (cur != LOCAL_GL_NONE) {
+            const bool isColorEnum = (cur >= LOCAL_GL_COLOR_ATTACHMENT0 &&
+                                      cur < mContext->LastColorAttachmentEnum());
+            if (cur != LOCAL_GL_BACK &&
+                !isColorEnum)
+            {
+                mContext->ErrorInvalidEnum("%s: Unexpected enum in buffers.", funcName);
+                return;
+            }
+
             mContext->ErrorInvalidOperation("%s: `buffers[i]` must be NONE or"
                                             " COLOR_ATTACHMENTi.",
                                             funcName);
