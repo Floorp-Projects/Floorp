@@ -280,7 +280,7 @@ LIRGeneratorShared::assignSnapshot(LInstruction* ins, BailoutKind kind)
     if (snapshot)
         ins->assignSnapshot(snapshot);
     else
-        gen->abort("buildSnapshot failed");
+        abort(AbortReason::Alloc, "buildSnapshot failed");
 }
 
 void
@@ -294,13 +294,13 @@ LIRGeneratorShared::assignSafepoint(LInstruction* ins, MInstruction* mir, Bailou
     MResumePoint* mrp = mir->resumePoint() ? mir->resumePoint() : lastResumePoint_;
     LSnapshot* postSnapshot = buildSnapshot(ins, mrp, kind);
     if (!postSnapshot) {
-        gen->abort("buildSnapshot failed");
+        abort(AbortReason::Alloc, "buildSnapshot failed");
         return;
     }
 
     osiPoint_ = new(alloc()) LOsiPoint(ins->safepoint(), postSnapshot);
 
     if (!lirGraph_.noteNeedsSafepoint(ins))
-        gen->abort("noteNeedsSafepoint failed");
+        abort(AbortReason::Alloc, "noteNeedsSafepoint failed");
 }
 
