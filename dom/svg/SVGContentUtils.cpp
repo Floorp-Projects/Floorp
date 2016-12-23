@@ -21,6 +21,7 @@
 #include "nsIFrame.h"
 #include "nsIScriptError.h"
 #include "nsLayoutUtils.h"
+#include "nsMathUtils.h"
 #include "SVGAnimationElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsContentUtils.h"
@@ -509,7 +510,7 @@ SVGContentUtils::RectilinearGetStrokeBounds(const Rect& aRect,
 double
 SVGContentUtils::ComputeNormalizedHypotenuse(double aWidth, double aHeight)
 {
-  return sqrt((aWidth*aWidth + aHeight*aHeight)/2);
+  return NS_hypot(aWidth, aHeight) / M_SQRT2;
 }
 
 float
