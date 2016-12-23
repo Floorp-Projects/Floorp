@@ -110,14 +110,19 @@ let cacheGenerator = async function() {
 
 window.setup = function*() {
   yield idbGenerator();
-  yield cacheGenerator();
+
+  if (window.caches) {
+    yield cacheGenerator();
+  }
 };
 
 window.clear = function*() {
   yield deleteDB("idb1");
   yield deleteDB("idb2");
 
-  yield caches.delete("plop");
+  if (window.caches) {
+    yield caches.delete("plop");
+  }
 
   dump("removed indexedDB and cache data from " + document.location + "\n");
 };

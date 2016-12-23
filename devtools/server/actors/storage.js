@@ -1202,6 +1202,11 @@ StorageActors.createActor({
     // The |chrome| cache is the cache implicitely cached by the platform,
     // hosting the source file of the service worker.
     let { CacheStorage } = this.storageActor.window;
+
+    if (!CacheStorage) {
+      return [];
+    }
+
     let cache = new CacheStorage("content", principal);
     return cache;
   }),
