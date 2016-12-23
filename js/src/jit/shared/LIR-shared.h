@@ -6648,37 +6648,47 @@ class LCallGetIntrinsicValue : public LCallInstructionHelper<BOX_PIECES, 0, 0>
 
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
-class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 0>
+class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(GetPropertyCacheV)
 
     static const size_t Id = 1;
 
-    LGetPropertyCacheV(const LAllocation& object, const LBoxAllocation& id) {
+    LGetPropertyCacheV(const LAllocation& object, const LBoxAllocation& id,
+                       const LDefinition& temp) {
         setOperand(0, object);
         setBoxOperand(Id, id);
+        setTemp(0, temp);
     }
     const MGetPropertyCache* mir() const {
         return mir_->toGetPropertyCache();
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
 };
 
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // value of a known type, possibly into an FP register.
-class LGetPropertyCacheT : public LInstructionHelper<1, 1 + BOX_PIECES, 0>
+class LGetPropertyCacheT : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(GetPropertyCacheT)
 
     static const size_t Id = 1;
 
-    LGetPropertyCacheT(const LAllocation& object, const LBoxAllocation& id) {
+    LGetPropertyCacheT(const LAllocation& object, const LBoxAllocation& id,
+                       const LDefinition& temp) {
         setOperand(0, object);
         setBoxOperand(Id, id);
+        setTemp(0, temp);
     }
     const MGetPropertyCache* mir() const {
         return mir_->toGetPropertyCache();
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
 };
 
