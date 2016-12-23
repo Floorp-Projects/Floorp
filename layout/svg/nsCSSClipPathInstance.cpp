@@ -13,7 +13,6 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
-#include "nsMathUtils.h"
 #include "nsRenderingContext.h"
 #include "nsRuleNode.h"
 #include "nsSVGElement.h"
@@ -154,8 +153,9 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
   } else {
     // We resolve percent <shape-radius> value for circle() as defined here:
     // https://drafts.csswg.org/css-shapes/#funcdef-circle
-    const double sqrt2 = std::sqrt(2.0);
-    double referenceLength = NS_hypot(aRefBox.width, aRefBox.height) / sqrt2;
+    double referenceLength =
+      SVGContentUtils::ComputeNormalizedHypotenuse(aRefBox.width,
+                                                   aRefBox.height);
     r = nsRuleNode::ComputeCoordPercentCalc(coords[0],
                                             NSToCoordRound(referenceLength));
   }
