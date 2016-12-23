@@ -34,7 +34,6 @@
 #include "nsMimeTypes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
-#include "nsParserConstants.h"
 #include "nsCharsetSource.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
