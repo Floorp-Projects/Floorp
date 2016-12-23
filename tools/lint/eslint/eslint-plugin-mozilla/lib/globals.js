@@ -134,7 +134,8 @@ module.exports = {
       // comment directives
       if (type == "BlockComment") {
         let value = node.value.trim();
-        let match = /^globals?\s+(.+)$/.exec(value);
+        value = value.replace(/\n/g, '');
+        let match = /^globals?\s+(.+)/.exec(value);
         if (match) {
           let values = parseBooleanConfig(match[1].trim(), node);
           for (let name of Object.keys(values)) {

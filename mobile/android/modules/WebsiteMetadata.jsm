@@ -21,7 +21,8 @@ var WebsiteMetadata = {
   parseAsynchronously: function(doc) {
     Task.spawn(function() {
       let metadata = getMetadata(doc, doc.location.href, {
-        image_url: metadataRules['image_url']
+        image_url: metadataRules['image_url'],
+        provider: metadataRules['provider']
       });
 
       // No metadata was extracted, so don't bother sending it.
@@ -156,6 +157,12 @@ const metadataRules = {
       ['meta[property="og:url"]', node => node.element.getAttribute('content')],
       ['link[rel="canonical"]', node => node.element.getAttribute('href')],
     ],
+  },
+
+  provider: {
+    rules: [
+      ['meta[property="og:site_name"]', node => node.element.getAttribute('content')]
+    ]
   },
 };
 
