@@ -69,7 +69,7 @@ XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreat
 
     const js::Class* jsclazz =
         (mScriptableInfo &&
-         mScriptableInfo->GetFlags().AllowPropModsToPrototype())
+         mScriptableInfo->GetCallback()->AllowPropModsToPrototype())
         ? &XPC_WN_ModsAllowed_Proto_JSClass
         : &XPC_WN_NoMods_Proto_JSClass;
 
@@ -195,9 +195,10 @@ XPCWrappedNativeProto::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("mSet @ %x", mSet.get()));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
         if (depth && mScriptableInfo) {
+            nsCOMPtr<nsIXPCScriptable> scr = mScriptableInfo->GetCallback();
             XPC_LOG_INDENT();
-            XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptableInfo->GetCallback()));
-            XPC_LOG_ALWAYS(("mFlags of %x", (uint32_t)mScriptableInfo->GetFlags()));
+            XPC_LOG_ALWAYS(("mScriptable @ %x", scr.get()));
+            XPC_LOG_ALWAYS(("mFlags of %x", scr->GetScriptableFlags()));
             XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptableInfo->GetJSClass()));
             XPC_LOG_OUTDENT();
         }

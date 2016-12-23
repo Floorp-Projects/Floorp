@@ -117,6 +117,36 @@ interface nsIXPCScriptable : nsISupports
                        in jsval val, out boolean bp);
 
     void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
+
+%{ C++
+    #define GET_IT(f_) \
+    { \
+        return 0 != (GetScriptableFlags() & nsIXPCScriptable::f_); \
+    }
+
+    bool WantPreCreate()                GET_IT(WANT_PRECREATE)
+    bool WantGetProperty()              GET_IT(WANT_GETPROPERTY)
+    bool WantSetProperty()              GET_IT(WANT_SETPROPERTY)
+    bool WantEnumerate()                GET_IT(WANT_ENUMERATE)
+    bool WantNewEnumerate()             GET_IT(WANT_NEWENUMERATE)
+    bool WantResolve()                  GET_IT(WANT_RESOLVE)
+    bool WantFinalize()                 GET_IT(WANT_FINALIZE)
+    bool WantCall()                     GET_IT(WANT_CALL)
+    bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
+    bool WantHasInstance()              GET_IT(WANT_HASINSTANCE)
+    bool UseJSStubForAddProperty()      GET_IT(USE_JSSTUB_FOR_ADDPROPERTY)
+    bool UseJSStubForDelProperty()      GET_IT(USE_JSSTUB_FOR_DELPROPERTY)
+    bool UseJSStubForSetProperty()      GET_IT(USE_JSSTUB_FOR_SETPROPERTY)
+    bool DontEnumQueryInterface()       GET_IT(DONT_ENUM_QUERY_INTERFACE)
+    bool DontAskInstanceForScriptable() GET_IT(DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
+    bool ClassInfoInterfacesOnly()      GET_IT(CLASSINFO_INTERFACES_ONLY)
+    bool AllowPropModsDuringResolve()   GET_IT(ALLOW_PROP_MODS_DURING_RESOLVE)
+    bool AllowPropModsToPrototype()     GET_IT(ALLOW_PROP_MODS_TO_PROTOTYPE)
+    bool IsGlobalObject()               GET_IT(IS_GLOBAL_OBJECT)
+    bool DontReflectInterfaceNames()    GET_IT(DONT_REFLECT_INTERFACE_NAMES)
+
+#undef GET_IT
+%}
 };
 
 %{ C++
