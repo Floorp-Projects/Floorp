@@ -222,6 +222,12 @@
 #define CKM_NSS_CHACHA20_KEY_GEN (CKM_NSS + 27)
 #define CKM_NSS_CHACHA20_POLY1305 (CKM_NSS + 28)
 
+/* Additional PKCS #12 PBE algorithms defined in v1.1 */
+#define CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN (CKM_NSS + 29)
+#define CKM_NSS_PKCS12_PBE_SHA256_HMAC_KEY_GEN (CKM_NSS + 30)
+#define CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN (CKM_NSS + 31)
+#define CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN (CKM_NSS + 32)
+
 /*
  * HISTORICAL:
  * Do not attempt to use these. They are only used by NETSCAPE's internal

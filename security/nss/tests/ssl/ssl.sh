@@ -1006,7 +1006,7 @@ ssl_run()
     do
         case "${SSL_RUN}" in
         "stapling")
-            if [ -nz "$NSS_DISABLE_LIBPKIX" ]; then
+            if [ -z "$NSS_DISABLE_LIBPKIX" ]; then
               ssl_stapling
             fi
             ;;

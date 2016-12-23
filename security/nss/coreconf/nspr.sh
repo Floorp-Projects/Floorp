@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This script builds NSPR for NSS.
 #
 # This build system is still under development.  It does not yet support all
@@ -9,6 +9,11 @@ nspr_opt=()
 nspr_cflags=
 nspr_cxxflags=
 nspr_ldflags=
+
+# Try to avoid bmake on OS X and BSD systems
+if hash gmake 2>/dev/null; then
+    make() { command gmake "$@"; }
+fi
 
 nspr_sanitizer()
 {

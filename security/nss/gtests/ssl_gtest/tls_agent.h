@@ -129,6 +129,7 @@ class TlsAgent : public PollTarget {
   void SetSessionTicketsEnabled(bool en);
   void SetSessionCacheEnabled(bool en);
   void Set0RttEnabled(bool en);
+  void SetShortHeadersEnabled();
   void SetVersionRange(uint16_t minver, uint16_t maxver);
   void GetVersionRange(uint16_t* minver, uint16_t* maxver);
   void CheckPreliminaryInfo();
@@ -138,6 +139,7 @@ class TlsAgent : public PollTarget {
   void ExpectReadWriteError();
   void EnableFalseStart();
   void ExpectResumption();
+  void ExpectShortHeaders();
   void SetSignatureSchemes(const SSLSignatureScheme* schemes, size_t count);
   void EnableAlpn(const uint8_t* val, size_t len);
   void CheckAlpn(SSLNextProtoState expected_state,
@@ -369,6 +371,7 @@ class TlsAgent : public PollTarget {
   HandshakeCallbackFunction handshake_callback_;
   AuthCertificateCallbackFunction auth_certificate_callback_;
   SniCallbackFunction sni_callback_;
+  bool expect_short_headers_;
 };
 
 inline std::ostream& operator<<(std::ostream& stream,
