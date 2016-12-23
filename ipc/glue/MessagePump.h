@@ -164,43 +164,6 @@ private:
 };
 #endif // defined(XP_WIN)
 
-#if defined(MOZ_WIDGET_ANDROID)
-/*`
- * The MessagePumpForAndroidUI exists to enable IPDL in the Android UI thread. The Android
- * UI thread event loop is controlled by Android. This prevents running an existing
- * MessagePump implementation in the Android UI thread. In order to enable IPDL on the
- * Android UI thread it is necessary to have a non-looping MessagePump. This class enables
- * forwarding of nsIRunnables from MessageLoop::PostTask_Helper to the registered
- * nsIEventTarget with out the need to control the event loop. The only member function
- * that should be invoked is GetXPCOMThread. All other member functions will invoke MOZ_CRASH
-*/
-class MessagePumpForAndroidUI : public base::MessagePump {
-
-public:
-  MessagePumpForAndroidUI(nsIEventTarget* aEventTarget)
-    : mEventTarget(aEventTarget)
-  { }
-
-  virtual void Run(Delegate* delegate);
-  virtual void Quit();
-  virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const base::TimeTicks& delayed_work_time);
-  virtual nsIEventTarget* GetXPCOMThread()
-  {
-    return mEventTarget;
-  }
-
-private:
-  ~MessagePumpForAndroidUI()
-  { }
-  MessagePumpForAndroidUI()
-  { }
-
-  nsIEventTarget* mEventTarget;
-};
-#endif // defined(MOZ_WIDGET_ANDROID)
-
-
 } /* namespace ipc */
 } /* namespace mozilla */
 
