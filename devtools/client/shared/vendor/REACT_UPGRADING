@@ -53,9 +53,40 @@ version over:
 
 You also need to copy the ReactDOM and ReactDOMServer package. It requires React, so
 right now we are just manually changing the path from `react` to
-`devtools/client/shared/vendor/react`.
+`devtools/client/shared/vendor/react`. Also, to have React's event system working
+correctly in certain XUL situations, ReactDOM must be monkey patched with a fix. This
+fix is currently applied in devtools/client/shared/vendor/react-dom.js. When upgrading,
+copy and paste the existing block of code into the new file in the same location. It is
+delimited by a header and footer, and then the monkeyPatchReactDOM() needs to be applied
+to the returned value.
+
+e.g. Turn this:
+
+```
+})(function(React) {
+  return React.__SECRET_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+});
+```
+
+Into this:
+
+```
+})(function(React) {
+  //--------------------------------------------------------------------------------------
+  // START MONKEY PATCH
+
+  ...
+
+  // END MONKEY PATCH
+  //--------------------------------------------------------------------------------------
+
+  return monkeyPatchReactDOM(React.__SECRET_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED);
+});
+```
 
 * cp build/react-dom.js <gecko-dev>/devtools/client/shared/vendor/react-dom.js
 * (change `require('react')` at the top of the file to the right path)
+* Copy/paste existing monkey patch
+* Apply monkeyPatchReactDOM() to the returned object ReactDOM object.
 * cp build/react-dom.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server.js
 * (change `require('react')` at the top of the file to the right path)
