@@ -27,6 +27,8 @@
 #include <media/stagefright/foundation/hexdump.h>
 #include <media/stagefright/MetaData.h>
 
+#include "mozilla/Assertions.h"
+
 namespace stagefright {
 
 MetaData::MetaData() {
@@ -192,7 +194,10 @@ bool MetaData::setData(
     ssize_t i = mItems.indexOfKey(key);
     if (i < 0) {
         typed_data item;
+        // TODO: "i" will be negative value when OOM,
+        // we should consider handling this case instead of asserting.
         i = mItems.add(key, item);
+        MOZ_RELEASE_ASSERT(i >= 0, "Item cannot be added due to OOM.");
 
         overwrote_existing = false;
     }

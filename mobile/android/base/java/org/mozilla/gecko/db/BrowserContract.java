@@ -606,6 +606,7 @@ public class BrowserContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "highlights");
 
         public static final String DATE = "date";
+        public static final String METADATA = "metadata";
     }
 
     @RobocopTarget

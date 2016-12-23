@@ -28,6 +28,10 @@ const SPECIALVALUES = new Set([
  * Usage:
  *   let {colorUtils} = require("devtools/shared/css/color");
  *   let color = new colorUtils.CssColor("red");
+ *   // In order to support css-color-4 color function, pass true to the
+ *   // second argument.
+ *   // e.g.
+ *   //   let color = new colorUtils.CssColor("red", true);
  *
  *   color.authored === "red"
  *   color.hasAlpha === false
@@ -58,8 +62,9 @@ const SPECIALVALUES = new Set([
  *   Valid values for COLOR_UNIT_PREF are contained in CssColor.COLORUNIT.
  */
 
-function CssColor(colorValue) {
+function CssColor(colorValue, supportsCssColor4ColorFunction = false) {
   this.newColor(colorValue);
+  this.cssColor4 = supportsCssColor4ColorFunction;
 }
 
 module.exports.colorUtils = {
@@ -91,6 +96,9 @@ CssColor.prototype = {
   authored: null,
   // A lower-cased copy of |authored|.
   lowerCased: null,
+
+  // Whether the value should be parsed using css-color-4 rules.
+  cssColor4: false,
 
   _setColorUnitUppercase: function (color) {
     // Specifically exclude the case where the color is
@@ -136,7 +144,7 @@ CssColor.prototype = {
   },
 
   get valid() {
-    return isValidCSSColor(this.authored);
+    return isValidCSSColor(this.authored, this.cssColor4);
   },
 
   /**
@@ -393,7 +401,7 @@ CssColor.prototype = {
    * appropriate.
    */
   _getRGBATuple: function () {
-    let tuple = colorToRGBA(this.authored);
+    let tuple = colorToRGBA(this.authored, this.cssColor4);
 
     tuple.a = parseFloat(tuple.a.toFixed(1));
 
@@ -481,11 +489,13 @@ function roundTo(number, digits) {
  *         Color in the form of hex, hsl, hsla, rgb, rgba.
  * @param  {Number} alpha
  *         Alpha value for the color, between 0 and 1.
+ * @param  {Boolean} useCssColor4ColorFunction
+ *         use css-color-4 color function or not.
  * @return {String}
  *         Converted color with `alpha` value in rgba form.
  */
-function setAlpha(colorValue, alpha) {
-  let color = new CssColor(colorValue);
+function setAlpha(colorValue, alpha, useCssColor4ColorFunction = false) {
+  let color = new CssColor(colorValue, useCssColor4ColorFunction);
 
   // Throw if the color supplied is not valid.
   if (!color.valid) {
@@ -1049,12 +1059,11 @@ function parseOldStyleRgb(lexer, hasAlpha) {
  * color's components.  Any valid CSS color form can be passed in.
  *
  * @param {String} name the color
- * @param {Boolean} oldColorFunctionSyntax use old color function syntax or the
- *        css-color-4 syntax
+ * @param {Boolean} useCssColor4ColorFunction use css-color-4 color function or not.
  * @return {Object} an object of the form {r, g, b, a}; or null if the
  *         name was not a valid color
  */
-function colorToRGBA(name, oldColorFunctionSyntax = true) {
+function colorToRGBA(name, useCssColor4ColorFunction = false) {
   name = name.trim().toLowerCase();
 
   if (name in cssColors) {
@@ -1089,7 +1098,7 @@ function colorToRGBA(name, oldColorFunctionSyntax = true) {
   let hsl = func.text === "hsl" || func.text === "hsla";
 
   let vals;
-  if (oldColorFunctionSyntax) {
+  if (!useCssColor4ColorFunction) {
     let hasAlpha = (func.text === "rgba" || func.text === "hsla");
     vals = hsl ? parseOldStyleHsl(lexer, hasAlpha) : parseOldStyleRgb(lexer, hasAlpha);
   } else {
@@ -1110,8 +1119,9 @@ function colorToRGBA(name, oldColorFunctionSyntax = true) {
  * Check whether a string names a valid CSS color.
  *
  * @param {String} name The string to check
+ * @param {Boolean} useCssColor4ColorFunction use css-color-4 color function or not.
  * @return {Boolean} True if the string is a CSS color name.
  */
-function isValidCSSColor(name) {
-  return colorToRGBA(name) !== null;
+function isValidCSSColor(name, useCssColor4ColorFunction = false) {
+  return colorToRGBA(name, useCssColor4ColorFunction) !== null;
 }

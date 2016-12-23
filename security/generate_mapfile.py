@@ -17,12 +17,7 @@ import buildconfig
 
 
 def main(output, input):
-    # There's a check in old-configure.in under the system-nss handling
-    # that should match this.
-    if buildconfig.substs['OS_ARCH'] not in ('Linux', 'Darwin'):
-        print "Error: unhandled OS_ARCH %s" % buildconfig.substs['OS_ARCH']
-        return 1
-    is_linux = buildconfig.substs['OS_ARCH'] == 'Linux'
+    is_darwin = buildconfig.substs['OS_ARCH'] == 'Darwin'
 
     with open(input, 'rb') as f:
         for line in f:
@@ -30,8 +25,8 @@ def main(output, input):
             # Remove all lines containing ';-'
             if ';-' in line:
                 continue
-            # On non-Linux, remove all lines containing ';+'
-            if not is_linux and ';+' in line:
+            # On OS X, remove all lines containing ';+'
+            if is_darwin and ';+' in line:
                 continue
             # Remove the string ' DATA '.
             line = line.replace(' DATA ', '')
@@ -40,15 +35,15 @@ def main(output, input):
             # Remove the string ';;'
             line = line.replace(';;', '')
             # If a ';' is present, remove everything after it,
-            # and on non-Linux, remove it as well.
+            # and on OS X, remove it as well.
             i = line.find(';')
             if i != -1:
-                if is_linux:
-                    line = line[:i+1]
-                else:
+                if is_darwin:
                     line = line[:i]
-            # On non-Linux, symbols get an underscore in front.
-            if line and not is_linux:
+                else:
+                    line = line[:i+1]
+            # On OS X, symbols get an underscore in front.
+            if line and is_darwin:
                 output.write('_')
             output.write(line)
             output.write('\n')
