@@ -23,7 +23,7 @@ module.exports = {
     "curly": ["error", "multi-line"],
     "handle-callback-err": ["error", "er"],
     "indent": ["error", 2, {"SwitchCase": 1}],
-    "max-len": ["error", 80, "error"],
+    "max-len": ["error", 80, 2],
     "no-multiple-empty-lines": ["error", {"max": 1}],
     "no-undef": "error",
     "no-undef-init": "error",

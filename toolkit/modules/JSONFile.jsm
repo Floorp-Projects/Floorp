@@ -81,12 +81,20 @@ const kSaveDelayMs = 1500;
  *        - saveDelayMs: Number indicating the delay (in milliseconds) between a
  *                       change to the data and the related save operation. The
  *                       default value will be applied if omitted.
+ *        - beforeSave: Promise-returning function triggered just before the
+ *                      data is written to disk. This can be used to create any
+ *                      intermediate directories before saving. The file will
+ *                      not be saved if the promise rejects or the function
+ *                      throws an exception.
  */
 function JSONFile(config) {
   this.path = config.path;
 
   if (typeof config.dataPostProcessor === "function") {
     this._dataPostProcessor = config.dataPostProcessor;
+  }
+  if (typeof config.beforeSave === "function") {
+    this._beforeSave = config.beforeSave;
   }
 
   if (config.saveDelayMs === undefined) {
@@ -132,6 +140,15 @@ JSONFile.prototype = {
       throw new Error("Data is not ready.");
     }
     return this._data;
+  },
+
+  /**
+   * Sets the loaded data to a new object. This will overwrite any persisted
+   * data on the next save.
+   */
+  set data(data) {
+    this._data = data;
+    this.dataReady = true;
   },
 
   /**
@@ -252,6 +269,9 @@ JSONFile.prototype = {
   _save: Task.async(function* () {
     // Create or overwrite the file.
     let bytes = gTextEncoder.encode(JSON.stringify(this._data));
+    if (this._beforeSave) {
+      yield Promise.resolve(this._beforeSave());
+    }
     yield OS.File.writeAtomic(this.path, bytes,
                               { tmpPath: this.path + ".tmp" });
   }),
@@ -260,7 +280,6 @@ JSONFile.prototype = {
    * Synchronously work on the data just loaded into memory.
    */
   _processLoadedData(data) {
-    this._data = this._dataPostProcessor ? this._dataPostProcessor(data) : data;
-    this.dataReady = true;
+    this.data = this._dataPostProcessor ? this._dataPostProcessor(data) : data;
   },
 };
