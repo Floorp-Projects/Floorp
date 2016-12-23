@@ -236,6 +236,7 @@ UNIFIED_SOURCES += [
     'jit/Ion.cpp',
     'jit/IonAnalysis.cpp',
     'jit/IonBuilder.cpp',
+    'jit/IonCacheIRCompiler.cpp',
     'jit/IonCaches.cpp',
     'jit/IonControlFlow.cpp',
     'jit/IonIC.cpp',
