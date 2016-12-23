@@ -11,6 +11,8 @@
 
 namespace mozilla {
 
+class MediaContentType;
+
 // Decoder that uses DirectShow to playback MP3 files only.
 class DirectShowDecoder : public MediaDecoder
 {
@@ -33,7 +35,7 @@ public:
   // it is filled with a (static const) null-terminated list of strings
   // denoting the codecs we'll playback. Note that playback is strictly
   // limited to MP3 only.
-  static bool GetSupportedCodecs(const nsACString& aType,
+  static bool GetSupportedCodecs(const MediaContentType& aType,
                                  char const *const ** aCodecList);
 
   // Returns true if the DirectShow backend is preffed on.

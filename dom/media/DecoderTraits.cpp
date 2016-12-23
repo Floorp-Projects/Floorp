@@ -93,14 +93,6 @@ IsAndroidMediaType(const nsACString& aType)
 }
 #endif
 
-#ifdef MOZ_DIRECTSHOW
-static bool
-IsDirectShowSupportedType(const nsACString& aType)
-{
-  return DirectShowDecoder::GetSupportedCodecs(aType, nullptr);
-}
-#endif
-
 /* static */ bool
 DecoderTraits::IsMP4SupportedType(const MediaContentType& aType,
                                   DecoderDoctorDiagnostics* aDiagnostics)
@@ -175,7 +167,7 @@ CanHandleCodecsType(const MediaContentType& aType,
     return CANPLAY_YES;
   }
 #ifdef MOZ_DIRECTSHOW
-  DirectShowDecoder::GetSupportedCodecs(aType.Type().AsString(), &codecList);
+  DirectShowDecoder::GetSupportedCodecs(aType, &codecList);
 #endif
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled()) {
@@ -256,7 +248,7 @@ CanHandleMediaType(const MediaContentType& aType,
     return CANPLAY_MAYBE;
   }
 #ifdef MOZ_DIRECTSHOW
-  if (DirectShowDecoder::GetSupportedCodecs(mimeType.Type().AsString(), nullptr)) {
+  if (DirectShowDecoder::GetSupportedCodecs(mimeType, nullptr)) {
     return CANPLAY_MAYBE;
   }
 #endif
@@ -362,7 +354,7 @@ InstantiateDecoder(const MediaContentType& aType,
 #ifdef MOZ_DIRECTSHOW
   // Note: DirectShow should come before WMF, so that we prefer DirectShow's
   // MP3 support over WMF's.
-  if (IsDirectShowSupportedType(aType.Type().AsString())) {
+  if (DirectShowDecoder::GetSupportedCodecs(aType, nullptr)) {
     decoder = new DirectShowDecoder(aOwner);
     return decoder.forget();
   }
@@ -436,7 +428,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
       new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()));
   } else
 #ifdef MOZ_DIRECTSHOW
-  if (IsDirectShowSupportedType(aType)) {
+  if (DirectShowDecoder::GetSupportedCodecs(*type, nullptr)) {
     decoderReader = new DirectShowReader(aDecoder);
   } else
 #endif
@@ -474,7 +466,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     ADTSDecoder::IsSupportedType(*type) ||
     FlacDecoder::IsSupportedType(*type) ||
 #ifdef MOZ_DIRECTSHOW
-    IsDirectShowSupportedType(aType) ||
+	  DirectShowDecoder::GetSupportedCodecs(*type, nullptr) ||
 #endif
     false;
 }
