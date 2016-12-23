@@ -51,7 +51,7 @@ class TooltoolMixin(object):
         if self.topsrcdir:
             cmd = [
                 sys.executable,
-                os.path.join(self.topsrcdir, 'testing', 'docker', 'recipes',
+                os.path.join(self.topsrcdir, 'taskcluster', 'docker', 'recipes',
                                 'tooltool.py')
             ]
         elif self.config.get("download_tooltool"):

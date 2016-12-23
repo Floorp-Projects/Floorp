@@ -77,7 +77,6 @@ protected:
   virtual void Disconnect() override
   {
     DestroyBackBuffer();
-    ClientLayer::Disconnect();
   }
 
   void DestroyBackBuffer()

@@ -68,7 +68,7 @@ interface nsIFrameLoader : nsISupports
    *
    * @return A promise which will be resolved when the navigation is complete.
    */
-  nsISupports appendPartialSessionHistoryAndSwap(in nsIFrameLoader aOther);
+  nsISupports appendPartialSHistoryAndSwap(in nsIFrameLoader aOther);
 
   /**
    * If grouped session history is applied, use this function to navigate to
@@ -256,13 +256,13 @@ interface nsIFrameLoader : nsISupports
   /**
    * The partial session history.
    */
-  readonly attribute nsIPartialSHistory partialSessionHistory;
+  readonly attribute nsIPartialSHistory partialSHistory;
 
   /**
    * The grouped session history composed of multiple session history objects
    * across root docshells.
    */
-  readonly attribute nsIGroupedSHistory groupedSessionHistory;
+  readonly attribute nsIGroupedSHistory groupedSHistory;
 
   /**
    * Is `true` if the frameloader is dead (destroy has been called on it)

@@ -27,6 +27,8 @@ class URLClassifierParent : public nsIURIClassifierCallback,
                                         bool* aSuccess);
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  void ClassificationFailed();
+
  private:
   ~URLClassifierParent() = default;
 

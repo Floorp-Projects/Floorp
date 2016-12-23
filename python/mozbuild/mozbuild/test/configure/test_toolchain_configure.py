@@ -786,7 +786,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     )
     CLANG_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=gnu99',
-               '-fms-compatibility-version=19.00.24213', '-fallback'],
+               '-fms-compatibility-version=19.00.24213'],
         version='19.00.24213',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
@@ -794,7 +794,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     )
     CLANGXX_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=c++14',
-               '-fms-compatibility-version=19.00.24213', '-fallback'],
+               '-fms-compatibility-version=19.00.24213'],
         version='19.00.24213',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',

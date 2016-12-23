@@ -9,21 +9,8 @@
 interface nsIDOMScreen : nsIDOMEventTarget
 {
   readonly attribute long             top;
-  readonly attribute long             left;
-  readonly attribute long             width;
-  readonly attribute long             height;
-  readonly attribute long             pixelDepth;
-  readonly attribute long             colorDepth;
   readonly attribute long             availWidth;
   readonly attribute long             availHeight;
   readonly attribute long             availLeft;
   readonly attribute long             availTop;
-
-  /**
-   * Returns the current screen orientation.
-   * Can be: landscape-primary, landscape-secondary,
-   *         portrait-primary or portrait-secondary.
-   */
-  [binaryname(SlowMozOrientation)]
-  readonly attribute DOMString       mozOrientation;
 };

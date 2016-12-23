@@ -7,7 +7,6 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PCompositable;
 include protocol PImageContainer;
-include protocol PLayer;
 include protocol PTexture;
 include ProtocolTypes;
 include protocol PMediaSystemResourceManager;
