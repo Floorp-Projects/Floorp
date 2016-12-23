@@ -16,16 +16,6 @@ EXTRA_DEPS += symverscript
 endif
 endif
 
-ifdef MOZ_WEBRTC
-ifeq (WINNT,$(OS_TARGET))
-ifndef MOZ_HAS_WINSDK_WITH_D3D
-OS_LDFLAGS += \
-  -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_D3D_CPU_SUFFIX)' \
-  $(NULL)
-endif
-endif
-endif
-
 # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
 # too old to support Python pretty-printers; if this changes, we could make
 # this 'ifdef GNU_CC'.

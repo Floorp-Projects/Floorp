@@ -18,7 +18,7 @@ namespace a11y {
 class ServiceProvider final : public IServiceProvider
 {
 public:
-  ServiceProvider(AccessibleWrap* aAcc) : mAccessible(aAcc) {}
+  explicit ServiceProvider(AccessibleWrap* aAcc) : mAccessible(aAcc) {}
   ~ServiceProvider() {}
 
   DECL_IUNKNOWN

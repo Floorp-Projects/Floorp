@@ -15,6 +15,7 @@ import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.DynamicToolbar;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoActivityStatus;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -92,6 +93,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import com.keepsafe.switchboard.SwitchBoard;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -884,10 +887,18 @@ public class GeckoPreferences
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (PREFS_COMPACT_TABS.equals(key) && HardwareUtils.isTablet()) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
+                } else if (PREFS_COMPACT_TABS.equals(key)) {
+                    if (HardwareUtils.isTablet()) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    } else {
+                        final boolean value = GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS,
+                                SwitchBoard.isInExperiment(this, Experiments.COMPACT_TABS));
+
+                        pref.setDefaultValue(value);
+                        ((SwitchPreference) pref).setChecked(value);
+                    }
                 }
 
                 // Some Preference UI elements are not actually preferences,

@@ -155,52 +155,6 @@ char nsStandardURL::gHostLimitDigits[] = { '/', '\\', '?', '#', 0 };
   PR_END_MACRO
 
 //----------------------------------------------------------------------------
-
-static nsresult
-EncodeString(nsIUnicodeEncoder *encoder, const nsAFlatString &str, nsACString &result)
-{
-    nsresult rv;
-    int32_t len = str.Length();
-    int32_t maxlen;
-
-    rv = encoder->GetMaxLength(str.get(), len, &maxlen);
-    if (NS_FAILED(rv))
-        return rv;
-
-    char buf[256], *p = buf;
-    if (uint32_t(maxlen) > sizeof(buf) - 1) {
-        p = (char *) malloc(maxlen + 1);
-        if (!p)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    rv = encoder->Convert(str.get(), &len, p, &maxlen);
-    if (NS_FAILED(rv))
-        goto end;
-    if (rv == NS_ERROR_UENC_NOMAPPING) {
-        NS_WARNING("unicode conversion failed");
-        rv = NS_ERROR_UNEXPECTED;
-        goto end;
-    }
-    p[maxlen] = 0;
-    result.Assign(p);
-
-    len = sizeof(buf) - 1;
-    rv = encoder->Finish(buf, &len);
-    if (NS_FAILED(rv))
-        goto end;
-    buf[len] = 0;
-    result.Append(buf);
-
-end:
-    encoder->Reset();
-
-    if (p != buf)
-        free(p);
-    return rv;
-}
-
-//----------------------------------------------------------------------------
 // nsStandardURL::nsPrefObserver
 //----------------------------------------------------------------------------
 
@@ -262,7 +216,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
             // we have to encode this segment
             if (mEncoder || InitUnicodeEncoder()) {
                 NS_ConvertUTF8toUTF16 ucsBuf(Substring(str + pos, str + pos + len));
-                if (NS_SUCCEEDED(EncodeString(mEncoder, ucsBuf, encBuf))) {
+                if (mEncoder->Encode(ucsBuf, encBuf)) {
                     str = encBuf.get();
                     pos = 0;
                     len = encBuf.Length();
@@ -311,14 +265,14 @@ nsSegmentEncoder::InitUnicodeEncoder()
     // "replacement" won't survive another label resolution
     nsDependentCString label(mCharset);
     if (label.EqualsLiteral("replacement")) {
-      mEncoder = EncodingUtils::EncoderForEncoding(label);
-      return true;
+      // Returning false here causes the caller to use UTF-8.
+      return false;
     }
     nsAutoCString encoding;
     if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
       return false;
     }
-    mEncoder = EncodingUtils::EncoderForEncoding(encoding);
+    mEncoder = MakeUnique<nsNCRFallbackEncoderWrapper>(encoding);
     return true;
 }
 
@@ -979,6 +933,17 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     }
 
     buf[i] = '\0';
+
+    // https://url.spec.whatwg.org/#path-state (1.4.1.2)
+    // https://url.spec.whatwg.org/#windows-drive-letter
+    if (SegmentIs(buf, mScheme, "file")) {
+        char* path = &buf[mPath.mPos];
+        if (mPath.mLen >= 3 && path[0] == '/'
+            && nsCRT::IsAsciiAlpha(path[1])
+            && path[2] == '|') {
+            buf[mPath.mPos + 2] = ':';
+        }
+    }
 
     if (mDirectory.mLen > 1) {
         netCoalesceFlags coalesceFlag = NET_COALESCE_NORMAL;

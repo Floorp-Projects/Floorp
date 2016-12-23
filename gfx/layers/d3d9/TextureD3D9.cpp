@@ -647,7 +647,7 @@ D3D9TextureData::Unlock()
 bool
 D3D9TextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  mTexture->AddRef(); // Release in TextureHostD3D9::TextureHostD3D9
+  mTexture.get()->AddRef(); // Release in TextureHostD3D9::TextureHostD3D9
   aOutDescriptor = SurfaceDescriptorD3D9(reinterpret_cast<uintptr_t>(mTexture.get()));
   return true;
 }
@@ -835,7 +835,7 @@ TextureHostD3D9::TextureHostD3D9(TextureFlags aFlags,
 {
   mTexture = reinterpret_cast<IDirect3DTexture9*>(aDescriptor.texture());
   MOZ_ASSERT(mTexture);
-  mTexture->Release(); // see AddRef in TextureClientD3D9::ToSurfaceDescriptor
+  mTexture.get()->Release(); // see AddRef in TextureClientD3D9::ToSurfaceDescriptor
   MOZ_ASSERT(mTexture);
   D3DSURFACE_DESC desc;
   HRESULT hr = mTexture->GetLevelDesc(0, &desc);

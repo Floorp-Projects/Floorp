@@ -1557,6 +1557,7 @@ IonBuilder::visitBlock(const CFGBlock* cfgblock, MBasicBlock* mblock)
               case JSOP_DUP:
               case JSOP_DUP2:
               case JSOP_PICK:
+              case JSOP_UNPICK:
               case JSOP_SWAP:
               case JSOP_SETARG:
               case JSOP_SETLOCAL:
@@ -2117,6 +2118,10 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_PICK:
         current->pick(-GET_INT8(pc));
+        return true;
+
+      case JSOP_UNPICK:
+        current->unpick(-GET_INT8(pc));
         return true;
 
       case JSOP_GETALIASEDVAR:
@@ -7423,11 +7428,28 @@ IonBuilder::jsop_getelem()
         return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
     }
 
+    bool emitted = false;
+
+    // Handle lazy-arguments first. We have to do this even if forceInlineCaches
+    // is true (lazy arguments cannot escape to the IC). Like the code in
+    // IonBuilder::jsop_getprop, we only do this if we're not in analysis mode,
+    // to avoid unnecessary analysis aborts.
+    if (obj->mightBeType(MIRType::MagicOptimizedArguments) && !info().isAnalysis()) {
+        trackOptimizationAttempt(TrackedStrategy::GetElem_Arguments);
+        if (!getElemTryArguments(&emitted, obj, index) || emitted)
+            return emitted;
+
+        trackOptimizationAttempt(TrackedStrategy::GetElem_ArgumentsInlined);
+        if (!getElemTryArgumentsInlined(&emitted, obj, index) || emitted)
+            return emitted;
+
+        if (script()->argumentsHasVarBinding())
+            return abort("Type is not definitely lazy arguments.");
+    }
+
     obj = maybeUnboxForPropertyAccess(obj);
     if (obj->type() == MIRType::Object)
         obj = convertUnboxedObjects(obj);
-
-    bool emitted = false;
 
     if (!forceInlineCaches()) {
         trackOptimizationAttempt(TrackedStrategy::GetElem_TypedObject);
@@ -7454,18 +7476,7 @@ IonBuilder::jsop_getelem()
         trackOptimizationAttempt(TrackedStrategy::GetElem_String);
         if (!getElemTryString(&emitted, obj, index) || emitted)
             return emitted;
-
-        trackOptimizationAttempt(TrackedStrategy::GetElem_Arguments);
-        if (!getElemTryArguments(&emitted, obj, index) || emitted)
-            return emitted;
-
-        trackOptimizationAttempt(TrackedStrategy::GetElem_ArgumentsInlined);
-        if (!getElemTryArgumentsInlined(&emitted, obj, index) || emitted)
-            return emitted;
     }
-
-    if (script()->argumentsHasVarBinding() && obj->mightBeType(MIRType::MagicOptimizedArguments))
-        return abort("Type is not definitely lazy arguments.");
 
     trackOptimizationAttempt(TrackedStrategy::GetElem_InlineCache);
     if (!getElemTryCache(&emitted, obj, index) || emitted)

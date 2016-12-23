@@ -70,7 +70,7 @@ nsHttpAuthManager::GetAuthIdentity(const nsACString & aScheme,
 
   nsAutoCString originSuffix;
   if (aPrincipal) {
-    BasePrincipal::Cast(aPrincipal)->OriginAttributesRef().CreateSuffix(originSuffix);
+    aPrincipal->OriginAttributesRef().CreateSuffix(originSuffix);
   }
 
   if (!aPath.IsEmpty())
@@ -118,9 +118,8 @@ nsHttpAuthManager::SetAuthIdentity(const nsACString & aScheme,
 
   nsAutoCString originSuffix;
   if (aPrincipal) {
-    BasePrincipal::Cast(aPrincipal)->OriginAttributesRef().CreateSuffix(originSuffix);
+    aPrincipal->OriginAttributesRef().CreateSuffix(originSuffix);
   }
-
 
   nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
   return auth_cache->SetAuthEntry(PromiseFlatCString(aScheme).get(),

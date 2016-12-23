@@ -35,7 +35,7 @@ load 323489-1.html
 load 323604-1.html
 load 323604-2.xhtml
 load 331344-1.html
-load 331446-1.xhtml
+asserts-if(stylo,1-3) load 331446-1.xhtml # bug 1324663
 load 331690-1.html
 load 339130-1.html
 load 339246-1.html
@@ -68,12 +68,12 @@ load 370360-1.html
 load 370710.xhtml
 load 370713-1.html
 load 370876-1.html
-load 370897-1.html
+asserts-if(stylo,16-17) load 370897-1.html # bug 1324643
 load 371290.html
 load 373400-1.html
 load 373400-2.html
 load 373400-3.html
-load 373611-1.html
+asserts-if(stylo,1) load 373611-1.html # bug 1324663
 load 373946-1.html
 load 374356-1.html
 load 374819-1.html
@@ -84,7 +84,7 @@ load 379687-1.html
 load 380200-1.xhtml
 load 385132-1.xhtml
 load 385132-2.html
-load 387051-1.html
+asserts-if(stylo,4) load 387051-1.html # bug 1324663
 load 388700-1.html
 load 391898-1.html
 load 391901-1.html
@@ -105,13 +105,13 @@ load 416845-1.xhtml
 load 416845-2.xhtml
 load 416845-3.html   
 load 420242-1.xhtml
-asserts(8) load 420654-1.xhtml # bug 458238, bug 436123, bug 457397
+asserts(8) asserts-if(stylo,4) load 420654-1.xhtml # bug 458238, bug 436123, bug 457397 # bug 1324682
 load 423514-1.xhtml
 load 430374.html
 load 444431-1.html
 load 444702-1.html
-load 448988-1.xhtml
-load 450311-1.html
+asserts-if(stylo,1) load 448988-1.xhtml # bug 1324681
+asserts-if(stylo,1) load 450311-1.html # bug 1324663
 load 451170.html
 load 451355-1.html
 load 456041.html
@@ -119,7 +119,7 @@ skip-if(stylo) load 457115.html # bug 1323649
 load 460637-1.xhtml
 load 460637-2.xhtml
 load 460637-3.xhtml
-load 462849.xhtml
+asserts-if(stylo,2) load 462849.xhtml # bug 1324663
 load 467141-1.html
 load 488388-1.html
 load 501870-1.html
@@ -136,7 +136,7 @@ load 576890-1.html
 load 576890-2.html
 load 576890-3.html
 load 580481-1.xhtml
-asserts(1) load 595758-1.xhtml # Bug 714667
+asserts(1) asserts-if(stylo,0) load 595758-1.xhtml # Bug 714667
 load 595758-2.xhtml
 load 678447-1.html
 load 691824-1.xhtml
@@ -145,10 +145,10 @@ load 696640-1.html
 load 696640-2.html
 load 705996-1.html
 load 705996-2.html
-load 707622-1.html
+asserts-if(stylo,1) load 707622-1.html # bug 1324663
 load 710098-1.html
-load 711864-1.html
-asserts-if(gtkWidget&&browserIsRemote,5) load 759249-1.html # Bug 1195474
+asserts-if(stylo,2) load 711864-1.html # bug 1324663
+asserts-if(gtkWidget&&browserIsRemote,5) asserts-if(stylo,1-3) load 759249-1.html # Bug 1195474 # bug 1324704
 load 759249-2.html
 load 814713.html
 load 1027611-1.html

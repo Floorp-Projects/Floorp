@@ -251,10 +251,12 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
               ChannelInterpretation::Speakers)
   , mType(BiquadFilterType::Lowpass)
   , mFrequency(new AudioParam(this, BiquadFilterNodeEngine::FREQUENCY,
-                              350.f, "frequency"))
-  , mDetune(new AudioParam(this, BiquadFilterNodeEngine::DETUNE, 0.f, "detune"))
-  , mQ(new AudioParam(this, BiquadFilterNodeEngine::Q, 1.f, "Q"))
-  , mGain(new AudioParam(this, BiquadFilterNodeEngine::GAIN, 0.f, "gain"))
+                              "frequency", 350.f,
+                              -(aContext->SampleRate() / 2),
+                              aContext->SampleRate() / 2))
+  , mDetune(new AudioParam(this, BiquadFilterNodeEngine::DETUNE, "detune", 0.f))
+  , mQ(new AudioParam(this, BiquadFilterNodeEngine::Q, "Q", 1.f))
+  , mGain(new AudioParam(this, BiquadFilterNodeEngine::GAIN, "gain", 0.f))
 {
   uint64_t windowID = aContext->GetParentObject()->WindowID();
   BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination(), windowID);

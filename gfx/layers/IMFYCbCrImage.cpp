@@ -34,7 +34,7 @@ IMFYCbCrImage::~IMFYCbCrImage()
 
 struct AutoLockTexture
 {
-  AutoLockTexture(ID3D11Texture2D* aTexture)
+  explicit AutoLockTexture(ID3D11Texture2D* aTexture)
   {
     aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
     if (!mMutex) {

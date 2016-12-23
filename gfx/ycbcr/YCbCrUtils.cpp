@@ -153,5 +153,26 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
   }
 }
 
+void
+ConvertYCbCrAToARGB(const uint8_t* aSrcY,
+                    const uint8_t* aSrcU,
+                    const uint8_t* aSrcV,
+                    const uint8_t* aSrcA,
+                    int aSrcStrideYA, int aSrcStrideUV,
+                    uint8_t* aDstARGB, int aDstStrideARGB,
+                    int aWidth, int aHeight) {
+
+  ConvertYCbCrAToARGB32(aSrcY,
+                        aSrcU,
+                        aSrcV,
+                        aSrcA,
+                        aDstARGB,
+                        aWidth,
+                        aHeight,
+                        aSrcStrideYA,
+                        aSrcStrideUV,
+                        aDstStrideARGB);
+}
+
 } // namespace gfx
 } // namespace mozilla

@@ -66,7 +66,7 @@ struct IDXGIAdapter1;
 class MOZ_STACK_CLASS DCFromDrawTarget final
 {
 public:
-    DCFromDrawTarget(mozilla::gfx::DrawTarget& aDrawTarget);
+    explicit DCFromDrawTarget(mozilla::gfx::DrawTarget& aDrawTarget);
 
     ~DCFromDrawTarget() {
         if (mNeedsRelease) {

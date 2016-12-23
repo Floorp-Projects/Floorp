@@ -207,7 +207,7 @@ protected:
 class DWriteFontFallbackRenderer final : public IDWriteTextRenderer
 {
 public:
-    DWriteFontFallbackRenderer(IDWriteFactory *aFactory)
+    explicit DWriteFontFallbackRenderer(IDWriteFactory *aFactory)
         : mRefCount(0)
     {
         HRESULT hr = S_OK;

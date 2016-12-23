@@ -29,8 +29,7 @@ add_task(function* () {
       isPrerendered: true,
     });
     yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
-    browser1.frameLoader.appendPartialSessionHistoryAndSwap(
-      tab2.linkedBrowser.frameLoader);
+    browser1.frameLoader.appendPartialSHistoryAndSwap(tab2.linkedBrowser.frameLoader);
     yield awaitProcessChange(browser1);
     ok(isAlive(tab2));
 

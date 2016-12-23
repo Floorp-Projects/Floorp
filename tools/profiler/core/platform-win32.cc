@@ -49,7 +49,8 @@ class PlatformData {
   // going to use it in the sampler thread. Using GetThreadHandle() will
   // not work in this case. We're using OpenThread because DuplicateHandle
   // for some reason doesn't work in Chrome's sandbox.
-  PlatformData(int aThreadId) : profiled_thread_(OpenThread(THREAD_GET_CONTEXT |
+  explicit PlatformData(int aThreadId) : profiled_thread_(OpenThread(
+                                               THREAD_GET_CONTEXT |
                                                THREAD_SUSPEND_RESUME |
                                                THREAD_QUERY_INFORMATION,
                                                false,

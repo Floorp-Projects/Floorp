@@ -23,8 +23,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
     width: "100px",
     height: "200px",
     position: "absolute",
-    left:0,
-    top:0
+    left: 0,
+    top: 0
   });
 
   let rafMock = createRAFMock();
@@ -78,8 +78,6 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   info("Dragging correctly translates the div");
   {
-    let initialX = dragZoom.translateX;
-    let initialY = dragZoom.translateY;
     div.dispatchEvent(new MouseEvent("mousemove", {
       clientX: 10,
       clientY: 10,

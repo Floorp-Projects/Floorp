@@ -35,9 +35,7 @@
 
     <SwitchPreference android:key="android.not_a_preference.compact_tabs"
                       android:title="@string/pref_compact_tabs"
-                      android:summary="@string/pref_compact_tabs_summary"
-                      android:defaultValue="false"
-                      android:persistent="true"/>
+                      android:summary="@string/pref_compact_tabs_summary" />
 
 
 </PreferenceScreen>

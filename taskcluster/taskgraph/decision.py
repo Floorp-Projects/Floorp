@@ -181,6 +181,7 @@ def get_action_yml(parameters):
     action_parameters.update({
         "action": "{{action}}",
         "action_args": "{{action_args}}",
+        "project": parameters["project"],
         "from_now": json_time_from_now,
         "now": current_json_time()
     })

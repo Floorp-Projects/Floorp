@@ -141,7 +141,7 @@ task_description_schema = Schema({
         Required('docker-image'): Any(
             # a raw Docker image path (repo/image:tag)
             basestring,
-            # an in-tree generated docker image (from `testing/docker/<name>`)
+            # an in-tree generated docker image (from `taskcluster/docker/<name>`)
             {'in-tree': basestring}
         ),
 
@@ -289,6 +289,8 @@ GROUP_NAMES = {
     'tc-M-V': 'Mochitests on Valgrind executed by TaskCluster',
     'tc-R': 'Reftests executed by TaskCluster',
     'tc-R-e10s': 'Reftests executed by TaskCluster with e10s',
+    'tc-T': 'Talos performance tests executed by TaskCluster',
+    'tc-T-e10s': 'Talos performance tests executed by TaskCluster with e10s',
     'tc-VP': 'VideoPuppeteer tests executed by TaskCluster',
     'tc-W': 'Web platform tests executed by TaskCluster',
     'tc-W-e10s': 'Web platform tests executed by TaskCluster with e10s',

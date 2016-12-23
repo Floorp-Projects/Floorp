@@ -30,7 +30,7 @@ static const GUID sD3D11TextureUsage =
 class TextureMemoryMeasurer : public IUnknown
 {
 public:
-  TextureMemoryMeasurer(size_t aMemoryUsed)
+  explicit TextureMemoryMeasurer(size_t aMemoryUsed)
   {
     mMemoryUsed = aMemoryUsed;
     gfxWindowsPlatform::sD3D11SharedTextures += mMemoryUsed;

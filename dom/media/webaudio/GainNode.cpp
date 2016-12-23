@@ -120,7 +120,7 @@ GainNode::GainNode(AudioContext* aContext)
               2,
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
-  , mGain(new AudioParam(this, GainNodeEngine::GAIN, 1.0f, "gain"))
+  , mGain(new AudioParam(this, GainNodeEngine::GAIN, "gain", 1.0f))
 {
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,

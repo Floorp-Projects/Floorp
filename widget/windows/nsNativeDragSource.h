@@ -24,7 +24,7 @@ public:
 
   // construct an nsNativeDragSource referencing adapter
   // nsNativeDragSource(nsIDragSource * adapter);
-  nsNativeDragSource(nsIDOMDataTransfer* aDataTransfer);
+  explicit nsNativeDragSource(nsIDOMDataTransfer* aDataTransfer);
   ~nsNativeDragSource();
 
   // IUnknown methods - see iunknown.h for documentation

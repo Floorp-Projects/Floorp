@@ -145,6 +145,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Move the definition to the top of the stack.
     void pick(int32_t depth);
 
+    // Move the top of the stack definition under the depth-th stack value.
+    void unpick(int32_t depth);
+
     // Exchange 2 stack slots at the defined depth
     void swapAt(int32_t depth);
 

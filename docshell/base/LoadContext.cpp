@@ -50,7 +50,7 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
   , mIsNotNull(true)
 #endif
 {
-  PrincipalOriginAttributes poa = BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+  PrincipalOriginAttributes poa = aPrincipal->OriginAttributesRef();
   mOriginAttributes.InheritFromDocToChildDocShell(poa);
   if (!aOptionalBase) {
     return;

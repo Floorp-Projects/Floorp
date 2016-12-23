@@ -7,9 +7,8 @@
     <meta name="assert" content="When a pointerdown is canceled, a mouse drag shouldn't fire any compatibility mouse events."/>
     <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
     <script src="/resources/testharness.js"></script>
-    <!--script src="/resources/testharnessreport.js"></script-->
+    <script src="/resources/testharnessreport.js"></script>
     <script type="text/javascript" src="pointerevent_support.js"></script>
-    <script type="text/javascript" src="mochitest_support_internal.js"></script>
     <script type="text/javascript">
       var test_pointerEvent = async_test("Suppress compat mouse events on drag");
       add_completion_callback(end_of_test);
@@ -89,7 +88,6 @@
   </head>
   <body onload="run()">
     <h1>Pointer Event: Suppress compatibility mouse events on drag</h1>
-    <!--
     <h4>
       When a pointerdown is canceled, a mouse drag shouldn't fire any compatibility mouse events.
     </h4>
@@ -98,7 +96,6 @@
       <li> Drag mouse within Target1 &amp; release.</li>
       <li> Click Done.</li>
     </ol>
-	-->
     <div id="target0">
       Target0
     </div>

@@ -8,6 +8,8 @@
 #include "MediaInfo.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
+#include "mozilla/layers/SharedRGBImage.h"
+#include "YCbCrUtils.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
@@ -91,6 +93,45 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
          aPlane.mHeight <= PlanarYCbCrImage::MAX_DIMENSION &&
          aPlane.mWidth * aPlane.mHeight < MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
          aPlane.mStride > 0;
+}
+
+static bool ValidateBufferAndPicture(const VideoData::YCbCrBuffer& aBuffer,
+                                     const IntRect& aPicture)
+{
+  // The following situation should never happen unless there is a bug
+  // in the decoder
+  if (aBuffer.mPlanes[1].mWidth != aBuffer.mPlanes[2].mWidth ||
+      aBuffer.mPlanes[1].mHeight != aBuffer.mPlanes[2].mHeight) {
+    NS_ERROR("C planes with different sizes");
+    return false;
+  }
+
+  // The following situations could be triggered by invalid input
+  if (aPicture.width <= 0 || aPicture.height <= 0) {
+    // In debug mode, makes the error more noticeable
+    MOZ_ASSERT(false, "Empty picture rect");
+    return false;
+  }
+  if (!ValidatePlane(aBuffer.mPlanes[0]) ||
+      !ValidatePlane(aBuffer.mPlanes[1]) ||
+      !ValidatePlane(aBuffer.mPlanes[2])) {
+    NS_WARNING("Invalid plane size");
+    return false;
+  }
+
+  // Ensure the picture size specified in the headers can be extracted out of
+  // the frame we've been supplied without indexing out of bounds.
+  CheckedUint32 xLimit = aPicture.x + CheckedUint32(aPicture.width);
+  CheckedUint32 yLimit = aPicture.y + CheckedUint32(aPicture.height);
+  if (!xLimit.isValid() || xLimit.value() > aBuffer.mPlanes[0].mStride ||
+      !yLimit.isValid() || yLimit.value() > aBuffer.mPlanes[0].mHeight)
+  {
+    // The specified picture dimensions can't be contained inside the video
+    // frame, we'll stomp memory if we try to copy it. Fail.
+    NS_WARNING("Overflowing picture rect");
+    return false;
+  }
+  return true;
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -261,36 +302,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
     return v.forget();
   }
 
-  // The following situation should never happen unless there is a bug
-  // in the decoder
-  if (aBuffer.mPlanes[1].mWidth != aBuffer.mPlanes[2].mWidth ||
-      aBuffer.mPlanes[1].mHeight != aBuffer.mPlanes[2].mHeight) {
-    NS_ERROR("C planes with different sizes");
-    return nullptr;
-  }
-
-  // The following situations could be triggered by invalid input
-  if (aPicture.width <= 0 || aPicture.height <= 0) {
-    // In debug mode, makes the error more noticeable
-    MOZ_ASSERT(false, "Empty picture rect");
-    return nullptr;
-  }
-  if (!ValidatePlane(aBuffer.mPlanes[0]) || !ValidatePlane(aBuffer.mPlanes[1]) ||
-      !ValidatePlane(aBuffer.mPlanes[2])) {
-    NS_WARNING("Invalid plane size");
-    return nullptr;
-  }
-
-  // Ensure the picture size specified in the headers can be extracted out of
-  // the frame we've been supplied without indexing out of bounds.
-  CheckedUint32 xLimit = aPicture.x + CheckedUint32(aPicture.width);
-  CheckedUint32 yLimit = aPicture.y + CheckedUint32(aPicture.height);
-  if (!xLimit.isValid() || xLimit.value() > aBuffer.mPlanes[0].mStride ||
-      !yLimit.isValid() || yLimit.value() > aBuffer.mPlanes[0].mHeight)
-  {
-    // The specified picture dimensions can't be contained inside the video
-    // frame, we'll stomp memory if we try to copy it. Fail.
-    NS_WARNING("Overflowing picture rect");
+  if (!ValidateBufferAndPicture(aBuffer, aPicture)) {
     return nullptr;
   }
 
@@ -345,6 +357,74 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
     }
   }
 #endif
+  return v.forget();
+}
+
+
+/* static */
+already_AddRefed<VideoData>
+VideoData::CreateAndCopyData(const VideoInfo& aInfo,
+                             ImageContainer* aContainer,
+                             int64_t aOffset,
+                             int64_t aTime,
+                             int64_t aDuration,
+                             const YCbCrBuffer& aBuffer,
+                             const YCbCrBuffer::Plane &aAlphaPlane,
+                             bool aKeyframe,
+                             int64_t aTimecode,
+                             const IntRect& aPicture)
+{
+  if (!aContainer) {
+    // Create a dummy VideoData with no image. This gives us something to
+    // send to media streams if necessary.
+    RefPtr<VideoData> v(new VideoData(aOffset,
+                                      aTime,
+                                      aDuration,
+                                      aKeyframe,
+                                      aTimecode,
+                                      aInfo.mDisplay,
+                                      0));
+    return v.forget();
+  }
+
+  if (!ValidateBufferAndPicture(aBuffer, aPicture)) {
+    return nullptr;
+  }
+
+  RefPtr<VideoData> v(new VideoData(aOffset,
+                                    aTime,
+                                    aDuration,
+                                    aKeyframe,
+                                    aTimecode,
+                                    aInfo.mDisplay,
+                                    0));
+
+  // Convert from YUVA to BGRA format on the software side.
+  RefPtr<layers::SharedRGBImage> videoImage =
+    aContainer->CreateSharedRGBImage();
+  v->mImage = videoImage;
+
+  if (!v->mImage) {
+    return nullptr;
+  }
+  if (!videoImage->Allocate(IntSize(aBuffer.mPlanes[0].mWidth,
+                                    aBuffer.mPlanes[0].mHeight),
+                            SurfaceFormat::B8G8R8A8)) {
+    return nullptr;
+  }
+  uint8_t* argb_buffer = videoImage->GetBuffer();
+  IntSize size = videoImage->GetSize();
+
+  // The naming convention for libyuv and associated utils is word-order.
+  // The naming convention in the gfx stack is byte-order.
+  ConvertYCbCrAToARGB(aBuffer.mPlanes[0].mData,
+                      aBuffer.mPlanes[1].mData,
+                      aBuffer.mPlanes[2].mData,
+                      aAlphaPlane.mData,
+                      aBuffer.mPlanes[0].mStride, aBuffer.mPlanes[1].mStride,
+                      argb_buffer, size.width * 4,
+                      size.width, size.height);
+
   return v.forget();
 }
 

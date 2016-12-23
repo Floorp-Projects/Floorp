@@ -283,6 +283,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/StackScroller.java',
     'gfx/SurfaceTextureListener.java',
     'gfx/ViewTransform.java',
+    'gfx/VsyncSource.java',
     'InputConnectionListener.java',
     'InputMethods.java',
     'NotificationListener.java',

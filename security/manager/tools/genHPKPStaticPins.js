@@ -19,7 +19,7 @@ if (arguments.length != 3) {
                   "<absolute path to StaticHPKPins.h>");
 }
 
-var { 'classes': Cc, 'interfaces': Ci, 'utils': Cu, 'results': Cr } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
@@ -236,7 +236,7 @@ function downloadAndParseChromeCerts(filename, certNameToSKD, certSKDToName) {
   let chromeName;
   for (let line of lines) {
     // Skip comments and newlines.
-    if (line.length == 0 || line[0] == '#') {
+    if (line.length == 0 || line[0] == "#") {
       continue;
     }
     switch (state) {

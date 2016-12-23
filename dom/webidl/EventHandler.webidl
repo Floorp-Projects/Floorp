@@ -131,6 +131,7 @@ interface GlobalEventHandlers {
            attribute EventHandler onanimationend;
            attribute EventHandler onanimationiteration;
            attribute EventHandler onanimationstart;
+           attribute EventHandler ontransitioncancel;
            attribute EventHandler ontransitionend;
            attribute EventHandler ontransitionrun;
            attribute EventHandler ontransitionstart;

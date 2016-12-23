@@ -423,6 +423,8 @@ DataStorage::AsyncReadData(bool& aHaveProfileDir,
 void
 DataStorage::WaitForReady()
 {
+  MOZ_DIAGNOSTIC_ASSERT(mInitCalled, "Waiting before Init() has been called?");
+
   MonitorAutoLock readyLock(mReadyMonitor);
   while (!mReady) {
     nsresult rv = readyLock.Wait();

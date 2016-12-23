@@ -326,9 +326,7 @@ function testOfflineAudioContext() {
   var o = new OfflineAudioContext(1, 44100, 44100);
   is(o.state, "suspended", "OfflineAudioContext should start in suspended state.");
 
-  expectRejectedPromise(o, "suspend", "NotSupportedError");
   expectRejectedPromise(o, "resume", "NotSupportedError");
-  expectRejectedPromise(o, "close", "NotSupportedError");
 
   var previousState = o.state,
       finishedRendering = false;

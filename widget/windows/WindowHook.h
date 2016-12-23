@@ -49,7 +49,7 @@ private:
     bool operator!= (const CallbackData &rhs) const {
       return !(*this == rhs);
     }
-    operator bool () const {
+    explicit operator bool () const {
       return !!cb;
     }
   };

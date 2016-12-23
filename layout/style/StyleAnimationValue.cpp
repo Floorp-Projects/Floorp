@@ -4335,7 +4335,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           return true;
         }
 
-        case eCSSProperty_image_region: {
+        case eCSSProperty__moz_image_region: {
           const nsStyleList *list =
             static_cast<const nsStyleList*>(styleStruct);
           const nsRect &srect = list->mImageRegion;

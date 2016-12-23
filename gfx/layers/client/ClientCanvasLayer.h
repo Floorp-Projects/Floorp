@@ -88,7 +88,6 @@ public:
       mBufferProvider->ClearCachedResources();
     }
     mCanvasClient = nullptr;
-    ClientLayer::Disconnect();
   }
 
   virtual CompositableClient* GetCompositableClient() override

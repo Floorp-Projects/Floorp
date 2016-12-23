@@ -56,8 +56,8 @@ public:
 
   CComPtr(const CComPtr& aOther) : mPtr(nullptr) { Set(aOther.Get()); }
   CComPtr() : mPtr(nullptr) { }
-  CComPtr(T* const & aPtr) : mPtr(nullptr) { Set(aPtr); }
-  CComPtr(const std::nullptr_t& aNullPtr) : mPtr(aNullPtr) { }
+  MOZ_IMPLICIT CComPtr(T* const & aPtr) : mPtr(nullptr) { Set(aPtr); }
+  MOZ_IMPLICIT CComPtr(const std::nullptr_t& aNullPtr) : mPtr(aNullPtr) { }
   T** operator&() { return &mPtr; }
   T* operator->(){ return mPtr; }
   operator T*() { return mPtr; }
@@ -178,7 +178,7 @@ public:
   {
   }
 
-  AutoPtr(Type* aPtr)
+  explicit AutoPtr(Type* aPtr)
     : mPtr(aPtr)
   {
   }

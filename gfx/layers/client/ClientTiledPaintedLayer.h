@@ -64,11 +64,6 @@ public:
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override;
   virtual ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void Disconnect() override
-  {
-    ClientLayer::Disconnect();
-  }
-
   virtual void RenderLayer() override;
 
   virtual void ClearCachedResources() override;

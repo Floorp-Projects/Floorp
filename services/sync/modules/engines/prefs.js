@@ -226,10 +226,6 @@ PrefTracker.prototype = {
     Svc.Prefs.set("engine.prefs.modified", value);
   },
 
-  loadChangedIDs: function loadChangedIDs() {
-    // Don't read changed IDs from disk at start up.
-  },
-
   clearChangedIDs: function clearChangedIDs() {
     this.modified = false;
   },

@@ -9,7 +9,7 @@ template <class T, size_t size>
 class StackArray
 {
 public:
-  StackArray(size_t count) {
+  explicit StackArray(size_t count) {
     if (count > size) {
       mData = new T[count];
     } else {
