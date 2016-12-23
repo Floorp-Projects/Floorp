@@ -381,18 +381,28 @@ class JitRuntime
     }
 };
 
+class JitZone
+{
+    // Allocated space for optimized baseline stubs.
+    OptimizedICStubSpace optimizedStubSpace_;
+    // Allocated space for cached cfg.
+    CFGSpace cfgSpace_;
+
+  public:
+    OptimizedICStubSpace* optimizedStubSpace() {
+        return &optimizedStubSpace_;
+    }
+    CFGSpace* cfgSpace() {
+        return &cfgSpace_;
+    }
+};
+
 enum class CacheKind : uint8_t;
 class CacheIRStubInfo;
 
 enum class ICStubEngine : uint8_t {
-    // Baseline IC, see SharedIC.h and BaselineIC.h.
     Baseline = 0,
-
-    // Ion IC that reuses Baseline IC code, see SharedIC.h.
-    IonSharedIC,
-
-    // Ion IC, see IonIC.h.
-    IonIC
+    IonMonkey
 };
 
 struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
@@ -417,45 +427,6 @@ struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
 
     void operator=(CacheIRStubKey&& other) {
         stubInfo = Move(other.stubInfo);
-    }
-};
-
-class JitZone
-{
-    // Allocated space for optimized baseline stubs.
-    OptimizedICStubSpace optimizedStubSpace_;
-    // Allocated space for cached cfg.
-    CFGSpace cfgSpace_;
-
-    // Set of CacheIRStubInfo instances used by Ion stubs in this Zone.
-    using IonCacheIRStubInfoSet = HashSet<CacheIRStubKey, CacheIRStubKey, SystemAllocPolicy>;
-    IonCacheIRStubInfoSet ionCacheIRStubInfoSet_;
-
-  public:
-    OptimizedICStubSpace* optimizedStubSpace() {
-        return &optimizedStubSpace_;
-    }
-    CFGSpace* cfgSpace() {
-        return &cfgSpace_;
-    }
-
-    CacheIRStubInfo* getIonCacheIRStubInfo(const CacheIRStubKey::Lookup& key) {
-        if (!ionCacheIRStubInfoSet_.initialized())
-            return nullptr;
-        IonCacheIRStubInfoSet::Ptr p = ionCacheIRStubInfoSet_.lookup(key);
-        return p ? p->stubInfo.get() : nullptr;
-    }
-    MOZ_MUST_USE bool putIonCacheIRStubInfo(const CacheIRStubKey::Lookup& lookup,
-                                            CacheIRStubKey& key)
-    {
-        if (!ionCacheIRStubInfoSet_.initialized() && !ionCacheIRStubInfoSet_.init())
-            return false;
-        IonCacheIRStubInfoSet::AddPtr p = ionCacheIRStubInfoSet_.lookupForAdd(lookup);
-        MOZ_ASSERT(!p);
-        return ionCacheIRStubInfoSet_.add(p, Move(key));
-    }
-    void purgeIonCacheIRStubInfo() {
-        ionCacheIRStubInfoSet_.finish();
     }
 };
 

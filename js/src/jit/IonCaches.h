@@ -849,8 +849,6 @@ bool IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
 bool ValueToNameOrSymbolId(JSContext* cx, HandleValue idval, MutableHandleId id,
                            bool* nameOrSymbol);
 
-void* GetReturnAddressToIonCode(JSContext* cx);
-
 } // namespace jit
 } // namespace js
 
