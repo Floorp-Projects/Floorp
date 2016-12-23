@@ -20,6 +20,7 @@ maybe_unified_sources += [
     'src/src/chunk_dss.c',
     'src/src/chunk_mmap.c',
     'src/src/ckh.c',
+    'src/src/ctl.c',
     'src/src/extent.c',
     'src/src/hash.c',
     'src/src/huge.c',
@@ -39,11 +40,6 @@ maybe_unified_sources += [
     'src/src/tsd.c',
     'src/src/util.c',
     'src/src/witness.c',
-]
-
-SOURCES += [
-    # This file cannot be built in unified mode because of symbol clash on arena_purge.
-    'src/src/ctl.c',
 ]
 
 # Only OSX needs the zone allocation implementation,
