@@ -1037,22 +1037,28 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     }
 
     const Instance& instance = instanceObj->instance();
-    RootedAtom name(cx, instance.code().getFuncAtom(cx, funcIndex));
-    if (!name)
-        return false;
-
     unsigned numArgs = instance.metadata().lookupFuncExport(funcIndex).sig().args().length();
 
-    // asm.js needs to active like a normal JS function which are allowed to be
-    // used as constructors.
+    // asm.js needs to act like a normal JS function which means having the name
+    // from the original source and being callable as a constructor.
     if (instance.isAsmJS()) {
+        RootedAtom name(cx, instance.code().getFuncAtom(cx, funcIndex));
+        if (!name)
+            return false;
+
         fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
                                      SingletonObject, JSFunction::ASMJS_CTOR));
+        if (!fun)
+            return false;
     } else {
+        RootedAtom name(cx, NumberToAtom(cx, funcIndex));
+        if (!name)
+            return false;
+
         fun.set(NewNativeFunction(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED));
+        if (!fun)
+            return false;
     }
-    if (!fun)
-        return false;
 
     fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
     fun->setExtendedSlot(FunctionExtended::WASM_FUNC_INDEX_SLOT, Int32Value(funcIndex));
