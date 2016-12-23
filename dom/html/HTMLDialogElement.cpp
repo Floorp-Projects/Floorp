@@ -30,6 +30,9 @@ HTMLDialogElement::Close(const mozilla::dom::Optional<nsAString>& aReturnValue)
   ErrorResult ignored;
   SetOpen(false, ignored);
   ignored.SuppressException();
+  RefPtr<AsyncEventDispatcher> eventDispatcher =
+    new AsyncEventDispatcher(this, NS_LITERAL_STRING("close"), false);
+  eventDispatcher->PostDOMEvent();
 }
 
 void
