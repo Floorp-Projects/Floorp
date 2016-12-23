@@ -38,6 +38,7 @@ public:
 
   void GetRole(nsAString& aRole);
   void GetStates(nsTArray<nsString>& aStates);
+  void GetAttributes(nsTArray<nsString>& aAttributes);
   nsINode* GetDOMNode();
 
   bool Is(const Sequence<nsString>& aFlavors);

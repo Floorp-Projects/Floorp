@@ -86,6 +86,21 @@
     ok(anode.has('explicit-name'),
        'object attributes are present');
 
+    var attrs = [ 'explicit-name' ];
+    if (anode.attributes.length > 1) {
+      attrs = [
+        'margin-left', 'text-align', 'text-indent', 'margin-right',
+        'tag', 'margin-top', 'margin-bottom', 'display',
+        'explicit-name'
+      ];
+    }
+
+    is(anode.attributes.length, attrs.length, 'correct number of attributes');
+    for (var i = 0; i < attrs.length; i++) {
+      is(anode.attributes[i], attrs[i],
+         `${attrs[i]} attribute is expected at ${i}th index`);
+    }
+
     finish();
   }
   </script>
