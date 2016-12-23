@@ -9,6 +9,8 @@ interface AccessibleNode {
   readonly attribute DOMString role;
   [Frozen, Cached, Pure]
   readonly attribute sequence<DOMString> states;
+  [Frozen, Cached, Pure]
+  readonly attribute sequence<DOMString> attributes;
   readonly attribute Node? DOMNode;
 
   boolean is(DOMString... states);
