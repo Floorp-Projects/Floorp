@@ -142,8 +142,6 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
             taskdesc['scopes'].append(
                 'docker-worker:relengapi-proxy:tooltool.download.internal')
         env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
-        env['TOOLTOOL_REPO'] = 'https://github.com/mozilla/build-tooltool'
-        env['TOOLTOOL_REV'] = 'master'
 
     # Retry if mozharness returns TBPL_RETRY
     worker['retry-exit-status'] = 4
@@ -198,8 +196,6 @@ def mozharness_on_windows(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'TOOLTOOL_REPO': 'https://github.com/mozilla/build-tooltool',
-        'TOOLTOOL_REV': 'master',
     })
 
     mh_command = [r'c:\mozilla-build\python\python.exe']

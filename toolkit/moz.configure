@@ -809,11 +809,13 @@ set_define('USE_SKIA_GPU', skia_gpu)
 
 option('--enable-skia-pdf', help='Enable Skia PDF')
 
-@depends('--enable-skia-pdf', skia)
-def skia_pdf(value, skia):
+@depends('--enable-skia-pdf', skia, milestone)
+def skia_pdf(value, skia, milestone):
     if value.origin == 'default':
         if not skia:
             return None
+        if milestone.is_nightly:
+            return True
     elif value and not skia:
         die('Cannot enable Skia PDF without enabling Skia')
     if skia and value:
