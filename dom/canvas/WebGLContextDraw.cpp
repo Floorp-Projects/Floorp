@@ -396,6 +396,8 @@ public:
 
         for (const auto& progAttrib : mWebGL->mActiveProgramLinkInfo->attribs) {
             const auto& loc = progAttrib.mLoc;
+            if (loc == -1)
+                continue;
 
             const auto& attribData = mWebGL->mBoundVertexArray->mAttribs[loc];
 
@@ -931,8 +933,10 @@ WebGLContext::ValidateBufferFetching(const char* info)
     mBufferFetch_IsAttrib0Active = false;
 
     for (const auto& attrib : mActiveProgramLinkInfo->attribs) {
-        const auto& attribLoc = attrib.mLoc;
+        if (attrib.mLoc == -1)
+            continue;
 
+        const uint32_t attribLoc(attrib.mLoc);
         if (attribLoc >= attribCount)
             continue;
 
