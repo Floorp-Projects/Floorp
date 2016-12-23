@@ -40,7 +40,6 @@ class nsIRequestObserver;
 class nsString;
 class nsIURI;
 class nsIChannel;
-class nsIContent;
 
 enum eParserCommands {
   eViewNormal,
