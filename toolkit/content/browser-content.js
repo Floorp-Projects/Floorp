@@ -1768,8 +1768,8 @@ DateTimePickerListener.init();
  * This doesn't include scrolling sub frames, but does include scrolling from JavaScript.
  * See bug 1312881 and bug 1297867 for more details.
  */
-addEventListener("DOMWindowCreated", function(aEvent) {
-  if (aEvent.target !== content.document ||
+addEventListener("DOMWindowCreated", function() {
+  if (event.target !== content.document ||
       content.location == "" ||
       content.location.protocol === "about:") {
     return;
