@@ -3641,24 +3641,16 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins)
     // constant to reduce register allocation pressure.
     bool useConstId = id->type() == MIRType::String || id->type() == MIRType::Symbol;
 
-    // We need a temp register if we can't use the output register as scratch.
-    // See IonIC::scratchRegisterForEntryJump.
-    LDefinition maybeTemp = LDefinition::BogusTemp();
-    if (EnableIonCacheIR && ins->type() == MIRType::Double)
-        maybeTemp = temp();
-
     if (ins->type() == MIRType::Value) {
         LGetPropertyCacheV* lir =
             new(alloc()) LGetPropertyCacheV(useRegister(ins->object()),
-                                            useBoxOrTypedOrConstant(id, useConstId),
-                                            maybeTemp);
+                                            useBoxOrTypedOrConstant(id, useConstId));
         defineBox(lir, ins);
         assignSafepoint(lir, ins);
     } else {
         LGetPropertyCacheT* lir =
             new(alloc()) LGetPropertyCacheT(useRegister(ins->object()),
-                                            useBoxOrTypedOrConstant(id, useConstId),
-                                            maybeTemp);
+                                            useBoxOrTypedOrConstant(id, useConstId));
         define(lir, ins);
         assignSafepoint(lir, ins);
     }
