@@ -166,13 +166,9 @@ toolbar[brighttext] #downloads-button:not([counter])[attention="success"] > #dow
   font-size: 9px;
   line-height: 9px;
   text-align: center;
-}
 
-@media not all and (-moz-os-version: windows-xp) {
-  #downloads-indicator-counter {
-    /* Bug 812345 added this... */
-    margin-bottom: -1px;
-  }
+  /* Bug 812345 added this... */
+  margin-bottom: -1px;
 }
 
 toolbar[brighttext] #downloads-indicator-counter {
