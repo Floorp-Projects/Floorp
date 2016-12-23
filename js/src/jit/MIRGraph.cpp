@@ -25,7 +25,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     optimizationInfo_(optimizationInfo),
     alloc_(alloc),
     graph_(graph),
-    abortReason_(AbortReason_NoAbort),
+    abortReason_(AbortReason::NoAbort),
     shouldForceAbort_(false),
     abortedPreliminaryGroups_(*alloc_),
     error_(false),
@@ -1325,21 +1325,21 @@ MBasicBlock::setBackedge(TempAllocator& alloc, MBasicBlock* pred)
 
     // Add exit definitions to each corresponding phi at the entry.
     if (!inheritPhisFromBackedge(alloc, pred, &hadTypeChange))
-        return AbortReason_Alloc;
+        return AbortReason::Alloc;
 
     if (hadTypeChange) {
         for (MPhiIterator phi = phisBegin(); phi != phisEnd(); phi++)
             phi->removeOperand(phi->numOperands() - 1);
-        return AbortReason_Disable;
+        return AbortReason::Disable;
     }
 
     // We are now a loop header proper
     kind_ = LOOP_HEADER;
 
     if (!predecessors_.append(pred))
-        return AbortReason_Alloc;
+        return AbortReason::Alloc;
 
-    return AbortReason_NoAbort;
+    return AbortReason::NoAbort;
 }
 
 bool

@@ -120,7 +120,7 @@ class MIRGenerator
     }
 
     void disable() {
-        abortReason_ = AbortReason_Disable;
+        abortReason_ = AbortReason::Disable;
     }
     AbortReason abortReason() {
         return abortReason_;
@@ -158,7 +158,7 @@ class MIRGenerator
 
     typedef Vector<ObjectGroup*, 0, JitAllocPolicy> ObjectGroupVector;
 
-    // When abortReason() == AbortReason_PreliminaryObjects, all groups with
+    // When abortReason() == AbortReason::PreliminaryObjects, all groups with
     // preliminary objects which haven't been analyzed yet.
     const ObjectGroupVector& abortedPreliminaryGroups() const {
         return abortedPreliminaryGroups_;
@@ -173,7 +173,7 @@ class MIRGenerator
     TempAllocator* alloc_;
     MIRGraph* graph_;
     AbortReason abortReason_;
-    bool shouldForceAbort_; // Force AbortReason_Disable
+    bool shouldForceAbort_; // Force AbortReason::Disable
     ObjectGroupVector abortedPreliminaryGroups_;
     bool error_;
     mozilla::Atomic<bool, mozilla::Relaxed>* pauseBuild_;
