@@ -6,8 +6,20 @@
 
 #include "mozilla/dom/HTMLDialogElement.h"
 #include "mozilla/dom/HTMLDialogElementBinding.h"
+#include "mozilla/dom/HTMLUnknownElement.h"
+#include "mozilla/Preferences.h"
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Dialog)
+// Expand NS_IMPL_NS_NEW_HTML_ELEMENT(Dialog) with pref check
+nsGenericHTMLElement*
+NS_NewHTMLDialogElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                         mozilla::dom::FromParser aFromParser)
+{
+  if (!mozilla::dom::HTMLDialogElement::IsDialogEnabled()) {
+    return new mozilla::dom::HTMLUnknownElement(aNodeInfo);
+  }
+
+  return new mozilla::dom::HTMLDialogElement(aNodeInfo);
+}
 
 namespace mozilla {
 namespace dom {
@@ -17,6 +29,21 @@ HTMLDialogElement::~HTMLDialogElement()
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLDialogElement)
+
+bool
+HTMLDialogElement::IsDialogEnabled()
+{
+  static bool isDialogEnabled = false;
+  static bool added = false;
+
+  if (!added) {
+    Preferences::AddBoolVarCache(&isDialogEnabled,
+                                 "dom.dialog_element.enabled");
+    added = true;
+  }
+
+  return isDialogEnabled;
+}
 
 void
 HTMLDialogElement::Close(const mozilla::dom::Optional<nsAString>& aReturnValue)
