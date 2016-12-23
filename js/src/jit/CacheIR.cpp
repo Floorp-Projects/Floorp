@@ -210,7 +210,7 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
 
     if (IsCacheableGetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable)) {
         // See bug 1226816.
-        if (engine != ICStubEngine::IonSharedIC)
+        if (engine == ICStubEngine::Baseline)
             return CanAttachCallGetter;
     }
 
@@ -1070,16 +1070,6 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
         return false;
     }
 
-    if (idVal_.toNumber() < 0 || floor(idVal_.toNumber()) != idVal_.toNumber())
-        return false;
-
-    // Ensure the index is in-bounds so the element type gets monitored.
-    if (obj->is<TypedArrayObject>() &&
-        idVal_.toNumber() >= double(obj->as<TypedArrayObject>().length()))
-    {
-        return false;
-    }
-
     // Don't attach typed object stubs if the underlying storage could be
     // detached, as the stub will always bail out.
     if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
@@ -1093,13 +1083,7 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
 
     Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
     writer.loadTypedElementResult(objId, int32IndexId, layout, TypedThingElementType(obj));
-
-    // Reading from Uint32Array may produce an int32 now but a double value
-    // later, so ensure we monitor the result.
-    if (TypedThingElementType(obj) == Scalar::Type::Uint32)
-        writer.typeMonitorResult();
-    else
-        writer.returnFromIC();
+    writer.returnFromIC();
     return true;
 }
 

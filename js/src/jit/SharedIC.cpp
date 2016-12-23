@@ -462,7 +462,7 @@ ICStub::trace(JSTracer* trc)
         break;
       }
       case ICStub::CacheIR_Monitored:
-        TraceCacheIRStub(trc, this, toCacheIR_Monitored()->stubInfo());
+        TraceBaselineCacheIRStub(trc, this, toCacheIR_Monitored()->stubInfo());
         break;
       default:
         break;
@@ -749,7 +749,7 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 void
 ICStubCompiler::pushStubPayload(MacroAssembler& masm, Register scratch)
 {
-    if (engine_ == Engine::IonSharedIC) {
+    if (engine_ == Engine::IonMonkey) {
         masm.push(Imm32(0));
         return;
     }

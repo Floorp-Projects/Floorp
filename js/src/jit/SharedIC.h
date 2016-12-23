@@ -1097,9 +1097,7 @@ class SharedStubInfo
     SharedStubInfo(JSContext* cx, void* payload, ICEntry* entry);
 
     ICStubCompiler::Engine engine() const {
-        return maybeFrame_
-               ? ICStubCompiler::Engine::Baseline
-               : ICStubCompiler::Engine::IonSharedIC;
+        return maybeFrame_ ? ICStubCompiler::Engine::Baseline : ICStubCompiler::Engine::IonMonkey;
     }
 
     HandleScript script() const {

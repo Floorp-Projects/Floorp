@@ -9549,22 +9549,22 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
 
         switch (sharedStubs_[i].kind) {
           case ICStub::Kind::BinaryArith_Fallback: {
-            ICBinaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
+            ICBinaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
           case ICStub::Kind::UnaryArith_Fallback: {
-            ICUnaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
+            ICUnaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
           case ICStub::Kind::Compare_Fallback: {
-            ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
+            ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
           case ICStub::Kind::GetProp_Fallback: {
-            ICGetProp_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
+            ICGetProp_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
@@ -9575,12 +9575,12 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
             if (!group)
                 return false;
 
-            ICNewArray_Fallback::Compiler stubCompiler(cx, group, ICStubCompiler::Engine::IonSharedIC);
+            ICNewArray_Fallback::Compiler stubCompiler(cx, group, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
           case ICStub::Kind::NewObject_Fallback: {
-            ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
+            ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
@@ -10178,8 +10178,7 @@ CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
             if (idString->isAtom() && !idString->asAtom().isIndex(&dummy))
                 kind = CacheKind::GetProp;
         }
-        IonGetPropertyIC cache(kind, liveRegs, objReg, id, output, maybeTemp, monitoredResult,
-                               allowDoubleResult);
+        IonGetPropertyIC cache(kind, liveRegs, objReg, id, output, maybeTemp, monitoredResult);
         addIC(ins, allocateIC(cache));
         return;
     }
