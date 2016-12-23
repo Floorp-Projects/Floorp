@@ -2627,7 +2627,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     newFrame = frameItems.FirstChild();
     NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   } else {
-    MOZ_ASSERT(display->mDisplay == StyleDisplay::Block,
+    MOZ_ASSERT(display->mDisplay == StyleDisplay::Block ||
+               display->mDisplay == StyleDisplay::FlowRoot,
                "Unhandled display type for root element");
     contentFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
     nsFrameItems frameItems;
@@ -4767,6 +4768,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   static const FrameConstructionDataByDisplay sDisplayData[] = {
     FCDATA_FOR_DISPLAY(StyleDisplay::None, UNREACHABLE_FCDATA()),
     FCDATA_FOR_DISPLAY(StyleDisplay::Block, UNREACHABLE_FCDATA()),
+    FCDATA_FOR_DISPLAY(StyleDisplay::FlowRoot, UNREACHABLE_FCDATA()),
     // To keep the hash table small don't add inline frames (they're
     // typically things like FONT and B), because we can quickly
     // find them if we need to.
