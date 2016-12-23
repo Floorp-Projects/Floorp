@@ -7,6 +7,7 @@
 #ifndef HTMLDialogElement_h
 #define HTMLDialogElement_h
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
