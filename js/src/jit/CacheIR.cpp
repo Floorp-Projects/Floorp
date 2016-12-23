@@ -45,40 +45,12 @@ EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderOp, NativeObject* h
     }
 }
 
-enum class ProxyStubType {
-    None,
-    DOMShadowed,
-    DOMUnshadowed,
-    Generic
-};
-
-static ProxyStubType
-GetProxyStubType(JSContext* cx, HandleObject obj, HandleId id)
-{
-    if (!obj->is<ProxyObject>())
-        return ProxyStubType::None;
-
-    if (!IsCacheableDOMProxy(obj))
-        return ProxyStubType::Generic;
-
-    DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
-    if (shadows == ShadowCheckFailed) {
-        cx->clearPendingException();
-        return ProxyStubType::None;
-    }
-
-    if (DOMProxyIsShadowing(shadows))
-        return ProxyStubType::DOMShadowed;
-
-    MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
-    return ProxyStubType::DOMUnshadowed;
-}
-
 bool
 GetPropIRGenerator::tryAttachStub()
 {
-    // Idempotent ICs should call tryAttachIdempotentStub instead.
-    MOZ_ASSERT(!idempotent());
+    // pc_ should only be null for idempotent ICs, and idempotent ICs should
+    // call tryAttachIdempotentStub instead.
+    MOZ_ASSERT(pc_);
 
     AutoAssertNoPendingException aanpe(cx_);
 
@@ -168,21 +140,16 @@ GetPropIRGenerator::tryAttachIdempotentStub()
     // of (2), we don't support for instance missing properties or array
     // lengths, as TI does not account for these cases.
 
-    MOZ_ASSERT(idempotent());
+    // No pc if idempotent, as there can be multiple bytecode locations
+    // due to GVN.
+    MOZ_ASSERT(!pc_);
 
     RootedObject obj(cx_, &val_.toObject());
     RootedId id(cx_, NameToId(idVal_.toString()->asAtom().asPropertyName()));
 
     ValOperandId valId(writer.setInputOperandId(0));
     ObjOperandId objId = writer.guardIsObject(valId);
-    if (tryAttachNative(obj, objId, id))
-        return true;
-
-    // Also support native data properties on DOMProxy prototypes.
-    if (GetProxyStubType(cx_, obj, id) == ProxyStubType::DOMUnshadowed)
-        return tryAttachDOMProxyUnshadowed(obj, objId, id);
-
-    return false;
+    return tryAttachNative(obj, objId, id);
 }
 
 static bool
@@ -235,16 +202,11 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
         holder.set(&baseHolder->as<NativeObject>());
     }
 
-    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape))
+    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape) ||
+        IsCacheableNoProperty(cx, obj, holder, shape, id, pc))
+    {
         return CanAttachReadSlot;
-
-    // Idempotent ICs only support plain data properties, see
-    // tryAttachIdempotentStub.
-    if (!pc)
-        return CanAttachNone;
-
-    if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc))
-        return CanAttachReadSlot;
+    }
 
     if (IsCacheableGetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable)) {
         // See bug 1226816.
@@ -419,8 +381,13 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
 
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_,
                                                             engine_, isTemporarilyUnoptimizable_);
-    MOZ_ASSERT_IF(idempotent(),
-                  type == CanAttachNone || (type == CanAttachReadSlot && holder));
+    if (!pc_) {
+        // Idempotent ICs only support plain data properties.
+        if (type != CanAttachReadSlot)
+            return false;
+        MOZ_ASSERT(holder);
+    }
+
     switch (type) {
       case CanAttachNone:
         return false;
@@ -579,8 +546,6 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
     NativeGetPropCacheability canCache = CanAttachNativeGetProp(cx_, checkObj, id, &holder, &shape,
                                                                 pc_, engine_,
                                                                 isTemporarilyUnoptimizable_);
-    MOZ_ASSERT_IF(idempotent(),
-                  canCache == CanAttachNone || (canCache == CanAttachReadSlot && holder));
     if (canCache == CanAttachNone)
         return false;
 
@@ -623,18 +588,24 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
 bool
 GetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id)
 {
-    switch (GetProxyStubType(cx_, obj, id)) {
-      case ProxyStubType::None:
+    if (!obj->is<ProxyObject>())
         return false;
-      case ProxyStubType::DOMShadowed:
-        return tryAttachDOMProxyShadowed(obj, objId, id);
-      case ProxyStubType::DOMUnshadowed:
+
+    // Skim off DOM proxies.
+    if (IsCacheableDOMProxy(obj)) {
+        DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx_, obj, id);
+        if (shadows == ShadowCheckFailed) {
+            cx_->clearPendingException();
+            return false;
+        }
+        if (DOMProxyIsShadowing(shadows))
+            return tryAttachDOMProxyShadowed(obj, objId, id);
+
+        MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
         return tryAttachDOMProxyUnshadowed(obj, objId, id);
-      case ProxyStubType::Generic:
-        return tryAttachGenericProxy(obj, objId, id);
     }
 
-    MOZ_CRASH("Unexpected ProxyStubType");
+    return tryAttachGenericProxy(obj, objId, id);
 }
 
 bool
