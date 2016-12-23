@@ -40,8 +40,11 @@ const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
  *                   where CSS_TYPES is defined in devtools/shared/css/properties-db.js
  * @param {Function} isValidOnClient - A function that checks if a css property
  *                   name/value combo is valid.
+ * @param {Function} supportsCssColor4ColorFunction - A function for checking
+ *                   the supporting of css-color-4 color function.
  */
-function OutputParser(document, {supportsType, isValidOnClient}) {
+function OutputParser(document,
+                      {supportsType, isValidOnClient, supportsCssColor4ColorFunction}) {
   this.parsed = [];
   this.doc = document;
   this.supportsType = supportsType;
@@ -50,6 +53,8 @@ function OutputParser(document, {supportsType, isValidOnClient}) {
   this.angleSwatches = new WeakMap();
   this._onColorSwatchMouseDown = this._onColorSwatchMouseDown.bind(this);
   this._onAngleSwatchMouseDown = this._onAngleSwatchMouseDown.bind(this);
+
+  this.cssColor4 = supportsCssColor4ColorFunction();
 }
 
 OutputParser.prototype = {
@@ -186,7 +191,8 @@ OutputParser.prototype = {
 
             if (options.expectCubicBezier && token.text === "cubic-bezier") {
               this._appendCubicBezier(functionText, options);
-            } else if (colorOK() && colorUtils.isValidCSSColor(functionText)) {
+            } else if (colorOK() &&
+                       colorUtils.isValidCSSColor(functionText, this.cssColor4)) {
               this._appendColor(functionText, options);
             } else {
               this._appendTextNode(functionText);
@@ -203,7 +209,8 @@ OutputParser.prototype = {
                      options.expectDisplay && token.text === "grid" &&
                      text === token.text) {
             this._appendGrid(token.text, options);
-          } else if (colorOK() && colorUtils.isValidCSSColor(token.text)) {
+          } else if (colorOK() &&
+                     colorUtils.isValidCSSColor(token.text, this.cssColor4)) {
             this._appendColor(token.text, options);
           } else if (angleOK(token.text)) {
             this._appendAngle(token.text, options);
@@ -216,7 +223,7 @@ OutputParser.prototype = {
         case "id":
         case "hash": {
           let original = text.substring(token.startOffset, token.endOffset);
-          if (colorOK() && colorUtils.isValidCSSColor(original)) {
+          if (colorOK() && colorUtils.isValidCSSColor(original, this.cssColor4)) {
             this._appendColor(original, options);
           } else {
             this._appendTextNode(original);
@@ -392,7 +399,7 @@ OutputParser.prototype = {
    *         _mergeOptions().
    */
   _appendColor: function (color, options = {}) {
-    let colorObj = new colorUtils.CssColor(color);
+    let colorObj = new colorUtils.CssColor(color, this.cssColor4);
 
     if (this._isValidColor(colorObj)) {
       let container = this._createNode("span", {
