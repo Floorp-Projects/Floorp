@@ -29,6 +29,7 @@
 #include "nsCocoaUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"
+#include "nsDeviceContext.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -331,8 +332,6 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
     }
   }
   [pbItem setDataProvider:mNativeDragView forTypes:types];
-
-  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
 
   NSPoint draggingPoint;
   NSImage* image = ConstructDragImage(mSourceNode, aDragRgn, &draggingPoint);
@@ -679,9 +678,10 @@ nsDragService::DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint)
           return;
         }
 
-        CSSIntPoint screenPoint =
-          CSSIntPoint(pc->DevPixelsToIntCSSPixels(devPoint.x),
-                      pc->DevPixelsToIntCSSPixels(devPoint.y));
+        nsPoint pt = LayoutDevicePixel::ToAppUnits(devPoint,
+                       pc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+        CSSIntPoint screenPoint = CSSIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                                              nsPresContext::AppUnitsToIntCSSPixels(pt.y));
 
         // Create a new image; if one isn't returned don't change the current one.
         LayoutDeviceIntRect newRect;
