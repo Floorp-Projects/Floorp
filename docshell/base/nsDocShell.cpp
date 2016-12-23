@@ -10551,7 +10551,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                             aLoadType, aSHEntry, aFirstParty, aSrcdoc,
                             aSourceDocShell, aBaseURI, false);
     // We don't need any success handler since in that case
-    // OnPartialSessionHistoryDeactive would be called, and it would ensure
+    // OnPartialSHistoryDeactive would be called, and it would ensure
     // docshell loads about:blank.
     bool shouldSwitch = false;
     rv = browserChrome3->ShouldSwitchToPrerenderedDocument(

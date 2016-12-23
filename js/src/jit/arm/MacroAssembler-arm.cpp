@@ -4844,6 +4844,43 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
 }
 
 void
+MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest, Register scratch)
+{
+    MOZ_ASSERT(!set.has(scratch));
+
+    int32_t diffF = set.fpus().getPushSizeInBytes();
+    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
+
+    MOZ_ASSERT(dest.offset >= diffF + diffG);
+
+    if (set.gprs().size() > 1) {
+        computeEffectiveAddress(dest, scratch);
+
+        startDataTransferM(IsStore, scratch, DB, WriteBack);
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
+            diffG -= sizeof(intptr_t);
+            dest.offset -= sizeof(intptr_t);
+            transferReg(*iter);
+        }
+        finishDataTransfer();
+    } else {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
+            diffG -= sizeof(intptr_t);
+            dest.offset -= sizeof(intptr_t);
+            storePtr(*iter, dest);
+        }
+    }
+    MOZ_ASSERT(diffG == 0);
+
+    if (diffF > 0) {
+        computeEffectiveAddress(dest, scratch);
+        diffF += transferMultipleByRuns(set.fpus(), IsStore, scratch, DB);
+    }
+
+    MOZ_ASSERT(diffF == 0);
+}
+
+void
 MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
 {
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);

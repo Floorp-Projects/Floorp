@@ -5,9 +5,8 @@
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <script type="text/javascript" src="pointerevent_support.js"></script>
-        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script>
             var detected_pointertypes = {};
             add_completion_callback(showPointerTypes);
@@ -55,7 +54,6 @@
     </head>
     <body onload="run()">
         <h1>Element.hasPointerCapture test after the pending pointer capture element releases pointer capture</h1>
-        <!--
         <h4>
             Test Description: This test checks if Element.hasPointerCapture returns value correctly after the pending pointer capture element releases pointer capture
             <ol>
@@ -64,7 +62,6 @@
                 <li> Release the pointer
             </ol>
         </h4>
-        -->
         <p>
         <div id="target0" touch-action:none></div>
         <div id="target1" touch-action:none></div>

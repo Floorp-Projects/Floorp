@@ -63,6 +63,7 @@ UNIFIED_SOURCES += [
     'WidgetTraceEvent.cpp',
     'WindowHook.cpp',
     'WinIMEHandler.cpp',
+    'WinPointerEvents.cpp',
     'WinTaskbar.cpp',
     'WinTextEventDispatcherListener.cpp',
     'WinUtils.cpp',

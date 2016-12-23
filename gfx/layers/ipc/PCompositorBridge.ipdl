@@ -14,7 +14,6 @@ include protocol PBrowser;
 include protocol PCompositable;
 include protocol PCompositorWidget;
 include protocol PImageContainer;
-include protocol PLayer;
 include protocol PLayerTransaction;
 include protocol PTexture;
 include "mozilla/GfxMessageUtils.h";

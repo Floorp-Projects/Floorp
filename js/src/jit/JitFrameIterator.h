@@ -47,8 +47,8 @@ enum FrameType
     // mismatches in calls.
     JitFrame_Rectifier,
 
-    // Ion IC calling a scripted getter/setter.
-    JitFrame_IonAccessorIC,
+    // Ion IC calling a scripted getter/setter or a VMFunction.
+    JitFrame_IonICCall,
 
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any
@@ -151,8 +151,8 @@ class JitFrameIterator
     bool isIonStub() const {
         return type_ == JitFrame_IonStub;
     }
-    bool isIonAccessorIC() const {
-        return type_ == JitFrame_IonAccessorIC;
+    bool isIonICCall() const {
+        return type_ == JitFrame_IonICCall;
     }
     bool isBailoutJS() const {
         return type_ == JitFrame_Bailout;

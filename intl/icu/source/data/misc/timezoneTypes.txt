@@ -366,6 +366,7 @@ timezoneTypes:table(nofallback){
             "Asia:Aqtau"{"kzaau"}
             "Asia:Aqtobe"{"kzakx"}
             "Asia:Ashgabat"{"tmasb"}
+            "Asia:Atyrau"{"kzguw"}
             "Asia:Baghdad"{"iqbgw"}
             "Asia:Bahrain"{"bhbah"}
             "Asia:Baku"{"azbak"}
@@ -383,6 +384,7 @@ timezoneTypes:table(nofallback){
             "Asia:Dili"{"tldil"}
             "Asia:Dubai"{"aedxb"}
             "Asia:Dushanbe"{"tjdyu"}
+            "Asia:Famagusta"{"cyfmg"}
             "Asia:Gaza"{"gaza"}
             "Asia:Hebron"{"hebron"}
             "Asia:Hong_Kong"{"hkhkg"}
@@ -531,6 +533,7 @@ timezoneTypes:table(nofallback){
             "Europe:Samara"{"rukuf"}
             "Europe:San_Marino"{"smsai"}
             "Europe:Sarajevo"{"basjj"}
+            "Europe:Saratov"{"rurtw"}
             "Europe:Simferopol"{"uasip"}
             "Europe:Skopje"{"mkskp"}
             "Europe:Sofia"{"bgsof"}

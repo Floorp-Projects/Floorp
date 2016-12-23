@@ -141,7 +141,7 @@ NS_IMPL_CYCLE_COLLECTION(nsFrameLoader,
                          mMessageManager,
                          mChildMessageManager,
                          mOpener,
-                         mPartialSessionHistory)
+                         mPartialSHistory)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -364,15 +364,15 @@ nsFrameLoader::MakePrerenderedLoaderActive()
 }
 
 NS_IMETHODIMP
-nsFrameLoader::GetPartialSessionHistory(nsIPartialSHistory** aResult)
+nsFrameLoader::GetPartialSHistory(nsIPartialSHistory** aResult)
 {
-  if (mRemoteBrowser && !mPartialSessionHistory) {
+  if (mRemoteBrowser && !mPartialSHistory) {
     // For remote case we can lazy initialize PartialSHistory since
     // it doens't need to be registered as a listener to nsISHistory directly.
-    mPartialSessionHistory = new PartialSHistory(this);
+    mPartialSHistory = new PartialSHistory(this);
   }
 
-  nsCOMPtr<nsIPartialSHistory> partialHistory(mPartialSessionHistory);
+  nsCOMPtr<nsIPartialSHistory> partialHistory(mPartialSHistory);
   partialHistory.forget(aResult);
   return NS_OK;
 }
@@ -381,18 +381,18 @@ NS_IMETHODIMP
 nsFrameLoader::EnsureGroupedSHistory(nsIGroupedSHistory** aResult)
 {
   nsCOMPtr<nsIPartialSHistory> partialHistory;
-  GetPartialSessionHistory(getter_AddRefs(partialHistory));
+  GetPartialSHistory(getter_AddRefs(partialHistory));
   MOZ_ASSERT(partialHistory);
 
   nsCOMPtr<nsIGroupedSHistory> groupedHistory;
   partialHistory->GetGroupedSHistory(getter_AddRefs(groupedHistory));
   if (!groupedHistory) {
     groupedHistory = new GroupedSHistory();
-    groupedHistory->AppendPartialSessionHistory(partialHistory);
+    groupedHistory->AppendPartialSHistory(partialHistory);
 
 #ifdef DEBUG
     nsCOMPtr<nsIGroupedSHistory> test;
-    GetGroupedSessionHistory(getter_AddRefs(test));
+    GetGroupedSHistory(getter_AddRefs(test));
     MOZ_ASSERT(test == groupedHistory, "GroupedHistory must match");
 #endif
   }
@@ -402,11 +402,11 @@ nsFrameLoader::EnsureGroupedSHistory(nsIGroupedSHistory** aResult)
 }
 
 NS_IMETHODIMP
-nsFrameLoader::GetGroupedSessionHistory(nsIGroupedSHistory** aResult)
+nsFrameLoader::GetGroupedSHistory(nsIGroupedSHistory** aResult)
 {
   nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-  if (mPartialSessionHistory) {
-    mPartialSessionHistory->GetGroupedSHistory(getter_AddRefs(groupedSHistory));
+  if (mPartialSHistory) {
+    mPartialSHistory->GetGroupedSHistory(getter_AddRefs(groupedSHistory));
   }
   groupedSHistory.forget(aResult);
   return NS_OK;
@@ -449,22 +449,22 @@ nsFrameLoader::SwapBrowsersAndNotify(nsFrameLoader* aOther)
   return true;
 }
 
-class AppendPartialSessionHistoryAndSwapHelper : public PromiseNativeHandler
+class AppendPartialSHistoryAndSwapHelper : public PromiseNativeHandler
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(AppendPartialSessionHistoryAndSwapHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS(AppendPartialSHistoryAndSwapHelper)
 
-  AppendPartialSessionHistoryAndSwapHelper(nsFrameLoader* aThis,
-                                           nsFrameLoader* aOther,
-                                           Promise* aPromise)
+  AppendPartialSHistoryAndSwapHelper(nsFrameLoader* aThis,
+                                     nsFrameLoader* aOther,
+                                     Promise* aPromise)
     : mThis(aThis), mOther(aOther), mPromise(aPromise) {}
 
   void
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
     nsCOMPtr<nsIGroupedSHistory> otherGroupedHistory;
-    mOther->GetGroupedSessionHistory(getter_AddRefs(otherGroupedHistory));
+    mOther->GetGroupedSHistory(getter_AddRefs(otherGroupedHistory));
     MOZ_ASSERT(!otherGroupedHistory,
                "Cannot append a GroupedSHistory owner to another.");
     if (otherGroupedHistory) {
@@ -483,8 +483,8 @@ public:
 
     // Append the other.
     nsCOMPtr<nsIPartialSHistory> otherPartialSHistory;
-    MOZ_ALWAYS_SUCCEEDS(mOther->GetPartialSessionHistory(getter_AddRefs(otherPartialSHistory)));
-    rv = groupedSHistory->AppendPartialSessionHistory(otherPartialSHistory);
+    MOZ_ALWAYS_SUCCEEDS(mOther->GetPartialSHistory(getter_AddRefs(otherPartialSHistory)));
+    rv = groupedSHistory->AppendPartialSHistory(otherPartialSHistory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mPromise->MaybeRejectWithUndefined();
       return;
@@ -505,18 +505,18 @@ public:
   }
 
 private:
-  ~AppendPartialSessionHistoryAndSwapHelper() {}
+  ~AppendPartialSHistoryAndSwapHelper() {}
   RefPtr<nsFrameLoader> mThis;
   RefPtr<nsFrameLoader> mOther;
   RefPtr<Promise> mPromise;
 };
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AppendPartialSessionHistoryAndSwapHelper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AppendPartialSessionHistoryAndSwapHelper)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AppendPartialSessionHistoryAndSwapHelper)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AppendPartialSHistoryAndSwapHelper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AppendPartialSHistoryAndSwapHelper)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AppendPartialSHistoryAndSwapHelper)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION(AppendPartialSessionHistoryAndSwapHelper,
+NS_IMPL_CYCLE_COLLECTION(AppendPartialSHistoryAndSwapHelper,
                          mThis, mPromise)
 
 class RequestGroupedHistoryNavigationHelper : public PromiseNativeHandler
@@ -539,7 +539,7 @@ public:
     }
 
     nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-    mThis->GetGroupedSessionHistory(getter_AddRefs(groupedSHistory));
+    mThis->GetGroupedSHistory(getter_AddRefs(groupedSHistory));
     if (NS_WARN_IF(!groupedSHistory)) {
       mPromise->MaybeRejectWithUndefined();
       return;
@@ -673,7 +673,7 @@ nsFrameLoader::FireWillChangeProcessEvent()
 }
 
 NS_IMETHODIMP
-nsFrameLoader::AppendPartialSessionHistoryAndSwap(nsIFrameLoader* aOther, nsISupports** aPromise)
+nsFrameLoader::AppendPartialSHistoryAndSwap(nsIFrameLoader* aOther, nsISupports** aPromise)
 {
   if (!aOther) {
     return NS_ERROR_INVALID_POINTER;
@@ -700,8 +700,8 @@ nsFrameLoader::AppendPartialSessionHistoryAndSwap(nsIFrameLoader* aOther, nsISup
 
   // Attach our handler to the ready promise, and make it fulfil the complete
   // promise when we are done.
-  RefPtr<AppendPartialSessionHistoryAndSwapHelper> helper =
-    new AppendPartialSessionHistoryAndSwapHelper(this, otherLoader, complete);
+  RefPtr<AppendPartialSHistoryAndSwapHelper> helper =
+    new AppendPartialSHistoryAndSwapHelper(this, otherLoader, complete);
   ready->AppendNativeHandler(helper);
   complete.forget(aPromise);
   return NS_OK;
@@ -2010,10 +2010,10 @@ nsFrameLoader::StartDestroy()
   }
 
   // Destroy the other frame loader owners now that we are being destroyed.
-  if (mPartialSessionHistory &&
-      mPartialSessionHistory->GetActiveState() == nsIPartialSHistory::STATE_ACTIVE) {
+  if (mPartialSHistory &&
+      mPartialSHistory->GetActiveState() == nsIPartialSHistory::STATE_ACTIVE) {
     nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-    GetGroupedSessionHistory(getter_AddRefs(groupedSHistory));
+    GetGroupedSHistory(getter_AddRefs(groupedSHistory));
     if (groupedSHistory) {
       NS_DispatchToCurrentThread(NS_NewRunnableFunction([groupedSHistory] () {
         groupedSHistory->CloseInactiveFrameLoaderOwners();
@@ -2391,9 +2391,9 @@ nsFrameLoader::MaybeCreateDocShell()
 
 
     if (GroupedSHistory::GroupedHistoryEnabled()) {
-      mPartialSessionHistory = new PartialSHistory(this);
-      nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mPartialSessionHistory));
-      nsCOMPtr<nsIPartialSHistoryListener> partialListener(do_QueryInterface(mPartialSessionHistory));
+      mPartialSHistory = new PartialSHistory(this);
+      nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mPartialSHistory));
+      nsCOMPtr<nsIPartialSHistoryListener> partialListener(do_QueryInterface(mPartialSHistory));
       sessionHistory->AddSHistoryListener(listener);
       sessionHistory->SetPartialSHistoryListener(partialListener);
     }

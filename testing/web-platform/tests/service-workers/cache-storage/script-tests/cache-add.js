@@ -83,6 +83,25 @@ cache_test(function(cache) {
 
 cache_test(function(cache) {
     return assert_promise_rejects(
+      cache.add('../resources/fetch-status.py?status=206'),
+      new TypeError(),
+      'Cache.add should reject on partial response');
+  }, 'Cache.add with 206 response');
+
+cache_test(function(cache) {
+    var urls = ['../resources/fetch-status.py?status=206',
+                '../resources/fetch-status.py?status=200'];
+    var requests = urls.map(function(url) {
+        return new Request(url);
+      });
+    return assert_promise_rejects(
+      cache.addAll(requests),
+      new TypeError(),
+      'Cache.addAll should reject with TypeError if any request fails');
+  }, 'Cache.addAll with 206 response');
+
+cache_test(function(cache) {
+    return assert_promise_rejects(
       cache.add('this-does-not-exist-please-dont-create-it'),
       new TypeError(),
       'Cache.add should reject if response is !ok');
@@ -90,7 +109,7 @@ cache_test(function(cache) {
 
 cache_test(function(cache) {
     return assert_promise_rejects(
-      cache.add('../resources/fetch-status.php?status=500'),
+      cache.add('../resources/fetch-status.py?status=500'),
       new TypeError(),
       'Cache.add should reject if response is !ok');
   }, 'Cache.add with request that results in a status of 500');

@@ -82,7 +82,7 @@ add_task(function* () {
        "VisibilityState of formerly prerendered window must be visible");
   });
 
-  let groupedSHistory = tab.linkedBrowser.frameLoader.groupedSessionHistory;
+  let groupedSHistory = tab.linkedBrowser.frameLoader.groupedSHistory;
   is(groupedSHistory.count, 2, "Check total length of grouped shistory.");
   is(gBrowser.tabs.length, 3, "Check number of opened tabs.");
 
