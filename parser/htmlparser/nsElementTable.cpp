@@ -152,6 +152,10 @@ const nsHTMLElement gHTMLElements[] = {
     /*parent,leaf*/ kPhrase, false
   },
   {
+    /*tag*/         eHTMLTag_dialog,
+    /*parent,leaf*/ kBlock, false
+  },
+  {
     /*tag*/         eHTMLTag_dir,
     /*parent,leaf*/ kList, false
   },
