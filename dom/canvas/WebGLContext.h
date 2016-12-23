@@ -658,6 +658,12 @@ public:
 
     already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
     bool StartVRPresentation();
+
+    ////
+
+    webgl::PackingInfo
+    ValidImplementationColorReadPI(const webgl::FormatUsageInfo* usage) const;
+
 protected:
     bool ReadPixels_SharedPrecheck(ErrorResult* const out_error);
     void ReadPixelsImpl(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
@@ -685,6 +691,8 @@ public:
     void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
                     GLenum type, const dom::ArrayBufferView& dstData, GLuint dstOffset,
                     ErrorResult& out_error);
+
+    ////
 
     void RenderbufferStorage(GLenum target, GLenum internalFormat,
                              GLsizei width, GLsizei height);
