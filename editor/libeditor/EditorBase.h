@@ -234,6 +234,19 @@ public:
   nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
+  nsresult CloneAttribute(nsIAtom* aAttribute, Element* aDestElement,
+                          Element* aSourceElement);
+  nsresult RemoveAttribute(Element* aElement, nsIAtom* aAttribute);
+  virtual nsresult RemoveAttributeOrEquivalent(Element* aElement,
+                                               nsIAtom* aAttribute,
+                                               bool aSuppressTransaction) = 0;
+  nsresult SetAttribute(Element* aElement, nsIAtom* aAttribute,
+                        const nsAString& aValue);
+  virtual nsresult SetAttributeOrEquivalent(Element* aElement,
+                                            nsIAtom* aAttribute,
+                                            const nsAString& aValue,
+                                            bool aSuppressTransaction) = 0;
+
   /**
    * Method to replace certain CreateElementNS() calls.
    *

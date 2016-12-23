@@ -58,6 +58,7 @@
 #include "gfxEnv.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
@@ -451,7 +452,7 @@ StaticAutoPtr<TIPMessageHandler> TIPMessageHandler::sInstance;
 
 static const char *sScreenManagerContractID       = "@mozilla.org/gfx/screenmanager;1";
 
-extern PRLogModuleInfo* gWindowsLog;
+extern mozilla::LazyLogModule gWindowsLog;
 
 // Global used in Show window enumerations.
 static bool     gWindowsVisible                   = false;

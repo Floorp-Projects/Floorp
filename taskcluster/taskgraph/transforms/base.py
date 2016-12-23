@@ -75,6 +75,24 @@ def validate_schema(schema, obj, msg_prefix):
         raise Exception('\n'.join(msg) + '\n' + pprint.pformat(obj))
 
 
+def optionally_keyed_by(*arguments):
+    """
+    Mark a schema value as optionally keyed by any of a number of fields.  The
+    schema is the last argument, and the remaining fields are taken to be the
+    field names.  For example:
+
+        'some-value': optionally_keyed_by(
+            'test-platform', 'build-platform',
+            Any('a', 'b', 'c'))
+    """
+    subschema = arguments[-1]
+    fields = arguments[:-1]
+    options = [subschema]
+    for field in fields:
+        options.append({'by-' + field: {basestring: subschema}})
+    return voluptuous.Any(*options)
+
+
 def get_keyed_by(item, field, item_name, subfield=None):
     """
     For values which can either accept a literal value, or be keyed by some

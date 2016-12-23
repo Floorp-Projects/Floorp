@@ -6,6 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/gfx/PrintTargetWindows.h"
+#include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
 
 #include "nsDeviceContextSpecWin.h"
@@ -34,7 +35,7 @@
 #include "mozilla/gfx/Logging.h"
 
 #include "mozilla/Logging.h"
-PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
+static mozilla::LazyLogModule kWidgetPrintingLogMod("printing-widget");
 #define PR_PL(_p1)  MOZ_LOG(kWidgetPrintingLogMod, mozilla::LogLevel::Debug, _p1)
 
 using namespace mozilla;
