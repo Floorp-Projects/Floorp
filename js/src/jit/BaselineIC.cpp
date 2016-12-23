@@ -16,7 +16,7 @@
 #include "builtin/Eval.h"
 #include "builtin/SIMD.h"
 #include "gc/Policy.h"
-#include "jit/BaselineCacheIR.h"
+#include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
@@ -963,7 +963,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     if (!attached && !JitOptions.disableCacheIR) {
         ICStubEngine engine = ICStubEngine::Baseline;
         GetPropIRGenerator gen(cx, pc, engine, CacheKind::GetElem, &isTemporarilyUnoptimizable,
-                               lhs, rhs, res);
+                               lhs, rhs);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         engine, info.outerScript(cx), stub);

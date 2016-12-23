@@ -16,7 +16,7 @@
 #include "jstypes.h"
 
 #include "gc/Policy.h"
-#include "jit/BaselineCacheIR.h"
+#include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineIC.h"
 #include "jit/JitSpewer.h"
@@ -1356,7 +1356,7 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.setupUnalignedABICall(scratchReg);
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
         masm.callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
-        masm.storeCallResult(scratchReg);
+        masm.storeCallWordResult(scratchReg);
         masm.pop(intReg);
 
         masm.bind(&doneTruncate);
@@ -1509,7 +1509,7 @@ ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
         masm.setupUnalignedABICall(scratchReg);
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
         masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
-        masm.storeCallResult(scratchReg);
+        masm.storeCallWordResult(scratchReg);
 
         masm.bind(&doneTruncate);
         masm.not32(scratchReg);
@@ -2325,7 +2325,7 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
     if (!attached && !JitOptions.disableCacheIR) {
         RootedValue idVal(cx, StringValue(name));
         GetPropIRGenerator gen(cx, pc, engine, CacheKind::GetProp, &isTemporarilyUnoptimizable,
-                               val, idVal, res);
+                               val, idVal);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         engine, info.outerScript(cx), stub);

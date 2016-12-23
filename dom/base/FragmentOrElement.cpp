@@ -642,6 +642,7 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
   mChildrenList = nullptr;
   mCustomElementData = nullptr;
   mClassList = nullptr;
+  mRegisteredIntersectionObservers.Clear();
 }
 
 size_t

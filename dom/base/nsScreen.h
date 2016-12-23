@@ -115,7 +115,8 @@ public:
   }
 
   // Deprecated
-  void GetMozOrientation(nsString& aOrientation) const;
+  void GetMozOrientation(nsString& aOrientation,
+                         mozilla::dom::CallerType aCallerType) const;
 
   IMPL_EVENT_HANDLER(mozorientationchange)
 

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests the reducer responding to the action `selectSnapshot(snapshot)`
  */
@@ -21,7 +23,8 @@ add_task(function* () {
     store.dispatch(actions.takeSnapshot(front));
   }
 
-  yield waitUntilState(store, ({ snapshots }) => snapshots.length === 5 && snapshots.every(isDone));
+  yield waitUntilState(store,
+    ({ snapshots }) => snapshots.length === 5 && snapshots.every(isDone));
 
   for (let i = 0; i < 5; i++) {
     do_print(`Selecting snapshot[${i}]`);
@@ -30,8 +33,11 @@ add_task(function* () {
 
     let { snapshots } = store.getState();
     ok(snapshots[i].selected, `snapshot[${i}] selected`);
-    equal(snapshots.filter(s => !s.selected).length, 4, "All other snapshots are unselected");
+    equal(snapshots.filter(s => !s.selected).length, 4,
+          "All other snapshots are unselected");
   }
 });
 
-function isDone(s) { return s.state === states.SAVED; }
+function isDone(s) {
+  return s.state === states.SAVED;
+}

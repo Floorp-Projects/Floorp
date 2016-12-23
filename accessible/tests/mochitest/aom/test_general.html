@@ -35,7 +35,7 @@
   function createIframe() {
     return new Promise((resolve) => {
       let iframe = document.createElement("iframe");
-      iframe.src = "about:blank";
+      iframe.src = `data:text/html,<html><body>hey</body></html>`;
       iframe.onload = () => resolve(iframe.contentDocument);
       document.body.appendChild(iframe);
     });
@@ -79,6 +79,12 @@
 
     ok(anode.is('document', 'focusable'),
        'correct role and state on an accessible node');
+
+    is(anode.get('explicit-name'), 'true',
+       'correct object attribute value on an accessible node');
+
+    ok(anode.has('explicit-name'),
+       'object attributes are present');
 
     finish();
   }

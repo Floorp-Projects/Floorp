@@ -48,7 +48,7 @@ GroupedSHistory::GetCount(uint32_t* aResult)
 }
 
 NS_IMETHODIMP
-GroupedSHistory::AppendPartialSessionHistory(nsIPartialSHistory* aPartialHistory)
+GroupedSHistory::AppendPartialSHistory(nsIPartialSHistory* aPartialHistory)
 {
   if (!aPartialHistory) {
     return NS_ERROR_INVALID_POINTER;
@@ -76,7 +76,7 @@ GroupedSHistory::AppendPartialSessionHistory(nsIPartialSHistory* aPartialHistory
   uint32_t offset = mCount;
   mCount += partialHistory->GetCount();
   mPartialHistories.AppendElement(partialHistory);
-  partialHistory->OnAttachGroupedSessionHistory(this, offset);
+  partialHistory->OnAttachGroupedSHistory(this, offset);
   mIndexOfActivePartialHistory = mPartialHistories.Count() - 1;
 
   // Remove the prerendered documents, as there was a history navigation
@@ -312,7 +312,7 @@ GroupedSHistory::ActivatePrerendering(int32_t aId, JSContext* aCx, nsISupports**
       nsresult rv = fl->MakePrerenderedLoaderActive();
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return activeFl->AppendPartialSessionHistoryAndSwap(fl, aPromise);
+      return activeFl->AppendPartialSHistoryAndSwap(fl, aPromise);
     }
   }
 

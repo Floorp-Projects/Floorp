@@ -33,13 +33,38 @@ addLoadEvent(function() {
   ac.createPeriodicWave(new Float32Array(4096), new Float32Array(4096));
   expectException(function() {
     ac.createPeriodicWave(new Float32Array(512), imag);
-  }, DOMException.NOT_SUPPORTED_ERR);
+  }, DOMException.INDEX_SIZE_ERR);
   expectException(function() {
     ac.createPeriodicWave(new Float32Array(0), new Float32Array(0));
-  }, DOMException.NOT_SUPPORTED_ERR);
+  }, DOMException.INDEX_SIZE_ERR);
   expectNoException(function() {
     ac.createPeriodicWave(new Float32Array(4097), new Float32Array(4097));
   });
+
+  // real || imag
+  expectException(function() {
+    new PeriodicWave(ac, {});
+  }, DOMException.INDEX_SIZE_ERR);
+
+  // real.size == imag.size
+  expectException(function() {
+    new PeriodicWave(ac, {real: new Float32Array(10), imag: new Float32Array(9)});
+  }, DOMException.INDEX_SIZE_ERR);
+
+  // 0 size is not allowed
+  expectException(function() {
+    new PeriodicWave(ac, {real: new Float32Array(0)});
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    new PeriodicWave(ac, {imag: new Float32Array(0)});
+  }, DOMException.INDEX_SIZE_ERR);
+  expectException(function() {
+    new PeriodicWave(ac, {real: new Float32Array(0), imag: new Float32Array(0)});
+  }, DOMException.INDEX_SIZE_ERR);
+
+  new PeriodicWave(ac, {real: new Float32Array(4096), imag: new Float32Array(4096)});
+  new PeriodicWave(ac, {real: new Float32Array(4096) });
+  new PeriodicWave(ac, {imag: new Float32Array(4096) });
 
   runTest();
 });

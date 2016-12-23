@@ -47,6 +47,9 @@ GetCairoAntialiasOption(gfxFont::AntialiasOption anAntialiasOption)
 #define FE_FONTSMOOTHINGCLEARTYPE 2
 #endif
 
+bool gfxDWriteFont::mUseClearType = true;
+
+// This function is expensive so we only want to call it when we have to.
 static bool
 UsingClearType()
 {
@@ -117,6 +120,12 @@ gfxDWriteFont::~gfxDWriteFont()
     delete mMetrics;
 }
 
+void
+gfxDWriteFont::UpdateClearTypeUsage()
+{
+  mUseClearType = UsingClearType();
+}
+
 gfxFont*
 gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
@@ -173,7 +182,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
 
     // Note that GetMeasuringMode depends on mAdjustedSize
     if ((anAAOption == gfxFont::kAntialiasDefault &&
-         UsingClearType() &&
+         mUseClearType &&
          GetMeasuringMode() == DWRITE_MEASURING_MODE_NATURAL) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
@@ -600,7 +609,7 @@ gfxDWriteFont::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
 already_AddRefed<GlyphRenderingOptions>
 gfxDWriteFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
 {
-  if (UsingClearType()) {
+  if (mUseClearType) {
     return Factory::CreateDWriteGlyphRenderingOptions(
       gfxWindowsPlatform::GetPlatform()->GetRenderingParams(GetForceGDIClassic() ?
         gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC : gfxWindowsPlatform::TEXT_RENDERING_NORMAL));

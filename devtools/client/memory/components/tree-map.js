@@ -9,11 +9,11 @@ const { treeMapModel } = require("../models");
 const startVisualization = require("./tree-map/start");
 
 module.exports = createClass({
+  displayName: "TreeMap",
+
   propTypes: {
     treeMap: treeMapModel
   },
-
-  displayName: "TreeMap",
 
   getInitialState() {
     return {};

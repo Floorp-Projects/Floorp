@@ -7475,10 +7475,10 @@ HasPureCoercion(JSContext* cx, HandleValue v)
     // coercions are not observable and coercion via ToNumber/ToInt32
     // definitely produces NaN/0. We should remove this special case later once
     // most apps have been built with newer Emscripten.
-    jsid toString = NameToId(cx->names().toString);
     if (v.toObject().is<JSFunction>() &&
-        HasObjectValueOf(&v.toObject(), cx) &&
-        ClassMethodIsNative(cx, &v.toObject().as<JSFunction>(), &JSFunction::class_, toString, fun_toString))
+        HasNoToPrimitiveMethodPure(&v.toObject(), cx) &&
+        HasNativeMethodPure(&v.toObject(), cx->names().valueOf, obj_valueOf, cx) &&
+        HasNativeMethodPure(&v.toObject(), cx->names().toString, fun_toString, cx))
     {
         return true;
     }
