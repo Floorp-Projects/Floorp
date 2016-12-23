@@ -112,7 +112,6 @@ devtools/server/actors/*.js
 !devtools/server/actors/webbrowser.js
 !devtools/server/actors/webextension.js
 !devtools/server/actors/webextension-inspected-window.js
-devtools/server/performance/**
 devtools/server/tests/browser/**
 !devtools/server/tests/browser/browser_webextension_inspected_window.js
 devtools/server/tests/mochitest/**
