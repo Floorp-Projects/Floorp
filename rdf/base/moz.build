@@ -25,7 +25,6 @@ XPIDL_SOURCES += [
     'nsIRDFXMLSink.idl',
     'nsIRDFXMLSource.idl',
     'rdfIDataSource.idl',
-    'rdfISerializer.idl',
     'rdfITripleVisitor.idl',
 ]
 
@@ -49,7 +48,6 @@ UNIFIED_SOURCES += [
     'nsRDFXMLDataSource.cpp',
     'nsRDFXMLParser.cpp',
     'nsRDFXMLSerializer.cpp',
-    'rdfTriplesSerializer.cpp',
     'rdfutil.cpp',
 ]
 

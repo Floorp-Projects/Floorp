@@ -49,8 +49,6 @@ static const char kURI##prefix##_##name[] = ns #name
 #define NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX   NS_RDF_RESOURCE_FACTORY_CONTRACTID "?name="
 #define NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX   NS_RDF_CONTRACTID "/infer-datasource;1?engine="
 
-#define NS_RDF_SERIALIZER                            NS_RDF_CONTRACTID "/serializer;1?format="
-
 // contract ID is in the form
 // @mozilla.org/rdf/delegate-factory;1?key=<key>&scheme=<scheme>
 #define NS_RDF_DELEGATEFACTORY_CONTRACTID    "@mozilla.org/rdf/delegate-factory;1"
