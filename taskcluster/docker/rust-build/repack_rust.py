@@ -6,8 +6,6 @@ build environment.
 '''
 
 import os.path
-import sys
-
 import requests
 import subprocess
 import toml
@@ -24,12 +22,6 @@ def fetch_file(url):
         for chunk in r.iter_content(4096):
             fd.write(chunk)
 
-def sha256sum():
-    '''Return the command for verifying SHA-2 256-bit checksums.'''
-    if sys.platform.startswith('darwin'):
-        return 'shasum'
-    else:
-        return 'sha256sum'
 
 def fetch(url):
     '''Download and verify a package url.'''
@@ -40,9 +32,8 @@ def fetch(url):
     fetch_file(url + '.sha256')
     fetch_file(url + '.asc.sha256')
     print('Verifying %s...' % base)
-    shasum = sha256sum()
-    subprocess.check_call([shasum, '-c', base + '.sha256'])
-    subprocess.check_call([shasum, '-c', base + '.asc.sha256'])
+    subprocess.check_call(['shasum', '-c', base + '.sha256'])
+    subprocess.check_call(['shasum', '-c', base + '.asc.sha256'])
     subprocess.check_call(['gpg', '--verify', base + '.asc', base])
     if False:
         subprocess.check_call([
