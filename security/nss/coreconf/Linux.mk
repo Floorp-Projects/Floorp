@@ -106,16 +106,6 @@ ifneq ($(OS_TARGET),Android)
 LIBC_TAG		= _glibc
 endif
 
-ifeq ($(OS_RELEASE),2.0)
-	OS_REL_CFLAGS	+= -DLINUX2_0
-	MKSHLIB		= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so) $(RPATH)
-	ifdef MAPFILE
-		MKSHLIB += -Wl,--version-script,$(MAPFILE)
-	endif
-	PROCESS_MAP_FILE = grep -v ';-' $< | \
-         sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
-endif
-
 ifdef BUILD_OPT
 ifeq (11,$(ALLOW_OPT_CODE_SIZE)$(OPT_CODE_SIZE))
 	OPTIMIZER = -Os
@@ -139,14 +129,15 @@ ifeq ($(USE_PTHREADS),1)
 OS_PTHREAD = -lpthread 
 endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -pipe -ffunction-sections -fdata-sections -DLINUX -Dlinux -DHAVE_STRERROR
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -pipe -ffunction-sections -fdata-sections -DHAVE_STRERROR
+ifeq ($(KERNEL),Linux)
+	OS_CFLAGS	+= -DLINUX -Dlinux
+endif
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
 
 ifdef USE_PTHREADS
 	DEFINES		+= -D_REENTRANT
 endif
-
-ARCH			= linux
 
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -shared $(ARCHFLAG) -Wl,--gc-sections
@@ -167,7 +158,6 @@ ifdef _SBOX_DIR
 LDFLAGS			+= -Wl,-rpath-link,/usr/lib:/lib
 endif
 
-# INCLUDES += -I/usr/include -Y/usr/include/linux
 G++INCLUDES		= -I/usr/include/g++
 
 #
@@ -202,7 +192,6 @@ RPATH = -Wl,-rpath,'$$ORIGIN:/opt/sun/private/lib'
 endif
 endif
 
-OS_REL_CFLAGS   += -DLINUX2_1
 MKSHLIB         = $(CC) $(DSO_LDOPTS) -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so) $(RPATH)
 
 ifdef MAPFILE

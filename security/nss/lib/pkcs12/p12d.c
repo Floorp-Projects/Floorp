@@ -1335,11 +1335,23 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
         case SEC_OID_MD2:
             integrityMech = CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN;
             break;
+        case SEC_OID_SHA224:
+            integrityMech = CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_SHA256:
+            integrityMech = CKM_NSS_PKCS12_PBE_SHA256_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_SHA384:
+            integrityMech = CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN;
+            break;
+        case SEC_OID_SHA512:
+            integrityMech = CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN;
+            break;
         default:
             goto loser;
     }
 
-    symKey = PK11_KeyGen(NULL, integrityMech, params, 20, NULL);
+    symKey = PK11_KeyGen(NULL, integrityMech, params, 0, NULL);
     PK11_DestroyPBEParams(params);
     params = NULL;
     if (!symKey)

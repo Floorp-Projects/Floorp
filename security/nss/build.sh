@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This script builds NSS with gyp and ninja.
 #
 # This build system is still under development.  It does not yet support all
@@ -36,6 +36,7 @@ NSS build tool options:
     --opt|-o      do an opt build
     --asan        do an asan build
     --ubsan       do an ubsan build
+                  --ubsan=bool,shift,... sets specific UB sanitizers
     --msan        do an msan build
     --sancov      do sanitize coverage builds
                   --sancov=func sets coverage to function level for example
@@ -54,11 +55,11 @@ rebuild_gyp=0
 target=Debug
 verbose=0
 fuzz=0
-sancov_default=edge,indirect-calls,8bit-counters
+ubsan_default=bool,signed-integer-overflow,shift,vptr
 
 # parse parameters to store in config
 params=$(echo "$*" | perl -pe 's/-c|-v|-g|-j [0-9]*|-h//g' | perl -pe 's/^\s*(.*?)\s*$/\1/')
-params=$(echo "$params $CC $CCC" | tr " " "\n" | perl -pe '/^\s*$/d')
+params=$(echo "$params $CC $CCC" | tr " " "\n" | perl -pe 's/^\s*$//')
 params=$(echo "${params[*]}" | sort)
 
 cwd=$(cd $(dirname $0); pwd -P)
@@ -74,13 +75,30 @@ gyp_params=()
 ninja_params=()
 scanbuild=()
 
+sancov_default()
+{
+    clang_version=$($CC --version | grep -oE 'clang version (3\.9\.|4\.)')
+    if [ -z "$clang_version" ]; then
+        echo "Need at least clang-3.9 (better 4.0) for sancov." 1>&2
+        exit 1
+    fi
+
+    if [ "$clang_version" = "clang version 3.9." ]; then
+        echo edge,indirect-calls,8bit-counters
+    else
+        echo trace-pc-guard
+    fi
+}
+
 enable_fuzz()
 {
     fuzz=1
     nspr_sanitizer asan
-    nspr_sanitizer sancov $sancov_default
+    nspr_sanitizer ubsan $ubsan_default
+    nspr_sanitizer sancov $(sancov_default)
     gyp_params+=(-Duse_asan=1)
-    gyp_params+=(-Duse_sancov=$sancov_default)
+    gyp_params+=(-Duse_ubsan=$ubsan_default)
+    gyp_params+=(-Duse_sancov=$(sancov_default))
 
     # Adding debug symbols even for opt builds.
     nspr_opt+=(--enable-debug-symbols)
@@ -100,8 +118,9 @@ while [ $# -gt 0 ]; do
         --opt|-o) opt_build=1 ;;
         -m32|--m32) build_64=0 ;;
         --asan) gyp_params+=(-Duse_asan=1); nspr_sanitizer asan ;;
-        --ubsan) gyp_params+=(-Duse_ubsan=1); nspr_sanitizer ubsan ;;
-        --sancov) gyp_params+=(-Duse_sancov=$sancov_default); nspr_sanitizer sancov $sancov_default ;;
+        --ubsan) gyp_params+=(-Duse_ubsan=$ubsan_default); nspr_sanitizer ubsan $ubsan_default ;;
+        --ubsan=?*) gyp_params+=(-Duse_ubsan="${1#*=}"); nspr_sanitizer ubsan "${1#*=}" ;;
+        --sancov) gyp_params+=(-Duse_sancov=$(sancov_default)); nspr_sanitizer sancov $(sancov_default) ;;
         --sancov=?*) gyp_params+=(-Duse_sancov="${1#*=}"); nspr_sanitizer sancov "${1#*=}" ;;
         --pprof) gyp_params+=(-Duse_pprof=1) ;;
         --msan) gyp_params+=(-Duse_msan=1); nspr_sanitizer msan ;;

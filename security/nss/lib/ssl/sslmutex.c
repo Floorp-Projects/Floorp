@@ -60,7 +60,8 @@ single_process_sslMutex_Lock(sslMutex* pMutex)
     return SECSuccess;
 }
 
-#if defined(LINUX) || defined(AIX) || defined(BEOS) || defined(BSDI) || (defined(NETBSD) && __NetBSD_Version__ < 500000000) || defined(OPENBSD)
+#if defined(LINUX) || defined(AIX) || defined(BEOS) || defined(BSDI) || \
+    (defined(NETBSD) && __NetBSD_Version__ < 500000000) || defined(OPENBSD) || defined(__GLIBC__)
 
 #include <unistd.h>
 #include <fcntl.h>
