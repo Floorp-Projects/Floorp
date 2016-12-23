@@ -56,5 +56,5 @@ nsHTMLTokenizer::WillTokenize(bool aIsFinalChunk)
 nsresult
 nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
 {
-  return kEOF;
+  return NS_ERROR_HTMLPARSER_EOF;
 }

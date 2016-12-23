@@ -320,7 +320,7 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen,
 nsresult nsScanner::GetChar(char16_t& aChar) {
   if (!mSlidingBuffer || mCurrentPosition == mEndPosition) {
     aChar = 0;
-    return kEOF;
+    return NS_ERROR_HTMLPARSER_EOF;
   }
 
   aChar = *mCurrentPosition++;
@@ -342,12 +342,12 @@ nsresult nsScanner::Peek(char16_t& aChar, uint32_t aOffset) {
   aChar = 0;
 
   if (!mSlidingBuffer || mCurrentPosition == mEndPosition) {
-    return kEOF;
+    return NS_ERROR_HTMLPARSER_EOF;
   }
 
   if (aOffset > 0) {
     if (mCountRemaining <= aOffset)
-      return kEOF;
+      return NS_ERROR_HTMLPARSER_EOF;
 
     nsScannerIterator pos = mCurrentPosition;
     pos.advance(aOffset);
@@ -363,7 +363,7 @@ nsresult nsScanner::Peek(char16_t& aChar, uint32_t aOffset) {
 nsresult nsScanner::Peek(nsAString& aStr, int32_t aNumChars, int32_t aOffset)
 {
   if (!mSlidingBuffer || mCurrentPosition == mEndPosition) {
-    return kEOF;
+    return NS_ERROR_HTMLPARSER_EOF;
   }
 
   nsScannerIterator start, end;
@@ -371,7 +371,7 @@ nsresult nsScanner::Peek(nsAString& aStr, int32_t aNumChars, int32_t aOffset)
   start = mCurrentPosition;
 
   if ((int32_t)mCountRemaining <= aOffset) {
-    return kEOF;
+    return NS_ERROR_HTMLPARSER_EOF;
   }
 
   if (aOffset > 0) {
