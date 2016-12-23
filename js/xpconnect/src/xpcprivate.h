@@ -1384,64 +1384,6 @@ class XPCNativeSet final
 };
 
 /***************************************************************************/
-// XPCNativeScriptableFlags is a wrapper class that holds the flags returned
-// from calls to nsIXPCScriptable::GetScriptableFlags(). It has convenience
-// methods to check for particular bitflags.
-
-class XPCNativeScriptableFlags final
-{
-public:
-    explicit XPCNativeScriptableFlags(uint32_t flags = 0) : mFlags(flags) {}
-
-    uint32_t GetFlags() const { return mFlags; }
-    void SetFlags(uint32_t flags) { mFlags = flags; }
-
-    operator uint32_t() const { return GetFlags(); }
-
-    XPCNativeScriptableFlags(const XPCNativeScriptableFlags& r)
-    {
-        mFlags = r.GetFlags();
-    }
-
-    XPCNativeScriptableFlags& operator= (const XPCNativeScriptableFlags& r)
-    {
-        mFlags = r.GetFlags();
-        return *this;
-    }
-
-#ifdef GET_IT
-#undef GET_IT
-#endif
-#define GET_IT(f_) const { return 0 != (mFlags & nsIXPCScriptable:: f_ ); }
-
-    bool WantPreCreate()                GET_IT(WANT_PRECREATE)
-    bool WantGetProperty()              GET_IT(WANT_GETPROPERTY)
-    bool WantSetProperty()              GET_IT(WANT_SETPROPERTY)
-    bool WantEnumerate()                GET_IT(WANT_ENUMERATE)
-    bool WantNewEnumerate()             GET_IT(WANT_NEWENUMERATE)
-    bool WantResolve()                  GET_IT(WANT_RESOLVE)
-    bool WantFinalize()                 GET_IT(WANT_FINALIZE)
-    bool WantCall()                     GET_IT(WANT_CALL)
-    bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
-    bool WantHasInstance()              GET_IT(WANT_HASINSTANCE)
-    bool UseJSStubForAddProperty()      GET_IT(USE_JSSTUB_FOR_ADDPROPERTY)
-    bool UseJSStubForDelProperty()      GET_IT(USE_JSSTUB_FOR_DELPROPERTY)
-    bool UseJSStubForSetProperty()      GET_IT(USE_JSSTUB_FOR_SETPROPERTY)
-    bool DontEnumQueryInterface()       GET_IT(DONT_ENUM_QUERY_INTERFACE)
-    bool DontAskInstanceForScriptable() GET_IT(DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
-    bool ClassInfoInterfacesOnly()      GET_IT(CLASSINFO_INTERFACES_ONLY)
-    bool AllowPropModsDuringResolve()   GET_IT(ALLOW_PROP_MODS_DURING_RESOLVE)
-    bool AllowPropModsToPrototype()     GET_IT(ALLOW_PROP_MODS_TO_PROTOTYPE)
-    bool IsGlobalObject()               GET_IT(IS_GLOBAL_OBJECT)
-    bool DontReflectInterfaceNames()    GET_IT(DONT_REFLECT_INTERFACE_NAMES)
-
-#undef GET_IT
-
-private:
-    uint32_t mFlags;
-};
-
-/***************************************************************************/
 // XPCNativeScriptableInfo is a trivial wrapper for nsIXPCScriptable which
 // should be removed eventually.
 
@@ -1453,9 +1395,6 @@ public:
 
     nsIXPCScriptable*
     GetCallback() const { return mCallback; }
-
-    XPCNativeScriptableFlags
-    GetFlags() const { return XPCNativeScriptableFlags(mCallback->GetScriptableFlags()); }
 
     const JSClass*
     GetJSClass() { return Jsvalify(mCallback->GetClass()); }
@@ -1489,27 +1428,17 @@ private:
 class MOZ_STACK_CLASS XPCNativeScriptableCreateInfo final
 {
 public:
-    XPCNativeScriptableCreateInfo()
-        : mFlags(0) {}
+    XPCNativeScriptableCreateInfo() {}
 
     nsIXPCScriptable*
     GetCallback() const {return mCallback;}
-
-    const XPCNativeScriptableFlags&
-    GetFlags() const      {return mFlags;}
 
     void
     SetCallback(already_AddRefed<nsIXPCScriptable>&& callback)
         {mCallback = callback;}
 
-    void
-    SetFlags(const XPCNativeScriptableFlags& flags)  {mFlags = flags;}
-
 private:
-    // XXX: the flags are the same as the ones gettable from the callback. This
-    // redundancy should be removed eventually.
     nsCOMPtr<nsIXPCScriptable>  mCallback;
-    XPCNativeScriptableFlags    mFlags;
 };
 
 /***********************************************/
