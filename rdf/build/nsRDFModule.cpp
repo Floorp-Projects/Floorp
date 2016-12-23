@@ -23,8 +23,6 @@
 #include "nsRDFXMLParser.h"
 #include "nsRDFXMLSerializer.h"
 
-#include "rdfISerializer.h"
-
 //----------------------------------------------------------------------
 
 // Functions used to create new instances of a given object by the
@@ -67,36 +65,6 @@ MAKE_CTOR(RDFContainerUtils,RDFContainerUtils,RDFContainerUtils)
 MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
 MAKE_CTOR(RDFDefaultResource,DefaultResource,RDFResource)
 
-#define MAKE_RDF_CTOR(_func,_new,_ifname)                            \
-static nsresult                                                      \
-CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
-{                                                                    \
-    if (!aResult) {                                                  \
-        return NS_ERROR_INVALID_POINTER;                             \
-    }                                                                \
-    if (aOuter) {                                                    \
-        *aResult = nullptr;                                           \
-        return NS_ERROR_NO_AGGREGATION;                              \
-    }                                                                \
-    rdfI##_ifname* inst;                                             \
-    nsresult rv = NS_New##_new(&inst);                               \
-    if (NS_FAILED(rv)) {                                             \
-        *aResult = nullptr;                                           \
-        return rv;                                                   \
-    }                                                                \
-    rv = inst->QueryInterface(aIID, aResult);                        \
-    if (NS_FAILED(rv)) {                                             \
-        *aResult = nullptr;                                           \
-    }                                                                \
-    NS_RELEASE(inst);             /* get rid of extra refcnt */      \
-    return rv;                                                       \
-}
-
-extern nsresult
-NS_NewTriplesSerializer(rdfISerializer** aResult);
-
-MAKE_RDF_CTOR(TriplesSerializer, TriplesSerializer, Serializer)
-
 NS_DEFINE_NAMED_CID(NS_RDFCOMPOSITEDATASOURCE_CID);
 NS_DEFINE_NAMED_CID(NS_RDFFILESYSTEMDATASOURCE_CID);
 NS_DEFINE_NAMED_CID(NS_RDFINMEMORYDATASOURCE_CID);
@@ -108,7 +76,6 @@ NS_DEFINE_NAMED_CID(NS_RDFCONTAINERUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_RDFSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_RDFXMLPARSER_CID);
 NS_DEFINE_NAMED_CID(NS_RDFXMLSERIALIZER_CID);
-NS_DEFINE_NAMED_CID(NS_RDFNTRIPLES_SERIALIZER_CID);
 NS_DEFINE_NAMED_CID(NS_LOCALSTORE_CID);
 
 
@@ -124,7 +91,6 @@ static const mozilla::Module::CIDEntry kRDFCIDs[] = {
     { &kNS_RDFSERVICE_CID, false, nullptr, RDFServiceImpl::CreateSingleton },
     { &kNS_RDFXMLPARSER_CID, false, nullptr, nsRDFXMLParser::Create },
     { &kNS_RDFXMLSERIALIZER_CID, false, nullptr, nsRDFXMLSerializer::Create },
-    { &kNS_RDFNTRIPLES_SERIALIZER_CID, false, nullptr, CreateNewTriplesSerializer },
     { &kNS_LOCALSTORE_CID, false, nullptr, NS_NewLocalStore },
     { nullptr }
 };
@@ -141,7 +107,6 @@ static const mozilla::Module::ContractIDEntry kRDFContracts[] = {
     { NS_RDF_CONTRACTID "/rdf-service;1", &kNS_RDFSERVICE_CID },
     { NS_RDF_CONTRACTID "/xml-parser;1", &kNS_RDFXMLPARSER_CID },
     { NS_RDF_CONTRACTID "/xml-serializer;1", &kNS_RDFXMLSERIALIZER_CID },
-    { NS_RDF_SERIALIZER "ntriples", &kNS_RDFNTRIPLES_SERIALIZER_CID },
     { NS_LOCALSTORE_CONTRACTID, &kNS_LOCALSTORE_CID },
     { nullptr }
 };
