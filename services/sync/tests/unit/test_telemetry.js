@@ -672,3 +672,35 @@ add_task(async function test_invalid_events() {
     await cleanAndGo(engine, server);
   }
 });
+
+add_task(async function test_no_ping_for_self_hosters() {
+  let telem = get_sync_test_telemetry();
+  let oldSubmit = telem.submit;
+
+  Service.engineManager.register(BogusEngine);
+  let engine = Service.engineManager.get("bogus");
+  engine.enabled = true;
+  let server = serverForUsers({"foo": "password"}, {
+    meta: {global: {engines: {bogus: {version: engine.version, syncID: engine.syncID}}}},
+    steam: {}
+  });
+
+  await SyncTestingInfrastructure(server);
+  try {
+    let submitPromise = new Promise(resolve => {
+      telem.submit = function() {
+        let result = oldSubmit.apply(this, arguments);
+        resolve(result);
+      };
+    });
+    Service.sync();
+    let pingSubmitted = await submitPromise;
+    // The Sync testing infrastructure already sets up a custom token server,
+    // so we don't need to do anything to simulate a self-hosted user.
+    ok(!pingSubmitted, "Should not submit ping with custom token server URL");
+  } finally {
+    telem.submit = oldSubmit;
+    Service.engineManager.unregister(engine);
+    await cleanAndGo(engine, server);
+  }
+});
