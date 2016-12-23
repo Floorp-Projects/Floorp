@@ -106,8 +106,6 @@ namespace quota {
 
 using namespace mozilla::ipc;
 
-const bool QuotaManager::kRunningXPCShellTests = !!PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR");
-
 // We want profiles to be platform-independent so we always need to replace
 // the same characters on every platform. Windows has the most extensive set
 // of illegal characters so we use its FILE_ILLEGAL_CHARACTERS and
