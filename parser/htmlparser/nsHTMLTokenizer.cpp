@@ -16,7 +16,6 @@
 
 #include "nsHTMLTokenizer.h"
 #include "nsIParser.h"
-#include "nsParserConstants.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
