@@ -11,47 +11,80 @@ cppunit:
     treeherder-symbol: tc(Cpp)
     e10s: false
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --cppunittest-suite=cppunittest
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=cppunittest
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --cppunittest-suite=cppunittest
 
 crashtest:
     description: "Crashtest run"
     suite: reftest/crashtest
     treeherder-symbol: tc-R(C)
-    docker-image: {"in-tree": "desktop1604-test"}
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    docker-image:
+        by-test-platform:
+            android.*: {'in-tree': 'desktop-test'}
+            default: {"in-tree": 'desktop1604-test'}
+    chunks:
+        by-test-platform:
+            android-4.3-arm7-api-15/debug: 10
+            android.*: 4
+            default: 1
     e10s:
         by-test-platform:
-            # Bug 1304435
-            win.*: false
+            windows.*: false # Bug 1304435
             default: both
     mozharness:
-        script: desktop_unittest.py
-        chunked: true
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --reftest-suite=crashtest
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=crashtest
+            default:
+                script: desktop_unittest.py
+                chunked: true
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --reftest-suite=crashtest
 
 external-media-tests:
     description: "External Media Test run"
@@ -64,7 +97,7 @@ external-media-tests:
         script: firefox_media_tests_taskcluster.py
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - mediatests/taskcluster_windows_config.py
                 default:
                     - mediatests/taskcluster_posix_config.py
@@ -113,12 +146,12 @@ gtest:
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - remove_executables.py
                     - unittests/mac_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
@@ -131,19 +164,19 @@ jittest:
     e10s: false
     chunks:
         by-test-platform:
-            win.*: 1
+            windows.*: 1
             default: 6
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - remove_executables.py
                     - unittests/mac_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
@@ -153,91 +186,161 @@ jsreftest:
     description: "JS Reftest run"
     suite: reftest/jsreftest
     treeherder-symbol: tc-R(J)
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     chunks:
         by-test-platform:
-            win.*: 1
+            android-4.3-arm7-api-15/debug: 20
+            android.*: 6
+            windows.*: 1
             default: 2
     e10s:
         by-test-platform:
             # Bug 1321782
-            win.*: false
+            windows.*: false
+            android.*: false
             default: both
+    max-run-time:
+        by-test-platform:
+            android.*: 7200
+            default: 3600
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --reftest-suite=jsreftest
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=jsreftest
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --reftest-suite=jsreftest
 
 marionette:
     description: "Marionette unittest run"
     suite: marionette
     treeherder-symbol: tc(Mn)
-    max-run-time: 5400
-    docker-image: {"in-tree": "desktop1604-test"}
+    max-run-time:
+        by-test-platform:
+            android.*: 3600
+            default: 5400
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
+    docker-image:
+        by-test-platform:
+            android.*: {'in-tree': 'desktop-test'}
+            default: {"in-tree": 'desktop1604-test'}
+    tier:
+        by-test-platform:
+            android.*: 3
+            default: default
+    chunks:
+        by-test-platform:
+            android.*: 10
+            default: 1
     mozharness:
-        script: marionette.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                win.*:
-                    - marionette/windows_taskcluster_config.py
-                default:
-                    - marionette/prod_config.py
+        by-test-platform:
+            android:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=marionette
+            default:
+                script: marionette.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - marionette/windows_taskcluster_config.py
+                        default:
+                            - marionette/prod_config.py
+                            - remove_executables.py
 
 mochitest:
     description: "Mochitest plain run"
     suite: mochitest/plain-chunked
     treeherder-symbol: tc-M()
     loopback-video: true
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: legacy # Bug 1281241: migrating to m3.large instances
     run-on-projects:
         by-test-platform:
             linux64-ccov/opt: []
             default: ['all']
     chunks:
         by-test-platform:
+            android-4.3-arm7-api-15/debug: 32
+            android.*: 20
             macosx.*: 5
-            win.*: 5
-            default: 10
+            windows.*: 5
+            linux.*: 10
     e10s:
         by-test-platform:
             linux64-ccov/opt: false
+            android.*: false
             default: both
-    max-run-time: 5400
-    mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        chunked: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            by-test-platform:
-                linux64-ccov/opt:
-                    - --mochitest-suite=plain-chunked
-                    - --code-coverage
-                default:
-                    - --mochitest-suite=plain-chunked
-    # Bug 1281241: migrating to m3.large instances
-    instance-size: legacy
+    max-run-time:
+        by-test-platform:
+            android-4.3-arm7-api-15/debug: 10800
+            default: 5400
     allow-software-gl-layers: false
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                    - remove_executables.py
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=mochitest
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    by-test-platform:
+                        linux64-ccov/opt:
+                            - --mochitest-suite=plain-chunked
+                            - --code-coverage
+                        default:
+                            - --mochitest-suite=plain-chunked
 
 mochitest-a11y:
     description: "Mochitest a11y run"
@@ -251,12 +354,12 @@ mochitest-a11y:
         chunked: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - remove_executables.py
                     - unittests/mac_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
@@ -296,12 +399,12 @@ mochitest-browser-chrome:
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - remove_executables.py
                     - unittests/mac_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
@@ -326,26 +429,51 @@ mochitest-chrome:
     suite: mochitest/chrome
     treeherder-symbol: tc-M(c)
     loopback-video: true
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     chunks:
-      by-test-platform:
-        macosx.*: 1
-        default: 3
+        by-test-platform:
+            android-4.3-arm7-api-15/debug: 2
+            android.*: 1
+            macosx.*: 1
+            default: 3
+    max-run-time:
+        by-test-platform:
+            android.*: 5400
+            default: 3600
     e10s: false
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=chrome
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        android-4.2-x86/opt:
+                            - android/androidx86-tc.py
+                        default:
+                            - android/androidarm_4_3.py
+                            - remove_executables.py
+                            - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=mochitest-chrome
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=chrome
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
@@ -354,21 +482,33 @@ mochitest-clipboard:
     loopback-video: true
     instance-size: xlarge
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        chunked: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard,jetpack-package-clipboard
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    # note that Android runs fewer suites than other platforms
+                    - --test-suite=mochitest-plain-clipboard
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard,jetpack-package-clipboard
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
@@ -381,7 +521,7 @@ mochitest-devtools-chrome:
     max-run-time: 5400
     chunks:
         by-test-platform:
-            win.*: 8
+            windows.*: 8
             default: 10
     run-on-projects:
         by-test-platform:
@@ -395,19 +535,19 @@ mochitest-devtools-chrome:
             linux64-ccov/opt: false
             linux64-jsdcov/opt: false
             # Bug 1304433: mochitest-devtools-chrome (e10s) not greened on windows
-            win.*: false
+            windows.*: false
             default: both
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - remove_executables.py
                     - unittests/mac_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
@@ -434,24 +574,37 @@ mochitest-gpu:
     loopback-video: true
     e10s:
         by-test-platform:
-            win.*: both
+            windows.*: both
+            android.*: false
             default: true
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        chunked: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=plain-gpu,chrome-gpu,browser-chrome-gpu
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    # note that Android runs fewer suites than other platforms
+                    - --test-suite=mochitest-plain-gpu
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=plain-gpu,chrome-gpu,browser-chrome-gpu
 
 mochitest-jetpack:
     description: "Mochitest jetpack run"
@@ -466,12 +619,12 @@ mochitest-jetpack:
         chunked: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - remove_executables.py
                     - unittests/mac_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
@@ -484,24 +637,45 @@ mochitest-media:
     treeherder-symbol: tc-M(mda)
     max-run-time: 5400
     loopback-video: true
-    instance-size: large
-    docker-image: {"in-tree": "desktop1604-test"}
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: large
+    chunks:
+        by-test-platform:
+            android.*: 3
+            default: 1
+    docker-image:
+        by-test-platform:
+            android.*: {'in-tree': 'desktop-test'}
+            default: {"in-tree": 'desktop1604-test'}
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        chunked: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=mochitest-media
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=mochitest-media
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=mochitest-media
 
 mochitest-other:
     description: "Mochitest other"
@@ -519,7 +693,7 @@ mochitest-other:
             macosx.*:
               - remove_executables.py
               - unittests/mac_unittest.py
-            default:
+            linux.*:
               - unittests/linux_unittest.py
               - remove_executables.py
         extra-options:
@@ -536,45 +710,67 @@ mochitest-valgrind:
     # We could re-enable e10s later.
     # There's no intrinsic reason not to use it.
     e10s: false
+    allow-software-gl-layers: false
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
             - --mochitest-suite=valgrind-plain
-    allow-software-gl-layers: false
 
 mochitest-webgl:
     description: "Mochitest webgl run"
     suite: mochitest/mochitest-gl
     treeherder-symbol: tc-M(gl)
-    chunks: 3
+    chunks:
+        by-test-platform:
+            android.*: 10
+            default: 3
     loopback-video: true
-    mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        chunked: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --mochitest-suite=mochitest-gl
+    max-run-time:
+        by-test-platform:
+            android.*: 7200
+            default: 3600
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
+                    - remove_executables.py
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=mochitest-gl
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --mochitest-suite=mochitest-gl
 
 mochitest-stylo:
     description: "Mochitest run for Stylo"
@@ -597,26 +793,50 @@ reftest:
     description: "Reftest run"
     suite: reftest/reftest
     treeherder-symbol: tc-R(R)
-    docker-image: {"in-tree": "desktop1604-test"}
+    docker-image:
+        by-test-platform:
+            android.*: {'in-tree': 'desktop-test'}
+            default: {"in-tree": 'desktop1604-test'}
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     chunks:
-      by-test-platform:
-        macosx.*: 1
-        default: 8
+        by-test-platform:
+            android-4.3-arm7-api-15/debug: 48
+            android.*: 16
+            macosx.*: 1
+            default: 8
+    max-run-time:
+        by-test-platform:
+            android.*: 10800
+            default: 3600
     mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    - android/androidarm_4_3.py
                     - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --reftest-suite=reftest
+                    - android/androidarm_4_3-tc.py
+                extra-options:
+                    - --test-suite=reftest
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --reftest-suite=reftest
 
 reftest-no-accel:
     description: "Reftest not accelerated run"
@@ -632,12 +852,12 @@ reftest-no-accel:
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - remove_executables.py
                     - unittests/mac_unittest.py
-                default:
+                linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
@@ -652,12 +872,32 @@ reftest-stylo:
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
-            by-test-platform:
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
+            - unittests/linux_unittest.py
+            - remove_executables.py
         extra-options:
             - --reftest-suite=reftest-stylo
+
+robocop:
+    description: "Robocop run"
+    suite: robocop
+    treeherder-symbol: tc-M(rc)
+    instance-size: xlarge
+    chunks:
+        by-test-platform:
+            # android-4.3-arm7-api-15/debug -- not run
+            android-4.3-arm7-api-15/opt: 4
+            android-4.3-arm7-api-15-gradle/opt: 4
+    loopback-video: true
+    e10s: false
+    mozharness:
+        script: android_emulator_unittest.py
+        no-read-buildbot-config: true
+        config:
+            - android/androidarm_4_3.py
+            - remove_executables.py
+            - android/androidarm_4_3-tc.py
+        extra-options:
+            - --test-suite=robocop
 
 talos-chrome:
     description: "Talos chrome"
@@ -838,7 +1078,7 @@ web-platform-tests:
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - web_platform_tests/prod_config_windows_taskcluster.py
                 default:
                     - web_platform_tests/prod_config.py
@@ -855,7 +1095,7 @@ web-platform-tests-reftests:
     e10s:
         by-test-platform:
             # Bug 1304438
-            win.*: false
+            windows.*: false
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
     checkout: true
@@ -864,7 +1104,7 @@ web-platform-tests-reftests:
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - web_platform_tests/prod_config_windows_taskcluster.py
                 default:
                     - web_platform_tests/prod_config.py
@@ -885,7 +1125,7 @@ web-platform-tests-wdspec:
         no-read-buildbot-config: true
         config:
             by-test-platform:
-                win.*:
+                windows.*:
                     - web_platform_tests/prod_config_windows_taskcluster.py
                 default:
                     - web_platform_tests/prod_config.py
@@ -903,32 +1143,54 @@ xpcshell:
             default: ['all']
     chunks:
         by-test-platform:
-            # win.*: 1
-            macosx.*: 1
             linux64/debug: 10
+            android-4.2-x86/opt: 4
+            android.*: 6
+            # windows.*: 1
+            macosx.*: 1
             default: 8
-    max-run-time: 5400
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: legacy # Bug 1281241: migrating to m3.large instances
+    max-run-time:
+        by-test-platform:
+            android.*: 7200
+            default: 5400
     e10s: false
-    mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                win.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - remove_executables.py
-                    - unittests/mac_unittest.py
-                default:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            by-test-platform:
-                linux64-ccov/opt:
-                    - --xpcshell-suite=xpcshell
-                    - --code-coverage
-                default:
-                    - --xpcshell-suite=xpcshell
-    # Bug 1281241: migrating to m3.large instances
-    instance-size: legacy
     allow-software-gl-layers: false
+    mozharness:
+        by-test-platform:
+            android.*:
+                script: android_emulator_unittest.py
+                no-read-buildbot-config: true
+                extra-options:
+                    - --test-suite=xpcshell
+                config:
+                    by-test-platform:
+                        android-4.2-x86/opt:
+                            - android/androidx86-tc.py
+                        default:
+                            - android/androidarm_4_3.py
+                            - remove_executables.py
+                            - android/androidarm_4_3-tc.py
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - remove_executables.py
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    by-test-platform:
+                        linux64-ccov/opt:
+                            - --xpcshell-suite=xpcshell
+                            - --code-coverage
+                        default:
+                            - --xpcshell-suite=xpcshell

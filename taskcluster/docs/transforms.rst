@@ -93,40 +93,17 @@ suitable for ``queue.createTask``.
 Test Descriptions
 -----------------
 
-The transforms configured for test kinds proceed as follows, based on
-configuration in ``kind.yml``:
+Test descriptions specify how to run a unittest or talos run.  They aim to
+describe this abstractly, although in many cases the unique nature of
+invocation on different platforms leaves a lot of specific behavior in the test
+description, divided by ``by-test-platform``.
 
- * The test description is validated to conform to the schema in
-   ``taskcluster/taskgraph/transforms/tests/test_description.py``.  This schema
-   is extensively documented and is a the primary reference for anyone
-   modifying tests.
+Test descriptions are validated to conform to the schema in
+``taskcluster/taskgraph/transforms/tests.py``.  This schema is extensively
+documented and is a the primary reference for anyone modifying tests.
 
- * Kind-specific transformations are applied.  These may apply default
-   settings, split tests (e.g., one to run with feature X enabled, one with it
-   disabled), or apply across-the-board business rules such as "all desktop
-   debug test platforms should have a max-run-time of 5400s".
-
- * Transformations generic to all tests are applied.  These apply policies
-   which apply to multiple kinds, e.g., for treeherder tiers.  This is also the
-   place where most values which differ based on platform are resolved, and
-   where chunked tests are split out into a test per chunk.
-
- * The test is again validated against the same schema.  At this point it is
-   still a test description, just with defaults and policies applied, and
-   per-platform options resolved.  So transforms up to this point do not modify
-   the "shape" of the test description, and are still governed by the schema in
-   ``test_description.py``.
-
- * The ``taskgraph.transforms.tests.make_task_description:transforms`` then
-   take the test description and create a *task* description.  This transform
-   embodies the specifics of how test runs work: invoking mozharness, various
-   worker options, and so on.
-
- * Finally, the ``taskgraph.transforms.task:transforms``, described above
-   under "Task-Generation Transforms", are applied.
-
-Test dependencies are produced in the form of a dictionary mapping dependency
-name to task label.
+The output of ``tests.py`` is a task description.  Test dependencies are
+produced in the form of a dictionary mapping dependency name to task label.
 
 Job Descriptions
 ----------------

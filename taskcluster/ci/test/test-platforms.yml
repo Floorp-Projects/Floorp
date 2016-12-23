@@ -11,6 +11,10 @@
 # should be performed in the target task selection phase of task-graph
 # generation.
 
+
+##
+# Linux platforms (matching /linux.*/)
+
 linux64/debug:
     build-platform: linux64/debug
     test-sets:
@@ -59,6 +63,9 @@ linux64-jsdcov/opt:
     test-sets:
         - jsdcov-code-coverage-tests
 
+##
+# Windows platforms (matching /windows.*/)
+
 # win32 vm
 windows7-32-vm/debug:
     build-platform: win32/debug
@@ -99,6 +106,9 @@ windows10-64-vm/opt:
 #    test-sets:
 #        - windows-gpu-tests
 
+##
+# MacOS X platforms (matching /macosx.*/)
+
 macosx64/debug:
     build-platform: macosx64/debug
     test-sets:
@@ -107,3 +117,28 @@ macosx64/opt:
     build-platform: macosx64/opt
     test-sets:
         - macosx64-tests-talos
+
+##
+# Android platforms (matching /android.*/)
+
+android-4.3-arm7-api-15/debug:
+    build-platform: android-api-15/debug
+    test-sets:
+        - android-common-tests
+        - android-debug-tests
+
+android-4.3-arm7-api-15/opt:
+    build-platform: android-api-15/opt
+    test-sets:
+        - android-common-tests
+        - android-opt-tests
+
+android-4.2-x86/opt:
+    build-platform: android-x86/opt
+    test-sets:
+        - android-x86-tests
+
+android-4.3-arm7-api-15-gradle/opt:
+    build-platform: android-api-15-gradle/opt
+    test-sets:
+        - android-gradle-tests
