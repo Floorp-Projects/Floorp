@@ -1696,7 +1696,7 @@ class MOZ_STACK_CLASS ModuleValidator
     }
     bool newSig(Sig&& sig, uint32_t* sigIndex) {
         *sigIndex = 0;
-        if (mg_.numSigs() >= MaxSigs)
+        if (mg_.numSigs() >= AsmJSMaxTypes)
             return failCurrentOffset("too many signatures");
 
         *sigIndex = mg_.numSigs();
@@ -1843,11 +1843,11 @@ class MOZ_STACK_CLASS ModuleValidator
 
         auto env = MakeUnique<ModuleEnvironment>(ModuleKind::AsmJS);
         if (!env ||
-            !env->sigs.resize(MaxSigs) ||
-            !env->funcSigs.resize(MaxFuncs) ||
+            !env->sigs.resize(AsmJSMaxTypes) ||
+            !env->funcSigs.resize(AsmJSMaxFuncs) ||
             !env->funcImportGlobalDataOffsets.resize(AsmJSMaxImports) ||
-            !env->tables.resize(MaxTables) ||
-            !env->asmJSSigToTableIndex.resize(MaxSigs))
+            !env->tables.resize(AsmJSMaxTables) ||
+            !env->asmJSSigToTableIndex.resize(AsmJSMaxTypes))
         {
             return false;
         }
@@ -2156,7 +2156,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!declareSig(Move(sig), &sigIndex))
             return false;
         uint32_t funcIndex = AsmJSFirstDefFuncIndex + numFunctions();
-        if (funcIndex >= MaxFuncs)
+        if (funcIndex >= AsmJSMaxFuncs)
             return failCurrentOffset("too many functions");
         mg_.initFuncSig(funcIndex, sigIndex);
         Global* global = validationLifo_.new_<Global>(Global::Function);
@@ -2171,7 +2171,7 @@ class MOZ_STACK_CLASS ModuleValidator
     bool declareFuncPtrTable(Sig&& sig, PropertyName* name, uint32_t firstUse, uint32_t mask,
                              uint32_t* index)
     {
-        if (mask > MaxTableElems)
+        if (mask > MaxTableLength)
             return failCurrentOffset("function pointer table too big");
         uint32_t sigIndex;
         if (!newSig(Move(sig), &sigIndex))
