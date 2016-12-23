@@ -47,9 +47,11 @@ enum Status
   eWasConstructed,
   eWasCopyConstructed,
   eWasMoveConstructed,
+  eWasAssigned,
   eWasCopyAssigned,
   eWasMoveAssigned,
-  eWasMovedFrom
+  eWasCopiedFrom,
+  eWasMovedFrom,
 };
 
 static size_t sUndestroyedObjects = 0;
@@ -842,6 +844,220 @@ TestSomePointerConversion()
   return true;
 }
 
+struct SourceType1
+{
+  int mTag;
+
+  operator int() const
+  {
+    return mTag;
+  }
+};
+struct DestType
+{
+  int mTag;
+  Status mStatus;
+
+  DestType()
+    : mTag(0)
+    , mStatus(eWasDefaultConstructed)
+  {}
+
+  MOZ_IMPLICIT DestType(int aTag)
+    : mTag(aTag)
+    , mStatus(eWasConstructed)
+  {}
+
+  MOZ_IMPLICIT DestType(SourceType1&& aSrc)
+    : mTag(aSrc.mTag)
+    , mStatus(eWasMoveConstructed)
+  {}
+
+  MOZ_IMPLICIT DestType(const SourceType1& aSrc)
+    : mTag(aSrc.mTag)
+    , mStatus(eWasCopyConstructed)
+  {}
+
+  DestType& operator=(int aTag)
+  {
+    mTag = aTag;
+    mStatus = eWasAssigned;
+    return *this;
+  }
+
+  DestType& operator=(SourceType1&& aSrc)
+  {
+    mTag = aSrc.mTag;
+    mStatus = eWasMoveAssigned;
+    return *this;
+  }
+
+  DestType& operator=(const SourceType1& aSrc)
+  {
+    mTag = aSrc.mTag;
+    mStatus = eWasCopyAssigned;
+    return *this;
+  }
+};
+struct SourceType2
+{
+  int mTag;
+
+  operator DestType() const&
+  {
+    DestType result;
+    result.mTag = mTag;
+    result.mStatus = eWasCopiedFrom;
+    return result;
+  }
+
+  operator DestType() &&
+  {
+    DestType result;
+    result.mTag = mTag;
+    result.mStatus = eWasMovedFrom;
+    return result;
+  }
+};
+
+static bool
+TestTypeConversion()
+{
+  {
+    Maybe<SourceType1> src = Some(SourceType1 {1});
+    Maybe<DestType> dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && src->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasCopyConstructed);
+
+    src = Some(SourceType1 {2});
+    dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && src->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasCopyAssigned);
+  }
+
+  {
+    Maybe<SourceType1> src = Some(SourceType1 {1});
+    Maybe<DestType> dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasMoveConstructed);
+
+    src = Some(SourceType1 {2});
+    dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasMoveAssigned);
+  }
+
+  {
+    Maybe<SourceType2> src = Some(SourceType2 {1});
+    Maybe<DestType> dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && src->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasCopiedFrom);
+
+    src = Some(SourceType2 {2});
+    dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && src->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasCopiedFrom);
+  }
+
+  {
+    Maybe<SourceType2> src = Some(SourceType2 {1});
+    Maybe<DestType> dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasMovedFrom);
+
+    src = Some(SourceType2 {2});
+    dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasMovedFrom);
+  }
+
+  {
+    Maybe<int> src = Some(1);
+    Maybe<DestType> dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && *src == 1);
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasConstructed);
+
+    src = Some(2);
+    dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && *src == 2);
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasAssigned);
+  }
+
+  {
+    Maybe<int> src = Some(1);
+    Maybe<DestType> dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasConstructed);
+
+    src = Some(2);
+    dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest->mStatus == eWasAssigned);
+  }
+
+  {
+    Maybe<SourceType1> src = Some(SourceType1 {1});
+    Maybe<int> dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && src->mTag == 1);
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 1);
+
+    src = Some(SourceType1 {2});
+    dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && src->mTag == 2);
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 2);
+  }
+
+  {
+    Maybe<SourceType1> src = Some(SourceType1 {1});
+    Maybe<int> dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 1);
+
+    src = Some(SourceType1 {2});
+    dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 2);
+  }
+
+  {
+    Maybe<size_t> src = Some(1);
+    Maybe<char16_t> dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && *src == 1);
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 1);
+
+    src = Some(2);
+    dest = src;
+    MOZ_RELEASE_ASSERT(src.isSome() && *src == 2);
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 2);
+  }
+
+  {
+    Maybe<size_t> src = Some(1);
+    Maybe<char16_t> dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 1);
+
+    src = Some(2);
+    dest = Move(src);
+    MOZ_RELEASE_ASSERT(src.isNothing());
+    MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 2);
+  }
+
+  return true;
+}
+
 int
 main()
 {
@@ -855,6 +1071,7 @@ main()
   RUN_TEST(TestVirtualFunction);
   RUN_TEST(TestSomeNullptrConversion);
   RUN_TEST(TestSomePointerConversion);
+  RUN_TEST(TestTypeConversion);
 
   return 0;
 }

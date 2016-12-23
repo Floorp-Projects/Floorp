@@ -103,16 +103,11 @@ public:
   }
 
   /**
-   * Maybe<T*> can be copy-constructed from a Maybe<U*> if U* and T* are
-   * compatible, or from Maybe<decltype(nullptr)>.
+   * Maybe<T> can be copy-constructed from a Maybe<U> if U is convertible to T.
    */
   template<typename U,
            typename =
-             typename std::enable_if<std::is_pointer<T>::value &&
-                                     (std::is_same<U, decltype(nullptr)>::value ||
-                                      (std::is_pointer<U>::value &&
-                                       std::is_base_of<typename std::remove_pointer<T>::type,
-                                                       typename std::remove_pointer<U>::type>::value))>::type>
+             typename std::enable_if<std::is_convertible<U, T>::value>::type>
   MOZ_IMPLICIT
   Maybe(const Maybe<U>& aOther)
     : mIsSome(false)
@@ -132,16 +127,11 @@ public:
   }
 
   /**
-   * Maybe<T*> can be move-constructed from a Maybe<U*> if U* and T* are
-   * compatible, or from Maybe<decltype(nullptr)>.
+   * Maybe<T> can be move-constructed from a Maybe<U> if U is convertible to T.
    */
   template<typename U,
            typename =
-             typename std::enable_if<std::is_pointer<T>::value &&
-                                     (std::is_same<U, decltype(nullptr)>::value ||
-                                      (std::is_pointer<U>::value &&
-                                       std::is_base_of<typename std::remove_pointer<T>::type,
-                                                       typename std::remove_pointer<U>::type>::value))>::type>
+             typename std::enable_if<std::is_convertible<U, T>::value>::type>
   MOZ_IMPLICIT
   Maybe(Maybe<U>&& aOther)
     : mIsSome(false)
@@ -168,11 +158,47 @@ public:
     return *this;
   }
 
+  template<typename U,
+           typename =
+             typename std::enable_if<std::is_convertible<U, T>::value>::type>
+  Maybe& operator=(const Maybe<U>& aOther)
+  {
+    if (aOther.isSome()) {
+      if (mIsSome) {
+        ref() = aOther.ref();
+      } else {
+        emplace(*aOther);
+      }
+    } else {
+      reset();
+    }
+    return *this;
+  }
+
   Maybe& operator=(Maybe&& aOther)
   {
     MOZ_ASSERT(this != &aOther, "Self-moves are prohibited");
 
     if (aOther.mIsSome) {
+      if (mIsSome) {
+        ref() = Move(aOther.ref());
+      } else {
+        emplace(Move(*aOther));
+      }
+      aOther.reset();
+    } else {
+      reset();
+    }
+
+    return *this;
+  }
+
+  template<typename U,
+           typename =
+             typename std::enable_if<std::is_convertible<U, T>::value>::type>
+  Maybe& operator=(Maybe<U>&& aOther)
+  {
+    if (aOther.isSome()) {
       if (mIsSome) {
         ref() = Move(aOther.ref());
       } else {
