@@ -478,7 +478,7 @@ BrowserGlue.prototype = {
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
 
-    if (AppConstants.isPlatformAndVersionAtMost("win", "5.2") ||
+    if (AppConstants.platform == "win" ||
         AppConstants.platform == "macosx") {
       // Handles prompting to inform about incompatibilites when accessibility
       // and e10s are active together.
