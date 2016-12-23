@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
+import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
@@ -113,15 +115,25 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             return;
         }
 
-        highlightsCursor.moveToPosition(
-                translatePositionToCursor(position));
+        int actualPosition = translatePositionToCursor(position);
+        highlightsCursor.moveToPosition(actualPosition);
 
         final String url = highlightsCursor.getString(
                 highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
 
         onUrlOpenListener.onUrlOpen(url, EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
 
-        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "as_highlights");
+        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
+                .forHighlightSource(Utils.highlightSource(highlightsCursor))
+                .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
+                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actualPosition)
+                .set(ActivityStreamTelemetry.Contract.COUNT, highlightsCursor.getCount());
+
+        Telemetry.sendUIEvent(
+                TelemetryContract.Event.LOAD_URL,
+                TelemetryContract.Method.LIST_ITEM,
+                extras.build()
+        );
     }
 
     @Override

@@ -8,6 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import json
 import logging
+import re
 
 import time
 import yaml
@@ -178,10 +179,17 @@ def write_artifact(filename, data):
 def get_action_yml(parameters):
     templates = Templates(os.path.join(GECKO, "taskcluster/taskgraph"))
     action_parameters = parameters.copy()
+
+    match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', action_parameters['head_repository'])
+    if not match:
+        raise Exception('Unrecognized head_repository')
+    repo_scope = 'assume:repo:{}/{}:*'.format(
+        match.group(1), match.group(2))
+
     action_parameters.update({
         "action": "{{action}}",
         "action_args": "{{action_args}}",
-        "project": parameters["project"],
+        "repo_scope": repo_scope,
         "from_now": json_time_from_now,
         "now": current_json_time()
     })

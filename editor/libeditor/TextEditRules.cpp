@@ -1425,9 +1425,9 @@ TextEditRules::CreateMozBR(nsIDOMNode* inParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // give it special moz attr
-  nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(brNode);
+  nsCOMPtr<Element> brElem = do_QueryInterface(brNode);
   if (brElem) {
-    rv = mTextEditor->SetAttribute(brElem, NS_LITERAL_STRING("type"),
+    rv = mTextEditor->SetAttribute(brElem, nsGkAtoms::type,
                                    NS_LITERAL_STRING("_moz"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
