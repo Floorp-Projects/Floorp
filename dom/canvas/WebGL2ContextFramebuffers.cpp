@@ -132,23 +132,27 @@ static bool
 ValidateFramebufferAttachmentEnum(WebGLContext* webgl, const char* funcName,
                                   GLenum attachment)
 {
-    if (attachment >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-        attachment <= webgl->LastColorAttachmentEnum())
-    {
-        return true;
-    }
-
     switch (attachment) {
     case LOCAL_GL_DEPTH_ATTACHMENT:
     case LOCAL_GL_STENCIL_ATTACHMENT:
     case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
         return true;
+    }
 
-    default:
+    if (attachment < LOCAL_GL_COLOR_ATTACHMENT0) {
         webgl->ErrorInvalidEnum("%s: attachment: invalid enum value 0x%x.",
                                 funcName, attachment);
         return false;
     }
+
+    if (attachment > webgl->LastColorAttachmentEnum()) {
+        // That these errors have different types is ridiculous.
+        webgl->ErrorInvalidOperation("%s: Too-large LOCAL_GL_COLOR_ATTACHMENTn.",
+                                     funcName);
+        return false;
+    }
+
+    return true;
 }
 
 bool
