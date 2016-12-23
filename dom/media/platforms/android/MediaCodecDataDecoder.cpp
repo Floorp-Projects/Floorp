@@ -129,7 +129,6 @@ protected:
   layers::ImageContainer* mImageContainer;
   const VideoInfo& mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
-  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
 };
 
 
