@@ -497,6 +497,7 @@ enum class FillMode : uint32_t;
 enum class StyleDisplay : uint8_t {
   None = 0,
   Block,
+  FlowRoot,
   Inline,
   InlineBlock,
   ListItem,
