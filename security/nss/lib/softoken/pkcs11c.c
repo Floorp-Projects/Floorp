@@ -3971,6 +3971,22 @@ nsc_SetupHMACKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter **pbe)
             params->hashType = HASH_AlgMD2;
             params->keyLen = 16;
             break;
+        case CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN:
+            params->hashType = HASH_AlgSHA224;
+            params->keyLen = 28;
+            break;
+        case CKM_NSS_PKCS12_PBE_SHA256_HMAC_KEY_GEN:
+            params->hashType = HASH_AlgSHA256;
+            params->keyLen = 32;
+            break;
+        case CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN:
+            params->hashType = HASH_AlgSHA384;
+            params->keyLen = 48;
+            break;
+        case CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN:
+            params->hashType = HASH_AlgSHA512;
+            params->keyLen = 64;
+            break;
         default:
             PORT_FreeArena(arena, PR_TRUE);
             return CKR_MECHANISM_INVALID;
@@ -4189,6 +4205,10 @@ NSC_GenerateKey(CK_SESSION_HANDLE hSession,
         case CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN:
         case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
         case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
+        case CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN:
+        case CKM_NSS_PKCS12_PBE_SHA256_HMAC_KEY_GEN:
+        case CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN:
+        case CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN:
             key_gen_type = nsc_pbe;
             key_type = CKK_GENERIC_SECRET;
             crv = nsc_SetupHMACKeyGen(pMechanism, &pbe_param);

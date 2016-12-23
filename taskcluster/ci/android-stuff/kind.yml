@@ -41,8 +41,6 @@ jobs:
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
                 TOOLTOOL_CACHE: "/home/worker/tooltool-cache"
-                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
-                TOOLTOOL_REV: "master"
             artifacts:
               - name: public/build
                 path: /home/worker/artifacts/
@@ -91,8 +89,6 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
-                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
-                TOOLTOOL_REV: "master"
             artifacts:
               - name: public/android/unittest
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
@@ -142,8 +138,6 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
-                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
-                TOOLTOOL_REV: "master"
             artifacts:
               - name: public/android/lint/lint-results-automationDebug.html
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-automationDebug.html
@@ -204,8 +198,6 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
-                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
-                TOOLTOOL_REV: "master"
             artifacts:
               - name: public/android/checkstyle/checkstyle.xml
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
@@ -256,8 +248,6 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
-                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
-                TOOLTOOL_REV: "master"
             artifacts:
               - name: public/android/findbugs/findbugs-report.html
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-automationDebug-output.html

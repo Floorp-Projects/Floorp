@@ -1071,3 +1071,101 @@ tls13_ServerHandlePskKeyExchangeModesXtn(const sslSocket *ss,
 
     return SECSuccess;
 }
+
+PRInt32
+tls13_SendShortHeaderXtn(const sslSocket *ss,
+                         TLSExtensionData *xtnData,
+                         PRBool append, PRUint32 maxBytes)
+{
+    PRUint32 extension_len = 2 + 2; /* Type + length (0). */
+
+    if (!ss->opt.enableShortHeaders) {
+        return 0;
+    }
+
+    /* Presently this is incompatible with 0-RTT. We will fix if
+     * it becomes more than an experiment. */
+    if (ss->opt.enable0RttData) {
+        return 0;
+    }
+
+    if (IS_DTLS(ss)) {
+        return 0;
+    }
+
+    SSL_TRC(3, ("%d: TLS13[%d]: send short_header extension",
+                SSL_GETPID(), ss->fd));
+
+    if (maxBytes < extension_len) {
+        PORT_Assert(0);
+        return 0;
+    }
+
+    if (append) {
+        SECStatus rv;
+
+        rv = ssl3_ExtAppendHandshakeNumber(ss, ssl_tls13_short_header_xtn, 2);
+        if (rv != SECSuccess)
+            return -1;
+
+        rv = ssl3_ExtAppendHandshakeNumber(ss, 0, 2);
+        if (rv != SECSuccess)
+            return -1;
+
+        xtnData->advertised[xtnData->numAdvertised++] =
+            ssl_tls13_short_header_xtn;
+    }
+
+    return extension_len;
+}
+
+SECStatus
+tls13_HandleShortHeaderXtn(
+    const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
+    SECItem *data)
+{
+    SSL_TRC(3, ("%d: TLS13[%d]: handle early_data extension",
+                SSL_GETPID(), ss->fd));
+
+    /* If we are doing < TLS 1.3, then ignore this. */
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        return SECSuccess;
+    }
+
+    /* Presently this is incompatible with 0-RTT. We will fix if
+     * it becomes more than an experiment. */
+    if (ss->opt.enable0RttData) {
+        return SECSuccess;
+    }
+
+    if (IS_DTLS(ss)) {
+        PORT_SetError(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION);
+        return SECFailure;
+    }
+
+    if (data->len) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
+        return SECFailure;
+    }
+
+    if (!ss->opt.enableShortHeaders) {
+        /* Ignore. */
+        return SECSuccess;
+    }
+
+    /* Keep track of negotiated extensions. */
+    xtnData->negotiated[xtnData->numNegotiated++] = ex_type;
+
+    if (ss->sec.isServer) {
+        SECStatus rv;
+
+        rv = ssl3_RegisterExtensionSender(ss, xtnData,
+                                          ssl_tls13_short_header_xtn,
+                                          tls13_SendShortHeaderXtn);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+    }
+
+    return SECSuccess;
+}
