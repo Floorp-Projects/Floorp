@@ -6078,9 +6078,10 @@ PropertyReadNeedsTypeBarrier(CompilerConstraintList* constraints,
     // and elements.
     //
     // We also need a barrier if the object is a proxy, because then all bets
-    // are off, just as if it has unknown properties.
+    // are off, just as if it has unknown properties. Also use a barrier when
+    // reading from a TypedObject, so the IC can attach TypedObject stubs.
     if (key->unknownProperties() || observed->empty() ||
-        key->clasp()->isProxy())
+        key->clasp()->isProxy() || IsTypedObjectClass(key->clasp()))
     {
         return BarrierKind::TypeSet;
     }
