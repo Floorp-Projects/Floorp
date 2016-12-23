@@ -517,9 +517,9 @@ HTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 #define GROUP_FORMCONTROL      (1 << 6)
 
 // address, applet, article, aside, blockquote, button, center, del, details,
-// dir, div, dl, fieldset, figure, footer, form, h1, h2, h3, h4, h5, h6, header,
-// hgroup, hr, iframe, ins, main, map, menu, nav, noframes, noscript, object,
-// ol, p, pre, table, section, summary, ul
+// dialog, dir, div, dl, fieldset, figure, footer, form, h1, h2, h3, h4, h5,
+// h6, header, hgroup, hr, iframe, ins, main, map, menu, nav, noframes,
+// noscript, object, ol, p, pre, table, section, summary, ul
 #define GROUP_BLOCK            (1 << 7)
 
 // frame, frameset
@@ -638,6 +638,7 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(del, true, true, GROUP_PHRASE | GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(details, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(dfn, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
+  ELEM(dialog, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(dir, true, false, GROUP_BLOCK, GROUP_LI),
   ELEM(div, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(dl, true, false, GROUP_BLOCK, GROUP_DL_CONTENT),
