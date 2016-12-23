@@ -20,6 +20,7 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const DEBUG = false; /* set to true to enable debug messages */
+var debug;
 
 const LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const APPSHELL_SERV_CONTRACTID  = "@mozilla.org/appshell/appShellService;1";
