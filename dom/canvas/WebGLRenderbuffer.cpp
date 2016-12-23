@@ -205,7 +205,7 @@ WebGLRenderbuffer::RenderbufferStorage(const char* funcName, uint32_t samples,
     MOZ_ASSERT(usage->maxSamplesKnown);
 
     if (samples > usage->maxSamples) {
-        mContext->ErrorInvalidValue("%s: `samples` is out of the valid range.", funcName);
+        mContext->ErrorInvalidOperation("%s: `samples` is out of the valid range.", funcName);
         return;
     }
 
