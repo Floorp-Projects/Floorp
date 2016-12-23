@@ -33,7 +33,6 @@
 #include "imgIContainer.h"
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #include "mozilla/a11y/AccessibleWrap.h"
-#include "mozilla/WindowsVersion.h"
 #endif
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -1098,13 +1097,14 @@ ContentParent::Init()
   // If accessibility is running in chrome process then start it in content
   // process.
   if (nsIPresShell::IsAccessibilityActive()) {
-#if defined(XP_WIN)
-    if (IsVistaOrLater()) {
-      Unused <<
-        SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
-    }
+#if !defined(XP_WIN)
+      Unused << SendActivateA11y(0);
 #else
-    Unused << SendActivateA11y(0);
+    // On Windows we currently only enable a11y in the content process
+    // for testing purposes.
+    if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+      Unused << SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+    }
 #endif
   }
 #endif
@@ -2427,13 +2427,14 @@ ContentParent::Observe(nsISupports* aSubject,
     if (*aData == '1') {
       // Make sure accessibility is running in content process when
       // accessibility gets initiated in chrome process.
-#if defined(XP_WIN)
-      if (IsVistaOrLater()) {
-        Unused <<
-          SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
-      }
-#else
+#if !defined(XP_WIN)
       Unused << SendActivateA11y(0);
+#else
+      // On Windows we currently only enable a11y in the content process
+      // for testing purposes.
+      if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+        Unused << SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      }
 #endif
     } else {
       // If possible, shut down accessibility in content process when
