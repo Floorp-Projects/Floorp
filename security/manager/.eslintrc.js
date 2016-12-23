@@ -29,6 +29,9 @@ module.exports = { // eslint-disable-line no-undef
     // Always require a trailing EOL
     "eol-last": "error",
 
+    // No spaces between function name and parentheses.
+    "func-call-spacing": ["error", "never"],
+
     // Require function* name()
     "generator-star-spacing": ["error", {"before": false, "after": true}],
 
@@ -81,12 +84,6 @@ module.exports = { // eslint-disable-line no-undef
     // No duplicate cases in switch statements
     "no-duplicate-case": "error",
 
-    // Disallow use of eval().
-    "no-eval": "error",
-
-    // No labels
-    "no-labels": "error",
-
     // If an if block ends with a return no need for an else block
     "no-else-return": "error",
 
@@ -95,6 +92,9 @@ module.exports = { // eslint-disable-line no-undef
 
     // Disallow empty destructuring
     "no-empty-pattern": "error",
+
+    // Disallow use of eval().
+    "no-eval": "error",
 
     // No assigning to exception variable
     "no-ex-assign": "error",
@@ -108,11 +108,17 @@ module.exports = { // eslint-disable-line no-undef
     // No overwriting defined functions
     "no-func-assign": "error",
 
+    // No reassigning native JS objects or read only globals.
+    "no-global-assign": "error",
+
     // No invalid regular expressions
     "no-invalid-regexp": "error",
 
     // No odd whitespace characters
     "no-irregular-whitespace": "error",
+
+    // No labels.
+    "no-labels": "error",
 
     // No single if block inside an else block
     "no-lonely-if": "error",
@@ -127,9 +133,6 @@ module.exports = { // eslint-disable-line no-undef
       "ArrayExpression": true,
       "ObjectExpression": true
     }}],
-
-    // No reassigning native JS objects
-    "no-native-reassign": "error",
 
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
@@ -158,11 +161,14 @@ module.exports = { // eslint-disable-line no-undef
     // No declaring variables that hide things like arguments
     "no-shadow-restricted-names": "error",
 
-    // No spaces between function name and parentheses
-    "no-spaced-func": "error",
-
     // Disallow sparse arrays, eg. let arr = [,,"error"].
     "no-sparse-arrays": "error",
+
+    // Disallow tabs.
+    "no-tabs": "error",
+
+    // Disallow template literal placeholder syntax in regular strings.
+    "no-template-curly-in-string": "error",
 
     // Disallow throwing literals (eg. |throw "error"| instead of
     // |throw new Error("error")|)
@@ -185,6 +191,10 @@ module.exports = { // eslint-disable-line no-undef
 
     // No using with
     "no-with": "error",
+
+    // Require double quote strings to be used, except cases where another quote
+    // type is used to avoid escaping.
+    "quotes": ["error", "double", { "avoidEscape": true }],
 
     // Always require semicolon at end of statement
     "semi": ["error", "always"],

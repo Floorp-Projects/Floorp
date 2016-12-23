@@ -1589,6 +1589,18 @@ public:
   virtual BorderLayer* AsBorderLayer() { return nullptr; }
 
   /**
+    * Dynamic cast to a Canvas. Returns null if this is not a
+    * ColorLayer.
+    */
+  virtual CanvasLayer* AsCanvasLayer() { return nullptr; }
+
+  /**
+    * Dynamic cast to an Image. Returns null if this is not a
+    * ColorLayer.
+    */
+  virtual ImageLayer* AsImageLayer() { return nullptr; }
+
+  /**
    * Dynamic cast to a LayerComposite.  Return null if this is not a
    * LayerComposite.  Can be used anytime.
    */
@@ -2603,6 +2615,8 @@ public:
    * Check the data is owned by this layer is still valid for rendering
    */
   virtual bool IsDataValid(const Data& aData) { return true; }
+
+  virtual CanvasLayer* AsCanvasLayer() override { return this; }
 
   /**
    * Notify this CanvasLayer that the canvas surface contents have

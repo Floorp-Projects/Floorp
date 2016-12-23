@@ -26,6 +26,7 @@ namespace mozilla {
 struct Ok {};
 
 template <typename E> class GenericErrorResult;
+template <typename V, typename E> class Result;
 
 namespace detail {
 
@@ -134,6 +135,12 @@ template <typename T> struct HasFreeLSB<T&> {
   static const bool value = HasFreeLSB<T*>::value;
 };
 
+template <typename T>
+struct IsResult : FalseType { };
+
+template <typename V, typename E>
+struct IsResult<Result<V, E>> : TrueType { };
+
 } // namespace detail
 
 /**
@@ -219,6 +226,75 @@ public:
   E unwrapErr() const {
     MOZ_ASSERT(isErr());
     return mImpl.unwrapErr();
+  }
+
+  /**
+   * Map a function V -> W over this result's success variant. If this result is
+   * an error, do not invoke the function and return a copy of the error.
+   *
+   * Mapping over success values invokes the function to produce a new success
+   * value:
+   *
+   *     // Map Result<int, E> to another Result<int, E>
+   *     Result<int, E> res(5);
+   *     Result<int, E> res2 = res.map([](int x) { return x * x; });
+   *     MOZ_ASSERT(res2.unwrap() == 25);
+   *
+   *     // Map Result<const char*, E> to Result<size_t, E>
+   *     Result<const char*, E> res("hello, map!");
+   *     Result<size_t, E> res2 = res.map(strlen);
+   *     MOZ_ASSERT(res2.unwrap() == 11);
+   *
+   * Mapping over an error does not invoke the function and copies the error:
+   *
+   *     Result<V, int> res(5);
+   *     MOZ_ASSERT(res.isErr());
+   *     Result<W, int> res2 = res.map([](V v) { ... });
+   *     MOZ_ASSERT(res2.isErr());
+   *     MOZ_ASSERT(res2.unwrapErr() == 5);
+   */
+  template<typename F>
+  auto map(F f) const -> Result<decltype(f(*((V*) nullptr))), E> {
+      using RetResult = Result<decltype(f(*((V*) nullptr))), E>;
+      return isOk() ? RetResult(f(unwrap())) : RetResult(unwrapErr());
+  }
+
+  /**
+   * Given a function V -> Result<W, E>, apply it to this result's success value
+   * and return its result. If this result is an error value, then return a
+   * copy.
+   *
+   * This is sometimes called "flatMap" or ">>=" in other contexts.
+   *
+   * `andThen`ing over success values invokes the function to produce a new
+   * result:
+   *
+   *     Result<const char*, Error> res("hello, andThen!");
+   *     Result<HtmlFreeString, Error> res2 = res.andThen([](const char* s) {
+   *       return containsHtmlTag(s)
+   *         ? Result<HtmlFreeString, Error>(Error("Invalid: contains HTML"))
+   *         : Result<HtmlFreeString, Error>(HtmlFreeString(s));
+   *       }
+   *     });
+   *     MOZ_ASSERT(res2.isOk());
+   *     MOZ_ASSERT(res2.unwrap() == HtmlFreeString("hello, andThen!");
+   *
+   * `andThen`ing over error results does not invoke the function, and just
+   * produces a new copy of the error result:
+   *
+   *     Result<int, const char*> res("some error");
+   *     auto res2 = res.andThen([](int x) { ... });
+   *     MOZ_ASSERT(res2.isErr());
+   *     MOZ_ASSERT(res.unwrapErr() == res2.unwrapErr());
+   */
+  template<
+      typename F,
+      typename = typename EnableIf<
+          detail::IsResult<decltype((*((F*) nullptr))(*((V*) nullptr)))>::value
+      >::Type
+  >
+  auto andThen(F f) const -> decltype(f(*((V*) nullptr))) {
+      return isOk() ? f(unwrap()) : GenericErrorResult<E>(unwrapErr());
   }
 };
 

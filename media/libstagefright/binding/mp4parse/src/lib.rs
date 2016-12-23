@@ -9,7 +9,9 @@
 extern crate afl;
 
 extern crate byteorder;
+extern crate bitreader;
 use byteorder::{ReadBytesExt, WriteBytesExt};
+use bitreader::{BitReader, ReadInto};
 use std::io::{Read, Take};
 use std::io::Cursor;
 use std::cmp;
@@ -59,6 +61,12 @@ pub enum Error {
     Io(std::io::Error),
     /// read_mp4 terminated without detecting a moov box.
     NoMoov,
+}
+
+impl From<bitreader::BitReaderError> for Error {
+    fn from(_: bitreader::BitReaderError) -> Error {
+        Error::InvalidData("invalid data")
+    }
 }
 
 impl From<std::io::Error> for Error {
@@ -1245,18 +1253,30 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
              (0x8, 16000), (0x9, 12000), (0xa, 11025), (0xb, 8000),
              (0xc, 7350)];
 
-    let des = &mut Cursor::new(data);
+    let bit_reader = &mut BitReader::new(data);
 
-    let audio_specific_config = be_u16(des)?;
+    let mut audio_object_type: u16 = ReadInto::read(bit_reader, 5)?;
 
-    let audio_object_type = audio_specific_config >> 11;
+    // Extend audio object type, for example, HE-AAC.
+    if audio_object_type == 31 {
+        let audio_object_type_ext: u16 = ReadInto::read(bit_reader, 6)?;
+        audio_object_type = 32 + audio_object_type_ext;
+    }
 
-    let sample_index = (audio_specific_config & 0x07FF) >> 7;
+    let sample_index: u32 = ReadInto::read(bit_reader, 4)?;
 
-    let channel_counts = (audio_specific_config & 0x007F) >> 3;
+    // Sample frequency could be from table, or retrieved from stream directly
+    // if index is 0x0f.
+    let sample_frequency = match sample_index {
+        0x0F => {
+            Some(ReadInto::read(bit_reader, 24)?)
+        },
+        _ => {
+            frequency_table.iter().find(|item| item.0 == sample_index).map(|x| x.1)
+        },
+    };
 
-    let sample_frequency =
-        frequency_table.iter().find(|item| item.0 == sample_index).map(|x| x.1);
+    let channel_counts: u16 = ReadInto::read(bit_reader, 4)?;
 
     esds.audio_object_type = Some(audio_object_type);
     esds.audio_sample_rate = sample_frequency;

@@ -31,8 +31,8 @@ function getHMAC(data, key, alg) {
 }
 
 function testHMAC(alg) {
-  const key1 = 'MyKey_ABCDEFGHIJKLMN';
-  const key2 = 'MyKey_01234567890123';
+  const key1 = "MyKey_ABCDEFGHIJKLMN";
+  const key2 = "MyKey_01234567890123";
 
   const dataA = "Secret message";
   const dataB = "Secres message";

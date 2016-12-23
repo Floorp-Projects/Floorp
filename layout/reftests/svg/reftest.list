@@ -461,3 +461,6 @@ default-preferences
 
 != nested-mask-mode.svg about:blank
 == mask-empty-size.svg about:blank
+
+== paint-on-maskLayer-1a.html paint-on-maskLayer-1-ref.html
+== paint-on-maskLayer-1b.html paint-on-maskLayer-1-ref.html

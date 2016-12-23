@@ -1289,7 +1289,9 @@ Event::GetCancelBubble(bool* aCancelBubble)
 NS_IMETHODIMP
 Event::SetCancelBubble(bool aCancelBubble)
 {
-  mEvent->mFlags.mPropagationStopped = aCancelBubble;
+  if (aCancelBubble) {
+    mEvent->StopPropagation();
+  }
   return NS_OK;
 }
 

@@ -13,6 +13,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
+#include "nsMathUtils.h"
 #include "nsRenderingContext.h"
 #include "nsRuleNode.h"
 #include "nsSVGElement.h"
@@ -215,20 +216,17 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
 }
 
 static void
-EnumerationToLength(nscoord& aCoord, int32_t aType,
+EnumerationToLength(nscoord& aCoord, StyleShapeRadius aType,
                     nscoord aCenter, nscoord aPosMin, nscoord aPosMax)
 {
   nscoord dist1 = abs(aPosMin - aCenter);
   nscoord dist2 = abs(aPosMax - aCenter);
   switch (aType) {
-    case NS_RADIUS_FARTHEST_SIDE:
+    case StyleShapeRadius::FarthestSide:
       aCoord = dist1 > dist2 ? dist1 : dist2;
       break;
-    case NS_RADIUS_CLOSEST_SIDE:
+    case StyleShapeRadius::ClosestSide:
       aCoord = dist1 > dist2 ? dist2 : dist1;
-      break;
-    default:
-      NS_NOTREACHED("unknown keyword");
       break;
   }
 }
@@ -250,22 +248,26 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
 
   const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
-  float referenceLength = sqrt((aRefBox.width * aRefBox.width +
-                                aRefBox.height * aRefBox.height) / 2.0);
   nscoord r = 0;
   if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
+    const auto styleShapeRadius = coords[0].GetEnumValue<StyleShapeRadius>();
     nscoord horizontal, vertical;
-    EnumerationToLength(horizontal, coords[0].GetIntValue(),
+    EnumerationToLength(horizontal, styleShapeRadius,
                         center.x, aRefBox.x, aRefBox.x + aRefBox.width);
-    EnumerationToLength(vertical, coords[0].GetIntValue(),
+    EnumerationToLength(vertical, styleShapeRadius,
                         center.y, aRefBox.y, aRefBox.y + aRefBox.height);
-    if (coords[0].GetIntValue() == NS_RADIUS_FARTHEST_SIDE) {
+    if (styleShapeRadius == StyleShapeRadius::FarthestSide) {
       r = horizontal > vertical ? horizontal : vertical;
     } else {
       r = horizontal < vertical ? horizontal : vertical;
     }
   } else {
-    r = nsRuleNode::ComputeCoordPercentCalc(coords[0], referenceLength);
+    // We resolve percent <shape-radius> value for circle() as defined here:
+    // https://drafts.csswg.org/css-shapes/#funcdef-circle
+    const double sqrt2 = std::sqrt(2.0);
+    double referenceLength = NS_hypot(aRefBox.width, aRefBox.height) / sqrt2;
+    r = nsRuleNode::ComputeCoordPercentCalc(coords[0],
+                                            NSToCoordRound(referenceLength));
   }
 
   nscoord appUnitsPerDevPixel =
@@ -295,13 +297,13 @@ nsCSSClipPathInstance::CreateClipPathEllipse(DrawTarget* aDrawTarget,
   MOZ_ASSERT(coords.Length() == 2, "wrong number of arguments");
   nscoord rx = 0, ry = 0;
   if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
-    EnumerationToLength(rx, coords[0].GetIntValue(),
+    EnumerationToLength(rx, coords[0].GetEnumValue<StyleShapeRadius>(),
                         center.x, aRefBox.x, aRefBox.x + aRefBox.width);
   } else {
     rx = nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.width);
   }
   if (coords[1].GetUnit() == eStyleUnit_Enumerated) {
-    EnumerationToLength(ry, coords[1].GetIntValue(),
+    EnumerationToLength(ry, coords[1].GetEnumValue<StyleShapeRadius>(),
                         center.y, aRefBox.y, aRefBox.y + aRefBox.height);
   } else {
     ry = nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.height);

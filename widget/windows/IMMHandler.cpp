@@ -54,7 +54,7 @@ HandleSeparator(nsACString& aDesc)
 class GetIMEGeneralPropertyName : public nsAutoCString
 {
 public:
-  GetIMEGeneralPropertyName(DWORD aFlags)
+  explicit GetIMEGeneralPropertyName(DWORD aFlags)
   {
     if (!aFlags) {
       AppendLiteral("no flags");
@@ -90,7 +90,7 @@ public:
 class GetIMEUIPropertyName : public nsAutoCString
 {
 public:
-  GetIMEUIPropertyName(DWORD aFlags)
+  explicit GetIMEUIPropertyName(DWORD aFlags)
   {
     if (!aFlags) {
       AppendLiteral("no flags");
@@ -114,7 +114,7 @@ public:
 class GetWritingModeName : public nsAutoCString
 {
 public:
-  GetWritingModeName(const WritingMode& aWritingMode)
+  explicit GetWritingModeName(const WritingMode& aWritingMode)
   {
     if (!aWritingMode.IsVertical()) {
       Assign("Horizontal");
@@ -132,7 +132,7 @@ public:
 class GetReconvertStringLog : public nsAutoCString
 {
 public:
-  GetReconvertStringLog(RECONVERTSTRING* aReconv)
+  explicit GetReconvertStringLog(RECONVERTSTRING* aReconv)
   {
     AssignLiteral("{ dwSize=");
     AppendInt(static_cast<uint32_t>(aReconv->dwSize));

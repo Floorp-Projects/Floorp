@@ -372,10 +372,10 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
         global = GlobalObject::createInternal(cx, clasp);
         if (!global)
             return nullptr;
-    }
 
-    if (hookOption == JS::FireOnNewGlobalHook)
-        JS_FireOnNewGlobalObject(cx, global);
+        if (hookOption == JS::FireOnNewGlobalHook)
+            JS_FireOnNewGlobalObject(cx, global);
+    }
 
     return global;
 }

@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["BrowserUsageTelemetry"];
+this.EXPORTED_SYMBOLS = ["BrowserUsageTelemetry", "URLBAR_SELECTED_RESULT_TYPES"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -23,6 +23,7 @@ const WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const TAB_RESTORING_TOPIC = "SSTabRestoring";
 const TELEMETRY_SUBSESSIONSPLIT_TOPIC = "internal-telemetry-after-subsession-split";
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
+const AUTOCOMPLETE_ENTER_TEXT_TOPIC = "autocomplete-did-enter-text";
 
 // Probe names.
 const MAX_TAB_COUNT_SCALAR_NAME = "browser.engagement.max_concurrent_tab_count";
@@ -47,6 +48,24 @@ const KNOWN_ONEOFF_SOURCES = [
   "oneoff-searchbar",
   "unknown", // Edge case: this is the searchbar (see bug 1195733 comment 7).
 ];
+
+/**
+ * The buckets used for logging telemetry to the FX_URLBAR_SELECTED_RESULT_TYPE
+ * histogram.
+ */
+const URLBAR_SELECTED_RESULT_TYPES = {
+  autofill: 0,
+  bookmark: 1,
+  history: 2,
+  keyword: 3,
+  searchengine: 4,
+  searchsuggestion: 5,
+  switchtab: 6,
+  tag: 7,
+  visiturl: 8,
+  remotetab: 9,
+  extension: 10,
+};
 
 function getOpenTabsAndWinsCounts() {
   let tabCount = 0;
@@ -187,9 +206,82 @@ let URICountListener = {
                                          Ci.nsISupportsWeakReference]),
 };
 
+let urlbarListener = {
+  init() {
+    Services.obs.addObserver(this, AUTOCOMPLETE_ENTER_TEXT_TOPIC, true);
+  },
+
+  uninit() {
+    Services.obs.removeObserver(this, AUTOCOMPLETE_ENTER_TEXT_TOPIC, true);
+  },
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case AUTOCOMPLETE_ENTER_TEXT_TOPIC:
+        this._handleURLBarTelemetry(subject.QueryInterface(Ci.nsIAutoCompleteInput));
+        break;
+    }
+  },
+
+  /**
+   * Used to log telemetry when the user enters text in the urlbar.
+   *
+   * @param {nsIAutoCompleteInput} input  The autocomplete element where the
+   *                                      text was entered.
+   */
+  _handleURLBarTelemetry(input) {
+    if (!input ||
+        input.id != "urlbar" ||
+        input.inPrivateContext ||
+        input.popup.selectedIndex < 0) {
+      return;
+    }
+    let controller =
+      input.popup.view.QueryInterface(Ci.nsIAutoCompleteController);
+    let idx = input.popup.selectedIndex;
+    let value = controller.getValueAt(idx);
+    let action = input._parseActionUrl(value);
+    let actionType;
+    if (action) {
+      actionType =
+        action.type == "searchengine" && action.params.searchSuggestion ?
+          "searchsuggestion" :
+        action.type;
+    }
+    if (!actionType) {
+      let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
+      let style = ["autofill", "tag", "bookmark"].find(s => styles.has(s));
+      actionType = style || "history";
+    }
+
+    Services.telemetry
+            .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
+            .add(idx);
+
+    // Ideally this would be a keyed histogram and we'd just add(actionType),
+    // but keyed histograms aren't currently shown on the telemetry dashboard
+    // (bug 1151756).
+    //
+    // You can add values but don't change any of the existing values.
+    // Otherwise you'll break our data.
+    if (actionType in URLBAR_SELECTED_RESULT_TYPES) {
+      Services.telemetry
+              .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE")
+              .add(URLBAR_SELECTED_RESULT_TYPES[actionType]);
+    } else {
+      Cu.reportError("Unknown FX_URLBAR_SELECTED_RESULT_TYPE type: " +
+                     actionType);
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+};
+
 let BrowserUsageTelemetry = {
   init() {
     Services.obs.addObserver(this, WINDOWS_RESTORED_TOPIC, false);
+    urlbarListener.init();
   },
 
   /**
@@ -211,6 +303,7 @@ let BrowserUsageTelemetry = {
     Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC, false);
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC, false);
     Services.obs.removeObserver(this, WINDOWS_RESTORED_TOPIC, false);
+    urlbarListener.uninit();
   },
 
   observe(subject, topic, data) {

@@ -240,3 +240,76 @@ add_task(function* test_load_string_malformed_sync()
   do_check_true(store.dataReady);
   do_check_matches(store.data, {});
 });
+
+add_task(function* test_overwrite_data()
+{
+  let storeForSave = new JSONFile({
+    path: getTempFile(TEST_STORE_FILE_NAME).path,
+  });
+
+  let string = `{"number":456,"string":"tset","object":{"prop1":3,"prop2":4}}`;
+
+  yield OS.File.writeAtomic(storeForSave.path, new TextEncoder().encode(string),
+                            { tmpPath: storeForSave.path + ".tmp" });
+
+  Assert.ok(!storeForSave.dataReady);
+  storeForSave.data = TEST_DATA;
+  Assert.ok(storeForSave.dataReady);
+  Assert.equal(storeForSave.data, TEST_DATA);
+
+  yield new Promise((resolve) => {
+    let save = storeForSave._save.bind(storeForSave);
+    storeForSave._save = () => {
+      save();
+      resolve();
+    };
+    storeForSave.saveSoon();
+  });
+
+  let storeForLoad = new JSONFile({
+    path: storeForSave.path,
+  });
+
+  yield storeForLoad.load();
+
+  Assert.deepEqual(storeForLoad.data, TEST_DATA);
+});
+
+add_task(function* test_beforeSave()
+{
+  let store;
+  let promiseBeforeSave = new Promise((resolve) => {
+    store = new JSONFile({
+      path: getTempFile(TEST_STORE_FILE_NAME).path,
+      beforeSave: resolve,
+      saveDelayMs: 250,
+    });
+  });
+
+  store.saveSoon();
+
+  yield promiseBeforeSave;
+});
+
+add_task(function* test_beforeSave_rejects()
+{
+  let storeForSave = new JSONFile({
+    path: getTempFile(TEST_STORE_FILE_NAME).path,
+    beforeSave() {
+      return Promise.reject(new Error("oops"));
+    },
+    saveDelayMs: 250,
+  });
+
+  let promiseSave = new Promise((resolve, reject) => {
+    let save = storeForSave._save.bind(storeForSave);
+    storeForSave._save = () => {
+      save().then(resolve, reject);
+    };
+    storeForSave.saveSoon();
+  });
+
+  yield rejects(promiseSave, function(ex) {
+    return ex.message == "oops";
+  });
+});

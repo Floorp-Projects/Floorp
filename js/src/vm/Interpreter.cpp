@@ -1868,7 +1868,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
-CASE(JSOP_UNUSED183)
 CASE(JSOP_UNUSED187)
 CASE(JSOP_UNUSED192)
 CASE(JSOP_UNUSED209)
@@ -2200,6 +2199,16 @@ CASE(JSOP_PICK)
     REGS.sp[-1] = lval;
 }
 END_CASE(JSOP_PICK)
+
+CASE(JSOP_UNPICK)
+{
+    int i = GET_UINT8(REGS.pc);
+    MOZ_ASSERT(REGS.stackDepth() >= unsigned(i) + 1);
+    Value lval = REGS.sp[-1];
+    memmove(REGS.sp - i, REGS.sp - (i + 1), sizeof(Value) * i);
+    REGS.sp[-(i + 1)] = lval;
+}
+END_CASE(JSOP_UNPICK)
 
 CASE(JSOP_BINDGNAME)
 CASE(JSOP_BINDNAME)

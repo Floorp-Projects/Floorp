@@ -1539,13 +1539,19 @@ FxAccountsInternal.prototype = {
     return this.currentAccountState.getUserAccountData()
       .then(data => data ? data.deviceId : null)
       .then(localDeviceId => {
+        if (!localDeviceId) {
+          // We've already been logged out (and that logout is probably what
+          // caused us to get here via push!), so don't make noise here.
+          log.info(`Push request to disconnect, but we've already disconnected`);
+          return;
+        }
         if (deviceId == localDeviceId) {
           this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, deviceId);
           return this.signOut(true);
         }
         log.error(
-          "The device ID to disconnect doesn't match with the local device ID.\n"
-          + "Local: " + localDeviceId + ", ID to disconnect: " + deviceId);
+          `The device ID to disconnect doesn't match with the local device ID. ` +
+          `Local: ${localDeviceId}, ID to disconnect: ${deviceId}`);
     });
   },
 

@@ -24,8 +24,15 @@ interface WebGLTransformFeedback {
 
 typedef (Uint32Array or sequence<GLuint>) Uint32List;
 
+// WebGL2 spec has this as an empty interface that pulls in everything
+// via WebGL2RenderingContextBase.
 [Pref="webgl.enable-webgl2"]
-interface WebGL2RenderingContext : WebGLRenderingContext
+interface WebGL2RenderingContext
+{
+};
+
+[NoInterfaceObject]
+interface WebGL2RenderingContextBase
 {
     const GLenum READ_BUFFER                                   = 0x0C02;
     const GLenum UNPACK_ROW_LENGTH                             = 0x0CF2;
@@ -174,8 +181,6 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     const GLenum FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE             = 0x8216;
     const GLenum FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE           = 0x8217;
     const GLenum FRAMEBUFFER_DEFAULT                           = 0x8218;
-    const GLenum DEPTH_STENCIL_ATTACHMENT                      = 0x821A;
-    const GLenum DEPTH_STENCIL                                 = 0x84F9;
     const GLenum UNSIGNED_INT_24_8                             = 0x84FA;
     const GLenum DEPTH24_STENCIL8                              = 0x88F0;
     const GLenum UNSIGNED_NORMALIZED                           = 0x8C17;
@@ -300,14 +305,14 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     // WebGL1:
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
     void bufferData(GLenum target, ArrayBuffer? srcData, GLenum usage);
-    //void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage);
+    void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage);
     void bufferSubData(GLenum target, GLintptr offset, ArrayBuffer srcData);
-    //void bufferSubData(GLenum target, GLintptr offset, ArrayBufferView srcData);
+    void bufferSubData(GLenum target, GLintptr offset, ArrayBufferView srcData);
     // WebGL2:
     void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage,
-                    optional GLuint srcOffset = 0, optional GLuint length = 0);
+                    GLuint srcOffset, optional GLuint length = 0);
     void bufferSubData(GLenum target, GLintptr dstByteOffset, ArrayBufferView srcData,
-                       optional GLuint srcOffset = 0, optional GLuint length = 0);
+                       GLuint srcOffset, optional GLuint length = 0);
 
     void copyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset,
                            GLintptr writeOffset, GLsizeiptr size);
@@ -360,6 +365,9 @@ interface WebGL2RenderingContext : WebGLRenderingContext
                     GLenum format, GLenum type, HTMLVideoElement source); // May throw DOMException
     [Throws] // Another overhead throws.
     void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, ImageBitmap source);
+    [Throws] // Another overhead throws.
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
                     GLenum format, GLenum type, ImageData source);
 
     [Throws] // Another overhead throws.
@@ -375,6 +383,9 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [Throws]
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, ImageBitmap source);
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, ImageData source);
@@ -395,6 +406,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type,
                     HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLint border, GLenum format, GLenum type,
+                    ImageBitmap source);
     [Throws] // Another overhead throws.
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type,
@@ -419,6 +434,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type,
                     HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLsizei depth, GLint border, GLenum format, GLenum type,
+                    ImageBitmap source);
     [Throws] // Another overhead throws.
     void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type,
@@ -449,6 +468,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
                        GLsizei height, GLenum format, GLenum type,
+                       ImageBitmap source);
+    [Throws] // Another overhead throws.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                       GLsizei height, GLenum format, GLenum type,
                        ImageData source);
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
@@ -471,6 +494,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
                        HTMLVideoElement source); // May throw DOMException
+    [Throws] // Another overhead throws.
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                       GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                       ImageBitmap source);
     [Throws] // Another overhead throws.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
@@ -665,6 +692,9 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [WebGLHandlesContextLoss] GLboolean isVertexArray(WebGLVertexArrayObject? vertexArray);
     void bindVertexArray(WebGLVertexArrayObject? array);
 };
+
+WebGL2RenderingContextBase implements WebGLRenderingContextBase;
+WebGL2RenderingContext implements WebGL2RenderingContextBase;
 
 [NoInterfaceObject]
 interface EXT_color_buffer_float {

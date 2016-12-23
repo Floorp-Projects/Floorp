@@ -619,10 +619,8 @@ pref("media.video-queue.default-size", 3);
 // (the most recent) image data.
 pref("media.video-queue.send-to-compositor-size", 1);
 
-#ifdef NIGHTLY_BUILD
 // Allow to check if the decoder supports recycling only on Fennec nightly build.
 pref("media.decoder.recycle.enabled", true);
-#endif
 
 // Enable the MediaCodec PlatformDecoderModule by default.
 pref("media.android-media-codec.enabled", true);

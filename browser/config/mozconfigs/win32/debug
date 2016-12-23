@@ -6,7 +6,6 @@ ac_add_options --enable-debug
 ac_add_options --enable-dmd
 ac_add_options --enable-profiling  # needed for --enable-dmd to work on Windows
 ac_add_options --enable-verify-mar
-ac_add_options --enable-require-all-d3dc-versions
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1

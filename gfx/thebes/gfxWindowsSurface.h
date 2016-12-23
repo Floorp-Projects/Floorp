@@ -25,16 +25,16 @@ public:
         FLAG_IS_TRANSPARENT = (1 << 2)
     };
 
-    gfxWindowsSurface(HDC dc, uint32_t flags = 0);
+    explicit gfxWindowsSurface(HDC dc, uint32_t flags = 0);
 
     // Create from a shared d3d9surface
-    gfxWindowsSurface(IDirect3DSurface9 *surface, uint32_t flags = 0);
+    explicit gfxWindowsSurface(IDirect3DSurface9 *surface, uint32_t flags = 0);
 
     // Create a DIB surface
-    gfxWindowsSurface(const mozilla::gfx::IntSize& size,
-                      gfxImageFormat imageFormat = mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32);
+    explicit gfxWindowsSurface(const mozilla::gfx::IntSize& size,
+                               gfxImageFormat imageFormat = mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32);
 
-    gfxWindowsSurface(cairo_surface_t *csurf);
+    explicit gfxWindowsSurface(cairo_surface_t *csurf);
 
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
                                                                const mozilla::gfx::IntSize& aSize);

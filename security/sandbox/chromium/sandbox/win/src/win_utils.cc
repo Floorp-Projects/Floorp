@@ -181,15 +181,16 @@ DWORD IsReparsePoint(const base::string16& full_path) {
   // Ensure that volume path matches start of path.
   wchar_t vol_path[MAX_PATH];
   if (!::GetVolumePathNameW(path.c_str(), vol_path, MAX_PATH)) {
-    return ERROR_INVALID_NAME;
+    // This will fail if this is a device that isn't volume related, which can't
+    // then be a reparse point.
+    return is_device_path ? ERROR_NOT_A_REPARSE_POINT : ERROR_INVALID_NAME;
   }
-  size_t vol_path_len = wcslen(vol_path);
+
+  // vol_path includes a trailing slash, so reduce size for path and loop check.
+  size_t vol_path_len = wcslen(vol_path) - 1;
   if (!EqualPath(path, vol_path, vol_path_len)) {
     return ERROR_INVALID_NAME;
   }
-
-  // vol_path will include a trailing slash, so reduce size for loop check.
-  --vol_path_len;
 
   do {
     DWORD attributes = ::GetFileAttributes(path.c_str());
@@ -197,6 +198,7 @@ DWORD IsReparsePoint(const base::string16& full_path) {
       DWORD error = ::GetLastError();
       if (error != ERROR_FILE_NOT_FOUND &&
           error != ERROR_PATH_NOT_FOUND &&
+          error != ERROR_INVALID_FUNCTION &&
           error != ERROR_INVALID_NAME) {
         // Unexpected error.
         NOTREACHED_NT();

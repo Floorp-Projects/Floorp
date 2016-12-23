@@ -968,15 +968,15 @@
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 11,
-    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1 (obsolete), LegacyGenerator=2, ExpressionClosure=3, LetBlock=4 (obsolete), LetExpression=5 (obsolete), NoSuchMethod=6 (obsolete), FlagsArgument=7 (obsolete), RegExpSourceProp=8 (obsolete), RestoredRegExpStatics=9 (obsolete), BlockScopeFunRedecl=10, StringGenerics=11"
+    "n_values": 10,
+    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1 (obsolete), LegacyGenerator=2, ExpressionClosure=3, LetBlock=4 (obsolete), LetExpression=5 (obsolete), NoSuchMethod=6 (obsolete), FlagsArgument=7 (obsolete), RegExpSourceProp=8 (obsolete), RestoredRegExpStatics=9 (obsolete), BlockScopeFunRedecl=10"
   },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_ADDONS": {
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 11,
-    "description": "Use of SpiderMonkey's deprecated language extensions in add-ons: ForEach=0, DestructuringForIn=1 (obsolete), LegacyGenerator=2, ExpressionClosure=3, LetBlock=4 (obsolete), LetExpression=5 (obsolete), NoSuchMethod=6 (obsolete), FlagsArgument=7 (obsolete), RegExpSourceProp=8 (obsolete), RestoredRegExpStatics=9 (obsolete), BlockScopeFunRedecl=10, StringGenerics=11"
+    "n_values": 10,
+    "description": "Use of SpiderMonkey's deprecated language extensions in add-ons: ForEach=0, DestructuringForIn=1 (obsolete), LegacyGenerator=2, ExpressionClosure=3, LetBlock=4 (obsolete), LetExpression=5 (obsolete), NoSuchMethod=6 (obsolete), FlagsArgument=7 (obsolete), RegExpSourceProp=8 (obsolete), RestoredRegExpStatics=9 (obsolete), BlockScopeFunRedecl=10"
   },
   "XUL_CACHE_DISABLED": {
     "expires_in_version": "default",
@@ -4397,6 +4397,28 @@
     "description": "Total disk space used by items in the reader view cache (KB)",
     "bug_numbers": [1246159]
   },
+  "FENNEC_LOOP_UI_LATENCY": {
+    "expires_in_version": "55",
+    "alert_emails": ["mobile-platform@mozilla.org"],
+    "kind": "exponential",
+    "low": 10,
+    "high": 10485760,
+    "n_buckets": 22,
+    "description": "Latency in microseconds of UI events in the Android event loop between posting and processing",
+    "bug_numbers": [1322574],
+    "cpp_guard": "MOZ_WIDGET_ANDROID"
+  },
+  "FENNEC_LOOP_OTHER_LATENCY": {
+    "expires_in_version": "55",
+    "alert_emails": ["mobile-platform@mozilla.org"],
+    "kind": "exponential",
+    "low": 10,
+    "high": 10485760,
+    "n_buckets": 22,
+    "description": "Latency in microseconds of non-UI events in the Android event loop between posting and processing",
+    "bug_numbers": [1322574],
+    "cpp_guard": "MOZ_WIDGET_ANDROID"
+  },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "expires_in_version": "never",
     "kind": "linear",
@@ -5473,7 +5495,7 @@
     "kind": "enumerated",
     "n_values": 14,
     "bug_numbers": [775825],
-    "description": "Firefox: The type of the selected result in the URL bar popup. See nsBrowserGlue.js::_handleURLBarTelemetry for the result types."
+    "description": "Firefox: The type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
@@ -5998,13 +6020,6 @@
     "expires_in_version": "53",
     "kind": "count",
     "description": "Count of TelemetrySession scheduler ticks that were delayed long enough to suspect sleep."
-  },
-  "TELEMETRY_SCHEDULER_SEND_DAILY": {
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "bug_numbers": [1250640],
-    "expires_in_version": "53",
-    "kind": "count",
-    "description": "Count of TelemetrySession triggering a daily ping."
   },
   "TELEMETRY_TEST_FLAG": {
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
@@ -10032,6 +10047,22 @@
     "n_values": 64,
     "description": "Count of scroll actions triggered by different input methods. See gfx/layers/apz/util/ScrollInputMethods.h for a list of possible values and their meanings."
   },
+  "TOTAL_SCROLL_Y": {
+    "alert_emails": ["rhunt@mozilla.com"],
+    "bug_numbers": [1297867],
+    "expires_in_version": "58",
+    "kind": "count",
+    "description": "Count of the total number of CSS pixels scrolled up or down in the vertical axis of the root frame of all the pages visited in a subsession. This doesn't include any scrolling of nested scroll frames such as inputs, iframes, or scrollable divs."
+  },
+  "PAGE_MAX_SCROLL_Y": {
+    "alert_emails": ["rhunt@mozilla.com"],
+    "bug_numbers": [1312881],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 50,
+    "description": "Maximum distance in CSS pixels a user scrolls down the vertical axis of the root frame of a page. This doesn't include any scrolling of nested scroll frames such as inputs, iframes, or scrollable divs."
+  },
   "WEB_NOTIFICATION_CLICKED": {
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
@@ -10563,9 +10594,9 @@
     "n_buckets": 10,
     "description": "Percentage of time taken by phases in expensive content paints."
   },
-  "NARRATE_CONTENT_BY_LANGUAGE": {
+  "NARRATE_CONTENT_BY_LANGUAGE_2": {
     "alert_emails": ["eisaacson@mozilla.com"],
-    "bug_numbers": [1308030],
+    "bug_numbers": [1308030, 1324868],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "56",
     "kind": "enumerated",

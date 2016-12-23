@@ -788,6 +788,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             andq(src, dest);
         }
     }
+    void unboxNonDouble(const Address& src, Register dest) {
+        unboxNonDouble(Operand(src), dest);
+    }
 
     void unboxString(const ValueOperand& src, Register dest) { unboxNonDouble(src, dest); }
     void unboxString(const Operand& src, Register dest) { unboxNonDouble(src, dest); }

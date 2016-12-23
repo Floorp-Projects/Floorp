@@ -987,5 +987,10 @@ nsChromeRegistryChrome::ManifestResource(ManifestProcessingContext& cx, int line
     return;
   }
 
-  rph->SetSubstitution(host, resolved);
+  rv = rph->SetSubstitution(host, resolved);
+  if (NS_FAILED(rv)) {
+    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
+                          "Warning: cannot set substitution for '%s'.",
+                          uri);
+  }
 }

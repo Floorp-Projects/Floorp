@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
-const { assert, safeErrorString } = require("devtools/shared/DevToolsUtils");
+const { assert } = require("devtools/shared/DevToolsUtils");
 const { createParentMap } = require("devtools/shared/heapsnapshot/CensusUtils");
 const Tree = createFactory(require("devtools/client/shared/components/tree"));
 const DominatorTreeItem = createFactory(require("./dominator-tree-item"));
@@ -21,14 +23,14 @@ const DOMINATOR_TREE_AUTO_EXPAND_DEPTH = 3;
 const DominatorTreeSubtreeFetching = createFactory(createClass({
   displayName: "DominatorTreeSubtreeFetching",
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return this.props.depth !== nextProps.depth
-      || this.props.focused !== nextProps.focused;
-  },
-
   propTypes: {
     depth: PropTypes.number.isRequired,
     focused: PropTypes.bool.isRequired,
+  },
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.props.depth !== nextProps.depth
+      || this.props.focused !== nextProps.focused;
   },
 
   render() {
@@ -103,7 +105,7 @@ const DominatorTreeSiblingLink = createFactory(createClass({
 /**
  * The actual dominator tree rendered as an expandable and collapsible tree.
  */
-const DominatorTree = module.exports = createClass({
+module.exports = createClass({
   displayName: "DominatorTree",
 
   propTypes: {

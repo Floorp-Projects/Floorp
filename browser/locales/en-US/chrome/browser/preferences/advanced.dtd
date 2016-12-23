@@ -82,7 +82,7 @@
 
 <!ENTITY updateTab.label                 "Update">
 
-<!ENTITY updateApp.label                 "&brandShortName; updates:">
+<!ENTITY updateApplication.label         "&brandShortName; updates">
 <!ENTITY updateAuto1.label               "Automatically install updates (recommended: improved security)">
 <!ENTITY updateAuto1.accesskey           "A">
 <!ENTITY updateCheck.label               "Check for updates, but let me choose whether to install them">
@@ -96,7 +96,7 @@
 <!ENTITY useService.label                "Use a background service to install updates">
 <!ENTITY useService.accesskey            "b">
 
-<!ENTITY updateOthers.label              "Automatically update:">
+<!ENTITY autoUpdateOthers.label          "Automatically update">
 <!ENTITY enableSearchUpdate.label        "Search Engines">
 <!ENTITY enableSearchUpdate.accesskey    "E">
 

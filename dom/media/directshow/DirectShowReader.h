@@ -46,7 +46,7 @@ class SourceFilter;
 class DirectShowReader : public MediaDecoderReader
 {
 public:
-  DirectShowReader(AbstractMediaDecoder* aDecoder);
+  explicit DirectShowReader(AbstractMediaDecoder* aDecoder);
 
   virtual ~DirectShowReader();
 

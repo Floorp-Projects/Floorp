@@ -16,7 +16,7 @@ dictionary ConvolverOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional ConvolverOptions options)]
+ Constructor(BaseAudioContext context, optional ConvolverOptions options)]
 interface ConvolverNode : AudioNode {
 
       [SetterThrows]

@@ -19,7 +19,7 @@ dictionary DynamicsCompressorOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional DynamicsCompressorOptions options)]
+ Constructor(BaseAudioContext context, optional DynamicsCompressorOptions options)]
 interface DynamicsCompressorNode : AudioNode {
 
     readonly attribute AudioParam threshold; // in Decibels

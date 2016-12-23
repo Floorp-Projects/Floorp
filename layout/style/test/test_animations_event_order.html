@@ -48,7 +48,8 @@ var gDisplay = document.getElementById('display');
   'animationend',
   'transitionrun',
   'transitionstart',
-  'transitionend' ]
+  'transitionend',
+  'transitioncancel' ]
   .forEach(event =>
              gDisplay.addEventListener(event,
                                        event => gEventsReceived.push(event),
@@ -619,6 +620,43 @@ checkEventOrder([ divs[0], 'transitionrun' ],
                 [ divs[1], 'transitionend' ],
                 [ divs[0], 'transitionend' ],
                 'Simultaneous transitionrun/start/end on siblings');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 4j. Test sorting transitions with cancel
+// The order of transitioncancel is based on StyleManager.
+// So this test looks like wrong result at a glance. However
+// the gecko will cancel div1's transition before div2 in this case.
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.style.marginLeft = '0px';
+  div.setAttribute('id', 'div' + i);
+});
+
+divs[0].style.transition = 'margin-left 10s 5s';
+divs[1].style.transition = 'margin-left 10s';
+
+getComputedStyle(divs[0]).marginLeft;
+divs.forEach(div => div.style.marginLeft = '100px');
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(5 * 1000);
+divs.forEach(div =>  div.style.display = 'none' );
+getComputedStyle(divs[0]).display;
+advance_clock(10 * 1000);
+
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[1], 'transitioncancel' ],
+                [ divs[0], 'transitioncancel' ],
+                'Simultaneous transitionrun/start/cancel on siblings');
 
 divs.forEach(div => div.remove());
 divs = [];

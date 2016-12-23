@@ -22,7 +22,7 @@ dictionary WaveShaperOptions : AudioNodeOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(AudioContext context, optional WaveShaperOptions options)]
+ Constructor(BaseAudioContext context, optional WaveShaperOptions options)]
 interface WaveShaperNode : AudioNode {
 
       [Cached, Pure, SetterThrows]

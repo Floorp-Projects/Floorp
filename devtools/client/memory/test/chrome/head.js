@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
@@ -17,8 +18,9 @@ var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
 SimpleTest.registerCleanupFunction(function () {
   if (DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
-    ok(false, "Should have had the expected number of DevToolsUtils.assert() failures. Expected " +
-       EXPECTED_DTU_ASSERT_FAILURE_COUNT + ", got " + DevToolsUtils.assertionFailureCount);
+    ok(false, "Should have had the expected number of DevToolsUtils.assert() failures." +
+      "Expected " + EXPECTED_DTU_ASSERT_FAILURE_COUNT +
+      ", got " + DevToolsUtils.assertionFailureCount);
   }
 });
 
@@ -115,7 +117,9 @@ function makeTestDominatorTreeNode(opts, children) {
   }, opts);
 
   if (children && children.length) {
-    children.map(c => c.parentId = node.nodeId);
+    children.map(c => {
+      c.parentId = node.nodeId;
+    });
   }
 
   return node;

@@ -370,13 +370,11 @@ def check_compiler(compiler, language, target):
         if info.type == 'clang-cl' and info.language_version != 201402:
             append_flag('-std=c++14')
 
-    # We force clang-cl to emulate Visual C++ 2015 Update 3 with fallback to
-    # cl.exe.
+    # We force clang-cl to emulate Visual C++ 2015 Update 3.
     if info.type == 'clang-cl' and info.version != '19.00.24213':
-        # Those flags are direct clang-cl flags that don't need -Xclang, add
-        # them directly.
+        # This flag is a direct clang-cl flag that doesn't need -Xclang,
+        # add it directly.
         flags.append('-fms-compatibility-version=19.00.24213')
-        flags.append('-fallback')
 
     # Check compiler target
     # --------------------------------------------------------------------

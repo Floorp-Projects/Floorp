@@ -709,6 +709,9 @@ ControlFlowGenerator::createBreakCatchBlock(DeferredEdge* edge, jsbytecode* pc)
 
     // Finish up remaining breaks.
     while (edge) {
+        if (!alloc().ensureBallast())
+            return nullptr;
+
         CFGGoto* brk = CFGGoto::New(alloc(), successor);
         edge->block->setStopIns(brk);
         edge = edge->next;
@@ -1061,6 +1064,8 @@ ControlFlowGenerator::processDeferredContinues(CFGState& state)
 
         // Remaining edges
         while (edge) {
+            if (!alloc().ensureBallast())
+                return false;
             edge->block->setStopIns(CFGGoto::New(alloc(), update));
             edge = edge->next;
         }
@@ -1973,10 +1978,13 @@ ControlFlowGenerator::processSwitchEnd(DeferredEdge* breaks, jsbytecode* exitpc)
     // If there are breaks, create block with breaks as predecessor
     // Else create a block with current as predecessor
     CFGBlock* successor = nullptr;
-    if (breaks)
+    if (breaks) {
         successor = createBreakCatchBlock(breaks, exitpc);
-    else
+        if (!successor)
+            return ControlStatus::Error;
+    } else {
         successor = CFGBlock::New(alloc(), exitpc);
+    }
 
     // If there is current, the current block flows into this one.
     // So current is also a predecessor to this block

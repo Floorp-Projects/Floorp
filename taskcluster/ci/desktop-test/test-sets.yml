@@ -65,11 +65,21 @@ all-tests-opt:
     - web-platform-tests-wdspec
     - xpcshell
     - mochitest-valgrind
+    - talos-chrome
+    - talos-dromaeojs
+    - talos-g1
+    - talos-g2
+    - talos-g3
+    - talos-g4
+    - talos-other
+    - talos-svgr
+    - talos-tp5o
 
 stylo-tests:
     - cppunit
     - crashtest
     - reftest-stylo
+    - mochitest-stylo
 
 qr-tests:
     - reftest
@@ -136,7 +146,7 @@ jsdcov-code-coverage-tests:
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
 
-macosx64-tests:
+macosx64-tests-debug:
     - cppunit
     - crashtest
     # - gtest
@@ -155,3 +165,14 @@ macosx64-tests:
     # - web-platform-tests
     # - web-platform-tests-reftests
     # - xpcshell
+
+macosx64-tests-talos:
+    - talos-chrome
+    - talos-dromaeojs
+    - talos-g1
+    - talos-g2
+    - talos-g3
+    - talos-g4
+    - talos-other
+    - talos-svgr
+    - talos-tp5o

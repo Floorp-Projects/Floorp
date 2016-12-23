@@ -122,7 +122,7 @@ private:
 #ifdef XP_WIN
 struct VersionW
 {
-  VersionW(const char16_t* aVersionStringW)
+  explicit VersionW(const char16_t* aVersionStringW)
   {
     versionContentW =
       reinterpret_cast<char16_t*>(wcsdup(char16ptr_t(aVersionStringW)));

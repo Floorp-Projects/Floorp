@@ -673,30 +673,10 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           pattern = new MatchPattern(queryInfo.url);
         }
 
-        function matches(window, tab) {
+        function matches(tab) {
           let props = ["active", "pinned", "highlighted", "status", "title", "index"];
           for (let prop of props) {
             if (queryInfo[prop] !== null && queryInfo[prop] != tab[prop]) {
-              return false;
-            }
-          }
-
-          let lastFocused = window == WindowManager.topWindow;
-          if (queryInfo.lastFocusedWindow !== null && queryInfo.lastFocusedWindow != lastFocused) {
-            return false;
-          }
-
-          let windowType = WindowManager.windowType(window);
-          if (queryInfo.windowType !== null && queryInfo.windowType != windowType) {
-            return false;
-          }
-
-          if (queryInfo.windowId !== null) {
-            if (queryInfo.windowId == WindowManager.WINDOW_ID_CURRENT) {
-              if (currentWindow(context) != window) {
-                return false;
-              }
-            } else if (queryInfo.windowId != tab.windowId) {
               return false;
             }
           }
@@ -709,13 +689,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
 
           if (queryInfo.muted !== null) {
             if (queryInfo.muted != tab.mutedInfo.muted) {
-              return false;
-            }
-          }
-
-          if (queryInfo.currentWindow !== null) {
-            let eq = window == currentWindow(context);
-            if (queryInfo.currentWindow != eq) {
               return false;
             }
           }
@@ -734,9 +707,36 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
 
         let result = [];
         for (let window of WindowListManager.browserWindows()) {
+          let lastFocused = window === WindowManager.topWindow;
+          if (queryInfo.lastFocusedWindow !== null && queryInfo.lastFocusedWindow !== lastFocused) {
+            continue;
+          }
+
+          let windowType = WindowManager.windowType(window);
+          if (queryInfo.windowType !== null && queryInfo.windowType !== windowType) {
+            continue;
+          }
+
+          if (queryInfo.windowId !== null) {
+            if (queryInfo.windowId === WindowManager.WINDOW_ID_CURRENT) {
+              if (currentWindow(context) !== window) {
+                continue;
+              }
+            } else if (queryInfo.windowId !== WindowManager.getId(window)) {
+              continue;
+            }
+          }
+
+          if (queryInfo.currentWindow !== null) {
+            let eq = window === currentWindow(context);
+            if (queryInfo.currentWindow != eq) {
+              continue;
+            }
+          }
+
           let tabs = TabManager.for(extension).getTabs(window);
           for (let tab of tabs) {
-            if (matches(window, tab)) {
+            if (matches(tab)) {
               result.push(tab);
             }
           }

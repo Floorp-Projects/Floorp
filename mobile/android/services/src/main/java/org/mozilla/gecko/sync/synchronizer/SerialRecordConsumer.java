@@ -6,7 +6,6 @@ package org.mozilla.gecko.sync.synchronizer;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.domain.Record;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Consume records from a queue inside a RecordsChannel, storing them serially.
@@ -16,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 class SerialRecordConsumer extends RecordConsumer {
   private static final String LOG_TAG = "SerialRecordConsumer";
   protected boolean stopEventually = false;
-  private AtomicLong counter = new AtomicLong(0);
+  private volatile long counter = 0;
 
   public SerialRecordConsumer(RecordsConsumerDelegate delegate) {
     this.delegate = delegate;
@@ -55,7 +54,7 @@ class SerialRecordConsumer extends RecordConsumer {
     Logger.debug(LOG_TAG, "Record stored. Notifying.");
     synchronized (storeSerializer) {
       Logger.debug(LOG_TAG, "stored() took storeSerializer.");
-      counter.getAndIncrement();
+      counter++;
       storeSerializer.notify();
       Logger.debug(LOG_TAG, "stored() dropped storeSerializer.");
     }
@@ -82,7 +81,7 @@ class SerialRecordConsumer extends RecordConsumer {
   }
 
   private void consumerIsDone() {
-    long counterNow = counter.get();
+    long counterNow = this.counter;
     Logger.info(LOG_TAG, "Consumer is done. Processed " + counterNow + ((counterNow == 1) ? " record." : " records."));
     delegate.consumerIsDone(stopImmediately);
   }

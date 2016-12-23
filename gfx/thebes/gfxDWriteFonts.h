@@ -29,6 +29,8 @@ public:
                   AntialiasOption = kAntialiasDefault);
     ~gfxDWriteFont();
 
+    static void UpdateClearTypeUsage();
+
     virtual gfxFont*
     CopyWithAntialiasOption(AntialiasOption anAAOption) override;
 
@@ -102,6 +104,7 @@ protected:
     bool mUseSubpixelPositions;
     bool mAllowManualShowGlyphs;
     bool mAzureScaledFontIsCairo;
+    static bool mUseClearType;
 };
 
 #endif

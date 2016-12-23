@@ -31,7 +31,7 @@ const AUTOMATION_GRANULARITY = 2000;
 const AUTOMATION_GRANULARITY_MAX = 6000;
 
 const AUDIO_GLOBALS = [
-  "AudioContext", "AudioNode", "AudioParam"
+  "BaseAudioContext", "AudioContext", "AudioNode", "AudioParam"
 ];
 
 /**
@@ -400,7 +400,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
 });
 
 /**
- * The Web Audio Actor handles simple interaction with an AudioContext
+ * The Web Audio Actor handles simple interaction with an BaseAudioContext
  * high-level methods. After instantiating this actor, you'll need to set it
  * up by calling setup().
  */
@@ -477,8 +477,8 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClassWithSpec(webAudio
   },
 
   /**
-   * Invoked whenever an instrumented function is called, like an AudioContext
-   * method or an AudioNode method.
+   * Invoked whenever an instrumented function is called, like an
+   * BaseAudioContext method or an AudioNode method.
    */
   _onContentFunctionCall: function (functionCall) {
     let { name } = functionCall.details;

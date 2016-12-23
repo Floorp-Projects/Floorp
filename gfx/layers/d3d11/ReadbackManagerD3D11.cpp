@@ -36,7 +36,7 @@ class ReadbackResultWriterD3D11 final : public nsIRunnable
   ~ReadbackResultWriterD3D11() {}
   NS_DECL_THREADSAFE_ISUPPORTS
 public:
-  ReadbackResultWriterD3D11(ReadbackTask *aTask) : mTask(aTask) {}
+  explicit ReadbackResultWriterD3D11(ReadbackTask *aTask) : mTask(aTask) {}
 
   NS_IMETHOD Run() override
   {

@@ -91,9 +91,13 @@ SingleMatchPattern.prototype = {
   },
 
   matches(uri, ignorePath = false) {
-    return (this.schemes.includes(uri.scheme) &&
-            this.hostMatch(uri) &&
-            (ignorePath || this.pathMatch(uri.path)));
+    return (
+      this.schemes.includes(uri.scheme) &&
+      this.hostMatch(uri) &&
+      (ignorePath || (
+        this.pathMatch(uri.cloneIgnoringRef().path)
+      ))
+    );
   },
 };
 

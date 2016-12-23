@@ -68,7 +68,7 @@ namespace TexSlot {
 
 struct DeviceAttachmentsD3D11
 {
-  DeviceAttachmentsD3D11(ID3D11Device* device)
+  explicit DeviceAttachmentsD3D11(ID3D11Device* device)
    : mSyncHandle(0),
      mDevice(device),
      mInitOkay(true)
