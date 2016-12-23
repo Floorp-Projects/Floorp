@@ -331,7 +331,7 @@ WebGLShader::BindAttribLocation(GLuint prog, const nsCString& userName,
 
 bool
 WebGLShader::FindAttribUserNameByMappedName(const nsACString& mappedName,
-                                            nsDependentCString* const out_userName) const
+                                            nsCString* const out_userName) const
 {
     if (!mValidator)
         return false;
@@ -341,7 +341,7 @@ WebGLShader::FindAttribUserNameByMappedName(const nsACString& mappedName,
     if (!mValidator->FindAttribUserNameByMappedName(mappedNameStr, &userNameStr))
         return false;
 
-    out_userName->Rebind(userNameStr->c_str());
+    *out_userName = userNameStr->c_str();
     return true;
 }
 
@@ -380,20 +380,15 @@ WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
 }
 
 bool
-WebGLShader::FindUniformBlockByMappedName(const nsACString& mappedName,
-                                          nsCString* const out_userName,
-                                          bool* const out_isArray) const
+WebGLShader::UnmapUniformBlockName(const nsACString& baseMappedName,
+                                   nsCString* const out_baseUserName) const
 {
-    if (!mValidator)
-        return false;
+    if (!mValidator) {
+        *out_baseUserName = baseMappedName;
+        return true;
+    }
 
-    const std::string mappedNameStr(mappedName.BeginReading(), mappedName.Length());
-    std::string userNameStr;
-    if (!mValidator->FindUniformBlockByMappedName(mappedNameStr, &userNameStr))
-        return false;
-
-    *out_userName = userNameStr.c_str();
-    return true;
+    return mValidator->UnmapUniformBlockName(baseMappedName, out_baseUserName);
 }
 
 void
