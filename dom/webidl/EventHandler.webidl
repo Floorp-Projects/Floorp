@@ -38,7 +38,7 @@ interface GlobalEventHandlers {
            attribute EventHandler oncanplaythrough;
            attribute EventHandler onchange;
            attribute EventHandler onclick;
-           //(Not implemented)attribute EventHandler onclose;
+           attribute EventHandler onclose;
            attribute EventHandler oncontextmenu;
            //(Not implemented)attribute EventHandler oncuechange;
            attribute EventHandler ondblclick;
