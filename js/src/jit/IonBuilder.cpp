@@ -165,7 +165,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
     script_ = info->script();
     scriptHasIonScript_ = script_->hasIonScript();
     pc = info->startPC();
-    abortReason_ = AbortReason_Disable;
+    abortReason_ = AbortReason::Disable;
 
     MOZ_ASSERT(script()->hasBaselineScript() == (info->analysisMode() != Analysis_ArgumentsUsage));
     MOZ_ASSERT(!!analysisContext == (info->analysisMode() == Analysis_DefiniteProperties));
@@ -855,17 +855,17 @@ IonBuilder::build()
         return false;
 
     if (!info().isAnalysis() && !abortedPreliminaryGroups().empty()) {
-        abortReason_ = AbortReason_PreliminaryObjects;
+        abortReason_ = AbortReason::PreliminaryObjects;
         return false;
     }
 
     if (shouldForceAbort()) {
-        abortReason_ = AbortReason_Disable;
+        abortReason_ = AbortReason::Disable;
         return false;
     }
 
     MOZ_ASSERT(loopDepth_ == 0);
-    abortReason_ = AbortReason_NoAbort;
+    abortReason_ = AbortReason::NoAbort;
     return true;
 }
 
@@ -1017,12 +1017,12 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
     MOZ_ASSERT(iterators_.empty(), "Iterators should be added to outer builder");
 
     if (!info().isAnalysis() && !abortedPreliminaryGroups().empty()) {
-        abortReason_ = AbortReason_PreliminaryObjects;
+        abortReason_ = AbortReason::PreliminaryObjects;
         return false;
     }
 
     if (shouldForceAbort()) {
-        abortReason_ = AbortReason_Disable;
+        abortReason_ = AbortReason::Disable;
         return false;
     }
 
@@ -1436,14 +1436,14 @@ IonBuilder::traverseBytecode()
     MOZ_ASSERT_IF(cfg && info().script()->hasBaselineScript(),
                   info().script()->baselineScript()->controlFlowGraph() == cfg);
     if (state == CFGState::Alloc) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return false;
     }
     if (state == CFGState::Abort)
         return abort("Couldn't create the CFG of script");
 
     if (!blockWorklist.growBy(cfg->numBlocks())) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return false;
     }
     blockWorklist[0] = current;
@@ -1451,7 +1451,7 @@ IonBuilder::traverseBytecode()
     size_t i = 0;
     while (i < cfg->numBlocks()) {
         if (!alloc().ensureBallast()) {
-            abortReason_ = AbortReason_Alloc;
+            abortReason_ = AbortReason::Alloc;
             return false;
         }
 
@@ -1518,7 +1518,7 @@ IonBuilder::visitBlock(const CFGBlock* cfgblock, MBasicBlock* mblock)
 
     while (pc < cfgblock->stopPc()) {
         if (!alloc().ensureBallast()) {
-            abortReason_ = AbortReason_Alloc;
+            abortReason_ = AbortReason::Alloc;
             return false;
         }
 
@@ -1670,11 +1670,11 @@ IonBuilder::visitBackEdge(CFGBackEdge* ins, bool* restarted)
     // Compute phis in the loop header and propagate them throughout the loop,
     // including the successor.
     AbortReason r = loopEntry->setBackedge(alloc(), current);
-    if (r == AbortReason_Alloc) {
-        abortReason_ = AbortReason_Alloc;
+    if (r == AbortReason::Alloc) {
+        abortReason_ = AbortReason::Alloc;
         return false;
     }
-    if (r == AbortReason_Disable) {
+    if (r == AbortReason::Disable) {
         // If there are types for variables on the backedge that were not
         // present at the original loop header, then uses of the variables'
         // phis may have generated incorrect nodes. The new types have been
@@ -3676,33 +3676,33 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
         if (analysisContext && analysisContext->isExceptionPending()) {
             JitSpew(JitSpew_IonAbort, "Inline builder raised exception.");
-            abortReason_ = AbortReason_Error;
+            abortReason_ = AbortReason::Error;
             return InliningStatus_Error;
         }
 
         // Inlining the callee failed. Mark the callee as uninlineable only if
         // the inlining was aborted for a non-exception reason.
-        if (inlineBuilder.abortReason_ == AbortReason_Disable) {
+        if (inlineBuilder.abortReason_ == AbortReason::Disable) {
             calleeScript->setUninlineable();
             if (!JitOptions.disableInlineBacktracking) {
                 current = backup.restore();
                 if (!current) {
-                    abortReason_ = AbortReason_Alloc;
+                    abortReason_ = AbortReason::Alloc;
                     return InliningStatus_Error;
                 }
                 return InliningStatus_NotInlined;
             }
-            abortReason_ = AbortReason_Inlining;
-        } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
-            abortReason_ = AbortReason_Inlining;
-        } else if (inlineBuilder.abortReason_ == AbortReason_Alloc) {
-            abortReason_ = AbortReason_Alloc;
-        } else if (inlineBuilder.abortReason_ == AbortReason_PreliminaryObjects) {
+            abortReason_ = AbortReason::Inlining;
+        } else if (inlineBuilder.abortReason_ == AbortReason::Inlining) {
+            abortReason_ = AbortReason::Inlining;
+        } else if (inlineBuilder.abortReason_ == AbortReason::Alloc) {
+            abortReason_ = AbortReason::Alloc;
+        } else if (inlineBuilder.abortReason_ == AbortReason::PreliminaryObjects) {
             const ObjectGroupVector& groups = inlineBuilder.abortedPreliminaryGroups();
             MOZ_ASSERT(!groups.empty());
             for (size_t i = 0; i < groups.length(); i++)
                 addAbortedPreliminaryGroup(groups[i]);
-            abortReason_ = AbortReason_PreliminaryObjects;
+            abortReason_ = AbortReason::PreliminaryObjects;
         }
 
         return InliningStatus_Error;
@@ -3714,12 +3714,12 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
         if (!JitOptions.disableInlineBacktracking) {
             current = backup.restore();
             if (!current) {
-                abortReason_ = AbortReason_Alloc;
+                abortReason_ = AbortReason::Alloc;
                 return InliningStatus_Error;
             }
             return InliningStatus_NotInlined;
         }
-        abortReason_ = AbortReason_Inlining;
+        abortReason_ = AbortReason::Inlining;
         return InliningStatus_Error;
     }
 
@@ -6201,7 +6201,7 @@ IonBuilder::newBlock(MBasicBlock* predecessor, jsbytecode* pc)
     MBasicBlock* block = MBasicBlock::New(graph(), &analysis(), info(), predecessor,
                                           bytecodeSite(pc), MBasicBlock::NORMAL);
     if (!block) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return nullptr;
     }
 
@@ -6215,7 +6215,7 @@ IonBuilder::newBlock(MBasicBlock* predecessor, jsbytecode* pc, MResumePoint* pri
     MBasicBlock* block = MBasicBlock::NewWithResumePoint(graph(), info(), predecessor,
                                                          bytecodeSite(pc), priorResumePoint);
     if (!block) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return nullptr;
     }
 
@@ -6229,7 +6229,7 @@ IonBuilder::newBlockPopN(MBasicBlock* predecessor, jsbytecode* pc, uint32_t popp
     MBasicBlock* block = MBasicBlock::NewPopN(graph(), info(), predecessor, bytecodeSite(pc),
                                               MBasicBlock::NORMAL, popped);
     if (!block) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return nullptr;
     }
 
@@ -6243,7 +6243,7 @@ IonBuilder::newBlockAfter(MBasicBlock* at, MBasicBlock* predecessor, jsbytecode*
     MBasicBlock* block = MBasicBlock::New(graph(), &analysis(), info(), predecessor,
                                           bytecodeSite(pc), MBasicBlock::NORMAL);
     if (!block) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return nullptr;
     }
 
@@ -6438,7 +6438,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock* predecessor, jsbytecode* pc, bool 
     MBasicBlock* block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor,
                                                            bytecodeSite(pc), stackPhiCount);
     if (!block) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return nullptr;
     }
 
@@ -6532,7 +6532,7 @@ IonBuilder::resume(MInstruction* ins, jsbytecode* pc, MResumePoint::Mode mode)
     MResumePoint* resumePoint = MResumePoint::New(alloc(), ins->block(), pc,
                                                   mode);
     if (!resumePoint) {
-        abortReason_ = AbortReason_Alloc;
+        abortReason_ = AbortReason::Alloc;
         return false;
     }
     ins->setResumePoint(resumePoint);
