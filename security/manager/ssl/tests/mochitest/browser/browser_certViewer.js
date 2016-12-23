@@ -106,8 +106,11 @@ add_task(function* testRevoked() {
     "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8="); // hash of the shared key
   let cert = yield readCertificate("revoked.pem", ",,");
   let win = yield displayCertificate(cert);
-  checkError(win,
-             "Could not verify this certificate because it has been revoked.");
+  // As of bug 1312827, OneCRL only applies to TLS web server certificates, so
+  // this certificate will actually verify successfully for every end-entity
+  // usage except TLS web server.
+  checkUsages(win, ["Email Recipient Certificate", "Email Signer Certificate",
+                    "Object Signer", "SSL Client Certificate"]);
   yield BrowserTestUtils.closeWindow(win);
 });
 
