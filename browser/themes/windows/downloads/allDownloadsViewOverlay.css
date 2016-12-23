@@ -18,32 +18,30 @@
 
 /*** Highlighted list items ***/
 
-@media not all and (-moz-os-version: windows-xp) {
-  @media (-moz-windows-default-theme) {
-    /*
-    -moz-appearance: menuitem is almost right, but the hover effect is not
-    transparent and is lighter than desired.
+@media (-moz-windows-default-theme) {
+  /*
+  -moz-appearance: menuitem is almost right, but the hover effect is not
+  transparent and is lighter than desired.
 
-    Copied from the autocomplete richlistbox styling in
-    toolkit/themes/windows/global/autocomplete.css
+  Copied from the autocomplete richlistbox styling in
+  toolkit/themes/windows/global/autocomplete.css
 
-    This styling should be kept in sync with the style from the above file.
-    */
-    @itemFocused@ {
-      color: inherit;
-      background-color: transparent;
-      /* four gradients for the bevel highlights on each edge, one for blue background */
-      background-image:
-        linear-gradient(to bottom, rgba(255,255,255,0.9) 3px, transparent 3px),
-        linear-gradient(to right, rgba(255,255,255,0.5) 3px, transparent 3px),
-        linear-gradient(to left, rgba(255,255,255,0.5) 3px, transparent 3px),
-        linear-gradient(to top, rgba(255,255,255,0.4) 3px, transparent 3px),
-        linear-gradient(to bottom, rgba(163,196,247,0.3), rgba(122,180,246,0.3));
-      background-clip: content-box;
-      border-radius: 6px;
-      outline: 1px solid rgb(124,163,206);
-      -moz-outline-radius: 3px;
-      outline-offset: -2px;
-    }
+  This styling should be kept in sync with the style from the above file.
+  */
+  @itemFocused@ {
+    color: inherit;
+    background-color: transparent;
+    /* four gradients for the bevel highlights on each edge, one for blue background */
+    background-image:
+      linear-gradient(to bottom, rgba(255,255,255,0.9) 3px, transparent 3px),
+      linear-gradient(to right, rgba(255,255,255,0.5) 3px, transparent 3px),
+      linear-gradient(to left, rgba(255,255,255,0.5) 3px, transparent 3px),
+      linear-gradient(to top, rgba(255,255,255,0.4) 3px, transparent 3px),
+      linear-gradient(to bottom, rgba(163,196,247,0.3), rgba(122,180,246,0.3));
+    background-clip: content-box;
+    border-radius: 6px;
+    outline: 1px solid rgb(124,163,206);
+    -moz-outline-radius: 3px;
+    outline-offset: -2px;
   }
 }
