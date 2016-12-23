@@ -189,7 +189,6 @@ WEBIDL_FILES = [
     'HTMLDataElement.webidl',
     'HTMLDataListElement.webidl',
     'HTMLDetailsElement.webidl',
-    'HTMLDialogElement.webidl',
     'HTMLDirectoryElement.webidl',
     'HTMLDivElement.webidl',
     'HTMLDListElement.webidl',
