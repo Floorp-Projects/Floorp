@@ -49,7 +49,8 @@ typedef struct {
 
 typedef int sslPID;
 
-#elif defined(LINUX) || defined(AIX) || defined(BEOS) || defined(BSDI) || (defined(NETBSD) && __NetBSD_Version__ < 500000000) || defined(OPENBSD)
+#elif defined(LINUX) || defined(AIX) || defined(BEOS) || defined(BSDI) || \
+    (defined(NETBSD) && __NetBSD_Version__ < 500000000) || defined(OPENBSD) || defined(__GLIBC__)
 
 #include <sys/types.h>
 #include "prtypes.h"
