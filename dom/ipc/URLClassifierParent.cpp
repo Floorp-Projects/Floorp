@@ -18,6 +18,7 @@ URLClassifierParent::StartClassify(nsIPrincipal* aPrincipal,
                                    bool aUseTrackingProtection,
                                    bool* aSuccess)
 {
+  *aSuccess = false;
   nsresult rv = NS_OK;
   // Note that in safe mode, the URL classifier service isn't available, so we
   // should handle the service not being present gracefully.
@@ -34,6 +35,7 @@ URLClassifierParent::StartClassify(nsIPrincipal* aPrincipal,
     // without ever calling out callback in both cases.
     // This means that code using this in the child process will only get a hit
     // on its callback if some classification actually happens.
+    *aSuccess = false;
     ClassificationFailed();
   }
   return IPC_OK();
