@@ -717,10 +717,6 @@ class MOZ_RAII GetPropIRGenerator
         return ValOperandId(1);
     }
 
-    // No pc if idempotent, as there can be multiple bytecode locations
-    // due to GVN.
-    bool idempotent() const { return pc_ == nullptr; }
-
     // If this is a GetElem cache, emit instructions to guard the incoming Value
     // matches |id|.
     void maybeEmitIdGuard(jsid id);
