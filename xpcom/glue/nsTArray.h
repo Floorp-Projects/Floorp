@@ -51,6 +51,12 @@ class SourceBufferTask;
 } // namespace mozilla
 
 namespace mozilla {
+namespace gfx {
+class FilterPrimitiveDescription;
+} // namespace gfx
+} // namespace mozilla
+
+namespace mozilla {
 namespace dom {
 namespace ipc {
 class StructuredCloneData;
@@ -857,6 +863,7 @@ DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::SerializedStructuredClone
 DECLARE_USE_COPY_CONSTRUCTORS(JSStructuredCloneData)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::MessagePortMessage)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::SourceBufferTask)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::gfx::FilterPrimitiveDescription)
 
 template<typename T>
 struct nsTArray_CopyChooser<std::function<T>>
