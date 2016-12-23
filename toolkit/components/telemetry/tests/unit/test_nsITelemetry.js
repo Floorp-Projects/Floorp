@@ -212,10 +212,16 @@ add_task(function* test_categorical_histogram()
     h1.add(s);
   }
 
+  // Categorical histograms default to 50 linear buckets.
+  let expectedRanges = [];
+  for (let i = 0; i < 51; ++i) {
+    expectedRanges.push(i);
+  }
+
   let snapshot = h1.snapshot();
   Assert.equal(snapshot.sum, 6);
-  Assert.deepEqual(snapshot.ranges, [0, 1, 2, 3]);
-  Assert.deepEqual(snapshot.counts, [3, 2, 2, 0]);
+  Assert.deepEqual(snapshot.ranges, expectedRanges);
+  Assert.deepEqual(snapshot.counts.slice(0, 4), [3, 2, 2, 0]);
 
   let h2 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL_OPTOUT");
   for (let v of ["CommonLabel", "CommonLabel", "Label4", "Label5", "Label6", 0, 1]) {
@@ -229,8 +235,25 @@ add_task(function* test_categorical_histogram()
 
   snapshot = h2.snapshot();
   Assert.equal(snapshot.sum, 7);
-  Assert.deepEqual(snapshot.ranges, [0, 1, 2, 3, 4]);
-  Assert.deepEqual(snapshot.counts, [3, 2, 1, 1, 0]);
+  Assert.deepEqual(snapshot.ranges, expectedRanges);
+  Assert.deepEqual(snapshot.counts.slice(0, 5), [3, 2, 1, 1, 0]);
+
+  // This histogram overrides the default of 50 values to 70.
+  let h3 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL_NVALUES");
+  for (let v of ["CommonLabel", "Label7", "Label8"]) {
+    h3.add(v);
+  }
+
+  expectedRanges = [];
+  for (let i = 0; i < 71; ++i) {
+    expectedRanges.push(i);
+  }
+
+  snapshot = h3.snapshot();
+  Assert.equal(snapshot.sum, 3);
+  Assert.equal(snapshot.ranges.length, expectedRanges.length);
+  Assert.deepEqual(snapshot.ranges, expectedRanges);
+  Assert.deepEqual(snapshot.counts.slice(0, 4), [1, 1, 1, 0]);
 });
 
 add_task(function* test_add_error_behaviour() {
