@@ -158,7 +158,7 @@ function* checkItem(aExpected, aNode) {
   let id = aNode.itemId;
 
   return Task.spawn(function* () {
-    for (prop in aExpected) {
+    for (let prop in aExpected) {
       switch (prop) {
         case "type":
           do_check_eq(aNode.type, aExpected.type);

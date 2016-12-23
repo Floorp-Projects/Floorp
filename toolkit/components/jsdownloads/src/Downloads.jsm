@@ -38,6 +38,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
+/* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
             "resource://gre/modules/DownloadIntegration.jsm");
 

@@ -8,7 +8,6 @@ module.exports = { // eslint-disable-line no-undef
   },
 
   "globals": {
-    "ChromeWorker": false,
     "onmessage": true,
     "sendAsyncMessage": false,
 

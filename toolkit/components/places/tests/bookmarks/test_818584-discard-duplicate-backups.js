@@ -46,7 +46,7 @@ add_task(function*() {
   // backup will replace the existing one.
   yield PlacesBackups.create(undefined, true);
   do_check_eq(backupFiles.length, 1);
-  recentBackup = yield PlacesBackups.getMostRecentBackup();
+  let recentBackup = yield PlacesBackups.getMostRecentBackup();
   do_check_neq(recentBackup, OS.Path.join(backupFolder, oldBackupName));
   matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
   do_check_eq(matches[1], PlacesBackups.toISODateString(new Date()));
