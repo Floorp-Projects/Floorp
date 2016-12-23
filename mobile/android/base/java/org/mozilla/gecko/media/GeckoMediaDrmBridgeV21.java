@@ -36,6 +36,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     private static final boolean DEBUG = false;
     private static final UUID WIDEVINE_SCHEME_UUID =
         new UUID(0xedef8ba979d64aceL, 0xa3c827dcd51d21edL);
+    private static final int MAX_PROMISE_ID = Integer.MAX_VALUE;
     // MediaDrm.KeyStatus information listener is supported on M+, adding a
     // dummy key id to report key status.
     private static final byte[] DUMMY_KEY_ID = new byte[] {0};
@@ -118,6 +119,15 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         mDrm = new MediaDrm(mSchemeUUID);
         configureVendorSpecificProperty();
         mDrm.setOnEventListener(new MediaDrmListener());
+        try {
+            // ensureMediaCryptoCreated may cause NotProvisionedException for the first time use.
+            // Need to start provisioning with a dummy promise id.
+            ensureMediaCryptoCreated();
+        } catch (android.media.NotProvisionedException e) {
+            if (DEBUG) Log.d(LOGTAG, "Device not provisioned:" + e.getMessage());
+            startProvisioning(MAX_PROMISE_ID);
+        }
+
     }
 
     @Override
