@@ -30,8 +30,7 @@ class ViewportFrame;
 // These are all the block specific frame bits, they are copied from
 // the prev-in-flow to a newly created next-in-flow, except for the
 // NS_BLOCK_FLAGS_NON_INHERITED_MASK bits below.
-#define NS_BLOCK_FLAGS_MASK (NS_BLOCK_MARGIN_ROOT              | \
-                             NS_BLOCK_FLOAT_MGR                | \
+#define NS_BLOCK_FLAGS_MASK (NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS | \
                              NS_BLOCK_CLIP_PAGINATED_OVERFLOW  | \
                              NS_BLOCK_HAS_FIRST_LETTER_STYLE   | \
                              NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET | \
