@@ -2240,6 +2240,15 @@
 
             this.tabContainer.updateVisibility();
 
+            // If URI is about:blank and we don't have a preferred remote type,
+            // then we need to use the referrer, if we have one, to get the
+            // correct remote type for the new tab.
+            if (uriIsAboutBlank && !aPreferredRemoteType && aReferrerURI) {
+              aPreferredRemoteType =
+                E10SUtils.getRemoteTypeForURI(aReferrerURI.spec,
+                                              gMultiProcessBrowser);
+            }
+
             // Currently in this incarnation of bug 906076, we are forcing the
             // browser to immediately be linked.  In future incarnations of this
             // bug this will be removed so we can leave the tab in its "lazy"
