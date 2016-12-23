@@ -906,8 +906,10 @@ WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj)
 /* static */ void
 WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 {
-    if (!obj->as<WasmInstanceObject>().isNewborn())
-        obj->as<WasmInstanceObject>().instance().tracePrivate(trc);
+    WasmInstanceObject& instanceObj = obj->as<WasmInstanceObject>();
+    instanceObj.exports().trace(trc);
+    if (!instanceObj.isNewborn())
+        instanceObj.instance().tracePrivate(trc);
 }
 
 /* static */ WasmInstanceObject*
@@ -919,7 +921,7 @@ WasmInstanceObject::create(JSContext* cx,
                            const ValVector& globalImports,
                            HandleObject proto)
 {
-    UniquePtr<WeakExportMap> exports = js::MakeUnique<WeakExportMap>(cx->zone(), ExportMap());
+    UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
     if (!exports || !exports->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -1010,10 +1012,10 @@ WasmInstanceObject::instance() const
     return *(Instance*)getReservedSlot(INSTANCE_SLOT).toPrivate();
 }
 
-WasmInstanceObject::WeakExportMap&
+WasmInstanceObject::ExportMap&
 WasmInstanceObject::exports() const
 {
-    return *(WeakExportMap*)getReservedSlot(EXPORTS_SLOT).toPrivate();
+    return *(ExportMap*)getReservedSlot(EXPORTS_SLOT).toPrivate();
 }
 
 static bool
