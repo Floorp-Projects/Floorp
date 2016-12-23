@@ -182,19 +182,18 @@ exports.Memory = Class({
    *                 event gets emitted (and drained), and also emits and drains on every
    *                 GC event, resetting the timer.
    */
-  startRecordingAllocations: expectState("attached", function ({
-    probability = 1,
-    drainAllocationsTimeout = null,
-    maxLogLength = null
-  }) {
+  startRecordingAllocations: expectState("attached", function (options = {}) {
     if (this.isRecordingAllocations()) {
       return this._getCurrentTime();
     }
 
     this._frameCache.initFrames();
 
-    this.dbg.memory.allocationSamplingProbability = probability;
-    this.drainAllocationsTimeoutTimer = drainAllocationsTimeout;
+    this.dbg.memory.allocationSamplingProbability = options.probability != null
+      ? options.probability
+      : 1.0;
+
+    this.drainAllocationsTimeoutTimer = options.drainAllocationsTimeout;
 
     if (this.drainAllocationsTimeoutTimer != null) {
       if (this._poller) {
@@ -205,8 +204,8 @@ exports.Memory = Class({
       this._poller.arm();
     }
 
-    if (maxLogLength != null) {
-      this.dbg.memory.maxAllocationsLogLength = maxLogLength;
+    if (options.maxLogLength != null) {
+      this.dbg.memory.maxAllocationsLogLength = options.maxLogLength;
     }
     this.dbg.memory.trackingAllocationSites = true;
 
