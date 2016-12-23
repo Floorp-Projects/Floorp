@@ -142,9 +142,9 @@ public:
                       const nsString& aDrmStubId,
                       CDMProxy* aProxy,
                       TaskQueue* aTaskQueue)
-   : VideoDataDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId)
-   , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
-                                                    aTaskQueue, aProxy))
+    : VideoDataDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId)
+    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
+                                                     aTaskQueue, aProxy))
   {
   }
 
@@ -260,9 +260,9 @@ public:
   EMEAudioDataDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat,
                       MediaDataDecoderCallback* aCallback, const nsString& aDrmStubId,
                       CDMProxy* aProxy, TaskQueue* aTaskQueue)
-   : AudioDataDecoder(aConfig, aFormat, aCallback, aDrmStubId)
-   , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
-                                                    aTaskQueue, aProxy))
+    : AudioDataDecoder(aConfig, aFormat, aCallback, aDrmStubId)
+    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
+                                                     aTaskQueue, aProxy))
   {
   }
 
