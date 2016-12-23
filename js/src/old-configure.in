@@ -194,10 +194,6 @@ case "$target" in
 
             # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
             CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
-
-            # Disable C++11 thread-safe statics due to crashes on XP (bug 1204752)
-            # See https://connect.microsoft.com/VisualStudio/feedback/details/1789709/visual-c-2015-runtime-broken-on-windows-server-2003-c-11-magic-statics
-            CXXFLAGS="$CXXFLAGS -Zc:threadSafeInit-"
             ;;
         esac
         AC_SUBST(MSVS_VERSION)
