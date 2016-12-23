@@ -18,8 +18,6 @@ import android.os.RemoteException;
 import android.view.Surface;
 import android.util.Log;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -39,8 +37,8 @@ public final class RemoteManager implements IBinder.DeathRecipient {
 
     private List<CodecProxy> mProxies = new LinkedList<CodecProxy>();
     private volatile IMediaManager mRemote;
-    private volatile CountDownLatch mConnectionLatch;
-    private final ServiceConnection mConnection = new ServiceConnection() {
+
+    private final class RemoteConnection implements ServiceConnection {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             if (DEBUG) Log.d(LOGTAG, "service connected");
@@ -49,32 +47,58 @@ public final class RemoteManager implements IBinder.DeathRecipient {
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
-            mRemote = IMediaManager.Stub.asInterface(service);
-            if (mConnectionLatch != null) {
-                mConnectionLatch.countDown();
+            synchronized (this) {
+                mRemote = IMediaManager.Stub.asInterface(service);
+                notify();
             }
         }
 
-        /**
-         * Called when a connection to the Service has been lost.  This typically
-         * happens when the process hosting the service has crashed or been killed.
-         * This does <em>not</em> remove the ServiceConnection itself -- this
-         * binding to the service will remain active, and you will receive a call
-         * to {@link #onServiceConnected} when the Service is next running.
-         *
-         * @param name The concrete component name of the service whose
-         *             connection has been lost.
-         */
         @Override
         public void onServiceDisconnected(ComponentName name) {
             if (DEBUG) Log.d(LOGTAG, "service disconnected");
             mRemote.asBinder().unlinkToDeath(RemoteManager.this, 0);
-            mRemote = null;
-            if (mConnectionLatch != null) {
-                mConnectionLatch.countDown();
+            synchronized (this) {
+                mRemote = null;
+                notify();
+            }
+        }
+
+        private boolean connect() {
+            Context appCtxt = GeckoAppShell.getApplicationContext();
+            appCtxt.bindService(new Intent(appCtxt, MediaManager.class),
+                    mConnection, Context.BIND_AUTO_CREATE);
+            waitConnect();
+            return mRemote != null;
+        }
+
+        // Wait up to 5s.
+        private synchronized void waitConnect() {
+            int waitCount = 0;
+            while (mRemote == null && waitCount < 5) {
+                try {
+                    wait(1000);
+                    waitCount++;
+                } catch (InterruptedException e) {
+                    if (DEBUG) { e.printStackTrace(); }
+                }
+            }
+            if (DEBUG) {
+                Log.d(LOGTAG, "wait ~" + waitCount + "s for connection: " + (mRemote == null ? "fail" : "ok"));
+            }
+        }
+
+        private synchronized void waitDisconnect() {
+            while (mRemote != null) {
+                try {
+                    wait(1000);
+                } catch (InterruptedException e) {
+                    if (DEBUG) { e.printStackTrace(); }
+                }
             }
         }
     };
+
+    RemoteConnection mConnection = new RemoteConnection();
 
     private synchronized boolean init() {
         if (mRemote != null) {
@@ -82,40 +106,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         }
 
         if (DEBUG) Log.d(LOGTAG, "init remote manager " + this);
-        Context appCtxt = GeckoAppShell.getApplicationContext();
-        if (DEBUG) Log.d(LOGTAG, "ctxt=" + appCtxt);
-        appCtxt.bindService(new Intent(appCtxt, MediaManager.class),
-                mConnection, Context.BIND_AUTO_CREATE);
-        if (!waitConnection()) {
-            appCtxt.unbindService(mConnection);
-            return false;
-        }
-        return true;
-    }
-
-    private boolean waitConnection() {
-        boolean ok = false;
-
-        mConnectionLatch = new CountDownLatch(1);
-        try {
-            int retryCount = 0;
-            while (retryCount < 5) {
-                if (DEBUG) Log.d(LOGTAG, "waiting for connection latch:" + mConnectionLatch);
-                mConnectionLatch.await(1, TimeUnit.SECONDS);
-                if (mConnectionLatch.getCount() == 0) {
-                    break;
-                }
-                Log.w(LOGTAG, "Creator not connected in 1s. Try again.");
-                retryCount++;
-            }
-            ok = true;
-        } catch (InterruptedException e) {
-            Log.e(LOGTAG, "service not connected in 5 seconds. Stop waiting.");
-            e.printStackTrace();
-        }
-        mConnectionLatch = null;
-
-        return ok;
+        return mConnection.connect();
     }
 
     public synchronized CodecProxy createCodec(MediaFormat format,
@@ -170,12 +161,8 @@ public final class RemoteManager implements IBinder.DeathRecipient {
     }
 
     private synchronized void handleRemoteDeath() {
-        // Wait for onServiceDisconnected()
-        if (!waitConnection()) {
-            notifyError(true);
-            return;
-        }
-        // Restart
+        mConnection.waitDisconnect();
+
         if (init() && recoverRemoteCodec()) {
             notifyError(false);
         } else {
