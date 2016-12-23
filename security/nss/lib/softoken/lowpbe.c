@@ -408,7 +408,6 @@ loser:
     return result;
 }
 
-#define HMAC_BUFFER 64
 #define NSSPBE_ROUNDUP(x, y) ((((x) + ((y)-1)) / (y)) * (y))
 #define NSSPBE_MIN(x, y) ((x) < (y) ? (x) : (y))
 /*
@@ -430,6 +429,7 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
     int iter;
     unsigned char *iterBuf;
     void *hash = NULL;
+    unsigned int bufferLength;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena) {
@@ -439,8 +439,11 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
     /* how many hash object lengths are needed */
     c = (bytesNeeded + (hashLength - 1)) / hashLength;
 
+    /* 64 if 0 < hashLength <= 32, 128 if 32 < hashLength <= 64 */
+    bufferLength = NSSPBE_ROUNDUP(hashLength * 2, 64);
+
     /* initialize our buffers */
-    D.len = HMAC_BUFFER;
+    D.len = bufferLength;
     /* B and D are the same length, use one alloc go get both */
     D.data = (unsigned char *)PORT_ArenaZAlloc(arena, D.len * 2);
     B.len = D.len;
@@ -452,8 +455,8 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
         goto loser;
     }
 
-    SLen = NSSPBE_ROUNDUP(salt->len, HMAC_BUFFER);
-    PLen = NSSPBE_ROUNDUP(pwitem->len, HMAC_BUFFER);
+    SLen = NSSPBE_ROUNDUP(salt->len, bufferLength);
+    PLen = NSSPBE_ROUNDUP(pwitem->len, bufferLength);
     I.len = SLen + PLen;
     I.data = (unsigned char *)PORT_ArenaZAlloc(arena, I.len);
     if (I.data == NULL) {

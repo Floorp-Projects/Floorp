@@ -96,8 +96,12 @@
       '../../gtests/common',
       '../../lib/ssl'
     ],
+    'defines': [
+      'NSS_USE_STATIC_LIBS'
+    ],
   },
   'variables': {
     'module': 'nss',
+    'use_static_libs': 1,
   }
 }

@@ -24,39 +24,45 @@
           # building on.
           'target_arch%': '<(host_arch)',
         }],
+        ['OS=="linux"', {
+          # FIPS-140 LOWHASH
+          'freebl_name': 'freeblpriv3',
+        }, {
+          'freebl_name': 'freebl3',
+        }],
+        ['OS=="mac"', {
+          'use_system_sqlite%': 1,
+        },{
+          'use_system_sqlite%': 0,
+        }],
+        ['OS=="mac" or OS=="win"', {
+          'cc_use_gnu_ld%': 0,
+        }, {
+          'cc_use_gnu_ld%': 1,
+        }],
         ['OS=="win"', {
           'use_system_zlib%': 0,
-          'nspr_libs%': ['nspr4.lib', 'plc4.lib', 'plds4.lib'],
+          'nspr_libs%': ['libnspr4.lib', 'libplc4.lib', 'libplds4.lib'],
           'zlib_libs%': [],
           #TODO
           'moz_debug_flags%': '',
           'dll_prefix': '',
           'dll_suffix': 'dll',
         }, {
-          'nspr_libs%': ['-lplds4', '-lplc4', '-lnspr4'],
           'use_system_zlib%': 1,
-        }],
-        ['OS=="linux" or OS=="android"', {
+          'nspr_libs%': ['-lplds4', '-lplc4', '-lnspr4'],
           'zlib_libs%': ['-lz'],
-          'moz_debug_flags%': '-gdwarf-2',
           'optimize_flags%': '-O2',
           'dll_prefix': 'lib',
-          'dll_suffix': 'so',
-        }],
-        ['OS=="linux"', {
-          'freebl_name': 'freeblpriv3',
-        }, {
-          'freebl_name': 'freebl3',
-        }],
-        ['OS=="mac"', {
-          'zlib_libs%': ['-lz'],
-          'use_system_sqlite%': 1,
-          'moz_debug_flags%': '-gdwarf-2 -gfull',
-          'optimize_flags%': '-O2',
-          'dll_prefix': 'lib',
-          'dll_suffix': 'dylib',
-        }, {
-          'use_system_sqlite%': 0,
+          'conditions': [
+            ['OS=="mac"', {
+              'moz_debug_flags%': '-gdwarf-2 -gfull',
+              'dll_suffix': 'dylib',
+            }, {
+              'moz_debug_flags%': '-gdwarf-2',
+              'dll_suffix': 'so',
+            }],
+          ],
         }],
         ['"<(GENERATOR)"=="ninja"', {
           'cc_is_clang%': '<!(<(python) <(DEPTH)/coreconf/check_cc_clang.py)',
@@ -81,6 +87,7 @@
     'dll_suffix': '<(dll_suffix)',
     'freebl_name': '<(freebl_name)',
     'cc_is_clang%': '<(cc_is_clang)',
+    'cc_use_gnu_ld%': '<(cc_use_gnu_ld)',
     # Some defaults
     'disable_tests%': 0,
     'disable_chachapoly%': 0,
@@ -115,9 +122,13 @@
       '<(nss_dist_dir)/private/<(module)',
     ],
     'conditions': [
-      [ 'OS=="linux"', {
+      [ 'OS!="android" and OS!="mac" and OS!="win"', {
         'libraries': [
           '-lpthread',
+        ],
+      }],
+      [ 'OS=="linux"', {
+        'libraries': [
           '-ldl',
           '-lc',
         ],
@@ -148,7 +159,7 @@
           ],
         },
         'conditions': [
-          [ 'OS=="linux" or OS=="android"', {
+          [ 'cc_use_gnu_ld==1', {
             'ldflags': [
               '-Wl,--version-script,<(INTERMEDIATE_DIR)/out.>(mapfile)',
             ],
@@ -195,10 +206,18 @@
       # Shared library specific settings.
       [ '_type=="shared_library"', {
         'conditions': [
-          [ 'OS=="linux" or OS=="android"', {
+          [ 'cc_use_gnu_ld==1', {
             'ldflags': [
               '-Wl,--gc-sections',
               '-Wl,-z,defs',
+            ],
+            'conditions': [
+              ['OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or OS=="openbsd"', {
+                # Bug 1321317 - unix_rand.c:880: undefined reference to `environ'
+                'ldflags': [
+                  '-Wl,--warn-unresolved-symbols',
+                ],
+              }],
             ],
           }],
         ],
@@ -251,10 +270,36 @@
               'LINUX2_1',
               'LINUX',
               'linux',
+            ],
+          }],
+          [ 'OS=="dragonfly" or OS=="freebsd"', {
+            'defines': [
+              'FREEBSD',
+            ],
+          }],
+          [ 'OS=="netbsd"', {
+            'defines': [
+              'NETBSD',
+            ],
+          }],
+          [ 'OS=="openbsd"', {
+            'defines': [
+              'OPENBSD',
+            ],
+          }],
+          ['OS=="mac" or OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or OS=="openbsd"', {
+            'defines': [
+              'HAVE_BSD_FLOCK',
+            ],
+          }],
+          [ 'OS!="win"', {
+            'defines': [
               'HAVE_STRERROR',
               'XP_UNIX',
               '_REENTRANT',
             ],
+          }],
+          [ 'OS!="mac" and OS!="win"', {
             'cflags': [
               '-fPIC',
               '-pipe',
@@ -275,18 +320,23 @@
               }],
             ],
           }],
-          [ 'use_pprof==1 and OS=="linux"', {
-            'ldflags': [ '-lprofiler' ],
-          }],
-          [ 'use_pprof==1 and OS=="mac"', {
-            'xcode_settings': {
-              'OTHER_LDFLAGS': [ '-lprofiler' ],
-            },
-            'library_dirs': [
-              '/usr/local/lib/',
+          [ 'use_pprof==1 and OS!="android" and OS!="win"', {
+            'conditions': [
+              [ 'OS=="mac"', {
+                'xcode_settings': {
+                  'OTHER_LDFLAGS': [ '-lprofiler' ],
+                },
+              }, {
+                'ldflags': [ '-lprofiler' ],
+              }],
+              [ 'OS!="linux"', {
+                'library_dirs': [
+                  '/usr/local/lib/',
+                ],
+              }],
             ],
           }],
-          [ 'disable_werror==0 and (OS=="linux" or OS=="mac")', {
+          [ 'disable_werror==0 and OS!="android" and OS!="win"', {
             'cflags': [
               '<!@(<(python) <(DEPTH)/coreconf/werror.py)',
             ],
@@ -296,7 +346,7 @@
               '-Wno-unused-function',
             ]
           }],
-          [ 'fuzz==1 or use_asan==1 or use_ubsan==1', {
+          [ 'fuzz==1 or use_asan==1 or use_ubsan!=0', {
             'cflags': ['-O1'],
             'xcode_settings': {
               'GCC_OPTIMIZATION_LEVEL': '1', # -O1
@@ -321,9 +371,9 @@
               'LIBRARY_SEARCH_PATHS': ['/usr/lib <(asan_flags)'],
             },
           }],
-          [ 'use_ubsan==1', {
+          [ 'use_ubsan!=0', {
             'variables': {
-              'ubsan_flags': '<!(<(python) <(DEPTH)/coreconf/sanitizers.py ubsan)',
+              'ubsan_flags': '<!(<(python) <(DEPTH)/coreconf/sanitizers.py ubsan <(use_ubsan))',
               'no_ldflags': '<!(<(python) <(DEPTH)/coreconf/sanitizers.py ld)',
             },
             'cflags': ['<@(ubsan_flags)'],
@@ -376,9 +426,6 @@
           [ 'OS=="mac"', {
             'defines': [
               'DARWIN',
-              'HAVE_STRERROR',
-              'HAVE_BSD_FLOCK',
-              'XP_UNIX',
             ],
             'conditions': [
               [ 'target_arch=="ia32"', {
@@ -459,7 +506,7 @@
       'Debug': {
         'inherit_from': ['Common'],
         'conditions': [
-          [ 'OS=="linux" or OS=="android"', {
+          [ 'OS!="mac" and OS!="win"', {
             'cflags': [
               '-g',
               '<(moz_debug_flags)',
@@ -524,9 +571,9 @@
     },
   },
   'conditions': [
-    [ 'OS=="linux" or OS=="android"', {
+    [ 'cc_use_gnu_ld==1', {
       'variables': {
-        'process_map_file': ['/bin/sh', '-c', '/bin/grep -v ";-" >(mapfile) | sed -e "s,;+,," -e "s; DATA ;;" -e "s,;;,," -e "s,;.*,;," > >@(_outputs)'],
+        'process_map_file': ['/bin/sh', '-c', '/usr/bin/env grep -v ";-" >(mapfile) | sed -e "s,;+,," -e "s; DATA ;;" -e "s,;;,," -e "s,;.*,;," > >@(_outputs)'],
       },
     }],
     [ 'OS=="mac"', {

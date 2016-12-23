@@ -115,6 +115,20 @@ ifeq ($(OS_ARCH),Linux)
     ifneq ($(words $(OS_RELEASE)),1)
 	OS_RELEASE := $(word 1,$(OS_RELEASE)).$(word 2,$(OS_RELEASE))
     endif
+    KERNEL = Linux
+endif
+
+# Since all uses of OS_ARCH that follow affect only userland, we can
+# merge other Glibc systems with Linux here.
+ifeq ($(OS_ARCH),GNU)
+    OS_ARCH = Linux
+    OS_RELEASE = 2.6
+    KERNEL = GNU
+endif
+ifeq ($(OS_ARCH),GNU_kFreeBSD)
+    OS_ARCH = Linux
+    OS_RELEASE = 2.6
+    KERNEL = FreeBSD
 endif
 
 #

@@ -228,7 +228,7 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * on the server to read that data. Calls to
  * SSL_GetPreliminaryChannelInfo() and SSL_GetNextProto()
  * can be made used during this period to learn about the channel
- * parameters [TODO(ekr@rtfm.com): This hasn't landed yet].
+ * parameters.
  *
  * The transition between the 0-RTT and 1-RTT modes is marked by the
  * handshake callback.

@@ -917,6 +917,7 @@ setupIO(PLArenaPool *arena, bltestIO *input, PRFileDesc *file,
     SECItem *in;
     unsigned char *tok;
     unsigned int i, j;
+    PRBool needToFreeFile = PR_FALSE;
 
     if (file && (numBytes == 0 || file == PR_STDIN)) {
         /* grabbing data from a file */
@@ -924,6 +925,7 @@ setupIO(PLArenaPool *arena, bltestIO *input, PRFileDesc *file,
         if (rv != SECSuccess)
             return SECFailure;
         in = &fileData;
+        needToFreeFile = PR_TRUE;
     } else if (str) {
         /* grabbing data from command line */
         fileData.data = (unsigned char *)str;
@@ -957,10 +959,7 @@ setupIO(PLArenaPool *arena, bltestIO *input, PRFileDesc *file,
                 --in->len;
             if (in->data[in->len - 1] == '\r')
                 --in->len;
-            SECITEM_CopyItem(arena, &input->buf, in);
-            if (rv != SECSuccess) {
-                return SECFailure;
-            }
+            rv = SECITEM_CopyItem(arena, &input->buf, in);
             break;
         case bltestHexSpaceDelim:
             SECITEM_AllocItem(arena, &input->buf, in->len / 5);
@@ -986,7 +985,7 @@ setupIO(PLArenaPool *arena, bltestIO *input, PRFileDesc *file,
             break;
     }
 
-    if (file)
+    if (needToFreeFile)
         SECITEM_FreeItem(&fileData, PR_FALSE);
     return rv;
 }
