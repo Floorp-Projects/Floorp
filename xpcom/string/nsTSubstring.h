@@ -378,6 +378,20 @@ public:
   MOZ_MUST_USE bool NS_FASTCALL Assign(const substring_tuple_type&,
                                        const fallible_t&);
 
+  // Assign at most aLength characters of aStr to this, fallibly.
+  // If aLength is more than the number of characters in aStr.Length(),
+  // only assign aStr.Length() characters.
+  //
+  // Using this method is functionally equivalent to:
+  //
+  //   str.Assign(other.BeginReading, other.Length(), fallible);
+  //
+  // but may enable string buffer sharing.
+  void NS_FASTCALL Assign(const self_type& aStr, size_type aLength);
+  MOZ_MUST_USE bool NS_FASTCALL Assign(const self_type& aStr,
+                                       size_type aLength,
+                                       const fallible_t&);
+
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
   void Assign(char16ptr_t aData)
   {
