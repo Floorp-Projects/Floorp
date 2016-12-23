@@ -38,8 +38,6 @@ static const char kURI##prefix##_##name[] = ns #name
 #define RDF_NAMESPACE_URI  "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define WEB_NAMESPACE_URI  "http://home.netscape.com/WEB-rdf#"
 #define NC_NAMESPACE_URI   "http://home.netscape.com/NC-rdf#"
-#define DEVMO_NAMESPACE_URI_PREFIX "http://developer.mozilla.org/rdf/vocabulary/"
-
 
 /* ContractID prefixes for RDF DLL registration. */
 #define NS_RDF_CONTRACTID                           "@mozilla.org/rdf"
