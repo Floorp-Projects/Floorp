@@ -74,6 +74,41 @@ IonIC::trace(JSTracer* trc)
 {
     if (script_)
         TraceManuallyBarrieredEdge(trc, &script_, "IonIC::script_");
+
+    uint8_t* nextCodeRaw = codeRaw_;
+    for (IonICStub* stub = firstStub_; stub; stub = stub->next()) {
+        JitCode* code = JitCode::FromExecutable(nextCodeRaw);
+        TraceManuallyBarrieredEdge(trc, &code, "ion-ic-code");
+
+        TraceCacheIRStub(trc, stub, stub->stubInfo());
+
+        nextCodeRaw = stub->nextCodeRaw();
+    }
+
+    MOZ_ASSERT(nextCodeRaw == fallbackLabel_.raw());
+}
+
+void
+IonGetPropertyIC::maybeDisable(Zone* zone, bool attached)
+{
+    if (attached) {
+        failedUpdates_ = 0;
+        return;
+    }
+
+    if (!canAttachStub() && kind() == CacheKind::GetProp) {
+        // Don't disable the cache (and discard stubs) if we have a GETPROP and
+        // attached the maximum number of stubs. This can happen when JS code
+        // uses an AST-like data structure and accesses a field of a "base
+        // class", like node.nodeType. This should be temporary until we handle
+        // this case better, see bug 1107515.
+        return;
+    }
+
+    if (++failedUpdates_ > MAX_FAILED_UPDATES) {
+        JitSpew(JitSpew_IonIC, "Disable inline cache");
+        disable(zone);
+    }
 }
 
 /* static */ bool
@@ -88,6 +123,22 @@ IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonGetProperty
         adi.disable();
 
     bool attached = false;
+    if (!JitOptions.disableCacheIR && !ic->disabled()) {
+        if (ic->canAttachStub()) {
+            jsbytecode* pc = ic->idempotent() ? nullptr : ic->pc();
+            RootedValue objVal(cx, ObjectValue(*obj));
+            bool isTemporarilyUnoptimizable;
+            GetPropIRGenerator gen(cx, pc, ICStubEngine::IonIC, ic->kind(),
+                                   &isTemporarilyUnoptimizable,
+                                   objVal, idVal);
+            if (ic->idempotent() ? gen.tryAttachIdempotentStub() : gen.tryAttachStub()) {
+                attached = ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                 outerScript);
+            }
+        }
+        ic->maybeDisable(cx->zone(), attached);
+    }
+
     if (!attached && ic->idempotent()) {
         // Invalidate the cache if the property was not found, or was found on
         // a non-native object. This ensures:
@@ -121,4 +172,30 @@ IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonGetProperty
     }
 
     return true;
+}
+
+uint8_t*
+IonICStub::stubDataStart()
+{
+    return reinterpret_cast<uint8_t*>(this) + stubInfo_->stubDataOffset();
+}
+
+void
+IonIC::attachStub(IonICStub* newStub, JitCode* code)
+{
+    MOZ_ASSERT(canAttachStub());
+    MOZ_ASSERT(newStub);
+    MOZ_ASSERT(code);
+
+    if (firstStub_) {
+        IonICStub* last = firstStub_;
+        while (IonICStub* next = last->next())
+            last = next;
+        last->setNext(newStub, code);
+    } else {
+        firstStub_ = newStub;
+        codeRaw_ = code->raw();
+    }
+
+    numStubs_++;
 }
