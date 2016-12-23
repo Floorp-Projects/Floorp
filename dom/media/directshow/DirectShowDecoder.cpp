@@ -7,6 +7,7 @@
 #include "DirectShowDecoder.h"
 #include "DirectShowReader.h"
 #include "DirectShowUtils.h"
+#include "MediaContentType.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/WindowsVersion.h"
@@ -20,7 +21,7 @@ MediaDecoderStateMachine* DirectShowDecoder::CreateStateMachine()
 
 /* static */
 bool
-DirectShowDecoder::GetSupportedCodecs(const nsACString& aType,
+DirectShowDecoder::GetSupportedCodecs(const MediaContentType& aType,
                                       char const *const ** aCodecList)
 {
   if (!IsEnabled()) {
@@ -31,8 +32,8 @@ DirectShowDecoder::GetSupportedCodecs(const nsACString& aType,
     "mp3",
     nullptr
   };
-  if (aType.EqualsASCII("audio/mpeg") ||
-      aType.EqualsASCII("audio/mp3")) {
+  if (aType.Type() == MEDIAMIMETYPE("audio/mpeg")
+      || aType.Type() == MEDIAMIMETYPE("audio/mp3")) {
     if (aCodecList) {
       *aCodecList = mp3AudioCodecs;
     }
