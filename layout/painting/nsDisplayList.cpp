@@ -4576,9 +4576,10 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aParameters,
                               const nsDisplayList& aList,
-                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren)
+                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren,
+                              LayerState aDefaultState = LAYER_INACTIVE)
 {
-  LayerState result = LAYER_INACTIVE;
+  LayerState result = aDefaultState;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
     if (result == LAYER_INACTIVE &&
         i->GetAnimatedGeometryRoot() != aExpectedAnimatedGeometryRootForChildren) {
@@ -7336,7 +7337,8 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
 {
   if (ShouldPaintOnMaskLayer(aManager)) {
     return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-                                         mList, GetAnimatedGeometryRoot());
+                                         mList, GetAnimatedGeometryRoot(),
+                                         LAYER_SVG_EFFECTS);
   }
 
   return LAYER_SVG_EFFECTS;
