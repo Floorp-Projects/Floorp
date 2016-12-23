@@ -409,13 +409,28 @@ nsTSubstring_CharT::AssignLiteral(const char_type* aData, size_type aLength)
 void
 nsTSubstring_CharT::Assign(const self_type& aStr)
 {
-  if (!Assign(aStr, mozilla::fallible)) {
+  if (!Assign(aStr, aStr.Length(), mozilla::fallible)) {
     AllocFailed(aStr.Length());
   }
 }
 
 bool
 nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
+{
+  return Assign(aStr, aStr.Length(), aFallible);
+}
+
+void
+nsTSubstring_CharT::Assign(const self_type& aStr, size_type aLength)
+{
+  if (!Assign(aStr, aLength, mozilla::fallible)) {
+    AllocFailed(aLength);
+  }
+}
+
+bool
+nsTSubstring_CharT::Assign(const self_type& aStr, size_type aLength,
+                           const fallible_t& aFallible)
 {
   // |aStr| could be sharable. We need to check its flags to know how to
   // deal with it.
@@ -424,7 +439,11 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
     return true;
   }
 
-  if (!aStr.mLength) {
+  if (aStr.Length() < aLength) {
+    aLength = aStr.Length();
+  }
+
+  if (!aLength) {
     Truncate();
     mFlags |= aStr.mFlags & F_VOIDED;
     return true;
@@ -439,7 +458,7 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
     ::ReleaseData(mData, mFlags);
 
     mData = aStr.mData;
-    mLength = aStr.mLength;
+    mLength = aLength;
     SetDataFlags(F_TERMINATED | F_SHARED);
 
     // get an owning reference to the mData
@@ -448,12 +467,12 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
   } else if (aStr.mFlags & F_LITERAL) {
     MOZ_ASSERT(aStr.mFlags & F_TERMINATED, "Unterminated literal");
 
-    AssignLiteral(aStr.mData, aStr.mLength);
+    AssignLiteral(aStr.mData, aLength);
     return true;
   }
 
   // else, treat this like an ordinary assignment.
-  return Assign(aStr.Data(), aStr.Length(), aFallible);
+  return Assign(aStr.Data(), aLength, aFallible);
 }
 
 void
