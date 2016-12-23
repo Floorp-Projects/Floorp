@@ -43,6 +43,14 @@ namespace jit {
 // share both the IR and JitCode between CacheIR stubs. This HashMap owns the
 // stubInfo (it uses UniquePtr), so once there are no references left to the
 // shared stub code, we can also free the CacheIRStubInfo.
+//
+// Ion stubs
+// ---------
+// Unlike Baseline stubs, Ion stubs do not share stub code, and data stored in
+// the IonICStub is baked into JIT code. This is one of the reasons Ion stubs
+// are faster than Baseline stubs. Also note that Ion ICs contain more state
+// (see IonGetPropertyIC for example) and use dynamic input/output registers,
+// so sharing stub code for Ion would be much more difficult.
 
 // An OperandId represents either a cache input or a value returned by a
 // CacheIR instruction. Most code should use the ValOperandId and ObjOperandId
@@ -377,6 +385,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     uint32_t codeLength() const {
         MOZ_ASSERT(!failed());
         return buffer_.length();
+    }
+
+    // This should not be used when compiling Baseline code, as Baseline code
+    // shouldn't bake in stub values.
+    StubField readStubFieldForIon(size_t i, StubField::Type type) const {
+        MOZ_ASSERT(stubFields_[i].type() == type);
+        return stubFields_[i];
     }
 
     ObjOperandId guardIsObject(ValOperandId val) {
