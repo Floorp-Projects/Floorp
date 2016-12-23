@@ -38,6 +38,8 @@ class IonICStub
     CacheIRStubInfo* stubInfo() const { return stubInfo_; }
     IonICStub* next() const { return next_; }
 
+    uint8_t* stubDataStart();
+
     void setNext(IonICStub* next, JitCode* nextCode) {
         MOZ_ASSERT(!next_);
         MOZ_ASSERT(next && nextCode);
@@ -94,6 +96,8 @@ class IonIC
         disabled_(false)
     {}
 
+    void attachStub(IonICStub* newStub, JitCode* code);
+
   public:
     void setScriptedLocation(JSScript* script, jsbytecode* pc) {
         MOZ_ASSERT(!script_ && !pc_);
@@ -142,6 +146,9 @@ class IonIC
     Register scratchRegisterForEntryJump();
 
     void trace(JSTracer* trc);
+
+    bool attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
+                           HandleScript outerScript);
 };
 
 class IonGetPropertyIC : public IonIC
@@ -157,11 +164,12 @@ class IonGetPropertyIC : public IonIC
     uint16_t failedUpdates_;
 
     bool monitoredResult_ : 1;
+    bool allowDoubleResult_ : 1;
 
   public:
     IonGetPropertyIC(CacheKind kind, LiveRegisterSet liveRegs, Register object,
-                     ConstantOrRegister id, TypedOrValueRegister output, Register maybeTemp,
-                     bool monitoredResult)
+                     const ConstantOrRegister& id, TypedOrValueRegister output, Register maybeTemp,
+                     bool monitoredResult, bool allowDoubleResult)
       : IonIC(kind),
         liveRegs_(liveRegs),
         object_(object),
@@ -169,7 +177,8 @@ class IonGetPropertyIC : public IonIC
         output_(output),
         maybeTemp_(maybeTemp),
         failedUpdates_(0),
-        monitoredResult_(monitoredResult)
+        monitoredResult_(monitoredResult),
+        allowDoubleResult_(allowDoubleResult)
     { }
 
     bool monitoredResult() const { return monitoredResult_; }
@@ -178,6 +187,9 @@ class IonGetPropertyIC : public IonIC
     TypedOrValueRegister output() const { return output_; }
     Register maybeTemp() const { return maybeTemp_; }
     LiveRegisterSet liveRegs() const { return liveRegs_; }
+    bool allowDoubleResult() const { return allowDoubleResult_; }
+
+    void maybeDisable(Zone* zone, bool attached);
 
     static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonGetPropertyIC* ic,
                                     HandleObject obj, HandleValue idVal, MutableHandleValue res);

@@ -63,7 +63,7 @@ class DebugModeOSRVolatileStub
     { }
 
     bool invalid() const {
-        if (engine_ == ICStubCompiler::Engine::IonMonkey)
+        if (engine_ == ICStubCompiler::Engine::IonSharedIC)
             return stub_->invalid();
         MOZ_ASSERT(!frame_->isHandlingException());
         ICEntry& entry = frame_->script()->baselineScript()->icEntryFromPCOffset(pcOffset_);

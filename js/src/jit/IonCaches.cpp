@@ -390,8 +390,8 @@ IonCache::trace(JSTracer* trc)
         TraceManuallyBarrieredEdge(trc, &script_, "IonCache::script_");
 }
 
-static void*
-GetReturnAddressToIonCode(JSContext* cx)
+void*
+jit::GetReturnAddressToIonCode(JSContext* cx)
 {
     JitFrameIterator iter(cx);
     MOZ_ASSERT(iter.type() == JitFrame_Exit,
