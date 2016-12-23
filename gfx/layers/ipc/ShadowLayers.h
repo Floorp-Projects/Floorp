@@ -17,6 +17,7 @@
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"  // for OpenMode, etc
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -358,7 +359,7 @@ public:
    * Construct a shadow of |aLayer| on the "other side", at the
    * LayerManagerComposite.
    */
-  PLayerChild* ConstructShadowFor(ShadowableLayer* aLayer);
+  LayerHandle ConstructShadowFor(ShadowableLayer* aLayer);
 
   /**
    * Flag the next paint as the first for a document.
@@ -384,6 +385,8 @@ public:
 
   virtual void UpdateFwdTransactionId() override;
   virtual uint64_t GetFwdTransactionId() override;
+
+  void ReleaseLayer(const LayerHandle& aHandle);
 
   bool InForwarderThread() override {
     return NS_IsMainThread();
@@ -435,6 +438,7 @@ private:
   int32_t mPaintSyncId;
   InfallibleTArray<PluginWindowData> mPluginWindowData;
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
+  uint64_t mNextLayerHandle;
 };
 
 class CompositableClient;
@@ -449,26 +453,35 @@ class CompositableClient;
 class ShadowableLayer
 {
 public:
-  virtual ~ShadowableLayer() {}
+  virtual ~ShadowableLayer();
 
   virtual Layer* AsLayer() = 0;
 
   /**
    * True if this layer has a shadow in a parent process.
    */
-  bool HasShadow() { return !!mShadow; }
+  bool HasShadow() { return mShadow.IsValid(); }
 
   /**
    * Return the IPC handle to a Shadow*Layer referring to this if one
    * exists, nullptr if not.
    */
-  PLayerChild* GetShadow() { return mShadow; }
+  const LayerHandle& GetShadow() { return mShadow; }
+
+  void SetShadow(ShadowLayerForwarder* aForwarder, const LayerHandle& aShadow) {
+    MOZ_ASSERT(!mShadow, "can't have two shadows (yet)");
+    mForwarder = aForwarder;
+    mShadow = aShadow;
+  }
 
   virtual CompositableClient* GetCompositableClient() { return nullptr; }
-protected:
-  ShadowableLayer() : mShadow(nullptr) {}
 
-  PLayerChild* mShadow;
+protected:
+  ShadowableLayer() {}
+
+private:
+  RefPtr<ShadowLayerForwarder> mForwarder;
+  LayerHandle mShadow;
 };
 
 } // namespace layers

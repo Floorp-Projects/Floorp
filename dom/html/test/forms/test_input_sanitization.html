@@ -155,12 +155,15 @@ function sanitizeDateTimeLocal(aValue)
     return "";
   }
 
-  var separator = aValue[10];
-  if (separator != "T" && separator != " ") {
-    return "";
+  var sepIndex = aValue.indexOf("T");
+  if (sepIndex == -1) {
+    sepIndex = aValue.indexOf(" ");
+    if (sepIndex == -1) {
+      return "";
+    }
   }
 
-  var [date, time] = aValue.split(separator);
+  var [date, time] = aValue.split(aValue[sepIndex]);
   if (!sanitizeDate(date)) {
     return "";
   }
@@ -171,27 +174,27 @@ function sanitizeDateTimeLocal(aValue)
 
   // Normalize datetime-local string.
   // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-normalised-local-date-and-time-string
-  if (separator == " ") {
+  if (aValue[sepIndex] == " ") {
     aValue = date + "T" + time;
   }
 
-  if (aValue.length == 16) {
+  if ((aValue.length - sepIndex) == 6) {
     return aValue;
   }
 
-  if (aValue.length > 19) {
-    var milliseconds = aValue.substring(20);
+  if ((aValue.length - sepIndex) > 9) {
+    var milliseconds = aValue.substring(sepIndex + 10);
     if (Number(milliseconds) != 0) {
       return aValue;
     }
-    aValue = aValue.slice(0, 19);
+    aValue = aValue.slice(0, sepIndex + 9);
   }
 
-  var seconds = aValue.substring(17);
+  var seconds = aValue.substring(sepIndex + 7);
   if (Number(seconds) != 0) {
     return aValue;
   }
-  aValue = aValue.slice(0, 16);
+  aValue = aValue.slice(0, sepIndex + 6);
 
   return aValue;
 }
@@ -474,7 +477,24 @@ function checkSanitizing(element, inputTypeDescription)
     "1970-01-01T00:00:00.00",
     "1970-01-01T00:00:00.000",
     "1970-01-01 00:00:00.20",
-    "1234567-01-01T12:00",
+    "1969-12-31 23:59",
+    "1969-12-31 23:59:00",
+    "1969-12-31 23:59:00.000",
+    "1969-12-31 23:59:00.30",
+    "123456-01-01T12:00",
+    "123456-01-01T12:00:00",
+    "123456-01-01T12:00:00.0",
+    "123456-01-01T12:00:00.00",
+    "123456-01-01T12:00:00.000",
+    "123456-01-01T12:00:30",
+    "123456-01-01T12:00:00.123",
+    "10000-12-31 20:00",
+    "10000-12-31 20:00:00",
+    "10000-12-31 20:00:00.0",
+    "10000-12-31 20:00:00.00",
+    "10000-12-31 20:00:00.000",
+    "10000-12-31 20:00:30",
+    "10000-12-31 20:00:00.123",
     "2016-13-01T12:00",
     "2016-12-32T12:00",
     "2016-11-08 15:40:30.0",

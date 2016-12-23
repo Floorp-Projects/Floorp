@@ -1501,7 +1501,7 @@ TabChild::RecvMenuKeyboardListenerInstalled(const bool& aInstalled)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvNotifyAttachGroupedSessionHistory(const uint32_t& aOffset)
+TabChild::RecvNotifyAttachGroupedSHistory(const uint32_t& aOffset)
 {
   // nsISHistory uses int32_t
   if (NS_WARN_IF(aOffset > INT32_MAX)) {
@@ -1511,15 +1511,15 @@ TabChild::RecvNotifyAttachGroupedSessionHistory(const uint32_t& aOffset)
   nsCOMPtr<nsISHistory> shistory = GetRelatedSHistory();
   NS_ENSURE_TRUE(shistory, IPC_FAIL_NO_REASON(this));
 
-  if (NS_FAILED(shistory->OnAttachGroupedSessionHistory(aOffset))) {
+  if (NS_FAILED(shistory->OnAttachGroupedSHistory(aOffset))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvNotifyPartialSessionHistoryActive(const uint32_t& aGlobalLength,
-                                                const uint32_t& aTargetLocalIndex)
+TabChild::RecvNotifyPartialSHistoryActive(const uint32_t& aGlobalLength,
+                                          const uint32_t& aTargetLocalIndex)
 {
   // nsISHistory uses int32_t
   if (NS_WARN_IF(aGlobalLength > INT32_MAX || aTargetLocalIndex > INT32_MAX)) {
@@ -1529,20 +1529,20 @@ TabChild::RecvNotifyPartialSessionHistoryActive(const uint32_t& aGlobalLength,
   nsCOMPtr<nsISHistory> shistory = GetRelatedSHistory();
   NS_ENSURE_TRUE(shistory, IPC_FAIL_NO_REASON(this));
 
-  if (NS_FAILED(shistory->OnPartialSessionHistoryActive(aGlobalLength,
-                                                        aTargetLocalIndex))) {
+  if (NS_FAILED(shistory->OnPartialSHistoryActive(aGlobalLength,
+                                                  aTargetLocalIndex))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvNotifyPartialSessionHistoryDeactive()
+TabChild::RecvNotifyPartialSHistoryDeactive()
 {
   nsCOMPtr<nsISHistory> shistory = GetRelatedSHistory();
   NS_ENSURE_TRUE(shistory, IPC_FAIL_NO_REASON(this));
 
-  if (NS_FAILED(shistory->OnPartialSessionHistoryDeactive())) {
+  if (NS_FAILED(shistory->OnPartialSHistoryDeactive())) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

@@ -67,9 +67,10 @@ public:
 
   void Broadcast(const T& aParam)
   {
-    uint32_t size = mObservers.Length();
+    nsTArray<Observer<T>*> observersCopy(mObservers);
+    uint32_t size = observersCopy.Length();
     for (uint32_t i = 0; i < size; ++i) {
-      mObservers[i]->Notify(aParam);
+      observersCopy[i]->Notify(aParam);
     }
   }
 

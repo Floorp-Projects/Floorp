@@ -1,5 +1,7 @@
 # Options to enable rust in automation builds.
 
+TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
+
 # Tell configure to use the tooltool rustc.
-RUSTC="$topsrcdir/rustc/bin/rustc"
-CARGO="$topsrcdir/rustc/bin/cargo"
+RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
+CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"

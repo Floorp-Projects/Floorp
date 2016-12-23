@@ -1,11 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test exporting a snapshot to a user specified location on disk.
 
 let { exportSnapshot } = require("devtools/client/memory/actions/io");
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-let { snapshotState: states, actions, treeMapState } = require("devtools/client/memory/constants");
+let { actions, treeMapState } = require("devtools/client/memory/constants");
 
 function run_test() {
   run_next_test();
@@ -30,7 +32,7 @@ add_task(function* () {
   dispatch(exportSnapshot(getState().snapshots[0], destPath));
   yield exportEvents;
 
-  stat = yield OS.File.stat(destPath);
+  let stat = yield OS.File.stat(destPath);
   do_print(stat.size);
   ok(stat.size > 0, "destination file is more than 0 bytes");
 

@@ -7,10 +7,9 @@
         <meta name="assert" content="After invoking the releasePointerCapture method on an element, subsequent events for the specified pointer must follow normal hit testing mechanisms for determining the event target"/>
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <!--script src="/resources/testharnessreport.js"></script-->
+        <script src="/resources/testharnessreport.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
-        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script type="text/javascript">
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("lostpointercapture: subsequent events to target.");  // set up test harness
@@ -113,14 +112,12 @@
     <body onload="run()">
         <div id="listener"></div>
         <h1>Pointer Event: releasePointerCapture() - subsequent events follow normal hitting testing mechanisms</h1>
-        <!--
         <h4>
             Test Description:
             After invoking the releasePointerCapture method on an element, subsequent events for the specified
             pointer must follow normal hit testing mechanisms for determining the event target
         </h4>
         <br />
-        -->
         <div id="target0">
             Use mouse, touch or pen to contact here and move around.
         </div>

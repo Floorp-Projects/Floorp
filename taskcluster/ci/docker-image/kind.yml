@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 implementation: 'taskgraph.task.docker_image:DockerImageTask'
-images_path: '../../../testing/docker'
+images_path: '../../../taskcluster/docker'
 
 # make a task for each docker-image we might want.  For the moment, since we
 # write artifacts for each, these are whitelisted, but ideally that will change

@@ -30,7 +30,7 @@ interface nsIGroupedSHistory : nsISupports
    * Remove all partial histories after currently active one (if any) and then
    * append the given partial session history to the end of the list.
    */
-  void appendPartialSessionHistory(in nsIPartialSHistory aPartialHistory);
+  void appendPartialSHistory(in nsIPartialSHistory aPartialHistory);
 
   /**
    * Notify the grouped session history that the active partial session history

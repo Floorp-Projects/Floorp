@@ -6,7 +6,6 @@
 "use strict";
 
 const {
-  snapshotState,
   diffingState,
   treeMapState
 } = require("devtools/client/memory/constants");
@@ -14,10 +13,8 @@ const {
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
-  const heapWorker = panel.panelWin.gHeapAnalysesClient;
-  const front = panel.panelWin.gFront;
   const store = panel.panelWin.gStore;
-  const { getState, dispatch } = store;
+  const { getState } = store;
   const doc = panel.panelWin.document;
 
   ok(!getState().diffing, "Not diffing by default.");

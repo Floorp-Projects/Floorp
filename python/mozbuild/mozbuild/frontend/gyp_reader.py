@@ -8,6 +8,7 @@ import gyp
 import gyp.msvs_emulation
 import sys
 import os
+import time
 import types
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
@@ -52,8 +53,8 @@ generator_default_variables = {
 }
 for dirname in [b'INTERMEDIATE_DIR', b'SHARED_INTERMEDIATE_DIR', b'PRODUCT_DIR',
                 b'LIB_DIR', b'SHARED_LIB_DIR']:
-  # Some gyp steps fail if these are empty(!).
-  generator_default_variables[dirname] = b'$' + dirname
+    # Some gyp steps fail if these are empty(!).
+    generator_default_variables[dirname] = b'$' + dirname
 
 for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
                'RULE_INPUT_DIRNAME', 'RULE_INPUT_EXT',
@@ -61,7 +62,7 @@ for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
                'STATIC_LIB_PREFIX', 'STATIC_LIB_SUFFIX',
                'SHARED_LIB_PREFIX', 'SHARED_LIB_SUFFIX',
                'LINKER_SUPPORTS_ICF']:
-  generator_default_variables[unused] = b''
+    generator_default_variables[unused] = b''
 
 
 class GypContext(TemplateContext):
@@ -78,82 +79,42 @@ class GypContext(TemplateContext):
 
 
 def handle_actions(actions, context, action_overrides):
-  idir = '$INTERMEDIATE_DIR/'
-  for action in actions:
-    name = action['action_name']
-    if name not in action_overrides:
-      raise RuntimeError('GYP action %s not listed in action_overrides' % name)
-    outputs = action['outputs']
-    if len(outputs) > 1:
-      raise NotImplementedError('GYP actions with more than one output not supported: %s' % name)
-    output = outputs[0]
-    if not output.startswith(idir):
-      raise NotImplementedError('GYP actions outputting to somewhere other than <(INTERMEDIATE_DIR) not supported: %s' % output)
-    output = output[len(idir):]
-    context['GENERATED_FILES'] += [output]
-    g = context['GENERATED_FILES'][output]
-    g.script = action_overrides[name]
-    g.inputs = action['inputs']
+    idir = '$INTERMEDIATE_DIR/'
+    for action in actions:
+        name = action['action_name']
+        if name not in action_overrides:
+            raise RuntimeError('GYP action %s not listed in action_overrides' % name)
+        outputs = action['outputs']
+        if len(outputs) > 1:
+            raise NotImplementedError('GYP actions with more than one output not supported: %s' % name)
+        output = outputs[0]
+        if not output.startswith(idir):
+            raise NotImplementedError('GYP actions outputting to somewhere other than <(INTERMEDIATE_DIR) not supported: %s' % output)
+        output = output[len(idir):]
+        context['GENERATED_FILES'] += [output]
+        g = context['GENERATED_FILES'][output]
+        g.script = action_overrides[name]
+        g.inputs = action['inputs']
+
 
 def handle_copies(copies, context):
-  dist = '$PRODUCT_DIR/dist/'
-  for copy in copies:
-    dest = copy['destination']
-    if not dest.startswith(dist):
-      raise NotImplementedError('GYP copies to somewhere other than <(PRODUCT_DIR)/dist not supported: %s' % dest)
-    dest_paths = dest[len(dist):].split('/')
-    exports = context['EXPORTS']
-    while dest_paths:
-      exports = getattr(exports, dest_paths.pop(0))
-    exports += sorted(copy['files'], key=lambda x: x.lower())
+    dist = '$PRODUCT_DIR/dist/'
+    for copy in copies:
+        dest = copy['destination']
+        if not dest.startswith(dist):
+            raise NotImplementedError('GYP copies to somewhere other than <(PRODUCT_DIR)/dist not supported: %s' % dest)
+        dest_paths = dest[len(dist):].split('/')
+        exports = context['EXPORTS']
+        while dest_paths:
+            exports = getattr(exports, dest_paths.pop(0))
+        exports += sorted(copy['files'], key=lambda x: x.lower())
 
-def read_from_gyp(config, path, output, vars, no_chromium, no_unified, action_overrides, non_unified_sources = set()):
-    """Read a gyp configuration and emits GypContexts for the backend to
-    process.
 
-    config is a ConfigEnvironment, path is the path to a root gyp configuration
-    file, output is the base path under which the objdir for the various gyp
-    dependencies will be, and vars a dict of variables to pass to the gyp
-    processor.
-    """
-
-    is_win = config.substs['OS_TARGET'] == 'WINNT'
-    is_msvc = bool(config.substs['_MSC_VER'])
-    # gyp expects plain str instead of unicode. The frontend code gives us
-    # unicode strings, so convert them.
-    path = encode(path)
-    str_vars = dict((name, encode(value)) for name, value in vars.items())
-    if is_msvc:
-        # This isn't actually used anywhere in this generator, but it's needed
-        # to override the registry detection of VC++ in gyp.
-        os.environ['GYP_MSVS_OVERRIDE_PATH'] = 'fake_path'
-        os.environ['GYP_MSVS_VERSION'] = config.substs['MSVS_VERSION']
-
-    params = {
-        b'parallel': False,
-        b'generator_flags': {},
-        b'build_files': [path],
-        b'root_targets': None,
-    }
-
-    if no_chromium:
-      includes = []
-      depth = mozpath.dirname(path)
-    else:
-      depth = chrome_src
-      # Files that gyp_chromium always includes
-      includes = [encode(mozpath.join(script_dir, 'common.gypi'))]
-      finder = FileFinder(chrome_src, find_executables=False)
-      includes.extend(encode(mozpath.join(chrome_src, name))
-          for name, _ in finder.find('*/supplement.gypi'))
-
-    # Read the given gyp file and its dependencies.
-    generator, flat_list, targets, data = \
-        gyp.Load([path], format=b'mozbuild',
-            default_variables=str_vars,
-            includes=includes,
-            depth=encode(depth),
-            params=params)
+def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
+                       non_unified_sources, action_overrides):
+    flat_list, targets, data = gyp_result
+    no_chromium = gyp_dir_attrs.no_chromium
+    no_unified = gyp_dir_attrs.no_unified
 
     # Process all targets from the given gyp files and its dependencies.
     # The path given to AllTargets needs to use os.sep, while the frontend code
@@ -280,7 +241,7 @@ def read_from_gyp(config, path, output, vars, no_chromium, no_unified, action_ov
             context['UNIFIED_SOURCES'] = alphabetical_sorted(unified_sources)
 
             defines = target_conf.get('defines', [])
-            if is_msvc and no_chromium:
+            if bool(config.substs['_MSC_VER']) and no_chromium:
                 msvs_settings = gyp.msvs_emulation.MsvsSettings(spec, {})
                 defines.extend(msvs_settings.GetComputedDefines(c))
             for define in defines:
@@ -360,9 +321,91 @@ def read_from_gyp(config, path, output, vars, no_chromium, no_unified, action_ov
               '/ipc/glue',
           ]
           # These get set via VC project file settings for normal GYP builds.
-          if is_win:
+          if config.substs['OS_TARGET'] == 'WINNT':
               context['DEFINES']['UNICODE'] = True
               context['DEFINES']['_UNICODE'] = True
         context['DISABLE_STL_WRAPPING'] = True
 
+        context.update(gyp_dir_attrs.sandbox_vars)
         yield context
+
+
+# A version of gyp.Load that doesn't return the generator (because module objects
+# aren't Pickle-able, and we don't use it anyway).
+def load_gyp(*args):
+    _, flat_list, targets, data = gyp.Load(*args)
+    return flat_list, targets, data
+
+
+class GypProcessor(object):
+    """Reads a gyp configuration in the background using the given executor and
+    emits GypContexts for the backend to process.
+
+    config is a ConfigEnvironment, path is the path to a root gyp configuration
+    file, and output is the base path under which the objdir for the various
+    gyp dependencies will be. gyp_dir_attrs are attributes set for the dir
+    from moz.build.
+    """
+    def __init__(self, config, gyp_dir_attrs, path, output, executor,
+                 action_overrides, non_unified_sources):
+        self._path = path
+        self._config = config
+        self._output = output
+        self._non_unified_sources = non_unified_sources
+        self._gyp_dir_attrs = gyp_dir_attrs
+        self._action_overrides = action_overrides
+        self.execution_time = 0.0
+        self._results = []
+
+        # gyp expects plain str instead of unicode. The frontend code gives us
+        # unicode strings, so convert them.
+        path = encode(path)
+        if bool(config.substs['_MSC_VER']):
+            # This isn't actually used anywhere in this generator, but it's needed
+            # to override the registry detection of VC++ in gyp.
+            os.environ['GYP_MSVS_OVERRIDE_PATH'] = 'fake_path'
+            os.environ['GYP_MSVS_VERSION'] = config.substs['MSVS_VERSION']
+
+        params = {
+            b'parallel': False,
+            b'generator_flags': {},
+            b'build_files': [path],
+            b'root_targets': None,
+        }
+
+        if gyp_dir_attrs.no_chromium:
+            includes = []
+            depth = mozpath.dirname(path)
+        else:
+            depth = chrome_src
+            # Files that gyp_chromium always includes
+            includes = [encode(mozpath.join(script_dir, 'common.gypi'))]
+            finder = FileFinder(chrome_src, find_executables=False)
+            includes.extend(encode(mozpath.join(chrome_src, name))
+                            for name, _ in finder.find('*/supplement.gypi'))
+
+        str_vars = dict((name, encode(value)) for name, value in
+                        gyp_dir_attrs.variables.items())
+        self._gyp_loader_future = executor.submit(load_gyp, [path], b'mozbuild',
+                                                  str_vars, includes,
+                                                  encode(depth), params)
+
+    @property
+    def results(self):
+        if self._results:
+            for res in self._results:
+                yield res
+        else:
+            # We report our execution time as the time spent blocked in a call
+            # to `result`, which is the only case a gyp processor will
+            # contribute significantly to total wall time.
+            t0 = time.time()
+            flat_list, targets, data = self._gyp_loader_future.result()
+            self.execution_time += time.time() - t0
+            results = []
+            for res in process_gyp_result((flat_list, targets, data), self._gyp_dir_attrs,
+                                          self._path, self._config, self._output,
+                                          self._non_unified_sources, self._action_overrides):
+                results.append(res)
+                yield res
+            self._results = results

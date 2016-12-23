@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * The `DominatorTreeLazyChildren` is a placeholder that represents a future
  * subtree in an existing `DominatorTreeNode` tree that is currently being

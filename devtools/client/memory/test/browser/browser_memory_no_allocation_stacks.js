@@ -35,5 +35,6 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
      "Should still not be recording allocagtions");
 
   ok(doc.querySelector(".no-allocation-stacks"),
-     "Because we did not record allocations, the no-allocation-stack warning should be visible");
+    "Because we did not record allocations, " +
+    "the no-allocation-stack warning should be visible");
 });
