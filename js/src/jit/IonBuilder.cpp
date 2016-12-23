@@ -7156,13 +7156,10 @@ AbortReasonOr<Ok>
 IonBuilder::jsop_getname(PropertyName* name)
 {
     MDefinition* object;
-    if (IsGlobalOp(JSOp(*pc)) && !script()->hasNonSyntacticScope()) {
-        MInstruction* global = constant(ObjectValue(script()->global().lexicalEnvironment()));
-        object = global;
-    } else {
-        current->push(current->environmentChain());
-        object = current->pop();
-    }
+    if (IsGlobalOp(JSOp(*pc)) && !script()->hasNonSyntacticScope())
+        object = constant(ObjectValue(script()->global().lexicalEnvironment()));
+    else
+        object = current->environmentChain();
 
     MGetNameCache* ins;
     if (JSOp(*GetNextPc(pc)) == JSOP_TYPEOF)
