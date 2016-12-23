@@ -250,13 +250,7 @@ RemovePrefForDriverVersion()
 static OperatingSystem
 BlacklistOSToOperatingSystem(const nsAString& os)
 {
-  if (os.EqualsLiteral("WINNT 5.1"))
-    return OperatingSystem::WindowsXP;
-  else if (os.EqualsLiteral("WINNT 5.2"))
-    return OperatingSystem::WindowsServer2003;
-  else if (os.EqualsLiteral("WINNT 6.0"))
-    return OperatingSystem::WindowsVista;
-  else if (os.EqualsLiteral("WINNT 6.1"))
+  if (os.EqualsLiteral("WINNT 6.1"))
     return OperatingSystem::Windows7;
   else if (os.EqualsLiteral("WINNT 6.2"))
     return OperatingSystem::Windows8;
