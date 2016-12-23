@@ -242,21 +242,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIParser, NS_IPARSER_IID)
   Some useful constants...
  * ===========================================================*/
 
-#include "nsError.h"
-
-const nsresult  kEOF              = NS_ERROR_HTMLPARSER_EOF;
-const nsresult  kUnknownError     = NS_ERROR_HTMLPARSER_UNKNOWN;
-const nsresult  kCantPropagate    = NS_ERROR_HTMLPARSER_CANTPROPAGATE;
-const nsresult  kContextMismatch  = NS_ERROR_HTMLPARSER_CONTEXTMISMATCH;
-const nsresult  kBadFilename      = NS_ERROR_HTMLPARSER_BADFILENAME;
-const nsresult  kBadURL           = NS_ERROR_HTMLPARSER_BADURL;
-const nsresult  kInvalidParserContext = NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
-const nsresult  kBlocked          = NS_ERROR_HTMLPARSER_BLOCK;
-const nsresult  kBadStringLiteral = NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL;
-const nsresult  kHierarchyTooDeep = NS_ERROR_HTMLPARSER_HIERARCHYTOODEEP;
-const nsresult  kFakeEndTag       = NS_ERROR_HTMLPARSER_FAKE_ENDTAG;
-const nsresult  kNotAComment      = NS_ERROR_HTMLPARSER_INVALID_COMMENT;
-
 #define NS_IPARSER_FLAG_XML                  0x00000200
 #define NS_IPARSER_FLAG_HTML                 0x00000400
 
