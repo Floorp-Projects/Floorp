@@ -1339,7 +1339,7 @@ static bool
 ArgumentToLaneIndex(JSContext* cx, JS::HandleValue v, unsigned limit, unsigned* lane)
 {
     uint64_t arg;
-    if (!ToIntegerIndex(cx, v, &arg))
+    if (!NonStandardToIndex(cx, v, &arg))
         return false;
     if (arg >= limit)
         return ErrorBadIndex(cx);
@@ -1366,7 +1366,7 @@ TypedArrayFromArgs(JSContext* cx, const CallArgs& args, uint32_t accessBytes,
     typedArray.set(&argobj);
 
     uint64_t index;
-    if (!ToIntegerIndex(cx, args[1], &index))
+    if (!NonStandardToIndex(cx, args[1], &index))
         return false;
 
     // Do the range check in 64 bits even when size_t is 32 bits.
