@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+      "use strict";
+
+      navigator.serviceWorker.register("serviceWorker.js").then(() => {
+        window.postMessage("serviceWorkerRegistered", "*");
+      });
+    </script>
+  </head>
+  <body>
+    This is a test page.
+  </body>
+<html>
