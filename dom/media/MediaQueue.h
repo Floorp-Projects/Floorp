@@ -43,6 +43,7 @@ public:
 
   inline void Push(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    MOZ_ASSERT(!mEndOfStream);
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
     MOZ_ASSERT(aItem->GetEndTime() >= aItem->mTime);
@@ -88,8 +89,10 @@ public:
   // Informs the media queue that it won't be receiving any more items.
   void Finish() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mEndOfStream = true;
-    mFinishEvent.Notify();
+    if (!mEndOfStream) {
+      mEndOfStream = true;
+      mFinishEvent.Notify();
+    }
   }
 
   // Returns the approximate number of microseconds of items in the queue.
