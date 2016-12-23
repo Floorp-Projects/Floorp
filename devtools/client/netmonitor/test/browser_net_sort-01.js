@@ -203,7 +203,7 @@ add_task(function* () {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
         transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
         time: true
       });
     verifyRequestItemTarget(RequestsMenu.getItemAtIndex(d),
