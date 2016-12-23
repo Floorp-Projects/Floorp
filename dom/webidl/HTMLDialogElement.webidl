@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[Pref="dom.dialog_element.enabled"]
 interface HTMLDialogElement : HTMLElement {
   [SetterThrows] attribute boolean open;
   attribute DOMString returnValue;
