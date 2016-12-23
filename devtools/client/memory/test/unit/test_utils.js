@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /**
@@ -19,11 +20,13 @@ function run_test() {
 add_task(function* () {
   let s1 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
   let s2 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
-  equal(s1.state, states.SAVING, "utils.createSnapshot() creates snapshot in saving state");
+  equal(s1.state, states.SAVING,
+        "utils.createSnapshot() creates snapshot in saving state");
   ok(s1.id !== s2.id, "utils.createSnapshot() creates snapshot with unique ids");
 
   let custom = { by: "internalType", then: { by: "count", bytes: true }};
-  Preferences.set("devtools.memory.custom-census-displays", JSON.stringify({ "My Display": custom }));
+  Preferences.set("devtools.memory.custom-census-displays",
+                  JSON.stringify({ "My Display": custom }));
 
   equal(utils.getCustomCensusDisplays()["My Display"].by, custom.by,
         "utils.getCustomCensusDisplays() returns custom displays");

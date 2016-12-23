@@ -5,7 +5,7 @@ Docker Images
 =============
 
 TaskCluster Docker images are defined in the source directory under
-``testing/docker``. Each directory therein contains the name of an
+``taskcluster/docker``. Each directory therein contains the name of an
 image used as part of the task graph.
 
 Adding Extra Files to Images

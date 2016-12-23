@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 // This module exports methods to record telemetry data for memory tool usage.
 //
 // NB: Ensure that *every* exported function is wrapped in `makeInfallible` so
@@ -10,7 +12,7 @@
 
 const { telemetry } = require("Services");
 const { makeInfallible, immutableUpdate } = require("devtools/shared/DevToolsUtils");
-const { labelDisplays, treeMapDisplays, censusDisplays } = require("./constants");
+const { labelDisplays, censusDisplays } = require("./constants");
 
 exports.countTakeSnapshot = makeInfallible(function () {
   const histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_TAKE_SNAPSHOT_COUNT");
@@ -80,7 +82,8 @@ exports.countDominatorTree = makeInfallible(function ({ display }) {
   let histogram = telemetry.getHistogramById("DEVTOOLS_MEMORY_DOMINATOR_TREE_COUNT");
   histogram.add(1);
 
-  histogram = telemetry.getKeyedHistogramById("DEVTOOLS_MEMORY_BREAKDOWN_DOMINATOR_TREE_COUNT");
+  histogram =
+    telemetry.getKeyedHistogramById("DEVTOOLS_MEMORY_BREAKDOWN_DOMINATOR_TREE_COUNT");
   if (display === labelDisplays.coarseType) {
     histogram.add(COARSE_TYPE);
   } else if (display === labelDisplays.allocationStack) {

@@ -356,6 +356,12 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
 }
 
 void
+MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest, Register scratch)
+{
+    MOZ_CRASH("NYI: storeRegsInMask");
+}
+
+void
 MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
 {
     // The offset of the data from the stack pointer.

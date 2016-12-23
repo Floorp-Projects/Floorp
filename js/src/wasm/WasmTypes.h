@@ -23,7 +23,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
-#include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 
@@ -31,6 +30,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "jit/IonTypes.h"
+#include "js/RefCounted.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
@@ -77,7 +77,6 @@ using mozilla::Nothing;
 using mozilla::PodZero;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
-using mozilla::RefCounted;
 using mozilla::Some;
 using mozilla::Unused;
 

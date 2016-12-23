@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test setting the filter string.
 
 let { setFilterString } = require("devtools/client/memory/actions/filter");

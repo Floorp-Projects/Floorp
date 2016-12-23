@@ -145,7 +145,7 @@ PartialSHistory::GetOwnerFrameLoader(nsIFrameLoader** aResult)
 }
 
 NS_IMETHODIMP
-PartialSHistory::OnAttachGroupedSessionHistory(nsIGroupedSHistory* aGroup, uint32_t aOffset)
+PartialSHistory::OnAttachGroupedSHistory(nsIGroupedSHistory* aGroup, uint32_t aOffset)
 {
   MOZ_ASSERT(!mGroupedSHistory, "Only may join a single GroupedSHistory");
 
@@ -160,7 +160,7 @@ PartialSHistory::OnAttachGroupedSessionHistory(nsIGroupedSHistory* aGroup, uint3
     if (aOffset > INT32_MAX) {
       return NS_ERROR_FAILURE;
     }
-    return shistory->OnAttachGroupedSessionHistory(aOffset);
+    return shistory->OnAttachGroupedSHistory(aOffset);
   }
 
   // Otherwise notify through TabParent.
@@ -170,7 +170,7 @@ PartialSHistory::OnAttachGroupedSessionHistory(nsIGroupedSHistory* aGroup, uint3
     NS_WARNING("Unable to get shitory nor tabParent!");
     return NS_ERROR_UNEXPECTED;
   }
-  Unused << tabParent->SendNotifyAttachGroupedSessionHistory(aOffset);
+  Unused << tabParent->SendNotifyAttachGroupedSHistory(aOffset);
 
   return NS_OK;
 }
@@ -216,8 +216,7 @@ PartialSHistory::OnActive(uint32_t aGlobalLength, uint32_t aTargetLocalIndex)
     if (aGlobalLength > INT32_MAX || aTargetLocalIndex > INT32_MAX) {
       return NS_ERROR_FAILURE;
     }
-    return shistory->OnPartialSessionHistoryActive(aGlobalLength,
-                                                   aTargetLocalIndex);
+    return shistory->OnPartialSHistoryActive(aGlobalLength, aTargetLocalIndex);
   }
 
   // Cross-process case.
@@ -227,8 +226,8 @@ PartialSHistory::OnActive(uint32_t aGlobalLength, uint32_t aTargetLocalIndex)
     NS_WARNING("Unable to get shitory nor tabParent!");
     return NS_ERROR_UNEXPECTED;
   }
-  Unused << tabParent->SendNotifyPartialSessionHistoryActive(aGlobalLength,
-                                                             aTargetLocalIndex);
+  Unused << tabParent->SendNotifyPartialSHistoryActive(aGlobalLength,
+                                                       aTargetLocalIndex);
 
   return NS_OK;
 }
@@ -243,7 +242,7 @@ PartialSHistory::OnDeactive()
   // In-process case.
   nsCOMPtr<nsISHistory> shistory(GetSessionHistory());
   if (shistory) {
-    if (NS_FAILED(shistory->OnPartialSessionHistoryDeactive())) {
+    if (NS_FAILED(shistory->OnPartialSHistoryDeactive())) {
       return NS_ERROR_FAILURE;
     }
     return NS_OK;
@@ -256,7 +255,7 @@ PartialSHistory::OnDeactive()
     NS_WARNING("Unable to get shitory nor tabParent!");
     return NS_ERROR_UNEXPECTED;
   }
-  Unused << tabParent->SendNotifyPartialSessionHistoryDeactive();
+  Unused << tabParent->SendNotifyPartialSHistoryDeactive();
   return NS_OK;
 }
 

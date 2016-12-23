@@ -29,6 +29,8 @@
 #include FT_FREETYPE_H
 #include FT_MODULE_H
 
+#include "GeneratedJNINatives.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -301,7 +303,7 @@ gfxAndroidPlatform::FontHintingEnabled()
     // On Android, we currently only use gecko to render web
     // content that can always be be non-reflow-zoomed.  So turn off
     // hinting.
-    // 
+    //
     // XXX when gecko-android-java is used as an "app runtime", we may
     // want to re-enable hinting for non-browser processes there.
     return false;
@@ -330,8 +332,100 @@ gfxAndroidPlatform::RequiresLinearZoom()
     return gfxPlatform::RequiresLinearZoom();
 }
 
+class AndroidVsyncSource final : public VsyncSource {
+public:
+    class JavaVsyncSupport final : public java::VsyncSource::Natives<JavaVsyncSupport>
+    {
+    public:
+        using Base = java::VsyncSource::Natives<JavaVsyncSupport>;
+        using Base::DisposeNative;
+
+        static void NotifyVsync() {
+            GetDisplayInstance().NotifyVsync(TimeStamp::Now());
+        }
+    };
+
+    class Display final : public VsyncSource::Display {
+    public:
+        Display()
+            : mJavaVsync(java::VsyncSource::GetInstance())
+            , mObservingVsync(false)
+        {
+            JavaVsyncSupport::Init(); // To register native methods.
+        }
+
+        ~Display() { DisableVsync(); }
+
+        bool IsVsyncEnabled() override
+        {
+            MOZ_ASSERT(NS_IsMainThread());
+            MOZ_ASSERT(mJavaVsync);
+
+            return mObservingVsync;
+        }
+
+        void EnableVsync() override
+        {
+            MOZ_ASSERT(NS_IsMainThread());
+            MOZ_ASSERT(mJavaVsync);
+
+            if (mObservingVsync) {
+                return;
+            }
+            bool ok = mJavaVsync->ObserveVsync(true);
+            if (ok && !mVsyncDuration) {
+                float fps = mJavaVsync->GetRefreshRate();
+                mVsyncDuration = TimeDuration::FromMilliseconds(1000.0 / fps);
+            }
+            mObservingVsync = ok;
+            MOZ_ASSERT(mObservingVsync);
+        }
+
+        void DisableVsync() override
+        {
+            MOZ_ASSERT(NS_IsMainThread());
+            MOZ_ASSERT(mJavaVsync);
+
+            if (!mObservingVsync) {
+              return;
+            }
+            mObservingVsync = mJavaVsync->ObserveVsync(false);
+            MOZ_ASSERT(!mObservingVsync);
+        }
+
+        TimeDuration GetVsyncRate() override { return mVsyncDuration; }
+
+        void Shutdown() override {
+            DisableVsync();
+            mJavaVsync = nullptr;
+        }
+
+    private:
+        java::VsyncSource::GlobalRef mJavaVsync;
+        bool mObservingVsync;
+        TimeDuration mVsyncDuration;
+    };
+
+    Display& GetGlobalDisplay() final { return GetDisplayInstance(); }
+
+private:
+   virtual ~AndroidVsyncSource() {}
+
+   static Display& GetDisplayInstance()
+   {
+       static Display globalDisplay;
+       return globalDisplay;
+   }
+};
+
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxAndroidPlatform::CreateHardwareVsyncSource()
 {
+    if (jni::IsAvailable() && java::VsyncSource::IsVsyncSupported()) {
+        RefPtr<AndroidVsyncSource> vsyncSource = new AndroidVsyncSource();
+        return vsyncSource.forget();
+    }
+
+    NS_WARNING("Vsync not supported. Falling back to software vsync");
     return gfxPlatform::CreateHardwareVsyncSource();
 }

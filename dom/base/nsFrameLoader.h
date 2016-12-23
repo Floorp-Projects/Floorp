@@ -70,7 +70,7 @@ class nsFrameLoader final : public nsIFrameLoader,
 {
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
-  friend class AppendPartialSessionHistoryAndSwapHelper;
+  friend class AppendPartialSHistoryAndSwapHelper;
   friend class RequestGroupedHistoryNavigationHelper;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::TabParent TabParent;
@@ -350,7 +350,7 @@ private:
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
 
-  nsCOMPtr<nsIPartialSHistory> mPartialSessionHistory;
+  nsCOMPtr<nsIPartialSHistory> mPartialSHistory;
 
   // A stack-maintained reference to an array of promises which are blocking
   // grouped history navigation

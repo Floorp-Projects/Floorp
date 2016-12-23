@@ -20,11 +20,15 @@ import tempfile
 import time
 import tooltool
 
+requests.packages.urllib3.disable_warnings()
+
+
 def local_file(filename):
     '''
     Return a path to a file next to this script.
     '''
     return os.path.join(os.path.dirname(__file__), filename)
+
 
 def read_tc_auth(tc_auth_file):
     '''
@@ -32,12 +36,14 @@ def read_tc_auth(tc_auth_file):
     '''
     return json.load(open(tc_auth_file, 'rb'))
 
+
 def fill_template_dict(d, keys):
     for key, val in d.items():
         if isinstance(val, basestring) and '{' in val:
             d[key] = val.format(**keys)
         elif isinstance(val, dict):
             fill_template_dict(val, keys)
+
 
 def fill_template(template_file, keys):
     '''
@@ -48,6 +54,7 @@ def fill_template(template_file, keys):
     fill_template_dict(template, keys)
     return template
 
+
 def spawn_task(queue, args):
     '''
     Spawn a Taskcluster task in queue using args.
@@ -57,12 +64,15 @@ def spawn_task(queue, args):
         keys = vars(args)
         now = datetime.datetime.utcnow()
         keys['task_created'] = now.isoformat() + 'Z'
-        keys['task_deadline'] = (now + datetime.timedelta(hours=2)).isoformat() + 'Z'
-        keys['artifacts_expires'] = (now + datetime.timedelta(days=1)).isoformat() + 'Z'
+        keys['task_deadline'] = (now + datetime.timedelta(
+            hours=2)).isoformat() + 'Z'
+        keys['artifacts_expires'] = (now + datetime.timedelta(
+            days=1)).isoformat() + 'Z'
         payload = fill_template(template, keys)
     queue.createTask(task_id, payload)
     print('--- %s task %s submitted ---' % (now, task_id))
     return task_id
+
 
 def wait_for_task(queue, task_id, initial_wait=5):
     '''
@@ -81,8 +91,8 @@ def wait_for_task(queue, task_id, initial_wait=5):
         if state != previous_state:
             now = datetime.datetime.utcnow()
             if have_ticks:
-              sys.stdout.write('\n')
-              have_ticks = False
+                sys.stdout.write('\n')
+                have_ticks = False
             print('--- %s task %s %s ---' % (now, task_id, state))
             previous_state = state
         if state == 'completed':
@@ -93,6 +103,7 @@ def wait_for_task(queue, task_id, initial_wait=5):
         sys.stdout.flush()
         have_ticks = True
         time.sleep(10)
+
 
 def fetch_artifact(queue, task_id, run_id, name, dest_dir):
     '''
@@ -114,10 +125,12 @@ def fetch_artifact(queue, task_id, run_id, name, dest_dir):
         return None
     return fn
 
+
 def make_artifact_dir(task_id, run_id):
     prefix = 'tc-artifacts.%s.%d.' % (task_id, run_id)
     print('making artifact dir %s' % prefix)
     return tempfile.mkdtemp(prefix=prefix)
+
 
 def fetch_artifacts(queue, task_id, run_id):
     '''
@@ -137,9 +150,10 @@ def fetch_artifacts(queue, task_id, run_id):
             yield fetch_artifact(queue, task_id, run_id, a['name'], tempdir)
     finally:
         if os.path.isdir(tempdir):
-            #shutil.rmtree(tempdir)
+            # shutil.rmtree(tempdir)
             print('Artifacts downloaded to %s' % tempdir)
             pass
+
 
 def upload_to_tooltool(tooltool_auth, task_id, artifact):
     '''
@@ -168,6 +182,7 @@ def upload_to_tooltool(tooltool_auth, task_id, artifact):
     finally:
         os.chdir(oldcwd)
 
+
 def update_manifest(artifact, manifest, local_gecko_clone):
     platform = 'linux'
     manifest_dir = os.path.join(local_gecko_clone,
@@ -178,11 +193,19 @@ def update_manifest(artifact, manifest, local_gecko_clone):
     print('%s -> %s' % (manifest, tree_manifest))
     shutil.copyfile(manifest, tree_manifest)
 
+
 def main():
     parser = argparse.ArgumentParser(description='Build and upload binaries')
-    parser.add_argument('taskcluster_auth', help='Path to a file containing Taskcluster client ID and authentication token as a JSON file in the form {"clientId": "...", "accessToken": "..."}')
-    parser.add_argument('--tooltool-auth', help='Path to a file containing a tooltool authentication token valid for uploading files')
-    parser.add_argument('--local-gecko-clone', help='Path to a local Gecko clone whose tooltool manifests will be updated with the newly-built binaries')
+    parser.add_argument('taskcluster_auth',
+                        help='Path to a file containing Taskcluster client '
+                             'ID and authentication token as a JSON file in '
+                             'the form {"clientId": "...", "accessToken": "..."}')
+    parser.add_argument('--tooltool-auth',
+                        help='Path to a file containing a tooltool '
+                             'authentication token valid for uploading files')
+    parser.add_argument('--local-gecko-clone',
+                        help='Path to a local Gecko clone whose tooltool '
+                             'manifests will be updated with the newly-built binaries')
     parser.add_argument('--rust-branch', default='stable',
                         help='Revision of the rust repository to use')
     parser.add_argument('--task', help='Use an existing task')
@@ -197,9 +220,11 @@ def main():
     run_id = wait_for_task(queue, task_id, initial_wait)
     for artifact in fetch_artifacts(queue, task_id, run_id):
         if args.tooltool_auth:
-            manifest = upload_to_tooltool(args.tooltool_auth, task_id, artifact)
+            manifest = upload_to_tooltool(args.tooltool_auth, task_id,
+                                          artifact)
         if args.local_gecko_clone:
             update_manifest(artifact, manifest, args.local_gecko_clone)
+
 
 if __name__ == '__main__':
     main()

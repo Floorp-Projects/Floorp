@@ -5,21 +5,21 @@ RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
 RUN mkdir /build
-# %include testing/docker/recipes/tooltool.py
-ADD topsrcdir/testing/docker/recipes/tooltool.py /build/tooltool.py
+# %include taskcluster/docker/recipes/tooltool.py
+ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /build/tooltool.py
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
-# %include testing/docker/recipes/install-mercurial.sh
-ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
+# %include taskcluster/docker/recipes/install-mercurial.sh
+ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
 ADD system-setup.sh /tmp/system-setup.sh
 # %include tools/lint/flake8/flake8_requirements.txt
 ADD topsrcdir/tools/lint/flake8/flake8_requirements.txt /tmp/flake8_requirements.txt
 RUN bash /tmp/system-setup.sh
 
-# %include testing/docker/recipes/run-task
-ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
+# %include taskcluster/docker/recipes/run-task
+ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
 RUN chown -R worker:worker /home/worker/bin && chmod 755 /home/worker/bin/*
 
 # Set variable normally configured at login, by the shells parent process, these

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_BaselineCacheIR_h
-#define jit_BaselineCacheIR_h
+#ifndef jit_BaselineCacheIRCompiler_h
+#define jit_BaselineCacheIRCompiler_h
 
 #include "gc/Barrier.h"
 #include "jit/CacheIR.h"
@@ -26,4 +26,4 @@ ICStub* AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
 } // namespace jit
 } // namespace js
 
-#endif /* jit_BaselineCacheIR_h */
+#endif /* jit_BaselineCacheIRCompiler_h */
