@@ -438,11 +438,12 @@ public:
  * if you need to construct a Maybe value that holds a const, volatile, or
  * reference value, you need to use emplace() instead.
  */
-template<typename T>
-Maybe<typename RemoveCV<typename RemoveReference<T>::Type>::Type>
+template<typename T,
+         typename U = typename std::remove_cv<
+           typename std::remove_reference<T>::type>::type>
+Maybe<U>
 Some(T&& aValue)
 {
-  typedef typename RemoveCV<typename RemoveReference<T>::Type>::Type U;
   Maybe<U> value;
   value.emplace(Forward<T>(aValue));
   return value;
