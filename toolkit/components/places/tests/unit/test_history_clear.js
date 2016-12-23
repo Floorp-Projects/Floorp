@@ -106,7 +106,7 @@ add_task(function* test_history_clear()
 
   // Check that frecency for not cleared items (bookmarks) has been converted
   // to -1.
-  stmt = mDBConn.createStatement(
+  let stmt = mDBConn.createStatement(
     "SELECT h.id FROM moz_places h WHERE h.frecency > 0 ");
   do_check_false(stmt.executeStep());
   stmt.finalize();

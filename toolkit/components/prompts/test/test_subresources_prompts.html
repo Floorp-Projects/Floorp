@@ -30,6 +30,7 @@
 <pre id="test"></pre>
 
 <script class="testbody" type="text/javascript">
+/* import-globals-from prompt_common.js */
 var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
 var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
 var iframe_prompt = document.getElementById("iframe_prompt");
@@ -66,7 +67,7 @@ add_task(function* runTest()
     buttonClick: "ok",
   };
 
-  promptDone = handlePrompt(state, action);
+  let promptDone = handlePrompt(state, action);
 
   var button = document.querySelector("button");
   dispatchMouseEvent(button, "click");
@@ -116,6 +117,7 @@ add_task(function* runTestAuth()
   // Force parent to not look for tab-modal prompts, as they're not
   // used for auth prompts.
   isTabModal = false;
+  let state, action;
 
   state = {
     msg         : "http://mochi.test:8888 is requesting your username " +
@@ -141,7 +143,7 @@ add_task(function* runTestAuth()
     passField   : "mochipass1",
   };
 
-  promptDone = handlePrompt(state, action);
+  let promptDone = handlePrompt(state, action);
 
   var iframe3Loaded = onloadPromiseFor("iframe_prompt");
   iframe_prompt.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";

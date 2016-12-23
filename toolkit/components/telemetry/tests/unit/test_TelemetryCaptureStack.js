@@ -157,7 +157,7 @@ add_task({
 
   // Capture stack for a new key.
   let uniqueKey = TEST_STACK_KEYS[1] + "-UNIQUE-KEY-2";
-  updated = captureStacks(uniqueKey);
+  let updated = captureStacks(uniqueKey);
 
   // The length of captured stacks should increase to reflect the new capture.
   Assert.equal(original.stacks.length + 1, updated.stacks.length);
