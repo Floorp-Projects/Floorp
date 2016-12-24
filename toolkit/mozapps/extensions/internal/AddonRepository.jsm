@@ -26,8 +26,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
-                                  "resource://gre/modules/ServiceRequest.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
@@ -101,6 +99,10 @@ const INTEGER_KEY_MAP = {
   weekly_downloads: "weeklyDownloads",
   daily_users:      "dailyUsers"
 };
+
+// Wrap the XHR factory so that tests can override with a mock
+var XHRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1",
+                                       "nsIXMLHttpRequest");
 
 function convertHTMLToPlainText(html) {
   if (!html)
@@ -1431,7 +1433,7 @@ this.AddonRepository = {
 
     logger.debug("Requesting " + aURI);
 
-    this._request = new ServiceRequest();
+    this._request = new XHRequest();
     this._request.mozBackgroundRequest = true;
     this._request.open("GET", aURI, true);
     this._request.overrideMimeType("text/xml");
