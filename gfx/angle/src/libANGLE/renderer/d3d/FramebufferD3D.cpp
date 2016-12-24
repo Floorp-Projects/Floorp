@@ -240,15 +240,13 @@ gl::Error FramebufferD3D::readPixels(ContextImpl *context,
 {
     const gl::PixelPackState &packState = context->getGLState().getPackState();
 
-    GLenum sizedInternalFormat = gl::GetSizedInternalFormat(format, type);
-    const gl::InternalFormat &sizedFormatInfo = gl::GetInternalFormatInfo(sizedInternalFormat);
+    const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(gl::GetSizedInternalFormat(format, type));
 
     GLuint outputPitch = 0;
-    ANGLE_TRY_RESULT(
-        sizedFormatInfo.computeRowPitch(type, area.width, packState.alignment, packState.rowLength),
-        outputPitch);
+    ANGLE_TRY_RESULT(formatInfo.computeRowPitch(area.width, packState.alignment, packState.rowLength),
+                     outputPitch);
     GLuint outputSkipBytes = 0;
-    ANGLE_TRY_RESULT(sizedFormatInfo.computeSkipBytes(outputPitch, 0, packState, false),
+    ANGLE_TRY_RESULT(formatInfo.computeSkipBytes(outputPitch, 0, packState, false),
                      outputSkipBytes);
 
     return readPixelsImpl(area, format, type, outputPitch, packState,

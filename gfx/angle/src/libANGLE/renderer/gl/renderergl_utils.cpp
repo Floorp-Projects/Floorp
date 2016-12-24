@@ -1023,10 +1023,10 @@ gl::ErrorOrResult<bool> ShouldApplyLastRowPaddingWorkaround(const gl::Extents &s
 
     const gl::InternalFormat &glFormat =
         gl::GetInternalFormatInfo(gl::GetSizedInternalFormat(format, type));
-    ANGLE_TRY_RESULT(glFormat.computePackUnpackEndByte(type, size, state, is3D), checkedEndByte);
-    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, size.width, state.alignment, state.rowLength),
+    ANGLE_TRY_RESULT(glFormat.computePackUnpackEndByte(size, state, is3D), checkedEndByte);
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(size.width, state.alignment, state.rowLength),
                      rowPitch);
-    pixelBytes = glFormat.computePixelBytes(type);
+    pixelBytes = glFormat.pixelBytes;
 
     checkedEndByte += reinterpret_cast<intptr_t>(pixels);
 
