@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+<!doctype html>
 <meta charset=utf-8>
-<title>Tests for animation type of interpolation</title>
+<title>Tests for animation type of addition</title>
 <link rel="help" href="https://w3c.github.io/web-animations/#animation-types">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -36,21 +36,21 @@ for (var property in gCSSProperties) {
       animationTypeString = animationType.type;
     }
 
-    // First, test that the animation type object has 'testInterpolation'.
-    // We use test() function() here so that we can continue the remainder tests
+    // First, test that the animation type object has 'testAddition'.
+    // We use test() function here so that we can continue the remainder tests
     // even if this test fails.
     test(function(t) {
-      assert_own_property(typeObject, 'testInterpolation', animationTypeString +
-                          ' should have testInterpolation property');
-      assert_equals(typeof typeObject.testInterpolation, 'function',
-                    'testInterpolation method should be a function');
-    }, animationTypeString + ' has testInterpolation function');
+      assert_own_property(typeObject, 'testAddition', animationTypeString +
+                          ' should have testAddition property');
+      assert_equals(typeof typeObject.testAddition, 'function',
+                    'testAddition method should be a function');
+    }, animationTypeString + ' has testAddition function');
 
-    if (typeObject.testInterpolation &&
-        typeof typeObject.testInterpolation === 'function') {
-      typeObject.testInterpolation(property,
-                                   setupFunction,
-                                   animationType.options);
+    if (typeObject.testAddition &&
+        typeof typeObject.testAddition === 'function') {
+      typeObject.testAddition(property,
+                              setupFunction,
+                              animationType.options);
     }
   });
 }
