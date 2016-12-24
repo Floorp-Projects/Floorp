@@ -133,6 +133,7 @@ enum class CacheKind : uint8_t
 {
     GetProp,
     GetElem,
+    GetName,
 };
 
 #define CACHE_IR_OPS(_)                   \
@@ -158,6 +159,7 @@ enum class CacheKind : uint8_t
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
     _(LoadProto)                          \
+    _(LoadEnclosingEnvironment)           \
                                           \
     _(LoadDOMExpandoValue)                \
     _(GuardDOMExpandoObject)              \
@@ -181,6 +183,8 @@ enum class CacheKind : uint8_t
     _(LoadFrameCalleeResult)              \
     _(LoadFrameNumActualArgsResult)       \
     _(LoadFrameArgumentResult)            \
+    _(LoadEnvironmentFixedSlotResult)     \
+    _(LoadEnvironmentDynamicSlotResult)   \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -496,6 +500,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return res;
     }
 
+    ObjOperandId loadEnclosingEnvironment(ObjOperandId obj) {
+        ObjOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::LoadEnclosingEnvironment, obj);
+        writeOperandId(res);
+        return res;
+    }
+
     ValOperandId loadDOMExpandoValue(ObjOperandId obj) {
         ValOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadDOMExpandoValue, obj);
@@ -599,6 +610,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
         writeOperandId(idVal);
     }
+    void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
+        writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
+        addStubField(offset, StubField::Type::RawWord);
+    }
+    void loadEnvironmentDynamicSlotResult(ObjOperandId obj, size_t offset) {
+        writeOpWithOperandId(CacheOp::LoadEnvironmentDynamicSlotResult, obj);
+        addStubField(offset, StubField::Type::RawWord);
+    }
 
     void typeMonitorResult() {
         writeOp(CacheOp::TypeMonitorResult);
@@ -671,16 +690,30 @@ class MOZ_RAII CacheIRReader
     }
 };
 
-// GetPropIRGenerator generates CacheIR for a GetProp IC.
-class MOZ_RAII GetPropIRGenerator
+class MOZ_RAII IRGenerator
 {
+  protected:
     CacheIRWriter writer;
     JSContext* cx_;
     jsbytecode* pc_;
+    CacheKind cacheKind_;
+
+    IRGenerator(const IRGenerator&) = delete;
+    IRGenerator& operator=(const IRGenerator&) = delete;
+
+  public:
+    explicit IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind);
+
+    const CacheIRWriter& writerRef() const { return writer; }
+    CacheKind cacheKind() const { return cacheKind_; }
+};
+
+// GetPropIRGenerator generates CacheIR for a GetProp IC.
+class MOZ_RAII GetPropIRGenerator : public IRGenerator
+{
     HandleValue val_;
     HandleValue idVal_;
     ICStubEngine engine_;
-    CacheKind cacheKind_;
     bool* isTemporarilyUnoptimizable_;
 
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
@@ -725,13 +758,9 @@ class MOZ_RAII GetPropIRGenerator
     // matches |id|.
     void maybeEmitIdGuard(jsid id);
 
-    GetPropIRGenerator(const GetPropIRGenerator&) = delete;
-    GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
-
   public:
-    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine, CacheKind cacheKind,
-                       bool* isTemporarilyUnoptimizable,
-                       HandleValue val, HandleValue idVal);
+    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind, ICStubEngine engine,
+                       bool* isTemporarilyUnoptimizable, HandleValue val, HandleValue idVal);
 
     bool tryAttachStub();
     bool tryAttachIdempotentStub();
@@ -742,9 +771,22 @@ class MOZ_RAII GetPropIRGenerator
     bool shouldNotePreliminaryObjectStub() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
     }
+};
 
-    const CacheIRWriter& writerRef() const { return writer; }
-    CacheKind cacheKind() const { return cacheKind_; }
+// GetPropIRGenerator generates CacheIR for a GetName IC.
+class MOZ_RAII GetNameIRGenerator : public IRGenerator
+{
+    HandleScript script_;
+    HandleObject env_;
+    HandlePropertyName name_;
+
+    bool tryAttachEnvironmentName(ObjOperandId objId);
+
+  public:
+    GetNameIRGenerator(JSContext* cx, jsbytecode* pc, HandleScript script,
+                       HandleObject env, HandlePropertyName name);
+
+    bool tryAttachStub();
 };
 
 } // namespace jit

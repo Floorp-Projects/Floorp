@@ -18,17 +18,21 @@ using namespace js::jit;
 
 using mozilla::Maybe;
 
-GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine,
-                                       CacheKind cacheKind,
-                                       bool* isTemporarilyUnoptimizable,
-                                       HandleValue val, HandleValue idVal)
+IRGenerator::IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind)
   : writer(cx),
     cx_(cx),
     pc_(pc),
+    cacheKind_(cacheKind)
+{}
+
+GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
+                                       ICStubEngine engine,
+                                       bool* isTemporarilyUnoptimizable,
+                                       HandleValue val, HandleValue idVal)
+  : IRGenerator(cx, pc, cacheKind),
     val_(val),
     idVal_(idVal),
     engine_(engine),
-    cacheKind_(cacheKind),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
     preliminaryObjectAction_(PreliminaryObjectAction::None)
 {}
@@ -1152,4 +1156,88 @@ GetPropIRGenerator::maybeEmitIdGuard(jsid id)
         StringOperandId strId = writer.guardIsString(valId);
         writer.guardSpecificAtom(strId, JSID_TO_ATOM(id));
     }
+}
+
+GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, jsbytecode* pc, HandleScript script,
+                                       HandleObject env, HandlePropertyName name)
+  : IRGenerator(cx, pc, CacheKind::GetName),
+    script_(script),
+    env_(env),
+    name_(name)
+{}
+
+bool
+GetNameIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::GetName);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ObjOperandId envId(writer.setInputOperandId(0));
+    if (tryAttachEnvironmentName(envId))
+        return true;
+
+    return false;
+}
+
+bool
+GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId)
+{
+    if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    RootedId id(cx_, NameToId(name_));
+    RootedObject env(cx_, env_);
+    RootedShape shape(cx_);
+    RootedNativeObject holder(cx_);
+
+    while (env) {
+        if (env->is<GlobalObject>()) {
+            shape = env->as<GlobalObject>().lookup(cx_, id);
+            if (shape)
+                break;
+            return false;
+        }
+
+        if (!env->is<EnvironmentObject>() || env->is<WithEnvironmentObject>())
+            return false;
+
+        MOZ_ASSERT(!env->hasUncacheableProto());
+
+        // Check for an 'own' property on the env. There is no need to
+        // check the prototype as non-with scopes do not inherit properties
+        // from any prototype.
+        shape = env->as<NativeObject>().lookup(cx_, id);
+        if (shape)
+            break;
+
+        env = env->enclosingEnvironment();
+    }
+
+    holder = &env->as<NativeObject>();
+    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(holder, holder, shape))
+        return false;
+
+    ObjOperandId lastObjId = objId;
+    env = env_;
+    while (env) {
+        if (env == holder) {
+            writer.guardShape(lastObjId, holder->maybeShape());
+            break;
+        }
+
+        writer.guardShape(lastObjId, env->maybeShape());
+        lastObjId = writer.loadEnclosingEnvironment(lastObjId);
+        env = env->enclosingEnvironment();
+    }
+
+    if (holder->isFixedSlot(shape->slot())) {
+        writer.loadEnvironmentFixedSlotResult(lastObjId, NativeObject::getFixedSlotOffset(shape->slot()));
+    } else {
+        size_t dynamicSlotOffset = holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+        writer.loadEnvironmentDynamicSlotResult(lastObjId, dynamicSlotOffset);
+    }
+
+    writer.typeMonitorResult();
+    return true;
 }
