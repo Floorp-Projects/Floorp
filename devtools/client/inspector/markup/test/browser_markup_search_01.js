@@ -13,7 +13,7 @@ const TEST_URL = URL_ROOT + "doc_markup_search.html";
 add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
-  let container = yield getContainerForSelector("em", inspector);
+  let container = yield getContainerForSelector("em", inspector, true);
   ok(!container, "The <em> tag isn't present yet in the markup-view");
 
   // Searching for the innermost element first makes sure that the inspector
