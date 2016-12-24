@@ -216,8 +216,109 @@ var parsers = [
 
       return handlers;
     }
-  }
+  },
+
+  {
+    id: "React events",
+    hasListeners: function (node) {
+      return reactGetListeners(node, true);
+    },
+
+    getListeners: function (node) {
+      return reactGetListeners(node, false);
+    },
+
+    normalizeListener: function (handlerDO, listener) {
+      let functionText = "";
+
+      if (handlerDO.boundTargetFunction) {
+        handlerDO = handlerDO.boundTargetFunction;
+      }
+
+      let introScript = handlerDO.script.source.introductionScript;
+      let script = handlerDO.script;
+
+      // If this is a Babel transpiled function we have no access to the
+      // source location so we need to hide the filename and debugger
+      // icon.
+      if (introScript && introScript.displayName.endsWith("/transform.run")) {
+        listener.hide.debugger = true;
+        listener.hide.filename = true;
+
+        if (!handlerDO.isArrowFunction) {
+          functionText += "function (";
+        } else {
+          functionText += "(";
+        }
+
+        functionText += handlerDO.parameterNames.join(", ");
+
+        functionText += ") {\n";
+
+        let scriptSource = script.source.text;
+        functionText +=
+          scriptSource.substr(script.sourceStart, script.sourceLength);
+
+        listener.override.handler = functionText;
+      }
+
+      return handlerDO;
+    }
+  },
 ];
+
+function reactGetListeners(node, boolOnEventFound) {
+  function getProps() {
+    for (let key in node) {
+      if (key.startsWith("__reactInternalInstance$")) {
+        return node[key]._currentElement.props;
+      }
+    }
+    return null;
+  }
+
+  node = node.wrappedJSObject || node;
+
+  let handlers = [];
+  let props = getProps();
+
+  if (props) {
+    for (let name in props) {
+      if (name.startsWith("on")) {
+        let prop = props[name];
+        let listener = prop.__reactBoundMethod || prop;
+
+        if (typeof listener !== "function") {
+          continue;
+        }
+
+        if (boolOnEventFound) {
+          return true;
+        }
+
+        let handler = {
+          type: name,
+          handler: listener,
+          tags: "React",
+          hide: {
+            dom0: true
+          },
+          override: {
+            capturing: name.endsWith("Capture")
+          }
+        };
+
+        handlers.push(handler);
+      }
+    }
+  }
+
+  if (boolOnEventFound) {
+    return false;
+  }
+
+  return handlers;
+}
 
 function jQueryLiveGetListeners(node, boolOnEventFound) {
   let global = node.ownerGlobal.wrappedJSObject;
@@ -335,16 +436,14 @@ EventParsers.prototype = {
    *                                            // indicating whether a node has
    *                                            // listeners attached.
    *
-   *     normalizeListener: function(fnDO) { }, // Optional function that takes a
-   *                                            // Debugger.Object instance and
-   *                                            // climbs the scope chain to get
-   *                                            // the function that should be
-   *                                            // displayed in the event bubble
-   *                                            // see the following url for
-   *                                            // details:
-   *                                            //   https://developer.mozilla.org/
-   *                                            //   docs/Tools/Debugger-API/
-   *                                            //   Debugger.Object
+   *     normalizeListener:
+   *        function(fnDO, listener) { },       // Optional function that takes
+   *                                            // a Debugger.Object instance
+   *                                            // and an optional listener
+   *                                            // object. Both objects can be
+   *                                            // manipulated to display the
+   *                                            // correct information in the
+   *                                            // event bubble.
    *   }
    *
    * An eventInfo object should take the following form:
@@ -362,6 +461,7 @@ EventParsers.prototype = {
    *     },
    *
    *     override: {                        // The following can be overridden:
+   *       handler: someEventHandler,
    *       type: "click",
    *       origin: "http://www.mozilla.com",
    *       searchString: 'onclick="doSomething()"',
