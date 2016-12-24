@@ -39579,6 +39579,12 @@
             "url": "/uievents/order-of-events/focus-events/focus-automated-blink-webkit.html"
           }
         ],
+        "web-animations/animation-model/animation-types/addition-per-property.html": [
+          {
+            "path": "web-animations/animation-model/animation-types/addition-per-property.html",
+            "url": "/web-animations/animation-model/animation-types/addition-per-property.html"
+          }
+        ],
         "web-animations/animation-model/animation-types/interpolation-per-property.html": [
           {
             "path": "web-animations/animation-model/animation-types/interpolation-per-property.html",
