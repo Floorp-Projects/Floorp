@@ -308,9 +308,8 @@ CacheRegisterAllocator::allocateValueRegister(MacroAssembler& masm)
 }
 
 bool
-CacheRegisterAllocator::init(const AllocatableGeneralRegisterSet& available)
+CacheRegisterAllocator::init()
 {
-    availableRegs_ = available;
     if (!origInputLocations_.resize(writer_.numInputOperands()))
         return false;
     if (!operandLocations_.resize(writer_.numOperandIds()))

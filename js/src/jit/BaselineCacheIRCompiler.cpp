@@ -684,12 +684,14 @@ BaselineCacheIRCompiler::emitGuardDOMExpandoGeneration()
 bool
 BaselineCacheIRCompiler::init(CacheKind kind)
 {
-    size_t numInputs = writer_.numInputOperands();
-    if (!allocator.init(ICStubCompiler::availableGeneralRegs(numInputs)))
+    if (!allocator.init())
         return false;
 
     // Baseline ICs monitor values when needed, so returning doubles is fine.
     allowDoubleResult_.emplace(true);
+
+    size_t numInputs = writer_.numInputOperands();
+    AllocatableGeneralRegisterSet available(ICStubCompiler::availableGeneralRegs(numInputs));
 
     if (numInputs >= 1) {
         allocator.initInputLocation(0, R0);
@@ -697,6 +699,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
             allocator.initInputLocation(1, R1);
     }
 
+    allocator.initAvailableRegs(available);
     outputUnchecked_.emplace(R0);
     return true;
 }
