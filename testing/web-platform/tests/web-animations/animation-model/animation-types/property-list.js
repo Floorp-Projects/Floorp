@@ -472,8 +472,7 @@ var gCSSProperties = {
   },
   'filter': {
     // https://drafts.fxtf.org/filters/#propdef-filter
-    types: [
-    ]
+    types: [ 'filterList' ]
   },
   'flex-basis': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-basis
