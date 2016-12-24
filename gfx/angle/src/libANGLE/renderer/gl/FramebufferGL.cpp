@@ -494,7 +494,7 @@ gl::Error FramebufferGL::readPixelsRowByRowWorkaround(const gl::Rectangle &area,
     const gl::InternalFormat &glFormat =
         gl::GetInternalFormatInfo(gl::GetSizedInternalFormat(format, type));
     GLuint rowBytes = 0;
-    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, pack.alignment, pack.rowLength),
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(area.width, pack.alignment, pack.rowLength),
                      rowBytes);
     GLuint skipBytes = 0;
     ANGLE_TRY_RESULT(glFormat.computeSkipBytes(rowBytes, 0, pack, false), skipBytes);
@@ -525,7 +525,7 @@ gl::Error FramebufferGL::readPixelsPaddingWorkaround(const gl::Rectangle &area,
     const gl::InternalFormat &glFormat =
         gl::GetInternalFormatInfo(gl::GetSizedInternalFormat(format, type));
     GLuint rowBytes = 0;
-    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, pack.alignment, pack.rowLength),
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(area.width, pack.alignment, pack.rowLength),
                      rowBytes);
     GLuint skipBytes = 0;
     ANGLE_TRY_RESULT(glFormat.computeSkipBytes(rowBytes, 0, pack, false), skipBytes);
