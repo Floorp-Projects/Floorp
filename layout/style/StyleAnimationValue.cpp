@@ -779,6 +779,32 @@ StyleAnimationValue::Add(nsCSSPropertyID aProperty,
         AddWeightedColors(1.0, color1, 1, color2));
       break;
     }
+    case eUnit_Transform: {
+      // If |aA| is 'transform:none', don't concatinate anything, just return
+      // |aB| as the result.
+      if (aA.GetCSSValueSharedListValue()->mHead->mValue.GetUnit() ==
+            eCSSUnit_None) {
+        break;
+      }
+
+      UniquePtr<nsCSSValueList>
+        resultList(aA.GetCSSValueSharedListValue()->mHead->Clone());
+
+      // If |aB| is not 'transform:none', concatinate it to |aA|, then return
+      // the concatinated list.
+      if (result.GetCSSValueSharedListValue()->mHead->mValue.GetUnit() !=
+            eCSSUnit_None) {
+        nsCSSValueList* listA = resultList.get();
+        while (listA->mNext) {
+          listA = listA->mNext;
+        }
+
+        listA->mNext = result.GetCSSValueSharedListValue()->mHead->Clone();
+      }
+
+      result.SetTransformValue(new nsCSSValueSharedList(resultList.release()));
+      break;
+    }
     default:
       Unused << AddWeighted(aProperty,
                             1.0, result,
