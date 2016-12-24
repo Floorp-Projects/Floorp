@@ -230,21 +230,13 @@ function getContainerForNodeFront(nodeFront, {markup}) {
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
- * @param {Boolean} Set to true in the event that the node shouldn't be found.
  * @return {MarkupContainer}
  */
-var getContainerForSelector =
-Task.async(function* (selector, inspector, expectFailure = false) {
+var getContainerForSelector = Task.async(function* (selector, inspector) {
   info("Getting the markup-container for node " + selector);
   let nodeFront = yield getNodeFront(selector, inspector);
   let container = getContainerForNodeFront(nodeFront, inspector);
-
-  if (expectFailure) {
-    ok(!container, "Shouldn't find markup-container for selector: " + selector);
-  } else {
-    ok(container, "Found markup-container for selector: " + selector);
-  }
-
+  info("Found markup-container " + container);
   return container;
 });
 
