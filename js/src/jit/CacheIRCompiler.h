@@ -252,8 +252,11 @@ class MOZ_RAII CacheRegisterAllocator
         writer_(writer)
     {}
 
-    MOZ_MUST_USE bool init(const AllocatableGeneralRegisterSet& available);
+    MOZ_MUST_USE bool init();
 
+    void initAvailableRegs(const AllocatableGeneralRegisterSet& available) {
+        availableRegs_ = available;
+    }
     void initAvailableRegsAfterSpill();
 
     OperandLocation operandLocation(size_t i) const {
