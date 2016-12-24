@@ -29,6 +29,7 @@ namespace jit {
     _(GuardNoDetachedTypedObjects)        \
     _(GuardNoDenseElements)               \
     _(LoadProto)                          \
+    _(LoadEnclosingEnvironment)           \
     _(LoadDOMExpandoValue)                \
     _(LoadUndefinedResult)                \
     _(LoadInt32ArrayLengthResult)         \

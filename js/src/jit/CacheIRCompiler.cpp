@@ -1268,6 +1268,15 @@ CacheIRCompiler::emitLoadProto()
 }
 
 bool
+CacheIRCompiler::emitLoadEnclosingEnvironment()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register reg = allocator.defineRegister(masm, reader.objOperandId());
+    masm.extractObject(Address(obj, EnvironmentObject::offsetOfEnclosingEnvironment()), reg);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadDOMExpandoValue()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
