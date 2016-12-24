@@ -779,6 +779,27 @@ StyleAnimationValue::Add(nsCSSPropertyID aProperty,
         AddWeightedColors(1.0, color1, 1, color2));
       break;
     }
+    case eUnit_Filter: {
+      // If |aA| is 'filter:none', don't concatinate anything, just return
+      // |aB| as the result.
+      if (aA.GetCSSValueListValue()->mValue.GetUnit() == eCSSUnit_None) {
+        break;
+      }
+      UniquePtr<nsCSSValueList> resultList(aA.GetCSSValueListValue()->Clone());
+
+      // If |aB| is not 'filter:none', concatinate it to |aA|, then return
+      // the concatinated list.
+      if (result.GetCSSValueListValue()->mValue.GetUnit() != eCSSUnit_None) {
+        nsCSSValueList* listA = resultList.get();
+        while (listA->mNext) {
+          listA = listA->mNext;
+        }
+
+        listA->mNext = result.GetCSSValueListValue();
+      }
+      result.mValue.mCSSValueList = resultList.release();
+      break;
+    }
     case eUnit_Transform: {
       // If |aA| is 'transform:none', don't concatinate anything, just return
       // |aB| as the result.

@@ -894,9 +894,36 @@ const transformListType = {
 
 };
 
+const filterListType = {
+  testAddition: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'blur(10px)';
+      var animation = target.animate({ [idlName]: ['blur(20px)',
+                                                   'blur(50px)'] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName,
+        [ { time: 0,    expected: 'blur(10px) blur(20px)' }]);
+    }, property + ': blur on blur');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'blur(10px)';
+      var animation = target.animate({ [idlName]: ['brightness(80%)',
+                                                   'brightness(40%)'] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName,
+        [ { time: 0,    expected: 'blur(10px) brightness(0.8)' }]);
+    }, property + ': different filter functions');
+  },
+};
+
 const types = {
   color: colorType,
   discrete: discreteType,
+  filterList: filterListType,
   integer: integerType,
   length: lengthType,
   percentage: percentageType,
