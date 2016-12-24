@@ -738,6 +738,21 @@ ExtractComplexColor(const StyleAnimationValue& aValue)
   }
 }
 
+StyleAnimationValue
+StyleAnimationValue::Add(nsCSSPropertyID aProperty,
+                         const StyleAnimationValue& aA,
+                         StyleAnimationValue&& aB)
+{
+  StyleAnimationValue result(Move(aB));
+
+  Unused << AddWeighted(aProperty,
+                        1.0, result,
+                        1, aA,
+                        result);
+
+  return result;
+}
+
 double
 StyleAnimationValue::ComputeColorDistance(const RGBAColorData& aStartColor,
                                           const RGBAColorData& aEndColor)

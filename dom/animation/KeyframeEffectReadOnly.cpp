@@ -316,13 +316,17 @@ KeyframeEffectReadOnly::CompositeValue(
   switch (aCompositeOperation) {
     case dom::CompositeOperation::Replace:
       return aValueToComposite;
-    case dom::CompositeOperation::Add:
-      // So far nothing to do since we come to here only in case of missing
-      // keyframe, that means we have only to use the base value or the
-      // underlying value as the composited value.
-      // FIXME: Bug 1311620: Once we implement additive operation, we need to
-      // calculate it here.
-      return aUnderlyingValue;
+    case dom::CompositeOperation::Add: {
+      // Just return the underlying value if |aValueToComposite| is null (i.e.
+      // missing keyframe).
+      if (aValueToComposite.IsNull()) {
+        return aUnderlyingValue;
+      }
+      StyleAnimationValue result(aValueToComposite);
+      return StyleAnimationValue::Add(aProperty,
+                                      aUnderlyingValue,
+                                      Move(result));
+    }
     case dom::CompositeOperation::Accumulate: {
       StyleAnimationValue result(aValueToComposite);
       return StyleAnimationValue::Accumulate(aProperty,
