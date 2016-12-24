@@ -95,10 +95,9 @@ struct WorkaroundsD3D
     // https://crbug.com/650547
     bool emulateIsnanFloat = false;
 
-    // On some Intel drivers, using clear() may not take effect. One of such situation is to clear
-    // a target with width or height < 16. To work around this bug, we call clear() twice on these
-    // platforms. Tracking bug: https://crbug.com/655534
-    bool callClearTwiceOnSmallTarget = false;
+    // On some Intel drivers, using clear() may not take effect. To work around this bug, we call
+    // clear() twice on these platforms. Tracking bug: https://crbug.com/655534
+    bool callClearTwice = false;
 
     // On some Intel drivers, copying from staging storage to constant buffer storage does not
     // seem to work. Work around this by keeping system memory storage as a canonical reference

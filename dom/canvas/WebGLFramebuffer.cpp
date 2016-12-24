@@ -1862,6 +1862,7 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
     ////
 
     gl->MakeCurrent();
+    webgl->OnBeforeReadCall();
     WebGLContext::ScopedDrawCallWrapper wrapper(*webgl);
     gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1,
                          dstX0, dstY0, dstX1, dstY1,
