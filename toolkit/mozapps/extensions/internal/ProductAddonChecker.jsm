@@ -21,6 +21,8 @@ const LOCAL_EME_SOURCES = [{
 
 this.EXPORTED_SYMBOLS = [ "ProductAddonChecker" ];
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -40,11 +42,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPPrefs",
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
-                                  "resource://gre/modules/ServiceRequest.jsm");
-
-
 var logger = Log.repository.getLogger("addons.productaddons");
+
+// This exists so that tests can override the XHR behaviour for downloading
+// the addon update XML file.
+var CreateXHR = function() {
+  return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+    createInstance(Ci.nsISupports);
+}
 
 /**
  * Number of milliseconds after which we need to cancel `downloadXML`.
@@ -97,7 +102,7 @@ function getRequestStatus(request) {
  */
 function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
   return new Promise((resolve, reject) => {
-    let request = new ServiceRequest();
+    let request = CreateXHR();
     // This is here to let unit test code override XHR
     if (request.wrappedJSObject) {
       request = request.wrappedJSObject;
@@ -158,7 +163,7 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
 function downloadJSON(uri) {
   logger.info("fetching config from: " + uri);
   return new Promise((resolve, reject) => {
-    let xmlHttp = new ServiceRequest({mozAnon: true});
+    let xmlHttp = new XMLHttpRequest({mozAnon: true});
 
     xmlHttp.onload = function(aResponse) {
       resolve(JSON.parse(this.responseText));
@@ -285,7 +290,8 @@ function downloadLocalConfig() {
  */
 function downloadFile(url) {
   return new Promise((resolve, reject) => {
-    let xhr = new ServiceRequest();
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                  createInstance(Ci.nsISupports);
     xhr.onload = function(response) {
       logger.info("downloadXHR File download. status=" + xhr.status);
       if (xhr.status != 200 && xhr.status != 206) {
