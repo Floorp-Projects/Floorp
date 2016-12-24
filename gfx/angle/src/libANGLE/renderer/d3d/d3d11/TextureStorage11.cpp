@@ -588,7 +588,7 @@ gl::Error TextureStorage11::copyToStorage(TextureStorage *destStorage)
 gl::Error TextureStorage11::setData(const gl::ImageIndex &index,
                                     ImageD3D *image,
                                     const gl::Box *destBox,
-                                    GLenum type,
+                                    GLenum inputType,
                                     const gl::PixelUnpackState &unpack,
                                     const uint8_t *pixelData)
 {
@@ -602,33 +602,33 @@ gl::Error TextureStorage11::setData(const gl::ImageIndex &index,
 
     UINT destSubresource = getSubresourceIndex(index);
 
-    const gl::InternalFormat &internalFormatInfo =
-        gl::GetInternalFormatInfo(image->getInternalFormat());
+    const auto sizedInputFormat = image->getSizedInputFormat(inputType);
+    const gl::InternalFormat &inputFormat = gl::GetInternalFormatInfo(sizedInputFormat);
 
     gl::Box levelBox(0, 0, 0, getLevelWidth(index.mipIndex), getLevelHeight(index.mipIndex),
                      getLevelDepth(index.mipIndex));
     bool fullUpdate = (destBox == nullptr || *destBox == levelBox);
-    ASSERT(internalFormatInfo.depthBits == 0 || fullUpdate);
+    ASSERT(inputFormat.depthBits == 0 || fullUpdate);
 
     // TODO(jmadill): Handle compressed formats
     // Compressed formats have different load syntax, so we'll have to handle them with slightly
     // different logic. Will implemnent this in a follow-up patch, and ensure we do not use SetData
     // with compressed formats in the calling logic.
-    ASSERT(!internalFormatInfo.compressed);
+    ASSERT(!inputFormat.compressed);
 
     const int width    = destBox ? destBox->width : static_cast<int>(image->getWidth());
     const int height   = destBox ? destBox->height : static_cast<int>(image->getHeight());
     const int depth    = destBox ? destBox->depth : static_cast<int>(image->getDepth());
     GLuint srcRowPitch = 0;
     ANGLE_TRY_RESULT(
-        internalFormatInfo.computeRowPitch(type, width, unpack.alignment, unpack.rowLength),
+        inputFormat.computeRowPitch(width, unpack.alignment, unpack.rowLength),
         srcRowPitch);
     GLuint srcDepthPitch = 0;
-    ANGLE_TRY_RESULT(internalFormatInfo.computeDepthPitch(height, unpack.imageHeight, srcRowPitch),
+    ANGLE_TRY_RESULT(gl::InternalFormat::computeDepthPitch(height, unpack.imageHeight, srcRowPitch),
                      srcDepthPitch);
     GLuint srcSkipBytes = 0;
     ANGLE_TRY_RESULT(
-        internalFormatInfo.computeSkipBytes(srcRowPitch, srcDepthPitch, unpack, index.is3D()),
+        inputFormat.computeSkipBytes(srcRowPitch, srcDepthPitch, unpack, index.is3D()),
         srcSkipBytes);
 
     const d3d11::Format &d3d11Format =
@@ -645,7 +645,7 @@ gl::Error TextureStorage11::setData(const gl::ImageIndex &index,
     MemoryBuffer *conversionBuffer = nullptr;
     const uint8_t *data            = nullptr;
 
-    LoadImageFunctionInfo loadFunctionInfo = d3d11Format.getLoadFunctions()(type);
+    LoadImageFunctionInfo loadFunctionInfo = d3d11Format.getLoadFunctions()(inputType);
     if (loadFunctionInfo.requiresConversion)
     {
         ANGLE_TRY(mRenderer->getScratchMemoryBuffer(neededSize, &conversionBuffer));
