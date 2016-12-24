@@ -1983,10 +1983,13 @@ protected:
             return false;
         }
 
-        explicit ScopedDrawCallWrapper(WebGLContext& webgl);
+        ////
 
+        explicit ScopedDrawCallWrapper(WebGLContext& webgl);
         ~ScopedDrawCallWrapper();
     };
+
+    void OnBeforeReadCall();
 
     void LoseOldestWebGLContextIfLimitExceeded();
     void UpdateLastUseIndex();
