@@ -203,8 +203,6 @@ WebGLContext::WebGLContext()
 
     InvalidateBufferFetching();
 
-    mBackbufferNeedsClear = true;
-
     mDisableFragHighP = false;
 
     mDrawCallsSinceLastFlush = 0;
@@ -1133,14 +1131,6 @@ WebGLContext::ClearBackbufferIfNeeded()
 {
     if (!mBackbufferNeedsClear)
         return;
-
-#ifdef DEBUG
-    gl->MakeCurrent();
-
-    GLuint fb = 0;
-    gl->GetUIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &fb);
-    MOZ_ASSERT(fb == 0);
-#endif
 
     ClearScreen();
 
@@ -2090,6 +2080,16 @@ WebGLContext::ScopedDrawCallWrapper::HasDepthButNoStencil(const WebGLFramebuffer
     const auto& depth = fb->DepthAttachment();
     const auto& stencil = fb->StencilAttachment();
     return depth.IsDefined() && !stencil.IsDefined();
+}
+
+////
+
+void
+WebGLContext::OnBeforeReadCall()
+{
+    if (!mBoundReadFramebuffer) {
+        ClearBackbufferIfNeeded();
+    }
 }
 
 ////////////////////////////////////////
