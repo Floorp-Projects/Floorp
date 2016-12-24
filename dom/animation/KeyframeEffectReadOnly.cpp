@@ -653,10 +653,7 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
     // then the default value 'Replace' will be used.
     if (AnimationUtils::IsCoreAPIEnabledForCaller(aCallerType)) {
       result.mIterationComposite = options.mIterationComposite;
-      // FIXME: Bug 1311620: We don't support additive animation yet.
-      if (options.mComposite != dom::CompositeOperation::Add) {
-        result.mComposite = options.mComposite;
-      }
+      result.mComposite = options.mComposite;
     }
   }
   return result;
