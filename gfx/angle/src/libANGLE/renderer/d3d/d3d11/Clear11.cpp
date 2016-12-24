@@ -371,23 +371,19 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams,
                     rect.bottom = clearParams.scissor.y + clearParams.scissor.height;
 
                     deviceContext1->ClearView(framebufferRTV, clearValues, &rect, 1);
-                    if (mRenderer->getWorkarounds().callClearTwiceOnSmallTarget)
+
+                    if (mRenderer->getWorkarounds().callClearTwice)
                     {
-                        if (clearParams.scissor.width <= 16 || clearParams.scissor.height <= 16)
-                        {
-                            deviceContext1->ClearView(framebufferRTV, clearValues, &rect, 1);
-                        }
+                        deviceContext1->ClearView(framebufferRTV, clearValues, &rect, 1);
                     }
                 }
                 else
                 {
                     deviceContext->ClearRenderTargetView(framebufferRTV, clearValues);
-                    if (mRenderer->getWorkarounds().callClearTwiceOnSmallTarget)
+
+                    if (mRenderer->getWorkarounds().callClearTwice)
                     {
-                        if (framebufferSize.width <= 16 || framebufferSize.height <= 16)
-                        {
-                            deviceContext->ClearRenderTargetView(framebufferRTV, clearValues);
-                        }
+                        deviceContext->ClearRenderTargetView(framebufferRTV, clearValues);
                     }
                 }
             }
