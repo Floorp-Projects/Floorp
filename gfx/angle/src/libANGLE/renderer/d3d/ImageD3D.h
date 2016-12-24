@@ -51,6 +51,8 @@ class ImageD3D : angle::NonCopyable
 
     virtual bool redefine(GLenum target, GLenum internalformat, const gl::Extents &size, bool forceRelease) = 0;
 
+    GLenum getSizedInputFormat(GLenum inputType) const;
+
     virtual gl::Error loadData(const gl::Box &area,
                                const gl::PixelUnpackState &unpack,
                                GLenum type,
