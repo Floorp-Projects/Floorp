@@ -920,6 +920,41 @@ const filterListType = {
   },
 };
 
+const textShadowListType = {
+  testAddition: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'rgb(0, 0, 0) 0px 0px 0px';
+      var animation =
+        target.animate({ [idlName]: [ 'rgb(120, 120, 120) 10px 10px 10px',
+                                      'rgb(120, 120, 120) 10px 10px 10px'] },
+                       { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName,
+        [ { time: 0, expected: 'rgb(0, 0, 0) 0px 0px 0px, ' +
+                               'rgb(120, 120, 120) 10px 10px 10px' }]);
+    }, property + ': shadow');
+  },
+};
+
+
+const boxShadowListType = {
+  testAddition: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'rgb(0, 0, 0) 0px 0px 0px 0px';
+      var animation =
+        target.animate({ [idlName]: [ 'rgb(120, 120, 120) 10px 10px 10px 0px',
+                                      'rgb(120, 120, 120) 10px 10px 10px 0px'] },
+                       { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName,
+        [ { time: 0, expected: 'rgb(0, 0, 0) 0px 0px 0px 0px, ' +
+                               'rgb(120, 120, 120) 10px 10px 10px 0px' }]);
+    }, property + ': shadow');
+  },
+};
+
 const types = {
   color: colorType,
   discrete: discreteType,
@@ -931,5 +966,7 @@ const types = {
   positiveNumber: positiveNumberType,
   transformList: transformListType,
   visibility: visibilityType,
+  boxShadowList: boxShadowListType,
+  textShadowList: textShadowListType,
 };
 
