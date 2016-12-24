@@ -589,9 +589,8 @@ SampleValue(float aPortion, const Animation& aAnimation,
             uint64_t aCurrentIteration,
             const StyleAnimationValue& aUnderlyingValue)
 {
-  NS_ASSERTION(aStart.mValue.GetUnit() == aEnd.mValue.GetUnit() ||
-               aStart.mValue.GetUnit() == StyleAnimationValue::eUnit_None ||
-               aEnd.mValue.GetUnit() == StyleAnimationValue::eUnit_None,
+  NS_ASSERTION(aStart.mValue.IsNull() || aEnd.mValue.IsNull() ||
+               aStart.mValue.GetUnit() == aEnd.mValue.GetUnit(),
                "Must have same unit");
 
   StyleAnimationValue startValue =
