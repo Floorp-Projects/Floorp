@@ -62,6 +62,15 @@ public:
   }
 
   /**
+   * Alternative version of Add that reflects the naming used in Web Animations
+   * and which returns the result using the return value.
+   */
+  static StyleAnimationValue
+  Add(nsCSSPropertyID aProperty,
+      const StyleAnimationValue& aA,
+      StyleAnimationValue&& aB);
+
+  /**
    * Calculates a measure of 'distance' between two colors.
    *
    * @param aStartColor The start of the interval for which the distance
