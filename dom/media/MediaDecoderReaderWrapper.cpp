@@ -38,86 +38,42 @@ MediaDecoderReaderWrapper::ReadMetadata()
                 &MediaDecoderReaderWrapper::OnMetadataNotRead);
 }
 
-void
+RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
 MediaDecoderReaderWrapper::RequestAudioData()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
-  auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                       &MediaDecoderReader::RequestAudioData);
-
-  RefPtr<MediaDecoderReaderWrapper> self = this;
-  mAudioDataRequest.Begin(p->Then(mOwnerThread, __func__,
-    [self] (MediaData* aAudioSample) {
-      self->mAudioDataRequest.Complete();
-      aAudioSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
-      self->mAudioCallback.Notify(AsVariant(aAudioSample));
-    },
-    [self] (const MediaResult& aError) {
-      self->mAudioDataRequest.Complete();
-      self->mAudioCallback.Notify(AsVariant(aError));
-    }));
+  int64_t startTime = StartTime().ToMicroseconds();
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(),
+                     __func__, &MediaDecoderReader::RequestAudioData)
+    ->Then(mOwnerThread, __func__,
+           [startTime] (MediaData* aAudio) {
+             aAudio->AdjustForStartTime(startTime);
+           },
+           [] (const MediaResult& aError) {});
 }
 
-void
+RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
 MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
                                             media::TimeUnit aTimeThreshold)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
 
-  // Time the video decode and send this value back to callbacks who accept
-  // a TimeStamp as its second parameter.
-  TimeStamp videoDecodeStartTime = TimeStamp::Now();
-
   if (aTimeThreshold.ToMicroseconds() > 0) {
     aTimeThreshold += StartTime();
   }
 
-  auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                       &MediaDecoderReader::RequestVideoData,
-                       aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds());
-
-  RefPtr<MediaDecoderReaderWrapper> self = this;
-  mVideoDataRequest.Begin(p->Then(mOwnerThread, __func__,
-    [self, videoDecodeStartTime] (MediaData* aVideoSample) {
-      self->mVideoDataRequest.Complete();
-      aVideoSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
-      self->mVideoCallback.Notify(AsVariant(MakeTuple(aVideoSample, videoDecodeStartTime)));
-    },
-    [self] (const MediaResult& aError) {
-      self->mVideoDataRequest.Complete();
-      self->mVideoCallback.Notify(AsVariant(aError));
-    }));
-}
-
-bool
-MediaDecoderReaderWrapper::IsRequestingAudioData() const
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return mAudioDataRequest.Exists();
-}
-
-bool
-MediaDecoderReaderWrapper::IsRequestingVideoData() const
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return mVideoDataRequest.Exists();
-}
-
-bool
-MediaDecoderReaderWrapper::IsWaitingAudioData() const
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return mAudioWaitRequest.Exists();
-}
-
-bool
-MediaDecoderReaderWrapper::IsWaitingVideoData() const
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return mVideoWaitRequest.Exists();
+  int64_t startTime = StartTime().ToMicroseconds();
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
+                     &MediaDecoderReader::RequestVideoData,
+                     aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds())
+    ->Then(mOwnerThread, __func__,
+           [startTime] (MediaData* aVideo) {
+             aVideo->AdjustForStartTime(startTime);
+           },
+           [] (const MediaResult& aError) {});
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
@@ -132,38 +88,12 @@ MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget)
            Move(adjustedTarget));
 }
 
-void
+RefPtr<MediaDecoderReaderWrapper::WaitForDataPromise>
 MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-
-  auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                       &MediaDecoderReader::WaitForData, aType);
-
-  RefPtr<MediaDecoderReaderWrapper> self = this;
-  WaitRequestRef(aType).Begin(p->Then(mOwnerThread, __func__,
-    [self] (MediaData::Type aType) {
-      self->WaitRequestRef(aType).Complete();
-      self->WaitCallbackRef(aType).Notify(AsVariant(aType));
-    },
-    [self, aType] (WaitForDataRejectValue aRejection) {
-      self->WaitRequestRef(aType).Complete();
-      self->WaitCallbackRef(aType).Notify(AsVariant(aRejection));
-    }));
-}
-
-MediaCallbackExc<WaitCallbackData>&
-MediaDecoderReaderWrapper::WaitCallbackRef(MediaData::Type aType)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return aType == MediaData::AUDIO_DATA ? mAudioWaitCallback : mVideoWaitCallback;
-}
-
-MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise>&
-MediaDecoderReaderWrapper::WaitRequestRef(MediaData::Type aType)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return aType == MediaData::AUDIO_DATA ? mAudioWaitRequest : mVideoWaitRequest;
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
+                     &MediaDecoderReader::WaitForData, aType);
 }
 
 void
@@ -179,17 +109,6 @@ void
 MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-
-  if (aTracks.contains(TrackInfo::kAudioTrack)) {
-    mAudioDataRequest.DisconnectIfExists();
-    mAudioWaitRequest.DisconnectIfExists();
-  }
-
-  if (aTracks.contains(TrackInfo::kVideoTrack)) {
-    mVideoDataRequest.DisconnectIfExists();
-    mVideoWaitRequest.DisconnectIfExists();
-  }
-
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod<TrackSet>(mReader,
                                 &MediaDecoderReader::ResetDecode,
@@ -201,9 +120,6 @@ RefPtr<ShutdownPromise>
 MediaDecoderReaderWrapper::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mAudioDataRequest.Exists());
-  MOZ_ASSERT(!mVideoDataRequest.Exists());
-
   mShutdown = true;
   return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                      &MediaDecoderReader::Shutdown);
