@@ -33,6 +33,7 @@ public:
   NS_IMETHOD GetNumDropItems(uint32_t * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval);
   NS_IMETHOD EndDragSession(bool aDoneDrag);
+  NS_IMETHOD UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY);
 
   // native impl.
   NS_IMETHOD SetIDataObject(IDataObject * aDataObj);
@@ -41,6 +42,8 @@ public:
 
   // A drop occurred within the application vs. outside of it.
   void SetDroppedLocal();
+
+  IDataObject* GetDataObject() { return mDataObject; }
 
 protected:
   nsDataObjCollection* GetDataObjCollection(IDataObject * aDataObj);

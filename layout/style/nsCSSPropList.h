@@ -564,7 +564,7 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
     VARIANT_KEYWORD, // used by list parsing
-    kImageLayerOriginKTable,
+    kBackgroundOriginKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
@@ -2686,7 +2686,7 @@ CSS_PROP_SVGRESET(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
     VARIANT_KEYWORD, // used by list parsing
-    kImageLayerOriginKTable,
+    kMaskClipKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 CSS_PROP_SVGRESET(
@@ -2732,7 +2732,7 @@ CSS_PROP_SVGRESET(
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
     VARIANT_KEYWORD, // used by list parsing
-    kImageLayerOriginKTable,
+    kMaskOriginKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(

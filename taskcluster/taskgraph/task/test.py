@@ -87,10 +87,10 @@ class TestTask(transform.TransformTask):
                         build_platform, test_platform))
                 continue
             test_platforms[test_platform] = {
-                'test-set': cfg['test-set'],
                 'build-platform': build_platform,
                 'build-label': builds_by_platform[build_platform],
             }
+            test_platforms[test_platform].update(cfg)
         return test_platforms
 
     @classmethod
@@ -101,12 +101,14 @@ class TestTask(transform.TransformTask):
         names."""
         rv = {}
         for test_platform, cfg in test_platforms.iteritems():
-            test_set = cfg['test-set']
-            if test_set not in test_sets_cfg:
+            test_sets = cfg['test-sets']
+            if not set(test_sets) < set(test_sets_cfg):
                 raise Exception(
-                    "Test set '{}' for test platform {} is not defined".format(
-                        test_set, test_platform))
-            test_names = test_sets_cfg[test_set]
+                    "Test sets {} for test platform {} are not defined".format(
+                        ', '.join(test_sets), test_platform))
+            test_names = set()
+            for test_set in test_sets:
+                test_names.update(test_sets_cfg[test_set])
             rv[test_platform] = cfg.copy()
             rv[test_platform]['test-names'] = test_names
         return rv

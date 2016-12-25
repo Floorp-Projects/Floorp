@@ -352,11 +352,13 @@ function run_test_8() {
   zip.open(do_get_addon("test_dictionary"));
   dir.append("install.rdf");
   zip.extract("install.rdf", dir);
+  dir.permissions |= FileUtils.PERMS_FILE;
   dir = dir.parent;
   dir.append("dictionaries");
   dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   dir.append("ab-CD.dic");
   zip.extract("dictionaries/ab-CD.dic", dir);
+  dir.permissions |= FileUtils.PERMS_FILE;
   zip.close();
 
   startupManager(false);
@@ -485,11 +487,13 @@ function run_test_17() {
   zip.open(do_get_addon("test_dictionary"));
   dir.append("install.rdf");
   zip.extract("install.rdf", dir);
+  dir.permissions |= FileUtils.PERMS_FILE;
   dir = dir.parent;
   dir.append("dictionaries");
   dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   dir.append("ab-CD.dic");
   zip.extract("dictionaries/ab-CD.dic", dir);
+  dir.permissions |= FileUtils.PERMS_FILE;
   zip.close();
 
   startupManager();

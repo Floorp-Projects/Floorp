@@ -115,13 +115,13 @@ win64/pgo:
             - builds/taskcluster_firefox_windows_64_opt.py
 
 win32-clang/debug:
-    description: "Win32 Clang-cl Debug"
+    description: "Win32 Static Analysis Debug (clang-cl)"
     index:
         product: firefox
         job-name: win32-clang-debug
     treeherder:
         platform: windows2012-32/debug
-        symbol: tc(Bcl)
+        symbol: tc(S)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -134,13 +134,13 @@ win32-clang/debug:
             - builds/taskcluster_firefox_win32_clang_debug.py
 
 win32-clang/opt:
-    description: "Win32 Clang-cl Opt"
+    description: "Win32 Static Analysis Opt (clang-cl)"
     index:
         product: firefox
         job-name: win32-clang-opt
     treeherder:
         platform: windows2012-32/opt
-        symbol: tc(Bcl)
+        symbol: tc(S)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -153,13 +153,13 @@ win32-clang/opt:
             - builds/taskcluster_firefox_win32_clang.py
 
 win64-clang/debug:
-    description: "Win64 Clang-cl Debug"
+    description: "Win64 Static Analysis Debug (clang-cl)"
     index:
         product: firefox
         job-name: win64-clang-debug
     treeherder:
         platform: windows2012-64/debug
-        symbol: tc(Bcl)
+        symbol: tc(S)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -172,13 +172,13 @@ win64-clang/debug:
             - builds/taskcluster_firefox_win64_clang_debug.py
 
 win64-clang/opt:
-    description: "Win64 Clang-cl Opt"
+    description: "Win64 Static Analysis Opt (clang-cl)"
     index:
         product: firefox
         job-name: win64-clang-opt
     treeherder:
         platform: windows2012-64/opt
-        symbol: tc(Bcl)
+        symbol: tc(S)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:

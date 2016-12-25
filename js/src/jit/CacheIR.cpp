@@ -18,17 +18,21 @@ using namespace js::jit;
 
 using mozilla::Maybe;
 
-GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine,
-                                       CacheKind cacheKind,
-                                       bool* isTemporarilyUnoptimizable,
-                                       HandleValue val, HandleValue idVal)
+IRGenerator::IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind)
   : writer(cx),
     cx_(cx),
     pc_(pc),
+    cacheKind_(cacheKind)
+{}
+
+GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
+                                       ICStubEngine engine,
+                                       bool* isTemporarilyUnoptimizable,
+                                       HandleValue val, HandleValue idVal)
+  : IRGenerator(cx, pc, cacheKind),
     val_(val),
     idVal_(idVal),
     engine_(engine),
-    cacheKind_(cacheKind),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
     preliminaryObjectAction_(PreliminaryObjectAction::None)
 {}
@@ -45,12 +49,40 @@ EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderOp, NativeObject* h
     }
 }
 
+enum class ProxyStubType {
+    None,
+    DOMShadowed,
+    DOMUnshadowed,
+    Generic
+};
+
+static ProxyStubType
+GetProxyStubType(JSContext* cx, HandleObject obj, HandleId id)
+{
+    if (!obj->is<ProxyObject>())
+        return ProxyStubType::None;
+
+    if (!IsCacheableDOMProxy(obj))
+        return ProxyStubType::Generic;
+
+    DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
+    if (shadows == ShadowCheckFailed) {
+        cx->clearPendingException();
+        return ProxyStubType::None;
+    }
+
+    if (DOMProxyIsShadowing(shadows))
+        return ProxyStubType::DOMShadowed;
+
+    MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
+    return ProxyStubType::DOMUnshadowed;
+}
+
 bool
 GetPropIRGenerator::tryAttachStub()
 {
-    // pc_ should only be null for idempotent ICs, and idempotent ICs should
-    // call tryAttachIdempotentStub instead.
-    MOZ_ASSERT(pc_);
+    // Idempotent ICs should call tryAttachIdempotentStub instead.
+    MOZ_ASSERT(!idempotent());
 
     AutoAssertNoPendingException aanpe(cx_);
 
@@ -140,16 +172,21 @@ GetPropIRGenerator::tryAttachIdempotentStub()
     // of (2), we don't support for instance missing properties or array
     // lengths, as TI does not account for these cases.
 
-    // No pc if idempotent, as there can be multiple bytecode locations
-    // due to GVN.
-    MOZ_ASSERT(!pc_);
+    MOZ_ASSERT(idempotent());
 
     RootedObject obj(cx_, &val_.toObject());
     RootedId id(cx_, NameToId(idVal_.toString()->asAtom().asPropertyName()));
 
     ValOperandId valId(writer.setInputOperandId(0));
     ObjOperandId objId = writer.guardIsObject(valId);
-    return tryAttachNative(obj, objId, id);
+    if (tryAttachNative(obj, objId, id))
+        return true;
+
+    // Also support native data properties on DOMProxy prototypes.
+    if (GetProxyStubType(cx_, obj, id) == ProxyStubType::DOMUnshadowed)
+        return tryAttachDOMProxyUnshadowed(obj, objId, id);
+
+    return false;
 }
 
 static bool
@@ -202,15 +239,20 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
         holder.set(&baseHolder->as<NativeObject>());
     }
 
-    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape) ||
-        IsCacheableNoProperty(cx, obj, holder, shape, id, pc))
-    {
+    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape))
         return CanAttachReadSlot;
-    }
+
+    // Idempotent ICs only support plain data properties, see
+    // tryAttachIdempotentStub.
+    if (!pc)
+        return CanAttachNone;
+
+    if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc))
+        return CanAttachReadSlot;
 
     if (IsCacheableGetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable)) {
         // See bug 1226816.
-        if (engine == ICStubEngine::Baseline)
+        if (engine != ICStubEngine::IonSharedIC)
             return CanAttachCallGetter;
     }
 
@@ -381,13 +423,8 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
 
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_,
                                                             engine_, isTemporarilyUnoptimizable_);
-    if (!pc_) {
-        // Idempotent ICs only support plain data properties.
-        if (type != CanAttachReadSlot)
-            return false;
-        MOZ_ASSERT(holder);
-    }
-
+    MOZ_ASSERT_IF(idempotent(),
+                  type == CanAttachNone || (type == CanAttachReadSlot && holder));
     switch (type) {
       case CanAttachNone:
         return false;
@@ -546,6 +583,8 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
     NativeGetPropCacheability canCache = CanAttachNativeGetProp(cx_, checkObj, id, &holder, &shape,
                                                                 pc_, engine_,
                                                                 isTemporarilyUnoptimizable_);
+    MOZ_ASSERT_IF(idempotent(),
+                  canCache == CanAttachNone || (canCache == CanAttachReadSlot && holder));
     if (canCache == CanAttachNone)
         return false;
 
@@ -588,24 +627,18 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
 bool
 GetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id)
 {
-    if (!obj->is<ProxyObject>())
+    switch (GetProxyStubType(cx_, obj, id)) {
+      case ProxyStubType::None:
         return false;
-
-    // Skim off DOM proxies.
-    if (IsCacheableDOMProxy(obj)) {
-        DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx_, obj, id);
-        if (shadows == ShadowCheckFailed) {
-            cx_->clearPendingException();
-            return false;
-        }
-        if (DOMProxyIsShadowing(shadows))
-            return tryAttachDOMProxyShadowed(obj, objId, id);
-
-        MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
+      case ProxyStubType::DOMShadowed:
+        return tryAttachDOMProxyShadowed(obj, objId, id);
+      case ProxyStubType::DOMUnshadowed:
         return tryAttachDOMProxyUnshadowed(obj, objId, id);
+      case ProxyStubType::Generic:
+        return tryAttachGenericProxy(obj, objId, id);
     }
 
-    return tryAttachGenericProxy(obj, objId, id);
+    MOZ_CRASH("Unexpected ProxyStubType");
 }
 
 bool
@@ -1070,6 +1103,16 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
         return false;
     }
 
+    if (idVal_.toNumber() < 0 || floor(idVal_.toNumber()) != idVal_.toNumber())
+        return false;
+
+    // Ensure the index is in-bounds so the element type gets monitored.
+    if (obj->is<TypedArrayObject>() &&
+        idVal_.toNumber() >= double(obj->as<TypedArrayObject>().length()))
+    {
+        return false;
+    }
+
     // Don't attach typed object stubs if the underlying storage could be
     // detached, as the stub will always bail out.
     if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
@@ -1083,7 +1126,13 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
 
     Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
     writer.loadTypedElementResult(objId, int32IndexId, layout, TypedThingElementType(obj));
-    writer.returnFromIC();
+
+    // Reading from Uint32Array may produce an int32 now but a double value
+    // later, so ensure we monitor the result.
+    if (TypedThingElementType(obj) == Scalar::Type::Uint32)
+        writer.typeMonitorResult();
+    else
+        writer.returnFromIC();
     return true;
 }
 
@@ -1107,4 +1156,88 @@ GetPropIRGenerator::maybeEmitIdGuard(jsid id)
         StringOperandId strId = writer.guardIsString(valId);
         writer.guardSpecificAtom(strId, JSID_TO_ATOM(id));
     }
+}
+
+GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, jsbytecode* pc, HandleScript script,
+                                       HandleObject env, HandlePropertyName name)
+  : IRGenerator(cx, pc, CacheKind::GetName),
+    script_(script),
+    env_(env),
+    name_(name)
+{}
+
+bool
+GetNameIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::GetName);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ObjOperandId envId(writer.setInputOperandId(0));
+    if (tryAttachEnvironmentName(envId))
+        return true;
+
+    return false;
+}
+
+bool
+GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId)
+{
+    if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    RootedId id(cx_, NameToId(name_));
+    RootedObject env(cx_, env_);
+    RootedShape shape(cx_);
+    RootedNativeObject holder(cx_);
+
+    while (env) {
+        if (env->is<GlobalObject>()) {
+            shape = env->as<GlobalObject>().lookup(cx_, id);
+            if (shape)
+                break;
+            return false;
+        }
+
+        if (!env->is<EnvironmentObject>() || env->is<WithEnvironmentObject>())
+            return false;
+
+        MOZ_ASSERT(!env->hasUncacheableProto());
+
+        // Check for an 'own' property on the env. There is no need to
+        // check the prototype as non-with scopes do not inherit properties
+        // from any prototype.
+        shape = env->as<NativeObject>().lookup(cx_, id);
+        if (shape)
+            break;
+
+        env = env->enclosingEnvironment();
+    }
+
+    holder = &env->as<NativeObject>();
+    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(holder, holder, shape))
+        return false;
+
+    ObjOperandId lastObjId = objId;
+    env = env_;
+    while (env) {
+        if (env == holder) {
+            writer.guardShape(lastObjId, holder->maybeShape());
+            break;
+        }
+
+        writer.guardShape(lastObjId, env->maybeShape());
+        lastObjId = writer.loadEnclosingEnvironment(lastObjId);
+        env = env->enclosingEnvironment();
+    }
+
+    if (holder->isFixedSlot(shape->slot())) {
+        writer.loadEnvironmentFixedSlotResult(lastObjId, NativeObject::getFixedSlotOffset(shape->slot()));
+    } else {
+        size_t dynamicSlotOffset = holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+        writer.loadEnvironmentDynamicSlotResult(lastObjId, dynamicSlotOffset);
+    }
+
+    writer.typeMonitorResult();
+    return true;
 }

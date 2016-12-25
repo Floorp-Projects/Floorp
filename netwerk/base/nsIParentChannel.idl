@@ -35,6 +35,12 @@ interface nsIParentChannel : nsIStreamListener
   [noscript] void notifyTrackingProtectionDisabled();
 
   /**
+   * Called to notify the HttpChannelChild that the resource being loaded
+   * is on the tracking protection list.
+   */
+  [noscript] void notifyTrackingResource();
+
+  /**
    * Called to invoke deletion of the IPC protocol.
    */
   void delete();

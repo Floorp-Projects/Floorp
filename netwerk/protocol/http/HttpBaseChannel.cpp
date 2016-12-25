@@ -119,6 +119,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mRequireCORSPreflight(false)
   , mReportCollector(new ConsoleReportCollector())
   , mForceMainDocumentChannel(false)
+  , mIsTrackingResource(false)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -233,6 +234,9 @@ NS_INTERFACE_MAP_BEGIN(HttpBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIConsoleReportCollector)
   NS_INTERFACE_MAP_ENTRY(nsIThrottledInputChannel)
+  if (aIID.Equals(NS_GET_IID(HttpBaseChannel))) {
+    foundInterface = static_cast<nsIWritablePropertyBag*>(this);
+  } else
 NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
@@ -1220,6 +1224,13 @@ NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t *aWindowId)
 NS_IMETHODIMP HttpBaseChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
 {
   mContentWindowId = aWindowId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetIsTrackingResource(bool* aIsTrackingResource)
+{
+  *aIsTrackingResource = mIsTrackingResource;
   return NS_OK;
 }
 

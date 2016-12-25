@@ -482,9 +482,12 @@ struct nsStyleImage
                                bool* aIsEntireImage = nullptr) const;
 
   /**
-   * Starts the decoding of a image.
+   * Starts the decoding of a image. Returns true if the current frame of the
+   * image is complete. The return value is intended to be used instead of
+   * IsComplete because IsComplete may not be up to date if notifications
+   * from decoding are pending because they are being sent async.
    */
-  nsresult StartDecoding() const;
+  bool StartDecoding() const;
   /**
    * @return true if the item is definitely opaque --- i.e., paints every
    * pixel within its bounds opaquely, and the bounds contains at least a pixel.
@@ -784,6 +787,8 @@ struct nsStyleImageLayers {
   struct Layer;
   friend struct Layer;
   struct Layer {
+    typedef mozilla::StyleGeometryBox StyleGeometryBox;
+
     nsStyleImage  mImage;         // [reset]
     RefPtr<mozilla::css::URLValueData> mSourceURI;  // [reset]
                                   // mask-only property
@@ -795,9 +800,9 @@ struct nsStyleImageLayers {
                                   // or an ImageValue.)
     mozilla::Position mPosition;  // [reset]
     Size          mSize;          // [reset]
-    uint8_t       mClip;          // [reset] See nsStyleConsts.h
+    StyleGeometryBox  mClip;      // [reset] See nsStyleConsts.h
     MOZ_INIT_OUTSIDE_CTOR
-      uint8_t     mOrigin;        // [reset] See nsStyleConsts.h
+      StyleGeometryBox mOrigin;   // [reset] See nsStyleConsts.h
     uint8_t       mAttachment;    // [reset] See nsStyleConsts.h
                                   // background-only property
                                   // This property is used for background layer
@@ -2751,7 +2756,7 @@ private:
   ReferenceBox mReferenceBox = ReferenceBox::NoBox;
 };
 
-using StyleClipPath = StyleShapeSource<StyleClipPathGeometryBox>;
+using StyleClipPath = StyleShapeSource<StyleGeometryBox>;
 using StyleShapeOutside = StyleShapeSource<StyleShapeOutsideShapeBox>;
 
 } // namespace mozilla
@@ -2883,7 +2888,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
     return mozilla::StyleDisplay::Block == mDisplay ||
            mozilla::StyleDisplay::ListItem == mDisplay ||
            mozilla::StyleDisplay::InlineBlock == mDisplay ||
-           mozilla::StyleDisplay::TableCaption == mDisplay;
+           mozilla::StyleDisplay::TableCaption == mDisplay ||
+           mozilla::StyleDisplay::FlowRoot == mDisplay;
     // Should TABLE_CELL be included here?  They have
     // block frames nested inside of them.
     // (But please audit all callers before changing.)
@@ -2895,7 +2901,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mozilla::StyleDisplay::WebkitBox == mDisplay ||
            mozilla::StyleDisplay::Grid == mDisplay ||
            mozilla::StyleDisplay::ListItem == mDisplay ||
-           mozilla::StyleDisplay::Table == mDisplay;
+           mozilla::StyleDisplay::Table == mDisplay ||
+           mozilla::StyleDisplay::FlowRoot == mDisplay;
   }
 
   static bool IsDisplayTypeInlineOutside(mozilla::StyleDisplay aDisplay) {

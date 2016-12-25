@@ -9,8 +9,7 @@ ac_add_options --host=x86_64-pc-mingw32
 
 ac_add_options --enable-optimize
 
-#Work to make the clang-plugin work on Windows is ongoing in bug 1316545.
-#ac_add_options --enable-clang-plugin
+ac_add_options --enable-clang-plugin
 
 . $topsrcdir/build/win64/mozconfig.vs-latest
 

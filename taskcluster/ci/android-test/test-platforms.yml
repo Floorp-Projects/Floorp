@@ -13,13 +13,17 @@
 
 android-4.3-arm7-api-15/debug:
     build-platform: android-api-15/debug
-    test-set: debug-tests
+    test-sets:
+        - debug-tests
 android-4.3-arm7-api-15/opt:
     build-platform: android-api-15/opt
-    test-set: opt-tests
+    test-sets:
+        - opt-tests
 android-4.2-x86/opt:
     build-platform: android-x86/opt
-    test-set: x86-tests
+    test-sets:
+        - x86-tests
 android-4.3-arm7-api-15-gradle/opt:
     build-platform: android-api-15-gradle/opt
-    test-set: gradle-tests
+    test-sets:
+        - gradle-tests

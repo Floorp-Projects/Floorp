@@ -8,6 +8,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "nsIPersistentProperties2.h"
+#include "nsISimpleEnumerator.h"
 
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
@@ -75,6 +76,31 @@ AccessibleNode::GetStates(nsTArray<nsString>& aStates)
   }
 
   aStates.AppendElement(NS_LITERAL_STRING("defunct"));
+}
+
+void
+AccessibleNode::GetAttributes(nsTArray<nsString>& aAttributes)
+{
+  if (!mIntl) {
+    return;
+  }
+
+  nsCOMPtr<nsIPersistentProperties> attrs = mIntl->Attributes();
+
+  nsCOMPtr<nsISimpleEnumerator> props;
+  attrs->Enumerate(getter_AddRefs(props));
+
+  bool hasMore = false;
+  while (NS_SUCCEEDED(props->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supp;
+    props->GetNext(getter_AddRefs(supp));
+
+    nsCOMPtr<nsIPropertyElement> prop(do_QueryInterface(supp));
+
+    nsAutoCString attr;
+    prop->GetKey(attr);
+    aAttributes.AppendElement(NS_ConvertUTF8toUTF16(attr));
+  }
 }
 
 bool

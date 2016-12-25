@@ -156,6 +156,12 @@ interface imgIRequest : nsIRequest
   void startDecoding(in uint32_t aFlags);
 
   /**
+   * Exactly like startDecoding above except returns whether the current frame
+   * of the image is complete or not.
+   */
+  [noscript, notxpcom] boolean startDecodingWithResult(in uint32_t aFlags);
+
+  /**
    * Locks an image. If the image does not exist yet, locks it once it becomes
    * available. The lock persists for the lifetime of the imgIRequest (until
    * unlockImage is called) even if the underlying image changes.

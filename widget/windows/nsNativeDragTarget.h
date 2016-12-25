@@ -68,6 +68,8 @@ public:
    */
   void DragCancel();
 
+  static void DragImageChanged() { gDragImageChanged = true; }
+
 protected:
 
   void GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect, 
@@ -95,6 +97,8 @@ protected:
 private:
   // Drag target helper 
   IDropTargetHelper * mDropTargetHelper;
+
+  static bool gDragImageChanged;
 };
 
 #endif // _nsNativeDragTarget_h_

@@ -228,6 +228,10 @@ var ignoreFunctions = {
     "calloc" : true,
 };
 
+function extraGCFunctions() {
+    return ["ffi_call"];
+}
+
 function isProtobuf(name)
 {
     return name.match(/\bgoogle::protobuf\b/) ||

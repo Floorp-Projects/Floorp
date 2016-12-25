@@ -6837,7 +6837,7 @@ ShouldDrawSelection(const nsIFrame* aFrame)
   const nsStyleBackground* bg = aFrame->StyleContext()->StyleBackground();
   const nsStyleImageLayers& layers = bg->mImage;
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, layers) {
-    if (layers.mLayers[i].mClip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+    if (layers.mLayers[i].mClip == StyleGeometryBox::Text) {
       return false;
     }
   }

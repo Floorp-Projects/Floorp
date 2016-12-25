@@ -701,6 +701,9 @@ wasm::ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, Dec
 static bool
 DecodePreamble(Decoder& d)
 {
+    if (d.bytesRemain() > MaxModuleBytes)
+        return d.fail("module too big");
+
     uint32_t u32;
     if (!d.readFixedU32(&u32) || u32 != MagicNumber)
         return d.fail("failed to match magic number");
@@ -725,7 +728,7 @@ DecodeTypeSection(Decoder& d, ModuleEnvironment* env)
     if (!d.readVarU32(&numSigs))
         return d.fail("expected number of signatures");
 
-    if (numSigs > MaxSigs)
+    if (numSigs > MaxTypes)
         return d.fail("too many signatures");
 
     if (!env->sigs.resize(numSigs))
@@ -740,7 +743,7 @@ DecodeTypeSection(Decoder& d, ModuleEnvironment* env)
         if (!d.readVarU32(&numArgs))
             return d.fail("bad number of function args");
 
-        if (numArgs > MaxArgsPerFunc)
+        if (numArgs > MaxParams)
             return d.fail("too many arguments in signature");
 
         ValTypeVector args;
@@ -783,6 +786,9 @@ DecodeName(Decoder& d)
 {
     uint32_t numBytes;
     if (!d.readVarU32(&numBytes))
+        return nullptr;
+
+    if (numBytes > MaxStringBytes)
         return nullptr;
 
     const uint8_t* bytes;
@@ -855,7 +861,7 @@ DecodeTableLimits(Decoder& d, TableDescVector* tables)
     if (!DecodeLimits(d, &limits))
         return false;
 
-    if (limits.initial > MaxTableElems)
+    if (limits.initial > MaxTableLength)
         return d.fail("too many table elements");
 
     if (tables->length())
@@ -959,6 +965,8 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
             return false;
         if (!env->funcSigs.append(&env->sigs[sigIndex]))
             return false;
+        if (env->funcSigs.length() > MaxFuncs)
+            return d.fail("too many functions");
         break;
       }
       case DefinitionKind::Table: {
@@ -981,6 +989,8 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
             return false;
         if (!env->globals.append(GlobalDesc(type, isMutable, env->globals.length())))
             return false;
+        if (env->globals.length() > MaxGlobals)
+            return d.fail("too many globals");
         break;
       }
       default:
@@ -1392,6 +1402,9 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
         if (!d.readVarU32(&numElems))
             return d.fail("expected segment size");
 
+        if (numElems > MaxTableLength)
+            return d.fail("too many table elements");
+
         Uint32Vector elemFuncIndices;
         if (!elemFuncIndices.resize(numElems))
             return false;
@@ -1457,6 +1470,9 @@ DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env, uint32_t funcIndex)
     uint32_t bodySize;
     if (!d.readVarU32(&bodySize))
         return d.fail("expected number of function body bytes");
+
+    if (bodySize > MaxFunctionBytes)
+        return d.fail("function body too big");
 
     if (d.bytesRemain() < bodySize)
         return d.fail("function body length too big");
@@ -1575,6 +1591,8 @@ MaybeDecodeNameSectionBody(Decoder& d, ModuleEnvironment* env)
         uint32_t numBytes;
         if (!d.readVarU32(&numBytes))
             return;
+        if (numBytes > MaxStringLength)
+            return;
 
         NameInBytecode name;
         name.offset = d.currentOffset();
@@ -1588,10 +1606,16 @@ MaybeDecodeNameSectionBody(Decoder& d, ModuleEnvironment* env)
         uint32_t numLocals;
         if (!d.readVarU32(&numLocals))
             return;
+        if (numLocals > MaxLocals)
+            return;
+
         for (uint32_t j = 0; j < numLocals; j++) {
             uint32_t numBytes;
             if (!d.readVarU32(&numBytes))
                 return;
+            if (numBytes > MaxStringLength)
+                return;
+
             if (!d.readBytes(numBytes))
                 return;
         }

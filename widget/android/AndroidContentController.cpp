@@ -26,24 +26,6 @@ AndroidContentController::Destroy()
 }
 
 void
-AndroidContentController::NotifyDefaultPrevented(IAPZCTreeManager* aManager,
-                                                 uint64_t aInputBlockId,
-                                                 bool aDefaultPrevented)
-{
-    if (!AndroidBridge::IsJavaUiThread()) {
-        // The notification must reach the APZ on the Java UI thread (aka the
-        // APZ "controller" thread) but we get it from the Gecko thread, so we
-        // have to throw it onto the other thread.
-        AndroidBridge::Bridge()->PostTaskToUiThread(NewRunnableMethod<uint64_t, bool>(
-            aManager, &IAPZCTreeManager::ContentReceivedInputBlock,
-            aInputBlockId, aDefaultPrevented), 0);
-        return;
-    }
-
-    aManager->ContentReceivedInputBlock(aInputBlockId, aDefaultPrevented);
-}
-
-void
 AndroidContentController::DispatchSingleTapToObservers(const LayoutDevicePoint& aPoint,
                                                        const ScrollableLayerGuid& aGuid) const
 {
@@ -101,11 +83,6 @@ AndroidContentController::HandleTap(TapType aType, const LayoutDevicePoint& aPoi
     ChromeProcessController::HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
 }
 
-void
-AndroidContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
-{
-    AndroidBridge::Bridge()->PostTaskToUiThread(Move(aTask), aDelayMs);
-}
 void
 AndroidContentController::UpdateOverscrollVelocity(const float aX, const float aY, const bool aIsRootContent)
 {

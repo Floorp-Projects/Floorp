@@ -305,11 +305,7 @@ function spoofPartnerInfo() {
 }
 
 function getAttributionFile() {
-  let file = Services.dirsvc.get("LocalAppData", Ci.nsIFile);
-  file.append("mozilla");
-  file.append(AppConstants.MOZ_APP_NAME);
-  file.append("postSigningData");
-  return file;
+  return FileUtils.getFile("LocalAppData", ["mozilla", AppConstants.MOZ_APP_NAME, "postSigningData"]);
 }
 
 function spoofAttributionData() {
@@ -319,6 +315,7 @@ function spoofAttributionData() {
                  createInstance(Ci.nsIFileOutputStream);
     stream.init(getAttributionFile(), -1, -1, 0);
     stream.write(ATTRIBUTION_CODE, ATTRIBUTION_CODE.length);
+    stream.close();
   }
 }
 

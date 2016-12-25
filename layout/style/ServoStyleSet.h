@@ -75,7 +75,7 @@ public:
   ResolveStyleForOtherNonElement(nsStyleContext* aParentContext);
 
   already_AddRefed<nsStyleContext>
-  ResolvePseudoElementStyle(dom::Element* aParentElement,
+  ResolvePseudoElementStyle(dom::Element* aOriginatingElement,
                             mozilla::CSSPseudoElementType aType,
                             nsStyleContext* aParentContext,
                             dom::Element* aPseudoElement);
@@ -103,12 +103,12 @@ public:
 
   // check whether there is ::before/::after style for an element
   already_AddRefed<nsStyleContext>
-  ProbePseudoElementStyle(dom::Element* aParentElement,
+  ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
                           nsStyleContext* aParentContext);
 
   already_AddRefed<nsStyleContext>
-  ProbePseudoElementStyle(dom::Element* aParentElement,
+  ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
                           nsStyleContext* aParentContext,
                           TreeMatchContext& aTreeMatchContext,

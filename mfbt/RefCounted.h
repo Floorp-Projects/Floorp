@@ -16,7 +16,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/RefCountType.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/UniquePtr.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 #include "nsXPCOM.h"
@@ -53,6 +52,9 @@ namespace mozilla {
  * Note that when deriving from RefCounted or AtomicRefCounted, you
  * should add MOZ_DECLARE_REFCOUNTED_TYPENAME(ClassName) to the public
  * section of your class, where ClassName is the name of your class.
+ *
+ * Note: SpiderMonkey should use js::RefCounted instead since that type
+ * will use appropriate js_delete and also not break ref-count logging.
  */
 namespace detail {
 const MozRefCountType DEAD = 0xffffdead;
@@ -87,7 +89,7 @@ enum RefCountAtomicity
   NonAtomicRefCount
 };
 
-template<typename T, RefCountAtomicity Atomicity, typename D>
+template<typename T, RefCountAtomicity Atomicity>
 class RefCounted
 {
 protected:
@@ -133,7 +135,7 @@ public:
 #ifdef DEBUG
       mRefCnt = detail::DEAD;
 #endif
-      D()(const_cast<T*>(static_cast<const T*>(this)));
+      delete static_cast<const T*>(this);
     }
   }
 
@@ -172,8 +174,8 @@ private:
 
 } // namespace detail
 
-template<typename T, class D = DefaultDelete<T>>
-class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount, D>
+template<typename T>
+class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount>
 {
 public:
   ~RefCounted()
@@ -192,9 +194,9 @@ namespace external {
  * NOTE: Please do not use this class, use NS_INLINE_DECL_THREADSAFE_REFCOUNTING
  * instead.
  */
-template<typename T, typename D = DefaultDelete<T>>
+template<typename T>
 class AtomicRefCounted :
-  public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount, D>
+  public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount>
 {
 public:
   ~AtomicRefCounted()

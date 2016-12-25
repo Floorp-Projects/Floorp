@@ -30,6 +30,7 @@ SOURCES += [
     'TestNonHeapClass.cpp',
     'TestNonMemMovable.cpp',
     'TestNonMemMovableStd.cpp',
+    'TestNonMemMovableStdAtomic.cpp',
     'TestNonParameterChecker.cpp',
     'TestNonTemporaryClass.cpp',
     'TestNoRefcountedInsideLambdas.cpp',

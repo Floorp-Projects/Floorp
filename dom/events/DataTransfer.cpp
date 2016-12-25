@@ -758,28 +758,36 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
 }
 
 void
-DataTransfer::SetDragImage(Element& aImage, int32_t aX, int32_t aY,
-                           ErrorResult& aRv)
+DataTransfer::SetDragImage(Element& aImage, int32_t aX, int32_t aY)
 {
-  if (mReadOnly) {
-    aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    return;
+  if (!mReadOnly) {
+    mDragImage = &aImage;
+    mDragImageX = aX;
+    mDragImageY = aY;
   }
-
-  mDragImage = &aImage;
-  mDragImageX = aX;
-  mDragImageY = aY;
 }
 
 NS_IMETHODIMP
 DataTransfer::SetDragImage(nsIDOMElement* aImage, int32_t aX, int32_t aY)
 {
-  ErrorResult rv;
   nsCOMPtr<Element> image = do_QueryInterface(aImage);
   if (image) {
-    SetDragImage(*image, aX, aY, rv);
+    SetDragImage(*image, aX, aY);
   }
-  return rv.StealNSResult();
+  return NS_OK;
+}
+
+void
+DataTransfer::UpdateDragImage(Element& aImage, int32_t aX, int32_t aY)
+{
+  if (mEventMessage < eDragDropEventFirst || mEventMessage > eDragDropEventLast) {
+    return;
+  }
+
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  if (dragSession) {
+    dragSession->UpdateDragImage(aImage.AsDOMNode(), aX, aY);
+  }
 }
 
 already_AddRefed<Promise>

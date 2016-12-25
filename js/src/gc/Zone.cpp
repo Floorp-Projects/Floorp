@@ -254,8 +254,10 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
          *
          * Defer freeing any allocated blocks until after the next minor GC.
          */
-        if (discardBaselineCode)
+        if (discardBaselineCode) {
             jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(fop->runtime());
+            jitZone()->purgeIonCacheIRStubInfo();
+        }
 
         /*
          * Free all control flow graphs that are cached on BaselineScripts.

@@ -34,8 +34,9 @@ exports.removeContentGlobal = function (options) {
   return undefined;
 };
 
-function getGlobalCache(aInnerWindowID) {
-  return globalsCache[aInnerWindowID] = globalsCache[aInnerWindowID] || [];
+function getGlobalCache(innerWindowID) {
+  globalsCache[innerWindowID] = globalsCache[innerWindowID] || [];
+  return globalsCache[innerWindowID];
 }
 
 // when the window is destroyed, eliminate the associated globals cache

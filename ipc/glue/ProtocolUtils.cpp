@@ -799,6 +799,16 @@ IToplevelProtocol::GetMessageEventTarget(const Message& aMsg)
   return target.forget();
 }
 
+already_AddRefed<nsIEventTarget>
+IToplevelProtocol::GetActorEventTarget(IProtocol* aActor)
+{
+  MOZ_RELEASE_ASSERT(aActor->Id() != kNullActorId && aActor->Id() != kFreedActorId);
+
+  MutexAutoLock lock(mEventTargetMutex);
+  nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(aActor->Id());
+  return target.forget();
+}
+
 void
 IToplevelProtocol::SetEventTargetForActorInternal(IProtocol* aActor,
                                                   nsIEventTarget* aEventTarget)

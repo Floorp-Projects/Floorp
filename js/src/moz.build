@@ -236,8 +236,10 @@ UNIFIED_SOURCES += [
     'jit/Ion.cpp',
     'jit/IonAnalysis.cpp',
     'jit/IonBuilder.cpp',
+    'jit/IonCacheIRCompiler.cpp',
     'jit/IonCaches.cpp',
     'jit/IonControlFlow.cpp',
+    'jit/IonIC.cpp',
     'jit/IonOptimizationLevels.cpp',
     'jit/JitcodeMap.cpp',
     'jit/JitFrames.cpp',
@@ -324,7 +326,6 @@ UNIFIED_SOURCES += [
     'vm/GlobalObject.cpp',
     'vm/HelperThreads.cpp',
     'vm/Id.cpp',
-    'vm/Interpreter.cpp',
     'vm/JSONParser.cpp',
     'vm/MemoryMetrics.cpp',
     'vm/NativeObject.cpp',
@@ -402,6 +403,8 @@ UNIFIED_SOURCES += [
 # StoreBuffer.cpp cannot be built in unified because its template
 # instantiations may or may not be needed depending on what it gets bundled
 # with.
+# vm/Interpreter.cpp is gigantic and destroys incremental build times for any
+# files unlucky enough to be unified with it.
 SOURCES += [
     'builtin/RegExp.cpp',
     'frontend/Parser.cpp',
@@ -412,6 +415,7 @@ SOURCES += [
     'jsmath.cpp',
     'jsutil.cpp',
     'vm/Initialization.cpp',
+    'vm/Interpreter.cpp',
 ]
 
 if CONFIG['JS_POSIX_NSPR']:

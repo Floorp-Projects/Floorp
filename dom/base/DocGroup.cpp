@@ -63,7 +63,7 @@ DocGroup::Dispatch(const char* aName,
   return mTabGroup->Dispatch(aName, aCategory, Move(aRunnable));
 }
 
-already_AddRefed<nsIEventTarget>
+nsIEventTarget*
 DocGroup::EventTargetFor(TaskCategory aCategory) const
 {
   return mTabGroup->EventTargetFor(aCategory);
