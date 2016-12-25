@@ -874,6 +874,7 @@ var AddonTestUtils = {
         for (let part of entry.split("/"))
           target.append(part);
         zip.extract(entry, target);
+        target.permissions |= FileUtils.PERMS_FILE;
       }
       zip.close();
 

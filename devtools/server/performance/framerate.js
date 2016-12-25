@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { on, once, off, emit } = require("sdk/event/core");
+const { on, off } = require("sdk/event/core");
 const { Class } = require("sdk/core/heritage");
 
 /**
@@ -11,7 +11,7 @@ const { Class } = require("sdk/core/heritage");
  * and monitors framerate over time. The actor wrapper around this
  * can be found at devtools/server/actors/framerate.js
  */
-var Framerate = exports.Framerate = Class({
+exports.Framerate = Class({
   initialize: function (tabActor) {
     this.tabActor = tabActor;
     this._contentWin = tabActor.window;

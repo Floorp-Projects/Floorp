@@ -7,6 +7,7 @@ with(7) {
         }
         const x = 42;
         function g() {
+            eval("");
             return x;
         }
         return g;

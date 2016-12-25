@@ -1219,6 +1219,9 @@ pref("privacy.trackingprotection.enabled",  false);
 pref("privacy.trackingprotection.pbmode.enabled",  true);
 // Annotate channels based on the tracking protection list in all modes
 pref("privacy.trackingprotection.annotate_channels",  false);
+// Lower the priority of network loads for resources on the tracking protection list.
+// Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
+pref("privacy.trackingprotection.lower_network_priority",  false);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
@@ -2623,6 +2626,9 @@ pref("layout.css.grid-template-subgrid-value.enabled", false);
 
 // Is support for CSS contain enabled?
 pref("layout.css.contain.enabled", false);
+
+// Is support for CSS display:flow-root enabled?
+pref("layout.css.display-flow-root.enabled", true);
 
 // Is support for CSS box-decoration-break enabled?
 pref("layout.css.box-decoration-break.enabled", true);

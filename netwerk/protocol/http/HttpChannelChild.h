@@ -106,6 +106,7 @@ public:
   bool IsSuspended();
 
   mozilla::ipc::IPCResult RecvNotifyTrackingProtectionDisabled() override;
+  mozilla::ipc::IPCResult RecvNotifyTrackingResource() override;
   void FlushedForDiversion();
 
 protected:
@@ -154,6 +155,8 @@ protected:
   mozilla::ipc::IPCResult RecvIssueDeprecationWarning(const uint32_t& warning,
                                                       const bool& asError) override;
 
+  mozilla::ipc::IPCResult RecvSetPriority(const uint16_t& aPriority) override;
+
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;
 
@@ -178,6 +181,12 @@ private:
     nsCOMPtr<nsIInputStream> mInput;
     nsAutoPtr<nsHttpResponseHead> mHead;
   };
+
+  // Sets the event target for future IPC messages. Messages will either be
+  // directed to the TabGroup or DocGroup, depending on the LoadInfo associated
+  // with the channel. Should be called when a new channel is being set up,
+  // before the constructor message is sent to the parent.
+  void SetEventTarget();
 
   nsresult ContinueAsyncOpen();
 

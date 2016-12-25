@@ -31,7 +31,6 @@ parent:
   // Note: channels are opened during construction, so no open method here:
   // see PNecko.ipdl
 
-  async SetPriority(uint16_t priority);
   async SetClassOfService(uint32_t cos);
 
   async SetCacheTokenCachedCharset(nsCString charset);
@@ -149,6 +148,10 @@ child:
   // Tell the child that tracking protection was disabled for this load.
   async NotifyTrackingProtectionDisabled();
 
+  // Tell the child that the resource being loaded is on the tracking
+  // protection list.
+  async NotifyTrackingResource();
+
   // Parent has been suspended for diversion; no more events to be enqueued.
   async FlushedForDiversion();
 
@@ -173,6 +176,8 @@ both:
   // after that. When receiving this message, the child will call
   // Send__delete__() and complete the steps required to finish the redirect.
   async FinishInterceptedRedirect();
+
+  async SetPriority(uint16_t priority);
 };
 
 

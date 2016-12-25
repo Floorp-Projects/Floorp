@@ -49,7 +49,7 @@ private:
 class MOZ_RAII DeneuteredWindowRegion
 {
 public:
-  DeneuteredWindowRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit DeneuteredWindowRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   ~DeneuteredWindowRegion();
 
 private:
@@ -60,7 +60,7 @@ private:
 class MOZ_RAII SuppressedNeuteringRegion
 {
 public:
-  SuppressedNeuteringRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit SuppressedNeuteringRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   ~SuppressedNeuteringRegion();
 
   static inline bool IsNeuteringSuppressed() { return sSuppressNeutering; }

@@ -6,10 +6,9 @@
 
 "use strict";
 
-var { Cu, CC, Ci, Cc } = require("chrome");
+const { Cu, CC } = require("chrome");
 
 const { DebuggerServer } = require("devtools/server/main");
-const promise = require("promise");
 
 /**
  * Support for actor registration. Main used by ActorRegistryActor

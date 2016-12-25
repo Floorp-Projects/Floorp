@@ -17,8 +17,6 @@ namespace jit {
 class ICFallbackStub;
 class ICStub;
 
-void TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo* stubInfo);
-
 ICStub* AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
                                   CacheKind kind, ICStubEngine engine, JSScript* outerScript,
                                   ICFallbackStub* stub);
