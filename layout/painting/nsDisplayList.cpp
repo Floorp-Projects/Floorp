@@ -394,27 +394,27 @@ SetAnimatable(nsCSSPropertyID aProperty,
 {
   MOZ_ASSERT(aFrame);
 
+  if (aAnimationValue.IsNull()) {
+    aAnimatable = null_t();
+    return;
+  }
+
   switch (aProperty) {
     case eCSSProperty_opacity:
-      if (!aAnimationValue.IsNull()) {
-        aAnimatable = aAnimationValue.GetFloatValue();
-      } else {
-        aAnimatable = 0.0;
-      }
+      aAnimatable = aAnimationValue.GetFloatValue();
       break;
-    case eCSSProperty_transform:
+    case eCSSProperty_transform: {
       aAnimatable = InfallibleTArray<TransformFunction>();
-      if (!aAnimationValue.IsNull()) {
-        nsCSSValueSharedList* list =
-          aAnimationValue.GetCSSValueSharedListValue();
-        TransformReferenceBox refBox(aFrame);
-        AddTransformFunctions(list->mHead,
-                              aFrame->StyleContext(),
-                              aFrame->PresContext(),
-                              refBox,
-                              aAnimatable.get_ArrayOfTransformFunction());
-      }
+      nsCSSValueSharedList* list =
+        aAnimationValue.GetCSSValueSharedListValue();
+      TransformReferenceBox refBox(aFrame);
+      AddTransformFunctions(list->mHead,
+                            aFrame->StyleContext(),
+                            aFrame->PresContext(),
+                            refBox,
+                            aAnimatable.get_ArrayOfTransformFunction());
       break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported property");
   }
@@ -424,7 +424,7 @@ static void
 SetBaseAnimationStyle(nsCSSPropertyID aProperty,
                       nsIFrame* aFrame,
                       const TransformReferenceBox& aRefBox,
-                      layers::BaseAnimationStyle& aBaseStyle)
+                      layers::Animatable& aBaseStyle)
 {
   MOZ_ASSERT(aFrame);
 
@@ -433,9 +433,7 @@ SetBaseAnimationStyle(nsCSSPropertyID aProperty,
   MOZ_ASSERT(!baseValue.IsNull(),
              "The base value should be already there");
 
-  layers::Animatable animatable;
-  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, animatable);
-  aBaseStyle = animatable;
+  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, aBaseStyle);
 }
 
 static void
@@ -4578,9 +4576,10 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aParameters,
                               const nsDisplayList& aList,
-                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren)
+                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren,
+                              LayerState aDefaultState = LAYER_INACTIVE)
 {
-  LayerState result = LAYER_INACTIVE;
+  LayerState result = aDefaultState;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
     if (result == LAYER_INACTIVE &&
         i->GetAnimatedGeometryRoot() != aExpectedAnimatedGeometryRootForChildren) {
@@ -7338,7 +7337,8 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
 {
   if (ShouldPaintOnMaskLayer(aManager)) {
     return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-                                         mList, GetAnimatedGeometryRoot());
+                                         mList, GetAnimatedGeometryRoot(),
+                                         LAYER_SVG_EFFECTS);
   }
 
   return LAYER_SVG_EFFECTS;

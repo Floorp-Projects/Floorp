@@ -156,13 +156,9 @@ union TransformFunction {
 };
 
 union Animatable {
+  null_t;
   float;
   TransformFunction[];
-};
-
-union BaseAnimationStyle {
-  null_t;
-  Animatable;
 };
 
 struct AnimationSegment {
@@ -232,7 +228,7 @@ struct Animation {
   // animations with a composite mode of additive or accumulate, and only for
   // the first animation in the set (i.e. the animation that is lowest in the
   // stack). In all other cases the value is null_t.
-  BaseAnimationStyle baseStyle;
+  Animatable baseStyle;
 };
 
 // Change a layer's attributes

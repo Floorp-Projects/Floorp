@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Log.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/ServiceRequest.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
@@ -904,8 +905,7 @@ var TelemetrySendImpl = {
     const version = isNewPing ? PING_FORMAT_VERSION : 1;
     const url = this._server + this._getSubmissionPath(ping) + "?v=" + version;
 
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                  .createInstance(Ci.nsIXMLHttpRequest);
+    let request = new ServiceRequest();
     request.mozBackgroundRequest = true;
     request.timeout = PING_SUBMIT_TIMEOUT_MS;
 

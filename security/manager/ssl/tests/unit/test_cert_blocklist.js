@@ -139,6 +139,17 @@ function verify_cert(file, expectedError) {
   checkCertErrorGeneric(certDB, ee, expectedError, certificateUsageSSLServer);
 }
 
+// The certificate blocklist currently only applies to TLS server certificates.
+function verify_non_tls_usage_succeeds(file) {
+  let ee = constructCertFromFile(file);
+  checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
+                        certificateUsageSSLClient);
+  checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
+                        certificateUsageEmailSigner);
+  checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
+                        certificateUsageEmailRecipient);
+}
+
 function load_cert(cert, trust) {
   let file = "bad_certs/" + cert + ".pem";
   addCertFromFile(certDB, file, trust);
@@ -294,14 +305,17 @@ function run_test() {
     // Check the blocklisted intermediate now causes a failure
     let file = "test_onecrl/test-int-ee.pem";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+    verify_non_tls_usage_succeeds(file);
 
     // Check the ee with the blocklisted root also causes a failure
     file = "bad_certs/other-issuer-ee.pem";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+    verify_non_tls_usage_succeeds(file);
 
     // Check the ee blocked by subject / pubKey causes a failure
     file = "test_onecrl/same-issuer-ee.pem";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+    verify_non_tls_usage_succeeds(file);
 
     // Check a non-blocklisted chain still validates OK
     file = "bad_certs/default-ee.pem";

@@ -7,12 +7,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Sna
 
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
-  _tokenName: "",
-
-  get _secModuleDB() {
-    delete this._secModuleDB;
-    return this._secModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
-  },
 
   get _pk11DB() {
     delete this._pk11DB;
@@ -20,29 +14,21 @@ var MasterPassword = {
   },
 
   get enabled() {
-    let slot = this._secModuleDB.findSlotByName(this._tokenName);
-    if (slot) {
-      let status = slot.status;
-      return status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED && status != Ci.nsIPKCS11Slot.SLOT_READY;
+    let token = this._pk11DB.getInternalKeyToken();
+    if (token) {
+      return token.hasPassword;
     }
     return false;
   },
 
   setPassword: function setPassword(aPassword) {
     try {
-      let status;
-      let slot = this._secModuleDB.findSlotByName(this._tokenName);
-      if (slot)
-        status = slot.status;
-      else
-        return false;
-
-      let token = this._pk11DB.findTokenByName(this._tokenName);
-
-      if (status == Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED)
+      let token = this._pk11DB.getInternalKeyToken();
+      if (token.needsUserInit) {
         token.initPassword(aPassword);
-      else if (status == Ci.nsIPKCS11Slot.SLOT_READY)
+      } else if (!token.needsLogin()) {
         token.changePassword("", aPassword);
+      }
 
       return true;
     } catch(e) {

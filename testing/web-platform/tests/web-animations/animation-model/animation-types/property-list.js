@@ -304,8 +304,7 @@ var gCSSProperties = {
   },
   'box-shadow': {
     // https://drafts.csswg.org/css-backgrounds/#box-shadow
-    types: [
-    ]
+    types: [ 'boxShadowList' ],
   },
   'box-sizing': {
     // https://drafts.csswg.org/css-ui-4/#box-sizing
@@ -472,8 +471,7 @@ var gCSSProperties = {
   },
   'filter': {
     // https://drafts.fxtf.org/filters/#propdef-filter
-    types: [
-    ]
+    types: [ 'filterList' ]
   },
   'flex-basis': {
     // https://drafts.csswg.org/css-flexbox/#propdef-flex-basis
@@ -1352,8 +1350,12 @@ var gCSSProperties = {
   },
   'text-shadow': {
     // https://drafts.csswg.org/css-text-decor-3/#propdef-text-shadow
-    types: [
-    ]
+    types: [ 'textShadowList' ],
+    setup: t => {
+      var element = createElement(t);
+      element.style.color = 'green';
+      return element;
+    }
   },
   'text-transform': {
     // https://drafts.csswg.org/css-text-3/#propdef-text-transform

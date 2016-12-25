@@ -444,6 +444,29 @@ function createPseudo(test, element, type) {
       [], "no record after setting the same spacing");
   }, "set_the_same_spacing");
 
+  test(t => {
+    var div = addDiv(t);
+    var observer =
+      setupSynchronousObserver(t,
+                               aOptions.subtree ? div.parentNode : div,
+                               aOptions.subtree);
+
+    var anim = div.animate({ }, 100 * MS_PER_SEC);
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [anim], changed: [], removed: [] }],
+      "records after animation is added");
+
+    anim.effect.composite = "add";
+    assert_equals_records(observer.takeRecords(),
+      [{ added: [], changed: [anim], removed: [] }],
+      "records after composite is changed");
+
+    anim.effect.composite = "add";
+    assert_equals_records(observer.takeRecords(),
+      [], "no record after setting the same composite");
+
+  }, "set_composite");
+
   // Test that starting a single animation that is cancelled by calling
   // cancel() dispatches an added notification and then a removed
   // notification.
