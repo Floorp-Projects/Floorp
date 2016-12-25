@@ -35,13 +35,13 @@
 #include "nsITimedChannel.h"
 #include "nsIScriptElement.h"
 #include "nsIDOMHTMLScriptElement.h"
+#include "nsIDocShell.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
 #include "nsIXPConnect.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
-#include "nsDocShell.h"
 #include "nsDocShellCID.h"
 #include "nsIContentSecurityPolicy.h"
 #include "mozilla/Logging.h"
@@ -1301,8 +1301,6 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
 
   RefPtr<nsScriptLoadHandler> handler =
       new nsScriptLoadHandler(this, aRequest, sriDataVerifier.forget());
-  rv = handler->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIIncrementalStreamLoader> loader;
   rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), handler);
@@ -2456,7 +2454,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
 }
 
 nsresult
-nsScriptLoader::OnStreamComplete(nsIChannel* aChannel,
+nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                  nsISupports* aContext,
                                  nsresult aChannelStatus,
                                  nsresult aSRIStatus,
@@ -2466,6 +2464,11 @@ nsScriptLoader::OnStreamComplete(nsIChannel* aChannel,
   nsScriptLoadRequest* request = static_cast<nsScriptLoadRequest*>(aContext);
   NS_ASSERTION(request, "null request in stream complete handler");
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIRequest> channelRequest;
+  aLoader->GetRequest(getter_AddRefs(channelRequest));
+  nsCOMPtr<nsIChannel> channel;
+  channel = do_QueryInterface(channelRequest);
 
   nsresult rv = NS_OK;
   if (!request->mIntegrity.IsEmpty() &&
@@ -2477,14 +2480,14 @@ nsScriptLoader::OnStreamComplete(nsIChannel* aChannel,
     if (mDocument && mDocument->GetDocumentURI()) {
       mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
     }
-    rv = aSRIDataVerifier->Verify(request->mIntegrity, aChannel, sourceUri,
+    rv = aSRIDataVerifier->Verify(request->mIntegrity, channel, sourceUri,
                                   mReporter);
     mReporter->FlushConsoleReports(mDocument);
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_SRI_CORRUPT;
     }
   } else {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
 
     if (loadInfo->GetEnforceSRI()) {
       MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
@@ -2503,7 +2506,7 @@ nsScriptLoader::OnStreamComplete(nsIChannel* aChannel,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = PrepareLoadedRequest(request, aChannel, aChannelStatus, aString);
+    rv = PrepareLoadedRequest(request, aLoader, aChannelStatus, aString);
   }
 
   if (NS_FAILED(rv)) {
@@ -2616,7 +2619,7 @@ nsScriptLoader::MaybeMoveToLoadedList(nsScriptLoadRequest* aRequest)
 
 nsresult
 nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
-                                     nsIChannel* aChannel,
+                                     nsIIncrementalStreamLoader* aLoader,
                                      nsresult aStatus,
                                      mozilla::Vector<char16_t> &aString)
 {
@@ -2634,8 +2637,13 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  // If the load returned an error page, then we need to abort
+  nsCOMPtr<nsIRequest> req;
+  nsresult rv = aLoader->GetRequest(getter_AddRefs(req));
+  NS_ASSERTION(req, "StreamLoader's request went away prematurely");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(req);
   if (httpChannel) {
     bool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
@@ -2649,14 +2657,19 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
       aRequest->mHasSourceMapURL = true;
       aRequest->mSourceMapURL = NS_ConvertUTF8toUTF16(sourceMapURL);
     }
+
+    if (httpChannel->GetIsTrackingResource()) {
+      aRequest->SetIsTracking();
+    }
   }
 
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(req);
   // If this load was subject to a CORS check; don't flag it with a
   // separate origin principal, so that it will treat our document's
   // principal as the origin principal
   if (aRequest->mCORSMode == CORS_NONE) {
     rv = nsContentUtils::GetSecurityManager()->
-      GetChannelResultPrincipal(aChannel, getter_AddRefs(aRequest->mOriginPrincipal));
+      GetChannelResultPrincipal(channel, getter_AddRefs(aRequest->mOriginPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2686,13 +2699,13 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     // When loading a module, only responses with a JavaScript MIME type are
     // acceptable.
     nsAutoCString mimeType;
-    aChannel->GetContentType(mimeType);
+    channel->GetContentType(mimeType);
     NS_ConvertUTF8toUTF16 typeString(mimeType);
     if (!nsContentUtils::IsJavascriptMIMEType(typeString)) {
       return NS_ERROR_FAILURE;
     }
 
-    aChannel->GetURI(getter_AddRefs(request->mBaseURL));
+    channel->GetURI(getter_AddRefs(request->mBaseURL));
 
     // Attempt to compile off main thread.
     rv = AttemptAsyncScriptCompile(request);
@@ -2839,53 +2852,15 @@ nsScriptLoadHandler::nsScriptLoadHandler(nsScriptLoader *aScriptLoader,
   : mScriptLoader(aScriptLoader),
     mRequest(aRequest),
     mSRIDataVerifier(aSRIDataVerifier),
-    mChannelStatus(NS_OK),
     mSRIStatus(NS_OK),
-    mClassificationStatus(NS_ERROR_NOT_INITIALIZED),
     mDecoder(),
     mBuffer()
-{
-}
-
-nsresult
-nsScriptLoadHandler::Init()
-{
-  nsCOMPtr<nsIURIClassifier> uriClassifier =
-    do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
-  if (!uriClassifier) {
-    return NS_ERROR_FAILURE;
-  }
-
-  PrincipalOriginAttributes attrs;
-  nsIDocShell* docShell = nullptr;
-  if (auto doc = mScriptLoader->GetDocument()) {
-    docShell = doc->GetDocShell();
-  }
-  if (!docShell) {
-    return NS_ERROR_FAILURE;
-  }
-  attrs.InheritFromDocShellToDoc(nsDocShell::Cast(docShell)->GetOriginAttributes(), nullptr);
-  nsCOMPtr<nsIPrincipal> prin =
-    BasePrincipal::CreateCodebasePrincipal(mRequest->mURI, attrs);
-  NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
-
-  bool expectCallback = false;
-  uriClassifier->Classify(prin, /* aTrackingProtectionEnabled = */ true,
-                          this, &expectCallback);
-  if (!expectCallback) {
-    // If we don't expect to receive a callback, set the classification status
-    // eagerly.
-    mClassificationStatus = NS_OK;
-  }
-  return NS_OK;
-}
+{}
 
 nsScriptLoadHandler::~nsScriptLoadHandler()
 {}
 
-NS_IMPL_ISUPPORTS(nsScriptLoadHandler,
-                  nsIIncrementalStreamLoaderObserver,
-                  nsIURIClassifierCallback)
+NS_IMPL_ISUPPORTS(nsScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
 
 NS_IMETHODIMP
 nsScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
@@ -3061,33 +3036,7 @@ nsScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
   }
 
-  nsCOMPtr<nsIRequest> request;
-  aLoader->GetRequest(getter_AddRefs(request));
-  MOZ_ASSERT(request, "How can we not have a request here?!");
-  mChannel = do_QueryInterface(request);
-  mChannelStatus = aStatus;
-  return MaybeInvokeOnStreamComplete();
-}
-
-NS_IMETHODIMP
-nsScriptLoadHandler::OnClassifyComplete(nsresult aResult)
-{
-  MOZ_ASSERT(mClassificationStatus == NS_ERROR_NOT_INITIALIZED);
-  MOZ_ASSERT(!mRequest->mIsTracking);
-  mClassificationStatus = aResult;
-  mRequest->mIsTracking = mClassificationStatus == NS_ERROR_TRACKING_URI;
-  return MaybeInvokeOnStreamComplete();
-}
-
-nsresult
-nsScriptLoadHandler::MaybeInvokeOnStreamComplete()
-{
-  // Run the script loader's callback if both the load and classification have
-  // been finished.
-  if (mChannel && mClassificationStatus != NS_ERROR_NOT_INITIALIZED) {
-    // we have to mediate and use mRequest.
-    return mScriptLoader->OnStreamComplete(mChannel, mRequest, mChannelStatus,
-                                           mSRIStatus, mBuffer, mSRIDataVerifier);
-  }
-  return NS_OK;
+  // we have to mediate and use mRequest.
+  return mScriptLoader->OnStreamComplete(aLoader, mRequest, aStatus, mSRIStatus,
+                                         mBuffer, mSRIDataVerifier);
 }

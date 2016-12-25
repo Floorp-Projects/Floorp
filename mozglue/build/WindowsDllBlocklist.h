@@ -22,7 +22,7 @@ MFBT_API bool DllBlocklist_CheckStatus();
 class MOZ_RAII AutoSetXPCOMLoadOnMainThread
 {
   public:
-    AutoSetXPCOMLoadOnMainThread(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    explicit AutoSetXPCOMLoadOnMainThread(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       DllBlocklist_SetInXPCOMLoadOnMainThread(true);
     }

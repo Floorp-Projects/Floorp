@@ -43,6 +43,14 @@ namespace jit {
 // share both the IR and JitCode between CacheIR stubs. This HashMap owns the
 // stubInfo (it uses UniquePtr), so once there are no references left to the
 // shared stub code, we can also free the CacheIRStubInfo.
+//
+// Ion stubs
+// ---------
+// Unlike Baseline stubs, Ion stubs do not share stub code, and data stored in
+// the IonICStub is baked into JIT code. This is one of the reasons Ion stubs
+// are faster than Baseline stubs. Also note that Ion ICs contain more state
+// (see IonGetPropertyIC for example) and use dynamic input/output registers,
+// so sharing stub code for Ion would be much more difficult.
 
 // An OperandId represents either a cache input or a value returned by a
 // CacheIR instruction. Most code should use the ValOperandId and ObjOperandId
@@ -125,6 +133,7 @@ enum class CacheKind : uint8_t
 {
     GetProp,
     GetElem,
+    GetName,
 };
 
 #define CACHE_IR_OPS(_)                   \
@@ -150,6 +159,7 @@ enum class CacheKind : uint8_t
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
     _(LoadProto)                          \
+    _(LoadEnclosingEnvironment)           \
                                           \
     _(LoadDOMExpandoValue)                \
     _(GuardDOMExpandoObject)              \
@@ -173,6 +183,8 @@ enum class CacheKind : uint8_t
     _(LoadFrameCalleeResult)              \
     _(LoadFrameNumActualArgsResult)       \
     _(LoadFrameArgumentResult)            \
+    _(LoadEnvironmentFixedSlotResult)     \
+    _(LoadEnvironmentDynamicSlotResult)   \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -379,6 +391,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return buffer_.length();
     }
 
+    // This should not be used when compiling Baseline code, as Baseline code
+    // shouldn't bake in stub values.
+    StubField readStubFieldForIon(size_t i, StubField::Type type) const {
+        MOZ_ASSERT(stubFields_[i].type() == type);
+        return stubFields_[i];
+    }
+
     ObjOperandId guardIsObject(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsObject, val);
         return ObjOperandId(val.id());
@@ -477,6 +496,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     ObjOperandId loadProto(ObjOperandId obj) {
         ObjOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadProto, obj);
+        writeOperandId(res);
+        return res;
+    }
+
+    ObjOperandId loadEnclosingEnvironment(ObjOperandId obj) {
+        ObjOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::LoadEnclosingEnvironment, obj);
         writeOperandId(res);
         return res;
     }
@@ -584,6 +610,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
         writeOperandId(idVal);
     }
+    void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
+        writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
+        addStubField(offset, StubField::Type::RawWord);
+    }
+    void loadEnvironmentDynamicSlotResult(ObjOperandId obj, size_t offset) {
+        writeOpWithOperandId(CacheOp::LoadEnvironmentDynamicSlotResult, obj);
+        addStubField(offset, StubField::Type::RawWord);
+    }
 
     void typeMonitorResult() {
         writeOp(CacheOp::TypeMonitorResult);
@@ -656,16 +690,30 @@ class MOZ_RAII CacheIRReader
     }
 };
 
-// GetPropIRGenerator generates CacheIR for a GetProp IC.
-class MOZ_RAII GetPropIRGenerator
+class MOZ_RAII IRGenerator
 {
+  protected:
     CacheIRWriter writer;
     JSContext* cx_;
     jsbytecode* pc_;
+    CacheKind cacheKind_;
+
+    IRGenerator(const IRGenerator&) = delete;
+    IRGenerator& operator=(const IRGenerator&) = delete;
+
+  public:
+    explicit IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind);
+
+    const CacheIRWriter& writerRef() const { return writer; }
+    CacheKind cacheKind() const { return cacheKind_; }
+};
+
+// GetPropIRGenerator generates CacheIR for a GetProp IC.
+class MOZ_RAII GetPropIRGenerator : public IRGenerator
+{
     HandleValue val_;
     HandleValue idVal_;
     ICStubEngine engine_;
-    CacheKind cacheKind_;
     bool* isTemporarilyUnoptimizable_;
 
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
@@ -702,17 +750,17 @@ class MOZ_RAII GetPropIRGenerator
         return ValOperandId(1);
     }
 
+    // No pc if idempotent, as there can be multiple bytecode locations
+    // due to GVN.
+    bool idempotent() const { return pc_ == nullptr; }
+
     // If this is a GetElem cache, emit instructions to guard the incoming Value
     // matches |id|.
     void maybeEmitIdGuard(jsid id);
 
-    GetPropIRGenerator(const GetPropIRGenerator&) = delete;
-    GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
-
   public:
-    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine, CacheKind cacheKind,
-                       bool* isTemporarilyUnoptimizable,
-                       HandleValue val, HandleValue idVal);
+    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind, ICStubEngine engine,
+                       bool* isTemporarilyUnoptimizable, HandleValue val, HandleValue idVal);
 
     bool tryAttachStub();
     bool tryAttachIdempotentStub();
@@ -723,9 +771,22 @@ class MOZ_RAII GetPropIRGenerator
     bool shouldNotePreliminaryObjectStub() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
     }
+};
 
-    const CacheIRWriter& writerRef() const { return writer; }
-    CacheKind cacheKind() const { return cacheKind_; }
+// GetPropIRGenerator generates CacheIR for a GetName IC.
+class MOZ_RAII GetNameIRGenerator : public IRGenerator
+{
+    HandleScript script_;
+    HandleObject env_;
+    HandlePropertyName name_;
+
+    bool tryAttachEnvironmentName(ObjOperandId objId);
+
+  public:
+    GetNameIRGenerator(JSContext* cx, jsbytecode* pc, HandleScript script,
+                       HandleObject env, HandlePropertyName name);
+
+    bool tryAttachStub();
 };
 
 } // namespace jit

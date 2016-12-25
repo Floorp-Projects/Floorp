@@ -204,7 +204,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
 
     RefPtr<Timeout> copy = timeout;
 
-    rv = timeout->InitTimer(mWindow.GetThrottledEventQueue(), realInterval);
+    rv = timeout->InitTimer(mWindow.EventTargetFor(TaskCategory::Timer),
+                            realInterval);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -585,7 +586,8 @@ TimeoutManager::MaybeApplyBackPressure()
     return;
   }
 
-  RefPtr<ThrottledEventQueue> queue = mWindow.TabGroup()->GetThrottledEventQueue();
+  RefPtr<ThrottledEventQueue> queue =
+    do_QueryObject(mWindow.TabGroup()->EventTargetFor(TaskCategory::Timer));
   if (!queue) {
     return;
   }
@@ -621,7 +623,8 @@ TimeoutManager::CancelOrUpdateBackPressure(nsGlobalWindow* aWindow)
   MOZ_ASSERT(mBackPressureDelayMS > 0);
 
   // First, re-calculate the back pressure delay.
-  RefPtr<ThrottledEventQueue> queue = mWindow.TabGroup()->GetThrottledEventQueue();
+  RefPtr<ThrottledEventQueue> queue =
+    do_QueryObject(mWindow.TabGroup()->EventTargetFor(TaskCategory::Timer));
   int32_t newBackPressureDelayMS =
     CalculateNewBackPressureDelayMS(queue ? queue->Length() : 0);
 
@@ -725,7 +728,7 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
 
   // Reschedule the OS timer. Don't bother returning any error codes if
   // this fails since the callers of this method don't care about them.
-  nsresult rv = aTimeout->InitTimer(mWindow.GetThrottledEventQueue(),
+  nsresult rv = aTimeout->InitTimer(mWindow.EventTargetFor(TaskCategory::Timer),
                                     delay.ToMilliseconds());
 
   if (NS_FAILED(rv)) {
@@ -769,15 +772,16 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
   Timeouts::SortBy sortBy = mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
                                                : Timeouts::SortBy::TimeWhen;
 
+  nsCOMPtr<nsIEventTarget> queue = mWindow.EventTargetFor(TaskCategory::Timer);
   nsresult rv = mNormalTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
                                                                 minTimeout,
                                                                 sortBy,
-                                                                mWindow.GetThrottledEventQueue());
+                                                                queue);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mTrackingTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
                                                          minTimeout,
                                                          sortBy,
-                                                         mWindow.GetThrottledEventQueue());
+                                                         queue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -787,7 +791,7 @@ nsresult
 TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
                                                           int32_t aMinTimeoutValueMS,
                                                           SortBy aSortBy,
-                                                          ThrottledEventQueue* aQueue)
+                                                          nsIEventTarget* aQueue)
 {
   TimeStamp now = TimeStamp::Now();
 
@@ -1033,7 +1037,8 @@ TimeoutManager::Resume()
       return;
     }
 
-    nsresult rv = aTimeout->InitTimer(mWindow.GetThrottledEventQueue(), delay);
+    nsresult rv = aTimeout->InitTimer(mWindow.EventTargetFor(TaskCategory::Timer),
+                                      delay);
     if (NS_FAILED(rv)) {
       aTimeout->mTimer = nullptr;
       aTimeout->remove();

@@ -364,7 +364,7 @@ public:
 
 NS_IMPL_ISUPPORTS(ThrottledEventQueue::Inner, nsIObserver);
 
-NS_IMPL_ISUPPORTS(ThrottledEventQueue, nsIEventTarget);
+NS_IMPL_ISUPPORTS(ThrottledEventQueue, ThrottledEventQueue, nsIEventTarget);
 
 ThrottledEventQueue::ThrottledEventQueue(already_AddRefed<Inner> aInner)
   : mInner(aInner)

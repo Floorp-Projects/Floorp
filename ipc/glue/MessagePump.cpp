@@ -463,3 +463,29 @@ MessagePumpForNonMainUIThreads::AfterProcessNextEvent(nsIThreadInternal *thread,
 }
 
 #endif // XP_WIN
+
+#if defined(MOZ_WIDGET_ANDROID)
+void
+MessagePumpForAndroidUI::Run(Delegate* delegate)
+{
+  MOZ_CRASH("MessagePumpForAndroidUI should never be Run.");
+}
+
+void
+MessagePumpForAndroidUI::Quit()
+{
+  MOZ_CRASH("MessagePumpForAndroidUI should never be Quit.");
+}
+
+void
+MessagePumpForAndroidUI::ScheduleWork()
+{
+  MOZ_CRASH("MessagePumpForAndroidUI should never ScheduleWork");
+}
+
+void
+MessagePumpForAndroidUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time)
+{
+  MOZ_CRASH("MessagePumpForAndroidUI should never ScheduleDelayedWork");
+}
+#endif // defined(MOZ_WIDGET_ANDROID)

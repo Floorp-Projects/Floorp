@@ -45,8 +45,6 @@ function afterDragTests()
               "NoModificationAllowedError", "setDataAt when read only");
   expectError(() => gDataTransfer.mozClearDataAt("text/plain", 0),
               "NoModificationAllowedError", "clearDataAt when read only");
-  expectError(() => gDataTransfer.setDragImage(draggable, 10, 10),
-              "NoModificationAllowedError", "setDragImage when read only");
   expectError(() => gDataTransfer.addElement(draggable),
               "NoModificationAllowedError", "addElement when read only");
 

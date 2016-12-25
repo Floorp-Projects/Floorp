@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+  <meta charset="utf-8">
+  <title>Reference: baseline of checkbox/radio</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1322698">
+    <style>
+body { font: 16px/1 monospace; }
+
+div { border: 1px dashed blue; }
+
+x {
+  display:inline-block;
+  margin: 20px;
+  border: 25px solid black;
+  width:0;
+  height:0;
+}
+
+   </style>
+  </head>
+  <body>
+    <div><x></x>Block</div>
+    <div style="font-size:72px"><x style="border-width:3px"></x>Block</div>
+  </body>
+</html>

@@ -1761,37 +1761,3 @@ let DateTimePickerListener = {
 }
 
 DateTimePickerListener.init();
-
-/*
- * Telemetry probe to track the amount of scrolling a user does up and down the root frame
- * of a page, and also the maximum distance a user scrolls down the root frame of a page.
- * This doesn't include scrolling sub frames, but does include scrolling from JavaScript.
- * See bug 1312881 and bug 1297867 for more details.
- */
-addEventListener("DOMWindowCreated", function() {
-  if (event.target !== content.document ||
-      content.location == "" ||
-      content.location.protocol === "about:") {
-    return;
-  }
-
-  let amountHistogram = Services.telemetry.getHistogramById("TOTAL_SCROLL_Y");
-  let maxHistogram = Services.telemetry.getHistogramById("PAGE_MAX_SCROLL_Y");
-
-  let prevScrollY = 0;
-  let maxScrollY = 0;
-
-  content.addEventListener("scroll", function() {
-    let amount = Math.abs(content.scrollY - prevScrollY);
-    amountHistogram.add(amount);
-    prevScrollY = content.scrollY;
-
-    if (content.scrollY > maxScrollY) {
-      maxScrollY = content.scrollY;
-    }
-  }, { passive: true });
-
-  content.addEventListener("unload", function() {
-    maxHistogram.add(maxScrollY);
-  });
-});

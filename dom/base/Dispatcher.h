@@ -16,6 +16,9 @@ class nsIRunnable;
 namespace mozilla {
 namespace dom {
 
+class TabGroup;
+class DocGroup;
+
 enum class TaskCategory {
   // User input (clicks, keypresses, etc.)
   UI,
@@ -25,6 +28,9 @@ enum class TaskCategory {
 
   // setTimeout, setInterval
   Timer,
+
+  // Runnables posted from a worker to the main thread
+  Worker,
 
   // requestIdleCallback
   IdleCallback,
@@ -53,8 +59,7 @@ public:
   // This method may or may not be safe off of the main thread. For nsIDocument
   // it is safe. For nsIGlobalWindow it is not safe. The nsIEventTarget can
   // always be used off the main thread.
-  virtual already_AddRefed<nsIEventTarget>
-  EventTargetFor(TaskCategory aCategory) const;
+  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
 };
 
 // Base class for DocGroup and TabGroup.
@@ -67,12 +72,17 @@ public:
 
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
-  virtual already_AddRefed<nsIEventTarget>
-  EventTargetFor(TaskCategory aCategory) const = 0;
+  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const = 0;
+
+  // These methods perform a safe cast. They return null if |this| is not of the
+  // requested type.
+  virtual TabGroup* AsTabGroup() { return nullptr; }
 
 protected:
   virtual already_AddRefed<nsIEventTarget>
   CreateEventTargetFor(TaskCategory aCategory);
+
+  static Dispatcher* FromEventTarget(nsIEventTarget* aEventTarget);
 };
 
 } // namespace dom
