@@ -432,7 +432,7 @@ class DataViewObject : public NativeObject
 
     template <typename NativeType>
     static SharedMem<uint8_t*>
-    getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, double offset, bool* isSharedMemory);
+    getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, uint64_t offset, bool* isSharedMemory);
 
     template<Value ValueGetter(DataViewObject* view)>
     static bool

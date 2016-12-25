@@ -150,12 +150,10 @@ RulersHighlighter.prototype = {
           } else {
             dGraduations += `M${i} 0 L${i} ${graduationLength} `;
           }
+        } else if (i % 50 === 0) {
+          dMarkers += `M0 ${i} L${graduationLength} ${i}`;
         } else {
-          if (i % 50 === 0) {
-            dMarkers += `M0 ${i} L${graduationLength} ${i}`;
-          } else {
-            dGraduations += `M0 ${i} L${graduationLength} ${i}`;
-          }
+          dGraduations += `M0 ${i} L${graduationLength} ${i}`;
         }
       }
 

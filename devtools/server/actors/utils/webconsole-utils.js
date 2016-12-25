@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu, components} = require("chrome");
+const {Ci, Cu} = require("chrome");
 
 // Note that this is only used in WebConsoleCommands, see $0 and pprint().
 if (!isWorker) {

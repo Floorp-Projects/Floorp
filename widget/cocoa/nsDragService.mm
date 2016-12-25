@@ -29,6 +29,7 @@
 #include "nsCocoaUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"
+#include "nsDeviceContext.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -57,10 +58,8 @@ NSString* const kUTTypeURLName         = @"public.url-name";
 NSString* const kCustomTypesPboardType = @"org.mozilla.custom-clipdata";
 
 nsDragService::nsDragService()
+  : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false)
 {
-  mNativeDragView = nil;
-  mNativeDragEvent = nil;
-
   EnsureLogInitialized();
 }
 
@@ -70,22 +69,65 @@ nsDragService::~nsDragService()
 
 NSImage*
 nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
-                                  LayoutDeviceIntRect* aDragRect,
-                                  nsIScriptableRegion* aRegion)
+                                  nsIScriptableRegion* aRegion,
+                                  NSPoint* aDragPoint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
+  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mNativeDragView);
+
+  LayoutDeviceIntRect dragRect(0, 0, 20, 20);
+  NSImage* image = ConstructDragImage(mSourceNode, aRegion, mScreenPosition, &dragRect);
+  if (!image) {
+    // if no image was returned, just draw a rectangle
+    NSSize size;
+    size.width = nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.width, scaleFactor);
+    size.height = nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.height, scaleFactor);
+    image = [[NSImage alloc] initWithSize:size];
+    [image lockFocus];
+    [[NSColor grayColor] set];
+    NSBezierPath* path = [NSBezierPath bezierPath];
+    [path setLineWidth:2.0];
+    [path moveToPoint:NSMakePoint(0, 0)];
+    [path lineToPoint:NSMakePoint(0, size.height)];
+    [path lineToPoint:NSMakePoint(size.width, size.height)];
+    [path lineToPoint:NSMakePoint(size.width, 0)];
+    [path lineToPoint:NSMakePoint(0, 0)];
+    [path stroke];
+    [image unlockFocus];
+  }
+
+  LayoutDeviceIntPoint pt(dragRect.x, dragRect.YMost());
+  NSPoint point = nsCocoaUtils::DevPixelsToCocoaPoints(pt, scaleFactor);
+  point.y = nsCocoaUtils::FlippedScreenY(point.y);
+
+  point = nsCocoaUtils::ConvertPointFromScreen([mNativeDragView window], point);
+  *aDragPoint = [mNativeDragView convertPoint:point fromView:nil];
+
+  return image;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+NSImage*
+nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
+                                  nsIScriptableRegion* aRegion,
+                                  CSSIntPoint aPoint,
+                                  LayoutDeviceIntRect* aDragRect)
+ {
+   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mNativeDragView);
 
   RefPtr<SourceSurface> surface;
   nsPresContext* pc;
-  nsresult rv = DrawDrag(aDOMNode, aRegion, mScreenPosition,
+  nsresult rv = DrawDrag(aDOMNode, aRegion, aPoint,
                          aDragRect, &surface, &pc);
   if (pc && (!aDragRect->width || !aDragRect->height)) {
     // just use some suitable defaults
     int32_t size = nsCocoaUtils::CocoaPointsToDevPixels(20, scaleFactor);
-    aDragRect->SetRect(pc->CSSPixelsToDevPixels(mScreenPosition.x),
-                       pc->CSSPixelsToDevPixels(mScreenPosition.y), size, size);
+    aDragRect->SetRect(pc->CSSPixelsToDevPixels(aPoint.x),
+                       pc->CSSPixelsToDevPixels(aPoint.y), size, size);
   }
 
   if (NS_FAILED(rv) || !surface)
@@ -291,38 +333,12 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
   }
   [pbItem setDataProvider:mNativeDragView forTypes:types];
 
-  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
+  NSPoint draggingPoint;
+  NSImage* image = ConstructDragImage(mSourceNode, aDragRgn, &draggingPoint);
 
-  LayoutDeviceIntRect dragRect(0, 0, 20, 20);
-  NSImage* image = ConstructDragImage(mSourceNode, &dragRect, aDragRgn);
-  if (!image) {
-    // if no image was returned, just draw a rectangle
-    NSSize size;
-    size.width = nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.width, scaleFactor);
-    size.height = nsCocoaUtils::DevPixelsToCocoaPoints(dragRect.height, scaleFactor);
-    image = [[NSImage alloc] initWithSize:size];
-    [image lockFocus];
-    [[NSColor grayColor] set];
-    NSBezierPath* path = [NSBezierPath bezierPath];
-    [path setLineWidth:2.0];
-    [path moveToPoint:NSMakePoint(0, 0)];
-    [path lineToPoint:NSMakePoint(0, size.height)];
-    [path lineToPoint:NSMakePoint(size.width, size.height)];
-    [path lineToPoint:NSMakePoint(size.width, 0)];
-    [path lineToPoint:NSMakePoint(0, 0)];
-    [path stroke];
-    [image unlockFocus];
-  }
-
-  // Make drag image appear in the right place under the cursor.
-  LayoutDeviceIntPoint pt(dragRect.x, dragRect.YMost());
-  NSPoint point = nsCocoaUtils::DevPixelsToCocoaPoints(pt, scaleFactor);
-  point.y = nsCocoaUtils::FlippedScreenY(point.y);
-  point = nsCocoaUtils::ConvertPointFromScreen([gLastDragView window], point);
-  NSPoint localPoint = [gLastDragView convertPoint:point fromView:nil];
   NSRect localDragRect = image.alignmentRect;
-  localDragRect.origin.x = localPoint.x;
-  localDragRect.origin.y = localPoint.y - localDragRect.size.height;
+  localDragRect.origin.x = draggingPoint.x;
+  localDragRect.origin.y = draggingPoint.y - localDragRect.size.height;
 
   NSDraggingItem* dragItem =
     [[NSDraggingItem alloc] initWithPasteboardWriter:pbItem];
@@ -619,6 +635,72 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems)
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
+nsDragService::UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY)
+{
+  nsBaseDragService::UpdateDragImage(aImage, aImageX, aImageY);
+  mDragImageChanged = true;
+  return NS_OK;
+}
+
+void
+nsDragService::DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint)
+{
+  aPoint.y = nsCocoaUtils::FlippedScreenY(aPoint.y);
+
+  // XXX It feels like we should be using the backing scale factor at aPoint
+  // rather than the initial drag view, but I've seen no ill effects of this.
+  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mNativeDragView);
+  LayoutDeviceIntPoint devPoint = nsCocoaUtils::CocoaPointsToDevPixels(aPoint, scaleFactor);
+
+  // If the image has changed, call enumerateDraggingItemsWithOptions to get
+  // the item being dragged and update its image.
+  if (mDragImageChanged && mNativeDragView) {
+    mDragImageChanged = false;
+
+    nsPresContext* pc = nullptr;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mImage);
+    if (content) {
+      nsCOMPtr<nsIDocument> document = content->OwnerDoc();
+      if (document) {
+        nsIPresShell* shell = document->GetShell();
+        pc = shell ? shell->GetPresContext() : nullptr;
+      }
+    }
+
+    if (pc) {
+      void (^changeImageBlock) (NSDraggingItem*, NSInteger, BOOL*) =
+                              ^(NSDraggingItem* draggingItem, NSInteger idx, BOOL* stop) {
+        // We never add more than one item right now, but check just in case.
+        if (idx > 0) {
+          return;
+        }
+
+        nsPoint pt = LayoutDevicePixel::ToAppUnits(devPoint,
+                       pc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+        CSSIntPoint screenPoint = CSSIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                                              nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+
+        // Create a new image; if one isn't returned don't change the current one.
+        LayoutDeviceIntRect newRect;
+        NSImage* image = ConstructDragImage(mSourceNode, nullptr, screenPoint, &newRect);
+        if (image) {
+          NSRect draggingRect = nsCocoaUtils::GeckoRectToCocoaRectDevPix(newRect, scaleFactor);
+          [draggingItem setDraggingFrame:draggingRect contents:image];
+        }
+      };
+
+      [aSession enumerateDraggingItemsWithOptions:NSDraggingItemEnumerationConcurrent
+                                          forView:nil
+                                          classes:[NSArray arrayWithObject:[NSPasteboardItem class]]
+                                    searchOptions:nil
+                                       usingBlock:changeImageBlock];
+    }
+  }
+
+  DragMoved(devPoint.x, devPoint.y);
 }
 
 NS_IMETHODIMP

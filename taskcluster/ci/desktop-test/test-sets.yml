@@ -9,10 +9,15 @@
 #
 # Test names given here reference tests.yml.
 
-all-tests-debug:
+##
+# Universal tests
+#
+# Tests that run just about everywhere; common-tests is the shared core, with
+# a few add-on test sets that are included or omitted on some platforms.
+
+common-tests:
     - cppunit
     - crashtest
-    - external-media-tests
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest
@@ -31,40 +36,20 @@ all-tests-debug:
     - mochitest-webgl
     - reftest
     - reftest-no-accel
-    - web-platform-tests
-    - web-platform-tests-reftests
-    - web-platform-tests-wdspec
     - xpcshell
 
-# This is the same as all-tests-debug,
-# with the addition of "mochitest-valgrind".
-all-tests-opt:
-    - cppunit
-    - crashtest
-    - external-media-tests
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
-    - gtest
-    - jittest
-    - jsreftest
-    - marionette
-    - mochitest
-    - mochitest-a11y
-    - mochitest-browser-chrome
-    - mochitest-chrome
-    - mochitest-clipboard
-    - mochitest-devtools-chrome
-    - mochitest-gpu
-    - mochitest-jetpack
-    - mochitest-media
-    - mochitest-webgl
-    - reftest
-    - reftest-no-accel
+web-platform-tests:
     - web-platform-tests
     - web-platform-tests-reftests
     - web-platform-tests-wdspec
-    - xpcshell
+
+external-media-tests:
+    - external-media-tests
+
+opt-only-tests:
     - mochitest-valgrind
+
+talos:
     - talos-chrome
     - talos-dromaeojs
     - talos-g1
@@ -75,34 +60,27 @@ all-tests-opt:
     - talos-svgr
     - talos-tp5o
 
+##
+# Limited test sets for specific platforms
+
 stylo-tests:
     - cppunit
     - crashtest
     - reftest-stylo
     - mochitest-stylo
 
-asan-tests:
-    - cppunit
-    - crashtest
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
-    - gtest
-    - jittest
-    - jsreftest
-    - marionette
+ccov-code-coverage-tests:
     - mochitest
-    - mochitest-a11y
     - mochitest-browser-chrome
-    - mochitest-chrome
-    - mochitest-clipboard
     - mochitest-devtools-chrome
-    - mochitest-gpu
-    - mochitest-jetpack
-    - mochitest-media
-    - mochitest-webgl
-    - reftest
-    - reftest-no-accel
     - xpcshell
+
+jsdcov-code-coverage-tests:
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+
+##
+# Test sets still being greened up in various ways
 
 windows-vm-tests:
     - cppunit

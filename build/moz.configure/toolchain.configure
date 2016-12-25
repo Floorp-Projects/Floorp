@@ -702,9 +702,9 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         # Check the compiler version here instead of in `compiler_version` so
         # that the `checking` message doesn't pretend the compiler can be used
         # to then bail out one line later.
-        if info.type == 'gcc' and info.version < '4.8.0':
+        if info.type == 'gcc' and info.version < '4.9.0':
             raise FatalCheckError(
-                'Only GCC 4.8 or newer is supported (found version %s).'
+                'Only GCC 4.9 or newer is supported (found version %s).'
                 % info.version)
 
         # If you want to bump the version check here search for

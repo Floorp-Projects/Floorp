@@ -2257,17 +2257,18 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
   return true;
 }
 
-nsresult
+bool
 nsStyleImage::StartDecoding() const
 {
   if (mType == eStyleImageType_Image) {
     imgRequestProxy* req = GetImageData();
     if (!req) {
-      return NS_ERROR_FAILURE;
+      return false;
     }
-    return req->StartDecoding(imgIContainer::FLAG_NONE);
+    return req->StartDecodingWithResult(imgIContainer::FLAG_NONE);
   }
-  return NS_OK;
+  // null image types always return false from IsComplete, so we do the same here.
+  return mType != eStyleImageType_Null ? true : false;
 }
 
 bool
@@ -2753,7 +2754,7 @@ nsStyleImageLayers::Size::operator==(const Size& aOther) const
 }
 
 nsStyleImageLayers::Layer::Layer()
-  : mClip(NS_STYLE_IMAGELAYER_CLIP_BORDER)
+  : mClip(StyleGeometryBox::Border)
   , mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL)
   , mBlendMode(NS_STYLE_BLEND_NORMAL)
   , mComposite(NS_STYLE_MASK_COMPOSITE_ADD)
@@ -2775,10 +2776,10 @@ nsStyleImageLayers::Layer::Initialize(nsStyleImageLayers::LayerType aType)
   mPosition.SetInitialPercentValues(0.0f);
 
   if (aType == LayerType::Background) {
-    mOrigin = NS_STYLE_IMAGELAYER_ORIGIN_PADDING;
+    mOrigin = StyleGeometryBox::Padding;
   } else {
     MOZ_ASSERT(aType == LayerType::Mask, "unsupported layer type.");
-    mOrigin = NS_STYLE_IMAGELAYER_ORIGIN_BORDER;
+    mOrigin = StyleGeometryBox::Border;
   }
 }
 

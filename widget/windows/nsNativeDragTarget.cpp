@@ -28,6 +28,8 @@ static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
 // This is cached for Leave notification
 static POINTL gDragLastPoint;
 
+bool nsNativeDragTarget::gDragImageChanged = false;
+
 /*
  * class nsNativeDragTarget
  */
@@ -319,6 +321,9 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
     return E_FAIL;
   }
 
+  bool dragImageChanged = gDragImageChanged;
+  gDragImageChanged = false;
+
   // If a LINK effect could be generated previously from a DragEnter(),
   // then we should include it as an allowed effect.
   mEffectsAllowed = (*pdwEffect) | (mEffectsAllowed & DROPEFFECT_LINK);
@@ -334,6 +339,14 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
 
   // Drag and drop image helper
   if (GetDropTargetHelper()) {
+    if (dragImageChanged) {
+      // The drop helper only updates the image during DragEnter, so emulate
+      // a DragEnter if the image was changed.
+      POINT pt = { ptl.x, ptl.y };
+      nsDragService* dragService = static_cast<nsDragService *>(mDragService);
+      GetDropTargetHelper()->DragEnter(mHWnd, dragService->GetDataObject(), &pt, *pdwEffect);
+
+    }
     POINT pt = { ptl.x, ptl.y };
     GetDropTargetHelper()->DragOver(&pt, *pdwEffect);
   }

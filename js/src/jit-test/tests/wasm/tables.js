@@ -190,3 +190,9 @@ assertEq(call(0), 42);
 for (var i = 1; i < 7; i++)
     assertErrorMessage(() => call(i), RuntimeError, /indirect call signature mismatch/);
 assertErrorMessage(() => call(7), RuntimeError, /index out of bounds/);
+
+// Function identity isn't lost:
+var tbl = wasmEvalText(`(module (table (export "tbl") anyfunc (elem $f)) (func $f))`).exports.tbl;
+tbl.get(0).foo = 42;
+gc();
+assertEq(tbl.get(0).foo, 42);

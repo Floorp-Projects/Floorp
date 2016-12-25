@@ -12,6 +12,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "mozilla/dom/Dispatcher.h"
 #include "mozilla/dom/EventTarget.h"
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
@@ -579,7 +580,8 @@ public:
 
   mozilla::dom::DocGroup* GetDocGroup() const;
 
-  virtual mozilla::ThrottledEventQueue* GetThrottledEventQueue() = 0;
+  virtual nsIEventTarget*
+  EventTargetFor(mozilla::dom::TaskCategory aCategory) const = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

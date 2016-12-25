@@ -83,11 +83,9 @@ devtools/client/debugger/**
 devtools/client/framework/**
 !devtools/client/framework/selection.js
 !devtools/client/framework/toolbox.js
-devtools/client/jsonview/lib/**
 devtools/client/netmonitor/test/**
 devtools/client/netmonitor/har/test/**
 devtools/client/projecteditor/**
-devtools/client/promisedebugger/**
 devtools/client/responsivedesign/**
 devtools/client/scratchpad/**
 devtools/client/shadereditor/**
@@ -104,17 +102,9 @@ devtools/client/webconsole/webconsole-connection-proxy.js
 devtools/client/webconsole/webconsole.js
 devtools/client/webide/**
 !devtools/client/webide/components/webideCli.js
-devtools/server/*.js
-devtools/server/*.jsm
-!devtools/server/child.js
-!devtools/server/css-logic.js
-!devtools/server/main.js
-!devtools/server/websocket-server.js
-devtools/server/actors/**
+devtools/server/actors/*.js
 !devtools/server/actors/csscoverage.js
 !devtools/server/actors/inspector.js
-!devtools/server/actors/highlighters/css-grid.js
-!devtools/server/actors/highlighters/eye-dropper.js
 !devtools/server/actors/layout.js
 !devtools/server/actors/string.js
 !devtools/server/actors/styles.js
@@ -122,7 +112,6 @@ devtools/server/actors/**
 !devtools/server/actors/webbrowser.js
 !devtools/server/actors/webextension.js
 !devtools/server/actors/webextension-inspected-window.js
-devtools/server/performance/**
 devtools/server/tests/browser/**
 !devtools/server/tests/browser/browser_webextension_inspected_window.js
 devtools/server/tests/mochitest/**
@@ -134,7 +123,6 @@ devtools/shared/gcli/**
 !devtools/shared/gcli/templater.js
 devtools/shared/heapsnapshot/**
 devtools/shared/layout/**
-devtools/shared/locales/**
 devtools/shared/performance/**
 !devtools/shared/platform/**
 devtools/shared/qrcode/**
