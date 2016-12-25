@@ -91,8 +91,6 @@ public:
 
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
-  static bool IsTargetIframe(nsINode* aTarget);
-
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
             nsViewManager* aViewManager, mozilla::StyleSetHandle aStyleSet);
   virtual void Destroy() override;
@@ -778,36 +776,6 @@ protected:
   // A set of frames that were visible or could be visible soon at the time
   // that we last did an approximate frame visibility update.
   VisibleFrames mApproximatelyVisibleFrames;
-
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Methods for dispatching KeyboardEvent.
-  //////////////////////////////////////////////////////////////////////////////
-
-  void HandleKeyboardEvent(nsINode* aTarget,
-                           mozilla::WidgetKeyboardEvent& aEvent,
-                           bool aEmbeddedCancelled,
-                           nsEventStatus* aStatus,
-                           mozilla::EventDispatchingCallback* aEventCB);
-
-#ifdef MOZ_B2G
-  // This method is used to forward the keyboard event to the input-method-app
-  // before the event is dispatched to its event target.
-  // Return true if it's successfully forwarded. Otherwise, return false.
-  bool ForwardKeyToInputMethodApp(nsINode* aTarget,
-                                  mozilla::WidgetKeyboardEvent& aEvent,
-                                  nsEventStatus* aStatus);
-#endif // MOZ_B2G
-
-  // This method tries forwarding key events to the input-method-editor(IME).
-  // If the event isn't be forwarded, then it will be dispathed to its target.
-  // Return true when event is successfully forwarded to the input-method-editor.
-  // Otherwise, return false.
-  bool ForwardKeyToInputMethodAppOrDispatch(bool aIsTargetRemote,
-                                            nsINode* aTarget,
-                                            mozilla::WidgetKeyboardEvent& aEvent,
-                                            nsEventStatus* aStatus,
-                                            mozilla::EventDispatchingCallback* aEventCB);
 
   nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution);
 

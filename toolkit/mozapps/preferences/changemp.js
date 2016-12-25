@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
@@ -14,7 +16,6 @@ const nsIPK11Token = Components.interfaces.nsIPK11Token;
 
 
 var params;
-var tokenName = "";
 var pw1;
 
 function init()
@@ -27,41 +28,38 @@ function init()
 
 function process()
 {
-   var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
-   var bundle = document.getElementById("bundlePreferences");
+  let bundle = document.getElementById("bundlePreferences");
 
-   // If the token is unitialized, don't use the old password box.
-   // Otherwise, do.
+  // If the token is unitialized, don't use the old password box.
+  // Otherwise, do.
 
-   var slot = secmoddb.findSlotByName(tokenName);
-   if (slot) {
-     var oldpwbox = document.getElementById("oldpw");
-     var msgBox = document.getElementById("message");
-     var status = slot.status;
-     if (status == nsIPKCS11Slot.SLOT_UNINITIALIZED
-         || status == nsIPKCS11Slot.SLOT_READY) {
+  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                  .getService(Ci.nsIPK11TokenDB);
+  let token = tokenDB.getInternalKeyToken();
+  if (token) {
+    let oldpwbox = document.getElementById("oldpw");
+    let msgBox = document.getElementById("message");
+    if ((token.needsLogin() && token.needsUserInit) || !token.needsLogin()) {
+      oldpwbox.setAttribute("hidden", "true");
+      msgBox.setAttribute("value", bundle.getString("password_not_set"));
+      msgBox.setAttribute("hidden", "false");
 
-       oldpwbox.setAttribute("hidden", "true");
-       msgBox.setAttribute("value", bundle.getString("password_not_set"));
-       msgBox.setAttribute("hidden", "false");
+      if (!token.needsLogin()) {
+        oldpwbox.setAttribute("inited", "empty");
+      } else {
+        oldpwbox.setAttribute("inited", "true");
+      }
 
-       if (status == nsIPKCS11Slot.SLOT_READY) {
-         oldpwbox.setAttribute("inited", "empty");
-       } else {
-         oldpwbox.setAttribute("inited", "true");
-       }
-
-       // Select first password field
-       document.getElementById('pw1').focus();
-
-     } else {
-       // Select old password field
-       oldpwbox.setAttribute("hidden", "false");
-       msgBox.setAttribute("hidden", "true");
-       oldpwbox.setAttribute("inited", "false");
-       oldpwbox.focus();
-     }
-   }
+      // Select first password field
+      document.getElementById('pw1').focus();
+    } else {
+      // Select old password field
+      oldpwbox.setAttribute("hidden", "false");
+      msgBox.setAttribute("hidden", "true");
+      oldpwbox.setAttribute("inited", "false");
+      oldpwbox.focus();
+    }
+  }
 
   if (params) {
     // Return value 0 means "canceled"
@@ -76,8 +74,7 @@ function setPassword()
   var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                 .getService(Components.interfaces.nsIPromptService);
-  var token = pk11db.findTokenByName(tokenName);
-  dump("*** TOKEN!!!! (name = |" + token + "|\n");
+  var token = pk11db.getInternalKeyToken();
 
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");

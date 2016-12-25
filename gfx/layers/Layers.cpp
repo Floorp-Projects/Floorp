@@ -432,6 +432,8 @@ ToStyleAnimationValue(const Animatable& aAnimatable)
   StyleAnimationValue result;
 
   switch (aAnimatable.type()) {
+    case Animatable::Tnull_t:
+      break;
     case Animatable::TArrayOfTransformFunction: {
       const InfallibleTArray<TransformFunction>& transforms =
         aAnimatable.get_ArrayOfTransformFunction();
@@ -471,9 +473,8 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
         break;
     }
 
-    if (animation.baseStyle().type() != BaseAnimationStyle::Tnull_t) {
-      mBaseAnimationStyle =
-        ToStyleAnimationValue(animation.baseStyle().get_Animatable());
+    if (animation.baseStyle().type() != Animatable::Tnull_t) {
+      mBaseAnimationStyle = ToStyleAnimationValue(animation.baseStyle());
     }
 
     AnimData* data = mAnimationData.AppendElement();
