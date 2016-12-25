@@ -9,3 +9,4 @@ pref("datareporting.policy.dataSubmissionPolicyBypassNotification", false);
 pref("datareporting.policy.currentPolicyVersion", 2);
 pref("datareporting.policy.minimumPolicyVersion", 1);
 pref("datareporting.policy.minimumPolicyVersion.channel-beta", 2);
+pref("datareporting.policy.firstRunURL", "");
