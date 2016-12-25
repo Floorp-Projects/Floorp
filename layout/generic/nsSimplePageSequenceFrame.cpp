@@ -5,7 +5,6 @@
 
 #include "nsSimplePageSequenceFrame.h"
 
-#include "DateTimeFormat.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
 #include "nsPresContext.h"
@@ -23,6 +22,7 @@
 #include "nsHTMLCanvasFrame.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
+#include "nsIDateTimeFormat.h"
 #include "nsServiceManagerUtils.h"
 #include <algorithm>
 
@@ -299,10 +299,18 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     pageNum++;
   }
 
+  // Create current Date/Time String
+  if (!mDateFormatter) {
+    mDateFormatter = nsIDateTimeFormat::Create();
+  }
+  if (!mDateFormatter) {
+    return;
+  }
   nsAutoString formattedDateString;
   time_t ltime;
   time( &ltime );
-  if (NS_SUCCEEDED(DateTimeFormat::FormatTime(kDateFormatShort,
+  if (NS_SUCCEEDED(mDateFormatter->FormatTime(nullptr /* nsILocale* locale */,
+                                              kDateFormatShort,
                                               kTimeFormatNoSeconds,
                                               ltime,
                                               formattedDateString))) {

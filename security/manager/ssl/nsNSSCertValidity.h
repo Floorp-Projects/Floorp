@@ -5,8 +5,8 @@
 #ifndef nsNSSCertValidity_h
 #define nsNSSCertValidity_h
 
-#include "DateTimeFormat.h"
 #include "ScopedNSSTypes.h"
+#include "nsIDateTimeFormat.h"
 #include "nsIX509CertValidity.h"
 #include "nsNSSShutDown.h"
 
