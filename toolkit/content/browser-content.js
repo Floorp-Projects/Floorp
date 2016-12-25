@@ -1761,3 +1761,56 @@ let DateTimePickerListener = {
 }
 
 DateTimePickerListener.init();
+
+/*
+ * Telemetry probe to track the amount of scrolling a user does up and down the root frame
+ * of a page. This doesn't include scrolling sub frames, but does include scrolling from JavaScript.
+ * See bug 1297867 for more details.
+ */
+let TelemetryScrollTracker = {
+  init: function() {
+    this._ignore = false;
+    this._prevScrollY = 0;
+    this._amountHistogram = Services.telemetry.getHistogramById("TOTAL_SCROLL_Y");
+
+    addEventListener("DOMWindowCreated", this, { passive: true });
+    addEventListener("pageshow", this, { passive: true });
+    addEventListener("scroll", this, { passive: true });
+  },
+
+  handleEvent: function(aEvent) {
+    if (aEvent.target !== content.document) {
+      return;
+    }
+
+    switch (aEvent.type) {
+      case "DOMWindowCreated": {
+        this._ignore = this.shouldIgnorePage();
+        this._prevScrollY = 0;
+        break;
+      }
+      case "pageshow": {
+        this._ignore = this.shouldIgnorePage();
+        this._prevScrollY = content.scrollY;
+        break;
+      }
+      case "scroll": {
+        if (this._ignore) {
+          return;
+        }
+
+        let amount = Math.abs(content.scrollY - this._prevScrollY);
+        this._amountHistogram.add(amount);
+        this._prevScrollY = content.scrollY;
+        break;
+      }
+    }
+  },
+
+  shouldIgnorePage: function() {
+    return content.location == "" ||
+           content.location.protocol === "about:";
+  }
+};
+
+TelemetryScrollTracker.init();
