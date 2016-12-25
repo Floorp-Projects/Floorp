@@ -2257,7 +2257,7 @@ nsStyleImage::StartDecoding() const
     if (!req) {
       return false;
     }
-    return req->StartDecodingWithResult(imgIContainer::FLAG_NONE);
+    return req->StartDecodingWithResult(imgIContainer::FLAG_ASYNC_NOTIFY);
   }
   // null image types always return false from IsComplete, so we do the same here.
   return mType != eStyleImageType_Null ? true : false;
