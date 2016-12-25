@@ -3381,7 +3381,10 @@ XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result)
   mRedirectCallback->OnRedirectVerifyCallback(result);
   mRedirectCallback = nullptr;
 
-  return result;
+  // It's important that we return success here. If we return the result code
+  // that we were passed, JavaScript callers who cancel the redirect will wind
+  // up throwing an exception in the process.
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////
