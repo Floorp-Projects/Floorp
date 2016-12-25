@@ -11,6 +11,7 @@
 
 #include "nsString.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "AccessCheck.h"
 
 namespace mozilla {
@@ -70,7 +71,7 @@ WebGLContext::IsExtensionEnabled(WebGLExtensionID ext) const
     return mExtensions[ext];
 }
 
-bool WebGLContext::IsExtensionSupported(JSContext* cx,
+bool WebGLContext::IsExtensionSupported(dom::CallerType callerType,
                                         WebGLExtensionID ext) const
 {
     bool allowPrivilegedExts = false;
@@ -78,8 +79,7 @@ bool WebGLContext::IsExtensionSupported(JSContext* cx,
     // Chrome contexts need access to debug information even when
     // webgl.disable-extensions is set. This is used in the graphics
     // section of about:support
-    if (NS_IsMainThread() &&
-        xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
+    if (callerType == dom::CallerType::System) {
         allowPrivilegedExts = true;
     }
 
@@ -233,10 +233,11 @@ CompareWebGLExtensionName(const nsACString& name, const char* other)
 }
 
 WebGLExtensionBase*
-WebGLContext::EnableSupportedExtension(JSContext* js, WebGLExtensionID ext)
+WebGLContext::EnableSupportedExtension(dom::CallerType callerType,
+                                       WebGLExtensionID ext)
 {
     if (!IsExtensionEnabled(ext)) {
-        if (!IsExtensionSupported(js, ext))
+        if (!IsExtensionSupported(callerType, ext))
             return nullptr;
 
         EnableExtension(ext);
@@ -246,8 +247,11 @@ WebGLContext::EnableSupportedExtension(JSContext* js, WebGLExtensionID ext)
 }
 
 void
-WebGLContext::GetExtension(JSContext* cx, const nsAString& wideName,
-                           JS::MutableHandle<JSObject*> retval, ErrorResult& rv)
+WebGLContext::GetExtension(JSContext* cx,
+                           const nsAString& wideName,
+                           JS::MutableHandle<JSObject*> retval,
+                           dom::CallerType callerType,
+                           ErrorResult& rv)
 {
     retval.set(nullptr);
 
@@ -303,22 +307,24 @@ WebGLContext::GetExtension(JSContext* cx, const nsAString& wideName,
         return;
 
     // step 2: check if the extension is supported
-    if (!IsExtensionSupported(cx, ext))
+    if (!IsExtensionSupported(callerType, ext))
         return;
 
     // step 3: if the extension hadn't been previously been created, create it now, thus enabling it
-    WebGLExtensionBase* extObj = EnableSupportedExtension(cx, ext);
+    WebGLExtensionBase* extObj = EnableSupportedExtension(callerType, ext);
     if (!extObj)
         return;
 
     // Step 4: Enable any implied extensions.
     switch (ext) {
     case WebGLExtensionID::OES_texture_float:
-        EnableSupportedExtension(cx, WebGLExtensionID::WEBGL_color_buffer_float);
+        EnableSupportedExtension(callerType,
+                                 WebGLExtensionID::WEBGL_color_buffer_float);
         break;
 
     case WebGLExtensionID::OES_texture_half_float:
-        EnableSupportedExtension(cx, WebGLExtensionID::EXT_color_buffer_half_float);
+        EnableSupportedExtension(callerType,
+                                 WebGLExtensionID::EXT_color_buffer_half_float);
         break;
 
     default:
@@ -432,8 +438,8 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
 }
 
 void
-WebGLContext::GetSupportedExtensions(JSContext* cx,
-                                     dom::Nullable< nsTArray<nsString> >& retval)
+WebGLContext::GetSupportedExtensions(dom::Nullable< nsTArray<nsString> >& retval,
+                                     dom::CallerType callerType)
 {
     retval.SetNull();
     if (IsContextLost())
@@ -444,7 +450,7 @@ WebGLContext::GetSupportedExtensions(JSContext* cx,
     for (size_t i = 0; i < size_t(WebGLExtensionID::Max); i++) {
         WebGLExtensionID extension = WebGLExtensionID(i);
 
-        if (IsExtensionSupported(cx, extension)) {
+        if (IsExtensionSupported(callerType, extension)) {
             const char* extStr = GetExtensionString(extension);
             arr.AppendElement(NS_ConvertUTF8toUTF16(extStr));
         }
@@ -455,15 +461,19 @@ WebGLContext::GetSupportedExtensions(JSContext* cx,
      * alias. Do not add new ones anymore. Hide it behind the
      * webgl.enable-draft-extensions flag instead.
      */
-    if (IsExtensionSupported(cx, WebGLExtensionID::WEBGL_lose_context))
+    if (IsExtensionSupported(callerType, WebGLExtensionID::WEBGL_lose_context))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
-    if (IsExtensionSupported(cx, WebGLExtensionID::WEBGL_compressed_texture_s3tc))
+    if (IsExtensionSupported(callerType,
+                             WebGLExtensionID::WEBGL_compressed_texture_s3tc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"));
-    if (IsExtensionSupported(cx, WebGLExtensionID::WEBGL_compressed_texture_atc))
+    if (IsExtensionSupported(callerType,
+                             WebGLExtensionID::WEBGL_compressed_texture_atc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_atc"));
-    if (IsExtensionSupported(cx, WebGLExtensionID::WEBGL_compressed_texture_pvrtc))
+    if (IsExtensionSupported(callerType,
+                             WebGLExtensionID::WEBGL_compressed_texture_pvrtc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_pvrtc"));
-    if (IsExtensionSupported(cx, WebGLExtensionID::WEBGL_depth_texture))
+    if (IsExtensionSupported(callerType,
+                             WebGLExtensionID::WEBGL_depth_texture))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"));
 }
 
