@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+  <meta charset="utf-8">
+  <title>CSS Align Test: baseline of checkbox/radio</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1322698">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#baseline-terms">
+  <link rel="match" href="checkbox-baseline-ref.html">
+    <style>
+body { font: 16px/1 monospace; }
+
+div { border: 1px dashed blue; }
+
+.none {
+     -moz-appearance: none; appearance: none;
+  -webkit-appearance: none;
+      -ms-appearance: none;
+          appearance: none;
+  width:0px;
+  height:0px;
+}
+.border { border: 25px solid black; }
+input { margin: 20px; }
+
+   </style>
+  </head>
+  <body>
+    <div><input class="none border" type="checkbox">Block</div>
+    <div style="font-size:72px"><input class="none border" type="checkbox" style="border-width:3px">Block</div>
+  </body>
+</html>

@@ -16,9 +16,7 @@ nsIFrame*
 NS_NewXULLabelFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsXULLabelFrame* it = new (aPresShell) nsXULLabelFrame(aContext);
-
-  it->AddStateBits(NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
-
+  it->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   return it;
 }
 

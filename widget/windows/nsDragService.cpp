@@ -639,3 +639,29 @@ nsDragService::EndDragSession(bool aDoneDrag)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDragService::UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY)
+{
+  if (!mDataObject) {
+    return NS_OK;
+  }
+
+  nsBaseDragService::UpdateDragImage(aImage, aImageX, aImageY);
+
+  IDragSourceHelper *pdsh;
+  if (SUCCEEDED(CoCreateInstance(CLSID_DragDropHelper, nullptr,
+                                 CLSCTX_INPROC_SERVER,
+                                 IID_IDragSourceHelper, (void**)&pdsh))) {
+    SHDRAGIMAGE sdi;
+    if (CreateDragImage(mSourceNode, nullptr, &sdi)) {
+      nsNativeDragTarget::DragImageChanged();
+      if (FAILED(pdsh->InitializeFromBitmap(&sdi, mDataObject)))
+        DeleteObject(sdi.hbmpDragImage);
+    }
+    pdsh->Release();
+  }
+
+  return NS_OK;
+}
+

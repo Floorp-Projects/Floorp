@@ -73,6 +73,31 @@ nsIContentChild::DeallocPBrowserChild(PBrowserChild* aIframe)
   return true;
 }
 
+mozilla::ipc::IPCResult
+nsIContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
+                                         const TabId& aTabId,
+                                         const IPCTabContext& aContext,
+                                         const uint32_t& aChromeFlags,
+                                         const ContentParentId& aCpID,
+                                         const bool& aIsForBrowser)
+{
+  // This runs after AllocPBrowserChild() returns and the IPC machinery for this
+  // PBrowserChild has been set up.
+
+  auto tabChild = static_cast<TabChild*>(static_cast<TabChild*>(aActor));
+
+  if (NS_WARN_IF(NS_FAILED(tabChild->Init()))) {
+    return IPC_FAIL(tabChild, "TabChild::Init failed");
+  }
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(static_cast<nsITabChild*>(tabChild), "tab-child-created", nullptr);
+  }
+
+  return IPC_OK();
+}
+
 PBlobChild*
 nsIContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 {

@@ -1359,6 +1359,14 @@ HttpChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
+HttpChannelParent::NotifyTrackingResource()
+{
+  if (!mIPCClosed)
+    Unused << SendNotifyTrackingResource();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelParent::Delete()
 {
   if (!mIPCClosed)
@@ -1817,6 +1825,14 @@ HttpChannelParent::IssueWarning(uint32_t aWarning, bool aAsError)
 {
   Unused << SendIssueDeprecationWarning(aWarning, aAsError);
   return NS_OK;
+}
+
+void
+HttpChannelParent::DoSendSetPriority(int16_t aValue)
+{
+  if (!mIPCClosed) {
+    Unused << SendSetPriority(aValue);
+  }
 }
 
 } // namespace net

@@ -9565,18 +9565,6 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
   return NS_OK;
 }
 
-ThrottledEventQueue*
-nsGlobalWindow::GetThrottledEventQueue()
-{
-  // We must have an outer to access the TabGroup.
-  nsGlobalWindow* outer = GetOuterWindowInternal();
-  if (!outer) {
-    return nullptr;
-  }
-
-  return TabGroup()->GetThrottledEventQueue();
-}
-
 Selection*
 nsGlobalWindow::GetSelectionOuter()
 {
@@ -14161,7 +14149,18 @@ nsGlobalWindow::TabGroupOuter()
       toJoin = opener->TabGroup();
     } else if (parent) {
       toJoin = parent->TabGroup();
+    } else {
+      // If the tab was created by the parent process, the IPC code may have
+      // already created a TabGroup for us. Fetch it in that case.
+      toJoin = TabGroup::GetFromWindowActor(AsOuter());
     }
+#ifdef DEBUG
+    // Make sure that, if we have a tab group from the actor, it matches the one
+    // we're planning to join.
+    mozilla::dom::TabGroup* actorTabGroup = TabGroup::GetFromWindowActor(AsOuter());
+    MOZ_ASSERT_IF(actorTabGroup, actorTabGroup == toJoin);
+#endif
+
     mTabGroup = mozilla::dom::TabGroup::Join(AsOuter(), toJoin);
   }
   MOZ_ASSERT(mTabGroup);
@@ -14255,7 +14254,7 @@ nsGlobalWindow::Dispatch(const char* aName,
   return DispatcherTrait::Dispatch(aName, aCategory, Move(aRunnable));
 }
 
-already_AddRefed<nsIEventTarget>
+nsIEventTarget*
 nsGlobalWindow::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());

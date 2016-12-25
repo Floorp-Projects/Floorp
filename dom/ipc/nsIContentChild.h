@@ -88,6 +88,13 @@ protected:
                                             const bool& aIsForBrowser);
   virtual bool DeallocPBrowserChild(PBrowserChild*);
 
+  virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(PBrowserChild* aActor,
+                                                          const TabId& aTabId,
+                                                          const IPCTabContext& aContext,
+                                                          const uint32_t& aChromeFlags,
+                                                          const ContentParentId& aCpID,
+                                                          const bool& aIsForBrowse);
+
   virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams);
 
   virtual bool DeallocPBlobChild(PBlobChild* aActor);
