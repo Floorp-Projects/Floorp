@@ -354,7 +354,7 @@ TabChild::Create(nsIContentChild* aManager,
 {
     RefPtr<TabChild> iframe = new TabChild(aManager, aTabId,
                                              aContext, aChromeFlags);
-    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
+    return iframe.forget();
 }
 
 TabChild::TabChild(nsIContentChild* aManager,
@@ -3115,6 +3115,14 @@ TabChildSHistoryListener::SHistoryDidUpdate(bool aTruncate /* = false */)
   // an update, and wait for the state to become consistent.
   NS_ENSURE_TRUE(tabChild->SendSHistoryUpdate(count, index, aTruncate), NS_ERROR_FAILURE);
   return NS_OK;
+}
+
+mozilla::dom::TabGroup*
+TabChild::TabGroup()
+{
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
+  MOZ_ASSERT(window);
+  return window->TabGroup();
 }
 
 /*******************************************************************************

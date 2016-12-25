@@ -47,6 +47,22 @@ class LIRGeneratorShared : public MDefinitionVisitor
         return gen;
     }
 
+    // Needed to capture the abort error out of the visitInstruction methods.
+    bool errored() {
+        return gen->getOffThreadStatus().isErr();
+    }
+    void abort(AbortReason r, const char* message, ...) MOZ_FORMAT_PRINTF(3, 4) {
+        va_list ap;
+        va_start(ap, message);
+        auto reason_ = gen->abortFmt(r, message, ap);
+        va_end(ap);
+        gen->setOffThreadStatus(reason_);
+    }
+    void abort(AbortReason r) {
+        auto reason_ = gen->abort(r);
+        gen->setOffThreadStatus(reason_);
+    }
+
   protected:
 
     static void ReorderCommutative(MDefinition** lhsp, MDefinition** rhsp, MInstruction* ins);
@@ -219,7 +235,7 @@ class LIRGeneratorShared : public MDefinitionVisitor
         // failed and return a dummy vreg. Include a + 1 here for NUNBOX32
         // platforms that expect Value vregs to be adjacent.
         if (vreg + 1 >= MAX_VIRTUAL_REGISTERS) {
-            gen->abort("max virtual registers");
+            abort(AbortReason::Alloc, "max virtual registers");
             return 1;
         }
         return vreg;

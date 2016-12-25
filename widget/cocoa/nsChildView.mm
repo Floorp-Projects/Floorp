@@ -5811,6 +5811,9 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   if (mDragService) {
     // set the dragend point from the current mouse location
     nsDragService* dragService = static_cast<nsDragService *>(mDragService);
+    FlipCocoaScreenCoordinate(aPoint);
+    dragService->SetDragEndPoint(gfx::IntPoint::Round(aPoint.x, aPoint.y));
+
     NSPoint pnt = [NSEvent mouseLocation];
     FlipCocoaScreenCoordinate(pnt);
     dragService->SetDragEndPoint(gfx::IntPoint::Round(pnt.x, pnt.y));
@@ -5856,11 +5859,8 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   }
 
   if (dragService) {
-    NSPoint pnt = [NSEvent mouseLocation];
-    FlipCocoaScreenCoordinate(pnt);
-
-    LayoutDeviceIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(pnt);
-    dragService->DragMoved(devPoint.x, devPoint.y);
+    nsDragService* ds = static_cast<nsDragService *>(dragService.get());
+    ds->DragMovedWithView(aSession, aPoint);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

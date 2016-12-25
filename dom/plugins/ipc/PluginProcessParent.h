@@ -75,6 +75,8 @@ public:
 
     bool IsConnected();
 
+    static bool IsPluginProcessId(base::ProcessId procId);
+
 private:
     void RunLaunchCompleteTask();
 
@@ -83,6 +85,12 @@ private:
     UniquePtr<LaunchCompleteTask> mLaunchCompleteTask;
     MessageLoop* mMainMsgLoop;
     bool mRunCompleteTaskImmediately;
+#ifdef XP_WIN
+    typedef nsTHashtable<nsUint32HashKey> PidSet;
+    // Set of PIDs for all plugin child processes or NULL if empty.
+    static PidSet* sPidSet;
+    uint32_t mChildPid;
+#endif
 
     DISALLOW_EVIL_CONSTRUCTORS(PluginProcessParent);
 };

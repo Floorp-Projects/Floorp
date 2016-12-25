@@ -77,6 +77,11 @@ class ChannelEventQueue final
   // Retargets delivery of events to the target thread specified.
   nsresult RetargetDeliveryTo(nsIEventTarget* aTargetThread);
 
+  // Nulls out the delivery target so events are delivered to the main
+  // thread. Should only be called when the queue is known to be empty.
+  // Useful if the queue will be re-used.
+  nsresult ResetDeliveryTarget();
+
  private:
   // Private destructor, to discourage deletion outside of Release():
   ~ChannelEventQueue()
