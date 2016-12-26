@@ -40,6 +40,7 @@ nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBarFrame,
                                      nsIContent* aMenuBarContent)
   : mMenuBarFrame(aMenuBarFrame)
   , mEventTarget(aMenuBarContent ? aMenuBarContent->GetComposedDoc() : nullptr)
+  , mTopWindowEventTarget(nullptr)
   , mAccessKeyDown(false)
   , mAccessKeyDownCanceled(false)
 {
@@ -66,6 +67,14 @@ nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBarFrame,
 
   mEventTarget->AddEventListener(
                   NS_LITERAL_STRING("MozDOMFullscreen:Entered"), this, false);
+
+  // Needs to listen to the deactivate event of the window.
+  RefPtr<EventTarget> topWindowEventTarget =
+    nsContentUtils::GetWindowRoot(aMenuBarContent->GetComposedDoc());
+  mTopWindowEventTarget = topWindowEventTarget.get();
+
+  mTopWindowEventTarget->AddSystemEventListener(NS_LITERAL_STRING("deactivate"),
+                                                this, true);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -95,8 +104,12 @@ nsMenuBarListener::OnDestroyMenuBarFrame()
   mEventTarget->RemoveEventListener(
                   NS_LITERAL_STRING("MozDOMFullscreen:Entered"), this, false);
 
+  mTopWindowEventTarget->RemoveSystemEventListener(
+                           NS_LITERAL_STRING("deactivate"), this, true);
+
   mMenuBarFrame = nullptr;
   mEventTarget = nullptr;
+  mTopWindowEventTarget = nullptr;
 }
 
 void
@@ -415,14 +428,24 @@ nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 {
   if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive()) {
     ToggleMenuActiveState();
+    mAccessKeyDown = false;
+    mAccessKeyDownCanceled = false;
   }
+  return NS_OK; // means I am NOT consuming event
+}
+
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsMenuBarListener::OnWindowDeactivated(nsIDOMEvent* aEvent)
+{
   // Reset the accesskey state because we cannot receive the keyup event for
   // the pressing accesskey.
   mAccessKeyDown = false;
   mAccessKeyDownCanceled = false;
   return NS_OK; // means I am NOT consuming event
 }
-  
+
 ////////////////////////////////////////////////////////////////////////
 nsresult 
 nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
@@ -487,6 +510,9 @@ nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
   }
   if (eventType.EqualsLiteral("blur")) {
     return Blur(aEvent);
+  }
+  if (eventType.EqualsLiteral("deactivate")) {
+    return OnWindowDeactivated(aEvent);
   }
   if (eventType.EqualsLiteral("mousedown")) {
     return MouseDown(aEvent);
