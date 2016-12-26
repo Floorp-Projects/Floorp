@@ -55,7 +55,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 {
     Value val = GetJSValPreserveColor();
 
-    MOZ_ASSERT(val.isGCThing(), "Must be traceable or unlinked");
+    MOZ_ASSERT(val.isGCThing() || val.isNull(), "Must be traceable or unlinked");
 
     mData.Cleanup();
 
@@ -65,7 +65,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
-    MOZ_ASSERT(GetJSValPreserveColor().isMarkable());
+    MOZ_ASSERT(GetJSValPreserveColor().isGCThing());
     JS::TraceEdge(trc, &mJSVal, "XPCTraceableVariant::mJSVal");
 }
 
@@ -86,7 +86,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
 
     tmp->mData.Cleanup();
 
-    if (val.isMarkable()) {
+    if (val.isGCThing()) {
         XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(tmp);
         v->RemoveFromRootSet();
     }
@@ -99,7 +99,7 @@ XPCVariant::newVariant(JSContext* cx, const Value& aJSVal)
 {
     RefPtr<XPCVariant> variant;
 
-    if (!aJSVal.isMarkable())
+    if (!aJSVal.isGCThing())
         variant = new XPCVariant(cx, aJSVal);
     else
         variant = new XPCTraceableVariant(cx, aJSVal);

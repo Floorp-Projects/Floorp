@@ -479,8 +479,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void popValue(ValueOperand val);
     void pushValue(const Value& val) {
         push(Imm32(val.toNunboxTag()));
-        if (val.isMarkable())
-            push(ImmGCPtr(val.toMarkablePointer()));
+        if (val.isGCThing())
+            push(ImmGCPtr(val.toGCThing()));
         else
             push(Imm32(val.toNunboxPayload()));
     }
