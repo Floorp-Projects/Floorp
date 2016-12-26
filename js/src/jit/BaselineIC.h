@@ -973,41 +973,6 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub
     };
 };
 
-// Optimized lexical GETGNAME stub.
-class ICGetName_GlobalLexical : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-  protected: // Protected to silence Clang warning.
-    uint32_t slot_;
-
-    ICGetName_GlobalLexical(JitCode* stubCode, ICStub* firstMonitorStub, uint32_t slot);
-
-  public:
-    static size_t offsetOfSlot() {
-        return offsetof(ICGetName_GlobalLexical, slot_);
-    }
-
-    class Compiler : public ICStubCompiler {
-        ICStub* firstMonitorStub_;
-        uint32_t slot_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t slot)
-          : ICStubCompiler(cx, ICStub::GetName_GlobalLexical, Engine::Baseline),
-            firstMonitorStub_(firstMonitorStub),
-            slot_(slot)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetName_GlobalLexical>(space, getStubCode(), firstMonitorStub_, slot_);
-        }
-    };
-};
-
 // BindName
 //      JSOP_BINDNAME
 class ICBindName_Fallback : public ICFallbackStub
