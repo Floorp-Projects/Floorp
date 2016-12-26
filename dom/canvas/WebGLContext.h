@@ -12,7 +12,6 @@
 #include "GLDefs.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/EnumeratedArray.h"
@@ -490,11 +489,10 @@ public:
     GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
     bool IsContextLost() const { return mContextStatus != ContextNotLost; }
-    void GetSupportedExtensions(dom::Nullable< nsTArray<nsString> >& retval,
-                                dom::CallerType callerType);
+    void GetSupportedExtensions(JSContext* cx,
+                                dom::Nullable< nsTArray<nsString> >& retval);
     void GetExtension(JSContext* cx, const nsAString& name,
-                      JS::MutableHandle<JSObject*> retval,
-                      dom::CallerType callerType, ErrorResult& rv);
+                      JS::MutableHandle<JSObject*> retval, ErrorResult& rv);
     void AttachShader(WebGLProgram& prog, WebGLShader& shader);
     void BindAttribLocation(WebGLProgram& prog, GLuint location,
                             const nsAString& name);
@@ -1452,7 +1450,7 @@ protected:
     void EnableExtension(WebGLExtensionID ext);
 
     // Enable an extension if it's supported. Return the extension on success.
-    WebGLExtensionBase* EnableSupportedExtension(dom::CallerType callerType,
+    WebGLExtensionBase* EnableSupportedExtension(JSContext* js,
                                                  WebGLExtensionID ext);
 
 public:
@@ -1460,9 +1458,8 @@ public:
     bool IsExtensionEnabled(WebGLExtensionID ext) const;
 
 protected:
-    // returns true if the extension is supported for this caller type (this decides what getSupportedExtensions exposes)
-    bool IsExtensionSupported(dom::CallerType callerType,
-                              WebGLExtensionID ext) const;
+    // returns true if the extension is supported for this JSContext (this decides what getSupportedExtensions exposes)
+    bool IsExtensionSupported(JSContext* cx, WebGLExtensionID ext) const;
     bool IsExtensionSupported(WebGLExtensionID ext) const;
 
     static const char* GetExtensionString(WebGLExtensionID ext);
