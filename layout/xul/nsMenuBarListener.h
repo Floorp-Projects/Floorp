@@ -17,13 +17,20 @@
 class nsMenuBarFrame;
 class nsIDOMKeyEvent;
 
+namespace mozilla {
+namespace dom {
+class EventTarget;
+} // namespace dom
+} // namespace mozilla
+
 /**
  * EventListener implementation for menubar.
  */
 class nsMenuBarListener final : public nsIDOMEventListener
 {
 public:
-  explicit nsMenuBarListener(nsMenuBarFrame* aMenuBar);
+  explicit nsMenuBarListener(nsMenuBarFrame* aMenuBarFrame,
+                             nsIContent* aMenuBarContent);
 
   NS_DECL_ISUPPORTS
 
@@ -73,6 +80,11 @@ protected:
 
   // The menu bar object.
   nsMenuBarFrame* mMenuBarFrame;
+  // The event target to listen to the events.
+  // XXX Should this store this as strong reference?  However,
+  //     OnDestroyMenuBarFrame() should be called at destroying mMenuBarFrame.
+  //     So, weak reference must be safe.
+  mozilla::dom::EventTarget* mEventTarget;
   // Whether or not the ALT key is currently down.
   bool mAccessKeyDown;
   // Whether or not the ALT key down is canceled by other action.
