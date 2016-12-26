@@ -65,6 +65,7 @@ protected:
   nsresult KeyDown(nsIDOMEvent* aMouseEvent);
   nsresult KeyPress(nsIDOMEvent* aMouseEvent);
   nsresult Blur(nsIDOMEvent* aEvent);
+  nsresult OnWindowDeactivated(nsIDOMEvent* aEvent);
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   nsresult Fullscreen(nsIDOMEvent* aEvent);
 
@@ -85,6 +86,8 @@ protected:
   //     OnDestroyMenuBarFrame() should be called at destroying mMenuBarFrame.
   //     So, weak reference must be safe.
   mozilla::dom::EventTarget* mEventTarget;
+  // The top window as EventTarget.
+  mozilla::dom::EventTarget* mTopWindowEventTarget;
   // Whether or not the ALT key is currently down.
   bool mAccessKeyDown;
   // Whether or not the ALT key down is canceled by other action.
