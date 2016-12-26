@@ -8,6 +8,8 @@ const general = {
   CONTENT_SIZE_DECIMALS: 2,
   FILTER_SEARCH_DELAY: 200,
   REQUEST_TIME_DECIMALS: 2,
+  // 100 KB in bytes
+  SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE: 102400,
 };
 
 const actionTypes = {

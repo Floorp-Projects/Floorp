@@ -8,8 +8,6 @@
 "use strict";
 
 const { testing: isTesting } = require("devtools/shared/flags");
-const promise = require("promise");
-const Editor = require("devtools/client/sourceeditor/editor");
 const { Task } = require("devtools/shared/task");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 const { RequestsMenuView } = require("./requests-menu-view");
@@ -31,12 +29,6 @@ const WDA_DEFAULT_VERIFY_INTERVAL = 50;
 // never gets hit during testing.
 // ms
 const WDA_DEFAULT_GIVE_UP_TIMEOUT = isTesting ? 45000 : 2000;
-
-const DEFAULT_EDITOR_CONFIG = {
-  mode: Editor.modes.text,
-  readOnly: true,
-  lineNumbers: true
-};
 
 /**
  * Object defining the network monitor view components.
@@ -102,11 +94,6 @@ var NetMonitorView = {
     Prefs.networkDetailsHeight = this._detailsPane.getAttribute("height");
 
     this._detailsPane = null;
-
-    for (let p of this._editorPromises.values()) {
-      let editor = yield p;
-      editor.destroy();
-    }
   }),
 
   /**
@@ -214,35 +201,8 @@ var NetMonitorView = {
       ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT);
   },
 
-  /**
-   * Lazily initializes and returns a promise for a Editor instance.
-   *
-   * @param string id
-   *        The id of the editor placeholder node.
-   * @return object
-   *         A promise that is resolved when the editor is available.
-   */
-  editor: function (id) {
-    dumpn("Getting a NetMonitorView editor: " + id);
-
-    if (this._editorPromises.has(id)) {
-      return this._editorPromises.get(id);
-    }
-
-    let deferred = promise.defer();
-    this._editorPromises.set(id, deferred.promise);
-
-    // Initialize the source editor and store the newly created instance
-    // in the ether of a resolved promise's value.
-    let editor = new Editor(DEFAULT_EDITOR_CONFIG);
-    editor.appendTo($(id)).then(() => deferred.resolve(editor));
-
-    return deferred.promise;
-  },
-
   _body: null,
   _detailsPane: null,
-  _editorPromises: new Map()
 };
 
 /**
