@@ -17,7 +17,6 @@
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "HTMLURIRefObject.h"
-#include "SetDocumentTitleTransaction.h"
 #include "StyleSheetTransactions.h"
 #include "TextEditUtils.h"
 #include "TypeInState.h"
@@ -809,22 +808,6 @@ bool
 HTMLEditor::IsBlockNode(nsINode* aNode)
 {
   return aNode && NodeIsBlockStatic(aNode);
-}
-
-// Non-static version for the nsIEditor interface and JavaScript
-NS_IMETHODIMP
-HTMLEditor::SetDocumentTitle(const nsAString& aTitle)
-{
-  RefPtr<SetDocumentTitleTransaction> transaction =
-    new SetDocumentTitleTransaction();
-  NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = transaction->Init(this, &aTitle);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  //Don't let Rules System change the selection
-  AutoTransactionsConserveSelection dontChangeSelection(this);
-  return EditorBase::DoTransaction(transaction);
 }
 
 /**
