@@ -712,7 +712,7 @@ TextEditRules::WillInsertText(EditAction aAction,
 
   // don't put text in places that can't have it
   NS_ENSURE_STATE(mTextEditor);
-  if (!mTextEditor->IsTextNode(selNode) &&
+  if (!EditorBase::IsTextNode(selNode) &&
       !mTextEditor->CanContainTag(*selNode, *nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
@@ -938,8 +938,7 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
   // delete empty text nodes at selection
-  NS_ENSURE_STATE(mTextEditor);
-  if (mTextEditor->IsTextNode(startNode)) {
+  if (EditorBase::IsTextNode(startNode)) {
     nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(startNode);
     uint32_t strLength;
     rv = textNode->GetLength(&strLength);
@@ -947,6 +946,7 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
 
     // are we in an empty text node?
     if (!strLength) {
+      NS_ENSURE_STATE(mTextEditor);
       rv = mTextEditor->DeleteNode(startNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }

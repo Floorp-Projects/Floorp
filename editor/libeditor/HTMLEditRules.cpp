@@ -1269,7 +1269,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
   // dont put text in places that can't have it
   NS_ENSURE_STATE(mHTMLEditor);
-  if (!mHTMLEditor->IsTextNode(selNode) &&
+  if (!EditorBase::IsTextNode(selNode) &&
       (!mHTMLEditor || !mHTMLEditor->CanContainTag(*selNode,
                                                    *nsGkAtoms::textTagName))) {
     return NS_ERROR_FAILURE;
@@ -5795,7 +5795,7 @@ HTMLEditRules::GetNodesForOperation(
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (aTouchContent == TouchContent::yes && IsInlineNode(node) &&
-          htmlEditor->IsContainer(node) && !htmlEditor->IsTextNode(node)) {
+          htmlEditor->IsContainer(node) && !EditorBase::IsTextNode(node)) {
         nsTArray<OwningNonNull<nsINode>> arrayOfInlines;
         nsresult rv = BustUpInlinesAtBRs(*node->AsContent(), arrayOfInlines);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -6335,7 +6335,7 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
   if (aNode == aPara && doesCRCreateNewP) {
     // we are at the edges of the block, newBRneeded not needed!
     sibling = node->AsContent();
-  } else if (mHTMLEditor->IsTextNode(aNode)) {
+  } else if (EditorBase::IsTextNode(aNode)) {
     nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aNode);
     uint32_t strLength;
     nsresult rv = textNode->GetLength(&strLength);
@@ -6474,7 +6474,7 @@ HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   NS_ENSURE_STATE(mHTMLEditor && rightParaNode);
   nsCOMPtr<nsIDOMNode> child =
     GetAsDOMNode(mHTMLEditor->GetLeftmostChild(rightParaNode, true));
-  if (mHTMLEditor->IsTextNode(child) ||
+  if (EditorBase::IsTextNode(child) ||
       mHTMLEditor->IsContainer(child)) {
     aSelection->Collapse(child,0);
   } else {
@@ -7261,7 +7261,7 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     NS_ENSURE_STATE(mHTMLEditor);
     tmp = GetAsDOMNode(mHTMLEditor->GetLastEditableChild(*block));
     uint32_t endPoint;
-    if (mHTMLEditor->IsTextNode(tmp) ||
+    if (EditorBase::IsTextNode(tmp) ||
         mHTMLEditor->IsContainer(tmp)) {
       rv = EditorBase::GetLengthOfDOMNode(tmp, endPoint);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -7276,7 +7276,7 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     NS_ENSURE_STATE(mHTMLEditor);
     tmp = GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*block));
     int32_t offset;
-    if (mHTMLEditor->IsTextNode(tmp) ||
+    if (EditorBase::IsTextNode(tmp) ||
         mHTMLEditor->IsContainer(tmp)) {
       tmp = EditorBase::GetNodeLocation(tmp, &offset);
     }
@@ -7526,8 +7526,7 @@ HTMLEditRules::FindNearSelectableNode(nsIDOMNode* aSelNode,
 
   // scan in the right direction until we find an eligible text node,
   // but don't cross any breaks, images, or table elements.
-  NS_ENSURE_STATE(mHTMLEditor);
-  while (nearNode && !(mHTMLEditor->IsTextNode(nearNode) ||
+  while (nearNode && !(EditorBase::IsTextNode(nearNode) ||
                        TextEditUtils::IsBreak(nearNode) ||
                        HTMLEditUtils::IsImage(nearNode))) {
     curNode = nearNode;
@@ -8268,8 +8267,7 @@ HTMLEditRules::RemoveAlignment(nsIDOMNode* aNode,
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  if (mHTMLEditor->IsTextNode(aNode) || HTMLEditUtils::IsTable(aNode)) {
+  if (EditorBase::IsTextNode(aNode) || HTMLEditUtils::IsTable(aNode)) {
     return NS_OK;
   }
 
