@@ -40,9 +40,11 @@ enum class TraceKind
     // Note: The order here is determined by our Value packing. Other users
     //       should sort alphabetically, for consistency.
     Object = 0x00,
-    String = 0x01,
-    Symbol = 0x02,
-    Script = 0x03,
+    String = 0x02,
+    Symbol = 0x03,
+
+    // 0x1 is not used for any GCThing Value tag, so we use it for Script.
+    Script = 0x01,
 
     // Shape details are exposed through JS_TraceShapeCycleCollectorChildren.
     Shape = 0x04,

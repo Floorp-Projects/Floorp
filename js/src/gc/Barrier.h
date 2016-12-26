@@ -273,7 +273,7 @@ template <typename S> struct ReadBarrierFunctor : public VoidDefaultAdaptor<S> {
 template <>
 struct InternalBarrierMethods<Value>
 {
-    static bool isMarkable(const Value& v) { return v.isMarkable(); }
+    static bool isMarkable(const Value& v) { return v.isGCThing(); }
     static bool isMarkableTaggedPointer(const Value& v) { return isMarkable(v); }
 
     static void preBarrier(const Value& v) {

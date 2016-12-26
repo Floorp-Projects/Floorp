@@ -1516,8 +1516,8 @@ MacroAssemblerMIPSCompat::getType(const Value& val)
 void
 MacroAssemblerMIPSCompat::moveData(const Value& val, Register data)
 {
-    if (val.isMarkable())
-        ma_li(data, ImmGCPtr(val.toMarkablePointer()));
+    if (val.isGCThing())
+        ma_li(data, ImmGCPtr(val.toGCThing()));
     else
         ma_li(data, Imm32(val.toNunboxPayload()));
 }
