@@ -1174,19 +1174,92 @@ GetNameIRGenerator::tryAttachStub()
     AutoAssertNoPendingException aanpe(cx_);
 
     ObjOperandId envId(writer.setInputOperandId(0));
-    if (tryAttachEnvironmentName(envId))
+    RootedId id(cx_, NameToId(name_));
+
+    if (tryAttachGlobalNameValue(envId, id))
+        return true;
+    if (tryAttachEnvironmentName(envId, id))
         return true;
 
     return false;
 }
 
 bool
-GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId)
+GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
+{
+    if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    Handle<LexicalEnvironmentObject*> globalLexical = env_.as<LexicalEnvironmentObject>();
+    MOZ_ASSERT(globalLexical->isGlobal());
+
+    // The property must be found, and it must be found as a normal data property.
+    RootedShape shape(cx_);
+    RootedNativeObject current(cx_, globalLexical);
+    while (true) {
+        shape = current->lookup(cx_, id);
+        if (shape)
+            break;
+        if (current == globalLexical) {
+            current = &globalLexical->global();
+        } else {
+            // In the browser the global prototype chain should be immutable.
+            if (!current->staticPrototypeIsImmutable())
+                return false;
+            JSObject* proto = current->staticPrototype();
+            if (!proto || !proto->is<NativeObject>())
+                return false;
+            current = &proto->as<NativeObject>();
+        }
+    }
+
+    if (!shape->hasDefaultGetter() || !shape->hasSlot())
+        return false;
+
+    // Instantiate this global property, for use during Ion compilation.
+    if (IsIonEnabled(cx_))
+        EnsureTrackPropertyTypes(cx_, current, id);
+
+    if (current == globalLexical) {
+        // There is no need to guard on the shape. Lexical bindings are
+        // non-configurable, and this stub cannot be shared across globals.
+        size_t dynamicSlotOffset = current->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+        writer.loadDynamicSlotResult(objId, dynamicSlotOffset);
+    } else {
+        // Check the prototype chain from the global to the current
+        // prototype. Ignore the global lexical scope as it doesn't figure
+        // into the prototype chain. We guard on the global lexical
+        // scope's shape independently.
+        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), current, shape))
+            return false;
+
+        // Shape guard for global lexical.
+        writer.guardShape(objId, globalLexical->lastProperty());
+
+        // Guard on the shape of the GlobalObject.
+        ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
+        writer.guardShape(globalId, globalLexical->global().lastProperty());
+
+        ObjOperandId holderId = globalId;
+        if (current != &globalLexical->global()) {
+            // Shape guard holder.
+            holderId = writer.loadObject(current);
+            writer.guardShape(holderId, current->lastProperty());
+        }
+
+        EmitLoadSlotResult(writer, holderId, current, shape);
+    }
+
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
 {
     if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
         return false;
 
-    RootedId id(cx_, NameToId(name_));
     RootedObject env(cx_, env_);
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
