@@ -72,13 +72,13 @@ public:
                     nsILoadContext* aLoadContext,
                     PBOverrideStatus aStatus);
 
-  bool Init(const HttpChannelCreationArgs& aOpenArgs);
+  MOZ_MUST_USE bool Init(const HttpChannelCreationArgs& aOpenArgs);
 
   // ADivertableParentChannel functions.
   void DivertTo(nsIStreamListener *aListener) override;
-  nsresult SuspendForDiversion() override;
-  nsresult SuspendMessageDiversion() override;
-  nsresult ResumeMessageDiversion() override;
+  MOZ_MUST_USE nsresult SuspendForDiversion() override;
+  MOZ_MUST_USE nsresult SuspendMessageDiversion() override;
+  MOZ_MUST_USE nsresult ResumeMessageDiversion() override;
 
   // Calls OnStartRequest for "DivertTo" listener, then notifies child channel
   // that it should divert OnDataAvailable and OnStopRequest calls to this
@@ -96,7 +96,8 @@ public:
     }
   }
 
-  nsresult OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval);
+  MOZ_MUST_USE nsresult OpenAlternativeOutputStream(const nsACString & type,
+                                                    nsIOutputStream * *_retval);
 
   void InvokeAsyncOpen(nsresult rv);
 
@@ -105,47 +106,49 @@ public:
 protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
-  bool ConnectChannel(const uint32_t& channelId, const bool& shouldIntercept);
+  MOZ_MUST_USE bool ConnectChannel(const uint32_t& channelId,
+                                   const bool& shouldIntercept);
 
-  bool DoAsyncOpen(const URIParams&           uri,
-                   const OptionalURIParams&   originalUri,
-                   const OptionalURIParams&   docUri,
-                   const OptionalURIParams&   referrerUri,
-                   const uint32_t&            referrerPolicy,
-                   const OptionalURIParams&   internalRedirectUri,
-                   const OptionalURIParams&   topWindowUri,
-                   const uint32_t&            loadFlags,
-                   const RequestHeaderTuples& requestHeaders,
-                   const nsCString&           requestMethod,
-                   const OptionalIPCStream&   uploadStream,
-                   const bool&                uploadStreamHasHeaders,
-                   const int16_t&             priority,
-                   const uint32_t&            classOfService,
-                   const uint8_t&             redirectionLimit,
-                   const bool&                allowSTS,
-                   const uint32_t&            thirdPartyFlags,
-                   const bool&                doResumeAt,
-                   const uint64_t&            startPos,
-                   const nsCString&           entityID,
-                   const bool&                chooseApplicationCache,
-                   const nsCString&           appCacheClientID,
-                   const bool&                allowSpdy,
-                   const bool&                allowAltSvc,
-                   const bool&                beConservative,
-                   const OptionalLoadInfoArgs& aLoadInfoArgs,
-                   const OptionalHttpResponseHead& aSynthesizedResponseHead,
-                   const nsCString&           aSecurityInfoSerialization,
-                   const uint32_t&            aCacheKey,
-                   const nsCString&           aRequestContextID,
-                   const OptionalCorsPreflightArgs& aCorsPreflightArgs,
-                   const uint32_t&            aInitialRwin,
-                   const bool&                aBlockAuthPrompt,
-                   const bool&                aSuspendAfterSynthesizeResponse,
-                   const bool&                aAllowStaleCacheContent,
-                   const nsCString&           aContentTypeHint,
-                   const nsCString&           aChannelId,
-                   const uint64_t&            aContentWindowId,
-                   const nsCString&           aPreferredAlternativeType);
+  MOZ_MUST_USE bool
+  DoAsyncOpen(const URIParams&           uri,
+              const OptionalURIParams&   originalUri,
+              const OptionalURIParams&   docUri,
+              const OptionalURIParams&   referrerUri,
+              const uint32_t&            referrerPolicy,
+              const OptionalURIParams&   internalRedirectUri,
+              const OptionalURIParams&   topWindowUri,
+              const uint32_t&            loadFlags,
+              const RequestHeaderTuples& requestHeaders,
+              const nsCString&           requestMethod,
+              const OptionalIPCStream&   uploadStream,
+              const bool&                uploadStreamHasHeaders,
+              const int16_t&             priority,
+              const uint32_t&            classOfService,
+              const uint8_t&             redirectionLimit,
+              const bool&                allowSTS,
+              const uint32_t&            thirdPartyFlags,
+              const bool&                doResumeAt,
+              const uint64_t&            startPos,
+              const nsCString&           entityID,
+              const bool&                chooseApplicationCache,
+              const nsCString&           appCacheClientID,
+              const bool&                allowSpdy,
+              const bool&                allowAltSvc,
+              const bool&                beConservative,
+              const OptionalLoadInfoArgs& aLoadInfoArgs,
+              const OptionalHttpResponseHead& aSynthesizedResponseHead,
+              const nsCString&           aSecurityInfoSerialization,
+              const uint32_t&            aCacheKey,
+              const nsCString&           aRequestContextID,
+              const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+              const uint32_t&            aInitialRwin,
+              const bool&                aBlockAuthPrompt,
+              const bool&                aSuspendAfterSynthesizeResponse,
+              const bool&                aAllowStaleCacheContent,
+              const nsCString&           aContentTypeHint,
+              const nsCString&           aChannelId,
+              const uint64_t&            aContentWindowId,
+              const nsCString&           aPreferredAlternativeType);
 
   virtual mozilla::ipc::IPCResult RecvSetPriority(const int16_t& priority) override;
   virtual mozilla::ipc::IPCResult RecvSetClassOfService(const uint32_t& cos) override;
@@ -177,7 +180,7 @@ protected:
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
-  nsresult ResumeForDiversion();
+  MOZ_MUST_USE nsresult ResumeForDiversion();
 
   // Asynchronously calls NotifyDiversionFailed.
   void FailDiversion(nsresult aErrorCode, bool aSkipResume = true);
@@ -185,12 +188,13 @@ protected:
   friend class HttpChannelParentListener;
   RefPtr<mozilla::dom::TabParent> mTabParent;
 
-  nsresult ReportSecurityMessage(const nsAString& aMessageTag,
-                                 const nsAString& aMessageCategory) override;
+  MOZ_MUST_USE nsresult
+  ReportSecurityMessage(const nsAString& aMessageTag,
+                        const nsAString& aMessageCategory) override;
 
   // Calls SendDeleteSelf and sets mIPCClosed to true because we should not
   // send any more messages after that. Bug 1274886
-  bool DoSendDeleteSelf();
+  MOZ_MUST_USE bool DoSendDeleteSelf();
   // Called to notify the parent channel to not send any more IPC messages.
   virtual mozilla::ipc::IPCResult RecvDeletingChannel() override;
   virtual mozilla::ipc::IPCResult RecvFinishInterceptedRedirect() override;

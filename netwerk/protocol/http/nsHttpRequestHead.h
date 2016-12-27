@@ -43,9 +43,10 @@ public:
 
     // Using this function it is possible to itereate through all headers
     // automatically under one lock.
-    nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor,
-                          nsHttpHeaderArray::VisitorFilter filter =
-                              nsHttpHeaderArray::eFilterAll);
+    MOZ_MUST_USE nsresult
+    VisitHeaders(nsIHttpHeaderVisitor *visitor,
+                 nsHttpHeaderArray::VisitorFilter filter =
+                     nsHttpHeaderArray::eFilterAll);
     void Method(nsACString &aMethod);
     nsHttpVersion Version();
     void RequestURI(nsACString &RequestURI);
@@ -57,13 +58,14 @@ public:
                    int32_t port);
     void Origin(nsACString &aOrigin);
 
-    nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m=false);
-    nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m,
-                       nsHttpHeaderArray::HeaderVariety variety);
-    nsresult SetEmptyHeader(nsHttpAtom h);
-    nsresult GetHeader(nsHttpAtom h, nsACString &v);
+    MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v,
+                                    bool m=false);
+    MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m,
+                                    nsHttpHeaderArray::HeaderVariety variety);
+    MOZ_MUST_USE nsresult SetEmptyHeader(nsHttpAtom h);
+    MOZ_MUST_USE nsresult GetHeader(nsHttpAtom h, nsACString &v);
 
-    nsresult ClearHeader(nsHttpAtom h);
+    MOZ_MUST_USE nsresult ClearHeader(nsHttpAtom h);
     void ClearHeaders();
 
     bool HasHeaderValue(nsHttpAtom h, const char *v);
@@ -73,7 +75,8 @@ public:
     void Flatten(nsACString &, bool pruneProxyHeaders = false);
 
     // Don't allow duplicate values
-    nsresult SetHeaderOnce(nsHttpAtom h, const char *v, bool merge = false);
+    MOZ_MUST_USE nsresult SetHeaderOnce(nsHttpAtom h, const char *v,
+                                        bool merge = false);
 
     bool IsSafeMethod();
 
