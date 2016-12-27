@@ -109,6 +109,75 @@ struct ParamTraits<WRImageKey>
 };
 
 template<>
+struct ParamTraits<WRBorderStyle>
+  : public ContiguousEnumSerializer<
+        WRBorderStyle,
+        WRBorderStyle::None,
+        WRBorderStyle::Outset>
+{
+};
+
+template<>
+struct ParamTraits<WRColor>
+{
+  static void
+  Write(Message* aMsg, const WRColor& aParam)
+  {
+    WriteParam(aMsg, aParam.r);
+    WriteParam(aMsg, aParam.g);
+    WriteParam(aMsg, aParam.b);
+    WriteParam(aMsg, aParam.a);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WRColor* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->r)
+        && ReadParam(aMsg, aIter, &aResult->g)
+        && ReadParam(aMsg, aIter, &aResult->b)
+        && ReadParam(aMsg, aIter, &aResult->a);
+  }
+};
+
+template<>
+struct ParamTraits<WRBorderSide>
+{
+  static void
+  Write(Message* aMsg, const WRBorderSide& aParam)
+  {
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.color);
+    WriteParam(aMsg, aParam.style);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WRBorderSide* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->width)
+        && ReadParam(aMsg, aIter, &aResult->color)
+        && ReadParam(aMsg, aIter, &aResult->style);
+  }
+};
+
+template<>
+struct ParamTraits<WRLayoutSize>
+{
+  static void
+  Write(Message* aMsg, const WRLayoutSize& aParam)
+  {
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WRLayoutSize* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->width)
+        && ReadParam(aMsg, aIter, &aResult->height);
+  }
+};
+
+template<>
 struct ParamTraits<WRRect>
 {
   static void
