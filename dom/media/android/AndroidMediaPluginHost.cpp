@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/Preferences.h"
+#include "MediaContentType.h"
 #include "MediaResource.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/Services.h"
@@ -226,10 +227,11 @@ AndroidMediaPluginHost::~AndroidMediaPluginHost() {
   MOZ_COUNT_DTOR(AndroidMediaPluginHost);
 }
 
-bool AndroidMediaPluginHost::FindDecoder(const nsACString& aMimeType, const char* const** aCodecs)
+bool AndroidMediaPluginHost::FindDecoder(const MediaContentType& aMimeType,
+                                         const char* const** aCodecs)
 {
   const char *chars;
-  size_t len = NS_CStringGetData(aMimeType, &chars, nullptr);
+  size_t len = NS_CStringGetData(aMimeType.Type().AsString(), &chars, nullptr);
   for (size_t n = 0; n < mPlugins.Length(); ++n) {
     Manifest *plugin = mPlugins[n];
     const char* const *codecs;
