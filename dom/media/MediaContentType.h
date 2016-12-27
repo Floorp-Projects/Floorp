@@ -41,7 +41,7 @@ public:
   // Was there an explicit 'codecs' parameter provided?
   bool HaveCodecs() const { return mExtendedMIMEType.HaveCodecs(); }
   // Codecs. May be empty if not provided or explicitly provided as empty.
-  const nsAString& GetCodecs() const { return mExtendedMIMEType.GetCodecs(); }
+  const nsAString& GetCodecs() const { return mExtendedMIMEType.Codecs().AsString(); }
 
   // Sizes and rates.
   Maybe<int32_t> GetWidth() const { return mExtendedMIMEType.GetWidth(); }
