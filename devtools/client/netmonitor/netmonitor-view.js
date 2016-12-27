@@ -9,7 +9,6 @@
 const { Task } = require("devtools/shared/task");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 const { RequestsMenuView } = require("./requests-menu-view");
-const { CustomRequestView } = require("./custom-request-view");
 const { SidebarView } = require("./sidebar-view");
 const { ACTIVITY_TYPE } = require("./constants");
 const { Prefs } = require("./prefs");
@@ -19,6 +18,7 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
 
 // Components
+const CustomRequestPanel = createFactory(require("./shared/components/custom-request-panel"));
 const DetailsPanel = createFactory(require("./shared/components/details-panel"));
 const StatisticsPanel = createFactory(require("./components/statistics-panel"));
 const Toolbar = createFactory(require("./components/toolbar"));
@@ -32,6 +32,13 @@ var NetMonitorView = {
    */
   initialize: function () {
     this._initializePanes();
+
+    this.customRequestPanel = $("#react-custom-request-panel-hook");
+
+    ReactDOM.render(Provider(
+      { store: gStore },
+      CustomRequestPanel(),
+    ), this.customRequestPanel);
 
     this.detailsPanel = $("#react-details-panel-hook");
 
@@ -55,7 +62,6 @@ var NetMonitorView = {
     ), this.toolbar);
 
     this.RequestsMenu.initialize(gStore);
-    this.CustomRequest.initialize();
 
     // Store watcher here is for observing the statisticsOpen state change.
     // It should be removed once we migrate to react and apply react/redex binding.
@@ -72,7 +78,7 @@ var NetMonitorView = {
   destroy: function () {
     this._isDestroyed = true;
     this.RequestsMenu.destroy();
-    this.CustomRequest.destroy();
+    ReactDOM.unmountComponentAtNode(this.customRequestPanel);
     ReactDOM.unmountComponentAtNode(this.detailsPanel);
     ReactDOM.unmountComponentAtNode(this.statisticsPanel);
     ReactDOM.unmountComponentAtNode(this.toolbar);
@@ -195,6 +201,5 @@ function storeWatcher(initialValue, reduceValue, onChange) {
  */
 NetMonitorView.Sidebar = new SidebarView();
 NetMonitorView.RequestsMenu = new RequestsMenuView();
-NetMonitorView.CustomRequest = new CustomRequestView();
 
 exports.NetMonitorView = NetMonitorView;

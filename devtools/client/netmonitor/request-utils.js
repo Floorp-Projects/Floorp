@@ -6,34 +6,7 @@
 
 "use strict";
 
-const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { Task } = require("devtools/shared/task");
-
-/**
- * Helper method to get a wrapped function which can be bound to as
- * an event listener directly and is executed only when data-key is
- * present in event.target.
- *
- * @param {function} callback - function to execute execute when data-key
- *                              is present in event.target.
- * @param {bool} onlySpaceOrReturn - flag to indicate if callback should only
- *                                   be called when the space or return button
- *                                   is pressed
- * @return {function} wrapped function with the target data-key as the first argument
- *                    and the event as the second argument.
- */
-function getKeyWithEvent(callback, onlySpaceOrReturn) {
-  return function (event) {
-    let key = event.target.getAttribute("data-key");
-    let filterKeyboardEvent = !onlySpaceOrReturn ||
-                              event.keyCode === KeyCodes.DOM_VK_SPACE ||
-                              event.keyCode === KeyCodes.DOM_VK_RETURN;
-
-    if (key && filterKeyboardEvent) {
-      callback(key);
-    }
-  };
-}
 
 /**
  * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
@@ -254,7 +227,6 @@ function parseQueryString(query) {
 }
 
 module.exports = {
-  getKeyWithEvent,
   getFormDataSections,
   fetchHeaders,
   formDataURI,
