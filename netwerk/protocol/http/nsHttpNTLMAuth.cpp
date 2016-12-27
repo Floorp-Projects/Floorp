@@ -116,7 +116,7 @@ CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
     }
 
     nsCOMPtr<nsIURI> uri;
-    channel->GetURI(getter_AddRefs(uri));
+    Unused << channel->GetURI(getter_AddRefs(uri));
 
     bool allowNonFqdn;
     if (NS_FAILED(prefs->GetBoolPref(kAllowNonFqdn, &allowNonFqdn)))
