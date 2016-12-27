@@ -25,6 +25,9 @@ public:
 protected:
   virtual ~WebRenderContainerLayer()
   {
+    while (mFirstChild) {
+      ContainerLayer::RemoveChild(mFirstChild);
+    }
     MOZ_COUNT_DTOR(WebRenderContainerLayer);
   }
 
