@@ -51,6 +51,7 @@ TabGroup::~TabGroup()
 {
   MOZ_ASSERT(mDocGroups.IsEmpty());
   MOZ_ASSERT(mWindows.IsEmpty());
+  MOZ_RELEASE_ASSERT(mLastWindowLeft);
 }
 
 void
@@ -149,6 +150,7 @@ TabGroup::Join(nsPIDOMWindowOuter* aWindow, TabGroup* aTabGroup)
   if (!tabGroup) {
     tabGroup = new TabGroup();
   }
+  MOZ_RELEASE_ASSERT(!tabGroup->mLastWindowLeft);
   MOZ_ASSERT(!tabGroup->mWindows.Contains(aWindow));
   tabGroup->mWindows.AppendElement(aWindow);
   return tabGroup.forget();
@@ -258,7 +260,13 @@ TabGroup::EventTargetFor(TaskCategory aCategory) const
     MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || this == sChromeTabGroup);
   }
 
-  MOZ_RELEASE_ASSERT(!mLastWindowLeft);
+  if (NS_WARN_IF(mLastWindowLeft)) {
+    // Once we've disconnected everything, we still allow people to
+    // dispatch. We'll just go directly to the main thread.
+    nsCOMPtr<nsIEventTarget> main = do_GetMainThread();
+    return main;
+  }
+
   return mEventTargets[size_t(aCategory)];
 }
 
