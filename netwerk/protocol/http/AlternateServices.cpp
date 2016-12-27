@@ -621,9 +621,9 @@ public:
           bool validWK = false;
           bool mixedScheme = false;
           int32_t lifetime = 0;
-          uu->GetValid(&validWK);
-          uu->GetLifetime(&lifetime);
-          uu->GetMixed(&mixedScheme);
+          Unused << uu->GetValid(&validWK);
+          Unused << uu->GetLifetime(&lifetime);
+          Unused << uu->GetMixed(&mixedScheme);
           if (!validWK) {
             LOG(("WellKnownChecker::Done %p json parser declares invalid\n%s\n", this, mTransactionAlternate->mWKResponse.get()));
             accepted = false;
@@ -903,7 +903,12 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
     nsCOMPtr<nsIInterfaceRequestor> callbacks = new AltSvcOverride(aCallbacks);
     RefPtr<AltSvcTransaction> nullTransaction =
       new AltSvcTransaction(map, ci, aCallbacks, caps);
-    gHttpHandler->ConnMgr()->SpeculativeConnect(ci, callbacks, caps, nullTransaction);
+    nsresult rv = gHttpHandler->ConnMgr()->SpeculativeConnect(ci, callbacks, caps, nullTransaction);
+    if (NS_FAILED(rv)) {
+      LOG(("AltSvcCache::UpdateAltServiceMapping %p "
+           "speculative connect failed with code %08x\n", this,
+           static_cast<uint32_t>(rv)));
+    }
   } else {
     // for http:// resources we fetch .well-known too
     nsAutoCString origin (NS_LITERAL_CSTRING("http://") + map->OriginHost());

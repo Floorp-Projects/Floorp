@@ -204,7 +204,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   bool requireExtraQuotes = false;
   {
     nsAutoCString serverVal;
-    authChannel->GetServerResponseHeader(serverVal);
+    Unused << authChannel->GetServerResponseHeader(serverVal);
     if (!serverVal.IsEmpty()) {
       requireExtraQuotes = !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
     }

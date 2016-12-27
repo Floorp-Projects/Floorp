@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/Unused.h"
 #include "nsHttpResponseHead.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsPrintfCString.h"
@@ -294,7 +295,7 @@ nsHttpResponseHead::ParseCachedHead(const char *block)
         if (!p)
             return NS_ERROR_UNEXPECTED;
 
-        ParseHeaderLine_locked(nsDependentCSubstring(block, p - block), false);
+        Unused << ParseHeaderLine_locked(nsDependentCSubstring(block, p - block), false);
 
     } while (1);
 

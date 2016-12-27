@@ -302,15 +302,28 @@ nsIncrementalDownload::ProcessTimeout()
     if (NS_FAILED(rv))
       return rv;
 
-    if (!mPartialValidator.IsEmpty())
-      http->SetRequestHeader(NS_LITERAL_CSTRING("If-Range"),
-                             mPartialValidator, false);
+    if (!mPartialValidator.IsEmpty()) {
+      rv = http->SetRequestHeader(NS_LITERAL_CSTRING("If-Range"),
+                                  mPartialValidator, false);
+      if (NS_FAILED(rv)) {
+        LOG(("nsIncrementalDownload::ProcessTimeout\n"
+             "    failed to set request header: If-Range\n"));
+      }
+    }
 
     if (mCacheBust) {
-      http->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
-                             NS_LITERAL_CSTRING("no-cache"), false);
-      http->SetRequestHeader(NS_LITERAL_CSTRING("Pragma"),
-                             NS_LITERAL_CSTRING("no-cache"), false);
+      rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                  NS_LITERAL_CSTRING("no-cache"), false);
+      if (NS_FAILED(rv)) {
+        LOG(("nsIncrementalDownload::ProcessTimeout\n"
+             "    failed to set request header: If-Range\n"));
+      }
+      rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Pragma"),
+                                  NS_LITERAL_CSTRING("no-cache"), false);
+      if (NS_FAILED(rv)) {
+        LOG(("nsIncrementalDownload::ProcessTimeout\n"
+             "    failed to set request header: If-Range\n"));
+      }
     }
   }
 
@@ -662,11 +675,16 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
     rv = http->GetURI(getter_AddRefs(mFinalURI));
     if (NS_FAILED(rv))
       return rv;
-    http->GetResponseHeader(NS_LITERAL_CSTRING("Etag"), mPartialValidator);
+    Unused << http->GetResponseHeader(NS_LITERAL_CSTRING("Etag"), mPartialValidator);
     if (StringBeginsWith(mPartialValidator, NS_LITERAL_CSTRING("W/")))
       mPartialValidator.Truncate(); // don't use weak validators
-    if (mPartialValidator.IsEmpty())
-      http->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), mPartialValidator);
+    if (mPartialValidator.IsEmpty()) {
+      rv = http->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), mPartialValidator);
+      if (NS_FAILED(rv)) {
+        LOG(("nsIncrementalDownload::OnStartRequest\n"
+             "    empty validator\n"));
+      }
+    }
 
     if (code == 206) {
       // OK, read the Content-Range header to determine the total size of this
@@ -869,7 +887,7 @@ nsIncrementalDownload::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 
   // If we didn't have a Range header, then we must be doing a full download.
   nsAutoCString rangeVal;
-  http->GetRequestHeader(rangeHdr, rangeVal);
+  Unused << http->GetRequestHeader(rangeHdr, rangeVal);
   if (!rangeVal.IsEmpty()) {
     rv = newHttpChannel->SetRequestHeader(rangeHdr, rangeVal, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -879,10 +897,18 @@ nsIncrementalDownload::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   mPartialValidator.Truncate();
 
   if (mCacheBust) {
-    newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
-                                     NS_LITERAL_CSTRING("no-cache"), false);
-    newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Pragma"),
-                                     NS_LITERAL_CSTRING("no-cache"), false);
+    rv = newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                          NS_LITERAL_CSTRING("no-cache"), false);
+    if (NS_FAILED(rv)) {
+      LOG(("nsIncrementalDownload::AsyncOnChannelRedirect\n"
+           "    failed to set request header: Cache-Control\n"));
+    }
+    rv = newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Pragma"),
+                                          NS_LITERAL_CSTRING("no-cache"), false);
+    if (NS_FAILED(rv)) {
+      LOG(("nsIncrementalDownload::AsyncOnChannelRedirect\n"
+           "    failed to set request header: Pragma\n"));
+    }
   }
 
   // Prepare to receive callback

@@ -1166,7 +1166,7 @@ HttpBaseChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings)
   }
 
   nsAutoCString encoding;
-  mResponseHead->GetHeader(nsHttp::Content_Encoding, encoding);
+  Unused << mResponseHead->GetHeader(nsHttp::Content_Encoding, encoding);
   if (encoding.IsEmpty()) {
     *aEncodings = nullptr;
     return NS_OK;
@@ -2263,10 +2263,10 @@ HttpBaseChannel::SetCookie(const char *aCookieHeader)
   NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
 
   nsAutoCString date;
-  mResponseHead->GetHeader(nsHttp::Date, date);
-  nsresult rv =
-    cs->SetCookieStringFromHttp(mURI, nullptr, nullptr, aCookieHeader,
-                                date.get(), this);
+  // empty date is not an error
+  Unused << mResponseHead->GetHeader(nsHttp::Date, date);
+  nsresult rv = cs->SetCookieStringFromHttp(mURI, nullptr, nullptr,
+                                            aCookieHeader, date.get(), this);
   if (NS_SUCCEEDED(rv)) {
     NotifySetCookie(aCookieHeader);
   }
@@ -2766,15 +2766,15 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID)
     // Not sending the Accept-Ranges header means we can still try
     // sending range requests.
     nsAutoCString acceptRanges;
-    mResponseHead->GetHeader(nsHttp::Accept_Ranges, acceptRanges);
+    Unused << mResponseHead->GetHeader(nsHttp::Accept_Ranges, acceptRanges);
     if (!acceptRanges.IsEmpty() &&
         !nsHttp::FindToken(acceptRanges.get(), "bytes", HTTP_HEADER_VALUE_SEPS)) {
       return NS_ERROR_NOT_RESUMABLE;
     }
 
     size = mResponseHead->TotalEntitySize();
-    mResponseHead->GetHeader(nsHttp::Last_Modified, lastmod);
-    mResponseHead->GetHeader(nsHttp::ETag, etag);
+    Unused << mResponseHead->GetHeader(nsHttp::Last_Modified, lastmod);
+    Unused << mResponseHead->GetHeader(nsHttp::ETag, etag);
   }
   nsCString entityID;
   NS_EscapeURL(etag.BeginReading(), etag.Length(), esc_AlwaysCopy |
@@ -3190,7 +3190,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
           ctype.SetIsVoid(true);
         }
         nsAutoCString clen;
-        mRequestHead.GetHeader(nsHttp::Content_Length, clen);
+        Unused << mRequestHead.GetHeader(nsHttp::Content_Length, clen);
         nsAutoCString method;
         mRequestHead.Method(method);
         int64_t len = clen.IsEmpty() ? -1 : nsCRT::atoll(clen.get());
