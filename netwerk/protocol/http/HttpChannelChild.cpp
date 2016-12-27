@@ -2009,7 +2009,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
     // connection. See nsHttpChannel::AsyncOpen().
-    AsyncAbort(mStatus);
+    Unused << AsyncAbort(mStatus);
     return NS_OK;
   }
 
@@ -2846,7 +2846,7 @@ HttpChannelChild::ResetInterception()
   // Continue with the original cross-process request
   nsresult rv = ContinueAsyncOpen();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AsyncAbort(rv);
+    Unused << AsyncAbort(rv);
   }
 }
 

@@ -793,8 +793,8 @@ nsBinaryDetector::DetermineContentType(nsIRequest* aRequest)
 
   // It's an HTTP channel.  Check for the text/plain mess
   nsAutoCString contentTypeHdr;
-  httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                 contentTypeHdr);
+  Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                           contentTypeHdr);
   nsAutoCString contentType;
   httpChannel->GetContentType(contentType);
 
@@ -818,8 +818,8 @@ nsBinaryDetector::DetermineContentType(nsIRequest* aRequest)
   // XXXbz we could improve this by doing a local decompress if we
   // wanted, I'm sure.  
   nsAutoCString contentEncoding;
-  httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
-                                 contentEncoding);
+  Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
+                                           contentEncoding);
   if (!contentEncoding.IsEmpty()) {
     return;
   }

@@ -178,7 +178,7 @@ Http2Stream::ReadSegments(nsAHttpSegmentReader *reader,
       LOG3(("Http2Stream %p ReadSegments forcing OnReadSegment call\n", this));
       uint32_t wasted = 0;
       mSegmentReader = reader;
-      OnReadSegment("", 0, &wasted);
+      Unused << OnReadSegment("", 0, &wasted);
       mSegmentReader = nullptr;
     }
 
@@ -1451,7 +1451,12 @@ Http2Stream::ClearTransactionsBlockedOnTunnel()
   if (!mIsTunnel) {
     return;
   }
-  gHttpHandler->ConnMgr()->ProcessPendingQ(mTransaction->ConnectionInfo());
+  nsresult rv = gHttpHandler->ConnMgr()->ProcessPendingQ(mTransaction->ConnectionInfo());
+  if (NS_FAILED(rv)) {
+    LOG3(("Http2Stream::ClearTransactionsBlockedOnTunnel %p\n"
+          "  ProcessPendingQ failed: %08x\n",
+          this, static_cast<uint32_t>(rv)));
+  }
 }
 
 void
