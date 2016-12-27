@@ -112,16 +112,35 @@ enum class StyleClear : uint8_t {
   Max = 13  // Max = (Both | Line)
 };
 
-// clip-path geometry box
-enum class StyleClipPathGeometryBox : uint8_t {
-  NoBox,
+// Define geometry box for clip-path's reference-box, background-clip,
+// background-origin, mask-clip and mask-origin.
+enum class StyleGeometryBox : uint8_t {
   Content,
   Padding,
   Border,
-  Margin,
-  Fill,
-  Stroke,
-  View,
+  Margin,  // XXX Bug 1260094 comment 9.
+           // Although margin-box is required by mask-origin and mask-clip, we
+           // do not implement that due to lack of support in other browsers.
+           // clip-path reference-box only.
+  Fill,    // mask-clip, mask-origin and clip-path reference-box only.
+  Stroke,  // mask-clip, mask-origin and clip-path reference-box only.
+  View,    // mask-clip, mask-origin and clip-path reference-box only.
+  NoClip,  // mask-clip only.
+  Text,    // background-clip only.
+  NoBox,   // Depending on which kind of element this style value applied on,
+           // the default value of a reference-box can be different.
+           // For an HTML element, the default value of reference-box is
+           // border-box; for an SVG element, the default value is fill-box.
+           // Since we can not determine the default value at parsing time,
+           // set it as NoBox so that we make a decision later.
+           // clip-path reference-box only.
+  MozAlmostPadding = 127 // A magic value that we use for our "pretend that
+                         // background-clip is 'padding' when we have a solid
+                         // border" optimization.  This isn't actually equal
+                         // to StyleGeometryBox::Padding because using that
+                         // causes antialiasing seams between the background
+                         // and border.
+                         // background-clip only.
 };
 
 // fill-rule
@@ -332,26 +351,12 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED         1
 #define NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL         2
 
-// See nsStyleImageLayers
-// Code depends on these constants having the same values as IMAGELAYER_ORIGIN_*
-#define NS_STYLE_IMAGELAYER_CLIP_BORDER              0
-#define NS_STYLE_IMAGELAYER_CLIP_PADDING             1
-#define NS_STYLE_IMAGELAYER_CLIP_CONTENT             2
-// One extra constant which does not exist in IMAGELAYER_ORIGIN_*
-#define NS_STYLE_IMAGELAYER_CLIP_TEXT                3
-
 // A magic value that we use for our "pretend that background-clip is
 // 'padding' when we have a solid border" optimization.  This isn't
 // actually equal to NS_STYLE_IMAGELAYER_CLIP_PADDING because using that
 // causes antialiasing seams between the background and border.  This
 // is a backend-only value.
 #define NS_STYLE_IMAGELAYER_CLIP_MOZ_ALMOST_PADDING  127
-
-// See nsStyleImageLayers
-// Code depends on these constants having the same values as BG_CLIP_*
-#define NS_STYLE_IMAGELAYER_ORIGIN_BORDER            0
-#define NS_STYLE_IMAGELAYER_ORIGIN_PADDING           1
-#define NS_STYLE_IMAGELAYER_ORIGIN_CONTENT           2
 
 // See nsStyleImageLayers
 // The parser code depends on |ing these values together.
@@ -492,6 +497,7 @@ enum class FillMode : uint32_t;
 enum class StyleDisplay : uint8_t {
   None = 0,
   Block,
+  FlowRoot,
   Inline,
   InlineBlock,
   ListItem,

@@ -245,7 +245,7 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
     this._insert();
   }
 
-  this._onWindowReady= this._onWindowReady.bind(this);
+  this._onWindowReady = this._onWindowReady.bind(this);
   this.highlighterEnv.on("window-ready", this._onWindowReady);
 
   this.listeners = new Map();

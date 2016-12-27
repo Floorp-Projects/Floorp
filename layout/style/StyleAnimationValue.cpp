@@ -689,6 +689,30 @@ AddTransformTranslate(double aCoeff1, const nsCSSValue &aValue1,
                               aResult);
 }
 
+// Unclamped AddWeightedColors.
+static RGBAColorData
+AddWeightedColors(double aCoeff1, const RGBAColorData& aValue1,
+                  double aCoeff2, const RGBAColorData& aValue2)
+{
+  float factor1 = aValue1.mA * aCoeff1;
+  float factor2 = aValue2.mA * aCoeff2;
+  float resultA = factor1 + factor2;
+  if (resultA <= 0.0) {
+    return {0, 0, 0, 0};
+  }
+
+  if (resultA > 1.0) {
+    resultA = 1.0;
+  }
+
+  float resultFactor = 1.0f / resultA;
+  return RGBAColorData(
+    (aValue1.mR * factor1 + aValue2.mR * factor2) * resultFactor,
+    (aValue1.mG * factor1 + aValue2.mG * factor2) * resultFactor,
+    (aValue1.mB * factor1 + aValue2.mB * factor2) * resultFactor,
+    resultA);
+}
+
 // CLASS METHODS
 // -------------
 
@@ -736,6 +760,82 @@ ExtractComplexColor(const StyleAnimationValue& aValue)
       MOZ_ASSERT_UNREACHABLE("Unknown unit");
       return ComplexColorData({0, 0, 0, 0}, 0.0f);
   }
+}
+
+StyleAnimationValue
+StyleAnimationValue::Add(nsCSSPropertyID aProperty,
+                         const StyleAnimationValue& aA,
+                         StyleAnimationValue&& aB)
+{
+  StyleAnimationValue result(Move(aB));
+
+  Unit commonUnit =
+    GetCommonUnit(aProperty, result.GetUnit(), aA.GetUnit());
+  switch (commonUnit) {
+    case eUnit_Color: {
+      RGBAColorData color1 = ExtractColor(result);
+      RGBAColorData color2 = ExtractColor(aA);
+      result.mValue.mCSSValue->SetRGBAColorValue(
+        AddWeightedColors(1.0, color1, 1, color2));
+      break;
+    }
+    case eUnit_Filter:
+    case eUnit_Shadow: {
+      // If |aA| has no function list, don't concatinate anything, just return
+      // |aB| as the result.
+      if (aA.GetCSSValueListValue()->mValue.GetUnit() == eCSSUnit_None) {
+        break;
+      }
+      UniquePtr<nsCSSValueList> resultList(aA.GetCSSValueListValue()->Clone());
+
+      // If |aB| has function list, concatinate it to |aA|, then return
+      // the concatinated list.
+      if (result.GetCSSValueListValue()->mValue.GetUnit() != eCSSUnit_None) {
+        nsCSSValueList* listA = resultList.get();
+        while (listA->mNext) {
+          listA = listA->mNext;
+        }
+
+        listA->mNext = result.GetCSSValueListValue();
+      }
+      result.mValue.mCSSValueList = resultList.release();
+      break;
+    }
+    case eUnit_Transform: {
+      // If |aA| is 'transform:none', don't concatinate anything, just return
+      // |aB| as the result.
+      if (aA.GetCSSValueSharedListValue()->mHead->mValue.GetUnit() ==
+            eCSSUnit_None) {
+        break;
+      }
+
+      UniquePtr<nsCSSValueList>
+        resultList(aA.GetCSSValueSharedListValue()->mHead->Clone());
+
+      // If |aB| is not 'transform:none', concatinate it to |aA|, then return
+      // the concatinated list.
+      if (result.GetCSSValueSharedListValue()->mHead->mValue.GetUnit() !=
+            eCSSUnit_None) {
+        nsCSSValueList* listA = resultList.get();
+        while (listA->mNext) {
+          listA = listA->mNext;
+        }
+
+        listA->mNext = result.GetCSSValueSharedListValue()->mHead->Clone();
+      }
+
+      result.SetTransformValue(new nsCSSValueSharedList(resultList.release()));
+      break;
+    }
+    default:
+      Unused << AddWeighted(aProperty,
+                            1.0, result,
+                            1, aA,
+                            result);
+      break;
+  }
+
+  return result;
 }
 
 double
@@ -1871,30 +1971,6 @@ AddCSSValuePercentNumber(const uint32_t aValueRestrictions,
   float result = (n1 - aInitialVal) * aCoeff1 + (n2 - aInitialVal) * aCoeff2;
   aResult.SetFloatValue(RestrictValue(aValueRestrictions, result + aInitialVal),
                         eCSSUnit_Number);
-}
-
-// Unclamped AddWeightedColors.
-static RGBAColorData
-AddWeightedColors(double aCoeff1, const RGBAColorData& aValue1,
-                  double aCoeff2, const RGBAColorData& aValue2)
-{
-  float factor1 = aValue1.mA * aCoeff1;
-  float factor2 = aValue2.mA * aCoeff2;
-  float resultA = factor1 + factor2;
-  if (resultA <= 0.0) {
-    return {0, 0, 0, 0};
-  }
-
-  if (resultA > 1.0) {
-    resultA = 1.0;
-  }
-
-  float resultFactor = 1.0f / resultA;
-  return RGBAColorData(
-    (aValue1.mR * factor1 + aValue2.mR * factor2) * resultFactor,
-    (aValue1.mG * factor1 + aValue2.mG * factor2) * resultFactor,
-    (aValue1.mB * factor1 + aValue2.mB * factor2) * resultFactor,
-    resultA);
 }
 
 // Multiplies |aValue| color by |aDilutionRation|.
@@ -3264,10 +3340,8 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
     case eUnit_Color: {
       RGBAColorData color1 = ExtractColor(result);
       RGBAColorData color2 = ExtractColor(aA);
-      auto resultColor = MakeUnique<nsCSSValue>();
-      resultColor->SetRGBAColorValue(
+      result.mValue.mCSSValue->SetRGBAColorValue(
         AddWeightedColors(1.0, color1, aCount, color2));
-      result.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
       break;
     }
     case eUnit_Transform: {

@@ -65,6 +65,14 @@ interface nsIPK11Token : nsISupports
   void setAskPasswordDefaults([const] in long askTimes, [const] in long timeout);
 
   /*
+   * True if a password has been configured for this token, and false otherwise.
+   * (Whether or not the user is currently logged in makes no difference.)
+   * In particular, this can be used to determine if a user has set a master
+   * password (if this is the internal key token).
+   */
+  readonly attribute boolean hasPassword;
+
+  /*
    * Other attributes
    */
   boolean isHardwareToken();

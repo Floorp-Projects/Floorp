@@ -8,6 +8,8 @@
 #define jit_Ion_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
+#include "mozilla/Result.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -28,14 +30,29 @@ enum MethodStatus
     Method_Compiled
 };
 
-enum AbortReason {
-    AbortReason_Alloc,
-    AbortReason_Inlining,
-    AbortReason_PreliminaryObjects,
-    AbortReason_Disable,
-    AbortReason_Error,
-    AbortReason_NoAbort
+enum class AbortReason {
+    Alloc,
+    Inlining,
+    PreliminaryObjects,
+    Disable,
+    Error,
+    NoAbort
 };
+
+template <typename V>
+using AbortReasonOr = mozilla::Result<V, AbortReason>;
+using mozilla::Ok;
+
+// This is the equivalent of the following, except that these are functions and
+// not types, which makes this syntax invalid:
+//     using Err = mozilla::MakeGenericErrorResult;
+template <typename E>
+inline mozilla::GenericErrorResult<E>
+Err(E&& aErrorValue)
+{
+    return mozilla::MakeGenericErrorResult(mozilla::Forward<E>(aErrorValue));
+}
+
 
 // A JIT context is needed to enter into either an JIT method or an instance
 // of a JIT compiler. It points to a temporary allocator and the active

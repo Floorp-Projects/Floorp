@@ -740,6 +740,13 @@ nsViewSourceChannel::SetTopLevelContentWindowId(uint64_t aWindowId)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetIsTrackingResource(bool* aIsTrackingResource)
+{
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+      mHttpChannel->GetIsTrackingResource(aIsTrackingResource);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetRequestMethod(nsACString & aRequestMethod)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :

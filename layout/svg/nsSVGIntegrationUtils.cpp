@@ -744,9 +744,6 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity,
                                  maskUsage);
-  MOZ_ASSERT(maskUsage.shouldGenerateMaskLayer ||
-             maskUsage.shouldApplyClipPath ||
-             maskUsage.shouldGenerateClipMaskLayer);
 
   nsIFrame* frame = aParams.frame;
   if (!ValidateSVGFrame(frame)) {
@@ -781,21 +778,50 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
                                                      SurfaceFormat::A8);
   }
 
+  if (maskUsage.shouldApplyBasicShape) {
+    matSR.SetContext(&ctx);
+
+    SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
+                       offsetToUserSpace);
+
+    nsCSSClipPathInstance::ApplyBasicShapeClip(ctx, frame);
+    if (!maskUsage.shouldGenerateMaskLayer) {
+      // Only have basic-shape clip-path effect. Fill clipped region by
+      // opaque white.
+      ctx.SetColor(Color(0.0, 0.0, 0.0, 1.0));
+      ctx.Fill();
+      ctx.PopClip();
+
+      return result;
+    }
+  }
+
   // Paint mask onto ctx.
   if (maskUsage.shouldGenerateMaskLayer) {
+    matSR.Restore();
     matSR.SetContext(&ctx);
 
     SetupContextMatrix(frame, aParams, offsetToBoundingBox,
                        offsetToUserSpace);
     nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
-    bool opacityApplied = !HasNonSVGMask(maskFrames);
-    result = PaintMaskSurface(aParams, maskTarget,
-                              opacityApplied ? maskUsage.opacity : 1.0,
+    // XXX Bug 1323912.
+    MOZ_ASSERT(maskUsage.opacity == 1.0,
+               "nsSVGIntegrationUtils::PaintMask can not handle opacity now.");
+    result = PaintMaskSurface(aParams, maskTarget, 1.0,
                               firstFrame->StyleContext(), maskFrames,
                               ctx.CurrentMatrix(), offsetToUserSpace);
     if (result != DrawResult::SUCCESS) {
+      if (maskUsage.shouldApplyBasicShape) {
+        ctx.PopClip();
+      }
+
       return result;
     }
+  }
+
+  if (maskUsage.shouldApplyBasicShape) {
+    ctx.PopClip();
+    return result;
   }
 
   // Paint clip-path onto ctx.

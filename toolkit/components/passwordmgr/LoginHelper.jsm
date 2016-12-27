@@ -687,15 +687,10 @@ this.LoginHelper = {
    * Returns true if the user has a master password set and false otherwise.
    */
   isMasterPasswordSet() {
-    let secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].
-                   getService(Ci.nsIPKCS11ModuleDB);
-    let slot = secmodDB.findSlotByName("");
-    if (!slot) {
-      return false;
-    }
-    let hasMP = slot.status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED &&
-                slot.status != Ci.nsIPKCS11Slot.SLOT_READY;
-    return hasMP;
+    let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                    .getService(Ci.nsIPK11TokenDB);
+    let token = tokenDB.getInternalKeyToken();
+    return token.hasPassword;
   },
 
   /**

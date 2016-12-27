@@ -95,9 +95,9 @@ def split_e10s(config, tests):
 def allow_software_gl_layers(config, tests):
     for test in tests:
 
-        # since this value defaults to true, but is not applicable on windows,
+        # since this value defaults to true, but is not applicable on non-linux,
         # it's overriden for that platform here.
-        allow = not test['test-platform'].startswith('win') \
+        allow = test['test-platform'].startswith('linux') \
             and get_keyed_by(item=test, field='allow-software-gl-layers',
                              item_name=test['test-name'])
         if allow:

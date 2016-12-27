@@ -40,3 +40,11 @@ def set_treeherder_machine_platform(config, tests):
         build_platform = test['build-platform']
         test['treeherder-machine-platform'] = translation.get(build_platform, build_platform)
         yield test
+
+
+@transforms.add
+def set_e10s_attr(config, tests):
+    """Set the e10s attribute to false"""
+    for test in tests:
+        test.setdefault('attributes', {})['e10s'] = False
+        yield test

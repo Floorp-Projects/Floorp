@@ -15,6 +15,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
 #include "nsIParentChannel.h"
@@ -31,10 +32,12 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
+#include "nsQueryObject.h"
 
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/net/HttpBaseChannel.h"
 
 namespace mozilla {
 namespace net {
@@ -43,6 +46,14 @@ namespace net {
 // MOZ_LOG=nsChannelClassifier:5
 //
 static LazyLogModule gChannelClassifierLog("nsChannelClassifier");
+
+// Whether channels should be annotated as being on the tracking protection
+// list.
+static bool sAnnotateChannelEnabled = false;
+// Whether the priority of the channels annotated as being on the tracking
+// protection list should be lowered.
+static bool sLowerNetworkPriority = false;
+static bool sIsInited = false;
 
 #undef LOG
 #define LOG(args)     MOZ_LOG(gChannelClassifierLog, LogLevel::Debug, args)
@@ -58,6 +69,13 @@ nsChannelClassifier::nsChannelClassifier(nsIChannel *aChannel)
     mTrackingProtectionEnabled(Nothing())
 {
   MOZ_ASSERT(mChannel);
+  if (!sIsInited) {
+    sIsInited = true;
+    Preferences::AddBoolVarCache(&sAnnotateChannelEnabled,
+                                 "privacy.trackingprotection.annotate_channels");
+    Preferences::AddBoolVarCache(&sLowerNetworkPriority,
+                                 "privacy.trackingprotection.lower_network_priority");
+  }
 }
 
 nsresult
@@ -358,14 +376,6 @@ nsChannelClassifier::StartInternal()
       (void)ShouldEnableTrackingProtection(&trackingProtectionEnabled);
     } else {
       trackingProtectionEnabled = mTrackingProtectionEnabled.value();
-    }
-
-    static bool sAnnotateChannelEnabled = false;
-    static bool sIsInited = false;
-    if (!sIsInited) {
-      sIsInited = true;
-      Preferences::AddBoolVarCache(&sAnnotateChannelEnabled,
-                                   "privacy.trackingprotection.annotate_channels");
     }
 
     if (LOG_ENABLED()) {
@@ -695,17 +705,34 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
 
       if (aErrorCode == NS_ERROR_TRACKING_URI &&
           !mTrackingProtectionEnabled.valueOr(false)) {
-        if (LOG_ENABLED()) {
-          nsCOMPtr<nsIURI> uri;
-          mChannel->GetURI(getter_AddRefs(uri));
-          LOG(("nsChannelClassifier[%p]: lower the priority of channel %p"
-               ", since %s is a tracker", this, mChannel.get(),
-               uri->GetSpecOrDefault().get()));
+        if (sAnnotateChannelEnabled) {
+          nsCOMPtr<nsIParentChannel> parentChannel;
+          NS_QueryNotificationCallbacks(mChannel, parentChannel);
+          if (parentChannel) {
+            // This channel is a parent-process proxy for a child process
+            // request. We should notify the child process as well.
+            parentChannel->NotifyTrackingResource();
+          }
+          RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(mChannel);
+          if (httpChannel) {
+            httpChannel->SetIsTrackingResource();
+          }
         }
-        nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
-        if (p) {
-          p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+
+        if (sLowerNetworkPriority) {
+          if (LOG_ENABLED()) {
+            nsCOMPtr<nsIURI> uri;
+            mChannel->GetURI(getter_AddRefs(uri));
+            LOG(("nsChannelClassifier[%p]: lower the priority of channel %p"
+                 ", since %s is a tracker", this, mChannel.get(),
+                 uri->GetSpecOrDefault().get()));
+          }
+          nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
+          if (p) {
+            p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+          }
         }
+
         aErrorCode = NS_OK;
       }
 

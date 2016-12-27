@@ -100,7 +100,7 @@ public:
   nsresult StartDrag(nsIDOMEvent* aEvent);
   nsresult StopDrag();
 
-  bool StartAPZDrag();
+  bool StartAPZDrag(WidgetGUIEvent* aEvent);
 
   static int32_t GetCurrentPosition(nsIContent* content);
   static int32_t GetMinPosition(nsIContent* content);

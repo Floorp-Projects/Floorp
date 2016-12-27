@@ -347,35 +347,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &inStub->shape(), "baseline-in-dense-shape");
         break;
       }
-      case ICStub::GetName_Global: {
-        ICGetName_Global* globalStub = toGetName_Global();
-        globalStub->receiverGuard().trace(trc);
-        TraceEdge(trc, &globalStub->holder(), "baseline-global-stub-holder");
-        TraceEdge(trc, &globalStub->holderShape(), "baseline-global-stub-holdershape");
-        TraceEdge(trc, &globalStub->globalShape(), "baseline-global-stub-globalshape");
-        break;
-      }
-      case ICStub::GetName_Env0:
-        static_cast<ICGetName_Env<0>*>(this)->traceEnvironments(trc);
-        break;
-      case ICStub::GetName_Env1:
-        static_cast<ICGetName_Env<1>*>(this)->traceEnvironments(trc);
-        break;
-      case ICStub::GetName_Env2:
-        static_cast<ICGetName_Env<2>*>(this)->traceEnvironments(trc);
-        break;
-      case ICStub::GetName_Env3:
-        static_cast<ICGetName_Env<3>*>(this)->traceEnvironments(trc);
-        break;
-      case ICStub::GetName_Env4:
-        static_cast<ICGetName_Env<4>*>(this)->traceEnvironments(trc);
-        break;
-      case ICStub::GetName_Env5:
-        static_cast<ICGetName_Env<5>*>(this)->traceEnvironments(trc);
-        break;
-      case ICStub::GetName_Env6:
-        static_cast<ICGetName_Env<6>*>(this)->traceEnvironments(trc);
-        break;
       case ICStub::GetIntrinsic_Constant: {
         ICGetIntrinsic_Constant* constantStub = toGetIntrinsic_Constant();
         TraceEdge(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
@@ -462,7 +433,7 @@ ICStub::trace(JSTracer* trc)
         break;
       }
       case ICStub::CacheIR_Monitored:
-        TraceBaselineCacheIRStub(trc, this, toCacheIR_Monitored()->stubInfo());
+        TraceCacheIRStub(trc, this, toCacheIR_Monitored()->stubInfo());
         break;
       default:
         break;
@@ -749,7 +720,7 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 void
 ICStubCompiler::pushStubPayload(MacroAssembler& masm, Register scratch)
 {
-    if (engine_ == Engine::IonMonkey) {
+    if (engine_ == Engine::IonSharedIC) {
         masm.push(Imm32(0));
         return;
     }
@@ -2324,7 +2295,7 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
 
     if (!attached && !JitOptions.disableCacheIR) {
         RootedValue idVal(cx, StringValue(name));
-        GetPropIRGenerator gen(cx, pc, engine, CacheKind::GetProp, &isTemporarilyUnoptimizable,
+        GetPropIRGenerator gen(cx, pc, CacheKind::GetProp, engine, &isTemporarilyUnoptimizable,
                                val, idVal);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
@@ -2421,25 +2392,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
     }
 }
 
-ICGetPropNativeStub*
-ICGetPropNativeCompiler::getStub(ICStubSpace* space)
-{
-    ReceiverGuard guard(obj_);
-
-    switch (kind) {
-      case ICStub::GetName_Global: {
-        MOZ_ASSERT(obj_ != holder_);
-        Shape* holderShape = holder_->as<NativeObject>().lastProperty();
-        Shape* globalShape = obj_->as<LexicalEnvironmentObject>().global().lastProperty();
-        return newStub<ICGetName_Global>(space, getStubCode(), firstMonitorStub_, guard,
-                                         offset_, holder_, holderShape, globalShape);
-      }
-
-      default:
-        MOZ_CRASH("Bad stub kind");
-    }
-}
-
 void
 GuardReceiverObject(MacroAssembler& masm, ReceiverGuard guard,
                     Register object, Register scratch,
@@ -2488,70 +2440,6 @@ GuardGlobalObject(MacroAssembler& masm, HandleObject holder, Register globalLexi
                        holderReg);
     masm.loadPtr(Address(ICStubReg, globalShapeOffset), scratch);
     masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, failure);
-}
-
-bool
-ICGetPropNativeCompiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
-    Register objReg = InvalidReg;
-
-    if (inputDefinitelyObject_) {
-        objReg = R0.scratchReg();
-    } else {
-        regs.take(R0);
-        // Guard input is an object and unbox.
-        masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-        objReg = masm.extractObject(R0, ExtractTemp0);
-    }
-    regs.takeUnchecked(objReg);
-
-    Register scratch = regs.takeAnyExcluding(ICTailCallReg);
-
-    // Shape/group guard.
-    GuardReceiverObject(masm, ReceiverGuard(obj_), objReg, scratch,
-                        ICGetPropNativeStub::offsetOfReceiverGuard(), &failure);
-
-    MOZ_ASSERT(obj_ != holder_);
-    MOZ_ASSERT(kind == ICStub::GetName_Global);
-
-    Register holderReg = regs.takeAny();
-
-    // If we are generating a non-lexical GETGNAME stub, we must also
-    // guard on the shape of the GlobalObject.
-    MOZ_ASSERT(obj_->is<LexicalEnvironmentObject>() &&
-               obj_->as<LexicalEnvironmentObject>().isGlobal());
-    GuardGlobalObject(masm, holder_, objReg, holderReg, scratch,
-                      ICGetName_Global::offsetOfGlobalShape(), &failure);
-
-    // Shape guard holder.
-    masm.loadPtr(Address(ICStubReg, ICGetName_Global::offsetOfHolder()),
-                 holderReg);
-    masm.loadPtr(Address(ICStubReg, ICGetName_Global::offsetOfHolderShape()),
-                 scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
-
-    if (!isFixedSlot_) {
-        // Don't overwrite actual holderReg if we need to load a dynamic slots object.
-        // May need to preserve object for noSuchMethod check later.
-        Register nextHolder = regs.takeAny();
-        masm.loadPtr(Address(holderReg, NativeObject::offsetOfSlots()), nextHolder);
-        holderReg = nextHolder;
-    }
-
-    masm.load32(Address(ICStubReg, ICGetPropNativeStub::offsetOfOffset()), scratch);
-    BaseIndex result(holderReg, scratch, TimesOne);
-
-    masm.loadValue(result, R0);
-
-    // Enter type monitor IC to type-check result.
-    EmitEnterTypeMonitorIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 bool
@@ -2789,23 +2677,6 @@ BaselineScript::noteAccessedGetter(uint32_t pcOffset)
     if (stub->isGetProp_Fallback())
         stub->toGetProp_Fallback()->noteAccessedGetter();
 }
-
-ICGetPropNativeStub::ICGetPropNativeStub(ICStub::Kind kind, JitCode* stubCode,
-                                         ICStub* firstMonitorStub,
-                                         ReceiverGuard guard, uint32_t offset)
-  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
-    receiverGuard_(guard),
-    offset_(offset)
-{ }
-
-ICGetPropNativePrototypeStub::ICGetPropNativePrototypeStub(ICStub::Kind kind, JitCode* stubCode,
-                                                           ICStub* firstMonitorStub,
-                                                           ReceiverGuard guard, uint32_t offset,
-                                                           JSObject* holder, Shape* holderShape)
-  : ICGetPropNativeStub(kind, stubCode, firstMonitorStub, guard, offset),
-    holder_(holder),
-    holderShape_(holderShape)
-{ }
 
 ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
                                          ReceiverGuard receiverGuard, JSObject* holder,

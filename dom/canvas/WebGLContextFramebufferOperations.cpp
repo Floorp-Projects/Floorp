@@ -32,24 +32,14 @@ WebGLContext::Clear(GLbitfield mask)
         GenerateWarning("Calling gl.clear() with RASTERIZER_DISCARD enabled has no effects.");
     }
 
-    if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
-            return;
-
-        gl->fClear(mask);
-        return;
-    } else {
-        ClearBackbufferIfNeeded();
-    }
-
-    // Ok, we're clearing the default framebuffer/screen.
+    if (mBoundDrawFramebuffer &&
+        !mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
     {
-        ScopedMaskWorkaround autoMask(*this);
-        gl->fClear(mask);
+        return;
     }
 
-    Invalidate();
-    mShouldPresent = true;
+    ScopedDrawCallWrapper wrapper(*this);
+    gl->fClear(mask);
 }
 
 static GLfloat

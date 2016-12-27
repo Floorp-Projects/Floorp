@@ -110,9 +110,9 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
     // and will be initialized in a linear order via init* functions as the
     // module is generated.
 
-    MOZ_ASSERT(env_->sigs.length() == MaxSigs);
-    MOZ_ASSERT(env_->tables.length() == MaxTables);
-    MOZ_ASSERT(env_->asmJSSigToTableIndex.length() == MaxSigs);
+    MOZ_ASSERT(env_->sigs.length() == AsmJSMaxTypes);
+    MOZ_ASSERT(env_->tables.length() == AsmJSMaxTables);
+    MOZ_ASSERT(env_->asmJSSigToTableIndex.length() == AsmJSMaxTypes);
 
     return true;
 }
@@ -1013,7 +1013,7 @@ ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t length)
 {
     MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(length != 0);
-    MOZ_ASSERT(length <= MaxTableElems);
+    MOZ_ASSERT(length <= MaxTableLength);
 
     MOZ_ASSERT(env_->asmJSSigToTableIndex[sigIndex] == 0);
     env_->asmJSSigToTableIndex[sigIndex] = numTables_;

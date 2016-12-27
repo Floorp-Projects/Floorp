@@ -44,7 +44,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     // wrappee. Prefer to allocate in the nursery, when possible.
     NewObjectKind newKind = NurseryAllocatedProxy;
     if (options.singleton()) {
-        MOZ_ASSERT(priv.isGCThing() && priv.toGCThing()->isTenured());
+        MOZ_ASSERT(priv.isNull() || (priv.isGCThing() && priv.toGCThing()->isTenured()));
         newKind = SingletonObject;
     } else if ((priv.isGCThing() && priv.toGCThing()->isTenured()) ||
                !handler->canNurseryAllocate() ||

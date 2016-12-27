@@ -7,7 +7,8 @@ def main():
     cc = os.environ.get('CC', 'cc')
     sink = open(os.devnull, 'wb')
     try:
-        cc_is_clang = 'clang' in subprocess.check_output([cc, '--version'], stderr=sink)
+        cc_is_clang = 'clang' in subprocess.check_output(
+          [cc, '--version'], universal_newlines=True, stderr=sink)
     except OSError:
         # We probably just don't have CC/cc.
         return

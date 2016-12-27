@@ -1,10 +1,19 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
 <head>
-<style>p { background-color: red; }</style>
+<style>
+p {
+  background-color: red;
+}
+.reftest-xdomain {
+  background: lime;
+}
+</style>
 </head>
 <body>
 <p class="reftest-usercss">This paragraph should have a green background.</p>
 <p class="reftest-userxbl">This paragraph should have a green background, too.</p>
+<p class="reftest-domain">@-moz-document rules should be applied.</p>
+<p class="reftest-xdomain">@-moz-document rules should not be applied.</p>
 </body>
 </html>
