@@ -16,6 +16,7 @@
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsThreadUtils.h"
 #include "TreeTraversal.h"
+#include "WebRenderBorderLayer.h"
 #include "WebRenderCanvasLayer.h"
 #include "WebRenderColorLayer.h"
 #include "WebRenderContainerLayer.h"
@@ -470,6 +471,12 @@ already_AddRefed<TextLayer>
 WebRenderLayerManager::CreateTextLayer()
 {
   return nullptr;
+}
+
+already_AddRefed<BorderLayer>
+WebRenderLayerManager::CreateBorderLayer()
+{
+  return MakeAndAddRef<WebRenderBorderLayer>(this);
 }
 
 } // namespace layers

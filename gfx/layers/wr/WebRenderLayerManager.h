@@ -113,6 +113,7 @@ public:
   virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
   virtual already_AddRefed<RefLayer> CreateRefLayer() override;
   virtual already_AddRefed<TextLayer> CreateTextLayer() override;
+  virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
 
   virtual bool NeedsWidgetInvalidation() override { return true; }
 
