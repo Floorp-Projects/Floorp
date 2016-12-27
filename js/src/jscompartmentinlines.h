@@ -61,7 +61,7 @@ inline bool
 JSCompartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
 {
     /* Only GC things have to be wrapped or copied. */
-    if (!vp.isMarkable())
+    if (!vp.isGCThing())
         return true;
 
     /*

@@ -62,11 +62,16 @@ nsX509CertValidity::FormatTime(const PRTime& aTimeDate,
   if (!mTimesInitialized)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter = nsIDateTimeFormat::Create();
+  if (!dateFormatter) {
+    return NS_ERROR_FAILURE;
+  }
+
   PRExplodedTime explodedTime;
   PR_ExplodeTime(const_cast<PRTime&>(aTimeDate), aParamFn, &explodedTime);
-  return mozilla::DateTimeFormat::FormatPRExplodedTime(kDateFormatLong,
-					                                             aTimeFormatSelector,
-					                                             &explodedTime, aFormattedTimeDate);
+  return dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatLong,
+					     aTimeFormatSelector,
+					     &explodedTime, aFormattedTimeDate);
 }
 
 NS_IMETHODIMP

@@ -242,17 +242,15 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
                    pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mImplMaxDrawBuffers))
         {
-            GLint iv = 0;
-            gl->fGetIntegerv(pname, &iv);
-
-            if (mBoundDrawFramebuffer)
-                return JS::Int32Value(iv);
-
-            const GLint index = (pname - LOCAL_GL_DRAW_BUFFER0);
-            if (iv == LOCAL_GL_COLOR_ATTACHMENT0 + index)
-                return JS::Int32Value(LOCAL_GL_BACK);
-
-            return JS::Int32Value(LOCAL_GL_NONE);
+            GLint ret = LOCAL_GL_NONE;
+            if (!mBoundDrawFramebuffer) {
+                if (pname == LOCAL_GL_DRAW_BUFFER0) {
+                    ret = gl->Screen()->GetDrawBufferMode();
+                }
+            } else {
+                gl->fGetIntegerv(pname, &ret);
+            }
+            return JS::Int32Value(ret);
         }
     }
 
@@ -395,48 +393,24 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_GENERATE_MIPMAP_HINT:
             return JS::NumberValue(mGenerateMipmapHint);
 
+        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
             const webgl::FormatUsageInfo* usage;
             uint32_t width, height;
             if (!ValidateCurFBForRead(funcName, &usage, &width, &height))
                 return JS::NullValue();
 
-            GLint i = 0;
-            if (gl->IsGLES()) {
-                // ES2_compatibility always returns UNSIGNED_BYTE here, so
-                // branch on actual IsGLES().
-                // Also OSX+NV generates an error here.
-                gl->fGetIntegerv(pname, &i);
+            const auto implPI = ValidImplementationColorReadPI(usage);
+
+            GLenum ret;
+            if (pname == LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT) {
+                ret = implPI.format;
             } else {
-                i = LOCAL_GL_UNSIGNED_BYTE;
+                ret = implPI.type;
             }
-            return JS::NumberValue(uint32_t(i));
+            return JS::NumberValue(uint32_t(ret));
         }
-        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT: {
-            const webgl::FormatUsageInfo* usage;
-            uint32_t width, height;
-            if (!ValidateCurFBForRead(funcName, &usage, &width, &height))
-                return JS::NullValue();
 
-            GLint i = 0;
-            if (gl->IsGLES()) {
-                // ES2_compatibility always returns UNSIGNED_BYTE here, so
-                // branch on actual IsGLES().
-                // Also OSX+NV generates an error here.
-                gl->fGetIntegerv(pname, &i);
-            } else {
-                i = LOCAL_GL_RGBA;
-            }
-
-            // OpenGL ES 3.0.4 p112 Table 3.2 shows that read format SRGB_ALPHA is
-            // not supported. And if internal format of fbo is SRGB8_ALPHA8, then
-            // IMPLEMENTATION_COLOR_READ_FORMAT is SRGB_ALPHA which is not supported
-            // by ReadPixels. So, just return RGBA here.
-            if (i == LOCAL_GL_SRGB_ALPHA)
-                i = LOCAL_GL_RGBA;
-
-            return JS::NumberValue(uint32_t(i));
-        }
         // int
         case LOCAL_GL_STENCIL_REF:
         case LOCAL_GL_STENCIL_BACK_REF: {

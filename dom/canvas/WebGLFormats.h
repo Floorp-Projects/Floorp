@@ -269,6 +269,11 @@ struct PackingInfo
 
         return type < x.type;
     }
+
+    bool operator ==(const PackingInfo& x) const {
+        return (format == x.format &&
+                type == x.type);
+    }
 };
 
 struct DriverUnpackInfo

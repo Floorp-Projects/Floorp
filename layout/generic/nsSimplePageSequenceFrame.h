@@ -10,6 +10,8 @@
 #include "nsContainerFrame.h"
 #include "nsIPrintSettings.h"
 
+class nsIDateTimeFormat;
+
 namespace mozilla {
 namespace dom {
 
@@ -136,6 +138,9 @@ protected:
   nsIFrame* GetCurrentPageFrame();
 
   nsMargin mMargin;
+
+  // I18N date formatter service which we'll want to cache locally.
+  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
   nsSize       mSize;
   nsSharedPageData* mPageData; // data shared by all the nsPageFrames
