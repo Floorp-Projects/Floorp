@@ -378,6 +378,7 @@ UNIFIED_SOURCES += [
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
     'TextureWrapperImage.cpp',
+    'wr/WebRenderBorderLayer.cpp',
     'wr/WebRenderBridgeChild.cpp',
     'wr/WebRenderBridgeParent.cpp',
     'wr/WebRenderCanvasLayer.cpp',
