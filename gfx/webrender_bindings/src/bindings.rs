@@ -5,6 +5,7 @@ use std::hash::BuildHasherDefault;
 use std::{mem, slice};
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
+use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
@@ -410,6 +411,27 @@ pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r
 }
 
 #[no_mangle]
+pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
+                                top: WrBorderSide, right: WrBorderSide, bottom: WrBorderSide, left: WrBorderSide,
+                                top_left_radius: WrLayoutSize, top_right_radius: WrLayoutSize,
+                                bottom_left_radius: WrLayoutSize, bottom_right_radius: WrLayoutSize) {
+    assert!( unsafe { is_in_compositor_thread() });
+    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+    let radius = BorderRadius { top_left: top_left_radius.to_layout_size(),
+                                top_right: top_right_radius.to_layout_size(),
+                                bottom_left: bottom_left_radius.to_layout_size(),
+                                bottom_right: bottom_right_radius.to_layout_size() };
+    state.frame_builder.root_dl_builder.push_border(
+                                    rect.to_rect(),
+                                    clip_region,
+                                    left.to_border_side(),
+                                    top.to_border_side(),
+                                    right.to_border_side(),
+                                    bottom.to_border_side(),
+                                    radius);
+}
+
+#[no_mangle]
 pub extern fn wr_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
     assert!( unsafe { is_in_compositor_thread() });
 
@@ -421,6 +443,54 @@ pub extern fn wr_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState,
     state.frame_builder.root_dl_builder.push_iframe(rect.to_rect(),
                                                                    clip_region,
                                                                    pipeline_id);
+}
+
+#[repr(C)]
+pub struct WrColor
+{
+    r: f32,
+    g: f32,
+    b: f32,
+    a: f32
+}
+
+impl WrColor
+{
+    pub fn to_color(&self) -> ColorF
+    {
+        ColorF::new(self.r, self.g, self.b, self.a)
+    }
+}
+
+#[repr(C)]
+pub struct WrBorderSide
+{
+    width: f32,
+    color: WrColor,
+    style: BorderStyle
+}
+
+impl WrBorderSide
+{
+    pub fn to_border_side(&self) -> BorderSide
+    {
+        BorderSide { width: self.width, color: self.color.to_color(), style: self.style }
+    }
+}
+
+#[repr(C)]
+pub struct WrLayoutSize
+{
+    width: f32,
+    height: f32
+}
+
+impl WrLayoutSize
+{
+    pub fn to_layout_size(&self) -> LayoutSize
+    {
+        LayoutSize::new(self.width, self.height)
+    }
 }
 
 #[repr(C)]

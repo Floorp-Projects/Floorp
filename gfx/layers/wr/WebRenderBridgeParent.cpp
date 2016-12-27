@@ -283,6 +283,14 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         wr_dp_push_rect(mWRState, op.bounds(), op.clip(), op.r(), op.g(), op.b(), op.a());
         break;
       }
+      case WebRenderCommand::TOpDPPushBorder: {
+        const OpDPPushBorder& op = cmd.get_OpDPPushBorder();
+        wr_dp_push_border(mWRState, op.bounds(),
+                          op.clip(), op.top(), op.right(), op.bottom(), op.left(),
+                          op.top_left_radius(), op.top_right_radius(),
+                          op.bottom_left_radius(), op.bottom_right_radius());
+        break;
+      }
       case WebRenderCommand::TOpDPPushImage: {
         const OpDPPushImage& op = cmd.get_OpDPPushImage();
         wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.key());
