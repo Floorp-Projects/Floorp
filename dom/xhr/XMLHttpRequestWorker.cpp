@@ -1148,8 +1148,8 @@ EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
       } else {
         bool doClone = true;
         JS::Rooted<JS::Value> transferable(cx);
-        JS::Rooted<JSObject*> obj(cx, response.isObjectOrNull() ?
-                                  response.toObjectOrNull() : nullptr);
+        JS::Rooted<JSObject*> obj(cx, response.isObject() ?
+                                  &response.toObject() : nullptr);
         if (obj && JS_IsArrayBufferObject(obj)) {
           // Use cached response if the arraybuffer has been transfered.
           if (mProxy->mArrayBufferResponseWasTransferred) {

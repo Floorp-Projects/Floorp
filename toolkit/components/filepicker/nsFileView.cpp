@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DateTimeFormat.h"
 #include "nsIFileView.h"
 #include "nsITreeView.h"
 #include "mozilla/ModuleUtils.h"
@@ -15,6 +14,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
+#include "nsIDateTimeFormat.h"
 #include "nsQuickSort.h"
 #include "nsIAtom.h"
 #include "nsIAutoCompleteResult.h"
@@ -234,6 +234,7 @@ protected:
   nsCOMPtr<nsIFile> mDirectoryPath;
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
+  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
   int16_t mSortType;
   int32_t mTotalRows;
@@ -290,6 +291,10 @@ nsFileView::~nsFileView()
 nsresult
 nsFileView::Init()
 {
+  mDateFormatter = nsIDateTimeFormat::Create();
+  if (!mDateFormatter)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   return NS_OK;
 }
 
@@ -725,8 +730,8 @@ nsFileView::GetCellText(int32_t aRow, nsITreeColumn* aCol,
     curFile->GetLastModifiedTime(&lastModTime);
     // XXX FormatPRTime could take an nsAString&
     nsAutoString temp;
-    mozilla::DateTimeFormat::FormatPRTime(kDateFormatShort, kTimeFormatSeconds,
-                                          lastModTime * 1000, temp);
+    mDateFormatter->FormatPRTime(nullptr, kDateFormatShort, kTimeFormatSeconds,
+                                 lastModTime * 1000, temp);
     aCellText = temp;
   } else {
     // file size

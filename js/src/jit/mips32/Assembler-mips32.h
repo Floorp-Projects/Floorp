@@ -161,7 +161,6 @@ class Assembler : public AssemblerMIPSShared
     static uint32_t PatchWrite_NearCallSize();
 
     static uint32_t ExtractLuiOriValue(Instruction* inst0, Instruction* inst1);
-    static void UpdateLuiOriValue(Instruction* inst0, Instruction* inst1, uint32_t value);
     static void WriteLuiOriInstructions(Instruction* inst, Instruction* inst1,
                                         Register reg, uint32_t value);
 

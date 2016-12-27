@@ -306,7 +306,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void pushValue(const Value& val) {
         vixl::UseScratchRegisterScope temps(this);
         const Register scratch = temps.AcquireX().asUnsized();
-        if (val.isMarkable()) {
+        if (val.isGCThing()) {
             BufferOffset load = movePatchablePtr(ImmPtr(val.bitsAsPunboxPointer()), scratch);
             writeDataRelocation(val, load);
             push(scratch);
@@ -349,7 +349,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         }
     }
     void moveValue(const Value& val, Register dest) {
-        if (val.isMarkable()) {
+        if (val.isGCThing()) {
             BufferOffset load = movePatchablePtr(ImmPtr(val.bitsAsPunboxPointer()), dest);
             writeDataRelocation(val, load);
         } else {
@@ -1835,8 +1835,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             dataRelocations_.writeUnsigned(load.getOffset());
     }
     void writeDataRelocation(const Value& val, BufferOffset load) {
-        if (val.isMarkable()) {
-            gc::Cell* cell = val.toMarkablePointer();
+        if (val.isGCThing()) {
+            gc::Cell* cell = val.toGCThing();
             if (cell && gc::IsInsideNursery(cell))
                 embedsNurseryPointers_ = true;
             dataRelocations_.writeUnsigned(load.getOffset());

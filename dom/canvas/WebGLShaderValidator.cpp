@@ -28,37 +28,20 @@ IdentifierHashFunc(const char* name, size_t len)
     return hash[0];
 }
 
-static int
+static ShCompileOptions
 ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
                               const mozilla::gl::GLContext* gl)
 {
-    int options = SH_VARIABLES |
-                  SH_ENFORCE_PACKING_RESTRICTIONS |
-                  SH_OBJECT_CODE |
-                  SH_LIMIT_CALL_STACK_DEPTH |
-                  SH_INIT_GL_POSITION;
-
-    if (resources.MaxExpressionComplexity > 0) {
-        options |= SH_LIMIT_EXPRESSION_COMPLEXITY;
-    }
+    ShCompileOptions options = SH_VARIABLES |
+                               SH_ENFORCE_PACKING_RESTRICTIONS |
+                               SH_OBJECT_CODE |
+                               SH_INIT_GL_POSITION;
 
     // Sampler arrays indexed with non-constant expressions are forbidden in
     // GLSL 1.30 and later.
     // ESSL 3 requires constant-integral-expressions for this as well.
     // Just do it universally.
     options |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
-
-    if (gfxPrefs::WebGLAllANGLEOptions()) {
-        return options |
-               SH_VALIDATE_LOOP_INDEXING |
-               SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX |
-               SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX |
-               SH_CLAMP_INDIRECT_ARRAY_BOUNDS |
-               SH_UNFOLD_SHORT_CIRCUIT |
-               SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS |
-               SH_INIT_OUTPUT_VARIABLES |
-               SH_REGENERATE_STRUCT_NAMES;
-    }
 
 #ifndef XP_MACOSX
     // We want to do this everywhere, but to do this on Mac, we need
@@ -78,6 +61,30 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         options |= SH_INIT_OUTPUT_VARIABLES;
     }
 #endif
+
+    if (gfxPrefs::WebGLAllANGLEOptions()) {
+        options = -1;
+
+        options ^= SH_INTERMEDIATE_TREE;
+        options ^= SH_LINE_DIRECTIVES;
+        options ^= SH_SOURCE_PATH;
+
+        options ^= SH_LIMIT_EXPRESSION_COMPLEXITY;
+        options ^= SH_LIMIT_CALL_STACK_DEPTH;
+
+        options ^= SH_EXPAND_SELECT_HLSL_INTEGER_POW_EXPRESSIONS;
+        options ^= SH_HLSL_GET_DIMENSIONS_IGNORES_BASE_LEVEL;
+
+        options ^= SH_DONT_REMOVE_INVARIANT_FOR_FRAGMENT_INPUT;
+        options ^= SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3;
+    }
+
+    if (resources.MaxExpressionComplexity > 0) {
+        options |= SH_LIMIT_EXPRESSION_COMPLEXITY;
+    }
+    if (resources.MaxCallStackDepth > 0) {
+        options |= SH_LIMIT_CALL_STACK_DEPTH;
+    }
 
     return options;
 }
@@ -166,8 +173,7 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
 #endif
     }
 
-    int compileOptions = webgl::ChooseValidatorCompileOptions(resources, gl);
-
+    const auto compileOptions = webgl::ChooseValidatorCompileOptions(resources, gl);
     return webgl::ShaderValidator::Create(shaderType, spec, outputLanguage, resources,
                                           compileOptions);
 }
@@ -179,7 +185,8 @@ namespace webgl {
 /*static*/ ShaderValidator*
 ShaderValidator::Create(GLenum shaderType, ShShaderSpec spec,
                         ShShaderOutput outputLanguage,
-                        const ShBuiltInResources& resources, int compileOptions)
+                        const ShBuiltInResources& resources,
+                        ShCompileOptions compileOptions)
 {
     ShHandle handle = ShConstructCompiler(shaderType, spec, outputLanguage, &resources);
     if (!handle)

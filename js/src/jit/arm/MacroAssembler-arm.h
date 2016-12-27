@@ -915,8 +915,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
         ma_mov(Imm32(val.toNunboxTag()), scratch);
         ma_str(scratch, ToType(dest), scratch2);
-        if (val.isMarkable())
-            ma_mov(ImmGCPtr(val.toMarkablePointer()), scratch);
+        if (val.isGCThing())
+            ma_mov(ImmGCPtr(val.toGCThing()), scratch);
         else
             ma_mov(Imm32(val.toNunboxPayload()), scratch);
         ma_str(scratch, ToPayload(dest), scratch2);
@@ -944,15 +944,15 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
         // Store the payload, marking if necessary.
         if (payloadoffset < 4096 && payloadoffset > -4096) {
-            if (val.isMarkable())
-                ma_mov(ImmGCPtr(val.toMarkablePointer()), scratch2);
+            if (val.isGCThing())
+                ma_mov(ImmGCPtr(val.toGCThing()), scratch2);
             else
                 ma_mov(Imm32(val.toNunboxPayload()), scratch2);
             ma_str(scratch2, DTRAddr(scratch, DtrOffImm(payloadoffset)));
         } else {
             ma_add(Imm32(payloadoffset), scratch, scratch2);
-            if (val.isMarkable())
-                ma_mov(ImmGCPtr(val.toMarkablePointer()), scratch2);
+            if (val.isGCThing())
+                ma_mov(ImmGCPtr(val.toGCThing()), scratch2);
             else
                 ma_mov(Imm32(val.toNunboxPayload()), scratch2);
             ma_str(scratch2, DTRAddr(scratch, DtrOffImm(0)));
@@ -977,8 +977,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void popValue(ValueOperand val);
     void pushValue(const Value& val) {
         push(Imm32(val.toNunboxTag()));
-        if (val.isMarkable())
-            push(ImmGCPtr(val.toMarkablePointer()));
+        if (val.isGCThing())
+            push(ImmGCPtr(val.toGCThing()));
         else
             push(Imm32(val.toNunboxPayload()));
     }

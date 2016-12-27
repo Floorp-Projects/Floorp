@@ -7,6 +7,7 @@
 #define nsLocaleConstructors_h__
 
 #include "nsCollationCID.h"
+#include "nsDateTimeFormatCID.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsILocaleService.h"
 #include "nsIScriptableDateFormat.h"
@@ -24,14 +25,17 @@
 
 #ifdef XP_WIN
 #include "windows/nsCollationWin.h"
+#include "windows/nsDateTimeFormatWin.h"
 #endif
 
 #ifdef USE_MAC_LOCALE
 #include "mac/nsCollationMacUC.h"
+#include "mac/nsDateTimeFormatMac.h"
 #endif
 
 #ifdef USE_UNIX_LOCALE
 #include "unix/nsCollationUnix.h"
+#include "unix/nsDateTimeFormatUnix.h"
 #endif
 
 #define NSLOCALE_MAKE_CTOR(ctor_, iface_, func_)          \
@@ -59,14 +63,17 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
 
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatWin)
 #endif
 
 #ifdef USE_UNIX_LOCALE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationUnix)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatUnix)
 #endif  
 
 #ifdef USE_MAC_LOCALE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMacUC)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatMac)
 #endif  
 
 #endif

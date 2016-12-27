@@ -202,17 +202,6 @@ MacroAssemblerMIPS::ma_li(Register dest, ImmWord imm)
     ma_li(dest, Imm32(uint32_t(imm.value)));
 }
 
-// This method generates lui and ori instruction pair that can be modified by
-// UpdateLuiOriValue, either during compilation (eg. Assembler::bind), or
-// during execution (eg. jit::PatchJump).
-void
-MacroAssemblerMIPS::ma_liPatchable(Register dest, Imm32 imm)
-{
-    m_buffer.ensureSpace(2 * sizeof(uint32_t));
-    as_lui(dest, Imm16::Upper(imm).encode());
-    as_ori(dest, dest, Imm16::Lower(imm).encode());
-}
-
 void
 MacroAssemblerMIPS::ma_liPatchable(Register dest, ImmPtr imm)
 {
@@ -1527,8 +1516,8 @@ MacroAssemblerMIPSCompat::getType(const Value& val)
 void
 MacroAssemblerMIPSCompat::moveData(const Value& val, Register data)
 {
-    if (val.isMarkable())
-        ma_li(data, ImmGCPtr(val.toMarkablePointer()));
+    if (val.isGCThing())
+        ma_li(data, ImmGCPtr(val.toGCThing()));
     else
         ma_li(data, Imm32(val.toNunboxPayload()));
 }

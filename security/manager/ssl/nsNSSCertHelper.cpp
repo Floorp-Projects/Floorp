@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-#include "DateTimeFormat.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
@@ -14,6 +13,8 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
 #include "nsNSSASN1Object.h"
 #include "nsNSSCertTrust.h"
 #include "nsNSSCertValidity.h"
@@ -1613,15 +1614,20 @@ static nsresult
 ProcessTime(PRTime dispTime, const char16_t* displayName,
             nsIASN1Sequence* parentSequence)
 {
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter = nsIDateTimeFormat::Create();
+  if (!dateFormatter) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsString text;
   nsString tempString;
 
   PRExplodedTime explodedTime;
   PR_ExplodeTime(dispTime, PR_LocalTimeParameters, &explodedTime);
 
-  DateTimeFormat::FormatPRExplodedTime(kDateFormatLong,
-                                       kTimeFormatSeconds, &explodedTime,
-                                       tempString);
+  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatLong,
+                                      kTimeFormatSeconds, &explodedTime,
+                                      tempString);
 
   text.Append(tempString);
   text.AppendLiteral("\n(");
@@ -1629,9 +1635,9 @@ ProcessTime(PRTime dispTime, const char16_t* displayName,
   PRExplodedTime explodedTimeGMT;
   PR_ExplodeTime(dispTime, PR_GMTParameters, &explodedTimeGMT);
 
-  DateTimeFormat::FormatPRExplodedTime(kDateFormatLong,
-                                       kTimeFormatSeconds, &explodedTimeGMT,
-                                       tempString);
+  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatLong,
+                                      kTimeFormatSeconds, &explodedTimeGMT,
+                                      tempString);
 
   text.Append(tempString);
   text.AppendLiteral(" GMT)");

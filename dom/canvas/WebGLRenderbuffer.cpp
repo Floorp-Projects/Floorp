@@ -205,7 +205,7 @@ WebGLRenderbuffer::RenderbufferStorage(const char* funcName, uint32_t samples,
     MOZ_ASSERT(usage->maxSamplesKnown);
 
     if (samples > usage->maxSamples) {
-        mContext->ErrorInvalidValue("%s: `samples` is out of the valid range.", funcName);
+        mContext->ErrorInvalidOperation("%s: `samples` is out of the valid range.", funcName);
         return;
     }
 
@@ -278,7 +278,7 @@ WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
 
     case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
         {
-            GLenum ret = 0;
+            GLenum ret = LOCAL_GL_RGBA4;
             if (mFormat) {
                 ret = mFormat->format->sizedFormat;
 

@@ -221,8 +221,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     }
 
     void writeDataRelocation(const Value& val) {
-        if (val.isMarkable()) {
-            gc::Cell* cell = val.toMarkablePointer();
+        if (val.isGCThing()) {
+            gc::Cell* cell = val.toGCThing();
             if (cell && gc::IsInsideNursery(cell))
                 embedsNurseryPointers_ = true;
             dataRelocations_.writeUnsigned(currentOffset());
@@ -498,7 +498,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
     void pushValue(const Value& val) {
-        if (val.isMarkable()) {
+        if (val.isGCThing()) {
             writeDataRelocation(val);
             movWithPatch(ImmWord(val.asRawBits()), ScratchRegister);
             push(ScratchRegister);
@@ -1007,12 +1007,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void abiret() {
         as_jr(ra);
         as_nop();
-    }
-
-    BufferOffset ma_BoundsCheck(Register bounded) {
-        BufferOffset bo = m_buffer.nextOffset();
-        ma_liPatchable(bounded, ImmWord(0));
-        return bo;
     }
 
     void moveFloat32(FloatRegister src, FloatRegister dest) {

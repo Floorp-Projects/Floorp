@@ -1044,7 +1044,7 @@ HasChild(JSContext* cx, unsigned argc, Value* vp)
     RootedValue parent(cx, args.get(0));
     RootedValue child(cx, args.get(1));
 
-    if (!parent.isMarkable() || !child.isMarkable()) {
+    if (!parent.isGCThing() || !child.isGCThing()) {
         args.rval().setBoolean(false);
         return true;
     }

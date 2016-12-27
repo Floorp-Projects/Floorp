@@ -56,6 +56,10 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
 
     ////
 
+    if (!mBoundReadFramebuffer) {
+        ClearBackbufferIfNeeded();
+    }
+
     WebGLFramebuffer::BlitFramebuffer(this,
                                       readFB, srcX0, srcY0, srcX1, srcY1,
                                       drawFB, dstX0, dstY0, dstX1, dstY1,
@@ -128,23 +132,27 @@ static bool
 ValidateFramebufferAttachmentEnum(WebGLContext* webgl, const char* funcName,
                                   GLenum attachment)
 {
-    if (attachment >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-        attachment <= webgl->LastColorAttachmentEnum())
-    {
-        return true;
-    }
-
     switch (attachment) {
     case LOCAL_GL_DEPTH_ATTACHMENT:
     case LOCAL_GL_STENCIL_ATTACHMENT:
     case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
         return true;
+    }
 
-    default:
+    if (attachment < LOCAL_GL_COLOR_ATTACHMENT0) {
         webgl->ErrorInvalidEnum("%s: attachment: invalid enum value 0x%x.",
                                 funcName, attachment);
         return false;
     }
+
+    if (attachment > webgl->LastColorAttachmentEnum()) {
+        // That these errors have different types is ridiculous.
+        webgl->ErrorInvalidOperation("%s: Too-large LOCAL_GL_COLOR_ATTACHMENTn.",
+                                     funcName);
+        return false;
+    }
+
+    return true;
 }
 
 bool
@@ -221,6 +229,16 @@ WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
         }
     }
 
+    ////
+
+    if (!fb) {
+        ClearBackbufferIfNeeded();
+
+        // Don't do more validation after these.
+        Invalidate();
+        mShouldPresent = true;
+    }
+
     return true;
 }
 
@@ -261,17 +279,17 @@ WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenu
 {
     const char funcName[] = "invalidateSubFramebuffer";
 
+    if (!ValidateNonNegative(funcName, "width", width) ||
+        !ValidateNonNegative(funcName, "height", height))
+    {
+        return;
+    }
+
     std::vector<GLenum> scopedVector;
     GLsizei glNumAttachments;
     const GLenum* glAttachments;
     if (!ValidateInvalidateFramebuffer(funcName, target, attachments, &rv, &scopedVector,
                                        &glNumAttachments, &glAttachments))
-    {
-        return;
-    }
-
-    if (!ValidateNonNegative(funcName, "width", width) ||
-        !ValidateNonNegative(funcName, "height", height))
     {
         return;
     }

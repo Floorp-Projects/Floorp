@@ -195,6 +195,32 @@ struct IndexedBufferBinding
     uint64_t ByteCount() const;
 };
 
+////
+
+struct FloatOrInt final // For TexParameter[fi] and friends.
+{
+    const bool isFloat;
+    const GLfloat f;
+    const GLint i;
+
+    explicit FloatOrInt(GLint x)
+        : isFloat(false)
+        , f(x)
+        , i(x)
+    { }
+
+    explicit FloatOrInt(GLfloat x)
+        : isFloat(true)
+        , f(x)
+        , i(roundf(x))
+    { }
+
+    FloatOrInt& operator =(const FloatOrInt& x) {
+        memcpy(this, &x, sizeof(x));
+        return *this;
+    }
+};
+
 ////////////////////////////////////
 
 struct TexImageSource
@@ -633,6 +659,12 @@ public:
 
     already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
     bool StartVRPresentation();
+
+    ////
+
+    webgl::PackingInfo
+    ValidImplementationColorReadPI(const webgl::FormatUsageInfo* usage) const;
+
 protected:
     bool ReadPixels_SharedPrecheck(ErrorResult* const out_error);
     void ReadPixelsImpl(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
@@ -660,6 +692,8 @@ public:
     void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
                     GLenum type, const dom::ArrayBufferView& dstData, GLuint dstOffset,
                     ErrorResult& out_error);
+
+    ////
 
     void RenderbufferStorage(GLenum target, GLenum internalFormat,
                              GLsizei width, GLsizei height);
@@ -1002,17 +1036,16 @@ public:
     bool IsTexture(WebGLTexture* tex);
 
     void TexParameterf(GLenum texTarget, GLenum pname, GLfloat param) {
-        TexParameter_base(texTarget, pname, nullptr, &param);
+        TexParameter_base(texTarget, pname, FloatOrInt(param));
     }
 
     void TexParameteri(GLenum texTarget, GLenum pname, GLint param) {
-        TexParameter_base(texTarget, pname, &param, nullptr);
+        TexParameter_base(texTarget, pname, FloatOrInt(param));
     }
 
 protected:
     JS::Value GetTexParameter(GLenum texTarget, GLenum pname);
-    void TexParameter_base(GLenum texTarget, GLenum pname, GLint* maybeIntParam,
-                           GLfloat* maybeFloatParam);
+    void TexParameter_base(GLenum texTarget, GLenum pname, const FloatOrInt& param);
 
     virtual bool IsTexParamValid(GLenum pname) const;
 
@@ -1235,7 +1268,7 @@ public:
     void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count,
                              GLsizei primcount);
     void DrawElements(GLenum mode, GLsizei count, GLenum type,
-                      WebGLintptr byteOffset);
+                      WebGLintptr byteOffset, const char* funcName = nullptr);
     void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                                WebGLintptr byteOffset, GLsizei primcount);
 
@@ -1901,7 +1934,7 @@ protected:
 
     bool Has64BitTimestamps() const;
 
-    struct ScopedMaskWorkaround {
+    struct ScopedDrawCallWrapper final {
         WebGLContext& mWebGL;
         const bool mFakeNoAlpha;
         const bool mFakeNoDepth;
@@ -1950,9 +1983,9 @@ protected:
             return false;
         }
 
-        explicit ScopedMaskWorkaround(WebGLContext& webgl);
+        explicit ScopedDrawCallWrapper(WebGLContext& webgl);
 
-        ~ScopedMaskWorkaround();
+        ~ScopedDrawCallWrapper();
     };
 
     void LoseOldestWebGLContextIfLimitExceeded();

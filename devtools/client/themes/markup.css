@@ -212,7 +212,7 @@ ul.children + .tag-line::before {
   height: 8px;
   margin: 0 2px;
   line-height: 3px;
-  color: var(--theme-body-color-inactive);;
+  color: var(--theme-body-color-inactive);
   border-radius: 3px;
   border-style: solid;
   border-width: 1px;
