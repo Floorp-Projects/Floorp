@@ -39,102 +39,35 @@ toolkit.jar:
   skin/classic/global/icons/autocomplete-search.svg        (icons/autocomplete-search.svg)
   skin/classic/global/icons/blacklist_favicon.png          (icons/blacklist_favicon.png)
   skin/classic/global/icons/blacklist_large.png            (icons/blacklist_large.png)
-  skin/classic/global/icons/close-XPVista7.png             (icons/close-XPVista7.png)
-  skin/classic/global/icons/close-XPVista7@2x.png          (icons/close-XPVista7@2x.png)
-  skin/classic/global/icons/close-inverted-XPVista7.png    (icons/close-inverted-XPVista7.png)
-  skin/classic/global/icons/close-inverted-XPVista7@2x.png (icons/close-inverted-XPVista7@2x.png)
+  skin/classic/global/icons/close-win7.png                 (icons/close-win7.png)
+  skin/classic/global/icons/close-win7@2x.png              (icons/close-win7@2x.png)
+  skin/classic/global/icons/close-inverted-win7.png        (icons/close-inverted-win7.png)
+  skin/classic/global/icons/close-inverted-win7@2x.png     (icons/close-inverted-win7@2x.png)
   skin/classic/global/icons/resizer.png                    (icons/resizer.png)
   skin/classic/global/icons/sslWarning.png                 (icons/sslWarning.png)
 * skin/classic/global/in-content/common.css                (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css            (in-content/info-pages.css)
   skin/classic/global/toolbar/spring.png                   (toolbar/spring.png)
 
-  skin/classic/global/dirListing/folder-XP.png                   (dirListing/folder-XP.png)
-  skin/classic/global/dirListing/local-XP.png                    (dirListing/local-XP.png)
-  skin/classic/global/dirListing/remote-XP.png                   (dirListing/remote-XP.png)
-  skin/classic/global/dirListing/up-XP.png                       (dirListing/up-XP.png)
   skin/classic/global/icons/autoscroll.png                       (icons/autoscroll.png)
-  skin/classic/global/icons/autoscroll-XP.png                    (icons/autoscroll-XP.png)
-  skin/classic/global/icons/blacklist_favicon-XP.png             (icons/blacklist_favicon-XP.png)
-  skin/classic/global/icons/blacklist_large-XP.png               (icons/blacklist_large-XP.png)
-  skin/classic/global/icons/Error-XP.png                         (icons/Error-XP.png)
-  skin/classic/global/icons/error-16-XP.png                      (icons/error-16-XP.png)
-  skin/classic/global/icons/error-64-XP.png                      (icons/error-64-XP.png)
-  skin/classic/global/icons/folder-item-XP.png                   (icons/folder-item-XP.png)
-  skin/classic/global/icons/information-16-XP.png                (icons/information-16-XP.png)
-  skin/classic/global/icons/information-24-XP.png                (icons/information-24-XP.png)
-  skin/classic/global/icons/information-32-XP.png                (icons/information-32-XP.png)
-  skin/classic/global/icons/Print-preview-XP.png                 (icons/Print-preview-XP.png)
-  skin/classic/global/icons/Portrait-XP.png                      (icons/Portrait-XP.png)
-  skin/classic/global/icons/Landscape-XP.png                     (icons/Landscape-XP.png)
-  skin/classic/global/icons/Question-XP.png                      (icons/Question-XP.png)
-  skin/classic/global/icons/question-16-XP.png                   (icons/question-16-XP.png)
-  skin/classic/global/icons/question-64-XP.png                   (icons/question-64-XP.png)
-  skin/classic/global/icons/Search-close-XP.png                  (icons/Search-close-XP.png)
-  skin/classic/global/icons/Search-glass-XP.png                  (icons/Search-glass-XP.png)
-  skin/classic/global/icons/sslWarning-XP.png                    (icons/sslWarning-XP.png)
-  skin/classic/global/icons/Warning-XP.png                       (icons/Warning-XP.png)
-  skin/classic/global/icons/warning-large-XP.png                 (icons/warning-large-XP.png)
-  skin/classic/global/icons/warning-16-XP.png                    (icons/warning-16-XP.png)
-  skin/classic/global/icons/warning-64-XP.png                    (icons/warning-64-XP.png)
-  skin/classic/global/icons/windowControls-XP.png                (icons/windowControls-XP.png)
-  skin/classic/global/toolbar/spring-XP.png                      (toolbar/spring-XP.png)
-  skin/classic/global/tree/sort-asc-XP.png                       (tree/sort-asc-XP.png)
-  skin/classic/global/tree/sort-dsc-XP.png                       (tree/sort-dsc-XP.png)
   skin/classic/global/tree/twisty.svg                            (tree/twisty.svg)
-  skin/classic/global/tree/twisty-XP.svg                         (tree/twisty-XP.svg)
-  skin/classic/global/tree/twisty-Vista78.svg                    (tree/twisty-Vista78.svg)
+  skin/classic/global/tree/twisty-preWin10.svg                   (tree/twisty-preWin10.svg)
 
 #if MOZ_BUILD_APP == browser
 [browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
-% override chrome://global/skin/dirListing/folder.png             chrome://global/skin/dirListing/folder-XP.png            osversion<6
-% override chrome://global/skin/dirListing/local.png              chrome://global/skin/dirListing/local-XP.png             osversion<6
-% override chrome://global/skin/dirListing/remote.png             chrome://global/skin/dirListing/remote-XP.png            osversion<6
-% override chrome://global/skin/dirListing/up.png                 chrome://global/skin/dirListing/up-XP.png                osversion<6
-% override chrome://global/skin/icons/autoscroll.png              chrome://global/skin/icons/autoscroll-XP.png             osversion<6
-% override chrome://global/skin/icons/blacklist_favicon.png       chrome://global/skin/icons/blacklist_favicon-XP.png      osversion<6
-% override chrome://global/skin/icons/blacklist_large.png         chrome://global/skin/icons/blacklist_large-XP.png        osversion<6
-% override chrome://global/skin/icons/Error.png                   chrome://global/skin/icons/Error-XP.png                  osversion<6
-% override chrome://global/skin/icons/error-16.png                chrome://global/skin/icons/error-16-XP.png               osversion<6
-% override chrome://global/skin/icons/error-64.png                chrome://global/skin/icons/error-64-XP.png               osversion<6
-% override chrome://global/skin/icons/folder-item.png             chrome://global/skin/icons/folder-item-XP.png            osversion<6
-% override chrome://global/skin/icons/information-16.png          chrome://global/skin/icons/information-16-XP.png         osversion<6
-% override chrome://global/skin/icons/information-24.png          chrome://global/skin/icons/information-24-XP.png         osversion<6
-% override chrome://global/skin/icons/information-32.png          chrome://global/skin/icons/information-32-XP.png         osversion<6
-% override chrome://global/skin/icons/Print-preview.png           chrome://global/skin/icons/Print-preview-XP.png          osversion<6
-% override chrome://global/skin/icons/Portrait.png                chrome://global/skin/icons/Portrait-XP.png               osversion<6
-% override chrome://global/skin/icons/Landscape.png               chrome://global/skin/icons/Landscape-XP.png              osversion<6
-% override chrome://global/skin/icons/Question.png                chrome://global/skin/icons/Question-XP.png               osversion<6
-% override chrome://global/skin/icons/question-16.png             chrome://global/skin/icons/question-16-XP.png            osversion<6
-% override chrome://global/skin/icons/question-64.png             chrome://global/skin/icons/question-64-XP.png            osversion<6
-% override chrome://global/skin/icons/Search-close.png            chrome://global/skin/icons/Search-close-XP.png           osversion<6
-% override chrome://global/skin/icons/Search-glass.png            chrome://global/skin/icons/Search-glass-XP.png           osversion<6
-% override chrome://global/skin/icons/sslWarning.png              chrome://global/skin/icons/sslWarning-XP.png             osversion<6
-% override chrome://global/skin/icons/Warning.png                 chrome://global/skin/icons/Warning-XP.png                osversion<6
-% override chrome://global/skin/icons/warning-large.png           chrome://global/skin/icons/warning-large-XP.png          osversion<6
-% override chrome://global/skin/icons/warning-16.png              chrome://global/skin/icons/warning-16-XP.png             osversion<6
-% override chrome://global/skin/icons/warning-64.png              chrome://global/skin/icons/warning-64-XP.png             osversion<6
-% override chrome://global/skin/icons/windowControls.png          chrome://global/skin/icons/windowControls-XP.png         osversion<6
-% override chrome://global/skin/toolbar/spring.png                chrome://global/skin/toolbar/spring-XP.png               osversion<6
-% override chrome://global/skin/tree/sort-asc.png                 chrome://global/skin/tree/sort-asc-XP.png                osversion<6
-% override chrome://global/skin/tree/sort-dsc.png                 chrome://global/skin/tree/sort-dsc-XP.png                osversion<6
+% override chrome://global/skin/icons/close.png                   chrome://global/skin/icons/close-win7.png            osversion<=6.1
+% override chrome://global/skin/icons/close@2x.png                chrome://global/skin/icons/close-win7@2x.png         osversion<=6.1
+% override chrome://global/skin/icons/close-inverted.png          chrome://global/skin/icons/close-inverted-win7.png   osversion<=6.1
+% override chrome://global/skin/icons/close-inverted@2x.png       chrome://global/skin/icons/close-inverted-win7@2x.png osversion<=6.1
 
-% override chrome://global/skin/icons/close.png                   chrome://global/skin/icons/close-XPVista7.png            osversion<=6.1
-% override chrome://global/skin/icons/close@2x.png                chrome://global/skin/icons/close-XPVista7@2x.png         osversion<=6.1
-% override chrome://global/skin/icons/close-inverted.png          chrome://global/skin/icons/close-inverted-XPVista7.png   osversion<=6.1
-% override chrome://global/skin/icons/close-inverted@2x.png       chrome://global/skin/icons/close-inverted-XPVista7@2x.png osversion<=6.1
-
-% override chrome://global/skin/tree/twisty.svg#clsd              chrome://global/skin/tree/twisty-Vista78.svg#clsd           osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#clsd-rtl          chrome://global/skin/tree/twisty-Vista78.svg#clsd-rtl       osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#clsd-hover        chrome://global/skin/tree/twisty-Vista78.svg#clsd-hover     osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#clsd-hover-rtl    chrome://global/skin/tree/twisty-Vista78.svg#clsd-hover-rtl osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open              chrome://global/skin/tree/twisty-Vista78.svg#open           osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open-rtl          chrome://global/skin/tree/twisty-Vista78.svg#open-rtl       osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open-hover        chrome://global/skin/tree/twisty-Vista78.svg#open-hover     osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open-hover-rtl    chrome://global/skin/tree/twisty-Vista78.svg#open-hover-rtl osversion<=6.3
-# to be sure osversion<6 has always higher precedence than osversion<=6.3 we override twisty-Vista78.svg instead of twisty.svg
-% override chrome://global/skin/tree/twisty-Vista78.svg#clsd      chrome://global/skin/tree/twisty-XP.svg#clsd                osversion<6
-% override chrome://global/skin/tree/twisty-Vista78.svg#open      chrome://global/skin/tree/twisty-XP.svg#open                osversion<6
+% override chrome://global/skin/tree/twisty.svg#clsd              chrome://global/skin/tree/twisty-preWin10.svg#clsd           osversion<=6.3
+% override chrome://global/skin/tree/twisty.svg#clsd-rtl          chrome://global/skin/tree/twisty-preWin10.svg#clsd-rtl       osversion<=6.3
+% override chrome://global/skin/tree/twisty.svg#clsd-hover        chrome://global/skin/tree/twisty-preWin10.svg#clsd-hover     osversion<=6.3
+% override chrome://global/skin/tree/twisty.svg#clsd-hover-rtl    chrome://global/skin/tree/twisty-preWin10.svg#clsd-hover-rtl osversion<=6.3
+% override chrome://global/skin/tree/twisty.svg#open              chrome://global/skin/tree/twisty-preWin10.svg#open           osversion<=6.3
+% override chrome://global/skin/tree/twisty.svg#open-rtl          chrome://global/skin/tree/twisty-preWin10.svg#open-rtl       osversion<=6.3
+% override chrome://global/skin/tree/twisty.svg#open-hover        chrome://global/skin/tree/twisty-preWin10.svg#open-hover     osversion<=6.3
+% override chrome://global/skin/tree/twisty.svg#open-hover-rtl    chrome://global/skin/tree/twisty-preWin10.svg#open-hover-rtl osversion<=6.3
