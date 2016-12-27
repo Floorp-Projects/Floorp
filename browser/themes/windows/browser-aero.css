@@ -46,8 +46,7 @@
     color: graytext;
   }
 
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7) {
+  @media (-moz-os-version: windows-win7) {
     .sidebar-header:not(:-moz-lwtheme),
     #sidebar-header:not(:-moz-lwtheme) {
       background-color: #EEF3FA;
@@ -83,190 +82,187 @@
     -moz-appearance: -moz-win-exclude-glass;
   }
 
-  @media not all and (-moz-os-version: windows-vista) {
-    @media not all and (-moz-os-version: windows-win7) {
-      @media not all and (-moz-os-version: windows-win8) {
-        @media (-moz-windows-default-theme) {
-          #main-window {
-            background-color: hsl(0, 0%, 78%);
-          }
-
-          :root[tabsintitlebar] .tab-label:-moz-window-inactive {
-            /* Calculated to match the opacity change of Windows Explorer
-               titlebar text change for inactive windows. */
-            opacity: .6;
-          }
+  @media not all and (-moz-os-version: windows-win7) {
+    @media not all and (-moz-os-version: windows-win8) {
+      @media (-moz-windows-default-theme) {
+        #main-window {
+          background-color: hsl(0, 0%, 78%);
         }
 
-        @media (-moz-windows-default-theme: 0) {
-          #main-window {
-            background-color: transparent;
-          }
+        :root[tabsintitlebar] .tab-label:-moz-window-inactive {
+          /* Calculated to match the opacity change of Windows Explorer
+             titlebar text change for inactive windows. */
+          opacity: .6;
         }
+      }
 
-        #titlebar-buttonbox,
+      @media (-moz-windows-default-theme: 0) {
+        #main-window {
+          background-color: transparent;
+        }
+      }
+
+      #titlebar-buttonbox,
+      .titlebar-button {
+        -moz-appearance: none !important;
+      }
+
+      .titlebar-button {
+        border: none;
+        margin: 0 !important;
+        padding: 10px 17px;
+      }
+
+      #main-window[sizemode=maximized] .titlebar-button {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      .titlebar-button > .toolbarbutton-icon {
+        width: 12px;
+        height: 12px;
+      }
+
+      #titlebar-min {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
+      }
+
+      #titlebar-max {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize);
+      }
+
+      #main-window[sizemode="maximized"] #titlebar-max {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
+      }
+
+      #titlebar-close {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
+      }
+      #titlebar-close:hover {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+      }
+
+      #titlebar-min:-moz-lwtheme {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-themes);
+      }
+      #titlebar-max:-moz-lwtheme {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-themes);
+      }
+      #main-window[sizemode="maximized"] #titlebar-max:-moz-lwtheme {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-themes);
+      }
+      #titlebar-close:-moz-lwtheme {
+        list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-themes);
+      }
+
+
+      /* the 12px image renders a 10px icon, and the 10px upscaled gets rounded to 12.5, which
+       * rounds up to 13px, which makes the icon one pixel too big on 1.25dppx. Fix: */
+      @media (min-resolution: 1.20dppx) and (max-resolution: 1.45dppx) {
+        .titlebar-button > .toolbarbutton-icon {
+          width: 11.5px;
+          height: 11.5px;
+        }
+      }
+
+      /* 175% dpi should result in the same device pixel sizes as 150% dpi. */
+      @media (min-resolution: 1.70dppx) and (max-resolution: 1.95dppx) {
         .titlebar-button {
-          -moz-appearance: none !important;
-        }
-
-        .titlebar-button {
-          border: none;
-          margin: 0 !important;
-          padding: 10px 17px;
-        }
-
-        #main-window[sizemode=maximized] .titlebar-button {
-          padding-top: 8px;
-          padding-bottom: 8px;
+          padding-left: 14.1px;
+          padding-right: 14.1px;
         }
 
         .titlebar-button > .toolbarbutton-icon {
-          width: 12px;
-          height: 12px;
+          width: 10.8px;
+          height: 10.8px;
+        }
+      }
+
+      /* 225% dpi should result in the same device pixel sizes as 200% dpi. */
+      @media (min-resolution: 2.20dppx) and (max-resolution: 2.45dppx) {
+        .titlebar-button {
+          padding-left: 15.3333px;
+          padding-right: 15.3333px;
+        }
+
+        .titlebar-button > .toolbarbutton-icon {
+          width: 10.8px;
+          height: 10.8px;
+        }
+      }
+
+      /* 275% dpi should result in the same device pixel sizes as 250% dpi. */
+      @media (min-resolution: 2.70dppx) and (max-resolution: 2.95dppx) {
+        /* NB: todo: this should also change padding on the buttons
+         * themselves, but without a device to test this on, it's
+         * impossible to know by how much. */
+        .titlebar-button > .toolbarbutton-icon {
+          width: 10.8px;
+          height: 10.8px;
+        }
+      }
+
+      @media (-moz-windows-default-theme) {
+        .titlebar-button:hover {
+          background-color: hsla(0, 0%, 0%, .12);
+        }
+
+        .titlebar-button:hover:active {
+          background-color: hsla(0, 0%, 0%, .22);
+        }
+
+        .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
+          opacity: 0.5;
+        }
+
+        #titlebar-close:hover {
+          background-color: hsl(355, 86%, 49%);
+        }
+
+        #titlebar-close:hover:active {
+          background-color: hsl(355, 82%, 69%);
+        }
+      }
+      @media (-moz-windows-default-theme: 0) {
+        .titlebar-button {
+          background-color: -moz-field;
+        }
+        .titlebar-button:hover {
+          background-color: Highlight;
         }
 
         #titlebar-min {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-highcontrast);
+        }
+        #titlebar-min:hover {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-highcontrast-hover);
         }
 
         #titlebar-max {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize);
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-highcontrast);
+        }
+        #titlebar-max:hover {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-highcontrast-hover);
         }
 
         #main-window[sizemode="maximized"] #titlebar-max {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-highcontrast);
+        }
+        #main-window[sizemode="maximized"] #titlebar-max:hover {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-highcontrast-hover);
         }
 
         #titlebar-close {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-highcontrast);
         }
         #titlebar-close:hover {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
-        }
-
-        #titlebar-min:-moz-lwtheme {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-themes);
-        }
-        #titlebar-max:-moz-lwtheme {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-themes);
-        }
-        #main-window[sizemode="maximized"] #titlebar-max:-moz-lwtheme {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-themes);
-        }
-        #titlebar-close:-moz-lwtheme {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-themes);
-        }
-
-
-        /* the 12px image renders a 10px icon, and the 10px upscaled gets rounded to 12.5, which
-         * rounds up to 13px, which makes the icon one pixel too big on 1.25dppx. Fix: */
-        @media (min-resolution: 1.20dppx) and (max-resolution: 1.45dppx) {
-          .titlebar-button > .toolbarbutton-icon {
-            width: 11.5px;
-            height: 11.5px;
-          }
-        }
-
-        /* 175% dpi should result in the same device pixel sizes as 150% dpi. */
-        @media (min-resolution: 1.70dppx) and (max-resolution: 1.95dppx) {
-          .titlebar-button {
-            padding-left: 14.1px;
-            padding-right: 14.1px;
-          }
-
-          .titlebar-button > .toolbarbutton-icon {
-            width: 10.8px;
-            height: 10.8px;
-          }
-        }
-
-        /* 225% dpi should result in the same device pixel sizes as 200% dpi. */
-        @media (min-resolution: 2.20dppx) and (max-resolution: 2.45dppx) {
-          .titlebar-button {
-            padding-left: 15.3333px;
-            padding-right: 15.3333px;
-          }
-
-          .titlebar-button > .toolbarbutton-icon {
-            width: 10.8px;
-            height: 10.8px;
-          }
-        }
-
-        /* 275% dpi should result in the same device pixel sizes as 250% dpi. */
-        @media (min-resolution: 2.70dppx) and (max-resolution: 2.95dppx) {
-          /* NB: todo: this should also change padding on the buttons
-           * themselves, but without a device to test this on, it's
-           * impossible to know by how much. */
-          .titlebar-button > .toolbarbutton-icon {
-            width: 10.8px;
-            height: 10.8px;
-          }
-        }
-
-        @media (-moz-windows-default-theme) {
-          .titlebar-button:hover {
-            background-color: hsla(0, 0%, 0%, .12);
-          }
-
-          .titlebar-button:hover:active {
-            background-color: hsla(0, 0%, 0%, .22);
-          }
-
-          .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
-            opacity: 0.5;
-          }
-
-          #titlebar-close:hover {
-            background-color: hsl(355, 86%, 49%);
-          }
-
-          #titlebar-close:hover:active {
-            background-color: hsl(355, 82%, 69%);
-          }
-        }
-        @media (-moz-windows-default-theme: 0) {
-          .titlebar-button {
-            background-color: -moz-field;
-          }
-          .titlebar-button:hover {
-            background-color: Highlight;
-          }
-
-          #titlebar-min {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-highcontrast);
-          }
-          #titlebar-min:hover {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-highcontrast-hover);
-          }
-
-          #titlebar-max {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-highcontrast);
-          }
-          #titlebar-max:hover {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-highcontrast-hover);
-          }
-
-          #main-window[sizemode="maximized"] #titlebar-max {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-highcontrast);
-          }
-          #main-window[sizemode="maximized"] #titlebar-max:hover {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-highcontrast-hover);
-          }
-
-          #titlebar-close {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-highcontrast);
-          }
-          #titlebar-close:hover {
-            list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-highcontrast-hover);
-          }
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-highcontrast-hover);
         }
       }
     }
   }
 
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7),
+  @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
     #main-window[sizemode="maximized"] #titlebar-buttonbox {
       margin-inline-end: 3px;
@@ -283,8 +279,8 @@
     }
 
     /* The borders on the glass frame are ours, and inside #browser, and on
-     * vista and win7 we want to make sure they are "glassy", so we can't use
-     * #browser as the exclude-glass container. We use #appcontent instead. */
+     * win7 we want to make sure they are "glassy", so we can't use #browser
+     * as the exclude-glass container. We use #appcontent instead. */
     #browser {
       -moz-appearance: none;
     }
@@ -296,7 +292,7 @@
 
   @media (-moz-os-version: windows-win8) {
     /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
-     * Borders for vista/win7 are below, win10 doesn't need them. */
+     * Borders for win7 are below, win10 doesn't need them. */
     #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
       border-top: 1px solid @toolbarShadowColor@;
     }
@@ -313,14 +309,12 @@
     }
 
     /* Use a different color only on Windows 8 and higher for inactive windows.
-     * On aero, the menubar fog disappears for inactive windows, and renders gray
+     * On Win 7, the menubar fog disappears for inactive windows, and renders gray
      * illegible.
      */
-    @media not all and (-moz-os-version: windows-vista) {
-      @media not all and (-moz-os-version: windows-win7) {
-        #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
-          color: ThreeDShadow;
-        }
+    @media not all and (-moz-os-version: windows-win7) {
+      #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
+        color: ThreeDShadow;
       }
     }
   }
@@ -330,9 +324,8 @@
     color: white;
   }
 
-  /* Show borders on vista through win8, but not on win10 and later: */
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7),
+  /* Show borders on Win 7 & 8, but not on 10 and later: */
+  @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
     /* Vertical toolbar border */
     #main-window:not([customizing])[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
