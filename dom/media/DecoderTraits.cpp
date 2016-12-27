@@ -171,8 +171,7 @@ CanHandleCodecsType(const MediaContentType& aType,
 #endif
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled()) {
-    EnsureAndroidMediaPluginHost()->FindDecoder(aType.Type().AsString(),
-                                                &codecList);
+    EnsureAndroidMediaPluginHost()->FindDecoder(aType, &codecList);
   }
 #endif
   if (!codecList) {
@@ -254,7 +253,7 @@ CanHandleMediaType(const MediaContentType& aType,
 #endif
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
-      EnsureAndroidMediaPluginHost()->FindDecoder(mimeType.Type().AsString(), nullptr)) {
+      EnsureAndroidMediaPluginHost()->FindDecoder(mimeType, nullptr)) {
     return CANPLAY_MAYBE;
   }
 #endif
@@ -339,8 +338,7 @@ InstantiateDecoder(const MediaContentType& aType,
   }
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
-      EnsureAndroidMediaPluginHost()->FindDecoder(aType.Type().AsString(),
-                                                  nullptr)) {
+      EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
     decoder = new AndroidMediaDecoder(aOwner, aType.Type().AsString());
     return decoder.forget();
   }
