@@ -983,27 +983,35 @@ public:
     }
 
     void fClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil) {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         mSymbols.fClearBufferfi(buffer, drawbuffer, depth, stencil);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat* value) {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         mSymbols.fClearBufferfv(buffer, drawbuffer, value);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint* value) {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         mSymbols.fClearBufferiv(buffer, drawbuffer, value);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint* value) {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         mSymbols.fClearBufferuiv(buffer, drawbuffer, value);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {

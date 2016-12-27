@@ -6,12 +6,12 @@
 
 #include "TransportSecurityInfo.h"
 
-#include "DateTimeFormat.h"
 #include "PSMRunnable.h"
 #include "mozilla/Casting.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIArray.h"
 #include "nsICertOverrideService.h"
+#include "nsIDateTimeFormat.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIWebProgressListener.h"
@@ -798,9 +798,14 @@ GetDateBoundary(nsIX509Cert* ix509,
     trueExpired_falseNotYetValid = false;
   }
 
-  DateTimeFormat::FormatPRTime(kDateFormatLong, kTimeFormatNoSeconds,
+  nsCOMPtr<nsIDateTimeFormat> dateTimeFormat = nsIDateTimeFormat::Create();
+  if (!dateTimeFormat) {
+    return;
+  }
+
+  dateTimeFormat->FormatPRTime(nullptr, kDateFormatLong, kTimeFormatNoSeconds,
                                timeToUse, formattedDate);
-  DateTimeFormat::FormatPRTime(kDateFormatLong, kTimeFormatNoSeconds,
+  dateTimeFormat->FormatPRTime(nullptr, kDateFormatLong, kTimeFormatNoSeconds,
                                now, nowDate);
 }
 
