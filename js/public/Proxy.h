@@ -456,7 +456,7 @@ SetProxyExtra(JSObject* obj, size_t n, const Value& extra)
     Value* vp = &detail::GetProxyDataLayout(obj)->values->extraSlots[n];
 
     // Trigger a barrier before writing the slot.
-    if (vp->isMarkable() || extra.isMarkable())
+    if (vp->isGCThing() || extra.isGCThing())
         SetValueInProxy(vp, extra);
     else
         *vp = extra;
@@ -482,7 +482,7 @@ SetReservedOrProxyPrivateSlot(JSObject* obj, size_t slot, const Value& value)
     MOZ_ASSERT(slot == 0);
     MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)) || IsProxy(obj));
     shadow::Object* sobj = reinterpret_cast<shadow::Object*>(obj);
-    if (sobj->slotRef(slot).isMarkable() || value.isMarkable())
+    if (sobj->slotRef(slot).isGCThing() || value.isGCThing())
         SetReservedOrProxyPrivateSlotWithBarrier(obj, slot, value);
     else
         sobj->slotRef(slot) = value;

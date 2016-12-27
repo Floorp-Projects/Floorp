@@ -58,8 +58,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // X64 helpers.
     /////////////////////////////////////////////////////////////////
     void writeDataRelocation(const Value& val) {
-        if (val.isMarkable()) {
-            gc::Cell* cell = val.toMarkablePointer();
+        if (val.isGCThing()) {
+            gc::Cell* cell = val.toGCThing();
             if (cell && gc::IsInsideNursery(cell))
                 embedsNurseryPointers_ = true;
             dataRelocations_.writeUnsigned(masm.currentOffset());
@@ -132,7 +132,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     template <typename T>
     void storeValue(const Value& val, const T& dest) {
         ScratchRegisterScope scratch(asMasm());
-        if (val.isMarkable()) {
+        if (val.isGCThing()) {
             movWithPatch(ImmWord(val.asRawBits()), scratch);
             writeDataRelocation(val);
         } else {
@@ -171,7 +171,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         pop(val.valueReg());
     }
     void pushValue(const Value& val) {
-        if (val.isMarkable()) {
+        if (val.isGCThing()) {
             ScratchRegisterScope scratch(asMasm());
             movWithPatch(ImmWord(val.asRawBits()), scratch);
             writeDataRelocation(val);

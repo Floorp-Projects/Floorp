@@ -131,6 +131,8 @@
 #include "nsIParser.h"
 #include "nsIContentSink.h"
 
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"

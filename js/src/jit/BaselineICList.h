@@ -62,8 +62,6 @@ namespace jit {
     _(In_Dense)                                  \
                                                  \
     _(GetName_Fallback)                          \
-    _(GetName_GlobalLexical)                     \
-    _(GetName_Global)                            \
                                                  \
     _(BindName_Fallback)                         \
                                                  \

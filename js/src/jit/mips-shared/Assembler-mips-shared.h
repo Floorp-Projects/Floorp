@@ -1273,6 +1273,8 @@ class AssemblerMIPSShared : public AssemblerShared
     static void ToggleToJmp(CodeLocationLabel inst_);
     static void ToggleToCmp(CodeLocationLabel inst_);
 
+    static void UpdateLuiOriValue(Instruction* inst0, Instruction* inst1, uint32_t value);
+
     void processCodeLabels(uint8_t* rawCode);
 
     bool bailed() {
