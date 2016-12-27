@@ -22,5 +22,5 @@ interface nsIHttpHeaderVisitor : nsISupports
      *
      * @throw any exception to terminate enumeration
      */
-    void visitHeader(in ACString aHeader, in ACString aValue);
+    [must_use] void visitHeader(in ACString aHeader, in ACString aValue);
 };

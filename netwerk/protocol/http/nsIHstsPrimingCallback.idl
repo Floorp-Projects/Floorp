@@ -31,7 +31,7 @@ interface nsIHstsPrimingCallback : nsISupports
    *
    * @param aCached whether the result was already in the HSTS cache
    */
-  [noscript, nostdcall]
+  [noscript, nostdcall, must_use]
   void onHSTSPrimingSucceeded(in bool aCached);
 
   /**
@@ -46,6 +46,6 @@ interface nsIHstsPrimingCallback : nsISupports
    * @param aError The error which caused this failure, or NS_ERROR_CONTENT_BLOCKED
    * @param aCached whether the result was already in the HSTS cache
    */
-  [noscript, nostdcall]
+  [noscript, nostdcall, must_use]
   void onHSTSPrimingFailed(in nsresult aError, in bool aCached);
 };

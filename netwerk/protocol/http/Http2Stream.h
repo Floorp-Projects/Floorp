@@ -54,8 +54,10 @@ public:
   stateType HTTPState() { return mState; }
   void SetHTTPState(stateType val) { mState = val; }
 
-  virtual nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *);
-  virtual nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *);
+  virtual MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader *,
+                                             uint32_t, uint32_t *);
+  virtual MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter *,
+                                              uint32_t, uint32_t *);
   virtual bool DeferCleanup(nsresult status);
 
   // The consumer stream is the synthetic pull stream hooked up to this stream
@@ -111,9 +113,11 @@ public:
   void UpdateTransportReadEvents(uint32_t count);
 
   // NS_ERROR_ABORT terminates stream, other failure terminates session
-  nsresult ConvertResponseHeaders(Http2Decompressor *, nsACString &,
-                                  nsACString &, int32_t &);
-  nsresult ConvertPushHeaders(Http2Decompressor *, nsACString &, nsACString &);
+  MOZ_MUST_USE nsresult ConvertResponseHeaders(Http2Decompressor *,
+                                               nsACString &,
+                                               nsACString &, int32_t &);
+  MOZ_MUST_USE nsresult ConvertPushHeaders(Http2Decompressor *, nsACString &,
+                                           nsACString &);
 
   bool AllowFlowControlledWrite();
   void UpdateServerReceiveWindow(int32_t delta);
@@ -147,12 +151,12 @@ public:
 
   Http2Session *Session() { return mSession; }
 
-  static nsresult MakeOriginURL(const nsACString &origin,
-                                RefPtr<nsStandardURL> &url);
+  static MOZ_MUST_USE nsresult MakeOriginURL(const nsACString &origin,
+                                             RefPtr<nsStandardURL> &url);
 
-  static nsresult MakeOriginURL(const nsACString &scheme,
-                                const nsACString &origin,
-                                RefPtr<nsStandardURL> &url);
+  static MOZ_MUST_USE nsresult MakeOriginURL(const nsACString &scheme,
+                                             const nsACString &origin,
+                                             RefPtr<nsStandardURL> &url);
 
   // Mirrors nsAHttpTransaction
   bool Do0RTT();
@@ -215,18 +219,18 @@ protected:
   void     ChangeState(enum upstreamStateType);
 
   virtual void AdjustInitialWindow();
-  nsresult TransmitFrame(const char *, uint32_t *, bool forceCommitment);
+  MOZ_MUST_USE nsresult TransmitFrame(const char *, uint32_t *, bool forceCommitment);
 
 private:
   friend class nsAutoPtr<Http2Stream>;
 
-  nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
-  nsresult GenerateOpen();
+  MOZ_MUST_USE nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
+  MOZ_MUST_USE nsresult GenerateOpen();
 
   void     AdjustPushedPriority();
   void     GenerateDataFrameHeader(uint32_t, bool);
 
-  nsresult BufferInput(uint32_t , uint32_t *);
+  MOZ_MUST_USE nsresult BufferInput(uint32_t , uint32_t *);
 
   // The underlying HTTP transaction. This pointer is used as the key
   // in the Http2Session mStreamTransactionHash so it is important to
