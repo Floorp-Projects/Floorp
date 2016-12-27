@@ -142,6 +142,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mLatestTransactionId(0)
   , mTarget(nullptr)
 {
+  MOZ_COUNT_CTOR(WebRenderLayerManager);
 }
 
 KnowsCompositor*
@@ -197,6 +198,7 @@ WebRenderLayerManager::Destroy()
 WebRenderLayerManager::~WebRenderLayerManager()
 {
   Destroy();
+  MOZ_COUNT_DTOR(WebRenderLayerManager);
 }
 
 CompositorBridgeChild*
