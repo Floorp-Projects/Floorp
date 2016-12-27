@@ -310,7 +310,7 @@ treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descend
 /* ::::: twisty :::::  */
 
 treechildren::-moz-tree-twisty {
-  padding-inline-end: 4px;
+  padding-inline-end: 1px;
   padding-top: 1px;
   width: 9px; /* The image's width is 9 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd");
@@ -320,8 +320,32 @@ treechildren::-moz-tree-twisty(open) {
   list-style-image: url("chrome://global/skin/tree/twisty.svg#open");
 }
 
+treechildren::-moz-tree-twisty(hover) {
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover");
+}
+
+treechildren::-moz-tree-twisty(hover, open) {
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover");
+}
+
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty {
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-rtl");
+}
+
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open) {
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#open-rtl");
+}
+
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover) {
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover-rtl");
+}
+
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover-rtl");
+}
+
 treechildren::-moz-tree-indentation {
-  width: 18px;
+  width: 12px;
 }
 
 /* ::::: gridline style ::::: */
@@ -359,233 +383,196 @@ treechildren::-moz-tree-cell-text(selected, editing) {
 }
 
 %ifdef XP_WIN
-@media not all and (-moz-os-version: windows-xp) {
-  /* ::::: twisty :::::  */
-
-  treechildren::-moz-tree-indentation {
-    width: 12px;
+@media (-moz-windows-default-theme) {
+  treechildren {
+    --treechildren-outline: none;
+    --treechildren-2ndBorderColor: rgba(255,255,255,.4);
+    --treechildren-selectedColor: rgb(217,217,217);
+    --treechildren-focusColor: rgb(123,195,255);
+    --treechildren-selectedFocusColor: rgb(205,232,255);
+    --treechildren-currentColor: rgb(125,162,206);
+    --treechildren-hoverColor: rgb(229,243,255);
+    --treechildren-selectedBorder: var(--treechildren-selectedColor);
+    --treechildren-selectedBottomBorder: rgb(204,204,204);
+    --treechildren-selectedImage: linear-gradient(rgb(217,217,217), rgb(217,217,217));
+    --treechildren-selectedBackground: transparent;
+    --treechildren-currentFocusBorder: var(--treechildren-focusColor);
+    --treechildren-currentFocusBottomBorder: var(--treechildren-focusColor);
+    --treechildren-selectedFocusBorder: var(--treechildren-selectedFocusColor);
+    --treechildren-selectedFocusBottomBorder: rgb(165,214,255);
+    --treechildren-selectedFocusImage: none;
+    --treechildren-selectedFocusBackground: var(--treechildren-selectedFocusColor);
+    --treechildren-selectedFocusCurrentBorder: var(--treechildren-focusColor);
+    --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-focusColor);
+    --treechildren-selectedFocusCurrentImage: linear-gradient(rgb(205,232,255), rgb(205,232,255));
+    --treechildren-hoverBorder: var(--treechildren-hoverColor);
+    --treechildren-hoverBottomBorder: var(--treechildren-hoverColor);
+    --treechildren-hoverImage: linear-gradient(rgb(229,243,255), rgb(229,243,255));
+    --treechildren-hoverCurrentBorder: var(--treechildren-currentColor);
+    --treechildren-hoverCurrentBottomBorder: var(--treechildren-currentColor);
+    --treechildren-hoverCurrentImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.16));
+    --treechildren-hoverSelectedBorder: var(--treechildren-focusColor);
+    --treechildren-hoverSelectedBottomBorder: var(--treechildren-focusColor);
+    --treechildren-hoverSelectedImage: linear-gradient(rgb(205,232,255), rgb(205,232,255));
   }
 
-  treechildren::-moz-tree-twisty {
-    padding-inline-end: 1px;
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row {
+    height: 1.8em;
+    color: -moz-FieldText;
+    margin-inline-start: 1px;
+    margin-inline-end: 1px;
+    border-width: 1px;
+    border-color: transparent;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
   }
 
-  treechildren::-moz-tree-twisty(hover) {
-    list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover");
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
+    -moz-border-top-colors: var(--treechildren-selectedBorder);
+    -moz-border-right-colors: var(--treechildren-selectedBorder);
+    -moz-border-left-colors: var(--treechildren-selectedBorder);
+    -moz-border-bottom-colors: var(--treechildren-selectedBottomBorder);
+    background-image: var(--treechildren-selectedImage);
+    background-color: var(--treechildren-selectedBackground);
+    outline: var(--treechildren-outline);
   }
 
-  treechildren::-moz-tree-twisty(hover, open) {
-    list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover");
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row(current, focus) {
+    border-style: solid;
+    -moz-border-top-colors: var(--treechildren-currentFocusBorder);
+    -moz-border-right-colors: var(--treechildren-currentFocusBorder);
+    -moz-border-left-colors: var(--treechildren-currentFocusBorder);
+    -moz-border-bottom-colors: var(--treechildren-currentFocusBottomBorder);
+    outline: var(--treechildren-outline);
   }
 
-  treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty {
-    list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-rtl");
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, focus),
+  treechildren::-moz-tree-row(dropOn) {
+    -moz-border-top-colors: var(--treechildren-selectedFocusBorder);
+    -moz-border-right-colors: var(--treechildren-selectedFocusBorder);
+    -moz-border-left-colors: var(--treechildren-selectedFocusBorder);
+    -moz-border-bottom-colors: var(--treechildren-selectedFocusBottomBorder);
+    background-image: var(--treechildren-selectedFocusImage);
+    background-color: var(--treechildren-selectedFocusBackground);
   }
 
-  treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open) {
-    list-style-image: url("chrome://global/skin/tree/twisty.svg#open-rtl");
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, current, focus) {
+    border-style: solid;
+    -moz-border-top-colors: var(--treechildren-selectedFocusCurrentBorder);
+    -moz-border-right-colors: var(--treechildren-selectedFocusCurrentBorder);
+    -moz-border-left-colors: var(--treechildren-selectedFocusCurrentBorder);
+    -moz-border-bottom-colors: var(--treechildren-selectedFocusCurrentBottomBorder);
+    background-image: var(--treechildren-selectedFocusCurrentImage);
   }
 
-  treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover) {
-    list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover-rtl");
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover) {
+    -moz-border-top-colors: var(--treechildren-hoverBorder);
+    -moz-border-right-colors: var(--treechildren-hoverBorder);
+    -moz-border-left-colors: var(--treechildren-hoverBorder);
+    -moz-border-bottom-colors: var(--treechildren-hoverBottomBorder);
+    background-image: var(--treechildren-hoverImage);
+    outline: var(--treechildren-outline);
   }
 
-  treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
-    list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover-rtl");
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, current) {
+    -moz-border-top-colors: var(--treechildren-hoverCurrentBorder);
+    -moz-border-right-colors: var(--treechildren-hoverCurrentBorder);
+    -moz-border-left-colors: var(--treechildren-hoverCurrentBorder);
+    -moz-border-bottom-colors: var(--treechildren-hoverCurrentBottomBorder);
+    background-image: var(--treechildren-hoverCurrentImage);
   }
 
-  @media (-moz-windows-default-theme) {
+  treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, selected) {
+    -moz-border-top-colors: var(--treechildren-hoverSelectedBorder);
+    -moz-border-right-colors: var(--treechildren-hoverSelectedBorder);
+    -moz-border-left-colors: var(--treechildren-hoverSelectedBorder);
+    -moz-border-bottom-colors: var(--treechildren-hoverSelectedBottomBorder);
+    background-image: var(--treechildren-hoverSelectedImage);
+  }
+
+  tree[disabled="true"] > treechildren::-moz-tree-row {
+    background: none;
+    -moz-border-top-colors: transparent;
+    -moz-border-right-colors: transparent;
+    -moz-border-left-colors: transparent;
+    -moz-border-bottom-colors: transparent;
+  }
+
+  treechildren::-moz-tree-cell(dropOn) {
+    background-image: none;
+    background-color: transparent;
+    border-radius: 0;
+  }
+
+  treechildren::-moz-tree-cell-text(primary, dropOn) {
+    color: -moz-FieldText;
+  }
+
+  treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text {
+    padding-bottom: initial;
+    border-color: transparent;
+    background-color: transparent;
+  }
+
+  treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text(selected, focus) {
+    color: -moz-DialogText;
+  }
+
+  @media (-moz-os-version: windows-win7) {
     treechildren {
-      --treechildren-outline: none;
-      --treechildren-2ndBorderColor: rgba(255,255,255,.4);
-      --treechildren-selectedColor: rgb(217,217,217);
-      --treechildren-focusColor: rgb(123,195,255);
-      --treechildren-selectedFocusColor: rgb(205,232,255);
-      --treechildren-currentColor: rgb(125,162,206);
-      --treechildren-hoverColor: rgb(229,243,255);
-      --treechildren-selectedBorder: var(--treechildren-selectedColor);
-      --treechildren-selectedBottomBorder: rgb(204,204,204);
-      --treechildren-selectedImage: linear-gradient(rgb(217,217,217), rgb(217,217,217));
-      --treechildren-selectedBackground: transparent;
-      --treechildren-currentFocusBorder: var(--treechildren-focusColor);
-      --treechildren-currentFocusBottomBorder: var(--treechildren-focusColor);
-      --treechildren-selectedFocusBorder: var(--treechildren-selectedFocusColor);
-      --treechildren-selectedFocusBottomBorder: rgb(165,214,255);
-      --treechildren-selectedFocusImage: none;
-      --treechildren-selectedFocusBackground: var(--treechildren-selectedFocusColor);
-      --treechildren-selectedFocusCurrentBorder: var(--treechildren-focusColor);
-      --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-focusColor);
-      --treechildren-selectedFocusCurrentImage: linear-gradient(rgb(205,232,255), rgb(205,232,255));
-      --treechildren-hoverBorder: var(--treechildren-hoverColor);
-      --treechildren-hoverBottomBorder: var(--treechildren-hoverColor);
-      --treechildren-hoverImage: linear-gradient(rgb(229,243,255), rgb(229,243,255));
-      --treechildren-hoverCurrentBorder: var(--treechildren-currentColor);
-      --treechildren-hoverCurrentBottomBorder: var(--treechildren-currentColor);
-      --treechildren-hoverCurrentImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.16));
-      --treechildren-hoverSelectedBorder: var(--treechildren-focusColor);
-      --treechildren-hoverSelectedBottomBorder: var(--treechildren-focusColor);
-      --treechildren-hoverSelectedImage: linear-gradient(rgb(205,232,255), rgb(205,232,255));
+      --treechildren-outline: 1px solid var(--treechildren-2ndBorderColor);
+      --treechildren-2ndBottomBorderColor: rgba(255,255,255,.6);
+      --treechildren-selectedBorder: var(--treechildren-selectedColor) var(--treechildren-2ndBorderColor);
+      --treechildren-selectedBottomBorder: var(--treechildren-selectedColor) var(--treechildren-2ndBottomBorderColor);
+      --treechildren-selectedImage: linear-gradient(rgba(190,190,190,.1), rgba(190,190,190,.4));
+      --treechildren-currentFocusBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+      --treechildren-currentFocusBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+      --treechildren-selectedFocusBorder: rgb(132,172,221) var(--treechildren-2ndBorderColor);
+      --treechildren-selectedFocusBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+      --treechildren-selectedFocusImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.375));
+      --treechildren-selectedFocusBackground: transparent;
+      --treechildren-selectedFocusCurrentBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+      --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+      --treechildren-selectedFocusCurrentImage: linear-gradient(rgba(131,183,249,.28), rgba(131,183,249,.5));
+      --treechildren-hoverBorder: rgb(184,214,251) var(--treechildren-2ndBorderColor);
+      --treechildren-hoverBottomBorder: rgb(184,214,251) var(--treechildren-2ndBottomBorderColor);
+      --treechildren-hoverImage: linear-gradient(rgba(131,183,249,.05), rgba(131,183,249,.16));
+      --treechildren-hoverCurrentBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+      --treechildren-hoverCurrentBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+      --treechildren-hoverCurrentImage: linear-gradient(rgba(131,183,249,.05), rgba(131,183,249,.16));
+      --treechildren-hoverSelectedBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+      --treechildren-hoverSelectedBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+      --treechildren-hoverSelectedImage: linear-gradient(rgba(131,183,249,.28), rgba(131,183,249,.5));
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row {
-      height: 1.8em;
-      color: -moz-FieldText;
-      margin-inline-start: 1px;
-      margin-inline-end: 1px;
-      border-width: 1px;
-      border-color: transparent;
-      background-repeat: no-repeat;
-      background-size: 100% 100%;
+      border-width: 2px;
+      border-radius: 3px;
+      -moz-outline-radius: 3px;
     }
+  }
 
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
-      -moz-border-top-colors: var(--treechildren-selectedBorder);
-      -moz-border-right-colors: var(--treechildren-selectedBorder);
-      -moz-border-left-colors: var(--treechildren-selectedBorder);
-      -moz-border-bottom-colors: var(--treechildren-selectedBottomBorder);
-      background-image: var(--treechildren-selectedImage);
-      background-color: var(--treechildren-selectedBackground);
-      outline: var(--treechildren-outline);
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row(current, focus) {
-      border-style: solid;
-      -moz-border-top-colors: var(--treechildren-currentFocusBorder);
-      -moz-border-right-colors: var(--treechildren-currentFocusBorder);
-      -moz-border-left-colors: var(--treechildren-currentFocusBorder);
-      -moz-border-bottom-colors: var(--treechildren-currentFocusBottomBorder);
-      outline: var(--treechildren-outline);
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, focus),
-    treechildren::-moz-tree-row(dropOn) {
-      -moz-border-top-colors: var(--treechildren-selectedFocusBorder);
-      -moz-border-right-colors: var(--treechildren-selectedFocusBorder);
-      -moz-border-left-colors: var(--treechildren-selectedFocusBorder);
-      -moz-border-bottom-colors: var(--treechildren-selectedFocusBottomBorder);
-      background-image: var(--treechildren-selectedFocusImage);
-      background-color: var(--treechildren-selectedFocusBackground);
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, current, focus) {
-      border-style: solid;
-      -moz-border-top-colors: var(--treechildren-selectedFocusCurrentBorder);
-      -moz-border-right-colors: var(--treechildren-selectedFocusCurrentBorder);
-      -moz-border-left-colors: var(--treechildren-selectedFocusCurrentBorder);
-      -moz-border-bottom-colors: var(--treechildren-selectedFocusCurrentBottomBorder);
-      background-image: var(--treechildren-selectedFocusCurrentImage);
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover) {
-      -moz-border-top-colors: var(--treechildren-hoverBorder);
-      -moz-border-right-colors: var(--treechildren-hoverBorder);
-      -moz-border-left-colors: var(--treechildren-hoverBorder);
-      -moz-border-bottom-colors: var(--treechildren-hoverBottomBorder);
-      background-image: var(--treechildren-hoverImage);
-      outline: var(--treechildren-outline);
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, current) {
-      -moz-border-top-colors: var(--treechildren-hoverCurrentBorder);
-      -moz-border-right-colors: var(--treechildren-hoverCurrentBorder);
-      -moz-border-left-colors: var(--treechildren-hoverCurrentBorder);
-      -moz-border-bottom-colors: var(--treechildren-hoverCurrentBottomBorder);
-      background-image: var(--treechildren-hoverCurrentImage);
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, selected) {
-      -moz-border-top-colors: var(--treechildren-hoverSelectedBorder);
-      -moz-border-right-colors: var(--treechildren-hoverSelectedBorder);
-      -moz-border-left-colors: var(--treechildren-hoverSelectedBorder);
-      -moz-border-bottom-colors: var(--treechildren-hoverSelectedBottomBorder);
-      background-image: var(--treechildren-hoverSelectedImage);
-    }
-
-    tree[disabled="true"] > treechildren::-moz-tree-row {
-      background: none;
-      -moz-border-top-colors: transparent;
-      -moz-border-right-colors: transparent;
-      -moz-border-left-colors: transparent;
-      -moz-border-bottom-colors: transparent;
-    }
-
-    treechildren::-moz-tree-cell(dropOn) {
-      background-image: none;
-      background-color: transparent;
-      border-radius: 0;
-    }
-
-    treechildren::-moz-tree-cell-text(primary, dropOn) {
-      color: -moz-FieldText;
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text {
-      padding-bottom: initial;
-      border-color: transparent;
-      background-color: transparent;
-    }
-
-    treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text(selected, focus) {
-      color: -moz-DialogText;
-    }
-
-    @media (-moz-os-version: windows-vista),
-           (-moz-os-version: windows-win7) {
-      treechildren {
-        --treechildren-outline: 1px solid var(--treechildren-2ndBorderColor);
-        --treechildren-2ndBottomBorderColor: rgba(255,255,255,.6);
-        --treechildren-selectedBorder: var(--treechildren-selectedColor) var(--treechildren-2ndBorderColor);
-        --treechildren-selectedBottomBorder: var(--treechildren-selectedColor) var(--treechildren-2ndBottomBorderColor);
-        --treechildren-selectedImage: linear-gradient(rgba(190,190,190,.1), rgba(190,190,190,.4));
-        --treechildren-currentFocusBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
-        --treechildren-currentFocusBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
-        --treechildren-selectedFocusBorder: rgb(132,172,221) var(--treechildren-2ndBorderColor);
-        --treechildren-selectedFocusBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
-        --treechildren-selectedFocusImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.375));
-        --treechildren-selectedFocusBackground: transparent;
-        --treechildren-selectedFocusCurrentBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
-        --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
-        --treechildren-selectedFocusCurrentImage: linear-gradient(rgba(131,183,249,.28), rgba(131,183,249,.5));
-        --treechildren-hoverBorder: rgb(184,214,251) var(--treechildren-2ndBorderColor);
-        --treechildren-hoverBottomBorder: rgb(184,214,251) var(--treechildren-2ndBottomBorderColor);
-        --treechildren-hoverImage: linear-gradient(rgba(131,183,249,.05), rgba(131,183,249,.16));
-        --treechildren-hoverCurrentBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
-        --treechildren-hoverCurrentBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
-        --treechildren-hoverCurrentImage: linear-gradient(rgba(131,183,249,.05), rgba(131,183,249,.16));
-        --treechildren-hoverSelectedBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
-        --treechildren-hoverSelectedBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
-        --treechildren-hoverSelectedImage: linear-gradient(rgba(131,183,249,.28), rgba(131,183,249,.5));
-      }
-
-      treechildren:not(.autocomplete-treebody)::-moz-tree-row {
-        border-width: 2px;
-        border-radius: 3px;
-        -moz-outline-radius: 3px;
-      }
-    }
-
-    @media (-moz-os-version: windows-win8) {
-      treechildren {
-        --treechildren-outline: 1px solid var(--treechildren-2ndBorderColor);
-        --treechildren-selectedBorder: var(--treechildren-selectedColor);
-        --treechildren-selectedBottomBorder: var(--treechildren-selectedColor);
-        --treechildren-selectedImage: linear-gradient(rgba(190,190,190,.4), rgba(190,190,190,.4));
-        --treechildren-currentFocusBorder: var(--treechildren-currentColor);
-        --treechildren-currentFocusBottomBorder: var(--treechildren-currentColor);
-        --treechildren-selectedFocusBorder: rgb(132,172,221) var(--treechildren-2ndBorderColor);
-        --treechildren-selectedFocusBottomBorder: var(--treechildren-currentColor);
-        --treechildren-selectedFocusImage: linear-gradient(rgba(131,183,249,.375), rgba(131,183,249,.375));
-        --treechildren-selectedFocusBackground: transparent;
-        --treechildren-selectedFocusCurrentBorder: var(--treechildren-currentColor);
-        --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-currentColor);
-        --treechildren-selectedFocusCurrentImage: linear-gradient(rgba(131,183,249,.5), rgba(131,183,249,.5));
-        --treechildren-hoverBorder: rgb(184,214,251);
-        --treechildren-hoverBottomBorder: rgb(184,214,251);
-        --treechildren-hoverImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.16));
-        --treechildren-hoverSelectedBorder: var(--treechildren-currentColor);
-        --treechildren-hoverSelectedBottomBorder: var(--treechildren-currentColor);
-        --treechildren-hoverSelectedImage: linear-gradient(rgba(131,183,249,.5), rgba(131,183,249,.5));
-      }
+  @media (-moz-os-version: windows-win8) {
+    treechildren {
+      --treechildren-outline: 1px solid var(--treechildren-2ndBorderColor);
+      --treechildren-selectedBorder: var(--treechildren-selectedColor);
+      --treechildren-selectedBottomBorder: var(--treechildren-selectedColor);
+      --treechildren-selectedImage: linear-gradient(rgba(190,190,190,.4), rgba(190,190,190,.4));
+      --treechildren-currentFocusBorder: var(--treechildren-currentColor);
+      --treechildren-currentFocusBottomBorder: var(--treechildren-currentColor);
+      --treechildren-selectedFocusBorder: rgb(132,172,221) var(--treechildren-2ndBorderColor);
+      --treechildren-selectedFocusBottomBorder: var(--treechildren-currentColor);
+      --treechildren-selectedFocusImage: linear-gradient(rgba(131,183,249,.375), rgba(131,183,249,.375));
+      --treechildren-selectedFocusBackground: transparent;
+      --treechildren-selectedFocusCurrentBorder: var(--treechildren-currentColor);
+      --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-currentColor);
+      --treechildren-selectedFocusCurrentImage: linear-gradient(rgba(131,183,249,.5), rgba(131,183,249,.5));
+      --treechildren-hoverBorder: rgb(184,214,251);
+      --treechildren-hoverBottomBorder: rgb(184,214,251);
+      --treechildren-hoverImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.16));
+      --treechildren-hoverSelectedBorder: var(--treechildren-currentColor);
+      --treechildren-hoverSelectedBottomBorder: var(--treechildren-currentColor);
+      --treechildren-hoverSelectedImage: linear-gradient(rgba(131,183,249,.5), rgba(131,183,249,.5));
     }
   }
 }
