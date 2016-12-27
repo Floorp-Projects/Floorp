@@ -43,7 +43,7 @@ public:
   // The cache holds only weak pointers - no references
   SpdyPushCache();
   virtual ~SpdyPushCache();
-  bool               RegisterPushedStreamHttp2(const nsCString& key,
+  MOZ_MUST_USE bool  RegisterPushedStreamHttp2(const nsCString& key,
                                                Http2PushedStream *stream);
   Http2PushedStream *RemovePushedStreamHttp2(const nsCString& key);
 private:

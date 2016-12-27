@@ -14,15 +14,16 @@ interface nsIURI;
 [uuid(d02b96ed-2789-4f42-a25c-7abe63de7c18)]
 interface nsIHttpChannelChild : nsISupports
 {
-  void addCookiesToRequest();
+  [must_use] void addCookiesToRequest();
 
   // Mark this channel as requiring an interception; this will propagate
   // to the corresponding parent channel when a redirect occurs.
+  [must_use]
   void forceIntercepted(in boolean postRedirectChannelShouldIntercept,
                         in boolean postRedirectChannelShouldUpgrade);
 
   // Headers that the channel client has set via SetRequestHeader.
-  readonly attribute RequestHeaderTuples clientSetRequestHeaders;
+  [must_use] readonly attribute RequestHeaderTuples clientSetRequestHeaders;
 
   // Headers that the channel client has set via SetRequestHeader.
   [notxpcom, nostdcall]
@@ -30,5 +31,6 @@ interface nsIHttpChannelChild : nsISupports
 
   // This method is called by nsCORSListenerProxy if we need to remove
   // an entry from the CORS preflight cache in the parent process.
+  [must_use]
   void removeCorsPreflightCacheEntry(in nsIURI aURI, in nsIPrincipal aRequestingPrincipal);
 };
