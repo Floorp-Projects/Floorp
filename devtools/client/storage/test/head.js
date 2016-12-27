@@ -15,6 +15,7 @@ Services.scriptloader.loadSubScript(
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
+const DOM_CACHE = "dom.caches.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
 const DEBUGGERLOG_PREF = "devtools.debugger.log";
 // Allows Cache API to be working on usage `http` test page
@@ -38,11 +39,12 @@ Services.prefs.setBoolPref(STORAGE_PREF, true);
 Services.prefs.setBoolPref(CACHES_ON_HTTP_PREF, true);
 registerCleanupFunction(() => {
   gToolbox = gPanelWindow = gWindow = gUI = null;
-  Services.prefs.clearUserPref(STORAGE_PREF);
-  Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
-  Services.prefs.clearUserPref(DUMPEMIT_PREF);
-  Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
   Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
+  Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
+  Services.prefs.clearUserPref(DOM_CACHE);
+  Services.prefs.clearUserPref(DUMPEMIT_PREF);
+  Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
+  Services.prefs.clearUserPref(STORAGE_PREF);
 });
 
 /**

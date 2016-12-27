@@ -129,8 +129,7 @@ toolbar:-moz-lwtheme {
 }
 
 @media (-moz-windows-default-theme) {
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7) {
+  @media (-moz-os-version: windows-win7) {
     #navigator-toolbox::after {
       border-bottom-color: #aabccf;
     }
@@ -158,9 +157,7 @@ toolbar:-moz-lwtheme {
   background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7) {
   #nav-bar {
     background-image: linear-gradient(@toolbarHighlight@, transparent) !important;
   }
@@ -313,64 +310,6 @@ toolbar:-moz-lwtheme {
   }
 }
 
-/* Render a window top border for lwthemes on WinXP modern themes: */
-@media (-moz-windows-theme: luna-blue) {
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
-    background-image: linear-gradient(to bottom,
-        rgb(8, 49, 216) 0, rgb(8, 49, 216) 1px,
-        rgb(15, 77, 227) 1px, rgb(15, 77, 227) 2px,
-        rgb(22, 106, 238) 2px, rgb(22, 106, 238) 3px,
-        rgb(8, 85, 221) 3px, rgb(8, 85, 221) 4px,
-        transparent 4px);
-  }
-
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
-    background-image: linear-gradient(to bottom,
-        rgb(91, 104, 205) 0, rgb(91, 104, 205) 1px,
-        rgb(116, 128, 220) 1px, rgb(116, 128, 220) 2px,
-        rgb(117, 140, 221) 2px, rgb(117, 140, 221) 4px,
-        transparent 4px);
-  }
-}
-
-@media (-moz-windows-theme: luna-silver) {
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
-    background-image: linear-gradient(to bottom,
-        rgb(102,102,126) 0, rgb(102,102,126) 1px,
-        rgb(168,167,191) 1px, rgb(168,167,191) 2px,
-        white 2px, white 3px,
-        rgb(188,188,207) 3px, rgb(188,188,207) 4px,
-        transparent 4px);
-  }
-
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
-    background-image: linear-gradient(to bottom,
-        rgb(186,186,197) 0, rgb(186,186,197) 1px,
-        rgb(236,238,245) 1px, rgb(236,238,245) 2px,
-        white 2px, white 3px,
-        rgb(215,215,227) 3px, rgb(215,215,227) 4px,
-        transparent 4px);
-  }
-}
-
-@media (-moz-windows-theme: luna-olive) {
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
-    background-image: linear-gradient(to bottom,
-        rgb(139,161,105) 0, rgb(139,161,105) 1px,
-        rgb(171, 189, 133) 1px, rgb(171, 189, 133) 2px,
-        rgb(164,178,127) 2px, rgb(164,178,127) 3px,
-        transparent 3px);
-  }
-
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
-    background-image: linear-gradient(to bottom,
-        rgb(207, 214, 188) 0, rgb(207, 214, 188) 1px,
-        rgb(224, 226, 200) 1px, rgb(224, 226, 200) 2px,
-        rgb(214, 216, 190) 2px, rgb(214, 216, 190) 3px,
-        transparent 3px);
-  }
-}
-
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
   /* Move up into the TabsToolbar for the inner highlight at the top of the nav-bar */
   margin-top: calc(-1 * var(--navbar-tab-toolbar-highlight-overlap));
@@ -401,12 +340,6 @@ toolbar:-moz-lwtheme {
   background-color: -moz-dialog;
 }
 
-@media (-moz-os-version: windows-xp) and (-moz-windows-default-theme) {
-  #main-window[tabsintitlebar][sizemode="normal"] #toolbar-menubar {
-    margin-top: 4px;
-  }
-}
-
 /* ::::: titlebar ::::: */
 
 #main-window[sizemode="normal"] > #titlebar {
@@ -427,7 +360,7 @@ toolbar:-moz-lwtheme {
  * click and hover mouse events to work properly for the button in the restored
  * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
  * can swallow those events. It will also place the buttons above the fog on
- * themes with Aero Glass.
+ * Windows 7 with Aero Glass.
  */
 #titlebar-buttonbox {
   z-index: 1;
@@ -435,12 +368,6 @@ toolbar:-moz-lwtheme {
 
 .titlebar-placeholder[type="caption-buttons"] {
   margin-left: 22px; /* space needed for Aero Snap */
-}
-
-@media (-moz-os-version: windows-xp) {
-  .titlebar-placeholder[type="caption-buttons"] {
-    margin-left: 10px; /* less space needed on XP because there's no Aero Snap */
-  }
 }
 
 /* titlebar command buttons */
@@ -665,13 +592,6 @@ menuitem.bookmark-item {
 
 %include ../shared/toolbarbuttons.inc.css
 
-@media (-moz-windows-theme: luna-silver) and (max-resolution: 1dppx) {
-  :-moz-any(@primaryToolbarButtons@),
-  #bookmarks-menu-button.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-    list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
-  }
-}
-
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
@@ -775,10 +695,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   max-width: 32px;
 }
 
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-  /* < Win8 */
+@media (-moz-os-version: windows-win7) {
   :root {
     --toolbarbutton-hover-background: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
     --toolbarbutton-hover-bordercolor: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
@@ -1096,9 +1013,7 @@ toolbar[brighttext] #close-button {
   list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
 }
 
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7) {
   #window-controls {
     margin-inline-start: 4px;
   }
@@ -1154,8 +1069,7 @@ toolbar[brighttext] #close-button {
   }
 }
 
-@media (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7) {
   #window-controls {
     -moz-box-align: start;
   }
@@ -1199,8 +1113,7 @@ toolbar[brighttext] #close-button {
 }
 
 @media (-moz-windows-default-theme) {
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7),
+  @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
     #main-window:not(:-moz-lwtheme) {
       --urlbar-border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
@@ -1237,8 +1150,7 @@ toolbar[brighttext] #close-button {
     border-radius: 1px;
   }
 
-  @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7),
+  @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
     #urlbar:not(:-moz-lwtheme),
     .searchbar-textbox:not(:-moz-lwtheme) {
@@ -1261,11 +1173,9 @@ toolbar[brighttext] #close-button {
     }
   }
 
-  @media not all and (-moz-os-version: windows-xp) {
-    #urlbar:not(:-moz-lwtheme)[focused],
-    .searchbar-textbox:not(:-moz-lwtheme)[focused] {
-      border-color: Highlight;
-    }
+  #urlbar:not(:-moz-lwtheme)[focused],
+  .searchbar-textbox:not(:-moz-lwtheme)[focused] {
+    border-color: Highlight;
   }
 }
 
@@ -1977,9 +1887,7 @@ html|span.ac-emphasize-text-url {
   }
 }
 
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7) {
   #sidebar-header > .close-icon {
     padding-top: 4px;
     padding-bottom: 4px;
@@ -2000,39 +1908,28 @@ html|span.ac-emphasize-text-url {
   margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap)); /* overlap the nav-bar's top border */
 }
 
-@media (-moz-os-version: windows-xp) and (-moz-windows-default-theme) {
-  #main-window[sizemode=normal] #TabsToolbar {
-    padding-left: 2px;
-    padding-right: 2px;
-  }
-}
-
 %include ../shared/tabs.inc.css
 
 /* Remove border between tab strip and navigation toolbar on Windows 10+ */
-@media not all and (-moz-os-version: windows-xp) {
-  @media not all and (-moz-os-version: windows-vista) {
-    @media not all and (-moz-os-version: windows-win7) {
-      @media not all and (-moz-os-version: windows-win8) {
-        @media (-moz-windows-default-theme) {
-          .tab-background-end[selected=true]::after,
-          .tab-background-start[selected=true]::after {
-            content: none;
-          }
+@media not all and (-moz-os-version: windows-win7) {
+  @media not all and (-moz-os-version: windows-win8) {
+    @media (-moz-windows-default-theme) {
+      .tab-background-end[selected=true]::after,
+      .tab-background-start[selected=true]::after {
+        content: none;
+      }
 
-          #TabsToolbar {
-            --tab-stroke-background-size: 0 0;
-          }
+      #TabsToolbar {
+        --tab-stroke-background-size: 0 0;
+      }
 
-          :root {
-            --tab-toolbar-navbar-overlap: 0px;
-          }
+      :root {
+        --tab-toolbar-navbar-overlap: 0px;
+      }
 
-          #nav-bar {
-            border-top-style: none !important;
-            box-shadow: none;
-          }
-        }
+      #nav-bar {
+        border-top-style: none !important;
+        box-shadow: none;
       }
     }
   }
@@ -2517,22 +2414,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   position: relative;
 }
 
-@media (-moz-os-version: windows-xp) {
-  @media not all and (-moz-windows-classic) {
-    #private-browsing-indicator-titlebar > .private-browsing-indicator {
-      background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7-tall.png");
-      height: 28px;
-    }
-
-    #main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
-      top: -5px;
-    }
-    #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
-      top: -1px;
-    }
-  }
-}
-
 @media (-moz-windows-classic) {
   /**
    * We have to use top instead of background-position in this case, otherwise
@@ -2544,8 +2425,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   }
 }
 
-@media (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7) {
   @media (-moz-windows-glass) {
     #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
       top: 1px;
@@ -2562,7 +2442,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   @media (-moz-windows-default-theme) {
     @media (-moz-windows-compositor: 0) {
       #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
-        background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7-tall.png");
+        background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-win7-tall.png");
         height: 28px;
       }
     }
@@ -2595,19 +2475,14 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   margin-top: -4px;
 }
 
-
-@media not all and (-moz-os-version: windows-xp) {
 %include browser-aero.css
-}
 
 .browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
   overflow: hidden;
 }
 
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7) {
   .cui-widget-panelview[id^=PanelUI-webext-] {
     border-radius: 4px;
   }

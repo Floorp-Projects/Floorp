@@ -99,7 +99,7 @@ protected:
   MediaDataDecoderCallback* mDecoderCallback;
 };
 
-class RemoteVideoDecoder final : public RemoteDataDecoder
+class RemoteVideoDecoder : public RemoteDataDecoder
 {
 public:
   // Hold an output buffer and render it to the surface when the frame is sent to compositor, or
@@ -208,10 +208,10 @@ public:
   };
 
   RemoteVideoDecoder(const VideoInfo& aConfig,
-                   MediaFormat::Param aFormat,
-                   MediaDataDecoderCallback* aCallback,
-                   layers::ImageContainer* aImageContainer,
-                   const nsString& aDrmStubId)
+                     MediaFormat::Param aFormat,
+                     MediaDataDecoderCallback* aCallback,
+                     layers::ImageContainer* aImageContainer,
+                     const nsString& aDrmStubId)
     : RemoteDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
                         aFormat, aCallback, aDrmStubId)
     , mImageContainer(aImageContainer)
@@ -315,7 +315,47 @@ private:
   bool mIsCodecSupportAdaptivePlayback = false;
 };
 
-class RemoteAudioDecoder final : public RemoteDataDecoder
+class RemoteEMEVideoDecoder : public RemoteVideoDecoder {
+public:
+  RemoteEMEVideoDecoder(const VideoInfo& aConfig,
+                        MediaFormat::Param aFormat,
+                        MediaDataDecoderCallback* aCallback,
+                        layers::ImageContainer* aImageContainer,
+                        const nsString& aDrmStubId,
+                        CDMProxy* aProxy,
+                        TaskQueue* aTaskQueue)
+    : RemoteVideoDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId)
+    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
+                                                     aTaskQueue, aProxy))
+  {
+  }
+
+  void Input(MediaRawData* aSample) override;
+  void Shutdown() override;
+
+private:
+  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+};
+
+void
+RemoteEMEVideoDecoder::Input(MediaRawData* aSample)
+{
+  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
+    return;
+  }
+  RemoteVideoDecoder::Input(aSample);
+}
+
+void
+RemoteEMEVideoDecoder::Shutdown()
+{
+  RemoteVideoDecoder::Shutdown();
+
+  mSamplesWaitingForKey->BreakCycles();
+  mSamplesWaitingForKey = nullptr;
+}
+
+class RemoteAudioDecoder : public RemoteDataDecoder
 {
 public:
   RemoteAudioDecoder(const AudioInfo& aConfig,
@@ -446,23 +486,82 @@ private:
   const AudioInfo& mConfig;
 };
 
+class RemoteEMEAudioDecoder : public RemoteAudioDecoder {
+public:
+  RemoteEMEAudioDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat,
+                        MediaDataDecoderCallback* aCallback, const nsString& aDrmStubId,
+                        CDMProxy* aProxy, TaskQueue* aTaskQueue)
+    : RemoteAudioDecoder(aConfig, aFormat, aCallback, aDrmStubId)
+    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
+                                                     aTaskQueue, aProxy))
+  {
+  }
+
+  void Input(MediaRawData* aSample) override;
+  void Shutdown() override;
+
+private:
+  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+};
+
+void
+RemoteEMEAudioDecoder::Input(MediaRawData* aSample)
+{
+  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
+    return;
+  }
+  RemoteAudioDecoder::Input(aSample);
+}
+
+void
+RemoteEMEAudioDecoder::Shutdown()
+{
+  RemoteAudioDecoder::Shutdown();
+
+  mSamplesWaitingForKey->BreakCycles();
+  mSamplesWaitingForKey = nullptr;
+}
+
 MediaDataDecoder*
 RemoteDataDecoder::CreateAudioDecoder(const AudioInfo& aConfig,
-                                          MediaFormat::Param aFormat,
-                                          MediaDataDecoderCallback* aCallback,
-                                          const nsString& aDrmStubId)
+                                      MediaFormat::Param aFormat,
+                                      MediaDataDecoderCallback* aCallback,
+                                      const nsString& aDrmStubId,
+                                      CDMProxy* aProxy,
+                                      TaskQueue* aTaskQueue)
 {
-  return new RemoteAudioDecoder(aConfig, aFormat, aCallback, aDrmStubId);
+  if (!aProxy) {
+    return new RemoteAudioDecoder(aConfig, aFormat, aCallback, aDrmStubId);
+  } else {
+    return new RemoteEMEAudioDecoder(aConfig,
+                                     aFormat,
+                                     aCallback,
+                                     aDrmStubId,
+                                     aProxy,
+                                     aTaskQueue);
+  }
 }
 
 MediaDataDecoder*
 RemoteDataDecoder::CreateVideoDecoder(const VideoInfo& aConfig,
-                                          MediaFormat::Param aFormat,
-                                          MediaDataDecoderCallback* aCallback,
-                                          layers::ImageContainer* aImageContainer,
-                                          const nsString& aDrmStubId)
+                                      MediaFormat::Param aFormat,
+                                      MediaDataDecoderCallback* aCallback,
+                                      layers::ImageContainer* aImageContainer,
+                                      const nsString& aDrmStubId,
+                                      CDMProxy* aProxy,
+                                      TaskQueue* aTaskQueue)
 {
-  return new RemoteVideoDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId);
+  if (!aProxy) {
+    return new RemoteVideoDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId);
+  } else {
+    return new RemoteEMEVideoDecoder(aConfig,
+                                     aFormat,
+                                     aCallback,
+                                     aImageContainer,
+                                     aDrmStubId,
+                                     aProxy,
+                                     aTaskQueue);
+  }
 }
 
 RemoteDataDecoder::RemoteDataDecoder(MediaData::Type aType,

@@ -34,6 +34,7 @@ enum {
 class nsIWidget;
 
 namespace mozilla {
+class TimeStamp;
 namespace gfx {
 class SourceSurface;
 } // namespace gfx
@@ -377,6 +378,12 @@ public:
            const nsTArray<mozilla::FontRange>& aFontRanges,
            const bool aIsVertical,
            const CGFloat aBackingScaleFactor);
+
+  /**
+   * Compute TimeStamp from an event's timestamp.
+   * If aEventTime is 0, this returns current timestamp.
+   */
+  static mozilla::TimeStamp GetEventTimeStamp(NSTimeInterval aEventTime);
 };
 
 #endif // nsCocoaUtils_h_
