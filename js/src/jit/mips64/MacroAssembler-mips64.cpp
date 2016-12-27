@@ -1894,7 +1894,7 @@ MacroAssemblerMIPS64Compat::storeValue(JSValueType type, Register reg, Address d
 void
 MacroAssemblerMIPS64Compat::storeValue(const Value& val, Address dest)
 {
-    if (val.isMarkable()) {
+    if (val.isGCThing()) {
         writeDataRelocation(val);
         movWithPatch(ImmWord(val.asRawBits()), SecondScratchReg);
     } else {

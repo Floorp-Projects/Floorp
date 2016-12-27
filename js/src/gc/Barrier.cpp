@@ -60,7 +60,7 @@ HeapSlot::assertPreconditionForWriteBarrierPost(NativeObject* obj, Kind kind, ui
     else
         MOZ_ASSERT(static_cast<HeapSlot*>(obj->getDenseElements() + slot)->get() == target);
 
-    MOZ_ASSERT_IF(target.isMarkable() && IsMarkedBlack(obj),
+    MOZ_ASSERT_IF(target.isGCThing() && IsMarkedBlack(obj),
                   !JS::GCThingIsMarkedGray(JS::GCCellPtr(target)));
 }
 

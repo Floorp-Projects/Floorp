@@ -10,6 +10,7 @@
 #include "nscore.h"
 #include "WinPointerEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/WindowsVersion.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

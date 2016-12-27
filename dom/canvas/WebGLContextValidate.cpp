@@ -362,6 +362,16 @@ WebGLContext::ValidateAttribPointer(bool integerMode, GLuint index, GLint size, 
         return false;
     }
 
+    switch (type) {
+    case LOCAL_GL_INT_2_10_10_10_REV:
+    case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
+        if (size != 4) {
+            ErrorInvalidOperation("%s: size must be 4 for this type.", info);
+            return false;
+        }
+        break;
+    }
+
     // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
     if (stride < 0 || stride > 255) {
         ErrorInvalidValue("%s: negative or too large stride", info);

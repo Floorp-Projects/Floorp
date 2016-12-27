@@ -525,8 +525,8 @@ MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
                                 const Value& rhs, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    if (rhs.isMarkable())
-        cmpPtr(lhs.payloadReg(), ImmGCPtr(rhs.toMarkablePointer()));
+    if (rhs.isGCThing())
+        cmpPtr(lhs.payloadReg(), ImmGCPtr(rhs.toGCThing()));
     else
         cmpPtr(lhs.payloadReg(), ImmWord(rhs.toNunboxPayload()));
 
