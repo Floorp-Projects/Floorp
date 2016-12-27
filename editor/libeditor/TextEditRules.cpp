@@ -443,8 +443,8 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
   int32_t selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   nsresult rv =
-    mTextEditor->GetStartNodeAndOffset(aSelection,
-                                       getter_AddRefs(selNode), &selOffset);
+    EditorBase::GetStartNodeAndOffset(aSelection,
+                                      getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(selNode);
@@ -712,7 +712,7 @@ TextEditRules::WillInsertText(EditAction aAction,
 
   // don't put text in places that can't have it
   NS_ENSURE_STATE(mTextEditor);
-  if (!mTextEditor->IsTextNode(selNode) &&
+  if (!EditorBase::IsTextNode(selNode) &&
       !mTextEditor->CanContainTag(*selNode, *nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
@@ -887,10 +887,9 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
   } else {
     nsCOMPtr<nsIDOMNode> startNode;
     int32_t startOffset;
-    NS_ENSURE_STATE(mTextEditor);
     nsresult rv =
-      mTextEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),
-                                         &startOffset);
+      EditorBase::GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),
+                                        &startOffset);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
@@ -932,15 +931,14 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
 {
   nsCOMPtr<nsIDOMNode> startNode;
   int32_t startOffset;
-  NS_ENSURE_STATE(mTextEditor);
   nsresult rv =
-    mTextEditor->GetStartNodeAndOffset(aSelection,
-                                       getter_AddRefs(startNode), &startOffset);
+    EditorBase::GetStartNodeAndOffset(aSelection,
+                                      getter_AddRefs(startNode), &startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
   // delete empty text nodes at selection
-  if (mTextEditor->IsTextNode(startNode)) {
+  if (EditorBase::IsTextNode(startNode)) {
     nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(startNode);
     uint32_t strLength;
     rv = textNode->GetLength(&strLength);
@@ -948,6 +946,7 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
 
     // are we in an empty text node?
     if (!strLength) {
+      NS_ENSURE_STATE(mTextEditor);
       rv = mTextEditor->DeleteNode(startNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }

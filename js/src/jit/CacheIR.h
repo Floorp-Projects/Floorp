@@ -780,7 +780,8 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
     HandleObject env_;
     HandlePropertyName name_;
 
-    bool tryAttachEnvironmentName(ObjOperandId objId);
+    bool tryAttachGlobalNameValue(ObjOperandId objId, HandleId id);
+    bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   public:
     GetNameIRGenerator(JSContext* cx, jsbytecode* pc, HandleScript script,
