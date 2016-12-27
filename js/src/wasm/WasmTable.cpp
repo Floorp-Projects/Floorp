@@ -150,7 +150,7 @@ Table::grow(uint32_t delta, JSContext* cx)
 
     CheckedInt<uint32_t> newLength = oldLength;
     newLength += delta;
-    if (!newLength.isValid())
+    if (!newLength.isValid() || newLength.value() > MaxTableLength)
         return -1;
 
     if (maximum_ && newLength.value() > maximum_.value())

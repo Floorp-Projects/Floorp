@@ -89,6 +89,10 @@ interface nsIDragSession : nsISupports
   // drag-and-drop based on the data got from the child process in response to
   // NS_DRAGDROP_OVER sent from parent process to child process.
   void updateDragEffect();
+
+  // Change the drag image, using similar arguments as
+  // nsIDragService::InvokeDragSessionWithImage.
+  void updateDragImage(in nsIDOMNode aImage, in long aImageX, in long aImageY);
 };
 
 

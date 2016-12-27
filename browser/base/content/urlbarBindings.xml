@@ -1459,7 +1459,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </getter>
       </property>
 
-      <property name="maxResults" readonly="true">
+      <property name="maxResults">
         <getter>
           <![CDATA[
             if (!this._maxResults) {
@@ -1471,6 +1471,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return this._maxResults;
           ]]>
         </getter>
+        <setter>
+          <![CDATA[
+            return this._maxResults = parseInt(val);
+          ]]>
+        </setter>
       </property>
 
       <method name="openAutocompletePopup">
@@ -1814,6 +1819,99 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           //    delay the action, cause a result wont't ever arrive.
           this.input.controller.setInitiallySelectedIndex(0);
           this.overrideValue = null;
+        ]]></body>
+      </method>
+
+      <field name="_addonIframe">null</field>
+      <field name="_addonIframeOwner">null</field>
+      <field name="_addonIframeOverriddenFunctionsByName">{}</field>
+
+      <!-- These methods must be overridden and properly handled by the API
+           runtime so that it doesn't break the popup.  If any of these methods
+           is not overridden, then initAddonIframe should throw. -->
+      <field name="_addonIframeOverrideFunctionNames">[
+        "_invalidate",
+      ]</field>
+
+      <field name="_addonIframeHiddenAnonids">[
+        "search-suggestions-notification",
+        "richlistbox",
+        "one-off-search-buttons",
+      ]</field>
+      <field name="_addonIframeHiddenDisplaysByAnonid">{}</field>
+
+      <method name="initAddonIframe">
+        <parameter name="owner"/>
+        <parameter name="overrides"/>
+        <body><![CDATA[
+          if (this._addonIframeOwner) {
+            // Another add-on has already requested the iframe.  Return null to
+            // signal to the calling add-on that it should not take over the
+            // popup.  First add-on wins for now.
+            return null;
+          }
+          // Make sure all overrides are provided before doing anything.
+          for (let name of this._addonIframeOverrideFunctionNames) {
+            if (typeof(overrides[name]) != "function") {
+              throw new Error(
+                "Override for method '" + name + "' must be given"
+              );
+            }
+          }
+          // OK, insert the iframe.
+          this._addonIframeOwner = owner;
+          this._addonIframe = this._makeAddonIframe();
+          this._addonIframeOverriddenFunctionsByName = {};
+          for (let name of this._addonIframeOverrideFunctionNames) {
+            this._addonIframeOverriddenFunctionsByName[name] = this[name];
+            this[name] = overrides[name];
+          }
+          return this._addonIframe;
+        ]]></body>
+      </method>
+
+      <method name="destroyAddonIframe">
+        <parameter name="owner"/>
+        <body><![CDATA[
+          if (this._addonIframeOwner != owner) {
+            throw new Error("You're not the iframe owner");
+          }
+          this._addonIframeOwner = null;
+          this._addonIframe.remove();
+          this._addonIframe = null;
+          for (let anonid of this._addonIframeHiddenAnonids) {
+            let child = document.getAnonymousElementByAttribute(
+              this, "anonid", anonid
+            );
+            child.style.display =
+              this._addonIframeHiddenDisplaysByAnonid[anonid];
+          }
+          for (let name in this._addonIframeOverriddenFunctionsByName) {
+            this[name] = this._addonIframeOverriddenFunctionsByName[name];
+          }
+          this._addonIframeOverriddenFunctionsByName = {};
+        ]]></body>
+      </method>
+
+      <method name="_makeAddonIframe">
+        <body><![CDATA[
+          this._addonIframeHiddenDisplaysByAnonid = {};
+          for (let anonid of this._addonIframeHiddenAnonids) {
+            let child = document.getAnonymousElementByAttribute(
+              this, "anonid", anonid
+            );
+            this._addonIframeHiddenDisplaysByAnonid[anonid] =
+              child.style.display;
+            child.style.display = "none";
+          }
+          let XUL_NS =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          let iframe = document.createElementNS(XUL_NS, "iframe");
+          iframe.setAttribute("type", "content");
+          iframe.setAttribute("flex", "1");
+          iframe.style.transition = "height 100ms";
+          this.appendChild(iframe);
+          return iframe;
         ]]></body>
       </method>
 

@@ -1184,8 +1184,6 @@ public:
                       nsPIDOMWindowOuter** _retval) override;
   nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
 
-  mozilla::ThrottledEventQueue* GetThrottledEventQueue() override;
-
   already_AddRefed<nsPIDOMWindowOuter>
   GetContentInternal(mozilla::ErrorResult& aError,
                      mozilla::dom::CallerType aCallerType);
@@ -1770,7 +1768,7 @@ public:
                             mozilla::dom::TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
-  virtual already_AddRefed<nsIEventTarget>
+  virtual nsIEventTarget*
   EventTargetFor(mozilla::dom::TaskCategory aCategory) const override;
 
 protected:

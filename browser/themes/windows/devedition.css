@@ -16,7 +16,7 @@
 
 /* The window background is white due to no accentcolor in the lightweight
    theme. It can't be changed to transparent when there is no compositor
-   (Win XP or 7 in classic / basic theme), or else dragging and focus become
+   (Win 7 in classic / basic theme), or else dragging and focus become
    broken. So instead just show the normal titlebar in that case, and override
    the window color as transparent when the compositor is available. */
 @media (-moz-windows-compositor: 0) {
@@ -116,9 +116,7 @@
   }
 }
 
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7),
+@media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
   :root {
     --space-above-tabbar: 15px;
@@ -263,8 +261,7 @@
   color: var(--chrome-color);
 }
 
-@media (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7),
+@media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
   /* And then we add them back on toolbars so that they don't look borderless: */
   #main-window:not([customizing])[sizemode=normal] #navigator-toolbox::after,

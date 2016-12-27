@@ -457,27 +457,6 @@ nsBrowserElement::RemoveNextPaintListener(BrowserElementNextPaintEventCallback& 
   }
 }
 
-already_AddRefed<DOMRequest>
-nsBrowserElement::SetInputMethodActive(bool aIsActive,
-                                       ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  nsCOMPtr<nsIDOMDOMRequest> req;
-  nsresult rv = mBrowserElementAPI->SetInputMethodActive(aIsActive,
-                                                         getter_AddRefs(req));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (rv == NS_ERROR_INVALID_ARG) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    } else {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-    return nullptr;
-  }
-
-  return req.forget().downcast<DOMRequest>();
-}
-
 void
 nsBrowserElement::GetAllowedAudioChannels(
                  nsTArray<RefPtr<BrowserElementAudioChannel>>& aAudioChannels,

@@ -298,6 +298,12 @@ typedef struct SSLPreliminaryChannelInfoStr {
     /* Cipher suite: test (valuesSet & ssl_preinfo_cipher_suite) */
     PRUint16 cipherSuite;
 
+    /* The following fields were added in NSS 3.29. */
+    /* |canSendEarlyData| is true when a 0-RTT is enabled. This can only be
+     * true after sending the ClientHello and before the handshake completes.
+     */
+    PRBool canSendEarlyData;
+
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */
 } SSLPreliminaryChannelInfo;
@@ -388,7 +394,8 @@ typedef enum {
     ssl_tls13_psk_key_exchange_modes_xtn = 45,
     ssl_tls13_ticket_early_data_info_xtn = 46,
     ssl_next_proto_nego_xtn = 13172,
-    ssl_renegotiation_info_xtn = 0xff01
+    ssl_renegotiation_info_xtn = 0xff01,
+    ssl_tls13_short_header_xtn = 0xff03
 } SSLExtensionType;
 
 /* This is the old name for the supported_groups extensions. */
@@ -398,7 +405,7 @@ typedef enum {
  * number of extensions that are supported for any single message type.  That
  * is, a ClientHello; ServerHello and TLS 1.3 NewSessionTicket and
  * HelloRetryRequest extensions are smaller. */
-#define SSL_MAX_EXTENSIONS 18
+#define SSL_MAX_EXTENSIONS 19
 
 /* Deprecated */
 typedef enum {

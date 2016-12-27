@@ -55,8 +55,6 @@ def docker_worker_toolchain(config, job, taskdesc):
         'mount-point': '/home/worker/tooltool-cache',
     })
     env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
-    env['TOOLTOOL_REPO'] = 'https://github.com/mozilla/build-tooltool'
-    env['TOOLTOOL_REV'] = 'master'
 
     command = ' && '.join([
         "cd /home/worker/",
@@ -93,8 +91,6 @@ def windows_toolchain(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'TOOLTOOL_REPO': 'https://github.com/mozilla/build-tooltool',
-        'TOOLTOOL_REV': 'master',
     })
 
     hg = r'c:\Program Files\Mercurial\hg.exe'

@@ -155,6 +155,27 @@ KeyframeEffect::SetIterationComposite(
 }
 
 void
+KeyframeEffect::SetComposite(const CompositeOperation& aComposite)
+{
+  if (mEffectOptions.mComposite == aComposite) {
+    return;
+  }
+
+  mEffectOptions.mComposite = aComposite;
+
+  if (mAnimation && mAnimation->IsRelevant()) {
+    nsNodeUtils::AnimationChanged(mAnimation);
+  }
+
+  if (mTarget) {
+    RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
+    if (styleContext) {
+      UpdateProperties(styleContext);
+    }
+  }
+}
+
+void
 KeyframeEffect::SetSpacing(JSContext* aCx,
                            const nsAString& aSpacing,
                            CallerType aCallerType,

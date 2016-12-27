@@ -66,7 +66,6 @@ function BrowserElementParent() {
   this._domRequestReady = false;
   this._pendingAPICalls = [];
   this._pendingDOMRequests = {};
-  this._pendingSetInputMethodActive = [];
   this._nextPaintListeners = [];
   this._pendingDOMFullscreen = false;
 
@@ -895,21 +894,6 @@ BrowserElementParent.prototype = {
     } else {
       run();
     }
-  },
-
-  setInputMethodActive: function(isActive) {
-    if (!this._isAlive()) {
-      throw Components.Exception("Dead content process",
-                                 Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-    }
-
-    if (typeof isActive !== 'boolean') {
-      throw Components.Exception("Invalid argument",
-                                 Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    return this._sendDOMRequest('set-input-method-active',
-                                {isActive: isActive});
   },
 
   getAudioChannelVolume: function(aAudioChannel) {

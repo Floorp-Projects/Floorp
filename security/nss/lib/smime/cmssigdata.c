@@ -706,6 +706,7 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
     int i;
     int count;
     PRTime now;
+    void *pwarg = NULL;
 
     if (!sigd || !certdb || !sigd->rawCerts) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -724,8 +725,11 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
                 break;
             }
         }
+        if (sigd->cmsg) {
+            pwarg = sigd->cmsg->pwfn_arg;
+        }
         rv |= CERT_VerifyCert(certdb, cert, PR_TRUE, usage, now,
-                              NULL, NULL);
+                              pwarg, NULL);
         CERT_DestroyCertificate(cert);
     }
 

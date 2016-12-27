@@ -4,10 +4,9 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
+const { utils: Cu, interfaces: Ci } = Components;
 
+/* exported init */
 this.EXPORTED_SYMBOLS = ["init"];
 
 let gLoader;

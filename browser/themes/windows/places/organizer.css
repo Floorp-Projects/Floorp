@@ -20,13 +20,6 @@
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-@media (-moz-windows-theme: luna-silver) {
-  #back-button,
-  #forward-button {
-    list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
-  }
-}
-
 #back-button {
   -moz-image-region: rect(0, 54px, 18px, 36px);
 }
@@ -119,11 +112,6 @@
   -moz-image-region: rect(16px, 48px, 32px, 32px);
 }
 
-/* Root View */
-#placesView {
-  border-top: 1px solid ThreeDDarkShadow;
-}
-
 /* Info box */
 #detailsDeck {
   border-top: 1px solid ThreeDShadow;
@@ -151,35 +139,28 @@
   padding-inline-end: 9px;
 }
 
-
-@media not all and (-moz-os-version: windows-xp) {
-  #placesView {
-    border-top: none;
+@media not all and (-moz-windows-classic) {
+  #placesToolbox {
+    -moz-appearance: none;
+    background-color: transparent;
   }
 
-  @media not all and (-moz-windows-classic) {
-    #placesToolbox {
-      -moz-appearance: none;
-      background-color: transparent;
-    }
-
-    #placesToolbar {
-      -moz-appearance: none;
-      background-color: -moz-Dialog;
-      color: -moz-dialogText;
-    }
+  #placesToolbar {
+    -moz-appearance: none;
+    background-color: -moz-Dialog;
+    color: -moz-dialogText;
   }
+}
 
-  @media (-moz-windows-default-theme) {
-    #placesView > splitter {
-      border: 0;
-      border-inline-end: 1px solid #A9B7C9;
-      min-width: 0;
-      width: 3px;
-      background-color: transparent;
-      margin-inline-start: -3px;
-      position: relative;
-    }
+@media (-moz-windows-default-theme) {
+  #placesView > splitter {
+    border: 0;
+    border-inline-end: 1px solid #A9B7C9;
+    min-width: 0;
+    width: 3px;
+    background-color: transparent;
+    margin-inline-start: -3px;
+    position: relative;
   }
 }
 
@@ -193,8 +174,7 @@
   }
 }
 
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
-       (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
   #placesView,
   #infoPane,
   #placesList,

@@ -9,9 +9,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "colorUtils", () => {
-  return require("devtools/shared/css/color").colorUtils;
-});
+XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
+                                   "@mozilla.org/inspector/dom-utils;1",
+                                   "inIDOMUtils");
 
 Cu.import("resource://devtools/shared/event-emitter.js");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -528,7 +528,7 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
         let color = details.color;
         if (!Array.isArray(color)) {
-          let col = colorUtils.colorToRGBA(color);
+          let col = DOMUtils.colorToRGBA(color);
           color = col && [col.r, col.g, col.b, Math.round(col.a * 255)];
         }
         BrowserAction.for(extension).setProperty(tab, "badgeBackgroundColor", color);

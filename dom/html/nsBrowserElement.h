@@ -105,9 +105,6 @@ public:
   void RemoveNextPaintListener(dom::BrowserElementNextPaintEventCallback& listener,
                                ErrorResult& aRv);
 
-  already_AddRefed<dom::DOMRequest> SetInputMethodActive(bool isActive,
-                                                         ErrorResult& aRv);
-
   already_AddRefed<dom::DOMRequest> ExecuteScript(const nsAString& aScript,
                                                   const dom::BrowserElementExecuteScriptOptions& aOptions,
                                                   ErrorResult& aRv);

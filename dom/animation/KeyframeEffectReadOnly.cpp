@@ -316,13 +316,17 @@ KeyframeEffectReadOnly::CompositeValue(
   switch (aCompositeOperation) {
     case dom::CompositeOperation::Replace:
       return aValueToComposite;
-    case dom::CompositeOperation::Add:
-      // So far nothing to do since we come to here only in case of missing
-      // keyframe, that means we have only to use the base value or the
-      // underlying value as the composited value.
-      // FIXME: Bug 1311620: Once we implement additive operation, we need to
-      // calculate it here.
-      return aUnderlyingValue;
+    case dom::CompositeOperation::Add: {
+      // Just return the underlying value if |aValueToComposite| is null (i.e.
+      // missing keyframe).
+      if (aValueToComposite.IsNull()) {
+        return aUnderlyingValue;
+      }
+      StyleAnimationValue result(aValueToComposite);
+      return StyleAnimationValue::Add(aProperty,
+                                      aUnderlyingValue,
+                                      Move(result));
+    }
     case dom::CompositeOperation::Accumulate: {
       StyleAnimationValue result(aValueToComposite);
       return StyleAnimationValue::Accumulate(aProperty,
@@ -649,10 +653,7 @@ KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
     // then the default value 'Replace' will be used.
     if (AnimationUtils::IsCoreAPIEnabledForCaller(aCallerType)) {
       result.mIterationComposite = options.mIterationComposite;
-      // FIXME: Bug 1311620: We don't support additive animation yet.
-      if (options.mComposite != dom::CompositeOperation::Add) {
-        result.mComposite = options.mComposite;
-      }
+      result.mComposite = options.mComposite;
     }
   }
   return result;

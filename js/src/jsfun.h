@@ -818,7 +818,7 @@ inline void
 JSFunction::setExtendedSlot(size_t which, const js::Value& val)
 {
     MOZ_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
-    MOZ_ASSERT_IF(js::IsMarkedBlack(this) && val.isMarkable(),
+    MOZ_ASSERT_IF(js::IsMarkedBlack(this) && val.isGCThing(),
                   !JS::GCThingIsMarkedGray(JS::GCCellPtr(val)));
     toExtended()->extendedSlots[which] = val;
 }

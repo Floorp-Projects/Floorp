@@ -12,8 +12,6 @@
  * matched.
  */
 
-const {Ci, Cu} = require("chrome");
-
 /**
  * The WalkerIndex class indexes the document (and all subdocs) from
  * a given walker.

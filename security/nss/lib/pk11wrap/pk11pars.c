@@ -1014,6 +1014,10 @@ secmod_getConfigDir(const char *spec, char **certPrefix, char **keyPrefix,
     *certPrefix = NULL;
     *keyPrefix = NULL;
     *readOnly = NSSUTIL_ArgHasFlag("flags", "readOnly", spec);
+    if (NSSUTIL_ArgHasFlag("flags", "nocertdb", spec) ||
+        NSSUTIL_ArgHasFlag("flags", "nokeydb", spec)) {
+        return NULL;
+    }
 
     spec = NSSUTIL_ArgStrip(spec);
     while (*spec) {
@@ -1133,6 +1137,13 @@ secmod_matchConfig(char *configDir1, char *configDir2,
                    char *keyPrefix1, char *keyPrefix2,
                    PRBool isReadOnly1, PRBool isReadOnly2)
 {
+    /* TODO: Document the answer to the question:
+     *       "Why not allow them to match if they are both NULL?"
+     * See: https://bugzilla.mozilla.org/show_bug.cgi?id=1318633#c1
+     */
+    if ((configDir1 == NULL) || (configDir2 == NULL)) {
+        return PR_FALSE;
+    }
     if (strcmp(configDir1, configDir2) != 0) {
         return PR_FALSE;
     }
@@ -1169,7 +1180,6 @@ secmod_MatchConfigList(const char *spec, SECMODConfigList *conflist, int count)
 
     config = secmod_getConfigDir(spec, &certPrefix, &keyPrefix, &isReadOnly);
     if (!config) {
-        ret = PR_TRUE;
         goto done;
     }
 

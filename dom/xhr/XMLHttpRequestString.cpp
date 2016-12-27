@@ -65,7 +65,7 @@ public:
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(aLength <= mData.Length());
-    return aString.Assign(mData.BeginReading(), aLength, mozilla::fallible);
+    return aString.Assign(mData, aLength, mozilla::fallible);
   }
 
   void

@@ -22,7 +22,6 @@ pref("dom.w3c_touch_events.enabled", 0);
 pref("font.size.inflation.minTwips", 0);
 pref("browser.enable_click_image_resizing", true);
 pref("layout.css.scroll-snap.enabled", true);
-pref("dom.mozInputMethod.enabled", false);
 pref("browser.autofocus", true);
 pref("layers.async-pan-zoom.enabled", false);
 pref("network.predictor.enabled", true);
