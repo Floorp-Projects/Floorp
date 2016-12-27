@@ -38,6 +38,8 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
     processString = "%s process:" % processType
     crashedOnPurpose = False
     totalBytesLeaked = None
+    logAsWarning = False
+    leakAnalysis = []
     leakedObjectAnalysis = []
     leakedObjectNames = []
     recordLeakedObjects = False
@@ -66,9 +68,9 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                 # log, particularly on B2G. Eventually, these should be split into multiple
                 # logs (bug 1068869), but for now, we report the largest leak.
                 if totalBytesLeaked is not None:
-                    log.warning("leakcheck | %s "
-                                "multiple BloatView byte totals found"
-                                % processString)
+                    leakAnalysis.append("WARNING | leakcheck | %s "
+                                        "multiple BloatView byte totals found"
+                                        % processString)
                 else:
                     totalBytesLeaked = 0
                 if bytesLeaked > totalBytesLeaked:
@@ -81,15 +83,22 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                 else:
                     recordLeakedObjects = False
             if size < 0 or bytesLeaked < 0 or numLeaked < 0:
-                log.error("TEST-UNEXPECTED-FAIL | leakcheck | %s negative leaks caught!"
-                          % processString)
+                leakAnalysis.append("TEST-UNEXPECTED-FAIL | leakcheck | %s negative leaks caught!"
+                                    % processString)
+                logAsWarning = True
                 continue
             if name != "TOTAL" and numLeaked != 0 and recordLeakedObjects:
                 leakedObjectNames.append(name)
                 leakedObjectAnalysis.append("TEST-INFO | leakcheck | %s leaked %d %s"
                                             % (processString, numLeaked, name))
 
-    log.info('\n'.join(leakedObjectAnalysis))
+    leakAnalysis.extend(leakedObjectAnalysis)
+    if logAsWarning:
+        log.warning('\n'.join(leakAnalysis))
+    else:
+        log.info('\n'.join(leakAnalysis))
+
+    logAsWarning = False
 
     if totalBytesLeaked is None:
         # We didn't see a line with name 'TOTAL'
@@ -100,8 +109,8 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
             log.info("TEST-INFO | leakcheck | %s ignoring missing output line for total leaks"
                      % processString)
         else:
-            log.error("TEST-UNEXPECTED-FAIL | leakcheck | %s missing output line for total leaks!"
-                      % processString)
+            log.info("TEST-UNEXPECTED-FAIL | leakcheck | %s missing output line for total leaks!"
+                     % processString)
             log.info("TEST-INFO | leakcheck | missing output line from log file %s"
                      % leakLogFileName)
         return
@@ -111,6 +120,12 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                  processString)
         return
 
+    if totalBytesLeaked > leakThreshold:
+        logAsWarning = True
+        # Fail the run if we're over the threshold (which defaults to 0)
+        prefix = "TEST-UNEXPECTED-FAIL"
+    else:
+        prefix = "WARNING"
     # Create a comma delimited string of the first N leaked objects found,
     # to aid with bug summary matching in TBPL. Note: The order of the objects
     # had no significance (they're sorted alphabetically).
@@ -119,15 +134,14 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
     if len(leakedObjectNames) > maxSummaryObjects:
         leakedObjectSummary += ', ...'
 
-    message = "leakcheck | %s %d bytes leaked (%s)" % (
-            processString, totalBytesLeaked, leakedObjectSummary)
-
     # totalBytesLeaked will include any expected leaks, so it can be off
     # by a few thousand bytes.
-    if totalBytesLeaked > leakThreshold:
-        log.error("TEST-UNEXPECTED-FAIL | %s" % message)
+    if logAsWarning:
+        log.warning("%s | leakcheck | %s %d bytes leaked (%s)"
+                    % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
     else:
-        log.warning(message)
+        log.info("%s | leakcheck | %s %d bytes leaked (%s)"
+                 % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
 
 
 def process_leak_log(leak_log_file, leak_thresholds=None,
@@ -161,8 +175,8 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
 
     leakLogFile = leak_log_file
     if not os.path.exists(leakLogFile):
-        log.warning(
-            "leakcheck | refcount logging is off, so leaks can't be detected!")
+        log.info(
+            "WARNING | leakcheck | refcount logging is off, so leaks can't be detected!")
         return
 
     leakThresholds = leak_thresholds or {}
@@ -178,8 +192,8 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
 
     for processType in leakThresholds:
         if processType not in knownProcessTypes:
-            log.error("TEST-UNEXPECTED-FAIL | leakcheck | "
-                      "Unknown process type %s in leakThresholds" % processType)
+            log.info("TEST-UNEXPECTED-FAIL | leakcheck | Unknown process type %s in leakThresholds"
+                     % processType)
 
     (leakLogFileDir, leakFileBase) = os.path.split(leakLogFile)
     if leakFileBase[-4:] == ".log":
@@ -197,8 +211,8 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
             else:
                 processType = "default"
             if processType not in knownProcessTypes:
-                log.error("TEST-UNEXPECTED-FAIL | leakcheck | "
-                          "Leak log with unknown process type %s" % processType)
+                log.info("TEST-UNEXPECTED-FAIL | leakcheck | Leak log with unknown process type %s"
+                         % processType)
             leakThreshold = leakThresholds.get(processType, 0)
             process_single_leak_file(thisFile, processType, leakThreshold,
                                      processType in ignoreMissingLeaks,
