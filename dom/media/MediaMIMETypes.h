@@ -9,6 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "nsString.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -99,6 +100,47 @@ Maybe<MediaMIMEType> MakeMediaMIMEType(const nsACString& aType);
 Maybe<MediaMIMEType> MakeMediaMIMEType(const char* aType);
 
 
+// A list of codecs attached to a MediaExtendedMIMEType.
+class MediaCodecs
+{
+public:
+  MediaCodecs() {}
+  // Construction from a comma-separated list of codecs. Unchecked.
+  explicit MediaCodecs(const nsAString& aCodecs)
+    : mCodecs(aCodecs)
+  {}
+  // Construction from a literal comma-separated list of codecs. Unchecked.
+  template <size_t N>
+  explicit MediaCodecs(const char (&aCodecs)[N])
+    : mCodecs(NS_ConvertUTF8toUTF16(aCodecs, N - 1))
+  {}
+
+  bool IsEmpty() const { return mCodecs.IsEmpty(); }
+  const nsAString& AsString() const { return mCodecs; }
+
+  using RangeType =
+    const StringListRange<nsString, StringListRangeEmptyItems::ProcessEmptyItems>;
+
+  // Produces a range object with begin()&end(), can be used in range-for loops.
+  // This will iterate through all codecs, even empty ones (except if the
+  // original list was an empty string). Iterators dereference to
+  // 'const nsDependentString', valid for as long as this MediaCodecs object.
+  RangeType Range() const
+  {
+    return RangeType(mCodecs);
+  };
+
+  bool Contains(const nsAString& aCodec) const;
+  bool ContainsAll(const MediaCodecs& aCodecs) const;
+
+private:
+  // UTF16 comma-separated list of codecs.
+  // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
+  // of the 'codecs' parameter.
+  nsString mCodecs;
+};
+
+
 // Class containing pre-parsed media MIME type parameters, e.g.:
 // MIME type/subtype, optional codecs, etc.
 class MediaExtendedMIMEType
@@ -113,7 +155,7 @@ public:
   // Was there an explicit 'codecs' parameter provided?
   bool HaveCodecs() const { return mHaveCodecs; }
   // Codecs. May be empty if not provided or explicitly provided as empty.
-  const nsAString& GetCodecs() const { return mCodecs; }
+  const MediaCodecs& Codecs() const { return mCodecs; }
 
   // Sizes and rates.
   Maybe<int32_t> GetWidth() const { return GetMaybeNumber(mWidth); }
@@ -135,7 +177,7 @@ private:
 
   MediaMIMEType mMIMEType; // MIME type/subtype.
   bool mHaveCodecs = false; // If false, mCodecs must be empty.
-  nsString mCodecs;
+  MediaCodecs mCodecs;
   int32_t mWidth = -1; // -1 if not provided.
   int32_t mHeight = -1; // -1 if not provided.
   int32_t mFramerate = -1; // -1 if not provided.
