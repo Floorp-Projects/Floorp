@@ -181,7 +181,8 @@ BaselineCacheIRCompiler::compile()
 
     // Done emitting the main IC code. Now emit the failure paths.
     for (size_t i = 0; i < failurePaths.length(); i++) {
-        emitFailurePath(i);
+        if (!emitFailurePath(i))
+            return nullptr;
         EmitStubGuardFailure(masm);
     }
 
@@ -575,39 +576,8 @@ BaselineCacheIRCompiler::emitLoadTypedObjectResult()
     masm.load32(fieldOffset, scratch2);
     masm.addPtr(scratch2, scratch1);
 
-    if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
-        Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
-        masm.loadFromTypedArray(type, Address(scratch1, 0), output.valueReg(),
-                                /* allowDouble = */ true, scratch2, nullptr);
-    } else {
-        ReferenceTypeDescr::Type type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
-        switch (type) {
-          case ReferenceTypeDescr::TYPE_ANY:
-            masm.loadValue(Address(scratch1, 0), output.valueReg());
-            break;
-
-          case ReferenceTypeDescr::TYPE_OBJECT: {
-            Label notNull, done;
-            masm.loadPtr(Address(scratch1, 0), scratch1);
-            masm.branchTestPtr(Assembler::NonZero, scratch1, scratch1, &notNull);
-            masm.moveValue(NullValue(), output.valueReg());
-            masm.jump(&done);
-            masm.bind(&notNull);
-            masm.tagValue(JSVAL_TYPE_OBJECT, scratch1, output.valueReg());
-            masm.bind(&done);
-            break;
-          }
-
-          case ReferenceTypeDescr::TYPE_STRING:
-            masm.loadPtr(Address(scratch1, 0), scratch1);
-            masm.tagValue(JSVAL_TYPE_STRING, scratch1, output.valueReg());
-            break;
-
-          default:
-            MOZ_CRASH("Invalid ReferenceTypeDescr");
-        }
-    }
-
+    Address fieldAddr(scratch1, 0);
+    emitLoadTypedObjectResultShared(fieldAddr, scratch2, layout, typeDescr, output);
     return true;
 }
 
@@ -631,6 +601,53 @@ BaselineCacheIRCompiler::emitLoadFrameArgumentResult()
                    output.valueReg());
     return true;
 }
+
+bool
+BaselineCacheIRCompiler::emitLoadEnvironmentFixedSlotResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.load32(stubAddress(reader.stubOffset()), scratch);
+    BaseIndex slot(obj, scratch, TimesOne);
+
+    // Check for uninitialized lexicals.
+    masm.branchTestMagic(Assembler::Equal, slot, failure->label());
+
+    // Load the value.
+    masm.loadValue(slot, output.valueReg());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+    AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.load32(stubAddress(reader.stubOffset()), scratch);
+    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2);
+
+    // Check for uninitialized lexicals.
+    BaseIndex slot(scratch2, scratch, TimesOne);
+    masm.branchTestMagic(Assembler::Equal, slot, failure->label());
+
+    // Load the value.
+    masm.loadValue(slot, output.valueReg());
+    return true;
+}
+
 bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
@@ -714,16 +731,37 @@ BaselineCacheIRCompiler::emitGuardDOMExpandoGeneration()
 bool
 BaselineCacheIRCompiler::init(CacheKind kind)
 {
-    size_t numInputs = writer_.numInputOperands();
-    if (!allocator.init(ICStubCompiler::availableGeneralRegs(numInputs)))
+    if (!allocator.init())
         return false;
 
-    if (numInputs >= 1) {
+    // Baseline ICs monitor values when needed, so returning doubles is fine.
+    allowDoubleResult_.emplace(true);
+
+    size_t numInputs = writer_.numInputOperands();
+    AllocatableGeneralRegisterSet available(ICStubCompiler::availableGeneralRegs(numInputs));
+
+    switch (kind) {
+      case CacheKind::GetProp:
+        MOZ_ASSERT(numInputs == 1);
         allocator.initInputLocation(0, R0);
-        if (numInputs >= 2)
-            allocator.initInputLocation(1, R1);
+        break;
+      case CacheKind::GetElem:
+        MOZ_ASSERT(numInputs == 2);
+        allocator.initInputLocation(0, R0);
+        allocator.initInputLocation(1, R1);
+        break;
+      case CacheKind::GetName:
+        MOZ_ASSERT(numInputs == 1);
+        allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_OBJECT);
+#if defined(JS_NUNBOX32)
+        // availableGeneralRegs can't know that GetName is only using
+        // the payloadReg and not typeReg on x86.
+        available.add(R0.typeReg());
+#endif
+        break;
     }
 
+    allocator.initAvailableRegs(available);
     outputUnchecked_.emplace(R0);
     return true;
 }
@@ -746,7 +784,8 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     // unlimited number of stubs.
     MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
 
-    MOZ_ASSERT(kind == CacheKind::GetProp || kind == CacheKind::GetElem);
+    MOZ_ASSERT(kind == CacheKind::GetProp || kind == CacheKind::GetElem ||
+               kind == CacheKind::GetName, "sizeof needs to change for SetProp!");
     uint32_t stubDataOffset = sizeof(ICCacheIR_Monitored);
 
     JitCompartment* jitCompartment = cx->compartment()->jitCompartment();
@@ -819,52 +858,6 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     writer.copyStubData(newStub->stubDataStart());
     stub->addNewStub(newStub);
     return newStub;
-}
-
-void
-jit::TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo* stubInfo)
-{
-    uint32_t field = 0;
-    size_t offset = 0;
-    while (true) {
-        StubField::Type fieldType = stubInfo->fieldType(field);
-        switch (fieldType) {
-          case StubField::Type::RawWord:
-          case StubField::Type::RawInt64:
-            break;
-          case StubField::Type::Shape:
-            TraceNullableEdge(trc, &stubInfo->getStubField<Shape*>(stub, offset),
-                              "baseline-cacheir-shape");
-            break;
-          case StubField::Type::ObjectGroup:
-            TraceNullableEdge(trc, &stubInfo->getStubField<ObjectGroup*>(stub, offset),
-                              "baseline-cacheir-group");
-            break;
-          case StubField::Type::JSObject:
-            TraceNullableEdge(trc, &stubInfo->getStubField<JSObject*>(stub, offset),
-                              "baseline-cacheir-object");
-            break;
-          case StubField::Type::Symbol:
-            TraceNullableEdge(trc, &stubInfo->getStubField<JS::Symbol*>(stub, offset),
-                              "baseline-cacheir-symbol");
-            break;
-          case StubField::Type::String:
-            TraceNullableEdge(trc, &stubInfo->getStubField<JSString*>(stub, offset),
-                              "baseline-cacheir-string");
-            break;
-          case StubField::Type::Id:
-            TraceEdge(trc, &stubInfo->getStubField<jsid>(stub, offset), "baseline-cacheir-id");
-            break;
-          case StubField::Type::Value:
-            TraceEdge(trc, &stubInfo->getStubField<JS::Value>(stub, offset),
-                      "baseline-cacheir-value");
-            break;
-          case StubField::Type::Limit:
-            return; // Done.
-        }
-        field++;
-        offset += StubField::sizeInBytes(fieldType);
-    }
 }
 
 uint8_t*

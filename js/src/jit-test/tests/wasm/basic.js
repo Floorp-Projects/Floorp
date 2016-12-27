@@ -15,7 +15,7 @@ assertEq(names.length, 1);
 assertEq(names[0], 'a');
 var desc = Object.getOwnPropertyDescriptor(o, 'a');
 assertEq(typeof desc.value, "function");
-assertEq(desc.value.name, "wasm-function[0]");
+assertEq(desc.value.name, "0");
 assertEq(desc.value.length, 0);
 assertEq(desc.value(), undefined);
 assertEq(desc.writable, false);
@@ -33,14 +33,14 @@ wasmFailValidateText('(module (func) (func) (export "a" 2))', /exported function
 
 var o = wasmEvalText('(module (func) (export "a" 0) (export "b" 0))').exports;
 assertEq(Object.getOwnPropertyNames(o).sort().toString(), "a,b");
-assertEq(o.a.name, "wasm-function[0]");
-assertEq(o.b.name, "wasm-function[0]");
+assertEq(o.a.name, "0");
+assertEq(o.b.name, "0");
 assertEq(o.a === o.b, true);
 
 var o = wasmEvalText('(module (func) (func) (export "a" 0) (export "b" 1))').exports;
 assertEq(Object.getOwnPropertyNames(o).sort().toString(), "a,b");
-assertEq(o.a.name, "wasm-function[0]");
-assertEq(o.b.name, "wasm-function[1]");
+assertEq(o.a.name, "0");
+assertEq(o.b.name, "1");
 assertEq(o.a === o.b, false);
 
 var o = wasmEvalText('(module (func (result i32) (i32.const 1)) (func (result i32) (i32.const 2)) (export "a" 0) (export "b" 1))').exports;

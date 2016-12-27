@@ -23,13 +23,17 @@ public:
   static MediaDataDecoder* CreateAudioDecoder(const AudioInfo& aConfig,
                                               java::sdk::MediaFormat::Param aFormat,
                                               MediaDataDecoderCallback* aCallback,
-                                              const nsString& aDrmStubId);
+                                              const nsString& aDrmStubId,
+                                              CDMProxy* aProxy,
+                                              TaskQueue* aTaskQueue);
 
   static MediaDataDecoder* CreateVideoDecoder(const VideoInfo& aConfig,
                                               java::sdk::MediaFormat::Param aFormat,
                                               MediaDataDecoderCallback* aCallback,
                                               layers::ImageContainer* aImageContainer,
-                                              const nsString& aDrmStubId);
+                                              const nsString& aDrmStubId,
+                                              CDMProxy* aProxy,
+                                              TaskQueue* aTaskQueue);
 
   virtual ~RemoteDataDecoder() {}
 

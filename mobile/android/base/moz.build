@@ -335,6 +335,8 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'ActionModeCompatView.java',
     'ActivityHandlerHelper.java',
     'activitystream/ActivityStream.java',
+    'activitystream/ActivityStreamTelemetry.java',
+    'activitystream/Utils.java',
     'adjust/AdjustBrowserAppDelegate.java',
     'animation/AnimationUtils.java',
     'animation/HeightChangeAnimation.java',

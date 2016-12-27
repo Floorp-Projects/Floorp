@@ -602,34 +602,20 @@ this.Utils = {
    * Is there a master password configured, regardless of current lock state?
    */
   mpEnabled: function mpEnabled() {
-    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                    .getService(Ci.nsIPKCS11ModuleDB);
-    let sdrSlot = modules.findSlotByName("");
-    let status  = sdrSlot.status;
-    let slots = Ci.nsIPKCS11Slot;
-
-    return status != slots.SLOT_UNINITIALIZED && status != slots.SLOT_READY;
+    let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                    .getService(Ci.nsIPK11TokenDB);
+    let token = tokenDB.getInternalKeyToken();
+    return token.hasPassword;
   },
 
   /**
    * Is there a master password configured and currently locked?
    */
   mpLocked: function mpLocked() {
-    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                    .getService(Ci.nsIPKCS11ModuleDB);
-    let sdrSlot = modules.findSlotByName("");
-    let status  = sdrSlot.status;
-    let slots = Ci.nsIPKCS11Slot;
-
-    if (status == slots.SLOT_READY || status == slots.SLOT_LOGGED_IN
-                                   || status == slots.SLOT_UNINITIALIZED)
-      return false;
-
-    if (status == slots.SLOT_NOT_LOGGED_IN)
-      return true;
-
-    // something wacky happened, pretend MP is locked
-    return true;
+    let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                    .getService(Ci.nsIPK11TokenDB);
+    let token = tokenDB.getInternalKeyToken();
+    return token.hasPassword && !token.isLoggedIn();
   },
 
   // If Master Password is enabled and locked, present a dialog to unlock it.

@@ -25,10 +25,8 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     optimizationInfo_(optimizationInfo),
     alloc_(alloc),
     graph_(graph),
-    abortReason_(AbortReason_NoAbort),
-    shouldForceAbort_(false),
+    offThreadStatus_(Ok()),
     abortedPreliminaryGroups_(*alloc_),
-    error_(false),
     pauseBuild_(nullptr),
     cancelBuild_(false),
     wasmMaxStackArgBytes_(0),
@@ -75,22 +73,49 @@ MIRGenerator::usesSimd()
     return false;
 }
 
-bool
-MIRGenerator::abortFmt(const char* message, va_list ap)
+mozilla::GenericErrorResult<AbortReason>
+MIRGenerator::abort(AbortReason r)
 {
-    JitSpewVA(JitSpew_IonAbort, message, ap);
-    error_ = true;
-    return false;
+    if (JitSpewEnabled(JitSpew_IonAbort)) {
+        switch (r) {
+          case AbortReason::Alloc:
+            JitSpew(JitSpew_IonAbort, "AbortReason::Alloc");
+            break;
+          case AbortReason::Inlining:
+            JitSpew(JitSpew_IonAbort, "AbortReason::Inlining");
+            break;
+          case AbortReason::PreliminaryObjects:
+            JitSpew(JitSpew_IonAbort, "AbortReason::PreliminaryObjects");
+            break;
+          case AbortReason::Disable:
+            JitSpew(JitSpew_IonAbort, "AbortReason::Disable");
+            break;
+          case AbortReason::Error:
+            JitSpew(JitSpew_IonAbort, "AbortReason::Error");
+            break;
+          case AbortReason::NoAbort:
+            MOZ_CRASH("Abort with AbortReason::NoAbort");
+            break;
+        }
+    }
+    return Err(mozilla::Move(r));
 }
 
-bool
-MIRGenerator::abort(const char* message, ...)
+mozilla::GenericErrorResult<AbortReason>
+MIRGenerator::abortFmt(AbortReason r, const char* message, va_list ap)
+{
+    JitSpewVA(JitSpew_IonAbort, message, ap);
+    return Err(mozilla::Move(r));
+}
+
+mozilla::GenericErrorResult<AbortReason>
+MIRGenerator::abort(AbortReason r, const char* message, ...)
 {
     va_list ap;
     va_start(ap, message);
-    abortFmt(message, ap);
+    auto forward = abortFmt(r, message, ap);
     va_end(ap);
-    return false;
+    return forward;
 }
 
 void
@@ -1325,21 +1350,21 @@ MBasicBlock::setBackedge(TempAllocator& alloc, MBasicBlock* pred)
 
     // Add exit definitions to each corresponding phi at the entry.
     if (!inheritPhisFromBackedge(alloc, pred, &hadTypeChange))
-        return AbortReason_Alloc;
+        return AbortReason::Alloc;
 
     if (hadTypeChange) {
         for (MPhiIterator phi = phisBegin(); phi != phisEnd(); phi++)
             phi->removeOperand(phi->numOperands() - 1);
-        return AbortReason_Disable;
+        return AbortReason::Disable;
     }
 
     // We are now a loop header proper
     kind_ = LOOP_HEADER;
 
     if (!predecessors_.append(pred))
-        return AbortReason_Alloc;
+        return AbortReason::Alloc;
 
-    return AbortReason_NoAbort;
+    return AbortReason::NoAbort;
 }
 
 bool

@@ -140,6 +140,9 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
     inf.valuesSet = ss->ssl3.hs.preliminaryInfo;
     inf.protocolVersion = ss->version;
     inf.cipherSuite = ss->ssl3.hs.cipher_suite;
+    inf.canSendEarlyData = !ss->sec.isServer &&
+                           (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent) &&
+                           !ss->firstHsDone;
 
     memcpy(info, &inf, inf.length);
     return SECSuccess;

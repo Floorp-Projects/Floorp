@@ -493,23 +493,27 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *           }
    */
   processHandlerForEvent: function (node, listenerArray, dbg, listener) {
-    let { capturing, handler, normalizeListener } = listener;
-    let dom0 = false;
-    let functionSource = handler.toString();
+    let { handler } = listener;
     let global = Cu.getGlobalForObject(handler);
     let globalDO = dbg.addDebuggee(global);
+    let listenerDO = globalDO.makeDebuggeeValue(handler);
+
+    let { normalizeListener } = listener;
+
+    if (normalizeListener) {
+      listenerDO = normalizeListener(listenerDO, listener);
+    }
+
+    let { capturing } = listener;
+    let dom0 = false;
+    let functionSource = handler.toString();
     let hide = listener.hide || {};
     let line = 0;
-    let listenerDO = globalDO.makeDebuggeeValue(handler);
     let native = false;
     let override = listener.override || {};
     let tags = listener.tags || "";
     let type = listener.type || "";
     let url = "";
-
-    if (normalizeListener) {
-      listenerDO = normalizeListener(listenerDO);
-    }
 
     // If the listener is an object with a 'handleEvent' method, use that.
     if (listenerDO.class === "Object" || listenerDO.class === "XULElement") {

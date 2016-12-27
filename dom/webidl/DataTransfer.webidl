@@ -14,7 +14,6 @@ interface DataTransfer {
 
   readonly attribute DataTransferItemList items;
 
-  [Throws]
   void setDragImage(Element image, long x, long y);
 
   // ReturnValueNeedsContainsHack on .types because lots of extension
@@ -131,6 +130,13 @@ partial interface DataTransfer {
    */
   [Throws, NeedsSubjectPrincipal]
   any mozGetDataAt(DOMString format, unsigned long index);
+
+  /**
+   * Update the drag image. Arguments are the same as setDragImage. This is only
+   * valid within the parent chrome process.
+   */
+  [ChromeOnly]
+  void updateDragImage(Element image, long x, long y);
 
   /**
    * Will be true when the user has cancelled the drag (typically by pressing

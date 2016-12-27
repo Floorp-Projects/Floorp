@@ -1,4 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
+
+/* eslint-env worker */
+/* global worker, loadSubScript, global */
 
 // This function is used to do remote procedure calls from the worker to the
 // main thread. It is exposed as a built-in global to every module by the
@@ -42,14 +49,14 @@ this.addEventListener("message", function (event) {
   let packet = JSON.parse(event.data);
   switch (packet.type) {
     case "connect":
-    // Step 3: Create a connection to the parent.
+      // Step 3: Create a connection to the parent.
       let connection = DebuggerServer.connectToParent(packet.id, this);
       connections[packet.id] = {
-        connection : connection,
+        connection,
         rpcs: []
       };
 
-    // Step 4: Create a thread actor for the connection to the parent.
+      // Step 4: Create a thread actor for the connection to the parent.
       let pool = new ActorPool(connection);
       connection.addActorPool(pool);
 
@@ -87,8 +94,8 @@ this.addEventListener("message", function (event) {
       let consoleActor = new WebConsoleActor(connection, parent);
       pool.addActor(consoleActor);
 
-    // Step 5: Send a response packet to the parent to notify
-    // it that a connection has been established.
+      // Step 5: Send a response packet to the parent to notify
+      // it that a connection has been established.
       postMessage(JSON.stringify({
         type: "connected",
         id: packet.id,

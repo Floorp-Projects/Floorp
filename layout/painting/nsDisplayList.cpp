@@ -394,27 +394,27 @@ SetAnimatable(nsCSSPropertyID aProperty,
 {
   MOZ_ASSERT(aFrame);
 
+  if (aAnimationValue.IsNull()) {
+    aAnimatable = null_t();
+    return;
+  }
+
   switch (aProperty) {
     case eCSSProperty_opacity:
-      if (!aAnimationValue.IsNull()) {
-        aAnimatable = aAnimationValue.GetFloatValue();
-      } else {
-        aAnimatable = 0.0;
-      }
+      aAnimatable = aAnimationValue.GetFloatValue();
       break;
-    case eCSSProperty_transform:
+    case eCSSProperty_transform: {
       aAnimatable = InfallibleTArray<TransformFunction>();
-      if (!aAnimationValue.IsNull()) {
-        nsCSSValueSharedList* list =
-          aAnimationValue.GetCSSValueSharedListValue();
-        TransformReferenceBox refBox(aFrame);
-        AddTransformFunctions(list->mHead,
-                              aFrame->StyleContext(),
-                              aFrame->PresContext(),
-                              refBox,
-                              aAnimatable.get_ArrayOfTransformFunction());
-      }
+      nsCSSValueSharedList* list =
+        aAnimationValue.GetCSSValueSharedListValue();
+      TransformReferenceBox refBox(aFrame);
+      AddTransformFunctions(list->mHead,
+                            aFrame->StyleContext(),
+                            aFrame->PresContext(),
+                            refBox,
+                            aAnimatable.get_ArrayOfTransformFunction());
       break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported property");
   }
@@ -424,7 +424,7 @@ static void
 SetBaseAnimationStyle(nsCSSPropertyID aProperty,
                       nsIFrame* aFrame,
                       const TransformReferenceBox& aRefBox,
-                      layers::BaseAnimationStyle& aBaseStyle)
+                      layers::Animatable& aBaseStyle)
 {
   MOZ_ASSERT(aFrame);
 
@@ -433,9 +433,7 @@ SetBaseAnimationStyle(nsCSSPropertyID aProperty,
   MOZ_ASSERT(!baseValue.IsNull(),
              "The base value should be already there");
 
-  layers::Animatable animatable;
-  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, animatable);
-  aBaseStyle = animatable;
+  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, aBaseStyle);
 }
 
 static void
@@ -3107,7 +3105,7 @@ nsDisplayBackgroundImage::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 /* static */ nsRegion
 nsDisplayBackgroundImage::GetInsideClipRegion(nsDisplayItem* aItem,
-                                              uint8_t aClip,
+                                              StyleGeometryBox aClip,
                                               const nsRect& aRect,
                                               const nsRect& aBackgroundRect)
 {
@@ -3121,10 +3119,10 @@ nsDisplayBackgroundImage::GetInsideClipRegion(nsDisplayItem* aItem,
   if (frame->GetType() == nsGkAtoms::canvasFrame) {
     nsCanvasFrame* canvasFrame = static_cast<nsCanvasFrame*>(frame);
     clipRect = canvasFrame->CanvasArea() + aItem->ToReferenceFrame();
-  } else if (aClip == NS_STYLE_IMAGELAYER_CLIP_PADDING ||
-             aClip == NS_STYLE_IMAGELAYER_CLIP_CONTENT) {
+  } else if (aClip == StyleGeometryBox::Padding ||
+             aClip == StyleGeometryBox::Content) {
     nsMargin border = frame->GetUsedBorder();
-    if (aClip == NS_STYLE_IMAGELAYER_CLIP_CONTENT) {
+    if (aClip == StyleGeometryBox::Content) {
       border += frame->GetUsedPadding();
     }
     border.ApplySkipSides(frame->GetSkipSides());
@@ -3157,7 +3155,7 @@ nsDisplayBackgroundImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
     if (layer.mImage.IsOpaque() && layer.mBlendMode == NS_STYLE_BLEND_NORMAL &&
         layer.mRepeat.mXRepeat != NS_STYLE_IMAGELAYER_REPEAT_SPACE &&
         layer.mRepeat.mYRepeat != NS_STYLE_IMAGELAYER_REPEAT_SPACE &&
-        layer.mClip != NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+        layer.mClip != StyleGeometryBox::Text) {
       result = GetInsideClipRegion(this, layer.mClip, mBounds, mBackgroundRect);
     }
   }
@@ -3236,9 +3234,9 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   CheckForBorderItem(this, flags);
 
   gfxContext* ctx = aCtx->ThebesContext();
-  uint8_t clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
+  StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
-  if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+  if (clip == StyleGeometryBox::Text) {
     if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
       return;
     }
@@ -3254,7 +3252,7 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   image::DrawResult result =
     nsCSSRendering::PaintBackground(params);
 
-  if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+  if (clip == StyleGeometryBox::Text) {
     ctx->PopGroupAndBlend();
   }
 
@@ -3645,8 +3643,8 @@ nsDisplayBackgroundColor::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
                                         const ContainerLayerParameters& aParameters)
 {
-  uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
-  if (!ForceActiveLayers() || clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+  StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[0].mClip;
+  if (!ForceActiveLayers() || clip == StyleGeometryBox::Text) {
     return LAYER_NONE;
   }
   return LAYER_ACTIVE;
@@ -3710,8 +3708,8 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     nsLayoutUtils::RectToGfxRect(mBackgroundRect,
                                  mFrame->PresContext()->AppUnitsPerDevPixel());
 
-  uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
-  if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+  StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[0].mClip;
+  if (clip == StyleGeometryBox::Text) {
     if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
       return;
     }
@@ -3745,7 +3743,7 @@ nsDisplayBackgroundColor::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 
 
   const nsStyleImageLayers::Layer& bottomLayer = mBackgroundStyle->BottomLayer();
-  if (bottomLayer.mClip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+  if (bottomLayer.mClip == StyleGeometryBox::Text) {
     return nsRegion();
   }
 
@@ -4579,9 +4577,10 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aParameters,
                               const nsDisplayList& aList,
-                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren)
+                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren,
+                              LayerState aDefaultState = LAYER_INACTIVE)
 {
-  LayerState result = LAYER_INACTIVE;
+  LayerState result = aDefaultState;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
     if (result == LAYER_INACTIVE &&
         i->GetAnimatedGeometryRoot() != aExpectedAnimatedGeometryRootForChildren) {
@@ -7339,7 +7338,8 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
 {
   if (ShouldPaintOnMaskLayer(aManager)) {
     return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-                                         mList, GetAnimatedGeometryRoot());
+                                         mList, GetAnimatedGeometryRoot(),
+                                         LAYER_SVG_EFFECTS);
   }
 
   return LAYER_SVG_EFFECTS;
@@ -7354,12 +7354,9 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
 
-  if (!maskUsage.shouldGenerateMaskLayer && !maskUsage.shouldApplyClipPath &&
-      !maskUsage.shouldGenerateClipMaskLayer) {
-    return false;
-  }
-
-  if (maskUsage.opacity != 1.0 || maskUsage.shouldApplyBasicShape) {
+  // XXX Bug 1323912. nsSVGIntegrationUtils::PaintMask can not handle opacity
+  // correctly. Turn it off before bug fixed.
+  if (maskUsage.opacity != 1.0) {
     return false;
   }
 

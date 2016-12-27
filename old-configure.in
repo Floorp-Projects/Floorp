@@ -258,10 +258,6 @@ case "$target" in
             # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
             CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
 
-            # Disable C++11 thread-safe statics due to crashes on XP (bug 1204752)
-            # See https://connect.microsoft.com/VisualStudio/feedback/details/1789709/visual-c-2015-runtime-broken-on-windows-server-2003-c-11-magic-statics
-            CXXFLAGS="$CXXFLAGS -Zc:threadSafeInit-"
-
             # https://connect.microsoft.com/VisualStudio/feedback/details/888527/warnings-on-dbghelp-h
             # for dbghelp.h, imagehlp.h, and shobj.h
             # C4091: 'typedef ': ignored on left of '' when no variable is declared
@@ -2081,9 +2077,8 @@ if test -n "$MOZ_SYSTEM_NSS"; then
 else
    NSS_CFLAGS="-I${DIST}/include/nss"
    case "${OS_ARCH}" in
-        # This is to match the conditions in security/generate_mapfile.py,
-        # plus Windows which doesn't run that script.
-        WINNT|Darwin|Linux)
+        # Only few platforms have been tested with GYP
+        WINNT|Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
             ;;
         *)
             AC_MSG_ERROR([building in-tree NSS is not supported on this platform. Use --with-system-nss])

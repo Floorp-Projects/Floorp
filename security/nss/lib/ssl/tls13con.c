@@ -1450,6 +1450,7 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
             return SECFailure;
         }
     }
+
     ssl_GetXmitBufLock(ss);
     rv = tls13_SendServerHelloSequence(ss);
     ssl_ReleaseXmitBufLock(ss);
@@ -1860,6 +1861,9 @@ tls13_SendEncryptedServerSequence(sslSocket *ss)
         return SECFailure;
     }
 
+    ss->ssl3.hs.shortHeaders = ssl3_ExtensionNegotiated(
+        ss, ssl_tls13_short_header_xtn);
+
     if (ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted) {
         rv = ssl3_RegisterExtensionSender(ss, &ss->xtnData, ssl_tls13_early_data_xtn,
                                           tls13_ServerSendEarlyDataXtn);
@@ -2065,6 +2069,9 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
     if (rv != SECSuccess) {
         return SECFailure; /* error code is set. */
     }
+
+    ss->ssl3.hs.shortHeaders = ssl3_ExtensionNegotiated(
+        ss, ssl_tls13_short_header_xtn);
 
     rv = tls13_SetCipherSpec(ss, TrafficKeyHandshake,
                              CipherSpecRead, PR_FALSE);
@@ -4025,7 +4032,8 @@ static const struct {
     { ssl_signed_cert_timestamp_xtn, ExtensionSendCertificate },
     { ssl_cert_status_xtn, ExtensionSendCertificate },
     { ssl_tls13_ticket_early_data_info_xtn, ExtensionNewSessionTicket },
-    { ssl_tls13_cookie_xtn, ExtensionSendHrr }
+    { ssl_tls13_cookie_xtn, ExtensionSendHrr },
+    { ssl_tls13_short_header_xtn, ExtensionSendClear }
 };
 
 PRBool
@@ -4297,6 +4305,7 @@ tls13_MaybeDo0RTTHandshake(sslSocket *ss)
     if (!ssl3_ClientExtensionAdvertised(ss, ssl_tls13_early_data_xtn)) {
         return SECSuccess;
     }
+
     ss->ssl3.hs.zeroRttState = ssl_0rtt_sent;
     ss->ssl3.hs.zeroRttSuite = ss->ssl3.hs.cipher_suite;
 
@@ -4319,8 +4328,7 @@ tls13_MaybeDo0RTTHandshake(sslSocket *ss)
     ssl_ReleaseSpecReadLock(ss);
 
     /* Cipher suite already set in tls13_SetupClientHello. */
-    ss->ssl3.hs.preliminaryInfo = 0; /* TODO(ekr@rtfm.com) Fill this in.
-                                      * bug 1281255. */
+    ss->ssl3.hs.preliminaryInfo = 0;
 
     rv = tls13_DeriveSecret(ss, ss->ssl3.hs.currentSecret,
                             kHkdfLabelClient,

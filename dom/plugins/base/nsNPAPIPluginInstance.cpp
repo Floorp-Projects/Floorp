@@ -1797,11 +1797,13 @@ nsNPAPIPluginInstance::WindowVolumeChanged(float aVolume, bool aMuted)
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetMuted failed");
   if (mMuted != aMuted) {
     mMuted = aMuted;
-    AudioChannelService::AudibleState audible = aMuted ?
-      AudioChannelService::AudibleState::eNotAudible :
-      AudioChannelService::AudibleState::eAudible;
-    mAudioChannelAgent->NotifyStartedAudible(audible,
-                                             AudioChannelService::AudibleChangedReasons::eVolumeChanged);
+    if (mAudioChannelAgent) {
+      AudioChannelService::AudibleState audible = aMuted ?
+        AudioChannelService::AudibleState::eNotAudible :
+        AudioChannelService::AudibleState::eAudible;
+      mAudioChannelAgent->NotifyStartedAudible(audible,
+                                               AudioChannelService::AudibleChangedReasons::eVolumeChanged);
+    }
   }
   return rv;
 }

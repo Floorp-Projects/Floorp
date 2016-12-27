@@ -483,6 +483,9 @@ FRAME_STATE_BIT(Block, 22, NS_BLOCK_MARGIN_ROOT)
 // used to reserve space for the floated frames.
 FRAME_STATE_BIT(Block, 23, NS_BLOCK_FLOAT_MGR)
 
+// For setting the relevant bits on a block formatting context:
+#define NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS (NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT)
+
 FRAME_STATE_BIT(Block, 24, NS_BLOCK_HAS_LINE_CURSOR)
 
 FRAME_STATE_BIT(Block, 25, NS_BLOCK_HAS_OVERFLOW_LINES)

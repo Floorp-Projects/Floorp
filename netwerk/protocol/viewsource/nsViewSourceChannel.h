@@ -48,12 +48,12 @@ public:
         : mIsDocument(false)
         , mOpened(false) {}
 
-    nsresult Init(nsIURI* uri);
+    MOZ_MUST_USE nsresult Init(nsIURI* uri);
 
-    nsresult InitSrcdoc(nsIURI* aURI,
-                        nsIURI* aBaseURI,
-                        const nsAString &aSrcdoc,
-                        nsILoadInfo* aLoadInfo);
+    MOZ_MUST_USE nsresult InitSrcdoc(nsIURI* aURI,
+                                     nsIURI* aBaseURI,
+                                     const nsAString &aSrcdoc,
+                                     nsILoadInfo* aLoadInfo);
 
 protected:
     ~nsViewSourceChannel() {}

@@ -26,3 +26,5 @@ asserts(1) == display-contents-xbl-5.xul display-contents-xbl-3-ref.xul # bug 10
 == display-contents-list-item-child.html display-contents-list-item-child-ref.html
 == display-contents-writing-mode-1.html display-contents-writing-mode-1-ref.html
 == display-contents-writing-mode-2.html display-contents-writing-mode-2-ref.html
+pref(layout.css.display-flow-root.enabled,true) == display-flow-root-001.html display-flow-root-001-ref.html
+pref(layout.css.display-flow-root.enabled,false) == display-flow-root-001.html display-flow-root-disabled-001-ref.html

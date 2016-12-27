@@ -58,6 +58,7 @@
 #include "gfxEnv.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
@@ -209,12 +210,14 @@
 #include "InputData.h"
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/plugins/PluginProcessParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+using namespace mozilla::plugins;
 
 /**************************************************************
  **************************************************************
@@ -451,7 +454,7 @@ StaticAutoPtr<TIPMessageHandler> TIPMessageHandler::sInstance;
 
 static const char *sScreenManagerContractID       = "@mozilla.org/gfx/screenmanager;1";
 
-extern PRLogModuleInfo* gWindowsLog;
+extern mozilla::LazyLogModule gWindowsLog;
 
 // Global used in Show window enumerations.
 static bool     gWindowsVisible                   = false;
@@ -3489,12 +3492,20 @@ nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
 {
   switch (aDataType) {
     case NS_NATIVE_CHILD_WINDOW:
-      SetChildStyleAndParent(reinterpret_cast<HWND>(aVal), mWnd);
-      break;
     case NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW:
-      SetChildStyleAndParent(reinterpret_cast<HWND>(aVal),
-                             WinUtils::GetTopLevelHWND(mWnd));
-      break;
+      {
+        HWND childHwnd = reinterpret_cast<HWND>(aVal);
+        DWORD childProc = 0;
+        GetWindowThreadProcessId(childHwnd, &childProc);
+        if (!PluginProcessParent::IsPluginProcessId(static_cast<base::ProcessId>(childProc))) {
+          MOZ_ASSERT_UNREACHABLE("SetNativeData window origin was not a plugin process.");
+          break;
+        }
+        HWND parentHwnd =
+          aDataType == NS_NATIVE_CHILD_WINDOW ? mWnd : WinUtils::GetTopLevelHWND(mWnd);
+        SetChildStyleAndParent(childHwnd, parentHwnd);
+        break;
+      }
     default:
       NS_ERROR("SetNativeData called with unsupported data type.");
   }
