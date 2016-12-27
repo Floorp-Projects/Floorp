@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1272623</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1272623">Mozilla Bug 1272623</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <div id="area" contenteditable="true"><b style="font-weight:normal;">testing <span id="misspelled">spellechek</span></b></div>
+  <div id="area2" contenteditable="true">testing <span id="misspelled2" style="font-weight:bold;">spellechek</span></div>
+</pre>
+<script>
+
+/** Test for Bug 1272623 **/
+
+  function *performCorrection(misspelled, area) {
+    synthesizeMouseAtCenter($(misspelled), {}, window);
+    yield new Promise(resolve => onSpellCheck($(area), resolve));
+    synthesizeMouseAtCenter($(misspelled), {type: 'contextmenu'}, window);
+
+    // Perform the spelling correction
+    let mm = SpecialPowers.loadChromeScript(function() {
+      let Cu = Components.utils;
+      let Ci = Components.interfaces;
+
+      Cu.import("resource://gre/modules/Services.jsm");
+
+      // Chrome scripts are run with synchronous messages, so make sure we're completely
+      // decoupled from the content process before doing this work.
+      Cu.dispatch(function() {
+        let chromeWin = Services.ww.activeWindow.QueryInterface(Ci.nsIDOMChromeWindow);
+        contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
+        let suggestion = contextMenu.querySelector(".spell-suggestion");
+        suggestion.doCommand();
+        contextMenu.hidePopup();
+        sendAsyncMessage("spellingCorrected");
+      });
+    });
+    info("Loaded chrome script");
+    yield new Promise(resolve => mm.addMessageListener('spellingCorrected', resolve));
+  }
+
+  add_task(function* () {
+    SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
+
+    // Wait for the page to be ready
+    yield new Promise(resolve => SimpleTest.waitForFocus(() => SimpleTest.executeSoon(resolve), window));
+
+    // Check that <b> tags aren't inserted inside of other <b> tags when it would change the style
+    yield* performCorrection('misspelled', 'area');
+    is($('area').innerHTML, "<b style=\"font-weight:normal;\">testing <span id=\"misspelled\">spellcheck</span></b>");
+    is($('area').textContent, 'testing spellcheck', "Spelling corrected properly");
+
+    // Check that nodes aren't removed when the entire text inside of them is spelling-corrected
+    yield* performCorrection('misspelled2', 'area2');
+    is($('area2').innerHTML, "testing <span id=\"misspelled2\" style=\"font-weight:bold;\">spellcheck</span>");
+    is($('area2').textContent, 'testing spellcheck', "Spelling corrected properly");
+  });
+</script>
+</body>
+</html>
