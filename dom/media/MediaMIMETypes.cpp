@@ -78,6 +78,28 @@ MakeMediaMIMEType(const char* aType)
   return MakeMediaMIMEType(nsDependentCString(aType));
 }
 
+bool
+MediaCodecs::Contains(const nsAString& aCodec) const
+{
+  for (const auto& myCodec : Range()) {
+    if (myCodec == aCodec) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+MediaCodecs::ContainsAll(const MediaCodecs& aCodecs) const
+{
+  const auto& codecsToTest = aCodecs.Range();
+  for (const auto& codecToTest : codecsToTest) {
+    if (!Contains(codecToTest)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 static int32_t
 GetParameterAsNumber(const nsContentTypeParser& aParser,
