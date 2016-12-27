@@ -51,8 +51,7 @@ class BrowserWindow(BaseWindow):
 
         :returns: The default homepage for the current locale.
         """
-        return self.marionette.get_pref('browser.startup.homepage',
-                                        value_type='nsIPrefLocalizedString')
+        return self._prefs.get_pref('browser.startup.homepage', interface='nsIPrefLocalizedString')
 
     @property
     def is_private(self):
