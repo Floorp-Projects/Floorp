@@ -11,7 +11,10 @@ include protocol PCompositable;
 include protocol PImageContainer;
 include protocol PTexture;
 
+using WRBorderSide from "mozilla/gfx/webrender.h";
+using WRColor from "mozilla/gfx/webrender.h";
 using WRImageKey from "mozilla/gfx/webrender.h";
+using WRLayoutSize from "mozilla/gfx/webrender.h";
 using WRRect from "mozilla/gfx/webrender.h";
 using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
@@ -35,6 +38,19 @@ struct OpDPPushRect {
   float g;
   float b;
   float a;
+};
+
+struct OpDPPushBorder {
+  WRRect bounds;
+  WRRect clip;
+  WRBorderSide top;
+  WRBorderSide right;
+  WRBorderSide bottom;
+  WRBorderSide left;
+  WRLayoutSize top_left_radius;
+  WRLayoutSize top_right_radius;
+  WRLayoutSize bottom_left_radius;
+  WRLayoutSize bottom_right_radius;
 };
 
 struct OpDPPushImage {
@@ -61,6 +77,7 @@ union WebRenderCommand {
   OpPushDLBuilder;
   OpPopDLBuilder;
   OpDPPushRect;
+  OpDPPushBorder;
   OpDPPushImage;
   OpDPPushExternalImageId;
   OpDPPushIframe;

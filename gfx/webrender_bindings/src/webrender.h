@@ -27,6 +27,51 @@ struct WRImageKey {
   }
 };
 
+struct WRColor {
+  float r;
+  float g;
+  float b;
+  float a;
+
+  bool operator==(const WRColor& aRhs) const {
+    return r == aRhs.r && g == aRhs.g &&
+           b == aRhs.b && a == aRhs.a;
+  }
+};
+
+enum WRBorderStyle {
+  None,
+  Solid,
+  Double,
+  Dotted,
+  Dashed,
+  Hidden,
+  Groove,
+  Ridge,
+  Inset,
+  Outset
+};
+
+struct WRBorderSide {
+  float width;
+  WRColor color;
+  WRBorderStyle style;
+
+  bool operator==(const WRBorderSide& aRhs) const {
+    return width == aRhs.width && color == aRhs.color &&
+           style == aRhs.style;
+  }
+};
+
+struct WRLayoutSize {
+  float width;
+  float height;
+
+  bool operator==(const WRLayoutSize& aRhs) const {
+    return width == aRhs.width && height == aRhs.height;
+  }
+};
+
 struct WRRect {
   float x;
   float y;
@@ -163,6 +208,13 @@ WR_FUNC;
 WR_INLINE void
 wr_dp_push_rect(wrstate* wrState, WRRect bounds, WRRect clip,
                 float r, float g, float b, float a)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_border(wrstate* wrState, WRRect bounds, WRRect clip,
+                  WRBorderSide top, WRBorderSide right, WRBorderSide bottom, WRBorderSide left,
+                  WRLayoutSize top_left_radius, WRLayoutSize top_right_radius,
+                  WRLayoutSize bottom_left_radius, WRLayoutSize bottom_right_radius)
 WR_FUNC;
 
 WR_INLINE void
