@@ -5986,19 +5986,22 @@ provideDataForType:(NSString*)aType
         }
 
         for (uint32_t i = 0; i < transferableCount; i++) {
-          nsCOMPtr<nsITransferable> item = do_QueryElementAt(gDraggedTransferables, i);
+          nsCOMPtr<nsITransferable> item =
+            do_QueryElementAt(gDraggedTransferables, i);
           if (!item) {
             NS_ERROR("no transferable");
             continue;
           }
 
-          item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile, sizeof(nsIFile*));
+          item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile,
+                                sizeof(nsIFile*));
 
-          // now request the kFilePromiseMime data, which will invoke the data provider
-          // If successful, the returned data is a reference to the resulting file.
+          // Now request the kFilePromiseMime data, which will invoke the data
+          // provider. If successful, the file will have been created.
           nsCOMPtr<nsISupports> fileDataPrimitive;
           uint32_t dataSize = 0;
-          item->GetTransferData(kFilePromiseMime, getter_AddRefs(fileDataPrimitive), &dataSize);
+          item->GetTransferData(kFilePromiseMime,
+                                getter_AddRefs(fileDataPrimitive), &dataSize);
         }
         CFRelease(urlRef);
         CFRelease(pboardRef);
