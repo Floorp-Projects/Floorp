@@ -27,7 +27,7 @@ class PushSincResampler : public SincResamplerCallback {
   // Provide the size of the source and destination blocks in samples. These
   // must correspond to the same time duration (typically 10 ms) as the sample
   // ratio is inferred from them.
-  PushSincResampler(int source_frames, int destination_frames);
+  PushSincResampler(size_t source_frames, size_t destination_frames);
   ~PushSincResampler() override;
 
   // Perform the resampling. |source_frames| must always equal the
@@ -35,12 +35,12 @@ class PushSincResampler : public SincResamplerCallback {
   // at least as large as |destination_frames|. Returns the number of samples
   // provided in destination (for convenience, since this will always be equal
   // to |destination_frames|).
-  int Resample(const int16_t* source, int source_frames,
-               int16_t* destination, int destination_capacity);
-  int Resample(const float* source,
-               int source_frames,
-               float* destination,
-               int destination_capacity);
+  size_t Resample(const int16_t* source, size_t source_frames,
+                  int16_t* destination, size_t destination_capacity);
+  size_t Resample(const float* source,
+                  size_t source_frames,
+                  float* destination,
+                  size_t destination_capacity);
 
   // Delay due to the filter kernel. Essentially, the time after which an input
   // sample will appear in the resampled output.
@@ -50,7 +50,7 @@ class PushSincResampler : public SincResamplerCallback {
 
  protected:
   // Implements SincResamplerCallback.
-  void Run(int frames, float* destination) override;
+  void Run(size_t frames, float* destination) override;
 
  private:
   friend class PushSincResamplerTest;
@@ -60,15 +60,15 @@ class PushSincResampler : public SincResamplerCallback {
   rtc::scoped_ptr<float[]> float_buffer_;
   const float* source_ptr_;
   const int16_t* source_ptr_int_;
-  const int destination_frames_;
+  const size_t destination_frames_;
 
   // True on the first call to Resample(), to prime the SincResampler buffer.
   bool first_pass_;
 
   // Used to assert we are only requested for as much data as is available.
-  int source_available_;
+  size_t source_available_;
 
-  DISALLOW_COPY_AND_ASSIGN(PushSincResampler);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PushSincResampler);
 };
 
 }  // namespace webrtc

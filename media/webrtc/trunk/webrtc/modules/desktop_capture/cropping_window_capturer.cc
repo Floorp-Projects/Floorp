@@ -11,7 +11,7 @@
 #include "webrtc/modules/desktop_capture/cropping_window_capturer.h"
 
 #include "webrtc/modules/desktop_capture/cropped_desktop_frame.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
@@ -29,11 +29,6 @@ CroppingWindowCapturer::~CroppingWindowCapturer() {}
 void CroppingWindowCapturer::Start(DesktopCapturer::Callback* callback) {
   callback_ = callback;
   window_capturer_->Start(callback);
-}
-
-void CroppingWindowCapturer::Stop() {
-  window_capturer_->Stop();
-  callback_ = NULL;
 }
 
 void CroppingWindowCapturer::Capture(const DesktopRegion& region) {

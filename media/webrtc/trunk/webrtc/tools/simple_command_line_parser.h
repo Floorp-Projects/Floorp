@@ -91,7 +91,7 @@ class CommandLineParser {
   FRIEND_TEST_ALL_PREFIXES(CommandLineParserTest, GetCommandLineFlagName);
   FRIEND_TEST_ALL_PREFIXES(CommandLineParserTest, GetCommandLineFlagValue);
 
-  DISALLOW_COPY_AND_ASSIGN(CommandLineParser);
+  RTC_DISALLOW_COPY_AND_ASSIGN(CommandLineParser);
 };
 
 }  // namespace test

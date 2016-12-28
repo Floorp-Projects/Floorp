@@ -24,38 +24,32 @@ class AudioFrame;
 
 namespace voe {
 
-// Upmix or downmix and resample the audio in |src_frame| to |dst_frame|.
-// Expects |dst_frame| to have its sample rate and channels members set to the
-// desired values. Updates the samples per channel member accordingly. No other
-// members will be changed.
+// Upmix or downmix and resample the audio to |dst_frame|. Expects |dst_frame|
+// to have its sample rate and channels members set to the desired values.
+// Updates the |samples_per_channel_| member accordingly.
+//
+// This version has an AudioFrame |src_frame| as input and sets the output
+// |timestamp_|, |elapsed_time_ms_| and |ntp_time_ms_| members equals to the
+// input ones.
 void RemixAndResample(const AudioFrame& src_frame,
                       PushResampler<int16_t>* resampler,
                       AudioFrame* dst_frame);
 
-// Downmix and downsample the audio in |src_data| to |dst_af| as necessary,
-// specified by |codec_num_channels| and |codec_rate_hz|. |mono_buffer| is
-// temporary space and must be of sufficient size to hold the downmixed source
-// audio (recommend using a size of kMaxMonoDataSizeSamples).
-//
-// |dst_af| will have its data and format members (sample rate, channels and
-// samples per channel) set appropriately. No other members will be changed.
-// TODO(ajm): For now, this still calls Reset() on |dst_af|. Remove this, as
-// it shouldn't be needed.
-void DownConvertToCodecFormat(const int16_t* src_data,
-                              int samples_per_channel,
-                              int num_channels,
-                              int sample_rate_hz,
-                              int codec_num_channels,
-                              int codec_rate_hz,
-                              int16_t* mono_buffer,
-                              PushResampler<int16_t>* resampler,
-                              AudioFrame* dst_af);
+// This version has a pointer to the samples |src_data| as input and receives
+// |samples_per_channel|, |num_channels| and |sample_rate_hz| of the data as
+// parameters.
+void RemixAndResample(const int16_t* src_data,
+                      size_t samples_per_channel,
+                      size_t num_channels,
+                      int sample_rate_hz,
+                      PushResampler<int16_t>* resampler,
+                      AudioFrame* dst_frame);
 
 void MixWithSat(int16_t target[],
-                int target_channel,
+                size_t target_channel,
                 const int16_t source[],
-                int source_channel,
-                int source_len);
+                size_t source_channel,
+                size_t source_len);
 
 }  // namespace voe
 }  // namespace webrtc

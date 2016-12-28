@@ -310,10 +310,10 @@ TEST(RedPayloadSplitter, CheckRedPayloads) {
   // easier to just register the payload types and let the actual implementation
   // do its job.
   DecoderDatabase decoder_database;
-  decoder_database.RegisterPayload(0, kDecoderCNGnb);
-  decoder_database.RegisterPayload(1, kDecoderPCMu);
-  decoder_database.RegisterPayload(2, kDecoderAVT);
-  decoder_database.RegisterPayload(3, kDecoderILBC);
+  decoder_database.RegisterPayload(0, NetEqDecoder::kDecoderCNGnb, "cng-nb");
+  decoder_database.RegisterPayload(1, NetEqDecoder::kDecoderPCMu, "pcmu");
+  decoder_database.RegisterPayload(2, NetEqDecoder::kDecoderAVT, "avt");
+  decoder_database.RegisterPayload(3, NetEqDecoder::kDecoderILBC, "ilbc");
 
   PayloadSplitter splitter;
   splitter.CheckRedPayloads(&packet_list, decoder_database);
@@ -372,27 +372,33 @@ TEST(AudioPayloadSplitter, NonSplittable) {
   // codec types.
   // Use scoped pointers to avoid having to delete them later.
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info0(
-      new DecoderDatabase::DecoderInfo(kDecoderISAC, 16000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderISAC, 16000, NULL,
+                                       false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(0))
       .WillRepeatedly(Return(info0.get()));
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info1(
-      new DecoderDatabase::DecoderInfo(kDecoderISACswb, 32000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderISACswb, 32000,
+                                       NULL, false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(1))
       .WillRepeatedly(Return(info1.get()));
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info2(
-      new DecoderDatabase::DecoderInfo(kDecoderRED, 8000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderRED, 8000, NULL,
+                                       false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(2))
       .WillRepeatedly(Return(info2.get()));
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info3(
-      new DecoderDatabase::DecoderInfo(kDecoderAVT, 8000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderAVT, 8000, NULL,
+                                       false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(3))
       .WillRepeatedly(Return(info3.get()));
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info4(
-      new DecoderDatabase::DecoderInfo(kDecoderCNGnb, 8000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderCNGnb, 8000, NULL,
+                                       false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(4))
       .WillRepeatedly(Return(info4.get()));
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info5(
-      new DecoderDatabase::DecoderInfo(kDecoderArbitrary, 8000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderArbitrary, 8000,
+                                       NULL, false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(5))
       .WillRepeatedly(Return(info5.get()));
 
@@ -452,53 +458,53 @@ class SplitBySamplesTest : public ::testing::TestWithParam<NetEqDecoder> {
   virtual void SetUp() {
     decoder_type_ = GetParam();
     switch (decoder_type_) {
-      case kDecoderPCMu:
-      case kDecoderPCMa:
+      case NetEqDecoder::kDecoderPCMu:
+      case NetEqDecoder::kDecoderPCMa:
         bytes_per_ms_ = 8;
         samples_per_ms_ = 8;
         break;
-      case kDecoderPCMu_2ch:
-      case kDecoderPCMa_2ch:
+      case NetEqDecoder::kDecoderPCMu_2ch:
+      case NetEqDecoder::kDecoderPCMa_2ch:
         bytes_per_ms_ = 2 * 8;
         samples_per_ms_ = 8;
         break;
-      case kDecoderG722:
+      case NetEqDecoder::kDecoderG722:
         bytes_per_ms_ = 8;
         samples_per_ms_ = 16;
         break;
-      case kDecoderPCM16B:
+      case NetEqDecoder::kDecoderPCM16B:
         bytes_per_ms_ = 16;
         samples_per_ms_ = 8;
         break;
-      case kDecoderPCM16Bwb:
+      case NetEqDecoder::kDecoderPCM16Bwb:
         bytes_per_ms_ = 32;
         samples_per_ms_ = 16;
         break;
-      case kDecoderPCM16Bswb32kHz:
+      case NetEqDecoder::kDecoderPCM16Bswb32kHz:
         bytes_per_ms_ = 64;
         samples_per_ms_ = 32;
         break;
-      case kDecoderPCM16Bswb48kHz:
+      case NetEqDecoder::kDecoderPCM16Bswb48kHz:
         bytes_per_ms_ = 96;
         samples_per_ms_ = 48;
         break;
-      case kDecoderPCM16B_2ch:
+      case NetEqDecoder::kDecoderPCM16B_2ch:
         bytes_per_ms_ = 2 * 16;
         samples_per_ms_ = 8;
         break;
-      case kDecoderPCM16Bwb_2ch:
+      case NetEqDecoder::kDecoderPCM16Bwb_2ch:
         bytes_per_ms_ = 2 * 32;
         samples_per_ms_ = 16;
         break;
-      case kDecoderPCM16Bswb32kHz_2ch:
+      case NetEqDecoder::kDecoderPCM16Bswb32kHz_2ch:
         bytes_per_ms_ = 2 * 64;
         samples_per_ms_ = 32;
         break;
-      case kDecoderPCM16Bswb48kHz_2ch:
+      case NetEqDecoder::kDecoderPCM16Bswb48kHz_2ch:
         bytes_per_ms_ = 2 * 96;
         samples_per_ms_ = 48;
         break;
-      case kDecoderPCM16B_5ch:
+      case NetEqDecoder::kDecoderPCM16B_5ch:
         bytes_per_ms_ = 5 * 16;
         samples_per_ms_ = 8;
         break;
@@ -569,14 +575,22 @@ TEST_P(SplitBySamplesTest, PayloadSizes) {
 }
 
 INSTANTIATE_TEST_CASE_P(
-    PayloadSplitter, SplitBySamplesTest,
-    ::testing::Values(kDecoderPCMu, kDecoderPCMa, kDecoderPCMu_2ch,
-                      kDecoderPCMa_2ch, kDecoderG722, kDecoderPCM16B,
-                      kDecoderPCM16Bwb, kDecoderPCM16Bswb32kHz,
-                      kDecoderPCM16Bswb48kHz, kDecoderPCM16B_2ch,
-                      kDecoderPCM16Bwb_2ch, kDecoderPCM16Bswb32kHz_2ch,
-                      kDecoderPCM16Bswb48kHz_2ch, kDecoderPCM16B_5ch));
-
+    PayloadSplitter,
+    SplitBySamplesTest,
+    ::testing::Values(NetEqDecoder::kDecoderPCMu,
+                      NetEqDecoder::kDecoderPCMa,
+                      NetEqDecoder::kDecoderPCMu_2ch,
+                      NetEqDecoder::kDecoderPCMa_2ch,
+                      NetEqDecoder::kDecoderG722,
+                      NetEqDecoder::kDecoderPCM16B,
+                      NetEqDecoder::kDecoderPCM16Bwb,
+                      NetEqDecoder::kDecoderPCM16Bswb32kHz,
+                      NetEqDecoder::kDecoderPCM16Bswb48kHz,
+                      NetEqDecoder::kDecoderPCM16B_2ch,
+                      NetEqDecoder::kDecoderPCM16Bwb_2ch,
+                      NetEqDecoder::kDecoderPCM16Bswb32kHz_2ch,
+                      NetEqDecoder::kDecoderPCM16Bswb48kHz_2ch,
+                      NetEqDecoder::kDecoderPCM16B_5ch));
 
 class SplitIlbcTest : public ::testing::TestWithParam<std::pair<int, int> > {
  protected:
@@ -609,7 +623,8 @@ TEST_P(SplitIlbcTest, NumFrames) {
   // codec types.
   // Use scoped pointers to avoid having to delete them later.
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info(
-      new DecoderDatabase::DecoderInfo(kDecoderILBC, 8000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderILBC, 8000, NULL,
+                                       false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(kPayloadType))
       .WillRepeatedly(Return(info.get()));
 
@@ -672,7 +687,8 @@ TEST(IlbcPayloadSplitter, TooLargePayload) {
 
   MockDecoderDatabase decoder_database;
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info(
-      new DecoderDatabase::DecoderInfo(kDecoderILBC, 8000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderILBC, 8000, NULL,
+                                       false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(kPayloadType))
       .WillRepeatedly(Return(info.get()));
 
@@ -703,7 +719,8 @@ TEST(IlbcPayloadSplitter, UnevenPayload) {
 
   MockDecoderDatabase decoder_database;
   rtc::scoped_ptr<DecoderDatabase::DecoderInfo> info(
-      new DecoderDatabase::DecoderInfo(kDecoderILBC, 8000, NULL, false));
+      new DecoderDatabase::DecoderInfo(NetEqDecoder::kDecoderILBC, 8000, NULL,
+                                       false));
   EXPECT_CALL(decoder_database, GetDecoderInfo(kPayloadType))
       .WillRepeatedly(Return(info.get()));
 
@@ -728,8 +745,8 @@ TEST(FecPayloadSplitter, MixedPayload) {
   PacketList packet_list;
   DecoderDatabase decoder_database;
 
-  decoder_database.RegisterPayload(0, kDecoderOpus);
-  decoder_database.RegisterPayload(1, kDecoderPCMu);
+  decoder_database.RegisterPayload(0, NetEqDecoder::kDecoderOpus, "opus");
+  decoder_database.RegisterPayload(1, NetEqDecoder::kDecoderPCMu, "pcmu");
 
   Packet* packet = CreatePacket(0, 10, 0xFF, true);
   packet_list.push_back(packet);
@@ -785,7 +802,7 @@ TEST(FecPayloadSplitter, EmbedFecInRed) {
 
   const int kTimestampOffset = 20 * 48;  // 20 ms * 48 kHz.
   uint8_t payload_types[] = {0, 0};
-  decoder_database.RegisterPayload(0, kDecoderOpus);
+  decoder_database.RegisterPayload(0, NetEqDecoder::kDecoderOpus, "opus");
   Packet* packet = CreateRedPayload(2, payload_types, kTimestampOffset, true);
   packet_list.push_back(packet);
 

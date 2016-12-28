@@ -94,7 +94,7 @@ class BaseLineFileVerify : public BaseLineFileInterface {
   rtc::scoped_ptr<ResourceFileReader> reader_;
   bool fail_to_read_response_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(BaseLineFileVerify);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BaseLineFileVerify);
 };
 
 class BaseLineFileUpdate : public BaseLineFileInterface {
@@ -146,7 +146,7 @@ class BaseLineFileUpdate : public BaseLineFileInterface {
   std::vector<uint32_t> output_content_;
   std::string filepath_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(BaseLineFileUpdate);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BaseLineFileUpdate);
 };
 
 BaseLineFileInterface* BaseLineFileInterface::Create(

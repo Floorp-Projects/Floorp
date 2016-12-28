@@ -11,53 +11,49 @@ import("../build/webrtc.gni")
 
 static_library("system_wrappers") {
   sources = [
-    "interface/aligned_array.h",
-    "interface/aligned_malloc.h",
-    "interface/atomic32.h",
-    "interface/clock.h",
-    "interface/condition_variable_wrapper.h",
-    "interface/cpu_info.h",
-    "interface/cpu_features_wrapper.h",
-    "interface/critical_section_wrapper.h",
-    "interface/data_log.h",
-    "interface/data_log_c.h",
-    "interface/data_log_impl.h",
-    "interface/event_tracer.h",
-    "interface/event_wrapper.h",
-    "interface/field_trial.h",
-    "interface/file_wrapper.h",
-    "interface/fix_interlocked_exchange_pointer_win.h",
-    "interface/logging.h",
-    "interface/metrics.h",
-    "interface/ref_count.h",
-    "interface/rtp_to_ntp.h",
-    "interface/rw_lock_wrapper.h",
-    "interface/scoped_refptr.h",
-    "interface/scoped_vector.h",
-    "interface/sleep.h",
-    "interface/sort.h",
-    "interface/static_instance.h",
-    "interface/stl_util.h",
-    "interface/stringize_macros.h",
-    "interface/thread_wrapper.h",
-    "interface/tick_util.h",
-    "interface/timestamp_extrapolator.h",
-    "interface/trace.h",
-    "interface/trace_event.h",
-    "interface/utf_util_win.h",
+    "include/aligned_array.h",
+    "include/aligned_malloc.h",
+    "include/atomic32.h",
+    "include/clock.h",
+    "include/condition_variable_wrapper.h",
+    "include/cpu_features_wrapper.h",
+    "include/cpu_info.h",
+    "include/critical_section_wrapper.h",
+    "include/data_log.h",
+    "include/data_log_c.h",
+    "include/data_log_impl.h",
+    "include/event_wrapper.h",
+    "include/field_trial.h",
+    "include/file_wrapper.h",
+    "include/fix_interlocked_exchange_pointer_win.h",
+    "include/logging.h",
+    "include/metrics.h",
+    "include/ref_count.h",
+    "include/rtp_to_ntp.h",
+    "include/rw_lock_wrapper.h",
+    "include/scoped_vector.h",
+    "include/sleep.h",
+    "include/sort.h",
+    "include/static_instance.h",
+    "include/stl_util.h",
+    "include/stringize_macros.h",
+    "include/tick_util.h",
+    "include/timestamp_extrapolator.h",
+    "include/trace.h",
+    "include/utf_util_win.h",
     "source/aligned_malloc.cc",
     "source/atomic32_mac.cc",
     "source/atomic32_win.cc",
     "source/clock.cc",
     "source/condition_variable.cc",
-    "source/condition_variable_posix.cc",
-    "source/condition_variable_posix.h",
     "source/condition_variable_event_win.cc",
     "source/condition_variable_event_win.h",
     "source/condition_variable_native_win.cc",
     "source/condition_variable_native_win.h",
-    "source/cpu_info.cc",
+    "source/condition_variable_posix.cc",
+    "source/condition_variable_posix.h",
     "source/cpu_features.cc",
+    "source/cpu_info.cc",
     "source/critical_section.cc",
     "source/critical_section_posix.cc",
     "source/critical_section_posix.h",
@@ -65,11 +61,10 @@ static_library("system_wrappers") {
     "source/critical_section_win.h",
     "source/data_log_c.cc",
     "source/event.cc",
-    "source/event_posix.cc",
-    "source/event_posix.h",
-    "source/event_tracer.cc",
-    "source/event_win.cc",
-    "source/event_win.h",
+    "source/event_timer_posix.cc",
+    "source/event_timer_posix.h",
+    "source/event_timer_win.cc",
+    "source/event_timer_win.h",
     "source/file_impl.cc",
     "source/file_impl.h",
     "source/logging.cc",
@@ -84,11 +79,6 @@ static_library("system_wrappers") {
     "source/sleep.cc",
     "source/sort.cc",
     "source/tick_util.cc",
-    "source/thread.cc",
-    "source/thread_posix.cc",
-    "source/thread_posix.h",
-    "source/thread_win.cc",
-    "source/thread_win.h",
     "source/timestamp_extrapolator.cc",
     "source/trace_impl.cc",
     "source/trace_impl.h",
@@ -100,9 +90,7 @@ static_library("system_wrappers") {
 
   configs += [ "..:common_config" ]
 
-  public_configs = [
-    "..:common_inherited_config",
-  ]
+  public_configs = [ "..:common_inherited_config" ]
 
   if (rtc_enable_data_logging) {
     sources += [ "source/data_log.cc" ]
@@ -112,16 +100,19 @@ static_library("system_wrappers") {
 
   defines = []
   libs = []
-  deps = [ "..:webrtc_common" ]
+  deps = [
+    "..:webrtc_common",
+  ]
 
   if (is_android) {
     sources += [
-      "interface/logcat_trace_context.h",
+      "include/logcat_trace_context.h",
       "source/logcat_trace_context.cc",
     ]
 
     defines += [
       "WEBRTC_THREAD_RR",
+
       # TODO(leozwang): Investigate CLOCK_REALTIME and CLOCK_MONOTONIC
       # support on Android. Keep WEBRTC_CLOCK_TYPE_REALTIME for now,
       # remove it after I verify that CLOCK_MONOTONIC is fully functional
@@ -146,9 +137,7 @@ static_library("system_wrappers") {
   }
 
   if (!is_mac && !is_ios) {
-    sources += [
-      "source/atomic32_posix.cc",
-    ]
+    sources += [ "source/atomic32_posix.cc" ]
   }
 
   if (is_ios || is_mac) {
@@ -159,9 +148,7 @@ static_library("system_wrappers") {
   }
 
   if (is_ios) {
-    sources += [
-      "source/atomic32_mac.cc",
-    ]
+    sources += [ "source/atomic32_mac.cc" ]
   }
 
   if (is_win) {
@@ -173,23 +160,17 @@ static_library("system_wrappers") {
     ]
   }
 
-  deps += [
-    "../base:rtc_base_approved",
-  ]
+  deps += [ "../base:rtc_base_approved" ]
 }
 
 source_set("field_trial_default") {
   sources = [
-    "interface/field_trial_default.h",
+    "include/field_trial_default.h",
     "source/field_trial_default.cc",
   ]
 
   configs += [ "..:common_config" ]
   public_configs = [ "..:common_inherited_config" ]
-
-  deps = [
-    ":system_wrappers",
-  ]
 }
 
 source_set("metrics_default") {
@@ -199,20 +180,16 @@ source_set("metrics_default") {
 
   configs += [ "..:common_config" ]
   public_configs = [ "..:common_inherited_config" ]
-
-  deps = [
-    ":system_wrappers",
-  ]
 }
 
 source_set("system_wrappers_default") {
-
   configs += [ "..:common_config" ]
   public_configs = [ "..:common_inherited_config" ]
 
   deps = [
     ":field_trial_default",
     ":metrics_default",
+    ":system_wrappers",
   ]
 }
 
@@ -224,11 +201,8 @@ if (is_android) {
 
     configs += [ "..:common_config" ]
     public_configs = [ "..:common_inherited_config" ]
-
-    if (is_android_webview_build) {
-      libs += [ "cpufeatures.a" ]
-    } else {
-      deps = [ "//third_party/android_tools:cpu_features" ]
-    }
+    deps = [
+      "//third_party/android_tools:cpu_features",
+    ]
   }
 }

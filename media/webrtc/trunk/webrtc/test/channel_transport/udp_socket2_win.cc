@@ -15,7 +15,7 @@
 #include <winsock2.h>
 
 #include "webrtc/base/format_macros.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/test/channel_transport/traffic_control_win.h"
 #include "webrtc/test/channel_transport/udp_socket2_manager_win.h"
 
@@ -432,13 +432,13 @@ void UdpSocket2Windows::IOCompleted(PerIoContext* pIOContext,
     if(pIOContext == NULL || error == ERROR_OPERATION_ABORTED)
     {
         if ((pIOContext != NULL) &&
-            !pIOContext->ioInitiatedByThreadWrapper &&
+            !pIOContext->ioInitiatedByPlatformThread &&
             (error == ERROR_OPERATION_ABORTED) &&
             (pIOContext->ioOperation == OP_READ) &&
             _outstandingCallsDisabled)
         {
-            // !pIOContext->initiatedIOByThreadWrapper indicate that the I/O
-            // was not initiated by a ThreadWrapper thread.
+            // !pIOContext->initiatedIOByPlatformThread indicate that the I/O
+            // was not initiated by a PlatformThread thread.
             // This may happen if the thread that initiated receiving (e.g.
             // by calling StartListen())) is deleted before any packets have
             // been received.
@@ -519,7 +519,7 @@ void UdpSocket2Windows::IOCompleted(PerIoContext* pIOContext,
         {
             // The PerIoContext was posted by a thread controlled by the socket
             // implementation.
-            pIOContext->ioInitiatedByThreadWrapper = true;
+            pIOContext->ioInitiatedByPlatformThread = true;
         }
         OutstandingCallCompleted();
         return;
@@ -546,7 +546,7 @@ int32_t UdpSocket2Windows::PostRecv()
     }
     // This function may have been called by thread not controlled by the socket
     // implementation.
-    pIoContext->ioInitiatedByThreadWrapper = false;
+    pIoContext->ioInitiatedByPlatformThread = false;
     return PostRecv(pIoContext);
 }
 

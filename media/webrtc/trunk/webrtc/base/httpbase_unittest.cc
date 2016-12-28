@@ -145,7 +145,7 @@ void HttpBaseTest::VerifyHeaderComplete(size_t event_count, bool empty_doc) {
 
   std::string header;
   EXPECT_EQ(HVER_1_1, data.version);
-  EXPECT_EQ(static_cast<uint32>(HC_OK), data.scode);
+  EXPECT_EQ(static_cast<uint32_t>(HC_OK), data.scode);
   EXPECT_TRUE(data.hasHeader(HH_PROXY_AUTHORIZATION, &header));
   EXPECT_EQ("42", header);
   EXPECT_TRUE(data.hasHeader(HH_CONNECTION, &header));
@@ -215,7 +215,7 @@ void HttpBaseTest::VerifyDocumentStreamOpenEvent() {
 
   // HTTP headers haven't arrived yet
   EXPECT_EQ(0U, events.size());
-  EXPECT_EQ(static_cast<uint32>(HC_INTERNAL_SERVER_ERROR), data.scode);
+  EXPECT_EQ(static_cast<uint32_t>(HC_INTERNAL_SERVER_ERROR), data.scode);
   LOG_F(LS_VERBOSE) << "Exit";
 }
 
@@ -404,7 +404,7 @@ TEST_F(HttpBaseTest, SupportsReceiveViaStreamPull) {
 TEST_F(HttpBaseTest, DISABLED_AllowsCloseStreamBeforeDocumentIsComplete) {
 
   // TODO: Remove extra logging once test failure is understood
-  int old_sev = rtc::LogMessage::GetLogToDebug();
+  LoggingSeverity old_sev = rtc::LogMessage::GetLogToDebug();
   rtc::LogMessage::LogToDebug(LS_VERBOSE);
 
 

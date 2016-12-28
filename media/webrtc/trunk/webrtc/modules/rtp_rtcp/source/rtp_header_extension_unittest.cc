@@ -15,7 +15,7 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
 #include "webrtc/typedefs.h"
 

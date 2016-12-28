@@ -28,11 +28,6 @@ AfterInitializationFixture::AfterInitializationFixture()
   webrtc::AudioProcessing* audioproc = webrtc::AudioProcessing::Create(config);
 
   EXPECT_EQ(0, voe_base_->Init(NULL, audioproc));
-
-#if defined(WEBRTC_ANDROID)
-  EXPECT_EQ(0, voe_hardware_->SetLoudspeakerStatus(false));
-#endif
-
   EXPECT_EQ(0, voe_base_->RegisterVoiceEngineObserver(*error_observer_));
 }
 

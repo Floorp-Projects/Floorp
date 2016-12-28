@@ -239,14 +239,6 @@ JNIEXPORT jint JNICALL Java_org_webrtc_voiceengine_test_AndroidTest_SetECStatus
 JNIEXPORT jint JNICALL Java_org_webrtc_voiceengine_test_AndroidTest_SetSpeakerVolume
   (JNIEnv *, jobject, jint);
 
-/*
- * Class:     org_webrtc_voiceengine_test_AndroidTest
- * Method:    SetLoudspeakerStatus
- * Signature: (Z)I
- */
-JNIEXPORT jint JNICALL Java_org_webrtc_voiceengine_test_AndroidTest_SetLoudspeakerStatus
-  (JNIEnv *, jobject, jboolean);
-
 #ifdef __cplusplus
 }
 #endif

@@ -30,9 +30,9 @@ class CovarianceMatrixGenerator {
   // The covariance matrix of a source at the given angle.
   static void AngledCovarianceMatrix(float sound_speed,
                                      float angle,
-                                     int frequency_bin,
-                                     int fft_size,
-                                     int num_freq_bins,
+                                     size_t frequency_bin,
+                                     size_t fft_size,
+                                     size_t num_freq_bins,
                                      int sample_rate,
                                      const std::vector<Point>& geometry,
                                      ComplexMatrix<float>* mat);
@@ -40,8 +40,8 @@ class CovarianceMatrixGenerator {
   // Calculates phase shifts that, when applied to a multichannel signal and
   // added together, cause constructive interferernce for sources located at
   // the given angle.
-  static void PhaseAlignmentMasks(int frequency_bin,
-                                  int fft_size,
+  static void PhaseAlignmentMasks(size_t frequency_bin,
+                                  size_t fft_size,
                                   int sample_rate,
                                   float sound_speed,
                                   const std::vector<Point>& geometry,

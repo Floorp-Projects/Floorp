@@ -80,9 +80,9 @@ static const uint32_t kCrcTable[256] = {
  *                             -1 - Error
  */
 
-int16_t WebRtcIsac_GetCrc(const int16_t* bitstream,
-                          int16_t        len_bitstream_in_bytes,
-                          uint32_t*      crc)
+int WebRtcIsac_GetCrc(const int16_t* bitstream,
+                      int len_bitstream_in_bytes,
+                      uint32_t* crc)
 {
   uint8_t* bitstream_ptr_uw8;
   uint32_t crc_state;

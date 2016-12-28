@@ -42,55 +42,39 @@
 //   }
 //
 // These scopers also implement part of the functionality of C++11 unique_ptr
-// in that they are "movable but not copyable."  You can use the scopers in
-// the parameter and return types of functions to signify ownership transfer
-// in to and out of a function.  When calling a function that has a scoper
-// as the argument type, it must be called with the result of an analogous
-// scoper's Pass() function or another function that generates a temporary;
-// passing by copy will NOT work.  Here is an example using scoped_ptr:
+// in that they are "movable but not copyable." You can use the scopers in the
+// parameter and return types of functions to signify ownership transfer in to
+// and out of a function. When calling a function that has a scoper as the
+// argument type, it must be called with the result of calling std::move on an
+// analogous scoper, or another function that generates a temporary; passing by
+// copy will NOT work. Here is an example using scoped_ptr:
 //
 //   void TakesOwnership(scoped_ptr<Foo> arg) {
 //     // Do something with arg
 //   }
 //   scoped_ptr<Foo> CreateFoo() {
-//     // No need for calling Pass() because we are constructing a temporary
+//     // No need for calling std::move because we are constructing a temporary
 //     // for the return value.
 //     return scoped_ptr<Foo>(new Foo("new"));
 //   }
 //   scoped_ptr<Foo> PassThru(scoped_ptr<Foo> arg) {
-//     return arg.Pass();
+//     return std::move(arg);
 //   }
 //
 //   {
 //     scoped_ptr<Foo> ptr(new Foo("yay"));  // ptr manages Foo("yay").
-//     TakesOwnership(ptr.Pass());           // ptr no longer owns Foo("yay").
+//     TakesOwnership(std::move(ptr));       // ptr no longer owns Foo("yay").
 //     scoped_ptr<Foo> ptr2 = CreateFoo();   // ptr2 owns the return Foo.
 //     scoped_ptr<Foo> ptr3 =                // ptr3 now owns what was in ptr2.
-//         PassThru(ptr2.Pass());            // ptr2 is correspondingly nullptr.
+//         PassThru(std::move(ptr2));        // ptr2 is correspondingly nullptr.
 //   }
 //
-// Notice that if you do not call Pass() when returning from PassThru(), or
+// Notice that if you do not call std::move when returning from PassThru(), or
 // when invoking TakesOwnership(), the code will not compile because scopers
 // are not copyable; they only implement move semantics which require calling
-// the Pass() function to signify a destructive transfer of state. CreateFoo()
-// is different though because we are constructing a temporary on the return
-// line and thus can avoid needing to call Pass().
-//
-// Pass() properly handles upcast in initialization, i.e. you can use a
-// scoped_ptr<Child> to initialize a scoped_ptr<Parent>:
-//
-//   scoped_ptr<Foo> foo(new Foo());
-//   scoped_ptr<FooParent> parent(foo.Pass());
-//
-// PassAs<>() should be used to upcast return value in return statement:
-//
-//   scoped_ptr<Foo> CreateFoo() {
-//     scoped_ptr<FooChild> result(new FooChild());
-//     return result.PassAs<Foo>();
-//   }
-//
-// Note that PassAs<>() is implemented only for scoped_ptr<T>, but not for
-// scoped_ptr<T[]>. This is because casting array pointers may not be safe.
+// std::move to signify a destructive transfer of state. CreateFoo() is
+// different though because we are constructing a temporary on the return line
+// and thus can avoid needing to call std::move.
 
 #ifndef WEBRTC_BASE_SCOPED_PTR_H__
 #define WEBRTC_BASE_SCOPED_PTR_H__
@@ -103,24 +87,12 @@
 #include <stdlib.h>
 
 #include <algorithm>  // For std::swap().
+#include <cstddef>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/base/move.h"
+#include "webrtc/base/deprecation.h"
 #include "webrtc/base/template_util.h"
 #include "webrtc/typedefs.h"
-
-// XXX This file creates unused typedefs as a way of doing static assertions,
-// both via COMPILE_ASSERT and via direct typedefs like
-// 'type_must_be_complete'. These trigger a GCC warning (enabled by -Wall in
-// GCC 4.8 and above) which we disable here, just for this file, for GCC > 4.8.
-// This can be removed if & when this file (and COMPILE_ASSERT) stops using
-// these typedefs.
-#if defined(__GNUC__)
-#if !defined(__clang__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif // not clang, and version >= 4.8
-#endif // GCC or clang
 
 namespace rtc {
 
@@ -312,7 +284,7 @@ class scoped_ptr_impl {
 
   Data data_;
 
-  DISALLOW_COPY_AND_ASSIGN(scoped_ptr_impl);
+  RTC_DISALLOW_COPY_AND_ASSIGN(scoped_ptr_impl);
 };
 
 }  // namespace internal
@@ -335,7 +307,6 @@ class scoped_ptr_impl {
 // types.
 template <class T, class D = rtc::DefaultDeleter<T> >
 class scoped_ptr {
-  RTC_MOVE_ONLY_TYPE_WITH_MOVE_CONSTRUCTOR_FOR_CPP_03(scoped_ptr)
 
   // TODO(ajm): If we ever import RefCountedBase, this check needs to be
   // enabled.
@@ -357,7 +328,7 @@ class scoped_ptr {
   scoped_ptr(element_type* p, const D& d) : impl_(p, d) {}
 
   // Constructor.  Allows construction from a nullptr.
-  scoped_ptr(decltype(nullptr)) : impl_(nullptr) {}
+  scoped_ptr(std::nullptr_t) : impl_(nullptr) {}
 
   // Constructor.  Allows construction from a scoped_ptr rvalue for a
   // convertible type and deleter.
@@ -394,9 +365,19 @@ class scoped_ptr {
 
   // operator=.  Allows assignment from a nullptr. Deletes the currently owned
   // object, if any.
-  scoped_ptr& operator=(decltype(nullptr)) {
+  scoped_ptr& operator=(std::nullptr_t) {
     reset();
     return *this;
+  }
+
+  // Deleted copy constructor and copy assignment, to make the type move-only.
+  scoped_ptr(const scoped_ptr& other) = delete;
+  scoped_ptr& operator=(const scoped_ptr& other) = delete;
+
+  // Get an rvalue reference. (sp.Pass() does the same thing as std::move(sp).)
+  // Deprecated; remove in March 2016 (bug 5373).
+  RTC_DEPRECATED scoped_ptr&& Pass() {
+    return std::move(*this);
   }
 
   // Reset.  Deletes the currently owned object, if any.
@@ -483,8 +464,6 @@ class scoped_ptr {
 
 template <class T, class D>
 class scoped_ptr<T[], D> {
-  RTC_MOVE_ONLY_TYPE_WITH_MOVE_CONSTRUCTOR_FOR_CPP_03(scoped_ptr)
-
  public:
   // The element and deleter types.
   typedef T element_type;
@@ -509,7 +488,7 @@ class scoped_ptr<T[], D> {
   explicit scoped_ptr(element_type* array) : impl_(array) {}
 
   // Constructor.  Allows construction from a nullptr.
-  scoped_ptr(decltype(nullptr)) : impl_(nullptr) {}
+  scoped_ptr(std::nullptr_t) : impl_(nullptr) {}
 
   // Constructor.  Allows construction from a scoped_ptr rvalue.
   scoped_ptr(scoped_ptr&& other) : impl_(&other.impl_) {}
@@ -522,9 +501,19 @@ class scoped_ptr<T[], D> {
 
   // operator=.  Allows assignment from a nullptr. Deletes the currently owned
   // array, if any.
-  scoped_ptr& operator=(decltype(nullptr)) {
+  scoped_ptr& operator=(std::nullptr_t) {
     reset();
     return *this;
+  }
+
+  // Deleted copy constructor and copy assignment, to make the type move-only.
+  scoped_ptr(const scoped_ptr& other) = delete;
+  scoped_ptr& operator=(const scoped_ptr& other) = delete;
+
+  // Get an rvalue reference. (sp.Pass() does the same thing as std::move(sp).)
+  // Deprecated; remove in March 2016 (bug 5373).
+  RTC_DEPRECATED scoped_ptr&& Pass() {
+    return std::move(*this);
   }
 
   // Reset.  Deletes the currently owned array, if any.
@@ -611,12 +600,12 @@ class scoped_ptr<T[], D> {
   template <class U> bool operator!=(scoped_ptr<U> const& p2) const;
 };
 
-}  // namespace rtc
-
 template <class T, class D>
 void swap(rtc::scoped_ptr<T, D>& p1, rtc::scoped_ptr<T, D>& p2) {
   p1.swap(p2);
 }
+
+}  // namespace rtc
 
 template <class T, class D>
 bool operator==(T* p1, const rtc::scoped_ptr<T, D>& p2) {
@@ -635,12 +624,5 @@ template <typename T>
 rtc::scoped_ptr<T> rtc_make_scoped_ptr(T* ptr) {
   return rtc::scoped_ptr<T>(ptr);
 }
-
-// Pop off 'ignored "-Wunused-local-typedefs"':
-#if defined(__GNUC__)
-#if !defined(__clang__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
-#pragma GCC diagnostic pop
-#endif // not clang, and version >= 4.8
-#endif // GCC or clang
 
 #endif  // #ifndef WEBRTC_BASE_SCOPED_PTR_H__

@@ -15,93 +15,87 @@
 #include <vector>
 
 #include "webrtc/call.h"
+#include "webrtc/call/transport_adapter.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/video/encoded_frame_callback_adapter.h"
 #include "webrtc/video/send_statistics_proxy.h"
-#include "webrtc/video/transport_adapter.h"
+#include "webrtc/video/video_capture_input.h"
 #include "webrtc/video_receive_stream.h"
 #include "webrtc/video_send_stream.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 
-class CpuOveruseObserver;
-class VideoEngine;
-class ViEBase;
-class ViECapture;
-class ViECodec;
-class ViEExternalCapture;
-class ViEExternalCodec;
-class ViEImageProcess;
-class ViENetwork;
-class ViERTP_RTCP;
+class BitrateAllocator;
+class CallStats;
+class CongestionController;
+class EncoderStateFeedback;
+class ProcessThread;
+class ViEChannel;
+class ViEEncoder;
 
 namespace internal {
 
 class VideoSendStream : public webrtc::VideoSendStream,
-                        public VideoSendStreamInput {
+                        public webrtc::CpuOveruseObserver {
  public:
-  VideoSendStream(newapi::Transport* transport,
-                  CpuOveruseObserver* overuse_observer,
-                  webrtc::VideoEngine* video_engine,
+  VideoSendStream(int num_cpu_cores,
+                  ProcessThread* module_process_thread,
+                  CallStats* call_stats,
+                  CongestionController* congestion_controller,
+                  BitrateAllocator* bitrate_allocator,
                   const VideoSendStream::Config& config,
                   const VideoEncoderConfig& encoder_config,
-                  const std::map<uint32_t, RtpState>& suspended_ssrcs,
-                  int base_channel);
+                  const std::map<uint32_t, RtpState>& suspended_ssrcs);
 
-  virtual ~VideoSendStream();
+  ~VideoSendStream() override;
 
+  // webrtc::SendStream implementation.
   void Start() override;
   void Stop() override;
+  void SignalNetworkState(NetworkState state) override;
+  bool DeliverRtcp(const uint8_t* packet, size_t length) override;
 
+  // webrtc::VideoSendStream implementation.
+  VideoCaptureInput* Input() override;
   bool ReconfigureVideoEncoder(const VideoEncoderConfig& config) override;
-
   Stats GetStats() override;
 
-  bool DeliverRtcp(const uint8_t* packet, size_t length);
-
-  // From VideoSendStreamInput.
-  void IncomingCapturedFrame(const I420VideoFrame& frame) override;
-
-  // From webrtc::VideoSendStream.
-  VideoSendStreamInput* Input() override;
+  // webrtc::CpuOveruseObserver implementation.
+  void OveruseDetected() override;
+  void NormalUsage() override;
 
   typedef std::map<uint32_t, RtpState> RtpStateMap;
   RtpStateMap GetRtpStates() const;
 
-  void SignalNetworkState(Call::NetworkState state);
-
-  int64_t GetPacerQueuingDelayMs() const;
-
   int64_t GetRtt() const;
+  int GetPaddingNeededBps() const;
 
  private:
+  bool SetSendCodec(VideoCodec video_codec);
   void ConfigureSsrcs();
+
+  SendStatisticsProxy stats_proxy_;
   TransportAdapter transport_adapter_;
   EncodedFrameCallbackAdapter encoded_frame_proxy_;
   const VideoSendStream::Config config_;
   VideoEncoderConfig encoder_config_;
   std::map<uint32_t, RtpState> suspended_ssrcs_;
 
-  ViEBase* video_engine_base_;
-  ViECapture* capture_;
-  ViECodec* codec_;
-  ViEExternalCapture* external_capture_;
-  ViEExternalCodec* external_codec_;
-  ViENetwork* network_;
-  ViERTP_RTCP* rtp_rtcp_;
-  ViEImageProcess* image_process_;
+  ProcessThread* const module_process_thread_;
+  CallStats* const call_stats_;
+  CongestionController* const congestion_controller_;
 
-  int channel_;
-  int capture_id_;
+  rtc::scoped_ptr<VideoCaptureInput> input_;
+  rtc::scoped_ptr<ViEChannel> vie_channel_;
+  rtc::scoped_ptr<ViEEncoder> vie_encoder_;
+  rtc::scoped_ptr<EncoderStateFeedback> encoder_feedback_;
 
   // Used as a workaround to indicate that we should be using the configured
   // start bitrate initially, instead of the one reported by VideoEngine (which
   // defaults to too high).
   bool use_config_bitrate_;
-
-  SendStatisticsProxy stats_proxy_;
 };
 }  // namespace internal
 }  // namespace webrtc

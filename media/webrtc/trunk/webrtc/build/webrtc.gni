@@ -8,11 +8,9 @@
 
 import("//build/config/arm.gni")
 import("//build/config/mips.gni")
+import("//build_overrides/webrtc.gni")
 
 declare_args() {
-  # Assume Chromium build for now, since that's the priority case for getting GN
-  # up and running with WebRTC.
-  build_with_chromium = true
   build_with_libjingle = true
 
   # Disable this to avoid building the Opus audio codec.
@@ -37,13 +35,14 @@ declare_args() {
   rtc_enable_protobuf = true
 
   # Disable these to not build components which can be externally provided.
+  rtc_build_expat = true
   rtc_build_json = true
   rtc_build_libjpeg = true
-  rtc_build_libyuv = true
   rtc_build_libvpx = true
-  rtc_build_vp9 = true
-  rtc_build_ssl = true
+  rtc_build_libyuv = true
+  rtc_build_openmax_dl = true
   rtc_build_opus = true
+  rtc_build_ssl = true
 
   # Disable by default.
   rtc_have_dbus_glib = false
@@ -57,26 +56,6 @@ declare_args() {
   # Executes code generation at link-time instead of compile-time.
   # https://gcc.gnu.org/wiki/LinkTimeOptimization
   rtc_use_lto = false
-
-  if (build_with_chromium) {
-    # Exclude pulse audio on Chromium since its prerequisites don't require
-    # pulse audio.
-    rtc_include_pulse_audio = false
-
-    # Exclude internal ADM since Chromium uses its own IO handling.
-    rtc_include_internal_audio_device = false
-
-  } else {
-    # Settings for the standalone (not-in-Chromium) build.
-
-    # TODO(andrew): For now, disable the Chrome plugins, which causes a
-    # flood of chromium-style warnings. Investigate enabling them:
-    # http://code.google.com/p/webrtc/issues/detail?id=163
-    clang_use_chrome_plugins = false
-
-    rtc_include_pulse_audio = true
-    rtc_include_internal_audio_device = true
-  }
 
   if (build_with_libjingle) {
     rtc_include_tests = false
@@ -103,14 +82,29 @@ declare_args() {
     rtc_use_openmax_dl = false
   }
 
-  # WebRTC builds ARM v7 Neon instruction set optimized code for both iOS and
-  # Android, which is why we currently cannot use the variables in
-  # //build/config/arm.gni (since it disables Neon for Android).
-  rtc_build_armv7_neon = (current_cpu == "arm" && arm_version >= 7)
+  # Determines whether NEON code will be built.
+  rtc_build_with_neon =
+      (current_cpu == "arm" && (arm_use_neon || arm_optionally_use_neon)) ||
+      current_cpu == "arm64"
+
+  # Enable this to use HW H.264 encoder/decoder on iOS PeerConnections.
+  # Enabling this may break interop with Android clients that support H264.
+  rtc_use_objc_h264 = false
+
+  # Enable this to build H.264 encoder/decoder using third party libraries.
+  # Encoding uses OpenH264 and decoding uses FFmpeg. Because of this, OpenH264
+  # and FFmpeg have to be correctly enabled separately.
+  # - use_openh264=true is required for OpenH264 targets to be defined.
+  # - ffmpeg_branding="Chrome" is one way to support H.264 decoding in FFmpeg.
+  #   FFmpeg can be built with/without H.264 support, see 'ffmpeg_branding'.
+  #   Without it, it compiles but H264DecoderImpl fails to initialize.
+  # CHECK THE OPENH264, FFMPEG AND H.264 LICENSES/PATENTS BEFORE BUILDING.
+  # http://www.openh264.org, https://www.ffmpeg.org/
+  use_third_party_h264 = false  # TODO(hbos): To be used in follow-up CL(s).
 }
 
 # Make it possible to provide custom locations for some libraries (move these
 # up into declare_args should we need to actually use them for the GN build).
-rtc_libvpx_dir = "//third_party/libvpx"
+rtc_libvpx_dir = "//third_party/libvpx_new"
 rtc_libyuv_dir = "//third_party/libyuv"
 rtc_opus_dir = "//third_party/opus"

@@ -18,6 +18,7 @@
       'variables': {
         'files': [
           '<(DEPTH)/data/audio_processing/output_data_float.pb',
+          '<(DEPTH)/data/audio_processing/output_data_mac.pb',
           '<(DEPTH)/data/voice_engine/audio_tiny48.wav',
           '<(DEPTH)/resources/att-downlink.rx',
           '<(DEPTH)/resources/att-uplink.rx',
@@ -26,10 +27,7 @@
           '<(DEPTH)/resources/audio_coding/neteq4_universal_ref.pcm',
           '<(DEPTH)/resources/audio_coding/neteq4_universal_ref_win_32.pcm',
           '<(DEPTH)/resources/audio_coding/neteq4_universal_ref_win_64.pcm',
-          '<(DEPTH)/resources/audio_coding/neteq_network_stats.dat',
-          '<(DEPTH)/resources/audio_coding/neteq_rtcp_stats.dat',
           '<(DEPTH)/resources/audio_coding/neteq_universal_new.rtp',
-          '<(DEPTH)/resources/audio_coding/neteq_universal_ref.pcm',
           '<(DEPTH)/resources/audio_coding/speech_mono_16kHz.pcm',
           '<(DEPTH)/resources/audio_coding/speech_mono_32_48kHz.pcm',
           '<(DEPTH)/resources/audio_coding/testfile32kHz.pcm',
@@ -129,7 +127,7 @@
         ],
       },
     }],
-    ['OS=="linux" or OS=="mac" or OS=="win"', {
+    ['(OS=="linux" or OS=="mac" or OS=="win") and use_x11==0', {
       'variables': {
         'command': [
           '<(DEPTH)/testing/test_env.py',
@@ -139,6 +137,23 @@
           '<(DEPTH)/DEPS',
           '<(DEPTH)/testing/test_env.py',
           '<(PRODUCT_DIR)/modules_unittests<(EXECUTABLE_SUFFIX)',
+        ],
+      },
+    }],
+    ['(OS=="linux" or OS=="mac" or OS=="win") and use_x11==1', {
+      'variables': {
+        'command': [
+          '<(DEPTH)/testing/xvfb.py',
+          '<(PRODUCT_DIR)',
+          '<(DEPTH)/testing/test_env.py',
+          '<(PRODUCT_DIR)/modules_unittests<(EXECUTABLE_SUFFIX)',
+        ],
+        'files': [
+          '<(DEPTH)/DEPS',
+          '<(DEPTH)/testing/test_env.py',
+          '<(DEPTH)/testing/xvfb.py',
+          '<(PRODUCT_DIR)/modules_unittests<(EXECUTABLE_SUFFIX)',
+          '<(PRODUCT_DIR)/xdisplaycheck<(EXECUTABLE_SUFFIX)',
         ],
       },
     }],

@@ -9,8 +9,17 @@
 import("../build/webrtc.gni")
 
 source_set("voice_engine") {
-
   sources = [
+    "channel.cc",
+    "channel.h",
+    "channel_manager.cc",
+    "channel_manager.h",
+    "channel_proxy.cc",
+    "channel_proxy.h",
+    "dtmf_inband.cc",
+    "dtmf_inband.h",
+    "dtmf_inband_queue.cc",
+    "dtmf_inband_queue.h",
     "include/voe_audio_processing.h",
     "include/voe_base.h",
     "include/voe_codec.h",
@@ -24,14 +33,6 @@ source_set("voice_engine") {
     "include/voe_rtp_rtcp.h",
     "include/voe_video_sync.h",
     "include/voe_volume_control.h",
-    "channel.cc",
-    "channel.h",
-    "channel_manager.cc",
-    "channel_manager.h",
-    "dtmf_inband.cc",
-    "dtmf_inband.h",
-    "dtmf_inband_queue.cc",
-    "dtmf_inband_queue.h",
     "level_indicator.cc",
     "level_indicator.h",
     "monitor_module.cc",
@@ -96,6 +97,7 @@ source_set("voice_engine") {
   }
 
   deps = [
+    "..:rtc_event_log",
     "..:webrtc_common",
     "../common_audio",
     "../modules/audio_coding",
@@ -104,6 +106,7 @@ source_set("voice_engine") {
     "../modules/audio_processing",
     "../modules/bitrate_controller",
     "../modules/media_file",
+    "../modules/pacing",
     "../modules/rtp_rtcp",
     "../modules/utility",
     "../system_wrappers",

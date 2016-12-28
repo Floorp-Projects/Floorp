@@ -21,13 +21,20 @@ namespace cricket {
 
 class Candidate;
 
+// TODO(pthatcher): Remove this once it's no longer used in
+// remoting/protocol/libjingle_transport_factory.cc
+enum IceProtocolType {
+  ICEPROTO_RFC5245  // Standard RFC 5245 version of ICE.
+};
+
 // Base class for real implementations of TransportChannel.  This includes some
 // methods called only by Transport, which do not need to be exposed to the
 // client.
 class TransportChannelImpl : public TransportChannel {
  public:
-  explicit TransportChannelImpl(const std::string& content_name, int component)
-      : TransportChannel(content_name, component) {}
+  explicit TransportChannelImpl(const std::string& transport_name,
+                                int component)
+      : TransportChannel(transport_name, component) {}
 
   // Returns the transport that created this channel.
   virtual Transport* GetTransport() = 0;
@@ -35,10 +42,10 @@ class TransportChannelImpl : public TransportChannel {
   // For ICE channels.
   virtual IceRole GetIceRole() const = 0;
   virtual void SetIceRole(IceRole role) = 0;
-  virtual void SetIceTiebreaker(uint64 tiebreaker) = 0;
-  // To toggle G-ICE/ICE.
-  virtual bool GetIceProtocolType(IceProtocolType* type) const = 0;
-  virtual void SetIceProtocolType(IceProtocolType type) = 0;
+  virtual void SetIceTiebreaker(uint64_t tiebreaker) = 0;
+  // TODO(pthatcher): Remove this once it's no longer called in
+  // remoting/protocol/libjingle_transport_factory.cc
+  virtual void SetIceProtocolType(IceProtocolType type) {}
   // SetIceCredentials only need to be implemented by the ICE
   // transport channels. Non-ICE transport channels can just ignore.
   // The ufrag and pwd should be set before the Connect() is called.
@@ -52,17 +59,16 @@ class TransportChannelImpl : public TransportChannel {
   // SetRemoteIceMode must be implemented only by the ICE transport channels.
   virtual void SetRemoteIceMode(IceMode mode) = 0;
 
+  virtual void SetIceConfig(const IceConfig& config) = 0;
+
   // Begins the process of attempting to make a connection to the other client.
   virtual void Connect() = 0;
 
-  // Resets this channel back to the initial state (i.e., not connecting).
-  virtual void Reset() = 0;
+  // Start gathering candidates if not already started, or if an ICE restart
+  // occurred.
+  virtual void MaybeStartGathering() = 0;
 
-  // Allows an individual channel to request signaling and be notified when it
-  // is ready.  This is useful if the individual named channels have need to
-  // send their own transport-info stanzas.
-  sigslot::signal1<TransportChannelImpl*> SignalRequestSignaling;
-  virtual void OnSignalingReady() = 0;
+  sigslot::signal1<TransportChannelImpl*> SignalGatheringState;
 
   // Handles sending and receiving of candidates.  The Transport
   // receives the candidates and may forward them to the relevant
@@ -72,26 +78,22 @@ class TransportChannelImpl : public TransportChannel {
   // channel, they cannot return an error if the message is invalid.
   // It is assumed that the Transport will have checked validity
   // before forwarding.
-  sigslot::signal2<TransportChannelImpl*,
-                   const Candidate&> SignalCandidateReady;
-  virtual void OnCandidate(const Candidate& candidate) = 0;
+  sigslot::signal2<TransportChannelImpl*, const Candidate&>
+      SignalCandidateGathered;
+  virtual void AddRemoteCandidate(const Candidate& candidate) = 0;
+
+  virtual IceGatheringState gathering_state() const = 0;
 
   // DTLS methods
-  // Set DTLS local identity.  The identity object is not copied, but the caller
-  // retains ownership and must delete it after this TransportChannelImpl is
-  // destroyed.
-  // TODO(bemasc): Fix the ownership semantics of this method.
-  virtual bool SetLocalIdentity(rtc::SSLIdentity* identity) = 0;
+  virtual bool SetLocalCertificate(
+      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) = 0;
 
   // Set DTLS Remote fingerprint. Must be after local identity set.
   virtual bool SetRemoteFingerprint(const std::string& digest_alg,
-    const uint8* digest,
-    size_t digest_len) = 0;
+                                    const uint8_t* digest,
+                                    size_t digest_len) = 0;
 
   virtual bool SetSslRole(rtc::SSLRole role) = 0;
-
-  // TransportChannel is forwarding this signal from PortAllocatorSession.
-  sigslot::signal1<TransportChannelImpl*> SignalCandidatesAllocationDone;
 
   // Invoked when there is conflict in the ICE role between local and remote
   // agents.
@@ -102,7 +104,7 @@ class TransportChannelImpl : public TransportChannel {
   sigslot::signal1<TransportChannelImpl*> SignalConnectionRemoved;
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(TransportChannelImpl);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TransportChannelImpl);
 };
 
 }  // namespace cricket

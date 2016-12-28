@@ -52,7 +52,7 @@ class Win32Socket : public AsyncSocket {
   virtual int GetError() const;
   virtual void SetError(int error);
   virtual ConnState GetState() const;
-  virtual int EstimateMTU(uint16* mtu);
+  virtual int EstimateMTU(uint16_t* mtu);
   virtual int GetOption(Option opt, int* value);
   virtual int SetOption(Option opt, int value);
 
@@ -72,7 +72,7 @@ class Win32Socket : public AsyncSocket {
   int error_;
   ConnState state_;
   SocketAddress addr_;         // address that we connected to (see DoConnect)
-  uint32 connect_time_;
+  uint32_t connect_time_;
   bool closing_;
   int close_error_;
 

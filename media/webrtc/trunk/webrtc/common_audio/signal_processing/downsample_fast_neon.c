@@ -15,22 +15,22 @@
 // NEON intrinsics version of WebRtcSpl_DownsampleFast()
 // for ARM 32-bit/64-bit platforms.
 int WebRtcSpl_DownsampleFastNeon(const int16_t* data_in,
-                                 int data_in_length,
+                                 size_t data_in_length,
                                  int16_t* data_out,
-                                 int data_out_length,
+                                 size_t data_out_length,
                                  const int16_t* __restrict coefficients,
-                                 int coefficients_length,
+                                 size_t coefficients_length,
                                  int factor,
-                                 int delay) {
-  int i = 0;
-  int j = 0;
+                                 size_t delay) {
+  size_t i = 0;
+  size_t j = 0;
   int32_t out_s32 = 0;
-  int endpos = delay + factor * (data_out_length - 1) + 1;
-  int res = data_out_length & 0x7;
-  int endpos1 = endpos - factor * res;
+  size_t endpos = delay + factor * (data_out_length - 1) + 1;
+  size_t res = data_out_length & 0x7;
+  size_t endpos1 = endpos - factor * res;
 
   // Return error if any of the running conditions doesn't meet.
-  if (data_out_length <= 0 || coefficients_length <= 0
+  if (data_out_length == 0 || coefficients_length == 0
                            || data_in_length < endpos) {
     return -1;
   }

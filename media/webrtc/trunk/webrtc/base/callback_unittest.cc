@@ -11,6 +11,8 @@
 #include "webrtc/base/bind.h"
 #include "webrtc/base/callback.h"
 #include "webrtc/base/gunit.h"
+#include "webrtc/base/keep_ref_until_done.h"
+#include "webrtc/base/refcount.h"
 
 namespace rtc {
 
@@ -24,6 +26,21 @@ void i(int& x) { x *= x; }  // NOLINT: Testing refs
 struct BindTester {
   int a() { return 24; }
   int b(int x) const { return x * x; }
+};
+
+class RefCountedBindTester : public RefCountInterface {
+ public:
+  RefCountedBindTester() : count_(0) {}
+  int AddRef() const override {
+    return ++count_;
+  }
+  int Release() const {
+    return --count_;
+  }
+  int RefCount() const { return count_; }
+
+ private:
+  mutable int count_;
 };
 
 }  // namespace
@@ -76,6 +93,48 @@ TEST(CallbackTest, WithBind) {
   cb1 = Bind(&BindTester::b, &t, 5);
   EXPECT_EQ(25, cb1());
   EXPECT_EQ(25, cb1());
+}
+
+TEST(KeepRefUntilDoneTest, simple) {
+  RefCountedBindTester t;
+  EXPECT_EQ(0, t.RefCount());
+  {
+    Callback0<void> cb = KeepRefUntilDone(&t);
+    EXPECT_EQ(1, t.RefCount());
+    cb();
+    EXPECT_EQ(1, t.RefCount());
+    cb();
+    EXPECT_EQ(1, t.RefCount());
+  }
+  EXPECT_EQ(0, t.RefCount());
+}
+
+TEST(KeepRefUntilDoneTest, copy) {
+  RefCountedBindTester t;
+  EXPECT_EQ(0, t.RefCount());
+  Callback0<void> cb2;
+  {
+    Callback0<void> cb = KeepRefUntilDone(&t);
+    EXPECT_EQ(1, t.RefCount());
+    cb2 = cb;
+  }
+  EXPECT_EQ(1, t.RefCount());
+  cb2 = Callback0<void>();
+  EXPECT_EQ(0, t.RefCount());
+}
+
+TEST(KeepRefUntilDoneTest, scopedref) {
+  RefCountedBindTester t;
+  EXPECT_EQ(0, t.RefCount());
+  {
+    scoped_refptr<RefCountedBindTester> t_scoped_ref(&t);
+    Callback0<void> cb = KeepRefUntilDone(t_scoped_ref);
+    t_scoped_ref = nullptr;
+    EXPECT_EQ(1, t.RefCount());
+    cb();
+    EXPECT_EQ(1, t.RefCount());
+  }
+  EXPECT_EQ(0, t.RefCount());
 }
 
 }  // namespace rtc

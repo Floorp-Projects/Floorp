@@ -46,7 +46,7 @@ class PacketSource {
   uint32_t ssrc_;  // The selected SSRC. All other SSRCs will be discarded.
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(PacketSource);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PacketSource);
 };
 
 }  // namespace test

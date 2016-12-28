@@ -11,6 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENCODER_H_
 #define WEBRTC_VIDEO_ENCODER_H_
 
+#include <string>
 #include <vector>
 
 #include "webrtc/common_types.h"
@@ -37,8 +38,10 @@ class EncodedImageCallback {
 class VideoEncoder {
  public:
   enum EncoderType {
+    kH264,
     kVp8,
     kVp9,
+    kUnsupportedCodec,
   };
 
   static VideoEncoder* Create(EncoderType codec_type);
@@ -94,9 +97,9 @@ class VideoEncoder {
   //                                  WEBRTC_VIDEO_CODEC_MEMORY
   //                                  WEBRTC_VIDEO_CODEC_ERROR
   //                                  WEBRTC_VIDEO_CODEC_TIMEOUT
-  virtual int32_t Encode(const I420VideoFrame& frame,
+  virtual int32_t Encode(const VideoFrame& frame,
                          const CodecSpecificInfo* codec_specific_info,
-                         const std::vector<VideoFrameType>* frame_types) = 0;
+                         const std::vector<FrameType>* frame_types) = 0;
 
   // Inform the encoder of the new packet loss rate and the round-trip time of
   // the network.
@@ -119,10 +122,64 @@ class VideoEncoder {
   virtual int32_t SetRates(uint32_t bitrate, uint32_t framerate) = 0;
 
   virtual int32_t SetPeriodicKeyFrames(bool enable) { return -1; }
-  virtual int32_t CodecConfigParameters(uint8_t* /*buffer*/, int32_t /*size*/) {
-    return -1;
-  }
+  virtual void OnDroppedFrame() {}
+  virtual int GetTargetFramerate() { return -1; }
+  virtual bool SupportsNativeHandle() const { return false; }
+  virtual const char* ImplementationName() const { return "unknown"; }
 };
 
+// Class used to wrap external VideoEncoders to provide a fallback option on
+// software encoding when a hardware encoder fails to encode a stream due to
+// hardware restrictions, such as max resolution.
+class VideoEncoderSoftwareFallbackWrapper : public VideoEncoder {
+ public:
+  VideoEncoderSoftwareFallbackWrapper(VideoCodecType codec_type,
+                                      webrtc::VideoEncoder* encoder);
+
+  int32_t InitEncode(const VideoCodec* codec_settings,
+                     int32_t number_of_cores,
+                     size_t max_payload_size) override;
+
+  int32_t RegisterEncodeCompleteCallback(
+      EncodedImageCallback* callback) override;
+
+  int32_t Release() override;
+  int32_t Encode(const VideoFrame& frame,
+                 const CodecSpecificInfo* codec_specific_info,
+                 const std::vector<FrameType>* frame_types) override;
+  int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
+
+  int32_t SetRates(uint32_t bitrate, uint32_t framerate) override;
+  void OnDroppedFrame() override;
+  int GetTargetFramerate() override;
+  bool SupportsNativeHandle() const override;
+  const char* ImplementationName() const override;
+
+ private:
+  bool InitFallbackEncoder();
+
+  // Settings used in the last InitEncode call and used if a dynamic fallback to
+  // software is required.
+  VideoCodec codec_settings_;
+  int32_t number_of_cores_;
+  size_t max_payload_size_;
+
+  // The last bitrate/framerate set, and a flag for noting they are set.
+  bool rates_set_;
+  uint32_t bitrate_;
+  uint32_t framerate_;
+
+  // The last channel parameters set, and a flag for noting they are set.
+  bool channel_parameters_set_;
+  uint32_t packet_loss_;
+  int64_t rtt_;
+
+  const EncoderType encoder_type_;
+  webrtc::VideoEncoder* const encoder_;
+
+  rtc::scoped_ptr<webrtc::VideoEncoder> fallback_encoder_;
+  std::string fallback_implementation_name_;
+  EncodedImageCallback* callback_;
+};
 }  // namespace webrtc
 #endif  // WEBRTC_VIDEO_ENCODER_H_

@@ -61,7 +61,7 @@ class LateBindingSymbolTable {
   DllHandle handle_;
   bool undefined_symbols_;
 
-  DISALLOW_COPY_AND_ASSIGN(LateBindingSymbolTable);
+  RTC_DISALLOW_COPY_AND_ASSIGN(LateBindingSymbolTable);
 };
 
 }  // namespace rtc

@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "webrtc/system_wrappers/interface/aligned_malloc.h"
+#include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/test/channel_transport/udp_socket2_win.h"
 
 namespace webrtc {
@@ -520,8 +520,8 @@ int32_t UdpSocket2WorkerWindows::_numOfWorkers = 0;
 
 UdpSocket2WorkerWindows::UdpSocket2WorkerWindows(HANDLE ioCompletionHandle)
     : _ioCompletionHandle(ioCompletionHandle),
-      _init(false)
-{
+      _pThread(Run, this, "UdpSocket2ManagerWindows_thread"),
+      _init(false) {
     _workerNumber = _numOfWorkers++;
     WEBRTC_TRACE(kTraceMemory,  kTraceTransport, -1,
                  "UdpSocket2WorkerWindows created");
@@ -537,10 +537,9 @@ bool UdpSocket2WorkerWindows::Start()
 {
     WEBRTC_TRACE(kTraceStateInfo,  kTraceTransport, -1,
                  "Start UdpSocket2WorkerWindows");
-    if (!_pThread->Start())
-        return false;
+    _pThread.Start();
 
-    _pThread->SetPriority(kRealtimePriority);
+    _pThread.SetPriority(rtc::kRealtimePriority);
     return true;
 }
 
@@ -548,18 +547,14 @@ bool UdpSocket2WorkerWindows::Stop()
 {
     WEBRTC_TRACE(kTraceStateInfo,  kTraceTransport, -1,
                  "Stop UdpSocket2WorkerWindows");
-    return _pThread->Stop();
+    _pThread.Stop();
+    return true;
 }
 
 int32_t UdpSocket2WorkerWindows::Init()
 {
-    if(!_init)
-    {
-        const char* threadName = "UdpSocket2ManagerWindows_thread";
-        _pThread = ThreadWrapper::CreateThread(Run, this, threadName);
-        _init = true;
-    }
-    return 0;
+  _init = true;
+  return 0;
 }
 
 bool UdpSocket2WorkerWindows::Run(void* obj)

@@ -22,45 +22,54 @@ namespace cricket {
 
 class PortAllocator;
 
-// Base should be a descendant of cricket::Transport
+// Base should be a descendant of cricket::Transport and have a constructor
+// that takes a transport name and PortAllocator.
+//
+// Everything in this class should be called on the worker thread.
 template<class Base>
 class DtlsTransport : public Base {
  public:
-  DtlsTransport(rtc::Thread* signaling_thread,
-                rtc::Thread* worker_thread,
-                const std::string& content_name,
+  DtlsTransport(const std::string& name,
                 PortAllocator* allocator,
-                rtc::SSLIdentity* identity)
-      : Base(signaling_thread, worker_thread, content_name, allocator),
-        identity_(identity),
-        secure_role_(rtc::SSL_CLIENT) {
-  }
+                const rtc::scoped_refptr<rtc::RTCCertificate>& certificate)
+      : Base(name, allocator),
+        certificate_(certificate),
+        secure_role_(rtc::SSL_CLIENT),
+        ssl_max_version_(rtc::SSL_PROTOCOL_DTLS_12) {}
 
   ~DtlsTransport() {
     Base::DestroyAllChannels();
   }
-  virtual void SetIdentity_w(rtc::SSLIdentity* identity) {
-    identity_ = identity;
+
+  void SetLocalCertificate(
+      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) override {
+    certificate_ = certificate;
   }
-  virtual bool GetIdentity_w(rtc::SSLIdentity** identity) {
-    if (!identity_)
+  bool GetLocalCertificate(
+      rtc::scoped_refptr<rtc::RTCCertificate>* certificate) override {
+    if (!certificate_)
       return false;
 
-    *identity = identity_->GetReference();
+    *certificate = certificate_;
     return true;
   }
 
-  virtual bool ApplyLocalTransportDescription_w(TransportChannelImpl* channel,
-                                                std::string* error_desc) {
+  bool SetSslMaxProtocolVersion(rtc::SSLProtocolVersion version) override {
+    ssl_max_version_ = version;
+    return true;
+  }
+
+  bool ApplyLocalTransportDescription(TransportChannelImpl* channel,
+                                      std::string* error_desc) override {
     rtc::SSLFingerprint* local_fp =
         Base::local_description()->identity_fingerprint.get();
 
     if (local_fp) {
       // Sanity check local fingerprint.
-      if (identity_) {
+      if (certificate_) {
         rtc::scoped_ptr<rtc::SSLFingerprint> local_fp_tmp(
             rtc::SSLFingerprint::Create(local_fp->algorithm,
-                                              identity_));
+                                        certificate_->identity()));
         ASSERT(local_fp_tmp.get() != NULL);
         if (!(*local_fp_tmp == *local_fp)) {
           std::ostringstream desc;
@@ -75,20 +84,20 @@ class DtlsTransport : public Base {
             error_desc);
       }
     } else {
-      identity_ = NULL;
+      certificate_ = nullptr;
     }
 
-    if (!channel->SetLocalIdentity(identity_)) {
+    if (!channel->SetLocalCertificate(certificate_)) {
       return BadTransportDescription("Failed to set local identity.",
                                      error_desc);
     }
 
     // Apply the description in the base class.
-    return Base::ApplyLocalTransportDescription_w(channel, error_desc);
+    return Base::ApplyLocalTransportDescription(channel, error_desc);
   }
 
-  virtual bool NegotiateTransportDescription_w(ContentAction local_role,
-                                               std::string* error_desc) {
+  bool NegotiateTransportDescription(ContentAction local_role,
+                                     std::string* error_desc) override {
     if (!Base::local_description() || !Base::remote_description()) {
       const std::string msg = "Local and Remote description must be set before "
                               "transport descriptions are negotiated";
@@ -185,15 +194,17 @@ class DtlsTransport : public Base {
     }
 
     // Now run the negotiation for the base class.
-    return Base::NegotiateTransportDescription_w(local_role, error_desc);
+    return Base::NegotiateTransportDescription(local_role, error_desc);
   }
 
-  virtual DtlsTransportChannelWrapper* CreateTransportChannel(int component) {
-    return new DtlsTransportChannelWrapper(
+  DtlsTransportChannelWrapper* CreateTransportChannel(int component) override {
+    DtlsTransportChannelWrapper* channel = new DtlsTransportChannelWrapper(
         this, Base::CreateTransportChannel(component));
+    channel->SetSslMaxProtocolVersion(ssl_max_version_);
+    return channel;
   }
 
-  virtual void DestroyTransportChannel(TransportChannelImpl* channel) {
+  void DestroyTransportChannel(TransportChannelImpl* channel) override {
     // Kind of ugly, but this lets us do the exact inverse of the create.
     DtlsTransportChannelWrapper* dtls_channel =
         static_cast<DtlsTransportChannelWrapper*>(channel);
@@ -202,16 +213,15 @@ class DtlsTransport : public Base {
     Base::DestroyTransportChannel(base_channel);
   }
 
-  virtual bool GetSslRole_w(rtc::SSLRole* ssl_role) const {
+  bool GetSslRole(rtc::SSLRole* ssl_role) const override {
     ASSERT(ssl_role != NULL);
     *ssl_role = secure_role_;
     return true;
   }
 
  private:
-  virtual bool ApplyNegotiatedTransportDescription_w(
-      TransportChannelImpl* channel,
-      std::string* error_desc) {
+  bool ApplyNegotiatedTransportDescription(TransportChannelImpl* channel,
+                                           std::string* error_desc) override {
     // Set ssl role. Role must be set before fingerprint is applied, which
     // initiates DTLS setup.
     if (!channel->SetSslRole(secure_role_)) {
@@ -219,18 +229,19 @@ class DtlsTransport : public Base {
                                      error_desc);
     }
     // Apply remote fingerprint.
-    if (!channel->SetRemoteFingerprint(
-            remote_fingerprint_->algorithm,
-            reinterpret_cast<const uint8*>(remote_fingerprint_->digest.data()),
-            remote_fingerprint_->digest.size())) {
+    if (!channel->SetRemoteFingerprint(remote_fingerprint_->algorithm,
+                                       reinterpret_cast<const uint8_t*>(
+                                           remote_fingerprint_->digest.data()),
+                                       remote_fingerprint_->digest.size())) {
       return BadTransportDescription("Failed to apply remote fingerprint.",
                                      error_desc);
     }
-    return Base::ApplyNegotiatedTransportDescription_w(channel, error_desc);
+    return Base::ApplyNegotiatedTransportDescription(channel, error_desc);
   }
 
-  rtc::SSLIdentity* identity_;
+  rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
   rtc::SSLRole secure_role_;
+  rtc::SSLProtocolVersion ssl_max_version_;
   rtc::scoped_ptr<rtc::SSLFingerprint> remote_fingerprint_;
 };
 

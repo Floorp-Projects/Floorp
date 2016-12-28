@@ -11,6 +11,7 @@
 #include "webrtc/base/natsocketfactory.h"
 #include "webrtc/base/natserver.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/base/socketadapters.h"
 
 namespace rtc {
 
@@ -63,14 +64,77 @@ bool AddrCmp::operator()(
   return false;
 }
 
+// Proxy socket that will capture the external destination address intended for
+// a TCP connection to the NAT server.
+class NATProxyServerSocket : public AsyncProxyServerSocket {
+ public:
+  NATProxyServerSocket(AsyncSocket* socket)
+      : AsyncProxyServerSocket(socket, kNATEncodedIPv6AddressSize) {
+    BufferInput(true);
+  }
+
+  void SendConnectResult(int err, const SocketAddress& addr) override {
+    char code = err ? 1 : 0;
+    BufferedReadAdapter::DirectSend(&code, sizeof(char));
+  }
+
+ protected:
+  void ProcessInput(char* data, size_t* len) override {
+    if (*len < 2) {
+      return;
+    }
+
+    int family = data[1];
+    ASSERT(family == AF_INET || family == AF_INET6);
+    if ((family == AF_INET && *len < kNATEncodedIPv4AddressSize) ||
+        (family == AF_INET6 && *len < kNATEncodedIPv6AddressSize)) {
+      return;
+    }
+
+    SocketAddress dest_addr;
+    size_t address_length = UnpackAddressFromNAT(data, *len, &dest_addr);
+
+    *len -= address_length;
+    if (*len > 0) {
+      memmove(data, data + address_length, *len);
+    }
+
+    bool remainder = (*len > 0);
+    BufferInput(false);
+    SignalConnectRequest(this, dest_addr);
+    if (remainder) {
+      SignalReadEvent(this);
+    }
+  }
+
+};
+
+class NATProxyServer : public ProxyServer {
+ public:
+  NATProxyServer(SocketFactory* int_factory, const SocketAddress& int_addr,
+                 SocketFactory* ext_factory, const SocketAddress& ext_ip)
+      : ProxyServer(int_factory, int_addr, ext_factory, ext_ip) {
+  }
+
+ protected:
+  AsyncProxyServerSocket* WrapSocket(AsyncSocket* socket) override {
+    return new NATProxyServerSocket(socket);
+  }
+};
+
 NATServer::NATServer(
-    NATType type, SocketFactory* internal, const SocketAddress& internal_addr,
+    NATType type, SocketFactory* internal,
+    const SocketAddress& internal_udp_addr,
+    const SocketAddress& internal_tcp_addr,
     SocketFactory* external, const SocketAddress& external_ip)
     : external_(external), external_ip_(external_ip.ipaddr(), 0) {
   nat_ = NAT::Create(type);
 
-  server_socket_ = AsyncUDPSocket::Create(internal, internal_addr);
-  server_socket_->SignalReadPacket.connect(this, &NATServer::OnInternalPacket);
+  udp_server_socket_ = AsyncUDPSocket::Create(internal, internal_udp_addr);
+  udp_server_socket_->SignalReadPacket.connect(this,
+                                               &NATServer::OnInternalUDPPacket);
+  tcp_proxy_server_ = new NATProxyServer(internal, internal_tcp_addr, external,
+                                         external_ip);
 
   int_map_ = new InternalMap(RouteCmp(nat_));
   ext_map_ = new ExternalMap();
@@ -83,15 +147,15 @@ NATServer::~NATServer() {
     delete iter->second;
 
   delete nat_;
-  delete server_socket_;
+  delete udp_server_socket_;
+  delete tcp_proxy_server_;
   delete int_map_;
   delete ext_map_;
 }
 
-void NATServer::OnInternalPacket(
+void NATServer::OnInternalUDPPacket(
     AsyncPacketSocket* socket, const char* buf, size_t size,
     const SocketAddress& addr, const PacketTime& packet_time) {
-
   // Read the intended destination from the wire.
   SocketAddress dest_addr;
   size_t length = UnpackAddressFromNAT(buf, size, &dest_addr);
@@ -113,10 +177,9 @@ void NATServer::OnInternalPacket(
   iter->second->socket->SendTo(buf + length, size - length, dest_addr, options);
 }
 
-void NATServer::OnExternalPacket(
+void NATServer::OnExternalUDPPacket(
     AsyncPacketSocket* socket, const char* buf, size_t size,
     const SocketAddress& remote_addr, const PacketTime& packet_time) {
-
   SocketAddress local_addr = socket->GetLocalAddress();
 
   // Find the translation for this addresses.
@@ -139,8 +202,8 @@ void NATServer::OnExternalPacket(
   // Copy the data part after the address.
   rtc::PacketOptions options;
   memcpy(real_buf.get() + addrlength, buf, size);
-  server_socket_->SendTo(real_buf.get(), size + addrlength,
-                         iter->second->route.source(), options);
+  udp_server_socket_->SendTo(real_buf.get(), size + addrlength,
+                             iter->second->route.source(), options);
 }
 
 void NATServer::Translate(const SocketAddressPair& route) {
@@ -154,7 +217,7 @@ void NATServer::Translate(const SocketAddressPair& route) {
   TransEntry* entry = new TransEntry(route, socket, nat_);
   (*int_map_)[route] = entry;
   (*ext_map_)[socket->GetLocalAddress()] = entry;
-  socket->SignalReadPacket.connect(this, &NATServer::OnExternalPacket);
+  socket->SignalReadPacket.connect(this, &NATServer::OnExternalUDPPacket);
 }
 
 bool NATServer::ShouldFilterOut(TransEntry* entry,

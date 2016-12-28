@@ -37,14 +37,6 @@ const ScreenId kFullDesktopScreenId = -1;
 
 const ScreenId kInvalidScreenId = -2;
 
-
-typedef intptr_t ProcessId;
-const ProcessId DesktopProcessId = 0;
-
-#ifdef XP_WIN
-typedef int pid_t;
-#endif
-
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_

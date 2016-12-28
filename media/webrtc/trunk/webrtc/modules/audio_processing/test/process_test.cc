@@ -17,13 +17,15 @@
 
 #include <algorithm>
 
+#include "webrtc/base/format_macros.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/audio_processing/test/protobuf_utils.h"
 #include "webrtc/modules/audio_processing/test/test_utils.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/perf_test.h"
 #ifdef WEBRTC_ANDROID_PLATFORM_BUILD
@@ -158,9 +160,9 @@ void void_main(int argc, char* argv[]) {
 
   int32_t sample_rate_hz = 16000;
 
-  int num_capture_input_channels = 1;
-  int num_capture_output_channels = 1;
-  int num_render_channels = 1;
+  size_t num_capture_input_channels = 1;
+  size_t num_capture_output_channels = 1;
+  size_t num_render_channels = 1;
 
   int samples_per_channel = sample_rate_hz / 100;
 
@@ -171,6 +173,7 @@ void void_main(int argc, char* argv[]) {
   bool raw_output = false;
   int extra_delay_ms = 0;
   int override_delay_ms = 0;
+  Config config;
 
   ASSERT_EQ(apm->kNoError, apm->level_estimator()->Enable(true));
   for (int i = 1; i < argc; i++) {
@@ -205,14 +208,14 @@ void void_main(int argc, char* argv[]) {
     } else if (strcmp(argv[i], "-ch") == 0) {
       i++;
       ASSERT_LT(i + 1, argc) << "Specify number of channels after -ch";
-      ASSERT_EQ(1, sscanf(argv[i], "%d", &num_capture_input_channels));
+      ASSERT_EQ(1, sscanf(argv[i], "%" PRIuS, &num_capture_input_channels));
       i++;
-      ASSERT_EQ(1, sscanf(argv[i], "%d", &num_capture_output_channels));
+      ASSERT_EQ(1, sscanf(argv[i], "%" PRIuS, &num_capture_output_channels));
 
     } else if (strcmp(argv[i], "-rch") == 0) {
       i++;
       ASSERT_LT(i, argc) << "Specify number of channels after -rch";
-      ASSERT_EQ(1, sscanf(argv[i], "%d", &num_render_channels));
+      ASSERT_EQ(1, sscanf(argv[i], "%" PRIuS, &num_render_channels));
 
     } else if (strcmp(argv[i], "-aec") == 0) {
       ASSERT_EQ(apm->kNoError, apm->echo_cancellation()->Enable(true));
@@ -256,14 +259,13 @@ void void_main(int argc, char* argv[]) {
                         suppression_level)));
 
     } else if (strcmp(argv[i], "--extended_filter") == 0) {
-      Config config;
-      config.Set<DelayCorrection>(new DelayCorrection(true));
-      apm->SetExtraOptions(config);
+      config.Set<ExtendedFilter>(new ExtendedFilter(true));
 
     } else if (strcmp(argv[i], "--no_reported_delay") == 0) {
-      Config config;
-      config.Set<ReportedDelay>(new ReportedDelay(false));
-      apm->SetExtraOptions(config);
+      config.Set<DelayAgnostic>(new DelayAgnostic(true));
+
+    } else if (strcmp(argv[i], "--delay_agnostic") == 0) {
+      config.Set<DelayAgnostic>(new DelayAgnostic(true));
 
     } else if (strcmp(argv[i], "-aecm") == 0) {
       ASSERT_EQ(apm->kNoError, apm->echo_control_mobile()->Enable(true));
@@ -402,9 +404,7 @@ void void_main(int argc, char* argv[]) {
       vad_out_filename = argv[i];
 
     } else if (strcmp(argv[i], "-expns") == 0) {
-      Config config;
       config.Set<ExperimentalNs>(new ExperimentalNs(true));
-      apm->SetExtraOptions(config);
 
     } else if (strcmp(argv[i], "--noasm") == 0) {
       WebRtc_GetCPUInfo = WebRtc_GetCPUInfoNoASM;
@@ -440,16 +440,18 @@ void void_main(int argc, char* argv[]) {
       FAIL() << "Unrecognized argument " << argv[i];
     }
   }
+  apm->SetExtraOptions(config);
+
   // If we're reading a protobuf file, ensure a simulation hasn't also
   // been requested (which makes no sense...)
   ASSERT_FALSE(pb_filename && simulating);
 
   if (verbose) {
     printf("Sample rate: %d Hz\n", sample_rate_hz);
-    printf("Primary channels: %d (in), %d (out)\n",
+    printf("Primary channels: %" PRIuS " (in), %" PRIuS " (out)\n",
            num_capture_input_channels,
            num_capture_output_channels);
-    printf("Reverse channels: %d \n", num_render_channels);
+    printf("Reverse channels: %" PRIuS "\n", num_render_channels);
   }
 
   const std::string out_path = webrtc::test::OutputPath();
@@ -600,14 +602,18 @@ void void_main(int argc, char* argv[]) {
         if (msg.has_output_sample_rate()) {
           output_sample_rate = msg.output_sample_rate();
         }
-        output_layout = LayoutFromChannels(msg.num_output_channels());
-        ASSERT_EQ(kNoErr, apm->Initialize(
-                              msg.sample_rate(),
-                              output_sample_rate,
-                              reverse_sample_rate,
-                              LayoutFromChannels(msg.num_input_channels()),
-                              output_layout,
-                              LayoutFromChannels(msg.num_reverse_channels())));
+        output_layout =
+            LayoutFromChannels(static_cast<size_t>(msg.num_output_channels()));
+        ASSERT_EQ(kNoErr,
+                  apm->Initialize(
+                      msg.sample_rate(),
+                      output_sample_rate,
+                      reverse_sample_rate,
+                      LayoutFromChannels(
+                          static_cast<size_t>(msg.num_input_channels())),
+                      output_layout,
+                      LayoutFromChannels(
+                          static_cast<size_t>(msg.num_reverse_channels()))));
 
         samples_per_channel = msg.sample_rate() / 100;
         far_frame.sample_rate_hz_ = reverse_sample_rate;
@@ -635,11 +641,11 @@ void void_main(int argc, char* argv[]) {
         }
 
         if (!raw_output) {
-          // The WAV file needs to be reset every time, because it cant change
-          // it's sample rate or number of channels.
-          output_wav_file.reset(new WavWriter(out_filename + ".wav",
-                                              output_sample_rate,
-                                              msg.num_output_channels()));
+          // The WAV file needs to be reset every time, because it can't change
+          // its sample rate or number of channels.
+          output_wav_file.reset(new WavWriter(
+              out_filename + ".wav", output_sample_rate,
+              static_cast<size_t>(msg.num_output_channels())));
         }
 
       } else if (event_msg.type() == Event::REVERSE_STREAM) {
@@ -908,7 +914,7 @@ void void_main(int argc, char* argv[]) {
             // not reaching end-of-file.
             EXPECT_EQ(0, fseek(near_file, read_count * sizeof(int16_t),
                       SEEK_CUR));
-            break; // This is expected.
+            break;  // This is expected.
           }
         } else {
           ASSERT_EQ(size, read_count);
@@ -951,7 +957,7 @@ void void_main(int argc, char* argv[]) {
         }
         if (simulating) {
           if (read_count != size) {
-            break; // This is expected.
+            break;  // This is expected.
           }
 
           delay_ms = 0;
@@ -1043,13 +1049,14 @@ void void_main(int argc, char* argv[]) {
                      size,
                      output_wav_file.get(),
                      output_raw_file.get());
-      }
-      else {
+      } else {
         FAIL() << "Event " << event << " is unrecognized";
       }
     }
   }
-  printf("100%% complete\r");
+  if (progress) {
+    printf("100%% complete\r");
+  }
 
   if (aecm_echo_path_out_file != NULL) {
     const size_t path_size =
@@ -1139,8 +1146,7 @@ void void_main(int argc, char* argv[]) {
 }  // namespace
 }  // namespace webrtc
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   webrtc::void_main(argc, argv);
 
   // Optional, but removes memory leak noise from Valgrind.

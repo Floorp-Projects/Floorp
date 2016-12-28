@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 
 #if defined(_WIN32)

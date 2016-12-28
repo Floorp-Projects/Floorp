@@ -27,7 +27,7 @@ typedef rtc::PhysicalSocketServer DefaultSocketServer;
 
 namespace rtc {
 
-const uint32 kMaxMsgLatency = 150;  // 150 ms
+const uint32_t kMaxMsgLatency = 150;  // 150 ms
 
 //------------------------------------------------------------------
 // MessageQueueManager
@@ -59,7 +59,7 @@ void MessageQueueManager::AddInternal(MessageQueue *message_queue) {
   // MessageQueueManager methods should be non-reentrant, so we
   // ASSERT that is the case.  If any of these ASSERT, please
   // contact bpm or jbeda.
-#if CS_TRACK_OWNER  // CurrentThreadIsOwner returns true by default.
+#if CS_DEBUG_CHECKS  // CurrentThreadIsOwner returns true by default.
   ASSERT(!crit_.CurrentThreadIsOwner());
 #endif
   CritScope cs(&crit_);
@@ -73,7 +73,7 @@ void MessageQueueManager::Remove(MessageQueue *message_queue) {
   return Instance()->RemoveInternal(message_queue);
 }
 void MessageQueueManager::RemoveInternal(MessageQueue *message_queue) {
-#if CS_TRACK_OWNER  // CurrentThreadIsOwner returns true by default.
+#if CS_DEBUG_CHECKS  // CurrentThreadIsOwner returns true by default.
   ASSERT(!crit_.CurrentThreadIsOwner());  // See note above.
 #endif
   // If this is the last MessageQueue, destroy the manager as well so that
@@ -104,7 +104,7 @@ void MessageQueueManager::Clear(MessageHandler *handler) {
   return Instance()->ClearInternal(handler);
 }
 void MessageQueueManager::ClearInternal(MessageHandler *handler) {
-#if CS_TRACK_OWNER  // CurrentThreadIsOwner returns true by default.
+#if CS_DEBUG_CHECKS  // CurrentThreadIsOwner returns true by default.
   ASSERT(!crit_.CurrentThreadIsOwner());  // See note above.
 #endif
   CritScope cs(&crit_);
@@ -188,8 +188,8 @@ bool MessageQueue::Get(Message *pmsg, int cmsWait, bool process_io) {
 
   int cmsTotal = cmsWait;
   int cmsElapsed = 0;
-  uint32 msStart = Time();
-  uint32 msCurrent = msStart;
+  uint32_t msStart = Time();
+  uint32_t msCurrent = msStart;
   while (true) {
     // Check for sent messages
     ReceiveSends();
@@ -227,7 +227,7 @@ bool MessageQueue::Get(Message *pmsg, int cmsWait, bool process_io) {
 
       // Log a warning for time-sensitive messages that we're late to deliver.
       if (pmsg->ts_sensitive) {
-        int32 delay = TimeDiff(msCurrent, pmsg->ts_sensitive);
+        int32_t delay = TimeDiff(msCurrent, pmsg->ts_sensitive);
         if (delay > 0) {
           LOG_F(LS_WARNING) << "id: " << pmsg->message_id << "  delay: "
                             << (delay + kMaxMsgLatency) << "ms";
@@ -276,8 +276,10 @@ bool MessageQueue::Get(Message *pmsg, int cmsWait, bool process_io) {
 void MessageQueue::ReceiveSends() {
 }
 
-void MessageQueue::Post(MessageHandler *phandler, uint32 id,
-    MessageData *pdata, bool time_sensitive) {
+void MessageQueue::Post(MessageHandler* phandler,
+                        uint32_t id,
+                        MessageData* pdata,
+                        bool time_sensitive) {
   if (fStop_)
     return;
 
@@ -299,20 +301,23 @@ void MessageQueue::Post(MessageHandler *phandler, uint32 id,
 
 void MessageQueue::PostDelayed(int cmsDelay,
                                MessageHandler* phandler,
-                               uint32 id,
+                               uint32_t id,
                                MessageData* pdata) {
   return DoDelayPost(cmsDelay, TimeAfter(cmsDelay), phandler, id, pdata);
 }
 
-void MessageQueue::PostAt(uint32 tstamp,
+void MessageQueue::PostAt(uint32_t tstamp,
                           MessageHandler* phandler,
-                          uint32 id,
+                          uint32_t id,
                           MessageData* pdata) {
   return DoDelayPost(TimeUntil(tstamp), tstamp, phandler, id, pdata);
 }
 
-void MessageQueue::DoDelayPost(int cmsDelay, uint32 tstamp,
-    MessageHandler *phandler, uint32 id, MessageData* pdata) {
+void MessageQueue::DoDelayPost(int cmsDelay,
+                               uint32_t tstamp,
+                               MessageHandler* phandler,
+                               uint32_t id,
+                               MessageData* pdata) {
   if (fStop_)
     return;
 
@@ -350,7 +355,8 @@ int MessageQueue::GetDelay() {
   return kForever;
 }
 
-void MessageQueue::Clear(MessageHandler *phandler, uint32 id,
+void MessageQueue::Clear(MessageHandler* phandler,
+                         uint32_t id,
                          MessageList* removed) {
   CritScope cs(&crit_);
 

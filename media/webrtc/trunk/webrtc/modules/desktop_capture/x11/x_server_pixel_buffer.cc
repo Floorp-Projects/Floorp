@@ -16,7 +16,7 @@
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace {
 

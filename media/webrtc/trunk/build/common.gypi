@@ -1027,7 +1027,7 @@
                   }],
                 ],
               }],
-              ['target_arch=="arm64"', {
+              ['target_arch=="aarch64"', {
                 'android_app_abi%': 'arm64-v8a',
                 'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-21/arch-arm64',
               }],

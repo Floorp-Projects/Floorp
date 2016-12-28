@@ -140,7 +140,7 @@ StatisticsReport.prototype = {
       if(exists) {
         writeFile.bind(this)();
       } else {
-        fs.mkdir("test/reports/", 0o777, writeFile.bind(this));
+        fs.mkdir("test/reports/", 0777, writeFile.bind(this));
       }
     }.bind(this));
 

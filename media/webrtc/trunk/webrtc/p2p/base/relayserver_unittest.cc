@@ -24,7 +24,7 @@
 using rtc::SocketAddress;
 using namespace cricket;
 
-static const uint32 LIFETIME = 4;  // seconds
+static const uint32_t LIFETIME = 4;  // seconds
 static const SocketAddress server_int_addr("127.0.0.1", 5000);
 static const SocketAddress server_ext_addr("127.0.0.1", 5001);
 static const SocketAddress client1_addr("127.0.0.1", 6000 + (rand() % 1000));

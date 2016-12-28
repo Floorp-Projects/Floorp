@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <utility>  // pair
 
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 
 namespace webrtc {
@@ -37,17 +39,17 @@ void DecoderDatabase::Reset() {
 }
 
 int DecoderDatabase::RegisterPayload(uint8_t rtp_payload_type,
-                                     NetEqDecoder codec_type) {
+                                     NetEqDecoder codec_type,
+                                     const std::string& name) {
   if (rtp_payload_type > 0x7F) {
     return kInvalidRtpPayloadType;
   }
   if (!CodecSupported(codec_type)) {
     return kCodecNotSupported;
   }
-  int fs_hz = CodecSampleRateHz(codec_type);
-  std::pair<DecoderMap::iterator, bool> ret;
-  DecoderInfo info(codec_type, fs_hz, NULL, false);
-  ret = decoders_.insert(std::make_pair(rtp_payload_type, info));
+  const int fs_hz = CodecSampleRateHz(codec_type);
+  DecoderInfo info(codec_type, name, fs_hz, NULL, false);
+  auto ret = decoders_.insert(std::make_pair(rtp_payload_type, info));
   if (ret.second == false) {
     // Database already contains a decoder with type |rtp_payload_type|.
     return kDecoderExists;
@@ -57,6 +59,7 @@ int DecoderDatabase::RegisterPayload(uint8_t rtp_payload_type,
 
 int DecoderDatabase::InsertExternal(uint8_t rtp_payload_type,
                                     NetEqDecoder codec_type,
+                                    const std::string& codec_name,
                                     int fs_hz,
                                     AudioDecoder* decoder) {
   if (rtp_payload_type > 0x7F) {
@@ -71,9 +74,8 @@ int DecoderDatabase::InsertExternal(uint8_t rtp_payload_type,
   if (!decoder) {
     return kInvalidPointer;
   }
-  decoder->Init();
   std::pair<DecoderMap::iterator, bool> ret;
-  DecoderInfo info(codec_type, fs_hz, decoder, true);
+  DecoderInfo info(codec_type, codec_name, fs_hz, decoder, true);
   ret = decoders_.insert(std::make_pair(rtp_payload_type, info));
   if (ret.second == false) {
     // Database already contains a decoder with type |rtp_payload_type|.
@@ -135,7 +137,6 @@ AudioDecoder* DecoderDatabase::GetDecoder(uint8_t rtp_payload_type) {
     AudioDecoder* decoder = CreateAudioDecoder(info->codec_type);
     assert(decoder);  // Should not be able to have an unsupported codec here.
     info->decoder = decoder;
-    info->decoder->Init();
   }
   return info->decoder;
 }
@@ -151,10 +152,10 @@ bool DecoderDatabase::IsType(uint8_t rtp_payload_type,
 }
 
 bool DecoderDatabase::IsComfortNoise(uint8_t rtp_payload_type) const {
-  if (IsType(rtp_payload_type, kDecoderCNGnb) ||
-      IsType(rtp_payload_type, kDecoderCNGwb) ||
-      IsType(rtp_payload_type, kDecoderCNGswb32kHz) ||
-      IsType(rtp_payload_type, kDecoderCNGswb48kHz)) {
+  if (IsType(rtp_payload_type, NetEqDecoder::kDecoderCNGnb) ||
+      IsType(rtp_payload_type, NetEqDecoder::kDecoderCNGwb) ||
+      IsType(rtp_payload_type, NetEqDecoder::kDecoderCNGswb32kHz) ||
+      IsType(rtp_payload_type, NetEqDecoder::kDecoderCNGswb48kHz)) {
     return true;
   } else {
     return false;
@@ -162,11 +163,11 @@ bool DecoderDatabase::IsComfortNoise(uint8_t rtp_payload_type) const {
 }
 
 bool DecoderDatabase::IsDtmf(uint8_t rtp_payload_type) const {
-  return IsType(rtp_payload_type, kDecoderAVT);
+  return IsType(rtp_payload_type, NetEqDecoder::kDecoderAVT);
 }
 
 bool DecoderDatabase::IsRed(uint8_t rtp_payload_type) const {
-  return IsType(rtp_payload_type, kDecoderRED);
+  return IsType(rtp_payload_type, NetEqDecoder::kDecoderRED);
 }
 
 int DecoderDatabase::SetActiveDecoder(uint8_t rtp_payload_type,
@@ -249,6 +250,8 @@ int DecoderDatabase::CheckPayloadTypes(const PacketList& packet_list) const {
   for (it = packet_list.begin(); it != packet_list.end(); ++it) {
     if (decoders_.find((*it)->header.payloadType) == decoders_.end()) {
       // Payload type is not found.
+      LOG(LS_WARNING) << "CheckPayloadTypes: unknown RTP payload type "
+                      << static_cast<int>((*it)->header.payloadType);
       return kDecoderNotFound;
     }
   }

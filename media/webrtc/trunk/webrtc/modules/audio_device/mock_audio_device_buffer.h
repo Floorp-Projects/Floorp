@@ -20,9 +20,13 @@ class MockAudioDeviceBuffer : public AudioDeviceBuffer {
  public:
   MockAudioDeviceBuffer() {}
   virtual ~MockAudioDeviceBuffer() {}
-
-  MOCK_METHOD1(RequestPlayoutData, int32_t(uint32_t nSamples));
+  MOCK_METHOD1(RequestPlayoutData, int32_t(size_t nSamples));
   MOCK_METHOD1(GetPlayoutData, int32_t(void* audioBuffer));
+  MOCK_METHOD2(SetRecordedBuffer,
+               int32_t(const void* audioBuffer, size_t nSamples));
+  MOCK_METHOD3(SetVQEData,
+               void(int playDelayMS, int recDelayMS, int clockDrift));
+  MOCK_METHOD0(DeliverRecordedData, int32_t());
 };
 
 }  // namespace webrtc

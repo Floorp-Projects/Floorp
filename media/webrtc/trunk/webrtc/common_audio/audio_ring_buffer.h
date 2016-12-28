@@ -7,9 +7,9 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-
 #ifndef WEBRTC_COMMON_AUDIO_AUDIO_RING_BUFFER_H_
 #define WEBRTC_COMMON_AUDIO_AUDIO_RING_BUFFER_H_
+
 #include <stddef.h>
 #include <vector>
 
@@ -27,20 +27,23 @@ class AudioRingBuffer final {
   AudioRingBuffer(size_t channels, size_t max_frames);
   ~AudioRingBuffer();
 
-  // Copy |data| to the buffer and advance the write pointer. |channels| must
+  // Copies |data| to the buffer and advances the write pointer. |channels| must
   // be the same as at creation time.
   void Write(const float* const* data, size_t channels, size_t frames);
 
-  // Copy from the buffer to |data| and advance the read pointer. |channels|
+  // Copies from the buffer to |data| and advances the read pointer. |channels|
   // must be the same as at creation time.
   void Read(float* const* data, size_t channels, size_t frames);
 
   size_t ReadFramesAvailable() const;
   size_t WriteFramesAvailable() const;
 
-  // Positive values advance the read pointer and negative values withdraw
-  // the read pointer (i.e. flush and stuff the buffer respectively.)
-  void MoveReadPosition(int frames);
+  // Moves the read position. The forward version advances the read pointer
+  // towards the write pointer and the backward verison withdraws the read
+  // pointer away from the write pointer (i.e. flushing and stuffing the buffer
+  // respectively.)
+  void MoveReadPositionForward(size_t frames);
+  void MoveReadPositionBackward(size_t frames);
 
  private:
   // We don't use a ScopedVector because it doesn't support a specialized
@@ -49,4 +52,5 @@ class AudioRingBuffer final {
 };
 
 }  // namespace webrtc
-#endif
+
+#endif  // WEBRTC_COMMON_AUDIO_AUDIO_RING_BUFFER_H_

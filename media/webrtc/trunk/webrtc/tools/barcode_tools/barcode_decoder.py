@@ -56,7 +56,7 @@ def convert_yuv_to_png_files(yuv_file_name, yuv_frame_width, yuv_frame_height,
     print 'Error executing command: %s. Error: %s' % (command, err)
     return False
   except OSError:
-    print ('Did not find %s. Have you installed it?' % ffmpeg_path)
+    print 'Did not find %s. Have you installed it?' % ffmpeg_path
     return False
   return True
 
@@ -111,7 +111,7 @@ def _decode_barcode_in_file(file_name, command_line_decoder):
     print err
     return False
   except OSError:
-    print ('Did not find %s. Have you installed it?' % command_line_decoder)
+    print 'Did not find %s. Have you installed it?' % command_line_decoder
     return False
   return True
 
@@ -200,7 +200,7 @@ def _check_barcode(barcode):
   return dsum == int(barcode[11])
 
 
-def _count_frames_in(input_directory = '.'):
+def _count_frames_in(input_directory='.'):
   """Calculates the number of frames in the input directory.
 
   The function calculates the number of frames in the input directory. The
@@ -252,7 +252,7 @@ def _parse_args():
                           'decoded. If using Windows and a Cygwin-compiled '
                           'zxing.exe, you should keep the default value to '
                           'avoid problems. Default: %default'))
-  options, _args = parser.parse_args()
+  options, _ = parser.parse_args()
   return options
 
 

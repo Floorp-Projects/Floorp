@@ -13,8 +13,9 @@
 
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/modules/audio_device/linux/pulseaudiosymboltable_linux.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/typedefs.h"
+#include "webrtc/base/thread_checker.h"
 
 #include <pulse/pulseaudio.h>
 #include <stdint.h>
@@ -82,17 +83,13 @@ private:
     void PaSinkInputInfoCallbackHandler(const pa_sink_input_info *i, int eol);
     void PaSourceInfoCallbackHandler(const pa_source_info *i, int eol);
 
-    void ResetCallbackVariables() const;
     void WaitForOperationCompletion(pa_operation* paOperation) const;
-    void PaLock() const;
-    void PaUnLock() const;
 
     bool GetSinkInputInfo() const;
     bool GetSinkInfoByIndex(int device_index)const ;
     bool GetSourceInfoByIndex(int device_index) const;
 
 private:
-    CriticalSectionWrapper& _critSect;
     int32_t _id;
     int16_t _paOutputDeviceIndex;
     int16_t _paInputDeviceIndex;
@@ -110,7 +107,12 @@ private:
     mutable uint32_t _paSpeakerVolume;
     mutable uint8_t _paChannels;
     bool _paObjectsSet;
-    mutable bool _callbackValues;
+
+    // Stores thread ID in constructor.
+    // We can then use ThreadChecker::CalledOnValidThread() to ensure that
+    // other methods are called from the same thread.
+    // Currently only does RTC_DCHECK(thread_checker_.CalledOnValidThread()).
+    rtc::ThreadChecker thread_checker_;
 };
 
 }

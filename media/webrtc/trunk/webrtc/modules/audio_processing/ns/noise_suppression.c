@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/ns/include/noise_suppression.h"
+#include "webrtc/modules/audio_processing/ns/noise_suppression.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -17,22 +17,15 @@
 #include "webrtc/modules/audio_processing/ns/defines.h"
 #include "webrtc/modules/audio_processing/ns/ns_core.h"
 
-int WebRtcNs_Create(NsHandle** NS_inst) {
-  *NS_inst = (NsHandle*)malloc(sizeof(NoiseSuppressionC));
-  if (*NS_inst != NULL) {
-    (*(NoiseSuppressionC**)NS_inst)->initFlag = 0;
-    return 0;
-  } else {
-    return -1;
-  }
-
+NsHandle* WebRtcNs_Create() {
+  NoiseSuppressionC* self = malloc(sizeof(NoiseSuppressionC));
+  self->initFlag = 0;
+  return (NsHandle*)self;
 }
 
-int WebRtcNs_Free(NsHandle* NS_inst) {
+void WebRtcNs_Free(NsHandle* NS_inst) {
   free(NS_inst);
-  return 0;
 }
-
 
 int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs) {
   return WebRtcNs_InitCore((NoiseSuppressionC*)NS_inst, fs);
@@ -48,7 +41,7 @@ void WebRtcNs_Analyze(NsHandle* NS_inst, const float* spframe) {
 
 void WebRtcNs_Process(NsHandle* NS_inst,
                       const float* const* spframe,
-                      int num_bands,
+                      size_t num_bands,
                       float* const* outframe) {
   WebRtcNs_ProcessCore((NoiseSuppressionC*)NS_inst, spframe, num_bands,
                        outframe);

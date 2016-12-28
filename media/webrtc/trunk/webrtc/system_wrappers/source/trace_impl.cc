@@ -14,8 +14,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include "base/singleton.h"
 
+#include "webrtc/base/atomicops.h"
+#include "webrtc/base/platform_thread.h"
 #ifdef _WIN32
 #include "webrtc/system_wrappers/source/trace_win.h"
 #else
@@ -28,29 +29,12 @@
 #pragma warning(disable:4355)
 #endif  // _WIN32
 
-extern "C" {
-  int AECDebug() { return (int) webrtc::Trace::aec_debug(); }
-  uint32_t AECDebugMaxSize() { return webrtc::Trace::aec_debug_size(); }
-  void AECDebugEnable(uint32_t enable) { webrtc::Trace::set_aec_debug(!!enable); }
-  void AECDebugFilenameBase(char *buffer, size_t size) {
-    webrtc::Trace::aec_debug_filename(buffer, size);
-  }
-}
-
 namespace webrtc {
 
 const int Trace::kBoilerplateLength = 71;
 const int Trace::kTimestampPosition = 13;
 const int Trace::kTimestampLength = 12;
 volatile int Trace::level_filter_ = kTraceDefault;
-bool Trace::aec_debug_ = false;
-uint32_t Trace::aec_debug_size_ = 4*1024*1024;
-std::string Trace::aec_filename_base_;
-
-void Trace::aec_debug_filename(char *buffer, size_t size) {
-  strncpy(buffer, aec_filename_base_.c_str(), size-1);
-  buffer[size-1] = '\0';
-}
 
 // Construct On First Use idiom. Avoids "static initialization order fiasco".
 TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
@@ -64,12 +48,7 @@ TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
     }
   }
   TraceImpl* impl =
-#if defined(_WIN32)
-    GetStaticInstance<TraceWindows>(count_operation);
-#else
-    GetStaticInstance<TracePosix>(count_operation);
-#endif
-
+    GetStaticInstance<TraceImpl>(count_operation);
   return impl;
 }
 
@@ -98,7 +77,7 @@ TraceImpl::~TraceImpl() {
 }
 
 int32_t TraceImpl::AddThreadId(char* trace_message) const {
-  uint32_t thread_id = ThreadWrapper::GetThreadId();
+  uint32_t thread_id = rtc::CurrentThreadId();
   // Messages is 12 characters.
   return sprintf(trace_message, "%10u; ", thread_id);
 }
@@ -353,26 +332,27 @@ int32_t TraceImpl::AddMessage(
   if (written_so_far >= WEBRTC_TRACE_MAX_MESSAGE_SIZE) {
     return -1;
   }
-  // - 1 to leave room for newline.
+  // - 2 to leave room for newline and NULL termination.
 #ifdef _WIN32
   length = _snprintf(trace_message,
-                     WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1,
-                     "%s\n", msg);
+                     WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2,
+                     "%s", msg);
   if (length < 0) {
-    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1;
+    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2;
     trace_message[length] = 0;
   }
 #else
   length = snprintf(trace_message,
-                    WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1,
-                    "%s\n", msg);
+                    WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2,
+                    "%s", msg);
   if (length < 0 ||
-      length > WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1) {
-    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1;
+      length > WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2) {
+    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2;
     trace_message[length] = 0;
   }
 #endif
-  return length;
+  // Length with NULL termination.
+  return length + 1;
 }
 
 void TraceImpl::AddMessageToList(
@@ -423,7 +403,12 @@ void TraceImpl::WriteToFile(const char* msg, uint16_t length) {
       row_count_text_++;
     }
   }
-  trace_file_->Write(msg, length);
+
+  char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE];
+  memcpy(trace_message, msg, length);
+  trace_message[length] = 0;
+  trace_message[length - 1] = '\n';
+  trace_file_->Write(trace_message, length);
   row_count_text_++;
 }
 
@@ -563,12 +548,12 @@ int32_t Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
 
 // static
 void Trace::set_level_filter(int filter) {
-  rtc::AtomicOps::Store(&level_filter_, filter);
+  rtc::AtomicOps::ReleaseStore(&level_filter_, filter);
 }
 
 // static
 int Trace::level_filter() {
-  return rtc::AtomicOps::Load(&level_filter_);
+  return rtc::AtomicOps::AcquireLoad(&level_filter_);
 }
 
 // static

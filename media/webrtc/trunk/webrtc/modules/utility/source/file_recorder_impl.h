@@ -17,17 +17,17 @@
 
 #include <list>
 
+#include "webrtc/base/platform_thread.h"
 #include "webrtc/common_audio/resampler/include/resampler.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/media_file/interface/media_file.h"
-#include "webrtc/modules/media_file/interface/media_file_defines.h"
-#include "webrtc/modules/utility/interface/file_recorder.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/media_file/media_file.h"
+#include "webrtc/modules/media_file/media_file_defines.h"
+#include "webrtc/modules/utility/include/file_recorder.h"
 #include "webrtc/modules/utility/source/coder.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -50,13 +50,11 @@ public:
     virtual int32_t StartRecordingAudioFile(
         const char* fileName,
         const CodecInst& codecInst,
-        uint32_t notificationTimeMs,
-        ACMAMRPackingFormat amrFormat = AMRFileStorage);
+        uint32_t notificationTimeMs) override;
     virtual int32_t StartRecordingAudioFile(
         OutStream& destStream,
         const CodecInst& codecInst,
-        uint32_t notificationTimeMs,
-        ACMAMRPackingFormat amrFormat = AMRFileStorage);
+        uint32_t notificationTimeMs) override;
     virtual int32_t StopRecording();
     virtual bool IsRecording() const;
     virtual int32_t codec_info(CodecInst& codecInst) const;
@@ -67,22 +65,17 @@ public:
         const char* fileName,
         const CodecInst& audioCodecInst,
         const VideoCodec& videoCodecInst,
-        ACMAMRPackingFormat amrFormat = AMRFileStorage,
-        bool videoOnly = false)
+        bool videoOnly = false) override
     {
         return -1;
     }
-    virtual int32_t RecordVideoToFile(const I420VideoFrame& videoFrame)
-    {
+    virtual int32_t RecordVideoToFile(const VideoFrame& videoFrame) {
         return -1;
     }
 
 protected:
-    virtual int32_t WriteEncodedAudioData(
-        const int8_t* audioBuffer,
-        size_t bufferLength,
-        uint16_t millisecondsOfData,
-        const TickTime* playoutTS);
+    int32_t WriteEncodedAudioData(const int8_t* audioBuffer,
+                                  size_t bufferLength);
 
     int32_t SetUpAudioEncoder();
 
@@ -92,8 +85,6 @@ protected:
 
 private:
     CodecInst codec_info_;
-    ACMAMRPackingFormat _amrFormat;
-
     int8_t _audioBuffer[MAX_AUDIO_BUFFER_IN_BYTES];
     AudioCoder _audioEncoder;
     Resampler _audioResampler;

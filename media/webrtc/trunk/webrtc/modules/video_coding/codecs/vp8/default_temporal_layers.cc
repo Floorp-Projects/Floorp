@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8_common_types.h"
 
 #include "vpx/vpx_encoder.h"
@@ -41,7 +41,7 @@ int DefaultTemporalLayers::CurrentLayerId() const {
   int index = pattern_idx_ % temporal_ids_length_;
   assert(index >= 0);
   return temporal_ids_[index];
- }
+}
 
 bool DefaultTemporalLayers::ConfigureBitrates(int bitrateKbit,
                                               int max_bitrate_kbit,
@@ -56,8 +56,7 @@ bool DefaultTemporalLayers::ConfigureBitrates(int bitrateKbit,
       cfg->ts_periodicity = temporal_ids_length_;
       cfg->ts_target_bitrate[0] = bitrateKbit;
       cfg->ts_rate_decimator[0] = 1;
-      memcpy(cfg->ts_layer_id,
-             temporal_ids_,
+      memcpy(cfg->ts_layer_id, temporal_ids_,
              sizeof(unsigned int) * temporal_ids_length_);
       temporal_pattern_length_ = 1;
       temporal_pattern_[0] = kTemporalUpdateLastRefAll;
@@ -74,8 +73,7 @@ bool DefaultTemporalLayers::ConfigureBitrates(int bitrateKbit,
       cfg->ts_target_bitrate[1] = bitrateKbit;
       cfg->ts_rate_decimator[0] = 2;
       cfg->ts_rate_decimator[1] = 1;
-      memcpy(cfg->ts_layer_id,
-             temporal_ids_,
+      memcpy(cfg->ts_layer_id, temporal_ids_,
              sizeof(unsigned int) * temporal_ids_length_);
       temporal_pattern_length_ = 8;
       temporal_pattern_[0] = kTemporalUpdateLastAndGoldenRefAltRef;
@@ -103,8 +101,7 @@ bool DefaultTemporalLayers::ConfigureBitrates(int bitrateKbit,
       cfg->ts_rate_decimator[0] = 4;
       cfg->ts_rate_decimator[1] = 2;
       cfg->ts_rate_decimator[2] = 1;
-      memcpy(cfg->ts_layer_id,
-             temporal_ids_,
+      memcpy(cfg->ts_layer_id, temporal_ids_,
              sizeof(unsigned int) * temporal_ids_length_);
       temporal_pattern_length_ = 8;
       temporal_pattern_[0] = kTemporalUpdateLastAndGoldenRefAltRef;
@@ -138,8 +135,7 @@ bool DefaultTemporalLayers::ConfigureBitrates(int bitrateKbit,
       cfg->ts_rate_decimator[1] = 4;
       cfg->ts_rate_decimator[2] = 2;
       cfg->ts_rate_decimator[3] = 1;
-      memcpy(cfg->ts_layer_id,
-             temporal_ids_,
+      memcpy(cfg->ts_layer_id, temporal_ids_,
              sizeof(unsigned int) * temporal_ids_length_);
       temporal_pattern_length_ = 16;
       temporal_pattern_[0] = kTemporalUpdateLast;
@@ -243,7 +239,7 @@ int DefaultTemporalLayers::EncodeFlags(uint32_t timestamp) {
 
 void DefaultTemporalLayers::PopulateCodecSpecific(
     bool base_layer_sync,
-    CodecSpecificInfoVP8 *vp8_info,
+    CodecSpecificInfoVP8* vp8_info,
     uint32_t timestamp) {
   assert(number_of_temporal_layers_ > 0);
   assert(0 < temporal_ids_length_);
@@ -254,8 +250,8 @@ void DefaultTemporalLayers::PopulateCodecSpecific(
     vp8_info->tl0PicIdx = kNoTl0PicIdx;
   } else {
     if (base_layer_sync) {
-    vp8_info->temporalIdx = 0;
-    vp8_info->layerSync = true;
+      vp8_info->temporalIdx = 0;
+      vp8_info->layerSync = true;
     } else {
       vp8_info->temporalIdx = CurrentLayerId();
       TemporalReferences temporal_reference =
@@ -267,7 +263,7 @@ void DefaultTemporalLayers::PopulateCodecSpecific(
               kTemporalUpdateGoldenWithoutDependencyRefAltRef ||
           temporal_reference == kTemporalUpdateNoneNoRefGoldenRefAltRef ||
           (temporal_reference == kTemporalUpdateNone &&
-              number_of_temporal_layers_ == 4)) {
+           number_of_temporal_layers_ == 4)) {
         vp8_info->layerSync = true;
       } else {
         vp8_info->layerSync = false;

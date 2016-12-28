@@ -11,10 +11,10 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_ALSA_LINUX_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_ALSA_LINUX_H
 
+#include "webrtc/base/platform_thread.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/modules/audio_device/linux/audio_mixer_manager_alsa_linux.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 #if defined(USE_X11)
 #include <X11/Xlib.h>
@@ -161,9 +161,7 @@ private:
                            const bool playback,
                            const int32_t enumDeviceNo = 0,
                            char* enumDeviceName = NULL,
-                           const int32_t ednLen = 0,
-                           char* enumDeviceID = NULL,
-                           const int32_t ediLen = 0) const;
+                           const int32_t ednLen = 0) const;
     int32_t ErrorRecovery(int32_t error, snd_pcm_t* deviceHandle);
 
 private:
@@ -187,8 +185,10 @@ private:
 
     CriticalSectionWrapper& _critSect;
 
-    rtc::scoped_ptr<ThreadWrapper> _ptrThreadRec;
-    rtc::scoped_ptr<ThreadWrapper> _ptrThreadPlay;
+    // TODO(pbos): Make plain members and start/stop instead of resetting these
+    // pointers. A thread can be reused.
+    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
+    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
 
     int32_t _id;
 
@@ -227,7 +227,6 @@ private:
 private:
     bool _initialized;
     bool _recording;
-    bool _firstRecord;
     bool _playing;
     bool _recIsInitialized;
     bool _playIsInitialized;

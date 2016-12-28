@@ -69,7 +69,7 @@ void GlRenderer::ResizeVideo(size_t width, size_t height) {
                GL_UNSIGNED_INT_8_8_8_8, static_cast<GLvoid*>(buffer_));
 }
 
-void GlRenderer::RenderFrame(const webrtc::I420VideoFrame& frame,
+void GlRenderer::RenderFrame(const webrtc::VideoFrame& frame,
                              int /*render_delay_ms*/) {
   assert(is_init_);
 

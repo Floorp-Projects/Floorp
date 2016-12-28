@@ -31,11 +31,11 @@ class RealFourierOoura : public RealFourier {
 
  private:
   const int order_;
-  const int length_;
-  const int complex_length_;
+  const size_t length_;
+  const size_t complex_length_;
   // These are work arrays for Ooura. The names are based on the comments in
   // fft4g.c.
-  const rtc::scoped_ptr<int[]> work_ip_;
+  const rtc::scoped_ptr<size_t[]> work_ip_;
   const rtc::scoped_ptr<float[]> work_w_;
 };
 

@@ -47,7 +47,7 @@ SocketAddress::SocketAddress(const std::string& hostname, int port) {
   SetPort(port);
 }
 
-SocketAddress::SocketAddress(uint32 ip_as_host_order_integer, int port) {
+SocketAddress::SocketAddress(uint32_t ip_as_host_order_integer, int port) {
   SetIP(IPAddress(ip_as_host_order_integer));
   SetPort(port);
 }
@@ -86,7 +86,7 @@ SocketAddress& SocketAddress::operator=(const SocketAddress& addr) {
   return *this;
 }
 
-void SocketAddress::SetIP(uint32 ip_as_host_order_integer) {
+void SocketAddress::SetIP(uint32_t ip_as_host_order_integer) {
   hostname_.clear();
   literal_ = false;
   ip_ = IPAddress(ip_as_host_order_integer);
@@ -109,7 +109,7 @@ void SocketAddress::SetIP(const std::string& hostname) {
   scope_id_ = 0;
 }
 
-void SocketAddress::SetResolvedIP(uint32 ip_as_host_order_integer) {
+void SocketAddress::SetResolvedIP(uint32_t ip_as_host_order_integer) {
   ip_ = IPAddress(ip_as_host_order_integer);
   scope_id_ = 0;
 }
@@ -121,10 +121,10 @@ void SocketAddress::SetResolvedIP(const IPAddress& ip) {
 
 void SocketAddress::SetPort(int port) {
   ASSERT((0 <= port) && (port < 65536));
-  port_ = static_cast<uint16>(port);
+  port_ = static_cast<uint16_t>(port);
 }
 
-uint32 SocketAddress::ip() const {
+uint32_t SocketAddress::ip() const {
   return ip_.v4AddressAsHostOrderInteger();
 }
 
@@ -132,7 +132,7 @@ const IPAddress& SocketAddress::ipaddr() const {
   return ip_;
 }
 
-uint16 SocketAddress::port() const {
+uint16_t SocketAddress::port() const {
   return port_;
 }
 
@@ -279,7 +279,9 @@ bool SocketAddress::FromSockAddr(const sockaddr_in& saddr) {
 }
 
 static size_t ToSockAddrStorageHelper(sockaddr_storage* addr,
-                                      IPAddress ip, uint16 port, int scope_id) {
+                                      IPAddress ip,
+                                      uint16_t port,
+                                      int scope_id) {
   memset(addr, 0, sizeof(sockaddr_storage));
   addr->ss_family = static_cast<unsigned short>(ip.family());
   if (addr->ss_family == AF_INET6) {
@@ -303,47 +305,6 @@ size_t SocketAddress::ToDualStackSockAddrStorage(sockaddr_storage *addr) const {
 
 size_t SocketAddress::ToSockAddrStorage(sockaddr_storage* addr) const {
   return ToSockAddrStorageHelper(addr, ip_, port_, scope_id_);
-}
-
-std::string SocketAddress::IPToString(uint32 ip_as_host_order_integer) {
-  return IPAddress(ip_as_host_order_integer).ToString();
-}
-
-std::string IPToSensitiveString(uint32 ip_as_host_order_integer) {
-  return IPAddress(ip_as_host_order_integer).ToSensitiveString();
-}
-
-bool SocketAddress::StringToIP(const std::string& hostname, uint32* ip) {
-  in_addr addr;
-  if (rtc::inet_pton(AF_INET, hostname.c_str(), &addr) == 0)
-    return false;
-  *ip = NetworkToHost32(addr.s_addr);
-  return true;
-}
-
-bool SocketAddress::StringToIP(const std::string& hostname, IPAddress* ip) {
-  in_addr addr4;
-  if (rtc::inet_pton(AF_INET, hostname.c_str(), &addr4) > 0) {
-    if (ip) {
-      *ip = IPAddress(addr4);
-    }
-    return true;
-  }
-
-  in6_addr addr6;
-  if (rtc::inet_pton(AF_INET6, hostname.c_str(), &addr6) > 0) {
-    if (ip) {
-      *ip = IPAddress(addr6);
-    }
-    return true;
-  }
-  return false;
-}
-
-uint32 SocketAddress::StringToIP(const std::string& hostname) {
-  uint32 ip = 0;
-  StringToIP(hostname, &ip);
-  return ip;
 }
 
 bool SocketAddressFromSockAddrStorage(const sockaddr_storage& addr,

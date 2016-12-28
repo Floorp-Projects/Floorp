@@ -9,7 +9,7 @@
  */
 
 #include "webrtc/modules/audio_device/win/audio_mixer_manager_win.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #include <assert.h>      // assert()
 #include <strsafe.h>    // StringCchCopy(), StringCchCat(), StringCchPrintf()
@@ -195,7 +195,9 @@ int32_t AudioMixerManager::EnumerateSpeakers()
     for (mixId = 0; mixId < nDevices; mixId++)
     {
         // get capabilities for the specified mixer ID
-        GetCapabilities(mixId, caps);
+        if (!GetCapabilities(mixId, caps))
+            continue;
+
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "[mixerID=%d] %s: ", mixId, WideToUTF8(caps.szPname));
         // scan all avaliable destinations for this mixer
         for (destId = 0; destId < caps.cDestinations; destId++)
@@ -280,7 +282,9 @@ int32_t AudioMixerManager::EnumerateMicrophones()
     for (mixId = 0; mixId < nDevices; mixId++)
     {
         // get capabilities for the specified mixer ID
-        GetCapabilities(mixId, caps);
+        if (!GetCapabilities(mixId, caps))
+            continue;
+
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "[mixerID=%d] %s: ", mixId, WideToUTF8(caps.szPname));
         // scan all avaliable destinations for this mixer
         for (destId = 0; destId < caps.cDestinations; destId++)

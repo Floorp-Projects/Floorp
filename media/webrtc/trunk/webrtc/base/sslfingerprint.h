@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "webrtc/base/basictypes.h"
 #include "webrtc/base/buffer.h"
 #include "webrtc/base/sslidentity.h"
 
@@ -30,7 +31,8 @@ struct SSLFingerprint {
   static SSLFingerprint* CreateFromRfc4572(const std::string& algorithm,
                                            const std::string& fingerprint);
 
-  SSLFingerprint(const std::string& algorithm, const uint8* digest_in,
+  SSLFingerprint(const std::string& algorithm,
+                 const uint8_t* digest_in,
                  size_t digest_len);
 
   SSLFingerprint(const SSLFingerprint& from);

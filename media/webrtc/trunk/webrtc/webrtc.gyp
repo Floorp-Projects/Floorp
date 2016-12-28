@@ -16,9 +16,41 @@
         'webrtc_tests.gypi',
       ],
     }],
+    ['enable_protobuf==1', {
+      'targets': [
+        {
+          # This target should only be built if enable_protobuf is defined
+          'target_name': 'rtc_event_log_proto',
+          'type': 'static_library',
+          'sources': ['call/rtc_event_log.proto',],
+          'variables': {
+            'proto_in_dir': 'call',
+            'proto_out_dir': 'webrtc/call',
+          },
+        'includes': ['build/protoc.gypi'],
+        },
+      ],
+    }],
+    ['include_tests==1 and enable_protobuf==1', {
+      'targets': [
+        {
+          'target_name': 'rtc_event_log2rtp_dump',
+          'type': 'executable',
+          'sources': ['call/rtc_event_log2rtp_dump.cc',],
+          'dependencies': [
+            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+            'rtc_event_log',
+            'rtc_event_log_proto',
+            'test/test.gyp:rtp_test_utils'
+          ],
+        },
+      ],
+    }],
   ],
   'includes': [
     'build/common.gypi',
+    'audio/webrtc_audio.gypi',
+    'call/webrtc_call.gypi',
     'video/webrtc_video.gypi',
   ],
   'variables': {
@@ -32,7 +64,6 @@
       'p2p/p2p.gyp:*',
       'system_wrappers/system_wrappers.gyp:*',
       'tools/tools.gyp:*',
-      'video_engine/video_engine.gyp:*',
       'voice_engine/voice_engine.gyp:*',
       '<(webrtc_vp8_dir)/vp8.gyp:*',
       '<(webrtc_vp9_dir)/vp9.gyp:*',
@@ -50,40 +81,46 @@
         ['include_tests==1', {
           'dependencies': [
             'common_video/common_video_unittests.gyp:*',
+            'rtc_unittests',
             'system_wrappers/system_wrappers_tests.gyp:*',
             'test/metrics.gyp:*',
             'test/test.gyp:*',
-            'test/webrtc_test_common.gyp:webrtc_test_common_unittests',
+            'test/webrtc_test_common.gyp:*',
             'webrtc_tests',
-            'rtc_unittests',
           ],
         }],
       ],
     },
     {
-      # TODO(pbos): This is intended to contain audio parts as well as soon as
-      #             VoiceEngine moves to the same new API format.
       'target_name': 'webrtc',
       'type': 'static_library',
       'sources': [
+        'audio_receive_stream.h',
+        'audio_send_stream.h',
+        'audio_state.h',
         'call.h',
         'config.h',
-        'experiments.h',
         'frame_callback.h',
+        'stream.h',
         'transport.h',
         'video_receive_stream.h',
         'video_renderer.h',
         'video_send_stream.h',
 
+        '<@(webrtc_audio_sources)',
+        '<@(webrtc_call_sources)',
         '<@(webrtc_video_sources)',
       ],
       'dependencies': [
         'common.gyp:*',
+        '<@(webrtc_audio_dependencies)',
+        '<@(webrtc_call_dependencies)',
         '<@(webrtc_video_dependencies)',
+        'rtc_event_log',
       ],
       'conditions': [
-        # TODO(andresp): Chromium libpeerconnection should link directly with
-        # this and no if conditions should be needed on webrtc build files.
+        # TODO(andresp): Chromium should link directly with this and no if
+        # conditions should be needed on webrtc build files.
         ['build_with_chromium==1', {
           'dependencies': [
             '<(webrtc_root)/modules/modules.gyp:video_capture',
@@ -92,5 +129,26 @@
         }],
       ],
     },
+    {
+      'target_name': 'rtc_event_log',
+      'type': 'static_library',
+      'sources': [
+        'call/rtc_event_log.cc',
+        'call/rtc_event_log.h',
+      ],
+      'conditions': [
+        # If enable_protobuf is defined, we want to compile the protobuf
+        # and add rtc_event_log.pb.h and rtc_event_log.pb.cc to the sources.
+        ['enable_protobuf==1', {
+          'dependencies': [
+            'rtc_event_log_proto',
+          ],
+          'defines': [
+            'ENABLE_RTC_EVENT_LOG',
+          ],
+        }],
+      ],
+    },
+
   ],
 }

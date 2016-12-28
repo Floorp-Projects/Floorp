@@ -32,18 +32,17 @@
 #endif
 
 #include "webrtc/common_types.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/utility/interface/process_thread.h"
-#include "webrtc/modules/video_render/include/video_render.h"
-#include "webrtc/modules/video_render/include/video_render_defines.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/utility/include/process_thread.h"
+#include "webrtc/modules/video_render/video_render.h"
+#include "webrtc/modules/video_render/video_render_defines.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 using namespace webrtc;
 
-void GetTestVideoFrame(I420VideoFrame* frame,
-                       uint8_t startColor);
+void GetTestVideoFrame(VideoFrame* frame, uint8_t startColor);
 int TestSingleStream(VideoRender* renderModule);
 int TestFullscreenStream(VideoRender* &renderModule,
                          void* window,
@@ -262,8 +261,7 @@ public:
     }
     ;
     virtual int32_t RenderFrame(const uint32_t streamId,
-                                const I420VideoFrame& videoFrame)
-    {
+                                const VideoFrame& videoFrame) {
         _cnt++;
         if (_cnt % 100 == 0)
         {
@@ -274,8 +272,7 @@ public:
     int32_t _cnt;
 };
 
-void GetTestVideoFrame(I420VideoFrame* frame,
-                       uint8_t startColor) {
+void GetTestVideoFrame(VideoFrame* frame, uint8_t startColor) {
     // changing color
     static uint8_t color = startColor;
 
@@ -308,7 +305,7 @@ int TestSingleStream(VideoRender* renderModule) {
     const int half_width = (width + 1) / 2;
     const int height = 288;
 
-    I420VideoFrame videoFrame0;
+    VideoFrame videoFrame0;
     videoFrame0.CreateEmptyFrame(width, height, width, half_width, half_width);
 
     const uint32_t renderDelayMs = 500;
@@ -382,7 +379,7 @@ int TestBitmapText(VideoRender* renderModule) {
     const int half_width = (width + 1) / 2;
     const int height = 288;
 
-    I420VideoFrame videoFrame0;
+    VideoFrame videoFrame0;
     videoFrame0.CreateEmptyFrame(width, height, width, half_width, half_width);
 
     const uint32_t renderDelayMs = 500;
@@ -460,13 +457,13 @@ int TestMultipleStreams(VideoRender* renderModule) {
     const int half_width = (width + 1) / 2;
     const int height = 288;
 
-    I420VideoFrame videoFrame0;
+    VideoFrame videoFrame0;
     videoFrame0.CreateEmptyFrame(width, height, width, half_width, half_width);
-    I420VideoFrame videoFrame1;
+    VideoFrame videoFrame1;
     videoFrame1.CreateEmptyFrame(width, height, width, half_width, half_width);
-    I420VideoFrame videoFrame2;
+    VideoFrame videoFrame2;
     videoFrame2.CreateEmptyFrame(width, height, width, half_width, half_width);
-    I420VideoFrame videoFrame3;
+    VideoFrame videoFrame3;
     videoFrame3.CreateEmptyFrame(width, height, width, half_width, half_width);
 
     const uint32_t renderDelayMs = 500;
@@ -542,7 +539,7 @@ int TestExternalRender(VideoRender* renderModule) {
     const int width = 352;
     const int half_width = (width + 1) / 2;
     const int height = 288;
-    I420VideoFrame videoFrame0;
+    VideoFrame videoFrame0;
     videoFrame0.CreateEmptyFrame(width, height, width, half_width, half_width);
 
     const uint32_t renderDelayMs = 500;

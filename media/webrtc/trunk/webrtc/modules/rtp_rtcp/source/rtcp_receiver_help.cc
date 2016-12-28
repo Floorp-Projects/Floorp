@@ -13,10 +13,11 @@
 #include <assert.h>  // assert
 #include <string.h>  // memset
 
+#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 
 namespace webrtc {
-using namespace RTCPHelp;
+namespace RTCPHelp {
 
 RTCPPacketInformation::RTCPPacketInformation()
     : rtcpPacketTypeFlags(0),
@@ -36,8 +37,7 @@ RTCPPacketInformation::RTCPPacketInformation()
       rtp_timestamp(0),
       xr_originator_ssrc(0),
       xr_dlrr_item(false),
-      VoIPMetric(NULL) {
-}
+      VoIPMetric(nullptr) {}
 
 RTCPPacketInformation::~RTCPPacketInformation()
 {
@@ -61,9 +61,6 @@ void RTCPPacketInformation::AddApplicationData(const uint8_t* data,
     uint16_t copySize = size;
     if (size > kRtcpAppCode_DATA_SIZE) {
         copySize = kRtcpAppCode_DATA_SIZE;
-    }
-    if (((uint32_t) applicationLength) + copySize > UINT16_MAX) {
-      return;
     }
 
     applicationLength += copySize;
@@ -106,10 +103,6 @@ RTCPPacketInformation::AddReportInfo(
 RTCPReportBlockInformation::RTCPReportBlockInformation():
     remoteReceiveBlock(),
     remoteMaxJitter(0),
-    remotePacketsReceived(0),
-    remoteOctetsReceived(0),
-    lastReceivedRRNTPsecs(0),
-    lastReceivedRRNTPfrac(0),
     RTT(0),
     minRTT(0),
     maxRTT(0),
@@ -197,4 +190,5 @@ void RTCPReceiveInformation::VerifyAndAllocateBoundingSet(
     const uint32_t minimumSize) {
   TmmbnBoundingSet.VerifyAndAllocateSet(minimumSize);
 }
+}  // namespace RTCPHelp
 }  // namespace webrtc

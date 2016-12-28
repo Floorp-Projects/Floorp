@@ -11,13 +11,14 @@
 // Refer to kUsage below for a description.
 
 #include "gflags/gflags.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/format_macros.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/test/channel_transport/channel_transport.h"
 #include "webrtc/test/testsupport/trace_to_stderr.h"
-#include "webrtc/tools/agc/agc_manager.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_codec.h"
@@ -28,20 +29,26 @@
 #include "webrtc/voice_engine/include/voe_volume_control.h"
 
 DEFINE_bool(codecs, false, "print out available codecs");
-DEFINE_int32(pt, 103, "codec payload type (defaults to ISAC/16000/1)");
-DEFINE_bool(internal, true, "use the internal AGC in 'serial' mode, or as the "
-                            "first voice engine's AGC in parallel mode");
-DEFINE_bool(parallel, false, "run internal and public AGCs in parallel, with "
-    "left- and right-panning respectively. Not compatible with -aec.");
+DEFINE_int32(pt, 120, "codec payload type (defaults to opus/48000/2)");
+DEFINE_bool(legacy_agc,
+            false,
+            "use the legacy AGC in 'serial' mode, or as the first voice "
+            "engine's AGC in parallel mode");
+DEFINE_bool(parallel,
+            false,
+            "run new and legacy AGCs in parallel, with left- and right-panning "
+            "respectively. Not compatible with -aec.");
 DEFINE_bool(devices, false, "print out capture devices and indexes to be used "
                             "with the capture flags");
 DEFINE_int32(capture1, 0, "capture device index for the first voice engine");
 DEFINE_int32(capture2, 0, "capture device index for second voice engine");
 DEFINE_int32(render1, 0, "render device index for first voice engine");
 DEFINE_int32(render2, 0, "render device index for second voice engine");
-DEFINE_bool(aec, false, "runs two voice engines in parallel, with the first "
-    "playing out a file and sending its captured signal to the second voice "
-    "engine. Also enables echo cancellation.");
+DEFINE_bool(aec,
+            false,
+            "runs two voice engines in parallel, with the first playing out a "
+            "file and sending its captured signal to the second voice engine. "
+            "Also enables echo cancellation.");
 DEFINE_bool(ns, true, "enable noise suppression");
 DEFINE_bool(highpass, true, "enable high pass filter");
 DEFINE_string(filename, "", "filename for the -aec mode");
@@ -51,10 +58,9 @@ namespace {
 
 const char kUsage[] =
     "\nWithout additional flags, sets up a simple VoiceEngine loopback call\n"
-    "with the default audio devices and runs forever. The internal AGC is\n"
-    "enabled and the public disabled.\n\n"
+    "with the default audio devices and runs forever.\n"
 
-    "It can also run the public AGC in parallel with the internal, panned to\n"
+    "It can also run the new and legacy AGCs in parallel, panned to\n"
     "opposite stereo channels on the default render device. The capture\n"
     "devices for each can be selected (recommended, because otherwise they\n"
     "will fight for the level on the same device).\n\n"
@@ -75,63 +81,63 @@ class AgcVoiceEngine {
     PanRight
   };
 
-  AgcVoiceEngine(bool internal, int tx_port, int rx_port, int capture_idx,
+  AgcVoiceEngine(bool legacy_agc,
+                 int tx_port,
+                 int rx_port,
+                 int capture_idx,
                  int render_idx)
       : voe_(VoiceEngine::Create()),
         base_(VoEBase::GetInterface(voe_)),
         hardware_(VoEHardware::GetInterface(voe_)),
         codec_(VoECodec::GetInterface(voe_)),
-        manager_(new AgcManager(voe_)),
         channel_(-1),
         capture_idx_(capture_idx),
         render_idx_(render_idx) {
-    SetUp(internal, tx_port, rx_port);
+    SetUp(legacy_agc, tx_port, rx_port);
   }
 
   ~AgcVoiceEngine() {
     TearDown();
   }
 
-  void SetUp(bool internal, int tx_port, int rx_port) {
-    ASSERT_TRUE(voe_ != NULL);
-    ASSERT_TRUE(base_ != NULL);
-    ASSERT_TRUE(hardware_ != NULL);
-    ASSERT_TRUE(codec_ != NULL);
+  void SetUp(bool legacy_agc, int tx_port, int rx_port) {
     VoEAudioProcessing* audio = VoEAudioProcessing::GetInterface(voe_);
-    ASSERT_TRUE(audio != NULL);
     VoENetwork* network = VoENetwork::GetInterface(voe_);
-    ASSERT_TRUE(network != NULL);
-
-    ASSERT_EQ(0, base_->Init());
+    {
+      webrtc::Config config;
+      config.Set<ExperimentalAgc>(new ExperimentalAgc(!legacy_agc));
+      AudioProcessing* audioproc = AudioProcessing::Create(config);
+      RTC_CHECK_EQ(0, base_->Init(nullptr, audioproc));
+      // Set this stuff after Init, to override the default voice engine
+      // settings.
+      audioproc->gain_control()->Enable(true);
+      audioproc->high_pass_filter()->Enable(FLAGS_highpass);
+      audioproc->noise_suppression()->Enable(FLAGS_ns);
+      audioproc->echo_cancellation()->Enable(FLAGS_aec);
+    }
     channel_ = base_->CreateChannel();
-    ASSERT_NE(-1, channel_);
+    RTC_CHECK_NE(-1, channel_);
 
     channel_transport_.reset(
         new test::VoiceChannelTransport(network, channel_));
-    ASSERT_EQ(0, channel_transport_->SetSendDestination("127.0.0.1", tx_port));
-    ASSERT_EQ(0, channel_transport_->SetLocalReceiver(rx_port));
+    RTC_CHECK_EQ(0,
+                 channel_transport_->SetSendDestination("127.0.0.1", tx_port));
+    RTC_CHECK_EQ(0, channel_transport_->SetLocalReceiver(rx_port));
 
-    ASSERT_EQ(0, hardware_->SetRecordingDevice(capture_idx_));
-    ASSERT_EQ(0, hardware_->SetPlayoutDevice(render_idx_));
+    RTC_CHECK_EQ(0, hardware_->SetRecordingDevice(capture_idx_));
+    RTC_CHECK_EQ(0, hardware_->SetPlayoutDevice(render_idx_));
 
-    CodecInst codec_params = {0};
+    CodecInst codec_params = {};
     bool codec_found = false;
     for (int i = 0; i < codec_->NumOfCodecs(); i++) {
-      ASSERT_EQ(0, codec_->GetCodec(i, codec_params));
+      RTC_CHECK_EQ(0, codec_->GetCodec(i, codec_params));
       if (FLAGS_pt == codec_params.pltype) {
         codec_found = true;
         break;
       }
     }
-    ASSERT_TRUE(codec_found);
-    ASSERT_EQ(0, codec_->SetSendCodec(channel_, codec_params));
-
-    ASSERT_EQ(0, audio->EnableHighPassFilter(FLAGS_highpass));
-    ASSERT_EQ(0, audio->SetNsStatus(FLAGS_ns));
-    ASSERT_EQ(0, audio->SetEcStatus(FLAGS_aec));
-
-    ASSERT_EQ(0, manager_->Enable(internal));
-    ASSERT_EQ(0, audio->SetAgcStatus(!internal));
+    RTC_CHECK(codec_found);
+    RTC_CHECK_EQ(0, codec_->SetSendCodec(channel_, codec_params));
 
     audio->Release();
     network->Release();
@@ -139,31 +145,29 @@ class AgcVoiceEngine {
 
   void TearDown() {
     Stop();
-    channel_transport_.reset(NULL);
-    ASSERT_EQ(0, base_->DeleteChannel(channel_));
-    ASSERT_EQ(0, base_->Terminate());
-    // Don't test; the manager hasn't released its interfaces.
+    channel_transport_.reset(nullptr);
+    RTC_CHECK_EQ(0, base_->DeleteChannel(channel_));
+    RTC_CHECK_EQ(0, base_->Terminate());
     hardware_->Release();
     base_->Release();
     codec_->Release();
-    delete manager_;
-    ASSERT_TRUE(VoiceEngine::Delete(voe_));
+    RTC_CHECK(VoiceEngine::Delete(voe_));
   }
 
   void PrintDevices() {
     int num_devices = 0;
     char device_name[128] = {0};
     char guid[128] = {0};
-    ASSERT_EQ(0, hardware_->GetNumOfRecordingDevices(num_devices));
+    RTC_CHECK_EQ(0, hardware_->GetNumOfRecordingDevices(num_devices));
     printf("Capture devices:\n");
     for (int i = 0; i < num_devices; i++) {
-      ASSERT_EQ(0, hardware_->GetRecordingDeviceName(i, device_name, guid));
+      RTC_CHECK_EQ(0, hardware_->GetRecordingDeviceName(i, device_name, guid));
       printf("%d: %s\n", i, device_name);
     }
-    ASSERT_EQ(0, hardware_->GetNumOfPlayoutDevices(num_devices));
+    RTC_CHECK_EQ(0, hardware_->GetNumOfPlayoutDevices(num_devices));
     printf("Render devices:\n");
     for (int i = 0; i < num_devices; i++) {
-      ASSERT_EQ(0, hardware_->GetPlayoutDeviceName(i, device_name, guid));
+      RTC_CHECK_EQ(0, hardware_->GetPlayoutDeviceName(i, device_name, guid));
       printf("%d: %s\n", i, device_name);
     }
   }
@@ -172,21 +176,17 @@ class AgcVoiceEngine {
     CodecInst params = {0};
     printf("Codecs:\n");
     for (int i = 0; i < codec_->NumOfCodecs(); i++) {
-      ASSERT_EQ(0, codec_->GetCodec(i, params));
-      printf("%d %s/%d/%d\n", params.pltype, params.plname, params.plfreq,
-             params.channels);
+      RTC_CHECK_EQ(0, codec_->GetCodec(i, params));
+      printf("%d %s/%d/%" PRIuS "\n", params.pltype, params.plname,
+             params.plfreq, params.channels);
     }
   }
 
-  void StartSending() {
-    ASSERT_EQ(0, base_->StartSend(channel_));
-  }
+  void StartSending() { RTC_CHECK_EQ(0, base_->StartSend(channel_)); }
 
   void StartPlaying(Pan pan, const std::string& filename) {
     VoEVolumeControl* volume = VoEVolumeControl::GetInterface(voe_);
     VoEFile* file = VoEFile::GetInterface(voe_);
-    ASSERT_TRUE(volume != NULL);
-    ASSERT_TRUE(file != NULL);
     if (pan == PanLeft) {
       volume->SetOutputVolumePan(channel_, 1, 0);
     } else if (pan == PanRight) {
@@ -194,18 +194,19 @@ class AgcVoiceEngine {
     }
     if (filename != "") {
       printf("playing file\n");
-      ASSERT_EQ(0, file->StartPlayingFileLocally(channel_, filename.c_str(),
-          true, kFileFormatPcm16kHzFile, 1.0, 0, 0));
+      RTC_CHECK_EQ(
+          0, file->StartPlayingFileLocally(channel_, filename.c_str(), true,
+                                           kFileFormatPcm16kHzFile, 1.0, 0, 0));
     }
-    ASSERT_EQ(0, base_->StartReceive(channel_));
-    ASSERT_EQ(0, base_->StartPlayout(channel_));
+    RTC_CHECK_EQ(0, base_->StartReceive(channel_));
+    RTC_CHECK_EQ(0, base_->StartPlayout(channel_));
     volume->Release();
     file->Release();
   }
 
   void Stop() {
-    ASSERT_EQ(0, base_->StopSend(channel_));
-    ASSERT_EQ(0, base_->StopPlayout(channel_));
+    RTC_CHECK_EQ(0, base_->StopSend(channel_));
+    RTC_CHECK_EQ(0, base_->StopPlayout(channel_));
   }
 
  private:
@@ -213,7 +214,6 @@ class AgcVoiceEngine {
   VoEBase* base_;
   VoEHardware* hardware_;
   VoECodec* codec_;
-  AgcManager* manager_;
   int channel_;
   int capture_idx_;
   int render_idx_;
@@ -222,19 +222,19 @@ class AgcVoiceEngine {
 
 void RunHarness() {
   rtc::scoped_ptr<AgcVoiceEngine> voe1(new AgcVoiceEngine(
-      FLAGS_internal, 2000, 2000, FLAGS_capture1, FLAGS_render1));
+      FLAGS_legacy_agc, 2000, 2000, FLAGS_capture1, FLAGS_render1));
   rtc::scoped_ptr<AgcVoiceEngine> voe2;
   if (FLAGS_parallel) {
-    voe2.reset(new AgcVoiceEngine(!FLAGS_internal, 3000, 3000, FLAGS_capture2,
+    voe2.reset(new AgcVoiceEngine(!FLAGS_legacy_agc, 3000, 3000, FLAGS_capture2,
                                   FLAGS_render2));
     voe1->StartPlaying(AgcVoiceEngine::PanLeft, "");
     voe1->StartSending();
     voe2->StartPlaying(AgcVoiceEngine::PanRight, "");
     voe2->StartSending();
   } else if (FLAGS_aec) {
-    voe1.reset(new AgcVoiceEngine(FLAGS_internal, 2000, 4242, FLAGS_capture1,
+    voe1.reset(new AgcVoiceEngine(FLAGS_legacy_agc, 2000, 4242, FLAGS_capture1,
                                   FLAGS_render1));
-    voe2.reset(new AgcVoiceEngine(!FLAGS_internal, 4242, 2000, FLAGS_capture2,
+    voe2.reset(new AgcVoiceEngine(!FLAGS_legacy_agc, 4242, 2000, FLAGS_capture2,
                                   FLAGS_render2));
     voe1->StartPlaying(AgcVoiceEngine::NoPan, FLAGS_filename);
     voe1->StartSending();

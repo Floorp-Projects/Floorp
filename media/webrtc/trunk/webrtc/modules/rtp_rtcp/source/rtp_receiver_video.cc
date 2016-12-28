@@ -13,21 +13,15 @@
 #include <assert.h>
 #include <string.h>
 
-#ifdef WIN32
-#include <winsock2.h>
-#else
-#include <arpa/inet.h>
-#endif
-
-#include "webrtc/modules/rtp_rtcp/interface/rtp_cvo.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/base/trace_event.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_cvo.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_payload_registry.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/trace_event.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -67,6 +61,7 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
                rtp_header->header.timestamp);
   rtp_header->type.Video.codec = specific_payload.Video.videoCodecType;
 
+  RTC_DCHECK_GE(payload_length, rtp_header->header.paddingLength);
   const size_t payload_data_length =
       payload_length - rtp_header->header.paddingLength;
 
@@ -116,14 +111,13 @@ RTPAliveType RTPReceiverVideo::ProcessDeadOrAlive(
 
 int32_t RTPReceiverVideo::InvokeOnInitializeDecoder(
     RtpFeedback* callback,
-    int32_t id,
     int8_t payload_type,
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
     const PayloadUnion& specific_payload) const {
   // For video we just go with default values.
   if (-1 ==
-      callback->OnInitializeDecoder(
-          id, payload_type, payload_name, kVideoPayloadTypeFrequency, 1, 0)) {
+      callback->OnInitializeDecoder(payload_type, payload_name,
+                                    kVideoPayloadTypeFrequency, 1, 0)) {
     LOG(LS_ERROR) << "Failed to created decoder for payload type: "
                   << static_cast<int>(payload_type);
     return -1;

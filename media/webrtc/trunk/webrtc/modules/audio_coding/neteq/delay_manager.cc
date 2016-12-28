@@ -17,12 +17,12 @@
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq/delay_peak_detector.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
-DelayManager::DelayManager(int max_packets_in_buffer,
+DelayManager::DelayManager(size_t max_packets_in_buffer,
                            DelayPeakDetector* peak_detector)
     : first_packet_received_(false),
       max_packets_in_buffer_(max_packets_in_buffer),
@@ -239,7 +239,8 @@ void DelayManager::LimitTargetLevel() {
   }
 
   // Shift to Q8, then 75%.;
-  int max_buffer_packets_q8 = (3 * (max_packets_in_buffer_ << 8)) / 4;
+  int max_buffer_packets_q8 =
+      static_cast<int>((3 * (max_packets_in_buffer_ << 8)) / 4);
   target_level_ = std::min(target_level_, max_buffer_packets_q8);
 
   // Sanity check, at least 1 packet (in Q8).
@@ -372,11 +373,11 @@ int DelayManager::TargetLevel() const {
 }
 
 void DelayManager::LastDecoderType(NetEqDecoder decoder_type) {
-  if (decoder_type == kDecoderAVT ||
-      decoder_type == kDecoderCNGnb ||
-      decoder_type == kDecoderCNGwb ||
-      decoder_type == kDecoderCNGswb32kHz ||
-      decoder_type == kDecoderCNGswb48kHz) {
+  if (decoder_type == NetEqDecoder::kDecoderAVT ||
+      decoder_type == NetEqDecoder::kDecoderCNGnb ||
+      decoder_type == NetEqDecoder::kDecoderCNGwb ||
+      decoder_type == NetEqDecoder::kDecoderCNGswb32kHz ||
+      decoder_type == NetEqDecoder::kDecoderCNGswb48kHz) {
     last_pack_cng_or_dtmf_ = 1;
   } else if (last_pack_cng_or_dtmf_ != 0) {
     last_pack_cng_or_dtmf_ = -1;
@@ -389,7 +390,8 @@ bool DelayManager::SetMinimumDelay(int delay_ms) {
   // |max_packets_in_buffer_|.
   if ((maximum_delay_ms_ > 0 && delay_ms > maximum_delay_ms_) ||
       (packet_len_ms_ > 0 &&
-          delay_ms > 3 * max_packets_in_buffer_ * packet_len_ms_ / 4)) {
+       delay_ms >
+           static_cast<int>(3 * max_packets_in_buffer_ * packet_len_ms_ / 4))) {
     return false;
   }
   minimum_delay_ms_ = delay_ms;

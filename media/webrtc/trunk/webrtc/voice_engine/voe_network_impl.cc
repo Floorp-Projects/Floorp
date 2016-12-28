@@ -10,81 +10,52 @@
 
 #include "webrtc/voice_engine/voe_network_impl.h"
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/format_macros.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/voice_engine/voice_engine_impl.h"
 
-namespace webrtc
-{
+namespace webrtc {
 
-VoENetwork* VoENetwork::GetInterface(VoiceEngine* voiceEngine)
-{
-    if (NULL == voiceEngine)
-    {
-        return NULL;
-    }
-    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
-    s->AddRef();
-    return s;
+VoENetwork* VoENetwork::GetInterface(VoiceEngine* voiceEngine) {
+  if (!voiceEngine) {
+    return nullptr;
+  }
+  VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
+  s->AddRef();
+  return s;
 }
 
-VoENetworkImpl::VoENetworkImpl(voe::SharedData* shared) : _shared(shared)
-{
-    WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "VoENetworkImpl() - ctor");
+VoENetworkImpl::VoENetworkImpl(voe::SharedData* shared) : _shared(shared) {
 }
 
-VoENetworkImpl::~VoENetworkImpl()
-{
-    WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "~VoENetworkImpl() - dtor");
-}
+VoENetworkImpl::~VoENetworkImpl() = default;
 
 int VoENetworkImpl::RegisterExternalTransport(int channel,
-                                              Transport& transport)
-{
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "SetExternalTransport(channel=%d, transport=0x%x)",
-                 channel, &transport);
-    if (!_shared->statistics().Initialized())
-    {
-        _shared->SetLastError(VE_NOT_INITED, kTraceError);
-        return -1;
-    }
-    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-    voe::Channel* channelPtr = ch.channel();
-    if (channelPtr == NULL)
-    {
-        _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-            "SetExternalTransport() failed to locate channel");
-        return -1;
-    }
-    return channelPtr->RegisterExternalTransport(transport);
+                                              Transport& transport) {
+  RTC_DCHECK(_shared->statistics().Initialized());
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
+  if (!channelPtr) {
+    LOG_F(LS_ERROR) << "Failed to locate channel: " << channel;
+    return -1;
+  }
+  return channelPtr->RegisterExternalTransport(transport);
 }
 
-int VoENetworkImpl::DeRegisterExternalTransport(int channel)
-{
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "DeRegisterExternalTransport(channel=%d)", channel);
-    if (!_shared->statistics().Initialized())
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVoice,
-                     VoEId(_shared->instance_id(), -1),
-                     "DeRegisterExternalTransport() - invalid state");
-    }
-    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-    voe::Channel* channelPtr = ch.channel();
-    if (channelPtr == NULL)
-    {
-        _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-            "DeRegisterExternalTransport() failed to locate channel");
-        return -1;
-    }
-    return channelPtr->DeRegisterExternalTransport();
+int VoENetworkImpl::DeRegisterExternalTransport(int channel) {
+  RTC_CHECK(_shared->statistics().Initialized());
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
+  if (!channelPtr) {
+    LOG_F(LS_ERROR) << "Failed to locate channel: " << channel;
+    return -1;
+  }
+  return channelPtr->DeRegisterExternalTransport();
 }
 
 int VoENetworkImpl::ReceivedRTPPacket(int channel,
@@ -96,85 +67,48 @@ int VoENetworkImpl::ReceivedRTPPacket(int channel,
 int VoENetworkImpl::ReceivedRTPPacket(int channel,
                                       const void* data,
                                       size_t length,
-                                      const PacketTime& packet_time)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "ReceivedRTPPacket(channel=%d, length=%" PRIuS ")", channel,
-                 length);
-    if (!_shared->statistics().Initialized())
-    {
-        _shared->SetLastError(VE_NOT_INITED, kTraceError);
-        return -1;
-    }
-    // L16 at 32 kHz, stereo, 10 ms frames (+12 byte RTP header) -> 1292 bytes
-    if ((length < 12) || (length > 1292))
-    {
-        _shared->SetLastError(VE_INVALID_PACKET);
-        LOG(LS_ERROR) << "Invalid packet length: " << length;
-        return -1;
-    }
-    if (NULL == data)
-    {
-        _shared->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
-            "ReceivedRTPPacket() invalid data vector");
-        return -1;
-    }
-    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-    voe::Channel* channelPtr = ch.channel();
-    if (channelPtr == NULL)
-    {
-        _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-            "ReceivedRTPPacket() failed to locate channel");
-        return -1;
-    }
-
-    if (!channelPtr->ExternalTransport())
-    {
-        _shared->SetLastError(VE_INVALID_OPERATION, kTraceError,
-            "ReceivedRTPPacket() external transport is not enabled");
-        return -1;
-    }
-    return channelPtr->ReceivedRTPPacket((const int8_t*) data, length,
-                                         packet_time);
+                                      const PacketTime& packet_time) {
+  RTC_CHECK(_shared->statistics().Initialized());
+  RTC_CHECK(data);
+  // L16 at 32 kHz, stereo, 10 ms frames (+12 byte RTP header) -> 1292 bytes
+  if ((length < 12) || (length > 1292)) {
+    LOG_F(LS_ERROR) << "Invalid packet length: " << length;
+    return -1;
+  }
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
+  if (!channelPtr) {
+    LOG_F(LS_ERROR) << "Failed to locate channel: " << channel;
+    return -1;
+  }
+  if (!channelPtr->ExternalTransport()) {
+    LOG_F(LS_ERROR) << "No external transport for channel: " << channel;
+    return -1;
+  }
+  return channelPtr->ReceivedRTPPacket((const int8_t*)data, length,
+                                       packet_time);
 }
 
-int VoENetworkImpl::ReceivedRTCPPacket(int channel, const void* data,
-                                       size_t length)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "ReceivedRTCPPacket(channel=%d, length=%" PRIuS ")", channel,
-                 length);
-    if (!_shared->statistics().Initialized())
-    {
-        _shared->SetLastError(VE_NOT_INITED, kTraceError);
-        return -1;
-    }
-    if (length < 4)
-    {
-        _shared->SetLastError(VE_INVALID_PACKET, kTraceError,
-            "ReceivedRTCPPacket() invalid packet length");
-        return -1;
-    }
-    if (NULL == data)
-    {
-        _shared->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
-            "ReceivedRTCPPacket() invalid data vector");
-        return -1;
-    }
-    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
-    voe::Channel* channelPtr = ch.channel();
-    if (channelPtr == NULL)
-    {
-        _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
-            "ReceivedRTCPPacket() failed to locate channel");
-        return -1;
-    }
-    if (!channelPtr->ExternalTransport())
-    {
-        _shared->SetLastError(VE_INVALID_OPERATION, kTraceError,
-            "ReceivedRTCPPacket() external transport is not enabled");
-        return -1;
-    }
-    return channelPtr->ReceivedRTCPPacket((const int8_t*) data, length);
+int VoENetworkImpl::ReceivedRTCPPacket(int channel,
+                                       const void* data,
+                                       size_t length) {
+  RTC_CHECK(_shared->statistics().Initialized());
+  RTC_CHECK(data);
+  if (length < 4) {
+    LOG_F(LS_ERROR) << "Invalid packet length: " << length;
+    return -1;
+  }
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
+  if (!channelPtr) {
+    LOG_F(LS_ERROR) << "Failed to locate channel: " << channel;
+    return -1;
+  }
+  if (!channelPtr->ExternalTransport()) {
+    LOG_F(LS_ERROR) << "No external transport for channel: " << channel;
+    return -1;
+  }
+  return channelPtr->ReceivedRTCPPacket((const int8_t*)data, length);
 }
+
 }  // namespace webrtc

@@ -27,8 +27,10 @@
 
 #include "webrtc/base/ipaddress.h"
 #include "webrtc/base/byteorder.h"
-#include "webrtc/base/nethelpers.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/base/nethelpers.h"
+#include "webrtc/base/stringutils.h"
 #include "webrtc/base/win32.h"
 
 namespace rtc {
@@ -41,17 +43,19 @@ static const in6_addr kTeredoPrefix = {{{0x20, 0x01, 0x00, 0x00}}};
 static const in6_addr kV4CompatibilityPrefix = {{{0}}};
 static const in6_addr k6BonePrefix = {{{0x3f, 0xfe, 0}}};
 
-bool IPAddress::strip_sensitive_ = false;
-
-static bool IsPrivateV4(uint32 ip);
+static bool IsPrivateV4(uint32_t ip);
 static in_addr ExtractMappedAddress(const in6_addr& addr);
 
-uint32 IPAddress::v4AddressAsHostOrderInteger() const {
+uint32_t IPAddress::v4AddressAsHostOrderInteger() const {
   if (family_ == AF_INET) {
     return NetworkToHost32(u_.ip4.s_addr);
   } else {
     return 0;
   }
+}
+
+bool IPAddress::IsNil() const {
+  return IPIsUnspec(*this);
 }
 
 size_t IPAddress::Size() const {
@@ -140,9 +144,10 @@ std::string IPAddress::ToString() const {
 }
 
 std::string IPAddress::ToSensitiveString() const {
-  if (!strip_sensitive_)
-    return ToString();
-
+#if !defined(NDEBUG)
+  // Return non-stripped in debug.
+  return ToString();
+#else
   switch (family_) {
     case AF_INET: {
       std::string address = ToString();
@@ -154,12 +159,20 @@ std::string IPAddress::ToSensitiveString() const {
       return address;
     }
     case AF_INET6: {
-      // TODO(grunell): Return a string of format 1:2:3:x:x:x:x:x or such
-      // instead of zeroing out.
-      return TruncateIP(*this, 128 - 80).ToString();
+      std::string result;
+      result.resize(INET6_ADDRSTRLEN);
+      in6_addr addr = ipv6_address();
+      size_t len =
+          rtc::sprintfn(&(result[0]), result.size(), "%x:%x:%x:x:x:x:x:x",
+                        (addr.s6_addr[0] << 8) + addr.s6_addr[1],
+                        (addr.s6_addr[2] << 8) + addr.s6_addr[3],
+                        (addr.s6_addr[4] << 8) + addr.s6_addr[5]);
+      result.resize(len);
+      return result;
     }
   }
   return std::string();
+#endif
 }
 
 IPAddress IPAddress::Normalized() const {
@@ -180,10 +193,6 @@ IPAddress IPAddress::AsIPv6Address() const {
   in6_addr v6addr = kV4MappedPrefix;
   ::memcpy(&v6addr.s6_addr[12], &u_.ip4.s_addr, sizeof(u_.ip4.s_addr));
   return IPAddress(v6addr);
-}
-
-void IPAddress::set_strip_sensitive(bool enable) {
-  strip_sensitive_ = enable;
 }
 
 bool InterfaceAddress::operator==(const InterfaceAddress &other) const {
@@ -211,7 +220,7 @@ std::ostream& operator<<(std::ostream& os, const InterfaceAddress& ip) {
   return os;
 }
 
-bool IsPrivateV4(uint32 ip_in_host_order) {
+bool IsPrivateV4(uint32_t ip_in_host_order) {
   return ((ip_in_host_order >> 24) == 127) ||
       ((ip_in_host_order >> 24) == 10) ||
       ((ip_in_host_order >> 20) == ((172 << 4) | 1)) ||
@@ -317,8 +326,8 @@ size_t HashIP(const IPAddress& ip) {
     }
     case AF_INET6: {
       in6_addr v6addr = ip.ipv6_address();
-      const uint32* v6_as_ints =
-          reinterpret_cast<const uint32*>(&v6addr.s6_addr);
+      const uint32_t* v6_as_ints =
+          reinterpret_cast<const uint32_t*>(&v6addr.s6_addr);
       return v6_as_ints[0] ^ v6_as_ints[1] ^ v6_as_ints[2] ^ v6_as_ints[3];
     }
   }
@@ -337,7 +346,7 @@ IPAddress TruncateIP(const IPAddress& ip, int length) {
       return IPAddress(INADDR_ANY);
     }
     int mask = (0xFFFFFFFF << (32 - length));
-    uint32 host_order_ip = NetworkToHost32(ip.ipv4_address().s_addr);
+    uint32_t host_order_ip = NetworkToHost32(ip.ipv4_address().s_addr);
     in_addr masked;
     masked.s_addr = HostToNetwork32(host_order_ip & mask);
     return IPAddress(masked);
@@ -352,12 +361,11 @@ IPAddress TruncateIP(const IPAddress& ip, int length) {
     int position = length / 32;
     int inner_length = 32 - (length - (position * 32));
     // Note: 64bit mask constant needed to allow possible 32-bit left shift.
-    uint32 inner_mask = 0xFFFFFFFFLL  << inner_length;
-    uint32* v6_as_ints =
-        reinterpret_cast<uint32*>(&v6addr.s6_addr);
+    uint32_t inner_mask = 0xFFFFFFFFLL << inner_length;
+    uint32_t* v6_as_ints = reinterpret_cast<uint32_t*>(&v6addr.s6_addr);
     for (int i = 0; i < 4; ++i) {
       if (i == position) {
-        uint32 host_order_inner = NetworkToHost32(v6_as_ints[i]);
+        uint32_t host_order_inner = NetworkToHost32(v6_as_ints[i]);
         v6_as_ints[i] = HostToNetwork32(host_order_inner & inner_mask);
       } else if (i > position) {
         v6_as_ints[i] = 0;
@@ -369,7 +377,7 @@ IPAddress TruncateIP(const IPAddress& ip, int length) {
 }
 
 int CountIPMaskBits(IPAddress mask) {
-  uint32 word_to_count = 0;
+  uint32_t word_to_count = 0;
   int bits = 0;
   switch (mask.family()) {
     case AF_INET: {
@@ -378,8 +386,8 @@ int CountIPMaskBits(IPAddress mask) {
     }
     case AF_INET6: {
       in6_addr v6addr = mask.ipv6_address();
-      const uint32* v6_as_ints =
-          reinterpret_cast<const uint32*>(&v6addr.s6_addr);
+      const uint32_t* v6_as_ints =
+          reinterpret_cast<const uint32_t*>(&v6addr.s6_addr);
       int i = 0;
       for (; i < 4; ++i) {
         if (v6_as_ints[i] != 0xFFFFFFFF) {
@@ -404,7 +412,7 @@ int CountIPMaskBits(IPAddress mask) {
   // http://graphics.stanford.edu/~seander/bithacks.html
   // Counts the trailing 0s in the word.
   unsigned int zeroes = 32;
-  word_to_count &= -static_cast<int32>(word_to_count);
+  word_to_count &= -static_cast<int32_t>(word_to_count);
   if (word_to_count) zeroes--;
   if (word_to_count & 0x0000FFFF) zeroes -= 16;
   if (word_to_count & 0x00FF00FF) zeroes -= 8;
@@ -494,4 +502,24 @@ int IPAddressPrecedence(const IPAddress& ip) {
   return 0;
 }
 
-}  // Namespace talk base
+IPAddress GetLoopbackIP(int family) {
+  if (family == AF_INET) {
+    return rtc::IPAddress(INADDR_LOOPBACK);
+  }
+  if (family == AF_INET6) {
+    return rtc::IPAddress(in6addr_loopback);
+  }
+  return rtc::IPAddress();
+}
+
+IPAddress GetAnyIP(int family) {
+  if (family == AF_INET) {
+    return rtc::IPAddress(INADDR_ANY);
+  }
+  if (family == AF_INET6) {
+    return rtc::IPAddress(in6addr_any);
+  }
+  return rtc::IPAddress();
+}
+
+}  // Namespace rtc

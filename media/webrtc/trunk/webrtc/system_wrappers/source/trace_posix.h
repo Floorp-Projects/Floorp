@@ -11,7 +11,7 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_SOURCE_TRACE_POSIX_H_
 #define WEBRTC_SYSTEM_WRAPPERS_SOURCE_TRACE_POSIX_H_
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/source/trace_impl.h"
 
 namespace webrtc {

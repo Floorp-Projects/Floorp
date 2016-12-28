@@ -15,12 +15,12 @@
  * video_capture_impl.h
  */
 
-#include "webrtc/common_video/interface/i420_video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/common_video/rotation.h"
-#include "webrtc/modules/video_capture/include/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/video_frame.h"
 
 namespace webrtc
 {
@@ -104,7 +104,7 @@ public:
 protected:
     VideoCaptureImpl(const int32_t id);
     virtual ~VideoCaptureImpl();
-    int32_t DeliverCapturedFrame(I420VideoFrame& captureFrame);
+    int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
 
     int32_t _id; // Module ID
     char* _deviceUniqueId; // current Device unique name;
@@ -132,7 +132,7 @@ private:
     VideoRotation _rotateFrame;  // Set if the frame should be rotated by the
                                  // capture module.
 
-    I420VideoFrame _captureFrame;
+    VideoFrame _captureFrame;
 
     // Indicate whether rotation should be applied before delivered externally.
     bool apply_rotation_;

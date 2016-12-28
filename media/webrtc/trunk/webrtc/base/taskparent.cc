@@ -46,7 +46,7 @@ void TaskParent::AddChild(Task *child) {
   children_->insert(child);
 }
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 bool TaskParent::IsChildTask(Task *task) {
   ASSERT(task != NULL);
   return task->parent_ == this && children_->find(task) != children_->end();
@@ -69,7 +69,7 @@ bool TaskParent::AnyChildError() {
 
 void TaskParent::AbortAllChildren() {
   if (children_->size() > 0) {
-#ifdef _DEBUG
+#if !defined(NDEBUG)
     runner_->IncrementAbortCount();
 #endif
 
@@ -78,7 +78,7 @@ void TaskParent::AbortAllChildren() {
       (*it)->Abort(true);  // Note we do not wake
     }
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
     runner_->DecrementAbortCount();
 #endif
   }

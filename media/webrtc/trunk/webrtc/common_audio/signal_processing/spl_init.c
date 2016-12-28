@@ -15,7 +15,7 @@
  */
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 
 /* Declare function pointers. */
 MaxAbsValueW16 WebRtcSpl_MaxAbsValueW16;
@@ -28,8 +28,8 @@ CrossCorrelation WebRtcSpl_CrossCorrelation;
 DownsampleFast WebRtcSpl_DownsampleFast;
 ScaleAndAddVectorsWithRound WebRtcSpl_ScaleAndAddVectorsWithRound;
 
-#if (defined(WEBRTC_DETECT_ARM_NEON) || !defined(WEBRTC_ARCH_ARM_NEON)) && \
-    !defined(MIPS32_LE) && !defined(WEBRTC_ARCH_ARM64_NEON)
+#if (defined(WEBRTC_DETECT_NEON) || !defined(WEBRTC_HAS_NEON)) && \
+    !defined(MIPS32_LE)
 /* Initialize function pointers to the generic C version. */
 static void InitPointersToC() {
   WebRtcSpl_MaxAbsValueW16 = WebRtcSpl_MaxAbsValueW16C;
@@ -45,8 +45,7 @@ static void InitPointersToC() {
 }
 #endif
 
-#if defined(WEBRTC_DETECT_ARM_NEON) || defined(WEBRTC_ARCH_ARM_NEON) || \
-  (defined WEBRTC_ARCH_ARM64_NEON)
+#if defined(WEBRTC_DETECT_NEON) || defined(WEBRTC_HAS_NEON)
 /* Initialize function pointers to the Neon version. */
 static void InitPointersToNeon() {
   WebRtcSpl_MaxAbsValueW16 = WebRtcSpl_MaxAbsValueW16Neon;
@@ -57,8 +56,6 @@ static void InitPointersToNeon() {
   WebRtcSpl_MinValueW32 = WebRtcSpl_MinValueW32Neon;
   WebRtcSpl_CrossCorrelation = WebRtcSpl_CrossCorrelationNeon;
   WebRtcSpl_DownsampleFast = WebRtcSpl_DownsampleFastNeon;
-  /* TODO(henrik.lundin): re-enable NEON when the crash from bug 3243 is
-     understood. */
   WebRtcSpl_ScaleAndAddVectorsWithRound =
       WebRtcSpl_ScaleAndAddVectorsWithRoundC;
 }
@@ -87,19 +84,19 @@ static void InitPointersToMIPS() {
 #endif
 
 static void InitFunctionPointers(void) {
-#if defined(WEBRTC_DETECT_ARM_NEON)
+#if defined(WEBRTC_DETECT_NEON)
   if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
     InitPointersToNeon();
   } else {
     InitPointersToC();
   }
-#elif defined(WEBRTC_ARCH_ARM_NEON) || defined(WEBRTC_ARCH_ARM64_NEON)
+#elif defined(WEBRTC_HAS_NEON)
   InitPointersToNeon();
 #elif defined(MIPS32_LE)
   InitPointersToMIPS();
 #else
   InitPointersToC();
-#endif  /* WEBRTC_DETECT_ARM_NEON */
+#endif  /* WEBRTC_DETECT_NEON */
 }
 
 #if defined(WEBRTC_POSIX)

@@ -18,6 +18,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
@@ -25,18 +26,10 @@
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 #include "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
-
-// TODO(sergeyu): Move this to a header where it can be shared.
-#if defined(NDEBUG)
-#define DCHECK(condition) (void)(condition)
-#else  // NDEBUG
-#define DCHECK(condition) if (!(condition)) {abort();}
-#endif
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
-
 namespace {
 
 // A class to perform video frame capturing for Linux.
@@ -51,7 +44,6 @@ class ScreenCapturerLinux : public ScreenCapturer,
 
   // DesktopCapturer interface.
   void Start(Callback* delegate) override;
-  void Stop() override;
   void Capture(const DesktopRegion& region) override;
 
   // ScreenCapturer interface.
@@ -122,7 +114,7 @@ class ScreenCapturerLinux : public ScreenCapturer,
   // |Differ| for use when polling for changes.
   rtc::scoped_ptr<Differ> differ_;
 
-  DISALLOW_COPY_AND_ASSIGN(ScreenCapturerLinux);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerLinux);
 };
 
 ScreenCapturerLinux::ScreenCapturerLinux()
@@ -234,14 +226,10 @@ void ScreenCapturerLinux::InitXDamage() {
 }
 
 void ScreenCapturerLinux::Start(Callback* callback) {
-  DCHECK(!callback_);
-  DCHECK(callback);
+  RTC_DCHECK(!callback_);
+  RTC_DCHECK(callback);
 
   callback_ = callback;
-}
-
-void ScreenCapturerLinux::Stop() {
-  callback_ = NULL;
 }
 
 void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
@@ -290,7 +278,7 @@ void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
 }
 
 bool ScreenCapturerLinux::GetScreenList(ScreenList* screens) {
-  DCHECK(screens->size() == 0);
+  RTC_DCHECK(screens->size() == 0);
   // TODO(jiayl): implement screen enumeration.
   Screen default_screen;
   default_screen.id = 0;
@@ -309,7 +297,7 @@ bool ScreenCapturerLinux::HandleXEvent(const XEvent& event) {
         reinterpret_cast<const XDamageNotifyEvent*>(&event);
     if (damage_event->damage != damage_handle_)
       return false;
-    DCHECK(damage_event->level == XDamageReportNonEmpty);
+    RTC_DCHECK(damage_event->level == XDamageReportNonEmpty);
     return true;
   } else if (event.type == ConfigureNotify) {
     ScreenConfigurationChanged();
@@ -372,8 +360,8 @@ DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
     if (queue_.previous_frame()) {
       // Full-screen polling, so calculate the invalid rects here, based on the
       // changed pixels between current and previous buffers.
-      DCHECK(differ_.get() != NULL);
-      DCHECK(queue_.previous_frame()->data());
+      RTC_DCHECK(differ_.get() != NULL);
+      RTC_DCHECK(queue_.previous_frame()->data());
       differ_->CalcDirtyRegion(queue_.previous_frame()->data(),
                                frame->data(), updated_region);
     } else {
@@ -408,11 +396,11 @@ void ScreenCapturerLinux::SynchronizeFrame() {
   // TODO(hclam): We can reduce the amount of copying here by subtracting
   // |capturer_helper_|s region from |last_invalid_region_|.
   // http://crbug.com/92354
-  DCHECK(queue_.previous_frame());
+  RTC_DCHECK(queue_.previous_frame());
 
   DesktopFrame* current = queue_.current_frame();
   DesktopFrame* last = queue_.previous_frame();
-  DCHECK(current != last);
+  RTC_DCHECK(current != last);
   for (DesktopRegion::Iterator it(last_invalid_region_);
        !it.IsAtEnd(); it.Advance()) {
     current->CopyPixelsFrom(*last, it.rect().top_left(), it.rect());

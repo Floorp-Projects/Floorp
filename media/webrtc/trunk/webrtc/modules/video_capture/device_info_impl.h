@@ -13,9 +13,9 @@
 
 #include <vector>
 
-#include "webrtc/modules/video_capture/include/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture.h"
 #include "webrtc/modules/video_capture/video_capture_delay.h"
-#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
 
 namespace webrtc
 {
@@ -43,7 +43,6 @@ protected:
     /* Initialize this object*/
 
     virtual int32_t Init()=0;
-    virtual int32_t Refresh() { return 0; }
     /*
      * Fills the member variable _captureCapabilities with capabilities for the given device name.
      */

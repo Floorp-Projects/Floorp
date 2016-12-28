@@ -40,7 +40,7 @@ class DesktopFrameWin : public DesktopFrame {
   HBITMAP bitmap_;
   rtc::scoped_ptr<SharedMemory> owned_shared_memory_;
 
-  DISALLOW_COPY_AND_ASSIGN(DesktopFrameWin);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrameWin);
 };
 
 }  // namespace webrtc

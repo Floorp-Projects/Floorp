@@ -17,7 +17,7 @@
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/transient/common.h"
 #include "webrtc/modules/audio_processing/transient/file_utils.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/typedefs.h"
 
@@ -36,7 +36,11 @@ static const size_t kNumberOfSampleRates =
 // The files contain all the results in double precision (Little endian).
 // The audio files used with different sample rates are stored in the same
 // directory.
+#if defined(WEBRTC_IOS)
+TEST(TransientDetectorTest, DISABLED_CorrectnessBasedOnFiles) {
+#else
 TEST(TransientDetectorTest, CorrectnessBasedOnFiles) {
+#endif
   for (size_t i = 0; i < kNumberOfSampleRates; ++i) {
     int sample_rate_hz = kSampleRatesHz[i];
 

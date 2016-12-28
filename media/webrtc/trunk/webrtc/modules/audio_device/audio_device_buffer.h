@@ -12,14 +12,14 @@
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_BUFFER_H
 
 #include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 class CriticalSectionWrapper;
 
 const uint32_t kPulsePeriodMs = 1000;
-const uint32_t kMaxBufferSizeBytes = 3840; // 10ms in stereo @ 96kHz
+const size_t kMaxBufferSizeBytes = 3840; // 10ms in stereo @ 96kHz
 
 class AudioDeviceObserver;
 
@@ -40,17 +40,17 @@ public:
     int32_t RecordingSampleRate() const;
     int32_t PlayoutSampleRate() const;
 
-    virtual int32_t SetRecordingChannels(uint8_t channels);
-    virtual int32_t SetPlayoutChannels(uint8_t channels);
-    uint8_t RecordingChannels() const;
-    uint8_t PlayoutChannels() const;
+    virtual int32_t SetRecordingChannels(size_t channels);
+    virtual int32_t SetPlayoutChannels(size_t channels);
+    size_t RecordingChannels() const;
+    size_t PlayoutChannels() const;
     int32_t SetRecordingChannel(
         const AudioDeviceModule::ChannelType channel);
     int32_t RecordingChannel(
         AudioDeviceModule::ChannelType& channel) const;
 
     virtual int32_t SetRecordedBuffer(const void* audioBuffer,
-                                      uint32_t nSamples);
+                                      size_t nSamples);
     int32_t SetCurrentMicLevel(uint32_t level);
     virtual void SetVQEData(int playDelayMS,
                             int recDelayMS,
@@ -58,7 +58,7 @@ public:
     virtual int32_t DeliverRecordedData();
     uint32_t NewMicLevel() const;
 
-    virtual int32_t RequestPlayoutData(uint32_t nSamples);
+    virtual int32_t RequestPlayoutData(size_t nSamples);
     virtual int32_t GetPlayoutData(void* audioBuffer);
 
     int32_t StartInputFileRecording(
@@ -80,29 +80,29 @@ private:
     uint32_t                  _recSampleRate;
     uint32_t                  _playSampleRate;
 
-    uint8_t                   _recChannels;
-    uint8_t                   _playChannels;
+    size_t                   _recChannels;
+    size_t                   _playChannels;
 
     // selected recording channel (left/right/both)
     AudioDeviceModule::ChannelType _recChannel;
 
     // 2 or 4 depending on mono or stereo
-    uint8_t                   _recBytesPerSample;
-    uint8_t                   _playBytesPerSample;
+    size_t                   _recBytesPerSample;
+    size_t                   _playBytesPerSample;
 
     // 10ms in stereo @ 96kHz
     int8_t                          _recBuffer[kMaxBufferSizeBytes];
 
     // one sample <=> 2 or 4 bytes
-    uint32_t                  _recSamples;
-    uint32_t                  _recSize;           // in bytes
+    size_t                    _recSamples;
+    size_t                    _recSize;           // in bytes
 
     // 10ms in stereo @ 96kHz
     int8_t                          _playBuffer[kMaxBufferSizeBytes];
 
     // one sample <=> 2 or 4 bytes
-    uint32_t                  _playSamples;
-    uint32_t                  _playSize;          // in bytes
+    size_t                    _playSamples;
+    size_t                    _playSize;          // in bytes
 
     FileWrapper&                    _recFile;
     FileWrapper&                    _playFile;

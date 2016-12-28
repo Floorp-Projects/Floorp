@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/utility/interface/audio_frame_operations.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/utility/include/audio_frame_operations.h"
 
 namespace webrtc {
 
 void AudioFrameOperations::MonoToStereo(const int16_t* src_audio,
-                                        int samples_per_channel,
+                                        size_t samples_per_channel,
                                         int16_t* dst_audio) {
-  for (int i = 0; i < samples_per_channel; i++) {
+  for (size_t i = 0; i < samples_per_channel; i++) {
     dst_audio[2 * i] = src_audio[i];
     dst_audio[2 * i + 1] = src_audio[i];
   }
@@ -41,9 +41,9 @@ int AudioFrameOperations::MonoToStereo(AudioFrame* frame) {
 }
 
 void AudioFrameOperations::StereoToMono(const int16_t* src_audio,
-                                        int samples_per_channel,
+                                        size_t samples_per_channel,
                                         int16_t* dst_audio) {
-  for (int i = 0; i < samples_per_channel; i++) {
+  for (size_t i = 0; i < samples_per_channel; i++) {
     dst_audio[i] = (src_audio[2 * i] + src_audio[2 * i + 1]) >> 1;
   }
 }
@@ -62,7 +62,7 @@ int AudioFrameOperations::StereoToMono(AudioFrame* frame) {
 void AudioFrameOperations::SwapStereoChannels(AudioFrame* frame) {
   if (frame->num_channels_ != 2) return;
 
-  for (int i = 0; i < frame->samples_per_channel_ * 2; i += 2) {
+  for (size_t i = 0; i < frame->samples_per_channel_ * 2; i += 2) {
     int16_t temp_data = frame->data_[i];
     frame->data_[i] = frame->data_[i + 1];
     frame->data_[i + 1] = temp_data;
@@ -79,7 +79,7 @@ int AudioFrameOperations::Scale(float left, float right, AudioFrame& frame) {
     return -1;
   }
 
-  for (int i = 0; i < frame.samples_per_channel_; i++) {
+  for (size_t i = 0; i < frame.samples_per_channel_; i++) {
     frame.data_[2 * i] =
         static_cast<int16_t>(left * frame.data_[2 * i]);
     frame.data_[2 * i + 1] =
@@ -92,7 +92,7 @@ int AudioFrameOperations::ScaleWithSat(float scale, AudioFrame& frame) {
   int32_t temp_data = 0;
 
   // Ensure that the output result is saturated [-32768, +32767].
-  for (int i = 0; i < frame.samples_per_channel_ * frame.num_channels_;
+  for (size_t i = 0; i < frame.samples_per_channel_ * frame.num_channels_;
        i++) {
     temp_data = static_cast<int32_t>(scale * frame.data_[i]);
     if (temp_data < -32768) {

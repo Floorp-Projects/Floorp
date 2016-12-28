@@ -15,8 +15,10 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/rtp_rtcp/interface/fec_receiver.h"
+#include "webrtc/modules/rtp_rtcp/include/fec_receiver.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 #include "webrtc/modules/rtp_rtcp/mocks/mock_rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/fec_test_helper.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 
@@ -81,6 +83,11 @@ class ReceiverFecTest : public ::testing::Test {
     delete red_packet;
   }
 
+  void InjectGarbagePacketLength(size_t fec_garbage_offset);
+  static void SurvivesMaliciousPacket(const uint8_t* data,
+                                      size_t length,
+                                      uint8_t ulpfec_payload_type);
+
   MockRtpData rtp_data_callback_;
   rtc::scoped_ptr<ForwardErrorCorrection> fec_;
   rtc::scoped_ptr<FecReceiver> receiver_fec_;
@@ -104,8 +111,7 @@ TEST_F(ReceiverFecTest, TwoMediaOneFec) {
 
   // Recovery
   std::list<RtpPacket*>::iterator it = media_rtp_packets.begin();
-  std::list<RtpPacket*>::iterator media_it = media_rtp_packets.begin();
-  BuildAndAddRedMediaPacket(*media_it);
+  BuildAndAddRedMediaPacket(*it);
   VerifyReconstructedMediaPacket(*it, 1);
   EXPECT_EQ(0, receiver_fec_->ProcessReceivedFec());
   // Drop one media packet.
@@ -121,6 +127,44 @@ TEST_F(ReceiverFecTest, TwoMediaOneFec) {
   EXPECT_EQ(1U, counter.num_recovered_packets);
 
   DeletePackets(&media_packets);
+}
+
+void ReceiverFecTest::InjectGarbagePacketLength(size_t fec_garbage_offset) {
+  EXPECT_CALL(rtp_data_callback_, OnRecoveredPacket(_, _))
+      .WillRepeatedly(Return(true));
+
+  const unsigned int kNumFecPackets = 1u;
+  std::list<RtpPacket*> media_rtp_packets;
+  std::list<Packet*> media_packets;
+  GenerateFrame(2, 0, &media_rtp_packets, &media_packets);
+  std::list<Packet*> fec_packets;
+  GenerateFEC(&media_packets, &fec_packets, kNumFecPackets);
+  ByteWriter<uint16_t>::WriteBigEndian(
+      &fec_packets.front()->data[fec_garbage_offset], 0x4711);
+
+  // Inject first media packet, then first FEC packet, skipping the second media
+  // packet to cause a recovery from the FEC packet.
+  BuildAndAddRedMediaPacket(media_rtp_packets.front());
+  BuildAndAddRedFecPacket(fec_packets.front());
+  EXPECT_EQ(0, receiver_fec_->ProcessReceivedFec());
+
+  FecPacketCounter counter = receiver_fec_->GetPacketCounter();
+  EXPECT_EQ(2u, counter.num_packets);
+  EXPECT_EQ(1u, counter.num_fec_packets);
+  EXPECT_EQ(0u, counter.num_recovered_packets);
+
+  DeletePackets(&media_packets);
+}
+
+TEST_F(ReceiverFecTest, InjectGarbageFecHeaderLengthRecovery) {
+  // Byte offset 8 is the 'length recovery' field of the FEC header.
+  InjectGarbagePacketLength(8);
+}
+
+TEST_F(ReceiverFecTest, InjectGarbageFecLevelHeaderProtectionLength) {
+  // Byte offset 10 is the 'protection length' field in the first FEC level
+  // header.
+  InjectGarbagePacketLength(10);
 }
 
 TEST_F(ReceiverFecTest, TwoMediaTwoFec) {
@@ -360,6 +404,134 @@ TEST_F(ReceiverFecTest, OldFecPacketDropped) {
   EXPECT_EQ(0, receiver_fec_->ProcessReceivedFec());
 
   DeletePackets(&media_packets);
+}
+
+void ReceiverFecTest::SurvivesMaliciousPacket(const uint8_t* data,
+                                              size_t length,
+                                              uint8_t ulpfec_payload_type) {
+  webrtc::RTPHeader header;
+  rtc::scoped_ptr<webrtc::RtpHeaderParser> parser(
+      webrtc::RtpHeaderParser::Create());
+  ASSERT_TRUE(parser->Parse(data, length, &header));
+
+  webrtc::NullRtpData null_callback;
+  rtc::scoped_ptr<webrtc::FecReceiver> receiver_fec(
+      webrtc::FecReceiver::Create(&null_callback));
+
+  receiver_fec->AddReceivedRedPacket(header, data, length, ulpfec_payload_type);
+}
+
+TEST_F(ReceiverFecTest, TruncatedPacketWithFBitSet) {
+  const uint8_t kTruncatedPacket[] = {0x80,
+                                      0x2a,
+                                      0x68,
+                                      0x71,
+                                      0x29,
+                                      0xa1,
+                                      0x27,
+                                      0x3a,
+                                      0x29,
+                                      0x12,
+                                      0x2a,
+                                      0x98,
+                                      0xe0,
+                                      0x29};
+
+  SurvivesMaliciousPacket(kTruncatedPacket, sizeof(kTruncatedPacket), 100);
+}
+
+TEST_F(ReceiverFecTest, TruncatedPacketWithFBitSetEndingAfterFirstRedHeader) {
+  const uint8_t kPacket[] = {0x89,
+                             0x27,
+                             0x3a,
+                             0x83,
+                             0x27,
+                             0x3a,
+                             0x3a,
+                             0xf3,
+                             0x67,
+                             0xbe,
+                             0x2a,
+                             0xa9,
+                             0x27,
+                             0x54,
+                             0x3a,
+                             0x3a,
+                             0x2a,
+                             0x67,
+                             0x3a,
+                             0xf3,
+                             0x67,
+                             0xbe,
+                             0x2a,
+                             0x27,
+                             0xe6,
+                             0xf6,
+                             0x03,
+                             0x3e,
+                             0x29,
+                             0x27,
+                             0x21,
+                             0x27,
+                             0x2a,
+                             0x29,
+                             0x21,
+                             0x4b,
+                             0x29,
+                             0x3a,
+                             0x28,
+                             0x29,
+                             0xbf,
+                             0x29,
+                             0x2a,
+                             0x26,
+                             0x29,
+                             0xae,
+                             0x27,
+                             0xa6,
+                             0xf6,
+                             0x00,
+                             0x03,
+                             0x3e};
+  SurvivesMaliciousPacket(kPacket, sizeof(kPacket), 100);
+}
+
+TEST_F(ReceiverFecTest, TruncatedPacketWithoutDataPastFirstBlock) {
+  const uint8_t kPacket[] = {0x82,
+                             0x38,
+                             0x92,
+                             0x38,
+                             0x92,
+                             0x38,
+                             0xde,
+                             0x2a,
+                             0x11,
+                             0xc8,
+                             0xa3,
+                             0xc4,
+                             0x82,
+                             0x38,
+                             0x2a,
+                             0x21,
+                             0x2a,
+                             0x28,
+                             0x92,
+                             0x38,
+                             0x92,
+                             0x00,
+                             0x00,
+                             0x0a,
+                             0x3a,
+                             0xc8,
+                             0xa3,
+                             0x3a,
+                             0x27,
+                             0xc4,
+                             0x2a,
+                             0x21,
+                             0x2a,
+                             0x28};
+  SurvivesMaliciousPacket(kPacket, sizeof(kPacket), 100);
 }
 
 }  // namespace webrtc
