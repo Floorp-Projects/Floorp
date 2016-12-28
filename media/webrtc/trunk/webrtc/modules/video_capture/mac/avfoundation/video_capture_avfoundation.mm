@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,12 +8,26 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.h"
-#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info_objc.h"
-#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_objc.h"
+#include "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation.h"
+#import "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info_objc.h"
+#import "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_objc.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
+
+class nsAutoreleasePool {
+public:
+    nsAutoreleasePool()
+    {
+        mLocalPool = [[NSAutoreleasePool alloc] init];
+    }
+    ~nsAutoreleasePool()
+    {
+        [mLocalPool release];
+    }
+private:
+    NSAutoreleasePool *mLocalPool;
+};
 
 namespace webrtc
 {
@@ -21,15 +35,16 @@ namespace webrtc
 namespace videocapturemodule
 {
 
-VideoCaptureMacQTKit::VideoCaptureMacQTKit(const int32_t id) :
+VideoCaptureMacAVFoundation::VideoCaptureMacAVFoundation(const int32_t id) :
     VideoCaptureImpl(id),
     _captureDevice(NULL),
     _captureInfo(NULL),
     _isCapturing(false),
     _id(id),
-    _captureWidth(QTKIT_DEFAULT_WIDTH),
-    _captureHeight(QTKIT_DEFAULT_HEIGHT),
-    _captureFrameRate(QTKIT_DEFAULT_FRAME_RATE),
+    _captureWidth(AVFOUNDATION_DEFAULT_WIDTH),
+    _captureHeight(AVFOUNDATION_DEFAULT_HEIGHT),
+    _captureFrameRate(AVFOUNDATION_DEFAULT_FRAME_RATE),
+    _captureRawType(kVideoUnknown),
     _frameCount(0)
 {
 
@@ -38,16 +53,21 @@ VideoCaptureMacQTKit::VideoCaptureMacQTKit(const int32_t id) :
     memset(_currentDeviceProductUniqueIDUTF8, 0, MAX_NAME_LENGTH);
 }
 
-VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
+VideoCaptureMacAVFoundation::~VideoCaptureMacAVFoundation()
 {
 
+    nsAutoreleasePool localPool;
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
-                 "~VideoCaptureMacQTKit() called");
+                 "~VideoCaptureMacAVFoundation() called");
     if(_captureDevice)
     {
         [_captureDevice registerOwner:nil];
-        [_captureDevice stopCapture];
-        [_captureDevice release];
+        [_captureDevice performSelectorOnMainThread:@selector(stopCapture)
+                        withObject:nil
+                        waitUntilDone:NO];
+        [_captureDevice performSelectorOnMainThread:@selector(release)
+                        withObject:nil
+                        waitUntilDone:NO];
     }
 
     if(_captureInfo)
@@ -56,7 +76,7 @@ VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
     }
 }
 
-int32_t VideoCaptureMacQTKit::Init(
+int32_t VideoCaptureMacAVFoundation::Init(
     const int32_t id, const char* iDeviceUniqueIdUTF8)
 {
     CriticalSectionScoped cs(&_apiCs);
@@ -71,12 +91,14 @@ int32_t VideoCaptureMacQTKit::Init(
     _deviceUniqueId = new char[nameLength+1];
     memcpy(_deviceUniqueId, iDeviceUniqueIdUTF8,nameLength+1);
 
-    _captureDevice = [[VideoCaptureMacQTKitObjC alloc] init];
+    nsAutoreleasePool localPool;
+
+    _captureDevice = [[VideoCaptureMacAVFoundationObjC alloc] init];
     if(NULL == _captureDevice)
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, id,
                      "Failed to create an instance of "
-                     "VideoCaptureMacQTKitObjC");
+                     "VideoCaptureMacAVFounationObjC");
         return -1;
     }
 
@@ -88,11 +110,11 @@ int32_t VideoCaptureMacQTKit::Init(
         return 0;
     }
 
-    _captureInfo = [[VideoCaptureMacQTKitInfoObjC alloc]init];
+    _captureInfo = [[VideoCaptureMacAVFoundationInfoObjC alloc]init];
     if(nil == _captureInfo)
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, id,
-        "Failed to create an instance of VideoCaptureMacQTKitInfoObjC");
+        "Failed to create an instance of VideoCaptureMacAVFoundationInfoObjC");
         return -1;
     }
 
@@ -150,60 +172,65 @@ int32_t VideoCaptureMacQTKit::Init(
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                      "Failed to set capture device %s (unique ID %s) even "
                      "though it was a valid return from "
-                     "VideoCaptureMacQTKitInfo", deviceNameUTF8,
+                     "VideoCaptureMacAVFoundationInfo", deviceNameUTF8,
                      iDeviceUniqueIdUTF8);
         return -1;
     }
 
     WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
-                 "successfully Init VideoCaptureMacQTKit" );
+                 "successfully Init VideoCaptureMacAVFoundation" );
     return 0;
 }
 
-int32_t VideoCaptureMacQTKit::StartCapture(
+int32_t VideoCaptureMacAVFoundation::StartCapture(
     const VideoCaptureCapability& capability)
 {
 
+    nsAutoreleasePool localPool;
     _captureWidth = capability.width;
     _captureHeight = capability.height;
     _captureFrameRate = capability.maxFPS;
+    _captureRawType = capability.rawType;
     _captureDelay = 120;
 
     [_captureDevice setCaptureHeight:_captureHeight
                                width:_captureWidth
-                           frameRate:_captureFrameRate];
+                           frameRate:_captureFrameRate
+                             rawType:&_captureRawType];
 
     [_captureDevice startCapture];
     _isCapturing = true;
     return 0;
 }
 
-int32_t VideoCaptureMacQTKit::StopCapture()
+int32_t VideoCaptureMacAVFoundation::StopCapture()
 {
+    nsAutoreleasePool localPool;
     [_captureDevice stopCapture];
     _isCapturing = false;
     return 0;
 }
 
-bool VideoCaptureMacQTKit::CaptureStarted()
+bool VideoCaptureMacAVFoundation::CaptureStarted()
 {
     return _isCapturing;
 }
 
-int32_t VideoCaptureMacQTKit::CaptureSettings(VideoCaptureCapability& settings)
+int32_t VideoCaptureMacAVFoundation::CaptureSettings(VideoCaptureCapability& settings)
 {
     settings.width = _captureWidth;
     settings.height = _captureHeight;
     settings.maxFPS = _captureFrameRate;
+    settings.rawType = _captureRawType;
     return 0;
 }
 
 
 // ********** begin functions inherited from DeviceInfoImpl **********
 
-struct VideoCaptureCapabilityMacQTKit:public VideoCaptureCapability
+struct VideoCaptureCapabilityMacAVFoundation:public VideoCaptureCapability
 {
-    VideoCaptureCapabilityMacQTKit()
+    VideoCaptureCapabilityMacAVFoundation()
     {
     }
 };

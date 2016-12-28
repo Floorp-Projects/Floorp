@@ -32,7 +32,7 @@ class AudioDecoder {
   enum { kNotImplemented = -2 };
 
   AudioDecoder() = default;
-  virtual ~AudioDecoder() = default;
+  virtual ~AudioDecoder() {} //= default;
 
   // Decodes |encode_len| bytes from |encoded| and writes the result in
   // |decoded|. The maximum bytes allowed to be written into |decoded| is

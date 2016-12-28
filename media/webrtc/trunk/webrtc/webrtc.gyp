@@ -8,9 +8,10 @@
 {
   'conditions': [
     ['include_tests==1', {
+      # note: all will be included even if the conditional is false!
       'includes': [
-        'libjingle/xmllite/xmllite_tests.gypi',
-        'libjingle/xmpp/xmpp_tests.gypi',
+        #'libjingle/xmllite/xmllite_tests.gypi',
+        #'libjingle/xmpp/xmpp_tests.gypi',
         'p2p/p2p_tests.gypi',
         'sound/sound_tests.gypi',
         'webrtc_tests.gypi',
@@ -55,7 +56,7 @@
   ],
   'variables': {
     'webrtc_all_dependencies': [
-      'base/base.gyp:*',
+      'base/base.gyp:rtc_base_approved',
       'sound/sound.gyp:*',
       'common.gyp:*',
       'common_audio/common_audio.gyp:*',
@@ -75,7 +76,7 @@
       'type': 'none',
       'dependencies': [
         '<@(webrtc_all_dependencies)',
-        'webrtc',
+        'webrtc_lib',
       ],
       'conditions': [
         ['include_tests==1', {
@@ -92,7 +93,7 @@
       ],
     },
     {
-      'target_name': 'webrtc',
+      'target_name': 'webrtc_lib',
       'type': 'static_library',
       'sources': [
         'audio_receive_stream.h',

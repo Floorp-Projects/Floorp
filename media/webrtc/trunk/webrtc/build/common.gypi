@@ -37,7 +37,13 @@
       'modules_java_gyp_path%': '<(modules_java_gyp_path)',
       'webrtc_vp8_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp8',
       'webrtc_vp9_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp9',
+      'webrtc_h264_dir%': '<(webrtc_root)/modules/video_coding/codecs/h264',
+      'include_g711%': 1,
+      'include_g722%': 1,
+      'include_ilbc%': 1,
       'include_opus%': 1,
+      'include_isac%': 1,
+      'include_pcm16b%': 1,
       'opus_dir%': '<(DEPTH)/third_party/opus',
 
       # Enable to use the Mozilla internal settings.
@@ -50,7 +56,15 @@
     'modules_java_gyp_path%': '<(modules_java_gyp_path)',
     'webrtc_vp8_dir%': '<(webrtc_vp8_dir)',
     'webrtc_vp9_dir%': '<(webrtc_vp9_dir)',
+    'webrtc_h264_dir%': '<(webrtc_h264_dir)',
+
+    'include_g711%': '<(include_g711)',
+    'include_g722%': '<(include_g722)',
+    'include_ilbc%': '<(include_ilbc)',
     'include_opus%': '<(include_opus)',
+    'include_isac%': '<(include_isac)',
+    'include_pcm16b%': '<(include_pcm16b)',
+
     'rtc_relative_path%': 1,
     'external_libraries%': '0',
     'json_root%': '<(DEPTH)/third_party/jsoncpp/source/include/',
@@ -144,6 +158,8 @@
         # Exclude internal ADM since Chromium uses its own IO handling.
         'include_internal_audio_device%': 0,
 
+        'include_ndk_cpu_features%': 0,
+
         # Remove tests for Chromium to avoid slowing down GYP generation.
         'include_tests%': 0,
         'restrict_webrtc_logging%': 1,
@@ -155,8 +171,44 @@
 
         'include_pulse_audio%': 1,
         'include_internal_audio_device%': 1,
-        'include_tests%': 1,
-        'restrict_webrtc_logging%': 0,
+        'include_ndk_cpu_features%': 0,
+        'conditions': [
+          ['build_with_mozilla==1', {
+            'include_tests%': 0,
+            'conditions': [
+	      # silly gyp won't let me do 'a': !'b'
+	      # suppress TRACE logging in non-debug builds
+              ['debug==1', {
+                'restrict_webrtc_logging%': 0,
+              }, {
+                'restrict_webrtc_logging%': 1,
+              }],
+	    ],
+          }, {
+            'include_tests%': 1,
+            'restrict_webrtc_logging%': 0,
+	  }],
+	],
+      }],
+      ['OS=="linux"', {
+        'include_alsa_audio%': 1,
+      }, {
+        'include_alsa_audio%': 0,
+      }],
+      ['OS=="openbsd"', {
+        'include_sndio_audio%': 1,
+      }, {
+        'include_sndio_audio%': 0,
+      }],
+      ['OS=="solaris" or (OS!="openbsd" and os_bsd==1)', {
+        'include_pulse_audio%': 1,
+      }, {
+        'include_pulse_audio%': 0,
+      }],
+      ['OS=="linux" or OS=="solaris" or os_bsd==1', {
+        'include_v4l2_video_capture%': 1,
+      }, {
+        'include_v4l2_video_capture%': 0,
       }],
       ['OS=="ios"', {
         'build_libjpeg%': 0,
@@ -167,7 +219,7 @@
       ['(target_arch=="arm" and (arm_neon==1 or arm_neon_optional==1)) or target_arch=="arm64"', {
         'build_with_neon%': 1,
       }],
-      ['OS!="ios" and (target_arch!="arm" or arm_version>=7) and target_arch!="mips64el"', {
+      ['OS!="ios" and (target_arch!="arm" or arm_version>=7) and target_arch!="mips64el" and build_with_mozilla==0', {
         'rtc_use_openmax_dl%': 1,
       }, {
         'rtc_use_openmax_dl%': 0,
@@ -176,6 +228,11 @@
   },
   'target_defaults': {
     'conditions': [
+      ['moz_widget_toolkit_gonk==1', {
+        'defines' : [
+          'WEBRTC_GONK',
+        ],
+      }],
       ['restrict_webrtc_logging==1', {
         'defines': ['WEBRTC_RESTRICT_LOGGING',],
       }],
@@ -284,18 +341,37 @@
         ],
         'conditions': [
           ['arm_version>=7', {
-            'defines': ['WEBRTC_ARCH_ARM_V7',],
+            'defines': ['WEBRTC_ARCH_ARM_V7',
+                        'WEBRTC_BUILD_NEON_LIBS'],
             'conditions': [
               ['arm_neon==1', {
                 'defines': ['WEBRTC_HAS_NEON',],
               }],
-              ['arm_neon==0 and arm_neon_optional==1', {
+              ['arm_neon==0 and (OS=="android" or moz_widget_toolkit_gonk==1)', {
                 'defines': ['WEBRTC_DETECT_NEON',],
               }],
             ],
           }],
         ],
       }],
+      ['os_bsd==1', {
+        'defines': [
+          'WEBRTC_BSD',
+          'WEBRTC_THREAD_RR',
+        ],
+      }],
+      ['OS=="dragonfly" or OS=="netbsd"', {
+        'defines': [
+          # doesn't support pthread_condattr_setclock
+          'WEBRTC_CLOCK_TYPE_REALTIME',
+        ],
+      }],
+      ['OS=="openbsd"', {
+        'defines' : [
+          'WEBRTC_AUDIO_SNDIO',
+        ],
+      }],
+      # Mozilla: if we support Mozilla on MIPS, we'll need to mod the cflags entries here
       ['target_arch=="mipsel" and mips_arch_variant!="r6"', {
         'defines': [
           'MIPS32_LE',
@@ -370,6 +446,17 @@
         ],
         # Re-enable some warnings that Chromium disables.
         'msvs_disabled_warnings!': [4189,],
+      }],
+      # used on GONK as well
+      ['enable_android_opensl==1 and (OS=="android" or moz_widget_toolkit_gonk==1)', {
+        'defines': [
+          'WEBRTC_ANDROID_OPENSLES',
+        ],
+      }],
+      ['moz_webrtc_omx==1', {
+        'defines' : [
+          'MOZ_WEBRTC_OMX'
+        ],
       }],
       ['OS=="android"', {
         'defines': [

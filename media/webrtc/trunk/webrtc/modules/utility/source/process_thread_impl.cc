@@ -129,7 +129,7 @@ void ProcessThreadImpl::PostTask(rtc::scoped_ptr<ProcessTask> task) {
 }
 
 void ProcessThreadImpl::RegisterModule(Module* module) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  //  RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(module);
 
 #if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))

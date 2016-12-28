@@ -21,7 +21,7 @@
 #ifdef WEBRTC_AEC_DEBUG_DUMP
 void WebRtcAec_ReopenWav(const char* name,
                          int instance_index,
-                         int process_rate,
+                         int count,
                          int sample_rate,
                          rtc_WavWriter** wav_file) {
   if (*wav_file) {
@@ -31,7 +31,7 @@ void WebRtcAec_ReopenWav(const char* name,
   }
   char filename[64];
   int written = rtc::sprintfn(filename, sizeof(filename), "%s%d-%d.wav", name,
-                              instance_index, process_rate);
+                              instance_index, count);
 
   // Ensure there was no buffer output error.
   RTC_DCHECK_GE(written, 0);
@@ -41,10 +41,10 @@ void WebRtcAec_ReopenWav(const char* name,
   *wav_file = rtc_WavOpen(filename, sample_rate, 1);
 }
 
-void WebRtcAec_RawFileOpen(const char* name, int instance_index, FILE** file) {
+void WebRtcAec_RawFileOpen(const char* name, int instance_index, int counter, FILE** file) {
   char filename[64];
-  int written = rtc::sprintfn(filename, sizeof(filename), "%s_%d.dat", name,
-                              instance_index);
+  int written = rtc::sprintfn(filename, sizeof(filename), "%s%d-%d.dat", name,
+                              instance_index, counter);
 
   // Ensure there was no buffer output error.
   RTC_DCHECK_GE(written, 0);

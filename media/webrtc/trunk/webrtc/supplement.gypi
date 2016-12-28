@@ -1,7 +1,7 @@
 {
   'variables': {
     'variables': {
-      'webrtc_root%': '<(DEPTH)/webrtc',
+      'webrtc_root%': '<(DEPTH)', # '<(DEPTH)/webrtc',
       # Override the default (10.6) in Chromium's build/common.gypi.
       # Needed for ARC and libc++.
       'mac_deployment_target%': '10.7',

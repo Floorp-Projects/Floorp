@@ -50,7 +50,7 @@ class ReceiverReport : public RtcpPacket {
   static const size_t kRrBaseLength = 4;
   static const size_t kMaxNumberOfReportBlocks = 0x1F;
 
-  size_t BlockLength() const {
+  size_t BlockLength() const override{
     return kHeaderLength + kRrBaseLength +
            report_blocks_.size() * ReportBlock::kLength;
   }

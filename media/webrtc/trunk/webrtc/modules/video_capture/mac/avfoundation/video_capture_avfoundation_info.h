@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,27 +8,27 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_H_
-#define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_H_
+#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_AVFOUNDATION_VIDEO_CAPTURE_AVFOUNDATION_INFO_H_
+#define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_AVFOUNDATION_VIDEO_CAPTURE_AVFOUNDATION_INFO_H_
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
-#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_utility.h"
+#include "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_utility.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
 
 
-@class VideoCaptureMacQTKitInfoObjC;
+@class VideoCaptureMacAVFoundationInfoObjC;
 
 namespace webrtc
 {
 namespace videocapturemodule
 {
 
-class VideoCaptureMacQTKitInfo: public DeviceInfoImpl
+class VideoCaptureMacAVFoundationInfo: public DeviceInfoImpl
 {
 public:
 
-   VideoCaptureMacQTKitInfo(const int32_t id);
-    virtual ~VideoCaptureMacQTKitInfo();
+   VideoCaptureMacAVFoundationInfo(const int32_t id);
+    virtual ~VideoCaptureMacAVFoundationInfo();
 
     int32_t Init();
 
@@ -48,7 +48,8 @@ public:
         uint32_t deviceNameLength, char* deviceUniqueIdUTF8,
         uint32_t deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8 = 0,
-        uint32_t productUniqueIdUTF8Length = 0);
+        uint32_t productUniqueIdUTF8Length = 0,
+        pid_t* pid = 0);
 
     /*
      *   Returns the number of capabilities for this device
@@ -65,15 +66,6 @@ public:
         VideoCaptureCapability& capability);
 
     /*
-     *  Gets the capability that best matches the requested width, height and frame rate.
-     *  Returns the deviceCapabilityNumber on success.
-     */
-    virtual int32_t GetBestMatchedCapability(
-        const char* deviceUniqueIdUTF8,
-        const VideoCaptureCapability& requested,
-        VideoCaptureCapability& resulting);
-
-    /*
      * Display OS /capture device specific settings dialog
      */
     virtual int32_t DisplayCaptureSettingsDialogBox(
@@ -85,9 +77,9 @@ protected:
     virtual int32_t CreateCapabilityMap(
         const char* deviceUniqueIdUTF8);
 
-    VideoCaptureMacQTKitInfoObjC*    _captureInfo;
+    VideoCaptureMacAVFoundationInfoObjC*    _captureInfo;
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_H_
+#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_AVFOUNDATION_VIDEO_CAPTURE_AVFOUNDATION_INFO_H_

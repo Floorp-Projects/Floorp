@@ -20,6 +20,9 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+      ],
       'sources': [
         'device_info_impl.cc',
         'device_info_impl.h',
@@ -41,6 +44,9 @@
       'dependencies': [
         'video_capture_module',
       ],
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+      ],
       'sources': [
         'external/device_info_external.cc',
         'external/video_capture_external.cc',
@@ -53,32 +59,35 @@
         {
           'target_name': 'video_capture_module_internal_impl',
           'type': 'static_library',
+          'dependencies': [
+            'video_capture_module',
+            '<(webrtc_root)/common.gyp:webrtc_common',
+           ],
+          'cflags_mozilla': [
+            '$(NSPR_CFLAGS)',
+          ],
           'conditions': [
             ['OS!="android"', {
-              'dependencies': [
-                'video_capture_module',
-                '<(webrtc_root)/common.gyp:webrtc_common',
-              ],
             }],
-            ['OS=="linux"', {
+            ['include_v4l2_video_capture==1', {
               'sources': [
                 'linux/device_info_linux.cc',
                 'linux/device_info_linux.h',
                 'linux/video_capture_linux.cc',
                 'linux/video_capture_linux.h',
               ],
-            }],  # linux
+            }],
             ['OS=="mac"', {
               'sources': [
-                'mac/qtkit/video_capture_qtkit.h',
-                'mac/qtkit/video_capture_qtkit.mm',
-                'mac/qtkit/video_capture_qtkit_info.h',
-                'mac/qtkit/video_capture_qtkit_info.mm',
-                'mac/qtkit/video_capture_qtkit_info_objc.h',
-                'mac/qtkit/video_capture_qtkit_info_objc.mm',
-                'mac/qtkit/video_capture_qtkit_objc.h',
-                'mac/qtkit/video_capture_qtkit_objc.mm',
-                'mac/qtkit/video_capture_qtkit_utility.h',
+                'mac/avfoundation/video_capture_avfoundation.h',
+                'mac/avfoundation/video_capture_avfoundation.mm',
+                'mac/avfoundation/video_capture_avfoundation_info.h',
+                'mac/avfoundation/video_capture_avfoundation_info.mm',
+                'mac/avfoundation/video_capture_avfoundation_info_objc.h',
+                'mac/avfoundation/video_capture_avfoundation_info_objc.mm',
+                'mac/avfoundation/video_capture_avfoundation_objc.h',
+                'mac/avfoundation/video_capture_avfoundation_objc.mm',
+                'mac/avfoundation/video_capture_avfoundation_utility.h',
                 'mac/video_capture_mac.mm',
               ],
               'link_settings': {
@@ -86,15 +95,18 @@
                   'OTHER_LDFLAGS': [
                     '-framework Cocoa',
                     '-framework CoreVideo',
-                    '-framework QTKit',
                   ],
                 },
               },
             }],  # mac
             ['OS=="win"', {
-              'dependencies': [
-                '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
-              ],
+              'conditions': [
+                ['build_with_mozilla==0', {
+                  'dependencies': [
+                    '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
+                  ],
+                }],
+	      ],
               'sources': [
                 'windows/device_info_ds.cc',
                 'windows/device_info_ds.h',
@@ -109,6 +121,10 @@
                 'windows/video_capture_factory_windows.cc',
                 'windows/video_capture_mf.cc',
                 'windows/video_capture_mf.h',
+		'windows/BasePin.cpp',
+                'windows/BaseFilter.cpp',
+                'windows/BaseInputPin.cpp',
+                'windows/MediaType.cpp',
               ],
               'link_settings': {
                 'libraries': [
@@ -133,6 +149,14 @@
                 },
               },
             }],
+            ['OS=="android"', {
+              'sources': [
+                'android/device_info_android.cc',
+                'android/device_info_android.h',
+                'android/video_capture_android.cc',
+                'android/video_capture_android.h',
+              ],
+            }],  # android
             ['OS=="ios"', {
               'sources': [
                 'ios/device_info_ios.h',
@@ -147,6 +171,9 @@
               'xcode_settings': {
                 'CLANG_ENABLE_OBJC_ARC': 'YES',
               },
+              'cflags_mozilla': [
+                '-fobjc-arc',
+              ],
               'all_dependent_settings': {
                 'xcode_settings': {
                   'OTHER_LDFLAGS': [
@@ -179,7 +206,7 @@
             'test/video_capture_main_mac.mm',
           ],
           'conditions': [
-            ['OS=="mac" or OS=="linux"', {
+            ['OS!="win" and OS!="android"', {
               'cflags': [
                 '-Wno-write-strings',
               ],
@@ -187,11 +214,15 @@
                 '-lpthread -lm',
               ],
             }],
+            ['include_v4l2_video_capture==1', {
+              'libraries': [
+                '-lXext',
+                '-lX11',
+              ],
+            }],
             ['OS=="linux"', {
               'libraries': [
                 '-lrt',
-                '-lXext',
-                '-lX11',
               ],
             }],
             ['OS=="mac"', {

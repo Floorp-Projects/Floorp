@@ -51,6 +51,18 @@ runNetworkTest(() => {
       // i.e., this order of `requestFrame(); draw();` should work.
       stream1.requestFrame();
       h1.drawColor(canvas1, h1.red);
+      var i = 0;
+      return setInterval(function() {
+        try {
+          info("draw " + i ? "green" : "red");
+          h1.drawColor(canvas1, i ? h1.green : h1.red);
+          i = 1 - i;
+          stream1.requestFrame();
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
     },
     function WAIT_FOR_REMOTE_RED() {
       return h1.waitForPixelColor(vremote1, h1.red, 128,

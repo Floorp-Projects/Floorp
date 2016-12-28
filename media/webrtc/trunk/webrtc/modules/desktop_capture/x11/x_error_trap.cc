@@ -11,54 +11,54 @@
 #include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
 
 #include <assert.h>
-
-#if defined(TOOLKIT_GTK)
-#include <gdk/gdk.h>
-#endif  // !defined(TOOLKIT_GTK)
+#include <limits>
 
 namespace webrtc {
 
-namespace {
+// static
+Bool XErrorTrap::XServerErrorHandler(Display* display, xReply* rep,
+                                     char* /* buf */, int /* len */,
+                                     XPointer data) {
+  XErrorTrap* self = reinterpret_cast<XErrorTrap*>(data);
 
-#if !defined(TOOLKIT_GTK)
+  if (rep->generic.type != X_Error ||
+      // Overflow-safe last_request_read <= last_ignored_request_ for skipping
+      // async replies from requests before XErrorTrap was created.
+      self->last_ignored_request_ - display->last_request_read <
+      std::numeric_limits<unsigned long>::max() >> 1)
+    return False;
 
-// TODO(sergeyu): This code is not thread safe. Fix it. Bug 2202.
-static bool g_xserver_error_trap_enabled = false;
-static int g_last_xserver_error_code = 0;
-
-int XServerErrorHandler(Display* display, XErrorEvent* error_event) {
-  assert(g_xserver_error_trap_enabled);
-  g_last_xserver_error_code = error_event->error_code;
-  return 0;
+  self->last_xserver_error_code_ = rep->error.errorCode;
+  return True;
 }
 
-#endif  // !defined(TOOLKIT_GTK)
-
-}  // namespace
-
 XErrorTrap::XErrorTrap(Display* display)
-    : original_error_handler_(NULL),
+    : display_(display),
+      last_xserver_error_code_(0),
       enabled_(true) {
-#if defined(TOOLKIT_GTK)
-  gdk_error_trap_push();
-#else  // !defined(TOOLKIT_GTK)
-  assert(!g_xserver_error_trap_enabled);
-  original_error_handler_ = XSetErrorHandler(&XServerErrorHandler);
-  g_xserver_error_trap_enabled = true;
-  g_last_xserver_error_code = 0;
-#endif  // !defined(TOOLKIT_GTK)
+  // Use async_handlers instead of XSetErrorHandler().  async_handlers can
+  // remain in place and then be safely removed at the right time even if a
+  // handler change happens concurrently on another thread.  async_handlers
+  // are processed first and so can prevent errors reaching the global
+  // XSetErrorHandler handler.  They also will not see errors from or affect
+  // handling of errors on other Displays, which may be processed on other
+  // threads.
+  LockDisplay(display);
+  async_handler_.next = display->async_handlers;
+  async_handler_.handler = XServerErrorHandler;
+  async_handler_.data = reinterpret_cast<XPointer>(this);
+  display->async_handlers = &async_handler_;
+  last_ignored_request_ = display->request;
+  UnlockDisplay(display);
 }
 
 int XErrorTrap::GetLastErrorAndDisable() {
+  assert(enabled_);
   enabled_ = false;
-#if defined(TOOLKIT_GTK)
-  return gdk_error_trap_push();
-#else  // !defined(TOOLKIT_GTK)
-  assert(g_xserver_error_trap_enabled);
-  XSetErrorHandler(original_error_handler_);
-  g_xserver_error_trap_enabled = false;
-  return g_last_xserver_error_code;
-#endif  // !defined(TOOLKIT_GTK)
+  LockDisplay(display_);
+  DeqAsyncHandler(display_, &async_handler_);
+  UnlockDisplay(display_);
+  return last_xserver_error_code_;
 }
 
 XErrorTrap::~XErrorTrap() {

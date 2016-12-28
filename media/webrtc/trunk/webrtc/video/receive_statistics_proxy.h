@@ -55,6 +55,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                        int min_playout_delay_ms,
                        int render_delay_ms,
                        int64_t rtt_ms);
+  void ReceiveStateChange(VideoReceiveState state);
 
   void OnPreDecode(const EncodedImage& encoded_image,
                    const CodecSpecificInfo* codec_specific_info);
@@ -107,6 +108,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   SampleCounter delay_counter_ GUARDED_BY(crit_);
   ReportBlockStats report_block_stats_ GUARDED_BY(crit_);
   QpCounters qp_counters_;  // Only accessed on the decoding thread.
+  VideoReceiveState receive_state_ GUARDED_BY(crit_);
 };
 
 }  // namespace webrtc

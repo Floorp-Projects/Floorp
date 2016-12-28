@@ -29,12 +29,29 @@
 #pragma warning(disable:4355)
 #endif  // _WIN32
 
+extern "C" {
+  int AECDebug() { return (int) webrtc::Trace::aec_debug(); }
+  uint32_t AECDebugMaxSize() { return webrtc::Trace::aec_debug_size(); }
+  void AECDebugEnable(uint32_t enable) { webrtc::Trace::set_aec_debug(!!enable); }
+  void AECDebugFilenameBase(char *buffer, size_t size) {
+    webrtc::Trace::aec_debug_filename(buffer, size);
+  }
+}
+
 namespace webrtc {
 
 const int Trace::kBoilerplateLength = 71;
 const int Trace::kTimestampPosition = 13;
 const int Trace::kTimestampLength = 12;
 volatile int Trace::level_filter_ = kTraceDefault;
+bool Trace::aec_debug_ = false;
+uint32_t Trace::aec_debug_size_ = 4*1024*1024;
+std::string Trace::aec_filename_base_;
+
+void Trace::aec_debug_filename(char *buffer, size_t size) {
+  strncpy(buffer, aec_filename_base_.c_str(), size-1);
+  buffer[size-1] = '\0';
+}
 
 // Construct On First Use idiom. Avoids "static initialization order fiasco".
 TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
@@ -48,20 +65,16 @@ TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
     }
   }
   TraceImpl* impl =
-    GetStaticInstance<TraceImpl>(count_operation);
+#if defined(_WIN32)
+    GetStaticInstance<TraceWindows>(count_operation);
+#else
+    GetStaticInstance<TracePosix>(count_operation);
+#endif
   return impl;
 }
 
 TraceImpl* TraceImpl::GetTrace(const TraceLevel level) {
   return StaticInstance(kAddRefNoCreate, level);
-}
-
-TraceImpl* TraceImpl::CreateInstance() {
-#if defined(_WIN32)
-  return new TraceWindows();
-#else
-  return new TracePosix();
-#endif
 }
 
 TraceImpl::TraceImpl()
@@ -332,27 +345,26 @@ int32_t TraceImpl::AddMessage(
   if (written_so_far >= WEBRTC_TRACE_MAX_MESSAGE_SIZE) {
     return -1;
   }
-  // - 2 to leave room for newline and NULL termination.
+  // - 1 to leave room for newline.
 #ifdef _WIN32
   length = _snprintf(trace_message,
-                     WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2,
-                     "%s", msg);
+                     WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1,
+                     "%s\n", msg);
   if (length < 0) {
-    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2;
+    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1;
     trace_message[length] = 0;
   }
 #else
   length = snprintf(trace_message,
-                    WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2,
-                    "%s", msg);
+                    WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1,
+                    "%s\n", msg);
   if (length < 0 ||
-      length > WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2) {
-    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 2;
+      length > WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1) {
+    length = WEBRTC_TRACE_MAX_MESSAGE_SIZE - written_so_far - 1;
     trace_message[length] = 0;
   }
 #endif
-  // Length with NULL termination.
-  return length + 1;
+  return length;
 }
 
 void TraceImpl::AddMessageToList(

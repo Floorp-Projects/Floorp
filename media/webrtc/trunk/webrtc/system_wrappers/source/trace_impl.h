@@ -36,7 +36,6 @@ class TraceImpl : public Trace {
  public:
   virtual ~TraceImpl();
 
-  static TraceImpl* CreateInstance();
   static TraceImpl* GetTrace(const TraceLevel level = kTraceAll);
 
   int32_t SetTraceFileImpl(const char* file_name, const bool add_file_counter);

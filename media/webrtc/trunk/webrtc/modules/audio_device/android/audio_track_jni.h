@@ -83,6 +83,10 @@ class AudioTrackJni {
 
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
+  int32_t PlayoutDeviceName(uint16_t index,
+                            char name[kAdmMaxDeviceNameSize],
+                            char guid[kAdmMaxGuidSize]);
+
  private:
   // Called from Java side so we can cache the address of the Java-manged
   // |byte_buffer| in |direct_buffer_address_|. The size of the buffer

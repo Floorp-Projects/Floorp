@@ -5,6 +5,7 @@
 #ifndef _JSEPTRACK_H_
 #define _JSEPTRACK_H_
 
+#include <functional>
 #include <algorithm>
 #include <string>
 #include <map>
@@ -28,10 +29,6 @@ namespace mozilla {
 class JsepTrackNegotiatedDetails
 {
 public:
-  JsepTrackNegotiatedDetails() :
-    mTias(0)
-  {}
-
   size_t
   GetEncodingCount() const
   {
@@ -55,14 +52,18 @@ public:
     return nullptr;
   }
 
+  void
+  ForEachRTPHeaderExtension(
+    const std::function<void(const SdpExtmapAttributeList::Extmap& extmap)> & fn) const
+  {
+    for(auto entry: mExtmap) {
+      fn(entry.second);
+    }
+  }
+
   std::vector<uint8_t> GetUniquePayloadTypes() const
   {
     return mUniquePayloadTypes;
-  }
-
-  uint32_t GetTias() const
-  {
-    return mTias;
   }
 
 private:
@@ -71,7 +72,6 @@ private:
   std::map<std::string, SdpExtmapAttributeList::Extmap> mExtmap;
   std::vector<uint8_t> mUniquePayloadTypes;
   PtrVector<JsepTrackEncoding> mEncodings;
-  uint32_t mTias; // bits per second
 };
 
 class JsepTrack

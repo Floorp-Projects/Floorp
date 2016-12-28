@@ -32,6 +32,18 @@
     ],
     'audio_coding_defines': [],
     'conditions': [
+      ['include_g722==1', {
+        'audio_coding_dependencies': ['g722',],
+        'audio_coding_defines': ['WEBRTC_CODEC_G722',],
+      }],
+      ['include_ilbc==1', {
+        'audio_coding_dependencies': ['ilbc', 'red',],
+        'audio_coding_defines': ['WEBRTC_CODEC_ILBC', 'WEBRTC_CODEC_RED',],
+      }],
+      ['include_isac==1', {
+        'audio_coding_dependencies': ['isac',],
+        'audio_coding_defines': ['WEBRTC_CODEC_ISAC',],
+      }],
       ['include_opus==1', {
         'audio_coding_dependencies': ['webrtc_opus',],
         'audio_coding_defines': ['WEBRTC_CODEC_OPUS',],

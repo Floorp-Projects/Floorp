@@ -154,7 +154,7 @@ RTCPSender::RTCPSender(
       using_nack_(false),
       sending_(false),
       remb_enabled_(false),
-      next_time_to_send_rtcp_(0),
+      next_time_to_send_rtcp_(clock->TimeInMilliseconds()),
       start_timestamp_(0),
       last_rtp_timestamp_(0),
       last_frame_capture_time_ms_(-1),
@@ -179,6 +179,8 @@ RTCPSender::RTCPSender(
       packet_type_counter_observer_(packet_type_counter_observer) {
   memset(last_send_report_, 0, sizeof(last_send_report_));
   memset(last_rtcp_time_, 0, sizeof(last_rtcp_time_));
+  memset(lastSRPacketCount_, 0, sizeof(lastSRPacketCount_));
+  memset(lastSROctetCount_, 0, sizeof(lastSROctetCount_));
   RTC_DCHECK(transport_ != nullptr);
 
   builders_[kRtcpSr] = &RTCPSender::BuildSR;
@@ -214,8 +216,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode method) {
   if (method == RtcpMode::kOff)
     return;
   next_time_to_send_rtcp_ =
-      clock_->TimeInMilliseconds() +
-      (audio_ ? RTCP_INTERVAL_AUDIO_MS / 2 : RTCP_INTERVAL_VIDEO_MS / 2);
+    clock_->TimeInMilliseconds() + RTCP_INTERVAL_RAPID_SYNC_MS / 2;
 }
 
 bool RTCPSender::Sending() const {
@@ -427,19 +428,28 @@ bool RTCPSender::TimeToSendRTCPReport(bool sendKeyframeBeforeRTP) const {
   return false;
 }
 
-int64_t RTCPSender::SendTimeOfSendReport(uint32_t sendReport) {
+bool
+RTCPSender::GetSendReportMetadata(const uint32_t sendReport,
+                                  uint64_t *timeOfSend,
+                                  uint32_t *packetCount,
+                                  uint64_t *octetCount)
+{
   CriticalSectionScoped lock(critical_section_rtcp_sender_.get());
 
   // This is only saved when we are the sender
   if ((last_send_report_[0] == 0) || (sendReport == 0)) {
-    return 0;  // will be ignored
+    return false;
   } else {
     for (int i = 0; i < RTCP_NUMBER_OF_SR; ++i) {
-      if (last_send_report_[i] == sendReport)
-        return last_rtcp_time_[i];
+      if (last_send_report_[i] == sendReport) {
+        *timeOfSend = last_rtcp_time_[i];
+        *packetCount = lastSRPacketCount_[i];
+        *octetCount = lastSROctetCount_[i];
+        return true;
+      }
     }
   }
-  return 0;
+  return false;
 }
 
 bool RTCPSender::SendTimeOfXrRrReport(uint32_t mid_ntp,
@@ -462,10 +472,14 @@ rtc::scoped_ptr<rtcp::RtcpPacket> RTCPSender::BuildSR(const RtcpContext& ctx) {
     // shift old
     last_send_report_[i + 1] = last_send_report_[i];
     last_rtcp_time_[i + 1] = last_rtcp_time_[i];
+    lastSRPacketCount_[i+1] = lastSRPacketCount_[i];
+    lastSROctetCount_[i+1] = lastSROctetCount_[i];
   }
 
   last_rtcp_time_[0] = Clock::NtpToMs(ctx.ntp_sec_, ctx.ntp_frac_);
   last_send_report_[0] = (ctx.ntp_sec_ << 16) + (ctx.ntp_frac_ >> 16);
+  lastSRPacketCount_[0] = ctx.feedback_state_.packets_sent;
+  lastSROctetCount_[0] = ctx.feedback_state_.media_bytes_sent;
 
   // The timestamp of this RTCP packet should be estimated as the timestamp of
   // the frame being captured at this moment. We are calculating that

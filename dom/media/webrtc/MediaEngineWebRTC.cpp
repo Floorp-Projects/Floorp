@@ -27,6 +27,7 @@ static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 #include "MediaTrackConstraints.h"
 
 #ifdef MOZ_WIDGET_ANDROID
+#include "VideoEngine.h"
 #include "AndroidJNIWrapper.h"
 #include "AndroidBridge.h"
 #endif
@@ -153,8 +154,8 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
   JNIEnv* const env = jni::GetEnvForThread();
   MOZ_ALWAYS_TRUE(!env->GetJavaVM(&jvm));
 
-  if (webrtc::VideoEngine::SetAndroidObjects(jvm) != 0) {
-    LOG(("VieCapture:SetAndroidObjects Failed"));
+  if (!jvm || mozilla::camera::VideoEngine::SetAndroidObjects(jvm)) {
+    LOG(("VideoEngine::SetAndroidObjects Failed"));
     return;
   }
 #endif

@@ -615,15 +615,32 @@ int WebRtc_ProcessBinarySpectrum(BinaryDelayEstimator* self,
       ((value_best_candidate < self->minimum_probability) ||
           (value_best_candidate < self->last_delay_probability)));
 
-  UpdateRobustValidationStatistics(self, candidate_delay, valley_depth,
-                                   value_best_candidate);
+  // Check for nonstationary farend signal.
+  int non_stationary_farend = 0;
+  for (i = 0; i < self->history_size; ++i) {
+    if (self->farend->far_bit_counts[i] > 0) {
+      non_stationary_farend = 1;
+      break;
+    }
+  }
+
+  if (non_stationary_farend) {
+    // Only update the validation statistics when the farend is nonstationary
+    // as the underlying estimates are otherwise frozen.
+    UpdateRobustValidationStatistics(self, candidate_delay, valley_depth,
+                                     value_best_candidate);
+  }
+
   if (self->robust_validation_enabled) {
     int is_histogram_valid = HistogramBasedValidation(self, candidate_delay);
     valid_candidate = RobustValidation(self, candidate_delay, valid_candidate,
                                        is_histogram_valid);
 
   }
-  if (valid_candidate) {
+
+  // Only update the delay estimate when the farend is nonstationary and when
+  // a valid delay candidate is available.
+  if (non_stationary_farend && valid_candidate) {
     if (candidate_delay != self->last_delay) {
       self->last_delay_histogram =
           (self->histogram[candidate_delay] > kLastHistogramMax ?

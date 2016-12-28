@@ -59,6 +59,7 @@ class VideoSendStream : public webrtc::VideoSendStream,
 
   // webrtc::VideoSendStream implementation.
   VideoCaptureInput* Input() override;
+  CPULoadStateObserver* LoadStateObserver() override;
   bool ReconfigureVideoEncoder(const VideoEncoderConfig& config) override;
   Stats GetStats() override;
 

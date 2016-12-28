@@ -31,7 +31,8 @@ enum class ConfigOptionID {
   kExperimentalAgc,
   kExperimentalNs,
   kBeamforming,
-  kIntelligibility
+  kIntelligibility,
+  kCaptureDeviceInfo
 };
 
 // Class Config is designed to ease passing a set of options across webrtc code.

@@ -20,8 +20,11 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Process;
 
-import org.webrtc.Logging;
+import android.util.Log;
 
+import org.mozilla.gecko.annotation.WebRTCJNITarget;
+
+@WebRTCJNITarget
 class WebRtcAudioTrack {
   private static final boolean DEBUG = false;
 
@@ -43,7 +46,7 @@ class WebRtcAudioTrack {
 
   private ByteBuffer byteBuffer;
 
-  private AudioTrack audioTrack = null;
+  private AudioTrack audioTrack;
   private AudioTrackThread audioThread = null;
 
   /**
@@ -62,7 +65,7 @@ class WebRtcAudioTrack {
     @Override
     public void run() {
       Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
-      Logging.d(TAG, "AudioTrackThread" + WebRtcAudioUtils.getThreadInfo());
+      Log.d(TAG, "AudioTrackThread" + WebRtcAudioUtils.getThreadInfo());
 
       try {
         // In MODE_STREAM mode we can optionally prime the output buffer by
@@ -72,7 +75,7 @@ class WebRtcAudioTrack {
         audioTrack.play();
         assertTrue(audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING);
       } catch (IllegalStateException e) {
-          Logging.e(TAG, "AudioTrack.play failed: " + e.getMessage());
+          Log.e(TAG, "AudioTrack.play failed: " + e.getMessage());
         return;
       }
 
@@ -96,7 +99,7 @@ class WebRtcAudioTrack {
           bytesWritten = writePreLollipop(audioTrack, byteBuffer, sizeInBytes);
         }
         if (bytesWritten != sizeInBytes) {
-          Logging.e(TAG, "AudioTrack.write failed: " + bytesWritten);
+          Log.e(TAG, "AudioTrack.write failed: " + bytesWritten);
           if (bytesWritten == AudioTrack.ERROR_INVALID_OPERATION) {
             keepAlive = false;
           }
@@ -114,7 +117,7 @@ class WebRtcAudioTrack {
       try {
         audioTrack.stop();
       } catch (IllegalStateException e) {
-        Logging.e(TAG, "AudioTrack.stop failed: " + e.getMessage());
+        Log.e(TAG, "AudioTrack.stop failed: " + e.getMessage());
       }
       assertTrue(audioTrack.getPlayState() == AudioTrack.PLAYSTATE_STOPPED);
       audioTrack.flush();
@@ -142,7 +145,7 @@ class WebRtcAudioTrack {
   }
 
   WebRtcAudioTrack(Context context, long nativeAudioTrack) {
-    Logging.d(TAG, "ctor" + WebRtcAudioUtils.getThreadInfo());
+    Log.d(TAG, "ctor" + WebRtcAudioUtils.getThreadInfo());
     this.context = context;
     this.nativeAudioTrack = nativeAudioTrack;
     audioManager = (AudioManager) context.getSystemService(
@@ -153,12 +156,12 @@ class WebRtcAudioTrack {
   }
 
   private void initPlayout(int sampleRate, int channels) {
-    Logging.d(TAG, "initPlayout(sampleRate=" + sampleRate + ", channels="
+    Log.d(TAG, "initPlayout(sampleRate=" + sampleRate + ", channels="
         + channels + ")");
     final int bytesPerFrame = channels * (BITS_PER_SAMPLE / 8);
-    byteBuffer = byteBuffer.allocateDirect(
+    byteBuffer = ByteBuffer.allocateDirect(
         bytesPerFrame * (sampleRate / BUFFERS_PER_SECOND));
-    Logging.d(TAG, "byteBuffer.capacity: " + byteBuffer.capacity());
+    Log.d(TAG, "byteBuffer.capacity: " + byteBuffer.capacity());
     // Rather than passing the ByteBuffer with every callback (requiring
     // the potentially expensive GetDirectBufferAddress) we simply have the
     // the native class cache the address to the memory once.
@@ -172,7 +175,7 @@ class WebRtcAudioTrack {
         sampleRate,
         AudioFormat.CHANNEL_OUT_MONO,
         AudioFormat.ENCODING_PCM_16BIT);
-    Logging.d(TAG, "AudioTrack.getMinBufferSize: " + minBufferSizeInBytes);
+    Log.d(TAG, "AudioTrack.getMinBufferSize: " + minBufferSizeInBytes);
     assertTrue(audioTrack == null);
 
     // For the streaming mode, data must be written to the audio sink in
@@ -190,7 +193,7 @@ class WebRtcAudioTrack {
                                   minBufferSizeInBytes,
                                   AudioTrack.MODE_STREAM);
     } catch (IllegalArgumentException e) {
-      Logging.d(TAG, e.getMessage());
+      Log.d(TAG, e.getMessage());
       return;
     }
     assertTrue(audioTrack.getState() == AudioTrack.STATE_INITIALIZED);
@@ -199,7 +202,7 @@ class WebRtcAudioTrack {
   }
 
   private boolean startPlayout() {
-    Logging.d(TAG, "startPlayout");
+    Log.d(TAG, "startPlayout");
     assertTrue(audioTrack != null);
     assertTrue(audioThread == null);
     audioThread = new AudioTrackThread("AudioTrackJavaThread");
@@ -208,7 +211,7 @@ class WebRtcAudioTrack {
   }
 
   private boolean stopPlayout() {
-    Logging.d(TAG, "stopPlayout");
+    Log.d(TAG, "stopPlayout");
     assertTrue(audioThread != null);
     audioThread.joinThread();
     audioThread = null;
@@ -221,17 +224,17 @@ class WebRtcAudioTrack {
 
   /** Get max possible volume index for a phone call audio stream. */
   private int getStreamMaxVolume() {
-    Logging.d(TAG, "getStreamMaxVolume");
+    Log.d(TAG, "getStreamMaxVolume");
     assertTrue(audioManager != null);
     return audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
   }
 
   /** Set current volume level for a phone call audio stream. */
   private boolean setStreamVolume(int volume) {
-    Logging.d(TAG, "setStreamVolume(" + volume + ")");
+    Log.d(TAG, "setStreamVolume(" + volume + ")");
     assertTrue(audioManager != null);
     if (isVolumeFixed()) {
-      Logging.e(TAG, "The device implements a fixed volume policy.");
+      Log.e(TAG, "The device implements a fixed volume policy.");
       return false;
     }
     audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, volume, 0);
@@ -247,7 +250,7 @@ class WebRtcAudioTrack {
 
   /** Get current volume level for a phone call audio stream. */
   private int getStreamVolume() {
-    Logging.d(TAG, "getStreamVolume");
+    Log.d(TAG, "getStreamVolume");
     assertTrue(audioManager != null);
     return audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL);
   }

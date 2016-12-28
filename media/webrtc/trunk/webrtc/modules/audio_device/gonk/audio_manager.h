@@ -1,0 +1,6 @@
+#ifndef WEBRTC_MODULES_AUDIO_DEVICE_GONK_AUDIO_MANAGER_H_
+#define WEBRTC_MODULES_AUDIO_DEVICE_GONK_AUDIO_MANAGER_H_
+
+#include "../android/audio_manager.h"
+
+#endif

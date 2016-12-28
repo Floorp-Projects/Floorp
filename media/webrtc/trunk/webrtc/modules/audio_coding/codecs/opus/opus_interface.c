@@ -158,6 +158,9 @@ int WebRtcOpus_Encode(OpusEncInst* inst,
 
 int16_t WebRtcOpus_SetBitRate(OpusEncInst* inst, int32_t rate) {
   if (inst) {
+#if defined(OPUS_COMPLEXITY) && (OPUS_COMPLEXITY != 0)
+    opus_encoder_ctl(inst->encoder, OPUS_SET_COMPLEXITY(OPUS_COMPLEXITY));
+#endif
     return opus_encoder_ctl(inst->encoder, OPUS_SET_BITRATE(rate));
   } else {
     return -1;

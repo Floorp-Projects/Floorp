@@ -21,7 +21,7 @@ namespace webrtc {
 //////////////////////////////////
 
 VCMContentMetricsProcessing::VCMContentMetricsProcessing()
-    : recursive_avg_factor_(1 / 150.0f),  // matched to  30fps.
+    : recursive_avg_factor_(1 / 150.0f),  // matched to  15fps.
       frame_cnt_uniform_avg_(0),
       avg_motion_level_(0.0f),
       avg_spatial_level_(0.0f) {
@@ -43,7 +43,7 @@ int VCMContentMetricsProcessing::Reset() {
   return VCM_OK;
 }
 
-void VCMContentMetricsProcessing::UpdateFrameRate(uint32_t frameRate) {
+void VCMContentMetricsProcessing::UpdateFrameRate(float frameRate) {
   // Update factor for recursive averaging.
   recursive_avg_factor_ = static_cast<float>(1000.0f) /
                           static_cast<float>(frameRate * kQmMinIntervalMs);

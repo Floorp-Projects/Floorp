@@ -15,6 +15,8 @@
 
 #include <string>
 #include <vector>
+#include <string.h>
+#include <algorithm>
 
 #include "webrtc/common.h"
 #include "webrtc/common_types.h"
@@ -65,6 +67,7 @@ struct RtpExtension {
   static const char* kVideoRotation;
   static const char* kAudioLevel;
   static const char* kTransportSequenceNumber;
+  static const char* kRtpStreamId;
   std::string name;
   int id;
 };
@@ -84,6 +87,18 @@ struct VideoStream {
 
   int max_qp;
 
+  char rid[kRIDSize+1];
+
+  const std::string Rid() const {
+    return std::string(rid);
+  }
+
+  void SetRid(const std::string & aRid) {
+    static_assert(sizeof(rid) > kRIDSize,
+      "mRid must be large enought to hold a RID + null termination");
+    strncpy(&rid[0], aRid.c_str(), std::min((size_t)kRIDSize, aRid.length()));
+    rid[kRIDSize] = 0;
+  }
   // Bitrate thresholds for enabling additional temporal layers. Since these are
   // thresholds in between layers, we have one additional layer. One threshold
   // gives two temporal layers, one below the threshold and one above, two give
@@ -111,6 +126,7 @@ struct VideoEncoderConfig {
   std::vector<SpatialLayer> spatial_layers;
   ContentType content_type;
   void* encoder_specific_settings;
+  unsigned char resolution_divisor;
 
   // Padding will be used up to this bitrate regardless of the bitrate produced
   // by the encoder. Padding above what's actually produced by the encoder helps

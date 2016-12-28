@@ -14,15 +14,18 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "webrtc/modules/video_coding/codecs/vp8/vp8_factory.h"
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 
 namespace webrtc {
-VideoEncoder* VideoEncoder::Create(VideoEncoder::EncoderType codec_type) {
+  VideoEncoder* VideoEncoder::Create(VideoEncoder::EncoderType codec_type,
+                                     bool enable_simulcast) {
   switch (codec_type) {
     case kH264:
       RTC_DCHECK(H264Encoder::IsSupported());
       return H264Encoder::Create();
     case kVp8:
+      VP8EncoderFactoryConfig::set_use_simulcast_adapter(enable_simulcast);
       return VP8Encoder::Create();
     case kVp9:
       return VP9Encoder::Create();

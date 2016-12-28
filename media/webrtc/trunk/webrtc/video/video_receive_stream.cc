@@ -245,6 +245,8 @@ VideoReceiveStream::VideoReceiveStream(
     }
   }
 
+  vie_channel_->EnableTMMBR(config.rtp.tmmbr);
+
   if (config.rtp.rtcp_xr.receiver_reference_time_report)
     vie_channel_->SetRtcpXrRrtrStatus(true);
 
@@ -383,6 +385,24 @@ int32_t VideoReceiveStream::Encoded(
 void VideoReceiveStream::SignalNetworkState(NetworkState state) {
   vie_channel_->SetRTCPMode(state == kNetworkUp ? config_.rtp.rtcp_mode
                                                 : RtcpMode::kOff);
+}
+
+int64_t VideoReceiveStream::GetRtt() const {
+  uint32_t timestampNTPHigh = 0;
+  uint32_t timestampNTPLow = 0;
+  uint32_t receivedPacketCount = 0;
+  uint64_t receivedOctetCount = 0;
+  uint32_t jitterSamples = 0;
+  uint16_t fractionLost = 0;
+  uint32_t cumulativeLost = 0;
+  int64_t rttMs = 0;
+  if (vie_channel_->GetRemoteRTCPReceiverInfo(
+        timestampNTPHigh, timestampNTPLow, receivedPacketCount,
+        receivedOctetCount, &jitterSamples, &fractionLost, &cumulativeLost,
+        &rttMs)) {
+    return rttMs;
+  }
+  return -1;
 }
 
 }  // namespace internal

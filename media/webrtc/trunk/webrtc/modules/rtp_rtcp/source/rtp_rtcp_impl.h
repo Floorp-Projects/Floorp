@@ -82,6 +82,8 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   void SetCsrcs(const std::vector<uint32_t>& csrcs) override;
 
+  int32_t SetRID(const char *rid) override;
+
   RTCPSender::FeedbackState GetFeedbackState();
 
   int CurrentSendFrequencyHz() const;
@@ -177,6 +179,12 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
       bool outgoing,
       uint32_t ssrc,
       struct RtpPacketLossStats* loss_stats) const override;
+ 
+  int32_t GetReportBlockInfo(const uint32_t remote_ssrc,
+                             uint32_t* ntp_high,
+                             uint32_t* ntp_low,
+                             uint32_t* packets_received,
+                             uint64_t* octets_received) const override;
 
   // Get received RTCP report, sender info.
   int32_t RemoteRTCPStat(RTCPSenderInfo* sender_info) override;
@@ -302,7 +310,10 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
                    uint32_t* fec_rate,
                    uint32_t* nackRate) const override;
 
-  int64_t SendTimeOfSendReport(uint32_t send_report);
+  bool GetSendReportMetadata(const uint32_t send_report,
+                             uint64_t *time_of_send,
+                             uint32_t *packet_count,
+                             uint64_t *octet_count);
 
   bool SendTimeOfXrRrReport(uint32_t mid_ntp, int64_t* time_ms) const;
 

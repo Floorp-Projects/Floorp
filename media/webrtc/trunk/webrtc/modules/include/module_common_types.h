@@ -200,6 +200,7 @@ struct RTPVideoHeaderVP9 {
   GofInfoVP9 gof;
 };
 
+#if WEBRTC_48_H264_IMPL
 // The packetization types that we support: single, aggregated, and fragmented.
 enum H264PacketizationTypes {
   kH264SingleNalu,  // This packet contains a single NAL unit.
@@ -220,6 +221,14 @@ struct RTPVideoHeaderH264 {
                       // the first NAL unit in the packet.
   H264PacketizationTypes packetization_type;
 };
+#else
+// Mozilla's OpenH264 implementation
+struct RTPVideoHeaderH264 {
+  bool packetization_mode;
+  bool stap_a;
+  bool single_nalu;
+};
+#endif
 
 union RTPVideoTypeHeader {
   RTPVideoHeaderVP8 VP8;
@@ -241,7 +250,7 @@ struct RTPVideoHeader {
   uint16_t height;
   VideoRotation rotation;
 
-  bool isFirstPacket;    // first packet in frame
+  bool isFirstPacket;    // first packet in frame (or NAL for H.264)
   uint8_t simulcastIdx;  // Index if the simulcast encoder creating
                          // this frame, 0 if not using simulcast.
   RtpVideoCodecTypes codec;
@@ -751,6 +760,11 @@ inline bool IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
   }
   return timestamp != prev_timestamp &&
          static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
+}
+ 
+inline bool IsNewerOrSameTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
+  return timestamp == prev_timestamp ||
+      static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
 }
 
 inline uint16_t LatestSequenceNumber(uint16_t sequence_number1,

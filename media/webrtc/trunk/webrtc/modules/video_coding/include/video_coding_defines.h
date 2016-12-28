@@ -168,6 +168,17 @@ class VCMPacketRequestCallback {
  protected:
   virtual ~VCMPacketRequestCallback() {}
 };
+ 
+// Callback class used for telling the user about the state of the decoder & jitter buffer.
+//
+class VCMReceiveStateCallback {
+ public:
+  virtual void ReceiveStateChange(VideoReceiveState state) = 0;
+
+ protected:
+  virtual ~VCMReceiveStateCallback() {
+  }
+};
 
 // Callback used to inform the user of the the desired resolution
 // as subscribed by Media Optimization (Quality Modes)

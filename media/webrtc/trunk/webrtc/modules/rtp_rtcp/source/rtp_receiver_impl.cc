@@ -79,6 +79,7 @@ RtpReceiverImpl::RtpReceiverImpl(
       last_received_timestamp_(0),
       last_received_frame_time_ms_(-1),
       last_received_sequence_number_(0),
+      rid_(NULL),
       nack_method_(kNackOff) {
   assert(incoming_audio_messages_callback);
   assert(incoming_messages_callback);
@@ -152,6 +153,15 @@ int32_t RtpReceiverImpl::CSRCs(uint32_t array_of_csrcs[kRtpCsrcSize]) const {
   return num_csrcs_;
 }
 
+void RtpReceiverImpl::GetRID(char rid[256]) const {
+  CriticalSectionScoped lock(critical_section_rtp_receiver_.get());
+  if (rid_) {
+    strncpy(rid, rid_, 256);
+  } else {
+    rid[0] = '\0';
+  }
+}
+
 int32_t RtpReceiverImpl::Energy(
     uint8_t array_of_energy[kRtpCsrcSize]) const {
   return rtp_media_receiver_->Energy(array_of_energy);
@@ -211,7 +221,13 @@ bool RtpReceiverImpl::IncomingRtpPacket(
 
     last_receive_time_ = clock_->TimeInMilliseconds();
     last_received_payload_length_ = payload_data_length;
-
+    // RID rarely if ever changes
+    if (rtp_header.extension.hasRID &&
+        (!rid_ || strcmp(rtp_header.extension.rid, rid_) != 0)) {
+      delete [] rid_;
+      rid_ = new char[strlen(rtp_header.extension.rid)+1];
+      strcpy(rid_, rtp_header.extension.rid);
+    }
     if (in_order) {
       if (last_received_timestamp_ != rtp_header.timestamp) {
         last_received_timestamp_ = rtp_header.timestamp;

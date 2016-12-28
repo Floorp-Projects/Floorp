@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -9,24 +9,27 @@
  */
 
 //
-//  video_capture_qtkit_info_objc.h
+//  video_capture_avfoundation_info_objc.h
 //
 //
 
-#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_OBJC_H_
-#define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_OBJC_H_
+#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_AVFOUNDATION_VIDEO_CAPTURE_AVFOUNDATION_INFO_OBJC_H_
+#define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_AVFOUNDATION_VIDEO_CAPTURE_AVFOUNDATION_INFO_OBJC_H_
 
 #import <Foundation/Foundation.h>
-#import <QTKit/QTKit.h>
+#import <AVFoundation/AVFoundation.h>
 
-#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info.h"
-#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_utility.h"
+#include "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info.h"
+#include "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_utility.h"
 
-@interface VideoCaptureMacQTKitInfoObjC : NSObject{
+@interface VideoCaptureMacAVFoundationInfoObjC : NSObject{
     bool                                _OSSupportedInfo;
     NSArray*                            _captureDevicesInfo;
-    NSAutoreleasePool*                    _poolInfo;
     int                                    _captureDeviceCountInfo;
+    NSArray*                            _observers;
+    NSLock*                             _lock;
+    webrtc::videocapturemodule::VideoCaptureMacAVFoundationInfo* _owner;
+    NSMutableDictionary*                _capabilityMaps;
 
 }
 
@@ -43,11 +46,22 @@
 
 /**************************************************************************
  *
- *   The following functions are considered to be public and called by VideoCaptureMacQTKitInfo class
+ *   The following functions are considered to be public and called by VideoCaptureMacAVFoundationInfo class
  *
  ***************************************************************************/
 
+- (void)registerOwner:(webrtc::videocapturemodule::VideoCaptureMacAVFoundationInfo*)owner;
+
 - (NSNumber*)getCaptureDeviceCount;
+
+- (NSNumber*)getCaptureCapabilityCount:(const char*)uniqueId;
+
+- (NSNumber*)getCaptureCapability:(const char*)uniqueId
+                     CapabilityId:(uint32_t)capabilityId
+                 Capability_width:(int32_t*)width
+                Capability_height:(int32_t*)height
+                Capability_maxFPS:(int32_t*)maxFPS
+                Capability_format:(webrtc::RawVideoType*)rawType;
 
 - (NSNumber*)getDeviceNamesFromIndex:(uint32_t)index
     DefaultName:(char*)deviceName
@@ -64,4 +78,4 @@
     AndY:(uint32_t) positionY;
 @end
 
-#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_OBJC_H_
+#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_AVFOUNDATION_VIDEO_CAPTURE_AVFOUNDATION_INFO_OBJC_H_

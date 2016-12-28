@@ -94,6 +94,8 @@ class RtpReceiver {
 
   // Returns the current remote CSRCs.
   virtual int32_t CSRCs(uint32_t array_of_csrc[kRtpCsrcSize]) const = 0;
+ 
+  virtual void GetRID(char rid[256]) const = 0;
 
   // Returns the current energy of the RTP stream received.
   virtual int32_t Energy(uint8_t array_of_energy[kRtpCsrcSize]) const = 0;

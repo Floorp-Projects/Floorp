@@ -13,8 +13,10 @@
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
+#include "base/singleton.h"
 
 #include <Dshow.h>
+#include <windows.h>
 
 namespace webrtc
 {
@@ -54,7 +56,8 @@ public:
                       char* deviceUniqueIdUTF8,
                       uint32_t deviceUniqueIdUTF8Length,
                       char* productUniqueIdUTF8,
-                      uint32_t productUniqueIdUTF8Length);
+                      uint32_t productUniqueIdUTF8Length,
+                      pid_t* pid);
 
     /*
      * Display OS /capture device specific settings dialog
@@ -91,15 +94,18 @@ protected:
                           char* deviceUniqueIdUTF8,
                           uint32_t deviceUniqueIdUTF8Length,
                           char* productUniqueIdUTF8,
-                          uint32_t productUniqueIdUTF8Length);
+                          uint32_t productUniqueIdUTF8Length,
+                          pid_t* pid);
 
     virtual int32_t
         CreateCapabilityMap(const char* deviceUniqueIdUTF8);
-
 private:
     ICreateDevEnum* _dsDevEnum;
     bool _CoUninitializeIsRequired;
     std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
+    HWND _hwnd;
+    WNDCLASS _wndClass;
+    HINSTANCE _hInstance;
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

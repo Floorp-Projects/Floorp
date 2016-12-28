@@ -273,6 +273,11 @@ OutputMixer::GetOutputVolumePan(float& left, float& right)
     return 0;
 }
 
+int OutputMixer::GetOutputChannelCount()
+{
+  return _audioFrame.num_channels_;
+}
+
 int OutputMixer::StartRecordingPlayout(const char* fileName,
                                        const CodecInst* codecInst)
 {
@@ -520,18 +525,7 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
 
     // --- Far-end Voice Quality Enhancement (AudioProcessing Module)
     if (feed_data_to_apm) {
-      // Convert from mixing to AudioProcessing sample rate, similarly to how it
-      // is done on the send side. Downmix to mono.
-      AudioFrame frame;
-      frame.num_channels_ = 1;
-      frame.sample_rate_hz_ = _audioProcessingModulePtr->input_sample_rate_hz();
-      RemixAndResample(_audioFrame, &audioproc_resampler_, &frame);
-
-      if (_audioProcessingModulePtr->AnalyzeReverseStream(&frame) != 0) {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
-                     "AudioProcessingModule::AnalyzeReverseStream() => error");
-        RTC_DCHECK(false);
-      }
+      APMAnalyzeReverseStream(_audioFrame);
     }
 
     // --- External media processing
@@ -559,6 +553,21 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
     return 0;
 }
 
+void OutputMixer::APMAnalyzeReverseStream(AudioFrame &audioFrame) {
+  // Convert from mixing to AudioProcessing sample rate, determined by the send
+  // side. Downmix to mono.
+  AudioFrame frame;
+  frame.num_channels_ = 1;
+  frame.sample_rate_hz_ = _audioProcessingModulePtr->input_sample_rate_hz();
+  RemixAndResample(audioFrame, &audioproc_resampler_, &frame);
+
+  if (_audioProcessingModulePtr->AnalyzeReverseStream(&frame) == -1) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId,-1),
+                 "AudioProcessingModule::AnalyzeReverseStream() => error");
+    RTC_DCHECK(false);
+  }
+}
+
 // ----------------------------------------------------------------------------
 //                             Private methods
 // ----------------------------------------------------------------------------
@@ -568,6 +577,22 @@ OutputMixer::InsertInbandDtmfTone()
 {
     uint16_t sampleRate(0);
     _dtmfGenerator.GetSampleRate(sampleRate);
+
+    // We're not using a supported sample rate for the DtmfInband generator, so
+    // we won't be able to generate feedback tones.
+    if (!(_audioFrame.sample_rate_hz_ == 8000 ||
+          _audioFrame.sample_rate_hz_ == 16000 ||
+          _audioFrame.sample_rate_hz_ == 32000 ||
+          _audioFrame.sample_rate_hz_ == 44100 ||
+          _audioFrame.sample_rate_hz_ == 48000)) {
+
+        WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
+                     "OutputMixer::InsertInbandDtmfTone() Sample rate"
+                     "not supported");
+
+        return -1;
+    }
+
     if (sampleRate != _audioFrame.sample_rate_hz_)
     {
         // Update sample rate of Dtmf tone since the mixing frequency changed.
@@ -577,7 +602,7 @@ OutputMixer::InsertInbandDtmfTone()
         _dtmfGenerator.ResetTone();
     }
 
-    int16_t toneBuffer[320];
+    int16_t toneBuffer[MAX_DTMF_SAMPLERATE/100];
     uint16_t toneSamples(0);
     if (_dtmfGenerator.Get10msTone(toneBuffer, toneSamples) == -1)
     {

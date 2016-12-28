@@ -70,6 +70,12 @@ class WEBRTC_DLLEXPORT VoEHardware {
   virtual int GetPlayoutDeviceName(int index,
                                    char strNameUTF8[128],
                                    char strGuidUTF8[128]) = 0;
+ 
+  // Checks if the sound card is available to be opened for recording.
+  virtual int GetRecordingDeviceStatus(bool& isAvailable) = 0;
+
+  // Checks if the sound card is available to be opened for playout.
+  virtual int GetPlayoutDeviceStatus(bool& isAvailable) = 0;
 
   // Sets the audio device used for recording.
   virtual int SetRecordingDevice(
@@ -84,6 +90,23 @@ class WEBRTC_DLLEXPORT VoEHardware {
 
   // Gets the currently used (active) audio device layer.
   virtual int GetAudioDeviceLayer(AudioLayers& audioLayer) = 0;
+ 
+  // Gets the VoiceEngine's current CPU consumption in terms of the percent
+  // of total CPU availability. [Windows only]
+  virtual int GetCPULoad(int& loadPercent) = 0;
+
+  // Not supported
+  virtual int ResetAudioDevice() = 0;
+
+  // Not supported
+  virtual int AudioDeviceControl(
+                                 unsigned int par1, unsigned int par2, unsigned int par3) = 0;
+
+  // Not supported
+  virtual int SetLoudspeakerStatus(bool enable) = 0;
+
+  // Not supported
+  virtual int GetLoudspeakerStatus(bool& enabled) = 0;
 
   // Native sample rate controls (samples/sec)
   virtual int SetRecordingSampleRate(unsigned int samples_per_sec) = 0;
@@ -94,6 +117,7 @@ class WEBRTC_DLLEXPORT VoEHardware {
   // Queries and controls platform audio effects on Android devices.
   virtual bool BuiltInAECIsAvailable() const = 0;
   virtual int EnableBuiltInAEC(bool enable) = 0;
+  virtual bool BuiltInAECIsEnabled() const = 0;
   virtual bool BuiltInAGCIsAvailable() const = 0;
   virtual int EnableBuiltInAGC(bool enable) = 0;
   virtual bool BuiltInNSIsAvailable() const = 0;

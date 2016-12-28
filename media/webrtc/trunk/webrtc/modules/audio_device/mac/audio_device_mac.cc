@@ -21,6 +21,9 @@
 #include <libkern/OSAtomic.h>  // OSAtomicCompareAndSwap()
 #include <mach/mach.h>         // mach_task_self()
 #include <sys/sysctl.h>        // sysctlbyname()
+#ifdef MOZILLA_INTERNAL_API
+#include <OSXRunLoopSingleton.h>
+#endif
 
 namespace webrtc {
 
@@ -300,6 +303,9 @@ int32_t AudioDeviceMac::Init() {
   AudioObjectPropertyAddress propertyAddress = {
       kAudioHardwarePropertyRunLoop, kAudioObjectPropertyScopeGlobal,
       kAudioObjectPropertyElementMaster};
+#ifdef MOZILLA_INTERNAL_API
+  mozilla_set_coreaudio_notification_runloop_if_needed();
+#else
   CFRunLoopRef runLoop = NULL;
   UInt32 size = sizeof(CFRunLoopRef);
   WEBRTC_CA_RETURN_ON_ERR(AudioObjectSetPropertyData(
@@ -309,6 +315,7 @@ int32_t AudioDeviceMac::Init() {
   propertyAddress.mSelector = kAudioHardwarePropertyDevices;
   WEBRTC_CA_LOG_ERR(AudioObjectAddPropertyListener(
       kAudioObjectSystemObject, &propertyAddress, &objectListenerProc, this));
+#endif
 
   // Determine if this is a MacBook Pro
   _macBookPro = false;

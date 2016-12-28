@@ -62,6 +62,8 @@ class VCMReceiver {
   VCMNackMode NackMode() const;
   std::vector<uint16_t> NackList(bool* request_key_frame);
 
+  VideoReceiveState ReceiveState() const;
+
   // Receiver video delay.
   int SetMinReceiverDelay(int desired_delay_ms);
 
@@ -79,11 +81,14 @@ class VCMReceiver {
   void TriggerDecoderShutdown();
 
  private:
+  void UpdateReceiveState(const VCMEncodedFrame& frame);
+
   CriticalSectionWrapper* crit_sect_;
   Clock* const clock_;
   VCMJitterBuffer jitter_buffer_;
   VCMTiming* timing_;
   rtc::scoped_ptr<EventWrapper> render_wait_event_;
+  VideoReceiveState receiveState_;
   int max_video_delay_ms_;
 };
 

@@ -44,33 +44,29 @@ ScreenCapturerWinGdi::ScreenCapturerWinGdi(const DesktopCaptureOptions& options)
       dwmapi_library_(NULL),
       composition_func_(NULL),
       set_thread_execution_state_failed_(false) {
-  if (options.disable_effects()) {
-    // Load dwmapi.dll dynamically since it is not available on XP.
-    if (!dwmapi_library_)
-      dwmapi_library_ = LoadLibrary(kDwmapiLibraryName);
+  // Load dwmapi.dll dynamically since it is not available on XP.
+  if (!dwmapi_library_)
+    dwmapi_library_ = LoadLibrary(kDwmapiLibraryName);
 
-    if (dwmapi_library_) {
-      composition_func_ = reinterpret_cast<DwmEnableCompositionFunc>(
-          GetProcAddress(dwmapi_library_, "DwmEnableComposition"));
-    }
+  if (dwmapi_library_) {
+    composition_func_ = reinterpret_cast<DwmEnableCompositionFunc>(
+      GetProcAddress(dwmapi_library_, "DwmEnableComposition"));
+    composition_enabled_func_ = reinterpret_cast<DwmIsCompositionEnabledFunc>
+      (GetProcAddress(dwmapi_library_, "DwmIsCompositionEnabled"));
   }
+
+  disable_composition_ = options.disable_effects();
 }
 
 ScreenCapturerWinGdi::~ScreenCapturerWinGdi() {
-  if (desktop_dc_)
-    ReleaseDC(NULL, desktop_dc_);
-  if (memory_dc_)
-    DeleteDC(memory_dc_);
-
-  // Restore Aero.
-  if (composition_func_)
-    (*composition_func_)(DWM_EC_ENABLECOMPOSITION);
+  Stop();
 
   if (dwmapi_library_)
     FreeLibrary(dwmapi_library_);
 }
 
 void ScreenCapturerWinGdi::Capture(const DesktopRegion& region) {
+  assert(IsGUIThread(false));
   TickTime capture_start_time = TickTime::Now();
 
   queue_.MoveToNextFrame();
@@ -133,10 +129,12 @@ void ScreenCapturerWinGdi::Capture(const DesktopRegion& region) {
 }
 
 bool ScreenCapturerWinGdi::GetScreenList(ScreenList* screens) {
+  assert(IsGUIThread(false));
   return webrtc::GetScreenList(screens);
 }
 
 bool ScreenCapturerWinGdi::SelectScreen(ScreenId id) {
+  assert(IsGUIThread(false));
   bool valid = IsScreenValid(id, &current_device_key_);
   if (valid)
     current_screen_id_ = id;
@@ -149,14 +147,35 @@ void ScreenCapturerWinGdi::Start(Callback* callback) {
 
   callback_ = callback;
 
-  // Vote to disable Aero composited desktop effects while capturing. Windows
-  // will restore Aero automatically if the process exits. This has no effect
-  // under Windows 8 or higher.  See crbug.com/124018.
-  if (composition_func_)
-    (*composition_func_)(DWM_EC_DISABLECOMPOSITION);
+  if (disable_composition_) {
+    // Vote to disable Aero composited desktop effects while capturing. Windows
+    // will restore Aero automatically if the process exits. This has no effect
+    // under Windows 8 or higher.  See crbug.com/124018.
+    if (composition_func_)
+      (*composition_func_)(DWM_EC_DISABLECOMPOSITION);
+  }
+}
+
+void ScreenCapturerWinGdi::Stop() {
+  if (desktop_dc_) {
+    ReleaseDC(NULL, desktop_dc_);
+    desktop_dc_ = NULL;
+  }
+  if (memory_dc_) {
+    DeleteDC(memory_dc_);
+    memory_dc_ = NULL;
+  }
+
+  if (disable_composition_) {
+    // Restore Aero.
+    if (composition_func_)
+      (*composition_func_)(DWM_EC_ENABLECOMPOSITION);
+  }
+  callback_ = NULL;
 }
 
 void ScreenCapturerWinGdi::PrepareCaptureResources() {
+  assert(IsGUIThread(false));
   // Switch to the desktop receiving user input if different from the current
   // one.
   rtc::scoped_ptr<Desktop> input_desktop(Desktop::GetInputDesktop());
@@ -176,10 +195,12 @@ void ScreenCapturerWinGdi::PrepareCaptureResources() {
     // So we can continue capture screen bits, just from the wrong desktop.
     desktop_.SetThreadDesktop(input_desktop.release());
 
-    // Re-assert our vote to disable Aero.
-    // See crbug.com/124018 and crbug.com/129906.
-    if (composition_func_ != NULL) {
-      (*composition_func_)(DWM_EC_DISABLECOMPOSITION);
+    if (disable_composition_) {
+      // Re-assert our vote to disable Aero.
+      // See crbug.com/124018 and crbug.com/129906.
+      if (composition_func_ != NULL) {
+        (*composition_func_)(DWM_EC_DISABLECOMPOSITION);
+      }
     }
   }
 
@@ -223,6 +244,7 @@ void ScreenCapturerWinGdi::PrepareCaptureResources() {
 }
 
 bool ScreenCapturerWinGdi::CaptureImage() {
+  assert(IsGUIThread(false));
   DesktopRect screen_rect =
       GetScreenRect(current_screen_id_, current_device_key_);
   if (screen_rect.is_empty())
@@ -253,12 +275,24 @@ bool ScreenCapturerWinGdi::CaptureImage() {
   DesktopFrameWin* current = static_cast<DesktopFrameWin*>(
       queue_.current_frame()->GetUnderlyingFrame());
   HGDIOBJ previous_object = SelectObject(memory_dc_, current->bitmap());
+  DWORD rop = SRCCOPY;
+  if (composition_enabled_func_) {
+    BOOL enabled;
+    (*composition_enabled_func_)(&enabled);
+    if (!enabled) {
+      // Vista or Windows 7, Aero disabled
+      rop |= CAPTUREBLT;
+    }
+  } else {
+    // Windows XP, required to get layered windows
+    rop |= CAPTUREBLT;
+  }
   if (previous_object != NULL) {
     BitBlt(memory_dc_,
            0, 0, screen_rect.width(), screen_rect.height(),
            desktop_dc_,
            screen_rect.left(), screen_rect.top(),
-           SRCCOPY | CAPTUREBLT);
+           rop);
 
     // Select back the previously selected object to that the device contect
     // could be destroyed independently of the bitmap if needed.

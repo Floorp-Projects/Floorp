@@ -39,22 +39,6 @@ int16_t MapSetting(EchoControlMobile::RoutingMode mode) {
   return -1;
 }
 
-AudioProcessing::Error MapError(int err) {
-  switch (err) {
-    case AECM_UNSUPPORTED_FUNCTION_ERROR:
-      return AudioProcessing::kUnsupportedFunctionError;
-    case AECM_NULL_POINTER_ERROR:
-      return AudioProcessing::kNullPointerError;
-    case AECM_BAD_PARAMETER_ERROR:
-      return AudioProcessing::kBadParameterError;
-    case AECM_BAD_PARAMETER_WARNING:
-      return AudioProcessing::kBadStreamParameterWarning;
-    default:
-      // AECM_UNSPECIFIED_ERROR
-      // AECM_UNINITIALIZED_ERROR
-      return AudioProcessing::kUnspecifiedError;
-  }
-}
 // Maximum length that a frame of samples can have.
 static const size_t kMaxAllowedValuesOfSamplesPerFrame = 160;
 // Maximum number of frames to buffer in the render queue.
@@ -112,7 +96,7 @@ int EchoControlMobileImpl::ProcessRenderAudio(const AudioBuffer* audio) {
           audio->num_frames_per_band());
 
       if (err != AudioProcessing::kNoError)
-        return MapError(err);  // TODO(ajm): warning possible?);
+        return AudioProcessing::kUnspecifiedError;
 
       // Buffer the samples in the render queue.
       render_queue_buffer_.insert(render_queue_buffer_.end(),
@@ -202,7 +186,7 @@ int EchoControlMobileImpl::ProcessCaptureAudio(AudioBuffer* audio) {
           apm_->stream_delay_ms());
 
       if (err != AudioProcessing::kNoError)
-        return MapError(err);
+        return AudioProcessing::kUnspecifiedError;
 
       handle_index++;
     }
@@ -300,7 +284,7 @@ int EchoControlMobileImpl::GetEchoPath(void* echo_path,
   Handle* my_handle = static_cast<Handle*>(handle(0));
   int32_t err = WebRtcAecm_GetEchoPath(my_handle, echo_path, size_bytes);
   if (err != 0)
-    return MapError(err);
+    return AudioProcessing::kUnspecifiedError;
 
   return AudioProcessing::kNoError;
 }

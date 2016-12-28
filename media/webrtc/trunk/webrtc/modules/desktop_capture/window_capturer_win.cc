@@ -18,12 +18,14 @@
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/modules/desktop_capture/win/window_capture_utils.h"
 #include "webrtc/system_wrappers/include/logging.h"
+#include <VersionHelpers.h>
 
 namespace webrtc {
 
 namespace {
 
 BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
+  assert(IsGUIThread(false));
   WindowCapturer::WindowList* list =
       reinterpret_cast<WindowCapturer::WindowList*>(param);
 
@@ -60,8 +62,20 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
     return TRUE;
   }
 
+  // Win8 introduced "Modern Apps" whose associated window is
+  // non-shareable. We want to filter them out.
+  if (IsWindows8OrGreater() &&
+      (wcscmp(class_name, L"ApplicationFrameWindow") == 0 ||
+       wcscmp(class_name, L"Windows.UI.Core.CoreWindow") == 0)) {
+    return TRUE;
+  }
+
   WindowCapturer::Window window;
   window.id = reinterpret_cast<WindowCapturer::WindowId>(hwnd);
+
+  DWORD pid;
+  GetWindowThreadProcessId(hwnd, &pid);
+  window.pid = (pid_t)pid;
 
   const size_t kTitleLength = 500;
   WCHAR window_title[kTitleLength];
@@ -72,6 +86,12 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   // Skip windows when we failed to convert the title or it is empty.
   if (window.title.empty())
     return TRUE;
+  // Skip windows of zero visible area, except IconicWindows
+  RECT bounds;
+  if(GetClientRect(hwnd,&bounds) && !IsIconic(hwnd)
+    && IsRectEmpty(&bounds)){
+    return TRUE;
+  }
 
   list->push_back(window);
 
@@ -90,6 +110,7 @@ class WindowCapturerWin : public WindowCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
 
  private:
@@ -115,6 +136,7 @@ WindowCapturerWin::~WindowCapturerWin() {
 }
 
 bool WindowCapturerWin::GetWindowList(WindowList* windows) {
+  assert(IsGUIThread(false));
   WindowList result;
   LPARAM param = reinterpret_cast<LPARAM>(&result);
   if (!EnumWindows(&WindowsEnumerationHandler, param))
@@ -124,6 +146,7 @@ bool WindowCapturerWin::GetWindowList(WindowList* windows) {
 }
 
 bool WindowCapturerWin::SelectWindow(WindowId id) {
+  assert(IsGUIThread(false));
   HWND window = reinterpret_cast<HWND>(id);
   if (!IsWindow(window) || !IsWindowVisible(window) || IsIconic(window))
     return false;
@@ -133,6 +156,7 @@ bool WindowCapturerWin::SelectWindow(WindowId id) {
 }
 
 bool WindowCapturerWin::BringSelectedWindowToFront() {
+  assert(IsGUIThread(false));
   if (!window_)
     return false;
 
@@ -149,7 +173,12 @@ void WindowCapturerWin::Start(Callback* callback) {
   callback_ = callback;
 }
 
+void WindowCapturerWin::Stop() {
+  callback_ = NULL;
+}
+
 void WindowCapturerWin::Capture(const DesktopRegion& region) {
+  assert(IsGUIThread(false));
   if (!window_) {
     LOG(LS_ERROR) << "Window hasn't been selected: " << GetLastError();
     callback_->OnCaptureCompleted(NULL);

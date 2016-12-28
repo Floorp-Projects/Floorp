@@ -34,6 +34,11 @@
 #include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
+extern int AECDebug();
+extern uint32_t AECDebugMaxSize();
+extern void AECDebugEnable(uint32_t enable);
+extern void AECDebugFilenameBase(char *buffer, size_t size);
+static void OpenCoreDebugFiles(AecCore* aec, int *instance_count);
 
 // Buffer size (samples)
 static const size_t kBufSizePartitions = 250;  // 1 second of audio in 16 kHz.
@@ -919,6 +924,51 @@ static int SignalBasedDelayCorrection(AecCore* self) {
   return delay_correction;
 }
 
+#ifdef WEBRTC_AEC_DEBUG_DUMP
+static void
+OpenCoreDebugFiles(AecCore* aec, int *aec_instance_count)
+{
+  if (AECDebug())
+  {
+    if (!aec->farFile)
+    {
+      int process_rate = aec->sampFreq > 16000 ? 16000 : aec->sampFreq;
+      RTC_AEC_DEBUG_WAV_REOPEN("aec_far", aec->instance_index, aec->debug_dump_count,
+                               process_rate, &aec->farFile);
+      RTC_AEC_DEBUG_WAV_REOPEN("aec_near", aec->instance_index, aec->debug_dump_count,
+                               process_rate, &aec->nearFile);
+      RTC_AEC_DEBUG_WAV_REOPEN("aec_out", aec->instance_index, aec->debug_dump_count,
+                               process_rate, &aec->outFile);
+      RTC_AEC_DEBUG_WAV_REOPEN("aec_out_linear", aec->instance_index, aec->debug_dump_count,
+                               process_rate, &aec->outLinearFile);
+      RTC_AEC_DEBUG_RAW_CLOSE(aec->e_fft_file);
+      RTC_AEC_DEBUG_RAW_OPEN("aec_fft", aec->instance_index, aec->debug_dump_count,
+                             &aec->e_fft_file);
+      ++aec->debug_dump_count;
+    }
+  } else {
+    if (aec->farFile) {
+      RTC_AEC_DEBUG_WAV_CLOSE(aec->farFile);
+    }
+    if (aec->nearFile) {
+      RTC_AEC_DEBUG_WAV_CLOSE(aec->nearFile);
+    }
+    if (aec->outFile) {
+      RTC_AEC_DEBUG_WAV_CLOSE(aec->outFile);
+    }
+    if (aec->outLinearFile) {
+      RTC_AEC_DEBUG_WAV_CLOSE(aec->outLinearFile);
+    }
+    if (aec->e_fft_file) {
+      RTC_AEC_DEBUG_RAW_CLOSE(aec->e_fft_file);
+    }
+    aec->outLinearFile = aec->outFile = aec->nearFile = aec->farFile = NULL;
+    aec->e_fft_file = NULL;
+    aec->debugWritten = 0;
+  }
+}
+#endif
+
 static void EchoSubtraction(
     AecCore* aec,
     int num_partitions,
@@ -971,9 +1021,13 @@ static void EchoSubtraction(
   memcpy(e_extended + PART_LEN, e, sizeof(float) * PART_LEN);
   Fft(e_extended, e_fft);
 
-  RTC_AEC_DEBUG_RAW_WRITE(aec->e_fft_file,
-                          &e_fft[0][0],
-                          sizeof(e_fft[0][0]) * PART_LEN1 * 2);
+#ifdef WEBRTC_AEC_DEBUG_DUMP
+  if (aec->e_fft_file) {
+    RTC_AEC_DEBUG_RAW_WRITE(aec->e_fft_file,
+                            &e_fft[0][0],
+                            sizeof(e_fft[0][0]) * PART_LEN1 * 2);
+  }
+#endif
 
   if (metrics_mode == 1) {
     // Note that the first PART_LEN samples in fft (before transformation) are
@@ -1293,9 +1347,15 @@ static void ProcessBlock(AecCore* aec) {
   {
     // TODO(minyue): |farend_ptr| starts from buffered samples. This will be
     // modified when |aec->far_time_buf| is revised.
-    RTC_AEC_DEBUG_WAV_WRITE(aec->farFile, &farend_ptr[PART_LEN], PART_LEN);
-
-    RTC_AEC_DEBUG_WAV_WRITE(aec->nearFile, nearend_ptr, PART_LEN);
+    OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
+    if (aec->farFile) {
+      RTC_AEC_DEBUG_WAV_WRITE(aec->farFile, &farend_ptr[PART_LEN], PART_LEN);
+      RTC_AEC_DEBUG_WAV_WRITE(aec->nearFile, nearend_ptr, PART_LEN);
+      aec->debugWritten += sizeof(int16_t) * PART_LEN;
+      if (aec->debugWritten >= AECDebugMaxSize()) {
+        AECDebugEnable(0);
+      }
+    }
   }
 #endif
 
@@ -1399,7 +1459,6 @@ static void ProcessBlock(AecCore* aec) {
                   &aec->linoutlevel,
                   echo_subtractor_output);
 
-  RTC_AEC_DEBUG_WAV_WRITE(aec->outLinearFile, echo_subtractor_output, PART_LEN);
 
   // Perform echo suppression.
   EchoSuppression(aec, farend_ptr, echo_subtractor_output, output, outputH_ptr);
@@ -1418,7 +1477,13 @@ static void ProcessBlock(AecCore* aec) {
     WebRtc_WriteBuffer(aec->outFrBufH[i], outputH[i], PART_LEN);
   }
 
-  RTC_AEC_DEBUG_WAV_WRITE(aec->outFile, output, PART_LEN);
+#ifdef WEBRTC_AEC_DEBUG_DUMP
+  OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
+  if (aec->outLinearFile) {
+    RTC_AEC_DEBUG_WAV_WRITE(aec->outLinearFile, echo_subtractor_output, PART_LEN);
+    RTC_AEC_DEBUG_WAV_WRITE(aec->outFile, output, PART_LEN);
+  }
+#endif
 }
 
 AecCore* WebRtcAec_CreateAec() {
@@ -1469,9 +1534,10 @@ AecCore* WebRtcAec_CreateAec() {
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
   aec->instance_index = webrtc_aec_instance_count;
-
   aec->farFile = aec->nearFile = aec->outFile = aec->outLinearFile = NULL;
+  aec->e_fft_file = NULL;
   aec->debug_dump_count = 0;
+  aec->debugWritten = 0;
 #endif
   aec->delay_estimator_farend =
       WebRtc_CreateDelayEstimatorFarend(PART_LEN1, kHistorySizeBlocks);
@@ -1549,11 +1615,15 @@ void WebRtcAec_FreeAec(AecCore* aec) {
 
   WebRtc_FreeBuffer(aec->far_time_buf);
 
-  RTC_AEC_DEBUG_WAV_CLOSE(aec->farFile);
-  RTC_AEC_DEBUG_WAV_CLOSE(aec->nearFile);
-  RTC_AEC_DEBUG_WAV_CLOSE(aec->outFile);
-  RTC_AEC_DEBUG_WAV_CLOSE(aec->outLinearFile);
-  RTC_AEC_DEBUG_RAW_CLOSE(aec->e_fft_file);
+#ifdef WEBRTC_AEC_DEBUG_DUMP
+  if (aec->farFile) {
+    RTC_AEC_DEBUG_WAV_CLOSE(aec->farFile);
+    RTC_AEC_DEBUG_WAV_CLOSE(aec->nearFile);
+    RTC_AEC_DEBUG_WAV_CLOSE(aec->outFile);
+    RTC_AEC_DEBUG_WAV_CLOSE(aec->outLinearFile);
+    RTC_AEC_DEBUG_RAW_CLOSE(aec->e_fft_file);
+  }
+#endif
 
   WebRtc_FreeDelayEstimator(aec->delay_estimator);
   WebRtc_FreeDelayEstimatorFarend(aec->delay_estimator_farend);
@@ -1587,26 +1657,8 @@ int WebRtcAec_InitAec(AecCore* aec, int sampFreq) {
   WebRtc_InitBuffer(aec->far_time_buf);
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
-  {
-    int process_rate = sampFreq > 16000 ? 16000 : sampFreq;
-    RTC_AEC_DEBUG_WAV_REOPEN("aec_far", aec->instance_index,
-                             aec->debug_dump_count, process_rate,
-                             &aec->farFile );
-    RTC_AEC_DEBUG_WAV_REOPEN("aec_near", aec->instance_index,
-                             aec->debug_dump_count, process_rate,
-                             &aec->nearFile);
-    RTC_AEC_DEBUG_WAV_REOPEN("aec_out", aec->instance_index,
-                             aec->debug_dump_count, process_rate,
-                             &aec->outFile );
-    RTC_AEC_DEBUG_WAV_REOPEN("aec_out_linear", aec->instance_index,
-                             aec->debug_dump_count, process_rate,
-                             &aec->outLinearFile);
-  }
-
-  RTC_AEC_DEBUG_RAW_OPEN("aec_e_fft",
-                         aec->debug_dump_count,
-                         &aec->e_fft_file);
-
+  aec->instance_index = webrtc_aec_instance_count;
+  OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
   ++aec->debug_dump_count;
 #endif
   aec->system_delay = 0;

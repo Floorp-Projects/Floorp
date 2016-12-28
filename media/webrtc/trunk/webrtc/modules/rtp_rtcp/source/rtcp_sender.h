@@ -103,7 +103,10 @@ class RTCPSender {
 
   int32_t RemoveMixedCNAME(uint32_t SSRC);
 
-  int64_t SendTimeOfSendReport(uint32_t sendReport);
+  bool GetSendReportMetadata(const uint32_t sendReport,
+                             uint64_t *timeOfSend,
+                             uint32_t *packetCount,
+                             uint64_t *octetCount);
 
   bool SendTimeOfXrRrReport(uint32_t mid_ntp, int64_t* time_ms) const;
 
@@ -231,6 +234,10 @@ class RTCPSender {
   uint32_t last_send_report_[RTCP_NUMBER_OF_SR] GUARDED_BY(
       critical_section_rtcp_sender_);  // allow packet loss and RTT above 1 sec
   int64_t last_rtcp_time_[RTCP_NUMBER_OF_SR] GUARDED_BY(
+      critical_section_rtcp_sender_);
+  uint32_t lastSRPacketCount_[RTCP_NUMBER_OF_SR] GUARDED_BY(
+      critical_section_rtcp_sender_); 
+  uint64_t lastSROctetCount_[RTCP_NUMBER_OF_SR] GUARDED_BY(
       critical_section_rtcp_sender_);
 
   // Sent XR receiver reference time report.

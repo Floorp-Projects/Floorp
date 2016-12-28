@@ -24,6 +24,7 @@
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_vp8.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_vp9.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {

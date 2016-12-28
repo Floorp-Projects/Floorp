@@ -572,6 +572,9 @@ AudioDeviceWindowsCore::~AudioDeviceWindowsCore()
 
     Terminate();
 
+    // Recording thread should be shut down before this!
+    assert(_hRecThread == NULL);
+
     // The IMMDeviceEnumerator is created during construction. Must release
     // it here and not in Terminate() since we don't recreate it in Init().
     SAFE_RELEASE(_ptrEnumerator);
@@ -2233,7 +2236,7 @@ int32_t AudioDeviceWindowsCore::InitPlayout()
     Wfx.wBitsPerSample = 16;
     Wfx.cbSize = 0;
 
-    const int freqs[] = {48000, 44100, 16000, 96000, 32000, 8000};
+    const int freqs[] = {48000, 44100, 32000, 96000, 16000, 8000};
     hr = S_FALSE;
 
     // Iterate over frequencies and channels, in order of priority
@@ -2570,7 +2573,7 @@ int32_t AudioDeviceWindowsCore::InitRecording()
     Wfx.wBitsPerSample = 16;
     Wfx.cbSize = 0;
 
-    const int freqs[6] = {48000, 44100, 16000, 96000, 32000, 8000};
+    const int freqs[6] = {48000, 44100, 32000, 96000, 16000, 8000};
     hr = S_FALSE;
 
     // Iterate over frequencies and channels, in order of priority

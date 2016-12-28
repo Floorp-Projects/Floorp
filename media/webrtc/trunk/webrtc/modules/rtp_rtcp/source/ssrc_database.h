@@ -30,10 +30,10 @@ class SSRCDatabase {
   void RegisterSSRC(uint32_t ssrc);
   void ReturnSSRC(uint32_t ssrc);
 
- protected:
   SSRCDatabase();
   virtual ~SSRCDatabase();
 
+ protected:
   static SSRCDatabase* CreateInstance() { return new SSRCDatabase(); }
 
  private:

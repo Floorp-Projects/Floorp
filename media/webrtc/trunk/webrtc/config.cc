@@ -37,18 +37,23 @@ const char* RtpExtension::kAudioLevel =
     "urn:ietf:params:rtp-hdrext:ssrc-audio-level";
 const char* RtpExtension::kTransportSequenceNumber =
     "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions";
+const char* RtpExtension::kRtpStreamId =
+  "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
 
 bool RtpExtension::IsSupportedForAudio(const std::string& name) {
   return name == webrtc::RtpExtension::kAbsSendTime ||
          name == webrtc::RtpExtension::kAudioLevel ||
-         name == webrtc::RtpExtension::kTransportSequenceNumber;
+         name == webrtc::RtpExtension::kTransportSequenceNumber ||
+         name == webrtc::RtpExtension::kRtpStreamId;
 }
 
 bool RtpExtension::IsSupportedForVideo(const std::string& name) {
   return name == webrtc::RtpExtension::kTOffset ||
          name == webrtc::RtpExtension::kAbsSendTime ||
          name == webrtc::RtpExtension::kVideoRotation ||
-         name == webrtc::RtpExtension::kTransportSequenceNumber;
+         name == webrtc::RtpExtension::kTransportSequenceNumber ||
+         name == webrtc::RtpExtension::kRtpStreamId;
+
 }
 
 VideoStream::VideoStream()
