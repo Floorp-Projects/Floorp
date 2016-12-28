@@ -161,23 +161,11 @@ SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed elemen
                    nsRestyleHint restyle_hint, nsChangeHint change_hint)
 SERVO_BINDING_FUNC(Servo_CheckChangeHint, nsChangeHint, RawGeckoElementBorrowed element)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, mozilla::ConsumeStyleBehavior consume)
+                   RawGeckoElementBorrowed element, RawServoStyleSetBorrowed set,
+                   mozilla::ConsumeStyleBehavior consume, mozilla::LazyComputeBehavior compute)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    bool is_probe, RawServoStyleSetBorrowed set)
-
-// Resolves style for an element or pseudo-element without processing pending
-// restyles first. The Element and its ancestors may be unstyled, have pending
-// restyles, or be in a display:none subtree. Styles are cached when possible,
-// though caching is not possible within display:none subtrees, and the styles
-// may be invalidated by already-scheduled restyles.
-//
-// The tree must be in a consistent state such that a normal traversal could be
-// performed, and this function maintains that invariant.
-SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
-                   mozilla::ConsumeStyleBehavior consume,
-                   RawServoStyleSetBorrowed set)
 
 // Restyle the given subtree.
 SERVO_BINDING_FUNC(Servo_TraverseSubtree, void,
