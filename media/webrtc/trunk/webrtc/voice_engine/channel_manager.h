@@ -111,6 +111,7 @@ class ChannelManager {
   void DestroyAllChannels();
 
   size_t NumOfChannels() const;
+  const Config& config_;
 
   // Returns a pointer to the event log object stored within the ChannelManager.
   RtcEventLog* GetEventLog() const;
@@ -126,7 +127,6 @@ class ChannelManager {
   rtc::scoped_ptr<CriticalSectionWrapper> lock_;
   std::vector<ChannelOwner> channels_;
 
-  const Config& config_;
   rtc::scoped_ptr<RtcEventLog> event_log_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(ChannelManager);

@@ -29,7 +29,9 @@ SharedData::SharedData(const Config& config)
       _channelManager(_gInstanceCounter, config),
       _engineStatistics(_gInstanceCounter),
       _audioDevicePtr(NULL),
-      _moduleProcessThreadPtr(ProcessThread::Create("VoiceProcessThread")) {
+      _moduleProcessThreadPtr(ProcessThread::Create("VoiceProcessThread")),
+      _externalRecording(false),
+      _externalPlayout(false) {
     Trace::CreateTrace();
     if (OutputMixer::Create(_outputMixerPtr, _gInstanceCounter) == 0)
     {

@@ -82,6 +82,8 @@
         'byteorder.h',
         'checks.cc',
         'checks.h',
+        'common.cc',
+        'common.h',
         'constructormagic.h',
         'criticalsection.cc',
         'criticalsection.h',
@@ -143,13 +145,25 @@
             'logging.h',
           ],
         }],
+        ['OS=="mac"', {
+          'sources': [
+            'macutils.cc',
+            'macutils.h',
+          ],
+        }],
+        ['OS=="win"', {
+          'sources': [
+            'win32.cc',
+            'win32.h',
+          ],
+        }],
       ],
     },
     {
       'target_name': 'rtc_base',
       'type': 'static_library',
       'dependencies': [
-        '<(webrtc_root)/common.gyp:webrtc_common',
+        '../common.gyp:webrtc_common',
         'rtc_base_approved',
       ],
       'export_dependent_settings': [
@@ -186,8 +200,6 @@
         'base64.h',
         'bind.h',
         'callback.h',
-        'common.cc',
-        'common.h',
         'crc32.cc',
         'crc32.h',
         'cryptstring.cc',
@@ -253,8 +265,9 @@
         'macconversion.h',
         'macsocketserver.cc',
         'macsocketserver.h',
-        'macutils.cc',
-        'macutils.h',
+# moved by mozilla
+#        'macutils.cc',
+#        'macutils.h',
         'macwindowpicker.cc',
         'macwindowpicker.h',
         'mathutils.h',
@@ -378,8 +391,8 @@
         'versionparsing.h',
         'virtualsocketserver.cc',
         'virtualsocketserver.h',
-        'win32.cc',
-        'win32.h',
+#        'win32.cc',
+#        'win32.h',
         'win32filesystem.cc',
         'win32filesystem.h',
         'win32regkey.cc',

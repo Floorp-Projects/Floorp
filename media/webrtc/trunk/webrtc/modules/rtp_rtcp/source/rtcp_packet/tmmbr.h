@@ -49,7 +49,7 @@ class Tmmbr : public RtcpPacket {
               RtcpPacket::PacketReadyCallback* callback) const override;
 
  private:
-  size_t BlockLength() const {
+  size_t BlockLength() const override {
     const size_t kFciLen = 8;
     return kCommonFbFmtLength + kFciLen;
   }

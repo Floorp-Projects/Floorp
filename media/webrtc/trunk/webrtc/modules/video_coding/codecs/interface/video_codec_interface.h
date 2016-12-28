@@ -11,8 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_INTERFACE_VIDEO_CODEC_INTERFACE_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_INTERFACE_VIDEO_CODEC_INTERFACE_H_
 
-#pragma message("WARNING: video_coding/codecs/interface is DEPRECATED; "
-    "use video_coding/include")
+#pragma message("WARNING: video_coding/codecs/interface is DEPRECATED; use video_coding/include")
 #include <vector>
 
 #include "webrtc/common_types.h"
@@ -79,7 +78,11 @@ struct CodecSpecificInfoGeneric {
   uint8_t simulcast_idx;
 };
 
-struct CodecSpecificInfoH264 {};
+struct CodecSpecificInfoH264 {
+  bool    single_nalu;
+  uint8_t simulcastIdx;
+  uint8_t packetizationMode;
+};
 
 union CodecSpecificInfoUnion {
   CodecSpecificInfoGeneric generic;

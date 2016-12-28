@@ -26,7 +26,8 @@ ReceiveStatisticsProxy::ReceiveStatisticsProxy(uint32_t ssrc, Clock* clock)
       decode_fps_estimator_(1000, 1000),
       renders_fps_estimator_(1000, 1000),
       render_fps_tracker_(100u, 10u),
-      render_pixel_tracker_(100u, 10u) {
+      render_pixel_tracker_(100u, 10u),
+      receive_state_(kReceiveStateInitial) {      
   stats_.ssrc = ssrc;
 }
 
@@ -87,11 +88,17 @@ void ReceiveStatisticsProxy::OnDecoderImplementationName(
   rtc::CritScope lock(&crit_);
   stats_.decoder_implementation_name = implementation_name;
 }
+
 void ReceiveStatisticsProxy::OnIncomingRate(unsigned int framerate,
                                             unsigned int bitrate_bps) {
   rtc::CritScope lock(&crit_);
   stats_.network_frame_rate = framerate;
   stats_.total_bitrate_bps = bitrate_bps;
+}
+
+void ReceiveStatisticsProxy::ReceiveStateChange(VideoReceiveState state) {
+  rtc::CritScope lock(&crit_);
+  receive_state_ = state;
 }
 
 void ReceiveStatisticsProxy::OnDecoderTiming(int decode_ms,

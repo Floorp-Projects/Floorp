@@ -94,6 +94,15 @@ class Call : public webrtc::Call, public PacketReceiver,
   void OnNetworkChanged(uint32_t bitrate_bps, uint8_t fraction_loss,
                         int64_t rtt_ms) override;
 
+  VoiceEngine* voice_engine() {
+    internal::AudioState* audio_state =
+        static_cast<internal::AudioState*>(config_.audio_state.get());
+    if (audio_state)
+      return audio_state->voice_engine();
+    else
+      return nullptr;
+  };
+
  private:
   DeliveryStatus DeliverRtcp(MediaType media_type, const uint8_t* packet,
                              size_t length);
@@ -105,14 +114,6 @@ class Call : public webrtc::Call, public PacketReceiver,
   void ConfigureSync(const std::string& sync_group)
       EXCLUSIVE_LOCKS_REQUIRED(receive_crit_);
 
-  VoiceEngine* voice_engine() {
-    internal::AudioState* audio_state =
-        static_cast<internal::AudioState*>(config_.audio_state.get());
-    if (audio_state)
-      return audio_state->voice_engine();
-    else
-      return nullptr;
-  }
 
   void UpdateSendHistograms() EXCLUSIVE_LOCKS_REQUIRED(&bitrate_crit_);
   void UpdateReceiveHistograms();
@@ -723,6 +724,7 @@ PacketReceiver::DeliveryStatus Call::DeliverRtp(MediaType media_type,
       return status;
     }
   }
+  LOG(LS_WARNING) << __FUNCTION__ <<": found unknown SSRC: " << ssrc;
   return DELIVERY_UNKNOWN_SSRC;
 }
 

@@ -67,6 +67,7 @@
           'conditions': [
             ['os_posix==1 and OS!="mac"', {
               'cflags': [ '-msse2', ],
+              'cflags_mozilla': [ '-msse2', ],
             }],
             ['OS=="mac"', {
               'xcode_settings': {

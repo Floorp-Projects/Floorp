@@ -32,6 +32,9 @@
       'export_dependent_settings': [
         '<(webrtc_root)/modules/modules.gyp:audio_coding_module',
       ],
+      'defines': [
+        'WEBRTC_EXTERNAL_TRANSPORT',
+      ],
       'sources': [
         'include/voe_audio_processing.h',
         'include/voe_base.h',

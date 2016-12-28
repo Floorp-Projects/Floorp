@@ -18,7 +18,7 @@
 #if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -33,13 +33,13 @@
 #ifndef WEBRTC_IOS
 #include <net/if_arp.h>
 #endif
-#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 
 #if defined(WEBRTC_MAC)
 #include <ifaddrs.h>
 #include <machine/types.h>
 #endif
-#if defined(WEBRTC_LINUX)
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #endif
@@ -51,7 +51,7 @@
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 #include "webrtc/typedefs.h"
 
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 #define GetLastError() errno
 
 #define IFRSIZE ((int)(size * sizeof (struct ifreq)))
@@ -61,7 +61,7 @@
    (int)(nlh)->nlmsg_len >= (int)sizeof(struct nlmsghdr) &&             \
    (int)(nlh)->nlmsg_len <= (len))
 
-#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 
 namespace webrtc {
 namespace test {
@@ -999,7 +999,7 @@ int32_t UdpTransportImpl::SetPCP(int32_t PCP)
         return -1;
     }
 
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
     if (!rtpSock->SetSockopt(SOL_SOCKET, SO_PRIORITY, (int8_t*) &PCP,
                              sizeof(PCP)))
     {
@@ -2328,7 +2328,7 @@ int32_t UdpTransport::InetPresentationToNumeric(int32_t af,
                                                 const char* src,
                                                 void* dst)
 {
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
     const int32_t result = inet_pton(af, src, dst);
     return result > 0 ? 0 : -1;
 
@@ -2450,7 +2450,7 @@ int32_t UdpTransport::LocalHostAddressIPV6(char n_localIP[16])
                  "getaddrinfo failed to find address");
     return -1;
 
-#elif defined(WEBRTC_MAC)
+#elif defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
     struct ifaddrs* ptrIfAddrs = NULL;
     struct ifaddrs* ptrIfAddrsStart = NULL;
 
@@ -2479,7 +2479,7 @@ int32_t UdpTransport::LocalHostAddressIPV6(char n_localIP[16])
     return -1;
 #elif defined(WEBRTC_ANDROID)
     return -1;
-#else // WEBRTC_LINUX
+#else // WEBRTC_LINUX || WEBRTC_BSD
     struct
     {
         struct nlmsghdr n;
@@ -2642,7 +2642,7 @@ int32_t UdpTransport::LocalHostAddress(uint32_t& localIP)
                      "gethostbyname failed, error:%d", error);
         return -1;
     }
-#elif (defined(WEBRTC_MAC))
+#elif (defined(WEBRTC_BSD) || defined(WEBRTC_MAC))
     char localname[255];
     if (gethostname(localname, 255) != -1)
     {
@@ -2665,7 +2665,7 @@ int32_t UdpTransport::LocalHostAddress(uint32_t& localIP)
     }
     WEBRTC_TRACE(kTraceWarning, kTraceTransport, -1, "gethostname failed");
     return -1;
-#else // WEBRTC_LINUX
+#else // WEBRTC_LINUX || WEBRTC_BSD
     int sockfd, size  = 1;
     struct ifreq* ifr;
     struct ifconf ifc;
@@ -2781,7 +2781,7 @@ int32_t UdpTransport::IPAddress(const SocketAddress& address,
     sourcePort = htons(source_port);
     return 0;
 
- #elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+ #elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
     int32_t ipFamily = address._sockaddr_storage.sin_family;
     const void* ptrNumericIP = NULL;
 

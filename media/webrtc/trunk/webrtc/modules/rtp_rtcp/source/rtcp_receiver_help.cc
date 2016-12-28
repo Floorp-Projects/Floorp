@@ -62,6 +62,9 @@ void RTCPPacketInformation::AddApplicationData(const uint8_t* data,
     if (size > kRtcpAppCode_DATA_SIZE) {
         copySize = kRtcpAppCode_DATA_SIZE;
     }
+    if (((uint32_t) applicationLength) + copySize > UINT16_MAX) {
+      return;
+    }
 
     applicationLength += copySize;
     applicationData = new uint8_t[applicationLength];
@@ -103,6 +106,10 @@ RTCPPacketInformation::AddReportInfo(
 RTCPReportBlockInformation::RTCPReportBlockInformation():
     remoteReceiveBlock(),
     remoteMaxJitter(0),
+    remotePacketsReceived(0),
+    remoteOctetsReceived(0),
+    lastReceivedRRNTPsecs(0),
+    lastReceivedRRNTPfrac(0),
     RTT(0),
     minRTT(0),
     maxRTT(0),

@@ -19,7 +19,7 @@ import android.media.AudioManager;
 import android.os.Build;
 import android.os.Process;
 
-import org.webrtc.Logging;
+import android.util.Log;
 
 import java.lang.Thread;
 import java.util.ArrayList;
@@ -84,19 +84,19 @@ public final class WebRtcAudioUtils {
 
   public static synchronized boolean useWebRtcBasedAcousticEchoCanceler() {
     if (useWebRtcBasedAcousticEchoCanceler) {
-      Logging.w(TAG, "Overriding default behavior; now using WebRTC AEC!");
+      Log.w(TAG, "Overriding default behavior; now using WebRTC AEC!");
     }
     return useWebRtcBasedAcousticEchoCanceler;
   }
   public static synchronized boolean useWebRtcBasedAutomaticGainControl() {
     if (useWebRtcBasedAutomaticGainControl) {
-      Logging.w(TAG, "Overriding default behavior; now using WebRTC AGC!");
+      Log.w(TAG, "Overriding default behavior; now using WebRTC AGC!");
     }
     return useWebRtcBasedAutomaticGainControl;
   }
   public static synchronized boolean useWebRtcBasedNoiseSuppressor() {
     if (useWebRtcBasedNoiseSuppressor) {
-      Logging.w(TAG, "Overriding default behavior; now using WebRTC NS!");
+      Log.w(TAG, "Overriding default behavior; now using WebRTC NS!");
     }
     return useWebRtcBasedNoiseSuppressor;
   }
@@ -181,7 +181,7 @@ public final class WebRtcAudioUtils {
 
   // Information about the current build, taken from system properties.
   public static void logDeviceInfo(String tag) {
-    Logging.d(tag, "Android SDK: " + Build.VERSION.SDK_INT + ", "
+    Log.d(tag, "Android SDK: " + Build.VERSION.SDK_INT + ", "
         + "Release: " + Build.VERSION.RELEASE + ", "
         + "Brand: " + Build.BRAND + ", "
         + "Device: " + Build.DEVICE + ", "

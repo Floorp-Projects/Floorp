@@ -175,6 +175,10 @@ class VideoSendStream : public SendStream {
   // VideoSendStream is valid.
   virtual VideoCaptureInput* Input() = 0;
 
+  // Gets interface used to signal the current CPU work level to the encoder.
+  // Valid as long as the VideoSendStream is valid.
+  virtual CPULoadStateObserver* LoadStateObserver() = 0;
+
   // Set which streams to send. Must have at least as many SSRCs as configured
   // in the config. Encoder settings are passed on to the encoder instance along
   // with the VideoStream settings.

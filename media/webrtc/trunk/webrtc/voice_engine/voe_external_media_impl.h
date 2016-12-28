@@ -26,6 +26,29 @@ class VoEExternalMediaImpl : public VoEExternalMedia {
   int DeRegisterExternalMediaProcessing(int channel,
                                         ProcessingTypes type) override;
 
+  virtual int SetExternalRecordingStatus(bool enable);
+
+  virtual int SetExternalPlayoutStatus(bool enable);
+
+  virtual int ExternalRecordingInsertData(
+        const int16_t speechData10ms[],
+        int lengthSamples,
+        int samplingFreqHz,
+        int current_delay_ms);
+
+  // Insertion of far-end data as actually played out to the OS audio driver
+  virtual int ExternalPlayoutData(
+        int16_t speechData10ms[],
+        int samplingFreqHz,
+        int num_channels,
+        int current_delay_ms,
+        int& lengthSamples);
+
+  virtual int ExternalPlayoutGetData(int16_t speechData10ms[],
+                                     int samplingFreqHz,
+                                     int current_delay_ms,
+                                     int& lengthSamples);
+
   int GetAudioFrame(int channel,
                     int desired_sample_rate_hz,
                     AudioFrame* frame) override;
@@ -37,6 +60,9 @@ class VoEExternalMediaImpl : public VoEExternalMedia {
   ~VoEExternalMediaImpl() override;
 
  private:
+#ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
+  int playout_delay_ms_;
+#endif
   voe::SharedData* shared_;
 };
 

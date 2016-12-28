@@ -44,6 +44,10 @@ public:
     TransmitMixer* transmit_mixer() { return _transmitMixerPtr; }
     OutputMixer* output_mixer() { return _outputMixerPtr; }
     CriticalSectionWrapper* crit_sec() { return _apiCritPtr; }
+    bool ext_recording() const { return _externalRecording; }
+    void set_ext_recording(bool value) { _externalRecording = value; }
+    bool ext_playout() const { return _externalPlayout; }
+    void set_ext_playout(bool value) { _externalPlayout = value; }
     ProcessThread* process_thread() { return _moduleProcessThreadPtr.get(); }
     AudioDeviceModule::AudioLayer audio_device_layer() const {
       return _audioDeviceLayer;
@@ -71,6 +75,9 @@ protected:
     TransmitMixer* _transmitMixerPtr;
     rtc::scoped_ptr<AudioProcessing> audioproc_;
     rtc::scoped_ptr<ProcessThread> _moduleProcessThreadPtr;
+
+    bool _externalRecording;
+    bool _externalPlayout;
 
     AudioDeviceModule::AudioLayer _audioDeviceLayer;
 

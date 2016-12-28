@@ -431,8 +431,9 @@ int VP8EncoderImpl::InitEncode(const VideoCodec* inst,
     if (encoded_images_[i]._buffer != NULL) {
       delete[] encoded_images_[i]._buffer;
     }
-    encoded_images_[i]._size =
-        CalcBufferSize(kI420, codec_.width, codec_.height);
+    // Reserve 100 extra bytes for overhead at small resolutions.
+    encoded_images_[i]._size = CalcBufferSize(kI420, codec_.width, codec_.height)
+                               + 100;
     encoded_images_[i]._buffer = new uint8_t[encoded_images_[i]._size];
     encoded_images_[i]._completeFrame = true;
   }
@@ -724,8 +725,8 @@ int VP8EncoderImpl::Encode(const VideoFrame& frame,
   const VideoFrame& input_image =
       quality_scaler_enabled_ ? quality_scaler_.GetScaledFrame(frame) : frame;
 
-  if (quality_scaler_enabled_ && (input_image.width() != codec_.width ||
-                                  input_image.height() != codec_.height)) {
+  if (input_image.width() != codec_.width ||
+      input_image.height() != codec_.height) {
     int ret = UpdateCodecFrameSize(input_image);
     if (ret < 0)
       return ret;

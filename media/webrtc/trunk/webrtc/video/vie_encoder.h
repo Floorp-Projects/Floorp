@@ -46,6 +46,7 @@ class ViEEncoder : public RtcpIntraFrameObserver,
                    public VideoEncoderRateObserver,
                    public VCMPacketizationCallback,
                    public VCMSendStatisticsCallback,
+                   public CPULoadStateObserver,
                    public VideoCaptureCallback {
  public:
   friend class ViEBitrateObserver;
@@ -76,6 +77,9 @@ class ViEEncoder : public RtcpIntraFrameObserver,
 
   // Returns the id of the owning channel.
   int Owner() const;
+
+  // CPULoadStateObserver interface
+  void onLoadStateChanged(CPULoadState state) override;
 
   // Drops incoming packets before they get to the encoder.
   void Pause();

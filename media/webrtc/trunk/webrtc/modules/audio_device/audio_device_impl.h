@@ -33,7 +33,8 @@ class AudioDeviceModuleImpl : public AudioDeviceModule {
     kPlatformLinux = 3,
     kPlatformMac = 4,
     kPlatformAndroid = 5,
-    kPlatformIOS = 6
+    kPlatformIOS = 6,
+    kPlatformSndio = 7
   };
 
   int32_t CheckPlatform();

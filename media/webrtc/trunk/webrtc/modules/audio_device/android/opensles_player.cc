@@ -11,6 +11,11 @@
 #include "webrtc/modules/audio_device/android/opensles_player.h"
 
 #include <android/log.h>
+#include <dlfcn.h>
+
+#ifdef MOZILLA_INTERNAL_API
+#include "OpenSLESProvider.h"
+#endif
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
@@ -30,7 +35,7 @@
   do {                                  \
     SLresult err = (op);                \
     if (err != SL_RESULT_SUCCESS) {     \
-      ALOGE("%s failed: %d", #op, err); \
+      ALOGE("%s failed: %ld", #op, err); \
       return __VA_ARGS__;               \
     }                                   \
   } while (0)
@@ -44,6 +49,7 @@ OpenSLESPlayer::OpenSLESPlayer(AudioManager* audio_manager)
       playing_(false),
       bytes_per_buffer_(0),
       buffer_index_(0),
+      engine_object_(nullptr),
       engine_(nullptr),
       player_(nullptr),
       simple_buffer_queue_(nullptr),
@@ -67,7 +73,7 @@ OpenSLESPlayer::~OpenSLESPlayer() {
   DestroyAudioPlayer();
   DestroyMix();
   DestroyEngine();
-  RTC_DCHECK(!engine_object_.Get());
+  RTC_DCHECK(!engine_object_);
   RTC_DCHECK(!engine_);
   RTC_DCHECK(!output_mix_.Get());
   RTC_DCHECK(!player_);
@@ -78,6 +84,32 @@ OpenSLESPlayer::~OpenSLESPlayer() {
 int OpenSLESPlayer::Init() {
   ALOGD("Init%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
+
+  /* Try to dynamically open the OpenSLES library */
+  opensles_lib_ = dlopen("libOpenSLES.so", RTLD_LAZY);
+  if (!opensles_lib_) {
+    ALOGE("failed to dlopen OpenSLES library");
+    return -1;
+  }
+
+  slCreateEngine_ = (slCreateEngine_t)dlsym(opensles_lib_, "slCreateEngine");
+  SL_IID_ENGINE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ENGINE");
+  SL_IID_ANDROIDCONFIGURATION_ =
+    *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDCONFIGURATION");
+  SL_IID_BUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_BUFFERQUEUE");
+  SL_IID_VOLUME_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_VOLUME");
+  SL_IID_PLAY_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_PLAY");
+
+  if (!slCreateEngine ||
+      !SL_IID_ENGINE_ ||
+      !SL_IID_ANDROIDCONFIGURATION_ ||
+      !SL_IID_BUFFERQUEUE_ ||
+      !SL_IID_VOLUME_ ||
+      !SL_IID_PLAY_) {
+    ALOGE("failed to links to SLES library");
+    return -1;
+  }
+
   return 0;
 }
 
@@ -266,29 +298,40 @@ void OpenSLESPlayer::AllocateDataBuffers() {
 bool OpenSLESPlayer::CreateEngine() {
   ALOGD("CreateEngine");
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  if (engine_object_.Get())
+  if (engine_object_) {
     return true;
+  }
   RTC_DCHECK(!engine_);
   const SLEngineOption option[] = {
     {SL_ENGINEOPTION_THREADSAFE, static_cast<SLuint32>(SL_BOOLEAN_TRUE)}};
-  RETURN_ON_ERROR(
-      slCreateEngine(engine_object_.Receive(), 1, option, 0, NULL, NULL),
-      false);
-  RETURN_ON_ERROR(
-      engine_object_->Realize(engine_object_.Get(), SL_BOOLEAN_FALSE), false);
-  RETURN_ON_ERROR(engine_object_->GetInterface(engine_object_.Get(),
-                                               SL_IID_ENGINE, &engine_),
+
+#ifndef MOZILLA_INTERNAL_API
+  RETURN_ON_ERROR(slCreateEngine_(&engine_object_, 1, option, 0, NULL, NULL),
                   false);
+  RETURN_ON_ERROR((*engine_object_)->Realize(engine_object_, SL_BOOLEAN_FALSE), false);
+#else
+  RETURN_ON_ERROR(mozilla_get_sles_engine(&engine_object_, 1, option),
+                  false);
+  RETURN_ON_ERROR(mozilla_realize_sles_engine(engine_object_), false);
+#endif
+  RETURN_ON_ERROR(
+    (*engine_object_)->GetInterface(engine_object_, SL_IID_ENGINE_, &engine_),
+    false);
+
   return true;
 }
 
 void OpenSLESPlayer::DestroyEngine() {
   ALOGD("DestroyEngine");
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  if (!engine_object_.Get())
+  if (!engine_object_)
     return;
   engine_ = nullptr;
-  engine_object_.Reset();
+#ifndef MOZILLA_INTERNAL_API
+  (*engine_object_)->Destroy(engine_object_);
+#else
+  mozilla_destroy_sles_engine(&engine_object_);
+#endif
 }
 
 bool OpenSLESPlayer::CreateMix() {
@@ -318,7 +361,7 @@ void OpenSLESPlayer::DestroyMix() {
 bool OpenSLESPlayer::CreateAudioPlayer() {
   ALOGD("CreateAudioPlayer");
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(engine_object_.Get());
+  RTC_DCHECK(engine_object_);
   RTC_DCHECK(output_mix_.Get());
   if (player_object_.Get())
     return true;
@@ -339,7 +382,7 @@ bool OpenSLESPlayer::CreateAudioPlayer() {
 
   // Define interfaces that we indend to use and realize.
   const SLInterfaceID interface_ids[] = {
-      SL_IID_ANDROIDCONFIGURATION, SL_IID_BUFFERQUEUE, SL_IID_VOLUME};
+      SL_IID_ANDROIDCONFIGURATION_, SL_IID_BUFFERQUEUE_, SL_IID_VOLUME_};
   const SLboolean interface_required[] = {
       SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
 
@@ -355,7 +398,7 @@ bool OpenSLESPlayer::CreateAudioPlayer() {
   SLAndroidConfigurationItf player_config;
   RETURN_ON_ERROR(
       player_object_->GetInterface(player_object_.Get(),
-                                   SL_IID_ANDROIDCONFIGURATION, &player_config),
+                                   SL_IID_ANDROIDCONFIGURATION_, &player_config),
       false);
   // Set audio player configuration to SL_ANDROID_STREAM_VOICE which
   // corresponds to android.media.AudioManager.STREAM_VOICE_CALL.
@@ -372,12 +415,12 @@ bool OpenSLESPlayer::CreateAudioPlayer() {
 
   // Get the SLPlayItf interface on the audio player.
   RETURN_ON_ERROR(
-      player_object_->GetInterface(player_object_.Get(), SL_IID_PLAY, &player_),
+      player_object_->GetInterface(player_object_.Get(), SL_IID_PLAY_, &player_),
       false);
 
   // Get the SLAndroidSimpleBufferQueueItf interface on the audio player.
   RETURN_ON_ERROR(
-      player_object_->GetInterface(player_object_.Get(), SL_IID_BUFFERQUEUE,
+      player_object_->GetInterface(player_object_.Get(), SL_IID_BUFFERQUEUE_,
                                    &simple_buffer_queue_),
       false);
 
@@ -390,13 +433,12 @@ bool OpenSLESPlayer::CreateAudioPlayer() {
 
   // Get the SLVolumeItf interface on the audio player.
   RETURN_ON_ERROR(player_object_->GetInterface(player_object_.Get(),
-                                               SL_IID_VOLUME, &volume_),
+                                               SL_IID_VOLUME_, &volume_),
                   false);
 
   // TODO(henrika): might not be required to set volume to max here since it
   // seems to be default on most devices. Might be required for unit tests.
   // RETURN_ON_ERROR((*volume_)->SetVolumeLevel(volume_, 0), false);
-
   return true;
 }
 
@@ -449,7 +491,7 @@ void OpenSLESPlayer::EnqueuePlayoutData() {
       (*simple_buffer_queue_)
           ->Enqueue(simple_buffer_queue_, audio_ptr, bytes_per_buffer_);
   if (SL_RESULT_SUCCESS != err) {
-    ALOGE("Enqueue failed: %d", err);
+    ALOGE("Enqueue failed: %ld", err);
   }
   buffer_index_ = (buffer_index_ + 1) % kNumOfOpenSLESBuffers;
 }
@@ -459,7 +501,7 @@ SLuint32 OpenSLESPlayer::GetPlayState() const {
   SLuint32 state;
   SLresult err = (*player_)->GetPlayState(player_, &state);
   if (SL_RESULT_SUCCESS != err) {
-    ALOGE("GetPlayState failed: %d", err);
+    ALOGE("GetPlayState failed: %ld", err);
   }
   return state;
 }

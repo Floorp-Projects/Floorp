@@ -34,6 +34,16 @@ const int16_t Dtmf_a_times2Tab32Khz[8]=
 	32462,32394, 32311, 32210, 31849, 31647, 31400, 31098
 };
 
+const int16_t Dtmf_a_times2Tab44_1Khz[8]=
+{
+  32607, 32571, 32527, 32474, 32283, 32176, 32045, 31885
+};
+
+const int16_t Dtmf_a_times2Tab48Khz[8]=
+{
+  32612, 32577, 32534, 32483, 32298, 32194, 32067, 31912
+};
+
 // Second table is sin(2*pi*f/fs) in Q14
 
 const int16_t Dtmf_ym2Tab8Khz[8]=
@@ -51,6 +61,16 @@ const int16_t Dtmf_ym2Tab16Khz[8]=
 const int16_t Dtmf_ym2Tab32Khz[8]=
 {
 	2235, 2468, 2728, 3010, 3853, 4249, 4685, 5164
+};
+
+const int16_t Dtmf_ym2Tab44_1Khz[8]=
+{
+  1624, 1794, 1984, 2190, 2808, 3100, 3422, 3777
+};
+
+const int16_t Dtmf_ym2Tab48Khz[8]=
+{
+  1599, 1766, 1953, 2156, 2765, 3052, 3369, 3719
 };
 
 const int16_t Dtmf_dBm0kHz[37]=
@@ -92,7 +112,9 @@ DtmfInband::SetSampleRate(uint16_t frequency)
 {
     if (frequency != 8000 &&
             frequency != 16000 &&
-            frequency != 32000)
+            frequency != 32000 &&
+            frequency != 44100 &&
+            frequency != 48000)
     {
         // invalid sample rate
         assert(false);
@@ -227,7 +249,7 @@ DtmfInband::IsAddingTone()
 }
 
 int
-DtmfInband::Get10msTone(int16_t output[320],
+DtmfInband::Get10msTone(int16_t output[MAX_DTMF_SAMPLERATE/100],
                         uint16_t& outputSizeInSamples)
 {
     CriticalSectionScoped lock(&_critSect);
@@ -267,7 +289,7 @@ DtmfInband::DtmfFix_generate(int16_t *decoded,
                              int16_t value,
                              int16_t volume,
                              int16_t frameLen,
-                             int16_t fs)
+                             uint16_t fs)
 {
     const int16_t *a_times2Tbl;
     const int16_t *y2_Table;
@@ -282,6 +304,12 @@ DtmfInband::DtmfFix_generate(int16_t *decoded,
     } else if (fs==32000) {
         a_times2Tbl=Dtmf_a_times2Tab32Khz;
         y2_Table=Dtmf_ym2Tab32Khz;
+    } else if (fs==44100) {
+        a_times2Tbl=Dtmf_a_times2Tab44_1Khz;
+        y2_Table=Dtmf_ym2Tab44_1Khz;
+    } else if (fs==48000) {
+        a_times2Tbl=Dtmf_a_times2Tab48Khz;
+        y2_Table=Dtmf_ym2Tab48Khz;
     } else {
         return(-1);
     }

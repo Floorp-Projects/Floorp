@@ -204,6 +204,7 @@
           'conditions': [
             ['os_posix==1', {
               'cflags': [ '-msse2', ],
+              'cflags_mozilla': ['-msse2',],
               'xcode_settings': {
                 'OTHER_CFLAGS': [ '-msse2', ],
               },

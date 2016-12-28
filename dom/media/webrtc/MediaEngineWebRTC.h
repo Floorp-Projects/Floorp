@@ -24,6 +24,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsRefPtrHashtable.h"
 
+#include "ipc/IPCMessageUtils.h"
 #include "VideoUtils.h"
 #include "MediaEngineCameraVideoSource.h"
 #include "VideoSegment.h"
@@ -36,6 +37,8 @@
 
 #include "MediaEngineWrapper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
+#include "CamerasChild.h"
+
 // WebRTC library includes follow
 #include "webrtc/common.h"
 // Audio Engine
@@ -52,11 +55,9 @@
 // Video Engine
 // conflicts with #include of scoped_ptr.h
 #undef FF
-#include "webrtc/video_engine/include/vie_base.h"
-#include "webrtc/video_engine/include/vie_codec.h"
-#include "webrtc/video_engine/include/vie_render.h"
-#include "webrtc/video_engine/include/vie_capture.h"
-#include "CamerasChild.h"
+
+// WebRTC imports
+#include "webrtc/modules/video_capture/video_capture_defines.h"
 
 #include "NullTransport.h"
 #include "AudioOutputObserver.h"
@@ -276,10 +277,10 @@ public:
 #endif
 
     if (mInUseCount == 0) {
-      ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
-      ptrVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
-      if (ptrVoERender) {
-        ptrVoERender->SetExternalRecordingStatus(true);
+      ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoEXMedia;
+      ptrVoEXMedia = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
+      if (ptrVoEXMedia) {
+        ptrVoEXMedia->SetExternalRecordingStatus(true);
       }
       mAnyInUse = true;
     }
@@ -495,9 +496,9 @@ public:
       const nsString& aDeviceId) const override;
 
   // VoEMediaProcess.
-  void Process(int channel, webrtc::ProcessingTypes type,
-               int16_t audio10ms[], int length,
-               int samplingFreq, bool isStereo) override;
+  virtual void Process(int channel, webrtc::ProcessingTypes type,
+                       int16_t audio10ms[], size_t length,
+                       int samplingFreq, bool isStereo) override;
 
   void Shutdown() override;
 

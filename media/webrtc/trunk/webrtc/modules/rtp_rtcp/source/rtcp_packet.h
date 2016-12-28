@@ -185,7 +185,7 @@ class SenderReport : public RtcpPacket {
  private:
   static const int kMaxNumberOfReportBlocks = 0x1f;
 
-  size_t BlockLength() const {
+  size_t BlockLength() const override {
     const size_t kSrHeaderLength = 8;
     const size_t kSenderInfoLength = 20;
     return kSrHeaderLength + kSenderInfoLength +
@@ -247,7 +247,7 @@ class Sdes : public RtcpPacket {
  private:
   static const int kMaxNumberOfChunks = 0x1f;
 
-  size_t BlockLength() const;
+  size_t BlockLength() const override;
 
   std::vector<Chunk> chunks_;
 
@@ -295,7 +295,7 @@ class Rpsi : public RtcpPacket {
               RtcpPacket::PacketReadyCallback* callback) const override;
 
  private:
-  size_t BlockLength() const {
+  size_t BlockLength() const override {
     size_t fci_length = 2 + (rpsi_.NumberOfValidBits / 8) + padding_bytes_;
     return kCommonFbFmtLength + fci_length;
   }
@@ -344,7 +344,7 @@ class Fir : public RtcpPacket {
               RtcpPacket::PacketReadyCallback* callback) const override;
 
  private:
-  size_t BlockLength() const {
+  size_t BlockLength() const override {
     const size_t kFciLength = 8;
     return kCommonFbFmtLength + kFciLength;
   }
@@ -399,7 +399,7 @@ class Remb : public RtcpPacket {
  private:
   static const int kMaxNumberOfSsrcs = 0xff;
 
-  size_t BlockLength() const {
+  size_t BlockLength() const override {
     return (remb_item_.NumberOfSSRCs + 5) * 4;
   }
 
@@ -452,7 +452,7 @@ class Xr : public RtcpPacket {
   static const int kMaxNumberOfDlrrBlocks = 50;
   static const int kMaxNumberOfVoipMetricBlocks = 50;
 
-  size_t BlockLength() const {
+  size_t BlockLength() const override {
     const size_t kXrHeaderLength = 8;
     return kXrHeaderLength + RrtrLength() + DlrrLength() + VoipMetricLength();
   }

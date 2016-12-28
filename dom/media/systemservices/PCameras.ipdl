@@ -10,7 +10,8 @@ using mozilla::camera::CaptureEngine from "mozilla/media/CamerasTypes.h";
 namespace mozilla {
 namespace camera {
 
-struct CaptureCapability
+// IPC analog for webrtc::VideoCaptureCapability
+struct VideoCaptureCapability
 {
   int width;
   int height;
@@ -21,6 +22,32 @@ struct CaptureCapability
   bool interlaced;
 };
 
+
+// IPC analog for webrtc::VideoFrame
+// the described buffer is transported seperately in a Shmem
+// See VideoFrameUtils.h
+struct VideoFrameProperties
+{
+  // Size of image data within the ShMem,
+  // the ShMem is at least this large
+  size_t bufferSize;
+  // From webrtc::VideoFrame
+  uint32_t timeStamp;
+  int64_t ntpTimeMs;
+  int64_t renderTimeMs;
+  // See webrtc/**/rotation.h
+  int rotation;
+  int yAllocatedSize;
+  int uAllocatedSize;
+  int vAllocatedSize;
+  // From webrtc::VideoFrameBuffer
+  int width;
+  int height;
+  int yStride;
+  int uStride;
+  int vStride;
+};
+
 async protocol PCameras
 {
   manager PBackground;
@@ -28,14 +55,13 @@ async protocol PCameras
 child:
   async FrameSizeChange(CaptureEngine capEngine, int cap_id, int w, int h);
   // transfers ownership of |buffer| from parent to child
-  async DeliverFrame(CaptureEngine capEngine, int cap_id,
-                     Shmem buffer, size_t size, uint32_t time_stamp,
-                     int64_t ntp_time, int64_t render_time);
+  async DeliverFrame(CaptureEngine capEngine, int streamId,
+                     Shmem buffer, VideoFrameProperties props);
   async DeviceChange();
   async ReplyNumberOfCaptureDevices(int numdev);
   async ReplyNumberOfCapabilities(int numdev);
   async ReplyAllocateCaptureDevice(int numdev);
-  async ReplyGetCaptureCapability(CaptureCapability cap);
+  async ReplyGetCaptureCapability(VideoCaptureCapability cap);
   async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id, bool scary);
   async ReplyFailure();
   async ReplySuccess();
@@ -45,12 +71,13 @@ parent:
   async NumberOfCaptureDevices(CaptureEngine engine);
   async NumberOfCapabilities(CaptureEngine engine, nsCString deviceUniqueIdUTF8);
 
-  async GetCaptureCapability(CaptureEngine engine, nsCString unique_idUTF8, int capability_number);
+  async GetCaptureCapability(CaptureEngine engine, nsCString unique_idUTF8,
+                             int capability_number);
   async GetCaptureDevice(CaptureEngine engine, int num);
 
   async AllocateCaptureDevice(CaptureEngine engine, nsCString unique_idUTF8, nsCString origin);
   async ReleaseCaptureDevice(CaptureEngine engine, int numdev);
-  async StartCapture(CaptureEngine engine, int numdev, CaptureCapability capability);
+  async StartCapture(CaptureEngine engine, int numdev, VideoCaptureCapability capability);
   async StopCapture(CaptureEngine engine, int numdev);
   // transfers frame back
   async ReleaseFrame(Shmem s);

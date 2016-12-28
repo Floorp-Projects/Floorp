@@ -57,7 +57,7 @@ bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return _strnicmp(str1, str2, length) == 0;
 }
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return strncasecmp(str1, str2, length) == 0;
@@ -176,6 +176,9 @@ bool RtpHeaderParser::ParseRtcp(RTPHeader* header) const {
   header->payloadType  = PT;
   header->ssrc         = SSRC;
   header->headerLength = 4 + (len << 2);
+  if (header->headerLength > static_cast<size_t>(length)) {
+    return false;
+  }
 
   return true;
 }
@@ -213,12 +216,6 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
     return false;
   }
 
-  const size_t CSRCocts = CC * 4;
-
-  if ((ptr + CSRCocts) > _ptrRTPDataEnd) {
-    return false;
-  }
-
   header->markerBit      = M;
   header->payloadType    = PT;
   header->sequenceNumber = sequenceNumber;
@@ -227,13 +224,20 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
   header->numCSRCs       = CC;
   header->paddingLength  = P ? *(_ptrRTPDataEnd - 1) : 0;
 
+  // 12 == sizeof(RFC rtp header) == kRtpMinParseLength, each CSRC=4 bytes
+  header->headerLength   = 12 + (CC * 4);
+  // not a full validation, just safety against underflow.  Padding must
+  // start after the header.  We can have 0 payload bytes left, note.
+  if (header->paddingLength + header->headerLength > (size_t) length) {
+    return false;
+  }
+
   for (uint8_t i = 0; i < CC; ++i) {
     uint32_t CSRC = ByteReader<uint32_t>::ReadBigEndian(ptr);
     ptr += 4;
     header->arrOfCSRCs[i] = CSRC;
   }
-
-  header->headerLength   = 12 + CSRCocts;
+  assert((ptr - _ptrRTPDataBegin) == (ptrdiff_t) header->headerLength);
 
   // If in effect, MAY be omitted for those packets for which the offset
   // is zero.
@@ -253,6 +257,10 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
   header->extension.hasVideoRotation = false;
   header->extension.videoRotation = 0;
 
+  // May not be present in packet.
+  header->extension.hasRID = false;
+  header->extension.rid = NULL;
+
   if (X) {
     /* RTP header extension, RFC 3550.
      0                   1                   2                   3
@@ -263,8 +271,9 @@ bool RtpHeaderParser::Parse(RTPHeader* header,
     |                        header extension                       |
     |                             ....                              |
     */
-    const ptrdiff_t remain = _ptrRTPDataEnd - ptr;
-    if (remain < 4) {
+    // earlier test ensures we have at least paddingLength bytes left
+    const ptrdiff_t remain = (_ptrRTPDataEnd - ptr) - header->paddingLength;
+    if (remain < 4) { // minimum header extension length = 32 bits
       return false;
     }
 
@@ -327,7 +336,7 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
     RTPExtensionType type;
     if (ptrExtensionMap->GetType(id, &type) != 0) {
       // If we encounter an unknown extension, just skip over it.
-      LOG(LS_WARNING) << "Failed to find extension id: " << id;
+      LOG(LS_INFO) << "Failed to find extension id: " << id;
     } else {
       switch (type) {
         case kRtpExtensionTransmissionTimeOffset: {
@@ -410,6 +419,21 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           sequence_number += ptr[1];
           header->extension.transportSequenceNumber = sequence_number;
           header->extension.hasTransportSequenceNumber = true;
+          break;
+        }
+        case kRtpExtensionRtpStreamId: {
+          //   0                   1                   2
+          //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+          //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+          //  |  ID   | L=?   |UTF-8 RID value......          |...
+          //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+          // TODO(jesup) - avoid allocating on each packet - high watermark the RID buffer?
+          char* ptrRID = new char[len+1];
+          memcpy(ptrRID, ptr, len);
+          ptrRID[len] = '\0';
+          header->extension.rid = ptrRID;
+          header->extension.hasRID = true;
           break;
         }
         default: {

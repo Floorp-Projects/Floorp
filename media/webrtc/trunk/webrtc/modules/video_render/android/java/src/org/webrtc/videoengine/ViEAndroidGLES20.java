@@ -24,23 +24,26 @@ import android.content.pm.ConfigurationInfo;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 
-import org.webrtc.Logging;
+import android.util.Log;
+
+import org.mozilla.gecko.annotation.WebRTCJNITarget;
 
 public class ViEAndroidGLES20 extends GLSurfaceView
         implements GLSurfaceView.Renderer {
-    private static String TAG = "WEBRTC-JR";
+    static final String TAG = "WEBRTC-JR";
     private static final boolean DEBUG = false;
     // True if onSurfaceCreated has been called.
-    private boolean surfaceCreated = false;
-    private boolean openGLCreated = false;
+    private boolean surfaceCreated;
+    private boolean openGLCreated;
     // True if NativeFunctionsRegistered has been called.
-    private boolean nativeFunctionsRegisted = false;
+    private boolean nativeFunctionsRegisted;
     private ReentrantLock nativeFunctionLock = new ReentrantLock();
     // Address of Native object that will do the drawing.
-    private long nativeObject = 0;
-    private int viewWidth = 0;
-    private int viewHeight = 0;
+    private long nativeObject;
+    private int viewWidth;
+    private int viewHeight;
 
+    @WebRTCJNITarget
     public static boolean UseOpenGL2(Object renderWindow) {
         return ViEAndroidGLES20.class.isInstance(renderWindow);
     }
@@ -50,6 +53,7 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         init(false, 0, 0);
     }
 
+    @WebRTCJNITarget
     public ViEAndroidGLES20(Context context, boolean translucent,
             int depth, int stencil) {
         super(context);
@@ -86,7 +90,7 @@ public class ViEAndroidGLES20 extends GLSurfaceView
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
         public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
-            Logging.w(TAG, "creating OpenGL ES 2.0 context");
+            Log.w(TAG, "creating OpenGL ES 2.0 context");
             checkEglError("Before eglCreateContext", egl);
             int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
             EGLContext context = egl.eglCreateContext(display, eglConfig,
@@ -100,10 +104,10 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         }
     }
 
-    private static void checkEglError(String prompt, EGL10 egl) {
+    static void checkEglError(String prompt, EGL10 egl) {
         int error;
         while ((error = egl.eglGetError()) != EGL10.EGL_SUCCESS) {
-            Logging.e(TAG, String.format("%s: EGL error: 0x%x", prompt, error));
+            Log.e(TAG, String.format("%s: EGL error: 0x%x", prompt, error));
         }
     }
 
@@ -194,9 +198,9 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         private void printConfigs(EGL10 egl, EGLDisplay display,
             EGLConfig[] configs) {
             int numConfigs = configs.length;
-            Logging.w(TAG, String.format("%d configurations", numConfigs));
+            Log.w(TAG, String.format("%d configurations", numConfigs));
             for (int i = 0; i < numConfigs; i++) {
-                Logging.w(TAG, String.format("Configuration %d:\n", i));
+                Log.w(TAG, String.format("Configuration %d:\n", i));
                 printConfig(egl, display, configs[i]);
             }
         }
@@ -278,9 +282,9 @@ public class ViEAndroidGLES20 extends GLSurfaceView
                 int attribute = attributes[i];
                 String name = names[i];
                 if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
-                    Logging.w(TAG, String.format("  %s: %d\n", name, value[0]));
+                    Log.w(TAG, String.format("  %s: %d\n", name, value[0]));
                 } else {
-                    // Logging.w(TAG, String.format("  %s: failed\n", name));
+                    // Log.w(TAG, String.format("  %s: failed\n", name));
                     while (egl.eglGetError() != EGL10.EGL_SUCCESS);
                 }
             }
@@ -342,6 +346,7 @@ public class ViEAndroidGLES20 extends GLSurfaceView
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     }
 
+    @WebRTCJNITarget
     public void RegisterNativeObject(long nativeObject) {
         nativeFunctionLock.lock();
         this.nativeObject = nativeObject;
@@ -349,6 +354,7 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         nativeFunctionLock.unlock();
     }
 
+    @WebRTCJNITarget
     public void DeRegisterNativeObject() {
         nativeFunctionLock.lock();
         nativeFunctionsRegisted = false;
@@ -357,6 +363,7 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         nativeFunctionLock.unlock();
     }
 
+    @WebRTCJNITarget
     public void ReDraw() {
         if(surfaceCreated) {
             // Request the renderer to redraw using the render thread context.

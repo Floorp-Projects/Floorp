@@ -326,7 +326,7 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
   }
 
   if (!audioproc) {
-    audioproc = AudioProcessing::Create();
+    audioproc = AudioProcessing::Create(shared_->channel_manager().config_);
     if (!audioproc) {
       LOG(LS_ERROR) << "Failed to create AudioProcessing.";
       shared_->SetLastError(VE_NO_MEMORY);
@@ -587,6 +587,9 @@ int VoEBaseImpl::GetVersion(char version[1024]) {
   }
 
   std::string versionString = VoiceEngine::GetVersionString();
+#ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
+  versionString += "External recording and playout build";
+#endif
   RTC_DCHECK_GT(1024u, versionString.size() + 1);
   char* end = std::copy(versionString.cbegin(), versionString.cend(), version);
   end[0] = '\n';
@@ -598,13 +601,16 @@ int VoEBaseImpl::LastError() { return (shared_->statistics().LastError()); }
 
 int32_t VoEBaseImpl::StartPlayout() {
   if (!shared_->audio_device()->Playing()) {
-    if (shared_->audio_device()->InitPlayout() != 0) {
-      LOG_F(LS_ERROR) << "Failed to initialize playout";
-      return -1;
-    }
-    if (shared_->audio_device()->StartPlayout() != 0) {
-      LOG_F(LS_ERROR) << "Failed to start playout";
-      return -1;
+    if (!shared_->ext_playout())
+    {
+      if (shared_->audio_device()->InitPlayout() != 0) {
+        LOG_F(LS_ERROR) << "Failed to initialize playout";
+        return -1;
+      }
+      if (shared_->audio_device()->StartPlayout() != 0) {
+        LOG_F(LS_ERROR) << "Failed to start playout";
+        return -1;
+      }
     }
   }
   return 0;
@@ -624,13 +630,16 @@ int32_t VoEBaseImpl::StopPlayout() {
 
 int32_t VoEBaseImpl::StartSend() {
   if (!shared_->audio_device()->Recording()) {
-    if (shared_->audio_device()->InitRecording() != 0) {
-      LOG_F(LS_ERROR) << "Failed to initialize recording";
-      return -1;
-    }
-    if (shared_->audio_device()->StartRecording() != 0) {
-      LOG_F(LS_ERROR) << "Failed to start recording";
-      return -1;
+    if (!shared_->ext_recording())
+    {
+      if (shared_->audio_device()->InitRecording() != 0) {
+        LOG_F(LS_ERROR) << "Failed to initialize recording";
+        return -1;
+      }
+      if (shared_->audio_device()->StartRecording() != 0) {
+        LOG_F(LS_ERROR) << "Failed to start recording";
+        return -1;
+      }
     }
   }
   return 0;

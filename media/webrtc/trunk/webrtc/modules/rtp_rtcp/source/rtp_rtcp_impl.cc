@@ -326,6 +326,11 @@ void ModuleRtpRtcpImpl::SetCsrcs(const std::vector<uint32_t>& csrcs) {
   rtp_sender_.SetCsrcs(csrcs);
 }
 
+int32_t ModuleRtpRtcpImpl::SetRID(const char *rid) {
+  //XXX rtcp_sender_.SetRID(rid);
+  return rtp_sender_.SetRID(rid);
+}
+
 // TODO(pbos): Handle media and RTX streams separately (separate RTCP
 // feedbacks).
 RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {
@@ -628,6 +633,17 @@ void ModuleRtpRtcpImpl::GetRtpPacketLossStats(
         stats_source->GetMultipleLossPacketCount();
   }
 }
+ 
+int32_t
+ModuleRtpRtcpImpl::GetReportBlockInfo(const uint32_t remote_ssrc,
+                                      uint32_t* ntp_high,
+                                      uint32_t* ntp_low,
+                                      uint32_t* packets_received,
+                                      uint64_t* octets_received) const {
+  return rtcp_receiver_.GetReportBlockInfo(remote_ssrc,
+                                           ntp_high, ntp_low,
+                                           packets_received, octets_received);
+}
 
 int32_t ModuleRtpRtcpImpl::RemoteRTCPStat(RTCPSenderInfo* sender_info) {
   return rtcp_receiver_.SenderInfoReceived(sender_info);
@@ -897,9 +913,14 @@ int32_t ModuleRtpRtcpImpl::SendRTCPReferencePictureSelection(
       GetFeedbackState(), kRtcpRpsi, 0, 0, false, picture_id);
 }
 
-int64_t ModuleRtpRtcpImpl::SendTimeOfSendReport(
-    const uint32_t send_report) {
-  return rtcp_sender_.SendTimeOfSendReport(send_report);
+bool ModuleRtpRtcpImpl::GetSendReportMetadata(const uint32_t send_report,
+                                              uint64_t *time_of_send,
+                                              uint32_t *packet_count,
+                                              uint64_t *octet_count) {
+  return rtcp_sender_.GetSendReportMetadata(send_report,
+                                            time_of_send,
+                                            packet_count,
+                                            octet_count);
 }
 
 bool ModuleRtpRtcpImpl::SendTimeOfXrRrReport(

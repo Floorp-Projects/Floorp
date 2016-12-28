@@ -53,3 +53,175 @@ TEST_F(HardwareTest, AbleToQueryForDevices) {
       0, device_name, guid_name));
 }
 #endif
+
+// Flakily hangs on Windows: code.google.com/p/webrtc/issues/detail?id=2179.
+TEST_F(HardwareTest,
+       DISABLED_ON_WIN(BuiltInWasapiAECWorksForAudioWindowsCoreAudioLayer)) {
+#ifdef WEBRTC_IOS
+  // Ensure the sound device is reset on iPhone.
+  EXPECT_EQ(0, voe_hardware_->ResetAudioDevice());
+  Sleep(2000);
+#endif
+  EXPECT_EQ(0, voe_base_->StopSend(channel_));
+  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
+
+  webrtc::AudioLayers given_layer;
+  EXPECT_EQ(0, voe_hardware_->GetAudioDeviceLayer(given_layer));
+  if (given_layer != webrtc::kAudioWindowsCore) {
+    // Not Windows Audio Core - then it shouldn't work.
+    EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(true));
+    EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(false));
+    return;
+  }
+
+  TEST_LOG("Testing AEC for Audio Windows Core.\n");
+  EXPECT_EQ(0, voe_base_->StartSend(channel_));
+
+  // Can't be set after StartSend().
+  EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(true));
+  EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(false));
+
+  EXPECT_EQ(0, voe_base_->StopSend(channel_));
+  EXPECT_EQ(0, voe_hardware_->EnableBuiltInAEC(true));
+
+  // Can't be called before StartPlayout().
+  EXPECT_EQ(-1, voe_base_->StartSend(channel_));
+
+  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
+  EXPECT_EQ(0, voe_base_->StartSend(channel_));
+  TEST_LOG("Processing capture data with built-in AEC...\n");
+  Sleep(2000);
+
+  TEST_LOG("Looping through capture devices...\n");
+  int num_devs = 0;
+  char dev_name[128] = { 0 };
+  char guid_name[128] = { 0 };
+  EXPECT_EQ(0, voe_hardware_->GetNumOfRecordingDevices(num_devs));
+  for (int dev_index = 0; dev_index < num_devs; ++dev_index) {
+    EXPECT_EQ(0, voe_hardware_->GetRecordingDeviceName(dev_index,
+                                                       dev_name,
+                                                       guid_name));
+    TEST_LOG("%d: %s\n", dev_index, dev_name);
+    EXPECT_EQ(0, voe_hardware_->SetRecordingDevice(dev_index));
+    Sleep(2000);
+  }
+
+  EXPECT_EQ(0, voe_hardware_->SetPlayoutDevice(-1));
+  EXPECT_EQ(0, voe_hardware_->SetRecordingDevice(-1));
+
+  TEST_LOG("Looping through render devices, restarting for each "
+      "device...\n");
+  EXPECT_EQ(0, voe_hardware_->GetNumOfPlayoutDevices(num_devs));
+  for (int dev_index = 0; dev_index < num_devs; ++dev_index) {
+    EXPECT_EQ(0, voe_hardware_->GetPlayoutDeviceName(dev_index,
+                                                     dev_name,
+                                                     guid_name));
+    TEST_LOG("%d: %s\n", dev_index, dev_name);
+    EXPECT_EQ(0, voe_hardware_->SetPlayoutDevice(dev_index));
+    Sleep(2000);
+  }
+
+  TEST_LOG("Using default devices...\n");
+  EXPECT_EQ(0, voe_hardware_->SetRecordingDevice(-1));
+  EXPECT_EQ(0, voe_hardware_->SetPlayoutDevice(-1));
+  Sleep(2000);
+
+  // Possible, but not recommended before StopSend().
+  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
+
+  EXPECT_EQ(0, voe_base_->StopSend(channel_));
+  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
+  Sleep(2000);  // To verify that there is no garbage audio.
+
+  TEST_LOG("Disabling built-in AEC.\n");
+  EXPECT_EQ(0, voe_hardware_->EnableBuiltInAEC(false));
+
+  EXPECT_EQ(0, voe_base_->StartSend(channel_));
+  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
+}
+
+// Flakily hangs on Windows: code.google.com/p/webrtc/issues/detail?id=2179.
+TEST_F(HardwareTest,
+       DISABLED_ON_WIN(BuiltInWasapiAECWorksForAudioWindowsCoreAudioLayer)) {
+#ifdef WEBRTC_IOS
+  // Ensure the sound device is reset on iPhone.
+  EXPECT_EQ(0, voe_hardware_->ResetAudioDevice());
+  Sleep(2000);
+#endif
+  EXPECT_EQ(0, voe_base_->StopSend(channel_));
+  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
+
+  webrtc::AudioLayers given_layer;
+  EXPECT_EQ(0, voe_hardware_->GetAudioDeviceLayer(given_layer));
+  if (given_layer != webrtc::kAudioWindowsCore) {
+    // Not Windows Audio Core - then it shouldn't work.
+    EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(true));
+    EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(false));
+    return;
+  }
+
+  TEST_LOG("Testing AEC for Audio Windows Core.\n");
+  EXPECT_EQ(0, voe_base_->StartSend(channel_));
+
+  // Can't be set after StartSend().
+  EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(true));
+  EXPECT_EQ(-1, voe_hardware_->EnableBuiltInAEC(false));
+
+  EXPECT_EQ(0, voe_base_->StopSend(channel_));
+  EXPECT_EQ(0, voe_hardware_->EnableBuiltInAEC(true));
+
+  // Can't be called before StartPlayout().
+  EXPECT_EQ(-1, voe_base_->StartSend(channel_));
+
+  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
+  EXPECT_EQ(0, voe_base_->StartSend(channel_));
+  TEST_LOG("Processing capture data with built-in AEC...\n");
+  Sleep(2000);
+
+  TEST_LOG("Looping through capture devices...\n");
+  int num_devs = 0;
+  char dev_name[128] = { 0 };
+  char guid_name[128] = { 0 };
+  EXPECT_EQ(0, voe_hardware_->GetNumOfRecordingDevices(num_devs));
+  for (int dev_index = 0; dev_index < num_devs; ++dev_index) {
+    EXPECT_EQ(0, voe_hardware_->GetRecordingDeviceName(dev_index,
+                                                       dev_name,
+                                                       guid_name));
+    TEST_LOG("%d: %s\n", dev_index, dev_name);
+    EXPECT_EQ(0, voe_hardware_->SetRecordingDevice(dev_index));
+    Sleep(2000);
+  }
+
+  EXPECT_EQ(0, voe_hardware_->SetPlayoutDevice(-1));
+  EXPECT_EQ(0, voe_hardware_->SetRecordingDevice(-1));
+
+  TEST_LOG("Looping through render devices, restarting for each "
+      "device...\n");
+  EXPECT_EQ(0, voe_hardware_->GetNumOfPlayoutDevices(num_devs));
+  for (int dev_index = 0; dev_index < num_devs; ++dev_index) {
+    EXPECT_EQ(0, voe_hardware_->GetPlayoutDeviceName(dev_index,
+                                                     dev_name,
+                                                     guid_name));
+    TEST_LOG("%d: %s\n", dev_index, dev_name);
+    EXPECT_EQ(0, voe_hardware_->SetPlayoutDevice(dev_index));
+    Sleep(2000);
+  }
+
+  TEST_LOG("Using default devices...\n");
+  EXPECT_EQ(0, voe_hardware_->SetRecordingDevice(-1));
+  EXPECT_EQ(0, voe_hardware_->SetPlayoutDevice(-1));
+  Sleep(2000);
+
+  // Possible, but not recommended before StopSend().
+  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
+
+  EXPECT_EQ(0, voe_base_->StopSend(channel_));
+  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
+  Sleep(2000);  // To verify that there is no garbage audio.
+
+  TEST_LOG("Disabling built-in AEC.\n");
+  EXPECT_EQ(0, voe_hardware_->EnableBuiltInAEC(false));
+
+  EXPECT_EQ(0, voe_base_->StartSend(channel_));
+  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
+}
