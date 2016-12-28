@@ -6,6 +6,9 @@
 #ifndef AndroidUiThread_h__
 #define AndroidUiThread_h__
 
+#include <mozilla/RefPtr.h>
+#include <nsThread.h>
+
 class MessageLoop;
 
 namespace mozilla {
@@ -14,6 +17,7 @@ void CreateAndroidUiThread();
 void DestroyAndroidUiThread();
 
 MessageLoop* GetAndroidUiThreadMessageLoop();
+RefPtr<nsThread> GetAndroidUiThread();
 
 } // namespace mozilla
 
