@@ -1347,6 +1347,12 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     JS::Rooted<JSObject*> dot_prototype(cx, &desc.value().toObject());
 
     JS::Rooted<JSObject*> proto(cx, dom_obj);
+    JSAutoCompartment ac(cx, proto);
+
+    if (!JS_WrapObject(cx, &dot_prototype)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     for (;;) {
       if (!JS_GetPrototype(cx, proto, &proto)) {
         return NS_ERROR_UNEXPECTED;
