@@ -339,7 +339,7 @@ InstantiateDecoder(const MediaContentType& aType,
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
-    decoder = new AndroidMediaDecoder(aOwner, aType.Type().AsString());
+    decoder = new AndroidMediaDecoder(aOwner, aType);
     return decoder.forget();
   }
 #endif
@@ -418,7 +418,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
-    decoderReader = new AndroidMediaReader(aDecoder, aType);
+    decoderReader = new AndroidMediaReader(aDecoder, *type);
   } else
 #endif
   if (WebMDecoder::IsSupportedType(*type)) {
