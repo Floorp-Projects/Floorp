@@ -130,7 +130,7 @@ def get_keyed_by(item, field, item_name, subfield=None):
     if item[keyed_by] in values:
         return values[item[keyed_by]]
 
-    matches = [(k,v )for k, v in values.iteritems() if re.match(k, item[keyed_by])]
+    matches = [(k, v) for k, v in values.iteritems() if re.match(k, item[keyed_by])]
     if len(matches) > 1:
         raise Exception(
             "Multiple matching values for {} {!r} found while determining item {} in {}".format(
