@@ -778,52 +778,64 @@ DrainJobQueue(JSContext* cx)
     if (sc->quitting || sc->drainingJobQueue)
         return true;
 
-    // Wait for any outstanding async tasks to finish so that the
-    // finishedAsyncTasks list is fixed.
     while (true) {
-        AutoLockHelperThreadState lock;
-        if (!sc->asyncTasks.lock()->outstanding)
-            break;
-        HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
-    }
-
-    // Lock the whole time while copying back the asyncTasks finished queue so
-    // that any new tasks created during finish() cannot racily join the job
-    // queue.  Call finish() only thereafter, to avoid a circular mutex
-    // dependency (see also bug 1297901).
-    Vector<JS::AsyncTask*> finished(cx);
-    {
-        ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
-        finished = Move(asyncTasks->finished);
-        asyncTasks->finished.clear();
-    }
-
-    for (JS::AsyncTask* task : finished)
-        task->finish(cx);
-
-    // It doesn't make sense for job queue draining to be reentrant. At the
-    // same time we don't want to assert against it, because that'd make
-    // drainJobQueue unsafe for fuzzers. We do want fuzzers to test this, so
-    // we simply ignore nested calls of drainJobQueue.
-    sc->drainingJobQueue = true;
-
-    RootedObject job(cx);
-    JS::HandleValueArray args(JS::HandleValueArray::empty());
-    RootedValue rval(cx);
-    // Execute jobs in a loop until we've reached the end of the queue.
-    // Since executing a job can trigger enqueuing of additional jobs,
-    // it's crucial to re-check the queue length during each iteration.
-    for (size_t i = 0; i < sc->jobQueue.length(); i++) {
-        job = sc->jobQueue[i];
-        AutoCompartment ac(cx, job);
-        {
-            AutoReportException are(cx);
-            JS::Call(cx, UndefinedHandleValue, job, args, &rval);
+        // Wait for any outstanding async tasks to finish so that the
+        // finishedAsyncTasks list is fixed.
+        while (true) {
+            AutoLockHelperThreadState lock;
+            if (!sc->asyncTasks.lock()->outstanding)
+                break;
+            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
         }
-        sc->jobQueue[i].set(nullptr);
+
+        // Lock the whole time while copying back the asyncTasks finished queue
+        // so that any new tasks created during finish() cannot racily join the
+        // job queue.  Call finish() only thereafter, to avoid a circular mutex
+        // dependency (see also bug 1297901).
+        Vector<JS::AsyncTask*> finished(cx);
+        {
+            ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
+            finished = Move(asyncTasks->finished);
+            asyncTasks->finished.clear();
+        }
+
+        for (JS::AsyncTask* task : finished)
+            task->finish(cx);
+
+        // It doesn't make sense for job queue draining to be reentrant. At the
+        // same time we don't want to assert against it, because that'd make
+        // drainJobQueue unsafe for fuzzers. We do want fuzzers to test this,
+        // so we simply ignore nested calls of drainJobQueue.
+        sc->drainingJobQueue = true;
+
+        RootedObject job(cx);
+        JS::HandleValueArray args(JS::HandleValueArray::empty());
+        RootedValue rval(cx);
+
+        // Execute jobs in a loop until we've reached the end of the queue.
+        // Since executing a job can trigger enqueuing of additional jobs,
+        // it's crucial to re-check the queue length during each iteration.
+        for (size_t i = 0; i < sc->jobQueue.length(); i++) {
+            job = sc->jobQueue[i];
+            AutoCompartment ac(cx, job);
+            {
+                AutoReportException are(cx);
+                JS::Call(cx, UndefinedHandleValue, job, args, &rval);
+            }
+            sc->jobQueue[i].set(nullptr);
+        }
+        sc->jobQueue.clear();
+        sc->drainingJobQueue = false;
+
+        // It's possible a job added an async task, and it's also possible
+        // that task has already finished.
+        {
+            ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
+            if (asyncTasks->outstanding == 0 && asyncTasks->finished.length() == 0)
+                break;
+        }
     }
-    sc->jobQueue.clear();
-    sc->drainingJobQueue = false;
+
     return true;
 }
 
