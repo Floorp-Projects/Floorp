@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_WINDOWS_I_VIDEO_RENDER_WIN_H_
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_WINDOWS_I_VIDEO_RENDER_WIN_H_
 
-#include "webrtc/modules/video_render/include/video_render.h"
+#include "webrtc/modules/video_render/video_render.h"
 
 namespace webrtc {
 

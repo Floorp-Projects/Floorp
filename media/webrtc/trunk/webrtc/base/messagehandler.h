@@ -11,7 +11,10 @@
 #ifndef WEBRTC_BASE_MESSAGEHANDLER_H_
 #define WEBRTC_BASE_MESSAGEHANDLER_H_
 
+#include <utility>
+
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace rtc {
 
@@ -28,7 +31,7 @@ class MessageHandler {
   MessageHandler() {}
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(MessageHandler);
+  RTC_DISALLOW_COPY_AND_ASSIGN(MessageHandler);
 };
 
 // Helper class to facilitate executing a functor on a thread.
@@ -47,6 +50,20 @@ class FunctorMessageHandler : public MessageHandler {
   ReturnT result_;
 };
 
+// Specialization for rtc::scoped_ptr<ReturnT>.
+template <class ReturnT, class FunctorT>
+class FunctorMessageHandler<class rtc::scoped_ptr<ReturnT>, FunctorT>
+    : public MessageHandler {
+ public:
+  explicit FunctorMessageHandler(const FunctorT& functor) : functor_(functor) {}
+  virtual void OnMessage(Message* msg) { result_ = std::move(functor_()); }
+  rtc::scoped_ptr<ReturnT> result() { return std::move(result_); }
+
+ private:
+  FunctorT functor_;
+  rtc::scoped_ptr<ReturnT> result_;
+};
+
 // Specialization for ReturnT of void.
 template <class FunctorT>
 class FunctorMessageHandler<void, FunctorT> : public MessageHandler {
@@ -61,7 +78,6 @@ class FunctorMessageHandler<void, FunctorT> : public MessageHandler {
  private:
   FunctorT functor_;
 };
-
 
 } // namespace rtc
 

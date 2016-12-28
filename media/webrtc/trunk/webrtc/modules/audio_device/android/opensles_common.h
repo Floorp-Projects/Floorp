@@ -13,9 +13,41 @@
 
 #include <SLES/OpenSLES.h>
 
-namespace webrtc_opensl {
+#include "webrtc/base/checks.h"
+
+namespace webrtc {
 
 SLDataFormat_PCM CreatePcmConfiguration(int sample_rate);
+
+// Helper class for using SLObjectItf interfaces.
+template <typename SLType, typename SLDerefType>
+class ScopedSLObject {
+ public:
+  ScopedSLObject() : obj_(nullptr) {}
+
+  ~ScopedSLObject() { Reset(); }
+
+  SLType* Receive() {
+    RTC_DCHECK(!obj_);
+    return &obj_;
+  }
+
+  SLDerefType operator->() { return *obj_; }
+
+  SLType Get() const { return obj_; }
+
+  void Reset() {
+    if (obj_) {
+      (*obj_)->Destroy(obj_);
+      obj_ = nullptr;
+    }
+  }
+
+ private:
+  SLType obj_;
+};
+
+typedef ScopedSLObject<SLObjectItf, const SLObjectItf_*> ScopedSLObjectItf;
 
 }  // namespace webrtc_opensl
 

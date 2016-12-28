@@ -10,7 +10,7 @@ import("../build/webrtc.gni")
 
 config("common_video_config") {
   include_dirs = [
-    "interface",
+    "include",
     "libyuv/include",
   ]
 }
@@ -18,16 +18,18 @@ config("common_video_config") {
 source_set("common_video") {
   sources = [
     "i420_buffer_pool.cc",
-    "i420_video_frame.cc",
-    "interface/i420_video_frame.h",
-    "interface/i420_buffer_pool.h",
-    "interface/native_handle.h",
-    "interface/video_frame_buffer.h",
+    "include/i420_buffer_pool.h",
+    "include/incoming_video_stream.h",
+    "include/video_frame_buffer.h",
+    "incoming_video_stream.cc",
     "libyuv/include/scaler.h",
     "libyuv/include/webrtc_libyuv.h",
     "libyuv/scaler.cc",
     "libyuv/webrtc_libyuv.cc",
+    "video_frame.cc",
     "video_frame_buffer.cc",
+    "video_render_frames.cc",
+    "video_render_frames.h",
   ]
 
   include_dirs = [ "../modules/interface" ]
@@ -51,7 +53,9 @@ source_set("common_video") {
 
   if (rtc_build_libyuv) {
     deps += [ "$rtc_libyuv_dir" ]
-    public_deps = [ "$rtc_libyuv_dir" ]
+    public_deps = [
+      "$rtc_libyuv_dir",
+    ]
   } else {
     # Need to add a directory normally exported by libyuv.
     include_dirs += [ "$rtc_libyuv_dir/include" ]

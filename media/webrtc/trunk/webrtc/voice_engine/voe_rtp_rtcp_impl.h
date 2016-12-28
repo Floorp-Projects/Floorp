@@ -17,96 +17,76 @@
 
 namespace webrtc {
 
-class VoERTP_RTCPImpl : public VoERTP_RTCP
-{
-public:
-    // RTCP
-    virtual int SetRTCPStatus(int channel, bool enable);
+class VoERTP_RTCPImpl : public VoERTP_RTCP {
+ public:
+  // RTCP
+  int SetRTCPStatus(int channel, bool enable) override;
 
-    virtual int GetRTCPStatus(int channel, bool& enabled);
+  int GetRTCPStatus(int channel, bool& enabled) override;
 
-    virtual int SetRTCP_CNAME(int channel, const char cName[256]);
+  int SetRTCP_CNAME(int channel, const char cName[256]) override;
 
-    virtual int GetRemoteRTCP_CNAME(int channel, char cName[256]);
+  int GetRemoteRTCP_CNAME(int channel, char cName[256]) override;
 
-    virtual int GetRemoteRTCPReceiverInfo(int channel,
-                                          uint32_t& NTPHigh,
-                                          uint32_t& NTPLow,
-                                          uint32_t& receivedPacketCount,
-                                          uint64_t& receivedOctetCount,
-                                          uint32_t& jitter,
-                                          uint16_t& fractionLost,
-                                          uint32_t& cumulativeLost,
-                                          int32_t& rttMs);
+  int GetRemoteRTCPData(int channel,
+                        unsigned int& NTPHigh,
+                        unsigned int& NTPLow,
+                        unsigned int& timestamp,
+                        unsigned int& playoutTimestamp,
+                        unsigned int* jitter = NULL,
+                        unsigned short* fractionLost = NULL) override;
 
-    // SSRC
-    virtual int SetLocalSSRC(int channel, unsigned int ssrc);
+  // SSRC
+  int SetLocalSSRC(int channel, unsigned int ssrc) override;
 
-    virtual int GetLocalSSRC(int channel, unsigned int& ssrc);
+  int GetLocalSSRC(int channel, unsigned int& ssrc) override;
 
-    virtual int GetRemoteSSRC(int channel, unsigned int& ssrc);
+  int GetRemoteSSRC(int channel, unsigned int& ssrc) override;
 
-    // RTP Header Extension for Client-to-Mixer Audio Level Indication
-    virtual int SetSendAudioLevelIndicationStatus(int channel,
-                                                  bool enable,
-                                                  unsigned char id);
-    virtual int SetReceiveAudioLevelIndicationStatus(int channel,
-                                                     bool enable,
-                                                     unsigned char id);
+  // RTP Header Extension for Client-to-Mixer Audio Level Indication
+  int SetSendAudioLevelIndicationStatus(int channel,
+                                        bool enable,
+                                        unsigned char id) override;
+  int SetReceiveAudioLevelIndicationStatus(int channel,
+                                           bool enable,
+                                           unsigned char id) override;
 
-    // RTP Header Extension for Absolute Sender Time
-    virtual int SetSendAbsoluteSenderTimeStatus(int channel,
-                                                bool enable,
-                                                unsigned char id);
-    virtual int SetReceiveAbsoluteSenderTimeStatus(int channel,
-                                                   bool enable,
-                                                   unsigned char id);
+  // RTP Header Extension for Absolute Sender Time
+  int SetSendAbsoluteSenderTimeStatus(int channel,
+                                      bool enable,
+                                      unsigned char id) override;
+  int SetReceiveAbsoluteSenderTimeStatus(int channel,
+                                         bool enable,
+                                         unsigned char id) override;
 
-    // Statistics
-    virtual int GetRTPStatistics(int channel,
-                                 unsigned int& averageJitterMs,
-                                 unsigned int& maxJitterMs,
-                                 unsigned int& discardedPackets,
-                                 unsigned int& cumulativeLost);
+  // Statistics
+  int GetRTPStatistics(int channel,
+                       unsigned int& averageJitterMs,
+                       unsigned int& maxJitterMs,
+                       unsigned int& discardedPackets) override;
 
-    virtual int GetRTCPStatistics(int channel, CallStatistics& stats);
+  int GetRTCPStatistics(int channel, CallStatistics& stats) override;
 
-    virtual int GetRemoteRTCPReportBlocks(
-        int channel, std::vector<ReportBlock>* report_blocks);
+  int GetRemoteRTCPReportBlocks(
+      int channel,
+      std::vector<ReportBlock>* report_blocks) override;
 
-    // RED
-    virtual int SetREDStatus(int channel,
-                             bool enable,
-                             int redPayloadtype = -1);
+  // RED
+  int SetREDStatus(int channel, bool enable, int redPayloadtype = -1) override;
 
-    virtual int GetREDStatus(int channel, bool& enabled, int& redPayloadtype);
+  int GetREDStatus(int channel, bool& enabled, int& redPayloadtype) override;
 
-    //NACK
-    virtual int SetNACKStatus(int channel,
-                              bool enable,
-                              int maxNoPackets);
+  // NACK
+  int SetNACKStatus(int channel, bool enable, int maxNoPackets) override;
 
-    // Store RTP and RTCP packets and dump to file (compatible with rtpplay)
-    virtual int StartRTPDump(int channel,
-                             const char fileNameUTF8[1024],
-                             RTPDirections direction = kRtpIncoming);
+ protected:
+  VoERTP_RTCPImpl(voe::SharedData* shared);
+  ~VoERTP_RTCPImpl() override;
 
-    virtual int StopRTPDump(int channel,
-                            RTPDirections direction = kRtpIncoming);
-
-    virtual int RTPDumpIsActive(int channel,
-                                RTPDirections direction = kRtpIncoming);
-
-    virtual int SetVideoEngineBWETarget(int channel, ViENetwork* vie_network,
-                                        int video_channel);
-protected:
-    VoERTP_RTCPImpl(voe::SharedData* shared);
-    virtual ~VoERTP_RTCPImpl();
-
-private:
-    voe::SharedData* _shared;
+ private:
+  voe::SharedData* _shared;
 };
 
 }  // namespace webrtc
 
-#endif    // WEBRTC_VOICE_ENGINE_VOE_RTP_RTCP_IMPL_H
+#endif  // WEBRTC_VOICE_ENGINE_VOE_RTP_RTCP_IMPL_H

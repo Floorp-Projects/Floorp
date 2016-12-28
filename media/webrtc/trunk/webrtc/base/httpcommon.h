@@ -112,8 +112,8 @@ enum HttpHeader {
   HH_LAST = HH_WWW_AUTHENTICATE
 };
 
-const uint16 HTTP_DEFAULT_PORT = 80;
-const uint16 HTTP_SECURE_PORT = 443;
+const uint16_t HTTP_DEFAULT_PORT = 80;
+const uint16_t HTTP_SECURE_PORT = 443;
 
 //////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -132,14 +132,24 @@ bool FromString(HttpVerb& verb, const std::string& str);
 const char* ToString(HttpHeader header);
 bool FromString(HttpHeader& header, const std::string& str);
 
-inline bool HttpCodeIsInformational(uint32 code) { return ((code / 100) == 1); }
-inline bool HttpCodeIsSuccessful(uint32 code)    { return ((code / 100) == 2); }
-inline bool HttpCodeIsRedirection(uint32 code)   { return ((code / 100) == 3); }
-inline bool HttpCodeIsClientError(uint32 code)   { return ((code / 100) == 4); }
-inline bool HttpCodeIsServerError(uint32 code)   { return ((code / 100) == 5); }
+inline bool HttpCodeIsInformational(uint32_t code) {
+  return ((code / 100) == 1);
+}
+inline bool HttpCodeIsSuccessful(uint32_t code) {
+  return ((code / 100) == 2);
+}
+inline bool HttpCodeIsRedirection(uint32_t code) {
+  return ((code / 100) == 3);
+}
+inline bool HttpCodeIsClientError(uint32_t code) {
+  return ((code / 100) == 4);
+}
+inline bool HttpCodeIsServerError(uint32_t code) {
+  return ((code / 100) == 5);
+}
 
-bool HttpCodeHasBody(uint32 code);
-bool HttpCodeIsCacheable(uint32 code);
+bool HttpCodeHasBody(uint32_t code);
+bool HttpCodeIsCacheable(uint32_t code);
 bool HttpHeaderIsEndToEnd(HttpHeader header);
 bool HttpHeaderIsCollapsible(HttpHeader header);
 
@@ -163,7 +173,7 @@ bool HttpHasNthAttribute(HttpAttributeList& attributes,
 // Convert RFC1123 date (DoW, DD Mon YYYY HH:MM:SS TZ) to unix timestamp
 bool HttpDateToSeconds(const std::string& date, time_t* seconds);
 
-inline uint16 HttpDefaultPort(bool secure) {
+inline uint16_t HttpDefaultPort(bool secure) {
   return secure ? HTTP_SECURE_PORT : HTTP_DEFAULT_PORT;
 }
 
@@ -196,9 +206,10 @@ public:
   static int Decode(const string& source, string& destination);
 
   Url(const string& url) { do_set_url(url.c_str(), url.size()); }
-  Url(const string& path, const string& host, uint16 port = HTTP_DEFAULT_PORT)
-  : host_(host), port_(port), secure_(HTTP_SECURE_PORT == port)
-  { set_full_path(path); }
+  Url(const string& path, const string& host, uint16_t port = HTTP_DEFAULT_PORT)
+      : host_(host), port_(port), secure_(HTTP_SECURE_PORT == port) {
+    set_full_path(path);
+  }
 
   bool valid() const { return !host_.empty(); }
   void clear() {
@@ -233,8 +244,8 @@ public:
   void set_host(const string& val) { host_ = val; }
   const string& host() const { return host_; }
 
-  void set_port(uint16 val) { port_ = val; }
-  uint16 port() const { return port_; }
+  void set_port(uint16_t val) { port_ = val; }
+  uint16_t port() const { return port_; }
 
   void set_secure(bool val) { secure_ = val; }
   bool secure() const { return secure_; }
@@ -267,7 +278,7 @@ private:
   void do_get_full_path(string* val) const;
 
   string host_, path_, query_;
-  uint16 port_;
+  uint16_t port_;
   bool secure_;
 };
 
@@ -393,7 +404,7 @@ struct HttpRequestData : public HttpData {
 };
 
 struct HttpResponseData : public HttpData {
-  uint32 scode;
+  uint32_t scode;
   std::string message;
 
   HttpResponseData() : scode(HC_INTERNAL_SERVER_ERROR) { }
@@ -401,12 +412,13 @@ struct HttpResponseData : public HttpData {
   void copy(const HttpResponseData& src);
 
   // Convenience methods
-  void set_success(uint32 scode = HC_OK);
-  void set_success(const std::string& content_type, StreamInterface* document,
-                   uint32 scode = HC_OK);
+  void set_success(uint32_t scode = HC_OK);
+  void set_success(const std::string& content_type,
+                   StreamInterface* document,
+                   uint32_t scode = HC_OK);
   void set_redirect(const std::string& location,
-                    uint32 scode = HC_MOVED_TEMPORARILY);
-  void set_error(uint32 scode);
+                    uint32_t scode = HC_MOVED_TEMPORARILY);
+  void set_error(uint32_t scode);
 
   size_t formatLeader(char* buffer, size_t size) const override;
   HttpError parseLeader(const char* line, size_t len) override;

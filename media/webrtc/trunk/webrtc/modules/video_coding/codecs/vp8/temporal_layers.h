@@ -14,7 +14,8 @@
 
 #include "vpx/vpx_encoder.h"
 
-#include "webrtc/common_video/interface/video_image.h"
+#include "webrtc/common.h"
+#include "webrtc/common_video/include/video_image.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -30,6 +31,8 @@ class TemporalLayers {
     virtual ~Factory() {}
     virtual TemporalLayers* Create(int temporal_layers,
                                    uint8_t initial_tl0_pic_idx) const;
+    static const ConfigOptionID identifier =
+        ConfigOptionID::kTemporalLayersFactory;
   };
 
   virtual ~TemporalLayers() {}
@@ -47,9 +50,11 @@ class TemporalLayers {
                                      CodecSpecificInfoVP8* vp8_info,
                                      uint32_t timestamp) = 0;
 
-  virtual void FrameEncoded(unsigned int size, uint32_t timestamp) = 0;
+  virtual void FrameEncoded(unsigned int size, uint32_t timestamp, int qp) = 0;
 
   virtual int CurrentLayerId() const = 0;
+
+  virtual bool UpdateConfiguration(vpx_codec_enc_cfg_t* cfg) = 0;
 };
 
 // Factory for a temporal layers strategy that adaptively changes the number of

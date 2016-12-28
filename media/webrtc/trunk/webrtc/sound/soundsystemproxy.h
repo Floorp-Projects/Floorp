@@ -25,18 +25,18 @@ class SoundSystemProxy : public SoundSystemInterface {
 
   // Each of these methods simply defers to wrapped_ if non-NULL, else fails.
 
-  virtual bool EnumeratePlaybackDevices(SoundDeviceLocatorList *devices);
-  virtual bool EnumerateCaptureDevices(SoundDeviceLocatorList *devices);
+  bool EnumeratePlaybackDevices(SoundDeviceLocatorList *devices) override;
+  bool EnumerateCaptureDevices(SoundDeviceLocatorList *devices) override;
 
-  virtual bool GetDefaultPlaybackDevice(SoundDeviceLocator **device);
-  virtual bool GetDefaultCaptureDevice(SoundDeviceLocator **device);
+  bool GetDefaultPlaybackDevice(SoundDeviceLocator **device) override;
+  bool GetDefaultCaptureDevice(SoundDeviceLocator **device) override;
 
-  virtual SoundOutputStreamInterface *OpenPlaybackDevice(
+  SoundOutputStreamInterface *OpenPlaybackDevice(
       const SoundDeviceLocator *device,
-      const OpenParams &params);
-  virtual SoundInputStreamInterface *OpenCaptureDevice(
+      const OpenParams &params) override;
+  SoundInputStreamInterface *OpenCaptureDevice(
       const SoundDeviceLocator *device,
-      const OpenParams &params);
+      const OpenParams &params) override;
 
  protected:
   SoundSystemInterface *wrapped_;

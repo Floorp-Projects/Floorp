@@ -51,9 +51,6 @@ source_set("common_audio") {
     "resampler/sinc_resampler.h",
     "ring_buffer.c",
     "ring_buffer.h",
-    "signal_processing/include/real_fft.h",
-    "signal_processing/include/signal_processing_library.h",
-    "signal_processing/include/spl_inl.h",
     "signal_processing/auto_corr_to_refl_coef.c",
     "signal_processing/auto_correlation.c",
     "signal_processing/complex_fft_tables.h",
@@ -68,12 +65,15 @@ source_set("common_audio") {
     "signal_processing/get_hanning_window.c",
     "signal_processing/get_scaling_square.c",
     "signal_processing/ilbc_specific_functions.c",
+    "signal_processing/include/real_fft.h",
+    "signal_processing/include/signal_processing_library.h",
+    "signal_processing/include/spl_inl.h",
     "signal_processing/levinson_durbin.c",
     "signal_processing/lpc_to_refl_coef.c",
     "signal_processing/min_max_operations.c",
     "signal_processing/randomization_functions.c",
-    "signal_processing/refl_coef_to_lpc.c",
     "signal_processing/real_fft.c",
+    "signal_processing/refl_coef_to_lpc.c",
     "signal_processing/resample.c",
     "signal_processing/resample_48khz.c",
     "signal_processing/resample_by_2.c",
@@ -85,10 +85,12 @@ source_set("common_audio") {
     "signal_processing/splitting_filter.c",
     "signal_processing/sqrt_of_one_minus_x_squared.c",
     "signal_processing/vector_scaling_operations.c",
+    "sparse_fir_filter.cc",
+    "sparse_fir_filter.h",
+    "swap_queue.h",
     "vad/include/vad.h",
     "vad/include/webrtc_vad.h",
     "vad/vad.cc",
-    "vad/webrtc_vad.c",
     "vad/vad_core.c",
     "vad/vad_core.h",
     "vad/vad_filterbank.c",
@@ -97,15 +99,18 @@ source_set("common_audio") {
     "vad/vad_gmm.h",
     "vad/vad_sp.c",
     "vad/vad_sp.h",
-    "wav_header.cc",
-    "wav_header.h",
+    "vad/webrtc_vad.c",
     "wav_file.cc",
     "wav_file.h",
+    "wav_header.cc",
+    "wav_header.h",
     "window_generator.cc",
     "window_generator.h",
   ]
 
-  deps = [ "../system_wrappers" ]
+  deps = [
+    "../system_wrappers",
+  ]
 
   defines = []
   if (rtc_use_openmax_dl) {
@@ -114,7 +119,9 @@ source_set("common_audio") {
       "real_fourier_openmax.h",
     ]
     defines += [ "RTC_USE_OPENMAX_DL" ]
-    deps += [ "//third_party/openmax_dl/dl" ]
+    if (rtc_build_openmax_dl) {
+      deps += [ "//third_party/openmax_dl/dl" ]
+    }
   }
 
   if (current_cpu == "arm") {
@@ -124,25 +131,24 @@ source_set("common_audio") {
     ]
 
     if (arm_version >= 7) {
-      deps += [ ":common_audio_neon" ]
       sources += [ "signal_processing/filter_ar_fast_q12_armv7.S" ]
     } else {
       sources += [ "signal_processing/filter_ar_fast_q12.c" ]
     }
   }
 
-  if (current_cpu == "arm64") {
+  if (rtc_build_with_neon) {
     deps += [ ":common_audio_neon" ]
   }
 
   if (current_cpu == "mipsel") {
     sources += [
-      "signal_processing/include/spl_inl_mips.h",
       "signal_processing/complex_bit_reverse_mips.c",
       "signal_processing/complex_fft_mips.c",
       "signal_processing/cross_correlation_mips.c",
       "signal_processing/downsample_fast_mips.c",
       "signal_processing/filter_ar_fast_q12_mips.c",
+      "signal_processing/include/spl_inl_mips.h",
       "signal_processing/min_max_operations_mips.c",
       "signal_processing/resample_by_2_mips.c",
       "signal_processing/spl_sqrt_floor_mips.c",
@@ -163,9 +169,7 @@ source_set("common_audio") {
   }
 
   if (is_win) {
-    cflags = [
-      "/wd4334",  # Ignore warning on shift operator promotion.
-    ]
+    cflags = [ "/wd4334" ]  # Ignore warning on shift operator promotion.
   }
 
   configs += [ "..:common_config" ]
@@ -193,7 +197,9 @@ if (current_cpu == "x86" || current_cpu == "x64") {
       "resampler/sinc_resampler_sse.cc",
     ]
 
-    cflags = [ "-msse2" ]
+    if (is_posix) {
+      cflags = [ "-msse2" ]
+    }
 
     configs += [ "..:common_inherited_config" ]
 
@@ -205,7 +211,7 @@ if (current_cpu == "x86" || current_cpu == "x64") {
   }
 }
 
-if (rtc_build_armv7_neon || current_cpu == "arm64") {
+if (rtc_build_with_neon) {
   source_set("common_audio_neon") {
     sources = [
       "fir_filter_neon.cc",
@@ -215,20 +221,24 @@ if (rtc_build_armv7_neon || current_cpu == "arm64") {
       "signal_processing/min_max_operations_neon.c",
     ]
 
-    configs += [ "..:common_config" ]
-    public_configs = [ "..:common_inherited_config" ]
-
-    if (!arm_use_neon) {
+    if (current_cpu != "arm64") {
+      # Enable compilation for the NEON instruction set. This is needed
+      # since //build/config/arm.gni only enables NEON for iOS, not Android.
+      # This provides the same functionality as webrtc/build/arm_neon.gypi.
       configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]
     }
 
-    # Disable LTO in audio_processing_neon target due to compiler bug.
+    # Disable LTO on NEON targets due to compiler bug.
+    # TODO(fdegans): Enable this. See crbug.com/408997.
     if (rtc_use_lto) {
       cflags -= [
         "-flto",
         "-ffat-lto-objects",
       ]
     }
+
+    configs += [ "..:common_config" ]
+    public_configs = [ "..:common_inherited_config" ]
   }
 }

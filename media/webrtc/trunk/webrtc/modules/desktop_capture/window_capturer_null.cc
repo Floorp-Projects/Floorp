@@ -30,13 +30,12 @@ class WindowCapturerNull : public WindowCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
-  void Stop() override;
   void Capture(const DesktopRegion& region) override;
 
  private:
   Callback* callback_;
 
-  DISALLOW_COPY_AND_ASSIGN(WindowCapturerNull);
+  RTC_DISALLOW_COPY_AND_ASSIGN(WindowCapturerNull);
 };
 
 WindowCapturerNull::WindowCapturerNull()
@@ -66,10 +65,6 @@ void WindowCapturerNull::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
-}
-
-void WindowCapturerNull::Stop() {
-  callback_ = NULL;
 }
 
 void WindowCapturerNull::Capture(const DesktopRegion& region) {

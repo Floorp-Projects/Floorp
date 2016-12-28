@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <algorithm>
 
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 

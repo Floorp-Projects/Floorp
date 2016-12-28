@@ -26,11 +26,11 @@ float SincResampler::Convolve_NEON(const float* input_ptr, const float* k1,
 
   const float* upper = input_ptr + kKernelSize;
   for (; input_ptr < upper; ) {
-    m_input = vld1q_f32((const float32_t *) input_ptr);
+    m_input = vld1q_f32(input_ptr);
     input_ptr += 4;
-    m_sums1 = vmlaq_f32(m_sums1, m_input, vld1q_f32((const float32_t *) k1));
+    m_sums1 = vmlaq_f32(m_sums1, m_input, vld1q_f32(k1));
     k1 += 4;
-    m_sums2 = vmlaq_f32(m_sums2, m_input, vld1q_f32((const float32_t *) k2));
+    m_sums2 = vmlaq_f32(m_sums2, m_input, vld1q_f32(k2));
     k2 += 4;
   }
 

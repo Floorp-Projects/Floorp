@@ -30,9 +30,9 @@ AudioClassifier::AudioClassifier()
       // to be deleted.
       celt_mode_(opus_custom_mode_create(kDefaultSampleRateHz,
                                          kDefaultFrameSizeSamples,
-                                         NULL)) {
+                                         NULL)),
+      analysis_state_() {
   assert(celt_mode_);
-  tonality_analysis_init(&analysis_state_);
 }
 
 AudioClassifier::~AudioClassifier() {}
@@ -65,6 +65,10 @@ bool AudioClassifier::Analysis(const int16_t* input,
                &analysis_info_);
   music_probability_ = analysis_info_.music_prob;
   is_music_ = music_probability_ > kDefaultThreshold;
+  return is_music_;
+}
+
+bool AudioClassifier::is_music() const {
   return is_music_;
 }
 

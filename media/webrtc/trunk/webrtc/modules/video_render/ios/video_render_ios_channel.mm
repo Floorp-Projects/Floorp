@@ -17,14 +17,13 @@
 using namespace webrtc;
 
 VideoRenderIosChannel::VideoRenderIosChannel(VideoRenderIosView* view)
-    : view_(view),
-      current_frame_(new I420VideoFrame()),
-      buffer_is_updated_(false) {}
+    : view_(view), current_frame_(new VideoFrame()), buffer_is_updated_(false) {
+}
 
 VideoRenderIosChannel::~VideoRenderIosChannel() { delete current_frame_; }
 
 int32_t VideoRenderIosChannel::RenderFrame(const uint32_t stream_id,
-                                           const I420VideoFrame& video_frame) {
+                                           const VideoFrame& video_frame) {
   current_frame_->CopyFrame(video_frame);
   current_frame_->set_render_time_ms(0);
   buffer_is_updated_ = true;

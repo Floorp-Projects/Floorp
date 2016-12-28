@@ -22,12 +22,12 @@ using std::complex;
 
 namespace {
 
-void Conjugate(complex<float>* array, int complex_length) {
+void Conjugate(complex<float>* array, size_t complex_length) {
   std::for_each(array, array + complex_length,
                 [=](complex<float>& v) { v = std::conj(v); });
 }
 
-size_t ComputeWorkIpSize(int fft_length) {
+size_t ComputeWorkIpSize(size_t fft_length) {
   return static_cast<size_t>(2 + std::ceil(std::sqrt(
       static_cast<float>(fft_length))));
 }
@@ -40,9 +40,9 @@ RealFourierOoura::RealFourierOoura(int fft_order)
       complex_length_(ComplexLength(order_)),
       // Zero-initializing work_ip_ will cause rdft to initialize these work
       // arrays on the first call.
-      work_ip_(new int[ComputeWorkIpSize(length_)]()),
+      work_ip_(new size_t[ComputeWorkIpSize(length_)]()),
       work_w_(new float[complex_length_]()) {
-  CHECK_GE(fft_order, 1);
+  RTC_CHECK_GE(fft_order, 1);
 }
 
 void RealFourierOoura::Forward(const float* src, complex<float>* dest) const {
@@ -66,7 +66,7 @@ void RealFourierOoura::Inverse(const complex<float>* src, float* dest) const {
     auto dest_complex = reinterpret_cast<complex<float>*>(dest);
     // The real output array is shorter than the input complex array by one
     // complex element.
-    const int dest_complex_length = complex_length_ - 1;
+    const size_t dest_complex_length = complex_length_ - 1;
     std::copy(src, src + dest_complex_length, dest_complex);
     // Restore Ooura's conjugate definition.
     Conjugate(dest_complex, dest_complex_length);

@@ -10,7 +10,7 @@
 
 #include <assert.h>
 
-#include "webrtc/modules/audio_processing/ns/include/noise_suppression_x.h"
+#include "webrtc/modules/audio_processing/ns/noise_suppression_x.h"
 #include "webrtc/modules/audio_processing/ns/nsx_core.h"
 #include "webrtc/modules/audio_processing/ns/nsx_defines.h"
 
@@ -33,7 +33,8 @@ void WebRtcNsx_SpeechNoiseProb(NoiseSuppressionFixedC* inst,
   int32_t logLrtTimeAvgKsumFX;
   int16_t indPriorFX16;
   int16_t tmp16, tmp16no1, tmp16no2, tmpIndFX, tableIndex, frac, intPart;
-  int i, normTmp, normTmp2, nShifts;
+  size_t i;
+  int normTmp, normTmp2, nShifts;
 
   // compute feature based on average LR factor
   // this is the average over all frequencies of the smooth log LRT

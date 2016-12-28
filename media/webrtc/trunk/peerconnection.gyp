@@ -21,6 +21,17 @@
       ['build_with_mozilla==1', {
         'target_name': 'dummy',
         'type': 'none',
+        'actions': [
+	{
+          'action_name': 'dummy',
+	  'action': [
+	     'echo ARGHHHHHHHHHHHHHHHHHHHH',
+          ],
+	  'inputs': [
+	     'dummy_file.txt',
+          ],
+          'message': 'Generating scream',
+        }, ],
         'dependencies': [
           'webrtc/modules/modules.gyp:audio_device',
           'webrtc/modules/modules.gyp:video_capture_module',

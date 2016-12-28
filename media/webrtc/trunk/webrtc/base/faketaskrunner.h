@@ -25,12 +25,12 @@ class FakeTaskRunner : public TaskRunner {
 
   virtual void WakeTasks() { RunTasks(); }
 
-  virtual int64 CurrentTime() {
+  virtual int64_t CurrentTime() {
     // Implement if needed.
     return current_time_++;
   }
 
-  int64 current_time_;
+  int64_t current_time_;
 };
 
 }  // namespace rtc

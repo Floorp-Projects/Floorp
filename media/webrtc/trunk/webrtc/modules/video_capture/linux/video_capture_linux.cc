@@ -10,6 +10,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/videodev2.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -17,21 +18,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-//v4l includes
-#if defined(__NetBSD__) || defined(__OpenBSD__)
-#include <sys/videoio.h>
-#elif defined(__sun)
-#include <sys/videodev2.h>
-#else
-#include <linux/videodev2.h>
-#endif
-
+#include <iostream>
 #include <new>
 
 #include "webrtc/modules/video_capture/linux/video_capture_linux.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc
 {
@@ -74,13 +67,6 @@ int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8)
     if (_deviceUniqueId)
     {
         memcpy(_deviceUniqueId, deviceUniqueIdUTF8, len + 1);
-    }
-
-    int device_index;
-    if (sscanf(deviceUniqueIdUTF8,"fake_%d", &device_index) == 1)
-    {
-      _deviceId = device_index;
-      return 0;
     }
 
     int fd;
@@ -294,10 +280,10 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
     //start capture thread;
     if (!_captureThread)
     {
-        _captureThread = ThreadWrapper::CreateThread(
-            VideoCaptureModuleV4L2::CaptureThread, this, "CaptureThread");
+        _captureThread.reset(new rtc::PlatformThread(
+            VideoCaptureModuleV4L2::CaptureThread, this, "CaptureThread"));
         _captureThread->Start();
-        _captureThread->SetPriority(kHighPriority);
+        _captureThread->SetPriority(rtc::kHighPriority);
     }
 
     // Needed to start UVC camera - from the uvcview application

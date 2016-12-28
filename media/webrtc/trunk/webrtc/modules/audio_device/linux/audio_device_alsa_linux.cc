@@ -11,19 +11,11 @@
 #include <assert.h>
 
 #include "webrtc/modules/audio_device/audio_device_config.h"
-#include "webrtc/modules/audio_device/audio_device_utility.h"
 #include "webrtc/modules/audio_device/linux/audio_device_alsa_linux.h"
 
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-
-#include "Latency.h"
-
-#define LOG_FIRST_CAPTURE(x) LogTime(AsyncLatencyLogger::AudioCaptureBase, \
-                                     reinterpret_cast<uint64_t>(x), 0)
-#define LOG_CAPTURE_FRAMES(x, frames) LogLatency(AsyncLatencyLogger::AudioCapture, \
-                                                 reinterpret_cast<uint64_t>(x), frames)
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 webrtc_adm_linux_alsa::AlsaSymbolTable AlsaSymbolTable;
 
@@ -97,7 +89,6 @@ AudioDeviceLinuxALSA::AudioDeviceLinuxALSA(const int32_t id) :
     _playBufType(AudioDeviceModule::kFixedBufferSize),
     _initialized(false),
     _recording(false),
-    _firstRecord(true),
     _playing(false),
     _recIsInitialized(false),
     _playIsInitialized(false),
@@ -216,7 +207,7 @@ int32_t AudioDeviceLinuxALSA::Terminate()
     // RECORDING
     if (_ptrThreadRec)
     {
-        ThreadWrapper* tmpThread = _ptrThreadRec.release();
+        rtc::PlatformThread* tmpThread = _ptrThreadRec.release();
         _critSect.Leave();
 
         tmpThread->Stop();
@@ -228,7 +219,7 @@ int32_t AudioDeviceLinuxALSA::Terminate()
     // PLAYOUT
     if (_ptrThreadPlay)
     {
-        ThreadWrapper* tmpThread = _ptrThreadPlay.release();
+        rtc::PlatformThread* tmpThread = _ptrThreadPlay.release();
         _critSect.Leave();
 
         tmpThread->Stop();
@@ -911,8 +902,7 @@ int32_t AudioDeviceLinuxALSA::RecordingDeviceName(
         memset(guid, 0, kAdmMaxGuidSize);
     }
 
-    return GetDevicesInfo(1, false, index, name, kAdmMaxDeviceNameSize,
-                          guid, kAdmMaxGuidSize);
+    return GetDevicesInfo(1, false, index, name, kAdmMaxDeviceNameSize);
 }
 
 int16_t AudioDeviceLinuxALSA::RecordingDevices()
@@ -1373,22 +1363,11 @@ int32_t AudioDeviceLinuxALSA::StartRecording()
         return -1;
     }
     // RECORDING
-    const char* threadName = "webrtc_audio_module_capture_thread";
-    _firstRecord = true;
-    _ptrThreadRec = ThreadWrapper::CreateThread(
-        RecThreadFunc, this, threadName);
+    _ptrThreadRec.reset(new rtc::PlatformThread(
+        RecThreadFunc, this, "webrtc_audio_module_capture_thread"));
 
-    if (!_ptrThreadRec->Start())
-    {
-        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
-                     "  failed to start the rec audio thread");
-        _recording = false;
-        _ptrThreadRec.reset();
-        delete [] _recordingBuffer;
-        _recordingBuffer = NULL;
-        return -1;
-    }
-    _ptrThreadRec->SetPriority(kRealtimePriority);
+    _ptrThreadRec->Start();
+    _ptrThreadRec->SetPriority(rtc::kRealtimePriority);
 
     errVal = LATE(snd_pcm_prepare)(_handleRecord);
     if (errVal < 0)
@@ -1528,9 +1507,11 @@ int32_t AudioDeviceLinuxALSA::StartPlayout()
     }
 
     // PLAYOUT
-    const char* threadName = "webrtc_audio_module_play_thread";
-    _ptrThreadPlay =  ThreadWrapper::CreateThread(PlayThreadFunc, this,
-                                                  threadName);
+    _ptrThreadPlay.reset(new rtc::PlatformThread(
+        PlayThreadFunc, this, "webrtc_audio_module_play_thread"));
+    _ptrThreadPlay->Start();
+    _ptrThreadPlay->SetPriority(rtc::kRealtimePriority);
+
     int errVal = LATE(snd_pcm_prepare)(_handlePlayout);
     if (errVal < 0)
     {
@@ -1540,18 +1521,6 @@ int32_t AudioDeviceLinuxALSA::StartPlayout()
         // just log error
         // if snd_pcm_open fails will return -1
     }
-
-    if (!_ptrThreadPlay->Start())
-    {
-        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
-                     "  failed to start the play audio thread");
-        _playing = false;
-        _ptrThreadPlay.reset();
-        delete [] _playoutBuffer;
-        _playoutBuffer = NULL;
-        return -1;
-    }
-    _ptrThreadPlay->SetPriority(kRealtimePriority);
 
     return 0;
 }
@@ -1727,9 +1696,7 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
     const bool playback,
     const int32_t enumDeviceNo,
     char* enumDeviceName,
-    const int32_t ednLen,
-    char* enumDeviceId,
-    const int32_t ediLen) const
+    const int32_t ednLen) const
 {
 
     // Device enumeration based on libjingle implementation
@@ -1752,9 +1719,7 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
     // Don't use snd_device_name_hint(-1,..) since there is a access violation
     // inside this ALSA API with libasound.so.2.0.0.
     int card = -1;
-#ifdef WEBRTC_LINUX
     while (!(LATE(snd_card_next)(&card)) && (card >= 0) && keepSearching) {
-#endif
         void **hints;
         err = LATE(snd_device_name_hint)(card, "pcm", &hints);
         if (err != 0)
@@ -1770,8 +1735,6 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
             function == FUNC_GET_DEVICE_NAME_FOR_AN_ENUM) && enumDeviceNo == 0)
         {
             strcpy(enumDeviceName, "default");
-            if (enumDeviceId)
-                memset(enumDeviceId, 0, ediLen);
 
             err = LATE(snd_device_name_free_hint)(hints);
             if (err != 0)
@@ -1834,11 +1797,6 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
                     // We have found the enum device, copy the name to buffer.
                     strncpy(enumDeviceName, desc, ednLen);
                     enumDeviceName[ednLen-1] = '\0';
-                    if (enumDeviceId)
-                    {
-                        strncpy(enumDeviceId, name, ediLen);
-                        enumDeviceId[ediLen-1] = '\0';
-                    }
                     keepSearching = false;
                     // Replace '\n' with '-'.
                     char * pret = strchr(enumDeviceName, '\n'/*0xa*/); //LF
@@ -1851,11 +1809,6 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
                     // We have found the enum device, copy the name to buffer.
                     strncpy(enumDeviceName, name, ednLen);
                     enumDeviceName[ednLen-1] = '\0';
-                    if (enumDeviceId)
-                    {
-                        strncpy(enumDeviceId, name, ediLen);
-                        enumDeviceId[ediLen-1] = '\0';
-                    }
                     keepSearching = false;
                 }
 
@@ -1880,9 +1833,7 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
                          LATE(snd_strerror)(err));
             // Continue and return true anyway, since we did get the whole list.
         }
-#ifdef WEBRTC_LINUX
-      }
-#endif
+    }
 
     if (FUNC_GET_NUM_OF_DEVICE == function)
     {
@@ -2167,11 +2118,6 @@ bool AudioDeviceLinuxALSA::RecThreadProcess()
         { // buf is full
             _recordingFramesLeft = _recordingFramesIn10MS;
 
-            if (_firstRecord) {
-              LOG_FIRST_CAPTURE(this);
-              _firstRecord = false;
-            }
-            LOG_CAPTURE_FRAMES(this, _recordingFramesIn10MS);
             // store the recorded buffer (no action will be taken if the
             // #recorded samples is not a full buffer)
             _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer,

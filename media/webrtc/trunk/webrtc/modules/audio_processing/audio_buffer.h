@@ -11,15 +11,12 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AUDIO_BUFFER_H_
 
-#include <vector>
-
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/channel_buffer.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/audio_processing/splitting_filter.h"
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/system_wrappers/interface/scoped_vector.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/system_wrappers/include/scoped_vector.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -36,19 +33,19 @@ enum Band {
 class AudioBuffer {
  public:
   // TODO(ajm): Switch to take ChannelLayouts.
-  AudioBuffer(int input_num_frames,
-              int num_input_channels,
-              int process_num_frames,
-              int num_process_channels,
-              int output_num_frames);
+  AudioBuffer(size_t input_num_frames,
+              size_t num_input_channels,
+              size_t process_num_frames,
+              size_t num_process_channels,
+              size_t output_num_frames);
   virtual ~AudioBuffer();
 
-  int num_channels() const;
-  void set_num_channels(int num_channels);
-  int num_frames() const;
-  int num_frames_per_band() const;
-  int num_keyboard_frames() const;
-  int num_bands() const;
+  size_t num_channels() const;
+  void set_num_channels(size_t num_channels);
+  size_t num_frames() const;
+  size_t num_frames_per_band() const;
+  size_t num_keyboard_frames() const;
+  size_t num_bands() const;
 
   // Returns a pointer array to the full-band channels.
   // Usage:
@@ -68,10 +65,10 @@ class AudioBuffer {
   // 0 <= channel < |num_proc_channels_|
   // 0 <= band < |num_bands_|
   // 0 <= sample < |num_split_frames_|
-  int16_t* const* split_bands(int channel);
-  const int16_t* const* split_bands_const(int channel) const;
-  float* const* split_bands_f(int channel);
-  const float* const* split_bands_const_f(int channel) const;
+  int16_t* const* split_bands(size_t channel);
+  const int16_t* const* split_bands_const(size_t channel) const;
+  float* const* split_bands_f(size_t channel);
+  const float* const* split_bands_const_f(size_t channel) const;
 
   // Returns a pointer array to the channels for a specific band.
   // Usage:
@@ -112,15 +109,11 @@ class AudioBuffer {
   void DeinterleaveFrom(AudioFrame* audioFrame);
   // If |data_changed| is false, only the non-audio data members will be copied
   // to |frame|.
-  void InterleaveTo(AudioFrame* frame, bool data_changed) const;
+  void InterleaveTo(AudioFrame* frame, bool data_changed);
 
   // Use for float deinterleaved data.
-  void CopyFrom(const float* const* data,
-                int num_frames,
-                AudioProcessing::ChannelLayout layout);
-  void CopyTo(int num_frames,
-              AudioProcessing::ChannelLayout layout,
-              float* const* data);
+  void CopyFrom(const float* const* data, const StreamConfig& stream_config);
+  void CopyTo(const StreamConfig& stream_config, float* const* data);
   void CopyLowPassToReference();
 
   // Splits the signal into different bands.
@@ -134,20 +127,20 @@ class AudioBuffer {
 
   // The audio is passed into DeinterleaveFrom() or CopyFrom() with input
   // format (samples per channel and number of channels).
-  const int input_num_frames_;
-  const int num_input_channels_;
+  const size_t input_num_frames_;
+  const size_t num_input_channels_;
   // The audio is stored by DeinterleaveFrom() or CopyFrom() with processing
   // format.
-  const int proc_num_frames_;
-  const int num_proc_channels_;
+  const size_t proc_num_frames_;
+  const size_t num_proc_channels_;
   // The audio is returned by InterleaveTo() and CopyTo() with output samples
   // per channels and the current number of channels. This last one can be
   // changed at any time using set_num_channels().
-  const int output_num_frames_;
-  int num_channels_;
+  const size_t output_num_frames_;
+  size_t num_channels_;
 
-  int num_bands_;
-  int num_split_frames_;
+  size_t num_bands_;
+  size_t num_split_frames_;
   bool mixed_low_pass_valid_;
   bool reference_copied_;
   AudioFrame::VADActivity activity_;
@@ -158,7 +151,8 @@ class AudioBuffer {
   rtc::scoped_ptr<SplittingFilter> splitting_filter_;
   rtc::scoped_ptr<ChannelBuffer<int16_t> > mixed_low_pass_channels_;
   rtc::scoped_ptr<ChannelBuffer<int16_t> > low_pass_reference_channels_;
-  rtc::scoped_ptr<ChannelBuffer<float> > input_buffer_;
+  rtc::scoped_ptr<IFChannelBuffer> input_buffer_;
+  rtc::scoped_ptr<IFChannelBuffer> output_buffer_;
   rtc::scoped_ptr<ChannelBuffer<float> > process_buffer_;
   ScopedVector<PushSincResampler> input_resamplers_;
   ScopedVector<PushSincResampler> output_resamplers_;

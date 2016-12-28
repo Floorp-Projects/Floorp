@@ -13,8 +13,8 @@
 #endif
 
 #include "webrtc/modules/video_render/ios/video_render_ios_gles20.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
 
 using namespace webrtc;
 
@@ -32,15 +32,15 @@ VideoRenderIosGles20::VideoRenderIosGles20(VideoRenderIosView* view,
       z_order_to_channel_(),
       gles_context_([view context]),
       is_rendering_(true) {
-  screen_update_thread_ = ThreadWrapper::CreateThread(
-      ScreenUpdateThreadProc, this, "ScreenUpdateGles20");
-  screen_update_event_ = EventWrapper::Create();
+  screen_update_thread_.reset(new rtc::PlatformThread(
+      ScreenUpdateThreadProc, this, "ScreenUpdateGles20"));
+  screen_update_event_ = EventTimerWrapper::Create();
   GetWindowRect(window_rect_);
 }
 
 VideoRenderIosGles20::~VideoRenderIosGles20() {
   // Signal event to exit thread, then delete it
-  ThreadWrapper* thread_wrapper = screen_update_thread_.release();
+  rtc::PlatformThread* thread_wrapper = screen_update_thread_.release();
 
   if (thread_wrapper) {
     screen_update_event_->Set();
@@ -83,7 +83,7 @@ int VideoRenderIosGles20::Init() {
   }
 
   screen_update_thread_->Start();
-  screen_update_thread_->SetPriority(kRealtimePriority);
+  screen_update_thread_->SetPriority(rtc::kRealtimePriority);
 
   // Start the event triggering the render process
   unsigned int monitor_freq = 60;

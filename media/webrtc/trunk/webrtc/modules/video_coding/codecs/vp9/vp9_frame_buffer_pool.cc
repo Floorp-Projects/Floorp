@@ -16,12 +16,12 @@
 #include "vpx/vpx_frame_buffer.h"
 
 #include "webrtc/base/checks.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/base/logging.h"
 
 namespace webrtc {
 
 uint8_t* Vp9FrameBufferPool::Vp9FrameBuffer::GetData() {
-  return (uint8_t*)(data_.data()); //data<uint8_t>();
+  return data_.data<uint8_t>();
 }
 
 size_t Vp9FrameBufferPool::Vp9FrameBuffer::GetDataSize() const {
@@ -34,7 +34,7 @@ void Vp9FrameBufferPool::Vp9FrameBuffer::SetSize(size_t size) {
 
 bool Vp9FrameBufferPool::InitializeVpxUsePool(
     vpx_codec_ctx* vpx_codec_context) {
-  DCHECK(vpx_codec_context);
+  RTC_DCHECK(vpx_codec_context);
   // Tell libvpx to use this pool.
   if (vpx_codec_set_frame_buffer_functions(
           // In which context to use these callback functions.
@@ -53,7 +53,7 @@ bool Vp9FrameBufferPool::InitializeVpxUsePool(
 
 rtc::scoped_refptr<Vp9FrameBufferPool::Vp9FrameBuffer>
 Vp9FrameBufferPool::GetFrameBuffer(size_t min_size) {
-  DCHECK_GT(min_size, 0u);
+  RTC_DCHECK_GT(min_size, 0u);
   rtc::scoped_refptr<Vp9FrameBuffer> available_buffer = nullptr;
   {
     rtc::CritScope cs(&buffers_lock_);
@@ -101,8 +101,8 @@ void Vp9FrameBufferPool::ClearPool() {
 int32_t Vp9FrameBufferPool::VpxGetFrameBuffer(void* user_priv,
                                               size_t min_size,
                                               vpx_codec_frame_buffer* fb) {
-  DCHECK(user_priv);
-  DCHECK(fb);
+  RTC_DCHECK(user_priv);
+  RTC_DCHECK(fb);
   Vp9FrameBufferPool* pool = static_cast<Vp9FrameBufferPool*>(user_priv);
 
   rtc::scoped_refptr<Vp9FrameBuffer> buffer = pool->GetFrameBuffer(min_size);
@@ -120,8 +120,8 @@ int32_t Vp9FrameBufferPool::VpxGetFrameBuffer(void* user_priv,
 // static
 int32_t Vp9FrameBufferPool::VpxReleaseFrameBuffer(void* user_priv,
                                                   vpx_codec_frame_buffer* fb) {
-  DCHECK(user_priv);
-  DCHECK(fb);
+  RTC_DCHECK(user_priv);
+  RTC_DCHECK(fb);
   Vp9FrameBuffer* buffer = static_cast<Vp9FrameBuffer*>(fb->priv);
   if (buffer != nullptr) {
     buffer->Release();

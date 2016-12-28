@@ -12,6 +12,7 @@
 #define WEBRTC_BASE_FAKENETWORK_H_
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "webrtc/base/network.h"
@@ -29,27 +30,32 @@ const int kFakeIPv6NetworkPrefixLength = 64;
 class FakeNetworkManager : public NetworkManagerBase,
                            public MessageHandler {
  public:
-  FakeNetworkManager()
-      : thread_(Thread::Current()),
-        next_index_(0),
-        started_(false),
-        sent_first_update_(false) {
-  }
+  FakeNetworkManager() : thread_(Thread::Current()) {}
 
-  typedef std::vector<SocketAddress> IfaceList;
+  typedef std::vector<std::pair<SocketAddress, AdapterType>> IfaceList;
 
   void AddInterface(const SocketAddress& iface) {
-    // ensure a unique name for the interface
-    SocketAddress address("test" + rtc::ToString(next_index_++), 0);
+    // Ensure a unique name for the interface if its name is not given.
+    AddInterface(iface, "test" + rtc::ToString(next_index_++));
+  }
+
+  void AddInterface(const SocketAddress& iface, const std::string& if_name) {
+    AddInterface(iface, if_name, ADAPTER_TYPE_UNKNOWN);
+  }
+
+  void AddInterface(const SocketAddress& iface,
+                    const std::string& if_name,
+                    AdapterType type) {
+    SocketAddress address(if_name, 0);
     address.SetResolvedIP(iface.ipaddr());
-    ifaces_.push_back(address);
+    ifaces_.push_back(std::make_pair(address, type));
     DoUpdateNetworks();
   }
 
   void RemoveInterface(const SocketAddress& iface) {
     for (IfaceList::iterator it = ifaces_.begin();
          it != ifaces_.end(); ++it) {
-      if (it->EqualIPs(iface)) {
+      if (it->first.EqualIPs(iface)) {
         ifaces_.erase(it);
         break;
       }
@@ -58,45 +64,46 @@ class FakeNetworkManager : public NetworkManagerBase,
   }
 
   virtual void StartUpdating() {
-    if (started_) {
-      if (sent_first_update_)
+    ++start_count_;
+    if (start_count_ == 1) {
+      sent_first_update_ = false;
+      thread_->Post(this);
+    } else {
+      if (sent_first_update_) {
         SignalNetworksChanged();
-      return;
+      }
     }
-
-    started_ = true;
-    sent_first_update_ = false;
-    thread_->Post(this);
   }
 
-  virtual void StopUpdating() {
-    started_ = false;
-  }
+  virtual void StopUpdating() { --start_count_; }
 
   // MessageHandler interface.
   virtual void OnMessage(Message* msg) {
     DoUpdateNetworks();
   }
 
+  using NetworkManagerBase::set_enumeration_permission;
+  using NetworkManagerBase::set_default_local_addresses;
+
  private:
   void DoUpdateNetworks() {
-    if (!started_)
+    if (start_count_ == 0)
       return;
     std::vector<Network*> networks;
     for (IfaceList::iterator it = ifaces_.begin();
          it != ifaces_.end(); ++it) {
       int prefix_length = 0;
-      if (it->ipaddr().family() == AF_INET) {
+      if (it->first.ipaddr().family() == AF_INET) {
         prefix_length = kFakeIPv4NetworkPrefixLength;
-      } else if (it->ipaddr().family() == AF_INET6) {
+      } else if (it->first.ipaddr().family() == AF_INET6) {
         prefix_length = kFakeIPv6NetworkPrefixLength;
       }
-      IPAddress prefix = TruncateIP(it->ipaddr(), prefix_length);
-      scoped_ptr<Network> net(new Network(it->hostname(),
-                                          it->hostname(),
-                                          prefix,
-                                          prefix_length));
-      net->AddIP(it->ipaddr());
+      IPAddress prefix = TruncateIP(it->first.ipaddr(), prefix_length);
+      scoped_ptr<Network> net(new Network(it->first.hostname(),
+                                          it->first.hostname(), prefix,
+                                          prefix_length, it->second));
+      net->set_default_local_address_provider(this);
+      net->AddIP(it->first.ipaddr());
       networks.push_back(net.release());
     }
     bool changed;
@@ -109,9 +116,12 @@ class FakeNetworkManager : public NetworkManagerBase,
 
   Thread* thread_;
   IfaceList ifaces_;
-  int next_index_;
-  bool started_;
-  bool sent_first_update_;
+  int next_index_ = 0;
+  int start_count_ = 0;
+  bool sent_first_update_ = false;
+
+  IPAddress default_local_ipv4_address_;
+  IPAddress default_local_ipv6_address_;
 };
 
 }  // namespace rtc

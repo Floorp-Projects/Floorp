@@ -47,11 +47,9 @@ bool GetOSVersion(int* major, int* minor, int* bugfix);
 MacOSVersionName GetOSVersionName();
 bool GetQuickTimeVersion(std::string* version);
 
-#ifndef WEBRTC_MOZILLA_BUILD
 // Runs the given apple script. Only supports scripts that does not
 // require user interaction.
 bool RunAppleScript(const std::string& script);
-#endif
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -13,12 +13,8 @@ source_set("video_render_module") {
     "external/video_render_external_impl.cc",
     "external/video_render_external_impl.h",
     "i_video_render.h",
-    "include/video_render.h",
-    "include/video_render_defines.h",
-    "incoming_video_stream.cc",
-    "incoming_video_stream.h",
-    "video_render_frames.cc",
-    "video_render_frames.h",
+    "video_render.h",
+    "video_render_defines.h",
     "video_render_impl.h",
   ]
 
@@ -123,17 +119,17 @@ if (!build_with_chromium) {
       ]
 
       directxsdk_exists =
-        (exec_script("//build/dir_exists.py",
-                     [ rebase_path("//third_party/directxsdk/files",
-                                   root_build_dir) ],
-                     "trim string") == "True")
+          exec_script("//build/dir_exists.py",
+                      [ rebase_path("//third_party/directxsdk/files",
+                                    root_build_dir) ],
+                      "trim string") == "True"
       if (directxsdk_exists) {
         directxsdk_path = "//third_party/directxsdk/files"
       } else {
         directxsdk_path =
             exec_script("../../build/find_directx_sdk.py", [], "trim string")
       }
-      include_dirs = [ directxsdk_path +  "/Include" ]
+      include_dirs = [ directxsdk_path + "/Include" ]
     }
     if (is_android) {
       sources += [
@@ -165,10 +161,10 @@ if (!build_with_chromium) {
 
       deps += [ "../..:webrtc_common" ]
 
-      cflags += [ "-fobjc-arc" ]  # CLANG_ENABLE_OBJC_ARC = YES.
+      cflags = [ "-fobjc-arc" ]  # CLANG_ENABLE_OBJC_ARC = YES.
     }
 
-    all_dependent_configs = [ ":video_render_internal_impl_config"]
+    all_dependent_configs = [ ":video_render_internal_impl_config" ]
 
     configs += [ "../..:common_config" ]
     public_configs = [ "../..:common_inherited_config" ]

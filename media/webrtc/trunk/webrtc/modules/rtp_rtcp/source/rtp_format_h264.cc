@@ -10,29 +10,29 @@
 
 #include <string.h>
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
+#include "webrtc/modules/rtp_rtcp/source/h264_sps_parser.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 namespace {
 
-enum Nalu { // 0-23 from H.264, 24-31 from RFC 6184
-  kSlice = 1, // I/P/B slice
-  kIdr = 5, // IDR slice
-  kSei = 6, // Supplementary Enhancement Info
-  kSeiRecPt = 6, // Recovery Point SEI Payload
-  kSps = 7, // Sequence Parameter Set
-  kPps = 8, // Picture Parameter Set
-  kPrefix = 14, // Prefix
-  kStapA = 24, // Single-Time Aggregation Packet Type A
-  kFuA = 28 // Fragmentation Unit Type A
+enum Nalu {
+  kSlice = 1,
+  kIdr = 5,
+  kSei = 6,
+  kSps = 7,
+  kPps = 8,
+  kStapA = 24,
+  kFuA = 28
 };
 
 static const size_t kNalHeaderSize = 1;
 static const size_t kFuAHeaderSize = 2;
 static const size_t kLengthFieldSize = 2;
+static const size_t kStapAHeaderSize = kNalHeaderSize + kLengthFieldSize;
 
 // Bit masks for FU (A and B) indicators.
 enum NalDefs { kFBit = 0x80, kNriMask = 0x60, kTypeMask = 0x1F };
@@ -40,7 +40,24 @@ enum NalDefs { kFBit = 0x80, kNriMask = 0x60, kTypeMask = 0x1F };
 // Bit masks for FU (A and B) headers.
 enum FuDefs { kSBit = 0x80, kEBit = 0x40, kRBit = 0x20 };
 
-void ParseSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
+// TODO(pbos): Avoid parsing this here as well as inside the jitter buffer.
+bool VerifyStapANaluLengths(const uint8_t* nalu_ptr, size_t length_remaining) {
+  while (length_remaining > 0) {
+    // Buffer doesn't contain room for additional nalu length.
+    if (length_remaining < sizeof(uint16_t))
+      return false;
+    uint16_t nalu_size = nalu_ptr[0] << 8 | nalu_ptr[1];
+    nalu_ptr += sizeof(uint16_t);
+    length_remaining -= sizeof(uint16_t);
+    if (nalu_size > length_remaining)
+      return false;
+    nalu_ptr += nalu_size;
+    length_remaining -= nalu_size;
+  }
+  return true;
+}
+
+bool ParseSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
                      const uint8_t* payload_data,
                      size_t payload_data_length) {
   parsed_payload->type.Video.width = 0;
@@ -49,42 +66,41 @@ void ParseSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   parsed_payload->type.Video.isFirstPacket = true;
   RTPVideoHeaderH264* h264_header =
       &parsed_payload->type.Video.codecHeader.H264;
-  h264_header->single_nalu = true;
-  h264_header->stap_a = false;
 
+  const uint8_t* nalu_start = payload_data + kNalHeaderSize;
+  size_t nalu_length = payload_data_length - kNalHeaderSize;
   uint8_t nal_type = payload_data[0] & kTypeMask;
-  size_t offset = 0;
   if (nal_type == kStapA) {
-    offset = 3;
-    if (offset >= payload_data_length) {
-      return; // XXX malformed
+    // Skip the StapA header (StapA nal type + length).
+    if (payload_data_length <= kStapAHeaderSize) {
+      LOG(LS_ERROR) << "StapA header truncated.";
+      return false;
     }
-    nal_type = payload_data[offset] & kTypeMask;
-    h264_header->stap_a = true;
-  }
+    if (!VerifyStapANaluLengths(nalu_start, nalu_length)) {
+      LOG(LS_ERROR) << "StapA packet with incorrect NALU packet lengths.";
+      return false;
+    }
 
-  // key frames start with SPS, PPS, IDR, or Recovery Point SEI
-  // Recovery Point SEI's are used in AIR and GDR refreshes, which don't
-  // send large iframes, and instead use forms of incremental/continuous refresh.
+    nal_type = payload_data[kStapAHeaderSize] & kTypeMask;
+    nalu_start += kStapAHeaderSize;
+    nalu_length -= kStapAHeaderSize;
+    h264_header->packetization_type = kH264StapA;
+  } else {
+    h264_header->packetization_type = kH264SingleNalu;
+  }
+  h264_header->nalu_type = nal_type;
+
+  // We can read resolution out of sps packets.
+  if (nal_type == kSps) {
+    H264SpsParser parser(nalu_start, nalu_length);
+    if (parser.Parse()) {
+      parsed_payload->type.Video.width = parser.width();
+      parsed_payload->type.Video.height = parser.height();
+    }
+  }
   switch (nal_type) {
-    case kSei: // check if it is a Recovery Point SEI (aka GDR)
-      if (offset+1 >= payload_data_length) {
-        return; // XXX malformed
-      }
-      if (payload_data[offset+1] != kSeiRecPt) {
-        parsed_payload->frame_type = kVideoFrameDelta;
-        break; // some other form of SEI - not a keyframe
-      }
-      // else fall through since GDR is like IDR
     case kSps:
     case kPps:
-      // These are always combined with other packets with the same timestamp...
-      // XXX To support 'solitary' SPS/PPS/etc, either fix the jitter buffer to
-      // accept multiple sessions with the same timestamp, or pass marker info
-      // down into here (SPS/PPS as a pair without an kIdr NALU would still be
-      // painful, but might work).
-      h264_header->single_nalu = false;
-      // fall through...
     case kIdr:
       parsed_payload->frame_type = kVideoFrameKey;
       break;
@@ -92,12 +108,17 @@ void ParseSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
       parsed_payload->frame_type = kVideoFrameDelta;
       break;
   }
+  return true;
 }
 
-void ParseFuaNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
+bool ParseFuaNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
                   const uint8_t* payload_data,
                   size_t payload_data_length,
                   size_t* offset) {
+  if (payload_data_length < kFuAHeaderSize) {
+    LOG(LS_ERROR) << "FU-A NAL units truncated.";
+    return false;
+  }
   uint8_t fnri = payload_data[0] & (kFBit | kNriMask);
   uint8_t original_nal_type = payload_data[1] & kTypeMask;
   bool first_fragment = (payload_data[1] & kSBit) > 0;
@@ -122,19 +143,17 @@ void ParseFuaNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   parsed_payload->type.Video.isFirstPacket = first_fragment;
   RTPVideoHeaderH264* h264_header =
       &parsed_payload->type.Video.codecHeader.H264;
-  h264_header->single_nalu = false;
-  h264_header->stap_a = false;
+  h264_header->packetization_type = kH264FuA;
+  h264_header->nalu_type = original_nal_type;
+  return true;
 }
 }  // namespace
 
 RtpPacketizerH264::RtpPacketizerH264(FrameType frame_type,
-                                     size_t max_payload_len,
-                                     uint8_t packetization_mode)
+                                     size_t max_payload_len)
     : payload_data_(NULL),
       payload_size_(0),
-      max_payload_len_(max_payload_len),
-      frame_type_(frame_type),
-      packetization_mode_(packetization_mode) {
+      max_payload_len_(max_payload_len) {
 }
 
 RtpPacketizerH264::~RtpPacketizerH264() {
@@ -156,28 +175,13 @@ void RtpPacketizerH264::GeneratePackets() {
   for (size_t i = 0; i < fragmentation_.fragmentationVectorSize;) {
     size_t fragment_offset = fragmentation_.fragmentationOffset[i];
     size_t fragment_length = fragmentation_.fragmentationLength[i];
-    if (packetization_mode_ == 0) {
-      PacketizeMode0(fragment_offset, fragment_length);
-      ++i;
-    } else if (fragment_length > max_payload_len_) {
+    if (fragment_length > max_payload_len_) {
       PacketizeFuA(fragment_offset, fragment_length);
       ++i;
     } else {
       i = PacketizeStapA(i, fragment_offset, fragment_length);
     }
   }
-}
-
-void RtpPacketizerH264::PacketizeMode0(size_t fragment_offset,
-                                       size_t fragment_length) {
-
-  uint8_t header = payload_data_[fragment_offset];
-  packets_.push(Packet(fragment_offset,
-                       fragment_length,
-                       true,
-                       true,
-                       false,
-                       header));
 }
 
 void RtpPacketizerH264::PacketizeFuA(size_t fragment_offset,
@@ -327,8 +331,7 @@ void RtpPacketizerH264::NextFragmentPacket(uint8_t* buffer,
 }
 
 ProtectionType RtpPacketizerH264::GetProtectionType() {
-  return (frame_type_ == kVideoFrameKey) ? kProtectedPacket
-                                         : kUnprotectedPacket;
+  return kProtectedPacket;
 }
 
 StorageType RtpPacketizerH264::GetStorageType(
@@ -344,15 +347,24 @@ bool RtpDepacketizerH264::Parse(ParsedPayload* parsed_payload,
                                 const uint8_t* payload_data,
                                 size_t payload_data_length) {
   assert(parsed_payload != NULL);
+  if (payload_data_length == 0) {
+    LOG(LS_ERROR) << "Empty payload.";
+    return false;
+  }
+
   uint8_t nal_type = payload_data[0] & kTypeMask;
   size_t offset = 0;
   if (nal_type == kFuA) {
     // Fragmented NAL units (FU-A).
-    ParseFuaNalu(parsed_payload, payload_data, payload_data_length, &offset);
+    if (!ParseFuaNalu(
+            parsed_payload, payload_data, payload_data_length, &offset)) {
+      return false;
+    }
   } else {
     // We handle STAP-A and single NALU's the same way here. The jitter buffer
     // will depacketize the STAP-A into NAL units later.
-    ParseSingleNalu(parsed_payload, payload_data, payload_data_length);
+    if (!ParseSingleNalu(parsed_payload, payload_data, payload_data_length))
+      return false;
   }
 
   parsed_payload->payload = payload_data + offset;

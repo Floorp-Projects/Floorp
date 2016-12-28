@@ -22,8 +22,7 @@ class VoEAudioProcessingTest : public ::testing::Test {
   VoEAudioProcessingTest()
       : voe_(VoiceEngine::Create()),
         base_(VoEBase::GetInterface(voe_)),
-        audioproc_(VoEAudioProcessing::GetInterface(voe_)) {
-  }
+        audioproc_(VoEAudioProcessing::GetInterface(voe_)) {}
 
   virtual ~VoEAudioProcessingTest() {
     base_->Terminate();

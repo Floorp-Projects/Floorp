@@ -38,7 +38,7 @@ class TestSuite {
   virtual void Initialize();
   virtual void Shutdown();
 
-  DISALLOW_COPY_AND_ASSIGN(TestSuite);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TestSuite);
 
  private:
   rtc::scoped_ptr<TraceToStderr> trace_to_stderr_;

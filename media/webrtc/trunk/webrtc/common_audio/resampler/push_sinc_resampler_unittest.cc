@@ -17,7 +17,7 @@
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/resampler/push_sinc_resampler.h"
 #include "webrtc/common_audio/resampler/sinusoidal_linear_chirp_source.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -58,14 +58,14 @@ class PushSincResamplerTest : public ::testing::TestWithParam<
 
 class ZeroSource : public SincResamplerCallback {
  public:
-  void Run(int frames, float* destination) {
+  void Run(size_t frames, float* destination) {
     std::memset(destination, 0, sizeof(float) * frames);
   }
 };
 
 void PushSincResamplerTest::ResampleBenchmarkTest(bool int_format) {
-  const int input_samples = input_rate_ / 100;
-  const int output_samples = output_rate_ / 100;
+  const size_t input_samples = static_cast<size_t>(input_rate_ / 100);
+  const size_t output_samples = static_cast<size_t>(output_rate_ / 100);
   const int kResampleIterations = 500000;
 
   // Source for data to be resampled.
@@ -77,7 +77,7 @@ void PushSincResamplerTest::ResampleBenchmarkTest(bool int_format) {
   rtc::scoped_ptr<int16_t[]> destination_int(new int16_t[output_samples]);
 
   resampler_source.Run(input_samples, source.get());
-  for (int i = 0; i < input_samples; ++i) {
+  for (size_t i = 0; i < input_samples; ++i) {
     source_int[i] = static_cast<int16_t>(floor(32767 * source[i] + 0.5));
   }
 
@@ -134,11 +134,13 @@ void PushSincResamplerTest::ResampleTest(bool int_format) {
   // Make comparisons using one second of data.
   static const double kTestDurationSecs = 1;
   // 10 ms blocks.
-  const int kNumBlocks = kTestDurationSecs * 100;
-  const int input_block_size = input_rate_ / 100;
-  const int output_block_size = output_rate_ / 100;
-  const int input_samples = kTestDurationSecs * input_rate_;
-  const int output_samples = kTestDurationSecs * output_rate_;
+  const size_t kNumBlocks = static_cast<size_t>(kTestDurationSecs * 100);
+  const size_t input_block_size = static_cast<size_t>(input_rate_ / 100);
+  const size_t output_block_size = static_cast<size_t>(output_rate_ / 100);
+  const size_t input_samples =
+      static_cast<size_t>(kTestDurationSecs * input_rate_);
+  const size_t output_samples =
+      static_cast<size_t>(kTestDurationSecs * output_rate_);
 
   // Nyquist frequency for the input sampling rate.
   const double input_nyquist_freq = 0.5 * input_rate_;
@@ -163,7 +165,7 @@ void PushSincResamplerTest::ResampleTest(bool int_format) {
   // deal with it in the test by delaying the "pure" source to match. It must be
   // checked before the first call to Resample(), because ChunkSize() will
   // change afterwards.
-  const int output_delay_samples = output_block_size -
+  const size_t output_delay_samples = output_block_size -
       resampler.get_resampler_for_testing()->ChunkSize();
 
   // Generate resampled signal.
@@ -171,7 +173,7 @@ void PushSincResamplerTest::ResampleTest(bool int_format) {
   // rather than in a single pass, to exercise how it will be used in WebRTC.
   resampler_source.Run(input_samples, source.get());
   if (int_format) {
-    for (int i = 0; i < kNumBlocks; ++i) {
+    for (size_t i = 0; i < kNumBlocks; ++i) {
       FloatToS16(&source[i * input_block_size], input_block_size,
                source_int.get());
       EXPECT_EQ(output_block_size,
@@ -183,7 +185,7 @@ void PushSincResamplerTest::ResampleTest(bool int_format) {
                &resampled_destination[i * output_block_size]);
     }
   } else {
-    for (int i = 0; i < kNumBlocks; ++i) {
+    for (size_t i = 0; i < kNumBlocks; ++i) {
       EXPECT_EQ(
           output_block_size,
           resampler.Resample(&source[i * input_block_size],
@@ -211,7 +213,7 @@ void PushSincResamplerTest::ResampleTest(bool int_format) {
   double low_frequency_range = kLowFrequencyNyquistRange * 0.5 * minimum_rate;
   double high_frequency_range = kHighFrequencyNyquistRange * 0.5 * minimum_rate;
 
-  for (int i = 0; i < output_samples; ++i) {
+  for (size_t i = 0; i < output_samples; ++i) {
     double error = fabs(resampled_destination[i] - pure_destination[i]);
 
     if (pure_source.Frequency(i) < low_frequency_range) {

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+#if defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -156,4 +156,4 @@ bool p_isCFNumberTrue(CFNumberRef cfn) {
   return result;
 }
 
-#endif  // WEBRTC_MAC && !defined(WEBRTC_IOS)
+#endif  // WEBRTC_MAC || WEBRTC_IOS

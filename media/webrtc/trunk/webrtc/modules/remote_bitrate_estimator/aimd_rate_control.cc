@@ -14,6 +14,10 @@
 #include <cassert>
 #include <cmath>
 
+#include "webrtc/base/checks.h"
+
+#include "webrtc/modules/remote_bitrate_estimator/overuse_detector.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 
 namespace webrtc {
@@ -21,32 +25,30 @@ namespace webrtc {
 static const int64_t kDefaultRttMs = 200;
 static const int64_t kLogIntervalMs = 1000;
 static const double kWithinIncomingBitrateHysteresis = 1.05;
+static const int64_t kMaxFeedbackIntervalMs = 1000;
 
-AimdRateControl::AimdRateControl(uint32_t min_bitrate_bps)
-    : min_configured_bitrate_bps_(min_bitrate_bps),
+AimdRateControl::AimdRateControl()
+    : min_configured_bitrate_bps_(
+          RemoteBitrateEstimator::kDefaultMinBitrateBps),
       max_configured_bitrate_bps_(30000000),
       current_bitrate_bps_(max_configured_bitrate_bps_),
-      max_hold_rate_bps_(0),
       avg_max_bitrate_kbps_(-1.0f),
       var_max_bitrate_kbps_(0.4f),
       rate_control_state_(kRcHold),
-      came_from_state_(kRcDecrease),
       rate_control_region_(kRcMaxUnknown),
       time_last_bitrate_change_(-1),
       current_input_(kBwNormal, 0, 1.0),
       updated_(false),
       time_first_incoming_estimate_(-1),
       bitrate_is_initialized_(false),
-      beta_(0.9f),
+      beta_(0.85f),
       rtt_(kDefaultRttMs),
-      time_of_last_log_(-1) {}
+      time_of_last_log_(-1),
+      in_experiment_(AdaptiveThresholdExperimentIsEnabled()) {}
 
-RateControlType AimdRateControl::GetControlType() const {
-  return kAimdControl;
-}
-
-uint32_t AimdRateControl::GetMinBitrate() const {
-  return min_configured_bitrate_bps_;
+void AimdRateControl::SetMinBitrate(int min_bitrate_bps) {
+  min_configured_bitrate_bps_ = min_bitrate_bps;
+  current_bitrate_bps_ = std::max<int>(min_bitrate_bps, current_bitrate_bps_);
 }
 
 bool AimdRateControl::ValidEstimate() const {
@@ -86,8 +88,7 @@ uint32_t AimdRateControl::LatestEstimate() const {
 
 uint32_t AimdRateControl::UpdateBandwidthEstimate(int64_t now_ms) {
   current_bitrate_bps_ = ChangeBitrate(current_bitrate_bps_,
-                                       current_input_._incomingBitRate,
-                                       now_ms);
+                                       current_input_.incoming_bitrate, now_ms);
   if (now_ms - time_of_last_log_ > kLogIntervalMs) {
     time_of_last_log_ = now_ms;
   }
@@ -98,34 +99,34 @@ void AimdRateControl::SetRtt(int64_t rtt) {
   rtt_ = rtt;
 }
 
-RateControlRegion AimdRateControl::Update(const RateControlInput* input,
-                                          int64_t now_ms) {
+void AimdRateControl::Update(const RateControlInput* input, int64_t now_ms) {
   assert(input);
 
   // Set the initial bit rate value to what we're receiving the first half
   // second.
   if (!bitrate_is_initialized_) {
+    const int64_t kInitializationTimeMs = 5000;
+    RTC_DCHECK_LE(kBitrateWindowMs, kInitializationTimeMs);
     if (time_first_incoming_estimate_ < 0) {
-      if (input->_incomingBitRate > 0) {
+      if (input->incoming_bitrate > 0) {
         time_first_incoming_estimate_ = now_ms;
       }
-    } else if (now_ms - time_first_incoming_estimate_ > 500 &&
-               input->_incomingBitRate > 0) {
-      current_bitrate_bps_ = input->_incomingBitRate;
+    } else if (now_ms - time_first_incoming_estimate_ > kInitializationTimeMs &&
+               input->incoming_bitrate > 0) {
+      current_bitrate_bps_ = input->incoming_bitrate;
       bitrate_is_initialized_ = true;
     }
   }
 
-  if (updated_ && current_input_._bwState == kBwOverusing) {
+  if (updated_ && current_input_.bw_state == kBwOverusing) {
     // Only update delay factor and incoming bit rate. We always want to react
     // on an over-use.
-    current_input_._noiseVar = input->_noiseVar;
-    current_input_._incomingBitRate = input->_incomingBitRate;
+    current_input_.noise_var = input->noise_var;
+    current_input_.incoming_bitrate = input->incoming_bitrate;
   } else {
     updated_ = true;
     current_input_ = *input;
   }
-  return rate_control_region_;
 }
 
 void AimdRateControl::SetEstimate(int bitrate_bps, int64_t now_ms) {
@@ -137,11 +138,14 @@ void AimdRateControl::SetEstimate(int bitrate_bps, int64_t now_ms) {
 uint32_t AimdRateControl::ChangeBitrate(uint32_t current_bitrate_bps,
                                         uint32_t incoming_bitrate_bps,
                                         int64_t now_ms) {
-  BWE_TEST_LOGGING_PLOT("estimated_incoming#1", -1,
-                        incoming_bitrate_bps / 1000);
   if (!updated_) {
     return current_bitrate_bps_;
   }
+  // An over-use should always trigger us to reduce the bitrate, even though
+  // we have not yet established our first estimate. By acting on the over-use,
+  // we will end up with a valid estimate.
+  if (!bitrate_is_initialized_ && current_input_.bw_state != kBwOverusing)
+    return current_bitrate_bps_;
   updated_ = false;
   ChangeState(current_input_, now_ms);
   // Calculated here because it's used in multiple places.
@@ -150,52 +154,35 @@ uint32_t AimdRateControl::ChangeBitrate(uint32_t current_bitrate_bps,
   // variance and the current incoming bit rate.
   const float std_max_bit_rate = sqrt(var_max_bitrate_kbps_ *
                                       avg_max_bitrate_kbps_);
-  bool fast_recovery_after_hold = false;
   switch (rate_control_state_) {
-    case kRcHold: {
-      max_hold_rate_bps_ = std::max(max_hold_rate_bps_, incoming_bitrate_bps);
+    case kRcHold:
       break;
-    }
-    case kRcIncrease: {
-      if (avg_max_bitrate_kbps_ >= 0) {
-        if (incoming_bitrate_kbps > avg_max_bitrate_kbps_ +
-            3 * std_max_bit_rate) {
-          ChangeRegion(kRcMaxUnknown);
-          avg_max_bitrate_kbps_ = -1.0;
-        } else if (incoming_bitrate_kbps > avg_max_bitrate_kbps_ +
-            2.5 * std_max_bit_rate) {
-          ChangeRegion(kRcAboveMax);
-        }
+
+    case kRcIncrease:
+      if (avg_max_bitrate_kbps_ >= 0 &&
+          incoming_bitrate_kbps >
+              avg_max_bitrate_kbps_ + 3 * std_max_bit_rate) {
+        ChangeRegion(kRcMaxUnknown);
+        avg_max_bitrate_kbps_ = -1.0;
       }
       if (rate_control_region_ == kRcNearMax) {
         // Approximate the over-use estimator delay to 100 ms.
         const int64_t response_time = rtt_ + 100;
         uint32_t additive_increase_bps = AdditiveRateIncrease(
             now_ms, time_last_bitrate_change_, response_time);
-        BWE_TEST_LOGGING_PLOT("add_increase#1", -1,
-                              additive_increase_bps / 1000);
         current_bitrate_bps += additive_increase_bps;
 
       } else {
         uint32_t multiplicative_increase_bps = MultiplicativeRateIncrease(
             now_ms, time_last_bitrate_change_, current_bitrate_bps);
-        BWE_TEST_LOGGING_PLOT("mult_increase#1", -1,
-                              multiplicative_increase_bps / 1000);
         current_bitrate_bps += multiplicative_increase_bps;
       }
 
-      if (max_hold_rate_bps_ > 0 &&
-          beta_ * max_hold_rate_bps_ > current_bitrate_bps) {
-        current_bitrate_bps = static_cast<uint32_t>(beta_ * max_hold_rate_bps_);
-        avg_max_bitrate_kbps_ = beta_ * max_hold_rate_bps_ / 1000.0f;
-        ChangeRegion(kRcNearMax);
-        fast_recovery_after_hold = true;
-      }
-      max_hold_rate_bps_ = 0;
       time_last_bitrate_change_ = now_ms;
       break;
-    }
-    case kRcDecrease: {
+
+    case kRcDecrease:
+      bitrate_is_initialized_ = true;
       if (incoming_bitrate_bps < min_configured_bitrate_bps_) {
         current_bitrate_bps = min_configured_bitrate_bps_;
       } else {
@@ -225,12 +212,11 @@ uint32_t AimdRateControl::ChangeBitrate(uint32_t current_bitrate_bps,
       ChangeState(kRcHold);
       time_last_bitrate_change_ = now_ms;
       break;
-    }
+
     default:
       assert(false);
   }
-  if (!fast_recovery_after_hold && (incoming_bitrate_bps > 100000 ||
-      current_bitrate_bps > 150000) &&
+  if ((incoming_bitrate_bps > 100000 || current_bitrate_bps > 150000) &&
       current_bitrate_bps > 1.5 * incoming_bitrate_bps) {
     // Allow changing the bit rate if we are operating at very low rates
     // Don't change the bit rate if the send side is too far off
@@ -258,8 +244,10 @@ uint32_t AimdRateControl::AdditiveRateIncrease(
   assert(response_time_ms > 0);
   double beta = 0.0;
   if (last_ms > 0) {
-    beta = std::min((now_ms - last_ms) /
-                    static_cast<double>(response_time_ms), 1.0);
+    beta = std::min((now_ms - last_ms) / static_cast<double>(response_time_ms),
+                    1.0);
+    if (in_experiment_)
+      beta /= 2.0;
   }
   double bits_per_frame = static_cast<double>(current_bitrate_bps_) / 30.0;
   double packets_per_frame = std::ceil(bits_per_frame / (8.0 * 1200.0));
@@ -295,7 +283,7 @@ void AimdRateControl::UpdateMaxBitRateEstimate(float incoming_bitrate_kbps) {
 
 void AimdRateControl::ChangeState(const RateControlInput& input,
                                   int64_t now_ms) {
-  switch (current_input_._bwState) {
+  switch (current_input_.bw_state) {
     case kBwNormal:
       if (rate_control_state_ == kRcHold) {
         time_last_bitrate_change_ = now_ms;
@@ -317,21 +305,9 @@ void AimdRateControl::ChangeState(const RateControlInput& input,
 
 void AimdRateControl::ChangeRegion(RateControlRegion region) {
   rate_control_region_ = region;
-  switch (rate_control_region_) {
-    case kRcAboveMax:
-    case kRcMaxUnknown:
-      beta_ = 0.9f;
-      break;
-    case kRcNearMax:
-      beta_ = 0.95f;
-      break;
-    default:
-      assert(false);
-  }
 }
 
 void AimdRateControl::ChangeState(RateControlState new_state) {
-  came_from_state_ = rate_control_state_;
   rate_control_state_ = new_state;
 }
 }  // namespace webrtc

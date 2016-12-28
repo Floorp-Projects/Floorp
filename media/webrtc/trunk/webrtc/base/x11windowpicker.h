@@ -38,10 +38,10 @@ class X11WindowPicker : public WindowPicker {
   bool GetDesktopDimensions(const DesktopId& id,
                             int* width,
                             int* height) override;
-  uint8* GetWindowIcon(const WindowId& id, int* width, int* height);
-  uint8* GetWindowThumbnail(const WindowId& id, int width, int height);
+  uint8_t* GetWindowIcon(const WindowId& id, int* width, int* height);
+  uint8_t* GetWindowThumbnail(const WindowId& id, int width, int height);
   int GetNumDesktops();
-  uint8* GetDesktopThumbnail(const DesktopId& id, int width, int height);
+  uint8_t* GetDesktopThumbnail(const DesktopId& id, int width, int height);
 
  private:
   scoped_ptr<XWindowEnumerator> enumerator_;

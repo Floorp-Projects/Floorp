@@ -19,7 +19,7 @@ namespace webrtc {
 
 using std::complex;
 
-const int RealFourier::kFftBufferAlignment = 32;
+const size_t RealFourier::kFftBufferAlignment = 32;
 
 rtc::scoped_ptr<RealFourier> RealFourier::Create(int fft_order) {
 #if defined(RTC_USE_OPENMAX_DL)
@@ -29,19 +29,18 @@ rtc::scoped_ptr<RealFourier> RealFourier::Create(int fft_order) {
 #endif
 }
 
-int RealFourier::FftOrder(int length) {
-  CHECK_GT(length, 0);
-  return WebRtcSpl_GetSizeInBits(length - 1);
+int RealFourier::FftOrder(size_t length) {
+  RTC_CHECK_GT(length, 0U);
+  return WebRtcSpl_GetSizeInBits(static_cast<uint32_t>(length - 1));
 }
 
-int RealFourier::FftLength(int order) {
-  CHECK_GE(order, 0);
-  return 1 << order;
+size_t RealFourier::FftLength(int order) {
+  RTC_CHECK_GE(order, 0);
+  return static_cast<size_t>(1 << order);
 }
 
-int RealFourier::ComplexLength(int order) {
-  CHECK_GE(order, 0);
-  return (1 << order) / 2 + 1;
+size_t RealFourier::ComplexLength(int order) {
+  return FftLength(order) / 2 + 1;
 }
 
 RealFourier::fft_real_scoper RealFourier::AllocRealBuffer(int count) {

@@ -19,9 +19,14 @@
       ],
       'sources': [
         'frame_dropper.cc',
-        'include/frame_dropper.h',
+        'frame_dropper.h',
+        'moving_average.h',
+        'qp_parser.cc',
+        'qp_parser.h',
         'quality_scaler.cc',
         'quality_scaler.h',
+        'vp8_header_parser.cc',
+        'vp8_header_parser.h',
       ],
     },
   ], # targets

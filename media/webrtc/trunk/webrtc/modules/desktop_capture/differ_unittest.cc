@@ -51,7 +51,7 @@ class DifferTest : public testing::Test {
   }
 
   // Here in DifferTest so that tests can access private methods of Differ.
-  void MarkDirtyBlocks(const void* prev_buffer, const void* curr_buffer) {
+  void MarkDirtyBlocks(const uint8_t* prev_buffer, const uint8_t* curr_buffer) {
     differ_->MarkDirtyBlocks(prev_buffer, curr_buffer);
   }
 
@@ -71,7 +71,7 @@ class DifferTest : public testing::Test {
 
   // Convenience wrapper for Differ's DiffBlock that calculates the appropriate
   // offset to the start of the desired block.
-  DiffInfo DiffBlock(int block_x, int block_y) {
+  bool DiffBlock(int block_x, int block_y) {
     // Offset from upper-left of buffer to upper-left of requested block.
     int block_offset = ((block_y * stride_) + (block_x * bytes_per_pixel_))
                         * kBlockSize;
@@ -114,8 +114,8 @@ class DifferTest : public testing::Test {
   }
 
   // Get the value in the |diff_info_| array at (x,y).
-  DiffInfo GetDiffInfo(int x, int y) {
-    DiffInfo* diff_info = differ_->diff_info_.get();
+  bool GetDiffInfo(int x, int y) {
+    bool* diff_info = differ_->diff_info_.get();
     return diff_info[(y * GetDiffInfoWidth()) + x];
   }
 
@@ -134,8 +134,8 @@ class DifferTest : public testing::Test {
     return differ_->diff_info_size_;
   }
 
-  void SetDiffInfo(int x, int y, const DiffInfo& value) {
-    DiffInfo* diff_info = differ_->diff_info_.get();
+  void SetDiffInfo(int x, int y, bool value) {
+    bool* diff_info = differ_->diff_info_.get();
     diff_info[(y * GetDiffInfoWidth()) + x] = value;
   }
 
@@ -143,7 +143,7 @@ class DifferTest : public testing::Test {
   void MarkBlocks(int x_origin, int y_origin, int width, int height) {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        SetDiffInfo(x_origin + x, y_origin + y, 1);
+        SetDiffInfo(x_origin + x, y_origin + y, true);
       }
     }
   }
@@ -204,7 +204,7 @@ class DifferTest : public testing::Test {
   rtc::scoped_ptr<uint8_t[]> curr_;
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(DifferTest);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DifferTest);
 };
 
 TEST_F(DifferTest, Setup) {
@@ -240,7 +240,7 @@ TEST_F(DifferTest, MarkDirtyBlocks_All) {
   // Make sure each block is marked as dirty.
   for (int y = 0; y < GetDiffInfoHeight() - 1; y++) {
     for (int x = 0; x < GetDiffInfoWidth() - 1; x++) {
-      EXPECT_EQ(1, GetDiffInfo(x, y))
+      EXPECT_TRUE(GetDiffInfo(x, y))
           << "when x = " << x << ", and y = " << y;
     }
   }
@@ -258,23 +258,23 @@ TEST_F(DifferTest, MarkDirtyBlocks_Sampling) {
   MarkDirtyBlocks(prev_.get(), curr_.get());
 
   // Make sure corresponding blocks are updated.
-  EXPECT_EQ(0, GetDiffInfo(0, 0));
-  EXPECT_EQ(0, GetDiffInfo(0, 1));
-  EXPECT_EQ(1, GetDiffInfo(0, 2));
-  EXPECT_EQ(1, GetDiffInfo(1, 0));
-  EXPECT_EQ(0, GetDiffInfo(1, 1));
-  EXPECT_EQ(0, GetDiffInfo(1, 2));
-  EXPECT_EQ(0, GetDiffInfo(2, 0));
-  EXPECT_EQ(1, GetDiffInfo(2, 1));
-  EXPECT_EQ(0, GetDiffInfo(2, 2));
+  EXPECT_FALSE(GetDiffInfo(0, 0));
+  EXPECT_FALSE(GetDiffInfo(0, 1));
+  EXPECT_TRUE(GetDiffInfo(0, 2));
+  EXPECT_TRUE(GetDiffInfo(1, 0));
+  EXPECT_FALSE(GetDiffInfo(1, 1));
+  EXPECT_FALSE(GetDiffInfo(1, 2));
+  EXPECT_FALSE(GetDiffInfo(2, 0));
+  EXPECT_TRUE(GetDiffInfo(2, 1));
+  EXPECT_FALSE(GetDiffInfo(2, 2));
 }
 
 TEST_F(DifferTest, DiffBlock) {
   InitDiffer(kScreenWidth, kScreenHeight);
 
   // Verify no differences at start.
-  EXPECT_EQ(0, DiffBlock(0, 0));
-  EXPECT_EQ(0, DiffBlock(1, 1));
+  EXPECT_FALSE(DiffBlock(0, 0));
+  EXPECT_FALSE(DiffBlock(1, 1));
 
   // Write new data into the 4 corners of the middle block and verify that
   // neighboring blocks are not affected.
@@ -283,15 +283,15 @@ TEST_F(DifferTest, DiffBlock) {
   WriteBlockPixel(curr_.get(), 1, 1, 0, max, 0xffffff);
   WriteBlockPixel(curr_.get(), 1, 1, max, 0, 0xffffff);
   WriteBlockPixel(curr_.get(), 1, 1, max, max, 0xffffff);
-  EXPECT_EQ(0, DiffBlock(0, 0));
-  EXPECT_EQ(0, DiffBlock(0, 1));
-  EXPECT_EQ(0, DiffBlock(0, 2));
-  EXPECT_EQ(0, DiffBlock(1, 0));
-  EXPECT_EQ(1, DiffBlock(1, 1));  // Only this block should change.
-  EXPECT_EQ(0, DiffBlock(1, 2));
-  EXPECT_EQ(0, DiffBlock(2, 0));
-  EXPECT_EQ(0, DiffBlock(2, 1));
-  EXPECT_EQ(0, DiffBlock(2, 2));
+  EXPECT_FALSE(DiffBlock(0, 0));
+  EXPECT_FALSE(DiffBlock(0, 1));
+  EXPECT_FALSE(DiffBlock(0, 2));
+  EXPECT_FALSE(DiffBlock(1, 0));
+  EXPECT_TRUE(DiffBlock(1, 1));  // Only this block should change.
+  EXPECT_FALSE(DiffBlock(1, 2));
+  EXPECT_FALSE(DiffBlock(2, 0));
+  EXPECT_FALSE(DiffBlock(2, 1));
+  EXPECT_FALSE(DiffBlock(2, 2));
 }
 
 TEST_F(DifferTest, Partial_Setup) {
@@ -328,7 +328,7 @@ TEST_F(DifferTest, Partial_FirstPixel) {
   // Make sure each block is marked as dirty.
   for (int y = 0; y < GetDiffInfoHeight() - 1; y++) {
     for (int x = 0; x < GetDiffInfoWidth() - 1; x++) {
-      EXPECT_EQ(1, GetDiffInfo(x, y))
+      EXPECT_TRUE(GetDiffInfo(x, y))
           << "when x = " << x << ", and y = " << y;
     }
   }
@@ -351,18 +351,18 @@ TEST_F(DifferTest, Partial_BorderPixel) {
   // Make sure last (partial) block in each row/column is marked as dirty.
   int x_last = GetDiffInfoWidth() - 2;
   for (int y = 0; y < GetDiffInfoHeight() - 1; y++) {
-    EXPECT_EQ(1, GetDiffInfo(x_last, y))
+    EXPECT_TRUE(GetDiffInfo(x_last, y))
         << "when x = " << x_last << ", and y = " << y;
   }
   int y_last = GetDiffInfoHeight() - 2;
   for (int x = 0; x < GetDiffInfoWidth() - 1; x++) {
-    EXPECT_EQ(1, GetDiffInfo(x, y_last))
+    EXPECT_TRUE(GetDiffInfo(x, y_last))
         << "when x = " << x << ", and y = " << y_last;
   }
   // All other blocks are clean.
   for (int y = 0; y < GetDiffInfoHeight() - 2; y++) {
     for (int x = 0; x < GetDiffInfoWidth() - 2; x++) {
-      EXPECT_EQ(0, GetDiffInfo(x, y)) << "when x = " << x << ", and y = " << y;
+      EXPECT_FALSE(GetDiffInfo(x, y)) << "when x = " << x << ", and y = " << y;
     }
   }
 }

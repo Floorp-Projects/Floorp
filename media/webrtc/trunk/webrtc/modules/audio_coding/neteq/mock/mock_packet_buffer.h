@@ -41,7 +41,7 @@ class MockPacketBuffer : public PacketBuffer {
   MOCK_CONST_METHOD0(NextRtpHeader,
       const RTPHeader*());
   MOCK_METHOD1(GetNextPacket,
-      Packet*(int* discard_count));
+      Packet*(size_t* discard_count));
   MOCK_METHOD0(DiscardNextPacket,
       int());
   MOCK_METHOD2(DiscardOldPackets,
@@ -49,7 +49,7 @@ class MockPacketBuffer : public PacketBuffer {
   MOCK_METHOD1(DiscardAllOldPackets,
       int(uint32_t timestamp_limit));
   MOCK_CONST_METHOD0(NumPacketsInBuffer,
-      int());
+      size_t());
   MOCK_METHOD1(IncrementWaitingTimes,
       void(int));
   MOCK_CONST_METHOD0(current_memory_bytes,

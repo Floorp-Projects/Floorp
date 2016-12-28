@@ -17,7 +17,7 @@
 
 // TODO(sjlee): unify this copy with the android one.
 #include "webrtc/modules/video_render/ios/open_gles20.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 using namespace webrtc;
 
@@ -151,7 +151,7 @@ bool OpenGles20::SetCoordinates(const float z_order,
   return true;
 }
 
-bool OpenGles20::Render(const I420VideoFrame& frame) {
+bool OpenGles20::Render(const VideoFrame& frame) {
   if (texture_width_ != (GLsizei)frame.width() ||
       texture_height_ != (GLsizei)frame.height()) {
     SetupTextures(frame);
@@ -261,7 +261,7 @@ static void InitializeTexture(int name, int id, int width, int height) {
                NULL);
 }
 
-void OpenGles20::SetupTextures(const I420VideoFrame& frame) {
+void OpenGles20::SetupTextures(const VideoFrame& frame) {
   const GLsizei width = frame.width();
   const GLsizei height = frame.height();
 
@@ -310,7 +310,7 @@ static void GlTexSubImage2D(GLsizei width,
   }
 }
 
-void OpenGles20::UpdateTextures(const I420VideoFrame& frame) {
+void OpenGles20::UpdateTextures(const VideoFrame& frame) {
   const GLsizei width = frame.width();
   const GLsizei height = frame.height();
 

@@ -67,7 +67,7 @@ class DesktopFrameWithCursor : public DesktopFrame {
   DesktopVector restore_position_;
   rtc::scoped_ptr<DesktopFrame> restore_frame_;
 
-  DISALLOW_COPY_AND_ASSIGN(DesktopFrameWithCursor);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrameWithCursor);
 };
 
 DesktopFrameWithCursor::DesktopFrameWithCursor(DesktopFrame* frame,
@@ -132,15 +132,8 @@ DesktopAndCursorComposer::~DesktopAndCursorComposer() {}
 void DesktopAndCursorComposer::Start(DesktopCapturer::Callback* callback) {
   callback_ = callback;
   if (mouse_monitor_.get())
-    mouse_monitor_->Start(this, MouseCursorMonitor::SHAPE_AND_POSITION);
+    mouse_monitor_->Init(this, MouseCursorMonitor::SHAPE_AND_POSITION);
   desktop_capturer_->Start(this);
-}
-
-void DesktopAndCursorComposer::Stop() {
-  desktop_capturer_->Stop();
-  if (mouse_monitor_.get())
-    mouse_monitor_->Stop();
-  callback_ = NULL;
 }
 
 void DesktopAndCursorComposer::Capture(const DesktopRegion& region) {

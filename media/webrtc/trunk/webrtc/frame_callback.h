@@ -17,11 +17,11 @@
 
 namespace webrtc {
 
-class I420VideoFrame;
+class VideoFrame;
 
 struct EncodedFrame {
  public:
-  EncodedFrame() : data_(NULL), length_(0), frame_type_(kFrameEmpty) {}
+  EncodedFrame() : data_(NULL), length_(0), frame_type_(kEmptyFrame) {}
   EncodedFrame(const uint8_t* data, size_t length, FrameType frame_type)
     : data_(data), length_(length), frame_type_(frame_type) {}
 
@@ -34,7 +34,7 @@ class I420FrameCallback {
  public:
   // This function is called with a I420 frame allowing the user to modify the
   // frame content.
-  virtual void FrameCallback(I420VideoFrame* video_frame) = 0;
+  virtual void FrameCallback(VideoFrame* video_frame) = 0;
 
  protected:
   virtual ~I420FrameCallback() {}

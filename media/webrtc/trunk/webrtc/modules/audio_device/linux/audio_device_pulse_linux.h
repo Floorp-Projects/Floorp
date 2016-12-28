@@ -11,14 +11,13 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_PULSE_LINUX_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_PULSE_LINUX_H
 
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
-#ifdef USE_X11
 #include <X11/Xlib.h>
-#endif
 #include <pulse/pulseaudio.h>
 
 // We define this flag if it's missing from our headers, because we want to be
@@ -206,18 +205,16 @@ public:
     // CPU load
     int32_t CPULoad(uint16_t& load) const override;
 
-public:
- bool PlayoutWarning() const override;
- bool PlayoutError() const override;
- bool RecordingWarning() const override;
- bool RecordingError() const override;
- void ClearPlayoutWarning() override;
- void ClearPlayoutError() override;
- void ClearRecordingWarning() override;
- void ClearRecordingError() override;
+    bool PlayoutWarning() const override;
+    bool PlayoutError() const override;
+    bool RecordingWarning() const override;
+    bool RecordingError() const override;
+    void ClearPlayoutWarning() override;
+    void ClearPlayoutError() override;
+    void ClearRecordingWarning() override;
+    void ClearRecordingError() override;
 
-public:
- void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override;
+   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override;
 
 private:
     void Lock() EXCLUSIVE_LOCK_FUNCTION(_critSect) {
@@ -229,10 +226,8 @@ private:
     void WaitForOperationCompletion(pa_operation* paOperation) const;
     void WaitForSuccess(pa_operation* paOperation) const;
 
-private:
     bool KeyPressed() const;
 
-private:
     static void PaContextStateCallback(pa_context *c, void *pThis);
     static void PaSinkInfoCallback(pa_context *c, const pa_sink_info *i,
                                    int eol, void *pThis);
@@ -281,7 +276,6 @@ private:
     bool RecThreadProcess();
     bool PlayThreadProcess();
 
-private:
     AudioDeviceBuffer* _ptrAudioBuffer;
 
     CriticalSectionWrapper& _critSect;
@@ -290,8 +284,9 @@ private:
     EventWrapper& _recStartEvent;
     EventWrapper& _playStartEvent;
 
-    rtc::scoped_ptr<ThreadWrapper> _ptrThreadPlay;
-    rtc::scoped_ptr<ThreadWrapper> _ptrThreadRec;
+    // TODO(pbos): Remove scoped_ptr and use directly without resetting.
+    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
+    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
     int32_t _id;
 
     AudioMixerManagerLinuxPulse _mixerManager;
@@ -307,7 +302,12 @@ private:
 
     AudioDeviceModule::BufferType _playBufType;
 
-private:
+    // Stores thread ID in constructor.
+    // We can then use ThreadChecker::CalledOnValidThread() to ensure that
+    // other methods are called from the same thread.
+    // Currently only does RTC_DCHECK(thread_checker_.CalledOnValidThread()).
+    rtc::ThreadChecker thread_checker_;
+
     bool _initialized;
     bool _recording;
     bool _playing;
@@ -320,7 +320,6 @@ private:
     bool _AGC;
     bool update_speaker_volume_at_startup_;
 
-private:
     uint16_t _playBufDelayFixed; // fixed playback delay
 
     uint32_t _sndCardPlayDelay;
@@ -369,9 +368,7 @@ private:
     pa_buffer_attr _recBufferAttr;
 
     char _oldKeyState[32];
-#ifdef USE_X11
     Display* _XDisplay;
-#endif
 };
 
 }

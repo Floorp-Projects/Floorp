@@ -23,7 +23,7 @@
  *  Classification of subframes to localize start state
  *---------------------------------------------------------------*/
 
-int16_t WebRtcIlbcfix_FrameClassify(
+size_t WebRtcIlbcfix_FrameClassify(
     /* (o) Index to the max-energy sub frame */
     IlbcEncoder *iLBCenc_inst,
     /* (i/o) the encoder state structure */
@@ -35,8 +35,8 @@ int16_t WebRtcIlbcfix_FrameClassify(
   int32_t *seqEnPtr;
   int32_t maxW32;
   int16_t scale1;
-  int16_t pos;
-  int n;
+  size_t pos;
+  size_t n;
 
   /*
     Calculate the energy of each of the 80 sample blocks
@@ -62,7 +62,7 @@ int16_t WebRtcIlbcfix_FrameClassify(
   }
 
   /* Scale to maximum 20 bits in order to allow for the 11 bit window */
-  maxW32 = WebRtcSpl_MaxValueW32(ssqEn, (int16_t)(iLBCenc_inst->nsub-1));
+  maxW32 = WebRtcSpl_MaxValueW32(ssqEn, iLBCenc_inst->nsub - 1);
   scale = WebRtcSpl_GetSizeInBits(maxW32) - 20;
   scale1 = WEBRTC_SPL_MAX(0, scale);
 
@@ -82,7 +82,7 @@ int16_t WebRtcIlbcfix_FrameClassify(
   }
 
   /* Extract the best choise of start state */
-  pos = WebRtcSpl_MaxIndexW32(ssqEn, (int16_t)(iLBCenc_inst->nsub-1)) + 1;
+  pos = WebRtcSpl_MaxIndexW32(ssqEn, iLBCenc_inst->nsub - 1) + 1;
 
   return(pos);
 }

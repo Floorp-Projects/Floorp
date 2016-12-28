@@ -16,8 +16,7 @@
 #include <algorithm>
 
 #include "webrtc/call.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -71,16 +70,15 @@ class NetworkPacket {
   int64_t arrival_time_;
 };
 
-FakeNetworkPipe::FakeNetworkPipe(
-    const FakeNetworkPipe::Config& config)
-    : lock_(CriticalSectionWrapper::CreateCriticalSection()),
+FakeNetworkPipe::FakeNetworkPipe(Clock* clock,
+                                 const FakeNetworkPipe::Config& config)
+    : clock_(clock),
       packet_receiver_(NULL),
       config_(config),
       dropped_packets_(0),
       sent_packets_(0),
       total_packet_delay_(0),
-      next_process_time_(TickTime::MillisecondTimestamp()) {
-}
+      next_process_time_(clock_->TimeInMilliseconds()) {}
 
 FakeNetworkPipe::~FakeNetworkPipe() {
   while (!capacity_link_.empty()) {
@@ -98,7 +96,7 @@ void FakeNetworkPipe::SetReceiver(PacketReceiver* receiver) {
 }
 
 void FakeNetworkPipe::SetConfig(const FakeNetworkPipe::Config& config) {
-  CriticalSectionScoped crit(lock_.get());
+  rtc::CritScope crit(&lock_);
   config_ = config;  // Shallow copy of the struct.
 }
 
@@ -107,7 +105,7 @@ void FakeNetworkPipe::SendPacket(const uint8_t* data, size_t data_length) {
   // packets.
   if (packet_receiver_ == NULL)
     return;
-  CriticalSectionScoped crit(lock_.get());
+  rtc::CritScope crit(&lock_);
   if (config_.queue_length_packets > 0 &&
       capacity_link_.size() >= config_.queue_length_packets) {
     // Too many packet on the link, drop this one.
@@ -115,7 +113,7 @@ void FakeNetworkPipe::SendPacket(const uint8_t* data, size_t data_length) {
     return;
   }
 
-  int64_t time_now = TickTime::MillisecondTimestamp();
+  int64_t time_now = clock_->TimeInMilliseconds();
 
   // Delay introduced by the link capacity.
   int64_t capacity_delay_ms = 0;
@@ -135,7 +133,7 @@ void FakeNetworkPipe::SendPacket(const uint8_t* data, size_t data_length) {
 }
 
 float FakeNetworkPipe::PercentageLoss() {
-  CriticalSectionScoped crit(lock_.get());
+  rtc::CritScope crit(&lock_);
   if (sent_packets_ == 0)
     return 0;
 
@@ -144,18 +142,19 @@ float FakeNetworkPipe::PercentageLoss() {
 }
 
 int FakeNetworkPipe::AverageDelay() {
-  CriticalSectionScoped crit(lock_.get());
+  rtc::CritScope crit(&lock_);
   if (sent_packets_ == 0)
     return 0;
 
-  return total_packet_delay_ / static_cast<int>(sent_packets_);
+  return static_cast<int>(total_packet_delay_ /
+                          static_cast<int64_t>(sent_packets_));
 }
 
 void FakeNetworkPipe::Process() {
-  int64_t time_now = TickTime::MillisecondTimestamp();
+  int64_t time_now = clock_->TimeInMilliseconds();
   std::queue<NetworkPacket*> packets_to_deliver;
   {
-    CriticalSectionScoped crit(lock_.get());
+    rtc::CritScope crit(&lock_);
     // Check the capacity link first.
     while (capacity_link_.size() > 0 &&
            time_now >= capacity_link_.front()->arrival_time()) {
@@ -202,18 +201,19 @@ void FakeNetworkPipe::Process() {
   while (!packets_to_deliver.empty()) {
     NetworkPacket* packet = packets_to_deliver.front();
     packets_to_deliver.pop();
-    packet_receiver_->DeliverPacket(packet->data(), packet->data_length());
+    packet_receiver_->DeliverPacket(MediaType::ANY, packet->data(),
+                                    packet->data_length(), PacketTime());
     delete packet;
   }
 }
 
 int64_t FakeNetworkPipe::TimeUntilNextProcess() const {
-  CriticalSectionScoped crit(lock_.get());
+  rtc::CritScope crit(&lock_);
   const int64_t kDefaultProcessIntervalMs = 30;
   if (capacity_link_.size() == 0 || delay_link_.size() == 0)
     return kDefaultProcessIntervalMs;
-  return std::max<int64_t>(
-      next_process_time_ - TickTime::MillisecondTimestamp(), 0);
+  return std::max<int64_t>(next_process_time_ - clock_->TimeInMilliseconds(),
+                           0);
 }
 
 }  // namespace webrtc

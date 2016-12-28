@@ -20,7 +20,7 @@
 
 - (BOOL)createContext;
 - (BOOL)presentFramebuffer;
-- (BOOL)renderFrame:(webrtc::I420VideoFrame*)frameToRender;
+- (BOOL)renderFrame:(webrtc::VideoFrame*)frameToRender;
 - (BOOL)setCoordinatesForZOrder:(const float)zOrder
                            Left:(const float)left
                             Top:(const float)top

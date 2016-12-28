@@ -11,76 +11,55 @@
 #include "webrtc/modules/audio_processing/level_estimator_impl.h"
 
 #include "webrtc/modules/audio_processing/audio_buffer.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/audio_processing/rms_level.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 
-LevelEstimatorImpl::LevelEstimatorImpl(const AudioProcessing* apm,
-                                       CriticalSectionWrapper* crit)
-    : ProcessingComponent(),
-      crit_(crit) {}
+LevelEstimatorImpl::LevelEstimatorImpl(rtc::CriticalSection* crit)
+    : crit_(crit), rms_(new RMSLevel()) {
+  RTC_DCHECK(crit);
+}
 
 LevelEstimatorImpl::~LevelEstimatorImpl() {}
 
-int LevelEstimatorImpl::ProcessStream(AudioBuffer* audio) {
-  if (!is_component_enabled()) {
-    return AudioProcessing::kNoError;
+void LevelEstimatorImpl::Initialize() {
+  rtc::CritScope cs(crit_);
+  rms_->Reset();
+}
+
+void LevelEstimatorImpl::ProcessStream(AudioBuffer* audio) {
+  RTC_DCHECK(audio);
+  rtc::CritScope cs(crit_);
+  if (!enabled_) {
+    return;
   }
 
-  RMSLevel* rms_level = static_cast<RMSLevel*>(handle(0));
-  for (int i = 0; i < audio->num_channels(); ++i) {
-    rms_level->Process(audio->channels_const()[i],
-                       audio->num_frames());
+  for (size_t i = 0; i < audio->num_channels(); i++) {
+    rms_->Process(audio->channels_const()[i], audio->num_frames());
   }
-
-  return AudioProcessing::kNoError;
 }
 
 int LevelEstimatorImpl::Enable(bool enable) {
-  CriticalSectionScoped crit_scoped(crit_);
-  return EnableComponent(enable);
+  rtc::CritScope cs(crit_);
+  if (enable && !enabled_) {
+    rms_->Reset();
+  }
+  enabled_ = enable;
+  return AudioProcessing::kNoError;
 }
 
 bool LevelEstimatorImpl::is_enabled() const {
-  return is_component_enabled();
+  rtc::CritScope cs(crit_);
+  return enabled_;
 }
 
 int LevelEstimatorImpl::RMS() {
-  if (!is_component_enabled()) {
+  rtc::CritScope cs(crit_);
+  if (!enabled_) {
     return AudioProcessing::kNotEnabledError;
   }
 
-  RMSLevel* rms_level = static_cast<RMSLevel*>(handle(0));
-  return rms_level->RMS();
+  return rms_->RMS();
 }
-
-// The ProcessingComponent implementation is pretty weird in this class since
-// we have only a single instance of the trivial underlying component.
-void* LevelEstimatorImpl::CreateHandle() const {
-  return new RMSLevel;
-}
-
-void LevelEstimatorImpl::DestroyHandle(void* handle) const {
-  delete static_cast<RMSLevel*>(handle);
-}
-
-int LevelEstimatorImpl::InitializeHandle(void* handle) const {
-  static_cast<RMSLevel*>(handle)->Reset();
-  return AudioProcessing::kNoError;
-}
-
-int LevelEstimatorImpl::ConfigureHandle(void* /*handle*/) const {
-  return AudioProcessing::kNoError;
-}
-
-int LevelEstimatorImpl::num_handles_required() const {
-  return 1;
-}
-
-int LevelEstimatorImpl::GetHandleError(void* /*handle*/) const {
-  return AudioProcessing::kUnspecifiedError;
-}
-
 }  // namespace webrtc

@@ -23,19 +23,19 @@ namespace {
 
 // Creates and initializes the Openmax state. Transfers ownership to caller.
 OMXFFTSpec_R_F32* CreateOpenmaxState(int order) {
-  CHECK_GE(order, 1);
+  RTC_CHECK_GE(order, 1);
   // The omx implementation uses this macro to check order validity.
-  CHECK_LE(order, TWIDDLE_TABLE_ORDER);
+  RTC_CHECK_LE(order, TWIDDLE_TABLE_ORDER);
 
   OMX_INT buffer_size;
   OMXResult r = omxSP_FFTGetBufSize_R_F32(order, &buffer_size);
-  CHECK_EQ(r, OMX_Sts_NoErr);
+  RTC_CHECK_EQ(r, OMX_Sts_NoErr);
 
   OMXFFTSpec_R_F32* omx_spec = malloc(buffer_size);
-  DCHECK(omx_spec);
+  RTC_DCHECK(omx_spec);
 
   r = omxSP_FFTInit_R_F32(omx_spec, order);
-  CHECK_EQ(r, OMX_Sts_NoErr);
+  RTC_CHECK_EQ(r, OMX_Sts_NoErr);
   return omx_spec;
 }
 
@@ -55,14 +55,14 @@ void RealFourierOpenmax::Forward(const float* src, complex<float>* dest) const {
   // http://en.cppreference.com/w/cpp/numeric/complex
   OMXResult r =
       omxSP_FFTFwd_RToCCS_F32(src, reinterpret_cast<OMX_F32*>(dest), omx_spec_);
-  CHECK_EQ(r, OMX_Sts_NoErr);
+  RTC_CHECK_EQ(r, OMX_Sts_NoErr);
 }
 
 void RealFourierOpenmax::Inverse(const complex<float>* src, float* dest) const {
   OMXResult r =
       omxSP_FFTInv_CCSToR_F32(reinterpret_cast<const OMX_F32*>(src), dest,
                               omx_spec_);
-  CHECK_EQ(r, OMX_Sts_NoErr);
+  RTC_CHECK_EQ(r, OMX_Sts_NoErr);
 }
 
 }  // namespace webrtc

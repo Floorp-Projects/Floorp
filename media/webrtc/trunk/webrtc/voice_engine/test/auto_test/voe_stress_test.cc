@@ -25,8 +25,8 @@
 #include "webrtc/voice_engine/test/auto_test/voe_stress_test.h"
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/test/channel_transport/channel_transport.h"
 #include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 #include "webrtc/voice_engine/test/auto_test/voe_test_defines.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"  // defines build macros
@@ -334,9 +334,9 @@ int VoEStressTest::MultipleThreadsTest() {
   int rnd(0);
 
   // Start extra thread
-  _ptrExtraApiThread = ThreadWrapper::CreateThread(RunExtraApi, this,
-                                                   "StressTestExtraApiThread");
-  VALIDATE_STRESS(!_ptrExtraApiThread->Start());
+  _ptrExtraApiThread.reset(
+      new rtc::PlatformThread(RunExtraApi, this, "StressTestExtraApiThread"));
+  _ptrExtraApiThread->Start();
 
   //       Some possible extensions include:
   //       Add more API calls to randomize
@@ -365,7 +365,7 @@ int VoEStressTest::MultipleThreadsTest() {
   ANL();
 
   // Stop extra thread
-  VALIDATE_STRESS(!_ptrExtraApiThread->Stop());
+  _ptrExtraApiThread->Stop();
 
   ///////////// End test /////////////
 

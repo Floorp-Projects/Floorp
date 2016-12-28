@@ -10,7 +10,8 @@
 
 #include <string>
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
 
 namespace webrtc {
@@ -90,6 +91,10 @@ bool RtpDepacketizerGeneric::Parse(ParsedPayload* parsed_payload,
                                    const uint8_t* payload_data,
                                    size_t payload_data_length) {
   assert(parsed_payload != NULL);
+  if (payload_data_length == 0) {
+    LOG(LS_ERROR) << "Empty payload.";
+    return false;
+  }
 
   uint8_t generic_header = *payload_data++;
   --payload_data_length;

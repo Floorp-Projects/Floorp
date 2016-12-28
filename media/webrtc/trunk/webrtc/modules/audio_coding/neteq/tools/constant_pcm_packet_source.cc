@@ -13,7 +13,7 @@
 #include <algorithm>
 
 #include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_coding/codecs/pcm16b/include/pcm16b.h"
+#include "webrtc/modules/audio_coding/codecs/pcm16b/pcm16b.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet.h"
 
 namespace webrtc {
@@ -31,12 +31,12 @@ ConstantPcmPacketSource::ConstantPcmPacketSource(size_t payload_len_samples,
       seq_number_(0),
       timestamp_(0),
       payload_ssrc_(0xABCD1234) {
-  int encoded_len = WebRtcPcm16b_Encode(&sample_value, 1, encoded_sample_);
-  CHECK_EQ(encoded_len, 2);
+  size_t encoded_len = WebRtcPcm16b_Encode(&sample_value, 1, encoded_sample_);
+  RTC_CHECK_EQ(2U, encoded_len);
 }
 
 Packet* ConstantPcmPacketSource::NextPacket() {
-  CHECK_GT(packet_len_bytes_, kHeaderLenBytes);
+  RTC_CHECK_GT(packet_len_bytes_, kHeaderLenBytes);
   uint8_t* packet_memory = new uint8_t[packet_len_bytes_];
   // Fill the payload part of the packet memory with the pre-encoded value.
   for (unsigned i = 0; i < 2 * payload_len_samples_; ++i)

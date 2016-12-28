@@ -9,7 +9,7 @@
  */
 
 #include "webrtc/modules/audio_conference_mixer/source/time_scheduler.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 TimeScheduler::TimeScheduler(const int64_t periodicityInMs)

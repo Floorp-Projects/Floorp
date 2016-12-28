@@ -13,10 +13,9 @@
 #include <algorithm>
 #include <map>
 
-#include "webrtc/base/asynchttprequest.h"
-#include "webrtc/base/basicdefs.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/helpers.h"
+#include "webrtc/base/httpcommon.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/nethelpers.h"
 #include "webrtc/base/signalthread.h"
@@ -144,7 +143,7 @@ void HttpPortAllocatorSessionBase::TryCreateRelaySession() {
     return;
   }
 
-  if (attempts_ == HttpPortAllocator::kNumRetries) {
+  if (attempts_ == HttpPortAllocatorBase::kNumRetries) {
     LOG(LS_ERROR) << "HttpPortAllocator: maximum number of requests reached; "
                   << "giving up on relay.";
     return;
@@ -167,13 +166,11 @@ void HttpPortAllocatorSessionBase::TryCreateRelaySession() {
 }
 
 std::string HttpPortAllocatorSessionBase::GetSessionRequestUrl() {
-  std::string url = std::string(HttpPortAllocator::kCreateSessionURL);
-  if (allocator()->flags() & PORTALLOCATOR_ENABLE_SHARED_UFRAG) {
-    ASSERT(!username().empty());
-    ASSERT(!password().empty());
-    url = url + "?username=" + rtc::s_url_encode(username()) +
-        "&password=" + rtc::s_url_encode(password());
-  }
+  std::string url = std::string(HttpPortAllocatorBase::kCreateSessionURL);
+  ASSERT(!username().empty());
+  ASSERT(!password().empty());
+  url = url + "?username=" + rtc::s_url_encode(username()) +
+      "&password=" + rtc::s_url_encode(password());
   return url;
 }
 
@@ -220,107 +217,6 @@ void HttpPortAllocatorSessionBase::ReceiveSessionResponse(
   }
   config->AddRelay(relay_config);
   ConfigReady(config);
-}
-
-// HttpPortAllocator
-
-HttpPortAllocator::HttpPortAllocator(
-    rtc::NetworkManager* network_manager,
-    rtc::PacketSocketFactory* socket_factory,
-    const std::string &user_agent)
-    : HttpPortAllocatorBase(network_manager, socket_factory, user_agent) {
-}
-
-HttpPortAllocator::HttpPortAllocator(
-    rtc::NetworkManager* network_manager,
-    const std::string &user_agent)
-    : HttpPortAllocatorBase(network_manager, user_agent) {
-}
-HttpPortAllocator::~HttpPortAllocator() {}
-
-PortAllocatorSession* HttpPortAllocator::CreateSessionInternal(
-    const std::string& content_name,
-    int component,
-    const std::string& ice_ufrag, const std::string& ice_pwd) {
-  return new HttpPortAllocatorSession(this, content_name, component,
-                                      ice_ufrag, ice_pwd, stun_hosts(),
-                                      relay_hosts(), relay_token(),
-                                      user_agent());
-}
-
-// HttpPortAllocatorSession
-
-HttpPortAllocatorSession::HttpPortAllocatorSession(
-    HttpPortAllocator* allocator,
-    const std::string& content_name,
-    int component,
-    const std::string& ice_ufrag,
-    const std::string& ice_pwd,
-    const std::vector<rtc::SocketAddress>& stun_hosts,
-    const std::vector<std::string>& relay_hosts,
-    const std::string& relay,
-    const std::string& agent)
-    : HttpPortAllocatorSessionBase(allocator, content_name, component,
-                                   ice_ufrag, ice_pwd, stun_hosts,
-                                   relay_hosts, relay, agent) {
-}
-
-HttpPortAllocatorSession::~HttpPortAllocatorSession() {
-  for (std::list<rtc::AsyncHttpRequest*>::iterator it = requests_.begin();
-       it != requests_.end(); ++it) {
-    (*it)->Destroy(true);
-  }
-}
-
-void HttpPortAllocatorSession::SendSessionRequest(const std::string& host,
-                                                  int port) {
-  // Initiate an HTTP request to create a session through the chosen host.
-  rtc::AsyncHttpRequest* request =
-      new rtc::AsyncHttpRequest(user_agent());
-  request->SignalWorkDone.connect(this,
-      &HttpPortAllocatorSession::OnRequestDone);
-
-  request->set_secure(port == rtc::HTTP_SECURE_PORT);
-  request->set_proxy(allocator()->proxy());
-  request->response().document.reset(new rtc::MemoryStream);
-  request->request().verb = rtc::HV_GET;
-  request->request().path = GetSessionRequestUrl();
-  request->request().addHeader("X-Talk-Google-Relay-Auth", relay_token(), true);
-  request->request().addHeader("X-Stream-Type", "video_rtp", true);
-  request->set_host(host);
-  request->set_port(port);
-  request->Start();
-  request->Release();
-
-  requests_.push_back(request);
-}
-
-void HttpPortAllocatorSession::OnRequestDone(rtc::SignalThread* data) {
-  rtc::AsyncHttpRequest* request =
-      static_cast<rtc::AsyncHttpRequest*>(data);
-
-  // Remove the request from the list of active requests.
-  std::list<rtc::AsyncHttpRequest*>::iterator it =
-      std::find(requests_.begin(), requests_.end(), request);
-  if (it != requests_.end()) {
-    requests_.erase(it);
-  }
-
-  if (request->response().scode != 200) {
-    LOG(LS_WARNING) << "HTTPPortAllocator: request "
-                    << " received error " << request->response().scode;
-    TryCreateRelaySession();
-    return;
-  }
-  LOG(LS_INFO) << "HTTPPortAllocator: request succeeded";
-
-  rtc::MemoryStream* stream =
-      static_cast<rtc::MemoryStream*>(request->response().document.get());
-  stream->Rewind();
-  size_t length;
-  stream->GetSize(&length);
-  std::string resp = std::string(stream->GetBuffer(), length);
-  ReceiveSessionResponse(resp);
 }
 
 }  // namespace cricket

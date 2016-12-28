@@ -12,6 +12,7 @@
 
 #include <assert.h>
 
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
 
 namespace webrtc {
@@ -88,6 +89,7 @@ int PayloadSplitter::SplitRed(PacketList* packet_list) {
         // The block lengths in the RED headers do not match the overall packet
         // length. Something is corrupt. Discard this and the remaining
         // payloads from this packet.
+        LOG(LS_WARNING) << "SplitRed length mismatch";
         while (new_it != new_packets.end()) {
           // Payload should not have been allocated yet.
           assert(!(*new_it)->payload);
@@ -130,6 +132,7 @@ int PayloadSplitter::SplitFec(PacketList* packet_list,
     const DecoderDatabase::DecoderInfo* info =
         decoder_database->GetDecoderInfo(payload_type);
     if (!info) {
+      LOG(LS_WARNING) << "SplitFec unknown payload type";
       return kUnknownPayloadType;
     }
     // No splitting for a sync-packet.
@@ -149,8 +152,8 @@ int PayloadSplitter::SplitFec(PacketList* packet_list,
     }
 
     switch (info->codec_type) {
-      case kDecoderOpus:
-      case kDecoderOpus_2ch: {
+      case NetEqDecoder::kDecoderOpus:
+      case NetEqDecoder::kDecoderOpus_2ch: {
         // The main payload of this packet should be decoded as a primary
         // payload, even if it comes as a secondary payload in a RED packet.
         packet->primary = true;
@@ -171,6 +174,7 @@ int PayloadSplitter::SplitFec(PacketList* packet_list,
         break;
       }
       default: {
+        LOG(LS_WARNING) << "SplitFec wrong payload type";
         return kFecSplitError;
       }
     }
@@ -222,6 +226,7 @@ int PayloadSplitter::SplitAudio(PacketList* packet_list,
     const DecoderDatabase::DecoderInfo* info =
         decoder_database.GetDecoderInfo(packet->header.payloadType);
     if (!info) {
+      LOG(LS_WARNING) << "SplitAudio unknown payload type";
       return kUnknownPayloadType;
     }
     // No splitting for a sync-packet.
@@ -231,72 +236,73 @@ int PayloadSplitter::SplitAudio(PacketList* packet_list,
     }
     PacketList new_packets;
     switch (info->codec_type) {
-      case kDecoderPCMu:
-      case kDecoderPCMa: {
+      case NetEqDecoder::kDecoderPCMu:
+      case NetEqDecoder::kDecoderPCMa: {
         // 8 bytes per ms; 8 timestamps per ms.
         SplitBySamples(packet, 8, 8, &new_packets);
         break;
       }
-      case kDecoderPCMu_2ch:
-      case kDecoderPCMa_2ch: {
+      case NetEqDecoder::kDecoderPCMu_2ch:
+      case NetEqDecoder::kDecoderPCMa_2ch: {
         // 2 * 8 bytes per ms; 8 timestamps per ms.
         SplitBySamples(packet, 2 * 8, 8, &new_packets);
         break;
       }
-      case kDecoderG722: {
+      case NetEqDecoder::kDecoderG722: {
         // 8 bytes per ms; 16 timestamps per ms.
         SplitBySamples(packet, 8, 16, &new_packets);
         break;
       }
-      case kDecoderPCM16B: {
+      case NetEqDecoder::kDecoderPCM16B: {
         // 16 bytes per ms; 8 timestamps per ms.
         SplitBySamples(packet, 16, 8, &new_packets);
         break;
       }
-      case kDecoderPCM16Bwb: {
+      case NetEqDecoder::kDecoderPCM16Bwb: {
         // 32 bytes per ms; 16 timestamps per ms.
         SplitBySamples(packet, 32, 16, &new_packets);
         break;
       }
-      case kDecoderPCM16Bswb32kHz: {
+      case NetEqDecoder::kDecoderPCM16Bswb32kHz: {
         // 64 bytes per ms; 32 timestamps per ms.
         SplitBySamples(packet, 64, 32, &new_packets);
         break;
       }
-      case kDecoderPCM16Bswb48kHz: {
+      case NetEqDecoder::kDecoderPCM16Bswb48kHz: {
         // 96 bytes per ms; 48 timestamps per ms.
         SplitBySamples(packet, 96, 48, &new_packets);
         break;
       }
-      case kDecoderPCM16B_2ch: {
+      case NetEqDecoder::kDecoderPCM16B_2ch: {
         // 2 * 16 bytes per ms; 8 timestamps per ms.
         SplitBySamples(packet, 2 * 16, 8, &new_packets);
         break;
       }
-      case kDecoderPCM16Bwb_2ch: {
+      case NetEqDecoder::kDecoderPCM16Bwb_2ch: {
         // 2 * 32 bytes per ms; 16 timestamps per ms.
         SplitBySamples(packet, 2 * 32, 16, &new_packets);
         break;
       }
-      case kDecoderPCM16Bswb32kHz_2ch: {
+      case NetEqDecoder::kDecoderPCM16Bswb32kHz_2ch: {
         // 2 * 64 bytes per ms; 32 timestamps per ms.
         SplitBySamples(packet, 2 * 64, 32, &new_packets);
         break;
       }
-      case kDecoderPCM16Bswb48kHz_2ch: {
+      case NetEqDecoder::kDecoderPCM16Bswb48kHz_2ch: {
         // 2 * 96 bytes per ms; 48 timestamps per ms.
         SplitBySamples(packet, 2 * 96, 48, &new_packets);
         break;
       }
-      case kDecoderPCM16B_5ch: {
+      case NetEqDecoder::kDecoderPCM16B_5ch: {
         // 5 * 16 bytes per ms; 8 timestamps per ms.
         SplitBySamples(packet, 5 * 16, 8, &new_packets);
         break;
       }
-      case kDecoderILBC: {
+      case NetEqDecoder::kDecoderILBC: {
         size_t bytes_per_frame;
         int timestamps_per_frame;
         if (packet->payload_length >= 950) {
+          LOG(LS_WARNING) << "SplitAudio too large iLBC payload";
           return kTooLargePayload;
         }
         if (packet->payload_length % 38 == 0) {
@@ -308,6 +314,7 @@ int PayloadSplitter::SplitAudio(PacketList* packet_list,
           bytes_per_frame = 50;
           timestamps_per_frame = 240;
         } else {
+          LOG(LS_WARNING) << "SplitAudio invalid iLBC payload";
           return kFrameSplitError;
         }
         int ret = SplitByFrames(packet, bytes_per_frame, timestamps_per_frame,
@@ -402,6 +409,7 @@ int PayloadSplitter::SplitByFrames(const Packet* packet,
                                    uint32_t timestamps_per_frame,
                                    PacketList* new_packets) {
   if (packet->payload_length % bytes_per_frame != 0) {
+    LOG(LS_WARNING) << "SplitByFrames length mismatch";
     return kFrameSplitError;
   }
 

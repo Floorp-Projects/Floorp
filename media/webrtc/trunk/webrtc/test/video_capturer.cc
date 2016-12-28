@@ -26,10 +26,10 @@ class NullCapturer : public VideoCapturer {
   virtual void Stop() {}
 };
 
-VideoCapturer::VideoCapturer(VideoSendStreamInput* input)
-    : input_(input) {}
+VideoCapturer::VideoCapturer(VideoCaptureInput* input) : input_(input) {
+}
 
-VideoCapturer* VideoCapturer::Create(VideoSendStreamInput* input,
+VideoCapturer* VideoCapturer::Create(VideoCaptureInput* input,
                                      size_t width,
                                      size_t height,
                                      int fps,

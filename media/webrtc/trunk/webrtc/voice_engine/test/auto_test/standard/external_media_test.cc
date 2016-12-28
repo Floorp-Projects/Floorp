@@ -8,7 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/base/arraysize.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/test/auto_test/fakes/fake_media_process.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
@@ -27,43 +28,6 @@ class ExternalMediaTest : public AfterStreamingFixture {
     Sleep(2000);
   }
 };
-
-TEST_F(ExternalMediaTest, ManualCanRecordAndPlaybackUsingExternalPlayout) {
-  SwitchToManualMicrophone();
-
-  EXPECT_EQ(0, voe_base_->StopSend(channel_));
-  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalPlayoutStatus(true));
-  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
-  EXPECT_EQ(0, voe_base_->StartSend(channel_));
-
-  TEST_LOG("Recording data for 2 seconds starting now: please speak.\n");
-  int16_t recording[32000];
-  for (int i = 0; i < 200; i++) {
-    int sample_length = 0;
-    EXPECT_EQ(0, voe_xmedia_->ExternalPlayoutGetData(
-        &(recording[i * 160]), 16000, 100, sample_length));
-    EXPECT_EQ(160, sample_length);
-    Sleep(10);
-  }
-
-  EXPECT_EQ(0, voe_base_->StopSend(channel_));
-  EXPECT_EQ(0, voe_base_->StopPlayout(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalPlayoutStatus(false));
-  EXPECT_EQ(0, voe_base_->StartPlayout(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalRecordingStatus(true));
-  EXPECT_EQ(0, voe_base_->StartSend(channel_));
-
-  TEST_LOG("Playing back recording, you should hear what you said earlier.\n");
-  for (int i = 0; i < 200; i++) {
-    EXPECT_EQ(0, voe_xmedia_->ExternalRecordingInsertData(
-        &(recording[i * 160]), 160, 16000, 20));
-    Sleep(10);
-  }
-
-  EXPECT_EQ(0, voe_base_->StopSend(channel_));
-  EXPECT_EQ(0, voe_xmedia_->SetExternalRecordingStatus(false));
-}
 
 TEST_F(ExternalMediaTest,
     ManualRegisterExternalMediaProcessingOnAllChannelsAffectsPlayout) {
@@ -118,8 +82,8 @@ TEST_F(ExternalMediaTest,
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
   ResumePlaying();
   EXPECT_EQ(0, voe_xmedia_->GetAudioFrame(channel_, 0, &frame));
-  EXPECT_LT(0, frame.sample_rate_hz_);
-  EXPECT_LT(0, frame.samples_per_channel_);
+  EXPECT_GT(frame.sample_rate_hz_, 0);
+  EXPECT_GT(frame.samples_per_channel_, 0U);
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));
   ResumePlaying();
@@ -132,12 +96,12 @@ TEST_F(ExternalMediaTest,
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
   ResumePlaying();
-  for (size_t i = 0; i < sizeof(kValidFrequencies) / sizeof(int); i++) {
+  for (size_t i = 0; i < arraysize(kValidFrequencies); i++) {
     int f = kValidFrequencies[i];
     EXPECT_EQ(0, voe_xmedia_->GetAudioFrame(channel_, f, &frame))
        << "Resampling succeeds for freq=" << f;
     EXPECT_EQ(f, frame.sample_rate_hz_);
-    EXPECT_EQ(f / 100, frame.samples_per_channel_);
+    EXPECT_EQ(static_cast<size_t>(f / 100), frame.samples_per_channel_);
   }
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));
@@ -151,7 +115,7 @@ TEST_F(ExternalMediaTest,
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
   ResumePlaying();
-  for (size_t i = 0; i < sizeof(kInvalidFrequencies) / sizeof(int); i++) {
+  for (size_t i = 0; i < arraysize(kInvalidFrequencies); i++) {
     int f = kInvalidFrequencies[i];
     EXPECT_EQ(-1, voe_xmedia_->GetAudioFrame(channel_, f, &frame))
         << "Resampling fails for freq=" << f;

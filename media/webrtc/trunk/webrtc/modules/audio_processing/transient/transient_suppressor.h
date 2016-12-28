@@ -86,7 +86,7 @@ class TransientSuppressor {
   rtc::scoped_ptr<float[]> out_buffer_;
 
   // Arrays for fft.
-  rtc::scoped_ptr<int[]> ip_;
+  rtc::scoped_ptr<size_t[]> ip_;
   rtc::scoped_ptr<float[]> wfft_;
 
   rtc::scoped_ptr<float[]> spectral_mean_;

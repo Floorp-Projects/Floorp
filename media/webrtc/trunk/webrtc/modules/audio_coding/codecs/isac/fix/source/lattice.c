@@ -43,7 +43,7 @@ void WebRtcIsacfix_FilterArLoop(int16_t* ar_g_Q0,
                                 int16_t* ar_f_Q0,
                                 int16_t* cth_Q15,
                                 int16_t* sth_Q15,
-                                int16_t order_coef);
+                                size_t order_coef);
 
 /* Inner loop used for function WebRtcIsacfix_NormLatticeFilterMa(). It does:
    for 0 <= n < HALF_SUBFRAMELEN - 1:
@@ -86,7 +86,7 @@ void WebRtcIsacfix_FilterMaLoopC(int16_t input0,  // Filter coefficient
 
 /* filter the signal using normalized lattice filter */
 /* MA filter */
-void WebRtcIsacfix_NormLatticeFilterMa(int16_t orderCoef,
+void WebRtcIsacfix_NormLatticeFilterMa(size_t orderCoef,
                                        int32_t *stateGQ15,
                                        int16_t *lat_inQ0,
                                        int16_t *filt_coefQ15,
@@ -97,9 +97,10 @@ void WebRtcIsacfix_NormLatticeFilterMa(int16_t orderCoef,
   int16_t sthQ15[MAX_AR_MODEL_ORDER];
   int16_t cthQ15[MAX_AR_MODEL_ORDER];
 
-  int u, i, k, n;
+  int u, n;
+  size_t i, k;
   int16_t temp2,temp3;
-  int16_t ord_1 = orderCoef+1;
+  size_t ord_1 = orderCoef+1;
   int32_t inv_cthQ16[MAX_AR_MODEL_ORDER];
 
   int32_t gain32, fQtmp;
@@ -210,7 +211,7 @@ void WebRtcIsacfix_NormLatticeFilterMa(int16_t orderCoef,
 
 /* ----------------AR filter-------------------------*/
 /* filter the signal using normalized lattice filter */
-void WebRtcIsacfix_NormLatticeFilterAr(int16_t orderCoef,
+void WebRtcIsacfix_NormLatticeFilterAr(size_t orderCoef,
                                        int16_t *stateGQ0,
                                        int32_t *lat_inQ25,
                                        int16_t *filt_coefQ15,
@@ -218,7 +219,8 @@ void WebRtcIsacfix_NormLatticeFilterAr(int16_t orderCoef,
                                        int16_t lo_hi,
                                        int16_t *lat_outQ0)
 {
-  int ii,n,k,i,u;
+  size_t ii, k, i;
+  int n, u;
   int16_t sthQ15[MAX_AR_MODEL_ORDER];
   int16_t cthQ15[MAX_AR_MODEL_ORDER];
   int32_t tmp32;
@@ -234,7 +236,7 @@ void WebRtcIsacfix_NormLatticeFilterAr(int16_t orderCoef,
   int16_t sh;
 
   int16_t temp2,temp3;
-  int16_t ord_1 = orderCoef+1;
+  size_t ord_1 = orderCoef+1;
 
   for (u=0;u<SUBFRAMES;u++)
   {
@@ -279,13 +281,16 @@ void WebRtcIsacfix_NormLatticeFilterAr(int16_t orderCoef,
       ARfQ0vec[i] = (int16_t)WebRtcSpl_SatW32ToW16(tmp32); // Q0
     }
 
-    for (i=orderCoef-1;i>=0;i--) //get the state of f&g for the first input, for all orders
+    // Get the state of f & g for the first input, for all orders.
+    for (i = orderCoef; i > 0; i--)
     {
-      tmp32 = (cthQ15[i] * ARfQ0vec[0] - sthQ15[i] * stateGQ0[i] + 16384) >> 15;
+      tmp32 = (cthQ15[i - 1] * ARfQ0vec[0] - sthQ15[i - 1] * stateGQ0[i - 1] +
+               16384) >> 15;
       tmpAR = (int16_t)WebRtcSpl_SatW32ToW16(tmp32); // Q0
 
-      tmp32 = (sthQ15[i] * ARfQ0vec[0] + cthQ15[i] * stateGQ0[i] + 16384) >> 15;
-      ARgQ0vec[i+1] = (int16_t)WebRtcSpl_SatW32ToW16(tmp32); // Q0
+      tmp32 = (sthQ15[i - 1] * ARfQ0vec[0] + cthQ15[i - 1] * stateGQ0[i - 1] +
+               16384) >> 15;
+      ARgQ0vec[i] = (int16_t)WebRtcSpl_SatW32ToW16(tmp32); // Q0
       ARfQ0vec[0] = tmpAR;
     }
     ARgQ0vec[0] = ARfQ0vec[0];

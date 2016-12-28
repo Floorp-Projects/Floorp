@@ -18,8 +18,9 @@
 
 #if defined(WEBRTC_WIN)
 #include "webrtc/base/win32.h"
-#endif  // WEBRTC_WIN 
+#endif  // WEBRTC_WIN
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
@@ -27,12 +28,11 @@
 #include "webrtc/base/taskrunner.h"
 #include "webrtc/base/thread.h"
 #include "webrtc/base/timeutils.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace rtc {
 
-static int64 GetCurrentTime() {
-  return static_cast<int64>(Time()) * 10000;
+static int64_t GetCurrentTime() {
+  return static_cast<int64_t>(Time()) * 10000;
 }
 
 // feel free to change these numbers.  Note that '0' won't work, though
@@ -98,9 +98,7 @@ class HappyTask : public IdTimeoutTask {
 class MyTaskRunner : public TaskRunner {
  public:
   virtual void WakeTasks() { RunTasks(); }
-  virtual int64 CurrentTime() {
-    return GetCurrentTime();
-  }
+  virtual int64_t CurrentTime() { return GetCurrentTime(); }
 
   bool timeout_change() const {
     return timeout_change_;
@@ -270,7 +268,7 @@ class TaskTest : public sigslot::has_slots<> {
       EXPECT_TRUE(stuck_[i].timed_out_);
       if (!stuck_[i].timed_out_) {
         std::cout << "Stuck task #" << i << " timeout is at "
-            << stuck_[i].task_->timeout_time() << std::endl;        
+                  << stuck_[i].task_->timeout_time() << std::endl;
       }
     }
 
@@ -308,7 +306,7 @@ class AbortTask : public Task {
     return STATE_NEXT;
   }
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(AbortTask);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AbortTask);
 };
 
 class TaskAbortTest : public sigslot::has_slots<> {
@@ -333,7 +331,7 @@ class TaskAbortTest : public sigslot::has_slots<> {
   }
 
   MyTaskRunner task_runner_;
-  DISALLOW_EVIL_CONSTRUCTORS(TaskAbortTest);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TaskAbortTest);
 };
 
 TEST(start_task_test, Abort) {
@@ -363,7 +361,7 @@ class SetBoolOnDeleteTask : public Task {
 
  private:
   bool* set_when_deleted_;
-  DISALLOW_EVIL_CONSTRUCTORS(SetBoolOnDeleteTask);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SetBoolOnDeleteTask);
 };
 
 class AbortShouldWakeTest : public sigslot::has_slots<> {
@@ -396,7 +394,7 @@ class AbortShouldWakeTest : public sigslot::has_slots<> {
   }
 
   MyTaskRunner task_runner_;
-  DISALLOW_EVIL_CONSTRUCTORS(AbortShouldWakeTest);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AbortShouldWakeTest);
 };
 
 TEST(start_task_test, AbortShouldWake) {
@@ -410,7 +408,7 @@ TEST(start_task_test, AbortShouldWake) {
 class TimeoutChangeTest : public sigslot::has_slots<> {
  public:
   TimeoutChangeTest()
-    : task_count_(ARRAY_SIZE(stuck_tasks_)) {}
+    : task_count_(arraysize(stuck_tasks_)) {}
 
   // no need to delete any tasks; the task runner owns them
   ~TimeoutChangeTest() {}
@@ -465,7 +463,7 @@ class TimeoutChangeTest : public sigslot::has_slots<> {
 
  private:
   void OnTimeoutId(const int id) {
-    for (int i = 0; i < ARRAY_SIZE(stuck_tasks_); ++i) {
+    for (size_t i = 0; i < arraysize(stuck_tasks_); ++i) {
       if (stuck_tasks_[i] && stuck_tasks_[i]->unique_id() == id) {
         task_count_--;
         stuck_tasks_[i] = NULL;
@@ -477,7 +475,7 @@ class TimeoutChangeTest : public sigslot::has_slots<> {
   MyTaskRunner task_runner_;
   StuckTask* (stuck_tasks_[3]);
   int task_count_;
-  DISALLOW_EVIL_CONSTRUCTORS(TimeoutChangeTest);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TimeoutChangeTest);
 };
 
 TEST(start_task_test, TimeoutChange) {
@@ -490,11 +488,9 @@ class DeleteTestTaskRunner : public TaskRunner {
   DeleteTestTaskRunner() {
   }
   virtual void WakeTasks() { }
-  virtual int64 CurrentTime() {
-    return GetCurrentTime();
-  }
+  virtual int64_t CurrentTime() { return GetCurrentTime(); }
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(DeleteTestTaskRunner);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DeleteTestTaskRunner);
 };
 
 TEST(unstarted_task_test, DeleteTask) {

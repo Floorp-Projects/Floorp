@@ -16,10 +16,10 @@
 
 #include "webrtc/common_audio/ring_buffer.h"
 #include "webrtc/common_audio/signal_processing/include/real_fft.h"
-#include "webrtc/modules/audio_processing/aecm/include/echo_control_mobile.h"
+#include "webrtc/modules/audio_processing/aecm/echo_control_mobile.h"
 #include "webrtc/modules/audio_processing/utility/delay_estimator_wrapper.h"
-#include "webrtc/system_wrappers/interface/compile_assert_c.h"
-#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/system_wrappers/include/compile_assert_c.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
 #ifdef AEC_DEBUG
@@ -361,8 +361,7 @@ static void ResetAdaptiveChannelC(AecmCore* aecm) {
 }
 
 // Initialize function pointers for ARM Neon platform.
-#if (defined WEBRTC_DETECT_ARM_NEON || defined WEBRTC_ARCH_ARM_NEON || \
-     defined WEBRTC_ARCH_ARM64_NEON)
+#if (defined WEBRTC_DETECT_NEON || defined WEBRTC_HAS_NEON)
 static void WebRtcAecm_InitNeon(void)
 {
   WebRtcAecm_StoreAdaptiveChannel = WebRtcAecm_StoreAdaptiveChannelNeon;
@@ -509,13 +508,13 @@ int WebRtcAecm_InitCore(AecmCore* const aecm, int samplingFreq) {
     WebRtcAecm_StoreAdaptiveChannel = StoreAdaptiveChannelC;
     WebRtcAecm_ResetAdaptiveChannel = ResetAdaptiveChannelC;
 
-#ifdef WEBRTC_DETECT_ARM_NEON
+#ifdef WEBRTC_DETECT_NEON
     uint64_t features = WebRtc_GetCPUFeaturesARM();
     if ((features & kCPUFeatureNEON) != 0)
     {
       WebRtcAecm_InitNeon();
     }
-#elif defined(WEBRTC_ARCH_ARM_NEON) || defined(WEBRTC_ARCH_ARM64_NEON)
+#elif defined(WEBRTC_HAS_NEON)
     WebRtcAecm_InitNeon();
 #endif
 

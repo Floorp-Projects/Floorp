@@ -39,21 +39,21 @@ int16_t WebRtcG722_EncoderInit(G722EncInst *G722enc_inst)
     }
 }
 
-int16_t WebRtcG722_FreeEncoder(G722EncInst *G722enc_inst)
+int WebRtcG722_FreeEncoder(G722EncInst *G722enc_inst)
 {
     // Free encoder memory
     return WebRtc_g722_encode_release((G722EncoderState*) G722enc_inst);
 }
 
-int16_t WebRtcG722_Encode(G722EncInst *G722enc_inst,
-                          const int16_t* speechIn,
-                          int16_t len,
-                          uint8_t* encoded)
+size_t WebRtcG722_Encode(G722EncInst *G722enc_inst,
+                         const int16_t* speechIn,
+                         size_t len,
+                         uint8_t* encoded)
 {
     unsigned char *codechar = (unsigned char*) encoded;
     // Encode the input speech vector
-    return WebRtc_g722_encode((G722EncoderState*) G722enc_inst,
-                       codechar, speechIn, len);
+    return WebRtc_g722_encode((G722EncoderState*) G722enc_inst, codechar,
+                              speechIn, len);
 }
 
 int16_t WebRtcG722_CreateDecoder(G722DecInst **G722dec_inst)
@@ -66,35 +66,28 @@ int16_t WebRtcG722_CreateDecoder(G722DecInst **G722dec_inst)
     }
 }
 
-int16_t WebRtcG722_DecoderInit(G722DecInst *G722dec_inst)
-{
-    // Create and/or reset the G.722 decoder
-    // Bitrate 64 kbps and wideband mode (2)
-    G722dec_inst = (G722DecInst *) WebRtc_g722_decode_init(
-        (G722DecoderState*) G722dec_inst, 64000, 2);
-    if (G722dec_inst == NULL) {
-        return -1;
-    } else {
-        return 0;
-    }
+void WebRtcG722_DecoderInit(G722DecInst* inst) {
+  // Create and/or reset the G.722 decoder
+  // Bitrate 64 kbps and wideband mode (2)
+  WebRtc_g722_decode_init((G722DecoderState*)inst, 64000, 2);
 }
 
-int16_t WebRtcG722_FreeDecoder(G722DecInst *G722dec_inst)
+int WebRtcG722_FreeDecoder(G722DecInst *G722dec_inst)
 {
     // Free encoder memory
     return WebRtc_g722_decode_release((G722DecoderState*) G722dec_inst);
 }
 
-int16_t WebRtcG722_Decode(G722DecInst *G722dec_inst,
-                          const uint8_t *encoded,
-                          int16_t len,
-                          int16_t *decoded,
-                          int16_t *speechType)
+size_t WebRtcG722_Decode(G722DecInst *G722dec_inst,
+                         const uint8_t *encoded,
+                         size_t len,
+                         int16_t *decoded,
+                         int16_t *speechType)
 {
     // Decode the G.722 encoder stream
     *speechType=G722_WEBRTC_SPEECH;
-    return WebRtc_g722_decode((G722DecoderState*) G722dec_inst,
-                              decoded, encoded, len);
+    return WebRtc_g722_decode((G722DecoderState*) G722dec_inst, decoded,
+                              encoded, len);
 }
 
 int16_t WebRtcG722_Version(char *versionStr, short len)

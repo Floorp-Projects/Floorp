@@ -20,13 +20,13 @@ namespace cricket {
 
 static const size_t kMaxPacketSize = 64 * 1024;
 
-typedef uint16 PacketLength;
+typedef uint16_t PacketLength;
 static const size_t kPacketLenSize = sizeof(PacketLength);
 static const size_t kPacketLenOffset = 2;
 static const size_t kBufSize = kMaxPacketSize + kStunHeaderSize;
 static const size_t kTurnChannelDataHdrSize = 4;
 
-inline bool IsStunMessage(uint16 msg_type) {
+inline bool IsStunMessage(uint16_t msg_type) {
   // The first two bits of a channel data message are 0b01.
   return (msg_type & 0xC000) ? false : true;
 }
@@ -129,7 +129,7 @@ size_t AsyncStunTCPSocket::GetExpectedLength(const void* data, size_t len,
   PacketLength pkt_len =
       rtc::GetBE16(static_cast<const char*>(data) + kPacketLenOffset);
   size_t expected_pkt_len;
-  uint16 msg_type = rtc::GetBE16(data);
+  uint16_t msg_type = rtc::GetBE16(data);
   if (IsStunMessage(msg_type)) {
     // STUN message.
     expected_pkt_len = kStunHeaderSize + pkt_len;

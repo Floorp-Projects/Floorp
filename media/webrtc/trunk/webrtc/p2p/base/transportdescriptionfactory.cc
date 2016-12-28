@@ -14,33 +14,18 @@
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/messagedigest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sslfingerprint.h"
 
 namespace cricket {
 
-static TransportProtocol kDefaultProtocol = ICEPROTO_RFC5245;
-
 TransportDescriptionFactory::TransportDescriptionFactory()
-    : protocol_(kDefaultProtocol),
-      secure_(SEC_DISABLED),
-      identity_(NULL) {
+    : secure_(SEC_DISABLED) {
 }
 
 TransportDescription* TransportDescriptionFactory::CreateOffer(
     const TransportOptions& options,
     const TransportDescription* current_description) const {
   rtc::scoped_ptr<TransportDescription> desc(new TransportDescription());
-
-  // Set the transport type depending on the selected protocol.
-  if (protocol_ == ICEPROTO_RFC5245) {
-    desc->transport_type = NS_JINGLE_ICE_UDP;
-  } else if (protocol_ == ICEPROTO_HYBRID) {
-    desc->transport_type = NS_JINGLE_ICE_UDP;
-    desc->AddOption(ICE_OPTION_GICE);
-  } else if (protocol_ == ICEPROTO_GOOGLE) {
-    desc->transport_type = NS_GINGLE_P2P;
-  }
 
   // Generate the ICE credentials if we don't already have them.
   if (!current_description || options.ice_restart) {
@@ -67,33 +52,14 @@ TransportDescription* TransportDescriptionFactory::CreateAnswer(
     const TransportDescription* offer,
     const TransportOptions& options,
     const TransportDescription* current_description) const {
-  // A NULL offer is treated as a GICE transport description.
   // TODO(juberti): Figure out why we get NULL offers, and fix this upstream.
-  rtc::scoped_ptr<TransportDescription> desc(new TransportDescription());
-
-  // Figure out which ICE variant to negotiate; prefer RFC 5245 ICE, but fall
-  // back to G-ICE if needed. Note that we never create a hybrid answer, since
-  // we know what the other side can support already.
-  if (offer && offer->transport_type == NS_JINGLE_ICE_UDP &&
-      (protocol_ == ICEPROTO_RFC5245 || protocol_ == ICEPROTO_HYBRID)) {
-    // Offer is ICE or hybrid, we support ICE or hybrid: use ICE.
-    desc->transport_type = NS_JINGLE_ICE_UDP;
-  } else if (offer && offer->transport_type == NS_JINGLE_ICE_UDP &&
-             offer->HasOption(ICE_OPTION_GICE) &&
-             protocol_ == ICEPROTO_GOOGLE) {
-    desc->transport_type = NS_GINGLE_P2P;
-    // Offer is hybrid, we support GICE: use GICE.
-  } else if ((!offer || offer->transport_type == NS_GINGLE_P2P) &&
-             (protocol_ == ICEPROTO_HYBRID || protocol_ == ICEPROTO_GOOGLE)) {
-    // Offer is GICE, we support hybrid or GICE: use GICE.
-    desc->transport_type = NS_GINGLE_P2P;
-  } else {
-    // Mismatch.
-    LOG(LS_WARNING) << "Failed to create TransportDescription answer "
-                       "because of incompatible transport types";
+  if (!offer) {
+    LOG(LS_WARNING) << "Failed to create TransportDescription answer " <<
+        "because offer is NULL";
     return NULL;
   }
 
+  rtc::scoped_ptr<TransportDescription> desc(new TransportDescription());
   // Generate the ICE credentials if we don't already have them or ice is
   // being restarted.
   if (!current_description || options.ice_restart) {
@@ -129,8 +95,8 @@ TransportDescription* TransportDescriptionFactory::CreateAnswer(
 
 bool TransportDescriptionFactory::SetSecurityInfo(
     TransportDescription* desc, ConnectionRole role) const {
-  if (!identity_) {
-    LOG(LS_ERROR) << "Cannot create identity digest with no identity";
+  if (!certificate_) {
+    LOG(LS_ERROR) << "Cannot create identity digest with no certificate";
     return false;
   }
 
@@ -138,13 +104,14 @@ bool TransportDescriptionFactory::SetSecurityInfo(
   // RFC 4572 Section 5 requires that those lines use the same hash function as
   // the certificate's signature.
   std::string digest_alg;
-  if (!identity_->certificate().GetSignatureDigestAlgorithm(&digest_alg)) {
+  if (!certificate_->ssl_certificate().GetSignatureDigestAlgorithm(
+          &digest_alg)) {
     LOG(LS_ERROR) << "Failed to retrieve the certificate's digest algorithm";
     return false;
   }
 
   desc->identity_fingerprint.reset(
-      rtc::SSLFingerprint::Create(digest_alg, identity_));
+      rtc::SSLFingerprint::Create(digest_alg, certificate_->identity()));
   if (!desc->identity_fingerprint.get()) {
     LOG(LS_ERROR) << "Failed to create identity fingerprint, alg="
                   << digest_alg;
@@ -157,4 +124,3 @@ bool TransportDescriptionFactory::SetSecurityInfo(
 }
 
 }  // namespace cricket
-

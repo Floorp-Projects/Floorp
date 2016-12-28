@@ -119,7 +119,7 @@ class CSecBufferBundle : public SecBufferBundleBase {
   }
 
   // Accessor for the descriptor
-  const PSecBufferDesc desc() const {
+  PSecBufferDesc desc() const {
     return &desc_;
   }
 

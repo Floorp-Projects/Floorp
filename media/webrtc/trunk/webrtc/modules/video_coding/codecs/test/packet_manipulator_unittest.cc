@@ -13,7 +13,7 @@
 #include <queue>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/test/predictive_packet_manipulator.h"
 #include "webrtc/test/testsupport/unittest_utils.h"
 #include "webrtc/typedefs.h"
@@ -25,7 +25,7 @@ const double kNeverDropProbability = 0.0;
 const double kAlwaysDropProbability = 1.0;
 const int kBurstLength = 1;
 
-class PacketManipulatorTest: public PacketRelatedTest {
+class PacketManipulatorTest : public PacketRelatedTest {
  protected:
   PacketReader packet_reader_;
   EncodedImage image_;
@@ -50,19 +50,15 @@ class PacketManipulatorTest: public PacketRelatedTest {
 
   virtual ~PacketManipulatorTest() {}
 
-  void SetUp() {
-    PacketRelatedTest::SetUp();
-  }
+  void SetUp() { PacketRelatedTest::SetUp(); }
 
-  void TearDown() {
-    PacketRelatedTest::TearDown();
-  }
+  void TearDown() { PacketRelatedTest::TearDown(); }
 
   void VerifyPacketLoss(int expected_nbr_packets_dropped,
                         int actual_nbr_packets_dropped,
                         size_t expected_packet_data_length,
                         uint8_t* expected_packet_data,
-                        EncodedImage& actual_image) {
+                        const EncodedImage& actual_image) {
     EXPECT_EQ(expected_nbr_packets_dropped, actual_nbr_packets_dropped);
     EXPECT_EQ(expected_packet_data_length, image_._length);
     EXPECT_EQ(0, memcmp(expected_packet_data, actual_image._buffer,
@@ -75,10 +71,10 @@ TEST_F(PacketManipulatorTest, Constructor) {
 }
 
 TEST_F(PacketManipulatorTest, DropNone) {
-  PacketManipulatorImpl manipulator(&packet_reader_,  no_drop_config_, false);
+  PacketManipulatorImpl manipulator(&packet_reader_, no_drop_config_, false);
   int nbr_packets_dropped = manipulator.ManipulatePackets(&image_);
-  VerifyPacketLoss(0, nbr_packets_dropped, kPacketDataLength,
-                   packet_data_, image_);
+  VerifyPacketLoss(0, nbr_packets_dropped, kPacketDataLength, packet_data_,
+                   image_);
 }
 
 TEST_F(PacketManipulatorTest, UniformDropNoneSmallFrame) {
@@ -87,15 +83,14 @@ TEST_F(PacketManipulatorTest, UniformDropNoneSmallFrame) {
   PacketManipulatorImpl manipulator(&packet_reader_, no_drop_config_, false);
   int nbr_packets_dropped = manipulator.ManipulatePackets(&image_);
 
-  VerifyPacketLoss(0, nbr_packets_dropped, data_length,
-                     packet_data_, image_);
+  VerifyPacketLoss(0, nbr_packets_dropped, data_length, packet_data_, image_);
 }
 
 TEST_F(PacketManipulatorTest, UniformDropAll) {
   PacketManipulatorImpl manipulator(&packet_reader_, drop_config_, false);
   int nbr_packets_dropped = manipulator.ManipulatePackets(&image_);
-  VerifyPacketLoss(kPacketDataNumberOfPackets, nbr_packets_dropped,
-                   0, packet_data_, image_);
+  VerifyPacketLoss(kPacketDataNumberOfPackets, nbr_packets_dropped, 0,
+                   packet_data_, image_);
 }
 
 // Use our customized test class to make the second packet being lost

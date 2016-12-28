@@ -13,8 +13,9 @@
 
 #include "vpx/vpx_encoder.h"
 
+#include "webrtc/base/timeutils.h"
 #include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
-#include "webrtc/modules/video_coding/utility/include/frame_dropper.h"
+#include "webrtc/modules/video_coding/utility/frame_dropper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -25,43 +26,73 @@ class ScreenshareLayers : public TemporalLayers {
  public:
   static const double kMaxTL0FpsReduction;
   static const double kAcceptableTargetOvershoot;
+  static const int kTl0Flags;
+  static const int kTl1Flags;
+  static const int kTl1SyncFlags;
 
-  ScreenshareLayers(int num_temporal_layers,
-                    uint8_t initial_tl0_pic_idx,
-                    FrameDropper* tl0_frame_dropper,
-                    FrameDropper* tl1_frame_dropper);
+  ScreenshareLayers(int num_temporal_layers, uint8_t initial_tl0_pic_idx);
   virtual ~ScreenshareLayers() {}
 
   // Returns the recommended VP8 encode flags needed. May refresh the decoder
   // and/or update the reference buffers.
-  virtual int EncodeFlags(uint32_t timestamp);
+  int EncodeFlags(uint32_t timestamp) override;
 
-  virtual bool ConfigureBitrates(int bitrate_kbit,
-                                 int max_bitrate_kbit,
-                                 int framerate,
-                                 vpx_codec_enc_cfg_t* cfg);
+  bool ConfigureBitrates(int bitrate_kbps,
+                         int max_bitrate_kbps,
+                         int framerate,
+                         vpx_codec_enc_cfg_t* cfg) override;
 
-  virtual void PopulateCodecSpecific(bool base_layer_sync,
-                                     CodecSpecificInfoVP8 *vp8_info,
-                                     uint32_t timestamp);
+  void PopulateCodecSpecific(bool base_layer_sync,
+                             CodecSpecificInfoVP8* vp8_info,
+                             uint32_t timestamp) override;
 
-  virtual void FrameEncoded(unsigned int size, uint32_t timestamp);
+  void FrameEncoded(unsigned int size, uint32_t timestamp, int qp) override;
 
-  virtual int CurrentLayerId() const;
+  int CurrentLayerId() const override;
+
+  // Allows the layers adapter to update the encoder configuration prior to a
+  // frame being encoded. Return true if the configuration should be updated
+  // and false if now change is needed.
+  bool UpdateConfiguration(vpx_codec_enc_cfg_t* cfg) override;
 
  private:
-  void CalculateFramerate(uint32_t timestamp);
-  bool TimeToSync(uint32_t timestamp) const;
+  bool TimeToSync(int64_t timestamp) const;
 
-  FrameDropper* tl0_frame_dropper_;
-  FrameDropper* tl1_frame_dropper_;
   int number_of_temporal_layers_;
   bool last_base_layer_sync_;
   uint8_t tl0_pic_idx_;
   int active_layer_;
-  std::list<uint32_t> timestamp_list_;
-  int framerate_;
+  int64_t last_timestamp_;
   int64_t last_sync_timestamp_;
+  rtc::TimestampWrapAroundHandler time_wrap_handler_;
+  int min_qp_;
+  int max_qp_;
+  uint32_t max_debt_bytes_;
+  int frame_rate_;
+
+  static const int kMaxNumTemporalLayers = 2;
+  struct TemporalLayer {
+    TemporalLayer()
+        : state(State::kNormal),
+          enhanced_max_qp(-1),
+          last_qp(-1),
+          debt_bytes_(0),
+          target_rate_kbps_(0) {}
+
+    enum class State {
+      kNormal,
+      kDropped,
+      kReencoded,
+      kQualityBoost,
+    } state;
+
+    int enhanced_max_qp;
+    int last_qp;
+    uint32_t debt_bytes_;
+    uint32_t target_rate_kbps_;
+
+    void UpdateDebt(int64_t delta_ms);
+  } layers_[kMaxNumTemporalLayers];
 };
 }  // namespace webrtc
 

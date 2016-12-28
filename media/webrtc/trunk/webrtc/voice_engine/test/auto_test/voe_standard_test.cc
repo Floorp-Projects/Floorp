@@ -15,7 +15,7 @@
 #include <string.h>
 
 #include "webrtc/engine_configurations.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/voice_engine/include/voe_neteq_stats.h"
 #include "webrtc/voice_engine/test/auto_test/automated_mode.h"
 #include "webrtc/voice_engine/test/auto_test/voe_cpu_test.h"
@@ -116,14 +116,6 @@ VoETestManager::~VoETestManager() {
 bool VoETestManager::Init() {
   if (initialized_)
     return true;
-
-  if (VoiceEngine::SetTraceFile(NULL) != -1) {
-    // should not be possible to call a Trace method before the VoE is
-    // created
-    TEST_LOG("\nError at line: %i (VoiceEngine::SetTraceFile()"
-      "should fail)!\n", __LINE__);
-    return false;
-  }
 
   voice_engine_ = VoiceEngine::Create();
   if (!voice_engine_) {
@@ -228,11 +220,6 @@ int VoETestManager::ReleaseInterfaces() {
   if (false == VoiceEngine::Delete(voice_engine_)) {
     TEST_LOG("\n\nVoiceEngine::Delete() failed. \n");
     releaseOK = false;
-  }
-
-  if (VoiceEngine::SetTraceFile(NULL) != -1) {
-    TEST_LOG("\nError at line: %i (VoiceEngine::SetTraceFile()"
-      "should fail)!\n", __LINE__);
   }
 
   return (releaseOK == true) ? 0 : -1;

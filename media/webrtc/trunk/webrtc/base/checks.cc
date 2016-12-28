@@ -16,7 +16,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#if defined(__GLIBC__) && !defined(__UCLIBC__)
+#if defined(__GLIBCXX__) && !defined(__UCLIBC__)
 #include <cxxabi.h>
 #include <execinfo.h>
 #endif
@@ -55,7 +55,7 @@ void PrintError(const char* format, ...) {
 // to get usable symbols on Linux. This is copied from V8. Chromium has a more
 // advanced stace trace system; also more difficult to copy.
 void DumpBacktrace() {
-#if defined(__GLIBC__) && !defined(__UCLIBC__)
+#if defined(__GLIBCXX__) && !defined(__UCLIBC__)
   void* trace[100];
   int size = backtrace(trace, sizeof(trace) / sizeof(*trace));
   char** symbols = backtrace_symbols(trace, size);
@@ -109,9 +109,6 @@ void FatalMessage::Init(const char* file, int line) {
           << file << ", line " << line << std::endl << "# ";
 }
 
-// Refer to comments in checks.h.
-#ifndef WEBRTC_CHROMIUM_BUILD
-
 // MSVC doesn't like complex extern templates and DLLs.
 #if !defined(COMPILER_MSVC)
 // Explicit instantiations for commonly used comparisons.
@@ -126,7 +123,5 @@ template std::string* MakeCheckOpString<unsigned int, unsigned long>(
 template std::string* MakeCheckOpString<std::string, std::string>(
     const std::string&, const std::string&, const char* name);
 #endif
-
-#endif  // WEBRTC_CHROMIUM_BUILD
 
 }  // namespace rtc

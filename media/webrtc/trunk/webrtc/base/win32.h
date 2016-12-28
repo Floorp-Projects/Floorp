@@ -46,8 +46,6 @@ namespace rtc {
 const char* win32_inet_ntop(int af, const void *src, char* dst, socklen_t size);
 int win32_inet_pton(int af, const char* src, void *dst);
 
-///////////////////////////////////////////////////////////////////////////////
-
 inline std::wstring ToUtf16(const char* utf8, size_t len) {
   int len16 = ::MultiByteToWideChar(CP_UTF8, 0, utf8, static_cast<int>(len),
                                     NULL, 0);
@@ -87,8 +85,8 @@ void UnixTimeToFileTime(const time_t& ut, FILETIME * ft);
 bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename);
 
 // Convert a FILETIME to a UInt64
-inline uint64 ToUInt64(const FILETIME& ft) {
-  ULARGE_INTEGER r = {ft.dwLowDateTime, ft.dwHighDateTime};
+inline uint64_t ToUInt64(const FILETIME& ft) {
+  ULARGE_INTEGER r = {{ft.dwLowDateTime, ft.dwHighDateTime}};
   return r.QuadPart;
 }
 
@@ -127,8 +125,6 @@ inline bool IsCurrentProcessLowIntegrity() {
 }
 
 bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
-
-///////////////////////////////////////////////////////////////////////////////
 
 }  // namespace rtc
 

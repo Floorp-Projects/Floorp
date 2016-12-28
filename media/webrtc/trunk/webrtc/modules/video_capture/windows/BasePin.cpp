@@ -24,14 +24,14 @@ class DECLSPEC_UUID("4de7a03c-6c3f-4314-949a-ee7e1ad05083")
 {
 public:
 
-  explicit EnumMediaTypes(BasePin* aPin)
+  EnumMediaTypes(BasePin* aPin)
     : mPin(aPin)
     , mIndex(0)
     , mRefCnt(0)
   {
   }
 
-  explicit EnumMediaTypes(EnumMediaTypes* aEnum)
+  EnumMediaTypes(EnumMediaTypes* aEnum)
     : mPin(aEnum->mPin)
     , mIndex(aEnum->mIndex)
     , mRefCnt(0)

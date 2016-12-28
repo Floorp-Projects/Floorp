@@ -18,8 +18,6 @@
 
 namespace webrtc {
 
-typedef uint8_t DiffInfo;
-
 // TODO(sergeyu): Simplify differ now that we are working with DesktopRegion.
 // diff_info_ should no longer be needed, as we can put our data directly into
 // the region that we are calculating.
@@ -40,7 +38,7 @@ class Differ {
 
   // Given the previous and current screen buffer, calculate the dirty region
   // that encloses all of the changed pixels in the new screen.
-  void CalcDirtyRegion(const void* prev_buffer, const void* curr_buffer,
+  void CalcDirtyRegion(const uint8_t* prev_buffer, const uint8_t* curr_buffer,
                        DesktopRegion* region);
 
  private:
@@ -48,21 +46,21 @@ class Differ {
   friend class DifferTest;
 
   // Identify all of the blocks that contain changed pixels.
-  void MarkDirtyBlocks(const void* prev_buffer, const void* curr_buffer);
+  void MarkDirtyBlocks(const uint8_t* prev_buffer, const uint8_t* curr_buffer);
 
   // After the dirty blocks have been identified, this routine merges adjacent
   // blocks into a region.
   // The goal is to minimize the region that covers the dirty blocks.
   void MergeBlocks(DesktopRegion* region);
 
-  // Check for diffs in upper-left portion of the block. The size of the portion
-  // to check is specified by the |width| and |height| values.
+  // Checks whether the upper-left portions of the buffers are equal. The size
+  // of the portion to check is specified by the |width| and |height| values.
   // Note that if we force the capturer to always return images whose width and
   // height are multiples of kBlockSize, then this will never be called.
-  DiffInfo DiffPartialBlock(const uint8_t* prev_buffer,
-                            const uint8_t* curr_buffer,
-                            int stride,
-                            int width, int height);
+  bool PartialBlocksEqual(const uint8_t* prev_buffer,
+                          const uint8_t* curr_buffer,
+                          int stride,
+                          int width, int height);
 
   // Dimensions of screen.
   int width_;
@@ -76,14 +74,14 @@ class Differ {
   int bytes_per_row_;
 
   // Diff information for each block in the image.
-  rtc::scoped_ptr<DiffInfo[]> diff_info_;
+  rtc::scoped_ptr<bool[]> diff_info_;
 
   // Dimensions and total size of diff info array.
   int diff_info_width_;
   int diff_info_height_;
   int diff_info_size_;
 
-  DISALLOW_COPY_AND_ASSIGN(Differ);
+  RTC_DISALLOW_COPY_AND_ASSIGN(Differ);
 };
 
 }  // namespace webrtc

@@ -8,9 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/vp8/default_temporal_layers.h"
 
 #include "vpx/vpx_encoder.h"
@@ -19,47 +18,36 @@
 namespace webrtc {
 
 enum {
-  kTemporalUpdateLast = VP8_EFLAG_NO_UPD_GF |
-                        VP8_EFLAG_NO_UPD_ARF |
+  kTemporalUpdateLast = VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF |
                         VP8_EFLAG_NO_REF_GF |
                         VP8_EFLAG_NO_REF_ARF,
-  kTemporalUpdateGoldenWithoutDependency = VP8_EFLAG_NO_REF_GF |
-                                           VP8_EFLAG_NO_REF_ARF |
-                                           VP8_EFLAG_NO_UPD_ARF |
-                                           VP8_EFLAG_NO_UPD_LAST,
-  kTemporalUpdateGolden = VP8_EFLAG_NO_REF_ARF |
-                          VP8_EFLAG_NO_UPD_ARF |
-                          VP8_EFLAG_NO_UPD_LAST,
-  kTemporalUpdateAltrefWithoutDependency = VP8_EFLAG_NO_REF_ARF |
-                                           VP8_EFLAG_NO_REF_GF |
-                                           VP8_EFLAG_NO_UPD_GF |
-                                           VP8_EFLAG_NO_UPD_LAST,
-  kTemporalUpdateAltref = VP8_EFLAG_NO_UPD_GF |
-                          VP8_EFLAG_NO_UPD_LAST,
-  kTemporalUpdateNone = VP8_EFLAG_NO_UPD_GF |
-                        VP8_EFLAG_NO_UPD_ARF |
+  kTemporalUpdateGoldenWithoutDependency =
+      VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_REF_ARF | VP8_EFLAG_NO_UPD_ARF |
+      VP8_EFLAG_NO_UPD_LAST,
+  kTemporalUpdateGolden =
+      VP8_EFLAG_NO_REF_ARF | VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST,
+  kTemporalUpdateAltrefWithoutDependency =
+      VP8_EFLAG_NO_REF_ARF | VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_UPD_GF |
+      VP8_EFLAG_NO_UPD_LAST,
+  kTemporalUpdateAltref = VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_LAST,
+  kTemporalUpdateNone = VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF |
                         VP8_EFLAG_NO_UPD_LAST |
                         VP8_EFLAG_NO_UPD_ENTROPY,
-  kTemporalUpdateNoneNoRefAltRef = VP8_EFLAG_NO_REF_ARF |
-                                   VP8_EFLAG_NO_UPD_GF |
+  kTemporalUpdateNoneNoRefAltRef = VP8_EFLAG_NO_REF_ARF | VP8_EFLAG_NO_UPD_GF |
                                    VP8_EFLAG_NO_UPD_ARF |
                                    VP8_EFLAG_NO_UPD_LAST |
                                    VP8_EFLAG_NO_UPD_ENTROPY,
-  kTemporalUpdateNoneNoRefGolden = VP8_EFLAG_NO_REF_GF |
-                                   VP8_EFLAG_NO_UPD_GF |
+  kTemporalUpdateNoneNoRefGolden = VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_UPD_GF |
                                    VP8_EFLAG_NO_UPD_ARF |
                                    VP8_EFLAG_NO_UPD_LAST |
                                    VP8_EFLAG_NO_UPD_ENTROPY,
-  kTemporalUpdateGoldenWithoutDependencyRefAltRef = VP8_EFLAG_NO_REF_GF |
-                                                    VP8_EFLAG_NO_UPD_ARF |
-                                                    VP8_EFLAG_NO_UPD_LAST,
-  kTemporalUpdateGoldenRefAltRef = VP8_EFLAG_NO_UPD_ARF |
-                                   VP8_EFLAG_NO_UPD_LAST,
-  kTemporalUpdateLastRefAltRef = VP8_EFLAG_NO_UPD_GF |
-                                 VP8_EFLAG_NO_UPD_ARF |
-                                 VP8_EFLAG_NO_REF_GF,
-  kTemporalUpdateLastAndGoldenRefAltRef = VP8_EFLAG_NO_UPD_ARF |
-                                          VP8_EFLAG_NO_REF_GF,
+  kTemporalUpdateGoldenWithoutDependencyRefAltRef =
+      VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST,
+  kTemporalUpdateGoldenRefAltRef = VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST,
+  kTemporalUpdateLastRefAltRef =
+      VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_REF_GF,
+  kTemporalUpdateLastAndGoldenRefAltRef =
+      VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_REF_GF,
 };
 
 TEST(TemporalLayersTest, 2Layers) {
@@ -68,29 +56,30 @@ TEST(TemporalLayersTest, 2Layers) {
   CodecSpecificInfoVP8 vp8_info;
   tl.ConfigureBitrates(500, 500, 30, &cfg);
 
-  int expected_flags[16] = { kTemporalUpdateLastAndGoldenRefAltRef,
-                             kTemporalUpdateGoldenWithoutDependencyRefAltRef,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateGoldenRefAltRef,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateGoldenRefAltRef,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateNone,
-                             kTemporalUpdateLastAndGoldenRefAltRef,
-                             kTemporalUpdateGoldenWithoutDependencyRefAltRef,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateGoldenRefAltRef,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateGoldenRefAltRef,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateNone,
-   };
-  int expected_temporal_idx[16] =
-      { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
+  int expected_flags[16] = {
+      kTemporalUpdateLastAndGoldenRefAltRef,
+      kTemporalUpdateGoldenWithoutDependencyRefAltRef,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateGoldenRefAltRef,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateGoldenRefAltRef,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateNone,
+      kTemporalUpdateLastAndGoldenRefAltRef,
+      kTemporalUpdateGoldenWithoutDependencyRefAltRef,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateGoldenRefAltRef,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateGoldenRefAltRef,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateNone,
+  };
+  int expected_temporal_idx[16] = {0, 1, 0, 1, 0, 1, 0, 1,
+                                   0, 1, 0, 1, 0, 1, 0, 1};
 
-  bool expected_layer_sync[16] =
-      { false, true, false, false, false, false, false, false,
-        false, true, false, false, false, false, false, false };
+  bool expected_layer_sync[16] = {false, true,  false, false, false, false,
+                                  false, false, false, true,  false, false,
+                                  false, false, false, false};
 
   uint32_t timestamp = 0;
   for (int i = 0; i < 16; ++i) {
@@ -108,29 +97,30 @@ TEST(TemporalLayersTest, 3Layers) {
   CodecSpecificInfoVP8 vp8_info;
   tl.ConfigureBitrates(500, 500, 30, &cfg);
 
-  int expected_flags[16] = { kTemporalUpdateLastAndGoldenRefAltRef,
-                             kTemporalUpdateNoneNoRefGolden,
-                             kTemporalUpdateGoldenWithoutDependencyRefAltRef,
-                             kTemporalUpdateNone,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateNone,
-                             kTemporalUpdateGoldenRefAltRef,
-                             kTemporalUpdateNone,
-                             kTemporalUpdateLastAndGoldenRefAltRef,
-                             kTemporalUpdateNoneNoRefGolden,
-                             kTemporalUpdateGoldenWithoutDependencyRefAltRef,
-                             kTemporalUpdateNone,
-                             kTemporalUpdateLastRefAltRef,
-                             kTemporalUpdateNone,
-                             kTemporalUpdateGoldenRefAltRef,
-                             kTemporalUpdateNone,
+  int expected_flags[16] = {
+      kTemporalUpdateLastAndGoldenRefAltRef,
+      kTemporalUpdateNoneNoRefGolden,
+      kTemporalUpdateGoldenWithoutDependencyRefAltRef,
+      kTemporalUpdateNone,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateNone,
+      kTemporalUpdateGoldenRefAltRef,
+      kTemporalUpdateNone,
+      kTemporalUpdateLastAndGoldenRefAltRef,
+      kTemporalUpdateNoneNoRefGolden,
+      kTemporalUpdateGoldenWithoutDependencyRefAltRef,
+      kTemporalUpdateNone,
+      kTemporalUpdateLastRefAltRef,
+      kTemporalUpdateNone,
+      kTemporalUpdateGoldenRefAltRef,
+      kTemporalUpdateNone,
   };
-  int expected_temporal_idx[16] =
-      { 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2 };
+  int expected_temporal_idx[16] = {0, 2, 1, 2, 0, 2, 1, 2,
+                                   0, 2, 1, 2, 0, 2, 1, 2};
 
-  bool expected_layer_sync[16] =
-      { false, true, true, false, false, false, false, false,
-        false, true, true, false, false, false, false, false };
+  bool expected_layer_sync[16] = {false, true,  true,  false, false, false,
+                                  false, false, false, true,  true,  false,
+                                  false, false, false, false};
 
   unsigned int timestamp = 0;
   for (int i = 0; i < 16; ++i) {
@@ -165,12 +155,12 @@ TEST(TemporalLayersTest, 4Layers) {
       kTemporalUpdateAltref,
       kTemporalUpdateNone,
   };
-  int expected_temporal_idx[16] =
-      { 0, 3, 2, 3, 1, 3, 2, 3, 0, 3, 2, 3, 1, 3, 2, 3 };
+  int expected_temporal_idx[16] = {0, 3, 2, 3, 1, 3, 2, 3,
+                                   0, 3, 2, 3, 1, 3, 2, 3};
 
-  bool expected_layer_sync[16] =
-      { false, true, true, true, true, true, false, true,
-        false, true, false, true, false, true, false, true };
+  bool expected_layer_sync[16] = {false, true, true,  true, true,  true,
+                                  false, true, false, true, false, true,
+                                  false, true, false, true};
 
   uint32_t timestamp = 0;
   for (int i = 0; i < 16; ++i) {
@@ -198,8 +188,7 @@ TEST(TemporalLayersTest, KeyFrame) {
       kTemporalUpdateGoldenRefAltRef,
       kTemporalUpdateNone,
   };
-  int expected_temporal_idx[8] =
-      { 0, 0, 0, 0, 0, 0, 0, 2};
+  int expected_temporal_idx[8] = {0, 0, 0, 0, 0, 0, 0, 2};
 
   uint32_t timestamp = 0;
   for (int i = 0; i < 7; ++i) {

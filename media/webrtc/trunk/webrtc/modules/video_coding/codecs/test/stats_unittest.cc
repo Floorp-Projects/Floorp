@@ -16,21 +16,15 @@
 namespace webrtc {
 namespace test {
 
-class StatsTest: public testing::Test {
+class StatsTest : public testing::Test {
  protected:
-  StatsTest() {
-  }
+  StatsTest() {}
 
-  virtual ~StatsTest() {
-  }
+  virtual ~StatsTest() {}
 
-  void SetUp() {
-    stats_ = new Stats();
-  }
+  void SetUp() { stats_ = new Stats(); }
 
-  void TearDown() {
-    delete stats_;
-  }
+  void TearDown() { delete stats_; }
 
   Stats* stats_;
 };

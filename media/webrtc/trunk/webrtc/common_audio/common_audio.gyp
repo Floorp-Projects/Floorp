@@ -99,6 +99,9 @@
         'signal_processing/splitting_filter.c',
         'signal_processing/sqrt_of_one_minus_x_squared.c',
         'signal_processing/vector_scaling_operations.c',
+        'sparse_fir_filter.cc',
+        'sparse_fir_filter.h',
+        'swap_queue.h',
         'vad/include/vad.h',
         'vad/include/webrtc_vad.h',
         'vad/vad.cc',
@@ -134,6 +137,9 @@
         ['target_arch=="ia32" or target_arch=="x64"', {
           'dependencies': ['common_audio_sse2',],
         }],
+        ['build_with_neon==1', {
+          'dependencies': ['common_audio_neon',],
+        }],
         ['target_arch=="arm"', {
           'sources': [
             'signal_processing/complex_bit_reverse_arm.S',
@@ -145,7 +151,6 @@
           ],
           'conditions': [
             ['arm_version>=7', {
-              'dependencies': ['common_audio_neon',],
               'sources': [
                 'signal_processing/filter_ar_fast_q12_armv7.S',
               ],
@@ -155,10 +160,7 @@
             }],
           ],  # conditions
         }],
-        ['target_arch=="arm64"', {
-          'dependencies': ['common_audio_neon',],
-        }],
-        ['target_arch=="mipsel" and mips_arch_variant!="r6" and android_webview_build==0', {
+        ['target_arch=="mipsel" and mips_arch_variant!="r6"', {
           'sources': [
             'signal_processing/include/spl_inl_mips.h',
             'signal_processing/complex_bit_reverse_mips.c',
@@ -199,19 +201,18 @@
             'fir_filter_sse.cc',
             'resampler/sinc_resampler_sse.cc',
           ],
-          'cflags': ['-msse2',],
           'conditions': [
-            [ 'os_posix == 1', {
-              'cflags_mozilla': ['-msse2',],
+            ['os_posix==1', {
+              'cflags': [ '-msse2', ],
+              'xcode_settings': {
+                'OTHER_CFLAGS': [ '-msse2', ],
+              },
             }],
           ],
-          'xcode_settings': {
-            'OTHER_CFLAGS': ['-msse2',],
-          },
         },
       ],  # targets
     }],
-    ['target_arch=="arm" and arm_version>=7 or target_arch=="arm64"', {
+    ['build_with_neon==1', {
       'targets': [
         {
           'target_name': 'common_audio_neon',
@@ -224,21 +225,13 @@
             'signal_processing/downsample_fast_neon.c',
             'signal_processing/min_max_operations_neon.c',
           ],
-          'conditions': [
-            # Disable LTO in common_audio_neon target due to compiler bug
-            ['use_lto==1', {
-              'cflags!': [
-                '-flto',
-                '-ffat-lto-objects',
-              ],
-            }],
-          ],
         },
       ],  # targets
     }],
-    ['include_tests==1', {
+    ['include_tests==1 and OS!="ios"', {
       'targets' : [
         {
+          # Does not compile on iOS: webrtc:4755.
           'target_name': 'common_audio_unittests',
           'type': '<(gtest_target_type)',
           'dependencies': [
@@ -264,6 +257,8 @@
             'ring_buffer_unittest.cc',
             'signal_processing/real_fft_unittest.cc',
             'signal_processing/signal_processing_unittest.cc',
+            'sparse_fir_filter_unittest.cc',
+            'swap_queue_unittest.cc',
             'vad/vad_core_unittest.cc',
             'vad/vad_filterbank_unittest.cc',
             'vad/vad_gmm_unittest.cc',

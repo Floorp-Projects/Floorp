@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_TOOLS_FRAME_EDITING_FRAME_EDITING_H_
-#define WEBRTC_TOOLS_FRAME_EDITING_FRAME_EDITING_H_
+#ifndef WEBRTC_TOOLS_FRAME_EDITING_FRAME_EDITING_LIB_H_
+#define WEBRTC_TOOLS_FRAME_EDITING_FRAME_EDITING_LIB_H_
 
 #include <string>
 
@@ -36,4 +36,4 @@ int EditFrames(const std::string& in_path, int width, int height,
                 int last_frame_to_process, const std::string& out_path);
 }  // namespace webrtc
 
-#endif  // WEBRTC_TOOLS_FRAME_EDITING_FRAME_EDITING_H_
+#endif  // WEBRTC_TOOLS_FRAME_EDITING_FRAME_EDITING_LIB_H_

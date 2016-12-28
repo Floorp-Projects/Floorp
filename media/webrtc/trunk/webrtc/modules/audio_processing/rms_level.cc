@@ -28,14 +28,14 @@ void RMSLevel::Reset() {
   sample_count_ = 0;
 }
 
-void RMSLevel::Process(const int16_t* data, int length) {
-  for (int i = 0; i < length; ++i) {
+void RMSLevel::Process(const int16_t* data, size_t length) {
+  for (size_t i = 0; i < length; ++i) {
     sum_square_ += data[i] * data[i];
   }
   sample_count_ += length;
 }
 
-void RMSLevel::ProcessMuted(int length) {
+void RMSLevel::ProcessMuted(size_t length) {
   sample_count_ += length;
 }
 

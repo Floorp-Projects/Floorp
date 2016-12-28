@@ -70,7 +70,7 @@ TEST(WavHeaderTest, CheckWavParameters) {
   // Try some really stupid values for one parameter at a time.
   EXPECT_TRUE(CheckWavParameters(1, 8000, kWavFormatPcm, 1, 0));
   EXPECT_FALSE(CheckWavParameters(0, 8000, kWavFormatPcm, 1, 0));
-  EXPECT_FALSE(CheckWavParameters(-1, 8000, kWavFormatPcm, 1, 0));
+  EXPECT_FALSE(CheckWavParameters(0x10000, 8000, kWavFormatPcm, 1, 0));
   EXPECT_FALSE(CheckWavParameters(1, 0, kWavFormatPcm, 1, 0));
   EXPECT_FALSE(CheckWavParameters(1, 8000, WavFormat(0), 1, 0));
   EXPECT_FALSE(CheckWavParameters(1, 8000, kWavFormatPcm, 0, 0));
@@ -91,11 +91,11 @@ TEST(WavHeaderTest, CheckWavParameters) {
 }
 
 TEST(WavHeaderTest, ReadWavHeaderWithErrors) {
-  int num_channels = 0;
+  size_t num_channels = 0;
   int sample_rate = 0;
   WavFormat format = kWavFormatPcm;
-  int bytes_per_sample = 0;
-  uint32_t num_samples = 0;
+  size_t bytes_per_sample = 0;
+  size_t num_samples = 0;
 
   // Test a few ways the header can be invalid. We start with the valid header
   // used in WriteAndReadWavHeader, and invalidate one field per test. The
@@ -268,19 +268,19 @@ TEST(WavHeaderTest, WriteAndReadWavHeader) {
   static_assert(sizeof(kExpectedBuf) == kSize, "buffer size");
   EXPECT_EQ(0, memcmp(kExpectedBuf, buf, kSize));
 
-  int num_channels = 0;
+  size_t num_channels = 0;
   int sample_rate = 0;
   WavFormat format = kWavFormatPcm;
-  int bytes_per_sample = 0;
-  uint32_t num_samples = 0;
+  size_t bytes_per_sample = 0;
+  size_t num_samples = 0;
   ReadableWavBuffer r(buf + 4, sizeof(buf) - 8);
   EXPECT_TRUE(
       ReadWavHeader(&r, &num_channels, &sample_rate, &format,
                     &bytes_per_sample, &num_samples));
-  EXPECT_EQ(17, num_channels);
+  EXPECT_EQ(17u, num_channels);
   EXPECT_EQ(12345, sample_rate);
   EXPECT_EQ(kWavFormatALaw, format);
-  EXPECT_EQ(1, bytes_per_sample);
+  EXPECT_EQ(1u, bytes_per_sample);
   EXPECT_EQ(123457689u, num_samples);
 }
 
@@ -304,19 +304,19 @@ TEST(WavHeaderTest, ReadAtypicalWavHeader) {
     0x99, 0xd0, 0x5b, 0x07,  // size of payload: 123457689
   };
 
-  int num_channels = 0;
+  size_t num_channels = 0;
   int sample_rate = 0;
   WavFormat format = kWavFormatPcm;
-  int bytes_per_sample = 0;
-  uint32_t num_samples = 0;
+  size_t bytes_per_sample = 0;
+  size_t num_samples = 0;
   ReadableWavBuffer r(kBuf, sizeof(kBuf));
   EXPECT_TRUE(
       ReadWavHeader(&r, &num_channels, &sample_rate, &format,
                     &bytes_per_sample, &num_samples));
-  EXPECT_EQ(17, num_channels);
+  EXPECT_EQ(17u, num_channels);
   EXPECT_EQ(12345, sample_rate);
   EXPECT_EQ(kWavFormatALaw, format);
-  EXPECT_EQ(1, bytes_per_sample);
+  EXPECT_EQ(1u, bytes_per_sample);
   EXPECT_EQ(123457689u, num_samples);
 }
 

@@ -11,8 +11,10 @@
 #include "webrtc/modules/rtp_rtcp/source/tmmbr_help.h"
 
 #include <assert.h>
-#include <limits>
 #include <string.h>
+
+#include <limits>
+
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
 
 namespace webrtc {

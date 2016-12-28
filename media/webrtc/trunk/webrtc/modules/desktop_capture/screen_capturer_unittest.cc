@@ -51,7 +51,7 @@ class FakeSharedMemory : public SharedMemory {
   }
  private:
   char* buffer_;
-  DISALLOW_COPY_AND_ASSIGN(FakeSharedMemory);
+  RTC_DISALLOW_COPY_AND_ASSIGN(FakeSharedMemory);
 };
 
 SharedMemory* ScreenCapturerTest::CreateSharedMemory(size_t size) {

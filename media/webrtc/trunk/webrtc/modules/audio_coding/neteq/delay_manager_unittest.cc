@@ -88,8 +88,8 @@ TEST_F(DelayManagerTest, VectorInitialization) {
   const DelayManager::IATVector& vec = dm_->iat_vector();
   double sum = 0.0;
   for (size_t i = 0; i < vec.size(); i++) {
-    EXPECT_NEAR(ldexp(pow(0.5, static_cast<int>(i + 1)), 30), vec[i], 65536);
-    // Tolerance 65536 in Q30 corresponds to a delta of approximately 0.00006.
+    EXPECT_NEAR(ldexp(pow(0.5, static_cast<int>(i + 1)), 30), vec[i], 65537);
+    // Tolerance 65537 in Q30 corresponds to a delta of approximately 0.00006.
     sum += vec[i];
   }
   EXPECT_EQ(1 << 30, static_cast<int>(sum));  // Should be 1 in Q30.

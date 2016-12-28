@@ -19,8 +19,7 @@
 
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
-#include "webrtc/modules/audio_device/audio_device_utility.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 
 // Helper functions
 #if defined(ANDROID)
@@ -83,17 +82,16 @@ class AudioTransportAPI: public AudioTransport {
 
   ~AudioTransportAPI() {}
 
-  virtual int32_t RecordedDataIsAvailable(
-      const void* audioSamples,
-      const uint32_t nSamples,
-      const uint8_t nBytesPerSample,
-      const uint8_t nChannels,
-      const uint32_t sampleRate,
-      const uint32_t totalDelay,
-      const int32_t clockSkew,
-      const uint32_t currentMicLevel,
-      const bool keyPressed,
-      uint32_t& newMicLevel) {
+  int32_t RecordedDataIsAvailable(const void* audioSamples,
+                                  const size_t nSamples,
+                                  const size_t nBytesPerSample,
+                                  const size_t nChannels,
+                                  const uint32_t sampleRate,
+                                  const uint32_t totalDelay,
+                                  const int32_t clockSkew,
+                                  const uint32_t currentMicLevel,
+                                  const bool keyPressed,
+                                  uint32_t& newMicLevel) override {
     rec_count_++;
     if (rec_count_ % 100 == 0) {
       if (nChannels == 1) {
@@ -110,15 +108,14 @@ class AudioTransportAPI: public AudioTransport {
     return 0;
   }
 
-  virtual int32_t NeedMorePlayData(
-      const uint32_t nSamples,
-      const uint8_t nBytesPerSample,
-      const uint8_t nChannels,
-      const uint32_t sampleRate,
-      void* audioSamples,
-      uint32_t& nSamplesOut,
-      int64_t* elapsed_time_ms,
-      int64_t* ntp_time_ms) {
+  int32_t NeedMorePlayData(const size_t nSamples,
+                           const size_t nBytesPerSample,
+                           const size_t nChannels,
+                           const uint32_t sampleRate,
+                           void* audioSamples,
+                           size_t& nSamplesOut,
+                           int64_t* elapsed_time_ms,
+                           int64_t* ntp_time_ms) override {
     play_count_++;
     if (play_count_ % 100 == 0) {
       if (nChannels == 1) {
@@ -131,29 +128,6 @@ class AudioTransportAPI: public AudioTransport {
     return 0;
   }
 
-  virtual int OnDataAvailable(const int voe_channels[],
-                              int number_of_voe_channels,
-                              const int16_t* audio_data,
-                              int sample_rate,
-                              int number_of_channels,
-                              int number_of_frames,
-                              int audio_delay_milliseconds,
-                              int current_volume,
-                              bool key_pressed,
-                              bool need_audio_processing) {
-    return 0;
-  }
-
-  virtual void PushCaptureData(int voe_channel, const void* audio_data,
-                               int bits_per_sample, int sample_rate,
-                               int number_of_channels,
-                               int number_of_frames) {}
-
-  virtual void PullRenderData(int bits_per_sample, int sample_rate,
-                              int number_of_channels, int number_of_frames,
-                              void* audio_data,
-                              int64_t* elapsed_time_ms,
-                              int64_t* ntp_time_ms) {}
  private:
   uint32_t rec_count_;
   uint32_t play_count_;
@@ -166,7 +140,7 @@ class AudioDeviceAPITest: public testing::Test {
   virtual ~AudioDeviceAPITest() {}
 
   static void SetUpTestCase() {
-    process_thread_ = ProcessThread::Create();
+    process_thread_ = ProcessThread::Create("ProcessThread");
     process_thread_->Start();
 
     // Windows:
@@ -179,8 +153,6 @@ class AudioDeviceAPITest: public testing::Test {
 #if defined(_WIN32)
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
-                kId, AudioDeviceModule::kSndioAudio)) == NULL);
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
     TEST_LOG("WEBRTC_WINDOWS_CORE_AUDIO_BUILD is defined!\n\n");
     // create default implementation (=Core Audio) instance
@@ -220,13 +192,11 @@ class AudioDeviceAPITest: public testing::Test {
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
-                kId, AudioDeviceModule::kSndioAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kLinuxPulseAudio)) == NULL);
     // Create default implementation instance
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#elif defined(WEBRTC_LINUX)
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) == NULL);
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
@@ -252,8 +222,6 @@ class AudioDeviceAPITest: public testing::Test {
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kLinuxPulseAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
-                kId, AudioDeviceModule::kSndioAudio)) == NULL);
     // Create default implementation instance
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
@@ -1049,9 +1017,15 @@ TEST_F(AudioDeviceAPITest, MicrophoneVolumeIsAvailable) {
 // MicrophoneVolume
 // MaxMicrophoneVolume
 // MinMicrophoneVolume
-// NOTE: Disabled on mac due to issue 257.
-#ifndef WEBRTC_MAC
-TEST_F(AudioDeviceAPITest, MicrophoneVolumeTests) {
+
+// Disabled on Mac and Linux,
+// see https://bugs.chromium.org/p/webrtc/issues/detail?id=5414
+#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX)
+#define MAYBE_MicrophoneVolumeTests DISABLED_MicrophoneVolumeTests
+#else
+#define MAYBE_MicrophoneVolumeTests MicrophoneVolumeTests
+#endif
+TEST_F(AudioDeviceAPITest, MAYBE_MicrophoneVolumeTests) {
   uint32_t vol(0);
   uint32_t volume(0);
   uint32_t maxVolume(0);
@@ -1144,7 +1118,6 @@ TEST_F(AudioDeviceAPITest, MicrophoneVolumeTests) {
     EXPECT_EQ(0, audio_device_->SetMicrophoneVolume(maxVolume/10));
   }
 }
-#endif  // !WEBRTC_MAC
 
 TEST_F(AudioDeviceAPITest, SpeakerMuteIsAvailable) {
   bool available;
@@ -1654,7 +1627,7 @@ TEST_F(AudioDeviceAPITest, CPULoad) {
 
 // TODO(kjellander): Fix flakiness causing failures on Windows.
 // TODO(phoglund):  Fix flakiness causing failures on Linux.
-#if !defined(_WIN32) && !defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)
+#if !defined(_WIN32) && !defined(WEBRTC_LINUX)
 TEST_F(AudioDeviceAPITest, StartAndStopRawOutputFileRecording) {
   // NOTE: this API is better tested in a functional test
   CheckInitialPlayoutStates();
@@ -1723,7 +1696,7 @@ TEST_F(AudioDeviceAPITest, StartAndStopRawInputFileRecording) {
   // - size of raw_input_not_recording.pcm shall be 0
   // - size of raw_input_not_recording.pcm shall be > 0
 }
-#endif  // !WIN32 && !WEBRTC_LINUX && !defined(WEBRTC_BSD)
+#endif  // !WIN32 && !WEBRTC_LINUX
 
 TEST_F(AudioDeviceAPITest, RecordingSampleRate) {
   uint32_t sampleRate(0);
@@ -1734,10 +1707,10 @@ TEST_F(AudioDeviceAPITest, RecordingSampleRate) {
   EXPECT_EQ(48000, sampleRate);
 #elif defined(ANDROID)
   TEST_LOG("Recording sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000));
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000));
 #elif defined(WEBRTC_IOS)
   TEST_LOG("Recording sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000) ||
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000) ||
               (sampleRate == 8000));
 #endif
 
@@ -1753,10 +1726,10 @@ TEST_F(AudioDeviceAPITest, PlayoutSampleRate) {
   EXPECT_EQ(48000, sampleRate);
 #elif defined(ANDROID)
   TEST_LOG("Playout sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000));
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000));
 #elif defined(WEBRTC_IOS)
   TEST_LOG("Playout sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000) ||
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000) ||
               (sampleRate == 8000));
 #endif
 }
