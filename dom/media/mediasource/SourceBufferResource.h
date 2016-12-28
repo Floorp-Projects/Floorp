@@ -15,7 +15,6 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIPrincipal.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nscore.h"
 #include "mozilla/Logging.h"
@@ -38,7 +37,7 @@ class SourceBuffer;
 class SourceBufferResource final : public MediaResource
 {
 public:
-  explicit SourceBufferResource(const nsACString& aType);
+  explicit SourceBufferResource(const MediaContainerType& aType);
   nsresult Close() override;
   void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
   void Resume() override { UNIMPLEMENTED(); }
@@ -80,14 +79,14 @@ public:
     return NS_OK;
   }
 
-  const nsCString& GetContentType() const override { return mType; }
+  const MediaContainerType& GetContentType() const override { return mType; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     ReentrantMonitorAutoEnter mon(mMonitor);
 
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    size += mType.SizeOfExcludingThis(aMallocSizeOf);
     size += mInputBuffer.SizeOfExcludingThis(aMallocSizeOf);
 
     return size;
@@ -138,7 +137,7 @@ private:
   virtual ~SourceBufferResource();
   nsresult ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes, bool aMayBlock);
 
-  const nsCString mType;
+  const MediaContainerType mType;
 
   // Provides synchronization between SourceBuffers and InputAdapters.
   // Protects all of the member variables below.  Read() will await a
