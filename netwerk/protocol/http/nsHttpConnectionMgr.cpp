@@ -1252,7 +1252,8 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
             if ((caps & NS_HTTP_ALLOW_KEEPALIVE) || !conn->IsExperienced()) {
                 LOG(("   dispatch to spdy: [conn=%p]\n", conn.get()));
                 trans->RemoveDispatchedAsBlocking();  /* just in case */
-                DispatchTransaction(ent, trans, conn);
+                nsresult rv = DispatchTransaction(ent, trans, conn);
+                NS_ENSURE_SUCCESS(rv, rv);
                 return NS_OK;
             }
             unusedSpdyPersistentConnection = conn;
@@ -1341,7 +1342,8 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
             // This will update the class of the connection to be the class of
             // the transaction dispatched on it.
             AddActiveConn(conn, ent);
-            DispatchTransaction(ent, trans, conn);
+            nsresult rv = DispatchTransaction(ent, trans, conn);
+            NS_ENSURE_SUCCESS(rv, rv);
             LOG(("   dispatched step 2 (idle) trans=%p\n", trans));
             return NS_OK;
         }

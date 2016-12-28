@@ -1476,7 +1476,9 @@ nsHttpTransaction::HandleContentStart()
 
         // notify the connection, give it a chance to cause a reset.
         bool reset = false;
-        mConnection->OnHeadersAvailable(this, mRequestHead, mResponseHead, &reset);
+        nsresult rv = mConnection->OnHeadersAvailable(this, mRequestHead,
+                                                      mResponseHead, &reset);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         // looks like we should ignore this response, resetting...
         if (reset) {
@@ -1732,7 +1734,8 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
         // the excess bytes back to the connection
         if (mResponseIsComplete && countRemaining) {
             MOZ_ASSERT(mConnection);
-            mConnection->PushBack(buf + *countRead, countRemaining);
+            rv = mConnection->PushBack(buf + *countRead, countRemaining);
+            NS_ENSURE_SUCCESS(rv, rv);
         }
 
         if (!mContentDecodingCheck && mResponseHead) {
@@ -1859,8 +1862,8 @@ nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header)
       nsCOMPtr<nsIHttpAuthenticator> authenticator(do_CreateInstance(contractid.get()));
       if (authenticator) {
           uint32_t flags;
-          authenticator->GetAuthFlags(&flags);
-          if (flags & nsIHttpAuthenticator::CONNECTION_BASED) {
+          nsresult rv = authenticator->GetAuthFlags(&flags);
+          if (NS_SUCCEEDED(rv) && (flags & nsIHttpAuthenticator::CONNECTION_BASED)) {
               LOG(("  connection made sticky, found %s auth shema", schema.get()));
               // This is enough to make this transaction keep it's current connection,
               // prevents the connection from being released back to the pool.

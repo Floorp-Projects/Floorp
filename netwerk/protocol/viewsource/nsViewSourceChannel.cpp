@@ -935,8 +935,9 @@ nsViewSourceChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
     nsAutoCString contentType;
     nsresult rv =
         mHttpChannel->GetResponseHeader(contentTypeStr, contentType);
-    if (NS_SUCCEEDED(rv))
-        aVisitor->VisitHeader(contentTypeStr, contentType);
+    if (NS_SUCCEEDED(rv)) {
+        return aVisitor->VisitHeader(contentTypeStr, contentType);
+    }
     return NS_OK;
 }
 
