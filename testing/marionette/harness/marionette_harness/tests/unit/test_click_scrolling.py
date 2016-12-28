@@ -43,7 +43,7 @@ class TestClickScrolling(MarionetteTestCase):
         except MoveTargetOutOfBoundsException:
             self.fail("Should not be out of bounds")
 
-    @skip("Bug 1200197 - Cannot interact with elements hidden inside overflow:scroll")
+    @skip("Bug 1003682")
     def test_should_be_able_to_click_on_an_element_hidden_by_overflow(self):
         test_html = self.marionette.absolute_url("scroll.html")
         self.marionette.navigate(test_html)

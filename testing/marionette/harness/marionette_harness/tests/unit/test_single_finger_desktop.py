@@ -6,9 +6,9 @@ import os
 import sys
 
 from marionette_driver.errors import MarionetteException
-from marionette_driver import Actions, By
+from marionette_driver.by import By
 
-from marionette_harness import MarionetteTestCase, skip
+from marionette_harness import MarionetteTestCase
 
 # add this directory to the path
 sys.path.append(os.path.dirname(__file__))
@@ -85,30 +85,28 @@ prefs.setIntPref("ui.click_hold_context_menus.delay", arguments[0]);
     def test_wait_with_value(self):
         wait_with_value(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-mouseup-click")
 
-    @skip("Bug 1191066")
+    """
+    // Skipping due to Bug 1191066
     def test_context_menu(self):
-        context_menu(self.marionette, self.wait_for_condition,
-                     "button1-mousemove-mousedown-contextmenu",
-                     "button1-mousemove-mousedown-contextmenu-mouseup-click")
+        context_menu(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-contextmenu", "button1-mousemove-mousedown-contextmenu-mouseup-click")
 
-    @skip("Bug 1191066")
     def test_long_press_action(self):
-        long_press_action(self.marionette, self.wait_for_condition,
-                          "button1-mousemove-mousedown-contextmenu-mouseup-click")
+        long_press_action(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-contextmenu-mouseup-click")
 
-    @skip("Bug 1191066")
     def test_long_press_on_xy_action(self):
-        long_press_on_xy_action(self.marionette, self.wait_for_condition,
-                                "button1-mousemove-mousedown-contextmenu-mouseup-click")
+        long_press_on_xy_action(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-contextmenu-mouseup-click")
+    """
 
-    @skip("Bug 865334")
+    """
+    //Skipping due to Bug 865334
     def test_long_press_fail(self):
         testAction = self.marionette.absolute_url("testAction.html")
         self.marionette.navigate(testAction)
         button = self.marionette.find_element(By.ID, "button1Copy")
         action = Actions(self.marionette)
         action.press(button).long_press(button, 5)
-        self.assertRaises(MarionetteException, action.perform)
+        assertRaises(MarionetteException, action.perform)
+    """
 
     def test_chain(self):
         chain(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown", "delayed-mousemove-mouseup")
