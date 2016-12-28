@@ -195,7 +195,7 @@ MediaDecodeTask::CreateReader()
 
   RefPtr<BufferMediaResource> resource =
     new BufferMediaResource(static_cast<uint8_t*> (mBuffer),
-                            mLength, principal, mContainerType.Type().AsString());
+                            mLength, principal, mContainerType);
 
   MOZ_ASSERT(!mBufferDecoder);
   mBufferDecoder = new BufferDecoder(resource,

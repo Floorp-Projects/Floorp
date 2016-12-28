@@ -10,10 +10,11 @@
 namespace mozilla
 {
 
-MockMediaResource::MockMediaResource(const char* aFileName, const nsACString& aContentType)
+MockMediaResource::MockMediaResource(const char* aFileName,
+                                     const MediaContainerType& aContainerType)
   : mFileHandle(nullptr)
   , mFileName(aFileName)
-  , mContentType(aContentType)
+  , mContainerType(aContainerType)
 {
 }
 
