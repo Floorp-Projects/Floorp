@@ -1834,18 +1834,42 @@ class BaseCompiler
             freeI64(joinRegI64);
     }
 
-    RegI32 popI32NotJoinReg(ExprType type) {
-        maybeReserveJoinRegI(type);
-        RegI32 r = popI32();
-        maybeUnreserveJoinRegI(type);
-        return r;
+    void maybeReserveJoinReg(ExprType type) {
+        switch (type) {
+          case ExprType::I32:
+            needI32(joinRegI32);
+            break;
+          case ExprType::I64:
+            needI64(joinRegI64);
+            break;
+          case ExprType::F32:
+            needF32(joinRegF32);
+            break;
+          case ExprType::F64:
+            needF64(joinRegF64);
+            break;
+          default:
+            break;
+        }
     }
 
-    RegI64 popI64NotJoinReg(ExprType type) {
-        maybeReserveJoinRegI(type);
-        RegI64 r = popI64();
-        maybeUnreserveJoinRegI(type);
-        return r;
+    void maybeUnreserveJoinReg(ExprType type) {
+        switch (type) {
+          case ExprType::I32:
+            freeI32(joinRegI32);
+            break;
+          case ExprType::I64:
+            freeI64(joinRegI64);
+            break;
+          case ExprType::F32:
+            freeF32(joinRegF32);
+            break;
+          case ExprType::F64:
+            freeF64(joinRegF64);
+            break;
+          default:
+            break;
+        }
     }
 
     // Return the amount of execution stack consumed by the top numval
@@ -5177,12 +5201,14 @@ BaseCompiler::sniffConditionalControlEqz(ValType operandType)
 void
 BaseCompiler::emitBranchSetup(BranchState* b)
 {
+    maybeReserveJoinReg(b->resultType);
+
     // Set up fields so that emitBranchPerform() need not switch on latentOp_.
     switch (latentOp_) {
       case LatentOp::None: {
         latentIntCmp_ = Assembler::NotEqual;
         latentType_ = ValType::I32;
-        b->i32.lhs = popI32NotJoinReg(b->resultType);
+        b->i32.lhs = popI32();
         b->i32.rhsImm = true;
         b->i32.imm = 0;
         break;
@@ -5191,20 +5217,16 @@ BaseCompiler::emitBranchSetup(BranchState* b)
         switch (latentType_) {
           case ValType::I32: {
             if (popConstI32(b->i32.imm)) {
-                b->i32.lhs = popI32NotJoinReg(b->resultType);
+                b->i32.lhs = popI32();
                 b->i32.rhsImm = true;
             } else {
-                maybeReserveJoinRegI(b->resultType);
                 pop2xI32(&b->i32.lhs, &b->i32.rhs);
-                maybeUnreserveJoinRegI(b->resultType);
                 b->i32.rhsImm = false;
             }
             break;
           }
           case ValType::I64: {
-            maybeReserveJoinRegI(b->resultType);
             pop2xI64(&b->i64.lhs, &b->i64.rhs);
-            maybeUnreserveJoinRegI(b->resultType);
             b->i64.rhsImm = false;
             break;
           }
@@ -5226,14 +5248,14 @@ BaseCompiler::emitBranchSetup(BranchState* b)
         switch (latentType_) {
           case ValType::I32: {
             latentIntCmp_ = Assembler::Equal;
-            b->i32.lhs = popI32NotJoinReg(b->resultType);
+            b->i32.lhs = popI32();
             b->i32.rhsImm = true;
             b->i32.imm = 0;
             break;
           }
           case ValType::I64: {
             latentIntCmp_ = Assembler::Equal;
-            b->i64.lhs = popI64NotJoinReg(b->resultType);
+            b->i64.lhs = popI64();
             b->i64.rhsImm = true;
             b->i64.imm = 0;
             break;
@@ -5245,6 +5267,8 @@ BaseCompiler::emitBranchSetup(BranchState* b)
         break;
       }
     }
+
+    maybeUnreserveJoinReg(b->resultType);
 }
 
 void
