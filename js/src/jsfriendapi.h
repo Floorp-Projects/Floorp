@@ -2907,6 +2907,12 @@ ToWindowIfWindowProxy(JSObject* obj);
 JS_FRIEND_API(bool)
 AllowGCBarriers(JSContext* cx);
 
+// Create and add the Intl.PluralRules constructor function to the provided
+// object.  This function throws if called more than once per realm/global
+// object.
+extern bool
+AddPluralRulesConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
+
 } /* namespace js */
 
 class NativeProfiler
