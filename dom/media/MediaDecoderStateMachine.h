@@ -338,7 +338,8 @@ protected:
 
   // Inserts MediaData* samples into their respective MediaQueues.
   // aSample must not be null.
-  void Push(MediaData* aSample);
+  void PushAudio(MediaData* aSample);
+  void PushVideo(MediaData* aSample);
 
   void OnAudioPopped(const RefPtr<MediaData>& aSample);
   void OnVideoPopped(const RefPtr<MediaData>& aSample);
