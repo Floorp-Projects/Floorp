@@ -34,6 +34,7 @@
 #include "VsyncSource.h"
 #endif
 #include "mozilla/widget/CompositorWidget.h"
+#include "VRManager.h"
 
 namespace mozilla {
 
