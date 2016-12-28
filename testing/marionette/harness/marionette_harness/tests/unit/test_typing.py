@@ -8,7 +8,7 @@ from marionette_driver.by import By
 from marionette_driver.errors import ElementNotVisibleException
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase, skip, skip_if_mobile
+from marionette_harness import MarionetteTestCase, skip_if_mobile
 
 
 def inline(doc):
@@ -32,7 +32,7 @@ class TestTypingChrome(TypingTestCase):
         super(TestTypingChrome, self).setUp()
         self.marionette.set_context("chrome")
 
-    @skip_if_mobile("Interacting with chrome elements not available for Fennec")
+    @skip_if_mobile  # Interacting with chrome elements not available for Fennec
     def test_cut_and_paste_shortcuts(self):
         with self.marionette.using_context("content"):
             test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -213,7 +213,7 @@ class TestTypingContent(TypingTestCase):
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
-    @skip_if_mobile("Bug 1324752 - Arrow keys cannot be sent in Fennec")
+    @skip_if_mobile  # Bug 1324752 - Arrow keys cannot be sent in Fennec
     def testShouldReportKeyCodeOfArrowKeysUpDownEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -241,7 +241,7 @@ class TestTypingContent(TypingTestCase):
         #  And leave no rubbish/printable keys in the "keyReporter"
         self.assertEqual("", element.get_property("value"))
 
-    @skip("Reenable in Bug 1068728")
+    """Disabled. Reenable in Bug 1068728
     def testNumericShiftKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -252,6 +252,7 @@ class TestTypingContent(TypingTestCase):
         element.send_keys(numericShiftsEtc)
         self.assertEqual(numericShiftsEtc, element.get_property("value"))
         self.assertIn(" up: 16", result.text.strip())
+    """
 
     def testLowerCaseAlphaKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -262,7 +263,7 @@ class TestTypingContent(TypingTestCase):
         element.send_keys(lowerAlphas)
         self.assertEqual(lowerAlphas, element.get_property("value"))
 
-    @skip("Reenable in Bug 1068735")
+    """Disabled. Reenable in Bug 1068735
     def testUppercaseAlphaKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -273,8 +274,9 @@ class TestTypingContent(TypingTestCase):
         element.send_keys(upperAlphas)
         self.assertEqual(upperAlphas, element.get_property("value"))
         self.assertIn(" up: 16", result.text.strip())
+    """
 
-    @skip("Reenable in Bug 1068726")
+    """Disabled. Reenable in Bug 1068726
     def testAllPrintableKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -286,8 +288,9 @@ class TestTypingContent(TypingTestCase):
 
         self.assertTrue(allPrintable, element.get_property("value"))
         self.assertIn(" up: 16", result.text.strip())
+    """
 
-    @skip("Reenable in Bug 1068733")
+    """Disabled. Reenable in Bug 1068733
     def testSpecialSpaceKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -295,6 +298,7 @@ class TestTypingContent(TypingTestCase):
         element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys("abcd" + Keys.SPACE + "fgh" + Keys.SPACE + "ij")
         self.assertEqual("abcd fgh ij", element.get_property("value"))
+    """
 
     def testShouldTypeAnInteger(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")

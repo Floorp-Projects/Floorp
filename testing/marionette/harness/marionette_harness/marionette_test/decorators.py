@@ -3,11 +3,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import functools
+import sys
 import types
 
-from unittest.case import (
+from .errors import (
+    _ExpectedFailure,
+    _UnexpectedSuccess,
     SkipTest,
 )
+
+
+def expectedFailure(func):
+    """Decorator which marks a test as expected fail."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except Exception:
+            raise _ExpectedFailure(sys.exc_info())
+        raise _UnexpectedSuccess
+    return wrapper
 
 
 def parameterized(func_suffix, *args, **kwargs):
@@ -46,101 +61,85 @@ def parameterized(func_suffix, *args, **kwargs):
     return wrapped
 
 
-def run_if_e10s(reason):
+def run_if_e10s(target):
     """Decorator which runs a test if e10s mode is active."""
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
+    def wrapper(self, *args, **kwargs):
+        with self.marionette.using_context('chrome'):
+            multi_process_browser = self.marionette.execute_script("""
+            try {
+              return Services.appinfo.browserTabsRemoteAutostart;
+            } catch (e) {
+              return false;
+            }""")
 
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
-            with self.marionette.using_context('chrome'):
-                multi_process_browser = not self.marionette.execute_script("""
-                    try {
-                      return Services.appinfo.browserTabsRemoteAutostart;
-                    } catch (e) {
-                      return false;
-                    }
-                """)
-                if multi_process_browser:
-                    raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
+        if not multi_process_browser:
+            raise SkipTest('skipping due to e10s is disabled')
+        return target(self, *args, **kwargs)
+    return wrapper
+
+
+def skip(reason):
+    """Decorator which unconditionally skips a test."""
+    def decorator(test_item):
+        if not isinstance(test_item, (type, types.ClassType)):
+            @functools.wraps(test_item)
+            def skip_wrapper(*args, **kwargs):
+                raise SkipTest(reason)
+            test_item = skip_wrapper
+
+        test_item.__unittest_skip__ = True
+        test_item.__unittest_skip_why__ = reason
+        return test_item
     return decorator
 
 
-def skip_if_chrome(reason):
+def skip_if_chrome(target):
     """Decorator which skips a test if chrome context is active."""
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
-
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
-            if self.marionette._send_message('getContext', key='value') == 'chrome':
-                raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
-    return decorator
+    def wrapper(self, *args, **kwargs):
+        if self.marionette._send_message("getContext", key="value") == "chrome":
+            raise SkipTest("skipping test in chrome context")
+        return target(self, *args, **kwargs)
+    return wrapper
 
 
-def skip_if_desktop(reason):
+def skip_if_desktop(target):
     """Decorator which skips a test if run on desktop."""
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
-
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
-            if self.marionette.session_capabilities.get('browserName') == 'firefox':
-                raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
-    return decorator
+    def wrapper(self, *args, **kwargs):
+        if self.marionette.session_capabilities.get('browserName') == 'firefox':
+            raise SkipTest('skipping due to desktop')
+        return target(self, *args, **kwargs)
+    return wrapper
 
 
-def skip_if_e10s(reason):
+def skip_if_e10s(target):
     """Decorator which skips a test if e10s mode is active."""
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
+    def wrapper(self, *args, **kwargs):
+        with self.marionette.using_context('chrome'):
+            multi_process_browser = self.marionette.execute_script("""
+            try {
+              return Services.appinfo.browserTabsRemoteAutostart;
+            } catch (e) {
+              return false;
+            }""")
 
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
-            with self.marionette.using_context('chrome'):
-                multi_process_browser = self.marionette.execute_script("""
-                    try {
-                      return Services.appinfo.browserTabsRemoteAutostart;
-                    } catch (e) {
-                      return false;
-                    }
-                """)
-                if multi_process_browser:
-                    raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
-    return decorator
+        if multi_process_browser:
+            raise SkipTest('skipping due to e10s')
+        return target(self, *args, **kwargs)
+    return wrapper
 
 
-def skip_if_mobile(reason):
+def skip_if_mobile(target):
     """Decorator which skips a test if run on mobile."""
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
-
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
-            if self.marionette.session_capabilities.get('browserName') == 'fennec':
-                raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
-    return decorator
+    def wrapper(self, *args, **kwargs):
+        if self.marionette.session_capabilities.get('browserName') == 'fennec':
+            raise SkipTest('skipping due to fennec')
+        return target(self, *args, **kwargs)
+    return wrapper
 
 
-def skip_unless_browser_pref(reason, pref, predicate=bool):
+def skip_unless_browser_pref(pref, predicate=bool):
     """Decorator which skips a test based on the value of a browser preference.
 
-    :param reason: Message describing why the test need to be skipped.
     :param pref: the preference name
     :param predicate: a function that should return false to skip the test.
                       The function takes one parameter, the preference value.
@@ -151,46 +150,33 @@ def skip_unless_browser_pref(reason, pref, predicate=bool):
     Example: ::
 
       class TestSomething(MarionetteTestCase):
-          @skip_unless_browser_pref("Sessionstore needs to be enabled for crashes",
-                                    "browser.sessionstore.resume_from_crash",
-                                    lambda value: value is True,
-                                    )
+          @skip_unless_browser_pref("accessibility.tabfocus",
+                                    lambda value: value >= 7)
           def test_foo(self):
               pass  # test implementation here
-
     """
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
-        if not callable(predicate):
-            raise ValueError('predicate must be callable')
-
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
+    def wrapper(target):
+        @functools.wraps(target)
+        def wrapped(self, *args, **kwargs):
             value = self.marionette.get_pref(pref)
             if value is None:
                 self.fail("No such browser preference: {0!r}".format(pref))
             if not predicate(value):
-                raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
-    return decorator
+                raise SkipTest("browser preference {0!r}: {1!r}".format((pref, value)))
+            return target(self, *args, **kwargs)
+        return wrapped
+    return wrapper
 
 
-def skip_unless_protocol(reason, predicate):
+def skip_unless_protocol(predicate):
     """Decorator which skips a test if the predicate does not match the current protocol level."""
     def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
-        if not callable(predicate):
-            raise ValueError('predicate must be callable')
-
         @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
+        def skip_wrapper(self):
             level = self.marionette.client.protocol
             if not predicate(level):
-                raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
+                raise SkipTest('skipping because protocol level is {}'.format(level))
+            return test_item(self)
         return skip_wrapper
     return decorator
 

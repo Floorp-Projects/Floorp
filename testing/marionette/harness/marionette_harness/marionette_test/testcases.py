@@ -12,18 +12,18 @@ import unittest
 import warnings
 import weakref
 
-from unittest.case import (
-    _ExpectedFailure,
-    _UnexpectedSuccess,
-    SkipTest,
-)
-
 from marionette_driver.errors import (
     MarionetteException,
     ScriptTimeoutException,
     TimeoutException,
 )
 from mozlog import get_default_logger
+
+from .errors import (
+    _ExpectedFailure,
+    _UnexpectedSuccess,
+    SkipTest,
+)
 
 
 def _wraps_parameterized(func, func_suffix, args, kwargs):
