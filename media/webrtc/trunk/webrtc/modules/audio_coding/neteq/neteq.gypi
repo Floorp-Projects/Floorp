@@ -19,22 +19,17 @@
         'codecs': ['webrtc_opus',],
         'neteq_defines': ['WEBRTC_CODEC_OPUS',],
       }],
-      ['build_with_mozilla==0', {
-        'conditions': [
-          ['target_arch=="arm"', {
-            'codecs': ['isac_fix',],
-            'neteq_defines': ['WEBRTC_CODEC_ISACFX',],
-          }, {
-            'codecs': ['isac',],
-            'neteq_defines': ['WEBRTC_CODEC_ISAC',],
-          }],
-        ],
+      ['include_g722==1', {
         'codecs': ['g722',],
         'neteq_defines': ['WEBRTC_CODEC_G722',],
       }],
-      ['build_with_mozilla==0 and build_with_chromium==0', {
+      ['include_ilbc==1', {
         'codecs': ['ilbc',],
         'neteq_defines': ['WEBRTC_CODEC_ILBC',],
+      }],
+      ['include_isac==1', {
+        'codecs': ['isac', 'isac_fix',],
+        'neteq_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFIX',],
       }],
     ],
     'neteq_dependencies': [
@@ -48,12 +43,54 @@
     {
       'target_name': 'neteq',
       'type': 'static_library',
+      'include_dirs': [
+        '../../../../../../media/opus/celt',
+      ],
+      'direct_dependent_settings': {
+        'include_dirs': [
+          '../../../../../../media/opus/celt',
+	],
+      },
       'dependencies': [
         '<@(neteq_dependencies)',
         '<(webrtc_root)/common.gyp:webrtc_common',
       ],
       'defines': [
         '<@(neteq_defines)',
+      ],
+      'conditions': [
+        ['build_with_mozilla==0', {
+          'include_dirs': [
+            # Need Opus header files for the audio classifier.
+            '<(DEPTH)/third_party/opus/src/celt',
+            '<(DEPTH)/third_party/opus/src/src',
+          ],
+          'direct_dependent_settings': {
+            'include_dirs': [
+              # Need Opus header files for the audio classifier.
+              '<(DEPTH)/third_party/opus/src/celt',
+              '<(DEPTH)/third_party/opus/src/src',
+            ],
+          },
+          'export_dependent_settings': [
+            '<(DEPTH)/third_party/opus/opus.gyp:opus',
+          ],
+	}],
+        ['build_with_mozilla==1', {
+          'include_dirs': [
+            # Need Opus header files for the audio classifier.
+            '<(DEPTH)/../../../media/opus/celt',
+#            '<(DEPTH)/third_party/opus/src/src',
+          ],
+          'direct_dependent_settings': {
+            'include_dirs': [
+              '../../../../../../media/opus/celt',
+              # Need Opus header files for the audio classifier.
+              '<(DEPTH)/../../../media/opus/celt',
+#              '<(DEPTH)/third_party/opus/src/src',
+            ],
+          },
+        }],
       ],
       'sources': [
         'include/neteq.h',

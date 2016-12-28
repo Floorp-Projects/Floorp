@@ -47,11 +47,26 @@
         'fine_audio_buffer.h',
       ],
       'conditions': [
-        ['OS=="linux"', {
+        ['build_with_mozilla==1', {
+          'cflags_mozilla': [
+            '$(NSPR_CFLAGS)',
+          ],
+        }],
+        ['hardware_aec_ns==1', {
+          'defines': [
+            'WEBRTC_HARDWARE_AEC_NS',
+          ],
+        }],
+        ['include_sndio_audio==1', {
+          'include_dirs': [
+            'sndio',
+          ],
+        }], # include_sndio_audio==1
+        ['OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1', {
           'include_dirs': [
             'linux',
           ],
-        }], # OS==linux
+        }], # OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1
         ['OS=="ios"', {
           'include_dirs': [
             'ios',
@@ -69,9 +84,15 @@
         }],
         ['OS=="android"', {
           'include_dirs': [
+            '/widget/android',
             'android',
           ],
         }], # OS==android
+        ['enable_android_opensl==1', {
+          'include_dirs': [
+            'opensl',
+          ],
+        }], # enable_android_opensl
         ['include_internal_audio_device==0', {
           'defines': [
             'WEBRTC_DUMMY_AUDIO_BUILD',
@@ -88,6 +109,9 @@
           'sources': [
             'audio_device_impl.cc',
             'audio_device_impl.h',
+            # used externally for getUserMedia
+            'opensl/single_rw_fifo.cc',
+            'opensl/single_rw_fifo.h',
           ],
           'conditions': [
             ['OS=="android"', {
@@ -115,37 +139,58 @@
             }],
             ['OS=="linux"', {
               'sources': [
-                'linux/alsasymboltable_linux.cc',
-                'linux/alsasymboltable_linux.h',
-                'linux/audio_device_alsa_linux.cc',
-                'linux/audio_device_alsa_linux.h',
-                'linux/audio_mixer_manager_alsa_linux.cc',
-                'linux/audio_mixer_manager_alsa_linux.h',
                 'linux/latebindingsymboltable_linux.cc',
                 'linux/latebindingsymboltable_linux.h',
-              ],
-              'defines': [
-                'LINUX_ALSA',
               ],
               'link_settings': {
                 'libraries': [
                   '-ldl','-lX11',
                 ],
               },
-              'conditions': [
-                ['include_pulse_audio==1', {
-                  'defines': [
-                    'LINUX_PULSE',
-                  ],
-                  'sources': [
-                    'linux/audio_device_pulse_linux.cc',
-                    'linux/audio_device_pulse_linux.h',
-                    'linux/audio_mixer_manager_pulse_linux.cc',
-                    'linux/audio_mixer_manager_pulse_linux.h',
-                    'linux/pulseaudiosymboltable_linux.cc',
-                    'linux/pulseaudiosymboltable_linux.h',
-                  ],
-                }],
+            }],
+            ['include_sndio_audio==1', {
+              'link_settings': {
+                'libraries': [
+                  '-lsndio',
+                ],
+              },
+              'sources': [
+                'sndio/audio_device_sndio.cc',
+                'sndio/audio_device_sndio.h',
+                'sndio/audio_device_utility_sndio.cc',
+                'sndio/audio_device_utility_sndio.h',
+              ],
+            }],
+            ['include_alsa_audio==1', {
+              'cflags_mozilla': [
+                '$(MOZ_ALSA_CFLAGS)',
+              ],
+              'defines': [
+                'LINUX_ALSA',
+              ],
+              'sources': [
+                'linux/alsasymboltable_linux.cc',
+                'linux/alsasymboltable_linux.h',
+                'linux/audio_device_alsa_linux.cc',
+                'linux/audio_device_alsa_linux.h',
+                'linux/audio_mixer_manager_alsa_linux.cc',
+                'linux/audio_mixer_manager_alsa_linux.h',
+              ],
+            }],
+            ['include_pulse_audio==1', {
+              'cflags_mozilla': [
+                '$(MOZ_PULSEAUDIO_CFLAGS)',
+              ],
+              'defines': [
+                'LINUX_PULSE',
+              ],
+              'sources': [
+                'linux/audio_device_pulse_linux.cc',
+                'linux/audio_device_pulse_linux.h',
+                'linux/audio_mixer_manager_pulse_linux.cc',
+                'linux/audio_mixer_manager_pulse_linux.h',
+                'linux/pulseaudiosymboltable_linux.cc',
+                'linux/pulseaudiosymboltable_linux.h',
               ],
             }],
             ['OS=="mac"', {
@@ -271,4 +316,3 @@
     }], # include_tests==1 and OS!=ios
   ],
 }
-

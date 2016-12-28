@@ -21,6 +21,7 @@
 #include "webrtc/stream.h"
 #include "webrtc/transport.h"
 #include "webrtc/video_renderer.h"
+#include "webrtc/voice_engine/include/voe_base.h"
 
 namespace webrtc {
 
@@ -105,6 +106,8 @@ class VideoReceiveStream : public ReceiveStream {
       // See draft-alvestrand-rmcat-remb for information.
       bool remb = false;
 
+      bool tmmbr = false;
+
       // See draft-holmer-rmcat-transport-wide-cc-extensions for details.
       bool transport_cc = false;
 
@@ -171,6 +174,8 @@ class VideoReceiveStream : public ReceiveStream {
 
   // TODO(pbos): Add info on currently-received codec to Stats.
   virtual Stats GetStats() const = 0;
+  virtual int64_t GetRtt() const = 0;
+  virtual void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) = 0;
 };
 
 }  // namespace webrtc

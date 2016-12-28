@@ -19,7 +19,7 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.os.Build;
 
-import org.webrtc.Logging;
+import android.util.Log;
 
 import java.lang.Math;
 
@@ -34,6 +34,10 @@ import java.lang.Math;
 // recommended to always use AudioManager.MODE_IN_COMMUNICATION.
 // This class also adds support for output volume control of the
 // STREAM_VOICE_CALL-type stream.
+
+import org.mozilla.gecko.annotation.WebRTCJNITarget;
+
+@WebRTCJNITarget
 public class WebRtcAudioManager {
   private static final boolean DEBUG = false;
 
@@ -87,7 +91,7 @@ public class WebRtcAudioManager {
   private int inputBufferSize;
 
   WebRtcAudioManager(Context context, long nativeAudioManager) {
-    Logging.d(TAG, "ctor" + WebRtcAudioUtils.getThreadInfo());
+    Log.d(TAG, "ctor" + WebRtcAudioUtils.getThreadInfo());
     this.context = context;
     this.nativeAudioManager = nativeAudioManager;
     audioManager = (AudioManager) context.getSystemService(
@@ -103,17 +107,17 @@ public class WebRtcAudioManager {
   }
 
   private boolean init() {
-    Logging.d(TAG, "init" + WebRtcAudioUtils.getThreadInfo());
+    Log.d(TAG, "init" + WebRtcAudioUtils.getThreadInfo());
     if (initialized) {
       return true;
     }
-    Logging.d(TAG, "audio mode is: " + AUDIO_MODES[audioManager.getMode()]);
+    Log.d(TAG, "audio mode is: " + AUDIO_MODES[audioManager.getMode()]);
     initialized = true;
     return true;
   }
 
   private void dispose() {
-    Logging.d(TAG, "dispose" + WebRtcAudioUtils.getThreadInfo());
+    Log.d(TAG, "dispose" + WebRtcAudioUtils.getThreadInfo());
     if (!initialized) {
       return;
     }
@@ -128,7 +132,7 @@ public class WebRtcAudioManager {
         blacklistDeviceForOpenSLESUsage :
         WebRtcAudioUtils.deviceIsBlacklistedForOpenSLESUsage();
     if (blacklisted) {
-      Logging.e(TAG, Build.MODEL + " is blacklisted for OpenSL ES usage!");
+      Log.e(TAG, Build.MODEL + " is blacklisted for OpenSL ES usage!");
     }
     return blacklisted;
   }
@@ -177,13 +181,13 @@ public class WebRtcAudioManager {
     // Override this if we're running on an old emulator image which only
     // supports 8 kHz and doesn't support PROPERTY_OUTPUT_SAMPLE_RATE.
     if (WebRtcAudioUtils.runningOnEmulator()) {
-      Logging.d(TAG, "Running emulator, overriding sample rate to 8 kHz.");
+      Log.d(TAG, "Running emulator, overriding sample rate to 8 kHz.");
       return 8000;
     }
     // Default can be overriden by WebRtcAudioUtils.setDefaultSampleRateHz().
     // If so, use that value and return here.
     if (WebRtcAudioUtils.isDefaultSampleRateOverridden()) {
-      Logging.d(TAG, "Default sample rate is overriden to " +
+      Log.d(TAG, "Default sample rate is overriden to " +
           WebRtcAudioUtils.getDefaultSampleRateHz() + " Hz");
       return WebRtcAudioUtils.getDefaultSampleRateHz();
     }
@@ -195,7 +199,7 @@ public class WebRtcAudioManager {
     } else {
       sampleRateHz = WebRtcAudioUtils.getDefaultSampleRateHz();
     }
-    Logging.d(TAG, "Sample rate is set to " + sampleRateHz + " Hz");
+    Log.d(TAG, "Sample rate is set to " + sampleRateHz + " Hz");
     return sampleRateHz;
   }
 

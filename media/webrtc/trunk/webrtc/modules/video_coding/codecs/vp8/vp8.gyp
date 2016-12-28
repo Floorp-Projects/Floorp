@@ -20,11 +20,20 @@
         '<(webrtc_root)/modules/video_coding/utility/video_coding_utility.gyp:video_coding_utility',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
+      'include_dirs': [
+        '../../../../../../../libyuv/include',
+      ],
       'conditions': [
         ['build_libvpx==1', {
           'dependencies': [
             '<(libvpx_dir)/libvpx.gyp:libvpx_new',
           ],
+        },{
+          'link_settings': {
+            'libraries': [
+              '$(LIBVPX_OBJ)/libvpx.a',
+            ],
+          },
         }],
       ],
       'sources': [

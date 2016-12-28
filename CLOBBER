@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1322938 needs a clobber for test_lowDiskSpace.html on Android
+Bug 1250356 Setting CLOBBER out caution landing a huge patchset with gyp changes

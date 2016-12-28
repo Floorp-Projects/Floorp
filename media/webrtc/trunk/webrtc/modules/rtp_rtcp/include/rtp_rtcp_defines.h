@@ -68,6 +68,7 @@ enum RTPExtensionType {
   kRtpExtensionAbsoluteSendTime,
   kRtpExtensionVideoRotation,
   kRtpExtensionTransportSequenceNumber,
+  kRtpExtensionRtpStreamId,
 };
 
 enum RTCPAppSubTypes { kAppSubtypeBwe = 0x00 };

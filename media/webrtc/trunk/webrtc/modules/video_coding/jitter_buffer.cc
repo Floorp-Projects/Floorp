@@ -56,6 +56,39 @@ void FrameList::InsertFrame(VCMFrameBuffer* frame) {
   insert(rbegin().base(), FrameListPair(frame->TimeStamp(), frame));
 }
 
+// Find a Frame which (may) include seq_num
+// Note: if we don't have an end for the frame yet AND there are multiple Frames
+// with the same timestamp being input, in theory you can get packets
+// for a later Frame mixed with an earlier one where there's a reordering.
+// e.g. for <frame 1: 1 2 3> <frame 2: 4 5 6> and we receive
+//          1 2 4 3 5 6
+// or       4 1 2 3 5 6
+// we'll return <frame 1> for packet 4, and at some point it needs to move to
+// <frame 2>.  You can't key off isFirstPacket or kNaluStart because the OOO packet
+// may be 5:
+//          1 5 2 3 4 6
+//          1 5 3 4 2 6 etc
+
+// This can be done by re-characterizing 4 when <frame 1> becomes complete
+// and we find it doesn't include 4.  Perhaps a better abstraction would be
+// to keep the packets in a single sorted list (per timestamp or not,
+// doesn't really matter), and then on insertion look to see if it's in a
+// complete unit (kNaluComplete or kNaluStart ... kNaluEnd sequence), and
+// remove the set *then*.
+//
+// If we instead limit multiple frames with the same timestamp to
+// kNaluComplete (single-packet) frames (i.e. Mode 0 H264), it's simpler.
+// You do need to be careful to pull off Frames only if they're contiguous
+// in sequence number to the previous frame, but that's normal since you
+// can get 4 5 6 1 2 3
+//
+// Note that you have to be careful reordering still:
+// <frame 1: 1> <frame 2: 2 3 4>
+// and arrival 2 1 3 4
+// means you must not match the frame created for 2 when 1 comes in
+
+// XXX This is NOT implemented here; we need to redo this
+
 VCMFrameBuffer* FrameList::PopFrame(uint32_t timestamp) {
   FrameList::iterator it = find(timestamp);
   if (it == end())
@@ -564,6 +597,10 @@ VCMEncodedFrame* VCMJitterBuffer::ExtractAndSetDecode(uint32_t timestamp) {
     return NULL;
   }
   // Extract the frame with the desired timestamp.
+  // This removes the frame, so if you have 2 1 3 4
+  // so when 2 comes in, we pull it
+  // XXX This is NOT implemented here; we may need to redo this
+
   VCMFrameBuffer* frame = decodable_frames_.PopFrame(timestamp);
   bool continuous = true;
   if (!frame) {
@@ -605,6 +642,11 @@ VCMEncodedFrame* VCMJitterBuffer::ExtractAndSetDecode(uint32_t timestamp) {
   if ((*frame).IsSessionComplete())
     UpdateAveragePacketsPerFrame(frame->NumPackets());
 
+  if (frame->Length() == 0) {
+    // Normally only if MakeDecodable() on an incomplete frame threw it all away
+    ReleaseFrame(frame);
+    return NULL;
+  }
   return frame;
 }
 
@@ -622,6 +664,13 @@ void VCMJitterBuffer::ReleaseFrame(VCMEncodedFrame* frame) {
 VCMFrameBufferEnum VCMJitterBuffer::GetFrame(const VCMPacket& packet,
                                              VCMFrameBuffer** frame,
                                              FrameList** frame_list) {
+  // Handle the 2 1 3 4 case (where 2 3 4 are frame 2 with the timestamp)
+  // from above, for complete nalu's (single-nalus) only.
+
+  // TODO(jesup) To handle a sequence of fragmented nalus which all are
+  // slices of the same lower-case frame (timestamp), the more complete
+  // solution for FindFrame that uses the seqNum and can move packets
+  // between sessions would be needed.
   *frame = incomplete_frames_.PopFrame(packet.timestamp);
   if (*frame != NULL) {
     *frame_list = &incomplete_frames_;
@@ -641,8 +690,10 @@ VCMFrameBufferEnum VCMJitterBuffer::GetFrame(const VCMPacket& packet,
     LOG(LS_WARNING) << "Unable to get empty frame; Recycling.";
     bool found_key_frame = RecycleFramesUntilKeyFrame();
     *frame = GetEmptyFrame();
-    assert(*frame);
-    if (!found_key_frame) {
+    if (!*frame) {
+      LOG(LS_ERROR) << "GetEmptyFrame returned NULL.";
+      return kGeneralError;
+    } else if (!found_key_frame) {
       free_frames_.push_back(*frame);
       return kFlushIndicator;
     }

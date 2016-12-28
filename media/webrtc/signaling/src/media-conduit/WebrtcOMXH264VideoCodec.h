@@ -42,9 +42,9 @@ public:
                              int32_t aNumOfCores,
                              size_t aMaxPayloadSize) override;
 
-  virtual int32_t Encode(const webrtc::I420VideoFrame& aInputImage,
+  virtual int32_t Encode(const webrtc::VideoFrame& aInputImage,
                          const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
+                         const std::vector<webrtc::FrameType>* aFrameTypes) override;
 
   virtual int32_t RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* aCallback) override;
 

@@ -10,8 +10,8 @@
 namespace mozilla {
 class GmpVideoCodec {
  public:
-  static VideoEncoder* CreateEncoder();
-  static VideoDecoder* CreateDecoder();
+  static WebrtcVideoEncoder* CreateEncoder();
+  static WebrtcVideoDecoder* CreateDecoder();
 };
 
 }

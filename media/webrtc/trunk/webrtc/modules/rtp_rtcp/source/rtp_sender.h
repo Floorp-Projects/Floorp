@@ -161,6 +161,7 @@ class RTPSender : public RTPSenderInterface {
   int32_t SetAbsoluteSendTime(uint32_t absolute_send_time);
   void SetVideoRotation(VideoRotation rotation);
   int32_t SetTransportSequenceNumber(uint16_t sequence_number);
+  int32_t SetRID(const char* rid);
 
   int32_t RegisterRtpHeaderExtension(RTPExtensionType type, uint8_t id);
   bool IsRtpHeaderExtensionRegistered(RTPExtensionType type) override;
@@ -176,6 +177,7 @@ class RTPSender : public RTPSenderInterface {
   uint8_t BuildVideoRotationExtension(uint8_t* data_buffer) const;
   uint8_t BuildTransportSequenceNumberExtension(uint8_t* data_buffer,
                                                 uint16_t sequence_number) const;
+  uint8_t BuildRIDExtension(uint8_t* data_buffer) const;
 
   // Verifies that the specified extension is registered, and that it is
   // present in rtp packet. If extension is not registered kNotRegistered is
@@ -416,6 +418,7 @@ class RTPSender : public RTPSenderInterface {
   VideoRotation rotation_;
   CVOMode cvo_mode_;
   uint16_t transport_sequence_number_;
+  char* rid_;
 
   // NACK
   uint32_t nack_byte_count_times_[NACK_BYTECOUNT_SIZE];

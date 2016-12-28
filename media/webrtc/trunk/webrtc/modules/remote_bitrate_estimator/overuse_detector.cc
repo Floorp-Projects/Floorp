@@ -36,20 +36,28 @@ const double kMaxAdaptOffsetMs = 15.0;
 const double kOverUsingTimeThreshold = 10;
 
 bool AdaptiveThresholdExperimentIsEnabled() {
+#ifdef CONVERT_TO_MOZILLA_ABOUT_CONFIG
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kAdaptiveThresholdExperiment);
   if (experiment_string.length() < kMinExperimentLength)
     return false;
   return experiment_string.substr(0, kEnabledPrefixLength) == kEnabledPrefix;
+#else
+  return false;
+#endif
 }
 
 // Gets thresholds from the experiment name following the format
 // "WebRTC-AdaptiveBweThreshold/Enabled-0.5,0.002/".
 bool ReadExperimentConstants(double* k_up, double* k_down) {
+#ifdef CONVERT_TO_MOZILLA_ABOUT_CONFIG
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kAdaptiveThresholdExperiment);
   return sscanf(experiment_string.substr(kEnabledPrefixLength + 1).c_str(),
                 "%lf,%lf", k_up, k_down) == 2;
+#else
+  return false;
+#endif
 }
 
 OveruseDetector::OveruseDetector(const OverUseDetectorOptions& options)

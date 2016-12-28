@@ -259,4 +259,18 @@ void AudioRecordJni::OnDataIsRecorded(int length) {
   }
 }
 
+int32_t AudioRecordJni::RecordingDeviceName(uint16_t index,
+                                            char name[kAdmMaxDeviceNameSize],
+                                            char guid[kAdmMaxGuidSize]) {
+  // Return empty string
+  memset(name, 0, kAdmMaxDeviceNameSize);
+
+  if (guid)
+  {
+    memset(guid, 0, kAdmMaxGuidSize);
+  }
+
+  return 0;
+}
+
 }  // namespace webrtc

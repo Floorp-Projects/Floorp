@@ -83,9 +83,9 @@
 // |virtual_source_idx_|, etc.
 
 // MSVC++ requires this to be set before any other includes to get M_PI.
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
-
-#include "webrtc/common_audio/resampler/sinc_resampler.h"
+#endif
 
 #include <assert.h>
 #include <math.h>
@@ -93,10 +93,10 @@
 
 #include <limits>
 
+#include "webrtc/common_audio/resampler/sinc_resampler.h"
 #include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
-namespace webrtc {
 
 namespace {
 
@@ -118,6 +118,8 @@ double SincScaleFactor(double io_ratio) {
 
 }  // namespace
 
+namespace webrtc {
+  
 // If we know the minimum architecture at compile time, avoid CPU detection.
 #if defined(WEBRTC_ARCH_X86_FAMILY)
 #if defined(__SSE2__)
@@ -132,7 +134,7 @@ void SincResampler::InitializeCPUSpecificFeatures() {}
 void SincResampler::InitializeCPUSpecificFeatures() {
   convolve_proc_ = WebRtc_GetCPUInfo(kSSE2) ? Convolve_SSE : Convolve_C;
 }
-#endif
+#endif // defined(__SSE2__)
 #elif defined(WEBRTC_HAS_NEON)
 #define CONVOLVE_FUNC Convolve_NEON
 void SincResampler::InitializeCPUSpecificFeatures() {}
@@ -146,7 +148,7 @@ void SincResampler::InitializeCPUSpecificFeatures() {
 // Unknown architecture.
 #define CONVOLVE_FUNC Convolve_C
 void SincResampler::InitializeCPUSpecificFeatures() {}
-#endif
+#endif // defined(WEBRTC_ARCH_X86_FAMILY
 
 SincResampler::SincResampler(double io_sample_rate_ratio,
                              size_t request_frames,

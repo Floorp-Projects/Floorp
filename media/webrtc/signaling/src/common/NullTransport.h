@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 
-#include "webrtc/common_types.h"
+#include "webrtc/transport.h"
 
 namespace mozilla {
 
@@ -18,6 +18,23 @@ namespace mozilla {
 class NullTransport : public webrtc::Transport
 {
 public:
+  virtual bool SendRtp(const uint8_t* packet,
+                       size_t length,
+                       const webrtc::PacketOptions& options) override
+  {
+    (void) packet;
+    (void) length;
+    (void) options;
+    return true;
+  }
+
+  virtual bool SendRtcp(const uint8_t* packet, size_t length) override
+  {
+    (void) packet;
+    (void) length;
+    return true;
+  }
+#if 0
   virtual int SendPacket(int channel, const void *data, size_t len)
   {
     (void) channel; (void) data;
@@ -29,7 +46,7 @@ public:
     (void) channel; (void) data;
     return len;
   }
-
+#endif
   NullTransport() {}
 
   virtual ~NullTransport() {}

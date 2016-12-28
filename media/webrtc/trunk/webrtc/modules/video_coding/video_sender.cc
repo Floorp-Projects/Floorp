@@ -42,6 +42,7 @@ VideoSender::VideoSender(Clock* clock,
       qm_settings_callback_(qm_settings_callback),
       protection_callback_(nullptr),
       encoder_params_({0, 0, 0, 0}) {
+  _encodedFrameCallback.SetCritSect(process_crit_sect_.get());
   // Allow VideoSender to be created on one thread but used on another, post
   // construction. This is currently how this class is being used by at least
   // one external project (diffractor).
@@ -128,7 +129,8 @@ int32_t VideoSender::RegisterSendCodec(const VideoCodec* sendCodec,
 
   _mediaOpt.SetEncodingData(sendCodec->codecType, sendCodec->maxBitrate * 1000,
                             sendCodec->startBitrate * 1000, sendCodec->width,
-                            sendCodec->height, sendCodec->maxFramerate,
+                            sendCodec->height, sendCodec->maxFramerate * 1000,
+                            sendCodec->resolution_divisor,
                             numLayers, maxPayloadSize);
   return VCM_OK;
 }
@@ -279,12 +281,14 @@ int32_t VideoSender::AddVideoFrame(const VideoFrame& videoFrame,
   }
   _mediaOpt.UpdateContentData(contentMetrics);
   // TODO(pbos): Make sure setting send codec is synchronized with video
+#ifdef VERIFY_FRAME_SIZE_VS_DATABASE
   // processing so frame size always matches.
   if (!_codecDataBase.MatchesCurrentResolution(videoFrame.width(),
                                                videoFrame.height())) {
     LOG(LS_ERROR) << "Incoming frame doesn't match set resolution. Dropping.";
     return VCM_PARAMETER_ERROR;
   }
+#endif
   VideoFrame converted_frame = videoFrame;
   if (converted_frame.native_handle() && !_encoder->SupportsNativeHandle()) {
     // This module only supports software encoding.
@@ -348,5 +352,11 @@ void VideoSender::SuspendBelowMinBitrate() {
 bool VideoSender::VideoSuspended() const {
   return _mediaOpt.IsVideoSuspended();
 }
+
+void VideoSender::SetCPULoadState(CPULoadState state) {
+  rtc::CritScope lock(&send_crit_);
+  _mediaOpt.SetCPULoadState(state);
+}
+
 }  // namespace vcm
 }  // namespace webrtc

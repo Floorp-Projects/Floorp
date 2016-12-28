@@ -13,6 +13,7 @@
 #include <assert.h>
 
 #include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 
 namespace webrtc {
 
@@ -145,6 +146,14 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       return;
     case kRtpVideoGeneric:
     case kRtpVideoNone:
+      if (isFirstPacket && markerBit)
+        completeNALU = kNaluComplete;
+      else if (isFirstPacket)
+        completeNALU = kNaluStart;
+      else if (markerBit)
+        completeNALU = kNaluEnd;
+      else
+        completeNALU = kNaluIncomplete;
       codec = kVideoCodecUnknown;
       return;
   }

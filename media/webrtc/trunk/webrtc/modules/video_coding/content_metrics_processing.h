@@ -41,7 +41,7 @@ class VCMContentMetricsProcessing {
   int Reset();
 
   // Inform class of current frame rate.
-  void UpdateFrameRate(uint32_t frameRate);
+  void UpdateFrameRate(float frameRate);
 
   // Returns the long-term averaged content data: recursive average over longer
   // time scale.

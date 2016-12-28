@@ -13,6 +13,7 @@
 #include "webrtc/modules/utility/include/jvm_android.h"
 
 #include "webrtc/base/checks.h"
+#include "AndroidJNIWrapper.h"
 
 #define TAG "JVM"
 #define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
@@ -39,11 +40,7 @@ struct {
 // http://developer.android.com/training/articles/perf-jni.html#faq_FindClass
 void LoadClasses(JNIEnv* jni) {
   for (auto& c : loaded_classes) {
-    jclass localRef = FindClass(jni, c.name);
-    CHECK_EXCEPTION(jni) << "Error during FindClass: " << c.name;
-    RTC_CHECK(localRef) << c.name;
-    jclass globalRef = reinterpret_cast<jclass>(jni->NewGlobalRef(localRef));
-    CHECK_EXCEPTION(jni) << "Error during NewGlobalRef: " << c.name;
+    jclass globalRef = jsjni_GetGlobalClassRef(c.name);
     RTC_CHECK(globalRef) << c.name;
     c.clazz = globalRef;
   }
@@ -207,7 +204,9 @@ std::string JNIEnvironment::JavaToStdString(const jstring& j_string) {
 // static
 void JVM::Initialize(JavaVM* jvm, jobject context) {
   ALOGD("JVM::Initialize%s", GetThreadInfo().c_str());
-  RTC_CHECK(!g_jvm);
+  if (g_jvm) {
+    return;
+  }
   g_jvm = new JVM(jvm, context);
 }
 

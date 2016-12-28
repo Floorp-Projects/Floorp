@@ -80,6 +80,9 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader* rtp) {
     }
     case kVideoCodecH264:
       rtp->codec = kRtpVideoH264;
+      rtp->codecHeader.H264.packetization_mode = info->codecSpecific.H264.packetizationMode;
+      rtp->codecHeader.H264.single_nalu = info->codecSpecific.H264.single_nalu;
+      rtp->simulcastIdx = info->codecSpecific.H264.simulcastIdx;
       return;
     case kVideoCodecGeneric:
       rtp->codec = kRtpVideoGeneric;
@@ -109,6 +112,7 @@ VCMGenericEncoder::VCMGenericEncoder(
 VCMGenericEncoder::~VCMGenericEncoder() {}
 
 int32_t VCMGenericEncoder::Release() {
+  encoder_->RegisterEncodeCompleteCallback(nullptr);
   return encoder_->Release();
 }
 
@@ -229,6 +233,7 @@ int VCMGenericEncoder::GetTargetFramerate() {
 VCMEncodedFrameCallback::VCMEncodedFrameCallback(
     EncodedImageCallback* post_encode_callback)
     : send_callback_(),
+      _critSect(NULL),
       _mediaOpt(NULL),
       _payloadType(0),
       _internalSource(false),
@@ -249,6 +254,12 @@ VCMEncodedFrameCallback::~VCMEncodedFrameCallback() {
   fclose(_bitStreamAfterEncoder);
 #endif
 }
+ 
+void
+VCMEncodedFrameCallback::SetCritSect(CriticalSectionWrapper* critSect)
+{
+    _critSect = critSect;
+}
 
 int32_t VCMEncodedFrameCallback::SetTransportCallback(
     VCMPacketizationCallback* transport) {
@@ -262,6 +273,9 @@ int32_t VCMEncodedFrameCallback::Encoded(
     const RTPFragmentationHeader* fragmentationHeader) {
   TRACE_EVENT_INSTANT1("webrtc", "VCMEncodedFrameCallback::Encoded",
                        "timestamp", encoded_image._timeStamp);
+  assert(_critSect);
+  CriticalSectionScoped cs(_critSect);
+
   post_encode_callback_->Encoded(encoded_image, NULL, NULL);
 
   if (send_callback_ == NULL) {

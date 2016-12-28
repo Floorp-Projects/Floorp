@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <limits>
 
 // NOTE(ajm): Path provided by gyp.
 #include "libyuv.h"  // NOLINT
@@ -69,6 +70,16 @@ void Calc16ByteAlignedStride(int width, int* stride_y, int* stride_uv) {
 size_t CalcBufferSize(VideoType type, int width, int height) {
   assert(width >= 0);
   assert(height >= 0);
+  // Verify we won't overflow; max is width*height*4
+  // 0x7FFF * 0x7FFF * 4 = < 0x100000000
+  assert(width <= 0x7FFF); // guarantees no overflow and cheaper than multiply
+  assert(height <= 0x7FFF);
+  assert(std::numeric_limits<std::size_t>::max() >= 0xFFFFFFFF);
+  // assert() is debug only
+  if (width > 0x7FFF || height > 0x7FFF) {
+    return SIZE_MAX; // very likely forces OOM
+  }
+
   size_t buffer_size = 0;
   switch (type) {
     case kI420:
@@ -245,6 +256,28 @@ int ConvertToI420(VideoType src_video_type,
     dst_width = dst_frame->height();
     dst_height = dst_frame->width();
   }
+#ifdef WEBRTC_GONK
+  if (src_video_type == kYV12) {
+    // In gralloc buffer, yv12 color format's cb and cr's strides are aligned
+    // to 16 Bytes boundary. See /system/core/include/system/graphics.h
+    int stride_y = (src_width + 15) & ~0x0F;
+    int stride_uv = (((stride_y + 1) / 2) + 15) & ~0x0F;
+    return libyuv::I420Rotate(src_frame,
+                              stride_y,
+                              src_frame + (stride_y * src_height) + (stride_uv * ((src_height + 1 / 2)),
+                              stride_uv,
+                              src_frame + (stride_y * src_height),
+                              stride_uv,
+                              dst_frame->buffer(kYPlane),
+                              dst_frame->stride(kYPlane),
+                              dst_frame->buffer(kUPlane),
+                              dst_frame->stride(kUPlane),
+                              dst_frame->buffer(kVPlane),
+                              dst_frame->stride(kVPlane),
+                              src_width, src_height,
+                              ConvertRotationMode(rotation));
+  }
+#endif
   return libyuv::ConvertToI420(src_frame, sample_size,
                                dst_frame->buffer(kYPlane),
                                dst_frame->stride(kYPlane),

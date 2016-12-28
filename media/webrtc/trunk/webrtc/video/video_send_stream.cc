@@ -184,6 +184,8 @@ VideoSendStream::VideoSendStream(
       RTC_CHECK_EQ(0, vie_channel_->SetSendVideoRotationStatus(true, id));
     } else if (extension == RtpExtension::kTransportSequenceNumber) {
       RTC_CHECK_EQ(0, vie_channel_->SetSendTransportSequenceNumber(true, id));
+    } else if (extension == RtpExtension::kRtpStreamId) {
+      RTC_CHECK_EQ(0, vie_channel_->SetSendRtpStreamId(true,id));
     } else {
       RTC_NOTREACHED() << "Registering unsupported RTP extension.";
     }
@@ -276,6 +278,10 @@ VideoCaptureInput* VideoSendStream::Input() {
   return input_.get();
 }
 
+CPULoadStateObserver* VideoSendStream::LoadStateObserver() {
+  return vie_encoder_.get();
+}
+
 void VideoSendStream::Start() {
   transport_adapter_.Enable();
   vie_encoder_->Pause();
@@ -336,6 +342,8 @@ bool VideoSendStream::ReconfigureVideoEncoder(
     video_codec.codecSpecific.H264 = VideoEncoder::GetDefaultH264Settings();
   }
 
+  video_codec.resolution_divisor = config.resolution_divisor;
+
   if (video_codec.codecType == kVideoCodecVP8) {
     if (config.encoder_specific_settings != nullptr) {
       video_codec.codecSpecific.VP8 = *reinterpret_cast<const VideoCodecVP8*>(
@@ -362,6 +370,7 @@ bool VideoSendStream::ReconfigureVideoEncoder(
     if (config.encoder_specific_settings != nullptr) {
       video_codec.codecSpecific.H264 = *reinterpret_cast<const VideoCodecH264*>(
                                            config.encoder_specific_settings);
+
     }
   } else {
     // TODO(pbos): Support encoder_settings codec-agnostically.

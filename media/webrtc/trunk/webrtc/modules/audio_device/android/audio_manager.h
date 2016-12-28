@@ -11,7 +11,9 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_MANAGER_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_MANAGER_H_
 
+#if !defined(MOZ_WIDGET_GONK)
 #include <jni.h>
+#endif
 
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/thread_checker.h"
@@ -19,7 +21,9 @@
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
+#if !defined(MOZ_WIDGET_GONK)
 #include "webrtc/modules/utility/include/helpers_android.h"
+#endif
 #include "webrtc/modules/utility/include/jvm_android.h"
 
 namespace webrtc {
@@ -97,6 +101,7 @@ class AudioManager {
   // Called from Java side so we can cache the native audio parameters.
   // This method will be called by the WebRtcAudioManager constructor, i.e.
   // on the same thread that this object is created on.
+#if !defined(MOZ_WIDGET_GONK)
   static void JNICALL CacheAudioParameters(JNIEnv* env,
                                            jobject obj,
                                            jint sample_rate,
@@ -117,6 +122,7 @@ class AudioManager {
                               jboolean low_latency_output,
                               jint output_buffer_size,
                               jint input_buffer_size);
+#endif
 
   // Stores thread ID in the constructor.
   // We can then use ThreadChecker::CalledOnValidThread() to ensure that
@@ -133,8 +139,10 @@ class AudioManager {
   // Contains factory method for creating the Java object.
   rtc::scoped_ptr<NativeRegistration> j_native_registration_;
 
+#if !defined(MOZ_WIDGET_GONK)
   // Wraps the Java specific parts of the AudioManager.
   rtc::scoped_ptr<AudioManager::JavaAudioManager> j_audio_manager_;
+#endif
 
   AudioDeviceModule::AudioLayer audio_layer_;
 

@@ -14,7 +14,7 @@
 // Windows needs to be included before mmsystem.h
 #include "webrtc/base/win32.h"
 #include <MMSystem.h>
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC) || (defined WEBRTC_BSD))
 #include <sys/time.h>
 #include <time.h>
 #endif
@@ -185,7 +185,7 @@ class WindowsRealTimeClock : public RealTimeClock {
   const ReferencePoint ref_point_;
 };
 
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
 class UnixRealTimeClock : public RealTimeClock {
  public:
   UnixRealTimeClock() {}
@@ -223,7 +223,7 @@ Clock* Clock::GetRealTimeClock() {
     delete clock;
   }
   return g_shared_clock;
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
   static UnixRealTimeClock clock;
   return &clock;
 #else

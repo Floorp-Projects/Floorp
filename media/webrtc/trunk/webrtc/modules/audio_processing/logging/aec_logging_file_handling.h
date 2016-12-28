@@ -25,12 +25,12 @@ extern "C" {
 // sample frequency, it closes it first.
 void WebRtcAec_ReopenWav(const char* name,
                          int instance_index,
-                         int process_rate,
+                         int count,
                          int sample_rate,
                          rtc_WavWriter** wav_file);
 
 // Opens dumpfile with instance-specific filename.
-void WebRtcAec_RawFileOpen(const char* name, int instance_index, FILE** file);
+void WebRtcAec_RawFileOpen(const char* name, int instance_index, int counter, FILE** file);
 
 #endif  // WEBRTC_AEC_DEBUG_DUMP
 

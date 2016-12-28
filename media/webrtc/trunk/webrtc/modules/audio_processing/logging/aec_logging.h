@@ -24,7 +24,7 @@
   } while (0)
 
 // (Re)opens a wav file for writing using the specified sample rate.
-#define RTC_AEC_DEBUG_WAV_REOPEN(name, instance_index, process_rate,     \
+#define RTC_AEC_DEBUG_WAV_REOPEN(name, instance_index, count,     \
                                  sample_rate, wav_file)                  \
   do {                                                                   \
     WebRtcAec_ReopenWav(name, instance_index, process_rate, sample_rate, \
@@ -58,15 +58,17 @@
   } while (0)
 
 // Opens a raw data file for writing using the specified sample rate.
-#define RTC_AEC_DEBUG_RAW_OPEN(name, instance_counter, file) \
+#define RTC_AEC_DEBUG_RAW_OPEN(name, instance_index, counter, file)     \
   do {                                                       \
-    WebRtcAec_RawFileOpen(name, instance_counter, file);     \
+    WebRtcAec_RawFileOpen(name, instance_index, counter, file); \
   } while (0)
 
 // Closes a raw data file.
 #define RTC_AEC_DEBUG_RAW_CLOSE(file) \
   do {                                \
-    fclose(file);                     \
+    if (file) {                       \
+      fclose(file);                   \
+    }                                 \
   } while (0)
 
 #else  // RTC_AEC_DEBUG_DUMP

@@ -18,7 +18,7 @@
 // Note: The Windows header must always be included before mmsystem.h
 #include <windows.h>
 #include <mmsystem.h>
-#elif WEBRTC_LINUX
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 #include <time.h>
 #elif WEBRTC_MAC
 #include <mach/mach_time.h>

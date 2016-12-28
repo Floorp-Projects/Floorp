@@ -26,7 +26,8 @@ class MouseCursorMonitorWin : public MouseCursorMonitor {
   explicit MouseCursorMonitorWin(ScreenId screen);
   virtual ~MouseCursorMonitorWin();
 
-  void Init(Callback* callback, Mode mode) override;
+  void Start(Callback* callback, Mode mode) override;
+  void Stop() override;
   void Capture() override;
 
  private:
@@ -70,9 +71,10 @@ MouseCursorMonitorWin::~MouseCursorMonitorWin() {
     ReleaseDC(NULL, desktop_dc_);
 }
 
-void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
+void MouseCursorMonitorWin::Start(Callback* callback, Mode mode) {
   assert(!callback_);
   assert(callback);
+  assert(IsGUIThread(false));
 
   callback_ = callback;
   mode_ = mode;
@@ -80,7 +82,16 @@ void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
   desktop_dc_ = GetDC(NULL);
 }
 
+void MouseCursorMonitorWin::Stop() {
+  callback_ = NULL;
+
+  if (desktop_dc_)
+    ReleaseDC(NULL, desktop_dc_);
+  desktop_dc_ = NULL;
+}
+
 void MouseCursorMonitorWin::Capture() {
+  assert(IsGUIThread(false));
   assert(callback_);
 
   CURSORINFO cursor_info;
@@ -131,6 +142,7 @@ void MouseCursorMonitorWin::Capture() {
 }
 
 DesktopRect MouseCursorMonitorWin::GetScreenRect() {
+  assert(IsGUIThread(false));
   assert(screen_ != kInvalidScreenId);
   if (screen_ == kFullDesktopScreenId) {
     return DesktopRect::MakeXYWH(

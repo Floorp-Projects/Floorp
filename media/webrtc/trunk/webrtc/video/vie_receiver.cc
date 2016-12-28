@@ -57,6 +57,7 @@ ViEReceiver::ViEReceiver(VideoCodingModule* module_vcm,
       receiving_ast_enabled_(false),
       receiving_cvo_enabled_(false),
       receiving_tsn_enabled_(false),
+			receiving_rid_enabled_(false),
       last_packet_log_ms_(-1) {
   assert(remote_bitrate_estimator);
 }
@@ -143,6 +144,10 @@ int ViEReceiver::GetCsrcs(uint32_t* csrcs) const {
   return rtp_receiver_->CSRCs(csrcs);
 }
 
+void ViEReceiver::GetRID(char rid[256]) const {
+  rtp_receiver_->GetRID(rid);
+}
+
 void ViEReceiver::SetRtpRtcpModule(RtpRtcp* module) {
   rtp_rtcp_ = module;
 }
@@ -219,6 +224,23 @@ bool ViEReceiver::SetReceiveTransportSequenceNumber(bool enable, int id) {
   }
 }
 
+bool ViEReceiver::SetReceiveRIDStatus(bool enable, int id) {
+  if (enable) {
+    if (rtp_header_parser_->RegisterRtpHeaderExtension(
+            kRtpExtensionRtpStreamId, id)) {
+      receiving_rid_enabled_ = true;
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    receiving_rid_enabled_ = false;
+    return rtp_header_parser_->DeregisterRtpHeaderExtension(
+        kRtpExtensionRtpStreamId);
+  }
+}
+
+
 int ViEReceiver::ReceivedRTPPacket(const void* rtp_packet,
                                    size_t rtp_packet_length,
                                    const PacketTime& packet_time) {
@@ -294,6 +316,8 @@ int ViEReceiver::InsertRTPPacket(const uint8_t* rtp_packet,
         ss << ", toffset: " << header.extension.transmissionTimeOffset;
       if (header.extension.hasAbsoluteSendTime)
         ss << ", abs send time: " << header.extension.absoluteSendTime;
+			if (header.extension.hasRID)
+				ss << ", rid: " << header.extension.rid;
       LOG(LS_INFO) << ss.str();
       last_packet_log_ms_ = now_ms;
     }

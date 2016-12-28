@@ -7,6 +7,9 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'includes': [
+    '../../build/common.gypi',
+  ],
   'variables': {
     'shared_generated_dir': '<(SHARED_INTERMEDIATE_DIR)/audio_processing/asm_offsets',
   },
@@ -28,7 +31,7 @@
         '<(webrtc_root)/base/base.gyp:rtc_base_approved',
         '<(webrtc_root)/common.gyp:webrtc_common',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-        '<(webrtc_root)/modules/modules.gyp:isac',
+#        '<(webrtc_root)/modules/modules.gyp:isac',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
@@ -248,6 +251,7 @@
           'conditions': [
             ['os_posix==1', {
               'cflags': [ '-msse2', ],
+              'cflags_mozilla': ['-msse2',],
               'xcode_settings': {
                 'OTHER_CFLAGS': [ '-msse2', ],
               },

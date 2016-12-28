@@ -24,6 +24,7 @@
 
 namespace webrtc
 {
+
 class CriticalSectionWrapper;
 
 namespace videocapturemodule {

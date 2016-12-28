@@ -44,7 +44,8 @@ class VideoEncoder {
     kUnsupportedCodec,
   };
 
-  static VideoEncoder* Create(EncoderType codec_type);
+  static VideoEncoder* Create(EncoderType codec_type,
+                              bool enable_simulcast = false);
 
   static VideoCodecVP8 GetDefaultVp8Settings();
   static VideoCodecVP9 GetDefaultVp9Settings();

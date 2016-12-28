@@ -58,19 +58,7 @@ ScreenCapturerWinMagnifier::ScreenCapturerWinMagnifier(
       magnifier_capture_succeeded_(true) {}
 
 ScreenCapturerWinMagnifier::~ScreenCapturerWinMagnifier() {
-  // DestroyWindow must be called before MagUninitialize. magnifier_window_ is
-  // destroyed automatically when host_window_ is destroyed.
-  if (host_window_)
-    DestroyWindow(host_window_);
-
-  if (magnifier_initialized_)
-    mag_uninitialize_func_();
-
-  if (mag_lib_handle_)
-    FreeLibrary(mag_lib_handle_);
-
-  if (desktop_dc_)
-    ReleaseDC(NULL, desktop_dc_);
+  Stop();
 }
 
 void ScreenCapturerWinMagnifier::Start(Callback* callback) {
@@ -79,6 +67,32 @@ void ScreenCapturerWinMagnifier::Start(Callback* callback) {
   callback_ = callback;
 
   InitializeMagnifier();
+}
+
+void ScreenCapturerWinMagnifier::Stop() {
+  callback_ = NULL;
+
+  // DestroyWindow must be called before MagUninitialize. magnifier_window_ is
+  // destroyed automatically when host_window_ is destroyed.
+  if (host_window_) {
+    DestroyWindow(host_window_);
+    host_window_ = NULL;
+  }
+
+  if (magnifier_initialized_) {
+    mag_uninitialize_func_();
+    magnifier_initialized_ = false;
+  }
+
+  if (mag_lib_handle_) {
+    FreeLibrary(mag_lib_handle_);
+    mag_lib_handle_ = NULL;
+  }
+
+  if (desktop_dc_) {
+    ReleaseDC(NULL, desktop_dc_);
+    desktop_dc_ = NULL;
+  }
 }
 
 void ScreenCapturerWinMagnifier::Capture(const DesktopRegion& region) {

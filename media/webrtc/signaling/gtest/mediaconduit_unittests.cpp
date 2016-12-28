@@ -436,7 +436,7 @@ public:
   {
   }
 
-  virtual nsresult SendRtpPacket(const void* data, int len)
+  virtual nsresult SendRtpPacket(const uint8_t* data, size_t len)
   {
     ++numPkts;
     if(mAudio)
@@ -449,7 +449,7 @@ public:
     return NS_OK;
   }
 
-  virtual nsresult SendRtcpPacket(const void* data, int len)
+  virtual nsresult SendRtcpPacket(const uint8_t* data, size_t len)
   {
     if(mAudio)
     {

@@ -215,6 +215,11 @@ class RtpRtcp : public Module {
     *   configure SSRC, default is a random number
     */
     virtual void SetSSRC(uint32_t ssrc) = 0;
+ 
+    /*
+    *   Set RID value for the RID header extension or RTCP SDES
+    */
+    virtual int32_t SetRID(const char *rid) = 0;
 
     /*
     *   Set CSRC
@@ -389,6 +394,17 @@ class RtpRtcp : public Module {
                         int64_t* minRTT,
                         int64_t* maxRTT) const = 0;
 
+     /*
+     *   Get time of last rr, as well as packets received remotely
+     *   (derived from rr report + cached sender-side info).
+     *
+     *   return -1 on failure else 0
+     */
+    virtual int32_t GetReportBlockInfo(const uint32_t remote_ssrc,
+                                       uint32_t* ntp_high,
+                                       uint32_t* ntp_low,
+                                       uint32_t* packets_received,
+                                       uint64_t* octets_received) const = 0;
     /*
     *   Force a send of a RTCP packet
     *   periodic SR and RR are triggered via the process function

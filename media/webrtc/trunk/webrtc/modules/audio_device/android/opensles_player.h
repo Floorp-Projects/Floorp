@@ -170,7 +170,7 @@ class OpenSLESPlayer {
 
   // The engine object which provides the SLEngineItf interface.
   // Created by the global Open SL ES constructor slCreateEngine().
-  webrtc::ScopedSLObjectItf engine_object_;
+  SLObjectItf engine_object_;
 
   // This interface exposes creation methods for all the OpenSL ES object types.
   // It is the OpenSL ES API entry point.
@@ -198,6 +198,20 @@ class OpenSLESPlayer {
 
   // Last time the OpenSL ES layer asked for audio data to play out.
   uint32_t last_play_time_;
+
+  void *opensles_lib_;
+  typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
+                                       SLuint32,
+                                       const SLEngineOption *,
+                                       SLuint32,
+                                       const SLInterfaceID *,
+                                       const SLboolean *);
+  slCreateEngine_t slCreateEngine_;
+  SLInterfaceID SL_IID_ENGINE_;
+  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
+  SLInterfaceID SL_IID_BUFFERQUEUE_;
+  SLInterfaceID SL_IID_VOLUME_;
+  SLInterfaceID SL_IID_PLAY_;
 };
 
 }  // namespace webrtc

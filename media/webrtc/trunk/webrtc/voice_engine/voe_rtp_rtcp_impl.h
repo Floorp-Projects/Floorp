@@ -28,13 +28,15 @@ class VoERTP_RTCPImpl : public VoERTP_RTCP {
 
   int GetRemoteRTCP_CNAME(int channel, char cName[256]) override;
 
-  int GetRemoteRTCPData(int channel,
-                        unsigned int& NTPHigh,
-                        unsigned int& NTPLow,
-                        unsigned int& timestamp,
-                        unsigned int& playoutTimestamp,
-                        unsigned int* jitter = NULL,
-                        unsigned short* fractionLost = NULL) override;
+  int GetRemoteRTCPReceiverInfo(int channel,
+                                uint32_t& NTPHigh,
+                                uint32_t& NTPLow,
+                                uint32_t& receivedPacketCount,
+                                uint64_t& receivedOctetCount,
+                                uint32_t& jitter,
+                                uint16_t& fractionLost,
+                                uint32_t& cumulativeLost,
+                                int32_t& rttMs) override;
 
   // SSRC
   int SetLocalSSRC(int channel, unsigned int ssrc) override;
@@ -63,7 +65,8 @@ class VoERTP_RTCPImpl : public VoERTP_RTCP {
   int GetRTPStatistics(int channel,
                        unsigned int& averageJitterMs,
                        unsigned int& maxJitterMs,
-                       unsigned int& discardedPackets) override;
+                       unsigned int& discardedPackets,
+                       unsigned int& cumulativeLost) override;
 
   int GetRTCPStatistics(int channel, CallStatistics& stats) override;
 

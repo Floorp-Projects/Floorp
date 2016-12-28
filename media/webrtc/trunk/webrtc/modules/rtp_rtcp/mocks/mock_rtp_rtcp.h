@@ -225,7 +225,7 @@ class MockRtpRtcp : public RtpRtcp {
   MOCK_METHOD1(SetSendREDPayloadType,
       int32_t(const int8_t payloadType));
   MOCK_CONST_METHOD1(SendREDPayloadType, int32_t(int8_t* payloadType));
-  MOCK_METHOD2(SetRTPAudioLevelIndicationStatus,
+  MOCK_METHOD2(SetAudioLevelIndicationStatus,
       int32_t(const bool enable, const uint8_t ID));
   MOCK_METHOD1(SetAudioLevel,
       int32_t(const uint8_t level_dBov));

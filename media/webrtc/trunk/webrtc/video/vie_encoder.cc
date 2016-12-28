@@ -613,6 +613,10 @@ void ViEEncoder::RegisterPostEncodeImageCallback(
   vcm_->RegisterPostEncodeImageCallback(post_encode_callback);
 }
 
+void ViEEncoder::onLoadStateChanged(CPULoadState state) {
+  vcm_->SetCPULoadState(state);
+}
+
 QMVideoSettingsCallback::QMVideoSettingsCallback(VideoProcessing* vpm)
     : vp_(vpm) {
 }

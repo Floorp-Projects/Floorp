@@ -19,7 +19,11 @@
           'dependencies': [
             '<(libvpx_dir)/libvpx.gyp:libvpx_new',
           ],
-        }],
+        }, {
+          'include_dirs': [
+            '$(MOZ_LIBVPX_CFLAGS)',
+          ],
+	}],
       ],
       'dependencies': [
         '<(webrtc_root)/common_video/common_video.gyp:common_video',

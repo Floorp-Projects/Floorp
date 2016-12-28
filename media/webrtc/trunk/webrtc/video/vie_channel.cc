@@ -44,6 +44,8 @@ const int kMinSendSidePacketHistorySize = 600;
 const int kMaxPacketAgeToNack = 450;
 const int kMaxNackListSize = 250;
 
+const int kInvalidRtpExtensionId = 0; //MOZ addition for RtpSenderId (RID)
+
 // Helper class receiving statistics callbacks.
 class ChannelStatsObserver : public CallStatsObserver {
  public:
@@ -120,6 +122,7 @@ ViEChannel::ViEChannel(uint32_t number_of_cores,
       rtt_sum_ms_(0),
       last_rtt_ms_(0),
       num_rtts_(0),
+			rid_extension_id_(kInvalidRtpExtensionId),
       rtp_rtcp_modules_(
           CreateRtpRtcpModules(!sender,
                                vie_receiver_.GetReceiveStatistics(),
@@ -163,6 +166,7 @@ int32_t ViEChannel::Init() {
     return -1;
   }
   vcm_->RegisterFrameTypeCallback(this);
+	vcm_->RegisterReceiveStateCallback(this); //MOZ addition for RID
   vcm_->RegisterReceiveStatisticsCallback(this);
   vcm_->RegisterDecoderTimingCallback(this);
   vcm_->SetRenderDelay(kDefaultRenderDelayMs);
@@ -654,6 +658,34 @@ int ViEChannel::SetReceiveTransportSequenceNumber(bool enable, int id) {
   return vie_receiver_.SetReceiveTransportSequenceNumber(enable, id) ? 0 : -1;
 }
 
+int ViEChannel::SetSendRtpStreamId(bool enable, int id) { //}, const char *rid)
+  CriticalSectionScoped cs(crit_.get());
+  int error = 0;
+  if (enable) {
+    // Enable the extension, but disable possible old id to avoid errors.
+    rid_extension_id_ = id;
+    for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
+      rtp_rtcp->DeregisterSendRtpHeaderExtension(
+        kRtpExtensionRtpStreamId);
+      error = rtp_rtcp->RegisterSendRtpHeaderExtension(
+        kRtpExtensionRtpStreamId, id);
+    }
+    // NOTE: simulcast streams must be set via the SetSendCodec() API
+  } else {
+    // Disable the extension.
+    rid_extension_id_ = kInvalidRtpExtensionId;
+    for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
+    	rtp_rtcp->DeregisterSendRtpHeaderExtension(
+        kRtpExtensionRtpStreamId);
+    }
+  }
+  return error;
+}
+
+int ViEChannel::SetReceiveRtpStreamId(bool enable, int id) {
+  return vie_receiver_.SetReceiveRIDStatus(enable, id) ? 0 : -1;
+}
+
 void ViEChannel::SetRtcpXrRrtrStatus(bool enable) {
   rtp_rtcp_modules_[0]->SetRtcpXrRrtrStatus(enable);
 }
@@ -790,6 +822,94 @@ int32_t ViEChannel::GetSendRtcpStatistics(uint16_t* fraction_lost,
   *rtt_ms = rtt;
   return 0;
 }
+
+int32_t ViEChannel::GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh,
+                                              uint32_t& NTPLow,
+                                              uint32_t& receivedPacketCount,
+                                              uint64_t& receivedOctetCount,
+                                              uint32_t* jitterSamples,
+                                              uint16_t* fractionLost,
+                                              uint32_t* cumulativeLost,
+                                             int64_t* rttMs) {
+  // TODO: how do we do this for simulcast ? average for all
+  // except cumulative_lost that is the sum ?
+  // CriticalSectionScoped cs(rtp_rtcp_cs_.get());
+
+  // for (std::list<RtpRtcp*>::const_iterator it = simulcast_rtp_rtcp_.begin();
+  //      it != simulcast_rtp_rtcp_.end();
+  //      it++) {
+  //   RtpRtcp* rtp_rtcp = *it;
+  // }
+  uint32_t remote_ssrc = vie_receiver_.GetRemoteSsrc();
+
+  // Get all RTCP receiver report blocks that have been received on this
+  // channel. If we receive RTP packets from a remote source we know the
+  // remote SSRC and use the report block from him.
+  // Otherwise use the first report block.
+  std::vector<RTCPReportBlock> remote_stats;
+	for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
+    rtp_rtcp->RemoteRTCPStat(&remote_stats);
+  }
+  if (remote_stats.empty()) {
+    LOG_F(LS_ERROR) << "Could not get remote stats";
+    return -1;
+  }
+  std::vector<RTCPReportBlock>::const_iterator statistics =
+      remote_stats.begin();
+  for (; statistics != remote_stats.end(); ++statistics) {
+    if (statistics->remoteSSRC == remote_ssrc)
+      break;
+  }
+
+  if (statistics == remote_stats.end()) {
+    // If we have not received any RTCP packets from this SSRC it probably means
+    // we have not received any RTP packets.
+    // Use the first received report block instead.
+    statistics = remote_stats.begin();
+    remote_ssrc = statistics->remoteSSRC;
+  }
+
+  if (!rtp_rtcp_modules_[0]) {
+    LOG_F(LS_ERROR) << "no RtpRtcp modules to retrieve RTT from";
+  } else {
+    if (rtp_rtcp_modules_[0]->GetReportBlockInfo(remote_ssrc, &NTPHigh, &NTPLow,
+          &receivedPacketCount, &receivedOctetCount) != 0) {
+      LOG_F(LS_ERROR) << "failed to retrieve block info";
+      NTPHigh = 0;
+      NTPLow = 0;
+      receivedPacketCount = 0;
+      receivedOctetCount = 0;
+    }
+  }
+  *fractionLost = statistics->fractionLost;
+  *cumulativeLost = statistics->cumulativeLost;
+  *jitterSamples = statistics->jitter;
+
+  int64_t dummy;
+  int64_t rtt = 0;
+  if (rtp_rtcp_modules_[0]->RTT(remote_ssrc, &rtt, &dummy, &dummy, &dummy) != 0) {
+    LOG_F(LS_ERROR) << "failed to get RTT";
+    return -1;
+  }
+  *rttMs = rtt;
+  return 0;
+}
+
+//->@@NG // int32_t ViEChannel::GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const {
+//->@@NG //   // Get the sender info from the latest received RTCP Sender Report.
+//->@@NG //   RTCPSenderInfo rtcp_sender_info;
+//->@@NG //   if (rtp_rtcp_->RemoteRTCPStat(&rtcp_sender_info) != 0) {
+//->@@NG //     LOG_F(LS_ERROR) << "failed to read RTCP SR sender info";
+//->@@NG //     return -1;
+//->@@NG //   }
+//->@@NG //
+//->@@NG //   sender_info->NTP_timestamp_high = rtcp_sender_info.NTPseconds;
+//->@@NG //   sender_info->NTP_timestamp_low = rtcp_sender_info.NTPfraction;
+//->@@NG //   sender_info->RTP_timestamp = rtcp_sender_info.RTPtimeStamp;
+//->@@NG //   sender_info->sender_packet_count = rtcp_sender_info.sendPacketCount;
+//->@@NG //   sender_info->sender_octet_count = rtcp_sender_info.sendOctetCount;
+//->@@NG //   return 0;
+//->@@NG // }
 
 void ViEChannel::RegisterSendChannelRtcpStatisticsCallback(
     RtcpStatisticsCallback* callback) {
@@ -1045,6 +1165,9 @@ int32_t ViEChannel::SliceLossIndicationRequest(
 int32_t ViEChannel::ResendPackets(const uint16_t* sequence_numbers,
                                   uint16_t length) {
   return rtp_rtcp_modules_[0]->SendNACK(sequence_numbers, length);
+}
+
+void ViEChannel::ReceiveStateChange(VideoReceiveState state) {
 }
 
 bool ViEChannel::ChannelDecodeThreadFunction(void* obj) {

@@ -416,7 +416,7 @@ enum NsModes    // type of Noise Suppression
     kNsLowSuppression,  // lowest suppression
     kNsModerateSuppression,
     kNsHighSuppression,
-    kNsVeryHighSuppression,     // highest suppression
+    kNsVeryHighSuppression     // highest suppression
 };
 
 enum AgcModes                  // type of Automatic Gain Control
@@ -441,7 +441,7 @@ enum EcModes                   // type of Echo Control
     kEcDefault,                // platform default
     kEcConference,             // conferencing default (aggressive AEC)
     kEcAec,                    // Acoustic Echo Cancellation
-    kEcAecm,                   // AEC mobile
+    kEcAecm                    // AEC mobile
 };
 
 // AECM modes
@@ -477,7 +477,8 @@ enum AudioLayers
     kAudioWindowsWave = 1,
     kAudioWindowsCore = 2,
     kAudioLinuxAlsa = 3,
-    kAudioLinuxPulse = 4
+    kAudioLinuxPulse = 4,
+    kAudioSndio = 5
 };
 
 // TODO(henrika): to be removed.
@@ -494,7 +495,7 @@ enum NetEqModes             // NetEQ playout configurations
     kNetEqFax = 2,
     // Minimal buffer management. Inserts zeros for lost packets and during
     // buffer increases.
-    kNetEqOff = 3,
+    kNetEqOff = 3
 };
 
 // TODO(henrika): to be removed.
@@ -510,7 +511,7 @@ enum AmrMode
 {
     kRfc3267BwEfficient = 0,
     kRfc3267OctetAligned = 1,
-    kRfc3267FileStorage = 2,
+    kRfc3267FileStorage = 2
 };
 
 // ==================================================================
@@ -537,12 +538,23 @@ enum RawVideoType
     kVideoUnknown  = 99
 };
 
+enum VideoReceiveState
+{
+  kReceiveStateInitial,            // No video decoded yet
+  kReceiveStateNormal,
+  kReceiveStatePreemptiveNACK,     // NACK sent for missing packet, no decode stall/fail yet
+  kReceiveStateWaitingKey,         // Decoding stalled, waiting for keyframe or NACK
+  kReceiveStateDecodingWithErrors, // Decoding with errors, waiting for keyframe or NACK
+  kReceiveStateNoIncoming,         // No errors, but no incoming video since last decode
+};
+
 // Video codec
 enum { kConfigParameterSize = 128};
 enum { kPayloadNameSize = 32};
 enum { kMaxSimulcastStreams = 4};
 enum { kMaxSpatialLayers = 5 };
 enum { kMaxTemporalStreams = 4};
+enum { kRIDSize = 32};
 
 enum VideoCodecComplexity
 {
@@ -617,8 +629,13 @@ struct VideoCodecVP9 {
 // H264 specific.
 struct VideoCodecH264 {
   VideoCodecProfile profile;
+  uint8_t        profile_byte;
+  uint8_t        constraints;
+  uint8_t        level;
+  uint8_t        packetizationMode; // 0 or 1
   bool           frameDroppingOn;
   int            keyFrameInterval;
+  double         scaleDownBy;
   // These are NULL/0 if not externally negotiated.
   const uint8_t* spsData;
   size_t         spsLen;
@@ -655,6 +672,9 @@ struct SimulcastStream {
   unsigned int        targetBitrate;  // kilobits/sec.
   unsigned int        minBitrate;  // kilobits/sec.
   unsigned int        qpMax; // minimum quality
+  char                rid[kRIDSize];
+  unsigned int        jsMaxBitrate; // user-controlled max bitrate
+  double              jsScaleDownBy; // user-controlled downscale
 
   bool operator==(const SimulcastStream& other) const {
     return width == other.width &&
@@ -663,7 +683,10 @@ struct SimulcastStream {
            maxBitrate == other.maxBitrate &&
            targetBitrate == other.targetBitrate &&
            minBitrate == other.minBitrate &&
-           qpMax == other.qpMax;
+           qpMax == other.qpMax &&
+           strcmp(rid, other.rid) == 0 &&
+           jsMaxBitrate == other.jsMaxBitrate &&
+           jsScaleDownBy == other.jsScaleDownBy;
   }
 
   bool operator!=(const SimulcastStream& other) const {
@@ -691,6 +714,8 @@ struct VideoCodec {
 
   unsigned short      width;
   unsigned short      height;
+  // width & height modulo resolution_divisor must be 0
+  unsigned char       resolution_divisor;
 
   unsigned int        startBitrate;  // kilobits/sec.
   unsigned int        maxBitrate;  // kilobits/sec.
@@ -703,6 +728,7 @@ struct VideoCodec {
 
   unsigned int        qpMax;
   unsigned char       numberOfSimulcastStreams;
+  unsigned char       ridId;
   SimulcastStream     simulcastStream[kMaxSimulcastStreams];
   SpatialLayer spatialLayers[kMaxSpatialLayers];
 
@@ -766,6 +792,26 @@ struct OverUseDetectorOptions {
   double initial_var_noise;
 };
 
+enum CPULoadState {
+  kLoadRelaxed = 0,
+  kLoadNormal,
+  kLoadStressed,
+  kLoadLast,
+};
+
+class CPULoadStateObserver {
+public:
+  virtual void onLoadStateChanged(CPULoadState aNewState) = 0;
+  virtual ~CPULoadStateObserver() {};
+};
+
+class CPULoadStateCallbackInvoker {
+public:
+    virtual void AddObserver(CPULoadStateObserver* aObserver) = 0;
+    virtual void RemoveObserver(CPULoadStateObserver* aObserver) = 0;
+    virtual ~CPULoadStateCallbackInvoker() {};
+};
+
 // This structure will have the information about when packet is actually
 // received by socket.
 struct PacketTime {
@@ -803,6 +849,10 @@ struct RTPHeaderExtension {
   // ts_126114v120700p.pdf
   bool hasVideoRotation;
   uint8_t videoRotation;
+
+  // RID values for simulcast; see draft-roach-avtext-rid
+  bool hasRID;
+  char *rid; // UTF8 string
 };
 
 struct RTPHeader {

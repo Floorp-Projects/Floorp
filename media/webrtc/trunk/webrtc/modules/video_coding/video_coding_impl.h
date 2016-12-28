@@ -91,6 +91,8 @@ class VideoSender {
   int32_t IntraFrameRequest(int stream_index);
   int32_t EnableFrameDropper(bool enable);
 
+  void SetCPULoadState(CPULoadState state);
+
   void SuspendBelowMinBitrate();
   bool VideoSuspended() const;
 
@@ -132,6 +134,7 @@ class VideoReceiver {
   VideoReceiver(Clock* clock, EventFactory* event_factory);
   ~VideoReceiver();
 
+  void SetReceiveState(VideoReceiveState state);
   int32_t RegisterReceiveCodec(const VideoCodec* receiveCodec,
                                int32_t numberOfCores,
                                bool requireKeyFrame);
@@ -145,6 +148,7 @@ class VideoReceiver {
       VCMDecoderTimingCallback* decoderTiming);
   int32_t RegisterFrameTypeCallback(VCMFrameTypeCallback* frameTypeCallback);
   int32_t RegisterPacketRequestCallback(VCMPacketRequestCallback* callback);
+  int32_t RegisterReceiveStateCallback(VCMReceiveStateCallback* callback);
   int RegisterRenderBufferSizeCallback(VCMRenderBufferSizeCallback* callback);
 
   int32_t Decode(uint16_t maxWaitTimeMs);
@@ -189,6 +193,7 @@ class VideoReceiver {
   Clock* const clock_;
   rtc::scoped_ptr<CriticalSectionWrapper> process_crit_sect_;
   CriticalSectionWrapper* _receiveCritSect;
+  VideoReceiveState _receiveState;
   VCMTiming _timing;
   VCMReceiver _receiver;
   VCMDecodedFrameCallback _decodedFrameCallback;
@@ -198,6 +203,8 @@ class VideoReceiver {
   VCMDecoderTimingCallback* _decoderTimingCallback
       GUARDED_BY(process_crit_sect_);
   VCMPacketRequestCallback* _packetRequestCallback
+      GUARDED_BY(process_crit_sect_);
+  VCMReceiveStateCallback* _receiveStateCallback
       GUARDED_BY(process_crit_sect_);
   VCMRenderBufferSizeCallback* render_buffer_callback_
       GUARDED_BY(process_crit_sect_);

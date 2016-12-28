@@ -45,7 +45,7 @@
   ], # targets
 
   'conditions': [
-    ['build_with_chromium==0', {
+    ['build_with_chromium==0 and build_with_mozilla==0', {
       'targets': [
         {
           # video_render_module implementation that supports the internal
@@ -146,7 +146,7 @@
                 'windows/video_render_windows_impl.cc',
               ],
               'include_dirs': [
-                '<(directx_sdk_path)/Include',
+#                '<(directx_sdk_path)/Include',
               ],
             }],
             ['OS=="win" and clang==1', {

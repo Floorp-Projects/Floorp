@@ -44,6 +44,7 @@ class ScreenCapturerWinMagnifier : public ScreenCapturer {
 
   // Overridden from ScreenCapturer:
   void Start(Callback* callback) override;
+  void Stop() override;
   void Capture(const DesktopRegion& region) override;
   bool GetScreenList(ScreenList* screens) override;
   bool SelectScreen(ScreenId id) override;
