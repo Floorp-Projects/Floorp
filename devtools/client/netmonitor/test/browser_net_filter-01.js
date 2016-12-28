@@ -135,7 +135,7 @@ add_task(function* () {
   let { gStore } = monitor.panelWin;
 
   function setFreetextFilter(value) {
-    gStore.dispatch(Actions.setFilterText(value));
+    gStore.dispatch(Actions.setRequestFilterText(value));
   }
 
   info("Starting test... ");

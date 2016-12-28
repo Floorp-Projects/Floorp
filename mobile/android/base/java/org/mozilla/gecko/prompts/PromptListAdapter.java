@@ -13,7 +13,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.view.LayoutInflater;
@@ -85,10 +84,9 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         return VIEW_TYPE_COUNT;
     }
 
-    private Drawable getMoreDrawable(Context context) {
+    private Drawable getMoreDrawable(Resources res) {
         if (mMoreDrawable == null) {
-            mMoreDrawable = ContextCompat.getDrawable(context, R.drawable.menu_item_more);
-            DrawableCompat.setAutoMirrored(mMoreDrawable, true);
+            mMoreDrawable = res.getDrawable(R.drawable.menu_item_more);
         }
         return mMoreDrawable;
     }
@@ -127,7 +125,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
 
         Drawable moreDrawable = null;
         if (item.isParent) {
-            moreDrawable = getMoreDrawable(getContext());
+            moreDrawable = getMoreDrawable(res);
         }
 
         if (d != null || moreDrawable != null) {
