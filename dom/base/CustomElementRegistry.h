@@ -72,7 +72,18 @@ struct CustomElementData
 {
   NS_INLINE_DECL_REFCOUNTING(CustomElementData)
 
+  // https://dom.spec.whatwg.org/#concept-element-custom-element-state
+  // CustomElementData is only created on the element which is a custom element
+  // or an upgrade candidate, so the state of an element without
+  // CustomElementData is "uncustomized".
+  enum class State {
+    eUndefined,
+    eFailed,
+    eCustom
+  };
+
   explicit CustomElementData(nsIAtom* aType);
+  CustomElementData(nsIAtom* aType, State aState);
   // Objects in this array are transient and empty after each microtask
   // checkpoint.
   nsTArray<nsAutoPtr<CustomElementCallback>> mCallbackQueue;
@@ -90,6 +101,8 @@ struct CustomElementData
   // it is used to determine if a new queue needs to be pushed onto the
   // processing stack.
   int32_t mAssociatedMicroTask;
+  // Custom element state as described in the custom element spec.
+  State mState;
 
   // Empties the callback queue.
   void RunCallbackQueue();
