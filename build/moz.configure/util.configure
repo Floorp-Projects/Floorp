@@ -154,7 +154,7 @@ def find_program(file, paths=None):
                 for e in environ.get("PATHEXT", "").split(pathsep)]
         # If '.exe' is not in exts then obviously this is Win9x and
         # or a bogus PATHEXT, then use a reasonable default.
-	if '.exe' not in exts:
+        if '.exe' not in exts:
             exts = ['.com', '.exe', '.bat']
     else:
         exts = None
