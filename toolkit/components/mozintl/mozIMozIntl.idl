@@ -10,4 +10,11 @@ interface mozIMozIntl : nsISupports
 {
   [implicit_jscontext] void addGetCalendarInfo(in jsval intlObject);
   [implicit_jscontext] void addGetDisplayNames(in jsval intlObject);
+
+  /**
+   * Adds a PluralRules constructor to the given object.  This function may only
+   * be called once within a realm/global object: calling it multiple times will
+   * throw.
+   */
+  [implicit_jscontext] void addPluralRulesConstructor(in jsval intlObject);
 };
