@@ -491,11 +491,13 @@ class CompareSimpleTextTrackEvents {
 private:
   int32_t TrackChildPosition(SimpleTextTrackEvent* aEvent) const
   {
-    HTMLTrackElement* trackElement = aEvent->mTrack->GetTrackElement();;
-    if (!trackElement) {
-      return -1;
+    if (aEvent->mTrack) {
+      HTMLTrackElement* trackElement = aEvent->mTrack->GetTrackElement();
+      if (trackElement) {
+        return mMediaElement->IndexOf(trackElement);
+      }
     }
-    return mMediaElement->IndexOf(trackElement);
+    return -1;
   }
   HTMLMediaElement* mMediaElement;
 public:
