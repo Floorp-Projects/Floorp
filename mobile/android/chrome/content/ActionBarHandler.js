@@ -143,7 +143,7 @@ var ActionBarHandler = {
     this._boundingClientRect = boundingClientRect;
 
     // Open the ActionBar, send it's actions list.
-    Messaging.sendRequest({
+    WindowEventDispatcher.sendRequest({
       type: "TextSelection:ActionbarInit",
       selectionID: this._selectionID,
     });
@@ -156,7 +156,7 @@ var ActionBarHandler = {
    * Called when content is scrolled and handles are hidden.
    */
   _updateVisibility: function() {
-    Messaging.sendRequest({
+    WindowEventDispatcher.sendRequest({
       type: "TextSelection:Visibility",
       selectionID: this._selectionID,
     });
@@ -207,7 +207,7 @@ var ActionBarHandler = {
     }
 
     // Close the ActionBar.
-    Messaging.sendRequest({
+    WindowEventDispatcher.sendRequest({
       type: "TextSelection:ActionbarUninit",
     });
 
@@ -266,7 +266,7 @@ var ActionBarHandler = {
       });
 
     if (sendAlways || !actionsMatch) {
-      Messaging.sendRequest({
+      WindowEventDispatcher.sendRequest({
         type: "TextSelection:ActionbarStatus",
         selectionID: this._selectionID,
         actions: actions,
