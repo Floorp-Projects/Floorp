@@ -27,7 +27,7 @@ public:
   static void Shutdown();
 
   bool FindDecoder(const MediaContentType& aMimeType, const char* const** aCodecs);
-  MPAPI::Decoder *CreateDecoder(mozilla::MediaResource *aResource, const nsACString& aMimeType);
+  MPAPI::Decoder *CreateDecoder(mozilla::MediaResource *aResource, const MediaContentType& aMimeType);
   void DestroyDecoder(MPAPI::Decoder *aDecoder);
 };
 

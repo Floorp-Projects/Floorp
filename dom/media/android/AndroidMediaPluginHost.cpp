@@ -244,7 +244,8 @@ bool AndroidMediaPluginHost::FindDecoder(const MediaContentType& aMimeType,
   return false;
 }
 
-MPAPI::Decoder *AndroidMediaPluginHost::CreateDecoder(MediaResource *aResource, const nsACString& aMimeType)
+MPAPI::Decoder *AndroidMediaPluginHost::CreateDecoder(MediaResource *aResource,
+                                                      const MediaContentType& aMimeType)
 {
   NS_ENSURE_TRUE(aResource, nullptr);
 
@@ -254,7 +255,7 @@ MPAPI::Decoder *AndroidMediaPluginHost::CreateDecoder(MediaResource *aResource, 
   }
 
   const char *chars;
-  size_t len = NS_CStringGetData(aMimeType, &chars, nullptr);
+  size_t len = NS_CStringGetData(aMimeType.Type().AsString(), &chars, nullptr);
   for (size_t n = 0; n < mPlugins.Length(); ++n) {
     Manifest *plugin = mPlugins[n];
     const char* const *codecs;
