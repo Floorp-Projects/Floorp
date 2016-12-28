@@ -80,13 +80,6 @@ public:
                             nsStyleContext* aParentContext,
                             dom::Element* aPseudoElement);
 
-  // Resolves style for a (possibly-pseudo) Element without assuming that the
-  // style has been resolved, and without worrying about setting the style
-  // context up to live in the style context tree (a null parent is used).
-  already_AddRefed<nsStyleContext>
-  ResolveTransientStyle(dom::Element* aElement,
-                        mozilla::CSSPseudoElementType aPseudoType);
-
   // aFlags is an nsStyleSet flags bitfield
   already_AddRefed<nsStyleContext>
   ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag, nsStyleContext* aParentContext,
