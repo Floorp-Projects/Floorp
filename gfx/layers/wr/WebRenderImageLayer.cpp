@@ -34,6 +34,9 @@ WebRenderImageLayer::~WebRenderImageLayer()
 already_AddRefed<gfx::SourceSurface>
 WebRenderImageLayer::GetAsSourceSurface()
 {
+  if (!mContainer) {
+    return nullptr;
+  }
   AutoLockImage autoLock(mContainer);
   Image *image = autoLock.GetImage();
   if (!image) {
