@@ -26,7 +26,7 @@
       <field name="_editorContentListener">
         <![CDATA[
           ({
-            QueryInterface: function(iid)
+            QueryInterface(iid)
             {
               if (iid.equals(Components.interfaces.nsIURIContentListener) ||
                   iid.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -35,19 +35,19 @@
 
               throw Components.results.NS_ERROR_NO_INTERFACE;
             },
-            onStartURIOpen: function(uri)
+            onStartURIOpen(uri)
             {
               return false;
             },
-            doContent: function(contentType, isContentPreferred, request, contentHandler)
+            doContent(contentType, isContentPreferred, request, contentHandler)
             {
               return false;
             },
-            isPreferred: function(contentType, desiredContentType)
+            isPreferred(contentType, desiredContentType)
             {
               return false;
             },
-            canHandleContent: function(contentType, isContentPreferred, desiredContentType)
+            canHandleContent(contentType, isContentPreferred, desiredContentType)
             {
               return false;
             },
