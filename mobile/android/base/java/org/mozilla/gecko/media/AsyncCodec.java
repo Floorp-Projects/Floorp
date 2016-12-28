@@ -29,6 +29,8 @@ public interface AsyncCodec {
     public abstract void start();
     public abstract void stop();
     public abstract void flush();
+    // Must be called after flush().
+    public abstract void resumeReceivingInputs();
     public abstract void release();
     public abstract ByteBuffer getInputBuffer(int index);
     public abstract ByteBuffer getOutputBuffer(int index);
