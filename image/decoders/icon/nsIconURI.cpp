@@ -372,6 +372,32 @@ nsMozIconURI::SetPath(const nsACString& aPath)
 }
 
 NS_IMETHODIMP
+nsMozIconURI::GetFilePath(nsACString& aFilePath)
+{
+  aFilePath.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::SetFilePath(const nsACString& aFilePath)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetQuery(nsACString& aQuery)
+{
+  aQuery.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::SetQuery(const nsACString& aQuery)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsMozIconURI::GetRef(nsACString& aRef)
 {
   aRef.Truncate();
