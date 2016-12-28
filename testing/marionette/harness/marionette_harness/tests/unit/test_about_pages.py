@@ -26,7 +26,7 @@ class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
 
         super(TestAboutPages, self).tearDown()
 
-    @skip_if_mobile  # Bug 1323185 - Add Fennec support to getWindowHandles
+    @skip_if_mobile("Bug 1323185 - Add Fennec support to getWindowHandles")
     def test_back_forward(self):
         # Bug 1311041 - Prevent changing of window handle by forcing the test
         # to be run in a new tab.
@@ -46,7 +46,7 @@ class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
         self.marionette.close()
         self.marionette.switch_to_window(self.start_tab)
 
-    @skip_if_mobile  # Bug 1323185 - Add Fennec support to getWindowHandles
+    @skip_if_mobile("Bug 1323185 - Add Fennec support to getWindowHandles")
     def test_navigate_non_remote_about_pages(self):
         # Bug 1311041 - Prevent changing of window handle by forcing the test
         # to be run in a new tab.
@@ -61,7 +61,7 @@ class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
         self.marionette.close()
         self.marionette.switch_to_window(self.start_tab)
 
-    @skip_if_mobile  # On Android no shortcuts are available
+    @skip_if_mobile("On Android no shortcuts are available")
     def test_navigate_shortcut_key(self):
         def open_with_shortcut():
             with self.marionette.using_context("chrome"):
@@ -76,7 +76,7 @@ class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
         self.marionette.close()
         self.marionette.switch_to_window(self.start_tab)
 
-    @skip_if_mobile  # Bug 1323185 - Add Fennec support to getWindowHandles
+    @skip_if_mobile("Bug 1323185 - Add Fennec support to getWindowHandles")
     def test_type_to_non_remote_tab(self):
         # Bug 1311041 - Prevent changing of window handle by forcing the test
         # to be run in a new tab.
@@ -93,7 +93,7 @@ class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
         self.marionette.close()
         self.marionette.switch_to_window(self.start_tab)
 
-    @skip_if_mobile  # Interacting with chrome elements not available for Fennec
+    @skip_if_mobile("Interacting with chrome elements not available for Fennec")
     def test_type_to_remote_tab(self):
         # about:blank keeps remoteness from remote_uri
         self.marionette.navigate("about:blank")
@@ -103,7 +103,7 @@ class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
 
         self.wait_for_condition(lambda mn: mn.get_url() == self.remote_uri)
 
-    @skip_if_mobile  # Bug 1323185 - Add Fennec support to getWindowHandles
+    @skip_if_mobile("Bug 1323185 - Add Fennec support to getWindowHandles")
     def test_hang(self):
         # Open a new tab and close the first one
         new_tab = self.open_tab(trigger="menu")
