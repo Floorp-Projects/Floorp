@@ -40,7 +40,7 @@ registerCleanupFunction(function* () {
  *         Resolves to the toolbox.
  */
 var openNewTabAndConsole = Task.async(function* (url) {
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let toolbox = yield openNewTabAndToolbox(url, "webconsole");
   let hud = toolbox.getCurrentPanel().hud;
   hud.jsterm._lazyVariablesView = false;
   return hud;
