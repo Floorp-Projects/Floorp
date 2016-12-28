@@ -92,6 +92,7 @@ public:
   virtual already_AddRefed<RefLayer> CreateRefLayer() override;
 
   void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier);
+  void UpdateContentDeviceToSyncObject();
   TextureFactoryIdentifier GetTextureFactoryIdentifier()
   {
     return AsShadowForwarder()->GetTextureFactoryIdentifier();
