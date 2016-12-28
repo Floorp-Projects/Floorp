@@ -20,6 +20,8 @@ class AndroidUiThread;
 
 StaticRefPtr<AndroidUiThread> sThread;
 static MessageLoop* sMessageLoop;
+static Monitor* sMessageLoopAccessMonitor;
+static bool sInitialized = false;
 
 /*
  * The AndroidUiThread is derived from nsThread so that nsIRunnable objects that get
@@ -112,41 +114,30 @@ ThreadObserver::AfterProcessNextEvent(nsIThreadInternal *thread, bool eventWasPr
 
 class CreateOnUiThread : public Runnable {
 public:
-  CreateOnUiThread() : mCreated(false), mThreadCreationMonitor("AndroidUiThreadCreationLock")
+  CreateOnUiThread()
   {}
 
   NS_IMETHOD Run() override {
-    MonitorAutoLock lock(mThreadCreationMonitor);
+    MOZ_ASSERT(sMessageLoopAccessMonitor);
+    MonitorAutoLock lock(*sMessageLoopAccessMonitor);
 
     sThread = new AndroidUiThread();
     sThread->InitCurrentThread();
     sThread->SetObserver(new ThreadObserver());
     sMessageLoop = new MessageLoop(MessageLoop::TYPE_MOZILLA_ANDROID_UI, sThread.get());
-    mCreated = true;
     lock.NotifyAll();
     return NS_OK;
   }
-
-  void WaitForCreation()
-  {
-    MonitorAutoLock lock(mThreadCreationMonitor);
-    while (!mCreated) {
-      lock.Wait();
-    }
-  }
-
-private:
-  bool mCreated;
-  Monitor mThreadCreationMonitor;
 };
 
 class DestroyOnUiThread : public Runnable {
 public:
-  DestroyOnUiThread() : mDestroyed(false), mThreadDestructionMonitor("AndroidUiThreadCreationLock")
+  DestroyOnUiThread() : mDestroyed(false)
   {}
 
   NS_IMETHOD Run() override {
-    MonitorAutoLock lock(mThreadDestructionMonitor);
+    MOZ_ASSERT(sMessageLoopAccessMonitor);
+    MonitorAutoLock lock(*sMessageLoopAccessMonitor);
 
     delete sMessageLoop;
     sMessageLoop = nullptr;
@@ -160,7 +151,8 @@ public:
 
   void WaitForDestruction()
   {
-    MonitorAutoLock lock(mThreadDestructionMonitor);
+    MOZ_ASSERT(sMessageLoopAccessMonitor);
+    MonitorAutoLock lock(*sMessageLoopAccessMonitor);
     while (!mDestroyed) {
       lock.Wait();
     }
@@ -168,7 +160,6 @@ public:
 
 private:
   bool mDestroyed;
-  Monitor mThreadDestructionMonitor;
 };
 
 } // namespace
@@ -178,27 +169,64 @@ namespace mozilla {
 void
 CreateAndroidUiThread()
 {
+  MOZ_ASSERT(!sInitialized);
   MOZ_ASSERT(!sThread);
+  MOZ_ASSERT(!sMessageLoopAccessMonitor);
+  sMessageLoopAccessMonitor = new Monitor("AndroidUiThreadMessageLoopAccessMonitor");
   RefPtr<CreateOnUiThread> runnable = new CreateOnUiThread;
   AndroidBridge::Bridge()->PostTaskToUiThread(do_AddRef(runnable), 0);
-  runnable->WaitForCreation();
+  sInitialized = true;
 }
 
 void
 DestroyAndroidUiThread()
 {
+  MOZ_ASSERT(sInitialized);
   MOZ_ASSERT(sThread);
-  RefPtr<DestroyOnUiThread> runnable = new DestroyOnUiThread;
   // Insure the Android bridge has not already been deconstructed.
   MOZ_ASSERT(AndroidBridge::Bridge() != nullptr);
+  sInitialized = false;
+  RefPtr<DestroyOnUiThread> runnable = new DestroyOnUiThread;
   AndroidBridge::Bridge()->PostTaskToUiThread(do_AddRef(runnable), 0);
   runnable->WaitForDestruction();
+  delete sMessageLoopAccessMonitor;
+  sMessageLoopAccessMonitor = nullptr;
 }
 
 MessageLoop*
 GetAndroidUiThreadMessageLoop()
 {
+  if (!sInitialized) {
+    return nullptr;
+  }
+
+  if (!sMessageLoop) {
+    MOZ_ASSERT(sMessageLoopAccessMonitor);
+    MonitorAutoLock lock(*sMessageLoopAccessMonitor);
+    while (!sMessageLoop) {
+      lock.Wait();
+    }
+  }
+
   return sMessageLoop;
+}
+
+RefPtr<nsThread>
+GetAndroidUiThread()
+{
+  if (!sInitialized) {
+    return nullptr;
+  }
+
+  if (!sThread) {
+    MOZ_ASSERT(sMessageLoopAccessMonitor);
+    MonitorAutoLock lock(*sMessageLoopAccessMonitor);
+    while (!sThread) {
+      lock.Wait();
+    }
+  }
+
+  return sThread;
 }
 
 } // namespace mozilla
