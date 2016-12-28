@@ -82,6 +82,10 @@ public:
     NS_RUNTIMEABORT("Not implemented.");
     return nullptr;
   }
+  virtual already_AddRefed<BorderLayer> CreateBorderLayer() {
+    NS_RUNTIMEABORT("Not implemented.");
+    return nullptr;
+  }
   virtual void SetRoot(Layer* aLayer) {}
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget) { return true; }
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
