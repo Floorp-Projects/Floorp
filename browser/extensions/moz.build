@@ -26,3 +26,9 @@ if CONFIG['MOZ_MORTAR']:
     DIRS += [
         'mortar',
     ]
+
+# Nightly-only system add-ons
+if CONFIG['NIGHTLY_BUILD']:
+    DIRS += [
+        'webcompat-reporter',
+    ]
