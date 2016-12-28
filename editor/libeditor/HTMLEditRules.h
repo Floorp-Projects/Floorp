@@ -405,19 +405,6 @@ protected:
   nsresult ChangeIndentation(Element& aElement, Change aChange);
   void DocumentModifiedWorker();
 
-  /**
-   * InitStyleCacheArray() initializes aStyleCache for usable with
-   * GetInlineStyles().
-   */
-  void InitStyleCacheArray(nsTArray<StyleCache>& aStyleCache);
-
-  /**
-   * GetInlineStyles() retrieves the style of aNode and modifies each item of
-   * aStyleCache.
-   */
-  nsresult GetInlineStyles(nsIDOMNode* aNode,
-                           nsTArray<StyleCache>& aStyleCache);
-
 protected:
   HTMLEditor* mHTMLEditor;
   RefPtr<nsRange> mDocChangeRange;
@@ -431,12 +418,7 @@ protected:
   uint32_t mJoinOffset;
   nsCOMPtr<Element> mNewBlock;
   RefPtr<RangeItem> mRangeItem;
-
-  // XXX In strict speaking, mCachedStyles isn't enough to cache inline styles
-  //     because inline style can be specified with "style" attribute and/or
-  //     CSS in <style> elements or CSS files.  So, we need to look for better
-  //     implementation about this.
-  nsTArray<StyleCache> mCachedStyles;
+  StyleCache mCachedStyles[SIZE_STYLE_TABLE];
 };
 
 } // namespace mozilla
