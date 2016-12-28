@@ -448,7 +448,6 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
   nsCOMPtr<nsIPresShell> shell = aDocument->GetShell();
   if (!shell || GetPrimaryFrame() || !isXULorPluginElement) {
     *aResult = nullptr;
-
     return true;
   }
 
@@ -457,8 +456,7 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr, shell);
   NS_ENSURE_TRUE(sc, false);
 
-  *aResult = sc->StyleDisplay()->mBinding;
-
+  NS_IF_ADDREF(*aResult = sc->StyleDisplay()->mBinding);
   return true;
 }
 
@@ -535,42 +533,40 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
   // Make sure the style context goes away _before_ we load the binding
   // since that can destroy the relevant presshell.
-  mozilla::css::URLValue *bindingURL;
-  bool ok = GetBindingURL(doc, &bindingURL);
-  if (!ok) {
-    dom::Throw(aCx, NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  if (!bindingURL) {
-    // No binding, nothing left to do here.
-    return obj;
-  }
-
-  nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
-  nsCOMPtr<nsIPrincipal> principal = bindingURL->mOriginPrincipal.get();
-
-  // We have a binding that must be installed.
-  bool dummy;
-
-  nsXBLService* xblService = nsXBLService::GetInstance();
-  if (!xblService) {
-    dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
 
   {
     // Make a scope so that ~nsRefPtr can GC before returning obj.
-    RefPtr<nsXBLBinding> binding;
-    xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding), &dummy);
+    RefPtr<css::URLValue> bindingURL;
+    bool ok = GetBindingURL(doc, getter_AddRefs(bindingURL));
+    if (!ok) {
+      dom::Throw(aCx, NS_ERROR_FAILURE);
+      return nullptr;
+    }
 
-    if (binding) {
-      if (nsContentUtils::IsSafeToRunScript()) {
-        binding->ExecuteAttachedHandler();
+    if (bindingURL) {
+      nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
+      nsCOMPtr<nsIPrincipal> principal = bindingURL->mOriginPrincipal.get();
+
+      // We have a binding that must be installed.
+      bool dummy;
+
+      nsXBLService* xblService = nsXBLService::GetInstance();
+      if (!xblService) {
+        dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
+        return nullptr;
       }
-      else {
-        nsContentUtils::AddScriptRunner(
-          NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
+
+      RefPtr<nsXBLBinding> binding;
+      xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding),
+                               &dummy);
+
+      if (binding) {
+        if (nsContentUtils::IsSafeToRunScript()) {
+          binding->ExecuteAttachedHandler();
+        } else {
+          nsContentUtils::AddScriptRunner(
+            NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
+        }
       }
     }
   }
