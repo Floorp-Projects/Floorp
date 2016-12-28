@@ -167,11 +167,16 @@ public:
   Maybe<int32_t> GetFramerate() const { return GetMaybeNumber(mFramerate); }
   Maybe<int32_t> GetBitrate() const { return GetMaybeNumber(mBitrate); }
 
+  // Original string. Note that "type/subtype" may not be lowercase,
+  // use Type().AsString() instead to get the normalized "type/subtype".
+  const nsACString& OriginalString() const { return mOriginalString; }
+
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   friend Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType);
-  MediaExtendedMIMEType(const nsACString& aMIMEType,
+  MediaExtendedMIMEType(const nsACString& aOriginalString,
+                        const nsACString& aMIMEType,
                         bool aHaveCodecs, const nsAString& aCodecs,
                         int32_t aWidth, int32_t aHeight,
                         int32_t aFramerate, int32_t aBitrate);
@@ -181,6 +186,7 @@ private:
     return (aNumber < 0) ? Maybe<int32_t>(Nothing()) : Some(int32_t(aNumber));
   }
 
+  nsCString mOriginalString; // Original full string.
   MediaMIMEType mMIMEType; // MIME type/subtype.
   bool mHaveCodecs = false; // If false, mCodecs must be empty.
   MediaCodecs mCodecs;
