@@ -219,8 +219,8 @@
           }
 
           this.mMessageManager.sendAsyncMessage("Printing:Preview:Navigate", {
-            navType: navType,
-            pageNum: pageNum,
+            navType,
+            pageNum,
           });
         ]]>
         </body>
@@ -242,8 +242,8 @@
           var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
           var promptStr = this.mScaleLabel.value;
           var renameTitle = this.mCustomTitle;
-          var result = {value:value};
-          var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value:value});
+          var result = {value};
+          var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value});
           if (!confirmed || (!result.value) || (result.value == "") || result.value == value) {
             return -1;
           }

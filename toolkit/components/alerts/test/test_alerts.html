@@ -21,7 +21,7 @@
 
 var observer = {
   alertShow: false,
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
     if (aTopic == "alertclickcallback") {
       todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
