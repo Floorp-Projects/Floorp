@@ -1,20 +1,20 @@
 # Please see the comment at the beginning of reftest.list
 
-random-if(webrender) == topN-heightA-bottomA.html?margin_parent topN-heightA-bottomA-ref.html?margin_parent
-random-if(webrender) == topN-heightA-bottomN.html?margin_parent topN-heightA-bottomN-ref.html?margin_parent
+== topN-heightA-bottomA.html?margin_parent topN-heightA-bottomA-ref.html?margin_parent
+== topN-heightA-bottomN.html?margin_parent topN-heightA-bottomN-ref.html?margin_parent
 == topA-heightN-bottomA.html?margin_parent topA-heightN-bottomA-ref.html?margin_parent
-random-if(webrender) == topN-heightN-bottomA.html?margin_parent topN-heightN-bottomA-ref.html?margin_parent
-random-if(webrender) == topA-heightN-bottomN.html?margin_parent topA-heightN-bottomN-ref.html?margin_parent
-random-if(webrender) == topA-heightA-bottomN.html?margin_parent topA-heightA-bottomN-ref.html?margin_parent
-random-if(webrender) == toauto-topN-heightA-bottomA.html?margin_parent toauto-topN-heightA-bottomA-ref.html?margin_parent
-random-if(webrender) == toauto-topN-heightA-bottomN.html?margin_parent toauto-topN-heightA-bottomN-ref.html?margin_parent
+== topN-heightN-bottomA.html?margin_parent topN-heightN-bottomA-ref.html?margin_parent
+== topA-heightN-bottomN.html?margin_parent topA-heightN-bottomN-ref.html?margin_parent
+== topA-heightA-bottomN.html?margin_parent topA-heightA-bottomN-ref.html?margin_parent
+== toauto-topN-heightA-bottomA.html?margin_parent toauto-topN-heightA-bottomA-ref.html?margin_parent
+== toauto-topN-heightA-bottomN.html?margin_parent toauto-topN-heightA-bottomN-ref.html?margin_parent
 == toauto-topA-heightN-bottomA.html?margin_parent toauto-topA-heightN-bottomA-ref.html?margin_parent
-random-if(webrender) == toauto-topN-heightN-bottomA.html?margin_parent toauto-topN-heightN-bottomA-ref.html?margin_parent
-random-if(webrender) == toauto-topA-heightN-bottomN.html?margin_parent toauto-topA-heightN-bottomN-ref.html?margin_parent
-random-if(webrender) == toauto-topA-heightA-bottomN.html?margin_parent toauto-topA-heightA-bottomN-ref.html?margin_parent
-random-if(webrender) == fromauto-topN-heightA-bottomA.html?margin_parent topN-heightA-bottomA-ref.html?margin_parent
-random-if(webrender) == fromauto-topN-heightA-bottomN.html?margin_parent topN-heightA-bottomN-ref.html?margin_parent
+== toauto-topN-heightN-bottomA.html?margin_parent toauto-topN-heightN-bottomA-ref.html?margin_parent
+== toauto-topA-heightN-bottomN.html?margin_parent toauto-topA-heightN-bottomN-ref.html?margin_parent
+== toauto-topA-heightA-bottomN.html?margin_parent toauto-topA-heightA-bottomN-ref.html?margin_parent
+== fromauto-topN-heightA-bottomA.html?margin_parent topN-heightA-bottomA-ref.html?margin_parent
+== fromauto-topN-heightA-bottomN.html?margin_parent topN-heightA-bottomN-ref.html?margin_parent
 == fromauto-topA-heightN-bottomA.html?margin_parent topA-heightN-bottomA-ref.html?margin_parent
-random-if(webrender) == fromauto-topN-heightN-bottomA.html?margin_parent topN-heightN-bottomA-ref.html?margin_parent
-random-if(webrender) == fromauto-topA-heightN-bottomN.html?margin_parent topA-heightN-bottomN-ref.html?margin_parent
-random-if(webrender) == fromauto-topA-heightA-bottomN.html?margin_parent topA-heightA-bottomN-ref.html?margin_parent
+== fromauto-topN-heightN-bottomA.html?margin_parent topN-heightN-bottomA-ref.html?margin_parent
+== fromauto-topA-heightN-bottomN.html?margin_parent topA-heightN-bottomN-ref.html?margin_parent
+== fromauto-topA-heightA-bottomN.html?margin_parent topA-heightA-bottomN-ref.html?margin_parent
