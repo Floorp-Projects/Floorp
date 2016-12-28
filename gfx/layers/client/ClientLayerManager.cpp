@@ -609,6 +609,9 @@ void
 ClientLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier)
 {
   mForwarder->IdentifyTextureHost(aNewIdentifier);
+  if (mForwarder->GetSyncObject()) {
+    mForwarder->GetSyncObject()->UpdateContentDevice();
+  }
 }
 
 void
@@ -651,7 +654,8 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-    if (mForwarder->GetSyncObject()) {
+    if (mForwarder->GetSyncObject() &&
+        mForwarder->GetSyncObject()->IsSyncObjectValid()) {
       mForwarder->GetSyncObject()->FinalizeFrame();
     }
   }
