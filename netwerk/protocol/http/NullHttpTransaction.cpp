@@ -66,13 +66,14 @@ public:
     RefPtr<NullHttpChannel> channel = new NullHttpChannel();
     rv = channel->Init(uri, 0, nullptr, 0, nullptr);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    mActivityDistributor->ObserveActivity(
+    rv = mActivityDistributor->ObserveActivity(
       nsCOMPtr<nsISupports>(do_QueryObject(channel)),
       mActivityType,
       mActivitySubtype,
       mTimestamp,
       mExtraSizeData,
       mExtraStringData);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }

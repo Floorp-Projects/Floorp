@@ -649,7 +649,8 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     }
 
     if (mTLSFilter) {
-        mTLSFilter->SetProxiedTransaction(trans);
+        rv = mTLSFilter->SetProxiedTransaction(trans);
+        NS_ENSURE_SUCCESS(rv, rv);
         mTransaction = mTLSFilter;
     }
 

@@ -2596,7 +2596,8 @@ HttpBaseChannel::GetLastModifiedTime(PRTime* lastModifiedTime)
   if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
   uint32_t lastMod;
-  mResponseHead->GetLastModifiedValue(&lastMod);
+  nsresult rv = mResponseHead->GetLastModifiedValue(&lastMod);
+  NS_ENSURE_SUCCESS(rv, rv);
   *lastModifiedTime = lastMod;
   return NS_OK;
 }

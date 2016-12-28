@@ -111,7 +111,7 @@ nsHttpChannelAuthProvider::Init(nsIHttpAuthenticableChannel *channel)
     nsresult rv = mAuthChannel->GetURI(getter_AddRefs(mURI));
     if (NS_FAILED(rv)) return rv;
 
-    mAuthChannel->GetIsSSL(&mUsingSSL);
+    rv = mAuthChannel->GetIsSSL(&mUsingSSL);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIProxiedChannel> proxied(do_QueryInterface(channel));
