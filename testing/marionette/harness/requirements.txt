@@ -9,6 +9,6 @@ moznetwork >= 0.21
 mozprocess >= 0.9
 mozprofile >= 0.7
 mozrunner >= 6.13
-moztest >= 0.8
+moztest >= 0.7
 mozversion >= 1.1
 wptserve >= 1.3.0

@@ -33,14 +33,14 @@ class TestMessageSequencing(MarionetteTestCase):
         self.marionette.client.send(cmd)
         return self.last_id
 
-    @skip_unless_protocol("Skip for level < 3", lambda level: level >= 3)
+    @skip_unless_protocol(lambda level: level >= 3)
     def test_discard_older_messages(self):
         first = self.send(*get_current_url)
         second = self.send(*execute_script)
         resp = self.marionette.client.receive()
         self.assertEqual(second, resp.id)
 
-    @skip_unless_protocol("Skip for level < 3", lambda level: level >= 3)
+    @skip_unless_protocol(lambda level: level >= 3)
     def test_last_id_incremented(self):
         before = self.last_id
         self.send(*get_current_url)

@@ -31,11 +31,6 @@ class TestImportScriptContent(WindowManagerMixin, MarionetteTestCase):
                 self.marionette.clear_imported_scripts()
         self.reset_context()
 
-    def tearDown(self):
-        self.close_all_windows()
-
-        super(TestImportScriptContent, self).tearDown()
-
     def reset_context(self):
         self.marionette.set_context("content")
 
@@ -114,8 +109,8 @@ class TestImportScriptContent(WindowManagerMixin, MarionetteTestCase):
         self.assert_defined("testFunc")
         self.assert_defined("testAnotherFunc")
 
-    @skip_if_chrome("Needs content scope")
-    @skip_if_mobile("New windows not supported in Fennec")
+    @skip_if_chrome
+    @skip_if_mobile  # New windows not supported in Fennec
     def test_imports_apply_globally(self):
         self.marionette.navigate(
             self.marionette.absolute_url("test_windows.html"))

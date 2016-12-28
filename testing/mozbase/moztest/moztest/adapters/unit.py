@@ -134,7 +134,7 @@ class StructuredTestResult(TextTestResult):
                              extra=extra)
 
     def addFailure(self, test, err):
-        extra = self.call_callbacks(test, "FAIL")
+        extra = self.call_callbacks(test, "ERROR")
         extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                              "FAIL",
@@ -145,13 +145,10 @@ class StructuredTestResult(TextTestResult):
 
     def addSuccess(self, test):
         extra = self._get_class_method_name(test)
-        self.logger.test_end(test.id(),
-                             "PASS",
-                             expected="PASS",
-                             extra=extra)
+        self.logger.test_end(test.id(), "PASS", expected="PASS", extra=extra)
 
     def addExpectedFailure(self, test, err):
-        extra = self.call_callbacks(test, "FAIL")
+        extra = self.call_callbacks(test, "ERROR")
         extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                              "FAIL",
@@ -161,7 +158,7 @@ class StructuredTestResult(TextTestResult):
                              extra=extra)
 
     def addUnexpectedSuccess(self, test):
-        extra = self.call_callbacks(test, "PASS")
+        extra = self.call_callbacks(test, "ERROR")
         extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                              "PASS",
@@ -169,7 +166,7 @@ class StructuredTestResult(TextTestResult):
                              extra=extra)
 
     def addSkip(self, test, reason):
-        extra = self.call_callbacks(test, "SKIP")
+        extra = self.call_callbacks(test, "ERROR")
         extra.update(self._get_class_method_name(test))
         self.logger.test_end(test.id(),
                              "SKIP",
