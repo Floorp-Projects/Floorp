@@ -852,6 +852,7 @@ ReflowInput::InitFrameType(nsIAtom* aFrameType)
     case StyleDisplay::Flex:
     case StyleDisplay::WebkitBox:
     case StyleDisplay::Grid:
+    case StyleDisplay::FlowRoot:
     case StyleDisplay::RubyTextContainer:
       frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
