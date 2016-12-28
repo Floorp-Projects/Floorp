@@ -198,64 +198,65 @@ test_description_schema = Schema({
     # What to run
     Required('mozharness'): optionally_keyed_by(
         'test-platform', 'test-platform-phylum', {
-        # the mozharness script used to run this task
-        Required('script'): basestring,
+            # the mozharness script used to run this task
+            Required('script'): basestring,
 
-        # the config files required for the task
-        Required('config'): optionally_keyed_by(
-            'test-platform',
-            [basestring]),
+            # the config files required for the task
+            Required('config'): optionally_keyed_by(
+                'test-platform',
+                [basestring]),
 
-        # any additional actions to pass to the mozharness command
-        Optional('actions'): [basestring],
+            # any additional actions to pass to the mozharness command
+            Optional('actions'): [basestring],
 
-        # additional command-line options for mozharness, beyond those
-        # automatically added
-        Required('extra-options', default=[]): optionally_keyed_by(
-            'test-platform',
-            [basestring]),
+            # additional command-line options for mozharness, beyond those
+            # automatically added
+            Required('extra-options', default=[]): optionally_keyed_by(
+                'test-platform',
+                [basestring]),
 
-        # the artifact name (including path) to test on the build task; this is
-        # generally set in a per-kind transformation
-        Optional('build-artifact-name'): basestring,
+            # the artifact name (including path) to test on the build task; this is
+            # generally set in a per-kind transformation
+            Optional('build-artifact-name'): basestring,
 
-        # If true, tooltool downloads will be enabled via relengAPIProxy.
-        Required('tooltool-downloads', default=False): bool,
+            # If true, tooltool downloads will be enabled via relengAPIProxy.
+            Required('tooltool-downloads', default=False): bool,
 
-        # This mozharness script also runs in Buildbot and tries to read a
-        # buildbot config file, so tell it not to do so in TaskCluster
-        Required('no-read-buildbot-config', default=False): bool,
+            # This mozharness script also runs in Buildbot and tries to read a
+            # buildbot config file, so tell it not to do so in TaskCluster
+            Required('no-read-buildbot-config', default=False): bool,
 
-        # Add --blob-upload-branch=<project> mozharness parameter
-        Optional('include-blob-upload-branch'): bool,
+            # Add --blob-upload-branch=<project> mozharness parameter
+            Optional('include-blob-upload-branch'): bool,
 
-        # The setting for --download-symbols (if omitted, the option will not
-        # be passed to mozharness)
-        Optional('download-symbols'): Any(True, 'ondemand'),
+            # The setting for --download-symbols (if omitted, the option will not
+            # be passed to mozharness)
+            Optional('download-symbols'): Any(True, 'ondemand'),
 
-        # If set, then MOZ_NODE_PATH=/usr/local/bin/node is included in the
-        # environment.  This is more than just a helpful path setting -- it
-        # causes xpcshell tests to start additional servers, and runs
-        # additional tests.
-        Required('set-moz-node-path', default=False): bool,
+            # If set, then MOZ_NODE_PATH=/usr/local/bin/node is included in the
+            # environment.  This is more than just a helpful path setting -- it
+            # causes xpcshell tests to start additional servers, and runs
+            # additional tests.
+            Required('set-moz-node-path', default=False): bool,
 
-        # If true, include chunking information in the command even if the number
-        # of chunks is 1
-        Required('chunked', default=False): bool,
+            # If true, include chunking information in the command even if the number
+            # of chunks is 1
+            Required('chunked', default=False): bool,
 
-        # The chunking argument format to use
-        Required('chunking-args', default='this-chunk'): Any(
-            # Use the usual --this-chunk/--total-chunk arguments
-            'this-chunk',
-            # Use --test-suite=<suite>-<chunk-suffix>; see chunk-suffix, below
-            'test-suite-suffix',
-        ),
+            # The chunking argument format to use
+            Required('chunking-args', default='this-chunk'): Any(
+                # Use the usual --this-chunk/--total-chunk arguments
+                'this-chunk',
+                # Use --test-suite=<suite>-<chunk-suffix>; see chunk-suffix, below
+                'test-suite-suffix',
+            ),
 
-        # the string to append to the `--test-suite` arugment when
-        # chunking-args = test-suite-suffix; "<CHUNK>" in this string will
-        # be replaced with the chunk number.
-        Optional('chunk-suffix'): basestring,
-    }),
+            # the string to append to the `--test-suite` arugment when
+            # chunking-args = test-suite-suffix; "<CHUNK>" in this string will
+            # be replaced with the chunk number.
+            Optional('chunk-suffix'): basestring,
+        }
+    ),
 
     # The current chunk; this is filled in by `all_kinds.py`
     Optional('this-chunk'): int,
@@ -297,7 +298,9 @@ def validate(config, tests):
 def resolve_keyed_by_mozharness(config, tests):
     """Resolve a mozharness field if it is keyed by something"""
     for test in tests:
-        test['mozharness'] = get_keyed_by(item=test, field='mozharness', item_name=test['test-name'])
+        test['mozharness'] = get_keyed_by(
+            item=test, field='mozharness',
+            item_name=test['test-name'])
         yield test
 
 
@@ -366,7 +369,8 @@ def set_treeherder_machine_platform(config, tests):
         'android-api-15-gradle/opt': 'android-api-15-gradle/opt',
     }
     for test in tests:
-        test['treeherder-machine-platform'] = translation.get(test['build-platform'], test['test-platform'])
+        test['treeherder-machine-platform'] = translation.get(
+            test['build-platform'], test['test-platform'])
         yield test
 
 
@@ -535,7 +539,7 @@ def allow_software_gl_layers(config, tests):
     for test in tests:
         if test.get('allow-software-gl-layers'):
             assert test['instance-size'] != 'legacy',\
-                   'Software GL layers on a legacy instance is disallowed (bug 1296086).'
+                'Software GL layers on a legacy instance is disallowed (bug 1296086).'
 
             # This should be set always once bug 1296086 is resolved.
             test['mozharness'].setdefault('extra-options', [])\
