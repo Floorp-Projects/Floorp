@@ -72,7 +72,7 @@ RequestsMenuView.prototype = {
     this.contextMenu = new RequestListContextMenu();
     this.contextMenu.initialize(store);
 
-    Prefs.filters.forEach(type => store.dispatch(Actions.toggleFilterType(type)));
+    Prefs.filters.forEach(type => store.dispatch(Actions.toggleRequestFilterType(type)));
 
     // Watch selection changes
     this.store.subscribe(storeWatcher(

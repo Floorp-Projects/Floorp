@@ -1381,6 +1381,17 @@ CSS_PROP_TABLEBORDER(
     kCaptionSideKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
+CSS_PROP_USERINTERFACE(
+    caret-color,
+    caret_color,
+    CaretColor,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    "",
+    VARIANT_AUTO | VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleUserInterface, mCaretColor),
+    eStyleAnimType_ComplexColor)
 CSS_PROP_DISPLAY(
     clear,
     clear,

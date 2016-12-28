@@ -10,8 +10,6 @@ import java.util.concurrent.Future;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.text.TextUtils;
@@ -167,9 +165,6 @@ public class TwoLinePageRow extends LinearLayout
         }
 
         mSwitchToTabIconId = iconId;
-        if (mSwitchToTabIconId != 0) {
-            DrawableCompat.setAutoMirrored(ActivityCompat.getDrawable(getContext(), mSwitchToTabIconId), true);
-        }
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(mUrl, mSwitchToTabIconId, 0, 0, 0);
     }
 

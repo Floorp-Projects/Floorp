@@ -2836,6 +2836,18 @@ var gCSSProperties = {
     other_values: [ "bottom", "left", "right", "top-outside", "bottom-outside" ],
     invalid_values: []
   },
+  "caret-color": {
+    domProp: "caretColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    prerequisites: { "color": "black" },
+    // Though "auto" is an independent computed-value time keyword value,
+    // it is not distinguishable from currentcolor because getComputedStyle
+    // always returns used value for <color>.
+    initial_values: [ "auto", "currentcolor", "black", "rgb(0,0,0)" ],
+    other_values: [ "green", "transparent", "rgba(128,128,128,.5)", "#123" ],
+    invalid_values: [ "#0", "#00", "#00000", "cc00ff" ]
+  },
   "clear": {
     domProp: "clear",
     inherited: false,
