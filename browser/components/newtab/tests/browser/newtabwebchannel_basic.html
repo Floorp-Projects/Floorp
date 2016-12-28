@@ -25,7 +25,7 @@
                         detail = JSON.stringify(detail);
                     }
                     let reply = new window.CustomEvent("WebChannelMessageToChrome", {
-                        detail: detail
+                        detail
                     });
                     window.dispatchEvent(reply);
                 }
