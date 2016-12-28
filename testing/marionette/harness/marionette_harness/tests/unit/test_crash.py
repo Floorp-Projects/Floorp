@@ -104,7 +104,7 @@ class TestCrash(BaseCrashTestCase):
         # chrome and frame script.
         # self.marionette.get_url()
 
-    @run_if_e10s
+    @run_if_e10s("Content crashes only exist in e10s mode")
     def test_crash_content_process(self):
         # If e10s is disabled the chrome process crashes
         self.marionette.navigate(self.remote_uri)
