@@ -293,7 +293,7 @@
           return !!this.contextMenu;
         },
 
-        init: function(event) {
+        init(event) {
           let node = event.target;
           while (node != this.toolbar) {
             if (node.localName == "menupopup")
@@ -313,7 +313,7 @@
           this.contextMenu.addEventListener("popuphiding", this, false);
           this.toolbar.addEventListener("mousemove", this, false);
         },
-        handleEvent: function(event) {
+        handleEvent(event) {
           switch (event.type) {
             case "popupshown":
               this.toolbar.removeEventListener("mousemove", this, false);
