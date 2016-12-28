@@ -8,11 +8,9 @@ package org.mozilla.gecko.notifications;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.net.URLDecoder;
 import java.util.List;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
@@ -21,7 +19,10 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.mozglue.SafeIntent;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.PendingIntent;
 import android.content.ComponentName;
@@ -32,9 +33,10 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
 
-public final class NotificationHelper implements GeckoEventListener {
+public final class NotificationHelper implements BundleEventListener {
     public static final String HELPER_BROADCAST_ACTION = AppConstants.ANDROID_PACKAGE_NAME + ".helperBroadcastAction";
 
     public static final String NOTIFICATION_ID = "NotificationHelper_ID";
@@ -77,7 +79,7 @@ public final class NotificationHelper implements GeckoEventListener {
 
     // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
     // Will not include ongoing or persistent notifications that are tied to Gecko's lifecycle.
-    private HashMap<String, String> mClearableNotifications;
+    private SimpleArrayMap<String, GeckoBundle> mClearableNotifications;
 
     private boolean mInitialized;
     private static NotificationHelper sInstance;
@@ -91,8 +93,8 @@ public final class NotificationHelper implements GeckoEventListener {
             return;
         }
 
-        mClearableNotifications = new HashMap<String, String>();
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        mClearableNotifications = new SimpleArrayMap<>();
+        EventDispatcher.getInstance().registerUiThreadListener(this,
             "Notification:Show",
             "Notification:Hide");
         mInitialized = true;
@@ -110,11 +112,12 @@ public final class NotificationHelper implements GeckoEventListener {
         return sInstance;
     }
 
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        if (event.equals("Notification:Show")) {
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("Notification:Show".equals(event)) {
             showNotification(message);
-        } else if (event.equals("Notification:Hide")) {
+        } else if ("Notification:Hide".equals(event)) {
             hideNotification(message);
         }
     }
@@ -169,141 +172,118 @@ public final class NotificationHelper implements GeckoEventListener {
         }
     }
 
-    private Uri.Builder getNotificationBuilder(JSONObject message, String type) {
-        Uri.Builder b = new Uri.Builder();
+    private Uri.Builder getNotificationBuilder(final GeckoBundle message, final String type) {
+        final Uri.Builder b = new Uri.Builder();
         b.scheme(NOTIFICATION_SCHEME).appendQueryParameter(EVENT_TYPE_ATTR, type);
 
-        try {
-            final String id = message.getString(ID_ATTR);
-            b.appendQueryParameter(ID_ATTR, id);
-        } catch (JSONException ex) {
-            Log.i(LOGTAG, "buildNotificationPendingIntent, error parsing", ex);
-        }
+        final String id = message.getString(ID_ATTR);
+        b.appendQueryParameter(ID_ATTR, id);
 
-        try {
-            final String id = message.getString(HANDLER_ATTR);
-            b.appendQueryParameter(HANDLER_ATTR, id);
-        } catch (JSONException ex) {
-            Log.i(LOGTAG, "Notification doesn't have a handler");
-        }
+        final String handler = message.getString(HANDLER_ATTR);
+        b.appendQueryParameter(HANDLER_ATTR, handler);
 
         return b;
     }
 
-    private Intent buildNotificationIntent(JSONObject message, Uri.Builder builder) {
-        Intent notificationIntent = new Intent(HELPER_BROADCAST_ACTION);
-        final boolean ongoing = message.optBoolean(ONGOING_ATTR);
+    private Intent buildNotificationIntent(final GeckoBundle message, final Uri.Builder builder) {
+        final Intent notificationIntent = new Intent(HELPER_BROADCAST_ACTION);
+        final boolean ongoing = message.getBoolean(ONGOING_ATTR);
         notificationIntent.putExtra(ONGOING_ATTR, ongoing);
 
         final Uri dataUri = builder.build();
         notificationIntent.setData(dataUri);
         notificationIntent.putExtra(HELPER_NOTIFICATION, true);
-        notificationIntent.putExtra(COOKIE_ATTR, message.optString(COOKIE_ATTR));
+        notificationIntent.putExtra(COOKIE_ATTR, message.getString(COOKIE_ATTR));
 
         // All intents get routed through the notificationReceiver. That lets us bail if we don't want to start Gecko
-        final ComponentName name = new ComponentName(mContext, GeckoAppShell.getGeckoInterface().getActivity().getClass());
+        final ComponentName name = new ComponentName(
+                mContext, GeckoAppShell.getGeckoInterface().getActivity().getClass());
         notificationIntent.putExtra(ORIGINAL_EXTRA_COMPONENT, name);
 
         return notificationIntent;
     }
 
-    private PendingIntent buildNotificationPendingIntent(JSONObject message, String type) {
-        Uri.Builder builder = getNotificationBuilder(message, type);
+    private PendingIntent buildNotificationPendingIntent(final GeckoBundle message,
+                                                         final String type) {
+        final Uri.Builder builder = getNotificationBuilder(message, type);
         final Intent notificationIntent = buildNotificationIntent(message, builder);
-        return PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(
+                mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    private PendingIntent buildButtonClickPendingIntent(JSONObject message, JSONObject action) {
+    private PendingIntent buildButtonClickPendingIntent(final GeckoBundle message,
+                                                        final GeckoBundle action) {
         Uri.Builder builder = getNotificationBuilder(message, BUTTON_EVENT);
-        try {
-            // Action name must be in query uri, otherwise buttons pending intents
-            // would be collapsed.
-            if (action.has(ACTION_ID_ATTR)) {
-                builder.appendQueryParameter(ACTION_ID_ATTR, action.getString(ACTION_ID_ATTR));
-            } else {
-                Log.i(LOGTAG, "button event with no name");
-            }
-        } catch (JSONException ex) {
-            Log.i(LOGTAG, "buildNotificationPendingIntent, error parsing", ex);
+
+        // Action name must be in query uri, otherwise buttons pending intents
+        // would be collapsed.
+        if (action.containsKey(ACTION_ID_ATTR)) {
+            builder.appendQueryParameter(ACTION_ID_ATTR, action.getString(ACTION_ID_ATTR));
+        } else {
+            Log.i(LOGTAG, "button event with no name");
         }
+
         final Intent notificationIntent = buildNotificationIntent(message, builder);
-        PendingIntent res = PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent res = PendingIntent.getBroadcast(
+                mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         return res;
     }
 
-    private void showNotification(JSONObject message) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
+    private void showNotification(final GeckoBundle message) {
+        ThreadUtils.assertOnUiThread();
+
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
 
         // These attributes are required
-        final String id;
-        try {
-            builder.setContentTitle(message.getString(TITLE_ATTR));
-            builder.setContentText(message.getString(TEXT_ATTR));
-            id = message.getString(ID_ATTR);
-        } catch (JSONException ex) {
-            Log.i(LOGTAG, "Error parsing", ex);
-            return;
-        }
+        final String id = message.getString(ID_ATTR);
+        builder.setContentTitle(message.getString(TITLE_ATTR));
+        builder.setContentText(message.getString(TEXT_ATTR));
 
-        Uri imageUri = Uri.parse(message.optString(SMALLICON_ATTR));
+        final Uri imageUri = Uri.parse(message.getString(SMALLICON_ATTR));
         builder.setSmallIcon(BitmapUtils.getResource(mContext, imageUri));
 
-        JSONArray light = message.optJSONArray(LIGHT_ATTR);
-        if (light != null && light.length() == 3) {
-            try {
-                builder.setLights(light.getInt(0),
-                                  light.getInt(1),
-                                  light.getInt(2));
-            } catch (JSONException ex) {
-                Log.i(LOGTAG, "Error parsing", ex);
-            }
+        final int[] light = message.getIntArray(LIGHT_ATTR);
+        if (light != null && light.length == 3) {
+            builder.setLights(light[0], light[1], light[2]);
         }
 
-        boolean ongoing = message.optBoolean(ONGOING_ATTR);
+        final boolean ongoing = message.getBoolean(ONGOING_ATTR);
         builder.setOngoing(ongoing);
 
-        if (message.has(WHEN_ATTR)) {
-            long when = message.optLong(WHEN_ATTR);
+        if (message.containsKey(WHEN_ATTR)) {
+            final long when = (long) message.getDouble(WHEN_ATTR);
             builder.setWhen(when);
         }
 
-        if (message.has(PRIORITY_ATTR)) {
-            int priority = message.optInt(PRIORITY_ATTR);
+        if (message.containsKey(PRIORITY_ATTR)) {
+            final int priority = message.getInt(PRIORITY_ATTR);
             builder.setPriority(priority);
         }
 
-        if (message.has(LARGE_ICON_ATTR)) {
-            Bitmap b = BitmapUtils.getBitmapFromDataURI(message.optString(LARGE_ICON_ATTR));
+        if (message.containsKey(LARGE_ICON_ATTR)) {
+            final Bitmap b = BitmapUtils.getBitmapFromDataURI(message.getString(LARGE_ICON_ATTR));
             builder.setLargeIcon(b);
         }
 
-        if (message.has(PROGRESS_VALUE_ATTR) &&
-            message.has(PROGRESS_MAX_ATTR) &&
-            message.has(PROGRESS_INDETERMINATE_ATTR)) {
-            try {
-                final int progress = message.getInt(PROGRESS_VALUE_ATTR);
-                final int progressMax = message.getInt(PROGRESS_MAX_ATTR);
-                final boolean progressIndeterminate = message.getBoolean(PROGRESS_INDETERMINATE_ATTR);
-                builder.setProgress(progressMax, progress, progressIndeterminate);
-            } catch (JSONException ex) {
-                Log.i(LOGTAG, "Error parsing", ex);
-            }
+        if (message.containsKey(PROGRESS_VALUE_ATTR) &&
+            message.containsKey(PROGRESS_MAX_ATTR) &&
+            message.containsKey(PROGRESS_INDETERMINATE_ATTR)) {
+            final int progress = message.getInt(PROGRESS_VALUE_ATTR);
+            final int progressMax = message.getInt(PROGRESS_MAX_ATTR);
+            final boolean progressIndeterminate = message.getBoolean(PROGRESS_INDETERMINATE_ATTR);
+            builder.setProgress(progressMax, progress, progressIndeterminate);
         }
 
-        JSONArray actions = message.optJSONArray(ACTIONS_ATTR);
+        final GeckoBundle[] actions = message.getBundleArray(ACTIONS_ATTR);
         if (actions != null) {
-            try {
-                for (int i = 0; i < actions.length(); i++) {
-                    JSONObject action = actions.getJSONObject(i);
-                    final PendingIntent pending = buildButtonClickPendingIntent(message, action);
-                    final String actionTitle = action.getString(ACTION_TITLE_ATTR);
-                    final Uri actionImage = Uri.parse(action.optString(ACTION_ICON_ATTR));
-                    builder.addAction(BitmapUtils.getResource(mContext, actionImage),
-                                      actionTitle,
-                                      pending);
-                }
-            } catch (JSONException ex) {
-                Log.i(LOGTAG, "Error parsing", ex);
+            for (int i = 0; i < actions.length; i++) {
+                final GeckoBundle action = actions[i];
+                final PendingIntent pending = buildButtonClickPendingIntent(message, action);
+                final String actionTitle = action.getString(ACTION_TITLE_ATTR);
+                final Uri actionImage = Uri.parse(action.getString(ACTION_ICON_ATTR));
+                builder.addAction(BitmapUtils.getResource(mContext, actionImage),
+                                  actionTitle,
+                                  pending);
             }
         }
 
@@ -312,77 +292,70 @@ public final class NotificationHelper implements GeckoEventListener {
         // scheme to prevent Fennec from popping up.
         final Intent viewFileIntent = createIntentIfDownloadCompleted(message);
         if (builder != null && viewFileIntent != null && mContext != null) {
-            PendingIntent pIntent = PendingIntent.getActivity(mContext, 0, viewFileIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final PendingIntent pIntent = PendingIntent.getActivity(
+                    mContext, 0, viewFileIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             builder.setAutoCancel(true);
             builder.setContentIntent(pIntent);
 
         } else {
-            PendingIntent pi = buildNotificationPendingIntent(message, CLICK_EVENT);
+            final PendingIntent pi = buildNotificationPendingIntent(message, CLICK_EVENT);
+            final PendingIntent deletePendingIntent = buildNotificationPendingIntent(
+                    message, CLEARED_EVENT);
             builder.setContentIntent(pi);
-            PendingIntent deletePendingIntent = buildNotificationPendingIntent(message, CLEARED_EVENT);
             builder.setDeleteIntent(deletePendingIntent);
 
         }
 
         ((NotificationClient) GeckoAppShell.getNotificationListener()).add(id, builder.build());
 
-        boolean persistent = message.optBoolean(PERSISTENT_ATTR);
+        final boolean persistent = message.getBoolean(PERSISTENT_ATTR);
         // We add only not persistent notifications to the list since we want to purge only
         // them when geckoapp is destroyed.
         if (!persistent && !mClearableNotifications.containsKey(id)) {
-            mClearableNotifications.put(id, message.toString());
+            mClearableNotifications.put(id, message);
         }
     }
 
-
-    private Intent createIntentIfDownloadCompleted(JSONObject message) {
-        try {
-            if (message.has(HANDLER_ATTR) && message.get(HANDLER_ATTR).equals("downloads") &&
-                    message.has(ONGOING_ATTR) && !message.optBoolean(ONGOING_ATTR) &&
-                    message.has(COOKIE_ATTR) && message.getString(COOKIE_ATTR).split("http").length > 0) {
-
-                String fileName = message.getString(TEXT_ATTR);
-                String cookie = message.getString(COOKIE_ATTR);
-                if (cookie.contains(fileName)) {
-                    String filePath = cookie.substring(0, cookie.indexOf(fileName)).replace("\"", "");
-                    String filePathDecode = java.net.URLDecoder.decode(filePath, "UTF-8");
-                    Uri uri = Uri.fromFile(new File(filePathDecode + fileName));
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.setDataAndType(uri, URLConnection.guessContentTypeFromName(uri.toString()));
-
-                    // if no one can handle this intent, let the user decides
-                    PackageManager manager = mContext.getPackageManager();
-                    List<ResolveInfo> infos = manager.queryIntentActivities(intent, 0);
-                    if (infos.size() == 0) {
-                        intent.setDataAndType(uri, "*/*");
-                    }
-
-                    return intent;
-                }
-            }
-        } catch (JSONException je) {
-            Log.e(LOGTAG, "Error while parsing download complete event.", je);
+    private Intent createIntentIfDownloadCompleted(final GeckoBundle message) {
+        if (!"downloads".equals(message.get(HANDLER_ATTR)) ||
+                message.getBoolean(ONGOING_ATTR, true)) {
             return null;
+        }
+
+        final String fileName = message.getString(TEXT_ATTR);
+        final String cookie = message.getString(COOKIE_ATTR);
+        if (!cookie.contains(fileName)) {
+            return null;
+        }
+
+        final String filePath = cookie.substring(0, cookie.indexOf(fileName)).replace("\"", "");
+        final String filePathDecode;
+        try {
+            filePathDecode = URLDecoder.decode(filePath, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            Log.e(LOGTAG, "Error while parsing download file path.", e);
+            Log.e(LOGTAG, "Error while parsing download file path", e);
             return null;
         }
-        return null;
+
+        final Uri uri = Uri.fromFile(new File(filePathDecode + fileName));
+        final Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, URLConnection.guessContentTypeFromName(uri.toString()));
+
+        // if no one can handle this intent, let the user decide.
+        final PackageManager manager = mContext.getPackageManager();
+        final List<ResolveInfo> infos = manager.queryIntentActivities(intent, 0);
+        if (infos.size() == 0) {
+            intent.setDataAndType(uri, "*/*");
+        }
+
+        return intent;
     }
 
-    private void hideNotification(JSONObject message) {
-        final String id;
-        final String handler;
-        final String cookie;
-        try {
-            id = message.getString("id");
-            handler = message.optString("handlerKey");
-            cookie  = message.optString("cookie");
-        } catch (JSONException ex) {
-            Log.i(LOGTAG, "Error parsing", ex);
-            return;
-        }
+    private void hideNotification(final GeckoBundle message) {
+        final String id = message.getString("id");
+        final String handler = message.getString("handlerKey");
+        final String cookie = message.getString("cookie");
 
         hideNotification(id, handler, cookie);
     }
@@ -392,25 +365,21 @@ public final class NotificationHelper implements GeckoEventListener {
     }
 
     public void hideNotification(String id, String handlerKey, String cookie) {
+        ThreadUtils.assertOnUiThread();
+
         mClearableNotifications.remove(id);
         closeNotification(id, handlerKey, cookie);
     }
 
     private void clearAll() {
-        for (Iterator<String> i = mClearableNotifications.keySet().iterator(); i.hasNext();) {
-            final String id = i.next();
-            final String json = mClearableNotifications.get(id);
-            i.remove();
+        ThreadUtils.assertOnUiThread();
 
-            JSONObject obj;
-            try {
-                obj = new JSONObject(json);
-            } catch (JSONException ex) {
-                obj = new JSONObject();
-            }
-
-            closeNotification(id, obj.optString(HANDLER_ATTR), obj.optString(COOKIE_ATTR));
+        for (int i = 0; i < mClearableNotifications.size(); i++) {
+            final String id = mClearableNotifications.keyAt(i);
+            final GeckoBundle obj = mClearableNotifications.valueAt(i);
+            closeNotification(id, obj.getString(HANDLER_ATTR), obj.getString(COOKIE_ATTR));
         }
+        mClearableNotifications.clear();
     }
 
     public static void destroy() {
