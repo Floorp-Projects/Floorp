@@ -78,12 +78,21 @@ CustomElementCallback::CustomElementCallback(Element* aThisObject,
 {
 }
 
+//-----------------------------------------------------
+// CustomElementData
+
 CustomElementData::CustomElementData(nsIAtom* aType)
-  : mType(aType),
-    mCurrentCallback(-1),
-    mElementIsBeingCreated(false),
-    mCreatedCallbackInvoked(true),
-    mAssociatedMicroTask(-1)
+  : CustomElementData(aType, CustomElementData::State::eUndefined)
+{
+}
+
+CustomElementData::CustomElementData(nsIAtom* aType, State aState)
+  : mType(aType)
+  , mCurrentCallback(-1)
+  , mElementIsBeingCreated(false)
+  , mCreatedCallbackInvoked(true)
+  , mAssociatedMicroTask(-1)
+  , mState(aState)
 {
 }
 
@@ -98,6 +107,9 @@ CustomElementData::RunCallbackQueue()
   mCallbackQueue.Clear();
   mCurrentCallback = -1;
 }
+
+//-----------------------------------------------------
+// CustomElementRegistry
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementRegistry)
@@ -306,10 +318,15 @@ CustomElementRegistry::SetupCustomElement(Element* aElement,
     aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::is, *aTypeExtension, true);
   }
 
-  CustomElementDefinition* data = LookupCustomElementDefinition(
+  // SetupCustomElement() should be called with an element that don't have
+  // CustomElementData setup, if not we will hit the assertion in
+  // SetCustomElementData().
+  aElement->SetCustomElementData(new CustomElementData(typeAtom));
+
+  CustomElementDefinition* definition = LookupCustomElementDefinition(
     aElement->NodeInfo()->LocalName(), aTypeExtension);
 
-  if (!data) {
+  if (!definition) {
     // The type extension doesn't exist in the registry,
     // thus we don't need to enqueue callback or adjust
     // the "is" attribute, but it is possibly an upgrade candidate.
@@ -317,7 +334,7 @@ CustomElementRegistry::SetupCustomElement(Element* aElement,
     return;
   }
 
-  if (data->mLocalName != tagAtom) {
+  if (definition->mLocalName != tagAtom) {
     // The element doesn't match the local name for the
     // definition, thus the element isn't a custom element
     // and we don't need to do anything more.
@@ -326,7 +343,7 @@ CustomElementRegistry::SetupCustomElement(Element* aElement,
 
   // Enqueuing the created callback will set the CustomElementData on the
   // element, causing prototype swizzling to occur in Element::WrapObject.
-  EnqueueLifecycleCallback(nsIDocument::eCreated, aElement, nullptr, data);
+  EnqueueLifecycleCallback(nsIDocument::eCreated, aElement, nullptr, definition);
 }
 
 void
@@ -335,7 +352,8 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
                                                 LifecycleCallbackArgs* aArgs,
                                                 CustomElementDefinition* aDefinition)
 {
-  CustomElementData* elementData = aCustomElement->GetCustomElementData();
+  RefPtr<CustomElementData> elementData = aCustomElement->GetCustomElementData();
+  MOZ_ASSERT(elementData, "CustomElementData should exist");
 
   // Let DEFINITION be ELEMENT's definition
   CustomElementDefinition* definition = aDefinition;
@@ -353,16 +371,6 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
       // a custom element. We are done, nothing to do.
       return;
     }
-  }
-
-  if (!elementData) {
-    // Create the custom element data the first time
-    // that we try to enqueue a callback.
-    elementData = new CustomElementData(definition->mType);
-    // aCustomElement takes ownership of elementData
-    aCustomElement->SetCustomElementData(elementData);
-    MOZ_ASSERT(aType == nsIDocument::eCreated,
-               "First callback should be the created callback");
   }
 
   // Let CALLBACK be the callback associated with the key NAME in CALLBACKS.
@@ -885,8 +893,6 @@ CustomElementRegistry::Upgrade(Element* aElement,
     }
   } // Leave prototype's compartment.
 
-  // Enqueuing the created callback will set the CustomElementData on the
-  // element, causing prototype swizzling to occur in Element::WrapObject.
   EnqueueLifecycleCallback(nsIDocument::eCreated, aElement, nullptr, aDefinition);
 }
 
