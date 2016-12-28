@@ -387,7 +387,7 @@ public:
     }
   }
 
-  bool GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult);
+  bool GetBindingURL(nsIDocument* aDocument, css::URLValue **aResult);
 
   // The bdi element defaults to dir=auto if it has no dir attribute set.
   // Other elements will only have dir=auto if they have an explicit dir=auto,
