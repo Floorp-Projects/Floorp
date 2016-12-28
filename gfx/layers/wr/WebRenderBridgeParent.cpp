@@ -236,26 +236,10 @@ WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aComma
                                      const uint64_t& aFwdTransactionId,
                                      const uint64_t& aTransactionId)
 {
-  UpdateFwdTransactionId(aFwdTransactionId);
+  // This is the same as RecvDPEnd, but in a sync IPC message instead of an
+  // async one.
 
-  if (mDestroyed) {
-    for (const auto& op : aToDestroy) {
-      DestroyActor(op);
-    }
-    return IPC_OK();
-  }
-  // This ensures that destroy operations are always processed. It is not safe
-  // to early-return from RecvDPEnd without doing so.
-  AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
-
-  ProcessWebrenderCommands(aCommands);
-
-  // The transaction ID might get reset to 1 if the page gets reloaded, see
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
-  // Otherwise, it should be continually increasing.
-  MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
-  mPendingTransactionId = aTransactionId;
-  return IPC_OK();
+  return RecvDPEnd(Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
 }
 
 void
