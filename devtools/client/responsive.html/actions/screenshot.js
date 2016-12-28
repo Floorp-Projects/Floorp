@@ -15,6 +15,7 @@ const { getFormatStr } = require("../utils/l10n");
 const { getToplevelWindow } = require("sdk/window/utils");
 const { Task: { spawn } } = require("devtools/shared/task");
 const e10s = require("../utils/e10s");
+const Services = require("Services");
 
 const CAMERA_AUDIO_URL = "resource://devtools/client/themes/audio/shutter.wav";
 
@@ -54,8 +55,10 @@ function saveToFile(data, filename) {
 }
 
 function simulateCameraEffects(node) {
-  let cameraAudio = new window.Audio(CAMERA_AUDIO_URL);
-  cameraAudio.play();
+  if (Services.prefs.getBoolPref("devtools.screenshot.audio.enabled")) {
+    let cameraAudio = new window.Audio(CAMERA_AUDIO_URL);
+    cameraAudio.play();
+  }
   node.animate({ opacity: [ 0, 1 ] }, 500);
 }
 
