@@ -860,9 +860,7 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args, EnumerableOwnPr
             // (Omitted because Object.keys doesn't use this implementation.)
 
             // Step 4.a.ii.2.a.
-            if (obj->isNative() && desc.hasValue())
-                value = desc.value();
-            else if (!GetProperty(cx, obj, obj, id, &value))
+            if (!GetProperty(cx, obj, obj, id, &value))
                 return false;
         }
 
