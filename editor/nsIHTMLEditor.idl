@@ -237,11 +237,6 @@ interface nsIHTMLEditor : nsISupports
                                 in boolean aDeleteSelection);
 
   /**
-   *   Set the documents title.
-   */
-  void setDocumentTitle(in AString aTitle);
-
-  /**
    *   Set the BaseURL for the document to the current URL
    *     but only if the page doesn't have a <base> tag
    *   This should be done after the document URL has changed,

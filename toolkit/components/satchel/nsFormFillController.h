@@ -111,6 +111,7 @@ protected:
   nsString mLastSearchString;
 
   nsDataHashtable<nsPtrHashKey<const nsINode>, bool> mPwmgrInputs;
+  nsDataHashtable<nsPtrHashKey<const nsINode>, bool> mAutofillInputs;
 
   uint32_t mTimeout;
   uint32_t mMinResultsForPopup;

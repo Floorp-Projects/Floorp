@@ -130,6 +130,9 @@ include css-sizing/reftest.list
 # css transitions
 include css-transitions/reftest.list
 
+# css ui
+include css-ui/reftest.list
+
 # css :-moz-ui-invalid
 include css-ui-invalid/reftest.list
 

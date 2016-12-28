@@ -266,7 +266,7 @@ var NetMonitorController = {
       request = getDisplayedRequestById(gStore.getState(), requestId);
       if (!request) {
         // Reset filters so that the request is visible.
-        gStore.dispatch(Actions.toggleFilterType("all"));
+        gStore.dispatch(Actions.toggleRequestFilterType("all"));
         request = getDisplayedRequestById(gStore.getState(), requestId);
       }
 

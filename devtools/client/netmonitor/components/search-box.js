@@ -19,7 +19,7 @@ module.exports = connect(
   }),
   (dispatch) => ({
     onChange: (url) => {
-      dispatch(Actions.setFilterText(url));
+      dispatch(Actions.setRequestFilterText(url));
     },
   })
 )(SearchBox);
