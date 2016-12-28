@@ -4,6 +4,7 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Memory = WebAssembly.Memory;
 const Table = WebAssembly.Table;
+const LinkError = WebAssembly.LinkError;
 
 const mem1Page = new Memory({initial:1});
 const mem1PageMax1 = new Memory({initial:1, maximum: 1});
@@ -25,61 +26,61 @@ assertErrorMessage(() => new Memory({initial:2, maximum:1}), RangeError, /bad Me
 const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m1, {foo:null}), TypeError, /import object field 'foo' is not an Object/);
-assertErrorMessage(() => new Instance(m1, {foo:{bar:{}}}), TypeError, /import object field 'bar' is not a Function/);
+assertErrorMessage(() => new Instance(m1, {foo:{bar:{}}}), LinkError, /import object field 'bar' is not a Function/);
 assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:null}), TypeError, /import object field 'baz' is not an Object/);
-assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:{}}), TypeError, /import object field 'quux' is not a Function/);
+assertErrorMessage(() => new Instance(m1, {foo:{bar:()=>{}}, baz:{}}), LinkError, /import object field 'quux' is not a Function/);
 assertEq(new Instance(m1, {foo:{bar:()=>{}}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m2 = new Module(wasmTextToBinary('(module (import "x" "y" (memory 2 3)))'));
 assertErrorMessage(() => new Instance(m2), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m2, {x:null}), TypeError, /import object field 'x' is not an Object/);
-assertErrorMessage(() => new Instance(m2, {x:{y:{}}}), TypeError, /import object field 'y' is not a Memory/);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem1Page}}), TypeError, /imported Memory with incompatible size/);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem1PageMax1}}), TypeError, /imported Memory with incompatible size/);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem4Page}}), TypeError, /imported Memory with incompatible size/);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem4PageMax4}}), TypeError, /imported Memory with incompatible size/);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem2Page}}), TypeError, /imported Memory with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:{}}}), LinkError, /import object field 'y' is not a Memory/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem1Page}}), LinkError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem1PageMax1}}), LinkError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem4Page}}), LinkError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem4PageMax4}}), LinkError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem2Page}}), LinkError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m2, {x:{y:mem2PageMax2}}) instanceof Instance, true);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem3Page}}), TypeError, /imported Memory with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem3Page}}), LinkError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m2, {x:{y:mem3PageMax3}}) instanceof Instance, true);
 assertEq(new Instance(m2, {x:{y:mem2PageMax3}}) instanceof Instance, true);
-assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), TypeError, /imported Memory with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), LinkError, /imported Memory with incompatible maximum size/);
 
 const m3 = new Module(wasmTextToBinary('(module (import "foo" "bar" (memory 1 1)) (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m3), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m3, {foo:null}), TypeError, /import object field 'foo' is not an Object/);
-assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), TypeError, /import object field 'bar' is not a Memory/);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), LinkError, /import object field 'bar' is not a Memory/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:null}), TypeError, /import object field 'baz' is not an Object/);
-assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:mem1Page}}), TypeError, /import object field 'quux' is not a Function/);
-assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}), TypeError, /imported Memory with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:mem1Page}}), LinkError, /import object field 'quux' is not a Function/);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}), LinkError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m3, {foo:{bar:mem1PageMax1}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m4 = new Module(wasmTextToBinary('(module (import "baz" "quux") (import "foo" "bar" (memory 1 1)))'));
 assertErrorMessage(() => new Instance(m4), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m4, {baz:null}), TypeError, /import object field 'baz' is not an Object/);
-assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), TypeError, /import object field 'quux' is not a Function/);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), LinkError, /import object field 'quux' is not a Function/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:null}), TypeError, /import object field 'foo' is not an Object/);
-assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:()=>{}}}), TypeError, /import object field 'bar' is not a Memory/);
-assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:mem1Page}}), TypeError, /imported Memory with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:()=>{}}}), LinkError, /import object field 'bar' is not a Memory/);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:mem1Page}}), LinkError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m3, {baz:{quux:()=>{}}, foo:{bar:mem1PageMax1}}) instanceof Instance, true);
 
 const m5 = new Module(wasmTextToBinary('(module (import "a" "b" (memory 2)))'));
-assertErrorMessage(() => new Instance(m5, {a:{b:mem1Page}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m5, {a:{b:mem1Page}}), LinkError, /imported Memory with incompatible size/);
 assertEq(new Instance(m5, {a:{b:mem2Page}}) instanceof Instance, true);
 assertEq(new Instance(m5, {a:{b:mem3Page}}) instanceof Instance, true);
 assertEq(new Instance(m5, {a:{b:mem4Page}}) instanceof Instance, true);
 
 const m6 = new Module(wasmTextToBinary('(module (import "a" "b" (table 2 anyfunc)))'));
-assertErrorMessage(() => new Instance(m6, {a:{b:tab1Elem}}), TypeError, /imported Table with incompatible size/);
+assertErrorMessage(() => new Instance(m6, {a:{b:tab1Elem}}), LinkError, /imported Table with incompatible size/);
 assertEq(new Instance(m6, {a:{b:tab2Elem}}) instanceof Instance, true);
 assertEq(new Instance(m6, {a:{b:tab3Elem}}) instanceof Instance, true);
 assertEq(new Instance(m6, {a:{b:tab4Elem}}) instanceof Instance, true);
 
 const m7 = new Module(wasmTextToBinary('(module (import "a" "b" (table 2 3 anyfunc)))'));
-assertErrorMessage(() => new Instance(m7, {a:{b:tab1Elem}}), TypeError, /imported Table with incompatible size/);
-assertErrorMessage(() => new Instance(m7, {a:{b:tab2Elem}}), TypeError, /imported Table with incompatible maximum size/);
-assertErrorMessage(() => new Instance(m7, {a:{b:tab3Elem}}), TypeError, /imported Table with incompatible maximum size/);
-assertErrorMessage(() => new Instance(m7, {a:{b:tab4Elem}}), TypeError, /imported Table with incompatible size/);
+assertErrorMessage(() => new Instance(m7, {a:{b:tab1Elem}}), LinkError, /imported Table with incompatible size/);
+assertErrorMessage(() => new Instance(m7, {a:{b:tab2Elem}}), LinkError, /imported Table with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m7, {a:{b:tab3Elem}}), LinkError, /imported Table with incompatible maximum size/);
+assertErrorMessage(() => new Instance(m7, {a:{b:tab4Elem}}), LinkError, /imported Table with incompatible size/);
 
 wasmFailValidateText('(module (memory 2 1))', /maximum length 1 is less than initial length 2/);
 wasmFailValidateText('(module (import "a" "b" (memory 2 1)))', /maximum length 1 is less than initial length 2/);
@@ -92,11 +93,11 @@ var e = wasmEvalText('(module (func $i2v (param i32)) (export "i2v" $i2v) (func 
 var i2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param i32)))'));
 var f2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param f32)))'));
 assertEq(new Instance(i2vm, {a:{b:e.i2v}}) instanceof Instance, true);
-assertErrorMessage(() => new Instance(i2vm, {a:{b:e.f2v}}), TypeError, /imported function 'a.b' signature mismatch/);
-assertErrorMessage(() => new Instance(f2vm, {a:{b:e.i2v}}), TypeError, /imported function 'a.b' signature mismatch/);
+assertErrorMessage(() => new Instance(i2vm, {a:{b:e.f2v}}), LinkError, /imported function 'a.b' signature mismatch/);
+assertErrorMessage(() => new Instance(f2vm, {a:{b:e.i2v}}), LinkError, /imported function 'a.b' signature mismatch/);
 assertEq(new Instance(f2vm, {a:{b:e.f2v}}) instanceof Instance, true);
 var l2vm = new Module(wasmTextToBinary('(module (import "x" "y" (memory 1)) (import "c" "d" (param i64)))'));
-assertErrorMessage(() => new Instance(l2vm, {x:{y:mem1Page}, c:{d:e.i2v}}), TypeError, /imported function 'c.d' signature mismatch/);
+assertErrorMessage(() => new Instance(l2vm, {x:{y:mem1Page}, c:{d:e.i2v}}), LinkError, /imported function 'c.d' signature mismatch/);
 
 // Import order:
 
@@ -116,7 +117,7 @@ var importObj = {
     },
     get baz() { arr.push("bad") },
 };
-assertErrorMessage(() => new Instance(m1, importObj), TypeError, /import object field 'bar' is not a Function/);
+assertErrorMessage(() => new Instance(m1, importObj), LinkError, /import object field 'bar' is not a Function/);
 assertEq(arr.join(), "foo,bar");
 
 var arr = [];
@@ -447,15 +448,15 @@ var m = new Module(wasmTextToBinary(`
 `));
 assertEq(new Instance(m, {glob:{a:0}}) instanceof Instance, true);
 assertEq(new Instance(m, {glob:{a:(64*1024 - 2)}}) instanceof Instance, true);
-assertErrorMessage(() => new Instance(m, {glob:{a:(64*1024 - 1)}}), RangeError, /data segment does not fit/);
-assertErrorMessage(() => new Instance(m, {glob:{a:64*1024}}), RangeError, /data segment does not fit/);
+assertErrorMessage(() => new Instance(m, {glob:{a:(64*1024 - 1)}}), LinkError, /data segment does not fit/);
+assertErrorMessage(() => new Instance(m, {glob:{a:64*1024}}), LinkError, /data segment does not fit/);
 
 var m = new Module(wasmTextToBinary(`
     (module
         (memory 1)
         (data (i32.const 0x10001) "\\0a\\0b"))
 `));
-assertErrorMessage(() => new Instance(m), RangeError, /data segment does not fit/);
+assertErrorMessage(() => new Instance(m), LinkError, /data segment does not fit/);
 
 var m = new Module(wasmTextToBinary(`
     (module
@@ -489,12 +490,12 @@ var mem = new Memory({initial:npages});
 var mem8 = new Uint8Array(mem.buffer);
 var tbl = new Table({initial:2, element:"anyfunc"});
 
-assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}), RangeError, /elem segment does not fit/);
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}), LinkError, /elem segment does not fit/);
 assertEq(mem8[0], 0);
 assertEq(mem8[1], 0);
 assertEq(tbl.get(0), null);
 
-assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:npages*64*1024, tblOff:1}}), RangeError, /data segment does not fit/);
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:npages*64*1024, tblOff:1}}), LinkError, /data segment does not fit/);
 assertEq(mem8[0], 0);
 assertEq(tbl.get(0), null);
 assertEq(tbl.get(1), null);
