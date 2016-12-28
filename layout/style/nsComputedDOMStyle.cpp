@@ -492,6 +492,13 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   // No frame has been created, or we have a pseudo, or we're looking
   // for the default style, so resolve the style ourselves.
+  RefPtr<nsStyleContext> parentContext;
+  nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
+  // Don't resolve parent context for document fragments.
+  if (parent && parent->IsElement())
+    parentContext = GetStyleContextForElementNoFlush(parent->AsElement(),
+                                                     nullptr, presShell,
+                                                     aStyleType);
 
   nsPresContext *presContext = presShell->GetPresContext();
   if (!presContext)
@@ -499,35 +506,13 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   StyleSetHandle styleSet = presShell->StyleSet();
 
-  auto type = CSSPseudoElementType::NotPseudo;
+  RefPtr<nsStyleContext> sc;
   if (aPseudo) {
     CSSPseudoElementType type = nsCSSPseudoElements::
       GetPseudoType(aPseudo, CSSEnabledState::eIgnoreEnabledState);
     if (type >= CSSPseudoElementType::Count) {
       return nullptr;
     }
-  }
-
-  // For Servo, compute the result directly without recursively building up
-  // a throwaway style context chain.
-  if (ServoStyleSet* servoSet = styleSet->GetAsServo()) {
-    if (aStyleType == eDefaultOnly) {
-      NS_ERROR("stylo: ServoStyleSets cannot supply UA-only styles yet");
-      return nullptr;
-    }
-    return servoSet->ResolveTransientStyle(aElement, type);
-  }
-
-  RefPtr<nsStyleContext> sc;
-  RefPtr<nsStyleContext> parentContext;
-  nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
-  // Don't resolve parent context for document fragments.
-  if (parent && parent->IsElement())
-    parentContext = GetStyleContextForElementNoFlush(parent->AsElement(),
-                                                     nullptr, aPresShell,
-                                                     aStyleType);
-
-  if (type != CSSPseudoElementType::NotPseudo) {
     nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
     Element* pseudoElement =
       frame && inDocWithShell ? frame->GetPseudoElement(type) : nullptr;
@@ -539,6 +524,11 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   }
 
   if (aStyleType == eDefaultOnly) {
+    if (styleSet->IsServo()) {
+      NS_ERROR("stylo: ServoStyleSets cannot supply UA-only styles yet");
+      return nullptr;
+    }
+
     // We really only want the user and UA rules.  Filter out the other ones.
     nsTArray< nsCOMPtr<nsIStyleRule> > rules;
     for (nsRuleNode* ruleNode = sc->RuleNode();
