@@ -414,7 +414,7 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Create a BorderLayer for this manager's layer tree.
    */
-  virtual already_AddRefed<BorderLayer> CreateBorderLayer() { return nullptr; }
+  virtual already_AddRefed<BorderLayer> CreateBorderLayer() = 0;
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a CanvasLayer for this manager's layer tree.
