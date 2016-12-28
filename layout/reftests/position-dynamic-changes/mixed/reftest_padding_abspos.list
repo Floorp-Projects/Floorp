@@ -1,4 +1,4 @@
 # Please see the comment at the beginning of reftest.list
 
-random-if(webrender) == mixed-dimentionN.html?padding_abspos mixed-dimentionN-ref.html?padding_abspos
-random-if(webrender) == mixed-dimentionA.html?padding_abspos mixed-dimentionA-ref.html?padding_abspos
+== mixed-dimentionN.html?padding_abspos mixed-dimentionN-ref.html?padding_abspos
+== mixed-dimentionA.html?padding_abspos mixed-dimentionA-ref.html?padding_abspos

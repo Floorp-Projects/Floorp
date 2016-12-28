@@ -1,4 +1,4 @@
 # Please see the comment at the beginning of reftest.list
 
-random-if(webrender) == mixed-dimentionN.html mixed-dimentionN-ref.html
-random-if(webrender) == mixed-dimentionA.html mixed-dimentionA-ref.html
+== mixed-dimentionN.html mixed-dimentionN-ref.html
+== mixed-dimentionA.html mixed-dimentionA-ref.html

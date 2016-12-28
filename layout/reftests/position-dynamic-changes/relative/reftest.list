@@ -1,5 +1,5 @@
-fuzzy-if(cocoaWidget,1,2) fuzzy-if(d2d,47,26) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,716) random-if(webrender) == move-right-bottom.html move-right-bottom-ref.html
-fuzzy-if(cocoaWidget,1,2) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,716) random-if(webrender) == move-top-left.html move-top-left-ref.html # Bug 688545
-fuzzy-if(cocoaWidget,1,3) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,580) random-if(webrender) == move-right-bottom-table.html move-right-bottom-table-ref.html
-fuzzy-if(cocoaWidget,1,3) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,580) random-if(webrender) == move-top-left-table.html move-top-left-table-ref.html # Bug 688545
+fuzzy-if(cocoaWidget,1,2) fuzzy-if(d2d,47,26) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,716) == move-right-bottom.html move-right-bottom-ref.html
+fuzzy-if(cocoaWidget,1,2) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,716) == move-top-left.html move-top-left-ref.html # Bug 688545
+fuzzy-if(cocoaWidget,1,3) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,580) == move-right-bottom-table.html move-right-bottom-table-ref.html
+fuzzy-if(cocoaWidget,1,3) fuzzy-if(asyncPan&&!layersGPUAccelerated,140,580) == move-top-left-table.html move-top-left-table-ref.html # Bug 688545
 == percent.html percent-ref.html
