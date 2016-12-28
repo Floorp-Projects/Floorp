@@ -22,9 +22,7 @@ RtpPacketizer* RtpPacketizer::Create(RtpVideoCodecTypes type,
                                      FrameType frame_type) {
   switch (type) {
     case kRtpVideoH264:
-      assert(rtp_type_header != NULL);
-      return new RtpPacketizerH264(frame_type, max_payload_len,
-                                   rtp_type_header->H264.packetization_mode);
+      return new RtpPacketizerH264(frame_type, max_payload_len);
     case kRtpVideoVp8:
       assert(rtp_type_header != NULL);
       return new RtpPacketizerVp8(rtp_type_header->VP8, max_payload_len);

@@ -11,9 +11,9 @@
 #include "webrtc/modules/utility/source/process_thread_impl.h"
 
 #include "webrtc/base/checks.h"
-#include "webrtc/modules/interface/module.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/modules/include/module.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
 namespace {
@@ -25,12 +25,9 @@ const int64_t kCallProcessImmediately = -1;
 
 int64_t GetNextCallbackTime(Module* module, int64_t time_now) {
   int64_t interval = module->TimeUntilNextProcess();
-  // Currently some implementations erroneously return error codes from
-  // TimeUntilNextProcess(). So, as is, we correct that and log an error.
   if (interval < 0) {
-    LOG(LS_ERROR) << "TimeUntilNextProcess returned an invalid value "
-                  << interval;
-    interval = 0;
+    // Falling behind, we should call the callback now.
+    return time_now;
   }
   return time_now + interval;
 }
@@ -39,18 +36,20 @@ int64_t GetNextCallbackTime(Module* module, int64_t time_now) {
 ProcessThread::~ProcessThread() {}
 
 // static
-rtc::scoped_ptr<ProcessThread> ProcessThread::Create() {
-  return rtc::scoped_ptr<ProcessThread>(new ProcessThreadImpl()).Pass();
+rtc::scoped_ptr<ProcessThread> ProcessThread::Create(
+    const char* thread_name) {
+  return rtc::scoped_ptr<ProcessThread>(new ProcessThreadImpl(thread_name));
 }
 
-ProcessThreadImpl::ProcessThreadImpl()
-    : wake_up_(EventWrapper::Create()), stop_(false) {
-}
+ProcessThreadImpl::ProcessThreadImpl(const char* thread_name)
+    : wake_up_(EventWrapper::Create()),
+      stop_(false),
+      thread_name_(thread_name) {}
 
 ProcessThreadImpl::~ProcessThreadImpl() {
-  DCHECK(thread_checker_.CalledOnValidThread());
-  DCHECK(!thread_.get());
-  DCHECK(!stop_);
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(!thread_.get());
+  RTC_DCHECK(!stop_);
 
   while (!queue_.empty()) {
     delete queue_.front();
@@ -59,12 +58,12 @@ ProcessThreadImpl::~ProcessThreadImpl() {
 }
 
 void ProcessThreadImpl::Start() {
-  DCHECK(thread_checker_.CalledOnValidThread());
-  DCHECK(!thread_.get());
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(!thread_.get());
   if (thread_.get())
     return;
 
-  DCHECK(!stop_);
+  RTC_DCHECK(!stop_);
 
   {
     // TODO(tommi): Since DeRegisterModule is currently being called from
@@ -76,13 +75,13 @@ void ProcessThreadImpl::Start() {
       m.module->ProcessThreadAttached(this);
   }
 
-  thread_ = ThreadWrapper::CreateThread(
-      &ProcessThreadImpl::Run, this, "ProcessThread");
-  CHECK(thread_->Start());
+  thread_.reset(
+      new rtc::PlatformThread(&ProcessThreadImpl::Run, this, thread_name_));
+  thread_->Start();
 }
 
 void ProcessThreadImpl::Stop() {
-  DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
   if(!thread_.get())
     return;
 
@@ -93,7 +92,7 @@ void ProcessThreadImpl::Stop() {
 
   wake_up_->Set();
 
-  CHECK(thread_->Stop());
+  thread_->Stop();
   stop_ = false;
 
   // TODO(tommi): Since DeRegisterModule is currently being called from
@@ -130,15 +129,15 @@ void ProcessThreadImpl::PostTask(rtc::scoped_ptr<ProcessTask> task) {
 }
 
 void ProcessThreadImpl::RegisterModule(Module* module) {
-  //  DCHECK(thread_checker_.CalledOnValidThread());
-  DCHECK(module);
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(module);
 
 #if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
   {
     // Catch programmer error.
     rtc::CritScope lock(&lock_);
     for (const ModuleCallback& mc : modules_)
-      DCHECK(mc.module != module);
+      RTC_DCHECK(mc.module != module);
   }
 #endif
 
@@ -162,7 +161,7 @@ void ProcessThreadImpl::RegisterModule(Module* module) {
 void ProcessThreadImpl::DeRegisterModule(Module* module) {
   // Allowed to be called on any thread.
   // TODO(tommi): Disallow this ^^^
-  DCHECK(module);
+  RTC_DCHECK(module);
 
   {
     rtc::CritScope lock(&lock_);

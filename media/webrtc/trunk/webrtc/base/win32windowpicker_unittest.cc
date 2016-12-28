@@ -7,6 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
@@ -71,7 +72,7 @@ TEST(Win32WindowPickerTest, TestGetWindowList) {
   EXPECT_EQ(window_picker.visible_window()->handle(), desc.id().id());
   TCHAR window_title[500];
   GetWindowText(window_picker.visible_window()->handle(), window_title,
-                ARRAY_SIZE(window_title));
+                arraysize(window_title));
   EXPECT_EQ(0, wcscmp(window_title, kVisibleWindowTitle));
 }
 

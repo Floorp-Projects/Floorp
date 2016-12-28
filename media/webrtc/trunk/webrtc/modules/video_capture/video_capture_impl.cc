@@ -12,15 +12,15 @@
 
 #include <stdlib.h>
 
+#include "webrtc/base/trace_event.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
-#include "webrtc/system_wrappers/interface/trace_event.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc
 {
@@ -211,7 +211,7 @@ int32_t VideoCaptureImpl::CaptureDelay()
     return _setCaptureDelay;
 }
 
-int32_t VideoCaptureImpl::DeliverCapturedFrame(I420VideoFrame& captureFrame) {
+int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
   UpdateFrameCount();  // frame count used for local frame rate callback.
 
   const bool callOnCaptureDelayChanged = _setCaptureDelay != _captureDelay;
@@ -258,23 +258,22 @@ int32_t VideoCaptureImpl::IncomingFrame(
             return -1;
         }
 
+        int stride_y = width;
+        int stride_uv = (width + 1) / 2;
+        int target_width = width;
+        int target_height = height;
+
         // SetApplyRotation doesn't take any lock. Make a local copy here.
         bool apply_rotation = apply_rotation_;
-        int target_width;
-        int target_height;
-        
-        if (apply_rotation &&
-            (_rotateFrame == kVideoRotation_90 ||
-             _rotateFrame == kVideoRotation_270)) {
-          target_width = abs(height);
-          target_height = width;
-        } else {
-          target_width = width;
-          target_height = height;
-        }
 
-        int stride_y = target_width;
-        int stride_uv = (target_width + 1) / 2;
+        if (apply_rotation) {
+          // Rotating resolution when for 90/270 degree rotations.
+          if (_rotateFrame == kVideoRotation_90 ||
+              _rotateFrame == kVideoRotation_270) {
+            target_width = abs(height);
+            target_height = width;
+          }
+        }
 
         // TODO(mikhal): Update correct aligned stride values.
         //Calc16ByteAlignedStride(target_width, &stride_y, &stride_uv);
@@ -295,7 +294,7 @@ int32_t VideoCaptureImpl::IncomingFrame(
             commonVideoType, videoFrame, 0, 0,  // No cropping
             width, height, videoFrameLength,
             apply_rotation ? _rotateFrame : kVideoRotation_0, &_captureFrame);
-        if (conversionResult != 0)
+        if (conversionResult < 0)
         {
           LOG(LS_ERROR) << "Failed to convert capture frame from type "
                         << frameInfo.rawType << "to I420.";

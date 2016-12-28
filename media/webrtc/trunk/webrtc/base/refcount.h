@@ -8,20 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TALK_APP_BASE_REFCOUNT_H_
-#define TALK_APP_BASE_REFCOUNT_H_
+#ifndef WEBRTC_BASE_REFCOUNT_H_
+#define WEBRTC_BASE_REFCOUNT_H_
 
 #include <string.h>
 
-#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/atomicops.h"
 
 namespace rtc {
 
 // Reference count interface.
 class RefCountInterface {
  public:
-  virtual int AddRef() = 0;
-  virtual int Release() = 0;
+  virtual int AddRef() const = 0;
+  virtual int Release() const = 0;
  protected:
   virtual ~RefCountInterface() {}
 };
@@ -95,12 +95,12 @@ class RefCountedObject : public T {
   : T(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11), ref_count_(0) {
   }
 
-  virtual int AddRef() {
-    return rtc::AtomicOps::Increment(&ref_count_);
+  virtual int AddRef() const {
+    return AtomicOps::Increment(&ref_count_);
   }
 
-  virtual int Release() {
-    int count = rtc::AtomicOps::Decrement(&ref_count_);
+  virtual int Release() const {
+    int count = AtomicOps::Decrement(&ref_count_);
     if (!count) {
       delete this;
     }
@@ -114,16 +114,16 @@ class RefCountedObject : public T {
   // barrier needed for the owning thread to act on the object, knowing that it
   // has exclusive access to the object.
   virtual bool HasOneRef() const {
-    return rtc::AtomicOps::Load(&ref_count_) == 1;
+    return AtomicOps::AcquireLoad(&ref_count_) == 1;
   }
 
  protected:
   virtual ~RefCountedObject() {
   }
 
-  volatile int ref_count_;
+  mutable volatile int ref_count_;
 };
 
 }  // namespace rtc
 
-#endif  // TALK_APP_BASE_REFCOUNT_H_
+#endif  // WEBRTC_BASE_REFCOUNT_H_

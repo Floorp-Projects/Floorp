@@ -15,8 +15,9 @@
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/atomic32.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/call/rtc_event_log.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -52,8 +53,9 @@ class ChannelOwner {
 
   ChannelOwner& operator=(const ChannelOwner& other);
 
-  Channel* channel() { return channel_ref_->channel.get(); }
+  Channel* channel() const { return channel_ref_->channel.get(); }
   bool IsValid() { return channel_ref_->channel.get() != NULL; }
+  int use_count() const { return channel_ref_->ref_count.Value(); }
  private:
   // Shared instance of a Channel. Copying ChannelOwners increase the reference
   // count and destroying ChannelOwners decrease references. Channels are
@@ -89,7 +91,7 @@ class ChannelManager {
     size_t iterator_pos_;
     std::vector<ChannelOwner> channels_;
 
-    DISALLOW_COPY_AND_ASSIGN(Iterator);
+    RTC_DISALLOW_COPY_AND_ASSIGN(Iterator);
   };
 
   // CreateChannel will always return a valid ChannelOwner instance. The channel
@@ -109,7 +111,9 @@ class ChannelManager {
   void DestroyAllChannels();
 
   size_t NumOfChannels() const;
-  const Config& config_;
+
+  // Returns a pointer to the event log object stored within the ChannelManager.
+  RtcEventLog* GetEventLog() const;
 
  private:
   // Create a channel given a configuration, |config|.
@@ -122,7 +126,10 @@ class ChannelManager {
   rtc::scoped_ptr<CriticalSectionWrapper> lock_;
   std::vector<ChannelOwner> channels_;
 
-  DISALLOW_COPY_AND_ASSIGN(ChannelManager);
+  const Config& config_;
+  rtc::scoped_ptr<RtcEventLog> event_log_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(ChannelManager);
 };
 }  // namespace voe
 }  // namespace webrtc

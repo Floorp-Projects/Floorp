@@ -11,6 +11,7 @@
 #include <string>
 
 #include "webrtc/p2p/base/stun.h"
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/bytebuffer.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
@@ -165,7 +166,7 @@ static const unsigned char kStunMessageWithPaddedByteStringAttribute[] = {
   0x61, 0x62, 0x63, 0xcc   // abc
 };
 
-// Message with an Unknown Attributes (uint16 list) attribute.
+// Message with an Unknown Attributes (uint16_t list) attribute.
 static const unsigned char kStunMessageWithUInt16ListAttribute[] = {
   0x00, 0x01, 0x00, 0x0c,
   0x21, 0x12, 0xa4, 0x42,
@@ -515,11 +516,11 @@ TEST_F(StunTest, MessageTypes) {
     STUN_BINDING_REQUEST, STUN_BINDING_INDICATION,
     STUN_BINDING_RESPONSE, STUN_BINDING_ERROR_RESPONSE
   };
-  for (int i = 0; i < ARRAY_SIZE(types); ++i) {
-    EXPECT_EQ(i == 0, IsStunRequestType(types[i]));
-    EXPECT_EQ(i == 1, IsStunIndicationType(types[i]));
-    EXPECT_EQ(i == 2, IsStunSuccessResponseType(types[i]));
-    EXPECT_EQ(i == 3, IsStunErrorResponseType(types[i]));
+  for (size_t i = 0; i < arraysize(types); ++i) {
+    EXPECT_EQ(i == 0U, IsStunRequestType(types[i]));
+    EXPECT_EQ(i == 1U, IsStunIndicationType(types[i]));
+    EXPECT_EQ(i == 2U, IsStunSuccessResponseType(types[i]));
+    EXPECT_EQ(i == 3U, IsStunErrorResponseType(types[i]));
     EXPECT_EQ(1, types[i] & 0xFEEF);
   }
 }

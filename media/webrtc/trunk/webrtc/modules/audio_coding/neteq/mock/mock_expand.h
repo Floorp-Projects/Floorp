@@ -22,10 +22,15 @@ class MockExpand : public Expand {
   MockExpand(BackgroundNoise* background_noise,
              SyncBuffer* sync_buffer,
              RandomVector* random_vector,
+             StatisticsCalculator* statistics,
              int fs,
              size_t num_channels)
-      : Expand(background_noise, sync_buffer, random_vector, fs, num_channels) {
-  }
+      : Expand(background_noise,
+               sync_buffer,
+               random_vector,
+               statistics,
+               fs,
+               num_channels) {}
   virtual ~MockExpand() { Die(); }
   MOCK_METHOD0(Die, void());
   MOCK_METHOD0(Reset,
@@ -46,10 +51,11 @@ namespace webrtc {
 
 class MockExpandFactory : public ExpandFactory {
  public:
-  MOCK_CONST_METHOD5(Create,
+  MOCK_CONST_METHOD6(Create,
                      Expand*(BackgroundNoise* background_noise,
                              SyncBuffer* sync_buffer,
                              RandomVector* random_vector,
+                             StatisticsCalculator* statistics,
                              int fs,
                              size_t num_channels));
 };

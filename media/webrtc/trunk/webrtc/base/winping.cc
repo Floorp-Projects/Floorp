@@ -124,14 +124,13 @@ const char * const ICMP_CREATE_FUNC = "IcmpCreateFile";
 const char * const ICMP_CLOSE_FUNC = "IcmpCloseHandle";
 const char * const ICMP_SEND_FUNC = "IcmpSendEcho";
 const char * const ICMP6_CREATE_FUNC = "Icmp6CreateFile";
-const char * const ICMP6_CLOSE_FUNC = "Icmp6CloseHandle";
 const char * const ICMP6_SEND_FUNC = "Icmp6SendEcho2";
 
-inline uint32 ReplySize(uint32 data_size, int family) {
+inline uint32_t ReplySize(uint32_t data_size, int family) {
   if (family == AF_INET) {
     // A ping error message is 8 bytes long, so make sure we allow for at least
     // 8 bytes of reply data.
-    return sizeof(ICMP_ECHO_REPLY) + std::max<uint32>(8, data_size);
+    return sizeof(ICMP_ECHO_REPLY) + std::max<uint32_t>(8, data_size);
   } else if (family == AF_INET6) {
     // Per MSDN, Send6IcmpEcho2 needs at least one ICMPV6_ECHO_REPLY,
     // 8 bytes for ICMP header, _and_ an IO_BLOCK_STATUS (2 pointers),
@@ -209,10 +208,11 @@ WinPing::~WinPing() {
   delete[] reply_;
 }
 
-WinPing::PingResult WinPing::Ping(
-    IPAddress ip, uint32 data_size, uint32 timeout, uint8 ttl,
-    bool allow_fragments) {
-
+WinPing::PingResult WinPing::Ping(IPAddress ip,
+                                  uint32_t data_size,
+                                  uint32_t timeout,
+                                  uint8_t ttl,
+                                  bool allow_fragments) {
   if (data_size == 0 || timeout == 0 || ttl == 0) {
     LOG(LERROR) << "IcmpSendEcho: data_size/timeout/ttl is 0.";
     return PING_INVALID_PARAMS;
@@ -226,7 +226,7 @@ WinPing::PingResult WinPing::Ping(
     ipopt.Flags |= IP_FLAG_DF;
   ipopt.Ttl = ttl;
 
-  uint32 reply_size = ReplySize(data_size, ip.family());
+  uint32_t reply_size = ReplySize(data_size, ip.family());
 
   if (data_size > dlen_) {
     delete [] data_;
@@ -242,19 +242,16 @@ WinPing::PingResult WinPing::Ping(
   }
   DWORD result = 0;
   if (ip.family() == AF_INET) {
-    result = send_(hping_, ip.ipv4_address().S_un.S_addr,
-                   data_, uint16(data_size), &ipopt,
-                   reply_, reply_size, timeout);
+    result = send_(hping_, ip.ipv4_address().S_un.S_addr, data_,
+                   uint16_t(data_size), &ipopt, reply_, reply_size, timeout);
   } else if (ip.family() == AF_INET6) {
     sockaddr_in6 src = {0};
     sockaddr_in6 dst = {0};
     src.sin6_family = AF_INET6;
     dst.sin6_family = AF_INET6;
     dst.sin6_addr = ip.ipv6_address();
-    result = send6_(hping6_, NULL, NULL, NULL,
-                    &src, &dst,
-                    data_, int16(data_size), &ipopt,
-                    reply_, reply_size, timeout);
+    result = send6_(hping6_, NULL, NULL, NULL, &src, &dst, data_,
+                    int16_t(data_size), &ipopt, reply_, reply_size, timeout);
   }
   if (result == 0) {
     DWORD error = GetLastError();

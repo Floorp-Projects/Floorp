@@ -45,9 +45,6 @@ class SignalThread
   // Context: Main Thread.  Call before Start to change the worker's name.
   bool SetName(const std::string& name, const void* obj);
 
-  // Context: Main Thread.  Call before Start to change the worker's priority.
-  bool SetPriority(ThreadPriority priority);
-
   // Context: Main Thread.  Call to begin the worker thread.
   void Start();
 
@@ -112,7 +109,7 @@ class SignalThread
    private:
     SignalThread* parent_;
 
-    DISALLOW_IMPLICIT_CONSTRUCTORS(Worker);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(Worker);
   };
 
   class SCOPED_LOCKABLE EnterExit {
@@ -135,7 +132,7 @@ class SignalThread
    private:
     SignalThread* t_;
 
-    DISALLOW_IMPLICIT_CONSTRUCTORS(EnterExit);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(EnterExit);
   };
 
   void Run();
@@ -147,7 +144,7 @@ class SignalThread
   State state_;
   int refcount_;
 
-  DISALLOW_COPY_AND_ASSIGN(SignalThread);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SignalThread);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

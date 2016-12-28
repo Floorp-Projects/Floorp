@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/condition_variable_wrapper.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/condition_variable_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
 namespace {
@@ -68,19 +68,6 @@ TEST_F(LoggingTest, LogStream) {
     std::string msg = "Important message";
     expected_log_ << "(logging_unittest.cc:" << __LINE__ + 1 << "): " << msg;
     LOG(LS_WARNING) << msg;
-    cv_->SleepCS(*crit_.get(), 2000);
-  }
-}
-
-TEST_F(LoggingTest, LogFunctionError) {
-  {
-    CriticalSectionScoped cs(crit_.get());
-    int bar = 42;
-    int baz = 99;
-    level_ = kTraceError;
-    expected_log_ << "(logging_unittest.cc:" << __LINE__ + 2
-                  << "): Foo failed: bar=" << bar << ", baz=" << baz;
-    LOG_FERR2(LS_ERROR, Foo, bar, baz);
     cv_->SleepCS(*crit_.get(), 2000);
   }
 }

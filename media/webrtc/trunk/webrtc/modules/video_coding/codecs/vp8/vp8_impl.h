@@ -22,13 +22,13 @@
 #include "vpx/vp8cx.h"
 #include "vpx/vp8dx.h"
 
-#include "webrtc/common_video/interface/i420_buffer_pool.h"
-#include "webrtc/common_video/interface/i420_video_frame.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
 #include "webrtc/modules/video_coding/codecs/vp8/reference_picture_selection.h"
-#include "webrtc/modules/video_coding/utility/include/frame_dropper.h"
+#include "webrtc/modules/video_coding/utility/frame_dropper.h"
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
+#include "webrtc/video_frame.h"
 
 namespace webrtc {
 
@@ -46,9 +46,9 @@ class VP8EncoderImpl : public VP8Encoder {
                          int number_of_cores,
                          size_t max_payload_size);
 
-  virtual int Encode(const I420VideoFrame& input_image,
+  virtual int Encode(const VideoFrame& input_image,
                      const CodecSpecificInfo* codec_specific_info,
-                     const std::vector<VideoFrameType>* frame_types);
+                     const std::vector<FrameType>* frame_types);
 
   virtual int RegisterEncodeCompleteCallback(EncodedImageCallback* callback);
 
@@ -56,8 +56,13 @@ class VP8EncoderImpl : public VP8Encoder {
 
   virtual int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate);
 
+  void OnDroppedFrame() override {}
+
+  const char* ImplementationName() const override;
+
  private:
-  void SetupTemporalLayers(int num_streams, int num_temporal_layers,
+  void SetupTemporalLayers(int num_streams,
+                           int num_temporal_layers,
                            const VideoCodec& codec);
 
   // Set the cpu_speed setting for encoder based on resolution and/or platform.
@@ -70,7 +75,7 @@ class VP8EncoderImpl : public VP8Encoder {
   int InitAndSetControlSettings();
 
   // Update frame size for codec.
-  int UpdateCodecFrameSize(const I420VideoFrame& input_image);
+  int UpdateCodecFrameSize(const VideoFrame& input_image);
 
   void PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              const vpx_codec_cx_pkt& pkt,
@@ -78,14 +83,8 @@ class VP8EncoderImpl : public VP8Encoder {
                              uint32_t timestamp,
                              bool only_predicting_from_key_frame);
 
-  int GetEncodedPartitions(const I420VideoFrame& input_image,
+  int GetEncodedPartitions(const VideoFrame& input_image,
                            bool only_predicting_from_key_frame);
-
-  // Get the stream bitrate, for the stream |stream_idx|, given the bitrate
-  // |new_bitrate_kbit|.
-  int GetStreamBitrate(int stream_idx,
-                       uint32_t new_bitrate_kbit,
-                       bool* send_stream) const;
 
   // Set the stream state for stream |stream_idx|.
   void SetStreamState(bool send_stream, int stream_idx);
@@ -118,6 +117,7 @@ class VP8EncoderImpl : public VP8Encoder {
   std::vector<vpx_codec_enc_cfg_t> configurations_;
   std::vector<vpx_rational_t> downsampling_factors_;
   QualityScaler quality_scaler_;
+  bool quality_scaler_enabled_;
 };  // end of VP8EncoderImpl class
 
 class VP8DecoderImpl : public VP8Decoder {
@@ -126,21 +126,19 @@ class VP8DecoderImpl : public VP8Decoder {
 
   virtual ~VP8DecoderImpl();
 
-  virtual int InitDecode(const VideoCodec* inst, int number_of_cores);
+  int InitDecode(const VideoCodec* inst, int number_of_cores) override;
 
-  virtual int Decode(const EncodedImage& input_image,
-                     bool missing_frames,
-                     const RTPFragmentationHeader* fragmentation,
-                     const CodecSpecificInfo* codec_specific_info,
-                     int64_t /*render_time_ms*/);
+  int Decode(const EncodedImage& input_image,
+             bool missing_frames,
+             const RTPFragmentationHeader* fragmentation,
+             const CodecSpecificInfo* codec_specific_info,
+             int64_t /*render_time_ms*/) override;
 
-  virtual int RegisterDecodeCompleteCallback(DecodedImageCallback* callback);
+  int RegisterDecodeCompleteCallback(DecodedImageCallback* callback) override;
+  int Release() override;
+  int Reset() override;
 
-  virtual int Release();
-
-  virtual int Reset();
-
-  virtual VideoDecoder* Copy();
+  const char* ImplementationName() const override;
 
  private:
   // Copy reference image from this _decoder to the _decoder in copyTo. Set
@@ -172,4 +170,3 @@ class VP8DecoderImpl : public VP8Decoder {
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_VP8_IMPL_H_
-

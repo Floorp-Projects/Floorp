@@ -40,57 +40,51 @@ namespace webrtc {
 class VoiceEngine;
 
 // VoEDtmf
-class WEBRTC_DLLEXPORT VoEDtmf
-{
-public:
+class WEBRTC_DLLEXPORT VoEDtmf {
+ public:
+  // Factory for the VoEDtmf sub-API. Increases an internal
+  // reference counter if successful. Returns NULL if the API is not
+  // supported or if construction fails.
+  static VoEDtmf* GetInterface(VoiceEngine* voiceEngine);
 
-    // Factory for the VoEDtmf sub-API. Increases an internal
-    // reference counter if successful. Returns NULL if the API is not
-    // supported or if construction fails.
-    static VoEDtmf* GetInterface(VoiceEngine* voiceEngine);
+  // Releases the VoEDtmf sub-API and decreases an internal
+  // reference counter. Returns the new reference count. This value should
+  // be zero for all sub-API:s before the VoiceEngine object can be safely
+  // deleted.
+  virtual int Release() = 0;
 
-    // Releases the VoEDtmf sub-API and decreases an internal
-    // reference counter. Returns the new reference count. This value should
-    // be zero for all sub-API:s before the VoiceEngine object can be safely
-    // deleted.
-    virtual int Release() = 0;
+  // Sends telephone events either in-band or out-of-band.
+  virtual int SendTelephoneEvent(int channel,
+                                 int eventCode,
+                                 bool outOfBand = true,
+                                 int lengthMs = 160,
+                                 int attenuationDb = 10) = 0;
 
-    // Sends telephone events either in-band or out-of-band.
-    virtual int SendTelephoneEvent(int channel, int eventCode,
-                                   bool outOfBand = true, int lengthMs = 160,
-                                   int attenuationDb = 10) = 0;
+  // Sets the dynamic payload |type| that should be used for telephone
+  // events.
+  virtual int SetSendTelephoneEventPayloadType(int channel,
+                                               unsigned char type) = 0;
 
+  // Gets the currently set dynamic payload |type| for telephone events.
+  virtual int GetSendTelephoneEventPayloadType(int channel,
+                                               unsigned char& type) = 0;
 
-    // Sets the dynamic payload |type| that should be used for telephone
-    // events.
-    virtual int SetSendTelephoneEventPayloadType(int channel,
-                                                 unsigned char type) = 0;
+  // Toogles DTMF feedback state: when a DTMF tone is sent, the same tone
+  // is played out on the speaker.
+  virtual int SetDtmfFeedbackStatus(bool enable,
+                                    bool directFeedback = false) = 0;
 
+  // Gets the DTMF feedback status.
+  virtual int GetDtmfFeedbackStatus(bool& enabled, bool& directFeedback) = 0;
 
-    // Gets the currently set dynamic payload |type| for telephone events.
-    virtual int GetSendTelephoneEventPayloadType(int channel,
-                                                 unsigned char& type) = 0;
+  // Plays a DTMF feedback tone (only locally).
+  virtual int PlayDtmfTone(int eventCode,
+                           int lengthMs = 200,
+                           int attenuationDb = 10) = 0;
 
-    // Toogles DTMF feedback state: when a DTMF tone is sent, the same tone
-    // is played out on the speaker.
-    virtual int SetDtmfFeedbackStatus(bool enable,
-                                      bool directFeedback = false) = 0;
-
-    // Gets the DTMF feedback status.
-    virtual int GetDtmfFeedbackStatus(bool& enabled, bool& directFeedback) = 0;
-
-    // Plays a DTMF feedback tone (only locally).
-    virtual int PlayDtmfTone(int eventCode, int lengthMs = 200,
-                             int attenuationDb = 10) = 0;
-
-    // To be removed. Don't use.
-    virtual int StartPlayingDtmfTone(int eventCode,
-        int attenuationDb = 10) { return -1; }
-    virtual int StopPlayingDtmfTone() { return -1; }
-
-protected:
-    VoEDtmf() {}
-    virtual ~VoEDtmf() {}
+ protected:
+  VoEDtmf() {}
+  virtual ~VoEDtmf() {}
 };
 
 }  // namespace webrtc

@@ -11,7 +11,6 @@
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/signalthread.h"
 #include "webrtc/base/thread.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 using namespace rtc;
 
@@ -57,7 +56,7 @@ class SignalThreadTest : public testing::Test, public sigslot::has_slots<> {
 
    private:
     SignalThreadTest* harness_;
-    DISALLOW_EVIL_CONSTRUCTORS(SlowSignalThread);
+    RTC_DISALLOW_COPY_AND_ASSIGN(SlowSignalThread);
   };
 
   void OnWorkComplete(rtc::SignalThread* thread) {
@@ -128,7 +127,7 @@ class OwnerThread : public Thread, public sigslot::has_slots<> {
  private:
   SignalThreadTest* harness_;
   bool has_run_;
-  DISALLOW_EVIL_CONSTRUCTORS(OwnerThread);
+  RTC_DISALLOW_COPY_AND_ASSIGN(OwnerThread);
 };
 
 // Test for when the main thread goes away while the

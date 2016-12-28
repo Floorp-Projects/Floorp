@@ -44,9 +44,8 @@ class DesktopCapturer {
   virtual ~DesktopCapturer() {}
 
   // Called at the beginning of a capturing session. |callback| must remain
-  // valid until capturer is destroyed or until Stop() is called
+  // valid until capturer is destroyed.
   virtual void Start(Callback* callback) = 0;
-  virtual void Stop() = 0;
 
   // Captures next frame. |region| specifies region of the capture target that
   // should be fresh in the resulting frame. The frame may also include fresh

@@ -14,48 +14,48 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_types.h"
-#include "webrtc/modules/rtp_rtcp/interface/receive_statistics.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_audio.h"
 #include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
 
-using namespace webrtc;
+namespace webrtc {
+namespace {
 
 const uint64_t kTestPictureId = 12345678;
+const uint8_t kSliPictureId = 156;
 
 class RtcpCallback : public RtcpIntraFrameObserver {
  public:
   void SetModule(RtpRtcp* module) {
     _rtpRtcpModule = module;
-  };
+  }
   virtual void OnRTCPPacketTimeout(const int32_t id) {
   }
   virtual void OnLipSyncUpdate(const int32_t id,
-                               const int32_t audioVideoOffset) {
-  };
-  virtual void OnReceivedIntraFrameRequest(uint32_t ssrc) {
-  };
+                               const int32_t audioVideoOffset) {}
+  virtual void OnReceivedIntraFrameRequest(uint32_t ssrc) {}
   virtual void OnReceivedSLI(uint32_t ssrc,
                              uint8_t pictureId) {
-    EXPECT_EQ(28, pictureId);
-  };
+    EXPECT_EQ(kSliPictureId & 0x3f, pictureId);
+  }
   virtual void OnReceivedRPSI(uint32_t ssrc,
                               uint64_t pictureId) {
     EXPECT_EQ(kTestPictureId, pictureId);
-  };
-  virtual void OnLocalSsrcChanged(uint32_t old_ssrc, uint32_t new_ssrc) {};
+  }
+  virtual void OnLocalSsrcChanged(uint32_t old_ssrc, uint32_t new_ssrc) {}
+
  private:
   RtpRtcp* _rtpRtcpModule;
 };
 
 class TestRtpFeedback : public NullRtpFeedback {
  public:
-  TestRtpFeedback(RtpRtcp* rtp_rtcp) : rtp_rtcp_(rtp_rtcp) {}
+  explicit TestRtpFeedback(RtpRtcp* rtp_rtcp) : rtp_rtcp_(rtp_rtcp) {}
   virtual ~TestRtpFeedback() {}
 
-  virtual void OnIncomingSSRCChanged(const int32_t id,
-                                     const uint32_t ssrc) {
+  void OnIncomingSSRCChanged(const uint32_t ssrc) override {
     rtp_rtcp_->SetRemoteSSRC(ssrc);
   }
 
@@ -68,7 +68,6 @@ class RtpRtcpRtcpTest : public ::testing::Test {
   RtpRtcpRtcpTest() : fake_clock(123456) {
     test_csrcs.push_back(1234);
     test_csrcs.push_back(2345);
-    test_id = 123;
     test_ssrc = 3456;
     test_timestamp = 4567;
     test_sequence_number = 2345;
@@ -86,7 +85,6 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     receive_statistics2_.reset(ReceiveStatistics::Create(&fake_clock));
 
     RtpRtcp::Configuration configuration;
-    configuration.id = test_id;
     configuration.audio = true;
     configuration.clock = &fake_clock;
     configuration.receive_statistics = receive_statistics1_.get();
@@ -103,11 +101,10 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     rtp_feedback1_.reset(new TestRtpFeedback(module1));
 
     rtp_receiver1_.reset(RtpReceiver::CreateAudioReceiver(
-        test_id, &fake_clock, NULL, receiver, rtp_feedback1_.get(),
+        &fake_clock, NULL, receiver, rtp_feedback1_.get(),
         rtp_payload_registry1_.get()));
 
     configuration.receive_statistics = receive_statistics2_.get();
-    configuration.id = test_id + 1;
     configuration.outgoing_transport = transport2;
     configuration.intra_frame_callback = myRTCPFeedback2;
 
@@ -116,7 +113,7 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     rtp_feedback2_.reset(new TestRtpFeedback(module2));
 
     rtp_receiver2_.reset(RtpReceiver::CreateAudioReceiver(
-        test_id + 1, &fake_clock, NULL, receiver, rtp_feedback2_.get(),
+        &fake_clock, NULL, receiver, rtp_feedback2_.get(),
         rtp_payload_registry2_.get()));
 
     transport1->SetSendModule(module2, rtp_payload_registry2_.get(),
@@ -126,8 +123,8 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     myRTCPFeedback1->SetModule(module1);
     myRTCPFeedback2->SetModule(module2);
 
-    module1->SetRTCPStatus(kRtcpCompound);
-    module2->SetRTCPStatus(kRtcpCompound);
+    module1->SetRTCPStatus(RtcpMode::kCompound);
+    module2->SetRTCPStatus(RtcpMode::kCompound);
 
     module2->SetSSRC(test_ssrc + 1);
     module1->SetSSRC(test_ssrc);
@@ -178,7 +175,6 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     delete receiver;
   }
 
-  int test_id;
   rtc::scoped_ptr<TestRtpFeedback> rtp_feedback1_;
   rtc::scoped_ptr<TestRtpFeedback> rtp_feedback2_;
   rtc::scoped_ptr<ReceiveStatistics> receive_statistics1_;
@@ -204,7 +200,7 @@ class RtpRtcpRtcpTest : public ::testing::Test {
 
 TEST_F(RtpRtcpRtcpTest, RTCP_PLI_RPSI) {
   EXPECT_EQ(0, module1->SendRTCPReferencePictureSelection(kTestPictureId));
-  EXPECT_EQ(0, module1->SendRTCPSliceLossIndication(156));
+  EXPECT_EQ(0, module1->SendRTCPSliceLossIndication(kSliPictureId));
 }
 
 TEST_F(RtpRtcpRtcpTest, RTCP_CNAME) {
@@ -246,103 +242,6 @@ TEST_F(RtpRtcpRtcpTest, RTCP_CNAME) {
   EXPECT_EQ(-1, module2->RemoteCNAME(rtp_receiver2_->SSRC(), cName));
 }
 
-TEST_F(RtpRtcpRtcpTest, RTCP) {
-  RTCPReportBlock reportBlock;
-  reportBlock.remoteSSRC = 1;
-  reportBlock.sourceSSRC = 2;
-  reportBlock.cumulativeLost = 1;
-  reportBlock.delaySinceLastSR = 2;
-  reportBlock.extendedHighSeqNum = 3;
-  reportBlock.fractionLost= 4;
-  reportBlock.jitter = 5;
-  reportBlock.lastSR = 6;
-
-  // Set report blocks.
-  EXPECT_EQ(0, module1->AddRTCPReportBlock(test_csrcs[0], &reportBlock));
-
-  reportBlock.lastSR= 7;
-  EXPECT_EQ(0, module1->AddRTCPReportBlock(test_csrcs[1], &reportBlock));
-
-  uint32_t name = 't' << 24;
-  name += 'e' << 16;
-  name += 's' << 8;
-  name += 't';
-  EXPECT_EQ(0, module1->SetRTCPApplicationSpecificData(
-      3,
-      name,
-      (const uint8_t *)"test test test test test test test test test"\
-          " test test test test test test test test test test test test test"\
-          " test test test test test test test test test test test test test"\
-          " test test test test test test test test test test test test test"\
-          " test test test test test test test test test test test test ",
-          300));
-
-  // send RTCP packet, triggered by timer
-  fake_clock.AdvanceTimeMilliseconds(7500);
-  module1->Process();
-  fake_clock.AdvanceTimeMilliseconds(100);
-  module2->Process();
-
-  uint32_t receivedNTPsecs = 0;
-  uint32_t receivedNTPfrac = 0;
-  uint32_t RTCPArrivalTimeSecs = 0;
-  uint32_t RTCPArrivalTimeFrac = 0;
-  EXPECT_EQ(0, module2->RemoteNTP(&receivedNTPsecs,
-                                  &receivedNTPfrac,
-                                  &RTCPArrivalTimeSecs,
-                                  &RTCPArrivalTimeFrac,
-                                  NULL));
-
-
-  // get all report blocks
-  std::vector<RTCPReportBlock> report_blocks;
-  EXPECT_EQ(0, module1->RemoteRTCPStat(&report_blocks));
-  ASSERT_EQ(1u, report_blocks.size());
-  const RTCPReportBlock& reportBlockReceived = report_blocks[0];
-
-  float secSinceLastReport =
-      static_cast<float>(reportBlockReceived.delaySinceLastSR) / 65536.0f;
-  EXPECT_GE(0.101f, secSinceLastReport);
-  EXPECT_LE(0.100f, secSinceLastReport);
-  EXPECT_EQ(test_sequence_number, reportBlockReceived.extendedHighSeqNum);
-  EXPECT_EQ(0, reportBlockReceived.fractionLost);
-
-  EXPECT_EQ(static_cast<uint32_t>(0),
-            reportBlockReceived.cumulativeLost);
-
-  StreamStatistician *statistician =
-      receive_statistics2_->GetStatistician(reportBlockReceived.sourceSSRC);
-  RtcpStatistics stats;
-  EXPECT_TRUE(statistician->GetStatistics(&stats, true));
-  EXPECT_EQ(0, stats.fraction_lost);
-  EXPECT_EQ((uint32_t)0, stats.cumulative_lost);
-  EXPECT_EQ(test_sequence_number, stats.extended_max_sequence_number);
-  EXPECT_EQ(reportBlockReceived.jitter, stats.jitter);
-
-  int64_t RTT;
-  int64_t avgRTT;
-  int64_t minRTT;
-  int64_t maxRTT;
-
-  // Get RoundTripTime.
-  EXPECT_EQ(0, module1->RTT(test_ssrc + 1, &RTT, &avgRTT, &minRTT, &maxRTT));
-  EXPECT_GE(10, RTT);
-  EXPECT_GE(10, avgRTT);
-  EXPECT_GE(10, minRTT);
-  EXPECT_GE(10, maxRTT);
-
-  // Set report blocks.
-  EXPECT_EQ(0, module1->AddRTCPReportBlock(test_csrcs[0], &reportBlock));
-
-  // Test receive report.
-  EXPECT_EQ(0, module1->SetSendingStatus(false));
-
-  // Send RTCP packet, triggered by timer.
-  fake_clock.AdvanceTimeMilliseconds(5000);
-  module1->Process();
-  module2->Process();
-}
-
 TEST_F(RtpRtcpRtcpTest, RemoteRTCPStatRemote) {
   std::vector<RTCPReportBlock> report_blocks;
 
@@ -367,3 +266,6 @@ TEST_F(RtpRtcpRtcpTest, RemoteRTCPStatRemote) {
   EXPECT_EQ(test_sequence_number, report_blocks[0].extendedHighSeqNum);
   EXPECT_EQ(0u, report_blocks[0].fractionLost);
 }
+
+}  // namespace
+}  // namespace webrtc

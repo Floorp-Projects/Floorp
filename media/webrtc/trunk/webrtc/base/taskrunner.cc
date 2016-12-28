@@ -23,7 +23,7 @@ TaskRunner::TaskRunner()
   : TaskParent(this),
     next_timeout_task_(NULL),
     tasks_running_(false)
-#ifdef _DEBUG
+#if !defined(NDEBUG)
     , abort_count_(0),
     deleting_task_(NULL)
 #endif
@@ -64,7 +64,7 @@ void TaskRunner::InternalRunTasks(bool in_destructor) {
 
   tasks_running_ = true;
 
-  int64 previous_timeout_time = next_task_timeout();
+  int64_t previous_timeout_time = next_task_timeout();
 
   int did_run = true;
   while (did_run) {
@@ -88,11 +88,11 @@ void TaskRunner::InternalRunTasks(bool in_destructor) {
         need_timeout_recalc = true;
       }
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
       deleting_task_ = task;
 #endif
       delete task;
-#ifdef _DEBUG
+#if !defined(NDEBUG)
       deleting_task_ = NULL;
 #endif
       tasks_[i] = NULL;
@@ -135,7 +135,7 @@ void TaskRunner::PollTasks() {
   }
 }
 
-int64 TaskRunner::next_task_timeout() const {
+int64_t TaskRunner::next_task_timeout() const {
   if (next_timeout_task_) {
     return next_timeout_task_->timeout_time();
   }
@@ -150,9 +150,9 @@ int64 TaskRunner::next_task_timeout() const {
 // effectively making the task scheduler O-1 instead of O-N
 
 void TaskRunner::UpdateTaskTimeout(Task* task,
-                                   int64 previous_task_timeout_time) {
+                                   int64_t previous_task_timeout_time) {
   ASSERT(task != NULL);
-  int64 previous_timeout_time = next_task_timeout();
+  int64_t previous_timeout_time = next_task_timeout();
   bool task_is_timeout_task = next_timeout_task_ != NULL &&
       task->unique_id() == next_timeout_task_->unique_id();
   if (task_is_timeout_task) {
@@ -190,7 +190,7 @@ void TaskRunner::RecalcNextTimeout(Task *exclude_task) {
   //   we're not excluding it
   //   it has the closest timeout time
 
-  int64 next_timeout_time = 0;
+  int64_t next_timeout_time = 0;
   next_timeout_task_ = NULL;
 
   for (size_t i = 0; i < tasks_.size(); ++i) {
@@ -210,8 +210,8 @@ void TaskRunner::RecalcNextTimeout(Task *exclude_task) {
   }
 }
 
-void TaskRunner::CheckForTimeoutChange(int64 previous_timeout_time) {
-  int64 next_timeout = next_task_timeout();
+void TaskRunner::CheckForTimeoutChange(int64_t previous_timeout_time) {
+  int64_t next_timeout = next_task_timeout();
   bool timeout_change = (previous_timeout_time == 0 && next_timeout != 0) ||
       next_timeout < previous_timeout_time ||
       (previous_timeout_time <= CurrentTime() &&

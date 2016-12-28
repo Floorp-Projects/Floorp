@@ -209,4 +209,4 @@ TEST(Vp8PartitionAggregator, TestCalcNumberOfFragments) {
                 1600, kMTU, 1, 900, 1000));
 }
 
-}  // namespace
+}  // namespace webrtc

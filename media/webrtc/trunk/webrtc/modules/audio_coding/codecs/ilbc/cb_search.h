@@ -26,10 +26,10 @@ void WebRtcIlbcfix_CbSearch(
     int16_t *gain_index, /* (o) Gain quantization indices */
     int16_t *intarget, /* (i) Target vector for encoding */
     int16_t *decResidual,/* (i) Decoded residual for codebook construction */
-    int16_t lMem,  /* (i) Length of buffer */
-    int16_t lTarget,  /* (i) Length of vector */
+    size_t lMem,  /* (i) Length of buffer */
+    size_t lTarget,  /* (i) Length of vector */
     int16_t *weightDenum,/* (i) weighting filter coefficients in Q12 */
-    int16_t block  /* (i) the subblock number */
+    size_t block  /* (i) the subblock number */
                             );
 
 #endif

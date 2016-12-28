@@ -13,14 +13,17 @@
 #ifdef HAVE_LIBPULSE
 
 #include <algorithm>
-#include "webrtc/sound/sounddevicelocator.h"
-#include "webrtc/sound/soundinputstreaminterface.h"
-#include "webrtc/sound/soundoutputstreaminterface.h"
+#include <string>
+
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/fileutils.h"  // for GetApplicationName()
 #include "webrtc/base/logging.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/base/worker.h"
+#include "webrtc/sound/sounddevicelocator.h"
+#include "webrtc/sound/soundinputstreaminterface.h"
+#include "webrtc/sound/soundoutputstreaminterface.h"
 
 namespace rtc {
 
@@ -206,7 +209,7 @@ class PulseAudioStream {
   pa_stream *stream_;
   int flags_;
 
-  DISALLOW_COPY_AND_ASSIGN(PulseAudioStream);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PulseAudioStream);
 };
 
 // Implementation of an input stream. See soundinputstreaminterface.h regarding
@@ -214,17 +217,6 @@ class PulseAudioStream {
 class PulseAudioInputStream :
     public SoundInputStreamInterface,
     private rtc::Worker {
-
-  struct GetVolumeCallbackData {
-    PulseAudioInputStream *instance;
-    pa_cvolume *channel_volumes;
-  };
-
-  struct GetSourceChannelCountCallbackData {
-    PulseAudioInputStream *instance;
-    uint8_t *channels;
-  };
-
  public:
   PulseAudioInputStream(PulseAudioSoundSystem *pulse,
                         pa_stream *stream,
@@ -384,6 +376,16 @@ class PulseAudioInputStream :
   }
 
  private:
+  struct GetVolumeCallbackData {
+    PulseAudioInputStream* instance;
+    pa_cvolume* channel_volumes;
+  };
+
+  struct GetSourceChannelCountCallbackData {
+    PulseAudioInputStream* instance;
+    uint8_t* channels;
+  };
+
   void Lock() {
     stream_.Lock();
   }
@@ -570,7 +572,7 @@ class PulseAudioInputStream :
   const void *temp_sample_data_;
   size_t temp_sample_data_size_;
 
-  DISALLOW_COPY_AND_ASSIGN(PulseAudioInputStream);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PulseAudioInputStream);
 };
 
 // Implementation of an output stream. See soundoutputstreaminterface.h
@@ -578,12 +580,6 @@ class PulseAudioInputStream :
 class PulseAudioOutputStream :
     public SoundOutputStreamInterface,
     private rtc::Worker {
-
-  struct GetVolumeCallbackData {
-    PulseAudioOutputStream *instance;
-    pa_cvolume *channel_volumes;
-  };
-
  public:
   PulseAudioOutputStream(PulseAudioSoundSystem *pulse,
                          pa_stream *stream,
@@ -731,7 +727,7 @@ class PulseAudioOutputStream :
   }
 
 #if 0
-  // TODO: Versions 0.9.16 and later of Pulse have a new API for
+  // TODO(henrika): Versions 0.9.16 and later of Pulse have a new API for
   // zero-copy writes, but Hardy is not new enough to have that so we can't
   // rely on it. Perhaps auto-detect if it's present or not and use it if we
   // can?
@@ -775,6 +771,11 @@ class PulseAudioOutputStream :
 #endif
 
  private:
+  struct GetVolumeCallbackData {
+    PulseAudioOutputStream* instance;
+    pa_cvolume* channel_volumes;
+  };
+
   void Lock() {
     stream_.Lock();
   }
@@ -954,7 +955,7 @@ class PulseAudioOutputStream :
   // Temporary storage for passing data between threads.
   size_t temp_buffer_space_;
 
-  DISALLOW_COPY_AND_ASSIGN(PulseAudioOutputStream);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PulseAudioOutputStream);
 };
 
 PulseAudioSoundSystem::PulseAudioSoundSystem()
@@ -1163,7 +1164,7 @@ bool PulseAudioSoundSystem::ConnectToPulse(pa_context *context) {
 pa_context *PulseAudioSoundSystem::CreateNewConnection() {
   // Create connection context.
   std::string app_name;
-  // TODO: Pulse etiquette says this name should be localized. Do
+  // TODO(henrika): Pulse etiquette says this name should be localized. Do
   // we care?
   rtc::Filesystem::GetApplicationName(&app_name);
   pa_context *context = symbol_table_.pa_context_new()(
@@ -1373,7 +1374,7 @@ StreamInterface *PulseAudioSoundSystem::OpenDevice(
 
   StreamInterface *stream_interface = NULL;
 
-  ASSERT(params.format < ARRAY_SIZE(kCricketFormatToPulseFormatTable));
+  ASSERT(params.format < arraysize(kCricketFormatToPulseFormatTable));
 
   pa_sample_spec spec;
   spec.format = kCricketFormatToPulseFormatTable[params.format];

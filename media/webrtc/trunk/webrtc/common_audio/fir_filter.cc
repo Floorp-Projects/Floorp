@@ -16,7 +16,7 @@
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/fir_filter_neon.h"
 #include "webrtc/common_audio/fir_filter_sse.h"
-#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 
 namespace webrtc {
 
@@ -57,19 +57,16 @@ FIRFilter* FIRFilter::Create(const float* coefficients,
     filter = new FIRFilterC(coefficients, coefficients_length);
   }
 #endif
-#elif defined(WEBRTC_DETECT_ARM_NEON) || defined(WEBRTC_ARCH_ARM_NEON)
-#if defined(WEBRTC_ARCH_ARM_NEON)
+#elif defined(WEBRTC_HAS_NEON)
   filter =
       new FIRFilterNEON(coefficients, coefficients_length, max_input_length);
-#else
-  // ARM CPU detection required.
+#elif defined(WEBRTC_DETECT_NEON)
   if (WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) {
     filter =
         new FIRFilterNEON(coefficients, coefficients_length, max_input_length);
   } else {
     filter = new FIRFilterC(coefficients, coefficients_length);
   }
-#endif
 #else
   filter = new FIRFilterC(coefficients, coefficients_length);
 #endif

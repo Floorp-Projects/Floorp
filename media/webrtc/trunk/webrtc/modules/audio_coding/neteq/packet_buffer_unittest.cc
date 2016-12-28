@@ -97,7 +97,7 @@ TEST(PacketBuffer, InsertPacket) {
   EXPECT_EQ(PacketBuffer::kOK, buffer.NextTimestamp(&next_ts));
   EXPECT_EQ(4711u, next_ts);
   EXPECT_FALSE(buffer.Empty());
-  EXPECT_EQ(1, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(1u, buffer.NumPacketsInBuffer());
   const RTPHeader* hdr = buffer.NextRtpHeader();
   EXPECT_EQ(&(packet->header), hdr);  // Compare pointer addresses.
 
@@ -116,12 +116,12 @@ TEST(PacketBuffer, FlushBuffer) {
     Packet* packet = gen.NextPacket(payload_len);
     EXPECT_EQ(PacketBuffer::kOK, buffer.InsertPacket(packet));
   }
-  EXPECT_EQ(10, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(10u, buffer.NumPacketsInBuffer());
   EXPECT_FALSE(buffer.Empty());
 
   buffer.Flush();
   // Buffer should delete the payloads itself.
-  EXPECT_EQ(0, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(0u, buffer.NumPacketsInBuffer());
   EXPECT_TRUE(buffer.Empty());
 }
 
@@ -137,7 +137,7 @@ TEST(PacketBuffer, OverfillBuffer) {
     Packet* packet = gen.NextPacket(payload_len);
     EXPECT_EQ(PacketBuffer::kOK, buffer.InsertPacket(packet));
   }
-  EXPECT_EQ(10, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(10u, buffer.NumPacketsInBuffer());
   uint32_t next_ts;
   EXPECT_EQ(PacketBuffer::kOK, buffer.NextTimestamp(&next_ts));
   EXPECT_EQ(0u, next_ts);  // Expect first inserted packet to be first in line.
@@ -145,7 +145,7 @@ TEST(PacketBuffer, OverfillBuffer) {
   // Insert 11th packet; should flush the buffer and insert it after flushing.
   Packet* packet = gen.NextPacket(payload_len);
   EXPECT_EQ(PacketBuffer::kFlushed, buffer.InsertPacket(packet));
-  EXPECT_EQ(1, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(1u, buffer.NumPacketsInBuffer());
   EXPECT_EQ(PacketBuffer::kOK, buffer.NextTimestamp(&next_ts));
   // Expect last inserted packet to be first in line.
   EXPECT_EQ(packet->header.timestamp, next_ts);
@@ -179,7 +179,7 @@ TEST(PacketBuffer, InsertPacketList) {
                                                        &current_pt,
                                                        &current_cng_pt));
   EXPECT_TRUE(list.empty());  // The PacketBuffer should have depleted the list.
-  EXPECT_EQ(10, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(10u, buffer.NumPacketsInBuffer());
   EXPECT_EQ(0, current_pt);  // Current payload type changed to 0.
   EXPECT_EQ(0xFF, current_cng_pt);  // CNG payload type not changed.
 
@@ -220,7 +220,7 @@ TEST(PacketBuffer, InsertPacketListChangePayloadType) {
                                                             &current_pt,
                                                             &current_cng_pt));
   EXPECT_TRUE(list.empty());  // The PacketBuffer should have depleted the list.
-  EXPECT_EQ(1, buffer.NumPacketsInBuffer());  // Only the last packet.
+  EXPECT_EQ(1u, buffer.NumPacketsInBuffer());  // Only the last packet.
   EXPECT_EQ(1, current_pt);  // Current payload type changed to 0.
   EXPECT_EQ(0xFF, current_cng_pt);  // CNG payload type not changed.
 
@@ -256,7 +256,7 @@ TEST(PacketBuffer, ExtractOrderRedundancy) {
     {0x0006, 0x0000001E, 1, false, -1},
   };
 
-  const int kExpectPacketsInBuffer = 9;
+  const size_t kExpectPacketsInBuffer = 9;
 
   std::vector<Packet*> expect_order(kExpectPacketsInBuffer);
 
@@ -277,10 +277,10 @@ TEST(PacketBuffer, ExtractOrderRedundancy) {
 
   EXPECT_EQ(kExpectPacketsInBuffer, buffer.NumPacketsInBuffer());
 
-  int drop_count;
-  for (int i = 0; i < kExpectPacketsInBuffer; ++i) {
+  size_t drop_count;
+  for (size_t i = 0; i < kExpectPacketsInBuffer; ++i) {
     Packet* packet = buffer.GetNextPacket(&drop_count);
-    EXPECT_EQ(0, drop_count);
+    EXPECT_EQ(0u, drop_count);
     EXPECT_EQ(packet, expect_order[i]);  // Compare pointer addresses.
     delete[] packet->payload;
     delete packet;
@@ -302,7 +302,7 @@ TEST(PacketBuffer, DiscardPackets) {
     Packet* packet = gen.NextPacket(payload_len);
     buffer.InsertPacket(packet);
   }
-  EXPECT_EQ(10, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(10u, buffer.NumPacketsInBuffer());
 
   // Discard them one by one and make sure that the right packets are at the
   // front of the buffer.
@@ -350,7 +350,7 @@ TEST(PacketBuffer, Reordering) {
                                                        decoder_database,
                                                        &current_pt,
                                                        &current_cng_pt));
-  EXPECT_EQ(10, buffer.NumPacketsInBuffer());
+  EXPECT_EQ(10u, buffer.NumPacketsInBuffer());
 
   // Extract them and make sure that come out in the right order.
   uint32_t current_ts = start_ts;
@@ -425,7 +425,7 @@ TEST(PacketBuffer, Failures) {
                                      &current_pt,
                                      &current_cng_pt));
   EXPECT_TRUE(list.empty());  // The PacketBuffer should have depleted the list.
-  EXPECT_EQ(1, buffer->NumPacketsInBuffer());
+  EXPECT_EQ(1u, buffer->NumPacketsInBuffer());
   delete buffer;
   EXPECT_CALL(decoder_database, Die());  // Called when object is deleted.
 }
@@ -531,9 +531,14 @@ void TestIsObsoleteTimestamp(uint32_t limit_timestamp) {
   // 1 sample ahead is not old.
   EXPECT_FALSE(PacketBuffer::IsObsoleteTimestamp(
       limit_timestamp + 1, limit_timestamp, kZeroHorizon));
-  // 2^31 samples ahead is not old.
+  // If |t1-t2|=2^31 and t1>t2, t2 is older than t1 but not the opposite.
+  uint32_t other_timestamp = limit_timestamp + (1 << 31);
+  uint32_t lowest_timestamp = std::min(limit_timestamp, other_timestamp);
+  uint32_t highest_timestamp = std::max(limit_timestamp, other_timestamp);
+  EXPECT_TRUE(PacketBuffer::IsObsoleteTimestamp(
+      lowest_timestamp, highest_timestamp, kZeroHorizon));
   EXPECT_FALSE(PacketBuffer::IsObsoleteTimestamp(
-      limit_timestamp + (1 << 31), limit_timestamp, kZeroHorizon));
+      highest_timestamp, lowest_timestamp, kZeroHorizon));
 
   // Fixed horizon at 10 samples.
   static const uint32_t kHorizon = 10;

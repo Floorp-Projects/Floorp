@@ -16,7 +16,7 @@
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 #include "webrtc/modules/desktop_capture/window_capturer.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
@@ -67,7 +67,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(FromScreen)) {
           DesktopCaptureOptions::CreateDefault(),
           webrtc::kFullDesktopScreenId));
   assert(capturer.get());
-  capturer->Start(this, MouseCursorMonitor::SHAPE_AND_POSITION);
+  capturer->Init(this, MouseCursorMonitor::SHAPE_AND_POSITION);
   capturer->Capture();
 
   EXPECT_TRUE(cursor_image_.get());
@@ -106,7 +106,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(FromWindow)) {
             DesktopCaptureOptions::CreateDefault(), windows[i].id));
     assert(capturer.get());
 
-    capturer->Start(this, MouseCursorMonitor::SHAPE_AND_POSITION);
+    capturer->Init(this, MouseCursorMonitor::SHAPE_AND_POSITION);
     capturer->Capture();
 
     EXPECT_TRUE(cursor_image_.get());
@@ -121,7 +121,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(ShapeOnly)) {
           DesktopCaptureOptions::CreateDefault(),
           webrtc::kFullDesktopScreenId));
   assert(capturer.get());
-  capturer->Start(this, MouseCursorMonitor::SHAPE_ONLY);
+  capturer->Init(this, MouseCursorMonitor::SHAPE_ONLY);
   capturer->Capture();
 
   EXPECT_TRUE(cursor_image_.get());

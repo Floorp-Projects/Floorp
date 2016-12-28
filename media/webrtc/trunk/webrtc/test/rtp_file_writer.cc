@@ -28,7 +28,7 @@ static const char kFirstLine[] = "#!rtpplay1.0 0.0.0.0/0\n";
 class RtpDumpWriter : public RtpFileWriter {
  public:
   explicit RtpDumpWriter(FILE* file) : file_(file) {
-    CHECK(file_ != NULL);
+    RTC_CHECK(file_ != NULL);
     Init();
   }
   virtual ~RtpDumpWriter() {
@@ -40,12 +40,11 @@ class RtpDumpWriter : public RtpFileWriter {
 
   bool WritePacket(const RtpPacket* packet) override {
     uint16_t len = static_cast<uint16_t>(packet->length + kPacketHeaderSize);
-    CHECK_GE(packet->original_length, packet->length);
     uint16_t plen = static_cast<uint16_t>(packet->original_length);
     uint32_t offset = packet->time_ms;
-    CHECK(WriteUint16(len));
-    CHECK(WriteUint16(plen));
-    CHECK(WriteUint32(offset));
+    RTC_CHECK(WriteUint16(len));
+    RTC_CHECK(WriteUint16(plen));
+    RTC_CHECK(WriteUint32(offset));
     return fwrite(packet->data, sizeof(uint8_t), packet->length, file_) ==
            packet->length;
   }
@@ -54,11 +53,11 @@ class RtpDumpWriter : public RtpFileWriter {
   bool Init() {
     fprintf(file_, "%s", kFirstLine);
 
-    CHECK(WriteUint32(0));
-    CHECK(WriteUint32(0));
-    CHECK(WriteUint32(0));
-    CHECK(WriteUint16(0));
-    CHECK(WriteUint16(0));
+    RTC_CHECK(WriteUint32(0));
+    RTC_CHECK(WriteUint32(0));
+    RTC_CHECK(WriteUint32(0));
+    RTC_CHECK(WriteUint16(0));
+    RTC_CHECK(WriteUint16(0));
 
     return true;
   }
@@ -87,7 +86,7 @@ class RtpDumpWriter : public RtpFileWriter {
 
   FILE* file_;
 
-  DISALLOW_COPY_AND_ASSIGN(RtpDumpWriter);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RtpDumpWriter);
 };
 
 RtpFileWriter* RtpFileWriter::Create(FileFormat format,

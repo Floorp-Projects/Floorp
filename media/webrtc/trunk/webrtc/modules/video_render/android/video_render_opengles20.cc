@@ -25,7 +25,7 @@
 #undef WEBRTC_TRACE
 #define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTCN*", __VA_ARGS__)
 #else
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #endif
 
 namespace webrtc {
@@ -214,8 +214,7 @@ int32_t VideoRenderOpenGles20::SetCoordinates(int32_t zOrder,
   return 0;
 }
 
-int32_t VideoRenderOpenGles20::Render(const I420VideoFrame& frameToRender) {
-
+int32_t VideoRenderOpenGles20::Render(const VideoFrame& frameToRender) {
   if (frameToRender.IsZeroSize()) {
     return -1;
   }
@@ -335,7 +334,7 @@ static void InitializeTexture(int name, int id, int width, int height) {
                GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 }
 
-void VideoRenderOpenGles20::SetupTextures(const I420VideoFrame& frameToRender) {
+void VideoRenderOpenGles20::SetupTextures(const VideoFrame& frameToRender) {
   WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, _id,
                "%s: width %d, height %d", __FUNCTION__,
                frameToRender.width(), frameToRender.height());
@@ -373,8 +372,7 @@ static void GlTexSubImage2D(GLsizei width, GLsizei height, int stride,
   }
 }
 
-void VideoRenderOpenGles20::UpdateTextures(const
-                                           I420VideoFrame& frameToRender) {
+void VideoRenderOpenGles20::UpdateTextures(const VideoFrame& frameToRender) {
   const GLsizei width = frameToRender.width();
   const GLsizei height = frameToRender.height();
 

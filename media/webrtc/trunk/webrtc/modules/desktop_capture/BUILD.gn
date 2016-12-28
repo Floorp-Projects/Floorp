@@ -10,7 +10,21 @@ import("//build/config/ui.gni")
 import("../../build/webrtc.gni")
 
 use_desktop_capture_differ_sse2 =
-    (!is_ios && (current_cpu == "x86" || current_cpu == "x64"))
+    !is_ios && (current_cpu == "x86" || current_cpu == "x64")
+
+source_set("primitives") {
+  sources = [
+    "desktop_capture_types.h",
+    "desktop_frame.cc",
+    "desktop_frame.h",
+    "desktop_geometry.cc",
+    "desktop_geometry.h",
+    "desktop_region.cc",
+    "desktop_region.h",
+  ]
+
+  public_configs = [ "../..:common_inherited_config" ]
+}
 
 source_set("desktop_capture") {
   sources = [
@@ -21,27 +35,20 @@ source_set("desktop_capture") {
     "cropping_window_capturer_win.cc",
     "desktop_and_cursor_composer.cc",
     "desktop_and_cursor_composer.h",
-    "desktop_capture_types.h",
+    "desktop_capture_options.cc",
+    "desktop_capture_options.h",
     "desktop_capturer.h",
-    "desktop_frame.cc",
-    "desktop_frame.h",
+    "desktop_capturer.h",
     "desktop_frame_win.cc",
     "desktop_frame_win.h",
-    "desktop_geometry.cc",
-    "desktop_geometry.h",
-    "desktop_capture_options.h",
-    "desktop_capture_options.cc",
-    "desktop_capturer.h",
-    "desktop_region.cc",
-    "desktop_region.h",
     "differ.cc",
     "differ.h",
     "differ_block.cc",
     "differ_block.h",
     "mac/desktop_configuration.h",
     "mac/desktop_configuration.mm",
-    "mac/desktop_configuration_monitor.h",
     "mac/desktop_configuration_monitor.cc",
+    "mac/desktop_configuration_monitor.h",
     "mac/full_screen_chrome_window_detector.cc",
     "mac/full_screen_chrome_window_detector.h",
     "mac/scoped_pixel_buffer_object.cc",
@@ -72,12 +79,12 @@ source_set("desktop_capture") {
     "win/scoped_gdi_object.h",
     "win/scoped_thread_desktop.cc",
     "win/scoped_thread_desktop.h",
+    "win/screen_capture_utils.cc",
+    "win/screen_capture_utils.h",
     "win/screen_capturer_win_gdi.cc",
     "win/screen_capturer_win_gdi.h",
     "win/screen_capturer_win_magnifier.cc",
     "win/screen_capturer_win_magnifier.h",
-    "win/screen_capture_utils.cc",
-    "win/screen_capture_utils.h",
     "win/window_capture_utils.cc",
     "win/window_capture_utils.h",
     "window_capturer.cc",
@@ -91,14 +98,14 @@ source_set("desktop_capture") {
       "mouse_cursor_monitor_x11.cc",
       "screen_capturer_x11.cc",
       "window_capturer_x11.cc",
-      "x11/shared_x_display.h",
       "x11/shared_x_display.cc",
+      "x11/shared_x_display.h",
       "x11/x_error_trap.cc",
       "x11/x_error_trap.h",
       "x11/x_server_pixel_buffer.cc",
       "x11/x_server_pixel_buffer.h",
     ]
-    configs += ["//build/config/linux:x11"]
+    configs += [ "//build/config/linux:x11" ]
   }
 
   if (!is_win && !is_mac && !use_x11) {
@@ -118,21 +125,22 @@ source_set("desktop_capture") {
   }
 
   configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config"]
+  public_configs = [ "../..:common_inherited_config" ]
 
-  if (is_clang) {
+  if (is_clang && !is_nacl) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
+    ":primitives",
     "../../base:rtc_base_approved",
     "../../system_wrappers",
   ]
 
   if (use_desktop_capture_differ_sse2) {
-    deps += [":desktop_capture_differ_sse2"]
+    deps += [ ":desktop_capture_differ_sse2" ]
   }
 }
 
@@ -150,7 +158,7 @@ if (use_desktop_capture_differ_sse2) {
     public_configs = [ "../..:common_inherited_config" ]
 
     if (is_posix && !is_mac) {
-      cflags = ["-msse2"]
+      cflags = [ "-msse2" ]
     }
   }
 }

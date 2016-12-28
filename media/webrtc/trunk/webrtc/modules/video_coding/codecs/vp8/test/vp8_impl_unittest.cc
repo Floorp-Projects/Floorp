@@ -11,12 +11,12 @@
 #include <stdio.h>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 
@@ -76,13 +76,17 @@ bool Vp8UnitTestEncodeCompleteCallback::EncodeComplete() {
 
 class Vp8UnitTestDecodeCompleteCallback : public webrtc::DecodedImageCallback {
  public:
-  explicit Vp8UnitTestDecodeCompleteCallback(I420VideoFrame* frame)
+  explicit Vp8UnitTestDecodeCompleteCallback(VideoFrame* frame)
       : decoded_frame_(frame), decode_complete(false) {}
-  int Decoded(webrtc::I420VideoFrame& frame);
+  int32_t Decoded(VideoFrame& frame) override;
+  int32_t Decoded(VideoFrame& frame, int64_t decode_time_ms) override {
+    RTC_NOTREACHED();
+    return -1;
+  }
   bool DecodeComplete();
 
  private:
-  I420VideoFrame* decoded_frame_;
+  VideoFrame* decoded_frame_;
   bool decode_complete;
 };
 
@@ -94,7 +98,7 @@ bool Vp8UnitTestDecodeCompleteCallback::DecodeComplete() {
   return false;
 }
 
-int Vp8UnitTestDecodeCompleteCallback::Decoded(I420VideoFrame& image) {
+int Vp8UnitTestDecodeCompleteCallback::Decoded(VideoFrame& image) {
   decoded_frame_->CopyFrame(image);
   decode_complete = true;
   return 0;
@@ -181,11 +185,11 @@ class TestVp8Impl : public ::testing::Test {
   rtc::scoped_ptr<Vp8UnitTestDecodeCompleteCallback> decode_complete_callback_;
   rtc::scoped_ptr<uint8_t[]> source_buffer_;
   FILE* source_file_;
-  I420VideoFrame input_frame_;
+  VideoFrame input_frame_;
   rtc::scoped_ptr<VideoEncoder> encoder_;
   rtc::scoped_ptr<VideoDecoder> decoder_;
   EncodedImage encoded_frame_;
-  I420VideoFrame decoded_frame_;
+  VideoFrame decoded_frame_;
   size_t length_source_frame_;
   VideoCodec codec_inst_;
 };
@@ -216,12 +220,17 @@ TEST_F(TestVp8Impl, EncoderParameterTest) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->InitDecode(&codec_inst_, 1));
 }
 
-TEST_F(TestVp8Impl, DISABLED_ON_ANDROID(AlignedStrideEncodeDecode)) {
+#if defined(WEBRTC_ANDROID)
+#define MAYBE_AlignedStrideEncodeDecode DISABLED_AlignedStrideEncodeDecode
+#else
+#define MAYBE_AlignedStrideEncodeDecode AlignedStrideEncodeDecode
+#endif
+TEST_F(TestVp8Impl, MAYBE_AlignedStrideEncodeDecode) {
   SetUpEncodeDecode();
   encoder_->Encode(input_frame_, NULL, NULL);
   EXPECT_GT(WaitForEncodedFrame(), 0u);
   // First frame should be a key frame.
-  encoded_frame_._frameType = kKeyFrame;
+  encoded_frame_._frameType = kVideoFrameKey;
   encoded_frame_.ntp_time_ms_ = kTestNtpTimeMs;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             decoder_->Decode(encoded_frame_, false, NULL));
@@ -232,7 +241,12 @@ TEST_F(TestVp8Impl, DISABLED_ON_ANDROID(AlignedStrideEncodeDecode)) {
   EXPECT_EQ(kTestNtpTimeMs, decoded_frame_.ntp_time_ms());
 }
 
-TEST_F(TestVp8Impl, DISABLED_ON_ANDROID(DecodeWithACompleteKeyFrame)) {
+#if defined(WEBRTC_ANDROID)
+#define MAYBE_DecodeWithACompleteKeyFrame DISABLED_DecodeWithACompleteKeyFrame
+#else
+#define MAYBE_DecodeWithACompleteKeyFrame DecodeWithACompleteKeyFrame
+#endif
+TEST_F(TestVp8Impl, MAYBE_DecodeWithACompleteKeyFrame) {
   SetUpEncodeDecode();
   encoder_->Encode(input_frame_, NULL, NULL);
   EXPECT_GT(WaitForEncodedFrame(), 0u);
@@ -241,12 +255,12 @@ TEST_F(TestVp8Impl, DISABLED_ON_ANDROID(DecodeWithACompleteKeyFrame)) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_ERROR,
             decoder_->Decode(encoded_frame_, false, NULL));
   // Setting complete back to true. Forcing a delta frame.
-  encoded_frame_._frameType = kDeltaFrame;
+  encoded_frame_._frameType = kVideoFrameDelta;
   encoded_frame_._completeFrame = true;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_ERROR,
             decoder_->Decode(encoded_frame_, false, NULL));
   // Now setting a key frame.
-  encoded_frame_._frameType = kKeyFrame;
+  encoded_frame_._frameType = kVideoFrameKey;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             decoder_->Decode(encoded_frame_, false, NULL));
   EXPECT_GT(I420PSNR(&input_frame_, &decoded_frame_), 36);

@@ -12,7 +12,7 @@
 
 #include <assert.h>
 
-#include "webrtc/modules/audio_processing/aecm/include/echo_control_mobile.h"
+#include "webrtc/modules/audio_processing/aecm/echo_control_mobile.h"
 #include "webrtc/modules/audio_processing/utility/delay_estimator_wrapper.h"
 
 static const ALIGN8_BEG int16_t WebRtcAecm_kSqrtHanning[] ALIGN8_END = {

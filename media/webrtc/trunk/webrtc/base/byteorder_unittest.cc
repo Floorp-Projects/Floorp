@@ -17,7 +17,7 @@ namespace rtc {
 
 // Test memory set functions put values into memory in expected order.
 TEST(ByteOrderTest, TestSet) {
-  uint8 buf[8] = { 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u };
+  uint8_t buf[8] = {0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u};
   Set8(buf, 0, 0xfb);
   Set8(buf, 1, 0x12);
   EXPECT_EQ(0xfb, buf[0]);
@@ -60,7 +60,7 @@ TEST(ByteOrderTest, TestSet) {
 
 // Test memory get functions get values from memory in expected order.
 TEST(ByteOrderTest, TestGet) {
-  uint8 buf[8];
+  uint8_t buf[8];
   buf[0] = 0x01u;
   buf[1] = 0x23u;
   buf[2] = 0x45u;

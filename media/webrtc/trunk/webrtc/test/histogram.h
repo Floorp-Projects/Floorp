@@ -20,6 +20,12 @@ namespace test {
 // found).
 int LastHistogramSample(const std::string& name);
 
+// Returns the number of added samples to a histogram.
+int NumHistogramSamples(const std::string& name);
+
+// Removes all histogram samples.
+void ClearHistograms();
+
 }  // namespace test
 }  // namespace webrtc
 

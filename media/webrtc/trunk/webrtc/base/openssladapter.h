@@ -67,9 +67,9 @@ private:
   static bool VerifyServerName(SSL* ssl, const char* host,
                                bool ignore_bad_cert);
   bool SSLPostConnectionCheck(SSL* ssl, const char* host);
-#if _DEBUG
+#if !defined(NDEBUG)
   static void SSLInfoCallback(const SSL* s, int where, int ret);
-#endif  // !_DEBUG
+#endif
   static int SSLVerifyCallback(int ok, X509_STORE_CTX* store);
   static VerificationCallback custom_verify_callback_;
   friend class OpenSSLStreamAdapter;  // for custom_verify_callback_;

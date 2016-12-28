@@ -74,7 +74,7 @@ class AsyncTCPSocketBase : public AsyncPacketSocket {
   char* inbuf_, * outbuf_;
   size_t insize_, inpos_, outsize_, outpos_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(AsyncTCPSocketBase);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AsyncTCPSocketBase);
 };
 
 class AsyncTCPSocket : public AsyncTCPSocketBase {
@@ -95,7 +95,7 @@ class AsyncTCPSocket : public AsyncTCPSocketBase {
   void HandleIncomingConnection(AsyncSocket* socket) override;
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(AsyncTCPSocket);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AsyncTCPSocket);
 };
 
 }  // namespace rtc

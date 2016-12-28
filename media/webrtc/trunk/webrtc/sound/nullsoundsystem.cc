@@ -16,9 +16,7 @@
 #include "webrtc/base/logging.h"
 
 namespace rtc {
-
 class Thread;
-
 }
 
 namespace rtc {
@@ -30,69 +28,68 @@ class NullSoundDeviceLocator : public SoundDeviceLocator {
  public:
   NullSoundDeviceLocator() : SoundDeviceLocator(kNullName, kNullName) {}
 
-  virtual SoundDeviceLocator *Copy() const {
+  SoundDeviceLocator *Copy() const override {
     return new NullSoundDeviceLocator();
   }
 };
 
 class NullSoundInputStream : public SoundInputStreamInterface {
  public:
-  virtual bool StartReading() {
+  bool StartReading() override {
     return true;
   }
 
-  virtual bool StopReading() {
+  bool StopReading() override {
     return true;
   }
 
-  virtual bool GetVolume(int *volume) {
+  bool GetVolume(int *volume) override {
     *volume = SoundSystemInterface::kMinVolume;
     return true;
   }
 
-  virtual bool SetVolume(int volume) {
+  bool SetVolume(int volume) override {
     return false;
   }
 
-  virtual bool Close() {
+  bool Close() override {
     return true;
   }
 
-  virtual int LatencyUsecs() {
+  int LatencyUsecs() override {
     return 0;
   }
 };
 
 class NullSoundOutputStream : public SoundOutputStreamInterface {
  public:
-  virtual bool EnableBufferMonitoring() {
+  bool EnableBufferMonitoring() override {
     return true;
   }
 
-  virtual bool DisableBufferMonitoring() {
+  bool DisableBufferMonitoring() override {
     return true;
   }
 
-  virtual bool WriteSamples(const void *sample_data,
-                            size_t size) {
+  bool WriteSamples(const void *sample_data, size_t size) override {
     LOG(LS_VERBOSE) << "Got " << size << " bytes of playback samples";
     return true;
   }
 
-  virtual bool GetVolume(int *volume) {
+  bool GetVolume(int *volume) override {
     *volume = SoundSystemInterface::kMinVolume;
     return true;
   }
 
-  virtual bool SetVolume(int volume) {
+  bool SetVolume(int volume) override {
     return false;
   }
 
-  virtual bool Close() {
+  bool Close() override {
     return true;
   }
 
-  virtual int LatencyUsecs() {
+  int LatencyUsecs() override {
     return 0;
   }
 };

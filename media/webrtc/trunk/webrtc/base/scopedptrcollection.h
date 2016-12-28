@@ -52,7 +52,7 @@ class ScopedPtrCollection {
  private:
   VectorT collection_;
 
-  DISALLOW_COPY_AND_ASSIGN(ScopedPtrCollection);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ScopedPtrCollection);
 };
 
 }  // namespace rtc

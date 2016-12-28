@@ -15,8 +15,8 @@
 
 #include <string>
 #include <vector>
-#include <algorithm>
 
+#include "webrtc/common.h"
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
 
@@ -35,25 +35,36 @@ struct NackConfig {
 // Settings for forward error correction, see RFC 5109 for details. Set the
 // payload types to '-1' to disable.
 struct FecConfig {
-  FecConfig() : ulpfec_payload_type(-1), red_payload_type(-1) {}
+  FecConfig()
+      : ulpfec_payload_type(-1),
+        red_payload_type(-1),
+        red_rtx_payload_type(-1) {}
   std::string ToString() const;
   // Payload type used for ULPFEC packets.
   int ulpfec_payload_type;
 
   // Payload type used for RED packets.
   int red_payload_type;
+
+  // RTX payload type for RED payload.
+  int red_rtx_payload_type;
 };
 
-// RTP header extension to use for the video stream, see RFC 5285.
+// RTP header extension, see RFC 5285.
 struct RtpExtension {
   RtpExtension(const std::string& name, int id) : name(name), id(id) {}
   std::string ToString() const;
-  static bool IsSupported(const std::string& name);
+  bool operator==(const RtpExtension& rhs) const {
+    return name == rhs.name && id == rhs.id;
+  }
+  static bool IsSupportedForAudio(const std::string& name);
+  static bool IsSupportedForVideo(const std::string& name);
 
   static const char* kTOffset;
   static const char* kAbsSendTime;
   static const char* kVideoRotation;
-  static const char* kRtpStreamId;
+  static const char* kAudioLevel;
+  static const char* kTransportSequenceNumber;
   std::string name;
   int id;
 };
@@ -73,18 +84,6 @@ struct VideoStream {
 
   int max_qp;
 
-  char rid[kRIDSize+1];
-
-  const std::string Rid() const {
-    return std::string(rid);
-  }
-
-  void SetRid(const std::string& aRid) {
-    static_assert(sizeof(rid) > kRIDSize,
-      "mRid must be large enought to hold a RID + null termination");
-    strncpy(&rid[0], aRid.c_str(), std::min((size_t)kRIDSize, aRid.length()));
-    rid[kRIDSize] = 0;
-  }
   // Bitrate thresholds for enabling additional temporal layers. Since these are
   // thresholds in between layers, we have one additional layer. One threshold
   // gives two temporal layers, one below the threshold and one above, two give
@@ -99,9 +98,9 @@ struct VideoStream {
 };
 
 struct VideoEncoderConfig {
-  enum ContentType {
+  enum class ContentType {
     kRealtimeVideo,
-    kScreenshare,
+    kScreen,
   };
 
   VideoEncoderConfig();
@@ -109,6 +108,7 @@ struct VideoEncoderConfig {
   std::string ToString() const;
 
   std::vector<VideoStream> streams;
+  std::vector<SpatialLayer> spatial_layers;
   ContentType content_type;
   void* encoder_specific_settings;
 
@@ -117,6 +117,35 @@ struct VideoEncoderConfig {
   // maintaining a higher bitrate estimate. Padding will however not be sent
   // unless the estimated bandwidth indicates that the link can handle it.
   int min_transmit_bitrate_bps;
+};
+
+// Controls the capacity of the packet buffer in NetEq. The capacity is the
+// maximum number of packets that the buffer can contain. If the limit is
+// exceeded, the buffer will be flushed. The capacity does not affect the actual
+// audio delay in the general case, since this is governed by the target buffer
+// level (calculated from the jitter profile). It is only in the rare case of
+// severe network freezes that a higher capacity will lead to a (transient)
+// increase in audio delay.
+struct NetEqCapacityConfig {
+  NetEqCapacityConfig() : enabled(false), capacity(0) {}
+  explicit NetEqCapacityConfig(int value) : enabled(true), capacity(value) {}
+  static const ConfigOptionID identifier = ConfigOptionID::kNetEqCapacityConfig;
+  bool enabled;
+  int capacity;
+};
+
+struct NetEqFastAccelerate {
+  NetEqFastAccelerate() : enabled(false) {}
+  explicit NetEqFastAccelerate(bool value) : enabled(value) {}
+  static const ConfigOptionID identifier = ConfigOptionID::kNetEqFastAccelerate;
+  bool enabled;
+};
+
+struct VoicePacing {
+  VoicePacing() : enabled(false) {}
+  explicit VoicePacing(bool value) : enabled(value) {}
+  static const ConfigOptionID identifier = ConfigOptionID::kVoicePacing;
+  bool enabled;
 };
 
 }  // namespace webrtc

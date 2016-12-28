@@ -40,7 +40,7 @@ class MacCocoaSocketServer : public MacBaseSocketServer {
   // The count of how many times we're inside the NSApplication main loop.
   int run_count_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(MacCocoaSocketServer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(MacCocoaSocketServer);
 };
 
 }  // namespace rtc

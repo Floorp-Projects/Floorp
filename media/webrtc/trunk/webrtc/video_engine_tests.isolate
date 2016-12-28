@@ -11,6 +11,7 @@
       'variables': {
         'files': [
           '<(DEPTH)/resources/foreman_cif_short.yuv',
+          '<(DEPTH)/resources/voice_engine/audio_long16.pcm',
         ],
       },
     }],

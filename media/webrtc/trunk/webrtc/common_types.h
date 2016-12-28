@@ -156,25 +156,12 @@ enum ProcessingTypes
     kRecordingPreprocessing
 };
 
-enum FrameType
-{
-    kFrameEmpty            = 0,
-    kAudioFrameSpeech      = 1,
-    kAudioFrameCN          = 2,
-    kVideoFrameKey         = 3,    // independent frame
-    kVideoFrameDelta       = 4,    // depends on the previus frame
-};
-
-// External transport callback interface
-class Transport
-{
-public:
-    virtual int SendPacket(int channel, const void *data, size_t len) = 0;
-    virtual int SendRTCPPacket(int channel, const void *data, size_t len) = 0;
-
-protected:
-    virtual ~Transport() {}
-    Transport() {}
+enum FrameType {
+  kEmptyFrame = 0,
+  kAudioFrameSpeech = 1,
+  kAudioFrameCN = 2,
+  kVideoFrameKey = 3,
+  kVideoFrameDelta = 4,
 };
 
 // Statistics for an RTCP channel
@@ -304,7 +291,7 @@ struct CodecInst {
   char plname[RTP_PAYLOAD_NAME_SIZE];
   int plfreq;
   int pacsize;
-  int channels;
+  size_t channels;
   int rate;  // bits/sec unlike {start,min,max}Bitrate elsewhere in this file!
 
   bool operator==(const CodecInst& other) const {
@@ -323,12 +310,6 @@ struct CodecInst {
 
 // RTP
 enum {kRtpCsrcSize = 15}; // RFC 3550 page 13
-
-enum RTPDirections
-{
-    kRtpIncoming = 0,
-    kRtpOutgoing
-};
 
 enum PayloadFrequencies
 {
@@ -381,7 +362,7 @@ struct NetworkStatistics           // NETEQ statistics
     // max packet waiting time in the jitter buffer (ms)
     int maxWaitingTimeMs;
     // added samples in off mode due to packet loss
-    int addedSamples;
+    size_t addedSamples;
 };
 
 // Statistics for calls to AudioCodingModule::PlayoutData10Ms().
@@ -435,7 +416,7 @@ enum NsModes    // type of Noise Suppression
     kNsLowSuppression,  // lowest suppression
     kNsModerateSuppression,
     kNsHighSuppression,
-    kNsVeryHighSuppression     // highest suppression
+    kNsVeryHighSuppression,     // highest suppression
 };
 
 enum AgcModes                  // type of Automatic Gain Control
@@ -460,7 +441,7 @@ enum EcModes                   // type of Echo Control
     kEcDefault,                // platform default
     kEcConference,             // conferencing default (aggressive AEC)
     kEcAec,                    // Acoustic Echo Cancellation
-    kEcAecm                    // AEC mobile
+    kEcAecm,                   // AEC mobile
 };
 
 // AECM modes
@@ -496,8 +477,7 @@ enum AudioLayers
     kAudioWindowsWave = 1,
     kAudioWindowsCore = 2,
     kAudioLinuxAlsa = 3,
-    kAudioLinuxPulse = 4,
-    kAudioSndio = 5
+    kAudioLinuxPulse = 4
 };
 
 // TODO(henrika): to be removed.
@@ -514,7 +494,7 @@ enum NetEqModes             // NetEQ playout configurations
     kNetEqFax = 2,
     // Minimal buffer management. Inserts zeros for lost packets and during
     // buffer increases.
-    kNetEqOff = 3
+    kNetEqOff = 3,
 };
 
 // TODO(henrika): to be removed.
@@ -530,7 +510,7 @@ enum AmrMode
 {
     kRfc3267BwEfficient = 0,
     kRfc3267OctetAligned = 1,
-    kRfc3267FileStorage = 2
+    kRfc3267FileStorage = 2,
 };
 
 // ==================================================================
@@ -557,22 +537,12 @@ enum RawVideoType
     kVideoUnknown  = 99
 };
 
-enum VideoReceiveState
-{
-  kReceiveStateInitial,            // No video decoded yet
-  kReceiveStateNormal,
-  kReceiveStatePreemptiveNACK,     // NACK sent for missing packet, no decode stall/fail yet
-  kReceiveStateWaitingKey,         // Decoding stalled, waiting for keyframe or NACK
-  kReceiveStateDecodingWithErrors, // Decoding with errors, waiting for keyframe or NACK
-  kReceiveStateNoIncoming,         // No errors, but no incoming video since last decode
-};
-
 // Video codec
 enum { kConfigParameterSize = 128};
 enum { kPayloadNameSize = 32};
 enum { kMaxSimulcastStreams = 4};
+enum { kMaxSpatialLayers = 5 };
 enum { kMaxTemporalStreams = 4};
-enum { kRIDSize = 32};
 
 enum VideoCodecComplexity
 {
@@ -630,7 +600,7 @@ struct VideoCodecVP8 {
   }
 };
 
-// VP9 specific
+// VP9 specific.
 struct VideoCodecVP9 {
   VideoCodecComplexity complexity;
   int                  resilience;
@@ -647,10 +617,6 @@ struct VideoCodecVP9 {
 // H264 specific.
 struct VideoCodecH264 {
   VideoCodecProfile profile;
-  uint8_t        profile_byte;
-  uint8_t        constraints;
-  uint8_t        level;
-  uint8_t        packetizationMode; // 0 or 1
   bool           frameDroppingOn;
   int            keyFrameInterval;
   // These are NULL/0 if not externally negotiated.
@@ -689,9 +655,6 @@ struct SimulcastStream {
   unsigned int        targetBitrate;  // kilobits/sec.
   unsigned int        minBitrate;  // kilobits/sec.
   unsigned int        qpMax; // minimum quality
-  char                rid[kRIDSize];
-  unsigned int        jsMaxBitrate; // user-controlled max bitrate
-  double              jsScaleDownBy; // user-controlled downscale
 
   bool operator==(const SimulcastStream& other) const {
     return width == other.width &&
@@ -700,15 +663,19 @@ struct SimulcastStream {
            maxBitrate == other.maxBitrate &&
            targetBitrate == other.targetBitrate &&
            minBitrate == other.minBitrate &&
-           qpMax == other.qpMax &&
-           strcmp(rid, other.rid) == 0 &&
-           jsMaxBitrate == other.jsMaxBitrate &&
-           jsScaleDownBy == other.jsScaleDownBy;
+           qpMax == other.qpMax;
   }
 
   bool operator!=(const SimulcastStream& other) const {
     return !(*this == other);
   }
+};
+
+struct SpatialLayer {
+  int scaling_factor_num;
+  int scaling_factor_den;
+  int target_bitrate_bps;
+  // TODO(ivica): Add max_quantizer and min_quantizer?
 };
 
 enum VideoCodecMode {
@@ -724,8 +691,6 @@ struct VideoCodec {
 
   unsigned short      width;
   unsigned short      height;
-  // width & height modulo resolution_divisor must be 0
-  unsigned char       resolution_divisor;
 
   unsigned int        startBitrate;  // kilobits/sec.
   unsigned int        maxBitrate;  // kilobits/sec.
@@ -738,8 +703,8 @@ struct VideoCodec {
 
   unsigned int        qpMax;
   unsigned char       numberOfSimulcastStreams;
-  unsigned char       ridId;
   SimulcastStream     simulcastStream[kMaxSimulcastStreams];
+  SpatialLayer spatialLayers[kMaxSpatialLayers];
 
   VideoCodecMode      mode;
 
@@ -786,12 +751,11 @@ struct OverUseDetectorOptions {
         initial_e(),
         initial_process_noise(),
         initial_avg_noise(0.0),
-        initial_var_noise(50),
-        initial_threshold(25.0) {
+        initial_var_noise(50) {
     initial_e[0][0] = 100;
     initial_e[1][1] = 1e-1;
     initial_e[0][1] = initial_e[1][0] = 0;
-    initial_process_noise[0] = 1e-10;
+    initial_process_noise[0] = 1e-13;
     initial_process_noise[1] = 1e-2;
   }
   double initial_slope;
@@ -800,27 +764,6 @@ struct OverUseDetectorOptions {
   double initial_process_noise[2];
   double initial_avg_noise;
   double initial_var_noise;
-  double initial_threshold;
-};
-
-enum CPULoadState {
-  kLoadRelaxed = 0,
-  kLoadNormal,
-  kLoadStressed,
-  kLoadLast,
-};
-
-class CPULoadStateObserver {
-public:
-  virtual void onLoadStateChanged(CPULoadState aNewState) = 0;
-  virtual ~CPULoadStateObserver() {};
-};
-
-class CPULoadStateCallbackInvoker {
-public:
-    virtual void AddObserver(CPULoadStateObserver* aObserver) = 0;
-    virtual void RemoveObserver(CPULoadStateObserver* aObserver) = 0;
-    virtual ~CPULoadStateCallbackInvoker() {};
 };
 
 // This structure will have the information about when packet is actually
@@ -852,6 +795,7 @@ struct RTPHeaderExtension {
   // Audio Level includes both level in dBov and voiced/unvoiced bit. See:
   // https://datatracker.ietf.org/doc/draft-lennox-avt-rtp-audio-level-exthdr/
   bool hasAudioLevel;
+  bool voiceActivity;
   uint8_t audioLevel;
 
   // For Coordination of Video Orientation. See
@@ -859,10 +803,6 @@ struct RTPHeaderExtension {
   // ts_126114v120700p.pdf
   bool hasVideoRotation;
   uint8_t videoRotation;
-
-  // RID values for simulcast; see draft-roach-avtext-rid
-  bool hasRID;
-  char *rid; // UTF8 string
 };
 
 struct RTPHeader {
@@ -955,6 +895,11 @@ class StreamDataCountersCallback {
   virtual void DataCountersUpdated(const StreamDataCounters& counters,
                                    uint32_t ssrc) = 0;
 };
+
+// RTCP mode to use. Compound mode is described by RFC 4585 and reduced-size
+// RTCP mode is described by RFC 5506.
+enum class RtcpMode { kOff, kCompound, kReducedSize };
+
 }  // namespace webrtc
 
 #endif  // WEBRTC_COMMON_TYPES_H_

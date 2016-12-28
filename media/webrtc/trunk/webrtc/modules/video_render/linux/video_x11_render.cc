@@ -11,8 +11,8 @@
 #include "webrtc/modules/video_render/linux/video_x11_channel.h"
 #include "webrtc/modules/video_render/linux/video_x11_render.h"
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
 

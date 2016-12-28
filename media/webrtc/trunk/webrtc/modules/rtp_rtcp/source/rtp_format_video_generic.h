@@ -59,7 +59,7 @@ class RtpPacketizerGeneric : public RtpPacketizer {
   size_t payload_length_;
   uint8_t generic_header_;
 
-  DISALLOW_COPY_AND_ASSIGN(RtpPacketizerGeneric);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RtpPacketizerGeneric);
 };
 
 // Depacketizer for generic codec.

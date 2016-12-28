@@ -11,10 +11,11 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
 
-#include <stddef.h> // size_t, ptrdiff_t
+#include <map>
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "webrtc/modules/rtp_rtcp/interface/receive_statistics.h"
+#include "webrtc/base/deprecation.h"
+#include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "webrtc/typedefs.h"
@@ -29,71 +30,48 @@ RtpAudioFeedback* NullObjectRtpAudioFeedback();
 ReceiveStatistics* NullObjectReceiveStatistics();
 
 namespace RtpUtility {
-    // January 1970, in NTP seconds.
-    const uint32_t NTP_JAN_1970 = 2208988800UL;
 
-    // Magic NTP fractional unit.
-    const double NTP_FRAC = 4.294967296E+9;
+struct Payload {
+  char name[RTP_PAYLOAD_NAME_SIZE];
+  bool audio;
+  PayloadUnion typeSpecific;
+};
 
-    struct Payload
-    {
-        char name[RTP_PAYLOAD_NAME_SIZE];
-        bool audio;
-        PayloadUnion typeSpecific;
-    };
+typedef std::map<int8_t, Payload*> PayloadTypeMap;
 
-    typedef std::map<int8_t, Payload*> PayloadTypeMap;
+bool StringCompare(const char* str1, const char* str2, const uint32_t length);
 
-    // Return the current RTP timestamp from the NTP timestamp
-    // returned by the specified clock.
-    uint32_t GetCurrentRTP(Clock* clock, uint32_t freq);
+// Round up to the nearest size that is a multiple of 4.
+size_t Word32Align(size_t size);
 
-    // Return the current RTP absolute timestamp.
-    uint32_t ConvertNTPTimeToRTP(uint32_t NTPsec,
-                                 uint32_t NTPfrac,
-                                 uint32_t freq);
+class RtpHeaderParser {
+ public:
+  RtpHeaderParser(const uint8_t* rtpData, size_t rtpDataLength);
+  ~RtpHeaderParser();
 
-    uint32_t pow2(uint8_t exp);
+  bool RTCP() const;
+  bool ParseRtcp(RTPHeader* header) const;
+  bool Parse(RTPHeader* parsedPacket,
+             RtpHeaderExtensionMap* ptrExtensionMap = nullptr) const;
+  RTC_DEPRECATED bool Parse(
+      RTPHeader& parsedPacket,  // NOLINT(runtime/references)
+      RtpHeaderExtensionMap* ptrExtensionMap = nullptr) const {
+    return Parse(&parsedPacket, ptrExtensionMap);
+  }
 
-    // Returns true if |newTimestamp| is older than |existingTimestamp|.
-    // |wrapped| will be set to true if there has been a wraparound between the
-    // two timestamps.
-    bool OldTimestamp(uint32_t newTimestamp,
-                      uint32_t existingTimestamp,
-                      bool* wrapped);
+ private:
+  void ParseOneByteExtensionHeader(RTPHeader* parsedPacket,
+                                   const RtpHeaderExtensionMap* ptrExtensionMap,
+                                   const uint8_t* ptrRTPDataExtensionEnd,
+                                   const uint8_t* ptr) const;
 
-    bool StringCompare(const char* str1,
-                       const char* str2,
-                       const uint32_t length);
+  uint8_t ParsePaddingBytes(const uint8_t* ptrRTPDataExtensionEnd,
+                            const uint8_t* ptr) const;
 
-    // Round up to the nearest size that is a multiple of 4.
-    size_t Word32Align(size_t size);
-
-    class RtpHeaderParser {
-    public:
-     RtpHeaderParser(const uint8_t* rtpData, size_t rtpDataLength);
-     ~RtpHeaderParser();
-
-        bool RTCP() const;
-        bool ParseRtcp(RTPHeader* header) const;
-        bool Parse(RTPHeader& parsedPacket,
-                   RtpHeaderExtensionMap* ptrExtensionMap = NULL) const;
-
-    private:
-        void ParseOneByteExtensionHeader(
-            RTPHeader& parsedPacket,
-            const RtpHeaderExtensionMap* ptrExtensionMap,
-            const uint8_t* ptrRTPDataExtensionEnd,
-            const uint8_t* ptr) const;
-
-        uint8_t ParsePaddingBytes(
-            const uint8_t* ptrRTPDataExtensionEnd,
-            const uint8_t* ptr) const;
-
-        const uint8_t* const _ptrRTPDataBegin;
-        const uint8_t* const _ptrRTPDataEnd;
-    };
+  const uint8_t* const _ptrRTPDataBegin;
+  const uint8_t* const _ptrRTPDataEnd;
+};
 }  // namespace RtpUtility
 }  // namespace webrtc
 
-#endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_

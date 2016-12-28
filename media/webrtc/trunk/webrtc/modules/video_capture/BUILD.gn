@@ -16,11 +16,11 @@ source_set("video_capture_module") {
   sources = [
     "device_info_impl.cc",
     "device_info_impl.h",
-    "include/video_capture.h",
-    "include/video_capture_defines.h",
-    "include/video_capture_factory.h",
+    "video_capture.h",
     "video_capture_config.h",
+    "video_capture_defines.h",
     "video_capture_delay.h",
+    "video_capture_factory.h",
     "video_capture_factory.cc",
     "video_capture_impl.cc",
     "video_capture_impl.h",
@@ -92,20 +92,21 @@ if (!build_with_chromium) {
     }
     if (is_mac) {
       sources = [
-        "mac/avfoundation/video_capture_avfoundation.h",
-        "mac/avfoundation/video_capture_avfoundation.mm",
-        "mac/avfoundation/video_capture_avfoundation_info.h",
-        "mac/avfoundation/video_capture_avfoundation_info.mm",
-        "mac/avfoundation/video_capture_avfoundation_info_objc.h",
-        "mac/avfoundation/video_capture_avfoundation_info_objc.mm",
-        "mac/avfoundation/video_capture_avfoundation_objc.h",
-        "mac/avfoundation/video_capture_avfoundation_objc.mm",
-        "mac/avfoundation/video_capture_avfoundation_utility.h",
+        "mac/qtkit/video_capture_qtkit.h",
+        "mac/qtkit/video_capture_qtkit.mm",
+        "mac/qtkit/video_capture_qtkit_info.h",
+        "mac/qtkit/video_capture_qtkit_info.mm",
+        "mac/qtkit/video_capture_qtkit_info_objc.h",
+        "mac/qtkit/video_capture_qtkit_info_objc.mm",
+        "mac/qtkit/video_capture_qtkit_objc.h",
+        "mac/qtkit/video_capture_qtkit_objc.mm",
+        "mac/qtkit/video_capture_qtkit_utility.h",
         "mac/video_capture_mac.mm",
       ]
 
       libs = [
         "CoreVideo.framework",
+        "QTKit.framework",
       ]
     }
     if (is_win) {
@@ -127,20 +128,7 @@ if (!build_with_chromium) {
 
       libs = [ "Strmiids.lib" ]
 
-      deps += [ "//third_party/winsdk_samples"]
-    }
-    if (is_android) {
-      sources = [
-        "android/device_info_android.cc",
-        "android/device_info_android.h",
-        "android/video_capture_android.cc",
-        "android/video_capture_android.h",
-      ]
-
-      deps += [
-        "//third_party/icu:icuuc",
-        "//third_party/jsoncpp",
-      ]
+      deps += [ "//third_party/winsdk_samples" ]
     }
     if (is_ios) {
       sources = [
@@ -156,6 +144,7 @@ if (!build_with_chromium) {
 
       cflags = [
         "-fobjc-arc",  # CLANG_ENABLE_OBJC_ARC = YES.
+
         # To avoid warnings for deprecated videoMinFrameDuration and
         # videoMaxFrameDuration properties in iOS 7.0.
         # See webrtc:3705 for more details.

@@ -13,7 +13,7 @@
 #endif
 
 #include "webrtc/modules/video_render/ios/video_render_ios_view.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 using namespace webrtc;
 
@@ -142,7 +142,7 @@ using namespace webrtc;
   return YES;
 }
 
-- (BOOL)renderFrame:(I420VideoFrame*)frameToRender {
+- (BOOL)renderFrame:(VideoFrame*)frameToRender {
   if (![EAGLContext setCurrentContext:_context]) {
     return NO;
   }

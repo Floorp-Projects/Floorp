@@ -8,6 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <stdio.h>
+#include <string>
+
+#include "webrtc/call/rtc_event_log.h"
+#include "webrtc/test/test_suite.h"
+#include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
@@ -44,7 +50,7 @@ static bool IsNotViableSendCodec(const char* codec_name) {
 
 TEST_F(CodecTest, PcmuIsDefaultCodecAndHasTheRightValues) {
   EXPECT_EQ(0, voe_codec_->GetSendCodec(channel_, codec_instance_));
-  EXPECT_EQ(1, codec_instance_.channels);
+  EXPECT_EQ(1u, codec_instance_.channels);
   EXPECT_EQ(160, codec_instance_.pacsize);
   EXPECT_EQ(8000, codec_instance_.plfreq);
   EXPECT_EQ(0, codec_instance_.pltype);
@@ -147,17 +153,6 @@ TEST_F(CodecTest, OpusMaxPlaybackRateCanBeSet) {
   }
 }
 
-TEST_F(CodecTest, OpusMaxPlaybackRateCannotBeSetForNonOpus) {
-  for (int i = 0; i < voe_codec_->NumOfCodecs(); ++i) {
-    voe_codec_->GetCodec(i, codec_instance_);
-    if (!_stricmp("opus", codec_instance_.plname)) {
-      continue;
-    }
-    voe_codec_->SetSendCodec(channel_, codec_instance_);
-    EXPECT_EQ(-1, voe_codec_->SetOpusMaxPlaybackRate(channel_, 16000));
-  }
-}
-
 TEST_F(CodecTest, OpusDtxCanBeSetForOpus) {
   for (int i = 0; i < voe_codec_->NumOfCodecs(); ++i) {
     voe_codec_->GetCodec(i, codec_instance_);
@@ -177,10 +172,33 @@ TEST_F(CodecTest, OpusDtxCannotBeSetForNonOpus) {
       continue;
     }
     voe_codec_->SetSendCodec(channel_, codec_instance_);
-    EXPECT_EQ(-1, voe_codec_->SetOpusDtx(channel_, false));
     EXPECT_EQ(-1, voe_codec_->SetOpusDtx(channel_, true));
   }
 }
+
+#ifdef ENABLE_RTC_EVENT_LOG
+TEST_F(CodecTest, RtcEventLogIntegrationTest) {
+  webrtc::RtcEventLog* event_log = voe_codec_->GetEventLog();
+  ASSERT_TRUE(event_log);
+
+  // Find the name of the current test, in order to use it as a temporary
+  // filename.
+  auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+  const std::string temp_filename = webrtc::test::OutputPath() +
+                                    test_info->test_case_name() +
+                                    test_info->name();
+  // Create a log file.
+  event_log->StartLogging(temp_filename, 1000);
+  event_log->StopLogging();
+
+  // Check if the file has been created.
+  FILE* event_file = fopen(temp_filename.c_str(), "r");
+  ASSERT_TRUE(event_file);
+  fclose(event_file);
+  // Remove the temporary file.
+  remove(temp_filename.c_str());
+}
+#endif  // ENABLE_RTC_EVENT_LOG
 
 // TODO(xians, phoglund): Re-enable when issue 372 is resolved.
 TEST_F(CodecTest, DISABLED_ManualVerifySendCodecsForAllPacketSizes) {

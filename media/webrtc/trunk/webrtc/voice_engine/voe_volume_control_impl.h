@@ -17,47 +17,44 @@
 
 namespace webrtc {
 
-class VoEVolumeControlImpl : public VoEVolumeControl
-{
-public:
-    virtual int SetSpeakerVolume(unsigned int volume);
+class VoEVolumeControlImpl : public VoEVolumeControl {
+ public:
+  int SetSpeakerVolume(unsigned int volume) override;
 
-    virtual int GetSpeakerVolume(unsigned int& volume);
+  int GetSpeakerVolume(unsigned int& volume) override;
 
-    virtual int SetMicVolume(unsigned int volume);
+  int SetMicVolume(unsigned int volume) override;
 
-    virtual int GetMicVolume(unsigned int& volume);
+  int GetMicVolume(unsigned int& volume) override;
 
-    virtual int SetInputMute(int channel, bool enable);
+  int SetInputMute(int channel, bool enable) override;
 
-    virtual int GetInputMute(int channel, bool& enabled);
+  int GetInputMute(int channel, bool& enabled) override;
 
-    virtual int GetSpeechInputLevel(unsigned int& level);
+  int GetSpeechInputLevel(unsigned int& level) override;
 
-    virtual int GetSpeechOutputLevel(int channel, unsigned int& level);
+  int GetSpeechOutputLevel(int channel, unsigned int& level) override;
 
-    virtual int GetSpeechInputLevelFullRange(unsigned int& level);
+  int GetSpeechInputLevelFullRange(unsigned int& level) override;
 
-    virtual int GetSpeechOutputLevelFullRange(int channel,
-                                              unsigned int& level);
+  int GetSpeechOutputLevelFullRange(int channel, unsigned int& level) override;
 
-    virtual int SetChannelOutputVolumeScaling(int channel, float scaling);
+  int SetChannelOutputVolumeScaling(int channel, float scaling) override;
 
-    virtual int GetChannelOutputVolumeScaling(int channel, float& scaling);
+  int GetChannelOutputVolumeScaling(int channel, float& scaling) override;
 
-    virtual int SetOutputVolumePan(int channel, float left, float right);
+  int SetOutputVolumePan(int channel, float left, float right) override;
 
-    virtual int GetOutputVolumePan(int channel, float& left, float& right);
+  int GetOutputVolumePan(int channel, float& left, float& right) override;
 
+ protected:
+  VoEVolumeControlImpl(voe::SharedData* shared);
+  ~VoEVolumeControlImpl() override;
 
-protected:
-    VoEVolumeControlImpl(voe::SharedData* shared);
-    virtual ~VoEVolumeControlImpl();
-
-private:
-    voe::SharedData* _shared;
+ private:
+  voe::SharedData* _shared;
 };
 
 }  // namespace webrtc
 
-#endif    // WEBRTC_VOICE_ENGINE_VOE_VOLUME_CONTROL_IMPL_H
+#endif  // WEBRTC_VOICE_ENGINE_VOE_VOLUME_CONTROL_IMPL_H

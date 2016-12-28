@@ -20,11 +20,13 @@ namespace webrtc {
 
 class MockNonlinearBeamformer : public NonlinearBeamformer {
  public:
-  explicit MockNonlinearBeamformer(const std::vector<Point>& array_geometry);
+  explicit MockNonlinearBeamformer(const std::vector<Point>& array_geometry)
+      : NonlinearBeamformer(array_geometry) {}
 
   MOCK_METHOD2(Initialize, void(int chunk_size_ms, int sample_rate_hz));
   MOCK_METHOD2(ProcessChunk, void(const ChannelBuffer<float>& input,
                                   ChannelBuffer<float>* output));
+  MOCK_METHOD1(IsInBeam, bool(const SphericalPointf& spherical_point));
   MOCK_METHOD0(is_target_present, bool());
 };
 

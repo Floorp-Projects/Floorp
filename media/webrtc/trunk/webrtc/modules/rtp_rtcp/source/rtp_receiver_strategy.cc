@@ -12,7 +12,7 @@
 
 #include <stdlib.h>
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -36,11 +36,9 @@ void RTPReceiverStrategy::SetLastMediaSpecificPayload(
 
 void RTPReceiverStrategy::CheckPayloadChanged(int8_t payload_type,
                                               PayloadUnion* specific_payload,
-                                              bool* should_reset_statistics,
                                               bool* should_discard_changes) {
-  // Default: Keep changes and don't reset statistics.
+  // Default: Keep changes.
   *should_discard_changes = false;
-  *should_reset_statistics = false;
 }
 
 int RTPReceiverStrategy::Energy(uint8_t array_of_energy[kRtpCsrcSize]) const {

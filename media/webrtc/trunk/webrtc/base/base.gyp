@@ -22,6 +22,46 @@
         }],
       ],
     }],
+    # TODO(tkchin): Mac support. There are a bunch of problems right now because
+    # of some settings pulled down from Chromium.
+    ['OS=="ios"', {
+      'targets': [
+        {
+          'target_name': 'rtc_base_objc',
+          'type': 'static_library',
+          'dependencies': [
+            'rtc_base',
+          ],
+          'sources': [
+            'objc/NSString+StdString.h',
+            'objc/NSString+StdString.mm',
+            'objc/RTCDispatcher.h',
+            'objc/RTCDispatcher.m',
+            'objc/RTCLogging.h',
+            'objc/RTCLogging.mm',
+          ],
+          'conditions': [
+            ['OS=="ios"', {
+              'sources': [
+                'objc/RTCCameraPreviewView.h',
+                'objc/RTCCameraPreviewView.m',
+              ],
+              'all_dependent_settings': {
+                'xcode_settings': {
+                  'OTHER_LDFLAGS': [
+                    '-framework AVFoundation',
+                  ],
+                },
+              },
+            }],
+          ],
+          'xcode_settings': {
+            'CLANG_ENABLE_OBJC_ARC': 'YES',
+            'CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS': 'YES',
+          },
+        }
+      ],
+    }], # OS=="ios"
   ],
   'targets': [
     {
@@ -29,31 +69,54 @@
       'target_name': 'rtc_base_approved',
       'type': 'static_library',
       'sources': [
+        'array_view.h',
+        'atomicops.h',
         'bitbuffer.cc',
         'bitbuffer.h',
         'buffer.cc',
         'buffer.h',
+        'bufferqueue.cc',
+        'bufferqueue.h',
+        'bytebuffer.cc',
+        'bytebuffer.h',
+        'byteorder.h',
         'checks.cc',
         'checks.h',
         'constructormagic.h',
+        'criticalsection.cc',
+        'criticalsection.h',
+        'deprecation.h',
         'event.cc',
         'event.h',
         'event_tracer.cc',
         'event_tracer.h',
         'exp_filter.cc',
         'exp_filter.h',
+        'logging.cc',
+        'logging.h',
         'md5.cc',
         'md5.h',
         'md5digest.cc',
         'md5digest.h',
+        'optional.h',
         'platform_file.cc',
         'platform_file.h',
+        'platform_thread.cc',
+        'platform_thread.h',
+        'platform_thread_types.h',
+        'random.cc',
+        'random.h',
+        'ratetracker.cc',
+        'ratetracker.h',
         'safe_conversions.h',
         'safe_conversions_impl.h',
+        'scoped_ptr.h',
         'stringencode.cc',
         'stringencode.h',
         'stringutils.cc',
         'stringutils.h',
+        'systeminfo.cc',
+        'systeminfo.h',
         'template_util.h',
         'thread_annotations.h',
         'thread_checker.h',
@@ -64,16 +127,20 @@
         'trace_event.h',
       ],
       'conditions': [
-        ['OS=="mac"', {
-          'sources': [
-            'macutils.cc',
-            'macutils.h',
+        ['build_with_chromium==1', {
+          'dependencies': [
+            '<(DEPTH)/base/base.gyp:base',
           ],
-        }],
-        ['OS=="win"', {
+          'include_dirs': [
+            '../../webrtc_overrides',
+          ],
           'sources': [
-            'win32.cc',
-            'win32.h',
+            '../../webrtc_overrides/webrtc/base/logging.cc',
+            '../../webrtc_overrides/webrtc/base/logging.h',
+          ],
+          'sources!': [
+            'logging.cc',
+            'logging.h',
           ],
         }],
       ],
@@ -85,16 +152,19 @@
         '<(webrtc_root)/common.gyp:webrtc_common',
         'rtc_base_approved',
       ],
+      'export_dependent_settings': [
+        'rtc_base_approved',
+      ],
       'defines': [
         'FEATURE_ENABLE_SSL',
+        'SSL_USE_OPENSSL',
+        'HAVE_OPENSSL_SSL_H',
         'LOGGING=1',
       ],
       'sources': [
         'arraysize.h',
         'asyncfile.cc',
         'asyncfile.h',
-        'asynchttprequest.cc',
-        'asynchttprequest.h',
         'asyncinvoker.cc',
         'asyncinvoker.h',
         'asyncinvoker-inl.h',
@@ -108,33 +178,18 @@
         'asynctcpsocket.h',
         'asyncudpsocket.cc',
         'asyncudpsocket.h',
-        'atomicops.h',
         'autodetectproxy.cc',
         'autodetectproxy.h',
         'bandwidthsmoother.cc',
         'bandwidthsmoother.h',
         'base64.cc',
         'base64.h',
-        'basicdefs.h',
-        'basictypes.h',
         'bind.h',
-#        'bind.h.pump',
-        'buffer.cc',
-        'buffer.h',
-        'bytebuffer.cc',
-        'bytebuffer.h',
-        'byteorder.h',
         'callback.h',
-#        'callback.h.pump',
-        'constructormagic.h',
         'common.cc',
         'common.h',
-        'cpumonitor.cc',
-        'cpumonitor.h',
         'crc32.cc',
         'crc32.h',
-        'criticalsection.cc',
-        'criticalsection.h',
         'cryptstring.cc',
         'cryptstring.h',
         'dbus.cc',
@@ -143,8 +198,8 @@
         'diskcache.h',
         'diskcache_win32.cc',
         'diskcache_win32.h',
-        'filelock.cc',
-        'filelock.h',
+        'filerotatingstream.cc',
+        'filerotatingstream.h',
         'fileutils.cc',
         'fileutils.h',
         'fileutils_mock.h',
@@ -169,15 +224,16 @@
         'httpserver.h',
         'ifaddrs-android.cc',
         'ifaddrs-android.h',
+        'ifaddrs_converter.cc',
+        'ifaddrs_converter.h',
+        'macifaddrs_converter.cc',
         'iosfilesystem.mm',
         'ipaddress.cc',
         'ipaddress.h',
         'json.cc',
         'json.h',
         'latebindingsymboltable.cc',
-#        'latebindingsymboltable.cc.def',
         'latebindingsymboltable.h',
-#        'latebindingsymboltable.h.def',
         'libdbusglibsymboltable.cc',
         'libdbusglibsymboltable.h',
         'linux.cc',
@@ -185,8 +241,8 @@
         'linuxfdwalk.c',
         'linuxfdwalk.h',
         'linked_ptr.h',
-        'logging.cc',
-        'logging.h',
+        'logsinks.cc',
+        'logsinks.h',
         'macasyncsocket.cc',
         'macasyncsocket.h',
         'maccocoasocketserver.h',
@@ -197,9 +253,8 @@
         'macconversion.h',
         'macsocketserver.cc',
         'macsocketserver.h',
-# moved by mozilla
-#        'macutils.cc',
-#        'macutils.h',
+        'macutils.cc',
+        'macutils.h',
         'macwindowpicker.cc',
         'macwindowpicker.h',
         'mathutils.h',
@@ -221,7 +276,18 @@
         'nethelpers.h',
         'network.cc',
         'network.h',
+        'networkmonitor.cc',
+        'networkmonitor.h',
         'nullsocketserver.h',
+        'openssl.h',
+        'openssladapter.cc',
+        'openssladapter.h',
+        'openssldigest.cc',
+        'openssldigest.h',
+        'opensslidentity.cc',
+        'opensslidentity.h',
+        'opensslstreamadapter.cc',
+        'opensslstreamadapter.h',
         'optionsfile.cc',
         'optionsfile.h',
         'pathutils.cc',
@@ -240,16 +306,13 @@
         'proxyserver.h',
         'ratelimiter.cc',
         'ratelimiter.h',
-        'ratetracker.cc',
-        'ratetracker.h',
         'refcount.h',
         'referencecountedsingletonfactory.h',
         'rollingaccumulator.h',
-        'schanneladapter.cc',
-        'schanneladapter.h',
+        'rtccertificate.cc',
+        'rtccertificate.h',
         'scoped_autorelease_pool.h',
         'scoped_autorelease_pool.mm',
-        'scoped_ptr.h',
         'scoped_ref_ptr.h',
         'scopedptrcollection.h',
         'sec_buffer.h',
@@ -293,8 +356,6 @@
         'sslstreamadapterhelper.h',
         'stream.cc',
         'stream.h',
-        'systeminfo.cc',
-        'systeminfo.h',
         'task.cc',
         'task.h',
         'taskparent.cc',
@@ -317,8 +378,8 @@
         'versionparsing.h',
         'virtualsocketserver.cc',
         'virtualsocketserver.h',
-#        'win32.cc',
-#        'win32.h',
+        'win32.cc',
+        'win32.h',
         'win32filesystem.cc',
         'win32filesystem.h',
         'win32regkey.cc',
@@ -343,11 +404,6 @@
         'worker.h',
         'x11windowpicker.cc',
         'x11windowpicker.h',
-        '../overrides/webrtc/base/basictypes.h',
-        '../overrides/webrtc/base/constructormagic.h',
-        '../overrides/webrtc/base/logging.cc',
-        '../overrides/webrtc/base/logging.h',
-        '../overrides/webrtc/base/win32socketinit.cc',
       ],
       # TODO(henrike): issue 3307, make rtc_base build without disabling
       # these flags.
@@ -364,6 +420,8 @@
         ],
         'defines': [
           'FEATURE_ENABLE_SSL',
+          'SSL_USE_OPENSSL',
+          'HAVE_OPENSSL_SSL_H',
         ],
       },
       'include_dirs': [
@@ -373,39 +431,30 @@
       'conditions': [
         ['build_with_chromium==1', {
           'include_dirs': [
-            '../overrides',
+            '../../webrtc_overrides',
             '../../boringssl/src/include',
           ],
+          'sources': [
+            '../../webrtc_overrides/webrtc/base/win32socketinit.cc',
+          ],
           'sources!': [
-            'asyncinvoker.cc',
-            'asyncinvoker.h',
-            'asyncinvoker-inl.h',
             'atomicops.h',
             'bandwidthsmoother.cc',
             'bandwidthsmoother.h',
-            'basictypes.h',
             'bind.h',
-#            'bind.h.pump',
             'callback.h',
-#            'callback.h.pump',
-            'constructormagic.h',
             'dbus.cc',
             'dbus.h',
             'diskcache_win32.cc',
             'diskcache_win32.h',
-            'filelock.cc',
-            'filelock.h',
             'fileutils_mock.h',
             'genericslot.h',
-#            'genericslot.h.pump',
             'httpserver.cc',
             'httpserver.h',
             'json.cc',
             'json.h',
             'latebindingsymboltable.cc',
-#            'latebindingsymboltable.cc.def',
             'latebindingsymboltable.h',
-#            'latebindingsymboltable.h.def',
             'libdbusglibsymboltable.cc',
             'libdbusglibsymboltable.h',
             'linuxfdwalk.c',
@@ -414,6 +463,8 @@
             'x11windowpicker.h',
             'logging.cc',
             'logging.h',
+            'logsinks.cc',
+            'logsinks.h',
             'macasyncsocket.cc',
             'macasyncsocket.h',
             'maccocoasocketserver.h',
@@ -495,91 +546,16 @@
                 'WEBRTC_EXTERNAL_JSON',
               ],
             }],
-          ],
-          'sources!': [
-            '../overrides/webrtc/base/basictypes.h',
-            '../overrides/webrtc/base/constructormagic.h',
-            '../overrides/webrtc/base/win32socketinit.cc',
-            '../overrides/webrtc/base/logging.cc',
-            '../overrides/webrtc/base/logging.h',
-          ],
-        }],
-        ['use_openssl==1', {
-          'defines': [
-            'SSL_USE_OPENSSL',
-            'HAVE_OPENSSL_SSL_H',
-          ],
-          'direct_dependent_settings': {
-            'defines': [
-              'SSL_USE_OPENSSL',
-              'HAVE_OPENSSL_SSL_H',
-            ],
-          },
-          'sources': [
-            'openssl.h',
-            'openssladapter.cc',
-            'openssladapter.h',
-            'openssldigest.cc',
-            'openssldigest.h',
-            'opensslidentity.cc',
-            'opensslidentity.h',
-            'opensslstreamadapter.cc',
-            'opensslstreamadapter.h',
-          ],
-          'conditions': [
-            ['build_ssl==1', {
-              'dependencies': [
-                '<(DEPTH)/third_party/boringssl/boringssl.gyp:boringssl',
-              ],
-            }, {
-              'include_dirs': [
-                '<(ssl_root)',
-              ],
-            }],
-          ],
-        }, {
-          'sources': [
-            'nssidentity.cc',
-            'nssidentity.h',
-            'nssstreamadapter.cc',
-            'nssstreamadapter.h',
-          ],
-          'conditions': [
-            ['use_legacy_ssl_defaults!=1', {
-              'defines': [
-                'SSL_USE_NSS',
-                'HAVE_NSS_SSL_H',
-                'SSL_USE_NSS_RNG',
-              ],
-              'direct_dependent_settings': {
-                'defines': [
-                  'SSL_USE_NSS',
-                  'HAVE_NSS_SSL_H',
-                  'SSL_USE_NSS_RNG',
-                ],
+            ['OS=="win" and clang==1', {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'AdditionalOptions': [
+                    # Disable warnings failing when compiling with Clang on Windows.
+                    # https://bugs.chromium.org/p/webrtc/issues/detail?id=5366
+                    '-Wno-missing-braces',
+                  ],
+                },
               },
-            }],
-            ['build_ssl==1', {
-              'conditions': [
-                # On some platforms, the rest of NSS is bundled. On others,
-                # it's pulled from the system.
-                ['OS == "mac" or OS == "ios" or OS == "win"', {
-                  'dependencies': [
-                    '<(DEPTH)/net/third_party/nss/ssl.gyp:libssl',
-                    '<(DEPTH)/third_party/nss/nss.gyp:nspr',
-                    '<(DEPTH)/third_party/nss/nss.gyp:nss',
-                  ],
-                }],
-                ['os_posix == 1 and OS != "mac" and OS != "ios" and OS != "android"', {
-                  'dependencies': [
-                    '<(DEPTH)/build/linux/system.gyp:ssl',
-                  ],
-                }],
-              ],
-            }, {
-              'include_dirs': [
-                '<(ssl_root)',
-              ],
             }],
           ],
         }],
@@ -597,9 +573,13 @@
           ],
         }],
         ['OS=="ios"', {
+          'sources/': [
+            ['include', 'macconversion.*'],
+          ],
           'all_dependent_settings': {
             'xcode_settings': {
               'OTHER_LDFLAGS': [
+                '-framework CFNetwork',
                 '-framework Foundation',
                 '-framework Security',
                 '-framework SystemConfiguration',
@@ -685,6 +665,9 @@
           ],
         }],
         ['OS=="win"', {
+          'sources!': [
+            'ifaddrs_converter.cc',
+          ],
           'link_settings': {
             'libraries': [
               '-lcrypt32.lib',
@@ -702,8 +685,6 @@
             ['exclude', 'win32[a-z0-9]*\\.(h|cc)$'],
           ],
           'sources!': [
-              'schanneladapter.cc',
-              'schanneladapter.h',
               'winping.cc',
               'winping.h',
               'winfirewall.cc',
@@ -738,6 +719,7 @@
         }],
         ['OS!="ios" and OS!="mac"', {
           'sources!': [
+            'macifaddrs_converter.cc',
             'scoped_autorelease_pool.mm',
           ],
         }],
@@ -745,6 +727,15 @@
           'sources!': [
             'linux.cc',
             'linux.h',
+          ],
+        }],
+        ['build_ssl==1', {
+          'dependencies': [
+            '<(DEPTH)/third_party/boringssl/boringssl.gyp:boringssl',
+          ],
+        }, {
+          'include_dirs': [
+            '<(ssl_root)',
           ],
         }],
       ],

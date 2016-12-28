@@ -38,6 +38,10 @@ class BitrateProber {
   // get accurate probing.
   int TimeUntilNextProbe(int64_t now_ms);
 
+  // Returns the number of bytes that the prober recommends for the next probe
+  // packet.
+  size_t RecommendedPacketSize() const;
+
   // Called to report to the prober that a packet has been sent, which helps the
   // prober know when to move to the next packet in a probe.
   void PacketSent(int64_t now_ms, size_t packet_size);

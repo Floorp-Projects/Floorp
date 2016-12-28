@@ -17,6 +17,7 @@
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "webrtc/modules/remote_bitrate_estimator/test/bwe.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_framework.h"
 
 namespace webrtc {
@@ -66,7 +67,48 @@ class Link : public PacketProcessorListener {
 class BweTest {
  public:
   BweTest();
+  explicit BweTest(bool plot_capacity);
   ~BweTest();
+
+  void RunChoke(BandwidthEstimatorType bwe_type,
+                std::vector<int> capacities_kbps);
+
+  void RunVariableCapacity1SingleFlow(BandwidthEstimatorType bwe_type);
+  void RunVariableCapacity2MultipleFlows(BandwidthEstimatorType bwe_type,
+                                         size_t num_flows);
+  void RunBidirectionalFlow(BandwidthEstimatorType bwe_type);
+  void RunSelfFairness(BandwidthEstimatorType bwe_type);
+  void RunRoundTripTimeFairness(BandwidthEstimatorType bwe_type);
+  void RunLongTcpFairness(BandwidthEstimatorType bwe_type);
+  void RunMultipleShortTcpFairness(BandwidthEstimatorType bwe_type,
+                                   std::vector<int> tcp_file_sizes_bytes,
+                                   std::vector<int64_t> tcp_starting_times_ms);
+  void RunPauseResumeFlows(BandwidthEstimatorType bwe_type);
+
+  void RunFairnessTest(BandwidthEstimatorType bwe_type,
+                       size_t num_media_flows,
+                       size_t num_tcp_flows,
+                       int64_t run_time_seconds,
+                       uint32_t capacity_kbps,
+                       int64_t max_delay_ms,
+                       int64_t rtt_ms,
+                       int64_t max_jitter_ms,
+                       const int64_t* offsets_ms);
+
+  void RunFairnessTest(BandwidthEstimatorType bwe_type,
+                       size_t num_media_flows,
+                       size_t num_tcp_flows,
+                       int64_t run_time_seconds,
+                       uint32_t capacity_kbps,
+                       int64_t max_delay_ms,
+                       int64_t rtt_ms,
+                       int64_t max_jitter_ms,
+                       const int64_t* offsets_ms,
+                       const std::string& title,
+                       const std::string& flow_name);
+
+  static std::vector<int> GetFileSizesBytes(int num_files);
+  static std::vector<int64_t> GetStartingTimesMs(int num_files);
 
  protected:
   void SetUp();
@@ -74,6 +116,17 @@ class BweTest {
   void VerboseLogging(bool enable);
   void RunFor(int64_t time_ms);
   std::string GetTestName() const;
+
+  void PrintResults(double max_throughput_kbps,
+                    Stats<double> throughput_kbps,
+                    int flow_id,
+                    Stats<double> flow_delay_ms,
+                    Stats<double> flow_throughput_kbps);
+
+  void PrintResults(double max_throughput_kbps,
+                    Stats<double> throughput_kbps,
+                    std::map<int, Stats<double>> flow_delay_ms,
+                    std::map<int, Stats<double>> flow_throughput_kbps);
 
   Link downlink_;
   Link uplink_;
@@ -88,9 +141,53 @@ class BweTest {
   int64_t simulation_interval_ms_;
   std::vector<Link*> links_;
   Packets packets_;
+  bool plot_total_available_capacity_;
 
-  DISALLOW_COPY_AND_ASSIGN(BweTest);
+  RTC_DISALLOW_COPY_AND_ASSIGN(BweTest);
 };
+
+// Default Evaluation parameters:
+// Link capacity: 4000ms;
+// Queueing delay capacity: 300ms.
+// One-Way propagation delay: 50ms.
+// Jitter model: Truncated gaussian.
+// Maximum end-to-end jitter: 30ms = 2*standard_deviation.
+// Bottleneck queue type: Drop tail.
+// Path loss ratio: 0%.
+
+const int kOneWayDelayMs = 50;
+const int kMaxQueueingDelayMs = 300;
+const int kMaxCapacityKbps = 4000;
+const int kMaxJitterMs = 15;
+
+struct DefaultEvaluationFilter {
+  DefaultEvaluationFilter(PacketProcessorListener* listener, int flow_id)
+      : choke(listener, flow_id),
+        delay(listener, flow_id),
+        jitter(listener, flow_id) {
+    SetDefaultParameters();
+  }
+
+  DefaultEvaluationFilter(PacketProcessorListener* listener,
+                          const FlowIds& flow_ids)
+      : choke(listener, flow_ids),
+        delay(listener, flow_ids),
+        jitter(listener, flow_ids) {
+    SetDefaultParameters();
+  }
+
+  void SetDefaultParameters() {
+    delay.SetOneWayDelayMs(kOneWayDelayMs);
+    choke.set_max_delay_ms(kMaxQueueingDelayMs);
+    choke.set_capacity_kbps(kMaxCapacityKbps);
+    jitter.SetMaxJitter(kMaxJitterMs);
+  }
+
+  ChokeFilter choke;
+  DelayFilter delay;
+  JitterFilter jitter;
+};
+
 }  // namespace bwe
 }  // namespace testing
 }  // namespace webrtc

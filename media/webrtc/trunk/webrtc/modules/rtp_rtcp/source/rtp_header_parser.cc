@@ -7,12 +7,12 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -58,7 +58,7 @@ bool RtpHeaderParserImpl::Parse(const uint8_t* packet,
     rtp_header_extension_map_.GetCopy(&map);
   }
 
-  const bool valid_rtpheader = rtp_parser.Parse(*header, &map);
+  const bool valid_rtpheader = rtp_parser.Parse(header, &map);
   if (!valid_rtpheader) {
     return false;
   }

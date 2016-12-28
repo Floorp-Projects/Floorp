@@ -12,13 +12,23 @@
 #error "This file requires ARC support."
 #endif
 
+#include <AVFoundation/AVFoundation.h>
+
+#include <string>
+
 #include "webrtc/modules/video_capture/ios/device_info_ios.h"
 #include "webrtc/modules/video_capture/ios/device_info_ios_objc.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 using namespace webrtc;
 using namespace videocapturemodule;
+
+static NSArray *camera_presets = @[AVCaptureSessionPreset352x288,
+                                   AVCaptureSessionPreset640x480,
+                                   AVCaptureSessionPreset1280x720,
+                                   AVCaptureSessionPreset1920x1080];
+
 
 #define IOS_UNSUPPORTED()                                  \
   WEBRTC_TRACE(kTraceError,                                \
@@ -34,11 +44,42 @@ VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo(
 }
 
 DeviceInfoIos::DeviceInfoIos(const int32_t device_id)
-    : DeviceInfoImpl(device_id) {}
+    : DeviceInfoImpl(device_id) {
+  this->Init();
+}
 
 DeviceInfoIos::~DeviceInfoIos() {}
 
-int32_t DeviceInfoIos::Init() { return 0; }
+int32_t DeviceInfoIos::Init() {
+  // Fill in all device capabilities.
+
+  int deviceCount = [DeviceInfoIosObjC captureDeviceCount];
+
+  for (int i = 0; i < deviceCount; i++) {
+    AVCaptureDevice *avDevice = [DeviceInfoIosObjC captureDeviceForIndex:i];
+    VideoCaptureCapabilities capabilityVector;
+
+    for (NSString *preset in camera_presets) {
+      BOOL support = [avDevice supportsAVCaptureSessionPreset:preset];
+      if (support) {
+        VideoCaptureCapability capability =
+            [DeviceInfoIosObjC capabilityForPreset:preset];
+        capabilityVector.push_back(capability);
+      }
+    }
+
+    char deviceNameUTF8[256];
+    char deviceId[256];
+    this->GetDeviceName(i, deviceNameUTF8, 256, deviceId, 256);
+    std::string deviceIdCopy(deviceId);
+    std::pair<std::string, VideoCaptureCapabilities> mapPair =
+        std::pair<std::string, VideoCaptureCapabilities>
+            (deviceIdCopy, capabilityVector);
+    _capabilitiesMap.insert(mapPair);
+  }
+
+  return 0;
+}
 
 uint32_t DeviceInfoIos::NumberOfDevices() {
   return [DeviceInfoIosObjC captureDeviceCount];
@@ -72,20 +113,36 @@ int32_t DeviceInfoIos::GetDeviceName(uint32_t deviceNumber,
 }
 
 int32_t DeviceInfoIos::NumberOfCapabilities(const char* deviceUniqueIdUTF8) {
-  IOS_UNSUPPORTED();
+  int32_t numberOfCapabilities = 0;
+  std::string deviceUniqueId(deviceUniqueIdUTF8);
+  std::map<std::string, VideoCaptureCapabilities>::iterator it =
+      _capabilitiesMap.find(deviceUniqueId);
+
+  if (it != _capabilitiesMap.end()) {
+    numberOfCapabilities = it->second.size();
+  }
+  return numberOfCapabilities;
 }
 
 int32_t DeviceInfoIos::GetCapability(const char* deviceUniqueIdUTF8,
                                      const uint32_t deviceCapabilityNumber,
                                      VideoCaptureCapability& capability) {
-  IOS_UNSUPPORTED();
-}
+  std::string deviceUniqueId(deviceUniqueIdUTF8);
+  std::map<std::string, VideoCaptureCapabilities>::iterator it =
+      _capabilitiesMap.find(deviceUniqueId);
 
-int32_t DeviceInfoIos::GetBestMatchedCapability(
-    const char* deviceUniqueIdUTF8,
-    const VideoCaptureCapability& requested,
-    VideoCaptureCapability& resulting) {
-  IOS_UNSUPPORTED();
+  if (it != _capabilitiesMap.end()) {
+    VideoCaptureCapabilities deviceCapabilities = it->second;
+
+    if (deviceCapabilityNumber < deviceCapabilities.size()) {
+      VideoCaptureCapability cap;
+      cap = deviceCapabilities[deviceCapabilityNumber];
+      capability = cap;
+      return 0;
+    }
+  }
+
+  return -1;
 }
 
 int32_t DeviceInfoIos::DisplayCaptureSettingsDialogBox(
@@ -108,5 +165,14 @@ int32_t DeviceInfoIos::GetOrientation(const char* deviceUniqueIdUTF8,
 }
 
 int32_t DeviceInfoIos::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-  IOS_UNSUPPORTED();
+  std::string deviceName(deviceUniqueIdUTF8);
+  std::map<std::string, std::vector<VideoCaptureCapability>>::iterator it =
+      _capabilitiesMap.find(deviceName);
+  VideoCaptureCapabilities deviceCapabilities;
+  if (it != _capabilitiesMap.end()) {
+    _captureCapabilities = it->second;
+    return 0;
+  }
+
+  return -1;
 }

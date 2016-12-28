@@ -12,7 +12,7 @@
 #define WEBRTC_VOICE_ENGINE_NETWORK_PREDICTOR_H_
 
 #include "webrtc/base/exp_filter.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
 

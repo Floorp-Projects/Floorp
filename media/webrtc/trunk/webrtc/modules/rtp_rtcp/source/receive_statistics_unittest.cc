@@ -11,8 +11,8 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/rtp_rtcp/interface/receive_statistics.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -139,12 +139,6 @@ TEST_F(ReceiveStatisticsTest, GetReceiveStreamDataCounters) {
   ASSERT_TRUE(statistician != NULL);
 
   StreamDataCounters counters;
-  statistician->GetReceiveStreamDataCounters(&counters);
-  EXPECT_GT(counters.first_packet_time_ms, -1);
-  EXPECT_EQ(1u, counters.transmitted.packets);
-
-  statistician->ResetStatistics();
-  // GetReceiveStreamDataCounters includes reset counter values.
   statistician->GetReceiveStreamDataCounters(&counters);
   EXPECT_GT(counters.first_packet_time_ms, -1);
   EXPECT_EQ(1u, counters.transmitted.packets);

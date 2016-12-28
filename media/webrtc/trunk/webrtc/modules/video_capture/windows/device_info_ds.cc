@@ -17,8 +17,6 @@
 #include "webrtc/system_wrappers/interface/trace.h"
 
 #include <Dvdmedia.h>
-#include <dbt.h>
-#include <ks.h>
 
 namespace webrtc
 {
@@ -43,28 +41,6 @@ const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
   },
 };
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-{
-    DeviceInfoDS* pParent;
-    if (uiMsg == WM_CREATE)
-    {
-        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
-    }
-    else if (uiMsg == WM_DESTROY)
-    {
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
-    }
-    else if (uiMsg == WM_DEVICECHANGE)
-    {
-        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-        if (pParent)
-        {
-            pParent->DeviceChange();
-        }
-    }
-    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
-}
 
 void _FreeMediaType(AM_MEDIA_TYPE& mt)
 {
@@ -136,18 +112,6 @@ DeviceInfoDS::DeviceInfoDS(const int32_t id)
                          hr);
         }
     }
-
-    _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
-    _wndClass = {0};
-    _wndClass.lpfnWndProc = &WndProc;
-    _wndClass.lpszClassName = TEXT("DeviceInfoDS");
-    _wndClass.hInstance = _hInstance;
-
-    if (RegisterClass(&_wndClass))
-    {
-        _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, _hInstance, this);
-    }
 }
 
 DeviceInfoDS::~DeviceInfoDS()
@@ -157,11 +121,6 @@ DeviceInfoDS::~DeviceInfoDS()
     {
         CoUninitialize();
     }
-    if (_hwnd != NULL)
-    {
-        DestroyWindow(_hwnd);
-    }
-    UnregisterClass(_wndClass.lpszClassName, _hInstance);
 }
 
 int32_t DeviceInfoDS::Init()
@@ -179,7 +138,7 @@ int32_t DeviceInfoDS::Init()
 uint32_t DeviceInfoDS::NumberOfDevices()
 {
     ReadLockScoped cs(_apiLock);
-    return GetDeviceInfo(0, 0, 0, 0, 0, 0, 0, 0);
+    return GetDeviceInfo(0, 0, 0, 0, 0, 0, 0);
 }
 
 int32_t DeviceInfoDS::GetDeviceName(
@@ -189,8 +148,7 @@ int32_t DeviceInfoDS::GetDeviceName(
                                        char* deviceUniqueIdUTF8,
                                        uint32_t deviceUniqueIdUTF8Length,
                                        char* productUniqueIdUTF8,
-                                       uint32_t productUniqueIdUTF8Length,
-                                       pid_t* pid)
+                                       uint32_t productUniqueIdUTF8Length)
 {
     ReadLockScoped cs(_apiLock);
     const int32_t result = GetDeviceInfo(deviceNumber, deviceNameUTF8,
@@ -198,8 +156,7 @@ int32_t DeviceInfoDS::GetDeviceName(
                                          deviceUniqueIdUTF8,
                                          deviceUniqueIdUTF8Length,
                                          productUniqueIdUTF8,
-                                         productUniqueIdUTF8Length,
-                                         pid);
+                                         productUniqueIdUTF8Length);
     return result > (int32_t) deviceNumber ? 0 : -1;
 }
 
@@ -210,8 +167,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
                                        char* deviceUniqueIdUTF8,
                                        uint32_t deviceUniqueIdUTF8Length,
                                        char* productUniqueIdUTF8,
-                                       uint32_t productUniqueIdUTF8Length,
-                                       pid_t* pid)
+                                       uint32_t productUniqueIdUTF8Length)
 
 {
 

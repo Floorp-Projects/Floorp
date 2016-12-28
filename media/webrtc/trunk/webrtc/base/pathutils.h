@@ -92,8 +92,10 @@ public:
   bool SetFilename(const std::string& filename);
 
 #if defined(WEBRTC_WIN)
-  bool GetDrive(char *drive, uint32 bytes) const;
-  static bool GetDrive(char *drive, uint32 bytes,const std::string& pathname);
+  bool GetDrive(char* drive, uint32_t bytes) const;
+  static bool GetDrive(char* drive,
+                       uint32_t bytes,
+                       const std::string& pathname);
 #endif
 
 private:

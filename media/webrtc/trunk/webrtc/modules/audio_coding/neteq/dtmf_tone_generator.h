@@ -30,8 +30,8 @@ class DtmfToneGenerator {
   virtual ~DtmfToneGenerator() {}
   virtual int Init(int fs, int event, int attenuation);
   virtual void Reset();
-  virtual int Generate(int num_samples, AudioMultiVector* output);
-  virtual bool initialized() const { return initialized_; }
+  virtual int Generate(size_t num_samples, AudioMultiVector* output);
+  virtual bool initialized() const;
 
  private:
   static const int kCoeff1[4][16];  // 1st oscillator model coefficient table.
@@ -48,7 +48,7 @@ class DtmfToneGenerator {
   int16_t sample_history1_[2];  // Last 2 samples for the 1st oscillator.
   int16_t sample_history2_[2];  // Last 2 samples for the 2nd oscillator.
 
-  DISALLOW_COPY_AND_ASSIGN(DtmfToneGenerator);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DtmfToneGenerator);
 };
 
 }  // namespace webrtc

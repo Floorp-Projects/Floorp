@@ -25,7 +25,7 @@ TEST(Crc32Test, TestBasic) {
 TEST(Crc32Test, TestMultipleUpdates) {
   std::string input =
       "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-  uint32 c = 0;
+  uint32_t c = 0;
   for (size_t i = 0; i < input.size(); ++i) {
     c = UpdateCrc32(c, &input[i], 1);
   }

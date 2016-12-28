@@ -15,10 +15,10 @@
 #ifndef WEBRTC_COMMON_VIDEO_LIBYUV_INCLUDE_SCALER_H_
 #define WEBRTC_COMMON_VIDEO_LIBYUV_INCLUDE_SCALER_H_
 
-#include "webrtc/common_video/interface/i420_buffer_pool.h"
-#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/typedefs.h"
+#include "webrtc/video_frame.h"
 
 namespace webrtc {
 
@@ -48,8 +48,7 @@ class Scaler {
   // Return value: 0 - OK,
   //               -1 - parameter error
   //               -2 - scaler not set
-  int Scale(const I420VideoFrame& src_frame,
-            I420VideoFrame* dst_frame);
+  int Scale(const VideoFrame& src_frame, VideoFrame* dst_frame);
 
  private:
   // Determine if the VideoTypes are currently supported.

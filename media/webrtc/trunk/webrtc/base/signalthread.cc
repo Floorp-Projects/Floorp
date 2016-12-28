@@ -39,13 +39,6 @@ bool SignalThread::SetName(const std::string& name, const void* obj) {
   return worker_.SetName(name, obj);
 }
 
-bool SignalThread::SetPriority(ThreadPriority priority) {
-  EnterExit ee(this);
-  ASSERT(main_->IsCurrent());
-  ASSERT(kInit == state_);
-  return worker_.SetPriority(priority);
-}
-
 void SignalThread::Start() {
   EnterExit ee(this);
   ASSERT(main_->IsCurrent());

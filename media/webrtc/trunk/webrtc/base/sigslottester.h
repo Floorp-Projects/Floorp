@@ -71,7 +71,7 @@ class SigslotTester1 : public sigslot::has_slots<> {
   int callback_count_;
   C1* capture1_;
 
-  DISALLOW_COPY_AND_ASSIGN(SigslotTester1);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SigslotTester1);
 };
 
 template <class A1, class A2, class C1, class C2>
@@ -97,7 +97,7 @@ class SigslotTester2 : public sigslot::has_slots<> {
   C1* capture1_;
   C2* capture2_;
 
-  DISALLOW_COPY_AND_ASSIGN(SigslotTester2);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SigslotTester2);
 };
 
 template <class A1, class A2, class A3, class C1, class C2, class C3>
@@ -125,7 +125,7 @@ class SigslotTester3 : public sigslot::has_slots<> {
   C2* capture2_;
   C3* capture3_;
 
-  DISALLOW_COPY_AND_ASSIGN(SigslotTester3);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SigslotTester3);
 };
 
 template <class A1, class A2, class A3, class A4, class C1, class C2, class C3,
@@ -157,7 +157,7 @@ class SigslotTester4 : public sigslot::has_slots<> {
   C3* capture3_;
   C4* capture4_;
 
-  DISALLOW_COPY_AND_ASSIGN(SigslotTester4);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SigslotTester4);
 };
 
 template <class A1, class A2, class A3, class A4, class A5, class C1, class C2,
@@ -192,7 +192,7 @@ class SigslotTester5 : public sigslot::has_slots<> {
   C4* capture4_;
   C5* capture5_;
 
-  DISALLOW_COPY_AND_ASSIGN(SigslotTester5);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SigslotTester5);
 };
 }  // namespace rtc
 

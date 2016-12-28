@@ -1,0 +1,38 @@
+# Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../build/webrtc.gni")
+
+source_set("audio") {
+  sources = [
+    "audio_receive_stream.cc",
+    "audio_receive_stream.h",
+    "audio_send_stream.cc",
+    "audio_send_stream.h",
+    "audio_sink.h",
+    "audio_state.cc",
+    "audio_state.h",
+    "conversion.h",
+    "scoped_voe_interface.h",
+  ]
+
+  configs += [ "..:common_config" ]
+  public_configs = [ "..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [
+    "..:webrtc_common",
+    "../system_wrappers",
+    "../voice_engine",
+  ]
+}

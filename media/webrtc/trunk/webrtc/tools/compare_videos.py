@@ -55,7 +55,7 @@ def _ParseArgs():
                     help='Width of the YUV file\'s frames. Default: %default')
   parser.add_option('--yuv_frame_height', type='int', default=480,
                     help='Height of the YUV file\'s frames. Default: %default')
-  options, _args = parser.parse_args()
+  options, _ = parser.parse_args()
 
   if not options.ref_video:
     parser.error('You must provide a path to the reference video!')

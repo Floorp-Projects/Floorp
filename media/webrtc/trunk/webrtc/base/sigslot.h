@@ -86,8 +86,6 @@
 
 #ifndef WEBRTC_BASE_SIGSLOT_H__
 #define WEBRTC_BASE_SIGSLOT_H__
-#ifndef TALK_BASE_SIGSLOT_H__
-#define TALK_BASE_SIGSLOT_H__
 
 #include <list>
 #include <set>
@@ -534,7 +532,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -688,7 +686,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -827,7 +825,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -965,7 +963,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -1103,7 +1101,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -1243,7 +1241,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -1383,7 +1381,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -1523,7 +1521,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -1664,7 +1662,7 @@ namespace sigslot {
 			m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
 		}
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 			bool connected(has_slots_interface* pclass)
 		{
 			lock_block<mt_policy> lock(this);
@@ -2803,5 +2801,4 @@ namespace sigslot {
 
 }; // namespace sigslot
 
-#endif // TALK_BASE_SIGSLOT_H__
 #endif // WEBRTC_BASE_SIGSLOT_H__

@@ -33,18 +33,19 @@ void WebRtcIlbcfix_DoThePlc(
                                                            0 - no PL, 1 = PL */
     int16_t *decresidual,  /* (i) decoded residual */
     int16_t *lpc,    /* (i) decoded LPC (only used for no PL) */
-    int16_t inlag,    /* (i) pitch lag */
+    size_t inlag,    /* (i) pitch lag */
     IlbcDecoder *iLBCdec_inst
     /* (i/o) decoder instance */
                             ){
-  int16_t i, pick;
+  size_t i;
   int32_t cross, ener, cross_comp, ener_comp = 0;
   int32_t measure, maxMeasure, energy;
   int16_t max, crossSquareMax, crossSquare;
-  int16_t j, lag, tmp1, tmp2, randlag;
+  size_t j, lag, randlag;
+  int16_t tmp1, tmp2;
   int16_t shift1, shift2, shift3, shiftMax;
   int16_t scale3;
-  int16_t corrLen;
+  size_t corrLen;
   int32_t tmpW32, tmp2W32;
   int16_t use_gain;
   int16_t tot_gain;
@@ -54,7 +55,7 @@ void WebRtcIlbcfix_DoThePlc(
   int32_t nom;
   int16_t denom;
   int16_t pitchfact;
-  int16_t use_lag;
+  size_t use_lag;
   int ind;
   int16_t randvec[BLOCKL_MAX];
 
@@ -70,7 +71,8 @@ void WebRtcIlbcfix_DoThePlc(
 
       /* Maximum 60 samples are correlated, preserve as high accuracy
          as possible without getting overflow */
-      max = WebRtcSpl_MaxAbsValueW16((*iLBCdec_inst).prevResidual, (int16_t)iLBCdec_inst->blockl);
+      max = WebRtcSpl_MaxAbsValueW16((*iLBCdec_inst).prevResidual,
+                                     iLBCdec_inst->blockl);
       scale3 = (WebRtcSpl_GetSizeInBits(max)<<1) - 25;
       if (scale3 < 0) {
         scale3 = 0;
@@ -85,7 +87,7 @@ void WebRtcIlbcfix_DoThePlc(
       lag = inlag - 3;
 
       /* Guard against getting outside the frame */
-      corrLen = WEBRTC_SPL_MIN(60, iLBCdec_inst->blockl-(inlag+3));
+      corrLen = (size_t)WEBRTC_SPL_MIN(60, iLBCdec_inst->blockl-(inlag+3));
 
       WebRtcIlbcfix_CompCorr( &cross, &ener,
                               iLBCdec_inst->prevResidual, lag, iLBCdec_inst->blockl, corrLen, scale3);
@@ -233,23 +235,20 @@ void WebRtcIlbcfix_DoThePlc(
 
       /* noise component -  52 < randlagFIX < 117 */
       iLBCdec_inst->seed = (int16_t)(iLBCdec_inst->seed * 31821 + 13849);
-      randlag = 53 + (int16_t)(iLBCdec_inst->seed & 63);
-
-      pick = i - randlag;
-
-      if (pick < 0) {
-        randvec[i] = iLBCdec_inst->prevResidual[iLBCdec_inst->blockl+pick];
+      randlag = 53 + (iLBCdec_inst->seed & 63);
+      if (randlag > i) {
+        randvec[i] =
+            iLBCdec_inst->prevResidual[iLBCdec_inst->blockl + i - randlag];
       } else {
-        randvec[i] = iLBCdec_inst->prevResidual[pick];
+        randvec[i] = iLBCdec_inst->prevResidual[i - randlag];
       }
 
       /* pitch repeatition component */
-      pick = i - use_lag;
-
-      if (pick < 0) {
-        PLCresidual[i] = iLBCdec_inst->prevResidual[iLBCdec_inst->blockl+pick];
+      if (use_lag > i) {
+        PLCresidual[i] =
+            iLBCdec_inst->prevResidual[iLBCdec_inst->blockl + i - use_lag];
       } else {
-        PLCresidual[i] = PLCresidual[pick];
+        PLCresidual[i] = PLCresidual[i - use_lag];
       }
 
       /* Attinuate total gain for each 10 ms */

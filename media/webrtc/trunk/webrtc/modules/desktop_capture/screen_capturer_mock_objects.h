@@ -27,7 +27,7 @@ class MockScreenCapturer : public ScreenCapturer {
   MOCK_METHOD1(SelectScreen, bool(ScreenId id));
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(MockScreenCapturer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(MockScreenCapturer);
 };
 
 class MockScreenCapturerCallback : public ScreenCapturer::Callback {
@@ -39,7 +39,7 @@ class MockScreenCapturerCallback : public ScreenCapturer::Callback {
   MOCK_METHOD1(OnCaptureCompleted, void(DesktopFrame*));
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(MockScreenCapturerCallback);
+  RTC_DISALLOW_COPY_AND_ASSIGN(MockScreenCapturerCallback);
 };
 
 }  // namespace webrtc

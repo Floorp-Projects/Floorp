@@ -10,11 +10,12 @@
 
 #include "webrtc/voice_engine/output_mixer.h"
 
+#include "webrtc/base/format_macros.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/utility/interface/audio_frame_operations.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/modules/utility/include/audio_frame_operations.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/statistics.h"
 #include "webrtc/voice_engine/utility.h"
@@ -33,29 +34,6 @@ OutputMixer::NewMixedAudio(int32_t id,
 
     _audioFrame.CopyFrom(generalAudioFrame);
     _audioFrame.id_ = id;
-}
-
-void OutputMixer::MixedParticipants(
-    int32_t id,
-    const ParticipantStatistics* participantStatistics,
-    uint32_t size)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
-                 "OutputMixer::MixedParticipants(id=%d, size=%u)", id, size);
-}
-
-void OutputMixer::VADPositiveParticipants(int32_t id,
-    const ParticipantStatistics* participantStatistics, uint32_t size)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
-                 "OutputMixer::VADPositiveParticipants(id=%d, size=%u)",
-                 id, size);
-}
-
-void OutputMixer::MixedAudioLevel(int32_t id, uint32_t level)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
-                 "OutputMixer::MixedAudioLevel(id=%d, level=%u)", id, level);
 }
 
 void OutputMixer::PlayNotification(int32_t id, uint32_t durationMs)
@@ -131,8 +109,7 @@ OutputMixer::OutputMixer(uint32_t instanceId) :
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_instanceId,-1),
                  "OutputMixer::OutputMixer() - ctor");
 
-    if ((_mixerModule.RegisterMixedStreamCallback(*this) == -1) ||
-        (_mixerModule.RegisterMixerStatusCallback(*this, 100) == -1))
+    if (_mixerModule.RegisterMixedStreamCallback(this) == -1)
     {
         WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId,-1),
                      "OutputMixer::OutputMixer() failed to register mixer"
@@ -170,7 +147,6 @@ OutputMixer::~OutputMixer()
             _outputFileRecorderPtr = NULL;
         }
     }
-    _mixerModule.UnRegisterMixerStatusCallback();
     _mixerModule.UnRegisterMixedStreamCallback();
     delete &_mixerModule;
     delete &_callbackCritSect;
@@ -240,14 +216,14 @@ int32_t
 OutputMixer::SetMixabilityStatus(MixerParticipant& participant,
                                  bool mixable)
 {
-    return _mixerModule.SetMixabilityStatus(participant, mixable);
+    return _mixerModule.SetMixabilityStatus(&participant, mixable);
 }
 
 int32_t
 OutputMixer::SetAnonymousMixabilityStatus(MixerParticipant& participant,
                                           bool mixable)
 {
-    return _mixerModule.SetAnonymousMixabilityStatus(participant,mixable);
+    return _mixerModule.SetAnonymousMixabilityStatus(&participant, mixable);
 }
 
 int32_t
@@ -295,11 +271,6 @@ OutputMixer::GetOutputVolumePan(float& left, float& right)
                  "GetOutputVolumePan() => left=%2.1f, right=%2.1f",
                  left, right);
     return 0;
-}
-
-int OutputMixer::GetOutputChannelCount()
-{
-  return _audioFrame.num_channels_;
 }
 
 int OutputMixer::StartRecordingPlayout(const char* fileName,
@@ -492,11 +463,12 @@ int OutputMixer::StopRecordingPlayout()
 }
 
 int OutputMixer::GetMixedAudio(int sample_rate_hz,
-                               int num_channels,
+                               size_t num_channels,
                                AudioFrame* frame) {
-  WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
-               "OutputMixer::GetMixedAudio(sample_rate_hz=%d, num_channels=%d)",
-               sample_rate_hz, num_channels);
+  WEBRTC_TRACE(
+      kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
+      "OutputMixer::GetMixedAudio(sample_rate_hz=%d, num_channels=%" PRIuS ")",
+      sample_rate_hz, num_channels);
 
   // --- Record playout if enabled
   {
@@ -548,7 +520,18 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
 
     // --- Far-end Voice Quality Enhancement (AudioProcessing Module)
     if (feed_data_to_apm) {
-      APMAnalyzeReverseStream(_audioFrame);
+      // Convert from mixing to AudioProcessing sample rate, similarly to how it
+      // is done on the send side. Downmix to mono.
+      AudioFrame frame;
+      frame.num_channels_ = 1;
+      frame.sample_rate_hz_ = _audioProcessingModulePtr->input_sample_rate_hz();
+      RemixAndResample(_audioFrame, &audioproc_resampler_, &frame);
+
+      if (_audioProcessingModulePtr->AnalyzeReverseStream(&frame) != 0) {
+        WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
+                     "AudioProcessingModule::AnalyzeReverseStream() => error");
+        RTC_DCHECK(false);
+      }
     }
 
     // --- External media processing
@@ -576,20 +559,6 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
     return 0;
 }
 
-void OutputMixer::APMAnalyzeReverseStream(AudioFrame &audioFrame) {
-  // Convert from mixing to AudioProcessing sample rate, determined by the send
-  // side. Downmix to mono.
-  AudioFrame frame;
-  frame.num_channels_ = 1;
-  frame.sample_rate_hz_ = _audioProcessingModulePtr->input_sample_rate_hz();
-  RemixAndResample(audioFrame, &audioproc_resampler_, &frame);
-
-  if (_audioProcessingModulePtr->AnalyzeReverseStream(&frame) == -1) {
-    WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId,-1),
-                 "AudioProcessingModule::AnalyzeReverseStream() => error");
-  }
-}
-
 // ----------------------------------------------------------------------------
 //                             Private methods
 // ----------------------------------------------------------------------------
@@ -599,22 +568,6 @@ OutputMixer::InsertInbandDtmfTone()
 {
     uint16_t sampleRate(0);
     _dtmfGenerator.GetSampleRate(sampleRate);
-
-    // We're not using a supported sample rate for the DtmfInband generator, so
-    // we won't be able to generate feedback tones.
-    if (!(_audioFrame.sample_rate_hz_ == 8000 ||
-          _audioFrame.sample_rate_hz_ == 16000 ||
-          _audioFrame.sample_rate_hz_ == 32000 ||
-          _audioFrame.sample_rate_hz_ == 44100 ||
-          _audioFrame.sample_rate_hz_ == 48000)) {
-
-        WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
-                     "OutputMixer::InsertInbandDtmfTone() Sample rate"
-                     "not supported");
-
-        return -1;
-    }
-
     if (sampleRate != _audioFrame.sample_rate_hz_)
     {
         // Update sample rate of Dtmf tone since the mixing frequency changed.
@@ -624,7 +577,7 @@ OutputMixer::InsertInbandDtmfTone()
         _dtmfGenerator.ResetTone();
     }
 
-    int16_t toneBuffer[MAX_DTMF_SAMPLERATE/100];
+    int16_t toneBuffer[320];
     uint16_t toneSamples(0);
     if (_dtmfGenerator.Get10msTone(toneBuffer, toneSamples) == -1)
     {
@@ -643,7 +596,7 @@ OutputMixer::InsertInbandDtmfTone()
     } else
     {
         // stereo
-        for (int i = 0; i < _audioFrame.samples_per_channel_; i++)
+        for (size_t i = 0; i < _audioFrame.samples_per_channel_; i++)
         {
             _audioFrame.data_[2 * i] = toneBuffer[i];
             _audioFrame.data_[2 * i + 1] = 0;

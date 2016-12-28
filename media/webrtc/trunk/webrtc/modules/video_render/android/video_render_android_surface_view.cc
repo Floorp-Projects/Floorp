@@ -10,8 +10,8 @@
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_render/android/video_render_android_surface_view.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 
 #ifdef ANDROID_LOG
 #include <android/log.h>
@@ -20,7 +20,7 @@
 #undef WEBRTC_TRACE
 #define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTC*", __VA_ARGS__)
 #else
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #endif
 
 namespace webrtc {
@@ -409,10 +409,8 @@ int32_t AndroidSurfaceViewChannel::Init(
   return 0;
 }
 
-
-int32_t AndroidSurfaceViewChannel::RenderFrame(
-    const uint32_t /*streamId*/,
-    const I420VideoFrame& videoFrame) {
+int32_t AndroidSurfaceViewChannel::RenderFrame(const uint32_t /*streamId*/,
+                                               const VideoFrame& videoFrame) {
   // WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer,_id, "%s:" ,__FUNCTION__);
   _renderCritSect.Enter();
   _bufferToRender = videoFrame;

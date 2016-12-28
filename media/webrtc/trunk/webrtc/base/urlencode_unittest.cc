@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/thread.h"
@@ -19,7 +20,7 @@ TEST(Urlencode, SourceTooLong) {
   char source[] = "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
       "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
   char dest[1];
-  ASSERT_EQ(0, UrlEncode(source, dest, ARRAY_SIZE(dest)));
+  ASSERT_EQ(0, UrlEncode(source, dest, arraysize(dest)));
   ASSERT_EQ('\0', dest[0]);
 
   dest[0] = 'a';
@@ -30,7 +31,7 @@ TEST(Urlencode, SourceTooLong) {
 TEST(Urlencode, OneCharacterConversion) {
   char source[] = "^";
   char dest[4];
-  ASSERT_EQ(3, UrlEncode(source, dest, ARRAY_SIZE(dest)));
+  ASSERT_EQ(3, UrlEncode(source, dest, arraysize(dest)));
   ASSERT_STREQ("%5E", dest);
 }
 
@@ -40,7 +41,7 @@ TEST(Urlencode, ShortDestinationNoEncoding) {
   // hold the text given.
   char source[] = "aa";
   char dest[3];
-  ASSERT_EQ(2, UrlEncode(source, dest, ARRAY_SIZE(dest)));
+  ASSERT_EQ(2, UrlEncode(source, dest, arraysize(dest)));
   ASSERT_STREQ("aa", dest);
 }
 
@@ -49,14 +50,14 @@ TEST(Urlencode, ShortDestinationEncoding) {
   // big enough to hold the encoding.
   char source[] = "&";
   char dest[3];
-  ASSERT_EQ(0, UrlEncode(source, dest, ARRAY_SIZE(dest)));
+  ASSERT_EQ(0, UrlEncode(source, dest, arraysize(dest)));
   ASSERT_EQ('\0', dest[0]);
 }
 
 TEST(Urlencode, Encoding1) {
   char source[] = "A^ ";
   char dest[8];
-  ASSERT_EQ(5, UrlEncode(source, dest, ARRAY_SIZE(dest)));
+  ASSERT_EQ(5, UrlEncode(source, dest, arraysize(dest)));
   ASSERT_STREQ("A%5E+", dest);
 }
 
@@ -64,7 +65,7 @@ TEST(Urlencode, Encoding2) {
   char source[] = "A^ ";
   char dest[8];
   ASSERT_EQ(7, rtc::UrlEncodeWithoutEncodingSpaceAsPlus(source, dest,
-                                                        ARRAY_SIZE(dest)));
+                                                        arraysize(dest)));
   ASSERT_STREQ("A%5E%20", dest);
 }
 

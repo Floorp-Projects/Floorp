@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string>
 
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_initialization_fixture.h"
 
@@ -35,7 +35,7 @@ class MixingTest : public AfterInitializationFixture {
       : output_filename_(test::OutputPath() + "mixing_test_output.pcm") {
   }
   void SetUp() {
-    transport_ = new LoopBackTransport(voe_network_);
+    transport_ = new LoopBackTransport(voe_network_, 0);
   }
   void TearDown() {
     delete transport_;
@@ -182,6 +182,9 @@ class MixingTest : public AfterInitializationFixture {
   void StartRemoteStream(int stream, const CodecInst& codec_inst, int port) {
     EXPECT_EQ(0, voe_codec_->SetRecPayloadType(stream, codec_inst));
     EXPECT_EQ(0, voe_network_->RegisterExternalTransport(stream, *transport_));
+    EXPECT_EQ(0, voe_rtp_rtcp_->SetLocalSSRC(
+                     stream, static_cast<unsigned int>(stream)));
+    transport_->AddChannel(stream, stream);
     EXPECT_EQ(0, voe_base_->StartReceive(stream));
     EXPECT_EQ(0, voe_base_->StartPlayout(stream));
     EXPECT_EQ(0, voe_codec_->SetSendCodec(stream, codec_inst));

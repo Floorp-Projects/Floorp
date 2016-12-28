@@ -14,15 +14,15 @@
 #include <list>
 #include <map>
 
+#include "webrtc/base/platform_thread.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/video_render/ios/video_render_ios_channel.h"
 #include "webrtc/modules/video_render/ios/video_render_ios_view.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc {
 
 class CriticalSectionWrapper;
-class EventWrapper;
+class EventTimerWrapper;
 
 class VideoRenderIosGles20 {
  public:
@@ -63,8 +63,9 @@ class VideoRenderIosGles20 {
 
  private:
   rtc::scoped_ptr<CriticalSectionWrapper> gles_crit_sec_;
-  EventWrapper* screen_update_event_;
-  rtc::scoped_ptr<ThreadWrapper> screen_update_thread_;
+  EventTimerWrapper* screen_update_event_;
+  // TODO(pbos): Remove scoped_ptr and use member directly.
+  rtc::scoped_ptr<rtc::PlatformThread> screen_update_thread_;
 
   VideoRenderIosView* view_;
   Rect window_rect_;

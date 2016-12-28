@@ -14,14 +14,14 @@
 #include "webrtc/modules/audio_processing/agc/agc.h"
 
 #include "gmock/gmock.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
 
 class MockAgc : public Agc {
  public:
-  MOCK_METHOD2(AnalyzePreproc, float(const int16_t* audio, int length));
-  MOCK_METHOD3(Process, int(const int16_t* audio, int length,
+  MOCK_METHOD2(AnalyzePreproc, float(const int16_t* audio, size_t length));
+  MOCK_METHOD3(Process, int(const int16_t* audio, size_t length,
                             int sample_rate_hz));
   MOCK_METHOD1(GetRmsErrorDb, bool(int* error));
   MOCK_METHOD0(Reset, void());

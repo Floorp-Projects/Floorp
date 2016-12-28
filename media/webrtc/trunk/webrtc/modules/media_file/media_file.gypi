@@ -17,12 +17,12 @@
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       ],
       'sources': [
-        'interface/media_file.h',
-        'interface/media_file_defines.h',
-        'source/media_file_impl.cc',
-        'source/media_file_impl.h',
-        'source/media_file_utility.cc',
-        'source/media_file_utility.h',
+        'media_file.h',
+        'media_file_defines.h',
+        'media_file_impl.cc',
+        'media_file_impl.h',
+        'media_file_utility.cc',
+        'media_file_utility.h',
       ], # source
       # TODO(jschuh): Bug 1348: fix size_t to int truncations.
       'msvs_disabled_warnings': [ 4267, ],

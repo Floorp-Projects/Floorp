@@ -13,11 +13,6 @@
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
-#ifdef WEBRTC_LINUX
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/atomic32.h"
-#include <sys/inotify.h>
-#endif
 
 namespace webrtc
 {
@@ -36,8 +31,7 @@ public:
         char* deviceUniqueIdUTF8,
         uint32_t deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8=0,
-        uint32_t productUniqueIdUTF8Length=0,
-        pid_t* pid=0);
+        uint32_t productUniqueIdUTF8Length=0);
     /*
     * Fills the membervariable _captureCapabilities with capabilites for the given device name.
     */
@@ -53,18 +47,6 @@ public:
 private:
 
     bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-
-#ifdef WEBRTC_LINUX
-    void HandleEvent(inotify_event* event);
-    int EventCheck();
-    int HandleEvents();
-    int ProcessInotifyEvents();
-    rtc::scoped_ptr<ThreadWrapper> _inotifyEventThread;
-    static bool InotifyEventThread(void*);
-    bool InotifyProcess();
-    int _fd, _wd_v4l, _wd_snd; /* accessed on InotifyEventThread thread */
-    Atomic32 _isShutdown;
-#endif
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

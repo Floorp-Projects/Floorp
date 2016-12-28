@@ -16,6 +16,7 @@
 
 #include <algorithm>  // find_if()
 
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
 
@@ -49,11 +50,16 @@ void PacketBuffer::Flush() {
   DeleteAllPackets(&buffer_);
 }
 
+bool PacketBuffer::Empty() const {
+  return buffer_.empty();
+}
+
 int PacketBuffer::InsertPacket(Packet* packet) {
   if (!packet || !packet->payload) {
     if (packet) {
       delete packet;
     }
+    LOG(LS_WARNING) << "InsertPacket invalid packet";
     return kInvalidPacket;
   }
 
@@ -62,6 +68,7 @@ int PacketBuffer::InsertPacket(Packet* packet) {
   if (buffer_.size() >= max_number_of_packets_) {
     // Buffer is full. Flush it.
     Flush();
+    LOG(LS_WARNING) << "Packet buffer flushed";
     return_val = kFlushed;
   }
 
@@ -174,7 +181,7 @@ const RTPHeader* PacketBuffer::NextRtpHeader() const {
   return const_cast<const RTPHeader*>(&(buffer_.front()->header));
 }
 
-Packet* PacketBuffer::GetNextPacket(int* discard_count) {
+Packet* PacketBuffer::GetNextPacket(size_t* discard_count) {
   if (Empty()) {
     // Buffer is empty.
     return NULL;
@@ -187,7 +194,7 @@ Packet* PacketBuffer::GetNextPacket(int* discard_count) {
 
   // Discard other packets with the same timestamp. These are duplicates or
   // redundant payloads that should not be used.
-  int discards = 0;
+  size_t discards = 0;
 
   while (!Empty() &&
       buffer_.front()->header.timestamp == packet->header.timestamp) {
@@ -229,25 +236,29 @@ int PacketBuffer::DiscardOldPackets(uint32_t timestamp_limit,
   return 0;
 }
 
-int PacketBuffer::NumSamplesInBuffer(DecoderDatabase* decoder_database,
-                                     int last_decoded_length) const {
+int PacketBuffer::DiscardAllOldPackets(uint32_t timestamp_limit) {
+  return DiscardOldPackets(timestamp_limit, 0);
+}
+
+size_t PacketBuffer::NumPacketsInBuffer() const {
+  return buffer_.size();
+}
+
+size_t PacketBuffer::NumSamplesInBuffer(DecoderDatabase* decoder_database,
+                                        size_t last_decoded_length) const {
   PacketList::const_iterator it;
-  int num_samples = 0;
-  int last_duration = last_decoded_length;
+  size_t num_samples = 0;
+  size_t last_duration = last_decoded_length;
   for (it = buffer_.begin(); it != buffer_.end(); ++it) {
     Packet* packet = (*it);
     AudioDecoder* decoder =
         decoder_database->GetDecoder(packet->header.payloadType);
-    if (decoder) {
-      int duration;
-      if (packet->sync_packet) {
-        duration = last_duration;
-      } else if (packet->primary) {
-        duration =
-            decoder->PacketDuration(packet->payload, packet->payload_length);
-      } else {
+    if (decoder && !packet->sync_packet) {
+      if (!packet->primary) {
         continue;
       }
+      int duration =
+          decoder->PacketDuration(packet->payload, packet->payload_length);
       if (duration >= 0) {
         last_duration = duration;  // Save the most up-to-date (valid) duration.
       }

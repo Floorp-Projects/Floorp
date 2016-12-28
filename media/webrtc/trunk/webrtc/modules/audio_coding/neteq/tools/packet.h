@@ -114,7 +114,7 @@ class Packet {
   double time_ms_;     // Used to denote a packet's arrival time.
   bool valid_header_;  // Set by the RtpHeaderParser.
 
-  DISALLOW_COPY_AND_ASSIGN(Packet);
+  RTC_DISALLOW_COPY_AND_ASSIGN(Packet);
 };
 
 }  // namespace test

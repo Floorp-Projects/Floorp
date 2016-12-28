@@ -14,7 +14,7 @@
 
 #include <algorithm>
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
 
@@ -27,11 +27,12 @@ float Db2Linear(float db) {
 }
 
 void ApplyGainLinear(float gain, float last_gain, AudioFrame* frame) {
-  const int frame_length = frame->samples_per_channel_ * frame->num_channels_;
+  const size_t frame_length =
+      frame->samples_per_channel_ * frame->num_channels_;
   // Smooth the transition between gain levels across the frame.
   float smoothed_gain = last_gain;
   float gain_step = (gain - last_gain) / (frame_length - 1);
-  for (int i = 0; i < frame_length; ++i) {
+  for (size_t i = 0; i < frame_length; ++i) {
     smoothed_gain += gain_step;
     float sample = std::floor(frame->data_[i] * smoothed_gain + 0.5);
     sample = std::max(std::min(32767.0f, sample), -32768.0f);

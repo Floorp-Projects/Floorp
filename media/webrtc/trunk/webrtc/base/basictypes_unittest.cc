@@ -15,40 +15,13 @@
 namespace rtc {
 
 TEST(BasicTypesTest, Endian) {
-  uint16 v16 = 0x1234u;
-  uint8 first_byte = *reinterpret_cast<uint8*>(&v16);
-#if defined(ARCH_CPU_LITTLE_ENDIAN)
+  uint16_t v16 = 0x1234u;
+  uint8_t first_byte = *reinterpret_cast<uint8_t*>(&v16);
+#if defined(RTC_ARCH_CPU_LITTLE_ENDIAN)
   EXPECT_EQ(0x34u, first_byte);
-#elif defined(ARCH_CPU_BIG_ENDIAN)
+#elif defined(RTC_ARCH_CPU_BIG_ENDIAN)
   EXPECT_EQ(0x12u, first_byte);
 #endif
-}
-
-TEST(BasicTypesTest, SizeOfTypes) {
-  int8 i8 = -1;
-  uint8 u8 = 1u;
-  int16 i16 = -1;
-  uint16 u16 = 1u;
-  int32 i32 = -1;
-  uint32 u32 = 1u;
-  int64 i64 = -1;
-  uint64 u64 = 1u;
-  EXPECT_EQ(1u, sizeof(i8));
-  EXPECT_EQ(1u, sizeof(u8));
-  EXPECT_EQ(2u, sizeof(i16));
-  EXPECT_EQ(2u, sizeof(u16));
-  EXPECT_EQ(4u, sizeof(i32));
-  EXPECT_EQ(4u, sizeof(u32));
-  EXPECT_EQ(8u, sizeof(i64));
-  EXPECT_EQ(8u, sizeof(u64));
-  EXPECT_GT(0, i8);
-  EXPECT_LT(0u, u8);
-  EXPECT_GT(0, i16);
-  EXPECT_LT(0u, u16);
-  EXPECT_GT(0, i32);
-  EXPECT_LT(0u, u32);
-  EXPECT_GT(0, i64);
-  EXPECT_LT(0u, u64);
 }
 
 TEST(BasicTypesTest, SizeOfConstants) {
@@ -65,9 +38,9 @@ TEST(BasicTypesTest, SizeOfConstants) {
 #if !defined(CPU_X86) && (defined(WEBRTC_WIN) || defined(WEBRTC_MAC) && !defined(WEBRTC_IOS))
 #error expected CPU_X86 to be defined.
 #endif
-#if !defined(ARCH_CPU_LITTLE_ENDIAN) && \
+#if !defined(RTC_ARCH_CPU_LITTLE_ENDIAN) && \
   (defined(WEBRTC_WIN) || defined(WEBRTC_MAC) && !defined(WEBRTC_IOS) || defined(CPU_X86))
-#error expected ARCH_CPU_LITTLE_ENDIAN to be defined.
+#error expected RTC_ARCH_CPU_LITTLE_ENDIAN to be defined.
 #endif
 
 // TODO(fbarchard): Test all macros in basictypes.h

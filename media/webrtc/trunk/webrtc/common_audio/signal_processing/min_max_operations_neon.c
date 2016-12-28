@@ -9,20 +9,19 @@
  */
 
 #include <arm_neon.h>
+#include <assert.h>
 #include <stdlib.h>
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 // Maximum absolute value of word16 vector. C version for generic platforms.
-int16_t WebRtcSpl_MaxAbsValueW16Neon(const int16_t* vector, int length) {
+int16_t WebRtcSpl_MaxAbsValueW16Neon(const int16_t* vector, size_t length) {
   int absolute = 0, maximum = 0;
 
-  if (vector == NULL || length <= 0) {
-    return -1;
-  }
+  assert(length > 0);
 
   const int16_t* p_start = vector;
-  int rest = length & 7;
+  size_t rest = length & 7;
   const int16_t* p_end = vector + length - rest;
 
   int16x8_t v;
@@ -69,24 +68,22 @@ int16_t WebRtcSpl_MaxAbsValueW16Neon(const int16_t* vector, int length) {
 
 // Maximum absolute value of word32 vector. NEON intrinsics version for
 // ARM 32-bit/64-bit platforms.
-int32_t WebRtcSpl_MaxAbsValueW32Neon(const int32_t* vector, int length) {
+int32_t WebRtcSpl_MaxAbsValueW32Neon(const int32_t* vector, size_t length) {
   // Use uint32_t for the local variables, to accommodate the return value
   // of abs(0x80000000), which is 0x80000000.
 
   uint32_t absolute = 0, maximum = 0;
-  int i = 0;
-  int residual = length & 0x7;
+  size_t i = 0;
+  size_t residual = length & 0x7;
 
-  if (vector == NULL || length <= 0) {
-    return -1;
-  }
+  assert(length > 0);
 
   const int32_t* p_start = vector;
   uint32x4_t max32x4_0 = vdupq_n_u32(0);
   uint32x4_t max32x4_1 = vdupq_n_u32(0);
 
   // First part, unroll the loop 8 times.
-  for (i = length - residual; i >0; i -= 8) {
+  for (i = 0; i < length - residual; i += 8) {
     int32x4_t in32x4_0 = vld1q_s32(p_start);
     p_start += 4;
     int32x4_t in32x4_1 = vld1q_s32(p_start);
@@ -126,20 +123,18 @@ int32_t WebRtcSpl_MaxAbsValueW32Neon(const int32_t* vector, int length) {
 
 // Maximum value of word16 vector. NEON intrinsics version for
 // ARM 32-bit/64-bit platforms.
-int16_t WebRtcSpl_MaxValueW16Neon(const int16_t* vector, int length) {
+int16_t WebRtcSpl_MaxValueW16Neon(const int16_t* vector, size_t length) {
   int16_t maximum = WEBRTC_SPL_WORD16_MIN;
-  int i = 0;
-  int residual = length & 0x7;
+  size_t i = 0;
+  size_t residual = length & 0x7;
 
-  if (vector == NULL || length <= 0) {
-    return maximum;
-  }
+  assert(length > 0);
 
   const int16_t* p_start = vector;
   int16x8_t max16x8 = vdupq_n_s16(WEBRTC_SPL_WORD16_MIN);
 
   // First part, unroll the loop 8 times.
-  for (i = length - residual; i >0; i -= 8) {
+  for (i = 0; i < length - residual; i += 8) {
     int16x8_t in16x8 = vld1q_s16(p_start);
     max16x8 = vmaxq_s16(max16x8, in16x8);
     p_start += 8;
@@ -166,21 +161,19 @@ int16_t WebRtcSpl_MaxValueW16Neon(const int16_t* vector, int length) {
 
 // Maximum value of word32 vector. NEON intrinsics version for
 // ARM 32-bit/64-bit platforms.
-int32_t WebRtcSpl_MaxValueW32Neon(const int32_t* vector, int length) {
+int32_t WebRtcSpl_MaxValueW32Neon(const int32_t* vector, size_t length) {
   int32_t maximum = WEBRTC_SPL_WORD32_MIN;
-  int i = 0;
-  int residual = length & 0x7;
+  size_t i = 0;
+  size_t residual = length & 0x7;
 
-  if (vector == NULL || length <= 0) {
-    return maximum;
-  }
+  assert(length > 0);
 
   const int32_t* p_start = vector;
   int32x4_t max32x4_0 = vdupq_n_s32(WEBRTC_SPL_WORD32_MIN);
   int32x4_t max32x4_1 = vdupq_n_s32(WEBRTC_SPL_WORD32_MIN);
 
   // First part, unroll the loop 8 times.
-  for (i = length - residual; i >0; i -= 8) {
+  for (i = 0; i < length - residual; i += 8) {
     int32x4_t in32x4_0 = vld1q_s32(p_start);
     p_start += 4;
     int32x4_t in32x4_1 = vld1q_s32(p_start);
@@ -210,20 +203,18 @@ int32_t WebRtcSpl_MaxValueW32Neon(const int32_t* vector, int length) {
 
 // Minimum value of word16 vector. NEON intrinsics version for
 // ARM 32-bit/64-bit platforms.
-int16_t WebRtcSpl_MinValueW16Neon(const int16_t* vector, int length) {
+int16_t WebRtcSpl_MinValueW16Neon(const int16_t* vector, size_t length) {
   int16_t minimum = WEBRTC_SPL_WORD16_MAX;
-  int i = 0;
-  int residual = length & 0x7;
+  size_t i = 0;
+  size_t residual = length & 0x7;
 
-  if (vector == NULL || length <= 0) {
-    return minimum;
-  }
+  assert(length > 0);
 
   const int16_t* p_start = vector;
   int16x8_t min16x8 = vdupq_n_s16(WEBRTC_SPL_WORD16_MAX);
 
   // First part, unroll the loop 8 times.
-  for (i = length - residual; i >0; i -= 8) {
+  for (i = 0; i < length - residual; i += 8) {
     int16x8_t in16x8 = vld1q_s16(p_start);
     min16x8 = vminq_s16(min16x8, in16x8);
     p_start += 8;
@@ -250,21 +241,19 @@ int16_t WebRtcSpl_MinValueW16Neon(const int16_t* vector, int length) {
 
 // Minimum value of word32 vector. NEON intrinsics version for
 // ARM 32-bit/64-bit platforms.
-int32_t WebRtcSpl_MinValueW32Neon(const int32_t* vector, int length) {
+int32_t WebRtcSpl_MinValueW32Neon(const int32_t* vector, size_t length) {
   int32_t minimum = WEBRTC_SPL_WORD32_MAX;
-  int i = 0;
-  int residual = length & 0x7;
+  size_t i = 0;
+  size_t residual = length & 0x7;
 
-  if (vector == NULL || length <= 0) {
-    return minimum;
-  }
+  assert(length > 0);
 
   const int32_t* p_start = vector;
   int32x4_t min32x4_0 = vdupq_n_s32(WEBRTC_SPL_WORD32_MAX);
   int32x4_t min32x4_1 = vdupq_n_s32(WEBRTC_SPL_WORD32_MAX);
 
   // First part, unroll the loop 8 times.
-  for (i = length - residual; i >0; i -= 8) {
+  for (i = 0; i < length - residual; i += 8) {
     int32x4_t in32x4_0 = vld1q_s32(p_start);
     p_start += 4;
     int32x4_t in32x4_1 = vld1q_s32(p_start);

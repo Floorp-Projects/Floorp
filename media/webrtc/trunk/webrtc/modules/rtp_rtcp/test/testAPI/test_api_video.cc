@@ -15,9 +15,9 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_types.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_payload_registry.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_video.h"
 #include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
@@ -33,13 +33,11 @@ namespace webrtc {
 class RtpRtcpVideoTest : public ::testing::Test {
  protected:
   RtpRtcpVideoTest()
-      : test_id_(123),
-        rtp_payload_registry_(RTPPayloadStrategy::CreateStrategy(false)),
+      : rtp_payload_registry_(RTPPayloadStrategy::CreateStrategy(false)),
         test_ssrc_(3456),
         test_timestamp_(4567),
         test_sequence_number_(2345),
-        fake_clock(123456) {
-  }
+        fake_clock(123456) {}
   ~RtpRtcpVideoTest() {}
 
   virtual void SetUp() {
@@ -47,16 +45,15 @@ class RtpRtcpVideoTest : public ::testing::Test {
     receiver_ = new TestRtpReceiver();
     receive_statistics_.reset(ReceiveStatistics::Create(&fake_clock));
     RtpRtcp::Configuration configuration;
-    configuration.id = test_id_;
     configuration.audio = false;
     configuration.clock = &fake_clock;
     configuration.outgoing_transport = transport_;
 
     video_module_ = RtpRtcp::CreateRtpRtcp(configuration);
     rtp_receiver_.reset(RtpReceiver::CreateVideoReceiver(
-        test_id_, &fake_clock, receiver_, NULL, &rtp_payload_registry_));
+        &fake_clock, receiver_, NULL, &rtp_payload_registry_));
 
-    video_module_->SetRTCPStatus(kRtcpCompound);
+    video_module_->SetRTCPStatus(RtcpMode::kCompound);
     video_module_->SetSSRC(test_ssrc_);
     rtp_receiver_->SetNACKStatus(kNackRtcp);
     video_module_->SetStorePacketsStatus(true, 600);

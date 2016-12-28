@@ -12,10 +12,10 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_STRATEGY_H_
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -28,7 +28,7 @@ class RTPReceiverStrategy {
  public:
   static RTPReceiverStrategy* CreateVideoStrategy(RtpData* data_callback);
   static RTPReceiverStrategy* CreateAudioStrategy(
-      int32_t id, RtpData* data_callback,
+      RtpData* data_callback,
       RtpAudioFeedback* incoming_messages_callback);
 
   virtual ~RTPReceiverStrategy() {}
@@ -70,7 +70,6 @@ class RTPReceiverStrategy {
   // Invokes the OnInitializeDecoder callback in a media-specific way.
   virtual int32_t InvokeOnInitializeDecoder(
       RtpFeedback* callback,
-      int32_t id,
       int8_t payload_type,
       const char payload_name[RTP_PAYLOAD_NAME_SIZE],
       const PayloadUnion& specific_payload) const = 0;
@@ -79,7 +78,6 @@ class RTPReceiverStrategy {
   // reset statistics and/or discard this packet.
   virtual void CheckPayloadChanged(int8_t payload_type,
                                    PayloadUnion* specific_payload,
-                                   bool* should_reset_statistics,
                                    bool* should_discard_changes);
 
   virtual int Energy(uint8_t array_of_energy[kRtpCsrcSize]) const;
@@ -97,7 +95,7 @@ class RTPReceiverStrategy {
   // Note: Implementations may call the callback for other reasons than calls
   // to ParseRtpPacket, for instance if the implementation somehow recovers a
   // packet.
-  RTPReceiverStrategy(RtpData* data_callback);
+  explicit RTPReceiverStrategy(RtpData* data_callback);
 
   rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
   PayloadUnion last_payload_;

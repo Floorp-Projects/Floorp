@@ -12,7 +12,7 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/voice_engine/network_predictor.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace voe {

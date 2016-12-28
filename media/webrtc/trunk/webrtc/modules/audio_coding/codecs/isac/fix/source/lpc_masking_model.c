@@ -393,7 +393,7 @@ void WebRtcIsacfix_GetVars(const int16_t *input, const int16_t *pitchGains_Q12,
   chng3 = WEBRTC_SPL_ABS_W16(nrgQlog[1]-nrgQlog[0]);
   chng4 = WEBRTC_SPL_ABS_W16(nrgQlog[0]-oldNrgQlog);
   tmp = chng1+chng2+chng3+chng4;
-  chngQ = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tmp, kChngFactor, 10); /* Q12 */
+  chngQ = (int16_t)(tmp * kChngFactor >> 10);  /* Q12 */
   chngQ += 2926; /* + 1.0/1.4 in Q12 */
 
   /* Find average pitch gain */
@@ -403,10 +403,10 @@ void WebRtcIsacfix_GetVars(const int16_t *input, const int16_t *pitchGains_Q12,
     pgQ += pitchGains_Q12[k];
   }
 
-  pg3 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(pgQ, pgQ,11); /* pgQ in Q(12+2)=Q14. Q14*Q14>>11 => Q17 */
-  pg3 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(pgQ, pg3,13); /* Q17*Q14>>13 =>Q18  */
-  pg3 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(pg3, kMulPitchGain ,5); /* Q10  kMulPitchGain = -25 = -200 in Q-3. */
-
+  pg3 = (int16_t)(pgQ * pgQ >> 11);  // pgQ in Q(12+2)=Q14. Q14*Q14>>11 => Q17
+  pg3 = (int16_t)(pgQ * pg3 >> 13);  /* Q14*Q17>>13 =>Q18  */
+  /* kMulPitchGain = -25 = -200 in Q-3. */
+  pg3 = (int16_t)(pg3 * kMulPitchGain >> 5);  // Q10
   tmp16=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(kExp2,pg3,13);/* Q13*Q10>>13 => Q10*/
   if (tmp16<0) {
     tmp16_2 = (0x0400 | (tmp16 & 0x03FF));
@@ -580,9 +580,9 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
   snrq=snrQ10;
 
   /* SNR= C * 2 ^ (D * snrq) ; C=0.289, D=0.05*log2(10)=0.166 (~=172 in Q10)*/
-  tmp16 = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(snrq, 172, 10); // Q10
+  tmp16 = (int16_t)(snrq * 172 >> 10);  // Q10
   tmp16b = exp2_Q10_T(tmp16); // Q10
-  snrq = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(tmp16b, 285, 10); // Q10
+  snrq = (int16_t)(tmp16b * 285 >> 10);  // Q10
 
   /* change quallevel depending on pitch gains and level fluctuations */
   WebRtcIsacfix_GetVars(inLoQ0, pitchGains_Q12, &(maskdata->OldEnergy), &varscaleQ14);
@@ -595,12 +595,12 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
   aaQ14 = (int16_t)((22938 * (8192 + (varscaleQ14 >> 1)) + 32768) >> 16);
 
   /* Calculate tmp = (1.0 + aa*aa); in Q12 */
-  tmp16 = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(aaQ14, aaQ14, 15); //Q14*Q14>>15 = Q13
+  tmp16 = (int16_t)(aaQ14 * aaQ14 >> 15);  // Q14*Q14>>15 = Q13
   tmpQQlo = 4096 + (tmp16 >> 1);  // Q12 + Q13>>1 = Q12.
 
   /* Calculate tmp = (1.0+aa) * (1.0+aa); */
   tmp16 = 8192 + (aaQ14 >> 1);  // 1+a in Q13.
-  tmpQQhi = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(tmp16, tmp16, 14); //Q13*Q13>>14 = Q12
+  tmpQQhi = (int16_t)(tmp16 * tmp16 >> 14);  // Q13*Q13>>14 = Q12
 
   /* replace data in buffer by new look-ahead data */
   for (pos1 = 0; pos1 < QLOOKAHEAD; pos1++) {
@@ -613,19 +613,19 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
     for (pos1 = 0; pos1 < WINLEN - UPDATE/2; pos1++) {
       maskdata->DataBufferLoQ0[pos1] = maskdata->DataBufferLoQ0[pos1 + UPDATE/2];
       maskdata->DataBufferHiQ0[pos1] = maskdata->DataBufferHiQ0[pos1 + UPDATE/2];
-      DataLoQ6[pos1] = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(
-          maskdata->DataBufferLoQ0[pos1], kWindowAutocorr[pos1], 15); // Q0*Q21>>15 = Q6
-      DataHiQ6[pos1] = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(
-          maskdata->DataBufferHiQ0[pos1], kWindowAutocorr[pos1], 15); // Q0*Q21>>15 = Q6
+      DataLoQ6[pos1] = (int16_t)(maskdata->DataBufferLoQ0[pos1] *
+          kWindowAutocorr[pos1] >> 15);  // Q0*Q21>>15 = Q6
+      DataHiQ6[pos1] = (int16_t)(maskdata->DataBufferHiQ0[pos1] *
+          kWindowAutocorr[pos1] >> 15);  // Q0*Q21>>15 = Q6
     }
     pos2 = (int16_t)(k * UPDATE / 2);
     for (n = 0; n < UPDATE/2; n++, pos1++) {
       maskdata->DataBufferLoQ0[pos1] = inLoQ0[QLOOKAHEAD + pos2];
       maskdata->DataBufferHiQ0[pos1] = inHiQ0[pos2++];
-      DataLoQ6[pos1] = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(
-          maskdata->DataBufferLoQ0[pos1], kWindowAutocorr[pos1], 15); // Q0*Q21>>15 = Q6
-      DataHiQ6[pos1] = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(
-          maskdata->DataBufferHiQ0[pos1], kWindowAutocorr[pos1], 15); // Q0*Q21>>15 = Q6
+      DataLoQ6[pos1] = (int16_t)(maskdata->DataBufferLoQ0[pos1] *
+          kWindowAutocorr[pos1] >> 15);  // Q0*Q21>>15 = Q6
+      DataHiQ6[pos1] = (int16_t)(maskdata->DataBufferHiQ0[pos1] *
+          kWindowAutocorr[pos1] >> 15);  // Q0*Q21>>15 = Q6
     }
 
     /* Get correlation coefficients */
@@ -868,14 +868,12 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
       /* add hearing threshold and compute the gain */
       /* lo_coeff = varscale * S_N_R / (sqrt_nrg + varscale * H_T_H); */
 
-
-      //tmp32a=WEBRTC_SPL_MUL_16_16_RSFT(varscaleQ14, H_T_HQ19, 17);  // Q14
       tmp32a = varscaleQ14 >> 1;  // H_T_HQ19=65536 (16-17=-1)
       ssh = sh_lo >> 1;  // sqrt_nrg is in Qssh.
       sh = ssh - 14;
       tmp32b = WEBRTC_SPL_SHIFT_W32(tmp32a, sh); // Q14->Qssh
       tmp32c = sqrt_nrg + tmp32b;  // Qssh  (denominator)
-      tmp32a = WEBRTC_SPL_MUL_16_16_RSFT(varscaleQ14, snrq, 0);  //Q24 (numerator)
+      tmp32a = varscaleQ14 * snrq;  // Q24 (numerator)
 
       sh = WebRtcSpl_NormW32(tmp32c);
       shft = 16 - sh;
@@ -918,14 +916,13 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
       /* add hearing threshold and compute the gain */
       /* hi_coeff = varscale * S_N_R / (sqrt_nrg + varscale * H_T_H); */
 
-      //tmp32a=WEBRTC_SPL_MUL_16_16_RSFT(varscaleQ14, H_T_HQ19, 17);  // Q14
       tmp32a = varscaleQ14 >> 1;  // H_T_HQ19=65536 (16-17=-1)
 
       ssh = sh_hi >> 1;  // |sqrt_nrg| is in Qssh.
       sh = ssh - 14;
       tmp32b = WEBRTC_SPL_SHIFT_W32(tmp32a, sh); // Q14->Qssh
       tmp32c = sqrt_nrg + tmp32b;  // Qssh  (denominator)
-      tmp32a = WEBRTC_SPL_MUL_16_16_RSFT(varscaleQ14, snrq, 0);  //Q24 (numerator)
+      tmp32a = varscaleQ14 * snrq;  // Q24 (numerator)
 
       sh = WebRtcSpl_NormW32(tmp32c);
       shft = 16 - sh;

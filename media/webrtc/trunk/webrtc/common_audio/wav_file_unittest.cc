@@ -26,11 +26,11 @@ static const float kSamples[] = {0.0, 10.0, 4e4, -1e9};
 // Write a tiny WAV file with the C++ interface and verify the result.
 TEST(WavWriterTest, CPP) {
   const std::string outfile = test::OutputPath() + "wavtest1.wav";
-  static const uint32_t kNumSamples = 3;
+  static const size_t kNumSamples = 3;
   {
     WavWriter w(outfile, 14099, 1);
     EXPECT_EQ(14099, w.sample_rate());
-    EXPECT_EQ(1, w.num_channels());
+    EXPECT_EQ(1u, w.num_channels());
     EXPECT_EQ(0u, w.num_samples());
     w.WriteSamples(kSamples, kNumSamples);
     EXPECT_EQ(kNumSamples, w.num_samples());
@@ -64,10 +64,10 @@ TEST(WavWriterTest, CPP) {
     0xff, 0x7f,  // third sample: 4e4 (saturated)
     kMetadata[0], kMetadata[1],
   };
-  static const int kContentSize =
+  static const size_t kContentSize =
       kWavHeaderSize + kNumSamples * sizeof(int16_t) + sizeof(kMetadata);
   static_assert(sizeof(kExpectedContents) == kContentSize, "content size");
-  EXPECT_EQ(size_t(kContentSize), test::GetFileSize(outfile));
+  EXPECT_EQ(kContentSize, test::GetFileSize(outfile));
   FILE* f = fopen(outfile.c_str(), "rb");
   ASSERT_TRUE(f);
   uint8_t contents[kContentSize];
@@ -78,7 +78,7 @@ TEST(WavWriterTest, CPP) {
   {
     WavReader r(outfile);
     EXPECT_EQ(14099, r.sample_rate());
-    EXPECT_EQ(1, r.num_channels());
+    EXPECT_EQ(1u, r.num_channels());
     EXPECT_EQ(kNumSamples, r.num_samples());
     static const float kTruncatedSamples[] = {0.0, 10.0, 32767.0};
     float samples[kNumSamples];
@@ -93,9 +93,9 @@ TEST(WavWriterTest, C) {
   const std::string outfile = test::OutputPath() + "wavtest2.wav";
   rtc_WavWriter* w = rtc_WavOpen(outfile.c_str(), 11904, 2);
   EXPECT_EQ(11904, rtc_WavSampleRate(w));
-  EXPECT_EQ(2, rtc_WavNumChannels(w));
+  EXPECT_EQ(2u, rtc_WavNumChannels(w));
   EXPECT_EQ(0u, rtc_WavNumSamples(w));
-  static const uint32_t kNumSamples = 4;
+  static const size_t kNumSamples = 4;
   rtc_WavWriteSamples(w, &kSamples[0], 2);
   EXPECT_EQ(2u, rtc_WavNumSamples(w));
   rtc_WavWriteSamples(w, &kSamples[2], kNumSamples - 2);
@@ -120,10 +120,10 @@ TEST(WavWriterTest, C) {
     0xff, 0x7f,  // third sample: 4e4 (saturated)
     0, 0x80,  // fourth sample: -1e9 (saturated)
   };
-  static const int kContentSize =
+  static const size_t kContentSize =
       kWavHeaderSize + kNumSamples * sizeof(int16_t);
   static_assert(sizeof(kExpectedContents) == kContentSize, "content size");
-  EXPECT_EQ(size_t(kContentSize), test::GetFileSize(outfile));
+  EXPECT_EQ(kContentSize, test::GetFileSize(outfile));
   FILE* f = fopen(outfile.c_str(), "rb");
   ASSERT_TRUE(f);
   uint8_t contents[kContentSize];
@@ -136,10 +136,10 @@ TEST(WavWriterTest, C) {
 TEST(WavWriterTest, LargeFile) {
   std::string outfile = test::OutputPath() + "wavtest3.wav";
   static const int kSampleRate = 8000;
-  static const int kNumChannels = 2;
-  static const uint32_t kNumSamples = 3 * kSampleRate * kNumChannels;
+  static const size_t kNumChannels = 2;
+  static const size_t kNumSamples = 3 * kSampleRate * kNumChannels;
   float samples[kNumSamples];
-  for (uint32_t i = 0; i < kNumSamples; i += kNumChannels) {
+  for (size_t i = 0; i < kNumSamples; i += kNumChannels) {
     // A nice periodic beeping sound.
     static const double kToneHz = 440;
     const double t = static_cast<double>(i) / (kNumChannels * kSampleRate);

@@ -23,12 +23,14 @@
         '<(webrtc_root)/modules/modules.gyp:audio_processing',
         '<(webrtc_root)/modules/modules.gyp:bitrate_controller',
         '<(webrtc_root)/modules/modules.gyp:media_file',
+        '<(webrtc_root)/modules/modules.gyp:paced_sender',
         '<(webrtc_root)/modules/modules.gyp:rtp_rtcp',
         '<(webrtc_root)/modules/modules.gyp:webrtc_utility',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/webrtc.gyp:rtc_event_log',
       ],
-      'defines': [
-        'WEBRTC_EXTERNAL_TRANSPORT',
+      'export_dependent_settings': [
+        '<(webrtc_root)/modules/modules.gyp:audio_coding_module',
       ],
       'sources': [
         'include/voe_audio_processing.h',
@@ -48,6 +50,8 @@
         'channel.h',
         'channel_manager.cc',
         'channel_manager.h',
+        'channel_proxy.cc',
+        'channel_proxy.h',
         'dtmf_inband.cc',
         'dtmf_inband.h',
         'dtmf_inband_queue.cc',
@@ -109,6 +113,7 @@
           'type': '<(gtest_target_type)',
           'dependencies': [
             'voice_engine',
+            '<(DEPTH)/testing/gmock.gyp:gmock',
             '<(DEPTH)/testing/gtest.gyp:gtest',
             # The rest are to satisfy the unittests' include chain.
             # This would be unnecessary if we used qualified includes.
@@ -131,6 +136,9 @@
             'voe_audio_processing_unittest.cc',
             'voe_base_unittest.cc',
             'voe_codec_unittest.cc',
+            'voe_network_unittest.cc',
+            'voice_engine_fixture.cc',
+            'voice_engine_fixture.h',
           ],
           'conditions': [
             ['OS=="android"', {
@@ -138,74 +146,6 @@
                 '<(DEPTH)/testing/android/native_test.gyp:native_test_native_code',
               ],
             }],
-          ],
-        },
-        {
-          'target_name': 'voe_auto_test',
-          'type': 'executable',
-          'dependencies': [
-            'voice_engine',
-            '<(DEPTH)/testing/gmock.gyp:gmock',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
-            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
-            '<(webrtc_root)/test/test.gyp:channel_transport',
-            '<(webrtc_root)/test/test.gyp:test_support',
-           ],
-          'sources': [
-            'test/auto_test/automated_mode.cc',
-            'test/auto_test/extended/agc_config_test.cc',
-            'test/auto_test/extended/ec_metrics_test.cc',
-            'test/auto_test/fakes/fake_external_transport.cc',
-            'test/auto_test/fakes/fake_external_transport.h',
-            'test/auto_test/fixtures/after_initialization_fixture.cc',
-            'test/auto_test/fixtures/after_initialization_fixture.h',
-            'test/auto_test/fixtures/after_streaming_fixture.cc',
-            'test/auto_test/fixtures/after_streaming_fixture.h',
-            'test/auto_test/fixtures/before_initialization_fixture.cc',
-            'test/auto_test/fixtures/before_initialization_fixture.h',
-            'test/auto_test/fixtures/before_streaming_fixture.cc',
-            'test/auto_test/fixtures/before_streaming_fixture.h',
-            'test/auto_test/standard/audio_processing_test.cc',
-            'test/auto_test/standard/codec_before_streaming_test.cc',
-            'test/auto_test/standard/codec_test.cc',
-            'test/auto_test/standard/dtmf_test.cc',
-            'test/auto_test/standard/external_media_test.cc',
-            'test/auto_test/standard/file_before_streaming_test.cc',
-            'test/auto_test/standard/file_test.cc',
-            'test/auto_test/standard/hardware_before_initializing_test.cc',
-            'test/auto_test/standard/hardware_before_streaming_test.cc',
-            'test/auto_test/standard/hardware_test.cc',
-            'test/auto_test/standard/mixing_test.cc',
-            'test/auto_test/standard/neteq_stats_test.cc',
-            'test/auto_test/standard/rtp_rtcp_before_streaming_test.cc',
-            'test/auto_test/standard/rtp_rtcp_extensions.cc',
-            'test/auto_test/standard/rtp_rtcp_test.cc',
-            'test/auto_test/standard/voe_base_misc_test.cc',
-            'test/auto_test/standard/video_sync_test.cc',
-            'test/auto_test/standard/volume_test.cc',
-            'test/auto_test/resource_manager.cc',
-            'test/auto_test/voe_cpu_test.cc',
-            'test/auto_test/voe_cpu_test.h',
-            'test/auto_test/voe_standard_test.cc',
-            'test/auto_test/voe_standard_test.h',
-            'test/auto_test/voe_stress_test.cc',
-            'test/auto_test/voe_stress_test.h',
-            'test/auto_test/voe_test_defines.h',
-            'test/auto_test/voe_test_interface.h',
-          ],
-          'conditions': [
-            ['OS=="android"', {
-              # some tests are not supported on android yet, exclude these tests.
-              'sources!': [
-                'test/auto_test/standard/hardware_before_streaming_test.cc',
-              ],
-            }],
-          ],
-          # Disable warnings to enable Win64 build, issue 1323.
-          'msvs_disabled_warnings': [
-            4267,  # size_t to int truncation.
           ],
         },
         {
@@ -220,6 +160,7 @@
             '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
             '<(webrtc_root)/test/test.gyp:channel_transport',
             '<(webrtc_root)/test/test.gyp:test_support',
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log',
           ],
           'sources': [
             'test/cmd_test/voe_cmd_test.cc',
@@ -227,51 +168,88 @@
         },
       ], # targets
       'conditions': [
-        # TODO(kjellander): Support UseoFMFC on VS2010.
-        # http://code.google.com/p/webrtc/issues/detail?id=709
-        ['OS=="win" and MSVS_VERSION < "2010"', {
+        ['OS!="ios"', {
           'targets': [
-            # WinTest - GUI test for Windows
             {
-              'target_name': 'voe_ui_win_test',
+              'target_name': 'voe_auto_test',
               'type': 'executable',
               'dependencies': [
                 'voice_engine',
+                '<(DEPTH)/testing/gmock.gyp:gmock',
+                '<(DEPTH)/testing/gtest.gyp:gtest',
+                '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
                 '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+                '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
+                '<(webrtc_root)/test/test.gyp:channel_transport',
                 '<(webrtc_root)/test/test.gyp:test_support',
-              ],
+                '<(webrtc_root)/test/webrtc_test_common.gyp:webrtc_test_common',
+                '<(webrtc_root)/webrtc.gyp:rtc_event_log',
+               ],
               'sources': [
-                'test/win_test/Resource.h',
-                'test/win_test/WinTest.cc',
-                'test/win_test/WinTest.h',
-                'test/win_test/WinTest.rc',
-                'test/win_test/WinTestDlg.cc',
-                'test/win_test/WinTestDlg.h',
-                'test/win_test/res/WinTest.ico',
-                'test/win_test/res/WinTest.rc2',
-                'test/win_test/stdafx.cc',
-                'test/win_test/stdafx.h',
+                'test/auto_test/automated_mode.cc',
+                'test/auto_test/extended/agc_config_test.cc',
+                'test/auto_test/extended/ec_metrics_test.cc',
+                'test/auto_test/fakes/conference_transport.cc',
+                'test/auto_test/fakes/conference_transport.h',
+                'test/auto_test/fakes/loudest_filter.cc',
+                'test/auto_test/fakes/loudest_filter.h',
+                'test/auto_test/fixtures/after_initialization_fixture.cc',
+                'test/auto_test/fixtures/after_initialization_fixture.h',
+                'test/auto_test/fixtures/after_streaming_fixture.cc',
+                'test/auto_test/fixtures/after_streaming_fixture.h',
+                'test/auto_test/fixtures/before_initialization_fixture.cc',
+                'test/auto_test/fixtures/before_initialization_fixture.h',
+                'test/auto_test/fixtures/before_streaming_fixture.cc',
+                'test/auto_test/fixtures/before_streaming_fixture.h',
+                'test/auto_test/standard/audio_processing_test.cc',
+                'test/auto_test/standard/codec_before_streaming_test.cc',
+                'test/auto_test/standard/codec_test.cc',
+                'test/auto_test/standard/dtmf_test.cc',
+                'test/auto_test/standard/external_media_test.cc',
+                'test/auto_test/standard/file_before_streaming_test.cc',
+                'test/auto_test/standard/file_test.cc',
+                'test/auto_test/standard/hardware_before_initializing_test.cc',
+                'test/auto_test/standard/hardware_before_streaming_test.cc',
+                'test/auto_test/standard/hardware_test.cc',
+                'test/auto_test/standard/mixing_test.cc',
+                'test/auto_test/standard/neteq_stats_test.cc',
+                'test/auto_test/standard/rtp_rtcp_before_streaming_test.cc',
+                'test/auto_test/standard/rtp_rtcp_extensions.cc',
+                'test/auto_test/standard/rtp_rtcp_test.cc',
+                'test/auto_test/standard/voe_base_misc_test.cc',
+                'test/auto_test/standard/video_sync_test.cc',
+                'test/auto_test/standard/volume_test.cc',
+                'test/auto_test/resource_manager.cc',
+                'test/auto_test/voe_conference_test.cc',
+                'test/auto_test/voe_cpu_test.cc',
+                'test/auto_test/voe_cpu_test.h',
+                'test/auto_test/voe_output_test.cc',
+                'test/auto_test/voe_standard_test.cc',
+                'test/auto_test/voe_standard_test.h',
+                'test/auto_test/voe_stress_test.cc',
+                'test/auto_test/voe_stress_test.h',
+                'test/auto_test/voe_test_defines.h',
+                'test/auto_test/voe_test_interface.h',
               ],
-              'configurations': {
-                'Common_Base': {
-                  'msvs_configuration_attributes': {
-                    'conditions': [
-                      ['component=="shared_library"', {
-                        'UseOfMFC': '2',  # Shared DLL
-                      },{
-                        'UseOfMFC': '1',  # Static
-                      }],
-                    ],
-                  },
-                },
-              },
-              'msvs_settings': {
-                'VCLinkerTool': {
-                  'SubSystem': '2',   # Windows
-                },
-              },
+              'conditions': [
+                ['OS=="android"', {
+                  # some tests are not supported on android yet, exclude these tests.
+                  'sources!': [
+                    'test/auto_test/standard/hardware_before_streaming_test.cc',
+                  ],
+                }],
+                ['enable_protobuf==1', {
+                  'defines': [
+                    'ENABLE_RTC_EVENT_LOG',
+                  ],
+                }],
+              ],
+              # Disable warnings to enable Win64 build, issue 1323.
+              'msvs_disabled_warnings': [
+                4267,  # size_t to int truncation.
+              ],
             },
-          ],  # targets
+          ],
         }],
         ['OS=="android"', {
           'targets': [
@@ -315,6 +293,6 @@
           ],
         }],
       ],  # conditions
-    }], # include_tests
+    }], # include_tests==1
   ], # conditions
 }
