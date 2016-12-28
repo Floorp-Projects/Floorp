@@ -3334,6 +3334,7 @@ class BaseCompiler
         Operand srcAddr(ptr, access.offset());
 
         if (dest.tag == AnyReg::I64) {
+            MOZ_ASSERT(dest.i64() == abiReturnRegI64);
             masm.wasmLoadI64(access, srcAddr, dest.i64());
         } else {
             bool byteRegConflict = access.byteSize() == 1 && !singleByteRegs_.has(dest.i32());
@@ -3417,7 +3418,12 @@ class BaseCompiler
         } else {
             AnyRegister value;
             if (src.tag == AnyReg::I64) {
-                value = AnyRegister(src.i64().low);
+                if (access.byteSize() == 1 && !singleByteRegs_.has(src.i64().low)) {
+                    masm.mov(src.i64().low, ScratchRegX86);
+                    value = AnyRegister(ScratchRegX86);
+                } else {
+                    value = AnyRegister(src.i64().low);
+                }
             } else if (access.byteSize() == 1 && !singleByteRegs_.has(src.i32())) {
                 masm.mov(src.i32(), ScratchRegX86);
                 value = AnyRegister(ScratchRegX86);
