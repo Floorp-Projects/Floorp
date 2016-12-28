@@ -131,12 +131,14 @@ GetParameterAsNumber(const nsContentTypeParser& aParser,
   return number;
 }
 
-MediaExtendedMIMEType::MediaExtendedMIMEType(const nsACString& aMIMEType,
+MediaExtendedMIMEType::MediaExtendedMIMEType(const nsACString& aOriginalString,
+                                             const nsACString& aMIMEType,
                                              bool aHaveCodecs,
                                              const nsAString& aCodecs,
                                              int32_t aWidth, int32_t aHeight,
                                              int32_t aFramerate, int32_t aBitrate)
-  : mMIMEType(aMIMEType)
+  : mOriginalString(aOriginalString)
+  , mMIMEType(aMIMEType)
   , mHaveCodecs(aHaveCodecs)
   , mCodecs(aCodecs)
   , mWidth(aWidth)
@@ -147,12 +149,14 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(const nsACString& aMIMEType,
 }
 
 MediaExtendedMIMEType::MediaExtendedMIMEType(const MediaMIMEType& aType)
-  : mMIMEType(aType)
+  : mOriginalString(aType.AsString())
+  , mMIMEType(aType)
 {
 }
 
 MediaExtendedMIMEType::MediaExtendedMIMEType(MediaMIMEType&& aType)
-  : mMIMEType(Move(aType))
+  : mOriginalString(aType.AsString())
+  , mMIMEType(Move(aType))
 {
 }
 
@@ -182,7 +186,8 @@ MakeMediaExtendedMIMEType(const nsAString& aType)
   int32_t framerate = GetParameterAsNumber(parser, "framerate", -1);
   int32_t bitrate = GetParameterAsNumber(parser, "bitrate", -1);
 
-  return Some(MediaExtendedMIMEType(mime8,
+  return Some(MediaExtendedMIMEType(NS_ConvertUTF16toUTF8(aType),
+                                    mime8,
                                     haveCodecs, codecs,
                                     width, height,
                                     framerate, bitrate));
@@ -191,7 +196,8 @@ MakeMediaExtendedMIMEType(const nsAString& aType)
 size_t
 MediaExtendedMIMEType::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  return mMIMEType.SizeOfExcludingThis(aMallocSizeOf)
+  return mOriginalString.SizeOfExcludingThisIfUnshared(aMallocSizeOf)
+         + mMIMEType.SizeOfExcludingThis(aMallocSizeOf)
          + mCodecs.SizeOfExcludingThis(aMallocSizeOf);
 }
 
