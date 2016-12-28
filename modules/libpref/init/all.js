@@ -5599,6 +5599,8 @@ pref("prompts.authentication_dialog_abuse_limit", 3);
 // Enable the Storage management in about:preferences and persistent-storage permission request
 // To enable the DOM implementation, turn on "dom.storageManager.enabled"
 pref("browser.storageManager.enabled", false);
+pref("browser.storageManager.pressureNotification.minIntervalMS", 1200000);
+pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
 pref("dom.IntersectionObserver.enabled", false);
 
 // Whether module scripts (<script type="module">) are enabled for content.
