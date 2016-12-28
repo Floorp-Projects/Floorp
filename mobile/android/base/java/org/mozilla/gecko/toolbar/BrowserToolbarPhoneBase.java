@@ -21,7 +21,6 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -51,8 +50,6 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
 
         // This will clip the translating edge's image at 60% of its width
         urlBarTranslatingEdge.getDrawable().setLevel(6000);
-        //  Support RTL
-        DrawableCompat.setAutoMirrored(urlBarTranslatingEdge.getDrawable(),  true);
 
         editCancel = (ThemedImageView) findViewById(R.id.edit_cancel);
 

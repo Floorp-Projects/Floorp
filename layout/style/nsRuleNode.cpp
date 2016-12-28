@@ -1142,13 +1142,16 @@ SetComplexColor(const nsCSSValue& aValue,
     aResult = StyleComplexColor::CurrentColor();
   } else if (unit == eCSSUnit_ComplexColor) {
     aResult = aValue.GetStyleComplexColorValue();
+  } else if (unit == eCSSUnit_Auto) {
+    aResult = StyleComplexColor::Auto();
   } else {
+    nscolor resultColor;
     if (!SetColor(aValue, aParentColor.mColor, aPresContext,
-                  nullptr, aResult.mColor, aConditions)) {
+                  nullptr, resultColor, aConditions)) {
       MOZ_ASSERT_UNREACHABLE("Unknown color value");
       return;
     }
-    aResult.mForegroundRatio = 0;
+    aResult = StyleComplexColor::FromColor(resultColor);
   }
 }
 
@@ -5292,6 +5295,14 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
            SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
            parentUI->mPointerEvents,
            NS_STYLE_POINTER_EVENTS_AUTO);
+
+  // caret-color: auto, color, inherit
+  const nsCSSValue* caretColorValue = aRuleData->ValueForCaretColor();
+  SetComplexColor<eUnsetInherit>(*caretColorValue,
+                                 parentUI->mCaretColor,
+                                 StyleComplexColor::Auto(),
+                                 mPresContext,
+                                 ui->mCaretColor, conditions);
 
   COMPUTE_END_INHERITED(UserInterface, ui)
 }
