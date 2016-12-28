@@ -125,7 +125,7 @@ const addView = curry((options, {document, window}) => {
   toolbar.setAttribute("id", "inner-" + options.id);
   toolbar.setAttribute("defaultset", options.items.join(","));
   toolbar.setAttribute("customizable", "true");
-  toolbar.setAttribute("style", "-moz-appearance: none; overflow: hidden");
+  toolbar.setAttribute("style", "-moz-appearance: none; overflow: hidden; border: 0;");
   toolbar.setAttribute("mode", "icons");
   toolbar.setAttribute("iconsize", "small");
   toolbar.setAttribute("context", "toolbar-context-menu");
