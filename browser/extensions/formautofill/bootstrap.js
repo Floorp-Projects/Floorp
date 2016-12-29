@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillParent",
 function startup() {
   // Besides this pref, we'll need dom.forms.autocomplete.experimental enabled
   // as well to make sure form autocomplete works correctly.
-  if (!Services.prefs.getBoolPref("browser.formautofill.enabled")) {
+  if (!Services.prefs.getBoolPref("browser.formautofill.experimental")) {
     return;
   }
 
