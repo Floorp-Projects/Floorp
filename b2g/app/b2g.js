@@ -278,7 +278,6 @@ pref("ui.threedlightshadow", "#ece7e2");
 pref("ui.threedshadow", "#aea194");
 pref("ui.windowframe", "#efebe7");
 
-// Themable via mozSettings
 pref("ui.menu", "#f97c17");
 pref("ui.menutext", "#ffffff");
 pref("ui.infobackground", "#343e40");
@@ -408,9 +407,6 @@ pref("dom.webapps.firstRunWithSIM", true);
 // SingleVariant
 pref("dom.mozApps.single_variant_sourcedir", "/persist/svoperapps");
 #endif
-
-// WebSettings
-pref("dom.mozSettings.enabled", true);
 
 // controls if we want camera support
 pref("device.camera.enabled", true);
@@ -915,27 +911,6 @@ pref("dom.mapped_arraybuffer.enabled", true);
 
 // UDPSocket API
 pref("dom.udpsocket.enabled", true);
-
-// Enable TV Manager API
-pref("dom.tv.enabled", true);
-
-// Enable Inputport Manager API
-pref("dom.inputport.enabled", true);
-
-pref("dom.mozSettings.SettingsDB.debug.enabled", true);
-pref("dom.mozSettings.SettingsManager.debug.enabled", true);
-pref("dom.mozSettings.SettingsRequestManager.debug.enabled", true);
-pref("dom.mozSettings.SettingsService.debug.enabled", true);
-
-pref("dom.mozSettings.SettingsDB.verbose.enabled", false);
-pref("dom.mozSettings.SettingsManager.verbose.enabled", false);
-pref("dom.mozSettings.SettingsRequestManager.verbose.enabled", false);
-pref("dom.mozSettings.SettingsService.verbose.enabled", false);
-
-// Controlling whether we want to allow forcing some Settings
-// IndexedDB transactions to be opened as readonly or keep everything as
-// readwrite.
-pref("dom.mozSettings.allowForceReadOnly", false);
 
 // Comma separated list of activity names that can only be provided by
 // the system app in dev mode.

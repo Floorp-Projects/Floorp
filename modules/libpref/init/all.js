@@ -4846,9 +4846,6 @@ pref("dom.push.http2.reset_retry_count_after_ms", 60000);
 pref("dom.push.http2.maxRetries", 2);
 pref("dom.push.http2.retryInterval", 5000);
 
-// WebSettings
-pref("dom.mozSettings.enabled", false);
-
 // W3C touch events
 // 0 - disabled, 1 - enabled, 2 - autodetect
 // Autodetection is currently only supported on Windows and GTK3
@@ -5286,23 +5283,6 @@ pref("intl.allow-insecure-text-input", false);
 
 // Enable meta-viewport support in remote APZ-enabled frames.
 pref("dom.meta-viewport.enabled", false);
-
-// MozSettings debugging prefs for each component
-pref("dom.mozSettings.SettingsDB.debug.enabled", false);
-pref("dom.mozSettings.SettingsManager.debug.enabled", false);
-pref("dom.mozSettings.SettingsRequestManager.debug.enabled", false);
-pref("dom.mozSettings.SettingsService.debug.enabled", false);
-
-// MozSettings verbose mode to track everything
-pref("dom.mozSettings.SettingsDB.verbose.enabled", false);
-pref("dom.mozSettings.SettingsManager.verbose.enabled", false);
-pref("dom.mozSettings.SettingsRequestManager.verbose.enabled", false);
-pref("dom.mozSettings.SettingsService.verbose.enabled", false);
-
-// Controlling whether we want to allow forcing some Settings
-// IndexedDB transactions to be opened as readonly or keep everything as
-// readwrite.
-pref("dom.mozSettings.allowForceReadOnly", false);
 
 // The interval at which to check for slow running addons
 #ifdef NIGHTLY_BUILD
