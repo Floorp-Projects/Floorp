@@ -12,6 +12,8 @@ module.exports = {
 
   // All globals made available in the test environment.
   "globals": {
+    // $ is defined in SimpleTest.js
+    "$": false,
     "add_task": false,
     "Assert": false,
     "EventUtils": false,
@@ -25,6 +27,7 @@ module.exports = {
     "is": false,
     "isDeeply": false,
     "isnot": false,
+    "netscape": false,
     "ok": false,
     "promise": false,
     "registerCleanupFunction": false,

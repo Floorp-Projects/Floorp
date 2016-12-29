@@ -1471,7 +1471,7 @@ add_task(function* test_livemark_txns() {
 add_task(function* test_copy() {
   function* duplicate_and_test(aOriginalGuid) {
     let txn = PT.Copy({ guid: aOriginalGuid, newParentGuid: rootGuid });
-    yield duplicateGuid = yield txn.transact();
+    let duplicateGuid = yield txn.transact();
     let originalInfo = yield PlacesUtils.promiseBookmarksTree(aOriginalGuid);
     let duplicateInfo = yield PlacesUtils.promiseBookmarksTree(duplicateGuid);
     yield ensureEqualBookmarksTrees(originalInfo, duplicateInfo, false);

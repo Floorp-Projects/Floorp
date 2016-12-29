@@ -4,10 +4,10 @@
 
 from marionette_driver.by import By
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, skip, WindowManagerMixin
 
 
-''' Disabled in bug 896043 and when working on Chrome code re-enable for bug 896046
+@skip("Disabled in bug 896043 and when working on Chrome code re-enable for bug 896046")
 class TestTextChrome(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
@@ -42,4 +42,3 @@ class TestTextChrome(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual("test", box.text)
         box.send_keys("at")
         self.assertEqual("attest", box.text)
-'''

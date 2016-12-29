@@ -12403,8 +12403,7 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mImage->mValue.SetNoneValue();
   aState.mAttachment->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL,
                                          eCSSUnit_Enumerated);
-  aState.mClip->mValue.SetIntValue(StyleGeometryBox::Border,
-                                   eCSSUnit_Enumerated);
+  aState.mClip->mValue.SetEnumValue(StyleGeometryBox::Border);
 
   aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
                                       eCSSUnit_Enumerated);
@@ -12416,11 +12415,9 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mPositionY->mValue.SetArrayValue(positionYArr, eCSSUnit_Array);
 
   if (eCSSProperty_mask == aTable[nsStyleImageLayers::shorthand]) {
-    aState.mOrigin->mValue.SetIntValue(StyleGeometryBox::Border,
-                                       eCSSUnit_Enumerated);
+    aState.mOrigin->mValue.SetEnumValue(StyleGeometryBox::Border);
   } else {
-    aState.mOrigin->mValue.SetIntValue(StyleGeometryBox::Padding,
-                                       eCSSUnit_Enumerated);
+    aState.mOrigin->mValue.SetEnumValue(StyleGeometryBox::Padding);
   }
   positionXArr->Item(1).SetPercentValue(0.0f);
   positionYArr->Item(1).SetPercentValue(0.0f);
@@ -17219,9 +17216,9 @@ CSSParserImpl::ParseAnimation()
   initialValues[1].SetIntValue(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE,
                                eCSSUnit_Enumerated);
   initialValues[2].SetFloatValue(0.0, eCSSUnit_Seconds);
-  initialValues[3].SetIntValue(static_cast<uint32_t>(mozilla::dom::PlaybackDirection::Normal),
+  initialValues[3].SetIntValue(static_cast<int32_t>(dom::PlaybackDirection::Normal),
                                eCSSUnit_Enumerated);
-  initialValues[4].SetIntValue(static_cast<uint32_t>(mozilla::dom::FillMode::None),
+  initialValues[4].SetIntValue(static_cast<int32_t>(dom::FillMode::None),
                                eCSSUnit_Enumerated);
   initialValues[5].SetFloatValue(1.0f, eCSSUnit_Number);
   initialValues[6].SetIntValue(NS_STYLE_ANIMATION_PLAY_STATE_RUNNING, eCSSUnit_Enumerated);

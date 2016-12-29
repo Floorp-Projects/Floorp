@@ -23,6 +23,7 @@ Test for Form History Autocomplete Untrusted Events: Bug 511615
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+/* import-globals-from satchel_common.js */
 
 var resolvePopupShownListener;
 registerPopupShownListener(() => resolvePopupShownListener());
@@ -74,7 +75,7 @@ function checkSelectedIndexAfterResponseTime(expectedIndex) {
 
 function doKeyUnprivileged(key) {
   let keyName = "DOM_VK_" + key.toUpperCase();
-  let keycode, charcode;
+  let keycode, charcode, alwaysval;
 
   if (key.length == 1) {
       keycode = 0;

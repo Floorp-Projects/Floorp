@@ -257,11 +257,11 @@ add_task(function* test_dedupe() {
     url: "http://getthunderbird.com",
   });
 
-  yield rejects(
+  yield Assert.rejects(
     PlacesSyncUtils.bookmarks.dedupe(makeGuid(), makeGuid(), makeGuid()),
     "Should reject attempts to de-dupe nonexistent items"
   );
-  yield rejects(PlacesSyncUtils.bookmarks.dedupe("menu", makeGuid(), "places"),
+  yield Assert.rejects(PlacesSyncUtils.bookmarks.dedupe("menu", makeGuid(), "places"),
     "Should reject attempts to de-dupe local roots");
 
   do_print("De-dupe with same remote parent");
@@ -282,7 +282,7 @@ add_task(function* test_dedupe() {
 
     ok(!(yield PlacesUtils.bookmarks.fetch(mozBmk.syncId)),
       "Bookmark with old local sync ID should not exist");
-    yield rejects(PlacesUtils.promiseItemId(mozBmk.syncId),
+    yield Assert.rejects(PlacesUtils.promiseItemId(mozBmk.syncId),
       "Should invalidate GUID cache entry for old local sync ID");
 
     let newMozBmk = yield PlacesUtils.bookmarks.fetch(newRemoteSyncId);
@@ -701,7 +701,7 @@ add_task(function* test_update_move_root() {
   }
 
   do_print("Try reparenting root");
-  yield rejects(PlacesSyncUtils.bookmarks.update({
+  yield Assert.rejects(PlacesSyncUtils.bookmarks.update({
     syncId: "menu",
     parentSyncId: "toolbar",
   }));
@@ -871,7 +871,7 @@ add_task(function* test_update_livemark() {
 
       // Since we're reinserting, we need to pass all properties required
       // for a new livemark. `update` won't merge the old and new ones.
-      yield rejects(PlacesSyncUtils.bookmarks.update({
+      yield Assert.rejects(PlacesSyncUtils.bookmarks.update({
         syncId: livemark.guid,
         feed: site + "/feed/2",
       }), "Reinserting livemark with changed feed URL requires full record");
@@ -897,7 +897,7 @@ add_task(function* test_update_livemark() {
       ok(livemark.feedURI.equals(feedURI), "Livemark feed URI should match");
       ok(!livemark.siteURI, "Livemark should not have site URI");
 
-      yield rejects(PlacesSyncUtils.bookmarks.update({
+      yield Assert.rejects(PlacesSyncUtils.bookmarks.update({
         syncId: livemark.guid,
         site,
       }), "Reinserting livemark with new site URL requires full record");
@@ -928,7 +928,7 @@ add_task(function* test_update_livemark() {
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
       });
 
-      yield rejects(PlacesSyncUtils.bookmarks.update({
+      yield Assert.rejects(PlacesSyncUtils.bookmarks.update({
         syncId: livemark.guid,
         site: null,
       }), "Reinserting livemark witout site URL requires full record");
@@ -956,7 +956,7 @@ add_task(function* test_update_livemark() {
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
       });
 
-      yield rejects(PlacesSyncUtils.bookmarks.update({
+      yield Assert.rejects(PlacesSyncUtils.bookmarks.update({
         syncId: livemark.guid,
         site: site + "/new",
       }), "Reinserting livemark with changed site URL requires full record");

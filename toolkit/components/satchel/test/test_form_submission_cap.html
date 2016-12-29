@@ -17,6 +17,7 @@
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+/* import-globals-from satchel_common.js */
 
 /* Test for bug 492701.
    Save only the first MAX_FIELDS_SAVED changed fields in a form.
@@ -38,7 +39,7 @@ function checkInitialState() {
 
 function startTest() {
   var form = document.getElementById("form1");
-  for (i = 1; i <= numInputFields; i++) {
+  for (let i = 1; i <= numInputFields; i++) {
     var newField = document.createElement("input");
     newField.setAttribute("type", "text");
     newField.setAttribute("name", "test" + i);
@@ -48,7 +49,7 @@ function startTest() {
   // Fill in values for the various fields. We could just set the <input>'s
   // value attribute, but we don't save default form values (and we want to
   // ensure unsaved values are because of autocomplete=off or whatever).
-  for (i = 1; i <= numInputFields; i++) {
+  for (let i = 1; i <= numInputFields; i++) {
     $_(1, "test" + i).value = i;
   }
 
@@ -64,7 +65,7 @@ function checkSubmit(formNum) {
   numSubmittedForms++;
 
   // check that the first (numInputFields - 1) CHANGED fields are saved
-  for (i = 1; i < numInputFields; i++) { // check all but last
+  for (let i = 1; i < numInputFields; i++) { // check all but last
     checkForSave("test" + i, i, "checking saved value " + i);
   }
 

@@ -10,8 +10,8 @@ try {
 } catch (e) {
 }
 
-CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
-CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
+const CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
+const CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
 
 function do_check_throws(f, type, stack)
 {
@@ -72,9 +72,9 @@ function run_test()
   run_float_tests(library, ctypes.double, "double", 8);
 
   // Test the wrapped integer types.
-  s64limits = ["-9223372036854775808", "9223372036854775807",
-               "-9223372036854775809", "9223372036854775808"];
-  u64limits = ["0", "18446744073709551615", "-1", "18446744073709551616"];
+  const s64limits = ["-9223372036854775808", "9223372036854775807",
+                     "-9223372036854775809", "9223372036854775808"];
+  const u64limits = ["0", "18446744073709551615", "-1", "18446744073709551616"];
 
   run_wrapped_integer_tests(library, ctypes.int64_t, "int64_t", 8, true,
                             ctypes.Int64, "ctypes.Int64", s64limits);
@@ -85,8 +85,8 @@ function run_test()
   run_wrapped_integer_tests(library, ctypes.unsigned_long_long, "unsigned_long_long", 8, false,
                             ctypes.UInt64, "ctypes.UInt64", u64limits);
 
-  s32limits = [-0x80000000, 0x7fffffff, -0x80000001, 0x80000000];
-  u32limits = [0, 0xffffffff, -1, 0x100000000];
+  const s32limits = [-0x80000000, 0x7fffffff, -0x80000001, 0x80000000];
+  const u32limits = [0, 0xffffffff, -1, 0x100000000];
 
   let slimits, ulimits;
   if (ctypes.long.size == 8) {
@@ -1771,7 +1771,7 @@ function run_PointerType_tests() {
                  " can be converted to " + item_type + " array");
 
         // Convert ArrayBuffer to array of the right size and check contents
-        c_array = array_type(c_arraybuffer);
+        let c_array = array_type(c_arraybuffer);
         for (let k = 0; k < number_of_items; ++k) {
           do_check_eq(c_array[k], view[k]);
         }
@@ -2690,14 +2690,14 @@ function run_variadic_tests(library) {
 
   do_check_eq(result.value, 3 + 5 + 7 + 11);
 
-  result = ctypes.int32_t.array(3)([1, 1, 1]),
-      v1 = ctypes.int32_t.array(4)([1, 2, 3, 5]),
-      v2 = ctypes.int32_t.array(3)([7, 11, 13]),
-      vector_add_va = library.declare("test_vector_add_va_cdecl",
+  result = ctypes.int32_t.array(3)([1, 1, 1]);
+  let v1 = ctypes.int32_t.array(4)([1, 2, 3, 5]);
+  let v2 = ctypes.int32_t.array(3)([7, 11, 13]);
+  let vector_add_va = library.declare("test_vector_add_va_cdecl",
                                       ctypes.default_abi, ctypes.int32_t.ptr,
-                                      ctypes.uint8_t, ctypes.uint8_t, "..."),
+                                      ctypes.uint8_t, ctypes.uint8_t, "...");
       // Note that vector_add_va zeroes out result first.
-      vec_sum = vector_add_va(2, 3, result, v1, v2);
+  let vec_sum = vector_add_va(2, 3, result, v1, v2);
   do_check_eq(vec_sum.contents, 8);
   do_check_eq(result[0], 8);
   do_check_eq(result[1], 13);

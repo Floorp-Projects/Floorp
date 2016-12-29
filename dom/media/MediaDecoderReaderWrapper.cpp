@@ -13,7 +13,11 @@ MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(AbstractThread* aOwnerThrea
                                                      MediaDecoderReader* aReader)
   : mOwnerThread(aOwnerThread)
   , mReader(aReader)
-{}
+{
+  // Must support either heuristic buffering or WaitForData().
+  MOZ_ASSERT(mReader->UseBufferingHeuristics() ||
+             mReader->IsWaitForDataSupported());
+}
 
 MediaDecoderReaderWrapper::~MediaDecoderReaderWrapper()
 {}
@@ -92,6 +96,7 @@ RefPtr<MediaDecoderReaderWrapper::WaitForDataPromise>
 MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_ASSERT(mReader->IsWaitForDataSupported());
   return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                      &MediaDecoderReader::WaitForData, aType);
 }

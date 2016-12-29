@@ -797,19 +797,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             uri = uriFixup.createExposableURI(uri);
           } catch (ex) {}
 
-          // If the entire URL is selected, just use the actual loaded URI.
-          if (inputVal == selectedVal) {
-            // ... but only if  isn't a javascript: or data: URI, since those
-            // are hard to read when encoded
-            if (!uri.schemeIs("javascript") && !uri.schemeIs("data")) {
-              selectedVal = uri.spec;
-            }
-
-            return selectedVal;
+          // If the entire URL is selected, just use the actual loaded URI,
+          // unless we want a decoded URI, or it's a data: or javascript: URI,
+          // since those are hard to read when encoded.
+          if (inputVal == selectedVal &&
+              !uri.schemeIs("javascript") && !uri.schemeIs("data") &&
+              !Services.prefs.getBoolPref("browser.urlbar.decodeURLsOnCopy")) {
+            return uri.spec;
           }
 
-          // Just the beginning of the URL is selected, check for a trimmed
-          // value
+          // Just the beginning of the URL is selected, or we want a decoded
+          // url. First check for a trimmed value.
           let spec = uri.spec;
           let trimmedSpec = this.trimValue(spec);
           if (spec != trimmedSpec) {
