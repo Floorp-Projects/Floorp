@@ -38,7 +38,7 @@ SecurityReporter.prototype = {
   classID:          Components.ID("{8a997c9a-bea1-11e5-a1fa-be6aBc8e7f8b}"),
   contractID:       "@mozilla.org/securityreporter;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISecurityReporter]),
-  reportTLSError: function(transportSecurityInfo, hostname, port) {
+  reportTLSError(transportSecurityInfo, hostname, port) {
     // don't send if there's no transportSecurityInfo (since the report cannot
     // contain anything of interest)
     if (!transportSecurityInfo) {
@@ -74,8 +74,8 @@ SecurityReporter.prototype = {
     }
 
     let report = {
-      hostname: hostname,
-      port: port,
+      hostname,
+      port,
       timestamp: Math.round(Date.now() / 1000),
       errorCode: transportSecurityInfo.errorCode,
       failedCertChain: asciiCertChain,

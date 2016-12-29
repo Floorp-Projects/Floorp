@@ -58,7 +58,7 @@ PrivateBrowsingTrackingProtectionWhitelist.prototype = {
     return this._allowlist.indexOf(uri.spec) !== -1;
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == "last-pb-context-exited") {
       this._allowlist = [];
     }

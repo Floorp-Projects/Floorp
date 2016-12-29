@@ -109,8 +109,8 @@ function reallyRunTests() {
 
 function sendGetBackgroundRequest(ifChanged)
 {
-  browser1.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged: ifChanged });
-  browser2.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged: ifChanged });
+  browser1.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged });
+  browser2.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged });
 }
 
 function runOtherWindowTests() {
@@ -177,7 +177,7 @@ function childFunction()
     if (oldColor != color || !ifChanged) {
       expectingResponse = false;
       oldColor = color;
-      sendAsyncMessage("Test:BackgroundColorChanged", { color: color });
+      sendAsyncMessage("Test:BackgroundColorChanged", { color });
     }
   }, 20);
 }

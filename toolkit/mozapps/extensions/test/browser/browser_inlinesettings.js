@@ -17,22 +17,22 @@ MockFilePicker.init(window);
 var observer = {
   lastDisplayed: null,
   callback: null,
-  checkDisplayed: function(aExpected) {
+  checkDisplayed(aExpected) {
     is(this.lastDisplayed, aExpected, "'addon-options-displayed' notification should have fired");
     this.lastDisplayed = null;
   },
-  checkNotDisplayed: function() {
+  checkNotDisplayed() {
     is(this.lastDisplayed, null, "'addon-options-displayed' notification should not have fired");
   },
   lastHidden: null,
-  checkHidden: function(aExpected) {
+  checkHidden(aExpected) {
     is(this.lastHidden, aExpected, "'addon-options-hidden' notification should have fired");
     this.lastHidden = null;
   },
-  checkNotHidden: function() {
+  checkNotHidden() {
     is(this.lastHidden, null, "'addon-options-hidden' notification should not have fired");
   },
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == AddonManager.OPTIONS_NOTIFICATION_DISPLAYED) {
       this.lastDisplayed = aData;
       // Test if the binding has applied before the observers are notified. We test the second setting here,
@@ -59,7 +59,7 @@ function installAddon(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_inlinesettings1.xpi",
                                 function(aInstall) {
     aInstall.addListener({
-      onInstallEnded: function() {
+      onInstallEnded() {
         executeSoon(aCallback);
       }
     });

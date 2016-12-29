@@ -141,7 +141,7 @@ this.LoginManagerStorage_json.prototype = {
       encryptedUsername:   encUsername,
       encryptedPassword:   encPassword,
       guid:                loginClone.guid,
-      encType:             encType,
+      encType,
       timeCreated:         loginClone.timeCreated,
       timeLastUsed:        loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
@@ -377,9 +377,9 @@ this.LoginManagerStorage_json.prototype = {
 
   findLogins(count, hostname, formSubmitURL, httpRealm) {
     let loginData = {
-      hostname: hostname,
-      formSubmitURL: formSubmitURL,
-      httpRealm: httpRealm
+      hostname,
+      formSubmitURL,
+      httpRealm
     };
     let matchData = { };
     for (let field of ["hostname", "formSubmitURL", "httpRealm"])
@@ -397,9 +397,9 @@ this.LoginManagerStorage_json.prototype = {
 
   countLogins(hostname, formSubmitURL, httpRealm) {
     let loginData = {
-      hostname: hostname,
-      formSubmitURL: formSubmitURL,
-      httpRealm: httpRealm
+      hostname,
+      formSubmitURL,
+      httpRealm
     };
     let matchData = { };
     for (let field of ["hostname", "formSubmitURL", "httpRealm"])

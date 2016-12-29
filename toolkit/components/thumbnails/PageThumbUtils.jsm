@@ -35,7 +35,7 @@ this.PageThumbUtils = {
    * @param aHeight (optional) height of the canvas to create
    * @return The newly created canvas.
    */
-  createCanvas: function(aWindow, aWidth = 0, aHeight = 0) {
+  createCanvas(aWindow, aWidth = 0, aHeight = 0) {
     let doc = (aWindow || Services.appShell.hiddenDOMWindow).document;
     let canvas = doc.createElementNS(this.HTML_NAMESPACE, "canvas");
     canvas.mozOpaque = true;
@@ -54,7 +54,7 @@ this.PageThumbUtils = {
    * @param aWindow (optional) aWindow that is used to calculate the scaling size.
    * @return The calculated thumbnail size or a default if unable to calculate.
    */
-  getThumbnailSize: function(aWindow = null) {
+  getThumbnailSize(aWindow = null) {
     if (!this._thumbnailWidth || !this._thumbnailHeight) {
       let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
                             .getService(Ci.nsIScreenManager);
@@ -105,7 +105,7 @@ this.PageThumbUtils = {
    * Given a browser window, return the size of the content
    * minus the scroll bars.
    */
-  getContentSize: function(aWindow) {
+  getContentSize(aWindow) {
     let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
     // aWindow may be a cpow, add exposed props security values.
@@ -148,7 +148,7 @@ this.PageThumbUtils = {
    *   fullScale - request that a non-downscaled image be returned.
    * @return Canvas with a scaled thumbnail of the window.
    */
-  createSnapshotThumbnail: function(aWindow, aDestCanvas, aArgs) {
+  createSnapshotThumbnail(aWindow, aDestCanvas, aArgs) {
     if (Cu.isCrossProcessWrapper(aWindow)) {
       throw new Error('Do not pass cpows here.');
     }
@@ -229,7 +229,7 @@ this.PageThumbUtils = {
    * @param aCanvas The target canvas.
    * @return An array containing width, height and scale.
    */
-  determineCropSize: function(aWindow, aCanvas) {
+  determineCropSize(aWindow, aCanvas) {
     if (Cu.isCrossProcessWrapper(aWindow)) {
       throw new Error('Do not pass cpows here.');
     }
@@ -265,7 +265,7 @@ this.PageThumbUtils = {
     return [width, height, scale];
   },
 
-  shouldStoreContentThumbnail: function(aDocument, aDocShell) {
+  shouldStoreContentThumbnail(aDocument, aDocShell) {
     if (BrowserUtils.isToolbarVisible(aDocShell, "findbar")) {
       return false;
     }
@@ -337,7 +337,7 @@ this.PageThumbUtils = {
    * Given a channel, returns true if it should be considered an "error
    * response", false otherwise.
    */
-  isChannelErrorResponse: function(channel) {
+  isChannelErrorResponse(channel) {
     // No valid document channel sounds like an error to me!
     if (!channel)
       return true;

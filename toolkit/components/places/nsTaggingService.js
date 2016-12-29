@@ -464,9 +464,9 @@ TaggingService.prototype = {
       delete this._tagFolders[aItemId];
   },
 
-  onItemVisited: function() {},
-  onBeginUpdateBatch: function() {},
-  onEndUpdateBatch: function() {},
+  onItemVisited() {},
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
 
   // nsISupports
 

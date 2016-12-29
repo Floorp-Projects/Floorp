@@ -82,7 +82,7 @@ RDFSerializer.prototype = {
    * @return a string with all characters invalid in XML character data
    *         converted to entity references.
    */
-  escapeEntities: function(aString) {
+  escapeEntities(aString) {
     aString = aString.replace(/&/g, "&amp;");
     aString = aString.replace(/</g, "&lt;");
     aString = aString.replace(/>/g, "&gt;");
@@ -100,7 +100,7 @@ RDFSerializer.prototype = {
    *         The current level of indent for pretty-printing
    * @return a string containing the serialized elements.
    */
-  serializeContainerItems: function(aDs, aContainer, aIndent) {
+  serializeContainerItems(aDs, aContainer, aIndent) {
     var result = "";
     var items = aContainer.GetElements();
     while (items.hasMoreElements()) {
@@ -126,7 +126,7 @@ RDFSerializer.prototype = {
    * @return a string containing the serialized properties.
    * @throws if the resource contains a property that cannot be serialized
    */
-  serializeResourceProperties: function(aDs, aResource, aIndent) {
+  serializeResourceProperties(aDs, aResource, aIndent) {
     var result = "";
     var items = [];
     var arcs = aDs.ArcLabelsOut(aResource);
@@ -180,7 +180,7 @@ RDFSerializer.prototype = {
    * @return a string containing the serialized resource.
    * @throws if the RDF data contains multiple references to the same resource.
    */
-  serializeResource: function(aDs, aResource, aIndent) {
+  serializeResource(aDs, aResource, aIndent) {
     if (this.resources.indexOf(aResource) != -1 ) {
       // We cannot output multiple references to the same resource.
       throw Components.Exception("Cannot serialize multiple references to " + aResource.Value);
@@ -412,7 +412,7 @@ function parseRDFManifest(aId, aUpdateKey, aRequest, aManifestData) {
 
       let result = {
         id: aId,
-        version: version,
+        version,
         multiprocessCompatible: getBooleanProperty(ds, item, "multiprocessCompatible"),
         updateURL: getProperty(ds, targetApp, "updateLink"),
         updateHash: getProperty(ds, targetApp, "updateHash"),
@@ -523,7 +523,7 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
 
     let result = {
       id: aId,
-      version: version,
+      version,
       multiprocessCompatible: getProperty(update, "multiprocess_compatible", "boolean", true),
       updateURL: getProperty(update, "update_link", "string"),
       updateHash: getProperty(update, "update_hash", "string"),
@@ -610,7 +610,7 @@ UpdateParser.prototype = {
   /**
    * Called when the manifest has been successfully loaded.
    */
-  onLoad: function() {
+  onLoad() {
     let request = this.request;
     this.request = null;
     this._doneAt = new Error("place holder");
@@ -696,7 +696,7 @@ UpdateParser.prototype = {
   /**
    * Called when the request times out
    */
-  onTimeout: function() {
+  onTimeout() {
     this.request = null;
     this._doneAt = new Error("Timed out");
     logger.warn("Request for " + this.url + " timed out");
@@ -706,7 +706,7 @@ UpdateParser.prototype = {
   /**
    * Called when the manifest failed to load.
    */
-  onError: function() {
+  onError() {
     if (!Components.isSuccessCode(this.request.status)) {
       logger.warn("Request failed: " + this.url + " - " + this.request.status);
     }
@@ -735,7 +735,7 @@ UpdateParser.prototype = {
   /**
    * Helper method to notify the observer that an error occured.
    */
-  notifyError: function(aStatus) {
+  notifyError(aStatus) {
     if ("onUpdateCheckError" in this.observer) {
       try {
         this.observer.onUpdateCheckError(aStatus);
@@ -749,7 +749,7 @@ UpdateParser.prototype = {
   /**
    * Called to cancel an in-progress update check.
    */
-  cancel: function() {
+  cancel() {
     if (!this.request) {
       logger.error("Trying to cancel already-complete request", this._doneAt);
       return;
@@ -843,7 +843,7 @@ this.AddonUpdateChecker = {
    *         Ignore strictCompatibility when testing if an update matches. Optional.
    * @return an update object if one matches or null if not
    */
-  getCompatibilityUpdate: function(aUpdates, aVersion, aIgnoreCompatibility,
+  getCompatibilityUpdate(aUpdates, aVersion, aIgnoreCompatibility,
                                    aAppVersion, aPlatformVersion,
                                    aIgnoreMaxVersion, aIgnoreStrictCompat) {
     if (!aAppVersion)
@@ -886,7 +886,7 @@ this.AddonUpdateChecker = {
    *         Array of AddonCompatibilityOverride to take into account. Optional.
    * @return an update object if one matches or null if not
    */
-  getNewestCompatibleUpdate: function(aUpdates, aAppVersion, aPlatformVersion,
+  getNewestCompatibleUpdate(aUpdates, aAppVersion, aPlatformVersion,
                                       aIgnoreMaxVersion, aIgnoreStrictCompat,
                                       aCompatOverrides) {
     if (!aAppVersion)
@@ -928,7 +928,7 @@ this.AddonUpdateChecker = {
    * @return UpdateParser so that the caller can use UpdateParser.cancel() to shut
    *         down in-progress update requests
    */
-  checkForUpdates: function(aId, aUpdateKey, aUrl, aObserver) {
+  checkForUpdates(aId, aUpdateKey, aUrl, aObserver) {
     return new UpdateParser(aId, aUpdateKey, aUrl, aObserver);
   }
 };

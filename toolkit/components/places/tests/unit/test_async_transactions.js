@@ -18,7 +18,7 @@ var observer = {
 
   tagRelatedGuids: new Set(),
 
-  reset: function() {
+  reset() {
     this.itemsAdded = new Map();
     this.itemsRemoved = new Map();
     this.itemsChanged = new Map();
@@ -27,16 +27,15 @@ var observer = {
     this.endUpdateBatch = false;
   },
 
-  onBeginUpdateBatch: function() {
+  onBeginUpdateBatch() {
     this.beginUpdateBatch = true;
   },
 
-  onEndUpdateBatch: function() {
+  onEndUpdateBatch() {
     this.endUpdateBatch = true;
   },
 
-  onItemAdded:
-  function(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
+  onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
            aGuid, aParentGuid) {
     // Ignore tag items.
     if (aParentId == PlacesUtils.tagsFolderId ||
@@ -54,8 +53,7 @@ var observer = {
                                , url:            aURI });
   },
 
-  onItemRemoved:
-  function(aItemId, aParentId, aIndex, aItemType, aURI, aGuid, aParentGuid) {
+  onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid, aParentGuid) {
     if (this.tagRelatedGuids.has(aGuid))
       return;
 
@@ -64,8 +62,7 @@ var observer = {
                                  , itemType:   aItemType });
   },
 
-  onItemChanged:
-  function(aItemId, aProperty, aIsAnnoProperty, aNewValue, aLastModified,
+  onItemChanged(aItemId, aProperty, aIsAnnoProperty, aNewValue, aLastModified,
            aItemType, aParentId, aGuid, aParentGuid) {
     if (this.tagRelatedGuids.has(aGuid))
       return;
@@ -84,7 +81,7 @@ var observer = {
         newValue = null;
     }
     let change = { isAnnoProperty: aIsAnnoProperty
-                 , newValue: newValue
+                 , newValue
                  , lastModified: aLastModified
                  , itemType: aItemType };
     changesForGuid.set(aProperty, change);
@@ -92,8 +89,7 @@ var observer = {
 
   onItemVisited: () => {},
 
-  onItemMoved:
-  function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex, aItemType,
+  onItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex, aItemType,
            aGuid, aOldParentGuid, aNewParentGuid) {
     this.itemsMoved.set(aGuid, { oldParentGuid: aOldParentGuid
                                , oldIndex:      aOldIndex
@@ -1344,18 +1340,18 @@ add_task(function* test_annotate_multiple() {
     Assert.deepEqual(currentAnnos, expectedAnnos);
   }
 
-  yield PT.Annotate({ guid: guid, annotations: annos(1, 2) }).transact();
+  yield PT.Annotate({ guid, annotations: annos(1, 2) }).transact();
   verifyAnnoValues(1, 2);
   yield PT.undo();
   verifyAnnoValues();
   yield PT.redo();
   verifyAnnoValues(1, 2);
 
-  yield PT.Annotate({ guid: guid
+  yield PT.Annotate({ guid
                     , annotation: { name: "A" } }).transact();
   verifyAnnoValues(null, 2);
 
-  yield PT.Annotate({ guid: guid
+  yield PT.Annotate({ guid
                     , annotation: { name: "B", value: 0 } }).transact();
   verifyAnnoValues(null, 0);
   yield PT.undo();

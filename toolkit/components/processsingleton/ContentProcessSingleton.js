@@ -41,7 +41,7 @@ ContentProcessSingleton.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     switch (topic) {
     case "app-startup": {
       Services.obs.addObserver(this, "console-api-log-event", false);
@@ -104,7 +104,7 @@ ContentProcessSingleton.prototype = {
     }
   },
 
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     // load devtools component on-demand
     // Only reply if we are in a real content process
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {

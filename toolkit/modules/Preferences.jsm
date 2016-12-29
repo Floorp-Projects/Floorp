@@ -400,7 +400,7 @@ function PrefObserver(prefName, callback, thisObject) {
 PrefObserver.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     // The pref service only observes whole branches, but we only observe
     // individual preferences, so we check here that the pref that changed
     // is the exact one we're observing (and not some sub-pref on the branch).
