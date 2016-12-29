@@ -512,7 +512,8 @@ ServoStyleSet::NoteStyleSheetsChanged()
 void
 ServoStyleSet::AssertTreeIsClean()
 {
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
     Servo_AssertTreeIsClean(root);
   }
 }

@@ -29,7 +29,7 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.url)
 
-        self.assertEqual(self.locationbar.identity_box.get_attribute('className'),
+        self.assertEqual(self.locationbar.identity_box.get_property('className'),
                          'verifiedDomain')
 
         # Open the identity popup
@@ -41,7 +41,7 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         cert = self.browser.tabbar.selected_tab.certificate
 
         # The shown host equals to the certificate
-        self.assertEqual(self.identity_popup.view.main.host.get_attribute('textContent'),
+        self.assertEqual(self.identity_popup.view.main.host.get_property('textContent'),
                          cert['commonName'])
 
         # Only the secure label is visible in the main view
@@ -52,7 +52,9 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(insecure_label.value_of_css_property('display'), 'none')
 
         self.identity_popup.view.main.expander.click()
-        Wait(self.marionette).until(lambda _: self.identity_popup.view.security.selected)
+        Wait(self.marionette).until(
+            lambda _: self.identity_popup.view.security.selected,
+            message='Security view of identity popup has not been selected.')
 
         # Only the secure label is visible in the security view
         secure_label = self.identity_popup.view.security.secure_connection_label
@@ -62,7 +64,7 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(insecure_label.value_of_css_property('display'), 'none')
 
         verifier_label = self.browser.localize_property('identity.identified.verifier')
-        self.assertEqual(self.identity_popup.view.security.verifier.get_attribute('textContent'),
+        self.assertEqual(self.identity_popup.view.security.verifier.get_property('textContent'),
                          verifier_label.replace("%S", cert['issuerOrganization']))
 
         def opener(mn):
@@ -73,11 +75,11 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
 
         self.assertEqual(deck.selected_panel, deck.security)
 
-        self.assertEqual(deck.security.domain.get_attribute('value'),
+        self.assertEqual(deck.security.domain.get_property('value'),
                          cert['commonName'])
 
-        self.assertEqual(deck.security.owner.get_attribute('value'),
+        self.assertEqual(deck.security.owner.get_property('value'),
                          page_info_window.localize_property('securityNoOwner'))
 
-        self.assertEqual(deck.security.verifier.get_attribute('value'),
+        self.assertEqual(deck.security.verifier.get_property('value'),
                          cert['issuerOrganization'])

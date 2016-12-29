@@ -175,7 +175,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
         path_out.value = fake_short_path(path_in)
         return length
 
-    def which(self, command, path=None):
+    def which(self, command, path=None, exts=None):
         for parent in (path or self._search_path):
             c = mozpath.abspath(mozpath.join(parent, command))
             for candidate in (c, ensure_exe_extension(c)):
