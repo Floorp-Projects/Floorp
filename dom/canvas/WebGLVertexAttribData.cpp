@@ -6,6 +6,7 @@
 #include "WebGLVertexAttribData.h"
 
 #include "GLContext.h"
+#include "WebGLBuffer.h"
 
 namespace mozilla {
 
@@ -71,7 +72,7 @@ WebGLVertexAttribData::VertexAttribPointer(bool integerFunc, WebGLBuffer* buf,
                                            uint32_t stride, uint64_t byteOffset)
 {
     mIntegerFunc = integerFunc;
-    mBuf = buf;
+    WebGLBuffer::SetSlot(0, buf, &mBuf);
     mType = type;
     mBaseType = AttribPointerBaseType(integerFunc, type);
     mSize = size;
