@@ -28,6 +28,21 @@ WebGLVertexArray::WebGLVertexArray(WebGLContext* webgl)
     mContext->mVertexArrays.insertBack(this);
 }
 
+WebGLVertexArray::~WebGLVertexArray()
+{
+    MOZ_ASSERT(IsDeleted());
+}
+
+void
+WebGLVertexArray::AddBufferBindCounts(int8_t addVal) const
+{
+    const GLenum target = 0; // Anything non-TF is fine.
+    WebGLBuffer::AddBindCount(target, mElementArrayBuffer.get(), addVal);
+    for (const auto& attrib : mAttribs) {
+        WebGLBuffer::AddBindCount(target, attrib.mBuf.get(), addVal);
+    }
+}
+
 WebGLVertexArray*
 WebGLVertexArray::Create(WebGLContext* webgl)
 {
