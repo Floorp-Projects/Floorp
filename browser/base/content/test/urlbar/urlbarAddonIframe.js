@@ -45,7 +45,7 @@ function ack(originalEventDetail, ackData = null, ackIndex = 0) {
   dispatchEvent(new CustomEvent("TestEventAck", {
     detail: {
       messageID: originalEventDetail.messageID,
-      ackIndex: ackIndex,
+      ackIndex,
       data: ackData,
     },
   }));

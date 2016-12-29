@@ -12,7 +12,7 @@ add_task(function* test() {
   isnot(tab, gBrowser.selectedTab, "New tab shouldn't be selected");
 
   let listener = {
-    onOpenWindow: function(window) {
+    onOpenWindow(window) {
       var domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindow);
       waitForFocus(() => {
@@ -25,7 +25,7 @@ add_task(function* test() {
       }, domwindow);
     },
 
-    onCloseWindow: function() {
+    onCloseWindow() {
     }
   };
 

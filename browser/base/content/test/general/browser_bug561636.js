@@ -17,7 +17,7 @@ function checkPopupHide()
 var gObserver = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
 
-  notifyInvalidSubmit : function(aFormElement, aInvalidElements)
+  notifyInvalidSubmit(aFormElement, aInvalidElements)
   {
   }
 };

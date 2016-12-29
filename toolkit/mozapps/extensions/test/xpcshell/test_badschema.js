@@ -165,9 +165,9 @@ function run_test() {
     a7.userDisabled = true;
     t2.userDisabled = false;
     a3.findUpdates({
-      onUpdateFinished: function() {
+      onUpdateFinished() {
         a4.findUpdates({
-          onUpdateFinished: function() {
+          onUpdateFinished() {
             do_execute_soon(run_test_1);
           }
         }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);

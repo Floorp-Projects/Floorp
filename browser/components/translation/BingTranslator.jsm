@@ -58,7 +58,7 @@ this.BingTranslator.prototype = {
    * @returns {Promise}          A promise that will resolve when the translation
    *                             task is finished.
    */
-  translate: function() {
+  translate() {
     return Task.spawn(function *() {
       let currentIndex = 0;
       this._onFinishedDeferred = Promise.defer();
@@ -98,7 +98,7 @@ this.BingTranslator.prototype = {
    * Resets the expiration time of the current token, in order to
    * force the token manager to ask for a new token during the next request.
    */
-  _resetToken : function() {
+  _resetToken() {
     // Force the token manager to get update token
     BingTokenManager._currentExpiryTime = 0;
   },
@@ -111,7 +111,7 @@ this.BingTranslator.prototype = {
    *
    * @param   request   The BingRequest sent to the server.
    */
-  _chunkCompleted: function(bingRequest) {
+  _chunkCompleted(bingRequest) {
     if (this._parseChunkResult(bingRequest)) {
       this._partialSuccess = true;
       // Count the number of characters successfully translated.
@@ -131,7 +131,7 @@ this.BingTranslator.prototype = {
    *
    * @param   aError   [optional] The XHR object of the request that failed.
    */
-  _chunkFailed: function(aError) {
+  _chunkFailed(aError) {
     if (aError instanceof Ci.nsIXMLHttpRequest &&
         [400, 401].indexOf(aError.status) != -1) {
       let body = aError.responseText;
@@ -148,7 +148,7 @@ this.BingTranslator.prototype = {
    * This function handles resolving the promise
    * returned by the public `translate()` method when all chunks are completed.
    */
-  _checkIfFinished: function() {
+  _checkIfFinished() {
     // Check if all pending requests have been
     // completed and then resolves the promise.
     // If at least one chunk was successful, the
@@ -177,7 +177,7 @@ this.BingTranslator.prototype = {
    * @param   request      The request sent to the server.
    * @returns boolean      True if parsing of this chunk was successful.
    */
-  _parseChunkResult: function(bingRequest) {
+  _parseChunkResult(bingRequest) {
     let results;
     try {
       let doc = bingRequest.networkRequest.responseXML;
@@ -220,7 +220,7 @@ this.BingTranslator.prototype = {
    * @param startIndex What is the index, in the roots list, that the
    *                   chunk should start.
    */
-  _generateNextTranslationRequest: function(startIndex) {
+  _generateNextTranslationRequest(startIndex) {
     let currentDataSize = 0;
     let currentChunks = 0;
     let output = [];
@@ -285,7 +285,7 @@ BingRequest.prototype = {
   /**
    * Initiates the request
    */
-  fireRequest: function() {
+  fireRequest() {
     return Task.spawn(function *() {
       // Prepare authentication.
       let token = yield BingTokenManager.getToken();
@@ -324,11 +324,11 @@ BingRequest.prototype = {
         onLoad: (function(responseText, xhr) {
           deferred.resolve(this);
         }).bind(this),
-        onError: function(e, responseText, xhr) {
+        onError(e, responseText, xhr) {
           deferred.reject(xhr);
         },
         postData: requestString,
-        headers: headers
+        headers
       };
 
       // Fire the request.
@@ -358,7 +358,7 @@ var BingTokenManager = {
    *                     can be the same one used in the past if it is still
    *                     valid.
    */
-  getToken: function() {
+  getToken() {
     if (this._pendingRequest) {
       return this._pendingRequest;
     }
@@ -378,7 +378,7 @@ var BingTokenManager = {
    * @returns {Promise}  A promise that resolves with the token
    *                     string once it is obtained.
    */
-  _getNewToken: function() {
+  _getNewToken() {
     let url = getUrlParam("https://datamarket.accesscontrol.windows.net/v2/OAuth2-13",
                           "browser.translation.bing.authURL");
     let params = [
@@ -392,7 +392,7 @@ var BingTokenManager = {
 
     let deferred = Promise.defer();
     let options = {
-      onLoad: function(responseText, xhr) {
+      onLoad(responseText, xhr) {
         BingTokenManager._pendingRequest = null;
         try {
           let json = JSON.parse(responseText);
@@ -411,7 +411,7 @@ var BingTokenManager = {
           deferred.reject(e);
         }
       },
-      onError: function(e, responseText, xhr) {
+      onError(e, responseText, xhr) {
         BingTokenManager._pendingRequest = null;
         deferred.reject(e);
       },

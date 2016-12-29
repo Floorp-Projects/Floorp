@@ -33,7 +33,7 @@ function checkForProperties(ping, expected) {
 function Checker() {
 }
 Checker.prototype = {
-  promiseInit: function() {
+  promiseInit() {
     this._pingMap = new Map();
     return TelemetryArchive.promiseArchivedPingList().then((plist) => {
       for (let ping of plist) {
@@ -77,10 +77,10 @@ Checker.prototype = {
 };
 
 const TelemetryArchiveTesting = {
-  setup: function() {
+  setup() {
     Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
     Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);
   },
 
-  Checker: Checker,
+  Checker,
 };

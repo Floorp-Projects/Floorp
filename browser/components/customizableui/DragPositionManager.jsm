@@ -33,7 +33,7 @@ AreaPositionManager.prototype = {
   _nodePositionStore: null,
   _wideCache: null,
 
-  update: function(aContainer) {
+  update(aContainer) {
     this._nodePositionStore = new WeakMap();
     this._wideCache = new Set();
     let last = null;
@@ -73,7 +73,7 @@ AreaPositionManager.prototype = {
    * where dy is more heavily weighted by a factor corresponding to the
    * ratio between the container's width and the height of its elements.
    */
-  find: function(aContainer, aX, aY, aDraggedItemId) {
+  find(aContainer, aX, aY, aDraggedItemId) {
     let closest = null;
     let minCartesian = Number.MAX_VALUE;
     let containerX = this._containerInfo.left;
@@ -130,7 +130,7 @@ AreaPositionManager.prototype = {
    * they would have if we had inserted something before aBefore. We use CSS
    * transforms for this, which are CSS transitioned.
    */
-  insertPlaceholder: function(aContainer, aBefore, aWide, aSize, aIsFromThisArea) {
+  insertPlaceholder(aContainer, aBefore, aWide, aSize, aIsFromThisArea) {
     let isShifted = false;
     let shiftDown = aWide;
     for (let child of aContainer.children) {
@@ -185,11 +185,11 @@ AreaPositionManager.prototype = {
     this._lastPlaceholderInsertion = aBefore;
   },
 
-  isWide: function(aNode) {
+  isWide(aNode) {
     return this._wideCache.has(aNode.id);
   },
 
-  _checkIfWide: function(aNode) {
+  _checkIfWide(aNode) {
     return this._inPanel && aNode && aNode.firstChild &&
            aNode.firstChild.classList.contains(CustomizableUI.WIDE_PANEL_CLASS);
   },
@@ -201,7 +201,7 @@ AreaPositionManager.prototype = {
    * @param aNoTransition if truthy, adds a notransition attribute to the node
    *                      while resetting the transform.
    */
-  clearPlaceholders: function(aContainer, aNoTransition) {
+  clearPlaceholders(aContainer, aNoTransition) {
     for (let child of aContainer.children) {
       if (aNoTransition) {
         child.setAttribute("notransition", true);
@@ -220,7 +220,7 @@ AreaPositionManager.prototype = {
     }
   },
 
-  _getNextPos: function(aNode, aShiftDown, aSize) {
+  _getNextPos(aNode, aShiftDown, aSize) {
     // Shifting down is easy:
     if (this._inPanel && aShiftDown) {
       return "translate(0, " + aSize.height + "px)";
@@ -228,7 +228,7 @@ AreaPositionManager.prototype = {
     return this._diffWithNext(aNode, aSize);
   },
 
-  _diffWithNext: function(aNode, aSize) {
+  _diffWithNext(aNode, aSize) {
     let xDiff;
     let yDiff = null;
     let nodeBounds = this._lazyStoreGet(aNode);
@@ -306,7 +306,7 @@ AreaPositionManager.prototype = {
    * @param aNodeBounds     the bounding rect info of this node
    * @param aFirstNodeInRow the first node in aNode's row
    */
-  _moveNextBasedOnPrevious: function(aNode, aNodeBounds, aFirstNodeInRow) {
+  _moveNextBasedOnPrevious(aNode, aNodeBounds, aFirstNodeInRow) {
     let next = this._getVisibleSiblingForDirection(aNode, "previous");
     let otherBounds = this._lazyStoreGet(next);
     let side = this._dir == "ltr" ? "left" : "right";
@@ -328,7 +328,7 @@ AreaPositionManager.prototype = {
    * @param aNode  the node whose position info we want
    * @return the position info
    */
-  _lazyStoreGet: function(aNode) {
+  _lazyStoreGet(aNode) {
     let rect = this._nodePositionStore.get(aNode);
     if (!rect) {
       // getBoundingClientRect() returns a DOMRect that is live, meaning that
@@ -352,7 +352,7 @@ AreaPositionManager.prototype = {
     return rect;
   },
 
-  _firstInRow: function(aNode) {
+  _firstInRow(aNode) {
     // XXXmconley: I'm not entirely sure why we need to take the floor of these
     // values - it looks like, periodically, we're getting fractional pixels back
     // from lazyStoreGet. I've filed bug 994247 to investigate.
@@ -368,7 +368,7 @@ AreaPositionManager.prototype = {
     return rv;
   },
 
-  _getVisibleSiblingForDirection: function(aNode, aDirection) {
+  _getVisibleSiblingForDirection(aNode, aDirection) {
     let rv = aNode;
     do {
       rv = rv[aDirection + "Sibling"];
@@ -378,7 +378,7 @@ AreaPositionManager.prototype = {
 }
 
 var DragPositionManager = {
-  start: function(aWindow) {
+  start(aWindow) {
     let areas = CustomizableUI.areas.filter((area) => CustomizableUI.getAreaType(area) != "toolbar");
     areas = areas.map((area) => CustomizableUI.getCustomizeTargetForArea(area, aWindow));
     areas.push(aWindow.document.getElementById(kPaletteId));
@@ -392,7 +392,7 @@ var DragPositionManager = {
     }
   },
 
-  add: function(aWindow, aArea, aContainer) {
+  add(aWindow, aArea, aContainer) {
     if (CustomizableUI.getAreaType(aArea) != "toolbar") {
       return;
     }
@@ -400,7 +400,7 @@ var DragPositionManager = {
     gManagers.set(aContainer, new AreaPositionManager(aContainer));
   },
 
-  remove: function(aWindow, aArea, aContainer) {
+  remove(aWindow, aArea, aContainer) {
     if (CustomizableUI.getAreaType(aArea) != "toolbar") {
       return;
     }
@@ -408,11 +408,11 @@ var DragPositionManager = {
     gManagers.delete(aContainer);
   },
 
-  stop: function() {
+  stop() {
     gManagers = new WeakMap();
   },
 
-  getManagerForArea: function(aArea) {
+  getManagerForArea(aArea) {
     return gManagers.get(aArea);
   }
 };

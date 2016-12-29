@@ -52,7 +52,7 @@ function isApplicable(experiment) {
   let deferred = Promise.defer();
   experiment.isApplicable().then(
     result => deferred.resolve({ applicable: true,  reason: null }),
-    reason => deferred.resolve({ applicable: false, reason: reason })
+    reason => deferred.resolve({ applicable: false, reason })
   );
 
   return deferred.promise;

@@ -18,11 +18,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "nsISerializationHelper");
 
 this.Utils = Object.freeze({
-  makeURI: function(url) {
+  makeURI(url) {
     return Services.io.newURI(url, null, null);
   },
 
-  makeInputStream: function(aString) {
+  makeInputStream(aString) {
     let stream = Cc["@mozilla.org/io/string-input-stream;1"].
                  createInstance(Ci.nsISupportsCString);
     stream.data = aString;
@@ -35,7 +35,7 @@ this.Utils = Object.freeze({
    * "mozilla.org", this will return true. It would return false the other way
    * around.
    */
-  hasRootDomain: function(url, domain) {
+  hasRootDomain(url, domain) {
     let host;
 
     try {
@@ -57,7 +57,7 @@ this.Utils = Object.freeze({
            (prevChar == "." || prevChar == "/");
   },
 
-  shallowCopy: function(obj) {
+  shallowCopy(obj) {
     let retval = {};
 
     for (let key of Object.keys(obj)) {

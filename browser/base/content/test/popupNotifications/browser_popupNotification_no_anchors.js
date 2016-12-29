@@ -15,7 +15,7 @@ var tests = [
   // Test that popupnotifications are anchored to the identity icon on
   // about:blank, where anchor icons are hidden.
   { id: "Test#1",
-    run: function* () {
+    *run() {
       this.oldSelectedTab = gBrowser.selectedTab;
       yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -23,7 +23,7 @@ var tests = [
       this.notifyObj.anchorID = "geo-notification-icon";
       this.notification = showNotification(this.notifyObj);
     },
-    onShown: function(popup) {
+    onShown(popup) {
       checkPopup(popup, this.notifyObj);
       is(document.getElementById("geo-notification-icon").boxObject.width, 0,
          "geo anchor shouldn't be visible");
@@ -31,7 +31,7 @@ var tests = [
          "notification anchored to identity icon");
       dismissNotification(popup);
     },
-    onHidden: function(popup) {
+    onHidden(popup) {
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
@@ -40,7 +40,7 @@ var tests = [
   // Test that popupnotifications are anchored to the identity icon after
   // navigation to about:blank.
   { id: "Test#2",
-    run: function* () {
+    *run() {
       this.oldSelectedTab = gBrowser.selectedTab;
       yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
@@ -51,7 +51,7 @@ var tests = [
       });
       this.notification = showNotification(this.notifyObj);
     },
-    onShown: function* (popup) {
+    *onShown(popup) {
       yield promiseTabLoadEvent(gBrowser.selectedTab, "about:blank");
 
       checkPopup(popup, this.notifyObj);
@@ -61,7 +61,7 @@ var tests = [
          "notification anchored to identity icon");
       dismissNotification(popup);
     },
-    onHidden: function(popup) {
+    onHidden(popup) {
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
@@ -70,7 +70,7 @@ var tests = [
   // Test that dismissed popupnotifications cannot be opened on about:blank, but
   // can be opened after navigation.
   { id: "Test#3",
-    run: function* () {
+    *run() {
       this.oldSelectedTab = gBrowser.selectedTab;
       yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -92,11 +92,11 @@ var tests = [
 
       EventUtils.synthesizeMouse(document.getElementById("geo-notification-icon"), 0, 0, {});
     },
-    onShown: function(popup) {
+    onShown(popup) {
       checkPopup(popup, this.notifyObj);
       dismissNotification(popup);
     },
-    onHidden: function(popup) {
+    onHidden(popup) {
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
@@ -106,7 +106,7 @@ var tests = [
   // editing the URL in the location bar, and restored to their anchors when the
   // URL is reverted.
   { id: "Test#4",
-    run: function* () {
+    *run() {
       this.oldSelectedTab = gBrowser.selectedTab;
       yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 

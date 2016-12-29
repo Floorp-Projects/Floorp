@@ -14,7 +14,7 @@ add_task(function* () {
     PlacesUtils.history.addObserver({
       __proto__: NavHistoryObserver.prototype,
       _notified: [],
-      onVisit: function(uri, id, time, sessionId, referrerId, transition) {
+      onVisit(uri, id, time, sessionId, referrerId, transition) {
         info("Received onVisit: " + uri.spec);
         this._notified.push(uri);
 

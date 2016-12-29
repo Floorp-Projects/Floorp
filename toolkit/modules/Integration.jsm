@@ -143,7 +143,7 @@ this.Integration = new Proxy({}, {
 this.IntegrationPoint = function() {
   this._overrideFns = new Set();
   this._combined = {
-    QueryInterface: function() {
+    QueryInterface() {
       let ex = new Components.Exception(
                    "Integration objects should not be used with XPCOM because" +
                    " they change when new overrides are registered.",

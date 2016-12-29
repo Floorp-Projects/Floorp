@@ -129,7 +129,7 @@ function onFirefoxButtonClick(event) {
 var PositionHandler = {
   positionCustomized: false,
   threshold: 10,
-  adjustPosition: function() {
+  adjustPosition() {
     if (!this.positionCustomized) {
       // Center the window horizontally on the screen (not the available area).
       // Until we have moved the window to y=0, 'screen.width' may give a value
@@ -150,14 +150,14 @@ var PositionHandler = {
       this.setXPosition(window.screenX);
     }
   },
-  setXPosition: function(desiredX) {
+  setXPosition(desiredX) {
     // Ensure the indicator isn't moved outside the available area of the screen.
     desiredX = Math.max(desiredX, screen.availLeft);
     let maxX =
       screen.availLeft + screen.availWidth - document.documentElement.clientWidth;
     window.moveTo(Math.min(desiredX, maxX), screen.availTop);
   },
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     switch (aEvent.type) {
       case "mousedown":
         if (aEvent.button != 0 || aEvent.defaultPrevented)

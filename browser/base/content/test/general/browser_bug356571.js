@@ -15,7 +15,7 @@ const kPromptServiceFactory = Cm.getClassObject(Cc[kPromptServiceContractID],
                                                 Ci.nsIFactory);
 
 var fakePromptServiceFactory = {
-  createInstance: function(aOuter, aIid) {
+  createInstance(aOuter, aIid) {
     if (aOuter != null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
     return promptService.QueryInterface(aIid);
@@ -24,7 +24,7 @@ var fakePromptServiceFactory = {
 
 var promptService = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
-  alert: function() {
+  alert() {
     didFail = true;
   }
 };
@@ -47,7 +47,7 @@ const kURIs = [
 
 var gProgressListener = {
   _runCount: 0,
-  onStateChange: function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     if ((aStateFlags & kCompleteState) == kCompleteState) {
       if (++this._runCount != kURIs.length)
         return;

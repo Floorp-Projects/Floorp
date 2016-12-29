@@ -40,7 +40,7 @@ var pktPanelMessaging = (function() {
    // Payload needs to be an object in format:
    // { panelId: panelId, data: {} }
    var messagePayload = {
-     panelId: panelId,
+     panelId,
      data: (payload || {})
    };
 
@@ -70,9 +70,9 @@ var pktPanelMessaging = (function() {
      * Public functions
      */
     return {
-      panelIdFromURL: panelIdFromURL,
-        addMessageListener : addMessageListener,
-        removeMessageListener : removeMessageListener,
-        sendMessage: sendMessage
+      panelIdFromURL,
+        addMessageListener,
+        removeMessageListener,
+        sendMessage
     };
 }());

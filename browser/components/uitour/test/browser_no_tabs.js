@@ -26,7 +26,7 @@ function createHiddenBrowser(aURL) {
       browser.setAttribute("src", aURL);
 
       doc.documentElement.appendChild(browser);
-      resolve({frame: frame, browser: browser});
+      resolve({frame, browser});
     }));
 }
 

@@ -98,7 +98,7 @@ var Harness = {
   leaveOpen: {},
 
   // Setup and tear down functions
-  setup: function() {
+  setup() {
     if (!this.waitingForFinish) {
       waitForExplicitFinish();
       this.waitingForFinish = true;
@@ -147,11 +147,11 @@ var Harness = {
     this.runningInstalls = [];
   },
 
-  finish: function() {
+  finish() {
     finish();
   },
 
-  endTest: function() {
+  endTest() {
     let callback = this.installsCompletedCallback;
     let count = this.installCount;
 
@@ -180,7 +180,7 @@ var Harness = {
   },
 
   // Window open handling
-  windowReady: function(window) {
+  windowReady(window) {
     if (window.document.location.href == XPINSTALL_URL) {
       if (this.installBlockedCallback)
         ok(false, "Should have been blocked by the whitelist");
@@ -242,7 +242,7 @@ var Harness = {
 
   // Install blocked handling
 
-  installDisabled: function(installInfo) {
+  installDisabled(installInfo) {
     ok(!!this.installDisabledCallback, "Installation shouldn't have been disabled");
     if (this.installDisabledCallback)
       this.installDisabledCallback(installInfo);
@@ -251,7 +251,7 @@ var Harness = {
     this.endTest();
   },
 
-  installCancelled: function(installInfo) {
+  installCancelled(installInfo) {
     if (this.expectingCancelled)
       return;
 
@@ -261,14 +261,14 @@ var Harness = {
     this.endTest();
   },
 
-  installOriginBlocked: function(installInfo) {
+  installOriginBlocked(installInfo) {
     ok(!!this.installOriginBlockedCallback, "Shouldn't have been blocked");
     if (this.installOriginBlockedCallback)
       this.installOriginBlockedCallback(installInfo);
     this.endTest();
   },
 
-  installBlocked: function(installInfo) {
+  installBlocked(installInfo) {
     ok(!!this.installBlockedCallback, "Shouldn't have been blocked by the whitelist");
     if (this.installBlockedCallback && this.installBlockedCallback(installInfo)) {
       this.installBlockedCallback = null;
@@ -286,10 +286,10 @@ var Harness = {
 
   // nsIWindowMediatorListener
 
-  onWindowTitleChange: function(window, title) {
+  onWindowTitleChange(window, title) {
   },
 
-  onOpenWindow: function(window) {
+  onOpenWindow(window) {
     var domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                           .getInterface(Components.interfaces.nsIDOMWindow);
     var self = this;
@@ -298,12 +298,12 @@ var Harness = {
     }, domwindow);
   },
 
-  onCloseWindow: function(window) {
+  onCloseWindow(window) {
   },
 
   // Addon Install Listener
 
-  onNewInstall: function(install) {
+  onNewInstall(install) {
     this.runningInstalls.push(install);
 
     if (this.finalContentEvent && !this.waitingForEvent) {
@@ -322,23 +322,23 @@ var Harness = {
     }
   },
 
-  onDownloadStarted: function(install) {
+  onDownloadStarted(install) {
     this.pendingCount++;
     if (this.downloadStartedCallback)
       this.downloadStartedCallback(install);
   },
 
-  onDownloadProgress: function(install) {
+  onDownloadProgress(install) {
     if (this.downloadProgressCallback)
       this.downloadProgressCallback(install);
   },
 
-  onDownloadEnded: function(install) {
+  onDownloadEnded(install) {
     if (this.downloadEndedCallback)
       this.downloadEndedCallback(install);
   },
 
-  onDownloadCancelled: function(install) {
+  onDownloadCancelled(install) {
     isnot(this.runningInstalls.indexOf(install), -1,
           "Should only see cancelations for started installs");
     this.runningInstalls.splice(this.runningInstalls.indexOf(install), 1);
@@ -348,38 +348,38 @@ var Harness = {
     this.checkTestEnded();
   },
 
-  onDownloadFailed: function(install) {
+  onDownloadFailed(install) {
     if (this.downloadFailedCallback)
       this.downloadFailedCallback(install);
     this.checkTestEnded();
   },
 
-  onInstallStarted: function(install) {
+  onInstallStarted(install) {
     if (this.installStartedCallback)
       this.installStartedCallback(install);
   },
 
-  onInstallEnded: function(install, addon) {
+  onInstallEnded(install, addon) {
     if (this.installEndedCallback)
       this.installEndedCallback(install, addon);
     this.installCount++;
     this.checkTestEnded();
   },
 
-  onInstallFailed: function(install) {
+  onInstallFailed(install) {
     if (this.installFailedCallback)
       this.installFailedCallback(install);
     this.checkTestEnded();
   },
 
-  checkTestEnded: function() {
+  checkTestEnded() {
     if (--this.pendingCount == 0 && !this.waitingForEvent)
       this.endTest();
   },
 
   // nsIObserver
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     var installInfo = subject.QueryInterface(Components.interfaces.amIWebInstallInfo);
     switch (topic) {
     case "addon-install-started":
