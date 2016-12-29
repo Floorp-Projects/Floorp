@@ -1075,6 +1075,11 @@ class AssemblerX86Shared : public AssemblerShared
         X86Encoding::SetRel32(code + farJumpOffset, code + targetOffset);
     }
 
+    // This is for patching during code generation, not after.
+    void patchAddl(CodeOffset offset, int32_t n) {
+        X86Encoding::SetInt32(masm.data() + offset.offset(), n);
+    }
+
     CodeOffset twoByteNop() {
         return CodeOffset(masm.twoByteNop().offset());
     }

@@ -52,16 +52,15 @@ public:
     size_t CalcNumSamplerUniforms() const;
     size_t NumAttributes() const;
     bool FindAttribUserNameByMappedName(const nsACString& mappedName,
-                                        nsDependentCString* const out_userName) const;
+                                        nsCString* const out_userName) const;
     bool FindVaryingByMappedName(const nsACString& mappedName,
                                  nsCString* const out_userName,
                                  bool* const out_isArray) const;
     bool FindUniformByMappedName(const nsACString& mappedName,
                                  nsCString* const out_userName,
                                  bool* const out_isArray) const;
-    bool FindUniformBlockByMappedName(const nsACString& mappedName,
-                                      nsCString* const out_userName,
-                                      bool* const out_isArray) const;
+    bool UnmapUniformBlockName(const nsACString& baseMappedName,
+                               nsCString* const out_baseUserName) const;
 
     void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
 
@@ -89,6 +88,7 @@ public:
 public:
     const GLuint mGLName;
     const GLenum mType;
+
 protected:
     nsString mSource;
     nsCString mCleanSource;

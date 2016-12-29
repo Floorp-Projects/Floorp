@@ -20,6 +20,7 @@ import android.view.View;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.toolbar.SiteIdentityPopup;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.Locale;
 
@@ -47,7 +48,7 @@ public class ContentSecurityDoorHanger extends DoorHanger {
             mMessage.setText(message);
         }
 
-        final JSONObject options = config.getOptions();
+        final GeckoBundle options = config.getOptions();
         if (options != null) {
             setOptions(options);
         }
@@ -66,35 +67,35 @@ public class ContentSecurityDoorHanger extends DoorHanger {
     }
 
     @Override
-    public void setOptions(final JSONObject options) {
+    public void setOptions(final GeckoBundle options) {
         super.setOptions(options);
-        final JSONObject link = options.optJSONObject("link");
+
+        final GeckoBundle link = options.getBundle("link");
         if (link != null) {
-            try {
-                final String linkLabel = link.getString("label");
-                final String linkUrl = link.getString("url");
-                addLink(linkLabel, linkUrl);
-            } catch (JSONException e) { }
+            final String linkLabel = link.getString("label");
+            final String linkUrl = link.getString("url");
+            addLink(linkLabel, linkUrl);
         }
 
-        final JSONObject trackingProtection = options.optJSONObject("tracking_protection");
+        final GeckoBundle trackingProtection = options.getBundle("tracking_protection");
         if (trackingProtection != null) {
             mTitle.setVisibility(VISIBLE);
             mTitle.setText(R.string.doorhanger_tracking_title);
-            try {
-                final boolean enabled = trackingProtection.getBoolean("enabled");
-                if (enabled) {
-                    mMessage.setText(R.string.doorhanger_tracking_message_enabled);
-                    mSecurityState.setText(R.string.doorhanger_tracking_state_enabled);
-                    mSecurityState.setTextColor(ContextCompat.getColor(getContext(), R.color.affirmative_green));
-                } else {
-                    mMessage.setText(R.string.doorhanger_tracking_message_disabled);
-                    mSecurityState.setText(R.string.doorhanger_tracking_state_disabled);
-                    mSecurityState.setTextColor(ContextCompat.getColor(getContext(), R.color.rejection_red));
-                }
-                mMessage.setVisibility(VISIBLE);
-                mSecurityState.setVisibility(VISIBLE);
-            } catch (JSONException e) { }
+
+            final boolean enabled = trackingProtection.getBoolean("enabled");
+            if (enabled) {
+                mMessage.setText(R.string.doorhanger_tracking_message_enabled);
+                mSecurityState.setText(R.string.doorhanger_tracking_state_enabled);
+                mSecurityState.setTextColor(ContextCompat.getColor(getContext(),
+                                            R.color.affirmative_green));
+            } else {
+                mMessage.setText(R.string.doorhanger_tracking_message_disabled);
+                mSecurityState.setText(R.string.doorhanger_tracking_state_disabled);
+                mSecurityState.setTextColor(ContextCompat.getColor(getContext(),
+                                            R.color.rejection_red));
+            }
+            mMessage.setVisibility(VISIBLE);
+            mSecurityState.setVisibility(VISIBLE);
         }
     }
 

@@ -624,6 +624,49 @@ public final class GeckoBundle {
         return mMap.size();
     }
 
+    @Override // Object
+    public boolean equals(Object other) {
+        if (!(other instanceof GeckoBundle)) {
+            return false;
+        }
+
+        // Support library's SimpleArrayMap.equals is buggy, so roll our own version.
+        final SimpleArrayMap<String, Object> otherMap = ((GeckoBundle) other).mMap;
+        if (mMap == otherMap) {
+            return true;
+        }
+        if (mMap.size() != otherMap.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < mMap.size(); i++) {
+            final String thisKey = mMap.keyAt(i);
+            final int otherKey = otherMap.indexOfKey(thisKey);
+            if (otherKey < 0) {
+                return false;
+            }
+            final Object thisValue = mMap.valueAt(i);
+            final Object otherValue = otherMap.valueAt(otherKey);
+            if (thisValue == otherValue) {
+                continue;
+            }
+            if (thisValue == null || otherValue == null || !thisValue.equals(otherValue)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override // Object
+    public int hashCode() {
+        return mMap.hashCode();
+    }
+
+    @Override // Object
+    public String toString() {
+        return mMap.toString();
+    }
+
     private static Object fromJSONValue(Object value) throws JSONException {
         if (value instanceof JSONObject || value == JSONObject.NULL) {
             return fromJSONObject((JSONObject) value);

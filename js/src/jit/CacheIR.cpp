@@ -6,6 +6,8 @@
 
 #include "jit/CacheIR.h"
 
+#include "mozilla/FloatingPoint.h"
+
 #include "jit/BaselineIC.h"
 #include "jit/IonCaches.h"
 
@@ -121,23 +123,24 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             return false;
         }
-        if (idVal_.isNumber()) {
-            ValOperandId indexId = getElemKeyValueId();
-            if (tryAttachTypedElement(obj, objId, indexId))
+
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
+
+        uint32_t index;
+        Int32OperandId indexId;
+        if (maybeGuardInt32Index(idVal_, getElemKeyValueId(), &index, &indexId)) {
+            if (tryAttachTypedElement(obj, objId, index, indexId))
+                return true;
+            if (tryAttachDenseElement(obj, objId, index, indexId))
+                return true;
+            if (tryAttachDenseElementHole(obj, objId, index, indexId))
+                return true;
+            if (tryAttachUnboxedArrayElement(obj, objId, index, indexId))
+                return true;
+            if (tryAttachArgumentsObjectArg(obj, objId, index, indexId))
                 return true;
         }
-        if (idVal_.isInt32()) {
-            ValOperandId indexId = getElemKeyValueId();
-            if (tryAttachDenseElement(obj, objId, indexId))
-                return true;
-            if (tryAttachDenseElementHole(obj, objId, indexId))
-                return true;
-            if (tryAttachUnboxedArrayElement(obj, objId, indexId))
-                return true;
-            if (tryAttachArgumentsObjectArg(obj, objId, indexId))
-                return true;
-            return false;
-        }
+
         return false;
     }
 
@@ -939,10 +942,8 @@ GetPropIRGenerator::tryAttachMagicArgument(ValOperandId valId, ValOperandId inde
 
 bool
 GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
-                                                ValOperandId indexId)
+                                                uint32_t index, Int32OperandId indexId)
 {
-    MOZ_ASSERT(idVal_.isInt32());
-
     if (!obj->is<ArgumentsObject>() || obj->as<ArgumentsObject>().hasOverriddenElement())
         return false;
 
@@ -953,28 +954,23 @@ GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId o
         writer.guardClass(objId, GuardClassKind::UnmappedArguments);
     }
 
-    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
-    writer.loadArgumentsObjectArgResult(objId, int32IndexId);
+    writer.loadArgumentsObjectArgResult(objId, indexId);
     writer.typeMonitorResult();
     return true;
 }
 
 bool
 GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
-                                          ValOperandId indexId)
+                                          uint32_t index, Int32OperandId indexId)
 {
-    MOZ_ASSERT(idVal_.isInt32());
-
     if (!obj->isNative())
         return false;
 
-    if (!obj->as<NativeObject>().containsDenseElement(uint32_t(idVal_.toInt32())))
+    if (!obj->as<NativeObject>().containsDenseElement(index))
         return false;
 
     writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
-
-    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
-    writer.loadDenseElementResult(objId, int32IndexId);
+    writer.loadDenseElementResult(objId, indexId);
     writer.typeMonitorResult();
     return true;
 }
@@ -1017,13 +1013,8 @@ CanAttachDenseElementHole(JSObject* obj)
 
 bool
 GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
-                                              ValOperandId indexId)
+                                              uint32_t index, Int32OperandId indexId)
 {
-    MOZ_ASSERT(idVal_.isInt32());
-
-    if (idVal_.toInt32() < 0)
-        return false;
-
     if (!obj->isNative() || !CanAttachDenseElementHole(obj))
         return false;
 
@@ -1055,29 +1046,25 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
         pobj = pobj->staticPrototype();
     }
 
-    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
-    writer.loadDenseElementHoleResult(objId, int32IndexId);
+    writer.loadDenseElementHoleResult(objId, indexId);
     writer.typeMonitorResult();
     return true;
 }
 
 bool
 GetPropIRGenerator::tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
-                                                 ValOperandId indexId)
+                                                 uint32_t index, Int32OperandId indexId)
 {
-    MOZ_ASSERT(idVal_.isInt32());
-
     if (!obj->is<UnboxedArrayObject>())
         return false;
 
-    if (uint32_t(idVal_.toInt32()) >= obj->as<UnboxedArrayObject>().initializedLength())
+    if (index >= obj->as<UnboxedArrayObject>().initializedLength())
         return false;
 
     writer.guardGroup(objId, obj->group());
 
     JSValueType elementType = obj->group()->unboxedLayoutDontCheckGeneration().elementType();
-    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
-    writer.loadUnboxedArrayElementResult(objId, int32IndexId, elementType);
+    writer.loadUnboxedArrayElementResult(objId, indexId, elementType);
 
     // Only monitor the result if its type might change.
     if (elementType == JSVAL_TYPE_OBJECT)
@@ -1090,28 +1077,17 @@ GetPropIRGenerator::tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId 
 
 bool
 GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
-                                          ValOperandId indexId)
+                                          uint32_t index, Int32OperandId indexId)
 {
-    MOZ_ASSERT(idVal_.isNumber());
-
     if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
         return false;
 
-    if (!cx_->runtime()->jitSupportsFloatingPoint &&
-        (TypedThingRequiresFloatingPoint(obj) || idVal_.isDouble()))
-    {
-        return false;
-    }
-
-    if (idVal_.toNumber() < 0 || floor(idVal_.toNumber()) != idVal_.toNumber())
+    if (!cx_->runtime()->jitSupportsFloatingPoint && TypedThingRequiresFloatingPoint(obj))
         return false;
 
     // Ensure the index is in-bounds so the element type gets monitored.
-    if (obj->is<TypedArrayObject>() &&
-        idVal_.toNumber() >= double(obj->as<TypedArrayObject>().length()))
-    {
+    if (obj->is<TypedArrayObject>() && index >= obj->as<TypedArrayObject>().length())
         return false;
-    }
 
     // Don't attach typed object stubs if the underlying storage could be
     // detached, as the stub will always bail out.
@@ -1124,8 +1100,7 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
 
     writer.guardShape(objId, obj->as<ShapedObject>().shape());
 
-    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
-    writer.loadTypedElementResult(objId, int32IndexId, layout, TypedThingElementType(obj));
+    writer.loadTypedElementResult(objId, indexId, layout, TypedThingElementType(obj));
 
     // Reading from Uint32Array may produce an int32 now but a double value
     // later, so ensure we monitor the result.
@@ -1313,4 +1288,41 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
 
     writer.typeMonitorResult();
     return true;
+}
+
+bool
+IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
+                                  uint32_t* int32Index, Int32OperandId* int32IndexId)
+{
+    if (index.isNumber()) {
+        int32_t indexSigned;
+        if (index.isInt32()) {
+            indexSigned = index.toInt32();
+        } else {
+            if (!mozilla::NumberIsInt32(index.toDouble(), &indexSigned))
+                return false;
+            if (!cx_->runtime()->jitSupportsFloatingPoint)
+                return false;
+        }
+
+        if (indexSigned < 0)
+            return false;
+
+        *int32Index = uint32_t(indexSigned);
+        *int32IndexId = writer.guardIsInt32(indexId);
+        return true;
+    }
+
+    if (index.isString()) {
+        int32_t indexSigned = GetIndexFromString(index.toString());
+        if (indexSigned < 0)
+            return false;
+
+        StringOperandId strId = writer.guardIsString(indexId);
+        *int32Index = uint32_t(indexSigned);
+        *int32IndexId = writer.guardAndGetIndexFromString(strId);
+        return true;
+    }
+
+    return false;
 }

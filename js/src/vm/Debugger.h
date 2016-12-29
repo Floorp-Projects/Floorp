@@ -1196,6 +1196,20 @@ struct Handler {
     virtual void trace(JSTracer* tracer) = 0;
 };
 
+class DebuggerArguments : public NativeObject {
+  public:
+    static const Class class_;
+
+    static DebuggerArguments* create(JSContext* cx, HandleObject proto, HandleDebuggerFrame frame);
+
+  private:
+    enum {
+        FRAME_SLOT
+    };
+
+    static const unsigned RESERVED_SLOTS = 1;
+};
+
 /*
  * An OnStepHandler represents a handler function that is called when a small
  * amount of progress is made in a frame.
@@ -1255,6 +1269,7 @@ class ScriptedOnPopHandler final : public OnPopHandler {
 
 class DebuggerFrame : public NativeObject
 {
+    friend class DebuggerArguments;
     friend class ScriptedOnStepHandler;
     friend class ScriptedOnPopHandler;
 
@@ -1271,6 +1286,8 @@ class DebuggerFrame : public NativeObject
     static DebuggerFrame* create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
                                  const ScriptFrameIter* maybeIter, HandleNativeObject debugger);
 
+    static MOZ_MUST_USE bool getArguments(JSContext* cx, HandleDebuggerFrame frame,
+                                          MutableHandleDebuggerArguments result);
     static MOZ_MUST_USE bool getCallee(JSContext* cx, HandleDebuggerFrame frame,
                                        MutableHandleDebuggerObject result);
     static MOZ_MUST_USE bool getIsConstructing(JSContext* cx, HandleDebuggerFrame frame,
@@ -1310,6 +1327,7 @@ class DebuggerFrame : public NativeObject
 
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
+    static MOZ_MUST_USE bool argumentsGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool constructingGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);

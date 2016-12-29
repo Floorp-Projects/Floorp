@@ -1992,8 +1992,7 @@ DoCopyTexOrSubImage(WebGLContext* webgl, const char* funcName, bool isSubImage,
                     uint32_t dstWidth, uint32_t dstHeight,
                     const webgl::FormatUsageInfo* dstUsage)
 {
-    gl::GLContext* gl = webgl->gl;
-    gl->MakeCurrent();
+    const auto& gl = webgl->gl;
 
     ////
 
@@ -2139,6 +2138,9 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     ////////////////////////////////////
     // Do the thing!
 
+    mContext->gl->MakeCurrent();
+    mContext->OnBeforeReadCall();
+
     const bool isSubImage = false;
     if (!DoCopyTexOrSubImage(mContext, funcName, isSubImage, this, target, level, x, y,
                              srcTotalWidth, srcTotalHeight, srcUsage, 0, 0, 0, width,
@@ -2213,6 +2215,9 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
 
     ////////////////////////////////////
     // Do the thing!
+
+    mContext->gl->MakeCurrent();
+    mContext->OnBeforeReadCall();
 
     bool uploadWillInitialize;
     if (!EnsureImageDataInitializedForUpload(this, funcName, target, level, xOffset,

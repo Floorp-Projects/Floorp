@@ -6,8 +6,33 @@
 
 SharedLibrary('clang-plugin')
 
-SOURCES += [
-    'clang-plugin.cpp',
+UNIFIED_SOURCES += [
+    'ArithmeticArgChecker.cpp',
+    'AssertAssignmentChecker.cpp',
+    'CustomTypeAnnotation.cpp',
+    'DiagnosticsMatcher.cpp',
+    'ExplicitImplicitChecker.cpp',
+    'ExplicitOperatorBoolChecker.cpp',
+    'KungFuDeathGripChecker.cpp',
+    'MozCheckAction.cpp',
+    'MustOverrideChecker.cpp',
+    'MustUseChecker.cpp',
+    'NaNExprChecker.cpp',
+    'NeedsNoVTableTypeChecker.cpp',
+    'NoAddRefReleaseOnReturnChecker.cpp',
+    'NoAutoTypeChecker.cpp',
+    'NoDuplicateRefCntMemberChecker.cpp',
+    'NoExplicitMoveConstructorChecker.cpp',
+    'NonMemMovableMemberChecker.cpp',
+    'NonMemMovableTemplateArgChecker.cpp',
+    'NonParamInsideFunctionDeclChecker.cpp',
+    'OverrideBaseCallChecker.cpp',
+    'OverrideBaseCallUsageChecker.cpp',
+    'RefCountedCopyConstructorChecker.cpp',
+    'RefCountedInsideLambdaChecker.cpp',
+    'ScopeChecker.cpp',
+    'SprintfLiteralChecker.cpp',
+    'TrivialCtorDtorChecker.cpp',
 ]
 
 DISABLE_STL_WRAPPING = True

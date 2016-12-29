@@ -545,13 +545,15 @@ ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
 }
 
 bool
-ShaderValidator::FindUniformBlockByMappedName(const std::string& mappedName,
-                                              std::string* const out_userName) const
+ShaderValidator::UnmapUniformBlockName(const nsACString& baseMappedName,
+                                       nsCString* const out_baseUserName) const
 {
     const std::vector<sh::InterfaceBlock>& interfaces = *ShGetInterfaceBlocks(mHandle);
     for (const auto& interface : interfaces) {
-        if (mappedName == interface.mappedName) {
-            *out_userName = interface.name;
+        const nsDependentCString interfaceMappedName(interface.mappedName.data(),
+                                                     interface.mappedName.size());
+        if (baseMappedName == interfaceMappedName) {
+            *out_baseUserName = interface.name.data();
             return true;
         }
     }
