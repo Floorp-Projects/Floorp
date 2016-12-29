@@ -28,7 +28,7 @@ add_task(function* test() {
                           count = result;
                         },
                         handleError(error) {
-                          do_throw("Error occurred searching form history: " + error);
+                          Assert.ok(false, "Error occurred searching form history: " + error);
                         },
                         handleCompletion(num) {
                           if (aShouldValueExist) {

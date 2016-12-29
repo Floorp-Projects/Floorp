@@ -112,6 +112,8 @@ add_task(function* test() {
     gBrowser.selectedBrowser.messageManager.loadFrameScript(`data:,(${f})()`, false);
   }
 
+  // These are available to frame scripts.
+  /* global addMessageListener:false, removeMessageListener: false */
   function initScript() {
     const {GCTelemetry} = Components.utils.import("resource://gre/modules/GCTelemetry.jsm", {});
 
