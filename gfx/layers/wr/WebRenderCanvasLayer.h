@@ -6,7 +6,7 @@
 #ifndef GFX_WEBRENDERCANVASLAYER_H
 #define GFX_WEBRENDERCANVASLAYER_H
 
-#include "CopyableCanvasLayer.h"
+#include "ShareableCanvasLayer.h"
 #include "WebRenderLayerManager.h"
 
 namespace mozilla {
@@ -17,14 +17,24 @@ class SourceSurface;
 namespace layers {
 
 class WebRenderCanvasLayer : public WebRenderLayer,
-                             public CopyableCanvasLayer
+                             public ShareableCanvasLayer
 {
 public:
   explicit WebRenderCanvasLayer(WebRenderLayerManager* aLayerManager)
-    : CopyableCanvasLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
+    : ShareableCanvasLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
+    , mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderCanvasLayer);
   }
+
+  virtual void Initialize(const Data& aData) override;
+
+  virtual CompositableForwarder* GetForwarder() override
+  {
+    return Manager()->WRBridge();
+  }
+
+  virtual void AttachCompositable() override;
 
 protected:
   virtual ~WebRenderCanvasLayer();
@@ -36,6 +46,9 @@ protected:
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer() override;
+
+protected:
+  uint64_t mExternalImageId;
 };
 
 } // namespace layers
