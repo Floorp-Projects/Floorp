@@ -201,9 +201,8 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
   return IPC_OK();
 }
 
-
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+void
+WebRenderBridgeParent::HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId)
@@ -214,7 +213,7 @@ WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
     }
-    return IPC_OK();
+    return;
   }
   // This ensures that destroy operations are always processed. It is not safe
   // to early-return from RecvDPEnd without doing so.
@@ -227,6 +226,15 @@ WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
   // Otherwise, it should be continually increasing.
   MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
   mPendingTransactionId = aTransactionId;
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                 InfallibleTArray<OpDestroy>&& aToDestroy,
+                                 const uint64_t& aFwdTransactionId,
+                                 const uint64_t& aTransactionId)
+{
+  HandleDPEnd(Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
   return IPC_OK();
 }
 
@@ -236,10 +244,8 @@ WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aComma
                                      const uint64_t& aFwdTransactionId,
                                      const uint64_t& aTransactionId)
 {
-  // This is the same as RecvDPEnd, but in a sync IPC message instead of an
-  // async one.
-
-  return RecvDPEnd(Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
+  HandleDPEnd(Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
+  return IPC_OK();
 }
 
 void
