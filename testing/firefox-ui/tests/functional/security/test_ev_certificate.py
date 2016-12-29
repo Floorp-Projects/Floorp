@@ -30,7 +30,7 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
             self.marionette.navigate(self.url)
 
         # Check the identity box
-        self.assertEqual(self.locationbar.identity_box.get_attribute('className'),
+        self.assertEqual(self.locationbar.identity_box.get_property('className'),
                          'verifiedIdentity')
 
         # Get the information from the certificate
@@ -38,9 +38,9 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
         address = self.puppeteer.security.get_address_from_certificate(cert)
 
         # Check the identity popup label displays
-        self.assertEqual(self.locationbar.identity_organization_label.get_attribute('value'),
+        self.assertEqual(self.locationbar.identity_organization_label.get_property('value'),
                          cert['organization'])
-        self.assertEqual(self.locationbar.identity_country_label.get_attribute('value'),
+        self.assertEqual(self.locationbar.identity_country_label.get_property('value'),
                          '(' + address['country'] + ')')
 
         # Open the identity popup
@@ -50,7 +50,7 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(self.identity_popup.element.get_attribute('connection'), 'secure-ev')
 
         # For EV certificates no hostname but the organization name is shown
-        self.assertEqual(self.identity_popup.view.main.host.get_attribute('textContent'),
+        self.assertEqual(self.identity_popup.view.main.host.get_property('textContent'),
                          cert['organization'])
 
         # Only the secure label is visible in the main view
@@ -73,8 +73,7 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(insecure_label.value_of_css_property('display'), 'none')
 
         # Check the organization name
-        self.assertEqual(security_view.owner.get_attribute('textContent'),
-                         cert['organization'])
+        self.assertEqual(security_view.owner.get_property('textContent'), cert['organization'])
 
         # Check the owner location string
         # More information:
@@ -82,14 +81,12 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
         location = self.browser.localize_property('identity.identified.state_and_country')
         location = location.replace('%S', address['state'], 1).replace('%S', address['country'])
         location = address['city'] + '\n' + location
-        self.assertEqual(security_view.owner_location.get_attribute('textContent'),
-                         location)
+        self.assertEqual(security_view.owner_location.get_property('textContent'), location)
 
         # Check the verifier
         l10n_verifier = self.browser.localize_property('identity.identified.verifier')
         l10n_verifier = l10n_verifier.replace('%S', cert['issuerOrganization'])
-        self.assertEqual(security_view.verifier.get_attribute('textContent'),
-                         l10n_verifier)
+        self.assertEqual(security_view.verifier.get_property('textContent'), l10n_verifier)
 
         # Open the Page Info window by clicking the More Information button
         page_info = self.browser.open_page_info_window(
@@ -101,14 +98,14 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
 
             # Verify the domain listed on the security panel
             self.assertIn(cert['commonName'],
-                          page_info.deck.security.domain.get_attribute('value'))
+                          page_info.deck.security.domain.get_property('value'))
 
             # Verify the owner listed on the security panel
-            self.assertEqual(page_info.deck.security.owner.get_attribute('value'),
+            self.assertEqual(page_info.deck.security.owner.get_property('value'),
                              cert['organization'])
 
             # Verify the verifier listed on the security panel
-            self.assertEqual(page_info.deck.security.verifier.get_attribute('value'),
+            self.assertEqual(page_info.deck.security.verifier.get_property('value'),
                              cert['issuerOrganization'])
         finally:
             page_info.close()
