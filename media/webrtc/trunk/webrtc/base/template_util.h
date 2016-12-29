@@ -48,6 +48,19 @@ template <class T> struct is_non_const_reference<const T&> : false_type {};
 template <class T> struct is_void : false_type {};
 template <> struct is_void<void> : true_type {};
 
+template <class T>
+struct remove_reference {
+  typedef T type;
+};
+template <class T>
+struct remove_reference<T&> {
+  typedef T type;
+};
+template <class T>
+struct remove_reference<T&&> {
+  typedef T type;
+};
+
 namespace internal {
 
 // Types YesType and NoType are guaranteed such that sizeof(YesType) <

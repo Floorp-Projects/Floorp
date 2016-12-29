@@ -12,6 +12,7 @@
 #define WEBRTC_TEST_CHANNEL_TRANSPORT_UDP_TRANSPORT_H_
 
 #include "webrtc/common_types.h"
+#include "webrtc/transport.h"
 #include "webrtc/typedefs.h"
 
 /*

@@ -11,6 +11,7 @@
 #ifndef WEBRTC_SOUND_LINUXSOUNDSYSTEM_H_
 #define WEBRTC_SOUND_LINUXSOUNDSYSTEM_H_
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/sound/automaticallychosensoundsystem.h"
 
 namespace rtc {
@@ -34,7 +35,7 @@ extern const SoundSystemCreator kLinuxSoundSystemCreators[
 // initializes then we choose that. Otherwise we choose ALSA.
 typedef AutomaticallyChosenSoundSystem<
     kLinuxSoundSystemCreators,
-    ARRAY_SIZE(kLinuxSoundSystemCreators)> LinuxSoundSystem;
+    arraysize(kLinuxSoundSystemCreators)> LinuxSoundSystem;
 
 }  // namespace rtc
 

@@ -11,9 +11,9 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_
 
+#include "webrtc/base/platform_thread.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc
 {
@@ -39,7 +39,8 @@ private:
     bool AllocateVideoBuffers();
     bool DeAllocateVideoBuffers();
 
-    rtc::scoped_ptr<ThreadWrapper> _captureThread;
+    // TODO(pbos): Stop using scoped_ptr and resetting the thread.
+    rtc::scoped_ptr<rtc::PlatformThread> _captureThread;
     CriticalSectionWrapper* _captureCritSect;
 
     int32_t _deviceId;

@@ -20,9 +20,9 @@
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/call.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/test/encoder_settings.h"
 #include "webrtc/test/null_transport.h"
 #include "webrtc/test/fake_decoder.h"
@@ -106,7 +106,7 @@ static const bool timestamp_offset_dummy =
 // Flag for rtpdump input file.
 bool ValidateInputFilenameNotEmpty(const char* flagname,
                                    const std::string& string) {
-  return string != "";
+  return !string.empty();
 }
 
 DEFINE_string(input_file, "", "input file");
@@ -152,11 +152,11 @@ class FileRenderPassthrough : public VideoRenderer {
   }
 
  private:
-  void RenderFrame(const I420VideoFrame& video_frame,
+  void RenderFrame(const VideoFrame& video_frame,
                    int time_to_render_ms) override {
     if (renderer_ != nullptr)
       renderer_->RenderFrame(video_frame, time_to_render_ms);
-    if (basename_ == "")
+    if (basename_.empty())
       return;
     if (last_width_ != video_frame.width() ||
         last_height_ != video_frame.height()) {
@@ -179,7 +179,7 @@ class FileRenderPassthrough : public VideoRenderer {
     last_height_ = video_frame.height();
     if (file_ == nullptr)
       return;
-    PrintI420VideoFrame(video_frame, file_);
+    PrintVideoFrame(video_frame, file_);
   }
 
   bool IsTextureSupported() const override { return false; }
@@ -196,7 +196,7 @@ class DecoderBitstreamFileWriter : public EncodedFrameObserver {
  public:
   explicit DecoderBitstreamFileWriter(const char* filename)
       : file_(fopen(filename, "wb")) {
-    DCHECK(file_ != nullptr);
+    RTC_DCHECK(file_ != nullptr);
   }
   ~DecoderBitstreamFileWriter() { fclose(file_); }
 
@@ -214,13 +214,10 @@ void RtpReplay() {
   FileRenderPassthrough file_passthrough(flags::OutBase(),
                                          playback_video.get());
 
-  // TODO(pbos): Might be good to have a transport that prints keyframe requests
-  //             etc.
-  test::NullTransport transport;
-  Call::Config call_config(&transport);
-  rtc::scoped_ptr<Call> call(Call::Create(call_config));
+  rtc::scoped_ptr<Call> call(Call::Create(Call::Config()));
 
-  VideoReceiveStream::Config receive_config;
+  test::NullTransport transport;
+  VideoReceiveStream::Config receive_config(&transport);
   receive_config.rtp.remote_ssrc = flags::Ssrc();
   receive_config.rtp.local_ssrc = kReceiverLocalSsrc;
   receive_config.rtp.fec.ulpfec_payload_type = flags::FecPayloadType();
@@ -241,13 +238,13 @@ void RtpReplay() {
   encoder_settings.payload_type = flags::PayloadType();
   VideoReceiveStream::Decoder decoder;
   rtc::scoped_ptr<DecoderBitstreamFileWriter> bitstream_writer;
-  if (flags::DecoderBitstreamFilename() != "") {
+  if (!flags::DecoderBitstreamFilename().empty()) {
     bitstream_writer.reset(new DecoderBitstreamFileWriter(
         flags::DecoderBitstreamFilename().c_str()));
     receive_config.pre_decode_callback = bitstream_writer.get();
   }
   decoder = test::CreateMatchingDecoder(encoder_settings);
-  if (flags::DecoderBitstreamFilename() != "") {
+  if (!flags::DecoderBitstreamFilename().empty()) {
     // Replace with a null decoder if we're writing the bitstream to a file
     // instead.
     delete decoder.decoder;
@@ -287,7 +284,8 @@ void RtpReplay() {
     if (!rtp_reader->NextPacket(&packet))
       break;
     ++num_packets;
-    switch (call->Receiver()->DeliverPacket(packet.data, packet.length)) {
+    switch (call->Receiver()->DeliverPacket(webrtc::MediaType::ANY, packet.data,
+                                            packet.length, PacketTime())) {
       case PacketReceiver::DELIVERY_OK:
         break;
       case PacketReceiver::DELIVERY_UNKNOWN_SSRC: {

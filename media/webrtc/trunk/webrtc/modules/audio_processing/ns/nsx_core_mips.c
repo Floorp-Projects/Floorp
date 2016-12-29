@@ -9,8 +9,9 @@
  */
 
 #include <assert.h>
+#include <string.h>
 
-#include "webrtc/modules/audio_processing/ns/include/noise_suppression_x.h"
+#include "webrtc/modules/audio_processing/ns/noise_suppression_x.h"
 #include "webrtc/modules/audio_processing/ns/nsx_core.h"
 
 static const int16_t kIndicatorTable[17] = {
@@ -31,7 +32,8 @@ void WebRtcNsx_SpeechNoiseProb(NoiseSuppressionFixedC* inst,
   int32_t logLrtTimeAvgKsumFX;
   int16_t indPriorFX16;
   int16_t tmp16, tmp16no1, tmp16no2, tmpIndFX, tableIndex, frac;
-  int i, normTmp, nShifts;
+  size_t i;
+  int normTmp, nShifts;
 
   int32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9;
   int32_t const_max = 0x7fffffff;
@@ -330,7 +332,7 @@ void WebRtcNsx_AnalysisUpdate_mips(NoiseSuppressionFixedC* inst,
                                    int16_t* out,
                                    int16_t* new_speech) {
   int iters, after;
-  int anaLen = inst->anaLen;
+  int anaLen = (int)inst->anaLen;
   int *window = (int*)inst->window;
   int *anaBuf = (int*)inst->analysisBuffer;
   int *outBuf = (int*)out;
@@ -340,11 +342,10 @@ void WebRtcNsx_AnalysisUpdate_mips(NoiseSuppressionFixedC* inst,
 #endif
 
   // For lower band update analysis buffer.
-  WEBRTC_SPL_MEMCPY_W16(inst->analysisBuffer,
-                        inst->analysisBuffer + inst->blockLen10ms,
-                        inst->anaLen - inst->blockLen10ms);
-  WEBRTC_SPL_MEMCPY_W16(inst->analysisBuffer
-      + inst->anaLen - inst->blockLen10ms, new_speech, inst->blockLen10ms);
+  memcpy(inst->analysisBuffer, inst->analysisBuffer + inst->blockLen10ms,
+      (inst->anaLen - inst->blockLen10ms) * sizeof(*inst->analysisBuffer));
+  memcpy(inst->analysisBuffer + inst->anaLen - inst->blockLen10ms, new_speech,
+      inst->blockLen10ms * sizeof(*inst->analysisBuffer));
 
   // Window data before FFT.
 #if defined(MIPS_DSP_R1_LE)
@@ -504,7 +505,7 @@ void WebRtcNsx_AnalysisUpdate_mips(NoiseSuppressionFixedC* inst,
 void WebRtcNsx_SynthesisUpdate_mips(NoiseSuppressionFixedC* inst,
                                     int16_t* out_frame,
                                     int16_t gain_factor) {
-  int iters = inst->blockLen10ms >> 2;
+  int iters = (int)inst->blockLen10ms >> 2;
   int after = inst->blockLen10ms & 3;
   int r0, r1, r2, r3, r4, r5, r6, r7;
   int16_t *window = (int16_t*)inst->window;
@@ -744,9 +745,8 @@ void WebRtcNsx_SynthesisUpdate_mips(NoiseSuppressionFixedC* inst,
   );
 
   // update synthesis buffer
-  WEBRTC_SPL_MEMCPY_W16(inst->synthesisBuffer,
-                        inst->synthesisBuffer + inst->blockLen10ms,
-                        inst->anaLen - inst->blockLen10ms);
+  memcpy(inst->synthesisBuffer, inst->synthesisBuffer + inst->blockLen10ms,
+      (inst->anaLen - inst->blockLen10ms) * sizeof(*inst->synthesisBuffer));
   WebRtcSpl_ZerosArrayW16(inst->synthesisBuffer
       + inst->anaLen - inst->blockLen10ms, inst->blockLen10ms);
 }
@@ -759,7 +759,7 @@ void WebRtcNsx_PrepareSpectrum_mips(NoiseSuppressionFixedC* inst,
   int16_t *imag = inst->imag;
   int32_t loop_count = 2;
   int16_t tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6;
-  int16_t tmp16 = (inst->anaLen << 1) - 4;
+  int16_t tmp16 = (int16_t)(inst->anaLen << 1) - 4;
   int16_t* freq_buf_f = freq_buf;
   int16_t* freq_buf_s = &freq_buf[tmp16];
 
@@ -862,7 +862,7 @@ void WebRtcNsx_Denormalize_mips(NoiseSuppressionFixedC* inst,
                                 int16_t* in,
                                 int factor) {
   int32_t r0, r1, r2, r3, t0;
-  int len = inst->anaLen;
+  int len = (int)inst->anaLen;
   int16_t *out = &inst->real[0];
   int shift = factor - inst->normData;
 
@@ -952,7 +952,7 @@ void WebRtcNsx_NormalizeRealBuffer_mips(NoiseSuppressionFixedC* inst,
                                         const int16_t* in,
                                         int16_t* out) {
   int32_t r0, r1, r2, r3, t0;
-  int len = inst->anaLen;
+  int len = (int)inst->anaLen;
   int shift = inst->normData;
 
   __asm __volatile (

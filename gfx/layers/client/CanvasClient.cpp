@@ -22,6 +22,7 @@
 #include "mozilla/layers/TextureClientOGL.h"
 #include "nsDebug.h"                    // for printf_stderr, NS_ASSERTION
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
+#include "ShareableCanvasLayer.h"
 #include "TextureClientSharedSurface.h"
 
 using namespace mozilla::gfx;
@@ -90,7 +91,7 @@ CanvasClient2D::UpdateFromTexture(TextureClient* aTexture)
 }
 
 void
-CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
+CanvasClient2D::Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer)
 {
   mBufferProviderTexture = nullptr;
 
@@ -164,7 +165,7 @@ already_AddRefed<TextureClient>
 CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                              gfx::IntSize aSize,
                                              TextureFlags aFlags,
-                                             ClientCanvasLayer* aLayer)
+                                             ShareableCanvasLayer* aLayer)
 {
   if (aLayer->IsGLLayer()) {
     // We want a cairo backend here as we don't want to be copying into
@@ -376,10 +377,10 @@ CloneSurface(gl::SharedSurface* src, gl::SurfaceFactory* factory)
 }
 
 void
-CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
+CanvasClientSharedSurface::Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer)
 {
   Renderer renderer;
-  renderer.construct<ClientCanvasLayer*>(aLayer);
+  renderer.construct<ShareableCanvasLayer*>(aLayer);
   UpdateRenderer(aSize, renderer);
 }
 
@@ -395,10 +396,10 @@ void
 CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer)
 {
   GLContext* gl = nullptr;
-  ClientCanvasLayer* layer = nullptr;
+  ShareableCanvasLayer* layer = nullptr;
   AsyncCanvasRenderer* asyncRenderer = nullptr;
-  if (aRenderer.constructed<ClientCanvasLayer*>()) {
-    layer = aRenderer.ref<ClientCanvasLayer*>();
+  if (aRenderer.constructed<ShareableCanvasLayer*>()) {
+    layer = aRenderer.ref<ShareableCanvasLayer*>();
     gl = layer->mGLContext;
   } else {
     asyncRenderer = aRenderer.ref<AsyncCanvasRenderer*>();
@@ -447,7 +448,7 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
     CompositableForwarder* shadowForwarder = nullptr;
     if (layer) {
       flags |= layer->Flags();
-      shadowForwarder = layer->ClientManager()->AsShadowForwarder();
+      shadowForwarder = layer->GetForwarder();
     } else {
       MOZ_ASSERT(asyncRenderer);
       flags |= mTextureFlags;

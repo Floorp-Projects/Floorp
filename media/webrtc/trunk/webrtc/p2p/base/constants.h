@@ -28,19 +28,12 @@ extern const char CN_OTHER[];
 // GN stands for group name
 extern const char GROUP_TYPE_BUNDLE[];
 
-extern const char NS_JINGLE_ICE_UDP[];
-extern const char NS_GINGLE_P2P[];
-extern const char NS_GINGLE_RAW[];
-
-extern const char ICE_OPTION_GICE[];
-
 extern const int ICE_UFRAG_LENGTH;
 extern const int ICE_PWD_LENGTH;
 extern const size_t ICE_UFRAG_MIN_LENGTH;
 extern const size_t ICE_PWD_MIN_LENGTH;
 extern const size_t ICE_UFRAG_MAX_LENGTH;
 extern const size_t ICE_PWD_MAX_LENGTH;
-extern const size_t GICE_UFRAG_MAX_LENGTH;
 
 extern const int ICE_CANDIDATE_COMPONENT_RTP;
 extern const int ICE_CANDIDATE_COMPONENT_RTCP;
@@ -48,13 +41,6 @@ extern const int ICE_CANDIDATE_COMPONENT_DEFAULT;
 
 extern const char NS_JINGLE_RTP[];
 extern const char NS_JINGLE_DRAFT_SCTP[];
-
-extern const char GICE_CHANNEL_NAME_RTP[];
-extern const char GICE_CHANNEL_NAME_RTCP[];
-extern const char GICE_CHANNEL_NAME_VIDEO_RTP[];
-extern const char GICE_CHANNEL_NAME_VIDEO_RTCP[];
-extern const char GICE_CHANNEL_NAME_DATA_RTP[];
-extern const char GICE_CHANNEL_NAME_DATA_RTCP[];
 
 // RFC 4145, SDP setup attribute values.
 extern const char CONNECTIONROLE_ACTIVE_STR[];

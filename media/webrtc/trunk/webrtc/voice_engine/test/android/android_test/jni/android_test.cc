@@ -15,7 +15,7 @@
 
 #include "webrtc/voice_engine/test/android/android_test/jni/org_webrtc_voiceengine_test_AndroidTest.h"
 
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/base/platform_thread.h"
 
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_base.h"
@@ -177,7 +177,7 @@ private:
     static bool Run(void* ptr);
     bool Process();
 private:
-    rtc::scoped_ptr<ThreadWrapper> _thread;
+    rtc::PlatformThread _thread;
 };
 
 ThreadTest::~ThreadTest()
@@ -188,7 +188,7 @@ ThreadTest::~ThreadTest()
 
 ThreadTest::ThreadTest()
 {
-    _thread = ThreadWrapper::CreateThread(Run, this, "ThreadTest thread");
+    _thread(Run, this, "ThreadTest thread");
 }
 
 bool ThreadTest::Run(void* ptr)
@@ -221,7 +221,6 @@ bool ThreadTest::Process()
         __android_log_write(ANDROID_LOG_ERROR, WEBRTC_LOG_TAG,
                 "set local receiver 2 failed");
     }
-    veData2.hardware->SetLoudspeakerStatus(false);
     veData2.volume->SetSpeakerVolume(204);
     veData2.base->StartReceive(0);
     if(veData2.base->StartPlayout(0) < 0)
@@ -1111,43 +1110,6 @@ Java_org_webrtc_voiceengine_test_AndroidTest_SetSpeakerVolume(
     {
         return -1;
     }
-
-    return 0;
-}
-
-/////////////////////////////////////////////
-// [Hardware] Set loudspeaker status
-//
-JNIEXPORT jint JNICALL
-Java_org_webrtc_voiceengine_test_AndroidTest_SetLoudspeakerStatus(
-        JNIEnv *,
-        jobject,
-        jboolean enable)
-{
-    VALIDATE_HARDWARE_POINTER;
-    if (veData1.hardware->SetLoudspeakerStatus(enable) != 0)
-    {
-        return -1;
-    }
-
-    /*VALIDATE_RTP_RTCP_POINTER;
-
-     if (veData1.rtp_rtcp->SetREDStatus(0, enable, -1) != 0)
-     {
-     __android_log_write(ANDROID_LOG_ERROR, WEBRTC_LOG_TAG,
-         "Could not set RED");
-     return -1;
-     }
-     else if(enable)
-     {
-     __android_log_write(ANDROID_LOG_ERROR, WEBRTC_LOG_TAG,
-         "Could enable RED");
-     }
-     else
-     {
-     __android_log_write(ANDROID_LOG_ERROR, WEBRTC_LOG_TAG,
-         "Could disable RED");
-     }*/
 
     return 0;
 }

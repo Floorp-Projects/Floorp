@@ -14,8 +14,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include "base/singleton.h"
 
+#include "webrtc/base/atomicops.h"
+#include "webrtc/base/platform_thread.h"
 #ifdef _WIN32
 #include "webrtc/system_wrappers/source/trace_win.h"
 #else
@@ -69,20 +70,11 @@ TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
 #else
     GetStaticInstance<TracePosix>(count_operation);
 #endif
-
   return impl;
 }
 
 TraceImpl* TraceImpl::GetTrace(const TraceLevel level) {
   return StaticInstance(kAddRefNoCreate, level);
-}
-
-TraceImpl* TraceImpl::CreateInstance() {
-#if defined(_WIN32)
-  return new TraceWindows();
-#else
-  return new TracePosix();
-#endif
 }
 
 TraceImpl::TraceImpl()
@@ -98,7 +90,7 @@ TraceImpl::~TraceImpl() {
 }
 
 int32_t TraceImpl::AddThreadId(char* trace_message) const {
-  uint32_t thread_id = ThreadWrapper::GetThreadId();
+  uint32_t thread_id = rtc::CurrentThreadId();
   // Messages is 12 characters.
   return sprintf(trace_message, "%10u; ", thread_id);
 }
@@ -423,7 +415,12 @@ void TraceImpl::WriteToFile(const char* msg, uint16_t length) {
       row_count_text_++;
     }
   }
-  trace_file_->Write(msg, length);
+
+  char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE];
+  memcpy(trace_message, msg, length);
+  trace_message[length] = 0;
+  trace_message[length - 1] = '\n';
+  trace_file_->Write(trace_message, length);
   row_count_text_++;
 }
 
@@ -563,12 +560,12 @@ int32_t Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
 
 // static
 void Trace::set_level_filter(int filter) {
-  rtc::AtomicOps::Store(&level_filter_, filter);
+  rtc::AtomicOps::ReleaseStore(&level_filter_, filter);
 }
 
 // static
 int Trace::level_filter() {
-  return rtc::AtomicOps::Load(&level_filter_);
+  return rtc::AtomicOps::AcquireLoad(&level_filter_);
 }
 
 // static

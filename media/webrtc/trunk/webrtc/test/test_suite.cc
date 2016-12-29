@@ -13,6 +13,7 @@
 #include "gflags/gflags.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/logging.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/trace_to_stderr.h"
 #include "webrtc/test/field_trial.h"
@@ -49,6 +50,7 @@ int TestSuite::Run() {
 }
 
 void TestSuite::Initialize() {
+  rtc::LogMessage::SetLogToStderr(FLAGS_logs);
   if (FLAGS_logs)
     trace_to_stderr_.reset(new TraceToStderr);
 }

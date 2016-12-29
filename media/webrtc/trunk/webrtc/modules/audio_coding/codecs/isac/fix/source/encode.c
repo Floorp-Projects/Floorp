@@ -115,8 +115,9 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
 
     // multiply the bottleneck by 0.88 before computing SNR, 0.88 is tuned by experimenting on TIMIT
     // 901/1024 is 0.87988281250000
-    ISACenc_obj->s2nr = WebRtcIsacfix_GetSnr((int16_t)WEBRTC_SPL_MUL_16_16_RSFT(ISACenc_obj->BottleNeck, 901, 10),
-                                             ISACenc_obj->current_framesamples);
+    ISACenc_obj->s2nr = WebRtcIsacfix_GetSnr(
+        (int16_t)(ISACenc_obj->BottleNeck * 901 >> 10),
+        ISACenc_obj->current_framesamples);
 
     /* encode frame length */
     status = WebRtcIsacfix_EncodeFrameLen(ISACenc_obj->current_framesamples, &ISACenc_obj->bitstr_obj);
@@ -352,8 +353,8 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
     // scale FFT coefficients to reduce the bit-rate
     for(k = 0; k < FRAMESAMPLES_HALF; k++)
     {
-      LP16a[k] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(LP16a[k], scaleQ14[idx], 14);
-      LPandHP[k] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(LPandHP[k], scaleQ14[idx], 14);
+      LP16a[k] = (int16_t)(LP16a[k] * scaleQ14[idx] >> 14);
+      LPandHP[k] = (int16_t)(LPandHP[k] * scaleQ14[idx] >> 14);
     }
 
     // Save data for multiple packets memory
@@ -497,7 +498,7 @@ int WebRtcIsacfix_EncodeStoredData(IsacFixEncoderInstance  *ISACenc_obj,
 {
   int ii;
   int status;
-  int16_t BWno = BWnumber;
+  int16_t BWno = (int16_t)BWnumber;
   int stream_length = 0;
 
   int16_t model;

@@ -34,9 +34,10 @@ class UDPPort : public Port {
                          rtc::AsyncPacketSocket* socket,
                          const std::string& username,
                          const std::string& password,
-                         const std::string& origin) {
-    UDPPort* port = new UDPPort(thread, factory, network, socket,
-                                username, password, origin);
+                         const std::string& origin,
+                         bool emit_local_for_anyaddress) {
+    UDPPort* port = new UDPPort(thread, factory, network, socket, username,
+                                password, origin, emit_local_for_anyaddress);
     if (!port->Init()) {
       delete port;
       port = NULL;
@@ -48,14 +49,15 @@ class UDPPort : public Port {
                          rtc::PacketSocketFactory* factory,
                          rtc::Network* network,
                          const rtc::IPAddress& ip,
-                         uint16 min_port,
-                         uint16 max_port,
+                         uint16_t min_port,
+                         uint16_t max_port,
                          const std::string& username,
                          const std::string& password,
-                         const std::string& origin) {
-    UDPPort* port = new UDPPort(thread, factory, network,
-                                ip, min_port, max_port,
-                                username, password, origin);
+                         const std::string& origin,
+                         bool emit_local_for_anyaddress) {
+    UDPPort* port =
+        new UDPPort(thread, factory, network, ip, min_port, max_port, username,
+                    password, origin, emit_local_for_anyaddress);
     if (!port->Init()) {
       delete port;
       port = NULL;
@@ -93,6 +95,9 @@ class UDPPort : public Port {
     OnReadPacket(socket, data, size, remote_addr, packet_time);
     return true;
   }
+  virtual bool SupportsProtocol(const std::string& protocol) const {
+    return protocol == UDP_PROTOCOL_NAME;
+  }
 
   void set_stun_keepalive_delay(int delay) {
     stun_keepalive_delay_ = delay;
@@ -106,11 +111,12 @@ class UDPPort : public Port {
           rtc::PacketSocketFactory* factory,
           rtc::Network* network,
           const rtc::IPAddress& ip,
-          uint16 min_port,
-          uint16 max_port,
+          uint16_t min_port,
+          uint16_t max_port,
           const std::string& username,
           const std::string& password,
-          const std::string& origin);
+          const std::string& origin,
+          bool emit_local_for_anyaddress);
 
   UDPPort(rtc::Thread* thread,
           rtc::PacketSocketFactory* factory,
@@ -118,7 +124,8 @@ class UDPPort : public Port {
           rtc::AsyncPacketSocket* socket,
           const std::string& username,
           const std::string& password,
-          const std::string& origin);
+          const std::string& origin,
+          bool emit_local_for_anyaddress);
 
   bool Init();
 
@@ -134,12 +141,21 @@ class UDPPort : public Port {
                     const rtc::SocketAddress& remote_addr,
                     const rtc::PacketTime& packet_time);
 
+  void OnSentPacket(rtc::AsyncPacketSocket* socket,
+                    const rtc::SentPacket& sent_packet);
+
   void OnReadyToSend(rtc::AsyncPacketSocket* socket);
 
   // This method will send STUN binding request if STUN server address is set.
   void MaybePrepareStunCandidate();
 
   void SendStunBindingRequests();
+
+  // Helper function which will set |addr|'s IP to the default local address if
+  // |addr| is the "any" address and |emit_local_for_anyaddress_| is true. When
+  // returning false, it indicates that the operation has failed and the
+  // address shouldn't be used by any candidate.
+  bool MaybeSetDefaultLocalAddress(rtc::SocketAddress* addr) const;
 
  private:
   // A helper class which can be called repeatedly to resolve multiple
@@ -202,6 +218,10 @@ class UDPPort : public Port {
   bool ready_;
   int stun_keepalive_delay_;
 
+  // This is true by default and false when
+  // PORTALLOCATOR_DISABLE_DEFAULT_LOCAL_CANDIDATE is specified.
+  bool emit_local_for_anyaddress_;
+
   friend class StunBindingRequest;
 };
 
@@ -211,7 +231,8 @@ class StunPort : public UDPPort {
                           rtc::PacketSocketFactory* factory,
                           rtc::Network* network,
                           const rtc::IPAddress& ip,
-                          uint16 min_port, uint16 max_port,
+                          uint16_t min_port,
+                          uint16_t max_port,
                           const std::string& username,
                           const std::string& password,
                           const ServerAddresses& servers,
@@ -238,14 +259,22 @@ class StunPort : public UDPPort {
            rtc::PacketSocketFactory* factory,
            rtc::Network* network,
            const rtc::IPAddress& ip,
-           uint16 min_port,
-           uint16 max_port,
+           uint16_t min_port,
+           uint16_t max_port,
            const std::string& username,
            const std::string& password,
            const ServerAddresses& servers,
            const std::string& origin)
-     : UDPPort(thread, factory, network, ip, min_port, max_port, username,
-               password, origin) {
+      : UDPPort(thread,
+                factory,
+                network,
+                ip,
+                min_port,
+                max_port,
+                username,
+                password,
+                origin,
+                false) {
     // UDPPort will set these to local udp, updating these to STUN.
     set_type(STUN_PORT_TYPE);
     set_server_addresses(servers);

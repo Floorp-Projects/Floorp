@@ -129,9 +129,15 @@ def get_keyed_by(item, field, item_name, subfield=None):
     keyed_by = keyed_by[3:]  # strip 'by-' off the keyed-by field name
     if item[keyed_by] in values:
         return values[item[keyed_by]]
-    for k in values.keys():
-        if re.match(k, item[keyed_by]):
-            return values[k]
+
+    matches = [(k, v) for k, v in values.iteritems() if re.match(k, item[keyed_by])]
+    if len(matches) > 1:
+        raise Exception(
+            "Multiple matching values for {} {!r} found while determining item {} in {}".format(
+                keyed_by, item[keyed_by], field, item_name))
+    elif matches:
+        return matches[0][1]
+
     if 'default' in values:
         return values['default']
     for k in item[keyed_by], 'default':
@@ -139,5 +145,5 @@ def get_keyed_by(item, field, item_name, subfield=None):
             return values[k]
     else:
         raise Exception(
-            "Neither {} {} nor 'default' found while determining item {} in {}".format(
+            "No {} matching {!r} nor 'default' found while determining item {} in {}".format(
                 keyed_by, item[keyed_by], field, item_name))

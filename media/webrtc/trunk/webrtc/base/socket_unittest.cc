@@ -10,6 +10,7 @@
 
 #include "webrtc/base/socket_unittest.h"
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/asyncudpsocket.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/nethelpers.h"
@@ -827,7 +828,7 @@ void SocketTest::SingleFlowControlCallbackInternal(const IPAddress& loopback) {
   // Fill the socket buffer.
   char buf[1024 * 16] = {0};
   int sends = 0;
-  while (++sends && accepted->Send(&buf, ARRAY_SIZE(buf)) != -1) {}
+  while (++sends && accepted->Send(&buf, arraysize(buf)) != -1) {}
   EXPECT_TRUE(accepted->IsBlocking());
 
   // Wait until data is available.
@@ -835,7 +836,7 @@ void SocketTest::SingleFlowControlCallbackInternal(const IPAddress& loopback) {
 
   // Pull data.
   for (int i = 0; i < sends; ++i) {
-    client->Recv(buf, ARRAY_SIZE(buf));
+    client->Recv(buf, arraysize(buf));
   }
 
   // Expect at least one additional writable callback.
@@ -845,7 +846,7 @@ void SocketTest::SingleFlowControlCallbackInternal(const IPAddress& loopback) {
   // callbacks.
   int extras = 0;
   for (int i = 0; i < 100; ++i) {
-    accepted->Send(&buf, ARRAY_SIZE(buf));
+    accepted->Send(&buf, arraysize(buf));
     rtc::Thread::Current()->ProcessMessages(1);
     if (sink.Check(accepted.get(), testing::SSE_WRITE)) {
       extras++;
@@ -929,7 +930,7 @@ void SocketTest::UdpReadyToSend(const IPAddress& loopback) {
   client->SetOption(rtc::Socket::OPT_SNDBUF, send_buffer_size);
 
   int error = 0;
-  uint32 start_ms = Time();
+  uint32_t start_ms = Time();
   int sent_packet_num = 0;
   int expected_error = EWOULDBLOCK;
   while (start_ms + kTimeout > Time()) {
@@ -990,7 +991,7 @@ void SocketTest::GetSetOptionsInternal(const IPAddress& loopback) {
         mtu_socket(
             ss_->CreateAsyncSocket(loopback.family(), SOCK_DGRAM));
     mtu_socket->Bind(SocketAddress(loopback, 0));
-    uint16 mtu;
+    uint16_t mtu;
     // should fail until we connect
     ASSERT_EQ(-1, mtu_socket->EstimateMTU(&mtu));
     mtu_socket->Connect(SocketAddress(loopback, 0));

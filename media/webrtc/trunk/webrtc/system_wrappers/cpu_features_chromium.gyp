@@ -16,8 +16,8 @@
           'sources': [
             'source/cpu_features_android.c',
           ],
-          'includes': [
-            '../../../build/android/cpufeatures.gypi',
+          'dependencies': [
+            '../../../build/android/ndk.gyp:cpu_features',
           ],
         },
       ],

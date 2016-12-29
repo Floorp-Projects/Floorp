@@ -9,7 +9,7 @@
  */
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/system_wrappers/interface/rtp_to_ntp.h"
+#include "webrtc/system_wrappers/include/rtp_to_ntp.h"
 
 namespace webrtc {
 

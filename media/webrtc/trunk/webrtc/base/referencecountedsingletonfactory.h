@@ -77,7 +77,7 @@ class ReferenceCountedSingletonFactory {
   CriticalSection crit_;
   int ref_count_;
 
-  DISALLOW_COPY_AND_ASSIGN(ReferenceCountedSingletonFactory);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ReferenceCountedSingletonFactory);
 };
 
 template <typename Interface>
@@ -149,7 +149,7 @@ class rcsf_ptr {
   Interface* instance_;
   ReferenceCountedSingletonFactory<Interface>* factory_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(rcsf_ptr);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(rcsf_ptr);
 };
 
 };  // namespace rtc

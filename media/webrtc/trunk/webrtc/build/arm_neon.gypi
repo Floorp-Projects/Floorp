@@ -33,7 +33,7 @@
     '-mfpu=vfpv3-d16',
   ],
   'conditions': [
-    # "-mfpu=neon" is not requried for arm64 in GCC.
+    # "-mfpu=neon" is not required for arm64 in GCC.
     ['target_arch!="arm64"', {
       'cflags': [
         '-mfpu=neon',
@@ -46,6 +46,14 @@
       ],
       'asflags_mozilla': [
         '-mfpu=neon',
+      ],
+    }],
+    # Disable GCC LTO on NEON targets due to compiler bug.
+    # TODO(fdegans): Enable this. See crbug.com/408997.
+    ['clang==0 and use_lto==1', {
+      'cflags!': [
+        '-flto',
+        '-ffat-lto-objects',
       ],
     }],
   ],

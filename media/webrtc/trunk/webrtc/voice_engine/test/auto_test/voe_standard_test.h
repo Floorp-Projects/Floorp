@@ -44,7 +44,6 @@
 #ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
 namespace webrtc {
 class CriticalSectionWrapper;
-class ThreadWrapper;
 class VoENetEqStats;
 }
 #endif

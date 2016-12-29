@@ -23,7 +23,7 @@ class DecisionLogicNormal : public DecisionLogic {
  public:
   // Constructor.
   DecisionLogicNormal(int fs_hz,
-                      int output_size_samples,
+                      size_t output_size_samples,
                       NetEqPlayoutMode playout_mode,
                       DecoderDatabase* decoder_database,
                       const PacketBuffer& packet_buffer,
@@ -33,9 +33,6 @@ class DecisionLogicNormal : public DecisionLogic {
                       decoder_database, packet_buffer, delay_manager,
                       buffer_level_filter) {
   }
-
-  // Destructor.
-  virtual ~DecisionLogicNormal() {}
 
  protected:
   static const int kAllowMergeWithoutExpandMs = 20;  // 20 ms.
@@ -51,19 +48,21 @@ class DecisionLogicNormal : public DecisionLogic {
   // should be set to true. The output variable |reset_decoder| will be set to
   // true if a reset is required; otherwise it is left unchanged (i.e., it can
   // remain true if it was true before the call).
-  virtual Operations GetDecisionSpecialized(const SyncBuffer& sync_buffer,
-                                            const Expand& expand,
-                                            int decoder_frame_length,
-                                            const RTPHeader* packet_header,
-                                            Modes prev_mode, bool play_dtmf,
-                                            bool* reset_decoder);
+  Operations GetDecisionSpecialized(const SyncBuffer& sync_buffer,
+                                    const Expand& expand,
+                                    size_t decoder_frame_length,
+                                    const RTPHeader* packet_header,
+                                    Modes prev_mode,
+                                    bool play_dtmf,
+                                    bool* reset_decoder) override;
 
   // Returns the operation to do given that the expected packet is not
   // available, but a packet further into the future is at hand.
   virtual Operations FuturePacketAvailable(
       const SyncBuffer& sync_buffer,
       const Expand& expand,
-      int decoder_frame_length, Modes prev_mode,
+      size_t decoder_frame_length,
+      Modes prev_mode,
       uint32_t target_timestamp,
       uint32_t available_timestamp,
       bool play_dtmf);
@@ -100,7 +99,7 @@ class DecisionLogicNormal : public DecisionLogic {
   // Checks if num_consecutive_expands_ >= kMaxWaitForPacket.
   bool MaxWaitForPacket() const;
 
-  DISALLOW_COPY_AND_ASSIGN(DecisionLogicNormal);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DecisionLogicNormal);
 };
 
 }  // namespace webrtc

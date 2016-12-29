@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "webrtc/base/basictypes.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/win32.h"
 
 namespace rtc {
@@ -63,7 +64,7 @@ class RegKey {
   bool HasValue(const wchar_t* value_name) const;
 
   // get the number of values for this key
-  uint32 GetValueCount();
+  uint32_t GetValueCount();
 
   // Called to get the value name for the given value name index
   // Use GetValueCount() to get the total value_name count for this key
@@ -79,7 +80,7 @@ class RegKey {
   bool HasSubkey(const wchar_t* key_name) const;
 
   // get the number of subkeys for this key
-  uint32 GetSubkeyCount();
+  uint32_t GetSubkeyCount();
 
   // Called to get the key name for the given key index
   // Use GetSubkeyCount() to get the total count for this key
@@ -91,10 +92,10 @@ class RegKey {
 
   // SETTERS
 
-  // set an int32 value - use when reading multiple values from a key
+  // set an int32_t value - use when reading multiple values from a key
   HRESULT SetValue(const wchar_t* value_name, DWORD value) const;
 
-  // set an int64 value
+  // set an int64_t value
   HRESULT SetValue(const wchar_t* value_name, DWORD64 value) const;
 
   // set a string value
@@ -102,21 +103,21 @@ class RegKey {
 
   // set binary data
   HRESULT SetValue(const wchar_t* value_name,
-                   const uint8* value,
+                   const uint8_t* value,
                    DWORD byte_count) const;
 
   // set raw data, including type
   HRESULT SetValue(const wchar_t* value_name,
-                   const uint8* value,
+                   const uint8_t* value,
                    DWORD byte_count,
                    DWORD type) const;
 
   // GETTERS
 
-  // get an int32 value
+  // get an int32_t value
   HRESULT GetValue(const wchar_t* value_name, DWORD* value) const;
 
-  // get an int64 value
+  // get an int64_t value
   HRESULT GetValue(const wchar_t* value_name, DWORD64* value) const;
 
   // get a string value - the caller must free the return buffer
@@ -131,12 +132,12 @@ class RegKey {
 
   // get binary data - the caller must free the return buffer
   HRESULT GetValue(const wchar_t* value_name,
-                   uint8** value,
+                   uint8_t** value,
                    DWORD* byte_count) const;
 
   // get raw data, including type - the caller must free the return buffer
   HRESULT GetValue(const wchar_t* value_name,
-                   uint8** value,
+                   uint8_t** value,
                    DWORD* byte_count,
                    DWORD* type) const;
 
@@ -153,12 +154,12 @@ class RegKey {
 
   // SETTERS
 
-  // STATIC int32 set
+  // STATIC int32_t set
   static HRESULT SetValue(const wchar_t* full_key_name,
                           const wchar_t* value_name,
                           DWORD value);
 
-  // STATIC int64 set
+  // STATIC int64_t set
   static HRESULT SetValue(const wchar_t* full_key_name,
                           const wchar_t* value_name,
                           DWORD64 value);
@@ -181,23 +182,23 @@ class RegKey {
   // STATIC binary data set
   static HRESULT SetValue(const wchar_t* full_key_name,
                           const wchar_t* value_name,
-                          const uint8* value,
+                          const uint8_t* value,
                           DWORD byte_count);
 
   // STATIC multi-string set
   static HRESULT SetValueMultiSZ(const wchar_t* full_key_name,
                                  const TCHAR* value_name,
-                                 const uint8* value,
+                                 const uint8_t* value,
                                  DWORD byte_count);
 
   // GETTERS
 
-  // STATIC int32 get
+  // STATIC int32_t get
   static HRESULT GetValue(const wchar_t* full_key_name,
                           const wchar_t* value_name,
                           DWORD* value);
 
-  // STATIC int64 get
+  // STATIC int64_t get
   //
   // Note: if you are using time64 you should
   // likely use GetLimitedTimeValue (util.h) instead of this method.
@@ -232,7 +233,7 @@ class RegKey {
   // STATIC get binary data - the caller must free the return buffer
   static HRESULT GetValue(const wchar_t* full_key_name,
                           const wchar_t* value_name,
-                          uint8** value,
+                          uint8_t** value,
                           DWORD* byte_count);
 
   // Get type of a registry value
@@ -296,7 +297,8 @@ class RegKey {
   // helper function to get any value from the registry
   // used when the size of the data is unknown
   HRESULT GetValueHelper(const wchar_t* value_name,
-                         DWORD* type, uint8** value,
+                         DWORD* type,
+                         uint8_t** value,
                          DWORD* byte_count) const;
 
   // helper function to get the parent key name and the subkey from a string
@@ -319,7 +321,7 @@ class RegKey {
                                       DWORD* byte_count = NULL);
 
   // convert REG_MULTI_SZ bytes to string array
-  static HRESULT MultiSZBytesToStringArray(const uint8* buffer,
+  static HRESULT MultiSZBytesToStringArray(const uint8_t* buffer,
                                            DWORD byte_count,
                                            std::vector<std::wstring>* value);
 
@@ -329,7 +331,7 @@ class RegKey {
   // for unittest
   friend void RegKeyHelperFunctionsTest();
 
-  DISALLOW_EVIL_CONSTRUCTORS(RegKey);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RegKey);
 };
 
 }  // namespace rtc

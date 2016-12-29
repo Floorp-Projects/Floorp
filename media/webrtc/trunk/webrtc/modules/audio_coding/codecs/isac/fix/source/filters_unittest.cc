@@ -9,7 +9,7 @@
  */
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
-#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
 class FiltersTest : public testing::Test {
@@ -59,11 +59,11 @@ class FiltersTest : public testing::Test {
 
 TEST_F(FiltersTest, AutocorrFixTest) {
   FiltersTester(WebRtcIsacfix_AutocorrC);
-#ifdef WEBRTC_DETECT_ARM_NEON
+#ifdef WEBRTC_DETECT_NEON
   if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
     FiltersTester(WebRtcIsacfix_AutocorrNeon);
   }
-#elif defined(WEBRTC_ARCH_ARM_NEON)
+#elif defined(WEBRTC_HAS_NEON)
   FiltersTester(WebRtcIsacfix_AutocorrNeon);
 #endif
 }

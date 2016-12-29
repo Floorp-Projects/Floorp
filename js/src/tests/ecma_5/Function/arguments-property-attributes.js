@@ -56,7 +56,7 @@ var sa = strictArgs(0, 1);
 
 var strictArgProps = Object.getOwnPropertyNames(sa).sort();
 assertEq(strictArgProps.indexOf("callee") >= 0, true);
-assertEq(strictArgProps.indexOf("caller") >= 0, true);
+assertEq(strictArgProps.indexOf("caller") >= 0, false);
 assertEq(strictArgProps.indexOf("0") >= 0, true);
 assertEq(strictArgProps.indexOf("1") >= 0, true);
 assertEq(strictArgProps.indexOf("length") >= 0, true);
@@ -69,11 +69,7 @@ assertEq(strictCalleeDesc.enumerable, false);
 assertEq(strictCalleeDesc.configurable, false);
 
 var strictCallerDesc = Object.getOwnPropertyDescriptor(sa, "caller");
-assertEq(typeof strictCallerDesc.get, "function");
-assertEq(typeof strictCallerDesc.set, "function");
-assertEq(strictCallerDesc.get, strictCallerDesc.set);
-assertEq(strictCallerDesc.enumerable, false);
-assertEq(strictCallerDesc.configurable, false);
+assertEq(strictCallerDesc, undefined);
 
 var strictZeroDesc = Object.getOwnPropertyDescriptor(sa, "0");
 assertEq(strictZeroDesc.value, 0);

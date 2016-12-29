@@ -12,28 +12,30 @@
 
 #include <string.h>
 
-#include "build/build_config.h"
+#include "webrtc/typedefs.h"
 #include "webrtc/modules/desktop_capture/differ_block_sse2.h"
-#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 
 namespace webrtc {
 
-int BlockDifference_C(const uint8_t* image1,
-                      const uint8_t* image2,
-                      int stride) {
+bool BlockDifference_C(const uint8_t* image1,
+                       const uint8_t* image2,
+                       int stride) {
   int width_bytes = kBlockSize * kBytesPerPixel;
 
   for (int y = 0; y < kBlockSize; y++) {
     if (memcmp(image1, image2, width_bytes) != 0)
-      return 1;
+      return true;
     image1 += stride;
     image2 += stride;
   }
-  return 0;
+  return false;
 }
 
-int BlockDifference(const uint8_t* image1, const uint8_t* image2, int stride) {
-  static int (*diff_proc)(const uint8_t*, const uint8_t*, int) = NULL;
+bool BlockDifference(const uint8_t* image1,
+                     const uint8_t* image2,
+                     int stride) {
+  static bool (*diff_proc)(const uint8_t*, const uint8_t*, int) = NULL;
 
   if (!diff_proc) {
 #if !defined(WEBRTC_ARCH_X86_FAMILY)

@@ -6,7 +6,6 @@
 
 #include "CamerasChild.h"
 
-#include "webrtc/video_engine/include/vie_capture.h"
 #undef FF
 
 #include "mozilla/Assertions.h"
@@ -345,7 +344,7 @@ int
 CamerasChild::GetCaptureCapability(CaptureEngine aCapEngine,
                                    const char* unique_idUTF8,
                                    const unsigned int capability_number,
-                                   webrtc::CaptureCapability& capability)
+                                   webrtc::VideoCaptureCapability& capability)
 {
   LOG(("GetCaptureCapability: %s %d", unique_idUTF8, capability_number));
   nsCString unique_id(unique_idUTF8);
@@ -364,7 +363,7 @@ CamerasChild::GetCaptureCapability(CaptureEngine aCapEngine,
 }
 
 mozilla::ipc::IPCResult
-CamerasChild::RecvReplyGetCaptureCapability(const CaptureCapability& ipcCapability)
+CamerasChild::RecvReplyGetCaptureCapability(const VideoCaptureCapability& ipcCapability)
 {
   LOG((__PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
@@ -429,7 +428,7 @@ int
 CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
                                     const char* unique_idUTF8,
                                     const unsigned int unique_idUTF8Length,
-                                    int& capture_id,
+                                    int& aStreamId,
                                     const nsACString& aOrigin)
 {
   LOG((__PRETTY_FUNCTION__));
@@ -445,7 +444,7 @@ CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
   LockAndDispatch<> dispatcher(this, __func__, runnable);
   if (dispatcher.Success()) {
     LOG(("Capture Device allocated: %d", mReplyInteger));
-    capture_id = mReplyInteger;
+    aStreamId = mReplyInteger;
   }
   return dispatcher.ReturnValue();
 }
@@ -481,7 +480,7 @@ CamerasChild::ReleaseCaptureDevice(CaptureEngine aCapEngine,
 
 void
 CamerasChild::AddCallback(const CaptureEngine aCapEngine, const int capture_id,
-                          webrtc::ExternalRenderer* render)
+                          FrameRelay* render)
 {
   MutexAutoLock lock(mCallbackMutex);
   CapturerElement ce;
@@ -507,12 +506,12 @@ CamerasChild::RemoveCallback(const CaptureEngine aCapEngine, const int capture_i
 int
 CamerasChild::StartCapture(CaptureEngine aCapEngine,
                            const int capture_id,
-                           webrtc::CaptureCapability& webrtcCaps,
-                           webrtc::ExternalRenderer* cb)
+                           webrtc::VideoCaptureCapability& webrtcCaps,
+                           FrameRelay* cb)
 {
   LOG((__PRETTY_FUNCTION__));
   AddCallback(aCapEngine, capture_id, cb);
-  CaptureCapability capCap(webrtcCaps.width,
+  VideoCaptureCapability capCap(webrtcCaps.width,
                            webrtcCaps.height,
                            webrtcCaps.maxFPS,
                            webrtcCaps.expectedCaptureDelay,
@@ -646,18 +645,12 @@ mozilla::ipc::IPCResult
 CamerasChild::RecvDeliverFrame(const CaptureEngine& capEngine,
                                const int& capId,
                                mozilla::ipc::Shmem&& shmem,
-                               const size_t& size,
-                               const uint32_t& time_stamp,
-                               const int64_t& ntp_time,
-                               const int64_t& render_time)
+                               const VideoFrameProperties & prop)
 {
   MutexAutoLock lock(mCallbackMutex);
   if (Callback(capEngine, capId)) {
     unsigned char* image = shmem.get<unsigned char>();
-    Callback(capEngine, capId)->DeliverFrame(image, size,
-                                             time_stamp,
-                                             ntp_time, render_time,
-                                             nullptr);
+    Callback(capEngine, capId)->DeliverFrame(image, prop);
   } else {
     LOG(("DeliverFrame called with dead callback"));
   }
@@ -702,7 +695,7 @@ CamerasChild::RecvFrameSizeChange(const CaptureEngine& capEngine,
   LOG((__PRETTY_FUNCTION__));
   MutexAutoLock lock(mCallbackMutex);
   if (Callback(capEngine, capId)) {
-    Callback(capEngine, capId)->FrameSizeChange(w, h, 0);
+    Callback(capEngine, capId)->FrameSizeChange(w, h);
   } else {
     LOG(("Frame size change with dead callback"));
   }
@@ -746,7 +739,7 @@ CamerasChild::~CamerasChild()
   MOZ_COUNT_DTOR(CamerasChild);
 }
 
-webrtc::ExternalRenderer* CamerasChild::Callback(CaptureEngine aCapEngine,
+FrameRelay* CamerasChild::Callback(CaptureEngine aCapEngine,
                                                  int capture_id)
 {
   for (unsigned int i = 0; i < mCallbacks.Length(); i++) {

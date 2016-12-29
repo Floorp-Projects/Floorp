@@ -27,10 +27,11 @@ source_set("field_trial") {
   deps = [
     "..:webrtc_common",
     "../system_wrappers",
+    "../system_wrappers:field_trial_default",
   ]
 
   configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config"]
+  public_configs = [ "..:common_inherited_config" ]
 }
 
 source_set("histogram") {
@@ -45,7 +46,7 @@ source_set("histogram") {
   ]
 
   configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config"]
+  public_configs = [ "..:common_inherited_config" ]
 }
 
 source_set("test_support") {
@@ -58,7 +59,6 @@ source_set("test_support") {
     "testsupport/frame_reader.h",
     "testsupport/frame_writer.cc",
     "testsupport/frame_writer.h",
-    "testsupport/gtest_disable.h",
     "testsupport/mock/mock_frame_reader.h",
     "testsupport/mock/mock_frame_writer.h",
     "testsupport/packet_reader.cc",
@@ -70,10 +70,10 @@ source_set("test_support") {
   ]
 
   deps = [
-    "//testing/gmock",
-    "//testing/gtest",
     "..:gtest_prod",
     "../system_wrappers",
+    "//testing/gmock",
+    "//testing/gtest",
   ]
 
   if (is_android) {
@@ -81,7 +81,7 @@ source_set("test_support") {
   }
 
   configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config"]
+  public_configs = [ "..:common_inherited_config" ]
 }
 
 source_set("test_support_main") {
@@ -103,5 +103,5 @@ source_set("test_support_main") {
   ]
 
   configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config"]
+  public_configs = [ "..:common_inherited_config" ]
 }

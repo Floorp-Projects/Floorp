@@ -11,7 +11,7 @@
 #ifndef WEBRTC_BASE_MACCONVERSION_H_
 #define WEBRTC_BASE_MACCONVERSION_H_
 
-#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
+#if defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -34,6 +34,6 @@ bool p_convertCFNumberToInt(CFNumberRef cfn, int* i);
 // given a CFNumberRef, determine if it represents a true value.
 bool p_isCFNumberTrue(CFNumberRef cfn);
 
-#endif  // WEBRTC_MAC && !defined(WEBRTC_IOS)
+#endif  // WEBRTC_MAC || WEBRTC_IOS
 
 #endif  // WEBRTC_BASE_MACCONVERSION_H_

@@ -55,7 +55,7 @@ void ProfilerEvent::Start() {
   ++start_count_;
 }
 
-void ProfilerEvent::Stop(uint64 stop_time) {
+void ProfilerEvent::Stop(uint64_t stop_time) {
   --start_count_;
   ASSERT(start_count_ >= 0);
   if (start_count_ == 0) {
@@ -89,7 +89,7 @@ double ProfilerEvent::standard_deviation() const {
 Profiler::~Profiler() = default;
 
 Profiler* Profiler::Instance() {
-  LIBJINGLE_DEFINE_STATIC_LOCAL(Profiler, instance, ());
+  RTC_DEFINE_STATIC_LOCAL(Profiler, instance, ());
   return &instance;
 }
 
@@ -114,7 +114,7 @@ void Profiler::StartEvent(const std::string& event_name) {
 
 void Profiler::StopEvent(const std::string& event_name) {
   // Get the time ASAP, then wait for the lock.
-  uint64 stop_time = TimeNanos();
+  uint64_t stop_time = TimeNanos();
   SharedScope scope(&lock_);
   EventMap::iterator it = events_.find(event_name);
   if (it != events_.end()) {

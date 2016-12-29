@@ -76,9 +76,11 @@ public:
     // Attempts to send a ping with the given parameters.
     enum PingResult { PING_FAIL, PING_INVALID_PARAMS,
                       PING_TOO_LARGE, PING_TIMEOUT, PING_SUCCESS };
-    PingResult Ping(
-        IPAddress ip, uint32 data_size, uint32 timeout_millis, uint8 ttl,
-        bool allow_fragments);
+    PingResult Ping(IPAddress ip,
+                    uint32_t data_size,
+                    uint32_t timeout_millis,
+                    uint8_t ttl,
+                    bool allow_fragments);
 
 private:
     HMODULE dll_;
@@ -90,9 +92,9 @@ private:
     PIcmp6CreateFile create6_;
     PIcmp6SendEcho2 send6_;
     char* data_;
-    uint32 dlen_;
+    uint32_t dlen_;
     char* reply_;
-    uint32 rlen_;
+    uint32_t rlen_;
     bool valid_;
 };
 

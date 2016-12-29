@@ -14,8 +14,8 @@
 // This header is included to get the nested declaration of Packet structure.
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/rtp_rtcp/interface/fec_receiver.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/fec_receiver.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 #include "webrtc/typedefs.h"
 
@@ -25,7 +25,7 @@ class CriticalSectionWrapper;
 
 class FecReceiverImpl : public FecReceiver {
  public:
-  FecReceiverImpl(RtpData* callback);
+  explicit FecReceiverImpl(RtpData* callback);
   virtual ~FecReceiverImpl();
 
   int32_t AddReceivedRedPacket(const RTPHeader& rtp_header,

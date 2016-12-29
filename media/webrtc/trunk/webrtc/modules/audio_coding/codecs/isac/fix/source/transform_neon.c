@@ -432,10 +432,10 @@ static inline void PostShiftAndDivideAndDemodulateNeon(int16_t* inre,
     xi3 = vmlal_s32(xi3, vget_high_s32(tmpi_1), vget_high_s32(outre1_1));
 #endif
 
-    outre1_0 = vcombine_s32(vshrn_n_s64(xr0, 10), vshrn_n_s64(xr1, 10));
-    outre2_0 = vcombine_s32(vshrn_n_s64(xi0, 10), vshrn_n_s64(xi1, 10));
-    outre1_1 = vcombine_s32(vshrn_n_s64(xr2, 10), vshrn_n_s64(xr3, 10));
-    outre2_1 = vcombine_s32(vshrn_n_s64(xi2, 10), vshrn_n_s64(xi3, 10));
+    outre1_0 = vcombine_s32(vrshrn_n_s64(xr0, 10), vrshrn_n_s64(xr1, 10));
+    outre2_0 = vcombine_s32(vrshrn_n_s64(xi0, 10), vrshrn_n_s64(xi1, 10));
+    outre1_1 = vcombine_s32(vrshrn_n_s64(xr2, 10), vrshrn_n_s64(xr3, 10));
+    outre2_1 = vcombine_s32(vrshrn_n_s64(xi2, 10), vrshrn_n_s64(xi3, 10));
     outre1_0 = vqdmulhq_s32(outre1_0, fact);
     outre2_0 = vqdmulhq_s32(outre2_0, fact);
     outre1_1 = vqdmulhq_s32(outre1_1, fact);

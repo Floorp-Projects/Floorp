@@ -29,25 +29,24 @@ class RelayConnection;
 // is created. The RelayEntry will try to reach the remote destination
 // by connecting to all available server addresses in a pre defined
 // order with a small delay in between. When a connection is
-// successful all other connection attemts are aborted.
+// successful all other connection attempts are aborted.
 class RelayPort : public Port {
  public:
   typedef std::pair<rtc::Socket::Option, int> OptionValue;
 
   // RelayPort doesn't yet do anything fancy in the ctor.
-  static RelayPort* Create(
-      rtc::Thread* thread,
-      rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
-      const rtc::IPAddress& ip,
-      uint16 min_port,
-      uint16 max_port,
-      const std::string& username,
-      const std::string& password) {
+  static RelayPort* Create(rtc::Thread* thread,
+                           rtc::PacketSocketFactory* factory,
+                           rtc::Network* network,
+                           const rtc::IPAddress& ip,
+                           uint16_t min_port,
+                           uint16_t max_port,
+                           const std::string& username,
+                           const std::string& password) {
     return new RelayPort(thread, factory, network, ip, min_port, max_port,
                          username, password);
   }
-  virtual ~RelayPort();
+  ~RelayPort() override;
 
   void AddServerAddress(const ProtocolAddress& addr);
   void AddExternalAddress(const ProtocolAddress& addr);
@@ -55,12 +54,16 @@ class RelayPort : public Port {
   const std::vector<OptionValue>& options() const { return options_; }
   bool HasMagicCookie(const char* data, size_t size);
 
-  virtual void PrepareAddress();
-  virtual Connection* CreateConnection(const Candidate& address,
-                                       CandidateOrigin origin);
-  virtual int SetOption(rtc::Socket::Option opt, int value);
-  virtual int GetOption(rtc::Socket::Option opt, int* value);
-  virtual int GetError();
+  void PrepareAddress() override;
+  Connection* CreateConnection(const Candidate& address,
+                               CandidateOrigin origin) override;
+  int SetOption(rtc::Socket::Option opt, int value) override;
+  int GetOption(rtc::Socket::Option opt, int* value) override;
+  int GetError() override;
+  bool SupportsProtocol(const std::string& protocol) const override {
+    // Relay port may create both TCP and UDP connections.
+    return true;
+  }
 
   const ProtocolAddress * ServerAddress(size_t index) const;
   bool IsReady() { return ready_; }
@@ -74,24 +77,30 @@ class RelayPort : public Port {
             rtc::PacketSocketFactory* factory,
             rtc::Network*,
             const rtc::IPAddress& ip,
-            uint16 min_port,
-            uint16 max_port,
+            uint16_t min_port,
+            uint16_t max_port,
             const std::string& username,
             const std::string& password);
   bool Init();
 
   void SetReady();
 
-  virtual int SendTo(const void* data, size_t size,
-                     const rtc::SocketAddress& addr,
-                     const rtc::PacketOptions& options,
-                     bool payload);
+  int SendTo(const void* data,
+             size_t size,
+             const rtc::SocketAddress& addr,
+             const rtc::PacketOptions& options,
+             bool payload) override;
 
   // Dispatches the given packet to the port or connection as appropriate.
   void OnReadPacket(const char* data, size_t size,
                     const rtc::SocketAddress& remote_addr,
                     ProtocolType proto,
                     const rtc::PacketTime& packet_time);
+
+  // The OnSentPacket callback is left empty here since they are handled by
+  // RelayEntry.
+  void OnSentPacket(rtc::AsyncPacketSocket* socket,
+                    const rtc::SentPacket& sent_packet) override {}
 
  private:
   friend class RelayEntry;

@@ -11,7 +11,7 @@
 #include <string>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/common_video/interface/i420_buffer_pool.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 
 namespace webrtc {
 
@@ -68,7 +68,7 @@ TEST(TestI420BufferPool, FrameValidAfterPoolDestruction) {
   EXPECT_EQ(16, buffer->width());
   EXPECT_EQ(16, buffer->height());
   // Try to trigger use-after-free errors by writing to y-plane.
-  memset(buffer->data(kYPlane), 0xA5, 16 * buffer->stride(kYPlane));
+  memset(buffer->MutableData(kYPlane), 0xA5, 16 * buffer->stride(kYPlane));
 }
 
 }  // namespace webrtc

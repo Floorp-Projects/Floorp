@@ -21,7 +21,7 @@
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 #include "webrtc/modules/desktop_capture/win/scoped_thread_desktop.h"
-#include "webrtc/system_wrappers/interface/atomic32.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
 
 namespace webrtc {
 
@@ -97,9 +97,6 @@ class ScreenCapturerWinMagnifier : public ScreenCapturer {
   // Makes sure the current frame exists and matches |size|.
   void CreateCurrentFrameIfNecessary(const DesktopSize& size);
 
-  // Returns true if we are capturing the primary screen only.
-  bool IsCapturingPrimaryScreenOnly() const;
-
   // Start the fallback capturer and select the screen.
   void StartFallbackCapturer();
 
@@ -149,7 +146,7 @@ class ScreenCapturerWinMagnifier : public ScreenCapturer {
   // successfully. Reset at the beginning of each CaptureImage call.
   bool magnifier_capture_succeeded_;
 
-  DISALLOW_COPY_AND_ASSIGN(ScreenCapturerWinMagnifier);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerWinMagnifier);
 };
 
 }  // namespace webrtc

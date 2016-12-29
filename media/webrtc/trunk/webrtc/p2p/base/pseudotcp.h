@@ -30,7 +30,7 @@ class IPseudoTcpNotify {
   virtual void OnTcpOpen(PseudoTcp* tcp) = 0;
   virtual void OnTcpReadable(PseudoTcp* tcp) = 0;
   virtual void OnTcpWriteable(PseudoTcp* tcp) = 0;
-  virtual void OnTcpClosed(PseudoTcp* tcp, uint32 error) = 0;
+  virtual void OnTcpClosed(PseudoTcp* tcp, uint32_t error) = 0;
 
   // Write the packet onto the network
   enum WriteResult { WR_SUCCESS, WR_TOO_LARGE, WR_FAIL };
@@ -47,9 +47,9 @@ class IPseudoTcpNotify {
 
 class PseudoTcp {
  public:
-  static uint32 Now();
+  static uint32_t Now();
 
-  PseudoTcp(IPseudoTcpNotify* notify, uint32 conv);
+  PseudoTcp(IPseudoTcpNotify* notify, uint32_t conv);
   virtual ~PseudoTcp();
 
   int Connect();
@@ -64,11 +64,11 @@ class PseudoTcp {
   TcpState State() const { return m_state; }
 
   // Call this when the PMTU changes.
-  void NotifyMTU(uint16 mtu);
+  void NotifyMTU(uint16_t mtu);
 
   // Call this based on timeout value returned from GetNextClock.
   // It's ok to call this too frequently.
-  void NotifyClock(uint32 now);
+  void NotifyClock(uint32_t now);
 
   // Call this whenever a packet arrives.
   // Returns true if the packet was processed successfully.
@@ -76,7 +76,7 @@ class PseudoTcp {
 
   // Call this to determine the next time NotifyClock should be called.
   // Returns false if the socket is ready to be destroyed.
-  bool GetNextClock(uint32 now, long& timeout);
+  bool GetNextClock(uint32_t now, long& timeout);
 
   // Call these to get/set option values to tailor this PseudoTcp
   // instance's behaviour for the kind of data it will carry.
@@ -94,47 +94,46 @@ class PseudoTcp {
   void SetOption(Option opt, int value);
 
   // Returns current congestion window in bytes.
-  uint32 GetCongestionWindow() const;
+  uint32_t GetCongestionWindow() const;
 
   // Returns amount of data in bytes that has been sent, but haven't
   // been acknowledged.
-  uint32 GetBytesInFlight() const;
+  uint32_t GetBytesInFlight() const;
 
   // Returns number of bytes that were written in buffer and haven't
   // been sent.
-  uint32 GetBytesBufferedNotSent() const;
+  uint32_t GetBytesBufferedNotSent() const;
 
   // Returns current round-trip time estimate in milliseconds.
-  uint32 GetRoundTripTimeEstimateMs() const;
+  uint32_t GetRoundTripTimeEstimateMs() const;
 
  protected:
   enum SendFlags { sfNone, sfDelayedAck, sfImmediateAck };
 
   struct Segment {
-    uint32 conv, seq, ack;
-    uint8 flags;
-    uint16 wnd;
+    uint32_t conv, seq, ack;
+    uint8_t flags;
+    uint16_t wnd;
     const char * data;
-    uint32 len;
-    uint32 tsval, tsecr;
+    uint32_t len;
+    uint32_t tsval, tsecr;
   };
 
   struct SSegment {
-    SSegment(uint32 s, uint32 l, bool c)
-        : seq(s), len(l), /*tstamp(0),*/ xmit(0), bCtrl(c) {
-    }
-    uint32 seq, len;
-    //uint32 tstamp;
-    uint8 xmit;
+    SSegment(uint32_t s, uint32_t l, bool c)
+        : seq(s), len(l), /*tstamp(0),*/ xmit(0), bCtrl(c) {}
+    uint32_t seq, len;
+    // uint32_t tstamp;
+    uint8_t xmit;
     bool bCtrl;
   };
   typedef std::list<SSegment> SList;
 
   struct RSegment {
-    uint32 seq, len;
+    uint32_t seq, len;
   };
 
-  uint32 queue(const char* data, uint32 len, bool bCtrl);
+  uint32_t queue(const char* data, uint32_t len, bool bCtrl);
 
   // Creates a packet and submits it to the network. This method can either
   // send payload or just an ACK packet.
@@ -144,18 +143,20 @@ class PseudoTcp {
   // |offset| is the offset to read from |m_sbuf|.
   // |len| is the number of bytes to read from |m_sbuf| as payload. If this
   // value is 0 then this is an ACK packet, otherwise this packet has payload.
-  IPseudoTcpNotify::WriteResult packet(uint32 seq, uint8 flags,
-                                       uint32 offset, uint32 len);
-  bool parse(const uint8* buffer, uint32 size);
+  IPseudoTcpNotify::WriteResult packet(uint32_t seq,
+                                       uint8_t flags,
+                                       uint32_t offset,
+                                       uint32_t len);
+  bool parse(const uint8_t* buffer, uint32_t size);
 
   void attemptSend(SendFlags sflags = sfNone);
 
-  void closedown(uint32 err = 0);
+  void closedown(uint32_t err = 0);
 
-  bool clock_check(uint32 now, long& nTimeout);
+  bool clock_check(uint32_t now, long& nTimeout);
 
   bool process(Segment& seg);
-  bool transmit(const SList::iterator& seg, uint32 now);
+  bool transmit(const SList::iterator& seg, uint32_t now);
 
   void adjustMTU();
 
@@ -172,20 +173,20 @@ class PseudoTcp {
   void queueConnectMessage();
 
   // Parse TCP options in the header.
-  void parseOptions(const char* data, uint32 len);
+  void parseOptions(const char* data, uint32_t len);
 
   // Apply a TCP option that has been read from the header.
-  void applyOption(char kind, const char* data, uint32 len);
+  void applyOption(char kind, const char* data, uint32_t len);
 
   // Apply window scale option.
-  void applyWindowScaleOption(uint8 scale_factor);
+  void applyWindowScaleOption(uint8_t scale_factor);
 
   // Resize the send buffer with |new_size| in bytes.
-  void resizeSendBuffer(uint32 new_size);
+  void resizeSendBuffer(uint32_t new_size);
 
   // Resize the receive buffer with |new_size| in bytes. This call adjusts
   // window scale factor |m_swnd_scale| accordingly.
-  void resizeReceiveBuffer(uint32 new_size);
+  void resizeReceiveBuffer(uint32_t new_size);
 
   IPseudoTcpNotify* m_notify;
   enum Shutdown { SD_NONE, SD_GRACEFUL, SD_FORCEFUL } m_shutdown;
@@ -193,43 +194,43 @@ class PseudoTcp {
 
   // TCB data
   TcpState m_state;
-  uint32 m_conv;
+  uint32_t m_conv;
   bool m_bReadEnable, m_bWriteEnable, m_bOutgoing;
-  uint32 m_lasttraffic;
+  uint32_t m_lasttraffic;
 
   // Incoming data
   typedef std::list<RSegment> RList;
   RList m_rlist;
-  uint32 m_rbuf_len, m_rcv_nxt, m_rcv_wnd, m_lastrecv;
-  uint8 m_rwnd_scale;  // Window scale factor.
+  uint32_t m_rbuf_len, m_rcv_nxt, m_rcv_wnd, m_lastrecv;
+  uint8_t m_rwnd_scale;  // Window scale factor.
   rtc::FifoBuffer m_rbuf;
 
   // Outgoing data
   SList m_slist;
-  uint32 m_sbuf_len, m_snd_nxt, m_snd_wnd, m_lastsend, m_snd_una;
-  uint8 m_swnd_scale;  // Window scale factor.
+  uint32_t m_sbuf_len, m_snd_nxt, m_snd_wnd, m_lastsend, m_snd_una;
+  uint8_t m_swnd_scale;  // Window scale factor.
   rtc::FifoBuffer m_sbuf;
 
   // Maximum segment size, estimated protocol level, largest segment sent
-  uint32 m_mss, m_msslevel, m_largest, m_mtu_advise;
+  uint32_t m_mss, m_msslevel, m_largest, m_mtu_advise;
   // Retransmit timer
-  uint32 m_rto_base;
+  uint32_t m_rto_base;
 
   // Timestamp tracking
-  uint32 m_ts_recent, m_ts_lastack;
+  uint32_t m_ts_recent, m_ts_lastack;
 
   // Round-trip calculation
-  uint32 m_rx_rttvar, m_rx_srtt, m_rx_rto;
+  uint32_t m_rx_rttvar, m_rx_srtt, m_rx_rto;
 
   // Congestion avoidance, Fast retransmit/recovery, Delayed ACKs
-  uint32 m_ssthresh, m_cwnd;
-  uint8 m_dup_acks;
-  uint32 m_recover;
-  uint32 m_t_ack;
+  uint32_t m_ssthresh, m_cwnd;
+  uint8_t m_dup_acks;
+  uint32_t m_recover;
+  uint32_t m_t_ack;
 
   // Configuration options
   bool m_use_nagling;
-  uint32 m_ack_delay;
+  uint32_t m_ack_delay;
 
   // This is used by unit tests to test backward compatibility of
   // PseudoTcp implementations that don't support window scaling.

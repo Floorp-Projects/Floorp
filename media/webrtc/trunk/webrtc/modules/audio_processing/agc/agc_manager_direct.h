@@ -21,9 +21,9 @@ class DebugFile;
 class GainControl;
 
 // Callbacks that need to be injected into AgcManagerDirect to read and control
-// the volume values. They have different behavior if they are called from
-// AgcManager or AudioProcessing. This is done to remove the VoiceEngine
-// dependency in AgcManagerDirect.
+// the volume values. This is done to remove the VoiceEngine dependency in
+// AgcManagerDirect.
+// TODO(aluebs): Remove VolumeCallbacks.
 class VolumeCallbacks {
  public:
   virtual ~VolumeCallbacks() {}
@@ -33,28 +33,41 @@ class VolumeCallbacks {
 
 // Direct interface to use AGC to set volume and compression values.
 // AudioProcessing uses this interface directly to integrate the callback-less
-// AGC. AgcManager delegates most of its calls here. See agc_manager.h for
-// undocumented methods.
+// AGC.
 //
 // This class is not thread-safe.
-class AgcManagerDirect {
+class AgcManagerDirect final {
  public:
   // AgcManagerDirect will configure GainControl internally. The user is
   // responsible for processing the audio using it after the call to Process.
-  AgcManagerDirect(GainControl* gctrl, VolumeCallbacks* volume_callbacks);
+  // The operating range of startup_min_level is [12, 255] and any input value
+  // outside that range will be clamped.
+  AgcManagerDirect(GainControl* gctrl,
+                   VolumeCallbacks* volume_callbacks,
+                   int startup_min_level);
   // Dependency injection for testing. Don't delete |agc| as the memory is owned
   // by the manager.
   AgcManagerDirect(Agc* agc,
                    GainControl* gctrl,
-                   VolumeCallbacks* volume_callbacks);
+                   VolumeCallbacks* volume_callbacks,
+                   int startup_min_level);
   ~AgcManagerDirect();
 
   int Initialize();
   void AnalyzePreProcess(int16_t* audio,
                          int num_channels,
-                         int samples_per_channel);
-  void Process(const int16_t* audio, int length, int sample_rate_hz);
+                         size_t samples_per_channel);
+  void Process(const int16_t* audio, size_t length, int sample_rate_hz);
 
+  // Call when the capture stream has been muted/unmuted. This causes the
+  // manager to disregard all incoming audio; chances are good it's background
+  // noise to which we'd like to avoid adapting.
+  void SetCaptureMuted(bool muted);
+  bool capture_muted() { return capture_muted_; }
+
+  float voice_probability();
+
+ private:
   // Sets a new microphone level, after first checking that it hasn't been
   // updated by the user, in which case no action is taken.
   void SetLevel(int new_level);
@@ -64,12 +77,6 @@ class AgcManagerDirect {
   // |kClippedLevelMin|.
   void SetMaxLevel(int level);
 
-  void SetCaptureMuted(bool muted);
-  bool capture_muted() { return capture_muted_; }
-
-  float voice_probability();
-
- private:
   int CheckVolumeAndReset();
   void UpdateGain();
   void UpdateCompressor();
@@ -88,9 +95,12 @@ class AgcManagerDirect {
   bool capture_muted_;
   bool check_volume_on_next_process_;
   bool startup_;
+  int startup_min_level_;
 
   rtc::scoped_ptr<DebugFile> file_preproc_;
   rtc::scoped_ptr<DebugFile> file_postproc_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(AgcManagerDirect);
 };
 
 }  // namespace webrtc

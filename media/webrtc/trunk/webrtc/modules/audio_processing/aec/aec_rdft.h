@@ -54,7 +54,7 @@ void aec_rdft_inverse_128(float* a);
 #if defined(MIPS_FPU_LE)
 void aec_rdft_init_mips(void);
 #endif
-#if defined(WEBRTC_DETECT_ARM_NEON) || defined(WEBRTC_ARCH_ARM_NEON)
+#if defined(WEBRTC_DETECT_NEON) || defined(WEBRTC_HAS_NEON)
 void aec_rdft_init_neon(void);
 #endif
 

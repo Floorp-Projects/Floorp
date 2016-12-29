@@ -17,7 +17,7 @@ namespace webrtc {
 namespace test {
 
 class NullRenderer : public VideoRenderer {
-  void RenderFrame(const I420VideoFrame& video_frame,
+  void RenderFrame(const VideoFrame& video_frame,
                    int time_to_render_ms) override {}
   bool IsTextureSupported() const override { return false; }
 };

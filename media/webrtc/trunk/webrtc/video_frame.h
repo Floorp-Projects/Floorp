@@ -12,28 +12,23 @@
 #define WEBRTC_VIDEO_FRAME_H_
 
 #include "webrtc/base/scoped_ref_ptr.h"
-#include "webrtc/common_video/interface/native_handle.h"
-#include "webrtc/common_video/interface/video_frame_buffer.h"
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/common_video/rotation.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-class I420VideoFrame {
+class VideoFrame {
  public:
-  I420VideoFrame();
-  I420VideoFrame(const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer,
-                 uint32_t timestamp,
-                 int64_t render_time_ms,
-                 VideoRotation rotation);
-  I420VideoFrame(NativeHandle* handle,
-                 int width,
-                 int height,
-                 uint32_t timestamp,
-                 int64_t render_time_ms);
+  VideoFrame();
+  VideoFrame(const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer,
+             uint32_t timestamp,
+             int64_t render_time_ms,
+             VideoRotation rotation);
 
   // TODO(pbos): Make all create/copy functions void, they should not be able to
-  // fail (which should be DCHECK/CHECKed instead).
+  // fail (which should be RTC_DCHECK/CHECKed instead).
 
   // CreateEmptyFrame: Sets frame dimensions and allocates buffers based
   // on set dimensions - height and plane stride.
@@ -81,11 +76,11 @@ class I420VideoFrame {
   // Deep copy frame: If required size is bigger than allocated one, new
   // buffers of adequate size will be allocated.
   // Return value: 0 on success, -1 on error.
-  int CopyFrame(const I420VideoFrame& videoFrame);
+  int CopyFrame(const VideoFrame& videoFrame);
 
   // Creates a shallow copy of |videoFrame|, i.e, the this object will retain a
   // reference to the video buffer also retained by |videoFrame|.
-  void ShallowCopy(const I420VideoFrame& videoFrame);
+  void ShallowCopy(const VideoFrame& videoFrame);
 
   // Release frame buffer and reset time stamps.
   void Reset();
@@ -159,6 +154,12 @@ class I420VideoFrame {
   void set_video_frame_buffer(
       const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer);
 
+  // Convert native-handle frame to memory-backed I420 frame. Should not be
+  // called on a non-native-handle frame.
+  VideoFrame ConvertNativeToI420Frame() const;
+
+  bool EqualsFrame(const VideoFrame& frame) const;
+
  private:
   // An opaque reference counted handle that stores the pixel data.
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> video_frame_buffer_;
@@ -168,13 +169,6 @@ class I420VideoFrame {
   VideoRotation rotation_;
 };
 
-enum VideoFrameType {
-  kKeyFrame = 0,
-  kDeltaFrame = 1,
-  kGoldenFrame = 2,
-  kAltRefFrame = 3,
-  kSkipFrame = 4
-};
 
 // TODO(pbos): Rename EncodedFrame and reformat this class' members.
 class EncodedImage {
@@ -183,18 +177,31 @@ class EncodedImage {
   EncodedImage(uint8_t* buffer, size_t length, size_t size)
       : _buffer(buffer), _length(length), _size(size) {}
 
+  struct AdaptReason {
+    AdaptReason()
+        : quality_resolution_downscales(-1),
+          bw_resolutions_disabled(-1) {}
+
+    int quality_resolution_downscales;  // Number of times this frame is down
+                                        // scaled in resolution due to quality.
+                                        // Or -1 if information is not provided.
+    int bw_resolutions_disabled;  // Number of resolutions that are not sent
+                                  // due to bandwidth for this frame.
+                                  // Or -1 if information is not provided.
+  };
   uint32_t _encodedWidth = 0;
   uint32_t _encodedHeight = 0;
   uint32_t _timeStamp = 0;
   // NTP time of the capture time in local timebase in milliseconds.
   int64_t ntp_time_ms_ = 0;
   int64_t capture_time_ms_ = 0;
-  // TODO(pbos): Use webrtc::FrameType directly (and remove VideoFrameType).
-  VideoFrameType _frameType = kDeltaFrame;
+  FrameType _frameType = kVideoFrameDelta;
   uint8_t* _buffer;
   size_t _length;
   size_t _size;
   bool _completeFrame = false;
+  AdaptReason adapt_reason_;
+  int qp_ = -1;  // Quantizer value.
 };
 
 }  // namespace webrtc

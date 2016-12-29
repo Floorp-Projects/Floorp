@@ -16,9 +16,6 @@ tags:
   createdForUser: {{owner}}
 
 scopes:
-  # Bug 1269443: cache scopes, etc. must be listed explicitly
-  - "docker-worker:cache:tooltool-cache"
-  - "secrets:get:project/taskcluster/gecko/hgfingerprint"
   - {{repo_scope}}
 
 routes:

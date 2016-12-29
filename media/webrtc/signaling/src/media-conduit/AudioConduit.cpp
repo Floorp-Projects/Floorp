@@ -25,11 +25,11 @@
 
 #include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/voice_engine/include/voe_dtmf.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/voice_engine/voice_engine_impl.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"
@@ -93,7 +93,9 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     mPtrVoEBase->StopSend(mChannel);
     mPtrVoEBase->StopReceive(mChannel);
     mPtrVoEBase->DeleteChannel(mChannel);
-    mPtrVoEBase->Terminate();
+    // We don't Terminate() the VoEBase here, because the Call (owned by
+    // PeerConnectionMedia) actually owns the (shared) VoEBase/VoiceEngine
+    // here
   }
 
   // We shouldn't delete the VoiceEngine until all these are released!
@@ -107,21 +109,24 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
   mPtrVoERTP_RTCP = nullptr;
   mPtrRTP = nullptr;
 
-  if(mVoiceEngine)
+  if (mVoiceEngine)
   {
     webrtc::VoiceEngine::Delete(mVoiceEngine);
   }
 }
 
-bool WebrtcAudioConduit::SetLocalSSRC(unsigned int ssrc)
+bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
 {
-  unsigned int oldSsrc;
-  if (!GetLocalSSRC(&oldSsrc)) {
+  // This should hold true until the WebRTC.org VoE refactor
+  MOZ_ASSERT(aSSRCs.size() == 1,"WebrtcAudioConduit::SetLocalSSRCs accepts exactly 1 ssrc.");
+
+  std::vector<unsigned int> oldSsrcs = GetLocalSSRCs();
+  if (oldSsrcs.empty()) {
     MOZ_ASSERT(false, "GetLocalSSRC failed");
     return false;
   }
 
-  if (oldSsrc == ssrc) {
+  if (oldSsrcs == aSSRCs) {
     return true;
   }
 
@@ -130,7 +135,7 @@ bool WebrtcAudioConduit::SetLocalSSRC(unsigned int ssrc)
     return false;
   }
 
-  if (mPtrRTP->SetLocalSSRC(mChannel, ssrc)) {
+  if (mPtrRTP->SetLocalSSRC(mChannel, aSSRCs[0])) {
     return false;
   }
 
@@ -142,8 +147,12 @@ bool WebrtcAudioConduit::SetLocalSSRC(unsigned int ssrc)
   return true;
 }
 
-bool WebrtcAudioConduit::GetLocalSSRC(unsigned int* ssrc) {
-  return !mPtrRTP->GetLocalSSRC(mChannel, *ssrc);
+std::vector<unsigned int> WebrtcAudioConduit::GetLocalSSRCs() const {
+  unsigned int ssrc;
+  if (!mPtrRTP->GetLocalSSRC(mChannel, ssrc)) {
+    return std::vector<unsigned int>(1,ssrc);
+  }
+  return std::vector<unsigned int>();
 }
 
 bool WebrtcAudioConduit::GetRemoteSSRC(unsigned int* ssrc) {
@@ -285,6 +294,13 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
     return kMediaConduitSessionNotInited;
   }
 
+  // init the engine with our audio device layer
+  if(mPtrVoEBase->Init() == -1)
+  {
+    CSFLogError(logTag, "%s VoiceEngine Base Not Initialized", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+
   if(!(mPtrVoENetwork = VoENetwork::GetInterface(mVoiceEngine)))
   {
     CSFLogError(logTag, "%s Unable to initialize VoENetwork", __FUNCTION__);
@@ -322,13 +338,6 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
   {
     CSFLogError(logTag, "%s Unable to get audio RTP/RTCP interface ",
                 __FUNCTION__);
-    return kMediaConduitSessionNotInited;
-  }
-
-  // init the engine with our audio device layer
-  if(mPtrVoEBase->Init() == -1)
-  {
-    CSFLogError(logTag, "%s VoiceEngine Base Not Initialized", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
 
@@ -881,7 +890,6 @@ WebrtcAudioConduit::StartReceiving()
       return kMediaConduitUnknownError;
     }
 
-
     if(mPtrVoEBase->StartPlayout(mChannel) == -1)
     {
       CSFLogError(logTag, "%s Starting playout Failed", __FUNCTION__);
@@ -895,9 +903,12 @@ WebrtcAudioConduit::StartReceiving()
 
 //WebRTC::RTP Callback Implementation
 // Called on AudioGUM or MSG thread
-int WebrtcAudioConduit::SendPacket(int channel, const void* data, size_t len)
+bool
+WebrtcAudioConduit::SendRtp(const uint8_t* data,
+                            size_t len,
+                            const webrtc::PacketOptions& options)
 {
-  CSFLogDebug(logTag,  "%s : channel %d", __FUNCTION__, channel);
+  CSFLogDebug(logTag,  "%s: len %lu", __FUNCTION__, (unsigned long)len);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   if (MOZ_LOG_TEST(GetLatencyLog(), LogLevel::Debug)) {
@@ -912,25 +923,30 @@ int WebrtcAudioConduit::SendPacket(int channel, const void* data, size_t len)
   }
 #endif
   ReentrantMonitorAutoEnter enter(mTransportMonitor);
+  // XXX(pkerr) - the PacketOptions are being ignored. This parameter was added along
+  // with the Call API update in the webrtc.org codebase.
+  // The only field in it is the packet_id, which is used when the header
+  // extension for TransportSequenceNumber is being used, which we don't.
+  (void) options;
   if(mTransmitterTransport &&
      (mTransmitterTransport->SendRtpPacket(data, len) == NS_OK))
   {
     CSFLogDebug(logTag, "%s Sent RTP Packet ", __FUNCTION__);
-    return len;
+    return true;
   } else {
     CSFLogError(logTag, "%s RTP Packet Send Failed ", __FUNCTION__);
-    return -1;
+    return false;
   }
 }
 
 // Called on WebRTC Process thread and perhaps others
-int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, size_t len)
+bool
+WebrtcAudioConduit::SendRtcp(const uint8_t* data, size_t len)
 {
-  CSFLogDebug(logTag,  "%s : channel %d , len %lu, first rtcp = %u ",
+  CSFLogDebug(logTag,  "%s : len %lu, first rtcp = %u ",
               __FUNCTION__,
-              channel,
               (unsigned long) len,
-              static_cast<unsigned>(((uint8_t *) data)[1]));
+              static_cast<unsigned>(data[1]));
 
   // We come here if we have only one pipeline/conduit setup,
   // such as for unidirectional streams.
@@ -941,14 +957,14 @@ int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, size_t len
   {
     // Might be a sender report, might be a receiver report, we don't know.
     CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
-    return len;
+    return true;
   } else if(mTransmitterTransport &&
             (mTransmitterTransport->SendRtcpPacket(data, len) == NS_OK)) {
       CSFLogDebug(logTag, "%s Sent RTCP Packet (sender report) ", __FUNCTION__);
-      return len;
+      return true;
   } else {
     CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
-    return -1;
+    return false;
   }
 }
 

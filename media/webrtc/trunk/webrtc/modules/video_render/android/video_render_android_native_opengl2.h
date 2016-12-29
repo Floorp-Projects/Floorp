@@ -15,7 +15,7 @@
 
 #include "webrtc/modules/video_render/android/video_render_android_impl.h"
 #include "webrtc/modules/video_render/android/video_render_opengles20.h"
-#include "webrtc/modules/video_render/include/video_render_defines.h"
+#include "webrtc/modules/video_render/video_render_defines.h"
 
 namespace webrtc {
 
@@ -33,9 +33,8 @@ class AndroidNativeOpenGl2Channel: public AndroidStream {
                const float right, const float bottom);
 
   //Implement VideoRenderCallback
-  virtual int32_t RenderFrame(
-      const uint32_t streamId,
-      const I420VideoFrame& videoFrame);
+  virtual int32_t RenderFrame(const uint32_t streamId,
+                              const VideoFrame& videoFrame);
 
   //Implements AndroidStream
   virtual void DeliverFrame(JNIEnv* jniEnv);
@@ -54,7 +53,7 @@ class AndroidNativeOpenGl2Channel: public AndroidStream {
   uint32_t _id;
   CriticalSectionWrapper& _renderCritSect;
 
-  I420VideoFrame _bufferToRender;
+  VideoFrame _bufferToRender;
   VideoRenderAndroid& _renderer;
   JavaVM*     _jvm;
   jobject     _javaRenderObj;

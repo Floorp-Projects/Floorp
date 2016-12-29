@@ -26,6 +26,12 @@ class SignalThread;
 
 namespace cricket {
 
+// TODO(pthatcher): Remove this.  It's only used by chromoting, so we
+// should just move this code there.  It's used in these places in
+// chromium:
+// src/remoting/protocol/chromium_port_allocator.cc
+// src/remoting/client/plugin/pepper_port_allocator.cc
+// src/remoting/protocol/libjingle_transport_factory.cc
 class HttpPortAllocatorBase : public BasicPortAllocator {
  public:
   // The number of HTTP requests we should attempt before giving up.
@@ -128,44 +134,6 @@ class HttpPortAllocatorSessionBase : public BasicPortAllocatorSession {
   std::string relay_token_;
   std::string agent_;
   int attempts_;
-};
-
-class HttpPortAllocator : public HttpPortAllocatorBase {
- public:
-  HttpPortAllocator(rtc::NetworkManager* network_manager,
-                    const std::string& user_agent);
-  HttpPortAllocator(rtc::NetworkManager* network_manager,
-                    rtc::PacketSocketFactory* socket_factory,
-                    const std::string& user_agent);
-  virtual ~HttpPortAllocator();
-  virtual PortAllocatorSession* CreateSessionInternal(
-      const std::string& content_name,
-      int component,
-      const std::string& ice_ufrag, const std::string& ice_pwd);
-};
-
-class HttpPortAllocatorSession : public HttpPortAllocatorSessionBase {
- public:
-  HttpPortAllocatorSession(
-      HttpPortAllocator* allocator,
-      const std::string& content_name,
-      int component,
-      const std::string& ice_ufrag,
-      const std::string& ice_pwd,
-      const std::vector<rtc::SocketAddress>& stun_hosts,
-      const std::vector<std::string>& relay_hosts,
-      const std::string& relay,
-      const std::string& agent);
-  virtual ~HttpPortAllocatorSession();
-
-  virtual void SendSessionRequest(const std::string& host, int port);
-
- protected:
-  // Protected for diagnostics.
-  virtual void OnRequestDone(rtc::SignalThread* request);
-
- private:
-  std::list<rtc::AsyncHttpRequest*> requests_;
 };
 
 }  // namespace cricket

@@ -2,6 +2,8 @@ syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 package webrtc.audioproc;
 
+// Contains the format of input/output/reverse audio. An Init message is added
+// when any of the fields are changed.
 message Init {
   optional int32 sample_rate = 1;
   optional int32 device_sample_rate = 2 [deprecated=true];
@@ -39,11 +41,41 @@ message Stream {
   repeated bytes output_channel = 8;
 }
 
+// Contains the configurations of various APM component. A Config message is
+// added when any of the fields are changed.
+message Config {
+  // Next field number 17.
+  // Acoustic echo canceler.
+  optional bool aec_enabled = 1;
+  optional bool aec_delay_agnostic_enabled = 2;
+  optional bool aec_drift_compensation_enabled = 3;
+  optional bool aec_extended_filter_enabled = 4;
+  optional int32 aec_suppression_level = 5;
+  // Mobile AEC.
+  optional bool aecm_enabled = 6;
+  optional bool aecm_comfort_noise_enabled = 7;
+  optional int32 aecm_routing_mode = 8;
+  // Automatic gain controller.
+  optional bool agc_enabled = 9;
+  optional int32 agc_mode = 10;
+  optional bool agc_limiter_enabled = 11;
+  optional bool noise_robust_agc_enabled = 12;
+  // High pass filter.
+  optional bool hpf_enabled = 13;
+  // Noise suppression.
+  optional bool ns_enabled = 14;
+  optional int32 ns_level = 15;
+  // Transient suppression.
+  optional bool transient_suppression_enabled = 16;
+}
+
 message Event {
   enum Type {
     INIT = 0;
     REVERSE_STREAM = 1;
     STREAM = 2;
+    CONFIG = 3;
+    UNKNOWN_EVENT = 4;
   }
 
   required Type type = 1;
@@ -51,4 +83,5 @@ message Event {
   optional Init init = 2;
   optional ReverseStream reverse_stream = 3;
   optional Stream stream = 4;
+  optional Config config = 5;
 }

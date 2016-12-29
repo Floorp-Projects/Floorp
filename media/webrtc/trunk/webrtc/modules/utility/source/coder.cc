@@ -9,7 +9,7 @@
  */
 
 #include "webrtc/common_types.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/utility/source/coder.h"
 
 namespace webrtc {
@@ -29,8 +29,7 @@ AudioCoder::~AudioCoder()
 {
 }
 
-int32_t AudioCoder::SetEncodeCodec(const CodecInst& codecInst,
-                                   ACMAMRPackingFormat amrFormat)
+int32_t AudioCoder::SetEncodeCodec(const CodecInst& codecInst)
 {
     if(_acm->RegisterSendCodec((CodecInst&)codecInst) == -1)
     {
@@ -39,8 +38,7 @@ int32_t AudioCoder::SetEncodeCodec(const CodecInst& codecInst,
     return 0;
 }
 
-int32_t AudioCoder::SetDecodeCodec(const CodecInst& codecInst,
-                                   ACMAMRPackingFormat amrFormat)
+int32_t AudioCoder::SetDecodeCodec(const CodecInst& codecInst)
 {
     if(_acm->RegisterReceiveCodec((CodecInst&)codecInst) == -1)
     {
@@ -85,7 +83,7 @@ int32_t AudioCoder::Encode(const AudioFrame& audio,
     AudioFrame audioFrame;
     audioFrame.CopyFrom(audio);
     audioFrame.timestamp_ = _encodeTimestamp;
-    _encodeTimestamp += audioFrame.samples_per_channel_;
+    _encodeTimestamp += static_cast<uint32_t>(audioFrame.samples_per_channel_);
 
     // For any codec with a frame size that is longer than 10 ms the encoded
     // length in bytes should be zero until a a full frame has been encoded.

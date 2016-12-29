@@ -40,7 +40,7 @@ static const size_t kNonceSize = 40;
 static const size_t TURN_CHANNEL_HEADER_SIZE = 4U;
 
 // TODO(mallinath) - Move these to a common place.
-inline bool IsTurnChannelData(uint16 msg_type) {
+inline bool IsTurnChannelData(uint16_t msg_type) {
   // The first two bits of a channel data message are 0b01.
   return ((msg_type & 0xC000) == 0x4000);
 }
@@ -200,7 +200,7 @@ void TurnServer::OnInternalPacket(rtc::AsyncPacketSocket* socket,
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
   ASSERT(iter != server_sockets_.end());
   TurnServerConnection conn(addr, iter->second, socket);
-  uint16 msg_type = rtc::GetBE16(data);
+  uint16_t msg_type = rtc::GetBE16(data);
   if (!IsTurnChannelData(msg_type)) {
     // This is a STUN message.
     HandleStunMessage(&conn, data, size);
@@ -394,7 +394,7 @@ void TurnServer::HandleAllocateRequest(TurnServerConnection* conn,
 
 std::string TurnServer::GenerateNonce() const {
   // Generate a nonce of the form hex(now + HMAC-MD5(nonce_key_, now))
-  uint32 now = rtc::Time();
+  uint32_t now = rtc::Time();
   std::string input(reinterpret_cast<const char*>(&now), sizeof(now));
   std::string nonce = rtc::hex_encode(input.c_str(), input.size());
   nonce += rtc::ComputeHmac(rtc::DIGEST_MD5, nonce_key_, input);
@@ -409,7 +409,7 @@ bool TurnServer::ValidateNonce(const std::string& nonce) const {
   }
 
   // Decode the timestamp.
-  uint32 then;
+  uint32_t then;
   char* p = reinterpret_cast<char*>(&then);
   size_t len = rtc::hex_decode(p, sizeof(then),
       nonce.substr(0, sizeof(then) * 2));
@@ -698,6 +698,12 @@ void TurnServerAllocation::HandleCreatePermissionRequest(
     return;
   }
 
+  if (server_->reject_private_addresses_ &&
+      rtc::IPIsPrivate(peer_attr->GetAddress().ipaddr())) {
+    SendErrorResponse(msg, STUN_ERROR_FORBIDDEN, STUN_ERROR_REASON_FORBIDDEN);
+    return;
+  }
+
   // Add this permission.
   AddPermission(peer_attr->GetAddress().ipaddr());
 
@@ -761,7 +767,7 @@ void TurnServerAllocation::HandleChannelBindRequest(const TurnMessage* msg) {
 
 void TurnServerAllocation::HandleChannelData(const char* data, size_t size) {
   // Extract the channel number from the data.
-  uint16 channel_id = rtc::GetBE16(data);
+  uint16_t channel_id = rtc::GetBE16(data);
   Channel* channel = FindChannel(channel_id);
   if (channel) {
     // Send the data to the peer address.
@@ -784,7 +790,7 @@ void TurnServerAllocation::OnExternalPacket(
     // There is a channel bound to this address. Send as a channel message.
     rtc::ByteBuffer buf;
     buf.WriteUInt16(channel->id());
-    buf.WriteUInt16(static_cast<uint16>(size));
+    buf.WriteUInt16(static_cast<uint16_t>(size));
     buf.WriteBytes(data, size);
     server_->Send(&conn_, buf);
   } else if (HasPermission(addr.ipaddr())) {
@@ -806,7 +812,7 @@ void TurnServerAllocation::OnExternalPacket(
 
 int TurnServerAllocation::ComputeLifetime(const TurnMessage* msg) {
   // Return the smaller of our default lifetime and the requested lifetime.
-  uint32 lifetime = kDefaultAllocationTimeout / 1000;  // convert to seconds
+  uint32_t lifetime = kDefaultAllocationTimeout / 1000;  // convert to seconds
   const StunUInt32Attribute* lifetime_attr = msg->GetUInt32(STUN_ATTR_LIFETIME);
   if (lifetime_attr && lifetime_attr->value() < lifetime) {
     lifetime = lifetime_attr->value();

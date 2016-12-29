@@ -9,8 +9,8 @@
  */
 
 #include "webrtc/modules/audio_device/sndio/audio_device_utility_sndio.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc
 {

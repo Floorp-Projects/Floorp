@@ -45,7 +45,7 @@
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
 #include "VideoConduit.h"
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
 #include "gmp-video-host.h"
 #include "GMPVideoDecoderProxy.h"
@@ -142,9 +142,9 @@ public:
                              int32_t aNumberOfCores,
                              uint32_t aMaxPayloadSize);
 
-  virtual int32_t Encode(const webrtc::I420VideoFrame& aInputImage,
+  virtual int32_t Encode(const webrtc::VideoFrame& aInputImage,
                          const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         const std::vector<webrtc::VideoFrameType>* aFrameTypes);
+                         const std::vector<webrtc::FrameType>* aFrameTypes);
 
   virtual int32_t RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* aCallback);
@@ -220,9 +220,9 @@ private:
     uint32_t mMaxPayloadSize;
   };
 
-  int32_t Encode_g(const webrtc::I420VideoFrame* aInputImage,
+  int32_t Encode_g(const webrtc::VideoFrame* aInputImage,
                    const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                   const std::vector<webrtc::VideoFrameType>* aFrameTypes);
+                   const std::vector<webrtc::FrameType>* aFrameTypes);
   void RegetEncoderForResolutionChange(
       uint32_t aWidth,
       uint32_t aHeight,
@@ -316,9 +316,9 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder
     }
 
     int32_t Encode(
-        const webrtc::I420VideoFrame& aInputImage,
+        const webrtc::VideoFrame& aInputImage,
         const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-        const std::vector<webrtc::VideoFrameType>* aFrameTypes) override
+        const std::vector<webrtc::FrameType>* aFrameTypes) override
     {
       return mEncoderImpl->Encode(aInputImage,
                                   aCodecSpecificInfo,

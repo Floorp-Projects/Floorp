@@ -1,7 +1,7 @@
 #ifndef WEBRTC_MODULES_BROWSER_CAPTURE_MAIN_SOURCE_BROWSER_CAPTURE_IMPL_H_
 #define WEBRTC_MODULES_BROWSER_CAPTURE_MAIN_SOURCE_BROWSER_CAPTURE_IMPL_H_
 
-#include "webrtc/modules/video_capture/include/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture.h"
 
 using namespace webrtc::videocapturemodule;
 

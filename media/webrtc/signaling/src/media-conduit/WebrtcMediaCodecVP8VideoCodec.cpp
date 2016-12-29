@@ -23,6 +23,8 @@
 #include "libyuv/convert.h"
 #include "libyuv/row.h"
 
+#include "webrtc/modules/video_coding/include/video_error_codes.h"
+
 #include <webrtc/common_video/libyuv/include/webrtc_libyuv.h>
 
 using namespace mozilla;
@@ -266,7 +268,7 @@ public:
   void GenerateVideoFrame(
       size_t width, size_t height, uint32_t timeStamp,
       void* decoded,
-      webrtc::I420VideoFrame* videoFrame, int color_format) {
+      webrtc::VideoFrame* videoFrame, int color_format) {
 
     CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
@@ -532,7 +534,7 @@ class OutputDrain : public MediaCodecOutputDrain
   MediaCodec::GlobalRef mCoder;
   webrtc::EncodedImageCallback* mEncoderCallback;
   webrtc::DecodedImageCallback* mDecoderCallback;
-  webrtc::I420VideoFrame mVideoFrame;
+  webrtc::VideoFrame mVideoFrame;
 
   jobjectArray mInputBuffers;
   jobjectArray mOutputBuffers;
@@ -546,7 +548,7 @@ class OutputDrain : public MediaCodecOutputDrain
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcAndroidMediaCodec)
 };
 
-static bool I420toNV12(uint8_t* dstY, uint16_t* dstUV, const webrtc::I420VideoFrame& inputImage) {
+static bool I420toNV12(uint8_t* dstY, uint16_t* dstUV, const webrtc::VideoFrame& inputImage) {
   uint8_t* buffer = dstY;
   uint8_t* dst_y = buffer;
   int dst_stride_y = inputImage.stride(webrtc::kYPlane);
@@ -630,9 +632,9 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::InitEncode(
 }
 
 int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
-    const webrtc::I420VideoFrame& inputImage,
+    const webrtc::VideoFrame& inputImage,
     const webrtc::CodecSpecificInfo* codecSpecificInfo,
-    const std::vector<webrtc::VideoFrameType>* frame_types) {
+    const std::vector<webrtc::FrameType>* frame_types) {
   CSFLogDebug(logTag,  "%s, w = %d, h = %d", __FUNCTION__, inputImage.width(), inputImage.height());
 
   if (!mMediaCodecEncoder) {
@@ -765,9 +767,9 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
         void* directBuffer = reinterpret_cast<uint8_t*>(env->GetDirectBufferAddress(buffer)) + offset;
 
         if (flags == MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
-          mEncodedImage._frameType = webrtc::kKeyFrame;
+          mEncodedImage._frameType = webrtc::kVideoFrameKey;
         } else {
-          mEncodedImage._frameType = webrtc::kDeltaFrame;
+          mEncodedImage._frameType = webrtc::kVideoFrameDelta;
         }
         mEncodedImage._completeFrame = true;
 
@@ -910,7 +912,7 @@ int32_t WebrtcMediaCodecVP8VideoDecoder::Decode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (inputImage._frameType == webrtc::kKeyFrame) {
+  if (inputImage._frameType == webrtc::kVideoFrameKey) {
     CSFLogDebug(logTag,  "%s, inputImage is Golden frame",
                   __FUNCTION__);
     mFrameWidth = inputImage._encodedWidth;

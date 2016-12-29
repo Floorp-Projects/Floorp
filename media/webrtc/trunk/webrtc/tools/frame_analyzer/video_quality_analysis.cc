@@ -26,6 +26,9 @@ namespace test {
 
 using std::string;
 
+ResultsContainer::ResultsContainer() {}
+ResultsContainer::~ResultsContainer() {}
+
 int GetI420FrameSize(int width, int height) {
   int half_width = (width + 1) >> 1;
   int half_height = (height + 1) >> 1;
@@ -87,8 +90,11 @@ bool GetNextStatsLine(FILE* stats_file, char* line) {
   return true;
 }
 
-bool ExtractFrameFromYuvFile(const char* i420_file_name, int width, int height,
-                             int frame_number, uint8* result_frame) {
+bool ExtractFrameFromYuvFile(const char* i420_file_name,
+                             int width,
+                             int height,
+                             int frame_number,
+                             uint8_t* result_frame) {
   int frame_size = GetI420FrameSize(width, height);
   int offset = frame_number * frame_size;  // Calculate offset for the frame.
   bool errors = false;
@@ -114,8 +120,11 @@ bool ExtractFrameFromYuvFile(const char* i420_file_name, int width, int height,
   return !errors;
 }
 
-bool ExtractFrameFromY4mFile(const char* y4m_file_name, int width, int height,
-                             int frame_number, uint8* result_frame) {
+bool ExtractFrameFromY4mFile(const char* y4m_file_name,
+                             int width,
+                             int height,
+                             int frame_number,
+                             uint8_t* result_frame) {
   int frame_size = GetI420FrameSize(width, height);
   int frame_offset = frame_number * frame_size;
   bool errors = false;
@@ -167,20 +176,22 @@ bool ExtractFrameFromY4mFile(const char* y4m_file_name, int width, int height,
 }
 
 double CalculateMetrics(VideoAnalysisMetricsType video_metrics_type,
-                        const uint8* ref_frame,  const uint8* test_frame,
-                        int width, int height) {
+                        const uint8_t* ref_frame,
+                        const uint8_t* test_frame,
+                        int width,
+                        int height) {
   if (!ref_frame || !test_frame)
     return -1;
   else if (height < 0 || width < 0)
     return -1;
   int half_width = (width + 1) >> 1;
   int half_height = (height + 1) >> 1;
-  const uint8* src_y_a = ref_frame;
-  const uint8* src_u_a = src_y_a + width * height;
-  const uint8* src_v_a = src_u_a + half_width * half_height;
-  const uint8* src_y_b = test_frame;
-  const uint8* src_u_b = src_y_b + width * height;
-  const uint8* src_v_b = src_u_b + half_width * half_height;
+  const uint8_t* src_y_a = ref_frame;
+  const uint8_t* src_u_a = src_y_a + width * height;
+  const uint8_t* src_v_a = src_u_a + half_width * half_height;
+  const uint8_t* src_y_b = test_frame;
+  const uint8_t* src_u_b = src_y_b + width * height;
+  const uint8_t* src_v_b = src_u_b + half_width * half_height;
 
   int stride_y = width;
   int stride_uv = half_width;
@@ -216,7 +227,7 @@ void RunAnalysis(const char* reference_file_name, const char* test_file_name,
                  ResultsContainer* results) {
   // Check if the reference_file_name ends with "y4m".
   bool y4m_mode = false;
-  if (std::string(reference_file_name).find("y4m") != std::string::npos){
+  if (std::string(reference_file_name).find("y4m") != std::string::npos) {
     y4m_mode = true;
   }
 
@@ -227,8 +238,8 @@ void RunAnalysis(const char* reference_file_name, const char* test_file_name,
   char line[STATS_LINE_LENGTH];
 
   // Allocate buffers for test and reference frames.
-  uint8* test_frame = new uint8[size];
-  uint8* reference_frame = new uint8[size];
+  uint8_t* test_frame = new uint8_t[size];
+  uint8_t* reference_frame = new uint8_t[size];
   int previous_frame_number = -1;
 
   // While there are entries in the stats file.

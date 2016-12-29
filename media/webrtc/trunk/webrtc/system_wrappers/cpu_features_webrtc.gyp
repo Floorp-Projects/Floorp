@@ -21,8 +21,8 @@
           ],
           'conditions': [
             ['include_ndk_cpu_features==1', {
-               'includes': [
-                  '../../build/android/cpufeatures.gypi',
+              'includes': [
+                 '../../build/android/cpufeatures.gypi',
                ],
             }, {
               'sources': [
@@ -31,8 +31,7 @@
               ],
             }],
           ],
-        },
-      ],
+      }],
     }],
   ], # conditions
 }

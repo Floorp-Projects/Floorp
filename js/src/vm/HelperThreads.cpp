@@ -868,8 +868,6 @@ GlobalHelperThreadState::maxWasmCompilationThreads() const
 {
     if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_WASM))
         return 1;
-    if (cpuCount < 2)
-        return 2;
     return cpuCount;
 }
 
@@ -1142,9 +1140,9 @@ js::GCParallelTask::runFromMainThread(JSRuntime* rt)
 {
     MOZ_ASSERT(state == NotStarted);
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
-    uint64_t timeStart = PRMJ_Now();
+    mozilla::TimeStamp timeStart = mozilla::TimeStamp::Now();
     run();
-    duration_ = PRMJ_Now() - timeStart;
+    duration_ = mozilla::TimeStamp::Now() - timeStart;
 }
 
 void
@@ -1153,9 +1151,9 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
     {
         AutoUnlockHelperThreadState parallelSection(locked);
         gc::AutoSetThreadIsPerformingGC performingGC;
-        uint64_t timeStart = PRMJ_Now();
+        mozilla::TimeStamp timeStart = mozilla::TimeStamp::Now();
         run();
-        duration_ = PRMJ_Now() - timeStart;
+        duration_ = mozilla::TimeStamp::Now() - timeStart;
     }
 
     state = Finished;

@@ -109,10 +109,6 @@
       'process_outputs_as_sources': 1,
     },
   ],
-  'dependencies': [
-    '<(DEPTH)/third_party/protobuf/protobuf.gyp:protoc#host',
-    '<(DEPTH)/third_party/protobuf/protobuf.gyp:protobuf_lite',
-  ],
   'include_dirs': [
     '<(SHARED_INTERMEDIATE_DIR)/protoc_out',
     '<(DEPTH)',
@@ -123,12 +119,20 @@
       '<(DEPTH)',
     ]
   },
-  'export_dependent_settings': [
-    # The generated headers reference headers within protobuf_lite,
-    # so dependencies must be able to find those headers too.
-    '<(DEPTH)/third_party/protobuf/protobuf.gyp:protobuf_lite',
-  ],
   # This target exports a hard dependency because it generates header
   # files.
   'hard_dependency': 1,
+  'conditions': [
+    ['build_protobuf==1', {
+      'dependencies': [
+        '<(DEPTH)/third_party/protobuf/protobuf.gyp:protoc#host',
+        '<(DEPTH)/third_party/protobuf/protobuf.gyp:protobuf_lite',
+      ],
+      'export_dependent_settings': [
+        # The generated headers reference headers within protobuf_lite,
+        # so dependencies must be able to find those headers too.
+        '<(DEPTH)/third_party/protobuf/protobuf.gyp:protobuf_lite',
+      ],
+    }],
+  ],
 }

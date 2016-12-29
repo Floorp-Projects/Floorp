@@ -75,13 +75,16 @@ class Converter {
 
   // Writes the Y, U and V (in this order) planes to the file, thus adding a
   // raw YUV frame to the file.
-  bool AddYUVToFile(uint8* y_plane, int y_plane_size,
-                    uint8* u_plane, int u_plane_size,
-                    uint8* v_plane, int v_plane_size,
+  bool AddYUVToFile(uint8_t* y_plane,
+                    int y_plane_size,
+                    uint8_t* u_plane,
+                    int u_plane_size,
+                    uint8_t* v_plane,
+                    int v_plane_size,
                     FILE* output_file);
 
   // Adds the Y, U or V plane to the file.
-  bool AddYUVPlaneToFile(uint8* yuv_plane, int yuv_plane_size, FILE* file);
+  bool AddYUVPlaneToFile(uint8_t* yuv_plane, int yuv_plane_size, FILE* file);
 
   // Reads a RGBA frame from input_file_name with input_frame_size size in bytes
   // into the buffer.

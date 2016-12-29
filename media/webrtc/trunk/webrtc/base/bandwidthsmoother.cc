@@ -16,7 +16,7 @@
 namespace rtc {
 
 BandwidthSmoother::BandwidthSmoother(int initial_bandwidth_guess,
-                                     uint32 time_between_increase,
+                                     uint32_t time_between_increase,
                                      double percent_increase,
                                      size_t samples_count_to_average,
                                      double min_sample_count_percent)
@@ -33,7 +33,7 @@ BandwidthSmoother::~BandwidthSmoother() = default;
 
 // Samples a new bandwidth measurement
 // returns true if the bandwidth estimation changed
-bool BandwidthSmoother::Sample(uint32 sample_time, int bandwidth) {
+bool BandwidthSmoother::Sample(uint32_t sample_time, int bandwidth) {
   if (bandwidth < 0) {
     return false;
   }

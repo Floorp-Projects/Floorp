@@ -48,8 +48,8 @@ public:
     return mInitialized;
   }
 
-  char* GetBytes() {
-    return mShmem.get<char>();
+  uint8_t * GetBytes() {
+    return mShmem.get<uint8_t>();
   }
 
   mozilla::ipc::Shmem& Get() {

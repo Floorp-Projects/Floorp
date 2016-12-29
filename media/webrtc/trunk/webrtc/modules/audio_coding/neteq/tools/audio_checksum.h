@@ -51,7 +51,7 @@ class AudioChecksum : public AudioSink {
   char checksum_result_[rtc::Md5Digest::kSize];
   bool finished_;
 
-  DISALLOW_COPY_AND_ASSIGN(AudioChecksum);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AudioChecksum);
 };
 
 }  // namespace test

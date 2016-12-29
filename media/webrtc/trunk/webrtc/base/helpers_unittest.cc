@@ -43,16 +43,23 @@ TEST_F(RandomTest, TestCreateRandomString) {
   EXPECT_EQ(256U, random2.size());
 }
 
+TEST_F(RandomTest, TestCreateRandomUuid) {
+  std::string random = CreateRandomUuid();
+  EXPECT_EQ(36U, random.size());
+}
+
 TEST_F(RandomTest, TestCreateRandomForTest) {
   // Make sure we get the output we expect.
   SetRandomTestMode(true);
   EXPECT_EQ(2154761789U, CreateRandomId());
   EXPECT_EQ("h0ISP4S5SJKH/9EY", CreateRandomString(16));
+  EXPECT_EQ("41706e92-cdd3-46d9-a22d-8ff1737ffb11", CreateRandomUuid());
 
   // Reset and make sure we get the same output.
   SetRandomTestMode(true);
   EXPECT_EQ(2154761789U, CreateRandomId());
   EXPECT_EQ("h0ISP4S5SJKH/9EY", CreateRandomString(16));
+  EXPECT_EQ("41706e92-cdd3-46d9-a22d-8ff1737ffb11", CreateRandomUuid());
 
   // Test different character sets.
   SetRandomTestMode(true);

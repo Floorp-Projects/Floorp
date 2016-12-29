@@ -20,7 +20,7 @@ class CroppedDesktopFrame : public DesktopFrame {
  private:
   rtc::scoped_ptr<DesktopFrame> frame_;
 
-  DISALLOW_COPY_AND_ASSIGN(CroppedDesktopFrame);
+  RTC_DISALLOW_COPY_AND_ASSIGN(CroppedDesktopFrame);
 };
 
 DesktopFrame*

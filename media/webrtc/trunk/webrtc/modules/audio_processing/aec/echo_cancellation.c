@@ -11,7 +11,7 @@
 /*
  * Contains the API functions for the AEC.
  */
-#include "webrtc/modules/audio_processing/aec/include/echo_cancellation.h"
+#include "webrtc/modules/audio_processing/aec/echo_cancellation.h"
 
 #include <math.h>
 #ifdef WEBRTC_AEC_DEBUG_DUMP
@@ -261,7 +261,7 @@ int32_t WebRtcAec_Init(void* aecInst, int32_t sampFreq, int32_t scSampFreq) {
   }
 
   return 0;
-  }
+}
 
 // Returns any error that is caused when buffering the
 // far-end signal.
@@ -296,9 +296,9 @@ int32_t WebRtcAec_BufferFarend(void* aecInst,
   int32_t error_code = WebRtcAec_GetBufferFarendError(aecInst, farend,
                                                       nrOfSamples);
 
-  if (error_code != 0)
+  if (error_code != 0) {
     return error_code;
-
+  }
 
   if (aecpc->skewMode == kAecTrue && aecpc->resample == kAecTrue) {
     // Resample and get a new number of samples
@@ -318,7 +318,8 @@ int32_t WebRtcAec_BufferFarend(void* aecInst,
   // Write the time-domain data to |far_pre_buf|.
   WebRtc_WriteBuffer(aecpc->far_pre_buf, farend_ptr, newNrOfSamples);
 
-  // Transform to frequency domain if we have enough data.
+  // TODO(minyue): reduce to |PART_LEN| samples for each buffering, when
+  // WebRtcAec_BufferFarendPartition() is changed to take |PART_LEN| samples.
   while (WebRtc_available_read(aecpc->far_pre_buf) >= PART_LEN2) {
     // We have enough data to pass to the FFT, hence read PART_LEN2 samples.
     {
@@ -326,10 +327,6 @@ int32_t WebRtcAec_BufferFarend(void* aecInst,
       float tmp[PART_LEN2];
       WebRtc_ReadBuffer(aecpc->far_pre_buf, (void**)&ptmp, tmp, PART_LEN2);
       WebRtcAec_BufferFarendPartition(aecpc->aec, ptmp);
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-      WebRtc_WriteBuffer(
-          WebRtcAec_far_time_buf(aecpc->aec), &ptmp[PART_LEN], 1);
-#endif
     }
 
     // Rewind |far_pre_buf| PART_LEN samples for overlap before continuing.
@@ -710,7 +707,7 @@ static int ProcessNormal(Aec* aecpc,
     }
   } else {
     // AEC is enabled.
-      EstBufDelayNormal(aecpc);
+    EstBufDelayNormal(aecpc);
 
     // Call the AEC.
     // TODO(bjornv): Re-structure such that we don't have to pass
@@ -968,3 +965,4 @@ OpenDebugFiles(Aec* aecpc,
 }
 
 #endif
+

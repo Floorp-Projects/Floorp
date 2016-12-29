@@ -99,7 +99,7 @@ TEST_F(CngTest, CngInitFail) {
 
 TEST_F(CngTest, CngEncode) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create encoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
@@ -151,7 +151,7 @@ TEST_F(CngTest, CngEncode) {
 // Encode Cng with too long input vector.
 TEST_F(CngTest, CngEncodeTooLong) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create and init encoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
@@ -170,7 +170,7 @@ TEST_F(CngTest, CngEncodeTooLong) {
 // Call encode without calling init.
 TEST_F(CngTest, CngEncodeNoInit) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create encoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
@@ -187,14 +187,14 @@ TEST_F(CngTest, CngEncodeNoInit) {
 // Update SID parameters, for both 9 and 16 parameters.
 TEST_F(CngTest, CngUpdateSid) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create and initialize encoder and decoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
   EXPECT_EQ(0, WebRtcCng_CreateDec(&cng_dec_inst_));
   EXPECT_EQ(0, WebRtcCng_InitEnc(cng_enc_inst_, 16000, kSidNormalIntervalUpdate,
                                  kCNGNumParamsNormal));
-  EXPECT_EQ(0, WebRtcCng_InitDec(cng_dec_inst_));
+  WebRtcCng_InitDec(cng_dec_inst_);
 
   // Run normal Encode and UpdateSid.
   EXPECT_EQ(kCNGNumParamsNormal + 1, WebRtcCng_Encode(
@@ -205,7 +205,7 @@ TEST_F(CngTest, CngUpdateSid) {
   // Reinit with new length.
   EXPECT_EQ(0, WebRtcCng_InitEnc(cng_enc_inst_, 16000, kSidNormalIntervalUpdate,
                                  kCNGNumParamsHigh));
-  EXPECT_EQ(0, WebRtcCng_InitDec(cng_dec_inst_));
+  WebRtcCng_InitDec(cng_dec_inst_);
 
   // Expect 0 because of unstable parameters after switching length.
   EXPECT_EQ(0, WebRtcCng_Encode(cng_enc_inst_, speech_data_, 160, sid_data,
@@ -224,7 +224,7 @@ TEST_F(CngTest, CngUpdateSid) {
 // Update SID parameters, with wrong parameters or without calling decode.
 TEST_F(CngTest, CngUpdateSidErroneous) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create encoder and decoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
@@ -242,7 +242,7 @@ TEST_F(CngTest, CngUpdateSidErroneous) {
   EXPECT_EQ(6220, WebRtcCng_GetErrorCodeDec(cng_dec_inst_));
 
   // Initialize decoder.
-  EXPECT_EQ(0, WebRtcCng_InitDec(cng_dec_inst_));
+  WebRtcCng_InitDec(cng_dec_inst_);
 
   // First run with valid parameters, then with too many CNG parameters.
   // The function will operate correctly by only reading the maximum number of
@@ -261,14 +261,14 @@ TEST_F(CngTest, CngUpdateSidErroneous) {
 TEST_F(CngTest, CngGenerate) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
   int16_t out_data[640];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create and initialize encoder and decoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
   EXPECT_EQ(0, WebRtcCng_CreateDec(&cng_dec_inst_));
   EXPECT_EQ(0, WebRtcCng_InitEnc(cng_enc_inst_, 16000, kSidNormalIntervalUpdate,
                                  kCNGNumParamsNormal));
-  EXPECT_EQ(0, WebRtcCng_InitDec(cng_dec_inst_));
+  WebRtcCng_InitDec(cng_dec_inst_);
 
   // Normal Encode.
   EXPECT_EQ(kCNGNumParamsNormal + 1, WebRtcCng_Encode(
@@ -294,14 +294,14 @@ TEST_F(CngTest, CngGenerate) {
 // Test automatic SID.
 TEST_F(CngTest, CngAutoSid) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create and initialize encoder and decoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
   EXPECT_EQ(0, WebRtcCng_CreateDec(&cng_dec_inst_));
   EXPECT_EQ(0, WebRtcCng_InitEnc(cng_enc_inst_, 16000, kSidNormalIntervalUpdate,
                                  kCNGNumParamsNormal));
-  EXPECT_EQ(0, WebRtcCng_InitDec(cng_dec_inst_));
+  WebRtcCng_InitDec(cng_dec_inst_);
 
   // Normal Encode, 100 msec, where no SID data should be generated.
   for (int i = 0; i < 10; i++) {
@@ -321,14 +321,14 @@ TEST_F(CngTest, CngAutoSid) {
 // Test automatic SID, with very short interval.
 TEST_F(CngTest, CngAutoSidShort) {
   uint8_t sid_data[WEBRTC_CNG_MAX_LPC_ORDER + 1];
-  int16_t number_bytes;
+  size_t number_bytes;
 
   // Create and initialize encoder and decoder memory.
   EXPECT_EQ(0, WebRtcCng_CreateEnc(&cng_enc_inst_));
   EXPECT_EQ(0, WebRtcCng_CreateDec(&cng_dec_inst_));
   EXPECT_EQ(0, WebRtcCng_InitEnc(cng_enc_inst_, 16000, kSidShortIntervalUpdate,
                                  kCNGNumParamsNormal));
-  EXPECT_EQ(0, WebRtcCng_InitDec(cng_dec_inst_));
+  WebRtcCng_InitDec(cng_dec_inst_);
 
   // First call will never generate SID, unless forced to.
   EXPECT_EQ(0, WebRtcCng_Encode(cng_enc_inst_, speech_data_, 160, sid_data,

@@ -17,14 +17,14 @@
 
 #include "webrtc/base/macutils.h"
 #include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/mac/desktop_configuration.h"
 #include "webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.h"
 #include "webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
@@ -48,13 +48,13 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
 
   void CaptureImage();
 
-  scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
+  rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
   CGWindowID window_id_;
   ScreenId screen_id_;
   Callback* callback_;
   Mode mode_;
   rtc::scoped_ptr<MouseCursor> last_cursor_;
-  scoped_refptr<FullScreenChromeWindowDetector>
+  rtc::scoped_refptr<FullScreenChromeWindowDetector>
       full_screen_chrome_window_detector_;
 };
 

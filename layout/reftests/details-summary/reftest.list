@@ -88,7 +88,7 @@ fuzzy-if(gtkWidget,1,20) == mouse-click-overflow-auto-details.html overflow-auto
 == mouse-click-fixed-summary.html open-fixed-summary.html
 == mouse-click-twice-fixed-summary.html fixed-summary.html
 == mouse-click-float-details.html open-float-details.html
-fuzzy-if(gtkWidget,1,1) == mouse-click-twice-float-details.html float-details.html #Bug 1316430
+fuzzy(1,1) == mouse-click-twice-float-details.html float-details.html # Bug 1316430
 
 # Dispatch keyboard event to summary
 == key-enter-single-summary.html open-single-summary.html

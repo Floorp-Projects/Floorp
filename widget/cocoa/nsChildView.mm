@@ -5887,67 +5887,6 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// This method is a callback typically invoked in response to a drag ending on the desktop
-// or a Findow folder window; the argument passed is a path to the drop location, to be used
-// in constructing a complete pathname for the file(s) we want to create as a result of
-// the drag.
-- (NSArray *)namesOfPromisedFilesDroppedAtDestination:(NSURL*)dropDestination
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  nsresult rv;
-
-  MOZ_LOG(sCocoaLog, LogLevel::Info, ("ChildView namesOfPromisedFilesDroppedAtDestination: entering callback for promised files\n"));
-
-  nsCOMPtr<nsIFile> targFile;
-  NS_NewLocalFile(EmptyString(), true, getter_AddRefs(targFile));
-  nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(targFile);
-  if (!macLocalFile) {
-    NS_ERROR("No Mac local file");
-    return nil;
-  }
-
-  if (!NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)dropDestination))) {
-    NS_ERROR("failed InitWithCFURL");
-    return nil;
-  }
-
-  if (!gDraggedTransferables)
-    return nil;
-
-  uint32_t transferableCount;
-  rv = gDraggedTransferables->GetLength(&transferableCount);
-  if (NS_FAILED(rv))
-    return nil;
-
-  for (uint32_t i = 0; i < transferableCount; i++) {
-    nsCOMPtr<nsITransferable> item = do_QueryElementAt(gDraggedTransferables, i);
-    if (!item) {
-      NS_ERROR("no transferable");
-      return nil;
-    }
-
-    item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile, sizeof(nsIFile*));
-
-    // now request the kFilePromiseMime data, which will invoke the data provider
-    // If successful, the returned data is a reference to the resulting file.
-    nsCOMPtr<nsISupports> fileDataPrimitive;
-    uint32_t dataSize = 0;
-    item->GetTransferData(kFilePromiseMime, getter_AddRefs(fileDataPrimitive), &dataSize);
-  }
-
-  NSPasteboard* generalPboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-  NSData* data = [generalPboard dataForType:@"application/x-moz-file-promise-dest-filename"];
-  NSString* name = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-  NSArray* rslt = [NSArray arrayWithObject:name];
-
-  [name release];
-
-  return rslt;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
 // NSPasteboardItemDataProvider
 - (void)pasteboard:(NSPasteboard*)aPasteboard
               item:(NSPasteboardItem*)aItem
@@ -6001,6 +5940,72 @@ provideDataForType:(NSString*)aType
       } else if (
         [curType isEqualToString:(NSString*)kPasteboardTypeFileURLPromise] ||
         [curType isEqualToString:NSFilenamesPboardType]) {
+
+        nsCOMPtr<nsIFile> targFile;
+        NS_NewLocalFile(EmptyString(), true, getter_AddRefs(targFile));
+        nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(targFile);
+        if (!macLocalFile) {
+          NS_ERROR("No Mac local file");
+          continue;
+        }
+
+        // get paste location from low level pasteboard
+        PasteboardRef pboardRef = NULL;
+        PasteboardCreate((CFStringRef)[aPasteboard name], &pboardRef);
+        if (!pboardRef) {
+          continue;
+        }
+
+        PasteboardSynchronize(pboardRef);
+        CFURLRef urlRef = NULL;
+        PasteboardCopyPasteLocation(pboardRef, &urlRef);
+        if (!urlRef) {
+          CFRelease(pboardRef);
+          continue;
+        }
+
+        if (!NS_SUCCEEDED(macLocalFile->InitWithCFURL(urlRef))) {
+          NS_ERROR("failed InitWithCFURL");
+          CFRelease(urlRef);
+          CFRelease(pboardRef);
+          continue;
+        }
+
+        if (!gDraggedTransferables) {
+          CFRelease(urlRef);
+          CFRelease(pboardRef);
+          continue;
+        }
+
+        uint32_t transferableCount;
+        nsresult rv = gDraggedTransferables->GetLength(&transferableCount);
+        if (NS_FAILED(rv)) {
+          CFRelease(urlRef);
+          CFRelease(pboardRef);
+          continue;
+        }
+
+        for (uint32_t i = 0; i < transferableCount; i++) {
+          nsCOMPtr<nsITransferable> item =
+            do_QueryElementAt(gDraggedTransferables, i);
+          if (!item) {
+            NS_ERROR("no transferable");
+            continue;
+          }
+
+          item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile,
+                                sizeof(nsIFile*));
+
+          // Now request the kFilePromiseMime data, which will invoke the data
+          // provider. If successful, the file will have been created.
+          nsCOMPtr<nsISupports> fileDataPrimitive;
+          uint32_t dataSize = 0;
+          item->GetTransferData(kFilePromiseMime,
+                                getter_AddRefs(fileDataPrimitive), &dataSize);
+        }
+        CFRelease(urlRef);
+        CFRelease(pboardRef);
+
         [aPasteboard setPropertyList:[pasteboardOutputDict valueForKey:curType]
                              forType:curType];
       }

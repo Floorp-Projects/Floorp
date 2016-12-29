@@ -12,9 +12,13 @@
 
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/defines.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
+
+void TimestampScaler::Reset() {
+  first_packet_received_ = false;
+}
 
 void TimestampScaler::ToInternal(Packet* packet) {
   if (!packet) {
@@ -40,28 +44,19 @@ uint32_t TimestampScaler::ToInternal(uint32_t external_timestamp,
     return external_timestamp;
   }
   switch (info->codec_type) {
-    case kDecoderG722:
-    case kDecoderG722_2ch: {
+    case NetEqDecoder::kDecoderG722:
+    case NetEqDecoder::kDecoderG722_2ch: {
       // Use timestamp scaling with factor 2 (two output samples per RTP
       // timestamp).
       numerator_ = 2;
       denominator_ = 1;
       break;
     }
-    case kDecoderISACfb:
-    case kDecoderCNGswb48kHz: {
-      // Use timestamp scaling with factor 2/3 (32 kHz sample rate, but RTP
-      // timestamps run on 48 kHz).
-      // TODO(tlegrand): Remove scaling for kDecoderCNGswb48kHz once ACM has
-      // full 48 kHz support.
-      numerator_ = 2;
-      denominator_ = 3;
-      break;
-    }
-    case kDecoderAVT:
-    case kDecoderCNGnb:
-    case kDecoderCNGwb:
-    case kDecoderCNGswb32kHz: {
+    case NetEqDecoder::kDecoderAVT:
+    case NetEqDecoder::kDecoderCNGnb:
+    case NetEqDecoder::kDecoderCNGwb:
+    case NetEqDecoder::kDecoderCNGswb32kHz:
+    case NetEqDecoder::kDecoderCNGswb48kHz: {
       // Do not change the timestamp scaling settings for DTMF or CNG.
       break;
     }
@@ -84,8 +79,6 @@ uint32_t TimestampScaler::ToInternal(uint32_t external_timestamp,
     assert(denominator_ > 0);  // Should not be possible.
     external_ref_ = external_timestamp;
     internal_ref_ += (external_diff * numerator_) / denominator_;
-    LOG(LS_VERBOSE) << "Converting timestamp: " << external_timestamp <<
-        " -> " << internal_ref_;
     return internal_ref_;
   } else {
     // No scaling.

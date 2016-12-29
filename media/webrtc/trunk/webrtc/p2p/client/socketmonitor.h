@@ -53,7 +53,7 @@ public:
   rtc::Thread* worker_thread_;
   rtc::Thread* monitoring_thread_;
   rtc::CriticalSection crit_;
-  uint32 rate_;
+  uint32_t rate_;
   bool monitoring_;
 };
 

@@ -24,6 +24,62 @@ class Thread;
 
 namespace cricket {
 
+class TestUDPPort : public UDPPort {
+ public:
+  static TestUDPPort* Create(rtc::Thread* thread,
+                             rtc::PacketSocketFactory* factory,
+                             rtc::Network* network,
+                             const rtc::IPAddress& ip,
+                             uint16_t min_port,
+                             uint16_t max_port,
+                             const std::string& username,
+                             const std::string& password,
+                             const std::string& origin,
+                             bool emit_localhost_for_anyaddress) {
+    TestUDPPort* port = new TestUDPPort(thread, factory, network, ip, min_port,
+                                        max_port, username, password, origin,
+                                        emit_localhost_for_anyaddress);
+    if (!port->Init()) {
+      delete port;
+      port = nullptr;
+    }
+    return port;
+  }
+  void SendBindingResponse(StunMessage* request,
+                           const rtc::SocketAddress& addr) override {
+    UDPPort::SendBindingResponse(request, addr);
+    sent_binding_response_ = true;
+  }
+  bool sent_binding_response() { return sent_binding_response_; }
+  void set_sent_binding_response(bool response) {
+    sent_binding_response_ = response;
+  }
+
+ protected:
+  TestUDPPort(rtc::Thread* thread,
+              rtc::PacketSocketFactory* factory,
+              rtc::Network* network,
+              const rtc::IPAddress& ip,
+              uint16_t min_port,
+              uint16_t max_port,
+              const std::string& username,
+              const std::string& password,
+              const std::string& origin,
+              bool emit_localhost_for_anyaddress)
+      : UDPPort(thread,
+                factory,
+                network,
+                ip,
+                min_port,
+                max_port,
+                username,
+                password,
+                origin,
+                emit_localhost_for_anyaddress) {}
+
+  bool sent_binding_response_ = false;
+};
+
 class FakePortAllocatorSession : public PortAllocatorSession {
  public:
   FakePortAllocatorSession(rtc::Thread* worker_thread,
@@ -33,7 +89,7 @@ class FakePortAllocatorSession : public PortAllocatorSession {
                            const std::string& ice_ufrag,
                            const std::string& ice_pwd)
       : PortAllocatorSession(content_name, component, ice_ufrag, ice_pwd,
-                             cricket::PORTALLOCATOR_ENABLE_SHARED_UFRAG),
+                             cricket::kDefaultPortAllocatorFlags),
         worker_thread_(worker_thread),
         factory_(factory),
         network_("network", "unittest",
@@ -45,15 +101,9 @@ class FakePortAllocatorSession : public PortAllocatorSession {
 
   virtual void StartGettingPorts() {
     if (!port_) {
-      port_.reset(cricket::UDPPort::Create(worker_thread_,
-                                           factory_,
-                                           &network_,
-                                           network_.GetBestIP(),
-                                           0,
-                                           0,
-                                           username(),
-                                           password(),
-                                           std::string()));
+      port_.reset(TestUDPPort::Create(worker_thread_, factory_, &network_,
+                                      network_.GetBestIP(), 0, 0, username(),
+                                      password(), std::string(), false));
       AddPort(port_.get());
     }
     ++port_config_count_;
@@ -62,6 +112,8 @@ class FakePortAllocatorSession : public PortAllocatorSession {
 
   virtual void StopGettingPorts() { running_ = false; }
   virtual bool IsGettingPorts() { return running_; }
+  virtual void ClearGettingPorts() {}
+
   int port_config_count() { return port_config_count_; }
 
   void AddPort(cricket::Port* port) {
@@ -98,11 +150,26 @@ class FakePortAllocator : public cricket::PortAllocator {
     }
   }
 
+  void SetIceServers(
+      const ServerAddresses& stun_servers,
+      const std::vector<RelayServerConfig>& turn_servers) override {
+    stun_servers_ = stun_servers;
+    turn_servers_ = turn_servers;
+  }
+
+  void SetNetworkIgnoreMask(int network_ignore_mask) override {}
+
+  const ServerAddresses& stun_servers() const { return stun_servers_; }
+
+  const std::vector<RelayServerConfig>& turn_servers() const {
+    return turn_servers_;
+  }
+
   virtual cricket::PortAllocatorSession* CreateSessionInternal(
       const std::string& content_name,
       int component,
       const std::string& ice_ufrag,
-      const std::string& ice_pwd) {
+      const std::string& ice_pwd) override {
     return new FakePortAllocatorSession(
         worker_thread_, factory_, content_name, component, ice_ufrag, ice_pwd);
   }
@@ -111,6 +178,8 @@ class FakePortAllocator : public cricket::PortAllocator {
   rtc::Thread* worker_thread_;
   rtc::PacketSocketFactory* factory_;
   rtc::scoped_ptr<rtc::BasicPacketSocketFactory> owned_factory_;
+  ServerAddresses stun_servers_;
+  std::vector<RelayServerConfig> turn_servers_;
 };
 
 }  // namespace cricket

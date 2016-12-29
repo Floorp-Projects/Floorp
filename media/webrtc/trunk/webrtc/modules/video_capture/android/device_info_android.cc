@@ -15,11 +15,11 @@
 #include <sstream>
 #include <vector>
 
-#include "webrtc/modules/utility/interface/helpers_android.h"
+#include "webrtc/modules/utility/include/helpers_android.h"
 #include "webrtc/modules/video_capture/android/video_capture_android.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #include "AndroidJNIWrapper.h"
 
@@ -35,8 +35,9 @@ typedef std::vector<IntPair> IntPairs;
 static std::string IntPairsToString(const IntPairs& pairs, char separator) {
   std::stringstream stream;
   for (size_t i = 0; i < pairs.size(); ++i) {
-    if (i > 0)
+    if (i > 0) {
       stream << ", ";
+    }
     stream << "(" << pairs[i].first << separator << pairs[i].second << ")";
   }
   return stream.str();
@@ -64,7 +65,7 @@ struct AndroidCameraInfo {
 // Camera info; populated during DeviceInfoAndroid::Refresh()
 static std::vector<AndroidCameraInfo>* g_camera_info = NULL;
 
-static JavaVM* g_jvm = NULL;
+static JavaVM* g_jvm_dev_info = NULL;
 
 // Set |*index| to the index of |name| in g_camera_info or return false if no
 // match found.
@@ -82,8 +83,9 @@ static bool FindCameraIndexByName(const std::string& name, size_t* index) {
 // is found.
 static AndroidCameraInfo* FindCameraInfoByName(const std::string& name) {
   size_t index = 0;
-  if (FindCameraIndexByName(name, &index))
+  if (FindCameraIndexByName(name, &index)) {
     return &g_camera_info->at(index);
+  }
   return NULL;
 }
 
@@ -95,18 +97,20 @@ void DeviceInfoAndroid::Initialize(JavaVM* javaVM) {
   // prevent this.  Once that code is made to only
   // VideoEngine::SetAndroidObjects() once per process, this can turn into an
   // assert.
-  if (g_camera_info)
-    return;
-
-  g_jvm = javaVM;
-}
-
-void DeviceInfoAndroid::BuildDeviceList() {
-  if (!g_jvm) {
+  if (g_camera_info) {
     return;
   }
 
-  AttachThreadScoped ats(g_jvm);
+  g_jvm_dev_info = javaVM;
+  BuildDeviceList();
+}
+
+void DeviceInfoAndroid::BuildDeviceList() {
+  if (!g_jvm_dev_info) {
+    return;
+  }
+
+  AttachThreadScoped ats(g_jvm_dev_info);
   JNIEnv* jni = ats.env();
 
   g_camera_info = new std::vector<AndroidCameraInfo>();
@@ -233,8 +237,9 @@ int32_t DeviceInfoAndroid::GetDeviceName(
     char* /*productUniqueIdUTF8*/,
     uint32_t /*productUniqueIdUTF8Length*/,
     pid_t* /*pid*/) {
-  if (deviceNumber >= g_camera_info->size())
+  if (deviceNumber >= g_camera_info->size()) {
     return -1;
+  }
   const AndroidCameraInfo& info = g_camera_info->at(deviceNumber);
   if (info.name.length() + 1 > deviceNameLength ||
       info.name.length() + 1 > deviceUniqueIdUTF8Length) {
@@ -249,8 +254,9 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
     const char* deviceUniqueIdUTF8) {
   _captureCapabilities.clear();
   const AndroidCameraInfo* info = FindCameraInfoByName(deviceUniqueIdUTF8);
-  if (info == NULL)
+  if (info == NULL) {
     return -1;
+  }
 
   for (size_t i = 0; i < info->resolutions.size(); ++i) {
     for (size_t j = 0; j < info->mfpsRanges.size(); ++j) {
@@ -283,8 +289,9 @@ void DeviceInfoAndroid::GetMFpsRange(const char* deviceUniqueIdUTF8,
                                      int max_fps_to_match,
                                      int* min_mfps, int* max_mfps) {
   const AndroidCameraInfo* info = FindCameraInfoByName(deviceUniqueIdUTF8);
-  if (info == NULL)
+  if (info == NULL) {
     return;
+  }
   int desired_mfps = max_fps_to_match * 1000;
   int best_diff_mfps = 0;
   LOG(LS_INFO) << "Search for best target mfps " << desired_mfps;

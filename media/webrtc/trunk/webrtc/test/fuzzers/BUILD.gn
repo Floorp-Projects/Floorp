@@ -1,0 +1,115 @@
+# Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("//build/config/features.gni")
+import("webrtc_fuzzer.gni")
+
+static_library("webrtc_fuzzer_main") {
+  public_configs = [ "../..:common_inherited_config" ]
+  sources = [
+    "webrtc_fuzzer_main.cc",
+  ]
+  deps = [
+    "../../system_wrappers:field_trial_default",
+    "../../system_wrappers:metrics_default",
+    "//testing/libfuzzer:libfuzzer_main",
+  ]
+}
+
+webrtc_fuzzer_test("h264_depacketizer_fuzzer") {
+  sources = [
+    "h264_depacketizer_fuzzer.cc",
+  ]
+  deps = [
+    "../../modules/rtp_rtcp",
+  ]
+}
+
+webrtc_fuzzer_test("vp8_depacketizer_fuzzer") {
+  sources = [
+    "vp8_depacketizer_fuzzer.cc",
+  ]
+  deps = [
+    "../../modules/rtp_rtcp",
+  ]
+}
+
+webrtc_fuzzer_test("vp9_depacketizer_fuzzer") {
+  sources = [
+    "vp9_depacketizer_fuzzer.cc",
+  ]
+  deps = [
+    "../../modules/rtp_rtcp",
+  ]
+}
+
+webrtc_fuzzer_test("vp8_qp_parser_fuzzer") {
+  sources = [
+    "vp8_qp_parser_fuzzer.cc",
+  ]
+  deps = [
+    "../../modules/video_coding/",
+  ]
+}
+
+webrtc_fuzzer_test("producer_fec_fuzzer") {
+  sources = [
+    "producer_fec_fuzzer.cc",
+  ]
+  deps = [
+    "../../modules/rtp_rtcp/",
+  ]
+}
+
+source_set("audio_decoder_fuzzer") {
+  public_configs = [ "../..:common_inherited_config" ]
+  sources = [
+    "audio_decoder_fuzzer.cc",
+    "audio_decoder_fuzzer.h",
+  ]
+}
+
+webrtc_fuzzer_test("audio_decoder_ilbc_fuzzer") {
+  sources = [
+    "audio_decoder_ilbc_fuzzer.cc",
+  ]
+  deps = [
+    ":audio_decoder_fuzzer",
+    "../../modules/audio_coding:ilbc",
+  ]
+}
+
+webrtc_fuzzer_test("audio_decoder_isac_fuzzer") {
+  sources = [
+    "audio_decoder_isac_fuzzer.cc",
+  ]
+  deps = [
+    ":audio_decoder_fuzzer",
+    "../../modules/audio_coding:isac",
+  ]
+}
+
+webrtc_fuzzer_test("audio_decoder_isacfix_fuzzer") {
+  sources = [
+    "audio_decoder_isacfix_fuzzer.cc",
+  ]
+  deps = [
+    ":audio_decoder_fuzzer",
+    "../../modules/audio_coding:isac_fix",
+  ]
+}
+
+webrtc_fuzzer_test("audio_decoder_opus_fuzzer") {
+  sources = [
+    "audio_decoder_opus_fuzzer.cc",
+  ]
+  deps = [
+    ":audio_decoder_fuzzer",
+    "../../modules/audio_coding:webrtc_opus",
+  ]
+}

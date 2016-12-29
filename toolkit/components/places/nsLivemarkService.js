@@ -590,8 +590,6 @@ Livemark.prototype = {
     let nodes = [];
     let now = Date.now() * 1000;
     for (let child of this.children) {
-      // Workaround for bug 449811.
-      let localChild = child;
       let node = {
         // The QueryInterface is needed cause aContainerNode is a jsval.
         // This is required to avoid issues with scriptable wrappers that would
@@ -603,13 +601,13 @@ Livemark.prototype = {
           return this.parent.parentResult;
         },
         get uri() {
-          return localChild.uri.spec;
+          return child.uri.spec;
         },
         get type() {
           return Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
         },
         get title() {
-          return localChild.title;
+          return child.title;
         },
         get accessCount() {
           return Number(livemark._isURIVisited(NetUtil.newURI(this.uri)));
@@ -681,12 +679,9 @@ Livemark.prototype = {
       if (this._nodes.has(container)) {
         let nodes = this._nodes.get(container);
         for (let node of nodes) {
-          // Workaround for bug 449811.
-          let localObserver = observer;
-          let localNode = node;
           if (!aURI || node.uri == aURI.spec) {
             Services.tm.mainThread.dispatch(() => {
-              localObserver.nodeHistoryDetailsChanged(localNode, 0, aVisitedStatus);
+              observer.nodeHistoryDetailsChanged(node, 0, aVisitedStatus);
             }, Ci.nsIThread.DISPATCH_NORMAL);
           }
         }

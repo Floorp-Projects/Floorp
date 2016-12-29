@@ -49,7 +49,7 @@ class ConstantPcmPacketSource : public PacketSource {
   uint32_t timestamp_;
   const uint32_t payload_ssrc_;
 
-  DISALLOW_COPY_AND_ASSIGN(ConstantPcmPacketSource);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ConstantPcmPacketSource);
 };
 
 }  // namespace test

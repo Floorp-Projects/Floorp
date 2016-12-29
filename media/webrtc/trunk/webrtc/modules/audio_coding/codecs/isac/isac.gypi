@@ -9,31 +9,32 @@
 {
   'targets': [
     {
-      'target_name': 'iSAC',
+      'target_name': 'isac',
       'type': 'static_library',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         'audio_decoder_interface',
         'audio_encoder_interface',
+        'isac_common',
       ],
       'include_dirs': [
-        'main/interface',
+        'main/include',
         '<(webrtc_root)',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
-          'main/interface',
+          'main/include',
           '<(webrtc_root)',
         ],
       },
       'sources': [
-        'audio_encoder_isac_t.h',
-        'audio_encoder_isac_t_impl.h',
-        'main/interface/audio_encoder_isac.h',
-        'main/interface/isac.h',
+        'main/include/audio_decoder_isac.h',
+        'main/include/audio_encoder_isac.h',
+        'main/include/isac.h',
         'main/source/arith_routines.c',
         'main/source/arith_routines_hist.c',
         'main/source/arith_routines_logist.c',
+        'main/source/audio_decoder_isac.cc',
         'main/source/audio_encoder_isac.cc',
         'main/source/bandwidth_estimator.c',
         'main/source/crc.c',
@@ -47,6 +48,7 @@
         'main/source/filterbank_tables.c',
         'main/source/intialize.c',
         'main/source/isac.c',
+        'main/source/isac_float_type.h',
         'main/source/filterbanks.c',
         'main/source/pitch_lag_tables.c',
         'main/source/lattice.c',
