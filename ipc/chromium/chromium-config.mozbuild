@@ -12,7 +12,6 @@ LOCAL_INCLUDES += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
-        'psapi',
         'shell32',
         'dbghelp',
     ]
