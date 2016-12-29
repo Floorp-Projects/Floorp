@@ -8,11 +8,14 @@ import imghdr
 import struct
 import urllib
 
-from unittest import skip
-
 from marionette_driver import By
 from marionette_driver.errors import JavascriptException, NoSuchWindowException
-from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+from marionette_harness import (
+    MarionetteTestCase,
+    skip,
+    skip_if_mobile,
+    WindowManagerMixin,
+)
 
 
 def inline(doc, mime="text/html;charset=utf-8"):
@@ -149,7 +152,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         screenshot_chrome = self.marionette.screenshot()
         self.assertNotEqual(screenshot_content, screenshot_chrome)
 
-    @skip_if_mobile
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_element(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -212,7 +215,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.close_chrome_window()
         self.marionette.switch_to_window(self.start_window)
 
-    @skip("https://bugzilla.mozilla.org/show_bug.cgi?id=1213875")
+    @skip("Bug 1213875")
     def test_capture_scroll_element_into_view(self):
         pass
 
@@ -237,7 +240,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         with self.assertRaises(ValueError):
             self.marionette.screenshot(format="cheese")
 
-    @skip_if_mobile
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_highlight_elements(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -293,7 +296,7 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
             return [document.body.scrollWidth, document.body.scrollHeight]
             """))
 
-    @skip_if_mobile  # Needs application independent method to open a new tab
+    @skip_if_mobile("Needs application independent method to open a new tab")
     def test_capture_tab_already_closed(self):
         tab = self.open_tab()
         self.marionette.switch_to_window(tab)
@@ -310,7 +313,7 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertEqual(self.scale(self.get_element_dimensions(el)),
                          self.get_image_dimensions(screenshot))
 
-    @skip("https://bugzilla.mozilla.org/show_bug.cgi?id=1213875")
+    @skip("Bug 1213875")
     def test_capture_element_scrolled_into_view(self):
         self.marionette.navigate(long)
         el = self.marionette.find_element(By.TAG_NAME, "p")
