@@ -216,8 +216,10 @@ function* testViewportResize(ui, selector, moveBy,
     `The y move of ${selector} is as expected`);
 }
 
-function openDeviceModal({toolWindow}) {
+function openDeviceModal({ toolWindow }) {
   let { document } = toolWindow;
+  let React = toolWindow.require("devtools/client/shared/vendor/react");
+  let { Simulate } = React.addons.TestUtils;
   let select = document.querySelector(".viewport-device-selector");
   let modal = document.querySelector("#device-modal-wrapper");
 
@@ -226,16 +228,8 @@ function openDeviceModal({toolWindow}) {
     "The device modal is closed by default.");
 
   info("Opening device modal through device selector.");
-
-  let event = new toolWindow.UIEvent("change", {
-    view: toolWindow,
-    bubbles: true,
-    cancelable: true
-  });
-
   select.value = OPEN_DEVICE_MODAL_VALUE;
-  select.dispatchEvent(event);
-
+  Simulate.change(select);
   ok(modal.classList.contains("opened") && !modal.classList.contains("closed"),
     "The device modal is displayed.");
 }
