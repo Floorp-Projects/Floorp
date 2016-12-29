@@ -540,13 +540,15 @@ JitRuntime::generateBailoutHandler(JSContext* cx)
     MacroAssembler masm(cx);
     GenerateBailoutThunk(cx, masm, NO_FRAME_SIZE_CLASS_ID);
 
+    Linker linker(masm);
+    AutoFlushICache afc("BailoutHandler");
+    JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
+
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "BailoutHandler");
 #endif
 
-    Linker linker(masm);
-    AutoFlushICache afc("BailoutHandler");
-    return linker.newCode<NoGC>(cx, OTHER_CODE);
+    return code;
 }
 
 JitCode*
