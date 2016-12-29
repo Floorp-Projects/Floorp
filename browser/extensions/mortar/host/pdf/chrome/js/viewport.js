@@ -419,6 +419,12 @@ class Viewport {
     });
   }
 
+  save() {
+    this._doAction({
+      type: 'save'
+    });
+  }
+
   // A handler for delivering messages to runtime.
   registerActionHandler(handler) {
     if (typeof handler === 'function') {
