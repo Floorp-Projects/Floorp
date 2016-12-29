@@ -10,11 +10,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-dictionary FoopySticks {
-  required long x;
-  required long y;
-};
-    
 [Constructor,
  Exposed=(Window,Worker,System)]
 interface TextEncoder {
@@ -22,6 +17,4 @@ interface TextEncoder {
   readonly attribute DOMString encoding;
   [NewObject]
   Uint8Array encode(optional USVString input = "");
-
-  static void foo();
 };
