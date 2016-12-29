@@ -464,11 +464,14 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
   popup.addEventListener("popupshown", onPopupShown);
 
   info("wait for the context menu to open");
-  button.scrollIntoView();
-  let eventDetails = {type: "contextmenu", button: 2};
-  EventUtils.synthesizeMouse(button, 5, 2, eventDetails,
-                             button.ownerDocument.defaultView);
+  synthesizeContextMenuEvent(button);
   return deferred.promise;
+}
+
+function synthesizeContextMenuEvent(el) {
+  el.scrollIntoView();
+  let eventDetails = {type: "contextmenu", button: 2};
+  EventUtils.synthesizeMouse(el, 5, 2, eventDetails, el.ownerDocument.defaultView);
 }
 
 /**

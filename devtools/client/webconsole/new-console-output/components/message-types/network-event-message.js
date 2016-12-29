@@ -57,6 +57,7 @@ function NetworkEventMessage(props) {
     timeStamp,
     messageBody,
     serviceContainer,
+    request,
   };
   return Message(childProps);
 }
