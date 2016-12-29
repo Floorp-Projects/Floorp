@@ -75,8 +75,27 @@ WebGLContext::ValidateBufferSelection(const char* funcName, GLenum target)
         return nullptr;
     }
 
-    if (!ValidateForNonTransformFeedback(funcName, buffer.get()))
-        return nullptr;
+    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER) {
+        if (mBoundTransformFeedback->IsActiveAndNotPaused()) {
+            ErrorInvalidOperation("%s: Cannot select TRANSFORM_FEEDBACK_BUFFER when"
+                                  " transform feedback is active and unpaused.",
+                                  funcName);
+            return nullptr;
+        }
+        if (buffer->IsBoundForNonTF()) {
+            ErrorInvalidOperation("%s: Specified WebGLBuffer is currently bound for"
+                                  " non-transform-feedback.",
+                                  funcName);
+            return nullptr;
+        }
+    } else {
+        if (buffer->IsBoundForTF()) {
+            ErrorInvalidOperation("%s: Specified WebGLBuffer is currently bound for"
+                                  " transform feedback.",
+                                  funcName);
+            return nullptr;
+        }
+    }
 
     return buffer.get();
 }
@@ -132,7 +151,7 @@ WebGLContext::BindBuffer(GLenum target, WebGLBuffer* buffer)
     gl->MakeCurrent();
     gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
 
-    *slot = buffer;
+    WebGLBuffer::SetSlot(target, buffer, slot);
     if (buffer) {
         buffer->SetContentAfterBind(target);
     }
@@ -201,22 +220,13 @@ WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
 
     ////
 
-    *genericBinding = buffer;
-    indexedBinding->mBufferBinding = buffer;
+    WebGLBuffer::SetSlot(target, buffer, genericBinding);
+    WebGLBuffer::SetSlot(target, buffer, &indexedBinding->mBufferBinding);
     indexedBinding->mRangeStart = 0;
     indexedBinding->mRangeSize = 0;
 
     if (buffer) {
         buffer->SetContentAfterBind(target);
-    }
-
-    switch (target) {
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
-        mBoundTransformFeedback->OnIndexedBindingsChanged();
-        break;
-    case LOCAL_GL_UNIFORM:
-        OnUBIndexedBindingsChanged();
-        break;
     }
 }
 
@@ -296,22 +306,13 @@ WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
 
     ////
 
-    *genericBinding = buffer;
-    indexedBinding->mBufferBinding = buffer;
+    WebGLBuffer::SetSlot(target, buffer, genericBinding);
+    WebGLBuffer::SetSlot(target, buffer, &indexedBinding->mBufferBinding);
     indexedBinding->mRangeStart = offset;
     indexedBinding->mRangeSize = size;
 
     if (buffer) {
         buffer->SetContentAfterBind(target);
-    }
-
-    switch (target) {
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
-        mBoundTransformFeedback->OnIndexedBindingsChanged();
-        break;
-    case LOCAL_GL_UNIFORM:
-        OnUBIndexedBindingsChanged();
-        break;
     }
 }
 
@@ -477,37 +478,39 @@ WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
 
     ////
 
-    const auto fnClearIfBuffer = [&](WebGLRefPtr<WebGLBuffer>& bindPoint) {
+    const auto fnClearIfBuffer = [&](GLenum target, WebGLRefPtr<WebGLBuffer>& bindPoint) {
         if (bindPoint == buffer) {
-            bindPoint = nullptr;
+            WebGLBuffer::SetSlot(target, nullptr, &bindPoint);
         }
     };
 
-    fnClearIfBuffer(mBoundArrayBuffer);
-    fnClearIfBuffer(mBoundVertexArray->mElementArrayBuffer);
+    fnClearIfBuffer(0, mBoundArrayBuffer);
+    fnClearIfBuffer(0, mBoundVertexArray->mElementArrayBuffer);
+
+    for (auto& cur : mBoundVertexArray->mAttribs) {
+        fnClearIfBuffer(0, cur.mBuf);
+    }
 
     // WebGL binding points
     if (IsWebGL2()) {
-        fnClearIfBuffer(mBoundCopyReadBuffer);
-        fnClearIfBuffer(mBoundCopyWriteBuffer);
-        fnClearIfBuffer(mBoundPixelPackBuffer);
-        fnClearIfBuffer(mBoundPixelUnpackBuffer);
-        fnClearIfBuffer(mBoundUniformBuffer);
-        fnClearIfBuffer(mBoundTransformFeedback->mGenericBufferBinding);
+        fnClearIfBuffer(0, mBoundCopyReadBuffer);
+        fnClearIfBuffer(0, mBoundCopyWriteBuffer);
+        fnClearIfBuffer(0, mBoundPixelPackBuffer);
+        fnClearIfBuffer(0, mBoundPixelUnpackBuffer);
+        fnClearIfBuffer(0, mBoundUniformBuffer);
+        fnClearIfBuffer(LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER,
+                        mBoundTransformFeedback->mGenericBufferBinding);
 
         if (!mBoundTransformFeedback->mIsActive) {
             for (auto& binding : mBoundTransformFeedback->mIndexedBindings) {
-                fnClearIfBuffer(binding.mBufferBinding);
+                fnClearIfBuffer(LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER,
+                                binding.mBufferBinding);
             }
         }
 
         for (auto& binding : mIndexedUniformBufferBindings) {
-            fnClearIfBuffer(binding.mBufferBinding);
+            fnClearIfBuffer(0, binding.mBufferBinding);
         }
-    }
-
-    for (auto& cur : mBoundVertexArray->mAttribs) {
-        fnClearIfBuffer(cur.mBuf);
     }
 
     ////
