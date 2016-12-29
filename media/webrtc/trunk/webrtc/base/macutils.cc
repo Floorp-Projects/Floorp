@@ -200,10 +200,10 @@ bool RunAppleScript(const std::string& script) {
     AECreateDesc(typeNull, NULL, 0, &result_data);
     OSAScriptError(component, kOSAErrorMessage, typeChar, &result_data);
     int len = AEGetDescDataSize(&result_data);
-    char* data = (char*) malloc(len);
+    char* data = (char*)malloc(len);
     if (data != NULL) {
       err = AEGetDescData(&result_data, data, len);
-      LOG(LS_ERROR) << "Script error: " << data;
+      LOG(LS_ERROR) << "Script error: " << std::string(data, len);
     }
     AEDisposeDesc(&script_desc);
     AEDisposeDesc(&result_data);

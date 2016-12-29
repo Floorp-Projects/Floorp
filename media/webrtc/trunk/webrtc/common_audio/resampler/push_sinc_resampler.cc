@@ -17,7 +17,8 @@
 
 namespace webrtc {
 
-PushSincResampler::PushSincResampler(int source_frames, int destination_frames)
+PushSincResampler::PushSincResampler(size_t source_frames,
+                                     size_t destination_frames)
     : resampler_(new SincResampler(source_frames * 1.0 / destination_frames,
                                    source_frames,
                                    this)),
@@ -30,10 +31,10 @@ PushSincResampler::PushSincResampler(int source_frames, int destination_frames)
 PushSincResampler::~PushSincResampler() {
 }
 
-int PushSincResampler::Resample(const int16_t* source,
-                                int source_length,
-                                int16_t* destination,
-                                int destination_capacity) {
+size_t PushSincResampler::Resample(const int16_t* source,
+                                   size_t source_length,
+                                   int16_t* destination,
+                                   size_t destination_capacity) {
   if (!float_buffer_.get())
     float_buffer_.reset(new float[destination_frames_]);
 
@@ -45,12 +46,12 @@ int PushSincResampler::Resample(const int16_t* source,
   return destination_frames_;
 }
 
-int PushSincResampler::Resample(const float* source,
-                                int source_length,
-                                float* destination,
-                                int destination_capacity) {
-  CHECK_EQ(source_length, resampler_->request_frames());
-  CHECK_GE(destination_capacity, destination_frames_);
+size_t PushSincResampler::Resample(const float* source,
+                                   size_t source_length,
+                                   float* destination,
+                                   size_t destination_capacity) {
+  RTC_CHECK_EQ(source_length, resampler_->request_frames());
+  RTC_CHECK_GE(destination_capacity, destination_frames_);
   // Cache the source pointer. Calling Resample() will immediately trigger
   // the Run() callback whereupon we provide the cached value.
   source_ptr_ = source;
@@ -77,10 +78,10 @@ int PushSincResampler::Resample(const float* source,
   return destination_frames_;
 }
 
-void PushSincResampler::Run(int frames, float* destination) {
+void PushSincResampler::Run(size_t frames, float* destination) {
   // Ensure we are only asked for the available samples. This would fail if
   // Run() was triggered more than once per Resample() call.
-  CHECK_EQ(source_available_, frames);
+  RTC_CHECK_EQ(source_available_, frames);
 
   if (first_pass_) {
     // Provide dummy input on the first pass, the output of which will be
@@ -93,7 +94,7 @@ void PushSincResampler::Run(int frames, float* destination) {
   if (source_ptr_) {
     std::memcpy(destination, source_ptr_, frames * sizeof(*destination));
   } else {
-    for (int i = 0; i < frames; ++i)
+    for (size_t i = 0; i < frames; ++i)
       destination[i] = static_cast<float>(source_ptr_int_[i]);
   }
   source_available_ -= frames;

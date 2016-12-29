@@ -117,7 +117,7 @@ size_t ComputeHmac(MessageDigest* digest,
   }
   // Copy the key to a block-sized buffer to simplify padding.
   // If the key is longer than a block, hash it and use the result instead.
-  scoped_ptr<uint8[]> new_key(new uint8[block_len]);
+  scoped_ptr<uint8_t[]> new_key(new uint8_t[block_len]);
   if (key_len > block_len) {
     ComputeDigest(digest, key, key_len, new_key.get(), block_len);
     memset(new_key.get() + digest->Size(), 0, block_len - digest->Size());
@@ -126,13 +126,14 @@ size_t ComputeHmac(MessageDigest* digest,
     memset(new_key.get() + key_len, 0, block_len - key_len);
   }
   // Set up the padding from the key, salting appropriately for each padding.
-  scoped_ptr<uint8[]> o_pad(new uint8[block_len]), i_pad(new uint8[block_len]);
+  scoped_ptr<uint8_t[]> o_pad(new uint8_t[block_len]);
+  scoped_ptr<uint8_t[]> i_pad(new uint8_t[block_len]);
   for (size_t i = 0; i < block_len; ++i) {
     o_pad[i] = 0x5c ^ new_key[i];
     i_pad[i] = 0x36 ^ new_key[i];
   }
   // Inner hash; hash the inner padding, and then the input buffer.
-  scoped_ptr<uint8[]> inner(new uint8[digest->Size()]);
+  scoped_ptr<uint8_t[]> inner(new uint8_t[digest->Size()]);
   digest->Update(i_pad.get(), block_len);
   digest->Update(input, in_len);
   digest->Finish(inner.get(), digest->Size());

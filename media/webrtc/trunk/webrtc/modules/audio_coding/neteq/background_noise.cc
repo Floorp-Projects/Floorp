@@ -21,6 +21,9 @@
 
 namespace webrtc {
 
+// static
+const size_t BackgroundNoise::kMaxLpcOrder;
+
 BackgroundNoise::BackgroundNoise(size_t num_channels)
     : num_channels_(num_channels),
       channel_parameters_(new ChannelParameters[num_channels_]),
@@ -150,7 +153,7 @@ const int16_t* BackgroundNoise::FilterState(size_t channel) const {
 void BackgroundNoise::SetFilterState(size_t channel, const int16_t* input,
                                      size_t length) {
   assert(channel < num_channels_);
-  length = std::min(length, static_cast<size_t>(kMaxLpcOrder));
+  length = std::min(length, kMaxLpcOrder);
   memcpy(channel_parameters_[channel].filter_state, input,
          length * sizeof(int16_t));
 }
@@ -165,7 +168,7 @@ int16_t BackgroundNoise::ScaleShift(size_t channel) const {
 }
 
 int32_t BackgroundNoise::CalculateAutoCorrelation(
-    const int16_t* signal, int length, int32_t* auto_correlation) const {
+    const int16_t* signal, size_t length, int32_t* auto_correlation) const {
   int16_t signal_max = WebRtcSpl_MaxAbsValueW16(signal, length);
   int correlation_scale = kLogVecLen -
       WebRtcSpl_NormW32(signal_max * signal_max);
@@ -239,19 +242,19 @@ void BackgroundNoise::SaveParameters(size_t channel,
   parameters.low_energy_update_threshold = 0;
 
   // Normalize residual_energy to 29 or 30 bits before sqrt.
-  int norm_shift = WebRtcSpl_NormW32(residual_energy) - 1;
+  int16_t norm_shift = WebRtcSpl_NormW32(residual_energy) - 1;
   if (norm_shift & 0x1) {
     norm_shift -= 1;  // Even number of shifts required.
   }
-  assert(norm_shift >= 0);  // Should always be positive.
-  residual_energy = residual_energy << norm_shift;
+  residual_energy = WEBRTC_SPL_SHIFT_W32(residual_energy, norm_shift);
 
   // Calculate scale and shift factor.
-  parameters.scale = WebRtcSpl_SqrtFloor(residual_energy);
+  parameters.scale = static_cast<int16_t>(WebRtcSpl_SqrtFloor(residual_energy));
   // Add 13 to the |scale_shift_|, since the random numbers table is in
   // Q13.
   // TODO(hlundin): Move the "13" to where the |scale_shift_| is used?
-  parameters.scale_shift = 13 + ((kLogResidualLength + norm_shift) / 2);
+  parameters.scale_shift =
+      static_cast<int16_t>(13 + ((kLogResidualLength + norm_shift) / 2));
 
   initialized_ = true;
 }

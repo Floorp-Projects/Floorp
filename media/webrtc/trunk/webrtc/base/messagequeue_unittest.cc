@@ -16,7 +16,6 @@
 #include "webrtc/base/thread.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/base/nullsocketserver.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 using namespace rtc;
 

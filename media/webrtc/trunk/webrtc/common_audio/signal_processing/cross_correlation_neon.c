@@ -15,18 +15,13 @@
 static inline void DotProductWithScaleNeon(int32_t* cross_correlation,
                                            const int16_t* vector1,
                                            const int16_t* vector2,
-                                           int length,
+                                           size_t length,
                                            int scaling) {
-  int i = 0;
-  int len1 = length >> 3;
-  int len2 = length & 7;
+  size_t i = 0;
+  size_t len1 = length >> 3;
+  size_t len2 = length & 7;
   int64x2_t sum0 = vdupq_n_s64(0);
   int64x2_t sum1 = vdupq_n_s64(0);
-
-  if (length < 0) {
-    *cross_correlation = 0;
-    return;
-  }
 
   for (i = len1; i > 0; i -= 1) {
     int16x8_t seq1_16x8 = vld1q_s16(vector1);
@@ -72,11 +67,11 @@ static inline void DotProductWithScaleNeon(int32_t* cross_correlation,
 void WebRtcSpl_CrossCorrelationNeon(int32_t* cross_correlation,
                                     const int16_t* seq1,
                                     const int16_t* seq2,
-                                    int16_t dim_seq,
-                                    int16_t dim_cross_correlation,
-                                    int16_t right_shifts,
-                                    int16_t step_seq2) {
-  int i = 0;
+                                    size_t dim_seq,
+                                    size_t dim_cross_correlation,
+                                    int right_shifts,
+                                    int step_seq2) {
+  size_t i = 0;
 
   for (i = 0; i < dim_cross_correlation; i++) {
     const int16_t* seq1_ptr = seq1;

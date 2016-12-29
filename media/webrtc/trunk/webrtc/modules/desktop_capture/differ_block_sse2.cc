@@ -21,9 +21,9 @@
 
 namespace webrtc {
 
-extern int BlockDifference_SSE2_W16(const uint8_t* image1,
-                                    const uint8_t* image2,
-                                    int stride) {
+extern bool BlockDifference_SSE2_W16(const uint8_t* image1,
+                                     const uint8_t* image2,
+                                     int stride) {
   __m128i acc = _mm_setzero_si128();
   __m128i v0;
   __m128i v1;
@@ -54,16 +54,16 @@ extern int BlockDifference_SSE2_W16(const uint8_t* image1,
     sad = _mm_adds_epu16(sad, acc);
     int diff = _mm_cvtsi128_si32(sad);
     if (diff)
-      return 1;
+      return true;
     image1 += stride;
     image2 += stride;
   }
-  return 0;
+  return false;
 }
 
-extern int BlockDifference_SSE2_W32(const uint8_t* image1,
-                                    const uint8_t* image2,
-                                    int stride) {
+extern bool BlockDifference_SSE2_W32(const uint8_t* image1,
+                                     const uint8_t* image2,
+                                     int stride) {
   __m128i acc = _mm_setzero_si128();
   __m128i v0;
   __m128i v1;
@@ -110,11 +110,11 @@ extern int BlockDifference_SSE2_W32(const uint8_t* image1,
     sad = _mm_adds_epu16(sad, acc);
     int diff = _mm_cvtsi128_si32(sad);
     if (diff)
-      return 1;
+      return true;
     image1 += stride;
     image2 += stride;
   }
-  return 0;
+  return false;
 }
 
 }  // namespace webrtc

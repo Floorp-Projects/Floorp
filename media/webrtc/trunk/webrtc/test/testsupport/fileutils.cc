@@ -18,7 +18,7 @@
 #include <windows.h>
 #include <algorithm>
 
-#include "webrtc/system_wrappers/interface/utf_util_win.h"
+#include "webrtc/system_wrappers/include/utf_util_win.h"
 #define GET_CURRENT_DIR _getcwd
 #else
 #include <unistd.h>
@@ -41,6 +41,11 @@
 namespace webrtc {
 namespace test {
 
+#if defined(WEBRTC_IOS)
+// Defined in iosfileutils.mm.  No header file to discourage use elsewhere.
+std::string IOSResourcePath(std::string name, std::string extension);
+#endif
+
 namespace {
 
 #ifdef WIN32
@@ -57,7 +62,9 @@ const char* kProjectRootFileName = "DEPS";
 const char* kOutputDirName = "out";
 const char* kFallbackPath = "./";
 #endif
+#if !defined(WEBRTC_IOS)
 const char* kResourcesDirName = "resources";
+#endif
 
 char relative_dir_path[FILENAME_MAX];
 bool relative_dir_path_set = false;
@@ -205,6 +212,9 @@ bool CreateDir(std::string directory_name) {
 }
 
 std::string ResourcePath(std::string name, std::string extension) {
+#if defined(WEBRTC_IOS)
+  return IOSResourcePath(name, extension);
+#else
   std::string platform = "win";
 #ifdef WEBRTC_LINUX
   platform = "linux";
@@ -239,6 +249,7 @@ std::string ResourcePath(std::string name, std::string extension) {
 
   // Fall back on name without architecture or platform.
   return resources_path + name + "." + extension;
+#endif  // defined (WEBRTC_IOS)
 }
 
 size_t GetFileSize(std::string filename) {

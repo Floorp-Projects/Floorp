@@ -237,7 +237,7 @@ class FakeFileSystem : public FilesystemInterface {
       EXPECT_TRUE(false) << "Unsupported operation";
       return false;
     }
-    bool GetDiskFreeSpace(const Pathname &path, int64 *freebytes) {
+    bool GetDiskFreeSpace(const Pathname& path, int64_t* freebytes) {
       EXPECT_TRUE(false) << "Unsupported operation";
       return false;
     }

@@ -9,72 +9,144 @@
  */
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/audio_coding/codecs/opus/interface/audio_encoder_opus.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h"
 
 namespace webrtc {
 
+namespace {
+const CodecInst kOpusSettings = {105, "opus", 48000, 960, 1, 32000};
+}  // namespace
+
 class AudioEncoderOpusTest : public ::testing::Test {
  protected:
-  // The constructor simply creates an Opus encoder with default configuration.
-  AudioEncoderOpusTest()
-      : opus_(new AudioEncoderOpus(AudioEncoderOpus::Config())) {}
-
-  // Repeatedly sets packet loss rates in the range [from, to], increasing by
-  // 0.01 in each step. The function verifies that the actual loss rate is
-  // |expected_return|.
-  void TestSetPacketLossRate(double from, double to, double expected_return) {
-    ASSERT_TRUE(opus_);
-    for (double loss = from; loss <= to;
-         (to >= from) ? loss += 0.01 : loss -= 0.01) {
-      opus_->SetProjectedPacketLossRate(loss);
-      EXPECT_DOUBLE_EQ(expected_return, opus_->packet_loss_rate());
-    }
+  void CreateCodec(int num_channels) {
+    codec_inst_.channels = num_channels;
+    encoder_.reset(new AudioEncoderOpus(codec_inst_));
+    auto expected_app =
+        num_channels == 1 ? AudioEncoderOpus::kVoip : AudioEncoderOpus::kAudio;
+    EXPECT_EQ(expected_app, encoder_->application());
   }
 
-  rtc::scoped_ptr<AudioEncoderOpus> opus_;
+  CodecInst codec_inst_ = kOpusSettings;
+  rtc::scoped_ptr<AudioEncoderOpus> encoder_;
 };
 
+TEST_F(AudioEncoderOpusTest, DefaultApplicationModeMono) {
+  CreateCodec(1);
+}
+
+TEST_F(AudioEncoderOpusTest, DefaultApplicationModeStereo) {
+  CreateCodec(2);
+}
+
+TEST_F(AudioEncoderOpusTest, ChangeApplicationMode) {
+  CreateCodec(2);
+  EXPECT_TRUE(encoder_->SetApplication(AudioEncoder::Application::kSpeech));
+  EXPECT_EQ(AudioEncoderOpus::kVoip, encoder_->application());
+}
+
+TEST_F(AudioEncoderOpusTest, ResetWontChangeApplicationMode) {
+  CreateCodec(2);
+
+  // Trigger a reset.
+  encoder_->Reset();
+  // Verify that the mode is still kAudio.
+  EXPECT_EQ(AudioEncoderOpus::kAudio, encoder_->application());
+
+  // Now change to kVoip.
+  EXPECT_TRUE(encoder_->SetApplication(AudioEncoder::Application::kSpeech));
+  EXPECT_EQ(AudioEncoderOpus::kVoip, encoder_->application());
+
+  // Trigger a reset again.
+  encoder_->Reset();
+  // Verify that the mode is still kVoip.
+  EXPECT_EQ(AudioEncoderOpus::kVoip, encoder_->application());
+}
+
+TEST_F(AudioEncoderOpusTest, ToggleDtx) {
+  CreateCodec(2);
+  // Enable DTX
+  EXPECT_TRUE(encoder_->SetDtx(true));
+  // Verify that the mode is still kAudio.
+  EXPECT_EQ(AudioEncoderOpus::kAudio, encoder_->application());
+  // Turn off DTX.
+  EXPECT_TRUE(encoder_->SetDtx(false));
+}
+
+TEST_F(AudioEncoderOpusTest, SetBitrate) {
+  CreateCodec(1);
+  // Constants are replicated from audio_encoder_opus.cc.
+  const int kMinBitrateBps = 500;
+  const int kMaxBitrateBps = 512000;
+  // Set a too low bitrate.
+  encoder_->SetTargetBitrate(kMinBitrateBps - 1);
+  EXPECT_EQ(kMinBitrateBps, encoder_->GetTargetBitrate());
+  // Set a too high bitrate.
+  encoder_->SetTargetBitrate(kMaxBitrateBps + 1);
+  EXPECT_EQ(kMaxBitrateBps, encoder_->GetTargetBitrate());
+  // Set the minimum rate.
+  encoder_->SetTargetBitrate(kMinBitrateBps);
+  EXPECT_EQ(kMinBitrateBps, encoder_->GetTargetBitrate());
+  // Set the maximum rate.
+  encoder_->SetTargetBitrate(kMaxBitrateBps);
+  EXPECT_EQ(kMaxBitrateBps, encoder_->GetTargetBitrate());
+  // Set rates from 1000 up to 32000 bps.
+  for (int rate = 1000; rate <= 32000; rate += 1000) {
+    encoder_->SetTargetBitrate(rate);
+    EXPECT_EQ(rate, encoder_->GetTargetBitrate());
+  }
+}
+
 namespace {
-// These constants correspond to those used in
-// AudioEncoderOpus::SetProjectedPacketLossRate.
-const double kPacketLossRate20 = 0.20;
-const double kPacketLossRate10 = 0.10;
-const double kPacketLossRate5 = 0.05;
-const double kPacketLossRate1 = 0.01;
-const double kLossRate20Margin = 0.02;
-const double kLossRate10Margin = 0.01;
-const double kLossRate5Margin = 0.01;
+
+// Returns a vector with the n evenly-spaced numbers a, a + (b - a)/(n - 1),
+// ..., b.
+std::vector<double> IntervalSteps(double a, double b, size_t n) {
+  RTC_DCHECK_GT(n, 1u);
+  const double step = (b - a) / (n - 1);
+  std::vector<double> points;
+  for (size_t i = 0; i < n; ++i)
+    points.push_back(a + i * step);
+  return points;
+}
+
+// Sets the packet loss rate to each number in the vector in turn, and verifies
+// that the loss rate as reported by the encoder is |expected_return| for all
+// of them.
+void TestSetPacketLossRate(AudioEncoderOpus* encoder,
+                           const std::vector<double>& losses,
+                           double expected_return) {
+  for (double loss : losses) {
+    encoder->SetProjectedPacketLossRate(loss);
+    EXPECT_DOUBLE_EQ(expected_return, encoder->packet_loss_rate());
+  }
+}
+
 }  // namespace
 
 TEST_F(AudioEncoderOpusTest, PacketLossRateOptimized) {
+  CreateCodec(1);
+  auto I = [](double a, double b) { return IntervalSteps(a, b, 10); };
+  const double eps = 1e-15;
+
   // Note that the order of the following calls is critical.
-  TestSetPacketLossRate(0.0, 0.0, 0.0);
-  TestSetPacketLossRate(kPacketLossRate1,
-                        kPacketLossRate5 + kLossRate5Margin - 0.01,
-                        kPacketLossRate1);
-  TestSetPacketLossRate(kPacketLossRate5 + kLossRate5Margin,
-                        kPacketLossRate10 + kLossRate10Margin - 0.01,
-                        kPacketLossRate5);
-  TestSetPacketLossRate(kPacketLossRate10 + kLossRate10Margin,
-                        kPacketLossRate20 + kLossRate20Margin - 0.01,
-                        kPacketLossRate10);
-  TestSetPacketLossRate(kPacketLossRate20 + kLossRate20Margin,
-                        1.0,
-                        kPacketLossRate20);
-  TestSetPacketLossRate(kPacketLossRate20 + kLossRate20Margin,
-                        kPacketLossRate20 - kLossRate20Margin,
-                        kPacketLossRate20);
-  TestSetPacketLossRate(kPacketLossRate20 - kLossRate20Margin - 0.01,
-                        kPacketLossRate10 - kLossRate10Margin,
-                        kPacketLossRate10);
-  TestSetPacketLossRate(kPacketLossRate10 - kLossRate10Margin - 0.01,
-                        kPacketLossRate5 - kLossRate5Margin,
-                        kPacketLossRate5);
-  TestSetPacketLossRate(kPacketLossRate5 - kLossRate5Margin - 0.01,
-                        kPacketLossRate1,
-                        kPacketLossRate1);
-  TestSetPacketLossRate(0.0, 0.0, 0.0);
+
+  // clang-format off
+  TestSetPacketLossRate(encoder_.get(), I(0.00      , 0.01 - eps), 0.00);
+  TestSetPacketLossRate(encoder_.get(), I(0.01 + eps, 0.06 - eps), 0.01);
+  TestSetPacketLossRate(encoder_.get(), I(0.06 + eps, 0.11 - eps), 0.05);
+  TestSetPacketLossRate(encoder_.get(), I(0.11 + eps, 0.22 - eps), 0.10);
+  TestSetPacketLossRate(encoder_.get(), I(0.22 + eps, 1.00      ), 0.20);
+
+  TestSetPacketLossRate(encoder_.get(), I(1.00      , 0.18 + eps), 0.20);
+  TestSetPacketLossRate(encoder_.get(), I(0.18 - eps, 0.09 + eps), 0.10);
+  TestSetPacketLossRate(encoder_.get(), I(0.09 - eps, 0.04 + eps), 0.05);
+  TestSetPacketLossRate(encoder_.get(), I(0.04 - eps, 0.01 + eps), 0.01);
+  TestSetPacketLossRate(encoder_.get(), I(0.01 - eps, 0.00      ), 0.00);
+  // clang-format on
 }
 
 }  // namespace webrtc

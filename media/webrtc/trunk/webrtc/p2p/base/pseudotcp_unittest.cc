@@ -27,9 +27,8 @@ static const int kBlockSize = 4096;
 
 class PseudoTcpForTest : public cricket::PseudoTcp {
  public:
-  PseudoTcpForTest(cricket::IPseudoTcpNotify* notify, uint32 conv)
-      : PseudoTcp(notify, conv) {
-  }
+  PseudoTcpForTest(cricket::IPseudoTcpNotify* notify, uint32_t conv)
+      : PseudoTcp(notify, conv) {}
 
   bool isReceiveBufferFull() const {
     return PseudoTcp::isReceiveBufferFull();
@@ -127,7 +126,7 @@ class PseudoTcpTestBase : public testing::Test,
   //   virtual void OnTcpReadable(PseudoTcp* tcp)
   // and
   //   virtual void OnTcpWritable(PseudoTcp* tcp)
-  virtual void OnTcpClosed(PseudoTcp* tcp, uint32 error) {
+  virtual void OnTcpClosed(PseudoTcp* tcp, uint32_t error) {
     // Consider ourselves closed when the remote side gets OnTcpClosed.
     // TODO: OnTcpClosed is only ever notified in case of error in
     // the current implementation.  Solicited close is not (yet) supported.
@@ -141,7 +140,7 @@ class PseudoTcpTestBase : public testing::Test,
                                      const char* buffer, size_t len) {
     // Randomly drop the desired percentage of packets.
     // Also drop packets that are larger than the configured MTU.
-    if (rtc::CreateRandomId() % 100 < static_cast<uint32>(loss_)) {
+    if (rtc::CreateRandomId() % 100 < static_cast<uint32_t>(loss_)) {
       LOG(LS_VERBOSE) << "Randomly dropping packet, size=" << len;
     } else if (len > static_cast<size_t>(std::min(local_mtu_, remote_mtu_))) {
       LOG(LS_VERBOSE) << "Dropping packet that exceeds path MTU, size=" << len;
@@ -156,7 +155,7 @@ class PseudoTcpTestBase : public testing::Test,
 
   void UpdateLocalClock() { UpdateClock(&local_, MSG_LCLOCK); }
   void UpdateRemoteClock() { UpdateClock(&remote_, MSG_RCLOCK); }
-  void UpdateClock(PseudoTcp* tcp, uint32 message) {
+  void UpdateClock(PseudoTcp* tcp, uint32_t message) {
     long interval = 0;  // NOLINT
     tcp->GetNextClock(PseudoTcp::Now(), interval);
     interval = std::max<int>(interval, 0L);  // sometimes interval is < 0
@@ -209,7 +208,7 @@ class PseudoTcpTestBase : public testing::Test,
 class PseudoTcpTest : public PseudoTcpTestBase {
  public:
   void TestTransfer(int size) {
-    uint32 start, elapsed;
+    uint32_t start, elapsed;
     size_t received;
     // Create some dummy data to send.
     send_stream_.ReserveSize(size);
@@ -326,7 +325,7 @@ class PseudoTcpTestPingPong : public PseudoTcpTestBase {
     bytes_per_send_ = bytes;
   }
   void TestPingPong(int size, int iterations) {
-    uint32 start, elapsed;
+    uint32_t start, elapsed;
     iterations_remaining_ = iterations;
     receiver_ = &remote_;
     sender_ = &local_;
@@ -489,12 +488,12 @@ class PseudoTcpTestReceiveWindow : public PseudoTcpTestBase {
     }
   }
 
-  uint32 EstimateReceiveWindowSize() const {
-    return static_cast<uint32>(recv_position_[0]);
+  uint32_t EstimateReceiveWindowSize() const {
+    return static_cast<uint32_t>(recv_position_[0]);
   }
 
-  uint32 EstimateSendWindowSize() const {
-    return static_cast<uint32>(send_position_[0] - recv_position_[0]);
+  uint32_t EstimateSendWindowSize() const {
+    return static_cast<uint32_t>(send_position_[0] - recv_position_[0]);
   }
 
  private:

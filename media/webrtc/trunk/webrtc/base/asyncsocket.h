@@ -64,7 +64,7 @@ class AsyncSocketAdapter : public AsyncSocket, public sigslot::has_slots<> {
   int GetError() const override;
   void SetError(int error) override;
   ConnState GetState() const override;
-  int EstimateMTU(uint16* mtu) override;
+  int EstimateMTU(uint16_t* mtu) override;
   int GetOption(Option opt, int* value) override;
   int SetOption(Option opt, int value) override;
 

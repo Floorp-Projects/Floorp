@@ -10,8 +10,9 @@
 
 #include "webrtc/p2p/base/transportdescription.h"
 
-#include "webrtc/p2p/base/constants.h"
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/stringutils.h"
+#include "webrtc/p2p/base/constants.h"
 
 namespace cricket {
 
@@ -23,7 +24,7 @@ bool StringToConnectionRole(const std::string& role_str, ConnectionRole* role) {
       CONNECTIONROLE_HOLDCONN_STR
   };
 
-  for (size_t i = 0; i < ARRAY_SIZE(roles); ++i) {
+  for (size_t i = 0; i < arraysize(roles); ++i) {
     if (_stricmp(roles[i], role_str.c_str()) == 0) {
       *role = static_cast<ConnectionRole>(CONNECTIONROLE_ACTIVE + i);
       return true;

@@ -32,6 +32,9 @@ struct AnalysisResult {
 };
 
 struct ResultsContainer {
+  ResultsContainer();
+  ~ResultsContainer();
+
   std::vector<AnalysisResult> frames;
 };
 
@@ -59,8 +62,10 @@ void RunAnalysis(const char* reference_file_name, const char* test_file_name,
 // frames are exactly the same) will be 48. In the case of SSIM the max return
 // value will be 1.
 double CalculateMetrics(VideoAnalysisMetricsType video_metrics_type,
-                        const uint8* ref_frame,  const uint8* test_frame,
-                        int width, int height);
+                        const uint8_t* ref_frame,
+                        const uint8_t* test_frame,
+                        int width,
+                        int height);
 
 // Prints the result from the analysis in Chromium performance
 // numbers compatible format to stdout. If the results object contains no frames
@@ -98,14 +103,19 @@ bool IsThereBarcodeError(std::string line);
 int ExtractDecodedFrameNumber(std::string line);
 
 // Extracts an I420 frame at position frame_number from the raw YUV file.
-bool ExtractFrameFromYuvFile(const char* i420_file_name, int width, int height,
-                             int frame_number, uint8* result_frame);
+bool ExtractFrameFromYuvFile(const char* i420_file_name,
+                             int width,
+                             int height,
+                             int frame_number,
+                             uint8_t* result_frame);
 
 // Extracts an I420 frame at position frame_number from the Y4M file. The first
 // frame has corresponded |frame_number| 0.
-bool ExtractFrameFromY4mFile(const char* i420_file_name, int width, int height,
-                             int frame_number, uint8* result_frame);
-
+bool ExtractFrameFromY4mFile(const char* i420_file_name,
+                             int width,
+                             int height,
+                             int frame_number,
+                             uint8_t* result_frame);
 
 }  // namespace test
 }  // namespace webrtc

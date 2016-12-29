@@ -13,6 +13,8 @@
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 
+#include <map>
+
 namespace webrtc {
 namespace videocapturemodule {
 class DeviceInfoIos : public DeviceInfoImpl {
@@ -37,10 +39,6 @@ class DeviceInfoIos : public DeviceInfoImpl {
                         const uint32_t deviceCapabilityNumber,
                         VideoCaptureCapability& capability) override;
 
-  int32_t GetBestMatchedCapability(const char* deviceUniqueIdUTF8,
-                                   const VideoCaptureCapability& requested,
-                                   VideoCaptureCapability& resulting) override;
-
   int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
                                           const char* dialogTitleUTF8,
                                           void* parentWindow,
@@ -51,6 +49,9 @@ class DeviceInfoIos : public DeviceInfoImpl {
                          VideoRotation& orientation) override;
 
   int32_t CreateCapabilityMap(const char* device_unique_id_utf8) override;
+
+ private:
+  std::map<std::string, VideoCaptureCapabilities> _capabilitiesMap;
 };
 
 }  // namespace videocapturemodule

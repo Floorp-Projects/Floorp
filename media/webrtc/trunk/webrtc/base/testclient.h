@@ -89,7 +89,7 @@ class TestClient : public sigslot::has_slots<> {
   AsyncPacketSocket* socket_;
   std::vector<Packet*>* packets_;
   bool ready_to_send_;
-  DISALLOW_EVIL_CONSTRUCTORS(TestClient);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TestClient);
 };
 
 }  // namespace rtc

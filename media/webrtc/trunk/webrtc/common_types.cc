@@ -28,6 +28,7 @@ RTPHeaderExtension::RTPHeaderExtension()
       hasTransportSequenceNumber(false),
       transportSequenceNumber(0),
       hasAudioLevel(false),
+      voiceActivity(false),
       audioLevel(0),
       hasVideoRotation(false),
       videoRotation(0),

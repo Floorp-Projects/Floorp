@@ -42,7 +42,7 @@ class AsyncStunTCPSocket : public rtc::AsyncTCPSocketBase {
   size_t GetExpectedLength(const void* data, size_t len,
                            int* pad_bytes);
 
-  DISALLOW_EVIL_CONSTRUCTORS(AsyncStunTCPSocket);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AsyncStunTCPSocket);
 };
 
 }  // namespace cricket

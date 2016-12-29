@@ -14,7 +14,7 @@
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/modules/utility/include/process_thread.h"
 #include "webrtc/voice_engine/channel_manager.h"
 #include "webrtc/voice_engine/statistics.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"

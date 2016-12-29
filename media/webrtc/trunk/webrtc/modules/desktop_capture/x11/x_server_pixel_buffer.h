@@ -77,7 +77,7 @@ class XServerPixelBuffer {
   Pixmap shm_pixmap_;
   GC shm_gc_;
 
-  DISALLOW_COPY_AND_ASSIGN(XServerPixelBuffer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(XServerPixelBuffer);
 };
 
 }  // namespace webrtc

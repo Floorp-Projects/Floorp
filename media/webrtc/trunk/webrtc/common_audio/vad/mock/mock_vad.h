@@ -19,7 +19,6 @@ namespace webrtc {
 
 class MockVad : public Vad {
  public:
-  explicit MockVad(enum Aggressiveness mode) : Vad(mode) {}
   virtual ~MockVad() { Die(); }
   MOCK_METHOD0(Die, void());
 
@@ -27,6 +26,7 @@ class MockVad : public Vad {
                enum Activity(const int16_t* audio,
                              size_t num_samples,
                              int sample_rate_hz));
+  MOCK_METHOD0(Reset, void());
 };
 
 }  // namespace webrtc

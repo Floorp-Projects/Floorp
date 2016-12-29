@@ -8,12 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/codecs/ilbc/interface/audio_encoder_ilbc.h"
+#include "webrtc/modules/audio_coding/codecs/ilbc/audio_encoder_ilbc.h"
 
-#include <cstring>
+#include <algorithm>
 #include <limits>
 #include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_coding/codecs/ilbc/interface/ilbc.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/codecs/ilbc/ilbc.h"
 
 namespace webrtc {
 
@@ -21,63 +22,88 @@ namespace {
 
 const int kSampleRateHz = 8000;
 
+AudioEncoderIlbc::Config CreateConfig(const CodecInst& codec_inst) {
+  AudioEncoderIlbc::Config config;
+  config.frame_size_ms = codec_inst.pacsize / 8;
+  config.payload_type = codec_inst.pltype;
+  return config;
+}
+
 }  // namespace
 
-AudioEncoderIlbc::AudioEncoderIlbc(const Config& config)
-    : payload_type_(config.payload_type),
-      num_10ms_frames_per_packet_(config.frame_size_ms / 10),
-      num_10ms_frames_buffered_(0) {
-  CHECK(config.frame_size_ms == 20 || config.frame_size_ms == 30 ||
-        config.frame_size_ms == 40 || config.frame_size_ms == 60)
-      << "Frame size must be 20, 30, 40, or 60 ms.";
-  DCHECK_LE(kSampleRateHz / 100 * num_10ms_frames_per_packet_,
-            kMaxSamplesPerPacket);
-  CHECK_EQ(0, WebRtcIlbcfix_EncoderCreate(&encoder_));
-  const int encoder_frame_size_ms = config.frame_size_ms > 30
-                                        ? config.frame_size_ms / 2
-                                        : config.frame_size_ms;
-  CHECK_EQ(0, WebRtcIlbcfix_EncoderInit(encoder_, encoder_frame_size_ms));
+// static
+const size_t AudioEncoderIlbc::kMaxSamplesPerPacket;
+
+bool AudioEncoderIlbc::Config::IsOk() const {
+  return (frame_size_ms == 20 || frame_size_ms == 30 || frame_size_ms == 40 ||
+          frame_size_ms == 60) &&
+      static_cast<size_t>(kSampleRateHz / 100 * (frame_size_ms / 10)) <=
+          kMaxSamplesPerPacket;
 }
+
+AudioEncoderIlbc::AudioEncoderIlbc(const Config& config)
+    : config_(config),
+      num_10ms_frames_per_packet_(
+          static_cast<size_t>(config.frame_size_ms / 10)),
+      encoder_(nullptr) {
+  Reset();
+}
+
+AudioEncoderIlbc::AudioEncoderIlbc(const CodecInst& codec_inst)
+    : AudioEncoderIlbc(CreateConfig(codec_inst)) {}
 
 AudioEncoderIlbc::~AudioEncoderIlbc() {
-  CHECK_EQ(0, WebRtcIlbcfix_EncoderFree(encoder_));
-}
-
-int AudioEncoderIlbc::SampleRateHz() const {
-  return kSampleRateHz;
-}
-
-int AudioEncoderIlbc::NumChannels() const {
-  return 1;
+  RTC_CHECK_EQ(0, WebRtcIlbcfix_EncoderFree(encoder_));
 }
 
 size_t AudioEncoderIlbc::MaxEncodedBytes() const {
   return RequiredOutputSizeBytes();
 }
 
-int AudioEncoderIlbc::Num10MsFramesInNextPacket() const {
+int AudioEncoderIlbc::SampleRateHz() const {
+  return kSampleRateHz;
+}
+
+size_t AudioEncoderIlbc::NumChannels() const {
+  return 1;
+}
+
+size_t AudioEncoderIlbc::Num10MsFramesInNextPacket() const {
   return num_10ms_frames_per_packet_;
 }
 
-int AudioEncoderIlbc::Max10MsFramesInAPacket() const {
+size_t AudioEncoderIlbc::Max10MsFramesInAPacket() const {
   return num_10ms_frames_per_packet_;
+}
+
+int AudioEncoderIlbc::GetTargetBitrate() const {
+  switch (num_10ms_frames_per_packet_) {
+    case 2: case 4:
+      // 38 bytes per frame of 20 ms => 15200 bits/s.
+      return 15200;
+    case 3: case 6:
+      // 50 bytes per frame of 30 ms => (approx) 13333 bits/s.
+      return 13333;
+    default:
+      FATAL();
+  }
 }
 
 AudioEncoder::EncodedInfo AudioEncoderIlbc::EncodeInternal(
     uint32_t rtp_timestamp,
-    const int16_t* audio,
+    rtc::ArrayView<const int16_t> audio,
     size_t max_encoded_bytes,
     uint8_t* encoded) {
-  DCHECK_GE(max_encoded_bytes, RequiredOutputSizeBytes());
+  RTC_DCHECK_GE(max_encoded_bytes, RequiredOutputSizeBytes());
 
   // Save timestamp if starting a new packet.
   if (num_10ms_frames_buffered_ == 0)
     first_timestamp_in_buffer_ = rtp_timestamp;
 
   // Buffer input.
-  std::memcpy(input_buffer_ + kSampleRateHz / 100 * num_10ms_frames_buffered_,
-              audio,
-              kSampleRateHz / 100 * sizeof(audio[0]));
+  RTC_DCHECK_EQ(static_cast<size_t>(kSampleRateHz / 100), audio.size());
+  std::copy(audio.cbegin(), audio.cend(),
+            input_buffer_ + kSampleRateHz / 100 * num_10ms_frames_buffered_);
 
   // If we don't yet have enough buffered input for a whole packet, we're done
   // for now.
@@ -86,20 +112,32 @@ AudioEncoder::EncodedInfo AudioEncoderIlbc::EncodeInternal(
   }
 
   // Encode buffered input.
-  DCHECK_EQ(num_10ms_frames_buffered_, num_10ms_frames_per_packet_);
+  RTC_DCHECK_EQ(num_10ms_frames_buffered_, num_10ms_frames_per_packet_);
   num_10ms_frames_buffered_ = 0;
   const int output_len = WebRtcIlbcfix_Encode(
       encoder_,
       input_buffer_,
       kSampleRateHz / 100 * num_10ms_frames_per_packet_,
       encoded);
-  CHECK_GE(output_len, 0);
+  RTC_CHECK_GE(output_len, 0);
   EncodedInfo info;
-  info.encoded_bytes = output_len;
-  DCHECK_EQ(info.encoded_bytes, RequiredOutputSizeBytes());
+  info.encoded_bytes = static_cast<size_t>(output_len);
+  RTC_DCHECK_EQ(info.encoded_bytes, RequiredOutputSizeBytes());
   info.encoded_timestamp = first_timestamp_in_buffer_;
-  info.payload_type = payload_type_;
+  info.payload_type = config_.payload_type;
   return info;
+}
+
+void AudioEncoderIlbc::Reset() {
+  if (encoder_)
+    RTC_CHECK_EQ(0, WebRtcIlbcfix_EncoderFree(encoder_));
+  RTC_CHECK(config_.IsOk());
+  RTC_CHECK_EQ(0, WebRtcIlbcfix_EncoderCreate(&encoder_));
+  const int encoder_frame_size_ms = config_.frame_size_ms > 30
+                                        ? config_.frame_size_ms / 2
+                                        : config_.frame_size_ms;
+  RTC_CHECK_EQ(0, WebRtcIlbcfix_EncoderInit(encoder_, encoder_frame_size_ms));
+  num_10ms_frames_buffered_ = 0;
 }
 
 size_t AudioEncoderIlbc::RequiredOutputSizeBytes() const {

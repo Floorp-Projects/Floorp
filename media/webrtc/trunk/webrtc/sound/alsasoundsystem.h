@@ -34,25 +34,25 @@ class AlsaSoundSystem : public SoundSystemInterface {
 
   AlsaSoundSystem();
 
-  virtual ~AlsaSoundSystem();
+  ~AlsaSoundSystem() override;
 
-  virtual bool Init();
-  virtual void Terminate();
+  bool Init() override;
+  void Terminate() override;
 
-  virtual bool EnumeratePlaybackDevices(SoundDeviceLocatorList *devices);
-  virtual bool EnumerateCaptureDevices(SoundDeviceLocatorList *devices);
+  bool EnumeratePlaybackDevices(SoundDeviceLocatorList *devices) override;
+  bool EnumerateCaptureDevices(SoundDeviceLocatorList *devices) override;
 
-  virtual bool GetDefaultPlaybackDevice(SoundDeviceLocator **device);
-  virtual bool GetDefaultCaptureDevice(SoundDeviceLocator **device);
+  bool GetDefaultPlaybackDevice(SoundDeviceLocator **device) override;
+  bool GetDefaultCaptureDevice(SoundDeviceLocator **device) override;
 
-  virtual SoundOutputStreamInterface *OpenPlaybackDevice(
+  SoundOutputStreamInterface *OpenPlaybackDevice(
       const SoundDeviceLocator *device,
-      const OpenParams &params);
-  virtual SoundInputStreamInterface *OpenCaptureDevice(
+      const OpenParams &params) override;
+  SoundInputStreamInterface *OpenCaptureDevice(
       const SoundDeviceLocator *device,
-      const OpenParams &params);
+      const OpenParams &params) override;
 
-  virtual const char *GetName() const;
+  const char *GetName() const override;
 
  private:
   bool IsInitialized() { return initialized_; }
@@ -95,7 +95,7 @@ class AlsaSoundSystem : public SoundSystemInterface {
   bool initialized_;
   AlsaSymbolTable symbol_table_;
 
-  DISALLOW_COPY_AND_ASSIGN(AlsaSoundSystem);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AlsaSoundSystem);
 };
 
 }  // namespace rtc

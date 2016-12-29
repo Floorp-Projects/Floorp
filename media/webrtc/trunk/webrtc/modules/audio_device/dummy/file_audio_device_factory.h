@@ -31,7 +31,7 @@ class FileAudioDeviceFactory {
                                 const char* outputAudioFilename);
 
  private:
-  static const uint32_t MAX_FILENAME_LEN = 256;
+  static const uint32_t MAX_FILENAME_LEN = 512;
   static bool _isConfigured;
   static char _inputAudioFilename[MAX_FILENAME_LEN];
   static char _outputAudioFilename[MAX_FILENAME_LEN];

@@ -16,13 +16,16 @@
 #include <string>
 
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
+#include "webrtc/system_wrappers/include/clock.h"
+
+namespace rtc {
+class PlatformThread;
+}  // namespace rtc
 
 namespace webrtc {
 class EventWrapper;
-class ThreadWrapper;
 
 // This is a fake audio device which plays audio from a file as its microphone
 // and plays out into a file.
@@ -174,12 +177,13 @@ class FileAudioDevice : public AudioDeviceGeneric {
   uint32_t _playoutFramesLeft;
   CriticalSectionWrapper& _critSect;
 
-  uint32_t _recordingBufferSizeIn10MS;
-  uint32_t _recordingFramesIn10MS;
-  uint32_t _playoutFramesIn10MS;
+  size_t _recordingBufferSizeIn10MS;
+  size_t _recordingFramesIn10MS;
+  size_t _playoutFramesIn10MS;
 
-  rtc::scoped_ptr<ThreadWrapper> _ptrThreadRec;
-  rtc::scoped_ptr<ThreadWrapper> _ptrThreadPlay;
+  // TODO(pbos): Make plain members instead of pointers and stop resetting them.
+  rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
+  rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
 
   bool _playing;
   bool _recording;

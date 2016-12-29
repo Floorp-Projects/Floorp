@@ -110,7 +110,7 @@ static int16_t CalcLogN(int32_t arg) {
   zeros=WebRtcSpl_NormU32(arg);
   frac = (int16_t)((uint32_t)((arg << zeros) & 0x7FFFFFFF) >> 23);
   log2 = (int16_t)(((31 - zeros) << 8) + frac);  // log2(x) in Q8
-  logN=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT(log2,22713,15); //Q8*Q15 log(2) = 0.693147 = 22713 in Q15
+  logN = (int16_t)(log2 * 22713 >> 15);  // log(2) = 0.693147 = 22713 in Q15
   logN=logN+11; //Scalar compensation which minimizes the (log(x)-logN(x))^2 error over all x.
 
   return logN;
@@ -129,13 +129,12 @@ static int16_t CalcLogN(int32_t arg) {
 */
 
 static int32_t CalcExpN(int16_t x) {
-  int16_t ax, axINT, axFRAC;
+  int16_t axINT, axFRAC;
   int16_t exp16;
   int32_t exp;
+  int16_t ax = (int16_t)(x * 23637 >> 14);  // Q8
 
   if (x>=0) {
-    //  ax=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT(x, 23637-700, 14); //Q8
-    ax=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT(x, 23637, 14); //Q8
     axINT = ax >> 8;  //Q0
     axFRAC = ax&0x00FF;
     exp16 = 1 << axINT;  // Q0
@@ -143,8 +142,6 @@ static int32_t CalcExpN(int16_t x) {
     exp = exp16 * axFRAC;  // Q0*Q8 = Q8
     exp <<= 9;  // Q17
   } else {
-    //  ax=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT(x, 23637+700, 14); //Q8
-    ax=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT(x, 23637, 14); //Q8
     ax = -ax;
     axINT = 1 + (ax >> 8);  //Q0
     axFRAC = 0x00FF - (ax&0x00FF);
@@ -453,10 +450,10 @@ static void GenerateDitherQ7(int16_t *bufQ7,
  * function to decode the complex spectrum from the bitstream
  * returns the total number of bytes in the stream
  */
-int16_t WebRtcIsacfix_DecodeSpec(Bitstr_dec *streamdata,
-                                 int16_t *frQ7,
-                                 int16_t *fiQ7,
-                                 int16_t AvgPitchGain_Q12)
+int WebRtcIsacfix_DecodeSpec(Bitstr_dec *streamdata,
+                             int16_t *frQ7,
+                             int16_t *fiQ7,
+                             int16_t AvgPitchGain_Q12)
 {
   int16_t  data[FRAMESAMPLES];
   int32_t  invARSpec2_Q16[FRAMESAMPLES/4];
@@ -464,7 +461,7 @@ int16_t WebRtcIsacfix_DecodeSpec(Bitstr_dec *streamdata,
   int16_t  RCQ15[AR_ORDER];
   int16_t  gainQ10;
   int32_t  gain2_Q10;
-  int16_t  len;
+  int len;
   int          k;
 
   /* create dither signal */
@@ -679,16 +676,16 @@ static void Rc2LarFix(const int16_t *rcQ15, int32_t *larQ17, int16_t order) {
 
     if (rc<24956) {  //0.7615966 in Q15
       // (Q15*Q13)>>11 = Q17
-      larAbsQ17 = WEBRTC_SPL_MUL_16_16_RSFT(rc, 21512, 11);
+      larAbsQ17 = rc * 21512 >> 11;
     } else if (rc<30000) { //0.91552734375 in Q15
       // Q17 + (Q15*Q12)>>10 = Q17
-      larAbsQ17 = -465024 + WEBRTC_SPL_MUL_16_16_RSFT(rc, 29837, 10);
+      larAbsQ17 = -465024 + (rc * 29837 >> 10);
     } else if (rc<32500) { //0.99182128906250 in Q15
       // Q17 + (Q15*Q10)>>8 = Q17
-      larAbsQ17 = -3324784 + WEBRTC_SPL_MUL_16_16_RSFT(rc, 31863, 8);
+      larAbsQ17 = -3324784 + (rc * 31863 >> 8);
     } else  {
       // Q17 + (Q15*Q5)>>3 = Q17
-      larAbsQ17 = -88546020 + WEBRTC_SPL_MUL_16_16_RSFT(rc, 21973, 3);
+      larAbsQ17 = -88546020 + (rc * 21973 >> 3);
     }
 
     if (rcQ15[k]>0) {
@@ -717,7 +714,7 @@ static void Lar2RcFix(const int32_t *larQ17, int16_t *rcQ15,  int16_t order) {
 
     if (larAbsQ11<4097) { //2.000012018559 in Q11
       // Q11*Q16>>12 = Q15
-      rc = WEBRTC_SPL_MUL_16_16_RSFT(larAbsQ11, 24957, 12);
+      rc = larAbsQ11 * 24957 >> 12;
     } else if (larAbsQ11<6393) { //3.121320351712 in Q11
       // (Q11*Q17 + Q13)>>13 = Q15
       rc = (larAbsQ11 * 17993 + 130738688) >> 13;
@@ -995,7 +992,8 @@ int WebRtcIsacfix_DecodeLpcCoef(Bitstr_dec *streamdata,
       pos = LPC_SHAPE_ORDER * j;
       pos2 = LPC_SHAPE_ORDER * k;
       for (n=0; n<LPC_SHAPE_ORDER; n++) {
-        sumQQ += WEBRTC_SPL_MUL_16_16_RSFT(tmpcoeffs_sQ10[pos], WebRtcIsacfix_kT1ShapeQ15[model][pos2], 7); // (Q10*Q15)>>7 = Q18
+        sumQQ += tmpcoeffs_sQ10[pos] *
+            WebRtcIsacfix_kT1ShapeQ15[model][pos2] >> 7;  // (Q10*Q15)>>7 = Q18
         pos++;
         pos2++;
       }
@@ -1609,7 +1607,7 @@ int WebRtcIsacfix_EncodePitchGain(int16_t* PitchGains_Q12,
 
   /* get the approximate arcsine (almost linear)*/
   for (k=0; k<PITCH_SUBFRAMES; k++)
-    SQ15[k] = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(PitchGains_Q12[k],33,2); //Q15
+    SQ15[k] = (int16_t)(PitchGains_Q12[k] * 33 >> 2);  // Q15
 
 
   /* find quantization index; only for the first three transform coefficients */
@@ -1618,7 +1616,7 @@ int WebRtcIsacfix_EncodePitchGain(int16_t* PitchGains_Q12,
     /*  transform */
     CQ17=0;
     for (j=0; j<PITCH_SUBFRAMES; j++) {
-      CQ17 += WEBRTC_SPL_MUL_16_16_RSFT(WebRtcIsacfix_kTransform[k][j], SQ15[j],10); // Q17
+      CQ17 += WebRtcIsacfix_kTransform[k][j] * SQ15[j] >> 10;  // Q17
     }
 
     index[k] = (int16_t)((CQ17 + 8192)>>14); // Rounding and scaling with stepsize (=1/0.125=8)
@@ -1677,7 +1675,7 @@ int WebRtcIsacfix_DecodePitchLag(Bitstr_dec *streamdata,
 
   int32_t meangainQ12;
   int32_t CQ11, CQ10,tmp32a,tmp32b;
-  int16_t shft,tmp16a,tmp16c;
+  int16_t shft;
 
   meangainQ12=0;
   for (k = 0; k < 4; k++)
@@ -1727,22 +1725,19 @@ int WebRtcIsacfix_DecodePitchLag(Bitstr_dec *streamdata,
   CQ11 = WEBRTC_SPL_SHIFT_W32(CQ11,11-shft); // Scale with StepSize, Q11
   for (k=0; k<PITCH_SUBFRAMES; k++) {
     tmp32a =  WEBRTC_SPL_MUL_16_32_RSFT11(WebRtcIsacfix_kTransform[0][k], CQ11);
-    tmp16a = (int16_t)(tmp32a >> 5);
-    PitchLags_Q7[k] = tmp16a;
+    PitchLags_Q7[k] = (int16_t)(tmp32a >> 5);
   }
 
   CQ10 = mean_val2Q10[index[1]];
   for (k=0; k<PITCH_SUBFRAMES; k++) {
-    tmp32b =  (int32_t) WEBRTC_SPL_MUL_16_16_RSFT((int16_t) WebRtcIsacfix_kTransform[1][k], (int16_t) CQ10,10);
-    tmp16c = (int16_t)(tmp32b >> 5);
-    PitchLags_Q7[k] += tmp16c;
+    tmp32b = WebRtcIsacfix_kTransform[1][k] * (int16_t)CQ10 >> 10;
+    PitchLags_Q7[k] += (int16_t)(tmp32b >> 5);
   }
 
   CQ10 = mean_val4Q10[index[3]];
   for (k=0; k<PITCH_SUBFRAMES; k++) {
-    tmp32b =  (int32_t) WEBRTC_SPL_MUL_16_16_RSFT((int16_t) WebRtcIsacfix_kTransform[3][k], (int16_t) CQ10,10);
-    tmp16c = (int16_t)(tmp32b >> 5);
-    PitchLags_Q7[k] += tmp16c;
+    tmp32b = WebRtcIsacfix_kTransform[3][k] * (int16_t)CQ10 >> 10;
+    PitchLags_Q7[k] += (int16_t)(tmp32b >> 5);
   }
 
   return 0;
@@ -1763,7 +1758,7 @@ int WebRtcIsacfix_EncodePitchLag(int16_t* PitchLagsQ7,
   const int16_t *mean_val2Q10,*mean_val4Q10;
   const int16_t *lower_limit, *upper_limit;
   const uint16_t **cdf;
-  int16_t shft, tmp16a, tmp16b, tmp16c;
+  int16_t shft, tmp16b;
   int32_t tmp32b;
   int status = 0;
 
@@ -1809,7 +1804,7 @@ int WebRtcIsacfix_EncodePitchLag(int16_t* PitchLagsQ7,
     /*  transform */
     CQ17=0;
     for (j=0; j<PITCH_SUBFRAMES; j++)
-      CQ17 += WEBRTC_SPL_MUL_16_16_RSFT(WebRtcIsacfix_kTransform[k][j], PitchLagsQ7[j],2); // Q17
+      CQ17 += WebRtcIsacfix_kTransform[k][j] * PitchLagsQ7[j] >> 2;  // Q17
 
     CQ17 = WEBRTC_SPL_SHIFT_W32(CQ17,shft); // Scale with StepSize
 
@@ -1834,22 +1829,19 @@ int WebRtcIsacfix_EncodePitchLag(int16_t* PitchLagsQ7,
 
   for (k=0; k<PITCH_SUBFRAMES; k++) {
     tmp32a =  WEBRTC_SPL_MUL_16_32_RSFT11(WebRtcIsacfix_kTransform[0][k], CQ11); // Q12
-    tmp16a = (int16_t)(tmp32a >> 5);  // Q7.
-    PitchLagsQ7[k] = tmp16a;
+    PitchLagsQ7[k] = (int16_t)(tmp32a >> 5);  // Q7.
   }
 
   CQ10 = mean_val2Q10[index[1]];
   for (k=0; k<PITCH_SUBFRAMES; k++) {
-    tmp32b =  (int32_t) WEBRTC_SPL_MUL_16_16_RSFT((int16_t) WebRtcIsacfix_kTransform[1][k], (int16_t) CQ10,10);
-    tmp16c = (int16_t)(tmp32b >> 5);  // Q7.
-    PitchLagsQ7[k] += tmp16c;
+    tmp32b = WebRtcIsacfix_kTransform[1][k] * (int16_t)CQ10 >> 10;
+    PitchLagsQ7[k] += (int16_t)(tmp32b >> 5);  // Q7.
   }
 
   CQ10 = mean_val4Q10[index[3]];
   for (k=0; k<PITCH_SUBFRAMES; k++) {
-    tmp32b =  (int32_t) WEBRTC_SPL_MUL_16_16_RSFT((int16_t) WebRtcIsacfix_kTransform[3][k], (int16_t) CQ10,10);
-    tmp16c = (int16_t)(tmp32b >> 5);  // Q7.
-    PitchLagsQ7[k] += tmp16c;
+    tmp32b = WebRtcIsacfix_kTransform[3][k] * (int16_t)CQ10 >> 10;
+    PitchLagsQ7[k] += (int16_t)(tmp32b >> 5);  // Q7.
   }
 
   /* entropy coding of quantization pitch lags */
@@ -1878,7 +1870,7 @@ const uint16_t kFrameLenInitIndex[1] = {1};
 
 
 int WebRtcIsacfix_DecodeFrameLen(Bitstr_dec *streamdata,
-                                 int16_t *framesamples)
+                                 size_t *framesamples)
 {
 
   int err;

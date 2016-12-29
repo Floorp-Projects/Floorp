@@ -20,7 +20,7 @@ namespace {
 class MediaCallback : public VoEMediaProcess {
  public:
   virtual void Process(int channel, ProcessingTypes type,
-                       int16_t audio[], int samples_per_channel,
+                       int16_t audio[], size_t samples_per_channel,
                        int sample_rate_hz, bool is_stereo) {
   }
 };

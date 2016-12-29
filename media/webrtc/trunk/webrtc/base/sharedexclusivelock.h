@@ -36,7 +36,7 @@ class LOCKABLE SharedExclusiveLock {
   rtc::Event shared_count_is_zero_;
   int shared_count_;
 
-  DISALLOW_COPY_AND_ASSIGN(SharedExclusiveLock);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SharedExclusiveLock);
 };
 
 class SCOPED_LOCKABLE SharedScope {
@@ -51,7 +51,7 @@ class SCOPED_LOCKABLE SharedScope {
  private:
   SharedExclusiveLock* lock_;
 
-  DISALLOW_COPY_AND_ASSIGN(SharedScope);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SharedScope);
 };
 
 class SCOPED_LOCKABLE ExclusiveScope {
@@ -67,7 +67,7 @@ class SCOPED_LOCKABLE ExclusiveScope {
  private:
   SharedExclusiveLock* lock_;
 
-  DISALLOW_COPY_AND_ASSIGN(ExclusiveScope);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ExclusiveScope);
 };
 
 }  // namespace rtc

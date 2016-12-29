@@ -8,11 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_payload_registry.h"
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/mock/mock_rtp_payload_strategy.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 
@@ -23,7 +25,7 @@ using ::testing::Return;
 using ::testing::_;
 
 static const char* kTypicalPayloadName = "name";
-static const uint8_t kTypicalChannels = 1;
+static const size_t kTypicalChannels = 1;
 static const int kTypicalFrequency = 44000;
 static const int kTypicalRate = 32 * 1024;
 
@@ -50,10 +52,9 @@ class RtpPayloadRegistryTest : public ::testing::Test {
     RtpUtility::Payload* returned_payload_on_heap =
         new RtpUtility::Payload(returned_payload);
     EXPECT_CALL(*mock_payload_strategy_,
-        CreatePayloadType(kTypicalPayloadName, payload_type,
-            kTypicalFrequency,
-            kTypicalChannels,
-            rate)).WillOnce(Return(returned_payload_on_heap));
+                CreatePayloadType(kTypicalPayloadName, payload_type,
+                                  kTypicalFrequency, kTypicalChannels, rate))
+        .WillOnce(Return(returned_payload_on_heap));
     return returned_payload_on_heap;
   }
 
@@ -68,14 +69,14 @@ TEST_F(RtpPayloadRegistryTest, RegistersAndRemembersPayloadsUntilDeregistered) {
 
   bool new_payload_created = false;
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type, kTypicalFrequency, kTypicalChannels,
-      kTypicalRate, &new_payload_created));
+                   kTypicalPayloadName, payload_type, kTypicalFrequency,
+                   kTypicalChannels, kTypicalRate, &new_payload_created));
 
   EXPECT_TRUE(new_payload_created) << "A new payload WAS created.";
 
-  RtpUtility::Payload* retrieved_payload = NULL;
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type,
-                                                          retrieved_payload));
+  const RtpUtility::Payload* retrieved_payload =
+      rtp_payload_registry_->PayloadTypeToPayload(payload_type);
+  EXPECT_TRUE(retrieved_payload);
 
   // We should get back the exact pointer to the payload returned by the
   // payload strategy.
@@ -83,32 +84,30 @@ TEST_F(RtpPayloadRegistryTest, RegistersAndRemembersPayloadsUntilDeregistered) {
 
   // Now forget about it and verify it's gone.
   EXPECT_EQ(0, rtp_payload_registry_->DeRegisterReceivePayload(payload_type));
-  EXPECT_FALSE(rtp_payload_registry_->PayloadTypeToPayload(
-      payload_type, retrieved_payload));
+  EXPECT_FALSE(rtp_payload_registry_->PayloadTypeToPayload(payload_type));
 }
 
 TEST_F(RtpPayloadRegistryTest, AudioRedWorkProperly) {
   const uint8_t kRedPayloadType = 127;
   const int kRedSampleRate = 8000;
-  const int kRedChannels = 1;
+  const size_t kRedChannels = 1;
   const int kRedBitRate = 0;
 
   // This creates an audio RTP payload strategy.
-  rtp_payload_registry_.reset(new RTPPayloadRegistry(
-      RTPPayloadStrategy::CreateStrategy(true)));
+  rtp_payload_registry_.reset(
+      new RTPPayloadRegistry(RTPPayloadStrategy::CreateStrategy(true)));
 
   bool new_payload_created = false;
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      "red", kRedPayloadType, kRedSampleRate, kRedChannels, kRedBitRate,
-      &new_payload_created));
+                   "red", kRedPayloadType, kRedSampleRate, kRedChannels,
+                   kRedBitRate, &new_payload_created));
   EXPECT_TRUE(new_payload_created);
 
   EXPECT_EQ(kRedPayloadType, rtp_payload_registry_->red_payload_type());
 
-  RtpUtility::Payload* retrieved_payload = NULL;
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(kRedPayloadType,
-                                                          retrieved_payload));
-  ASSERT_TRUE(retrieved_payload);
+  const RtpUtility::Payload* retrieved_payload =
+      rtp_payload_registry_->PayloadTypeToPayload(kRedPayloadType);
+  EXPECT_TRUE(retrieved_payload);
   EXPECT_TRUE(retrieved_payload->audio);
   EXPECT_STRCASEEQ("red", retrieved_payload->name);
 
@@ -125,27 +124,29 @@ TEST_F(RtpPayloadRegistryTest,
   RtpUtility::Payload* first_payload_on_heap =
       ExpectReturnOfTypicalAudioPayload(payload_type, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type, kTypicalFrequency, kTypicalChannels,
-      kTypicalRate, &ignored));
+                   kTypicalPayloadName, payload_type, kTypicalFrequency,
+                   kTypicalChannels, kTypicalRate, &ignored));
 
   EXPECT_EQ(-1, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type, kTypicalFrequency, kTypicalChannels,
-      kTypicalRate, &ignored)) << "Adding same codec twice = bad.";
+                    kTypicalPayloadName, payload_type, kTypicalFrequency,
+                    kTypicalChannels, kTypicalRate, &ignored))
+      << "Adding same codec twice = bad.";
 
   RtpUtility::Payload* second_payload_on_heap =
       ExpectReturnOfTypicalAudioPayload(payload_type - 1, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type - 1, kTypicalFrequency,
-      kTypicalChannels, kTypicalRate, &ignored)) <<
-          "With a different payload type is fine though.";
+                   kTypicalPayloadName, payload_type - 1, kTypicalFrequency,
+                   kTypicalChannels, kTypicalRate, &ignored))
+      << "With a different payload type is fine though.";
 
   // Ensure both payloads are preserved.
-  RtpUtility::Payload* retrieved_payload = NULL;
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type,
-                                                          retrieved_payload));
+  const RtpUtility::Payload* retrieved_payload =
+      rtp_payload_registry_->PayloadTypeToPayload(payload_type);
+  EXPECT_TRUE(retrieved_payload);
   EXPECT_EQ(first_payload_on_heap, retrieved_payload);
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type - 1,
-                                                          retrieved_payload));
+  retrieved_payload =
+      rtp_payload_registry_->PayloadTypeToPayload(payload_type - 1);
+  EXPECT_TRUE(retrieved_payload);
   EXPECT_EQ(second_payload_on_heap, retrieved_payload);
 
   // Ok, update the rate for one of the codecs. If either the incoming rate or
@@ -156,8 +157,8 @@ TEST_F(RtpPayloadRegistryTest,
   EXPECT_CALL(*mock_payload_strategy_,
               UpdatePayloadRate(first_payload_on_heap, kTypicalRate));
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type, kTypicalFrequency, kTypicalChannels,
-      kTypicalRate, &ignored));
+                   kTypicalPayloadName, payload_type, kTypicalFrequency,
+                   kTypicalChannels, kTypicalRate, &ignored));
 }
 
 TEST_F(RtpPayloadRegistryTest,
@@ -172,35 +173,31 @@ TEST_F(RtpPayloadRegistryTest,
   bool ignored = false;
   ExpectReturnOfTypicalAudioPayload(payload_type, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type, kTypicalFrequency, kTypicalChannels,
-      kTypicalRate, &ignored));
+                   kTypicalPayloadName, payload_type, kTypicalFrequency,
+                   kTypicalChannels, kTypicalRate, &ignored));
   ExpectReturnOfTypicalAudioPayload(payload_type - 1, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type - 1, kTypicalFrequency,
-      kTypicalChannels, kTypicalRate, &ignored));
+                   kTypicalPayloadName, payload_type - 1, kTypicalFrequency,
+                   kTypicalChannels, kTypicalRate, &ignored));
 
-  RtpUtility::Payload* retrieved_payload = NULL;
-  EXPECT_FALSE(rtp_payload_registry_->PayloadTypeToPayload(
-      payload_type, retrieved_payload)) << "The first payload should be "
-          "deregistered because the only thing that differs is payload type.";
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(
-      payload_type - 1, retrieved_payload)) <<
-          "The second payload should still be registered though.";
+  EXPECT_FALSE(rtp_payload_registry_->PayloadTypeToPayload(payload_type))
+      << "The first payload should be "
+         "deregistered because the only thing that differs is payload type.";
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type - 1))
+      << "The second payload should still be registered though.";
 
   // Now ensure non-compatible codecs aren't removed.
   ON_CALL(*mock_payload_strategy_, PayloadIsCompatible(_, _, _, _))
       .WillByDefault(Return(false));
   ExpectReturnOfTypicalAudioPayload(payload_type + 1, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, payload_type + 1, kTypicalFrequency,
-      kTypicalChannels, kTypicalRate, &ignored));
+                   kTypicalPayloadName, payload_type + 1, kTypicalFrequency,
+                   kTypicalChannels, kTypicalRate, &ignored));
 
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(
-      payload_type - 1, retrieved_payload)) <<
-          "Not compatible; both payloads should be kept.";
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(
-      payload_type + 1, retrieved_payload)) <<
-          "Not compatible; both payloads should be kept.";
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type - 1))
+      << "Not compatible; both payloads should be kept.";
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type + 1))
+      << "Not compatible; both payloads should be kept.";
 }
 
 TEST_F(RtpPayloadRegistryTest,
@@ -216,18 +213,17 @@ TEST_F(RtpPayloadRegistryTest,
   bool ignored;
   ExpectReturnOfTypicalAudioPayload(34, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      kTypicalPayloadName, 34, kTypicalFrequency, kTypicalChannels,
-      kTypicalRate, &ignored));
+                   kTypicalPayloadName, 34, kTypicalFrequency, kTypicalChannels,
+                   kTypicalRate, &ignored));
 
   EXPECT_EQ(-1, rtp_payload_registry_->last_received_payload_type());
   media_type_unchanged = rtp_payload_registry_->ReportMediaPayloadType(18);
   EXPECT_FALSE(media_type_unchanged);
 }
 
-class ParameterizedRtpPayloadRegistryTest :
-    public RtpPayloadRegistryTest,
-    public ::testing::WithParamInterface<int> {
-};
+class ParameterizedRtpPayloadRegistryTest
+    : public RtpPayloadRegistryTest,
+      public ::testing::WithParamInterface<int> {};
 
 TEST_P(ParameterizedRtpPayloadRegistryTest,
        FailsToRegisterKnownPayloadsWeAreNotInterestedIn) {
@@ -235,29 +231,166 @@ TEST_P(ParameterizedRtpPayloadRegistryTest,
 
   bool ignored;
   EXPECT_EQ(-1, rtp_payload_registry_->RegisterReceivePayload(
-      "whatever", static_cast<uint8_t>(payload_type), 19, 1, 17, &ignored));
+                    "whatever", static_cast<uint8_t>(payload_type), 19, 1, 17,
+                    &ignored));
 }
 
 INSTANTIATE_TEST_CASE_P(TestKnownBadPayloadTypes,
                         ParameterizedRtpPayloadRegistryTest,
                         testing::Values(64, 72, 73, 74, 75, 76, 77, 78, 79));
 
-class RtpPayloadRegistryGenericTest :
-    public RtpPayloadRegistryTest,
-    public ::testing::WithParamInterface<int> {
-};
+class RtpPayloadRegistryGenericTest
+    : public RtpPayloadRegistryTest,
+      public ::testing::WithParamInterface<int> {};
 
 TEST_P(RtpPayloadRegistryGenericTest, RegisterGenericReceivePayloadType) {
   int payload_type = GetParam();
 
   bool ignored;
 
-  EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload("generic-codec",
-    static_cast<int8_t>(payload_type),
-    19, 1, 17, &ignored)); // dummy values, except for payload_type
+  EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
+                   "generic-codec", static_cast<int8_t>(payload_type), 19, 1,
+                   17, &ignored));  // dummy values, except for payload_type
 }
 
-INSTANTIATE_TEST_CASE_P(TestDynamicRange, RtpPayloadRegistryGenericTest,
-                        testing::Range(96, 127+1));
+// Generates an RTX packet for the given length and original sequence number.
+// The RTX sequence number and ssrc will use the default value of 9999. The
+// caller takes ownership of the returned buffer.
+const uint8_t* GenerateRtxPacket(size_t header_length,
+                                 size_t payload_length,
+                                 uint16_t original_sequence_number) {
+  uint8_t* packet =
+      new uint8_t[kRtxHeaderSize + header_length + payload_length]();
+  // Write the RTP version to the first byte, so the resulting header can be
+  // parsed.
+  static const int kRtpExpectedVersion = 2;
+  packet[0] = static_cast<uint8_t>(kRtpExpectedVersion << 6);
+  // Write a junk sequence number. It should be thrown away when the packet is
+  // restored.
+  ByteWriter<uint16_t>::WriteBigEndian(packet + 2, 9999);
+  // Write a junk ssrc. It should also be thrown away when the packet is
+  // restored.
+  ByteWriter<uint32_t>::WriteBigEndian(packet + 8, 9999);
+
+  // Now write the RTX header. It occurs at the start of the payload block, and
+  // contains just the sequence number.
+  ByteWriter<uint16_t>::WriteBigEndian(packet + header_length,
+                                       original_sequence_number);
+  return packet;
+}
+
+void TestRtxPacket(RTPPayloadRegistry* rtp_payload_registry,
+                   int rtx_payload_type,
+                   int expected_payload_type,
+                   bool should_succeed) {
+  size_t header_length = 100;
+  size_t payload_length = 200;
+  size_t original_length = header_length + payload_length + kRtxHeaderSize;
+
+  RTPHeader header;
+  header.ssrc = 1000;
+  header.sequenceNumber = 100;
+  header.payloadType = rtx_payload_type;
+  header.headerLength = header_length;
+
+  uint16_t original_sequence_number = 1234;
+  uint32_t original_ssrc = 500;
+
+  rtc::scoped_ptr<const uint8_t[]> packet(GenerateRtxPacket(
+      header_length, payload_length, original_sequence_number));
+  rtc::scoped_ptr<uint8_t[]> restored_packet(
+      new uint8_t[header_length + payload_length]);
+  size_t length = original_length;
+  bool success = rtp_payload_registry->RestoreOriginalPacket(
+      restored_packet.get(), packet.get(), &length, original_ssrc, header);
+  ASSERT_EQ(should_succeed, success)
+      << "Test success should match should_succeed.";
+  if (!success) {
+    return;
+  }
+
+  EXPECT_EQ(original_length - kRtxHeaderSize, length)
+      << "The restored packet should be exactly kRtxHeaderSize smaller.";
+
+  rtc::scoped_ptr<RtpHeaderParser> header_parser(RtpHeaderParser::Create());
+  RTPHeader restored_header;
+  ASSERT_TRUE(
+      header_parser->Parse(restored_packet.get(), length, &restored_header));
+  EXPECT_EQ(original_sequence_number, restored_header.sequenceNumber)
+      << "The restored packet should have the original sequence number "
+      << "in the correct location in the RTP header.";
+  EXPECT_EQ(expected_payload_type, restored_header.payloadType)
+      << "The restored packet should have the correct payload type.";
+  EXPECT_EQ(original_ssrc, restored_header.ssrc)
+      << "The restored packet should have the correct ssrc.";
+}
+
+TEST_F(RtpPayloadRegistryTest, MultipleRtxPayloadTypes) {
+  // Set the incoming payload type to 90.
+  RTPHeader header;
+  header.payloadType = 90;
+  header.ssrc = 1;
+  rtp_payload_registry_->SetIncomingPayloadType(header);
+  rtp_payload_registry_->SetRtxSsrc(100);
+  // Map two RTX payload types.
+  rtp_payload_registry_->SetRtxPayloadType(105, 95);
+  rtp_payload_registry_->SetRtxPayloadType(106, 96);
+  rtp_payload_registry_->set_use_rtx_payload_mapping_on_restore(true);
+
+  TestRtxPacket(rtp_payload_registry_.get(), 105, 95, true);
+  TestRtxPacket(rtp_payload_registry_.get(), 106, 96, true);
+
+  // If the option is off, the map will be ignored.
+  rtp_payload_registry_->set_use_rtx_payload_mapping_on_restore(false);
+  TestRtxPacket(rtp_payload_registry_.get(), 105, 90, true);
+  TestRtxPacket(rtp_payload_registry_.get(), 106, 90, true);
+}
+
+// TODO(holmer): Ignored by default for compatibility with misconfigured RTX
+// streams in Chrome. When that is fixed, remove this.
+TEST_F(RtpPayloadRegistryTest, IgnoresRtxPayloadTypeMappingByDefault) {
+  // Set the incoming payload type to 90.
+  RTPHeader header;
+  header.payloadType = 90;
+  header.ssrc = 1;
+  rtp_payload_registry_->SetIncomingPayloadType(header);
+  rtp_payload_registry_->SetRtxSsrc(100);
+  // Map two RTX payload types.
+  rtp_payload_registry_->SetRtxPayloadType(105, 95);
+  rtp_payload_registry_->SetRtxPayloadType(106, 96);
+
+  TestRtxPacket(rtp_payload_registry_.get(), 105, 90, true);
+  TestRtxPacket(rtp_payload_registry_.get(), 106, 90, true);
+}
+
+TEST_F(RtpPayloadRegistryTest, InferLastReceivedPacketIfPayloadTypeUnknown) {
+  rtp_payload_registry_->SetRtxSsrc(100);
+  // Set the incoming payload type to 90.
+  RTPHeader header;
+  header.payloadType = 90;
+  header.ssrc = 1;
+  rtp_payload_registry_->SetIncomingPayloadType(header);
+  rtp_payload_registry_->SetRtxPayloadType(105, 95);
+  rtp_payload_registry_->set_use_rtx_payload_mapping_on_restore(true);
+  // Mapping respected for known type.
+  TestRtxPacket(rtp_payload_registry_.get(), 105, 95, true);
+  // Mapping ignored for unknown type, even though the option is on.
+  TestRtxPacket(rtp_payload_registry_.get(), 106, 90, true);
+}
+
+TEST_F(RtpPayloadRegistryTest, InvalidRtxConfiguration) {
+  rtp_payload_registry_->SetRtxSsrc(100);
+  // Fails because no mappings exist and the incoming payload type isn't known.
+  TestRtxPacket(rtp_payload_registry_.get(), 105, 0, false);
+  // Succeeds when the mapping is used, but fails for the implicit fallback.
+  rtp_payload_registry_->SetRtxPayloadType(105, 95);
+  rtp_payload_registry_->set_use_rtx_payload_mapping_on_restore(true);
+  TestRtxPacket(rtp_payload_registry_.get(), 105, 95, true);
+  TestRtxPacket(rtp_payload_registry_.get(), 106, 0, false);
+}
+
+INSTANTIATE_TEST_CASE_P(TestDynamicRange,
+                        RtpPayloadRegistryGenericTest,
+                        testing::Range(96, 127 + 1));
 
 }  // namespace webrtc

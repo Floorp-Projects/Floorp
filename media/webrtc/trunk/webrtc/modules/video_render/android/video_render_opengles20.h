@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_ANDROID_VIDEO_RENDER_OPENGLES20_H_
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_ANDROID_VIDEO_RENDER_OPENGLES20_H_
 
-#include "webrtc/modules/video_render/include/video_render_defines.h"
+#include "webrtc/modules/video_render/video_render_defines.h"
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -25,7 +25,7 @@ class VideoRenderOpenGles20 {
   ~VideoRenderOpenGles20();
 
   int32_t Setup(int32_t widht, int32_t height);
-  int32_t Render(const I420VideoFrame& frameToRender);
+  int32_t Render(const VideoFrame& frameToRender);
   int32_t SetCoordinates(int32_t zOrder, const float left, const float top,
                          const float right, const float bottom);
 
@@ -35,8 +35,8 @@ class VideoRenderOpenGles20 {
   GLuint loadShader(GLenum shaderType, const char* pSource);
   GLuint createProgram(const char* pVertexSource,
                        const char* pFragmentSource);
-  void SetupTextures(const I420VideoFrame& frameToRender);
-  void UpdateTextures(const I420VideoFrame& frameToRender);
+  void SetupTextures(const VideoFrame& frameToRender);
+  void UpdateTextures(const VideoFrame& frameToRender);
 
   int32_t _id;
   GLuint _textureIds[3]; // Texture id of Y,U and V texture.

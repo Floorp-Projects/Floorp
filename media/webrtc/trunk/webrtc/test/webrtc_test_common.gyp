@@ -18,6 +18,8 @@
         'call_test.h',
         'configurable_frame_size_encoder.cc',
         'configurable_frame_size_encoder.h',
+        'constants.cc',
+        'constants.h',
         'direct_transport.cc',
         'direct_transport.h',
         'encoder_settings.cc',
@@ -32,7 +34,11 @@
         'fake_network_pipe.h',
         'frame_generator_capturer.cc',
         'frame_generator_capturer.h',
+        'layer_filtering_transport.cc',
+        'layer_filtering_transport.h',
         'mock_transport.h',
+        'mock_voe_channel_proxy.h',
+        'mock_voice_engine.h',
         'null_transport.cc',
         'null_transport.h',
         'rtp_rtcp_observer.h',
@@ -54,13 +60,14 @@
         }],
       ],
       'dependencies': [
+        '<(DEPTH)/testing/gmock.gyp:gmock',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
         '<(webrtc_root)/base/base.gyp:rtc_base',
         '<(webrtc_root)/common.gyp:webrtc_common',
         '<(webrtc_root)/modules/modules.gyp:media_file',
         '<(webrtc_root)/modules/modules.gyp:video_render',
-        '<(webrtc_root)/test/test.gyp:frame_generator',
+        '<(webrtc_root)/test/test.gyp:fake_video_frames',
         '<(webrtc_root)/test/test.gyp:test_support',
         '<(webrtc_root)/test/test.gyp:rtp_test_utils',
         '<(webrtc_root)/webrtc.gyp:webrtc',
@@ -108,11 +115,24 @@
             '<(directx_sdk_path)/Include',
           ],
         }],
+        ['OS=="win" and clang==1', {
+          'msvs_settings': {
+            'VCCLCompilerTool': {
+              'AdditionalOptions': [
+                # Disable warnings failing when compiling with Clang on Windows.
+                # https://bugs.chromium.org/p/webrtc/issues/detail?id=5366
+                '-Wno-bool-conversion',
+                '-Wno-comment',
+                '-Wno-delete-non-virtual-dtor',
+              ],
+            },
+          },
+        }],
       ],
       'dependencies': [
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(webrtc_root)/modules/modules.gyp:media_file',
-        '<(webrtc_root)/test/test.gyp:frame_generator',
+        '<(webrtc_root)/test/test.gyp:fake_video_frames',
         '<(webrtc_root)/test/test.gyp:test_support',
       ],
       'direct_dependent_settings': {

@@ -40,7 +40,7 @@ class MouseCursor {
   rtc::scoped_ptr<DesktopFrame> image_;
   DesktopVector hotspot_;
 
-  DISALLOW_COPY_AND_ASSIGN(MouseCursor);
+  RTC_DISALLOW_COPY_AND_ASSIGN(MouseCursor);
 };
 
 }  // namespace webrtc

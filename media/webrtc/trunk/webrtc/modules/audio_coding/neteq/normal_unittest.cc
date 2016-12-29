@@ -23,6 +23,7 @@
 #include "webrtc/modules/audio_coding/neteq/mock/mock_decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/mock/mock_expand.h"
 #include "webrtc/modules/audio_coding/neteq/random_vector.h"
+#include "webrtc/modules/audio_coding/neteq/statistics_calculator.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
 
 using ::testing::_;
@@ -36,7 +37,8 @@ TEST(Normal, CreateAndDestroy) {
   BackgroundNoise bgn(channels);
   SyncBuffer sync_buffer(1, 1000);
   RandomVector random_vector;
-  Expand expand(&bgn, &sync_buffer, &random_vector, fs, channels);
+  StatisticsCalculator statistics;
+  Expand expand(&bgn, &sync_buffer, &random_vector, &statistics, fs, channels);
   Normal normal(fs, &db, bgn, &expand);
   EXPECT_CALL(db, Die());  // Called when |db| goes out of scope.
 }
@@ -49,7 +51,9 @@ TEST(Normal, AvoidDivideByZero) {
   BackgroundNoise bgn(channels);
   SyncBuffer sync_buffer(1, 1000);
   RandomVector random_vector;
-  MockExpand expand(&bgn, &sync_buffer, &random_vector, fs, channels);
+  StatisticsCalculator statistics;
+  MockExpand expand(&bgn, &sync_buffer, &random_vector, &statistics, fs,
+                    channels);
   Normal normal(fs, &db, bgn, &expand);
 
   int16_t input[1000] = {0};
@@ -93,7 +97,9 @@ TEST(Normal, InputLengthAndChannelsDoNotMatch) {
   BackgroundNoise bgn(channels);
   SyncBuffer sync_buffer(channels, 1000);
   RandomVector random_vector;
-  MockExpand expand(&bgn, &sync_buffer, &random_vector, fs, channels);
+  StatisticsCalculator statistics;
+  MockExpand expand(&bgn, &sync_buffer, &random_vector, &statistics, fs,
+                    channels);
   Normal normal(fs, &db, bgn, &expand);
 
   int16_t input[1000] = {0};

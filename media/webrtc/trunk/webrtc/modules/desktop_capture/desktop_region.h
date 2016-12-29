@@ -67,6 +67,7 @@ class DesktopRegion {
   class Iterator {
    public:
     explicit Iterator(const DesktopRegion& target);
+    ~Iterator();
 
     bool IsAtEnd() const;
     void Advance();

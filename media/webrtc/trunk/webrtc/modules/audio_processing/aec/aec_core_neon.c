@@ -34,51 +34,55 @@ __inline static float MulIm(float aRe, float aIm, float bRe, float bIm) {
   return aRe * bIm + aIm * bRe;
 }
 
-static void FilterFarNEON(AecCore* aec, float yf[2][PART_LEN1]) {
+static void FilterFarNEON(
+    int num_partitions,
+    int x_fft_buf_block_pos,
+    float x_fft_buf[2][kExtendedNumPartitions * PART_LEN1],
+    float h_fft_buf[2][kExtendedNumPartitions * PART_LEN1],
+    float y_fft[2][PART_LEN1]) {
   int i;
-  const int num_partitions = aec->num_partitions;
   for (i = 0; i < num_partitions; i++) {
     int j;
-    int xPos = (i + aec->xfBufBlockPos) * PART_LEN1;
+    int xPos = (i + x_fft_buf_block_pos) * PART_LEN1;
     int pos = i * PART_LEN1;
     // Check for wrap
-    if (i + aec->xfBufBlockPos >= num_partitions) {
+    if (i + x_fft_buf_block_pos >= num_partitions) {
       xPos -= num_partitions * PART_LEN1;
     }
 
     // vectorized code (four at once)
     for (j = 0; j + 3 < PART_LEN1; j += 4) {
-      const float32x4_t xfBuf_re = vld1q_f32(&aec->xfBuf[0][xPos + j]);
-      const float32x4_t xfBuf_im = vld1q_f32(&aec->xfBuf[1][xPos + j]);
-      const float32x4_t wfBuf_re = vld1q_f32(&aec->wfBuf[0][pos + j]);
-      const float32x4_t wfBuf_im = vld1q_f32(&aec->wfBuf[1][pos + j]);
-      const float32x4_t yf_re = vld1q_f32(&yf[0][j]);
-      const float32x4_t yf_im = vld1q_f32(&yf[1][j]);
-      const float32x4_t a = vmulq_f32(xfBuf_re, wfBuf_re);
-      const float32x4_t e = vmlsq_f32(a, xfBuf_im, wfBuf_im);
-      const float32x4_t c = vmulq_f32(xfBuf_re, wfBuf_im);
-      const float32x4_t f = vmlaq_f32(c, xfBuf_im, wfBuf_re);
-      const float32x4_t g = vaddq_f32(yf_re, e);
-      const float32x4_t h = vaddq_f32(yf_im, f);
-      vst1q_f32(&yf[0][j], g);
-      vst1q_f32(&yf[1][j], h);
+      const float32x4_t x_fft_buf_re = vld1q_f32(&x_fft_buf[0][xPos + j]);
+      const float32x4_t x_fft_buf_im = vld1q_f32(&x_fft_buf[1][xPos + j]);
+      const float32x4_t h_fft_buf_re = vld1q_f32(&h_fft_buf[0][pos + j]);
+      const float32x4_t h_fft_buf_im = vld1q_f32(&h_fft_buf[1][pos + j]);
+      const float32x4_t y_fft_re = vld1q_f32(&y_fft[0][j]);
+      const float32x4_t y_fft_im = vld1q_f32(&y_fft[1][j]);
+      const float32x4_t a = vmulq_f32(x_fft_buf_re, h_fft_buf_re);
+      const float32x4_t e = vmlsq_f32(a, x_fft_buf_im, h_fft_buf_im);
+      const float32x4_t c = vmulq_f32(x_fft_buf_re, h_fft_buf_im);
+      const float32x4_t f = vmlaq_f32(c, x_fft_buf_im, h_fft_buf_re);
+      const float32x4_t g = vaddq_f32(y_fft_re, e);
+      const float32x4_t h = vaddq_f32(y_fft_im, f);
+      vst1q_f32(&y_fft[0][j], g);
+      vst1q_f32(&y_fft[1][j], h);
     }
     // scalar code for the remaining items.
     for (; j < PART_LEN1; j++) {
-      yf[0][j] += MulRe(aec->xfBuf[0][xPos + j],
-                        aec->xfBuf[1][xPos + j],
-                        aec->wfBuf[0][pos + j],
-                        aec->wfBuf[1][pos + j]);
-      yf[1][j] += MulIm(aec->xfBuf[0][xPos + j],
-                        aec->xfBuf[1][xPos + j],
-                        aec->wfBuf[0][pos + j],
-                        aec->wfBuf[1][pos + j]);
+      y_fft[0][j] += MulRe(x_fft_buf[0][xPos + j],
+                           x_fft_buf[1][xPos + j],
+                           h_fft_buf[0][pos + j],
+                           h_fft_buf[1][pos + j]);
+      y_fft[1][j] += MulIm(x_fft_buf[0][xPos + j],
+                           x_fft_buf[1][xPos + j],
+                           h_fft_buf[0][pos + j],
+                           h_fft_buf[1][pos + j]);
     }
   }
 }
 
 // ARM64's arm_neon.h has already defined vdivq_f32 vsqrtq_f32.
-#if !defined (WEBRTC_ARCH_ARM64_NEON)
+#if !defined (WEBRTC_ARCH_ARM64)
 static float32x4_t vdivq_f32(float32x4_t a, float32x4_t b) {
   int i;
   float32x4_t x = vrecpeq_f32(b);
@@ -120,22 +124,26 @@ static float32x4_t vsqrtq_f32(float32x4_t s) {
   // sqrt(s) = s * 1/sqrt(s)
   return vmulq_f32(s, x);;
 }
-#endif  // WEBRTC_ARCH_ARM64_NEON
+#endif  // WEBRTC_ARCH_ARM64
 
-static void ScaleErrorSignalNEON(AecCore* aec, float ef[2][PART_LEN1]) {
-  const float mu = aec->extended_filter_enabled ? kExtendedMu : aec->normal_mu;
-  const float error_threshold = aec->extended_filter_enabled ?
-      kExtendedErrorThreshold : aec->normal_error_threshold;
+static void ScaleErrorSignalNEON(int extended_filter_enabled,
+                                 float normal_mu,
+                                 float normal_error_threshold,
+                                 float x_pow[PART_LEN1],
+                                 float ef[2][PART_LEN1]) {
+  const float mu = extended_filter_enabled ? kExtendedMu : normal_mu;
+  const float error_threshold = extended_filter_enabled ?
+      kExtendedErrorThreshold : normal_error_threshold;
   const float32x4_t k1e_10f = vdupq_n_f32(1e-10f);
   const float32x4_t kMu = vmovq_n_f32(mu);
   const float32x4_t kThresh = vmovq_n_f32(error_threshold);
   int i;
   // vectorized code (four at once)
   for (i = 0; i + 3 < PART_LEN1; i += 4) {
-    const float32x4_t xPow = vld1q_f32(&aec->xPow[i]);
+    const float32x4_t x_pow_local = vld1q_f32(&x_pow[i]);
     const float32x4_t ef_re_base = vld1q_f32(&ef[0][i]);
     const float32x4_t ef_im_base = vld1q_f32(&ef[1][i]);
-    const float32x4_t xPowPlus = vaddq_f32(xPow, k1e_10f);
+    const float32x4_t xPowPlus = vaddq_f32(x_pow_local, k1e_10f);
     float32x4_t ef_re = vdivq_f32(ef_re_base, xPowPlus);
     float32x4_t ef_im = vdivq_f32(ef_im_base, xPowPlus);
     const float32x4_t ef_re2 = vmulq_f32(ef_re, ef_re);
@@ -162,8 +170,8 @@ static void ScaleErrorSignalNEON(AecCore* aec, float ef[2][PART_LEN1]) {
   // scalar code for the remaining items.
   for (; i < PART_LEN1; i++) {
     float abs_ef;
-    ef[0][i] /= (aec->xPow[i] + 1e-10f);
-    ef[1][i] /= (aec->xPow[i] + 1e-10f);
+    ef[0][i] /= (x_pow[i] + 1e-10f);
+    ef[1][i] /= (x_pow[i] + 1e-10f);
     abs_ef = sqrtf(ef[0][i] * ef[0][i] + ef[1][i] * ef[1][i]);
 
     if (abs_ef > error_threshold) {
@@ -178,34 +186,37 @@ static void ScaleErrorSignalNEON(AecCore* aec, float ef[2][PART_LEN1]) {
   }
 }
 
-static void FilterAdaptationNEON(AecCore* aec,
-                                 float* fft,
-                                 float ef[2][PART_LEN1]) {
+static void FilterAdaptationNEON(
+    int num_partitions,
+    int x_fft_buf_block_pos,
+    float x_fft_buf[2][kExtendedNumPartitions * PART_LEN1],
+    float e_fft[2][PART_LEN1],
+    float h_fft_buf[2][kExtendedNumPartitions * PART_LEN1]) {
+  float fft[PART_LEN2];
   int i;
-  const int num_partitions = aec->num_partitions;
   for (i = 0; i < num_partitions; i++) {
-    int xPos = (i + aec->xfBufBlockPos) * PART_LEN1;
+    int xPos = (i + x_fft_buf_block_pos) * PART_LEN1;
     int pos = i * PART_LEN1;
     int j;
     // Check for wrap
-    if (i + aec->xfBufBlockPos >= num_partitions) {
+    if (i + x_fft_buf_block_pos >= num_partitions) {
       xPos -= num_partitions * PART_LEN1;
     }
 
     // Process the whole array...
     for (j = 0; j < PART_LEN; j += 4) {
-      // Load xfBuf and ef.
-      const float32x4_t xfBuf_re = vld1q_f32(&aec->xfBuf[0][xPos + j]);
-      const float32x4_t xfBuf_im = vld1q_f32(&aec->xfBuf[1][xPos + j]);
-      const float32x4_t ef_re = vld1q_f32(&ef[0][j]);
-      const float32x4_t ef_im = vld1q_f32(&ef[1][j]);
-      // Calculate the product of conjugate(xfBuf) by ef.
+      // Load x_fft_buf and e_fft.
+      const float32x4_t x_fft_buf_re = vld1q_f32(&x_fft_buf[0][xPos + j]);
+      const float32x4_t x_fft_buf_im = vld1q_f32(&x_fft_buf[1][xPos + j]);
+      const float32x4_t e_fft_re = vld1q_f32(&e_fft[0][j]);
+      const float32x4_t e_fft_im = vld1q_f32(&e_fft[1][j]);
+      // Calculate the product of conjugate(x_fft_buf) by e_fft.
       //   re(conjugate(a) * b) = aRe * bRe + aIm * bIm
       //   im(conjugate(a) * b)=  aRe * bIm - aIm * bRe
-      const float32x4_t a = vmulq_f32(xfBuf_re, ef_re);
-      const float32x4_t e = vmlaq_f32(a, xfBuf_im, ef_im);
-      const float32x4_t c = vmulq_f32(xfBuf_re, ef_im);
-      const float32x4_t f = vmlsq_f32(c, xfBuf_im, ef_re);
+      const float32x4_t a = vmulq_f32(x_fft_buf_re, e_fft_re);
+      const float32x4_t e = vmlaq_f32(a, x_fft_buf_im, e_fft_im);
+      const float32x4_t c = vmulq_f32(x_fft_buf_re, e_fft_im);
+      const float32x4_t f = vmlsq_f32(c, x_fft_buf_im, e_fft_re);
       // Interleave real and imaginary parts.
       const float32x4x2_t g_n_h = vzipq_f32(e, f);
       // Store
@@ -213,10 +224,10 @@ static void FilterAdaptationNEON(AecCore* aec,
       vst1q_f32(&fft[2 * j + 4], g_n_h.val[1]);
     }
     // ... and fixup the first imaginary entry.
-    fft[1] = MulRe(aec->xfBuf[0][xPos + PART_LEN],
-                   -aec->xfBuf[1][xPos + PART_LEN],
-                   ef[0][PART_LEN],
-                   ef[1][PART_LEN]);
+    fft[1] = MulRe(x_fft_buf[0][xPos + PART_LEN],
+                   -x_fft_buf[1][xPos + PART_LEN],
+                   e_fft[0][PART_LEN],
+                   e_fft[1][PART_LEN]);
 
     aec_rdft_inverse_128(fft);
     memset(fft + PART_LEN, 0, sizeof(float) * PART_LEN);
@@ -234,21 +245,21 @@ static void FilterAdaptationNEON(AecCore* aec,
     aec_rdft_forward_128(fft);
 
     {
-      const float wt1 = aec->wfBuf[1][pos];
-      aec->wfBuf[0][pos + PART_LEN] += fft[1];
+      const float wt1 = h_fft_buf[1][pos];
+      h_fft_buf[0][pos + PART_LEN] += fft[1];
       for (j = 0; j < PART_LEN; j += 4) {
-        float32x4_t wtBuf_re = vld1q_f32(&aec->wfBuf[0][pos + j]);
-        float32x4_t wtBuf_im = vld1q_f32(&aec->wfBuf[1][pos + j]);
+        float32x4_t wtBuf_re = vld1q_f32(&h_fft_buf[0][pos + j]);
+        float32x4_t wtBuf_im = vld1q_f32(&h_fft_buf[1][pos + j]);
         const float32x4_t fft0 = vld1q_f32(&fft[2 * j + 0]);
         const float32x4_t fft4 = vld1q_f32(&fft[2 * j + 4]);
         const float32x4x2_t fft_re_im = vuzpq_f32(fft0, fft4);
         wtBuf_re = vaddq_f32(wtBuf_re, fft_re_im.val[0]);
         wtBuf_im = vaddq_f32(wtBuf_im, fft_re_im.val[1]);
 
-        vst1q_f32(&aec->wfBuf[0][pos + j], wtBuf_re);
-        vst1q_f32(&aec->wfBuf[1][pos + j], wtBuf_im);
+        vst1q_f32(&h_fft_buf[0][pos + j], wtBuf_re);
+        vst1q_f32(&h_fft_buf[1][pos + j], wtBuf_im);
       }
-      aec->wfBuf[1][pos] = wt1;
+      h_fft_buf[1][pos] = wt1;
     }
   }
 }
@@ -442,7 +453,7 @@ static void OverdriveAndSuppressNEON(AecCore* aec,
   }
 }
 
-static int PartitionDelay(const AecCore* aec) {
+static int PartitionDelayNEON(const AecCore* aec) {
   // Measures the energy in each filter partition and returns the partition with
   // highest energy.
   // TODO(bjornv): Spread computational cost by computing one partition per
@@ -499,7 +510,8 @@ static int PartitionDelay(const AecCore* aec) {
 static void SmoothedPSD(AecCore* aec,
                         float efw[2][PART_LEN1],
                         float dfw[2][PART_LEN1],
-                        float xfw[2][PART_LEN1]) {
+                        float xfw[2][PART_LEN1],
+                        int* extreme_filter_divergence) {
   // Power estimate smoothing coefficients.
   const float* ptrGCoh = aec->extended_filter_enabled
       ? WebRtcAec_kExtendedSmoothingCoefficients[aec->mult - 1]
@@ -615,19 +627,16 @@ static void SmoothedPSD(AecCore* aec,
     seSum += aec->se[i];
   }
 
-  // Divergent filter safeguard.
+  // Divergent filter safeguard update.
   aec->divergeState = (aec->divergeState ? 1.05f : 1.0f) * seSum > sdSum;
 
-  if (aec->divergeState)
-    memcpy(efw, dfw, sizeof(efw[0][0]) * 2 * PART_LEN1);
-
-  // Reset if error is significantly larger than nearend (13 dB).
-  if (!aec->extended_filter_enabled && seSum > (19.95f * sdSum))
-    memset(aec->wfBuf, 0, sizeof(aec->wfBuf));
+  // Signal extreme filter divergence if the error is significantly larger
+  // than the nearend (13 dB).
+  *extreme_filter_divergence = (seSum > (19.95f * sdSum));
 }
 
 // Window time domain data to be used by the fft.
-__inline static void WindowData(float* x_windowed, const float* x) {
+static void WindowDataNEON(float* x_windowed, const float* x) {
   int i;
   for (i = 0; i < PART_LEN; i += 4) {
     const float32x4_t vec_Buf1 = vld1q_f32(&x[i]);
@@ -648,8 +657,8 @@ __inline static void WindowData(float* x_windowed, const float* x) {
 }
 
 // Puts fft output data into a complex valued array.
-__inline static void StoreAsComplex(const float* data,
-                                    float data_complex[2][PART_LEN1]) {
+static void StoreAsComplexNEON(const float* data,
+                               float data_complex[2][PART_LEN1]) {
   int i;
   for (i = 0; i < PART_LEN; i += 4) {
     const float32x4x2_t vec_data = vld2q_f32(&data[2 * i]);
@@ -665,32 +674,15 @@ __inline static void StoreAsComplex(const float* data,
 
 static void SubbandCoherenceNEON(AecCore* aec,
                                  float efw[2][PART_LEN1],
+                                 float dfw[2][PART_LEN1],
                                  float xfw[2][PART_LEN1],
                                  float* fft,
                                  float* cohde,
-                                 float* cohxd) {
-  float dfw[2][PART_LEN1];
+                                 float* cohxd,
+                                 int* extreme_filter_divergence) {
   int i;
 
-  if (aec->delayEstCtr == 0)
-    aec->delayIdx = PartitionDelay(aec);
-
-  // Use delayed far.
-  memcpy(xfw,
-         aec->xfwBuf + aec->delayIdx * PART_LEN1,
-         sizeof(xfw[0][0]) * 2 * PART_LEN1);
-
-  // Windowed near fft
-  WindowData(fft, aec->dBuf);
-  aec_rdft_forward_128(fft);
-  StoreAsComplex(fft, dfw);
-
-  // Windowed error fft
-  WindowData(fft, aec->eBuf);
-  aec_rdft_forward_128(fft);
-  StoreAsComplex(fft, efw);
-
-  SmoothedPSD(aec, efw, dfw, xfw);
+  SmoothedPSD(aec, efw, dfw, xfw, extreme_filter_divergence);
 
   {
     const float32x4_t vec_1eminus10 =  vdupq_n_f32(1e-10f);
@@ -732,5 +724,7 @@ void WebRtcAec_InitAec_neon(void) {
   WebRtcAec_FilterAdaptation = FilterAdaptationNEON;
   WebRtcAec_OverdriveAndSuppress = OverdriveAndSuppressNEON;
   WebRtcAec_SubbandCoherence = SubbandCoherenceNEON;
+  WebRtcAec_StoreAsComplex = StoreAsComplexNEON;
+  WebRtcAec_PartitionDelay = PartitionDelayNEON;
+  WebRtcAec_WindowData = WindowDataNEON;
 }
-

@@ -13,6 +13,7 @@
 
 #include "webrtc/p2p/base/basicpacketsocketfactory.h"
 #include "webrtc/p2p/base/constants.h"
+#include "webrtc/p2p/base/portallocator.h"
 #include "webrtc/p2p/base/tcpport.h"
 #include "webrtc/p2p/base/testturnserver.h"
 #include "webrtc/p2p/base/turnport.h"
@@ -100,6 +101,24 @@ class TurnPortTestVirtualSocketServer : public rtc::VirtualSocketServer {
   using rtc::VirtualSocketServer::LookupBinding;
 };
 
+class TestConnectionWrapper : public sigslot::has_slots<> {
+ public:
+  TestConnectionWrapper(Connection* conn) : connection_(conn) {
+    conn->SignalDestroyed.connect(
+        this, &TestConnectionWrapper::OnConnectionDestroyed);
+  }
+
+  Connection* connection() { return connection_; }
+
+ private:
+  void OnConnectionDestroyed(Connection* conn) {
+    ASSERT_TRUE(conn == connection_);
+    connection_ = nullptr;
+  }
+
+  Connection* connection_;
+};
+
 class TurnPortTest : public testing::Test,
                      public sigslot::has_slots<>,
                      public rtc::MessageHandler {
@@ -154,12 +173,15 @@ class TurnPortTest : public testing::Test,
                             bool /*port_muxed*/) {
     turn_unknown_address_ = true;
   }
-  void OnTurnCreatePermissionResult(TurnPort* port, const SocketAddress& addr,
-                                     int code) {
+  void OnTurnCreatePermissionResult(TurnPort* port,
+                                    const SocketAddress& addr,
+                                    int code) {
     // Ignoring the address.
-    if (code == 0) {
-      turn_create_permission_success_ = true;
-    }
+    turn_create_permission_success_ = (code == 0);
+  }
+
+  void OnTurnRefreshResult(TurnPort* port, int code) {
+    turn_refresh_success_ = (code == 0);
   }
   void OnTurnReadPacket(Connection* conn, const char* data, size_t size,
                         const rtc::PacketTime& packet_time) {
@@ -172,6 +194,7 @@ class TurnPortTest : public testing::Test,
                        const rtc::PacketTime& packet_time) {
     udp_packets_.push_back(rtc::Buffer(data, size));
   }
+  void OnConnectionDestroyed(Connection* conn) { connection_destroyed_ = true; }
   void OnSocketReadPacket(rtc::AsyncPacketSocket* socket,
                           const char* data, size_t size,
                           const rtc::SocketAddress& remote_addr,
@@ -201,11 +224,7 @@ class TurnPortTest : public testing::Test,
                                  kIceUfrag1, kIcePwd1,
                                  server_address, credentials, 0,
                                  std::string()));
-    // Set ICE protocol type to ICEPROTO_RFC5245, as port by default will be
-    // in Hybrid mode. Protocol type is necessary to send correct type STUN ping
-    // messages.
     // This TURN port will be the controlling.
-    turn_port_->SetIceProtocolType(cricket::ICEPROTO_RFC5245);
     turn_port_->SetIceRole(cricket::ICEROLE_CONTROLLING);
     ConnectSignals();
   }
@@ -223,11 +242,7 @@ class TurnPortTest : public testing::Test,
                                  kIceUfrag1, kIcePwd1,
                                  server_address, credentials, 0,
                                  origin));
-    // Set ICE protocol type to ICEPROTO_RFC5245, as port by default will be
-    // in Hybrid mode. Protocol type is necessary to send correct type STUN ping
-    // messages.
     // This TURN port will be the controlling.
-    turn_port_->SetIceProtocolType(cricket::ICEPROTO_RFC5245);
     turn_port_->SetIceRole(cricket::ICEROLE_CONTROLLING);
     ConnectSignals();
   }
@@ -249,11 +264,7 @@ class TurnPortTest : public testing::Test,
     turn_port_.reset(cricket::TurnPort::Create(
         main_, &socket_factory_, &network_, socket_.get(),
         kIceUfrag1, kIcePwd1, server_address, credentials, 0, std::string()));
-    // Set ICE protocol type to ICEPROTO_RFC5245, as port by default will be
-    // in Hybrid mode. Protocol type is necessary to send correct type STUN ping
-    // messages.
     // This TURN port will be the controlling.
-    turn_port_->SetIceProtocolType(cricket::ICEPROTO_RFC5245);
     turn_port_->SetIceRole(cricket::ICEROLE_CONTROLLING);
     ConnectSignals();
   }
@@ -267,18 +278,40 @@ class TurnPortTest : public testing::Test,
         &TurnPortTest::OnTurnUnknownAddress);
     turn_port_->SignalCreatePermissionResult.connect(this,
         &TurnPortTest::OnTurnCreatePermissionResult);
+    turn_port_->SignalTurnRefreshResult.connect(
+        this, &TurnPortTest::OnTurnRefreshResult);
   }
-  void CreateUdpPort() {
+  void ConnectConnectionDestroyedSignal(Connection* conn) {
+    conn->SignalDestroyed.connect(this, &TurnPortTest::OnConnectionDestroyed);
+  }
+
+  void CreateUdpPort() { CreateUdpPort(kLocalAddr2); }
+
+  void CreateUdpPort(const SocketAddress& address) {
     udp_port_.reset(UDPPort::Create(main_, &socket_factory_, &network_,
-                                    kLocalAddr2.ipaddr(), 0, 0,
-                                    kIceUfrag2, kIcePwd2,
-                                    std::string()));
-    // Set protocol type to RFC5245, as turn port is also in same mode.
+                                    address.ipaddr(), 0, 0, kIceUfrag2,
+                                    kIcePwd2, std::string(), false));
     // UDP port will be controlled.
-    udp_port_->SetIceProtocolType(cricket::ICEPROTO_RFC5245);
     udp_port_->SetIceRole(cricket::ICEROLE_CONTROLLED);
     udp_port_->SignalPortComplete.connect(
         this, &TurnPortTest::OnUdpPortComplete);
+  }
+
+  void PrepareTurnAndUdpPorts() {
+    // turn_port_ should have been created.
+    ASSERT_TRUE(turn_port_ != nullptr);
+    turn_port_->PrepareAddress();
+    ASSERT_TRUE_WAIT(turn_ready_, kTimeout);
+
+    CreateUdpPort();
+    udp_port_->PrepareAddress();
+    ASSERT_TRUE_WAIT(udp_ready_, kTimeout);
+  }
+
+  bool CheckConnectionDestroyed() {
+    turn_port_->FlushRequests(cricket::kAllRequests);
+    rtc::Thread::Current()->ProcessMessages(50);
+    return connection_destroyed_;
   }
 
   void TestTurnAlternateServer(cricket::ProtocolType protocol_type) {
@@ -364,12 +397,7 @@ class TurnPortTest : public testing::Test,
 
   void TestTurnConnection() {
     // Create ports and prepare addresses.
-    ASSERT_TRUE(turn_port_ != NULL);
-    turn_port_->PrepareAddress();
-    ASSERT_TRUE_WAIT(turn_ready_, kTimeout);
-    CreateUdpPort();
-    udp_port_->PrepareAddress();
-    ASSERT_TRUE_WAIT(udp_ready_, kTimeout);
+    PrepareTurnAndUdpPorts();
 
     // Send ping from UDP to TURN.
     Connection* conn1 = udp_port_->CreateConnection(
@@ -378,7 +406,7 @@ class TurnPortTest : public testing::Test,
     conn1->Ping(0);
     WAIT(!turn_unknown_address_, kTimeout);
     EXPECT_FALSE(turn_unknown_address_);
-    EXPECT_EQ(Connection::STATE_READ_INIT, conn1->read_state());
+    EXPECT_FALSE(conn1->receiving());
     EXPECT_EQ(Connection::STATE_WRITE_INIT, conn1->write_state());
 
     // Send ping from TURN to UDP.
@@ -389,22 +417,56 @@ class TurnPortTest : public testing::Test,
     conn2->Ping(0);
 
     EXPECT_EQ_WAIT(Connection::STATE_WRITABLE, conn2->write_state(), kTimeout);
-    EXPECT_EQ(Connection::STATE_READABLE, conn1->read_state());
-    EXPECT_EQ(Connection::STATE_READ_INIT, conn2->read_state());
+    EXPECT_TRUE(conn1->receiving());
+    EXPECT_TRUE(conn2->receiving());
     EXPECT_EQ(Connection::STATE_WRITE_INIT, conn1->write_state());
 
     // Send another ping from UDP to TURN.
     conn1->Ping(0);
     EXPECT_EQ_WAIT(Connection::STATE_WRITABLE, conn1->write_state(), kTimeout);
-    EXPECT_EQ(Connection::STATE_READABLE, conn2->read_state());
+    EXPECT_TRUE(conn2->receiving());
+  }
+
+  void TestDestroyTurnConnection() {
+    PrepareTurnAndUdpPorts();
+
+    // Create connections on both ends.
+    Connection* conn1 = udp_port_->CreateConnection(turn_port_->Candidates()[0],
+                                                    Port::ORIGIN_MESSAGE);
+    Connection* conn2 = turn_port_->CreateConnection(udp_port_->Candidates()[0],
+                                                     Port::ORIGIN_MESSAGE);
+    ASSERT_TRUE(conn2 != NULL);
+    ASSERT_TRUE_WAIT(turn_create_permission_success_, kTimeout);
+    // Make sure turn connection can receive.
+    conn1->Ping(0);
+    EXPECT_EQ_WAIT(Connection::STATE_WRITABLE, conn1->write_state(), kTimeout);
+    EXPECT_FALSE(turn_unknown_address_);
+
+    // Destroy the connection on the turn port. The TurnEntry is still
+    // there. So the turn port gets ping from unknown address if it is pinged.
+    conn2->Destroy();
+    conn1->Ping(0);
+    EXPECT_TRUE_WAIT(turn_unknown_address_, kTimeout);
+
+    // Flush all requests in the invoker to destroy the TurnEntry.
+    // Now the turn port cannot receive the ping.
+    turn_unknown_address_ = false;
+    turn_port_->invoker()->Flush(rtc::Thread::Current());
+    conn1->Ping(0);
+    rtc::Thread::Current()->ProcessMessages(500);
+    EXPECT_FALSE(turn_unknown_address_);
+
+    // If the connection is created again, it will start to receive pings.
+    conn2 = turn_port_->CreateConnection(udp_port_->Candidates()[0],
+                                         Port::ORIGIN_MESSAGE);
+    conn1->Ping(0);
+    EXPECT_TRUE_WAIT(conn2->receiving(), kTimeout);
+    EXPECT_FALSE(turn_unknown_address_);
   }
 
   void TestTurnSendData() {
-    turn_port_->PrepareAddress();
-    EXPECT_TRUE_WAIT(turn_ready_, kTimeout);
-    CreateUdpPort();
-    udp_port_->PrepareAddress();
-    EXPECT_TRUE_WAIT(udp_ready_, kTimeout);
+    PrepareTurnAndUdpPorts();
+
     // Create connections and send pings.
     Connection* conn1 = turn_port_->CreateConnection(
         udp_port_->Candidates()[0], Port::ORIGIN_MESSAGE);
@@ -460,6 +522,8 @@ class TurnPortTest : public testing::Test,
   bool turn_create_permission_success_;
   bool udp_ready_;
   bool test_finish_;
+  bool turn_refresh_success_ = false;
+  bool connection_destroyed_ = false;
   std::vector<rtc::Buffer> turn_packets_;
   std::vector<rtc::Buffer> udp_packets_;
   rtc::PacketOptions options;
@@ -627,6 +691,45 @@ TEST_F(TurnPortTest, TestTurnTcpAllocateMismatch) {
   EXPECT_NE(first_addr, turn_port_->socket()->GetLocalAddress());
 }
 
+TEST_F(TurnPortTest, TestRefreshRequestGetsErrorResponse) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
+  PrepareTurnAndUdpPorts();
+  turn_port_->CreateConnection(udp_port_->Candidates()[0],
+                               Port::ORIGIN_MESSAGE);
+  // Set bad credentials.
+  cricket::RelayCredentials bad_credentials("bad_user", "bad_pwd");
+  turn_port_->set_credentials(bad_credentials);
+  turn_refresh_success_ = false;
+  // This sends out the first RefreshRequest with correct credentials.
+  // When this succeeds, it will schedule a new RefreshRequest with the bad
+  // credential.
+  turn_port_->FlushRequests(cricket::TURN_REFRESH_REQUEST);
+  EXPECT_TRUE_WAIT(turn_refresh_success_, kTimeout);
+  // Flush it again, it will receive a bad response.
+  turn_port_->FlushRequests(cricket::TURN_REFRESH_REQUEST);
+  EXPECT_TRUE_WAIT(!turn_refresh_success_, kTimeout);
+  EXPECT_TRUE_WAIT(!turn_port_->connected(), kTimeout);
+  EXPECT_TRUE_WAIT(turn_port_->connections().empty(), kTimeout);
+  EXPECT_FALSE(turn_port_->HasRequests());
+}
+
+// Test that CreateConnection will return null if port becomes disconnected.
+TEST_F(TurnPortTest, TestCreateConnectionWhenSocketClosed) {
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, cricket::PROTO_TCP);
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTcpProtoAddr);
+  PrepareTurnAndUdpPorts();
+  // Create a connection.
+  Connection* conn1 = turn_port_->CreateConnection(udp_port_->Candidates()[0],
+                                                   Port::ORIGIN_MESSAGE);
+  ASSERT_TRUE(conn1 != NULL);
+
+  // Close the socket and create a connection again.
+  turn_port_->OnSocketClose(turn_port_->socket(), 1);
+  conn1 = turn_port_->CreateConnection(udp_port_->Candidates()[0],
+                                       Port::ORIGIN_MESSAGE);
+  ASSERT_TRUE(conn1 == NULL);
+}
+
 // Test try-alternate-server feature.
 TEST_F(TurnPortTest, TestTurnAlternateServerUDP) {
   TestTurnAlternateServer(cricket::PROTO_UDP);
@@ -686,6 +789,20 @@ TEST_F(TurnPortTest, TestTurnTcpConnection) {
   TestTurnConnection();
 }
 
+// Test that if a connection on a TURN port is destroyed, the TURN port can
+// still receive ping on that connection as if it is from an unknown address.
+// If the connection is created again, it will be used to receive ping.
+TEST_F(TurnPortTest, TestDestroyTurnConnection) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
+  TestDestroyTurnConnection();
+}
+
+// Similar to above, except that this test will use the shared socket.
+TEST_F(TurnPortTest, TestDestroyTurnConnectionUsingSharedSocket) {
+  CreateSharedTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
+  TestDestroyTurnConnection();
+}
+
 // Test that we fail to create a connection when we want to use TLS over TCP.
 // This test should be removed once we have TLS support.
 TEST_F(TurnPortTest, TestTurnTlsTcpConnectionFails) {
@@ -707,11 +824,61 @@ TEST_F(TurnPortTest, TestTurnConnectionUsingOTUNonce) {
   TestTurnConnection();
 }
 
+// Test that CreatePermissionRequest will be scheduled after the success
+// of the first create permission request and the request will get an
+// ErrorResponse if the ufrag and pwd are incorrect.
+TEST_F(TurnPortTest, TestRefreshCreatePermissionRequest) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
+  PrepareTurnAndUdpPorts();
+
+  Connection* conn = turn_port_->CreateConnection(udp_port_->Candidates()[0],
+                                                  Port::ORIGIN_MESSAGE);
+  ConnectConnectionDestroyedSignal(conn);
+  ASSERT_TRUE(conn != NULL);
+  ASSERT_TRUE_WAIT(turn_create_permission_success_, kTimeout);
+  turn_create_permission_success_ = false;
+  // A create-permission-request should be pending.
+  // After the next create-permission-response is received, it will schedule
+  // another request with bad_ufrag and bad_pwd.
+  cricket::RelayCredentials bad_credentials("bad_user", "bad_pwd");
+  turn_port_->set_credentials(bad_credentials);
+  turn_port_->FlushRequests(cricket::kAllRequests);
+  ASSERT_TRUE_WAIT(turn_create_permission_success_, kTimeout);
+  // Flush the requests again; the create-permission-request will fail.
+  turn_port_->FlushRequests(cricket::kAllRequests);
+  EXPECT_TRUE_WAIT(!turn_create_permission_success_, kTimeout);
+  EXPECT_TRUE_WAIT(connection_destroyed_, kTimeout);
+}
+
+TEST_F(TurnPortTest, TestChannelBindGetErrorResponse) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
+  PrepareTurnAndUdpPorts();
+  Connection* conn1 = turn_port_->CreateConnection(udp_port_->Candidates()[0],
+                                                   Port::ORIGIN_MESSAGE);
+  ASSERT_TRUE(conn1 != nullptr);
+  Connection* conn2 = udp_port_->CreateConnection(turn_port_->Candidates()[0],
+                                                  Port::ORIGIN_MESSAGE);
+  ASSERT_TRUE(conn2 != nullptr);
+  ConnectConnectionDestroyedSignal(conn1);
+  conn1->Ping(0);
+  ASSERT_TRUE_WAIT(conn1->writable(), kTimeout);
+
+  std::string data = "ABC";
+  conn1->Send(data.data(), data.length(), options);
+  bool success =
+      turn_port_->SetEntryChannelId(udp_port_->Candidates()[0].address(), -1);
+  ASSERT_TRUE(success);
+  // Next time when the binding request is sent, it will get an ErrorResponse.
+  EXPECT_TRUE_WAIT(CheckConnectionDestroyed(), kTimeout);
+}
+
 // Do a TURN allocation, establish a UDP connection, and send some data.
 TEST_F(TurnPortTest, TestTurnSendDataTurnUdpToUdp) {
   // Create ports and prepare addresses.
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
   TestTurnSendData();
+  EXPECT_EQ(cricket::UDP_PROTOCOL_NAME,
+            turn_port_->Candidates()[0].relay_protocol());
 }
 
 // Do a TURN allocation, establish a TCP connection, and send some data.
@@ -720,6 +887,8 @@ TEST_F(TurnPortTest, TestTurnSendDataTurnTcpToUdp) {
   // Create ports and prepare addresses.
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTcpProtoAddr);
   TestTurnSendData();
+  EXPECT_EQ(cricket::TCP_PROTOCOL_NAME,
+            turn_port_->Candidates()[0].relay_protocol());
 }
 
 // Test TURN fails to make a connection from IPv6 address to a server which has
@@ -759,6 +928,29 @@ TEST_F(TurnPortTest, TestOriginHeader) {
   EXPECT_EQ(kTestOrigin, turn_server_.FindAllocation(local_address)->origin());
 }
 
+// Test that a CreatePermission failure will result in the connection being
+// destroyed.
+TEST_F(TurnPortTest, TestConnectionDestroyedOnCreatePermissionFailure) {
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, cricket::PROTO_TCP);
+  turn_server_.server()->set_reject_private_addresses(true);
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTcpProtoAddr);
+  turn_port_->PrepareAddress();
+  ASSERT_TRUE_WAIT(turn_ready_, kTimeout);
+
+  CreateUdpPort(SocketAddress("10.0.0.10", 0));
+  udp_port_->PrepareAddress();
+  ASSERT_TRUE_WAIT(udp_ready_, kTimeout);
+  // Create a connection.
+  TestConnectionWrapper conn(turn_port_->CreateConnection(
+      udp_port_->Candidates()[0], Port::ORIGIN_MESSAGE));
+  ASSERT_TRUE(conn.connection() != nullptr);
+
+  // Asynchronously, CreatePermission request should be sent and fail, closing
+  // the connection.
+  EXPECT_TRUE_WAIT(conn.connection() == nullptr, kTimeout);
+  EXPECT_FALSE(turn_create_permission_success_);
+}
+
 // Test that a TURN allocation is released when the port is closed.
 TEST_F(TurnPortTest, TestTurnReleaseAllocation) {
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
@@ -785,15 +977,19 @@ TEST_F(TurnPortTest, DISABLED_TestTurnTCPReleaseAllocation) {
 // This test verifies any FD's are not leaked after TurnPort is destroyed.
 // https://code.google.com/p/webrtc/issues/detail?id=2651
 #if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
+// 1 second is not always enough for getaddrinfo().
+// See: https://bugs.chromium.org/p/webrtc/issues/detail?id=5191
+static const unsigned int kResolverTimeout = 10000;
+
 TEST_F(TurnPortTest, TestResolverShutdown) {
   turn_server_.AddInternalSocket(kTurnUdpIPv6IntAddr, cricket::PROTO_UDP);
   int last_fd_count = GetFDCount();
   // Need to supply unresolved address to kick off resolver.
   CreateTurnPort(kLocalIPv6Addr, kTurnUsername, kTurnPassword,
                  cricket::ProtocolAddress(rtc::SocketAddress(
-                    "stun.l.google.com", 3478), cricket::PROTO_UDP));
+                    "www.google.invalid", 3478), cricket::PROTO_UDP));
   turn_port_->PrepareAddress();
-  ASSERT_TRUE_WAIT(turn_error_, kTimeout);
+  ASSERT_TRUE_WAIT(turn_error_, kResolverTimeout);
   EXPECT_TRUE(turn_port_->Candidates().empty());
   turn_port_.reset();
   rtc::Thread::Current()->Post(this, MSG_TESTFINISH);
