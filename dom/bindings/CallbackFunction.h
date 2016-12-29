@@ -63,10 +63,10 @@ protected:
   }
 
   // See CallbackObject for an explanation of the arguments.
-  CallbackFunction(JSContext* aCx, JS::Handle<JSObject*> aCallable,
+  CallbackFunction(JS::Handle<JSObject*> aCallable,
                    nsIGlobalObject* aIncumbentGlobal,
                    const FastCallbackConstructor&)
-    : CallbackObject(aCx, aCallable, aIncumbentGlobal,
+    : CallbackObject(aCallable, aIncumbentGlobal,
                      FastCallbackConstructor())
   {
   }

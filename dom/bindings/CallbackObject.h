@@ -232,7 +232,7 @@ protected:
   // assumption that we will do that last whenever we decide to actually
   // HoldJSObjects; see FinishSlowJSInitIfMoreThanOneOwner).  If you use this,
   // you MUST ensure that the object is traced until the HoldJSObjects happens!
-  CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
+  CallbackObject(JS::Handle<JSObject*> aCallback,
                  nsIGlobalObject* aIncumbentGlobal,
                  const FastCallbackConstructor&)
   {
