@@ -32,11 +32,14 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileStorage",
                                   "resource://formautofill/ProfileStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
+                                  "resource://formautofill/FormAutofillPreferences.jsm");
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
@@ -57,6 +60,8 @@ let FormAutofillParent = {
                .getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("FormAutofill:PopulateFieldValues", this);
     mm.addMessageListener("FormAutofill:GetProfiles", this);
+
+    Services.obs.addObserver(this, "advanced-pane-loaded", false);
   },
 
   /**
@@ -74,6 +79,20 @@ let FormAutofillParent = {
       case "FormAutofill:GetProfiles":
         this._getProfiles(data, target);
         break;
+    }
+  },
+
+  observe: function(subject, topic, data) {
+    switch (topic) {
+      case "advanced-pane-loaded": {
+        let formAutofillPreferences = new FormAutofillPreferences();
+        let document = subject.document;
+        let prefGroup = formAutofillPreferences.init(document);
+        let parentNode = document.getElementById("mainPrefPane");
+        let insertBeforeNode = document.getElementById("locationBarGroup");
+        parentNode.insertBefore(prefGroup, insertBeforeNode);
+        break;
+      }
     }
   },
 
@@ -103,6 +122,8 @@ let FormAutofillParent = {
                .getService(Ci.nsIMessageListenerManager);
     mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
     mm.removeMessageListener("FormAutofill:GetProfiles", this);
+
+    Services.obs.removeObserver(this, "advanced-pane-loaded");
   },
 
   /**
