@@ -697,6 +697,12 @@ JS_SetWrapObjectCallbacks(JSContext* cx, const JSWrapObjectCallbacks* callbacks)
     cx->wrapObjectCallbacks = callbacks;
 }
 
+JS_PUBLIC_API(void)
+JS_SetExternalStringSizeofCallback(JSContext* cx, JSExternalStringSizeofCallback callback)
+{
+    cx->externalStringSizeofCallback = callback;
+}
+
 JS_PUBLIC_API(JSCompartment*)
 JS_EnterCompartment(JSContext* cx, JSObject* target)
 {
