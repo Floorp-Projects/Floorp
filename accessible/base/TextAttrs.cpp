@@ -374,10 +374,9 @@ bool
 TextAttrsMgr::BGColorTextAttr::
   GetColor(nsIFrame* aFrame, nscolor* aColor)
 {
-  const nsStyleBackground* styleBackground = aFrame->StyleBackground();
-
-  if (NS_GET_A(styleBackground->mBackgroundColor) > 0) {
-    *aColor = styleBackground->mBackgroundColor;
+  nscolor backgroundColor = aFrame->StyleBackground()->BackgroundColor(aFrame);
+  if (NS_GET_A(backgroundColor) > 0) {
+    *aColor = backgroundColor;
     return true;
   }
 
