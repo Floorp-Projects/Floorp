@@ -353,8 +353,7 @@ private:
   void RegisterUnresolvedElement(Element* aElement,
                                  nsIAtom* aTypeName = nullptr);
 
-  void UpgradeCandidates(JSContext* aCx,
-                         nsIAtom* aKey,
+  void UpgradeCandidates(nsIAtom* aKey,
                          CustomElementDefinition* aDefinition,
                          ErrorResult& aRv);
 
