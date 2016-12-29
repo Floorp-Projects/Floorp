@@ -14,23 +14,21 @@
 #include <math.h>   // pow()
 #include <string.h>  // memcpy()
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/trace_event.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/base/trace_event.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 RTPReceiverStrategy* RTPReceiverStrategy::CreateAudioStrategy(
-    int32_t id, RtpData* data_callback,
+    RtpData* data_callback,
     RtpAudioFeedback* incoming_messages_callback) {
-  return new RTPReceiverAudio(id, data_callback, incoming_messages_callback);
+  return new RTPReceiverAudio(data_callback, incoming_messages_callback);
 }
 
-RTPReceiverAudio::RTPReceiverAudio(const int32_t id,
-                                   RtpData* data_callback,
+RTPReceiverAudio::RTPReceiverAudio(RtpData* data_callback,
                                    RtpAudioFeedback* incoming_messages_callback)
     : RTPReceiverStrategy(data_callback),
       TelephoneEventHandler(),
-      id_(id),
       last_received_frequency_(8000),
       telephone_event_forward_to_decoder_(false),
       telephone_event_payload_type_(-1),
@@ -228,10 +226,8 @@ RTPAliveType RTPReceiverAudio::ProcessDeadOrAlive(
 
 void RTPReceiverAudio::CheckPayloadChanged(int8_t payload_type,
                                            PayloadUnion* specific_payload,
-                                           bool* should_reset_statistics,
                                            bool* should_discard_changes) {
   *should_discard_changes = false;
-  *should_reset_statistics = false;
 
   if (TelephoneEventPayloadType(payload_type)) {
     // Don't do callbacks for DTMF packets.
@@ -243,8 +239,6 @@ void RTPReceiverAudio::CheckPayloadChanged(int8_t payload_type,
   bool is_cng_payload_type = CNGPayloadType(payload_type,
                                             &specific_payload->Audio.frequency,
                                             &cng_payload_type_has_changed);
-
-  *should_reset_statistics = cng_payload_type_has_changed;
 
   if (is_cng_payload_type) {
     // Don't do callbacks for DTMF packets.
@@ -267,16 +261,13 @@ int RTPReceiverAudio::Energy(uint8_t array_of_energy[kRtpCsrcSize]) const {
 
 int32_t RTPReceiverAudio::InvokeOnInitializeDecoder(
     RtpFeedback* callback,
-    int32_t id,
     int8_t payload_type,
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
     const PayloadUnion& specific_payload) const {
-  if (-1 == callback->OnInitializeDecoder(id,
-                                          payload_type,
-                                          payload_name,
-                                          specific_payload.Audio.frequency,
-                                          specific_payload.Audio.channels,
-                                          specific_payload.Audio.rate)) {
+  if (-1 ==
+      callback->OnInitializeDecoder(
+          payload_type, payload_name, specific_payload.Audio.frequency,
+          specific_payload.Audio.channels, specific_payload.Audio.rate)) {
     LOG(LS_ERROR) << "Failed to create decoder for payload type: "
                   << payload_name << "/" << static_cast<int>(payload_type);
     return -1;

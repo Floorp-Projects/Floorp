@@ -59,20 +59,19 @@ static_assert(sizeof(WavHeader) == kWavHeaderSize, "no padding in header");
 
 }  // namespace
 
-bool CheckWavParameters(int num_channels,
+bool CheckWavParameters(size_t num_channels,
                         int sample_rate,
                         WavFormat format,
-                        int bytes_per_sample,
-                        uint32_t num_samples) {
+                        size_t bytes_per_sample,
+                        size_t num_samples) {
   // num_channels, sample_rate, and bytes_per_sample must be positive, must fit
   // in their respective fields, and their product must fit in the 32-bit
   // ByteRate field.
-  if (num_channels <= 0 || sample_rate <= 0 || bytes_per_sample <= 0)
+  if (num_channels == 0 || sample_rate <= 0 || bytes_per_sample == 0)
     return false;
   if (static_cast<uint64_t>(sample_rate) > std::numeric_limits<uint32_t>::max())
     return false;
-  if (static_cast<uint64_t>(num_channels) >
-      std::numeric_limits<uint16_t>::max())
+  if (num_channels > std::numeric_limits<uint16_t>::max())
     return false;
   if (static_cast<uint64_t>(bytes_per_sample) * 8 >
       std::numeric_limits<uint16_t>::max())
@@ -99,10 +98,9 @@ bool CheckWavParameters(int num_channels,
 
   // The number of bytes in the file, not counting the first ChunkHeader, must
   // be less than 2^32; otherwise, the ChunkSize field overflows.
-  const uint32_t max_samples =
-      (std::numeric_limits<uint32_t>::max()
-       - (kWavHeaderSize - sizeof(ChunkHeader))) /
-      bytes_per_sample;
+  const size_t header_size = kWavHeaderSize - sizeof(ChunkHeader);
+  const size_t max_samples =
+      (std::numeric_limits<uint32_t>::max() - header_size) / bytes_per_sample;
   if (num_samples > max_samples)
     return false;
 
@@ -164,30 +162,32 @@ static inline std::string ReadFourCC(uint32_t x) {
 }
 #endif
 
-static inline uint32_t RiffChunkSize(uint32_t bytes_in_payload) {
-  return bytes_in_payload + kWavHeaderSize - sizeof(ChunkHeader);
+static inline uint32_t RiffChunkSize(size_t bytes_in_payload) {
+  return static_cast<uint32_t>(
+      bytes_in_payload + kWavHeaderSize - sizeof(ChunkHeader));
 }
 
-static inline uint32_t ByteRate(int num_channels, int sample_rate,
-                                int bytes_per_sample) {
-  return static_cast<uint32_t>(num_channels) * sample_rate * bytes_per_sample;
+static inline uint32_t ByteRate(size_t num_channels, int sample_rate,
+                                size_t bytes_per_sample) {
+  return static_cast<uint32_t>(num_channels * sample_rate * bytes_per_sample);
 }
 
-static inline uint16_t BlockAlign(int num_channels, int bytes_per_sample) {
-  return num_channels * bytes_per_sample;
+static inline uint16_t BlockAlign(size_t num_channels,
+                                  size_t bytes_per_sample) {
+  return static_cast<uint16_t>(num_channels * bytes_per_sample);
 }
 
 void WriteWavHeader(uint8_t* buf,
-                    int num_channels,
+                    size_t num_channels,
                     int sample_rate,
                     WavFormat format,
-                    int bytes_per_sample,
-                    uint32_t num_samples) {
-  CHECK(CheckWavParameters(num_channels, sample_rate, format,
-                           bytes_per_sample, num_samples));
+                    size_t bytes_per_sample,
+                    size_t num_samples) {
+  RTC_CHECK(CheckWavParameters(num_channels, sample_rate, format,
+                               bytes_per_sample, num_samples));
 
   WavHeader header;
-  const uint32_t bytes_in_payload = bytes_per_sample * num_samples;
+  const size_t bytes_in_payload = bytes_per_sample * num_samples;
 
   WriteFourCC(&header.riff.header.ID, 'R', 'I', 'F', 'F');
   WriteLE32(&header.riff.header.Size, RiffChunkSize(bytes_in_payload));
@@ -196,15 +196,16 @@ void WriteWavHeader(uint8_t* buf,
   WriteFourCC(&header.fmt.header.ID, 'f', 'm', 't', ' ');
   WriteLE32(&header.fmt.header.Size, kFmtSubchunkSize);
   WriteLE16(&header.fmt.AudioFormat, format);
-  WriteLE16(&header.fmt.NumChannels, num_channels);
+  WriteLE16(&header.fmt.NumChannels, static_cast<uint16_t>(num_channels));
   WriteLE32(&header.fmt.SampleRate, sample_rate);
   WriteLE32(&header.fmt.ByteRate, ByteRate(num_channels, sample_rate,
                                            bytes_per_sample));
   WriteLE16(&header.fmt.BlockAlign, BlockAlign(num_channels, bytes_per_sample));
-  WriteLE16(&header.fmt.BitsPerSample, 8 * bytes_per_sample);
+  WriteLE16(&header.fmt.BitsPerSample,
+            static_cast<uint16_t>(8 * bytes_per_sample));
 
   WriteFourCC(&header.data.header.ID, 'd', 'a', 't', 'a');
-  WriteLE32(&header.data.header.Size, bytes_in_payload);
+  WriteLE32(&header.data.header.Size, static_cast<uint32_t>(bytes_in_payload));
 
   // Do an extra copy rather than writing everything to buf directly, since buf
   // might not be correctly aligned.
@@ -212,11 +213,11 @@ void WriteWavHeader(uint8_t* buf,
 }
 
 bool ReadWavHeader(ReadableWav* readable,
-                   int* num_channels,
+                   size_t* num_channels,
                    int* sample_rate,
                    WavFormat* format,
-                   int* bytes_per_sample,
-                   uint32_t* num_samples) {
+                   size_t* bytes_per_sample,
+                   size_t* num_samples) {
   WavHeader header;
   if (readable->Read(&header, kWavHeaderSize - sizeof(header.data)) !=
       kWavHeaderSize - sizeof(header.data))
@@ -242,8 +243,8 @@ bool ReadWavHeader(ReadableWav* readable,
   *num_channels = ReadLE16(header.fmt.NumChannels);
   *sample_rate = ReadLE32(header.fmt.SampleRate);
   *bytes_per_sample = ReadLE16(header.fmt.BitsPerSample) / 8;
-  const uint32_t bytes_in_payload = ReadLE32(header.data.header.Size);
-  if (*bytes_per_sample <= 0)
+  const size_t bytes_in_payload = ReadLE32(header.data.header.Size);
+  if (*bytes_per_sample == 0)
     return false;
   *num_samples = bytes_in_payload / *bytes_per_sample;
 

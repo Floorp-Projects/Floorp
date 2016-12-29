@@ -90,7 +90,6 @@ public:
   bool mRembFbSet;
   bool mFECFbSet;
 
-  uint32_t mTias;
   EncodingConstraints mEncodingConstraints;
   struct SimulcastEncoding {
     std::string rid;
@@ -111,7 +110,6 @@ public:
     mType(type),
     mName(name),
     mFECFbSet(false),
-    mTias(0),
     mEncodingConstraints(constraints),
     mProfile(0x42),
     mConstraints(0xE0),
@@ -125,20 +123,6 @@ public:
       mPacketizationMode = h264->packetization_mode;
       mSpropParameterSets = h264->sprop_parameter_sets;
     }
-  }
-
-  bool ResolutionEquals(const VideoCodecConfig& aConfig) const
-  {
-    if (mSimulcastEncodings.size() != aConfig.mSimulcastEncodings.size()) {
-      return false;
-    }
-    for (size_t i = 0; i < mSimulcastEncodings.size(); ++i) {
-      if (!mSimulcastEncodings[i].constraints.ResolutionEquals(
-            aConfig.mSimulcastEncodings[i].constraints)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   // Nothing seems to use this right now. Do we intend to support this

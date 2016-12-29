@@ -26,7 +26,7 @@ namespace rtc {
 size_t escape(char * buffer, size_t buflen,
               const char * source, size_t srclen,
               const char * illegal, char escape) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   if (buflen <= 0)
     return 0;
 
@@ -48,7 +48,7 @@ size_t escape(char * buffer, size_t buflen,
 size_t unescape(char * buffer, size_t buflen,
                 const char * source, size_t srclen,
                 char escape) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   if (buflen <= 0)
     return 0;
 
@@ -67,7 +67,7 @@ size_t unescape(char * buffer, size_t buflen,
 size_t encode(char * buffer, size_t buflen,
               const char * source, size_t srclen,
               const char * illegal, char escape) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   if (buflen <= 0)
     return 0;
 
@@ -119,8 +119,8 @@ const char* unsafe_filename_characters() {
 #if defined(WEBRTC_WIN)
   return "\\/:*?\"<>|";
 #else  // !WEBRTC_WIN
-  // TODO
-  DCHECK(false);
+  // TODO(grunell): Should this never be reached?
+  RTC_DCHECK(false);
   return "";
 #endif  // !WEBRTC_WIN
 }
@@ -257,7 +257,7 @@ size_t utf8_encode(char* buffer, size_t buflen, unsigned long value) {
 
 size_t html_encode(char * buffer, size_t buflen,
                    const char * source, size_t srclen) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   if (buflen <= 0)
     return 0;
 
@@ -275,7 +275,7 @@ size_t html_encode(char * buffer, size_t buflen,
           case '\'': escseq = "&#39;";  esclen = 5; break;
           case '\"': escseq = "&quot;"; esclen = 6; break;
           case '&':  escseq = "&amp;";  esclen = 5; break;
-          default: DCHECK(false);
+          default: RTC_DCHECK(false);
         }
         if (bufpos + esclen >= buflen) {
           break;
@@ -310,13 +310,13 @@ size_t html_encode(char * buffer, size_t buflen,
 
 size_t html_decode(char * buffer, size_t buflen,
                    const char * source, size_t srclen) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   return xml_decode(buffer, buflen, source, srclen);
 }
 
 size_t xml_encode(char * buffer, size_t buflen,
                   const char * source, size_t srclen) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   if (buflen <= 0)
     return 0;
 
@@ -332,7 +332,7 @@ size_t xml_encode(char * buffer, size_t buflen,
         case '\'': escseq = "&apos;"; esclen = 6; break;
         case '\"': escseq = "&quot;"; esclen = 6; break;
         case '&':  escseq = "&amp;";  esclen = 5; break;
-        default: DCHECK(false);
+        default: RTC_DCHECK(false);
       }
       if (bufpos + esclen >= buflen) {
         break;
@@ -349,7 +349,7 @@ size_t xml_encode(char * buffer, size_t buflen,
 
 size_t xml_decode(char * buffer, size_t buflen,
                   const char * source, size_t srclen) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   if (buflen <= 0)
     return 0;
 
@@ -385,7 +385,7 @@ size_t xml_decode(char * buffer, size_t buflen,
         srcpos += 1;
       }
       char * ptr;
-      // TODO: Fix hack (ptr may go past end of data)
+      // TODO(grunell): Fix hack (ptr may go past end of data)
       unsigned long val = strtoul(source + srcpos + 1, &ptr, int_base);
       if ((static_cast<size_t>(ptr - source) < srclen) && (*ptr == ';')) {
         srcpos = ptr - source + 1;
@@ -411,7 +411,7 @@ size_t xml_decode(char * buffer, size_t buflen,
 static const char HEX[] = "0123456789abcdef";
 
 char hex_encode(unsigned char val) {
-  DCHECK_LT(val, 16);
+  RTC_DCHECK_LT(val, 16);
   return (val < 16) ? HEX[val] : '!';
 }
 
@@ -436,7 +436,7 @@ size_t hex_encode(char* buffer, size_t buflen,
 size_t hex_encode_with_delimiter(char* buffer, size_t buflen,
                                  const char* csource, size_t srclen,
                                  char delimiter) {
-  DCHECK(buffer);  // TODO: estimate output size
+  RTC_DCHECK(buffer);  // TODO(grunell): estimate output size
   if (buflen == 0)
     return 0;
 
@@ -466,6 +466,10 @@ size_t hex_encode_with_delimiter(char* buffer, size_t buflen,
   return bufpos;
 }
 
+std::string hex_encode(const std::string& str) {
+  return hex_encode(str.c_str(), str.size());
+}
+
 std::string hex_encode(const char* source, size_t srclen) {
   return hex_encode_with_delimiter(source, srclen, 0);
 }
@@ -476,7 +480,7 @@ std::string hex_encode_with_delimiter(const char* source, size_t srclen,
   char* buffer = STACK_ARRAY(char, kBufferSize);
   size_t length = hex_encode_with_delimiter(buffer, kBufferSize,
                                             source, srclen, delimiter);
-  DCHECK(srclen == 0 || length > 0);
+  RTC_DCHECK(srclen == 0 || length > 0);
   return std::string(buffer, length);
 }
 
@@ -488,7 +492,7 @@ size_t hex_decode(char * cbuffer, size_t buflen,
 size_t hex_decode_with_delimiter(char* cbuffer, size_t buflen,
                                  const char* source, size_t srclen,
                                  char delimiter) {
-  DCHECK(cbuffer);  // TODO: estimate output size
+  RTC_DCHECK(cbuffer);  // TODO(grunell): estimate output size
   if (buflen == 0)
     return 0;
 
@@ -552,7 +556,6 @@ std::string s_transform(const std::string& source, Transform t) {
 
 size_t tokenize(const std::string& source, char delimiter,
                 std::vector<std::string>* fields) {
-  DCHECK(fields);
   fields->clear();
   size_t last = 0;
   for (size_t i = 0; i < source.length(); ++i) {
@@ -566,6 +569,21 @@ size_t tokenize(const std::string& source, char delimiter,
   if (last != source.length()) {
     fields->push_back(source.substr(last, source.length() - last));
   }
+  return fields->size();
+}
+
+size_t tokenize_with_empty_tokens(const std::string& source,
+                                  char delimiter,
+                                  std::vector<std::string>* fields) {
+  fields->clear();
+  size_t last = 0;
+  for (size_t i = 0; i < source.length(); ++i) {
+    if (source[i] == delimiter) {
+      fields->push_back(source.substr(last, i - last));
+      last = i + 1;
+    }
+  }
+  fields->push_back(source.substr(last, source.length() - last));
   return fields->size();
 }
 
@@ -607,9 +625,30 @@ size_t tokenize(const std::string& source, char delimiter, char start_mark,
   return tokenize_append(remain_source, delimiter, fields);
 }
 
+bool tokenize_first(const std::string& source,
+                    const char delimiter,
+                    std::string* token,
+                    std::string* rest) {
+  // Find the first delimiter
+  size_t left_pos = source.find(delimiter);
+  if (left_pos == std::string::npos) {
+    return false;
+  }
+
+  // Look for additional occurrances of delimiter.
+  size_t right_pos = left_pos + 1;
+  while (source[right_pos] == delimiter) {
+    right_pos++;
+  }
+
+  *token = source.substr(0, left_pos);
+  *rest = source.substr(right_pos);
+  return true;
+}
+
 size_t split(const std::string& source, char delimiter,
              std::vector<std::string>* fields) {
-  DCHECK(fields);
+  RTC_DCHECK(fields);
   fields->clear();
   size_t last = 0;
   for (size_t i = 0; i < source.length(); ++i) {

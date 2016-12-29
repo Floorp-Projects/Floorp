@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "webrtc/base/asyncfile.h"
+#include "webrtc/base/nethelpers.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socketserver.h"
 #include "webrtc/base/criticalsection.h"
@@ -41,9 +42,9 @@ class PosixSignalDispatcher;
 class Dispatcher {
  public:
   virtual ~Dispatcher() {}
-  virtual uint32 GetRequestedEvents() = 0;
-  virtual void OnPreEvent(uint32 ff) = 0;
-  virtual void OnEvent(uint32 ff, int err) = 0;
+  virtual uint32_t GetRequestedEvents() = 0;
+  virtual void OnPreEvent(uint32_t ff) = 0;
+  virtual void OnEvent(uint32_t ff, int err) = 0;
 #if defined(WEBRTC_WIN)
   virtual WSAEVENT GetWSAEvent() = 0;
   virtual SOCKET GetSocket() = 0;
@@ -113,6 +114,107 @@ class PhysicalSocketServer : public SocketServer {
 #if defined(WEBRTC_WIN)
   WSAEVENT socket_ev_;
 #endif
+};
+
+class PhysicalSocket : public AsyncSocket, public sigslot::has_slots<> {
+ public:
+  PhysicalSocket(PhysicalSocketServer* ss, SOCKET s = INVALID_SOCKET);
+  ~PhysicalSocket() override;
+
+  // Creates the underlying OS socket (same as the "socket" function).
+  virtual bool Create(int family, int type);
+
+  SocketAddress GetLocalAddress() const override;
+  SocketAddress GetRemoteAddress() const override;
+
+  int Bind(const SocketAddress& bind_addr) override;
+  int Connect(const SocketAddress& addr) override;
+
+  int GetError() const override;
+  void SetError(int error) override;
+
+  ConnState GetState() const override;
+
+  int GetOption(Option opt, int* value) override;
+  int SetOption(Option opt, int value) override;
+
+  int Send(const void* pv, size_t cb) override;
+  int SendTo(const void* buffer,
+             size_t length,
+             const SocketAddress& addr) override;
+
+  int Recv(void* buffer, size_t length) override;
+  int RecvFrom(void* buffer, size_t length, SocketAddress* out_addr) override;
+
+  int Listen(int backlog) override;
+  AsyncSocket* Accept(SocketAddress* out_addr) override;
+
+  int Close() override;
+
+  int EstimateMTU(uint16_t* mtu) override;
+
+  SocketServer* socketserver() { return ss_; }
+
+ protected:
+  int DoConnect(const SocketAddress& connect_addr);
+
+  // Make virtual so ::accept can be overwritten in tests.
+  virtual SOCKET DoAccept(SOCKET socket, sockaddr* addr, socklen_t* addrlen);
+
+  void OnResolveResult(AsyncResolverInterface* resolver);
+
+  void UpdateLastError();
+  void MaybeRemapSendError();
+
+  static int TranslateOption(Option opt, int* slevel, int* sopt);
+
+  PhysicalSocketServer* ss_;
+  SOCKET s_;
+  uint8_t enabled_events_;
+  bool udp_;
+  mutable CriticalSection crit_;
+  int error_ GUARDED_BY(crit_);
+  ConnState state_;
+  AsyncResolver* resolver_;
+
+#if !defined(NDEBUG)
+  std::string dbg_addr_;
+#endif
+};
+
+class SocketDispatcher : public Dispatcher, public PhysicalSocket {
+ public:
+  explicit SocketDispatcher(PhysicalSocketServer *ss);
+  SocketDispatcher(SOCKET s, PhysicalSocketServer *ss);
+  ~SocketDispatcher() override;
+
+  bool Initialize();
+
+  virtual bool Create(int type);
+  bool Create(int family, int type) override;
+
+#if defined(WEBRTC_WIN)
+  WSAEVENT GetWSAEvent() override;
+  SOCKET GetSocket() override;
+  bool CheckSignalClose() override;
+#elif defined(WEBRTC_POSIX)
+  int GetDescriptor() override;
+  bool IsDescriptorClosed() override;
+#endif
+
+  uint32_t GetRequestedEvents() override;
+  void OnPreEvent(uint32_t ff) override;
+  void OnEvent(uint32_t ff, int err) override;
+
+  int Close() override;
+
+#if defined(WEBRTC_WIN)
+ private:
+  static int next_id_;
+  int id_;
+  bool signal_close_;
+  int signal_err_;
+#endif // WEBRTC_WIN
 };
 
 } // namespace rtc

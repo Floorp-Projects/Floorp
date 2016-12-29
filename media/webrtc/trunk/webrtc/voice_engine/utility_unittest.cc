@@ -11,19 +11,15 @@
 #include <math.h>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/format_macros.h"
 #include "webrtc/common_audio/resampler/include/push_resampler.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/voice_engine/utility.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
 namespace webrtc {
 namespace voe {
 namespace {
-
-enum FunctionToTest {
-  TestRemixAndResample,
-  TestDownConvertToCodecFormat
-};
 
 class UtilityTest : public ::testing::Test {
  protected:
@@ -35,9 +31,10 @@ class UtilityTest : public ::testing::Test {
     golden_frame_.CopyFrom(src_frame_);
   }
 
-  void RunResampleTest(int src_channels, int src_sample_rate_hz,
-                       int dst_channels, int dst_sample_rate_hz,
-                       FunctionToTest function);
+  void RunResampleTest(int src_channels,
+                       int src_sample_rate_hz,
+                       int dst_channels,
+                       int dst_sample_rate_hz);
 
   PushResampler<int16_t> resampler_;
   AudioFrame src_frame_;
@@ -53,8 +50,8 @@ void SetMonoFrame(AudioFrame* frame, float data, int sample_rate_hz) {
   frame->num_channels_ = 1;
   frame->sample_rate_hz_ = sample_rate_hz;
   frame->samples_per_channel_ = sample_rate_hz / 100;
-  for (int i = 0; i < frame->samples_per_channel_; i++) {
-    frame->data_[i] = data * i;
+  for (size_t i = 0; i < frame->samples_per_channel_; i++) {
+    frame->data_[i] = static_cast<int16_t>(data * i);
   }
 }
 
@@ -71,9 +68,9 @@ void SetStereoFrame(AudioFrame* frame, float left, float right,
   frame->num_channels_ = 2;
   frame->sample_rate_hz_ = sample_rate_hz;
   frame->samples_per_channel_ = sample_rate_hz / 100;
-  for (int i = 0; i < frame->samples_per_channel_; i++) {
-    frame->data_[i * 2] = left * i;
-    frame->data_[i * 2 + 1] = right * i;
+  for (size_t i = 0; i < frame->samples_per_channel_; i++) {
+    frame->data_[i * 2] = static_cast<int16_t>(left * i);
+    frame->data_[i * 2 + 1] = static_cast<int16_t>(right * i);
   }
 }
 
@@ -92,14 +89,14 @@ void VerifyParams(const AudioFrame& ref_frame, const AudioFrame& test_frame) {
 // |test_frame|. It allows for up to a |max_delay| in samples between the
 // signals to compensate for the resampling delay.
 float ComputeSNR(const AudioFrame& ref_frame, const AudioFrame& test_frame,
-                 int max_delay) {
+                 size_t max_delay) {
   VerifyParams(ref_frame, test_frame);
   float best_snr = 0;
-  int best_delay = 0;
-  for (int delay = 0; delay <= max_delay; delay++) {
+  size_t best_delay = 0;
+  for (size_t delay = 0; delay <= max_delay; delay++) {
     float mse = 0;
     float variance = 0;
-    for (int i = 0; i < ref_frame.samples_per_channel_ *
+    for (size_t i = 0; i < ref_frame.samples_per_channel_ *
         ref_frame.num_channels_ - delay; i++) {
       int error = ref_frame.data_[i] - test_frame.data_[i + delay];
       mse += error * error;
@@ -113,15 +110,15 @@ float ComputeSNR(const AudioFrame& ref_frame, const AudioFrame& test_frame,
       best_delay = delay;
     }
   }
-  printf("SNR=%.1f dB at delay=%d\n", best_snr, best_delay);
+  printf("SNR=%.1f dB at delay=%" PRIuS "\n", best_snr, best_delay);
   return best_snr;
 }
 
 void VerifyFramesAreEqual(const AudioFrame& ref_frame,
                           const AudioFrame& test_frame) {
   VerifyParams(ref_frame, test_frame);
-  for (int i = 0; i < ref_frame.samples_per_channel_ * ref_frame.num_channels_;
-      i++) {
+  for (size_t i = 0;
+       i < ref_frame.samples_per_channel_ * ref_frame.num_channels_; i++) {
     EXPECT_EQ(ref_frame.data_[i], test_frame.data_[i]);
   }
 }
@@ -129,8 +126,7 @@ void VerifyFramesAreEqual(const AudioFrame& ref_frame,
 void UtilityTest::RunResampleTest(int src_channels,
                                   int src_sample_rate_hz,
                                   int dst_channels,
-                                  int dst_sample_rate_hz,
-                                  FunctionToTest function) {
+                                  int dst_sample_rate_hz) {
   PushResampler<int16_t> resampler;  // Create a new one with every test.
   const int16_t kSrcLeft = 30;  // Shouldn't overflow for any used sample rate.
   const int16_t kSrcRight = 15;
@@ -158,30 +154,16 @@ void UtilityTest::RunResampleTest(int src_channels,
       SetStereoFrame(&golden_frame_, dst_left, dst_right, dst_sample_rate_hz);
   }
 
-  // The speex resampler has a known delay dependent on quality and rates,
-  // which we approximate here. Multiplying by two gives us a crude maximum
-  // for any resampling, as the old resampler typically (but not always)
-  // has lower delay.  The actual delay is calculated internally based on the
-  // filter length in the QualityMap.
-  static const int kInputKernelDelaySamples = 16*3;
-  const int max_delay = std::min(1.0f, 1/kResamplingFactor) *
-                        kInputKernelDelaySamples * dst_channels * 2;
+  // The sinc resampler has a known delay, which we compute here. Multiplying by
+  // two gives us a crude maximum for any resampling, as the old resampler
+  // typically (but not always) has lower delay.
+  static const size_t kInputKernelDelaySamples = 16;
+  const size_t max_delay = static_cast<size_t>(
+      static_cast<double>(dst_sample_rate_hz) / src_sample_rate_hz *
+      kInputKernelDelaySamples * dst_channels * 2);
   printf("(%d, %d Hz) -> (%d, %d Hz) ",  // SNR reported on the same line later.
       src_channels, src_sample_rate_hz, dst_channels, dst_sample_rate_hz);
-  if (function == TestRemixAndResample) {
-    RemixAndResample(src_frame_, &resampler, &dst_frame_);
-  } else {
-    int16_t mono_buffer[kMaxMonoDataSizeSamples];
-    DownConvertToCodecFormat(src_frame_.data_,
-                             src_frame_.samples_per_channel_,
-                             src_frame_.num_channels_,
-                             src_frame_.sample_rate_hz_,
-                             dst_frame_.num_channels_,
-                             dst_frame_.sample_rate_hz_,
-                             mono_buffer,
-                             &resampler,
-                             &dst_frame_);
-  }
+  RemixAndResample(src_frame_, &resampler, &dst_frame_);
 
   if (src_sample_rate_hz == 96000 && dst_sample_rate_hz == 8000) {
     // The sinc resampler gives poor SNR at this extreme conversion, but we
@@ -235,28 +217,7 @@ TEST_F(UtilityTest, RemixAndResampleSucceeds) {
       for (int src_channel = 0; src_channel < kChannelsSize; src_channel++) {
         for (int dst_channel = 0; dst_channel < kChannelsSize; dst_channel++) {
           RunResampleTest(kChannels[src_channel], kSampleRates[src_rate],
-                          kChannels[dst_channel], kSampleRates[dst_rate],
-                          TestRemixAndResample);
-        }
-      }
-    }
-  }
-}
-
-TEST_F(UtilityTest, ConvertToCodecFormatSucceeds) {
-  const int kSampleRates[] = {8000, 16000, 32000, 44100, 48000, 96000};
-  const int kSampleRatesSize = sizeof(kSampleRates) / sizeof(*kSampleRates);
-  const int kChannels[] = {1, 2};
-  const int kChannelsSize = sizeof(kChannels) / sizeof(*kChannels);
-  for (int src_rate = 0; src_rate < kSampleRatesSize; src_rate++) {
-    for (int dst_rate = 0; dst_rate < kSampleRatesSize; dst_rate++) {
-      for (int src_channel = 0; src_channel < kChannelsSize; src_channel++) {
-        for (int dst_channel = 0; dst_channel < kChannelsSize; dst_channel++) {
-          if (dst_rate <= src_rate && dst_channel <= src_channel) {
-            RunResampleTest(kChannels[src_channel], kSampleRates[src_rate],
-                            kChannels[src_channel], kSampleRates[dst_rate],
-                            TestDownConvertToCodecFormat);
-          }
+                          kChannels[dst_channel], kSampleRates[dst_rate]);
         }
       }
     }

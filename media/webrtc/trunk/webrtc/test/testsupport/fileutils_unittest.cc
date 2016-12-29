@@ -16,7 +16,6 @@
 #include <string>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 #ifdef WIN32
 #define chdir _chdir
@@ -66,7 +65,14 @@ TEST_F(FileUtilsTest, ProjectRootPath) {
 }
 
 // Similar to the above test, but for the output dir
-TEST_F(FileUtilsTest, DISABLED_ON_ANDROID(OutputPathFromUnchangedWorkingDir)) {
+#if defined(WEBRTC_ANDROID)
+#define MAYBE_OutputPathFromUnchangedWorkingDir \
+  DISABLED_OutputPathFromUnchangedWorkingDir
+#else
+#define MAYBE_OutputPathFromUnchangedWorkingDir \
+  OutputPathFromUnchangedWorkingDir
+#endif
+TEST_F(FileUtilsTest, MAYBE_OutputPathFromUnchangedWorkingDir) {
   std::string path = webrtc::test::OutputPath();
   std::string expected_end = "out";
   expected_end = kPathDelimiter + expected_end + kPathDelimiter;
@@ -75,7 +81,12 @@ TEST_F(FileUtilsTest, DISABLED_ON_ANDROID(OutputPathFromUnchangedWorkingDir)) {
 
 // Tests with current working directory set to a directory higher up in the
 // directory tree than the project root dir.
-TEST_F(FileUtilsTest, DISABLED_ON_ANDROID(OutputPathFromRootWorkingDir)) {
+#if defined(WEBRTC_ANDROID)
+#define MAYBE_OutputPathFromRootWorkingDir DISABLED_OutputPathFromRootWorkingDir
+#else
+#define MAYBE_OutputPathFromRootWorkingDir OutputPathFromRootWorkingDir
+#endif
+TEST_F(FileUtilsTest, MAYBE_OutputPathFromRootWorkingDir) {
   ASSERT_EQ(0, chdir(kPathDelimiter));
   ASSERT_EQ("./", webrtc::test::OutputPath());
 }

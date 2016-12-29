@@ -91,7 +91,7 @@ class ProfilerEvent {
   ProfilerEvent();
   void Start();
   void Stop();
-  void Stop(uint64 stop_time);
+  void Stop(uint64_t stop_time);
   double standard_deviation() const;
   double total_time() const { return total_time_; }
   double mean() const { return mean_; }
@@ -101,7 +101,7 @@ class ProfilerEvent {
   bool is_started() const { return start_count_ > 0; }
 
  private:
-  uint64 current_start_time_;
+  uint64_t current_start_time_;
   double total_time_;
   double mean_;
   double sum_of_squared_differences_;
@@ -134,7 +134,7 @@ class Profiler {
   EventMap events_;
   mutable SharedExclusiveLock lock_;
 
-  DISALLOW_COPY_AND_ASSIGN(Profiler);
+  RTC_DISALLOW_COPY_AND_ASSIGN(Profiler);
 };
 
 // Starts an event on construction and stops it on destruction.
@@ -151,7 +151,7 @@ class ProfilerScope {
  private:
   std::string event_name_;
 
-  DISALLOW_COPY_AND_ASSIGN(ProfilerScope);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ProfilerScope);
 };
 
 std::ostream& operator<<(std::ostream& stream,

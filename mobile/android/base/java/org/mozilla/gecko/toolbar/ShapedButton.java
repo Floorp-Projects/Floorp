@@ -17,7 +17,6 @@ import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 
@@ -44,10 +43,6 @@ public class ShapedButton extends ThemedImageButton
         mCanvasDelegate = new CanvasDelegate(this, Mode.DST_IN, paint);
 
         setWillNotDraw(false);
-        Drawable drawable = getDrawable();
-        if (drawable != null) {
-            DrawableCompat.setAutoMirrored(drawable, true);
-        }
     }
 
     @Override

@@ -37,7 +37,8 @@ class NATInternalSocketFactory {
 // from a socket factory, given to the constructor.
 class NATSocketFactory : public SocketFactory, public NATInternalSocketFactory {
  public:
-  NATSocketFactory(SocketFactory* factory, const SocketAddress& nat_addr);
+  NATSocketFactory(SocketFactory* factory, const SocketAddress& nat_udp_addr,
+                   const SocketAddress& nat_tcp_addr);
 
   // SocketFactory implementation
   Socket* CreateSocket(int type) override;
@@ -53,8 +54,9 @@ class NATSocketFactory : public SocketFactory, public NATInternalSocketFactory {
 
  private:
   SocketFactory* factory_;
-  SocketAddress nat_addr_;
-  DISALLOW_EVIL_CONSTRUCTORS(NATSocketFactory);
+  SocketAddress nat_udp_addr_;
+  SocketAddress nat_tcp_addr_;
+  RTC_DISALLOW_COPY_AND_ASSIGN(NATSocketFactory);
 };
 
 // Creates sockets that will send traffic through a NAT depending on what
@@ -94,8 +96,8 @@ class NATSocketServer : public SocketServer, public NATInternalSocketFactory {
     ~Translator();
 
     SocketFactory* internal_factory() { return internal_factory_.get(); }
-    SocketAddress internal_address() const {
-      return nat_server_->internal_address();
+    SocketAddress internal_udp_address() const {
+      return nat_server_->internal_udp_address();
     }
     SocketAddress internal_tcp_address() const {
       return SocketAddress();  // nat_server_->internal_tcp_address();
@@ -151,7 +153,7 @@ class NATSocketServer : public SocketServer, public NATInternalSocketFactory {
   SocketServer* server_;
   MessageQueue* msg_queue_;
   TranslatorMap nats_;
-  DISALLOW_EVIL_CONSTRUCTORS(NATSocketServer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(NATSocketServer);
 };
 
 // Free-standing NAT helper functions.

@@ -10,8 +10,7 @@
 
 // General note: return values for the various pthread synchronization APIs
 // are explicitly ignored here. In Chromium, the same thing is done for release.
-// However, in debugging, failure in these APIs are logged. There is currently
-// no equivalent to DCHECK_EQ in WebRTC code so this is the best we can do here.
+// However, in debugging, failure in these APIs are logged.
 // TODO(henrike): add logging when pthread synchronization APIs are failing.
 
 #include "webrtc/system_wrappers/source/critical_section_posix.h"

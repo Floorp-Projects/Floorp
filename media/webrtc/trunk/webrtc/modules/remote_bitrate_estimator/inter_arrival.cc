@@ -13,7 +13,8 @@
 #include <algorithm>
 #include <cassert>
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
 
@@ -52,6 +53,14 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
                          prev_timestamp_group_.timestamp;
       *arrival_time_delta_ms = current_timestamp_group_.complete_time_ms -
                                prev_timestamp_group_.complete_time_ms;
+      if (*arrival_time_delta_ms < 0) {
+        // The group of packets has been reordered since receiving its local
+        // arrival timestamp.
+        LOG(LS_WARNING) << "Packets are being reordered on the path from the "
+                           "socket to the bandwidth estimator. Ignoring this "
+                           "packet for bandwidth estimation.";
+        return false;
+      }
       assert(*arrival_time_delta_ms >= 0);
       *packet_size_delta = static_cast<int>(current_timestamp_group_.size) -
           static_cast<int>(prev_timestamp_group_.size);
@@ -62,8 +71,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
     current_timestamp_group_.first_timestamp = timestamp;
     current_timestamp_group_.timestamp = timestamp;
     current_timestamp_group_.size = 0;
-  }
-  else {
+  } else {
     current_timestamp_group_.timestamp = LatestTimestamp(
         current_timestamp_group_.timestamp, timestamp);
   }

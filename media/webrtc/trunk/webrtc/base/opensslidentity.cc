@@ -33,9 +33,6 @@ namespace rtc {
 // We could have exposed a myriad of parameters for the crypto stuff,
 // but keeping it simple seems best.
 
-// Strength of generated keys. Those are RSA.
-static const int KEY_LENGTH = 1024;
-
 // Random bits for certificate serial number
 static const int SERIAL_RAND_BITS = 64;
 
@@ -46,23 +43,48 @@ static const int CERTIFICATE_LIFETIME = 60*60*24*30;  // 30 days, arbitrarily
 static const int CERTIFICATE_WINDOW = -60*60*24;
 
 // Generate a key pair. Caller is responsible for freeing the returned object.
-static EVP_PKEY* MakeKey() {
+static EVP_PKEY* MakeKey(const KeyParams& key_params) {
   LOG(LS_INFO) << "Making key pair";
   EVP_PKEY* pkey = EVP_PKEY_new();
-  // RSA_generate_key is deprecated. Use _ex version.
-  BIGNUM* exponent = BN_new();
-  RSA* rsa = RSA_new();
-  if (!pkey || !exponent || !rsa ||
-      !BN_set_word(exponent, 0x10001) ||  // 65537 RSA exponent
-      !RSA_generate_key_ex(rsa, KEY_LENGTH, exponent, NULL) ||
-      !EVP_PKEY_assign_RSA(pkey, rsa)) {
-    EVP_PKEY_free(pkey);
+  if (key_params.type() == KT_RSA) {
+    int key_length = key_params.rsa_params().mod_size;
+    BIGNUM* exponent = BN_new();
+    RSA* rsa = RSA_new();
+    if (!pkey || !exponent || !rsa ||
+        !BN_set_word(exponent, key_params.rsa_params().pub_exp) ||
+        !RSA_generate_key_ex(rsa, key_length, exponent, NULL) ||
+        !EVP_PKEY_assign_RSA(pkey, rsa)) {
+      EVP_PKEY_free(pkey);
+      BN_free(exponent);
+      RSA_free(rsa);
+      LOG(LS_ERROR) << "Failed to make RSA key pair";
+      return NULL;
+    }
+    // ownership of rsa struct was assigned, don't free it.
     BN_free(exponent);
-    RSA_free(rsa);
+  } else if (key_params.type() == KT_ECDSA) {
+    if (key_params.ec_curve() == EC_NIST_P256) {
+      EC_KEY* ec_key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+      if (!pkey || !ec_key || !EC_KEY_generate_key(ec_key) ||
+          !EVP_PKEY_assign_EC_KEY(pkey, ec_key)) {
+        EVP_PKEY_free(pkey);
+        EC_KEY_free(ec_key);
+        LOG(LS_ERROR) << "Failed to make EC key pair";
+        return NULL;
+      }
+      // ownership of ec_key struct was assigned, don't free it.
+    } else {
+      // Add generation of any other curves here.
+      EVP_PKEY_free(pkey);
+      LOG(LS_ERROR) << "ECDSA key requested for unknown curve";
+      return NULL;
+    }
+  } else {
+    EVP_PKEY_free(pkey);
+    LOG(LS_ERROR) << "Key type requested not understood";
     return NULL;
   }
-  // ownership of rsa struct was assigned, don't free it.
-  BN_free(exponent);
+
   LOG(LS_INFO) << "Returning key pair";
   return pkey;
 }
@@ -74,6 +96,7 @@ static X509* MakeCertificate(EVP_PKEY* pkey, const SSLIdentityParams& params) {
   X509* x509 = NULL;
   BIGNUM* serial_number = NULL;
   X509_NAME* name = NULL;
+  time_t epoch_off = 0;  // Time offset since epoch.
 
   if ((x509=X509_new()) == NULL)
     goto error;
@@ -108,11 +131,11 @@ static X509* MakeCertificate(EVP_PKEY* pkey, const SSLIdentityParams& params) {
       !X509_set_issuer_name(x509, name))
     goto error;
 
-  if (!X509_gmtime_adj(X509_get_notBefore(x509), params.not_before) ||
-      !X509_gmtime_adj(X509_get_notAfter(x509), params.not_after))
+  if (!X509_time_adj(X509_get_notBefore(x509), params.not_before, &epoch_off) ||
+      !X509_time_adj(X509_get_notAfter(x509), params.not_after, &epoch_off))
     goto error;
 
-  if (!X509_sign(x509, pkey, EVP_sha1()))
+  if (!X509_sign(x509, pkey, EVP_sha256()))
     goto error;
 
   BN_free(serial_number);
@@ -138,8 +161,8 @@ static void LogSSLErrors(const std::string& prefix) {
   }
 }
 
-OpenSSLKeyPair* OpenSSLKeyPair::Generate() {
-  EVP_PKEY* pkey = MakeKey();
+OpenSSLKeyPair* OpenSSLKeyPair::Generate(const KeyParams& key_params) {
+  EVP_PKEY* pkey = MakeKey(key_params);
   if (!pkey) {
     LogSSLErrors("Generating key pair");
     return NULL;
@@ -157,10 +180,14 @@ OpenSSLKeyPair* OpenSSLKeyPair::GetReference() {
 }
 
 void OpenSSLKeyPair::AddReference() {
+#if defined(OPENSSL_IS_BORINGSSL)
+  EVP_PKEY_up_ref(pkey_);
+#else
   CRYPTO_add(&pkey_->references, 1, CRYPTO_LOCK_EVP_PKEY);
+#endif
 }
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 // Print a certificate to the log, for debugging.
 static void PrintCert(X509* x509) {
   BIO* temp_memory_bio = BIO_new(BIO_s_mem());
@@ -189,7 +216,7 @@ OpenSSLCertificate* OpenSSLCertificate::Generate(
     LogSSLErrors("Generating certificate");
     return NULL;
   }
-#ifdef _DEBUG
+#if !defined(NDEBUG)
   PrintCert(x509);
 #endif
   OpenSSLCertificate* ret = new OpenSSLCertificate(x509);
@@ -203,8 +230,7 @@ OpenSSLCertificate* OpenSSLCertificate::FromPEMString(
   if (!bio)
     return NULL;
   BIO_set_mem_eof_return(bio, 0);
-  X509 *x509 = PEM_read_bio_X509(bio, NULL, NULL,
-                                 const_cast<char*>("\0"));
+  X509* x509 = PEM_read_bio_X509(bio, NULL, NULL, const_cast<char*>("\0"));
   BIO_free(bio);  // Frees the BIO, but not the pointed-to string.
 
   if (!x509)
@@ -279,7 +305,7 @@ bool OpenSSLCertificate::ComputeDigest(const X509* x509,
                                        unsigned char* digest,
                                        size_t size,
                                        size_t* length) {
-  const EVP_MD *md;
+  const EVP_MD* md;
   unsigned int n;
 
   if (!OpenSSLDigest::GetDigestEVP(algorithm, &md))
@@ -322,7 +348,7 @@ std::string OpenSSLCertificate::ToPEMString() const {
 
 void OpenSSLCertificate::ToDER(Buffer* der_buffer) const {
   // In case of failure, make sure to leave the buffer empty.
-  der_buffer->SetData(NULL, 0);
+  der_buffer->SetSize(0);
 
   // Calculates the DER representation of the certificate, from scratch.
   BIO* bio = BIO_new(BIO_s_mem());
@@ -341,7 +367,27 @@ void OpenSSLCertificate::ToDER(Buffer* der_buffer) const {
 
 void OpenSSLCertificate::AddReference() const {
   ASSERT(x509_ != NULL);
+#if defined(OPENSSL_IS_BORINGSSL)
+  X509_up_ref(x509_);
+#else
   CRYPTO_add(&x509_->references, 1, CRYPTO_LOCK_X509);
+#endif
+}
+
+// Documented in sslidentity.h.
+int64_t OpenSSLCertificate::CertificateExpirationTime() const {
+  ASN1_TIME* expire_time = X509_get_notAfter(x509_);
+  bool long_format;
+
+  if (expire_time->type == V_ASN1_UTCTIME) {
+    long_format = false;
+  } else if (expire_time->type == V_ASN1_GENERALIZEDTIME) {
+    long_format = true;
+  } else {
+    return -1;
+  }
+
+  return ASN1TimeToSec(expire_time->data, expire_time->length, long_format);
 }
 
 OpenSSLIdentity::OpenSSLIdentity(OpenSSLKeyPair* key_pair,
@@ -355,10 +401,10 @@ OpenSSLIdentity::~OpenSSLIdentity() = default;
 
 OpenSSLIdentity* OpenSSLIdentity::GenerateInternal(
     const SSLIdentityParams& params) {
-  OpenSSLKeyPair *key_pair = OpenSSLKeyPair::Generate();
+  OpenSSLKeyPair* key_pair = OpenSSLKeyPair::Generate(params.key_params);
   if (key_pair) {
-    OpenSSLCertificate *certificate = OpenSSLCertificate::Generate(
-        key_pair, params);
+    OpenSSLCertificate* certificate =
+        OpenSSLCertificate::Generate(key_pair, params);
     if (certificate)
       return new OpenSSLIdentity(key_pair, certificate);
     delete key_pair;
@@ -367,11 +413,14 @@ OpenSSLIdentity* OpenSSLIdentity::GenerateInternal(
   return NULL;
 }
 
-OpenSSLIdentity* OpenSSLIdentity::Generate(const std::string& common_name) {
+OpenSSLIdentity* OpenSSLIdentity::Generate(const std::string& common_name,
+                                           const KeyParams& key_params) {
   SSLIdentityParams params;
+  params.key_params = key_params;
   params.common_name = common_name;
-  params.not_before = CERTIFICATE_WINDOW;
-  params.not_after = CERTIFICATE_LIFETIME;
+  time_t now = time(NULL);
+  params.not_before = now + CERTIFICATE_WINDOW;
+  params.not_after = now + CERTIFICATE_LIFETIME;
   return GenerateInternal(params);
 }
 
@@ -396,8 +445,8 @@ SSLIdentity* OpenSSLIdentity::FromPEMStrings(
     return NULL;
   }
   BIO_set_mem_eof_return(bio, 0);
-  EVP_PKEY *pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL,
-                                           const_cast<char*>("\0"));
+  EVP_PKEY* pkey =
+      PEM_read_bio_PrivateKey(bio, NULL, NULL, const_cast<char*>("\0"));
   BIO_free(bio);  // Frees the BIO, but not the pointed-to string.
 
   if (!pkey) {

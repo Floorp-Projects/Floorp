@@ -10,8 +10,8 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/utility/interface/audio_frame_operations.h"
+#include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/modules/utility/include/audio_frame_operations.h"
 
 namespace webrtc {
 namespace {
@@ -28,14 +28,14 @@ class AudioFrameOperationsTest : public ::testing::Test {
 };
 
 void SetFrameData(AudioFrame* frame, int16_t left, int16_t right) {
-  for (int i = 0; i < frame->samples_per_channel_ * 2; i += 2) {
+  for (size_t i = 0; i < frame->samples_per_channel_ * 2; i += 2) {
     frame->data_[i] = left;
     frame->data_[i + 1] = right;
   }
 }
 
 void SetFrameData(AudioFrame* frame, int16_t data) {
-  for (int i = 0; i < frame->samples_per_channel_; i++) {
+  for (size_t i = 0; i < frame->samples_per_channel_; i++) {
     frame->data_[i] = data;
   }
 }
@@ -45,7 +45,7 @@ void VerifyFramesAreEqual(const AudioFrame& frame1, const AudioFrame& frame2) {
   EXPECT_EQ(frame1.samples_per_channel_,
             frame2.samples_per_channel_);
 
-  for (int i = 0; i < frame1.samples_per_channel_ * frame1.num_channels_;
+  for (size_t i = 0; i < frame1.samples_per_channel_ * frame1.num_channels_;
       i++) {
     EXPECT_EQ(frame1.data_[i], frame2.data_[i]);
   }

@@ -107,7 +107,7 @@ class UnixFilesystem : public FilesystemInterface {
   // Get a temporary folder that is unique to the current user and application.
   bool GetAppTempFolder(Pathname* path) override;
 
-  bool GetDiskFreeSpace(const Pathname& path, int64* freebytes) override;
+  bool GetDiskFreeSpace(const Pathname& path, int64_t* freebytes) override;
 
   // Returns the absolute path of the current directory.
   Pathname GetCurrentDirectory() override;

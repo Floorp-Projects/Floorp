@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/rtp_rtcp/source/dtmf_queue.h"
 
-#include <string.h>  //memset
+#include <string.h>
 
 namespace webrtc {
 DTMFqueue::DTMFqueue()
@@ -21,7 +21,9 @@ DTMFqueue::DTMFqueue()
   memset(dtmf_level_, 0, sizeof(dtmf_level_));
 }
 
-DTMFqueue::~DTMFqueue() { delete dtmf_critsect_; }
+DTMFqueue::~DTMFqueue() {
+  delete dtmf_critsect_;
+}
 
 int32_t DTMFqueue::AddDTMF(uint8_t key, uint16_t len, uint8_t level) {
   CriticalSectionScoped lock(dtmf_critsect_);

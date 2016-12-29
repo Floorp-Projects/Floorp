@@ -1,9 +1,5 @@
-# This file is used by gcl to get repository specific information.
-CODE_REVIEW_SERVER: webrtc-codereview.appspot.com
-CC_LIST: webrtc-reviews@webrtc.org
-VIEW_VC: http://code.google.com/p/webrtc/source/detail?r=
-TRY_ON_UPLOAD: False
-TRYSERVER_SVN_URL: svn://svn.chromium.org/chrome-try/try-webrtc
-TRYSERVER_ROOT: src/webrtc
-PROJECT: webrtc
-FORCE_HTTPS_COMMIT_URL: True
+
+Creating CLs from this location is not supported! Please make sure the current
+working directory is the parent directory of this directory.
+If you're working with a Chromium checkout, you'll have to create a full WebRTC
+checkout and upload a CL from that. See http://www.webrtc.org for instructions.

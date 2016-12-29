@@ -8,7 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/base/arraysize.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/test/auto_test/fakes/fake_media_process.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
@@ -118,8 +119,8 @@ TEST_F(ExternalMediaTest,
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
   ResumePlaying();
   EXPECT_EQ(0, voe_xmedia_->GetAudioFrame(channel_, 0, &frame));
-  EXPECT_LT(0, frame.sample_rate_hz_);
-  EXPECT_LT(0, frame.samples_per_channel_);
+  EXPECT_GT(frame.sample_rate_hz_, 0);
+  EXPECT_GT(frame.samples_per_channel_, 0U);
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));
   ResumePlaying();
@@ -132,12 +133,12 @@ TEST_F(ExternalMediaTest,
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
   ResumePlaying();
-  for (size_t i = 0; i < sizeof(kValidFrequencies) / sizeof(int); i++) {
+  for (size_t i = 0; i < arraysize(kValidFrequencies); i++) {
     int f = kValidFrequencies[i];
     EXPECT_EQ(0, voe_xmedia_->GetAudioFrame(channel_, f, &frame))
        << "Resampling succeeds for freq=" << f;
     EXPECT_EQ(f, frame.sample_rate_hz_);
-    EXPECT_EQ(f / 100, frame.samples_per_channel_);
+    EXPECT_EQ(static_cast<size_t>(f / 100), frame.samples_per_channel_);
   }
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, false));
@@ -151,7 +152,7 @@ TEST_F(ExternalMediaTest,
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));
   ResumePlaying();
-  for (size_t i = 0; i < sizeof(kInvalidFrequencies) / sizeof(int); i++) {
+  for (size_t i = 0; i < arraysize(kInvalidFrequencies); i++) {
     int f = kInvalidFrequencies[i];
     EXPECT_EQ(-1, voe_xmedia_->GetAudioFrame(channel_, f, &frame))
         << "Resampling fails for freq=" << f;

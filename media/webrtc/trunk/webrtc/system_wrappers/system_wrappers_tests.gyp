@@ -15,6 +15,7 @@
       'dependencies': [
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/test/test.gyp:histogram',
         '<(webrtc_root)/test/test.gyp:test_support_main',
       ],
       'sources': [
@@ -23,28 +24,24 @@
         'source/clock_unittest.cc',
         'source/condition_variable_unittest.cc',
         'source/critical_section_unittest.cc',
-        'source/event_tracer_unittest.cc',
         'source/logging_unittest.cc',
         'source/data_log_unittest.cc',
         'source/data_log_unittest_disabled.cc',
         'source/data_log_helpers_unittest.cc',
         'source/data_log_c_helpers_unittest.c',
         'source/data_log_c_helpers_unittest.h',
+        'source/metrics_unittest.cc',
+        'source/ntp_time_unittest.cc',
         'source/rtp_to_ntp_unittest.cc',
         'source/scoped_vector_unittest.cc',
         'source/stringize_macros_unittest.cc',
         'source/stl_util_unittest.cc',
-        'source/thread_unittest.cc',
-        'source/thread_posix_unittest.cc',
       ],
       'conditions': [
         ['enable_data_logging==1', {
           'sources!': [ 'source/data_log_unittest_disabled.cc', ],
         }, {
           'sources!': [ 'source/data_log_unittest.cc', ],
-        }],
-        ['os_posix==0', {
-          'sources!': [ 'source/thread_posix_unittest.cc', ],
         }],
         ['OS=="android"', {
           'dependencies': [

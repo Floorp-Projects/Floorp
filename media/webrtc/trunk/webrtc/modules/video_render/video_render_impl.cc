@@ -10,14 +10,14 @@
 
 #include <assert.h>
 
+#include "webrtc/common_video/include/incoming_video_stream.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/video_render/external/video_render_external_impl.h"
-#include "webrtc/modules/video_render/include/video_render_defines.h"
-#include "webrtc/modules/video_render/incoming_video_stream.h"
 #include "webrtc/modules/video_render/i_video_render.h"
+#include "webrtc/modules/video_render/video_render_defines.h"
 #include "webrtc/modules/video_render/video_render_impl.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
 
@@ -197,27 +197,10 @@ ModuleVideoRenderImpl::AddIncomingRenderStream(const uint32_t streamId,
     }
 
     // Create platform independant code
-    IncomingVideoStream* ptrIncomingStream = new IncomingVideoStream(_id,
-                                                                     streamId);
-    if (ptrIncomingStream == NULL)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
-                     "%s: Can't create incoming stream", __FUNCTION__);
-        return NULL;
-    }
-
-
-    if (ptrIncomingStream->SetRenderCallback(ptrRenderCallback) == -1)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
-                     "%s: Can't set render callback", __FUNCTION__);
-        delete ptrIncomingStream;
-        _ptrRenderer->DeleteIncomingRenderStream(streamId);
-        return NULL;
-    }
-
-    VideoRenderCallback* moduleCallback =
-            ptrIncomingStream->ModuleCallback();
+    IncomingVideoStream* ptrIncomingStream =
+        new IncomingVideoStream(streamId, false);
+    ptrIncomingStream->SetRenderCallback(ptrRenderCallback);
+    VideoRenderCallback* moduleCallback = ptrIncomingStream->ModuleCallback();
 
     // Store the stream
     _streamRenderMap[streamId] = ptrIncomingStream;
@@ -273,7 +256,8 @@ int32_t ModuleVideoRenderImpl::AddExternalRenderCallback(
                      "%s: could not get stream", __FUNCTION__);
         return -1;
     }
-    return item->second->SetExternalCallback(renderObject);
+    item->second->SetExternalCallback(renderObject);
+    return 0;
 }
 
 int32_t ModuleVideoRenderImpl::GetIncomingRenderStreamProperties(
@@ -567,10 +551,8 @@ int32_t ModuleVideoRenderImpl::ConfigureRenderer(
                                            bottom);
 }
 
-int32_t ModuleVideoRenderImpl::SetStartImage(
-    const uint32_t streamId,
-    const I420VideoFrame& videoFrame)
-{
+int32_t ModuleVideoRenderImpl::SetStartImage(const uint32_t streamId,
+                                             const VideoFrame& videoFrame) {
     CriticalSectionScoped cs(&_moduleCrit);
 
     if (!_ptrRenderer)
@@ -594,11 +576,9 @@ int32_t ModuleVideoRenderImpl::SetStartImage(
 
 }
 
-int32_t ModuleVideoRenderImpl::SetTimeoutImage(
-    const uint32_t streamId,
-    const I420VideoFrame& videoFrame,
-    const uint32_t timeout)
-{
+int32_t ModuleVideoRenderImpl::SetTimeoutImage(const uint32_t streamId,
+                                               const VideoFrame& videoFrame,
+                                               const uint32_t timeout) {
     CriticalSectionScoped cs(&_moduleCrit);
 
     if (!_ptrRenderer)

@@ -25,21 +25,23 @@ class NoopCallback : public webrtc::LappedTransform::Callback {
   NoopCallback() : block_num_(0) {}
 
   virtual void ProcessAudioBlock(const complex<float>* const* in_block,
-                                 int in_channels, int frames, int out_channels,
+                                 size_t in_channels,
+                                 size_t frames,
+                                 size_t out_channels,
                                  complex<float>* const* out_block) {
-    CHECK_EQ(in_channels, out_channels);
-    for (int i = 0; i < out_channels; ++i) {
+    RTC_CHECK_EQ(in_channels, out_channels);
+    for (size_t i = 0; i < out_channels; ++i) {
       memcpy(out_block[i], in_block[i], sizeof(**in_block) * frames);
     }
     ++block_num_;
   }
 
-  int block_num() {
+  size_t block_num() {
     return block_num_;
   }
 
  private:
-  int block_num_;
+  size_t block_num_;
 };
 
 class FftCheckerCallback : public webrtc::LappedTransform::Callback {
@@ -47,29 +49,32 @@ class FftCheckerCallback : public webrtc::LappedTransform::Callback {
   FftCheckerCallback() : block_num_(0) {}
 
   virtual void ProcessAudioBlock(const complex<float>* const* in_block,
-                                 int in_channels, int frames, int out_channels,
+                                 size_t in_channels,
+                                 size_t frames,
+                                 size_t out_channels,
                                  complex<float>* const* out_block) {
-    CHECK_EQ(in_channels, out_channels);
+    RTC_CHECK_EQ(in_channels, out_channels);
 
-    float full_length = (frames - 1) * 2;
+    size_t full_length = (frames - 1) * 2;
     ++block_num_;
 
     if (block_num_ > 0) {
-      ASSERT_NEAR(in_block[0][0].real(), full_length, 1e-5f);
+      ASSERT_NEAR(in_block[0][0].real(), static_cast<float>(full_length),
+                  1e-5f);
       ASSERT_NEAR(in_block[0][0].imag(), 0.0f, 1e-5f);
-      for (int i = 1; i < frames; ++i) {
+      for (size_t i = 1; i < frames; ++i) {
         ASSERT_NEAR(in_block[0][i].real(), 0.0f, 1e-5f);
         ASSERT_NEAR(in_block[0][i].imag(), 0.0f, 1e-5f);
       }
     }
   }
 
-  int block_num() {
+  size_t block_num() {
     return block_num_;
   }
 
  private:
-  int block_num_;
+  size_t block_num_;
 };
 
 void SetFloatArray(float value, int rows, int cols, float* const* array) {
@@ -85,10 +90,10 @@ void SetFloatArray(float value, int rows, int cols, float* const* array) {
 namespace webrtc {
 
 TEST(LappedTransformTest, Windowless) {
-  const int kChannels = 3;
-  const int kChunkLength = 512;
-  const int kBlockLength = 64;
-  const int kShiftAmount = 64;
+  const size_t kChannels = 3;
+  const size_t kChunkLength = 512;
+  const size_t kBlockLength = 64;
+  const size_t kShiftAmount = 64;
   NoopCallback noop;
 
   // Rectangular window.
@@ -113,8 +118,8 @@ TEST(LappedTransformTest, Windowless) {
 
   trans.ProcessChunk(in_chunk, out_chunk);
 
-  for (int i = 0; i < kChannels; ++i) {
-    for (int j = 0; j < kChunkLength; ++j) {
+  for (size_t i = 0; i < kChannels; ++i) {
+    for (size_t j = 0; j < kChunkLength; ++j) {
       ASSERT_NEAR(out_chunk[i][j], 2.0f, 1e-5f);
     }
   }
@@ -123,9 +128,9 @@ TEST(LappedTransformTest, Windowless) {
 }
 
 TEST(LappedTransformTest, IdentityProcessor) {
-  const int kChunkLength = 512;
-  const int kBlockLength = 64;
-  const int kShiftAmount = 32;
+  const size_t kChunkLength = 512;
+  const size_t kBlockLength = 64;
+  const size_t kShiftAmount = 32;
   NoopCallback noop;
 
   // Identity window for |overlap = block_size / 2|.
@@ -144,7 +149,7 @@ TEST(LappedTransformTest, IdentityProcessor) {
 
   trans.ProcessChunk(&in_chunk, &out_chunk);
 
-  for (int i = 0; i < kChunkLength; ++i) {
+  for (size_t i = 0; i < kChunkLength; ++i) {
     ASSERT_NEAR(out_chunk[i],
                 (i < kBlockLength - kShiftAmount) ? 0.0f : 2.0f,
                 1e-5f);
@@ -154,8 +159,8 @@ TEST(LappedTransformTest, IdentityProcessor) {
 }
 
 TEST(LappedTransformTest, Callbacks) {
-  const int kChunkLength = 512;
-  const int kBlockLength = 64;
+  const size_t kChunkLength = 512;
+  const size_t kBlockLength = 64;
   FftCheckerCallback call;
 
   // Rectangular window.
@@ -177,5 +182,27 @@ TEST(LappedTransformTest, Callbacks) {
   ASSERT_EQ(kChunkLength / kBlockLength, call.block_num());
 }
 
-}  // namespace webrtc
+TEST(LappedTransformTest, chunk_length) {
+  const size_t kBlockLength = 64;
+  FftCheckerCallback call;
+  const float window[kBlockLength] = {};
 
+  // Make sure that chunk_length returns the same value passed to the
+  // LappedTransform constructor.
+  {
+    const size_t kExpectedChunkLength = 512;
+    const LappedTransform trans(1, 1, kExpectedChunkLength, window,
+                                kBlockLength, kBlockLength, &call);
+
+    EXPECT_EQ(kExpectedChunkLength, trans.chunk_length());
+  }
+  {
+    const size_t kExpectedChunkLength = 160;
+    const LappedTransform trans(1, 1, kExpectedChunkLength, window,
+                                kBlockLength, kBlockLength, &call);
+
+    EXPECT_EQ(kExpectedChunkLength, trans.chunk_length());
+  }
+}
+
+}  // namespace webrtc

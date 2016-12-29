@@ -743,9 +743,7 @@ DefineTransaction.inputProps = new Map();
 DefineTransaction.defineInputProps =
 function(aNames, aValidationFunction, aDefaultValue) {
   for (let name of aNames) {
-    // Workaround bug 449811.
-    let propName = name;
-    this.inputProps.set(propName, {
+    this.inputProps.set(name, {
       validateValue: function(aValue) {
         if (aValue === undefined)
           return aDefaultValue;
@@ -753,14 +751,14 @@ function(aNames, aValidationFunction, aDefaultValue) {
           return aValidationFunction(aValue);
         }
         catch (ex) {
-          throw new Error(`Invalid value for input property ${propName}`);
+          throw new Error(`Invalid value for input property ${name}`);
         }
       },
 
       validateInput: function(aInput, aRequired) {
-        if (aRequired && !(propName in aInput))
-          throw new Error(`Required input property is missing: ${propName}`);
-        return this.validateValue(aInput[propName]);
+        if (aRequired && !(name in aInput))
+          throw new Error(`Required input property is missing: ${name}`);
+        return this.validateValue(aInput[name]);
       },
 
       isArrayProperty: false
@@ -1517,20 +1515,18 @@ PT.Tag.prototype = {
   execute: function* (aURIs, aTags) {
     let onUndo = [], onRedo = [];
     for (let uri of aURIs) {
-      // Workaround bug 449811.
-      let currentURI = uri;
 
       let promiseIsBookmarked = function* () {
         let deferred = Promise.defer();
         PlacesUtils.asyncGetBookmarkIds(
-          currentURI, ids => { deferred.resolve(ids.length > 0); });
+          uri, ids => { deferred.resolve(ids.length > 0); });
         return deferred.promise;
       };
 
-      if (yield promiseIsBookmarked(currentURI)) {
+      if (yield promiseIsBookmarked(uri)) {
         // Tagging is only allowed for bookmarked URIs (but see 424160).
         let createTxn = TransactionsHistory.getRawTransaction(
-          PT.NewBookmark({ url: currentURI
+          PT.NewBookmark({ url: uri
                          , tags: aTags
                          , parentGuid: PlacesUtils.bookmarks.unfiledGuid }));
         yield createTxn.execute();
@@ -1538,14 +1534,14 @@ PT.Tag.prototype = {
         onRedo.push(createTxn.redo.bind(createTxn));
       }
       else {
-        let currentTags = PlacesUtils.tagging.getTagsForURI(currentURI);
+        let currentTags = PlacesUtils.tagging.getTagsForURI(uri);
         let newTags = aTags.filter(t => !currentTags.includes(t));
-        PlacesUtils.tagging.tagURI(currentURI, newTags);
+        PlacesUtils.tagging.tagURI(uri, newTags);
         onUndo.unshift(() => {
-          PlacesUtils.tagging.untagURI(currentURI, newTags);
+          PlacesUtils.tagging.untagURI(uri, newTags);
         });
         onRedo.push(() => {
-          PlacesUtils.tagging.tagURI(currentURI, newTags);
+          PlacesUtils.tagging.tagURI(uri, newTags);
         });
       }
     }
@@ -1575,20 +1571,18 @@ PT.Untag.prototype = {
   execute: function* (aURIs, aTags) {
     let onUndo = [], onRedo = [];
     for (let uri of aURIs) {
-      // Workaround bug 449811.
-      let currentURI = uri;
       let tagsToRemove;
-      let tagsSet = PlacesUtils.tagging.getTagsForURI(currentURI);
+      let tagsSet = PlacesUtils.tagging.getTagsForURI(uri);
       if (aTags.length > 0)
         tagsToRemove = aTags.filter(t => tagsSet.includes(t));
       else
         tagsToRemove = tagsSet;
-      PlacesUtils.tagging.untagURI(currentURI, tagsToRemove);
+      PlacesUtils.tagging.untagURI(uri, tagsToRemove);
       onUndo.unshift(() => {
-        PlacesUtils.tagging.tagURI(currentURI, tagsToRemove);
+        PlacesUtils.tagging.tagURI(uri, tagsToRemove);
       });
       onRedo.push(() => {
-        PlacesUtils.tagging.untagURI(currentURI, tagsToRemove);
+        PlacesUtils.tagging.untagURI(uri, tagsToRemove);
       });
     }
     this.undo = function* () {

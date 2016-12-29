@@ -126,13 +126,13 @@ FirewallSocketServer::~FirewallSocketServer() {
 void FirewallSocketServer::AddRule(bool allow, FirewallProtocol p,
                                    FirewallDirection d,
                                    const SocketAddress& addr) {
-  SocketAddress src, dst;
-  if (d == FD_IN) {
-    dst = addr;
-  } else {
-    src = addr;
+  SocketAddress any;
+  if (d == FD_IN || d == FD_ANY) {
+    AddRule(allow, p, any, addr);
   }
-  AddRule(allow, p, src, dst);
+  if (d == FD_OUT || d == FD_ANY) {
+    AddRule(allow, p, addr, any);
+  }
 }
 
 

@@ -20,16 +20,14 @@ namespace rtc {
 class PlatformSoundSystemFactory : public SoundSystemFactory {
  public:
   PlatformSoundSystemFactory();
-  virtual ~PlatformSoundSystemFactory();
+  ~PlatformSoundSystemFactory() override;
 
  protected:
   // Inherited from SoundSystemFactory.
-  virtual bool SetupInstance();
-  virtual void CleanupInstance();
+  bool SetupInstance() override;
+  void CleanupInstance() override;
 };
 
 }  // namespace rtc
 
 #endif  // WEBRTC_SOUND_PLATFORMSOUNDSYSTEMFACTORY_H_
-
-

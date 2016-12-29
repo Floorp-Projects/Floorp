@@ -47,7 +47,7 @@ add_task(function* () {
      "The correct request is definitely selected");
 
   // Filter out the HTML request.
-  panel.panelWin.gStore.dispatch(Actions.toggleFilterType("js"));
+  panel.panelWin.gStore.dispatch(Actions.toggleRequestFilterType("js"));
 
   yield toolbox.selectTool("webconsole");
   is(toolbox.currentToolId, "webconsole", "Web console was selected");

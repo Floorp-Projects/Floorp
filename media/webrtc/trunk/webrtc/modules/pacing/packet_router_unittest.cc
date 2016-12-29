@@ -13,8 +13,8 @@
 #include "webrtc/base/checks.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/pacing/include/packet_router.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/pacing/packet_router.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/rtp_rtcp/mocks/mock_rtp_rtcp.h"
 #include "webrtc/base/scoped_ptr.h"
 
@@ -102,20 +102,30 @@ TEST_F(PacketRouterTest, TimeToSendPacket) {
 }
 
 TEST_F(PacketRouterTest, TimeToSendPadding) {
+  const uint16_t kSsrc1 = 1234;
+  const uint16_t kSsrc2 = 4567;
+
   MockRtpRtcp rtp_1;
+  EXPECT_CALL(rtp_1, SSRC()).WillRepeatedly(Return(kSsrc1));
   MockRtpRtcp rtp_2;
+  EXPECT_CALL(rtp_2, SSRC()).WillRepeatedly(Return(kSsrc2));
   packet_router_->AddRtpModule(&rtp_1);
   packet_router_->AddRtpModule(&rtp_2);
 
-  // Default configuration, sending padding on the first sending module.
+  // Default configuration, sending padding on all modules sending media,
+  // ordered by SSRC.
   const size_t requested_padding_bytes = 1000;
   const size_t sent_padding_bytes = 890;
   EXPECT_CALL(rtp_1, SendingMedia()).Times(1).WillOnce(Return(true));
   EXPECT_CALL(rtp_1, TimeToSendPadding(requested_padding_bytes))
       .Times(1)
       .WillOnce(Return(sent_padding_bytes));
-  EXPECT_CALL(rtp_2, TimeToSendPadding(_)).Times(0);
-  EXPECT_EQ(sent_padding_bytes,
+  EXPECT_CALL(rtp_2, SendingMedia()).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(rtp_2,
+              TimeToSendPadding(requested_padding_bytes - sent_padding_bytes))
+      .Times(1)
+      .WillOnce(Return(requested_padding_bytes - sent_padding_bytes));
+  EXPECT_EQ(requested_padding_bytes,
             packet_router_->TimeToSendPadding(requested_padding_bytes));
 
   // Let only the second module be sending and verify the padding request is
@@ -134,8 +144,7 @@ TEST_F(PacketRouterTest, TimeToSendPadding) {
   EXPECT_CALL(rtp_1, TimeToSendPadding(requested_padding_bytes)).Times(0);
   EXPECT_CALL(rtp_2, SendingMedia()).Times(1).WillOnce(Return(false));
   EXPECT_CALL(rtp_2, TimeToSendPadding(_)).Times(0);
-  EXPECT_EQ(static_cast<size_t>(0),
-            packet_router_->TimeToSendPadding(requested_padding_bytes));
+  EXPECT_EQ(0u, packet_router_->TimeToSendPadding(requested_padding_bytes));
 
   packet_router_->RemoveRtpModule(&rtp_1);
 
@@ -143,9 +152,21 @@ TEST_F(PacketRouterTest, TimeToSendPadding) {
   // to send by not expecting any calls. Instead verify rtp_2 is called.
   EXPECT_CALL(rtp_2, SendingMedia()).Times(1).WillOnce(Return(true));
   EXPECT_CALL(rtp_2, TimeToSendPadding(requested_padding_bytes)).Times(1);
-  EXPECT_EQ(static_cast<size_t>(0),
-            packet_router_->TimeToSendPadding(requested_padding_bytes));
+  EXPECT_EQ(0u, packet_router_->TimeToSendPadding(requested_padding_bytes));
 
   packet_router_->RemoveRtpModule(&rtp_2);
+}
+
+TEST_F(PacketRouterTest, AllocateSequenceNumbers) {
+  const uint16_t kStartSeq = 0xFFF0;
+  const size_t kNumPackets = 32;
+
+  packet_router_->SetTransportWideSequenceNumber(kStartSeq - 1);
+
+  for (size_t i = 0; i < kNumPackets; ++i) {
+    uint16_t seq = packet_router_->AllocateSequenceNumber();
+    uint32_t expected_unwrapped_seq = static_cast<uint32_t>(kStartSeq) + i;
+    EXPECT_EQ(static_cast<uint16_t>(expected_unwrapped_seq & 0xFFFF), seq);
+  }
 }
 }  // namespace webrtc

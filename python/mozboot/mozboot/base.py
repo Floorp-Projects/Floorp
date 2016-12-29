@@ -537,6 +537,16 @@ class BaseBootstrapper(object):
         cargo_bin = os.path.join(cargo_home, 'bin')
         return cargo_home, cargo_bin
 
+    def win_to_msys_path(self, path):
+        '''Convert a windows-style path to msys style.'''
+        drive, path = os.path.splitdrive(path)
+        path = '/'.join(path.split('\\'))
+        if drive:
+            if path[0] == '/':
+                path = path[1:]
+            path = '/%s/%s' % (drive[:-1], path)
+        return path
+
     def print_rust_path_advice(self, template, cargo_home, cargo_bin):
         # Suggest ~/.cargo/env if it exists.
         if os.path.exists(os.path.join(cargo_home, 'env')):
@@ -546,7 +556,7 @@ class BaseBootstrapper(object):
             # so fall back to a manual PATH update. Bootstrap
             # only runs under msys, so a unix-style shell command
             # is appropriate there.
-            cmd = 'export PATH=%s:$PATH' % cargo_bin
+            cmd = 'export PATH=%s:$PATH' % self.win_to_msys_path(cargo_bin)
         print(template % {
             'cargo_bin': cargo_bin,
             'cmd': cmd,

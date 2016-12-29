@@ -8,15 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_payload_registry.h"
 
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 
-RTPPayloadRegistry::RTPPayloadRegistry(
-    RTPPayloadStrategy* rtp_payload_strategy)
+RTPPayloadRegistry::RTPPayloadRegistry(RTPPayloadStrategy* rtp_payload_strategy)
     : crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       rtp_payload_strategy_(rtp_payload_strategy),
       red_payload_type_(-1),
@@ -25,7 +24,8 @@ RTPPayloadRegistry::RTPPayloadRegistry(
       last_received_payload_type_(-1),
       last_received_media_payload_type_(-1),
       rtx_(false),
-      payload_type_rtx_(-1),
+      rtx_payload_type_(-1),
+      use_rtx_payload_mapping_on_restore_(false),
       ssrc_rtx_(0) {}
 
 RTPPayloadRegistry::~RTPPayloadRegistry() {
@@ -40,7 +40,7 @@ int32_t RTPPayloadRegistry::RegisterReceivePayload(
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
     const int8_t payload_type,
     const uint32_t frequency,
-    const uint8_t channels,
+    const size_t channels,
     const uint32_t rate,
     bool* created_new_payload) {
   assert(payload_type >= 0);
@@ -139,7 +139,7 @@ void RTPPayloadRegistry::DeregisterAudioCodecOrRedTypeRegardlessOfPayloadType(
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
     const size_t payload_name_length,
     const uint32_t frequency,
-    const uint8_t channels,
+    const size_t channels,
     const uint32_t rate) {
   RtpUtility::PayloadTypeMap::iterator iterator = payload_type_map_.begin();
   for (; iterator != payload_type_map_.end(); ++iterator) {
@@ -171,7 +171,7 @@ void RTPPayloadRegistry::DeregisterAudioCodecOrRedTypeRegardlessOfPayloadType(
 int32_t RTPPayloadRegistry::ReceivePayloadType(
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
     const uint32_t frequency,
-    const uint8_t channels,
+    const size_t channels,
     const uint32_t rate,
     int8_t* payload_type) const {
   assert(payload_type);
@@ -237,37 +237,58 @@ bool RTPPayloadRegistry::RestoreOriginalPacket(uint8_t** restored_packet,
                                                size_t* packet_length,
                                                uint32_t original_ssrc,
                                                const RTPHeader& header) const {
-  if (kRtxHeaderSize + header.headerLength > *packet_length) {
+  return RestoreOriginalPacket(*restored_packet, packet, packet_length,
+                               original_ssrc, header);
+}
+
+bool RTPPayloadRegistry::RestoreOriginalPacket(uint8_t* restored_packet,
+                                               const uint8_t* packet,
+                                               size_t* packet_length,
+                                               uint32_t original_ssrc,
+                                               const RTPHeader& header) const {
+  if (kRtxHeaderSize + header.headerLength + header.paddingLength >
+      *packet_length) {
     return false;
   }
   const uint8_t* rtx_header = packet + header.headerLength;
   uint16_t original_sequence_number = (rtx_header[0] << 8) + rtx_header[1];
 
   // Copy the packet into the restored packet, except for the RTX header.
-  memcpy(*restored_packet, packet, header.headerLength);
-  memcpy(*restored_packet + header.headerLength,
+  memcpy(restored_packet, packet, header.headerLength);
+  memcpy(restored_packet + header.headerLength,
          packet + header.headerLength + kRtxHeaderSize,
          *packet_length - header.headerLength - kRtxHeaderSize);
   *packet_length -= kRtxHeaderSize;
 
   // Replace the SSRC and the sequence number with the originals.
-  ByteWriter<uint16_t>::WriteBigEndian(*restored_packet + 2,
+  ByteWriter<uint16_t>::WriteBigEndian(restored_packet + 2,
                                        original_sequence_number);
-  ByteWriter<uint32_t>::WriteBigEndian(*restored_packet + 8, original_ssrc);
+  ByteWriter<uint32_t>::WriteBigEndian(restored_packet + 8, original_ssrc);
 
   CriticalSectionScoped cs(crit_sect_.get());
+  if (!rtx_)
+    return true;
 
-  if (payload_type_rtx_ != -1) {
-    if (header.payloadType == payload_type_rtx_ &&
-        incoming_payload_type_ != -1) {
-      (*restored_packet)[1] = static_cast<uint8_t>(incoming_payload_type_);
-      if (header.markerBit) {
-        (*restored_packet)[1] |= kRtpMarkerBitMask;  // Marker bit is set.
-      }
-    } else {
+  int associated_payload_type;
+  auto apt_mapping = rtx_payload_type_map_.find(header.payloadType);
+  if (use_rtx_payload_mapping_on_restore_ &&
+      apt_mapping != rtx_payload_type_map_.end()) {
+    associated_payload_type = apt_mapping->second;
+  } else {
+    // In the future, this will be a bug. For now, just assume this RTX packet
+    // matches the last non-RTX payload type we received. There are cases where
+    // this could break, especially where RTX is sent outside of NACKing (e.g.
+    // padding with redundant payloads).
+    if (rtx_payload_type_ == -1 || incoming_payload_type_ == -1) {
       LOG(LS_WARNING) << "Incorrect RTX configuration, dropping packet.";
       return false;
     }
+    associated_payload_type = incoming_payload_type_;
+  }
+
+  restored_packet[1] = static_cast<uint8_t>(associated_payload_type);
+  if (header.markerBit) {
+    restored_packet[1] |= kRtpMarkerBitMask;  // Marker bit is set.
   }
   return true;
 }
@@ -284,11 +305,17 @@ bool RTPPayloadRegistry::GetRtxSsrc(uint32_t* ssrc) const {
   return rtx_;
 }
 
-void RTPPayloadRegistry::SetRtxPayloadType(int payload_type) {
+void RTPPayloadRegistry::SetRtxPayloadType(int payload_type,
+                                           int associated_payload_type) {
   CriticalSectionScoped cs(crit_sect_.get());
-  assert(payload_type >= 0);
-  payload_type_rtx_ = payload_type;
+  if (payload_type < 0) {
+    LOG(LS_ERROR) << "Invalid RTX payload type: " << payload_type;
+    return;
+  }
+
+  rtx_payload_type_map_[payload_type] = associated_payload_type;
   rtx_ = true;
+  rtx_payload_type_ = payload_type;
 }
 
 bool RTPPayloadRegistry::IsRed(const RTPHeader& header) const {
@@ -316,17 +343,16 @@ bool RTPPayloadRegistry::GetPayloadSpecifics(uint8_t payload_type,
 
 int RTPPayloadRegistry::GetPayloadTypeFrequency(
     uint8_t payload_type) const {
-  RtpUtility::Payload* payload;
-  if (!PayloadTypeToPayload(payload_type, payload)) {
+  const RtpUtility::Payload* payload = PayloadTypeToPayload(payload_type);
+  if (!payload) {
     return -1;
   }
   CriticalSectionScoped cs(crit_sect_.get());
   return rtp_payload_strategy_->GetPayloadTypeFrequency(*payload);
 }
 
-bool RTPPayloadRegistry::PayloadTypeToPayload(
-    const uint8_t payload_type,
-    RtpUtility::Payload*& payload) const {
+const RtpUtility::Payload* RTPPayloadRegistry::PayloadTypeToPayload(
+    uint8_t payload_type) const {
   CriticalSectionScoped cs(crit_sect_.get());
 
   RtpUtility::PayloadTypeMap::const_iterator it =
@@ -334,11 +360,10 @@ bool RTPPayloadRegistry::PayloadTypeToPayload(
 
   // Check that this is a registered payload type.
   if (it == payload_type_map_.end()) {
-    return false;
+    return nullptr;
   }
 
-  payload = it->second;
-  return true;
+  return it->second;
 }
 
 void RTPPayloadRegistry::SetIncomingPayloadType(const RTPHeader& header) {
@@ -363,7 +388,7 @@ class RTPPayloadAudioStrategy : public RTPPayloadStrategy {
 
   bool PayloadIsCompatible(const RtpUtility::Payload& payload,
                            const uint32_t frequency,
-                           const uint8_t channels,
+                           const size_t channels,
                            const uint32_t rate) const override {
     return
         payload.audio &&
@@ -382,7 +407,7 @@ class RTPPayloadAudioStrategy : public RTPPayloadStrategy {
       const char payloadName[RTP_PAYLOAD_NAME_SIZE],
       const int8_t payloadType,
       const uint32_t frequency,
-      const uint8_t channels,
+      const size_t channels,
       const uint32_t rate) const override {
     RtpUtility::Payload* payload = new RtpUtility::Payload;
     payload->name[RTP_PAYLOAD_NAME_SIZE - 1] = 0;
@@ -406,7 +431,7 @@ class RTPPayloadVideoStrategy : public RTPPayloadStrategy {
 
   bool PayloadIsCompatible(const RtpUtility::Payload& payload,
                            const uint32_t frequency,
-                           const uint8_t channels,
+                           const size_t channels,
                            const uint32_t rate) const override {
     return !payload.audio;
   }
@@ -420,7 +445,7 @@ class RTPPayloadVideoStrategy : public RTPPayloadStrategy {
       const char payloadName[RTP_PAYLOAD_NAME_SIZE],
       const int8_t payloadType,
       const uint32_t frequency,
-      const uint8_t channels,
+      const size_t channels,
       const uint32_t rate) const override {
     RtpVideoCodecTypes videoType = kRtpVideoGeneric;
 

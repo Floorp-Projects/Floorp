@@ -20,9 +20,9 @@
 namespace rtc {
 class Task;
 
-const int64 kSecToMsec = 1000;
-const int64 kMsecTo100ns = 10000;
-const int64 kSecTo100ns = kSecToMsec * kMsecTo100ns;
+const int64_t kSecToMsec = 1000;
+const int64_t kMsecTo100ns = 10000;
+const int64_t kSecTo100ns = kSecToMsec * kMsecTo100ns;
 
 class TaskRunner : public TaskParent, public sigslot::has_slots<> {
  public:
@@ -36,15 +36,15 @@ class TaskRunner : public TaskParent, public sigslot::has_slots<> {
   // the units and that rollover while the computer is running.
   //
   // On Windows, GetSystemTimeAsFileTime is the typical implementation.
-  virtual int64 CurrentTime() = 0 ;
+  virtual int64_t CurrentTime() = 0;
 
   void StartTask(Task *task);
   void RunTasks();
   void PollTasks();
 
-  void UpdateTaskTimeout(Task *task, int64 previous_task_timeout_time);
+  void UpdateTaskTimeout(Task* task, int64_t previous_task_timeout_time);
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
   bool is_ok_to_delete(Task* task) {
     return task == deleting_task_;
   }
@@ -60,7 +60,7 @@ class TaskRunner : public TaskParent, public sigslot::has_slots<> {
 
   // Returns the next absolute time when a task times out
   // OR "0" if there is no next timeout.
-  int64 next_task_timeout() const;
+  int64_t next_task_timeout() const;
 
  protected:
   // The primary usage of this method is to know if
@@ -82,12 +82,12 @@ class TaskRunner : public TaskParent, public sigslot::has_slots<> {
 
  private:
   void InternalRunTasks(bool in_destructor);
-  void CheckForTimeoutChange(int64 previous_timeout_time);
+  void CheckForTimeoutChange(int64_t previous_timeout_time);
 
   std::vector<Task *> tasks_;
   Task *next_timeout_task_;
   bool tasks_running_;
-#ifdef _DEBUG
+#if !defined(NDEBUG)
   int abort_count_;
   Task* deleting_task_;
 #endif

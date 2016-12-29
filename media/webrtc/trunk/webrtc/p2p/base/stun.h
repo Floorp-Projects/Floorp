@@ -97,7 +97,7 @@ extern const char STUN_ERROR_REASON_STALE_NONCE[];
 extern const char STUN_ERROR_REASON_SERVER_ERROR[];
 
 // The mask used to determine whether a STUN message is a request/response etc.
-const uint32 kStunTypeMask = 0x0110;
+const uint32_t kStunTypeMask = 0x0110;
 
 // STUN Attribute header length.
 const size_t kStunAttributeHeaderSize = 4;
@@ -106,7 +106,7 @@ const size_t kStunAttributeHeaderSize = 4;
 const size_t kStunHeaderSize = 20;
 const size_t kStunTransactionIdOffset = 8;
 const size_t kStunTransactionIdLength = 12;
-const uint32 kStunMagicCookie = 0x2112A442;
+const uint32_t kStunMagicCookie = 0x2112A442;
 const size_t kStunMagicCookieLength = sizeof(kStunMagicCookie);
 
 // Following value corresponds to an earlier version of STUN from
@@ -145,7 +145,7 @@ class StunMessage {
   // is determined by the lengths of the transaction ID.
   bool IsLegacy() const;
 
-  void SetType(int type) { type_ = static_cast<uint16>(type); }
+  void SetType(int type) { type_ = static_cast<uint16_t>(type); }
   bool SetTransactionID(const std::string& str);
 
   // Gets the desired attribute value, or NULL if no such attribute type exists.
@@ -198,8 +198,8 @@ class StunMessage {
   const StunAttribute* GetAttribute(int type) const;
   static bool IsValidTransactionId(const std::string& transaction_id);
 
-  uint16 type_;
-  uint16 length_;
+  uint16_t type_;
+  uint16_t length_;
   std::string transaction_id_;
   std::vector<StunAttribute*>* attrs_;
 };
@@ -228,37 +228,39 @@ class StunAttribute {
   virtual bool Write(rtc::ByteBuffer* buf) const = 0;
 
   // Creates an attribute object with the given type and smallest length.
-  static StunAttribute* Create(StunAttributeValueType value_type, uint16 type,
-                               uint16 length, StunMessage* owner);
+  static StunAttribute* Create(StunAttributeValueType value_type,
+                               uint16_t type,
+                               uint16_t length,
+                               StunMessage* owner);
   // TODO: Allow these create functions to take parameters, to reduce
   // the amount of work callers need to do to initialize attributes.
-  static StunAddressAttribute* CreateAddress(uint16 type);
-  static StunXorAddressAttribute* CreateXorAddress(uint16 type);
-  static StunUInt32Attribute* CreateUInt32(uint16 type);
-  static StunUInt64Attribute* CreateUInt64(uint16 type);
-  static StunByteStringAttribute* CreateByteString(uint16 type);
+  static StunAddressAttribute* CreateAddress(uint16_t type);
+  static StunXorAddressAttribute* CreateXorAddress(uint16_t type);
+  static StunUInt32Attribute* CreateUInt32(uint16_t type);
+  static StunUInt64Attribute* CreateUInt64(uint16_t type);
+  static StunByteStringAttribute* CreateByteString(uint16_t type);
   static StunErrorCodeAttribute* CreateErrorCode();
   static StunUInt16ListAttribute* CreateUnknownAttributes();
 
  protected:
-  StunAttribute(uint16 type, uint16 length);
-  void SetLength(uint16 length) { length_ = length; }
+  StunAttribute(uint16_t type, uint16_t length);
+  void SetLength(uint16_t length) { length_ = length; }
   void WritePadding(rtc::ByteBuffer* buf) const;
   void ConsumePadding(rtc::ByteBuffer* buf) const;
 
  private:
-  uint16 type_;
-  uint16 length_;
+  uint16_t type_;
+  uint16_t length_;
 };
 
 // Implements STUN attributes that record an Internet address.
 class StunAddressAttribute : public StunAttribute {
  public:
-  static const uint16 SIZE_UNDEF = 0;
-  static const uint16 SIZE_IP4 = 8;
-  static const uint16 SIZE_IP6 = 20;
-  StunAddressAttribute(uint16 type, const rtc::SocketAddress& addr);
-  StunAddressAttribute(uint16 type, uint16 length);
+  static const uint16_t SIZE_UNDEF = 0;
+  static const uint16_t SIZE_IP4 = 8;
+  static const uint16_t SIZE_IP6 = 20;
+  StunAddressAttribute(uint16_t type, const rtc::SocketAddress& addr);
+  StunAddressAttribute(uint16_t type, uint16_t length);
 
   virtual StunAttributeValueType value_type() const {
     return STUN_VALUE_ADDRESS;
@@ -276,7 +278,7 @@ class StunAddressAttribute : public StunAttribute {
 
   const rtc::SocketAddress& GetAddress() const { return address_; }
   const rtc::IPAddress& ipaddr() const { return address_.ipaddr(); }
-  uint16 port() const { return address_.port(); }
+  uint16_t port() const { return address_.port(); }
 
   void SetAddress(const rtc::SocketAddress& addr) {
     address_ = addr;
@@ -286,7 +288,7 @@ class StunAddressAttribute : public StunAttribute {
     address_.SetIP(ip);
     EnsureAddressLength();
   }
-  void SetPort(uint16 port) { address_.SetPort(port); }
+  void SetPort(uint16_t port) { address_.SetPort(port); }
 
   virtual bool Read(rtc::ByteBuffer* buf);
   virtual bool Write(rtc::ByteBuffer* buf) const;
@@ -316,9 +318,8 @@ class StunAddressAttribute : public StunAttribute {
 // transaction ID of the message.
 class StunXorAddressAttribute : public StunAddressAttribute {
  public:
-  StunXorAddressAttribute(uint16 type, const rtc::SocketAddress& addr);
-  StunXorAddressAttribute(uint16 type, uint16 length,
-                          StunMessage* owner);
+  StunXorAddressAttribute(uint16_t type, const rtc::SocketAddress& addr);
+  StunXorAddressAttribute(uint16_t type, uint16_t length, StunMessage* owner);
 
   virtual StunAttributeValueType value_type() const {
     return STUN_VALUE_XOR_ADDRESS;
@@ -337,16 +338,16 @@ class StunXorAddressAttribute : public StunAddressAttribute {
 // Implements STUN attributes that record a 32-bit integer.
 class StunUInt32Attribute : public StunAttribute {
  public:
-  static const uint16 SIZE = 4;
-  StunUInt32Attribute(uint16 type, uint32 value);
-  explicit StunUInt32Attribute(uint16 type);
+  static const uint16_t SIZE = 4;
+  StunUInt32Attribute(uint16_t type, uint32_t value);
+  explicit StunUInt32Attribute(uint16_t type);
 
   virtual StunAttributeValueType value_type() const {
     return STUN_VALUE_UINT32;
   }
 
-  uint32 value() const { return bits_; }
-  void SetValue(uint32 bits) { bits_ = bits; }
+  uint32_t value() const { return bits_; }
+  void SetValue(uint32_t bits) { bits_ = bits; }
 
   bool GetBit(size_t index) const;
   void SetBit(size_t index, bool value);
@@ -355,36 +356,36 @@ class StunUInt32Attribute : public StunAttribute {
   virtual bool Write(rtc::ByteBuffer* buf) const;
 
  private:
-  uint32 bits_;
+  uint32_t bits_;
 };
 
 class StunUInt64Attribute : public StunAttribute {
  public:
-  static const uint16 SIZE = 8;
-  StunUInt64Attribute(uint16 type, uint64 value);
-  explicit StunUInt64Attribute(uint16 type);
+  static const uint16_t SIZE = 8;
+  StunUInt64Attribute(uint16_t type, uint64_t value);
+  explicit StunUInt64Attribute(uint16_t type);
 
   virtual StunAttributeValueType value_type() const {
     return STUN_VALUE_UINT64;
   }
 
-  uint64 value() const { return bits_; }
-  void SetValue(uint64 bits) { bits_ = bits; }
+  uint64_t value() const { return bits_; }
+  void SetValue(uint64_t bits) { bits_ = bits; }
 
   virtual bool Read(rtc::ByteBuffer* buf);
   virtual bool Write(rtc::ByteBuffer* buf) const;
 
  private:
-  uint64 bits_;
+  uint64_t bits_;
 };
 
 // Implements STUN attributes that record an arbitrary byte string.
 class StunByteStringAttribute : public StunAttribute {
  public:
-  explicit StunByteStringAttribute(uint16 type);
-  StunByteStringAttribute(uint16 type, const std::string& str);
-  StunByteStringAttribute(uint16 type, const void* bytes, size_t length);
-  StunByteStringAttribute(uint16 type, uint16 length);
+  explicit StunByteStringAttribute(uint16_t type);
+  StunByteStringAttribute(uint16_t type, const std::string& str);
+  StunByteStringAttribute(uint16_t type, const void* bytes, size_t length);
+  StunByteStringAttribute(uint16_t type, uint16_t length);
   ~StunByteStringAttribute();
 
   virtual StunAttributeValueType value_type() const {
@@ -397,8 +398,8 @@ class StunByteStringAttribute : public StunAttribute {
   void CopyBytes(const char* bytes);  // uses strlen
   void CopyBytes(const void* bytes, size_t length);
 
-  uint8 GetByte(size_t index) const;
-  void SetByte(size_t index, uint8 value);
+  uint8_t GetByte(size_t index) const;
+  void SetByte(size_t index, uint8_t value);
 
   virtual bool Read(rtc::ByteBuffer* buf);
   virtual bool Write(rtc::ByteBuffer* buf) const;
@@ -412,9 +413,9 @@ class StunByteStringAttribute : public StunAttribute {
 // Implements STUN attributes that record an error code.
 class StunErrorCodeAttribute : public StunAttribute {
  public:
-  static const uint16 MIN_SIZE = 4;
-  StunErrorCodeAttribute(uint16 type, int code, const std::string& reason);
-  StunErrorCodeAttribute(uint16 type, uint16 length);
+  static const uint16_t MIN_SIZE = 4;
+  StunErrorCodeAttribute(uint16_t type, int code, const std::string& reason);
+  StunErrorCodeAttribute(uint16_t type, uint16_t length);
   ~StunErrorCodeAttribute();
 
   virtual StunAttributeValueType value_type() const {
@@ -429,23 +430,23 @@ class StunErrorCodeAttribute : public StunAttribute {
   int eclass() const { return class_; }
   int number() const { return number_; }
   const std::string& reason() const { return reason_; }
-  void SetClass(uint8 eclass) { class_ = eclass; }
-  void SetNumber(uint8 number) { number_ = number; }
+  void SetClass(uint8_t eclass) { class_ = eclass; }
+  void SetNumber(uint8_t number) { number_ = number; }
   void SetReason(const std::string& reason);
 
   bool Read(rtc::ByteBuffer* buf);
   bool Write(rtc::ByteBuffer* buf) const;
 
  private:
-  uint8 class_;
-  uint8 number_;
+  uint8_t class_;
+  uint8_t number_;
   std::string reason_;
 };
 
 // Implements STUN attributes that record a list of attribute names.
 class StunUInt16ListAttribute : public StunAttribute {
  public:
-  StunUInt16ListAttribute(uint16 type, uint16 length);
+  StunUInt16ListAttribute(uint16_t type, uint16_t length);
   ~StunUInt16ListAttribute();
 
   virtual StunAttributeValueType value_type() const {
@@ -453,15 +454,15 @@ class StunUInt16ListAttribute : public StunAttribute {
   }
 
   size_t Size() const;
-  uint16 GetType(int index) const;
-  void SetType(int index, uint16 value);
-  void AddType(uint16 value);
+  uint16_t GetType(int index) const;
+  void SetType(int index, uint16_t value);
+  void AddType(uint16_t value);
 
   bool Read(rtc::ByteBuffer* buf);
   bool Write(rtc::ByteBuffer* buf) const;
 
  private:
-  std::vector<uint16>* attr_types_;
+  std::vector<uint16_t>* attr_types_;
 };
 
 // Returns the (successful) response type for the given request type.

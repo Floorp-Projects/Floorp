@@ -102,7 +102,7 @@ void WebRtcAec_ResampleLinear(void* resampInst,
     mm++;
 
     tnew = be * mm + obj->position;
-    tn = (int)tnew;
+    tn = (size_t)tnew;
   }
 
   *size_out = mm;

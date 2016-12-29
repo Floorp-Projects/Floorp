@@ -139,19 +139,19 @@ G722EncoderState* WebRtc_g722_encode_init(G722EncoderState* s,
                                           int rate,
                                           int options);
 int WebRtc_g722_encode_release(G722EncoderState *s);
-int WebRtc_g722_encode(G722EncoderState *s,
-                       uint8_t g722_data[],
-                       const int16_t amp[],
-                       int len);
+size_t WebRtc_g722_encode(G722EncoderState *s,
+                          uint8_t g722_data[],
+                          const int16_t amp[],
+                          size_t len);
 
 G722DecoderState* WebRtc_g722_decode_init(G722DecoderState* s,
                                           int rate,
                                           int options);
 int WebRtc_g722_decode_release(G722DecoderState *s);
-int WebRtc_g722_decode(G722DecoderState *s,
-                       int16_t amp[],
-                       const uint8_t g722_data[],
-                       int len);
+size_t WebRtc_g722_decode(G722DecoderState *s,
+                          int16_t amp[],
+                          const uint8_t g722_data[],
+                          size_t len);
 
 #ifdef __cplusplus
 }

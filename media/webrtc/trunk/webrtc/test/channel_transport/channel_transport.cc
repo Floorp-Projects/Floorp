@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/test/channel_transport/channel_transport.h"
 
 #include <stdio.h>
 
@@ -16,8 +16,6 @@
 #include "testing/gtest/include/gtest/gtest.h"
 #endif
 #include "webrtc/test/channel_transport/udp_transport.h"
-#include "webrtc/video_engine/include/vie_network.h"
-#include "webrtc/video_engine/vie_defines.h"
 #include "webrtc/voice_engine/include/voe_network.h"
 
 #if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
@@ -67,68 +65,16 @@ void VoiceChannelTransport::IncomingRTCPPacket(
 }
 
 int VoiceChannelTransport::SetLocalReceiver(uint16_t rtp_port) {
+  static const int kNumReceiveSocketBuffers = 500;
   int return_value = socket_transport_->InitializeReceiveSockets(this,
                                                                  rtp_port);
   if (return_value == 0) {
-    return socket_transport_->StartReceiving(kViENumReceiveSocketBuffers);
+    return socket_transport_->StartReceiving(kNumReceiveSocketBuffers);
   }
   return return_value;
 }
 
 int VoiceChannelTransport::SetSendDestination(const char* ip_address,
-                                              uint16_t rtp_port) {
-  return socket_transport_->InitializeSendSockets(ip_address, rtp_port);
-}
-
-
-VideoChannelTransport::VideoChannelTransport(ViENetwork* vie_network,
-                                             int channel)
-    : channel_(channel),
-      vie_network_(vie_network) {
-  uint8_t socket_threads = 1;
-  socket_transport_ = UdpTransport::Create(channel, socket_threads);
-  int registered = vie_network_->RegisterSendTransport(channel,
-                                                       *socket_transport_);
-#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
-  EXPECT_EQ(0, registered);
-#else
-  assert(registered == 0);
-#endif
-}
-
-VideoChannelTransport::~VideoChannelTransport() {
-  vie_network_->DeregisterSendTransport(channel_);
-  UdpTransport::Destroy(socket_transport_);
-}
-
-void VideoChannelTransport::IncomingRTPPacket(
-    const int8_t* incoming_rtp_packet,
-    const size_t packet_length,
-    const char* /*from_ip*/,
-    const uint16_t /*from_port*/) {
-  vie_network_->ReceivedRTPPacket(
-      channel_, incoming_rtp_packet, packet_length, PacketTime());
-}
-
-void VideoChannelTransport::IncomingRTCPPacket(
-    const int8_t* incoming_rtcp_packet,
-    const size_t packet_length,
-    const char* /*from_ip*/,
-    const uint16_t /*from_port*/) {
-  vie_network_->ReceivedRTCPPacket(channel_, incoming_rtcp_packet,
-                                   packet_length);
-}
-
-int VideoChannelTransport::SetLocalReceiver(uint16_t rtp_port) {
-  int return_value = socket_transport_->InitializeReceiveSockets(this,
-                                                                 rtp_port);
-  if (return_value == 0) {
-    return socket_transport_->StartReceiving(kViENumReceiveSocketBuffers);
-  }
-  return return_value;
-}
-
-int VideoChannelTransport::SetSendDestination(const char* ip_address,
                                               uint16_t rtp_port) {
   return socket_transport_->InitializeSendSockets(ip_address, rtp_port);
 }

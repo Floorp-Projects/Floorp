@@ -20,7 +20,7 @@
 #endif
 
 #include "webrtc/base/checks.h"
-#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
 
 namespace webrtc {
 
@@ -271,7 +271,7 @@ int FileWrapperImpl::FlushImpl() {
 }
 
 int FileWrapper::Rewind() {
-  DCHECK(false);
+  RTC_DCHECK(false);
   return -1;
 }
 

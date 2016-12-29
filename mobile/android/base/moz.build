@@ -203,19 +203,25 @@ services_jar.extra_jars = [
 services_jar.javac_flags += ['-Xlint:all,-deprecation']
 
 if CONFIG['MOZ_WEBRTC']:
-    video_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/webrtc/videoengine/'
+    base_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/base/java/src/org/webrtc/'
     video_render_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_render/android/java/src/org/webrtc/videoengine/'
+    video_capture_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/webrtc/videoengine/'
     audio_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/'
     wrjar = add_java_jar('webrtc')
     wrjar.sources += [
-        video_root + 'CaptureCapabilityAndroid.java',
-        video_root + 'VideoCaptureAndroid.java',
-        video_root + 'VideoCaptureDeviceInfoAndroid.java',
-        video_render_root + 'ViEAndroidGLES20.java',
-        video_render_root + 'ViERenderer.java',
+        base_root + 'Logging.java',
     ]
     wrjar.sources += [
-        audio_root + 'AudioManagerAndroid.java',
+        video_capture_root + 'CaptureCapabilityAndroid.java',
+        video_capture_root + 'VideoCaptureAndroid.java',
+        video_capture_root + 'VideoCaptureDeviceInfoAndroid.java',
+        video_render_root + 'ViEAndroidGLES20.java',
+        video_render_root + 'ViERenderer.java',
+        video_render_root + 'ViESurfaceRenderer.java',
+    ]
+    wrjar.sources += [
+        audio_root + 'BuildInfo.java',
+        audio_root + 'WebRtcAudioEffects.java',
         audio_root + 'WebRtcAudioManager.java',
         audio_root + 'WebRtcAudioRecord.java',
         audio_root + 'WebRtcAudioTrack.java',

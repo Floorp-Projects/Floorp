@@ -294,21 +294,17 @@ this.MigratorPrototype = {
         MigrationUtils._importQuantities[resourceType] = 0;
       }
       notify("Migration:Started");
-      for (let [key, value] of resourcesGroupedByItems) {
-        // Workaround bug 449811.
-        let migrationType = key, itemResources = value;
+      for (let [migrationType, itemResources] of resourcesGroupedByItems) {
 
         notify("Migration:ItemBeforeMigrate", migrationType);
 
         let itemSuccess = false;
         for (let res of itemResources) {
-          // Workaround bug 449811.
-          let resource = res;
-          maybeStartTelemetryStopwatch(migrationType, resource);
+          maybeStartTelemetryStopwatch(migrationType, res);
           let completeDeferred = PromiseUtils.defer();
           let resourceDone = function(aSuccess) {
-            maybeStopTelemetryStopwatch(migrationType, resource);
-            itemResources.delete(resource);
+            maybeStopTelemetryStopwatch(migrationType, res);
+            itemResources.delete(res);
             itemSuccess |= aSuccess;
             if (itemResources.size == 0) {
               notify(itemSuccess ?
@@ -326,7 +322,7 @@ this.MigratorPrototype = {
           // If migrate throws, an error occurred, and the callback
           // (itemMayBeDone) might haven't been called.
           try {
-            resource.migrate(resourceDone);
+            res.migrate(resourceDone);
           }
           catch (ex) {
             Cu.reportError(ex);

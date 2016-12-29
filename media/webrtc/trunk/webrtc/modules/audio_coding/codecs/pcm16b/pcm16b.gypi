@@ -9,27 +9,19 @@
 {
   'targets': [
     {
-      'target_name': 'PCM16B',
+      'target_name': 'pcm16b',
       'type': 'static_library',
       'dependencies': [
         'audio_encoder_interface',
-        'G711',
+        'g711',
       ],
-      'include_dirs': [
-        'include',
-        '<(webrtc_root)',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          'include',
-          '<(webrtc_root)',
-        ],
-      },
       'sources': [
-        'include/audio_encoder_pcm16b.h',
-        'include/pcm16b.h',
+        'audio_decoder_pcm16b.cc',
+        'audio_decoder_pcm16b.h',
         'audio_encoder_pcm16b.cc',
+        'audio_encoder_pcm16b.h',
         'pcm16b.c',
+        'pcm16b.h',
       ],
     },
   ], # targets
