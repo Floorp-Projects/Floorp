@@ -15,8 +15,8 @@
 #include "mozilla/Unused.h"
 
 #include "gc/Marking.h"
-#include "js/UbiNode.h"
 #include "js/GCAPI.h"
+#include "js/UbiNode.h"
 #include "vm/SPSProfiler.h"
 
 #include "jscntxtinlines.h"
