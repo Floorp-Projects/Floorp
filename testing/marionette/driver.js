@@ -1015,26 +1015,32 @@ GeckoDriver.prototype.executeJSScript = function* (cmd, resp) {
  *     URL to navigate to.
  */
 GeckoDriver.prototype.get = function*(cmd, resp) {
-  assert.content(this.context);
-
   let url = cmd.parameters.url;
 
-  let get = this.listener.get({url: url, pageTimeout: this.pageTimeout});
-  // TODO(ato): Bug 1242595
-  let id = this.listener.activeMessageId;
+  switch (this.context) {
+    case Context.CONTENT:
+      let get = this.listener.get({url: url, pageTimeout: this.pageTimeout});
+      // TODO(ato): Bug 1242595
+      let id = this.listener.activeMessageId;
 
-  // If a remoteness update interrupts our page load, this will never return
-  // We need to re-issue this request to correctly poll for readyState and
-  // send errors.
-  this.curBrowser.pendingCommands.push(() => {
-    cmd.parameters.command_id = id;
-    cmd.parameters.pageTimeout = this.pageTimeout;
-    this.mm.broadcastAsyncMessage(
-        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
-        cmd.parameters);
-  });
+      // If a remoteness update interrupts our page load, this will never return
+      // We need to re-issue this request to correctly poll for readyState and
+      // send errors.
+      this.curBrowser.pendingCommands.push(() => {
+        cmd.parameters.command_id = id;
+        cmd.parameters.pageTimeout = this.pageTimeout;
+        this.mm.broadcastAsyncMessage(
+            "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+            cmd.parameters);
+      });
 
-  yield get;
+      yield get;
+      break;
+
+    case Context.CHROME:
+      throw new UnsupportedOperationError("Cannot navigate in chrome context");
+      break;
+  }
 };
 
 /**
@@ -1095,22 +1101,16 @@ GeckoDriver.prototype.getPageSource = function* (cmd, resp) {
 
 /** Go back in history. */
 GeckoDriver.prototype.goBack = function*(cmd, resp) {
-  assert.content(this.context);
-
   yield this.listener.goBack();
 };
 
 /** Go forward in history. */
 GeckoDriver.prototype.goForward = function*(cmd, resp) {
-  assert.content(this.context);
-
   yield this.listener.goForward();
 };
 
 /** Refresh the page. */
 GeckoDriver.prototype.refresh = function*(cmd, resp) {
-  assert.content(this.context);
-
   yield this.listener.refresh();
 };
 
@@ -1270,7 +1270,9 @@ GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
  *     Object with |x| and |y| coordinates.
  */
 GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
-  assert.firefox()
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError("Unable to set the window position on mobile");
+  }
 
   let {x, y} = cmd.parameters;
   assert.positiveInteger(x);
@@ -1616,8 +1618,7 @@ GeckoDriver.prototype.singleTap = function*(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      throw new UnsupportedOperationError(
-          "Command 'singleTap' is not yet available in chrome context");
+      throw new WebDriverError("Command 'singleTap' is not available in chrome context");
 
     case Context.CONTENT:
       this.addFrameCloseListener("tap");
@@ -1639,8 +1640,7 @@ GeckoDriver.prototype.performActions = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       throw new UnsupportedOperationError(
-          "Command 'performActions' is not yet available in chrome context");
-
+          "Command 'performActions' is not available in chrome context");
     case Context.CONTENT:
       return this.listener.performActions({"actions": cmd.parameters.actions});
   }
@@ -1650,14 +1650,7 @@ GeckoDriver.prototype.performActions = function(cmd, resp) {
  * Release all the keys and pointer buttons that are currently depressed.
  */
 GeckoDriver.prototype.releaseActions = function(cmd, resp) {
-  switch (this.context) {
-    case Context.CHROME:
-      throw new UnsupportedOperationError(
-          "Command 'releaseActions' is not yet available in chrome context");
-
-    case Context.CONTENT:
-        return this.listener.releaseActions();
-  }
+  return this.listener.releaseActions();
 };
 
 /**
@@ -1675,9 +1668,12 @@ GeckoDriver.prototype.actionChain = function*(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      // be conservative until this has a use case and is established
-      // to work as expected in Fennec
-      assert.firefox()
+      if (this.appName != "Firefox") {
+        // be conservative until this has a use case and is established
+        // to work as expected on b2g/fennec
+        throw new WebDriverError(
+            "Command 'actionChain' is not available in chrome context");
+      }
 
       let win = this.getCurrentWindow();
       resp.body.value = yield this.legacyactions.dispatchActions(
@@ -1702,8 +1698,7 @@ GeckoDriver.prototype.actionChain = function*(cmd, resp) {
 GeckoDriver.prototype.multiAction = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
-      throw new UnsupportedOperationError(
-          "Command 'multiAction' is not yet available in chrome context");
+      throw new WebDriverError("Command 'multiAction' is not available in chrome context");
 
     case Context.CONTENT:
       this.addFrameCloseListener("multi action chain");
@@ -1800,15 +1795,7 @@ GeckoDriver.prototype.findElements = function*(cmd, resp) {
 
 /** Return the active element on the page. */
 GeckoDriver.prototype.getActiveElement = function*(cmd, resp) {
-  switch (this.context) {
-    case Context.CHROME:
-      throw new UnsupportedOperationError(
-          "Command 'getActiveElement' is not yet available in chrome context");
-
-    case Context.CONTENT:
-      resp.body.value = yield this.listener.getActiveElement();
-      break;
-  }
+  resp.body.value = yield this.listener.getActiveElement();
 };
 
 /**
@@ -2125,8 +2112,6 @@ GeckoDriver.prototype.clearElement = function*(cmd, resp) {
  * @param {string} id element id.
  */
 GeckoDriver.prototype.switchToShadowRoot = function*(cmd, resp) {
-  assert.content(this.context)
-
   let id;
   if (cmd.parameters) { id = cmd.parameters.id; }
   yield this.listener.switchToShadowRoot(id);
@@ -2134,8 +2119,6 @@ GeckoDriver.prototype.switchToShadowRoot = function*(cmd, resp) {
 
 /** Add a cookie to the document. */
 GeckoDriver.prototype.addCookie = function*(cmd, resp) {
-  assert.content(this.context)
-
   let cb = msg => {
     this.mm.removeMessageListener("Marionette:addCookie", cb);
     let cookie = msg.json;
@@ -2151,7 +2134,6 @@ GeckoDriver.prototype.addCookie = function*(cmd, resp) {
         {}); // originAttributes
     return true;
   };
-
   this.mm.addMessageListener("Marionette:addCookie", cb);
   yield this.listener.addCookie(cmd.parameters.cookie);
 };
@@ -2163,15 +2145,11 @@ GeckoDriver.prototype.addCookie = function*(cmd, resp) {
  * the result.
  */
 GeckoDriver.prototype.getCookies = function*(cmd, resp) {
-  assert.content(this.context)
-
   resp.body = yield this.listener.getCookies();
 };
 
 /** Delete all cookies that are visible to a document. */
 GeckoDriver.prototype.deleteAllCookies = function*(cmd, resp) {
-  assert.content(this.context)
-
   let cb = msg => {
     let cookie = msg.json;
     cookieManager.remove(
@@ -2182,7 +2160,6 @@ GeckoDriver.prototype.deleteAllCookies = function*(cmd, resp) {
         cookie.originAttributes);
     return true;
   };
-
   this.mm.addMessageListener("Marionette:deleteCookie", cb);
   yield this.listener.deleteAllCookies();
   this.mm.removeMessageListener("Marionette:deleteCookie", cb);
@@ -2190,8 +2167,6 @@ GeckoDriver.prototype.deleteAllCookies = function*(cmd, resp) {
 
 /** Delete a cookie by name. */
 GeckoDriver.prototype.deleteCookie = function*(cmd, resp) {
-  assert.content(this.context)
-
   let cb = msg => {
     this.mm.removeMessageListener("Marionette:deleteCookie", cb);
     let cookie = msg.json;
@@ -2203,7 +2178,6 @@ GeckoDriver.prototype.deleteCookie = function*(cmd, resp) {
         cookie.originAttributes);
     return true;
   };
-
   this.mm.addMessageListener("Marionette:deleteCookie", cb);
   yield this.listener.deleteCookie(cmd.parameters.name);
 };
@@ -2373,15 +2347,7 @@ GeckoDriver.prototype.deleteSession = function (cmd, resp) {
 
 /** Returns the current status of the Application Cache. */
 GeckoDriver.prototype.getAppCacheStatus = function* (cmd, resp) {
-  switch (this.context) {
-    case Context.CHROME:
-      throw new UnsupportedOperationError(
-          "Command 'getAppCacheStatus' is not yet available in chrome context");
-
-    case Context.CONTENT:
-      resp.body.value = yield this.listener.getAppCacheStatus();
-      break;
-  }
+  resp.body.value = yield this.listener.getAppCacheStatus();
 };
 
 /**
@@ -2499,8 +2465,9 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
  * landscape-secondary.
  */
 GeckoDriver.prototype.getScreenOrientation = function (cmd, resp) {
-  assert.fennec();
-
+  if (this.appName == "Firefox") {
+    throw new UnsupportedOperationError();
+  }
   resp.body.value = this.getCurrentWindow().screen.mozOrientation;
 };
 
@@ -2527,7 +2494,7 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
   let or = String(cmd.parameters.orientation);
   assert.string(or);
   let mozOr = or.toLowerCase();
-  if (!ors.includes(mozOr)) {
+  if (!ors.include(mozOr)) {
     throw new InvalidArgumentError(`Unknown screen orientation: ${or}`);
   }
 
@@ -2558,7 +2525,9 @@ GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
  * bars, title bars, etc.
  */
 GeckoDriver.prototype.setWindowSize = function (cmd, resp) {
-  assert.firefox()
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
+  }
 
   let {width, height} = cmd.parameters;
   let win = this.getCurrentWindow();
@@ -2573,7 +2542,9 @@ GeckoDriver.prototype.setWindowSize = function (cmd, resp) {
  * Not Supported on B2G or Fennec.
  */
 GeckoDriver.prototype.maximizeWindow = function (cmd, resp) {
-  assert.firefox()
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
+  }
 
   let win = this.getCurrentWindow();
   win.maximize()
@@ -2670,7 +2641,9 @@ GeckoDriver.prototype.acceptConnections = function (cmd, resp) {
  * session.
  */
 GeckoDriver.prototype.quitApplication = function (cmd, resp) {
-  assert.firefox()
+  if (this.appName != "Firefox") {
+    throw new WebDriverError("In app initiated quit only supported in Firefox");
+  }
 
   let flags = Ci.nsIAppStartup.eAttemptQuit;
   for (let k of cmd.parameters.flags || []) {
@@ -2685,7 +2658,9 @@ GeckoDriver.prototype.quitApplication = function (cmd, resp) {
 };
 
 GeckoDriver.prototype.installAddon = function (cmd, resp) {
-  assert.firefox()
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
+  }
 
   let path = cmd.parameters.path;
   let temp = cmd.parameters.temporary || false;
@@ -2698,7 +2673,9 @@ GeckoDriver.prototype.installAddon = function (cmd, resp) {
 };
 
 GeckoDriver.prototype.uninstallAddon = function (cmd, resp) {
-  assert.firefox()
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
+  }
 
   let id = cmd.parameters.id;
   if (typeof id == "undefined" || typeof id != "string") {

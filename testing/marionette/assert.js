@@ -8,7 +8,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/error.js");
 
@@ -31,7 +30,7 @@ this.assert = {};
  *     If current browser is not Firefox.
  */
 assert.firefox = function (msg = "") {
-  msg = msg || "Only supported in Firefox";
+  msg = msg || "Expected Firefox";
   assert.that(isFirefox, msg, UnsupportedOperationError)();
 };
 
@@ -45,7 +44,7 @@ assert.firefox = function (msg = "") {
  *     If current browser is not Fennec.
  */
 assert.fennec = function (msg = "") {
-  msg = msg || "Only supported in Fennec";
+  msg = msg || "Expected Fennec";
   assert.that(isFennec, msg, UnsupportedOperationError)();
 };
 
@@ -59,28 +58,9 @@ assert.fennec = function (msg = "") {
  *     If the current browser is not B2G.
  */
 assert.b2g = function (msg = "") {
-  msg = msg || "Only supported in B2G";
+  msg = msg || "Expected B2G"
   assert.that(isB2G, msg, UnsupportedOperationError)();
 };
-
-/**
- * Asserts that the current |context| is content.
- *
- * @param {string} context
- *     Context to test.
- * @param {string=} msg
- *     Custom error message.
- *
- * @return {string}
- *     |context| is returned unaltered.
- *
- * @throws {UnsupportedOperationError}
- *     If |context| is not content.
- */
-assert.content = function (context, msg = "") {
-  msg = msg || "Only supported in content context";
-  assert.that(c => c.toString() == "content", msg, UnsupportedOperationError)(context);
-}
 
 /**
  * Asserts that the current browser is a mobile browser, that is either
@@ -93,7 +73,7 @@ assert.content = function (context, msg = "") {
  *     If the current browser is not B2G or Fennec.
  */
 assert.mobile = function (msg = "") {
-  msg = msg || "Only supported in Fennec or B2G";
+  msg = msg || "Expected Fennec or B2G";
   assert.that(() => isFennec() || isB2G(), msg, UnsupportedOperationError)();
 };
 
