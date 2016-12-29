@@ -173,7 +173,7 @@ var PKT_SAVED_OVERLAY = function(options)
             noResultsHideDropdown: true,
             scrollKeyboard: true,
             emptyInputLength: 200,
-            search_function: function(term, cb) {
+            search_function(term, cb) {
                 var returnlist = [];
                 if (term.length) {
                     var limit = 15;
@@ -191,7 +191,7 @@ var PKT_SAVED_OVERLAY = function(options)
                 }
                 cb(returnlist);
             },
-            textToData: function(text) {
+            textToData(text) {
                 if ($.trim(text).length > 25 || !$.trim(text).length) {
                     if (text.length > 25) {
                         myself.showTagsError(myself.dictJSON.maxtaglength);
@@ -205,7 +205,7 @@ var PKT_SAVED_OVERLAY = function(options)
                 myself.hideTagsError();
                 return {name:myself.sanitizeText(text.toLowerCase())};
             },
-            onReady: function() {
+            onReady() {
                 $('.token-input-dropdown').addClass('token-input-dropdown-tag');
                 inputwrapper.find('.token-input-input-token input').attr('placeholder', $('.tag-input').attr('placeholder')).css('width', '200px');
                 if ($('.pkt_ext_suggestedtag_detail').length) {
@@ -237,22 +237,22 @@ var PKT_SAVED_OVERLAY = function(options)
                 });
                 myself.checkPlaceholderStatus();
             },
-            onAdd: function() {
+            onAdd() {
                 myself.checkValidTagSubmit();
                 changestamp = Date.now();
                 myself.hideInactiveTags();
                 myself.checkPlaceholderStatus();
             },
-            onDelete: function() {
+            onDelete() {
                 myself.checkValidTagSubmit();
                 changestamp = Date.now();
                 myself.showActiveTags();
                 myself.checkPlaceholderStatus();
             },
-            onShowDropdown: function() {
+            onShowDropdown() {
                 thePKT_SAVED.sendMessage("expandSavePanel");
             },
-            onHideDropdown: function() {
+            onHideDropdown() {
                 thePKT_SAVED.sendMessage("collapseSavePanel");
             }
         });
@@ -457,7 +457,7 @@ var PKT_SAVED_OVERLAY = function(options)
 };
 
 PKT_SAVED_OVERLAY.prototype = {
-    create : function()
+    create()
     {
         if (this.active)
         {
@@ -497,7 +497,7 @@ PKT_SAVED_OVERLAY.prototype = {
         this.initOpenListInput();
         this.initAutoCloseEvents();
     },
-    createPremiumFunctionality: function()
+    createPremiumFunctionality()
     {
         if (this.premiumStatus && !$('.pkt_ext_suggestedtag_detail').length)
         {
@@ -512,7 +512,7 @@ PKT_SAVED_OVERLAY.prototype = {
 var PKT_SAVED = function() {};
 
 PKT_SAVED.prototype = {
-    init: function() {
+    init() {
         if (this.inited) {
             return;
         }
@@ -522,15 +522,15 @@ PKT_SAVED.prototype = {
         this.inited = true;
     },
 
-    addMessageListener: function(messageId, callback) {
+    addMessageListener(messageId, callback) {
         pktPanelMessaging.addMessageListener(this.panelId, messageId, callback);
     },
 
-    sendMessage: function(messageId, payload, callback) {
+    sendMessage(messageId, payload, callback) {
         pktPanelMessaging.sendMessage(this.panelId, messageId, payload, callback);
     },
 
-    create: function() {
+    create() {
         var myself = this;
         var url = window.location.href.match(/premiumStatus=([\w|\d|\.]*)&?/);
         if (url && url.length > 1)

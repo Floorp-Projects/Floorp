@@ -22,33 +22,33 @@ var gSeenWidgets = new Set();
 
 var PanelWideWidgetTracker = {
   // Listeners used to validate panel contents whenever they change:
-  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
+  onWidgetAdded(aWidgetId, aArea, aPosition) {
     if (aArea == gPanel) {
       gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
       let moveForward = this.shouldMoveForward(aWidgetId, aPosition);
       this.adjustWidgets(aWidgetId, moveForward);
     }
   },
-  onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
+  onWidgetMoved(aWidgetId, aArea, aOldPosition, aNewPosition) {
     if (aArea == gPanel) {
       gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
       let moveForward = this.shouldMoveForward(aWidgetId, aNewPosition);
       this.adjustWidgets(aWidgetId, moveForward);
     }
   },
-  onWidgetRemoved: function(aWidgetId, aPrevArea) {
+  onWidgetRemoved(aWidgetId, aPrevArea) {
     if (aPrevArea == gPanel) {
       gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
       this.adjustWidgets(aWidgetId, false);
     }
   },
-  onWidgetReset: function(aWidgetId) {
+  onWidgetReset(aWidgetId) {
     gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
   },
   // Listener to keep abreast of any new nodes. We use the DOM one because
   // we need access to the actual node's classlist, so we can't use the ones above.
   // Furthermore, onWidgetCreated only fires for API-based widgets, not for XUL ones.
-  onWidgetAfterDOMChange: function(aNode, aNextNode, aContainer) {
+  onWidgetAfterDOMChange(aNode, aNextNode, aContainer) {
     if (!gSeenWidgets.has(aNode.id)) {
       if (aNode.classList.contains(CustomizableUI.WIDE_PANEL_CLASS)) {
         gWideWidgets.add(aNode.id);
@@ -57,11 +57,11 @@ var PanelWideWidgetTracker = {
     }
   },
   // When widgets get destroyed, we remove them from our sets of stuff we care about:
-  onWidgetDestroyed: function(aWidgetId) {
+  onWidgetDestroyed(aWidgetId) {
     gSeenWidgets.delete(aWidgetId);
     gWideWidgets.delete(aWidgetId);
   },
-  shouldMoveForward: function(aWidgetId, aPosition) {
+  shouldMoveForward(aWidgetId, aPosition) {
     let currentWidgetAtPosition = gPanelPlacements[aPosition + 1];
     let rv = gWideWidgets.has(currentWidgetAtPosition) && !gWideWidgets.has(aWidgetId);
     // We might now think we can move forward, but for that we need at least 2 more small
@@ -83,7 +83,7 @@ var PanelWideWidgetTracker = {
     }
     return rv;
   },
-  adjustWidgets: function(aWidgetId, aMoveForwards) {
+  adjustWidgets(aWidgetId, aMoveForwards) {
     if (this.adjusting) {
       return;
     }
@@ -104,7 +104,7 @@ var PanelWideWidgetTracker = {
   // This function is called whenever an item gets moved in the menu panel. It
   // adjusts the position of widgets within the panel to prevent "gaps" between
   // wide widgets that could be filled up with single column widgets
-  adjustPosition: function(aWidgetId, aMoveForwards) {
+  adjustPosition(aWidgetId, aMoveForwards) {
     // Make sure that there are n % columns = 0 narrow buttons before the widget.
     let placementIndex = gPanelPlacements.indexOf(aWidgetId);
     let prevSiblingCount = 0;
@@ -144,7 +144,7 @@ var PanelWideWidgetTracker = {
    *          "public-only" if it's not shown in private windows
    *          "real" if it does exist and is shown even in private windows
    */
-  checkWidgetStatus: function(aWidgetId) {
+  checkWidgetStatus(aWidgetId) {
     let widgetWrapper = CustomizableUI.getWidget(aWidgetId);
     // This widget might not actually exist:
     if (!widgetWrapper) {
@@ -164,7 +164,7 @@ var PanelWideWidgetTracker = {
     return "real";
   },
 
-  init: function() {
+  init() {
     // Initialize our local placements copy and register the listener
     gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
     CustomizableUI.addListener(this);

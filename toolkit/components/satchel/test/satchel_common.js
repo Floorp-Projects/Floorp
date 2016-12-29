@@ -93,14 +93,14 @@ var checkObserver = {
     gChromeScript.sendAsyncMessage("removeObserver");
   },
 
-  waitForChecks: function(callback) {
+  waitForChecks(callback) {
     if (this.verifyStack.length == 0)
       callback();
     else
       this.callback = callback;
   },
 
-  observe: function({ subject, topic, data }) {
+  observe({ subject, topic, data }) {
     if (data != "formhistory-add" && data != "formhistory-update")
       return;
     ok(this.verifyStack.length > 0, "checking if saved form data was expected");
@@ -129,7 +129,7 @@ var checkObserver = {
 };
 
 function checkForSave(name, value, message) {
-  checkObserver.verifyStack.push({ name : name, value: value, message: message });
+  checkObserver.verifyStack.push({ name, value, message });
 }
 
 function getFormSubmitButton(formNum) {

@@ -80,7 +80,7 @@ add_task(function* testDevtoolsTheme() {
 
 function dummyLightweightTheme(id) {
   return {
-    id: id,
+    id,
     name: id,
     headerURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.header.png",
     iconURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.icon.png",

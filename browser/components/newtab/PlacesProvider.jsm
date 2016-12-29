@@ -248,6 +248,6 @@ Links.prototype = {
 const gLinks = new Links(); // jshint ignore:line
 
 let PlacesProvider = {
-  LinkChecker: LinkChecker,
+  LinkChecker,
   links: gLinks,
 };

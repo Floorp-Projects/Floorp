@@ -86,7 +86,7 @@ function run_install_tests(callback) {
     AddonManager.getInstallForURL(url, function(install) {
       gPendingInstall = install;
       install.addListener({
-        onDownloadEnded: function(install) {
+        onDownloadEnded(install) {
           is(SUCCESS, expectedStatus, message);
           info("Install test ran in " + (Date.now() - gLast) + "ms");
           // Don't proceed with the install
@@ -96,7 +96,7 @@ function run_install_tests(callback) {
           return false;
         },
 
-        onDownloadFailed: function(install) {
+        onDownloadFailed(install) {
           is(install.error, expectedStatus, message);
           info("Install test ran in " + (Date.now() - gLast) + "ms");
           gPendingInstall = null;

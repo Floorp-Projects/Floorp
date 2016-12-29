@@ -213,7 +213,7 @@ function run_test_2(aAddon) {
       ], check_test_2);
 
       install.addListener({
-        onDownloadProgress: function() {
+        onDownloadProgress() {
           do_execute_soon(function() {
             Components.utils.forceGC();
           });
@@ -748,10 +748,10 @@ function check_test_14(install) {
     let file = install.file;
 
     install.addListener({
-      onDownloadProgress: function() {
+      onDownloadProgress() {
         do_throw("Download should not have continued");
       },
-      onDownloadEnded: function() {
+      onDownloadEnded() {
         do_throw("Download should not have continued");
       }
     });
@@ -802,7 +802,7 @@ function check_test_15(install) {
   ensure_test_completed();
 
   install.addListener({
-    onInstallStarted: function() {
+    onInstallStarted() {
       do_throw("Install should not have continued");
     }
   });
@@ -818,12 +818,12 @@ function run_test_16() {
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
-      onInstallStarted: function() {
+      onInstallStarted() {
         do_check_false(aInstall.addon.userDisabled);
         aInstall.addon.userDisabled = true;
       },
 
-      onInstallEnded: function() {
+      onInstallEnded() {
        do_execute_soon(function test16_install1() {
         restartManager();
 
@@ -834,7 +834,7 @@ function run_test_16() {
           let url_2 = "http://localhost:4444/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url_2, function(aInstall_2) {
             aInstall_2.addListener({
-              onInstallEnded: function() {
+              onInstallEnded() {
                do_execute_soon(function test16_install2() {
                 do_check_true(aInstall_2.addon.userDisabled);
 
@@ -867,7 +867,7 @@ function run_test_17() {
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
-      onInstallEnded: function() {
+      onInstallEnded() {
        do_execute_soon(function() {
         do_check_false(aInstall.addon.userDisabled);
 
@@ -880,12 +880,12 @@ function run_test_17() {
           let url_2 = "http://localhost:4444/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url_2, function(aInstall_2) {
             aInstall_2.addListener({
-              onInstallStarted: function() {
+              onInstallStarted() {
                 do_check_false(aInstall_2.addon.userDisabled);
                 aInstall_2.addon.userDisabled = true;
               },
 
-              onInstallEnded: function() {
+              onInstallEnded() {
                do_execute_soon(function() {
                 restartManager();
 
@@ -916,12 +916,12 @@ function run_test_18() {
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
-      onInstallStarted: function() {
+      onInstallStarted() {
         do_check_false(aInstall.addon.userDisabled);
         aInstall.addon.userDisabled = true;
       },
 
-      onInstallEnded: function() {
+      onInstallEnded() {
        do_execute_soon(function test18_install1() {
         restartManager();
 
@@ -932,12 +932,12 @@ function run_test_18() {
           let url_2 = "http://localhost:4444/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url_2, function(aInstall_2) {
             aInstall_2.addListener({
-              onInstallStarted: function() {
+              onInstallStarted() {
                 do_check_true(aInstall_2.addon.userDisabled);
                 aInstall_2.addon.userDisabled = false;
               },
 
-              onInstallEnded: function() {
+              onInstallEnded() {
                do_execute_soon(function test18_install2() {
                 restartManager();
 
@@ -975,7 +975,7 @@ function run_test_18_1() {
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
-      onInstallEnded: function(unused, aAddon) {
+      onInstallEnded(unused, aAddon) {
        do_execute_soon(function test18_install() {
         do_check_neq(aAddon.fullDescription, "Repository description");
 
@@ -1003,7 +1003,7 @@ function run_test_19() {
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
-      onInstallEnded: function(unused, aAddon) {
+      onInstallEnded(unused, aAddon) {
        do_execute_soon(function test19_install() {
         do_check_eq(aAddon.fullDescription, "Repository description");
 
@@ -1029,7 +1029,7 @@ function run_test_20() {
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
-      onInstallEnded: function(unused, aAddon) {
+      onInstallEnded(unused, aAddon) {
        do_execute_soon(function test20_install() {
         do_check_eq(aAddon.fullDescription, "Repository description");
 
@@ -1295,7 +1295,7 @@ function run_test_26() {
   let observerService = AM_Cc["@mozilla.org/network/http-activity-distributor;1"].
                         getService(AM_Ci.nsIHttpActivityDistributor);
   observerService.addObserver({
-    observeActivity: function(aChannel, aType, aSubtype, aTimestamp, aSizeData,
+    observeActivity(aChannel, aType, aSubtype, aTimestamp, aSizeData,
                               aStringData) {
       aChannel.QueryInterface(AM_Ci.nsIChannel);
       // Wait for the final event for the redirected URL
@@ -1316,7 +1316,7 @@ function run_test_26() {
   let url = "http://localhost:4444/redirect?/addons/test_install1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
-      onDownloadProgress: function(aDownloadProgressInstall) {
+      onDownloadProgress(aDownloadProgressInstall) {
         aDownloadProgressInstall.cancel();
       }
     });
@@ -1341,7 +1341,7 @@ function run_test_27() {
     do_check_eq(aInstall.state, AddonManager.STATE_AVAILABLE);
 
     aInstall.addListener({
-      onDownloadProgress: function() {
+      onDownloadProgress() {
         aInstall.removeListener(this);
         aInstall.cancel();
       }

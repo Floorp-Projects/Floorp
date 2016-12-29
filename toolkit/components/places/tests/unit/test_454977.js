@@ -20,7 +20,7 @@ function* task_add_visit(aURI, aVisitType)
       handleError: function TAV_handleError() {
         reject(new Error("Unexpected error in adding visit."));
       },
-      handleResult: function(aPlaceInfo) {
+      handleResult(aPlaceInfo) {
         this.visitId = aPlaceInfo.visits[0].visitId;
       },
       handleCompletion: function TAV_handleCompletion() {

@@ -20,7 +20,7 @@ function test() {
   waitForExplicitFinish();
 
   let windowObserver = {
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       if (aTopic == "domwindowopened") {
         ok(false, "Alert window opened");
         let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);

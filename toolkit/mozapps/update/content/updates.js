@@ -142,7 +142,7 @@ var gUpdates = {
    * @param  pageID
    *         The page id for the last page displayed.
    */
-  _submitTelemetry: function(aPageID) {
+  _submitTelemetry(aPageID) {
     AUSTLMY.pingWizLastPageCode(aPageID);
   },
 
@@ -150,7 +150,7 @@ var gUpdates = {
    * Helper function for setButtons
    * Resets button to original label & accesskey if string is null.
    */
-  _setButton: function(button, string) {
+  _setButton(button, string) {
     if (string) {
       var label = this.getAUSString(string);
       if (label.indexOf("%S") != -1)
@@ -195,7 +195,7 @@ var gUpdates = {
    * | [ extra1 ] [ extra2 ]                     [ next or finish ] |
    * +--------------------------------------------------------------+
    */
-  setButtons: function(extra1ButtonString, extra2ButtonString,
+  setButtons(extra1ButtonString, extra2ButtonString,
                        nextFinishButtonString, canAdvance, showCancel) {
     this.wiz.canAdvance = canAdvance;
 
@@ -225,13 +225,13 @@ var gUpdates = {
     btn.hidden = btn.disabled = true;
   },
 
-  getAUSString: function(key, strings) {
+  getAUSString(key, strings) {
     if (strings)
       return this.strings.getFormattedString(key, strings);
     return this.strings.getString(key);
   },
 
-  never: function() {
+  never() {
     // If the user clicks "No Thanks", we should not prompt them to update to
     // this version again unless they manually select "Check for Updates..."
     // which will clear all of the "never" prefs. There are currently two
@@ -259,7 +259,7 @@ var gUpdates = {
    * Called when the user presses the "Finish" button on the wizard, dispatches
    * the function call to the selected page.
    */
-  onWizardFinish: function() {
+  onWizardFinish() {
     this._runUnload = false;
     var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardFinish" in this._pages[pageid])
@@ -271,7 +271,7 @@ var gUpdates = {
    * Called when the user presses the "Cancel" button on the wizard, dispatches
    * the function call to the selected page.
    */
-  onWizardCancel: function() {
+  onWizardCancel() {
     this._runUnload = false;
     var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardCancel" in this._pages[pageid])
@@ -283,7 +283,7 @@ var gUpdates = {
    * Called when the user presses the "Next" button on the wizard, dispatches
    * the function call to the selected page.
    */
-  onWizardNext: function() {
+  onWizardNext() {
     var cp = document.documentElement.currentPage;
     if (!cp)
       return;
@@ -308,7 +308,7 @@ var gUpdates = {
    * Helper function for onLoad
    * Saves default button label & accesskey for use by _setButton
    */
-  _cacheButtonStrings: function(buttonName) {
+  _cacheButtonStrings(buttonName) {
     var button = this.wiz.getButton(buttonName);
     button.defaultLabel = button.label;
     button.defaultAccesskey = button.getAttribute("accesskey");
@@ -317,7 +317,7 @@ var gUpdates = {
   /**
    * Called when the wizard UI is loaded.
    */
-  onLoad: function() {
+  onLoad() {
     this.wiz = document.documentElement;
 
     gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
@@ -349,7 +349,7 @@ var gUpdates = {
   /**
    * Called when the wizard UI is unloaded.
    */
-  onUnload: function() {
+  onUnload() {
     if (this._runUnload) {
       var cp = this.wiz.currentPage;
       if (cp.pageid != "finished" && cp.pageid != "finishedBackground")
@@ -375,7 +375,7 @@ var gUpdates = {
    * @param   aCallback
    *          A callback to pass the <wizardpage> object to be displayed first to.
    */
-  getStartPageID: function(aCallback) {
+  getStartPageID(aCallback) {
     if ("arguments" in window && window.arguments[0]) {
       var arg0 = window.arguments[0];
       if (arg0 instanceof CoI.nsIUpdate) {
@@ -475,7 +475,7 @@ var gUpdates = {
    * @param   update
    *          The update object
    */
-  setUpdate: function(update) {
+  setUpdate(update) {
     this.update = update;
     if (this.update)
       this.update.QueryInterface(CoI.nsIWritablePropertyBag);
@@ -496,7 +496,7 @@ var gCheckingPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     gUpdates.setButtons(null, null, null, false, true);
     gUpdates.wiz.getButton("cancel").focus();
 
@@ -530,7 +530,7 @@ var gCheckingPage = {
    * The user has closed the window, either by pressing cancel or using a Window
    * Manager control, so stop checking for updates.
    */
-  onWizardCancel: function() {
+  onWizardCancel() {
     this._checker.stopChecking(CoI.nsIUpdateChecker.CURRENT_CHECK);
   },
 
@@ -542,7 +542,7 @@ var gCheckingPage = {
     /**
      * See nsIUpdateCheckListener
      */
-    onCheckComplete: function(request, updates, updateCount) {
+    onCheckComplete(request, updates, updateCount) {
       var aus = CoC["@mozilla.org/updates/update-service;1"].
                 getService(CoI.nsIApplicationUpdateService);
       gUpdates.setUpdate(aus.selectUpdate(updates, updates.length));
@@ -572,7 +572,7 @@ var gCheckingPage = {
     /**
      * See nsIUpdateCheckListener
      */
-    onError: function(request, update) {
+    onError(request, update) {
       LOG("gCheckingPage", "onError - proceeding to error page");
       gUpdates.setUpdate(update);
       gUpdates.wiz.goTo("errors");
@@ -581,7 +581,7 @@ var gCheckingPage = {
     /**
      * See nsISupports.idl
      */
-    QueryInterface: function(aIID) {
+    QueryInterface(aIID) {
       if (!aIID.equals(CoI.nsIUpdateCheckListener) &&
           !aIID.equals(CoI.nsISupports))
         throw CoR.NS_ERROR_NO_INTERFACE;
@@ -597,7 +597,7 @@ var gNoUpdatesPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     LOG("gNoUpdatesPage", "onPageShow - could not select an appropriate " +
         "update. Either there were no updates or |selectUpdate| failed");
 
@@ -616,7 +616,7 @@ var gNoUpdatesPage = {
  * were unable to update and a manual download url.
  */
 var gManualUpdatePage = {
-  onPageShow: function() {
+  onPageShow() {
     var manualURL = Services.urlFormatter.formatURLPref(PREF_APP_UPDATE_URL_MANUAL);
     var manualUpdateLinkLabel = document.getElementById("manualUpdateLinkLabel");
     manualUpdateLinkLabel.value = manualURL;
@@ -632,7 +632,7 @@ var gManualUpdatePage = {
  * system no longer being supported and an url for more information.
  */
 var gUnsupportedPage = {
-  onPageShow: function() {
+  onPageShow() {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED, true);
     if (gUpdates.update.detailsURL) {
       let unsupportedLinkLabel = document.getElementById("unsupportedLinkLabel");
@@ -652,7 +652,7 @@ var gUpdatesFoundBasicPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     gUpdates.wiz.canRewind = false;
     var update = gUpdates.update;
     gUpdates.setButtons("askLaterButton",
@@ -688,11 +688,11 @@ var gUpdatesFoundBasicPage = {
     document.getElementById("updatesFoundBasicHeader").setAttribute("label", updateTitle);
   },
 
-  onExtra1: function() {
+  onExtra1() {
     gUpdates.wiz.cancel();
   },
 
-  onExtra2: function() {
+  onExtra2() {
     gUpdates.never();
     gUpdates.wiz.cancel();
   }
@@ -737,7 +737,7 @@ var gDownloadingPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     this._downloadStatus = document.getElementById("downloadStatus");
     this._downloadProgress = document.getElementById("downloadProgress");
     this._pauseButton = document.getElementById("pauseButton");
@@ -802,7 +802,7 @@ var gDownloadingPage = {
   /**
    * Updates the text status message
    */
-  _setStatus: function(status) {
+  _setStatus(status) {
     // Don't bother setting the same text more than once. This can happen
     // due to the asynchronous behavior of the downloader.
     if (this._downloadStatus.textContent == status)
@@ -822,7 +822,7 @@ var gDownloadingPage = {
    *        Total file size of the download
    * @return Current active download status
    */
-  _updateDownloadStatus: function(aCurr, aMax) {
+  _updateDownloadStatus(aCurr, aMax) {
     let status;
 
     // Get the download time left and progress
@@ -841,7 +841,7 @@ var gDownloadingPage = {
    * @param   paused
    *          Whether or not the download is paused
    */
-  _setUIState: function(paused) {
+  _setUIState(paused) {
     var u = gUpdates.update;
     if (paused) {
       if (this._downloadProgress.mode != "normal")
@@ -869,7 +869,7 @@ var gDownloadingPage = {
   /**
    * Wait for an update being staged in the background.
    */
-  _setUpdateApplying: function() {
+  _setUpdateApplying() {
     this._downloadProgress.mode = "undetermined";
     this._pauseButton.hidden = true;
     let applyingStatus = gUpdates.getAUSString("applyingUpdate");
@@ -882,7 +882,7 @@ var gDownloadingPage = {
   /**
    * Clean up the listener and observer registered for the wizard.
    */
-  cleanUp: function() {
+  cleanUp() {
     var aus = CoC["@mozilla.org/updates/update-service;1"].
               getService(CoI.nsIApplicationUpdateService);
     aus.removeDownloadListener(this);
@@ -896,7 +896,7 @@ var gDownloadingPage = {
   /**
    * When the user clicks the Pause/Resume button
    */
-  onPause: function() {
+  onPause() {
     var aus = CoC["@mozilla.org/updates/update-service;1"].
               getService(CoI.nsIApplicationUpdateService);
     if (this._paused)
@@ -917,7 +917,7 @@ var gDownloadingPage = {
    * When the user has closed the window using a Window Manager control (this
    * page doesn't have a cancel button) cancel the update in progress.
    */
-  onWizardCancel: function() {
+  onWizardCancel() {
     if (this._hiding)
       return;
 
@@ -927,7 +927,7 @@ var gDownloadingPage = {
   /**
    * When the user closes the Wizard UI by clicking the Hide button
    */
-  onHide: function() {
+  onHide() {
     // Set _hiding to true to prevent onWizardCancel from cancelling the update
     // that is in progress.
     this._hiding = true;
@@ -978,7 +978,7 @@ var gDownloadingPage = {
    * @param   context
    *          Additional data
    */
-  onStartRequest: function(request, context) {
+  onStartRequest(request, context) {
     // This !paused test is necessary because onStartRequest may fire after
     // the download was paused (for those speedy clickers...)
     if (this._paused)
@@ -1000,7 +1000,7 @@ var gDownloadingPage = {
    * @param   maxProgress
    *          The total number of bytes that must be transferred
    */
-  onProgress: function(request, context, progress, maxProgress) {
+  onProgress(request, context, progress, maxProgress) {
     let status = this._updateDownloadStatus(progress, maxProgress);
     var currentProgress = Math.round(100 * (progress / maxProgress));
 
@@ -1045,7 +1045,7 @@ var gDownloadingPage = {
    * @param   statusText
    *          Human readable version of |status|
    */
-  onStatus: function(request, context, status, statusText) {
+  onStatus(request, context, status, statusText) {
     this._setStatus(statusText);
   },
 
@@ -1058,7 +1058,7 @@ var gDownloadingPage = {
    * @param   status
    *          Status code containing the reason for the cessation.
    */
-  onStopRequest: function(request, context, status) {
+  onStopRequest(request, context, status) {
     if (this._downloadProgress.mode != "normal")
       this._downloadProgress.mode = "normal";
 
@@ -1112,7 +1112,7 @@ var gDownloadingPage = {
   /**
    * See nsIObserver.idl
    */
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "update-staged") {
       if (aData == STATE_DOWNLOADING) {
         // We've fallen back to downloding the full update because the
@@ -1138,7 +1138,7 @@ var gDownloadingPage = {
   /**
    * See nsISupports.idl
    */
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (!iid.equals(CoI.nsIRequestObserver) &&
         !iid.equals(CoI.nsIProgressEventSink) &&
         !iid.equals(CoI.nsIObserver) &&
@@ -1155,7 +1155,7 @@ var gErrorsPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
 
@@ -1179,7 +1179,7 @@ var gErrorExtraPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
 
@@ -1202,11 +1202,11 @@ var gErrorPatchingPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     gUpdates.setButtons(null, null, "okButton", true);
   },
 
-  onWizardNext: function() {
+  onWizardNext() {
     switch (gUpdates.update.selectedPatch.state) {
       case STATE_PENDING:
       case STATE_PENDING_SERVICE:
@@ -1230,7 +1230,7 @@ var gFinishedPage = {
   /**
    * Initialize
    */
-  onPageShow: function() {
+  onPageShow() {
     let aus = CoC["@mozilla.org/updates/update-service;1"].
               getService(CoI.nsIApplicationUpdateService);
     if (aus.elevationRequired) {
@@ -1248,7 +1248,7 @@ var gFinishedPage = {
   /**
    * Initialize the Wizard Page for a Background Source Event
    */
-  onPageShowBackground: function() {
+  onPageShowBackground() {
     this.onPageShow();
     let updateFinishedName = document.getElementById("updateFinishedName");
     updateFinishedName.value = gUpdates.update.name;
@@ -1291,7 +1291,7 @@ var gFinishedPage = {
    * Called when the wizard finishes, i.e. the "Restart Now" button is
    * clicked.
    */
-  onWizardFinish: function() {
+  onWizardFinish() {
     // Do the restart
     LOG("gFinishedPage", "onWizardFinish - restarting the application");
 
@@ -1343,7 +1343,7 @@ var gFinishedPage = {
    * When the user clicks the "Restart Later" instead of the Restart Now" button
    * in the wizard after an update has been downloaded.
    */
-  onExtra1: function() {
+  onExtra1() {
     gUpdates.wiz.cancel();
   },
 

@@ -10,7 +10,7 @@ var gRemovePasswordDialog = {
   _prompt   : null,
   _okButton : null,
   _password : null,
-  init: function()
+  init()
   {
     this._prompt = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                              .getService(Components.interfaces.nsIPromptService);
@@ -30,12 +30,12 @@ var gRemovePasswordDialog = {
     this.validateInput();
   },
 
-  validateInput: function()
+  validateInput()
   {
     this._okButton.disabled = !this._token.checkPassword(this._password.value);
   },
 
-  removePassword: function()
+  removePassword()
   {
     if (this._token.checkPassword(this._password.value)) {
       this._token.changePassword(this._password.value, "");

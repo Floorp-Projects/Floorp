@@ -90,7 +90,7 @@ Installer.prototype = {
   /**
    * Checks if all downloads are now complete and if so prompts to install.
    */
-  checkAllDownloaded: function() {
+  checkAllDownloaded() {
     // Prevent re-entrancy caused by the confirmation dialog cancelling unwanted
     // installs.
     if (!this.isDownloading)
@@ -194,7 +194,7 @@ Installer.prototype = {
   /**
    * Checks if all installs are now complete and if so notifies observers.
    */
-  checkAllInstalled: function() {
+  checkAllInstalled() {
     var failed = [];
 
     for (let install of this.downloads) {
@@ -220,32 +220,32 @@ Installer.prototype = {
     this.installed = null;
   },
 
-  onDownloadCancelled: function(aInstall) {
+  onDownloadCancelled(aInstall) {
     aInstall.removeListener(this);
     this.checkAllDownloaded();
   },
 
-  onDownloadFailed: function(aInstall) {
+  onDownloadFailed(aInstall) {
     aInstall.removeListener(this);
     this.checkAllDownloaded();
   },
 
-  onDownloadEnded: function(aInstall) {
+  onDownloadEnded(aInstall) {
     this.checkAllDownloaded();
     return false;
   },
 
-  onInstallCancelled: function(aInstall) {
+  onInstallCancelled(aInstall) {
     aInstall.removeListener(this);
     this.checkAllInstalled();
   },
 
-  onInstallFailed: function(aInstall) {
+  onInstallFailed(aInstall) {
     aInstall.removeListener(this);
     this.checkAllInstalled();
   },
 
-  onInstallEnded: function(aInstall) {
+  onInstallEnded(aInstall) {
     aInstall.removeListener(this);
     this.installed.push(aInstall);
 
@@ -267,7 +267,7 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
-  onWebInstallDisabled: function(aBrowser, aUri, aInstalls) {
+  onWebInstallDisabled(aBrowser, aUri, aInstalls) {
     let info = {
       browser: aBrowser,
       originatingURI: aUri,
@@ -281,13 +281,13 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
-  onWebInstallOriginBlocked: function(aBrowser, aUri, aInstalls) {
+  onWebInstallOriginBlocked(aBrowser, aUri, aInstalls) {
     let info = {
       browser: aBrowser,
       originatingURI: aUri,
       installs: aInstalls,
 
-      install: function() {
+      install() {
       },
 
       QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallInfo])
@@ -300,13 +300,13 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
-  onWebInstallBlocked: function(aBrowser, aUri, aInstalls) {
+  onWebInstallBlocked(aBrowser, aUri, aInstalls) {
     let info = {
       browser: aBrowser,
       originatingURI: aUri,
       installs: aInstalls,
 
-      install: function() {
+      install() {
         new Installer(this.browser, this.originatingURI, this.installs);
       },
 
@@ -320,7 +320,7 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
-  onWebInstallRequested: function(aBrowser, aUri, aInstalls) {
+  onWebInstallRequested(aBrowser, aUri, aInstalls) {
     new Installer(aBrowser, aUri, aInstalls);
 
     // We start the installs ourself

@@ -28,7 +28,7 @@ var WindowWatcher = {
   expected: false,
   args: null,
 
-  openWindow: function(parent, url, name, features, args) {
+  openWindow(parent, url, name, features, args) {
     do_check_true(Services.startup.interrupted);
     do_check_eq(url, URI_EXTENSION_UPDATE_DIALOG);
     do_check_true(this.expected);
@@ -39,7 +39,7 @@ var WindowWatcher = {
     if (gCheckUpdates) {
       AddonManager.getAddonByID("override1x2-1x3@tests.mozilla.org", function(a6) {
         a6.findUpdates({
-          onUpdateFinished: function() {
+          onUpdateFinished() {
             AddonManagerPrivate.removeStartupChange("disabled", "override1x2-1x3@tests.mozilla.org");
             updated = true;
           }
@@ -68,7 +68,7 @@ var WindowWatcher = {
       thr.processNextEvent(false);
   },
 
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsIWindowWatcher)
      || iid.equals(Ci.nsISupports))
       return this;

@@ -28,7 +28,7 @@ var invalidTagChildTest = {
   _tag: "testTag",
   _tagItemId: -1,
 
-  populate: function() {
+  populate() {
     // add a valid bookmark
     this._itemId = PlacesUtils.bookmarks
                               .insertBookmark(PlacesUtils.toolbarFolderId,
@@ -66,12 +66,12 @@ var invalidTagChildTest = {
                                        PlacesUtils.bookmarks.DEFAULT_INDEX);
   },
 
-  clean: function() {
+  clean() {
     PlacesUtils.tagging.untagURI(PlacesUtils._uri(this._itemUrl), [this._tag]);
     PlacesUtils.bookmarks.removeItem(this._itemId);
   },
 
-  validate: function() {
+  validate() {
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     var options = PlacesUtils.history.getNewQueryOptions();

@@ -136,7 +136,7 @@ var Change = {
       window.setTimeout(window.close, 1500);
   },
 
-  onDialogAccept: function() {
+  onDialogAccept() {
     switch (this._dialogType) {
       case "UpdatePassphrase":
       case "ResetPassphrase":
@@ -147,7 +147,7 @@ var Change = {
     return undefined;
   },
 
-  doGeneratePassphrase: function() {
+  doGeneratePassphrase() {
     let passphrase = Weave.Utils.generatePassphrase();
     this._passphraseBox.value = Weave.Utils.hyphenatePassphrase(passphrase);
     this._dialog.getButton("finish").disabled = false;
@@ -201,7 +201,7 @@ var Change = {
     return false;
   },
 
-  validate: function(event) {
+  validate(event) {
     let valid = false;
     let errorString = "";
 

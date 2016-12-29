@@ -19,7 +19,7 @@ this.InlineSpellChecker = function InlineSpellChecker(aEditor) {
 
 InlineSpellChecker.prototype = {
   // Call this function to initialize for a given editor
-  init: function(aEditor)
+  init(aEditor)
   {
     this.uninit();
     this.mEditor = aEditor;
@@ -31,7 +31,7 @@ InlineSpellChecker.prototype = {
     }
   },
 
-  initFromRemote: function(aSpellInfo)
+  initFromRemote(aSpellInfo)
   {
     if (this.mRemote)
       throw new Error("Unexpected state");
@@ -45,7 +45,7 @@ InlineSpellChecker.prototype = {
   },
 
   // call this to clear state
-  uninit: function()
+  uninit()
   {
     if (this.mRemote) {
       this.mRemote.uninit();
@@ -67,7 +67,7 @@ InlineSpellChecker.prototype = {
 
   // for each UI event, you must call this function, it will compute the
   // word the cursor is over
-  initFromEvent: function(rangeParent, rangeOffset)
+  initFromEvent(rangeParent, rangeOffset)
   {
     this.mOverMisspelling = false;
 
@@ -134,7 +134,7 @@ InlineSpellChecker.prototype = {
 
   // this prepends up to "maxNumber" suggestions at the given menu position
   // for the word under the cursor. Returns the number of suggestions inserted.
-  addSuggestionsToMenu: function(menu, insertBefore, maxNumber)
+  addSuggestionsToMenu(menu, insertBefore, maxNumber)
   {
     if (!this.mRemote && (!this.mInlineSpellChecker || !this.mOverMisspelling))
       return 0; // nothing to do
@@ -172,7 +172,7 @@ InlineSpellChecker.prototype = {
 
   // undoes the work of addSuggestionsToMenu for the same menu
   // (call from popup hiding)
-  clearSuggestionsFromMenu: function()
+  clearSuggestionsFromMenu()
   {
     for (var i = 0; i < this.mSuggestionItems.length; i++) {
       this.mMenu.removeChild(this.mSuggestionItems[i]);
@@ -180,7 +180,7 @@ InlineSpellChecker.prototype = {
     this.mSuggestionItems = [];
   },
 
-  sortDictionaryList: function(list) {
+  sortDictionaryList(list) {
     var sortedList = [];
     for (var i = 0; i < list.length; i++) {
       sortedList.push({"id": list[i],
@@ -199,7 +199,7 @@ InlineSpellChecker.prototype = {
 
   // returns the number of dictionary languages. If insertBefore is NULL, this
   // does an append to the given menu
-  addDictionaryListToMenu: function(menu, insertBefore)
+  addDictionaryListToMenu(menu, insertBefore)
   {
     this.mDictionaryMenu = menu;
     this.mDictionaryNames = [];
@@ -258,7 +258,7 @@ InlineSpellChecker.prototype = {
   },
 
   // Formats a valid BCP 47 language tag based on available localized names.
-  getDictionaryDisplayName: function(dictionaryName) {
+  getDictionaryDisplayName(dictionaryName) {
     try {
       // Get the display name for this dictionary.
       let languageTagMatch = /^([a-z]{2,3}|[a-z]{4}|[a-z]{5,8})(?:[-_]([a-z]{4}))?(?:[-_]([A-Z]{2}|[0-9]{3}))?((?:[-_](?:[a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*)(?:[-_][a-wy-z0-9](?:[-_][a-z0-9]{2,8})+)*(?:[-_]x(?:[-_][a-z0-9]{1,8})+)?$/i;
@@ -318,7 +318,7 @@ InlineSpellChecker.prototype = {
 
   // undoes the work of addDictionaryListToMenu for the menu
   // (call on popup hiding)
-  clearDictionaryListFromMenu: function()
+  clearDictionaryListFromMenu()
   {
     for (var i = 0; i < this.mDictionaryItems.length; i++) {
       this.mDictionaryMenu.removeChild(this.mDictionaryItems[i]);
@@ -327,7 +327,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for selecting a dictionary
-  selectDictionary: function(index)
+  selectDictionary(index)
   {
     if (this.mRemote) {
       this.mRemote.selectDictionary(index);
@@ -341,7 +341,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for selecting a suggested replacement
-  replaceMisspelling: function(index)
+  replaceMisspelling(index)
   {
     if (this.mRemote) {
       this.mRemote.replaceMisspelling(index);
@@ -356,7 +356,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for enabling or disabling spellchecking
-  toggleEnabled: function()
+  toggleEnabled()
   {
     if (this.mRemote)
       this.mRemote.toggleEnabled();
@@ -365,7 +365,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for adding the current misspelling to the user-defined dictionary
-  addToDictionary: function()
+  addToDictionary()
   {
     // Prevent the undo stack from growing over the max depth
     if (this.mAddedWordStack.length == MAX_UNDO_STACK_DEPTH)
@@ -379,7 +379,7 @@ InlineSpellChecker.prototype = {
     }
   },
   // callback for removing the last added word to the dictionary LIFO fashion
-  undoAddToDictionary: function()
+  undoAddToDictionary()
   {
     if (this.mAddedWordStack.length > 0)
     {
@@ -390,12 +390,12 @@ InlineSpellChecker.prototype = {
         this.mInlineSpellChecker.removeWordFromDictionary(word);
     }
   },
-  canUndo : function()
+  canUndo()
   {
     // Return true if we have words on the stack
     return (this.mAddedWordStack.length > 0);
   },
-  ignoreWord: function()
+  ignoreWord()
   {
     if (this.mRemote)
       this.mRemote.ignoreWord();

@@ -188,7 +188,7 @@ function getActionAtIndex(index) {
   }
   let [, type, paramStr] = mozActionMatch;
   return {
-    type: type,
+    type,
     params: JSON.parse(paramStr),
   };
 }

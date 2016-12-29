@@ -17,7 +17,7 @@ function test() {
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": {
       URL: url,
-      toString: function() { return this.URL; }
+      toString() { return this.URL; }
     }
   }));
   gBrowser.selectedTab = gBrowser.addTab();

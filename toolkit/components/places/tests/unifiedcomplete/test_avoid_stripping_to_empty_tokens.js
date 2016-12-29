@@ -31,7 +31,7 @@ add_task(function* test_protocol_trimming() {
       do_print("Searching for: " + input);
       yield check_autocomplete({
         search: input,
-        matches: matches
+        matches
       });
     }
 

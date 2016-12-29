@@ -64,7 +64,7 @@ function checkUpdates(aData) {
     AddonUpdateChecker.checkForUpdates(aData.id, aData.updateKey, updateUrl, {
       onUpdateCheckComplete: resolve,
 
-      onUpdateCheckError: function(status) {
+      onUpdateCheckError(status) {
         reject(new Error("Update check failed with status " + status));
       }
     });
@@ -343,7 +343,7 @@ add_task(function* test_type_detection() {
       let updates;
       try {
         updates = yield checkUpdates({
-          id: id,
+          id,
           version: "0.1",
           contentType: test.contentType,
           manifestExtension: test.extension,

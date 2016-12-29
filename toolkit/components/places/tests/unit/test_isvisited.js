@@ -15,19 +15,19 @@ add_task(function* test_execute()
 
   // add a http:// uri
   var uri1 = uri("http://mozilla.com");
-  yield PlacesTestUtils.addVisits({uri: uri1, referrer: referrer});
+  yield PlacesTestUtils.addVisits({uri: uri1, referrer});
   do_check_guid_for_uri(uri1);
   do_check_true(yield promiseIsURIVisited(uri1));
 
   // add a https:// uri
   var uri2 = uri("https://etrade.com");
-  yield PlacesTestUtils.addVisits({uri: uri2, referrer: referrer});
+  yield PlacesTestUtils.addVisits({uri: uri2, referrer});
   do_check_guid_for_uri(uri2);
   do_check_true(yield promiseIsURIVisited(uri2));
 
   // add a ftp:// uri
   var uri3 = uri("ftp://ftp.mozilla.org");
-  yield PlacesTestUtils.addVisits({uri: uri3, referrer: referrer});
+  yield PlacesTestUtils.addVisits({uri: uri3, referrer});
   do_check_guid_for_uri(uri3);
   do_check_true(yield promiseIsURIVisited(uri3));
 
@@ -63,7 +63,7 @@ add_task(function* test_execute()
       do_print("Could not construct URI for '" + currentURL + "'; ignoring");
     }
     if (cantAddUri) {
-      PlacesTestUtils.addVisits({uri: cantAddUri, referrer: referrer}).then(() => {
+      PlacesTestUtils.addVisits({uri: cantAddUri, referrer}).then(() => {
         do_throw("Should not have added history for invalid URI.");
       }, error => {
         do_check_true(error.message.includes("No items were added to history"));

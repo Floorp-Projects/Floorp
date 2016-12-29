@@ -23,7 +23,7 @@ const TEST_CHANNEL_ID = "account_updates_test";
 var gTests = [
   {
     desc: "FxA Web Channel - should receive message about profile changes",
-    run: function* () {
+    *run() {
       let client = new FxAccountsWebChannel({
         content_uri: TEST_HTTP_PATH,
         channel_id: TEST_CHANNEL_ID,
@@ -37,7 +37,7 @@ var gTests = [
       });
 
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: TEST_BASE_URL + "?profile_change"
       }, function* () {
         yield promiseObserver;
@@ -46,7 +46,7 @@ var gTests = [
   },
   {
     desc: "fxa web channel - login messages should notify the fxAccounts object",
-    run: function* () {
+    *run() {
 
       let promiseLogin = new Promise((resolve, reject) => {
         let login = (accountData) => {
@@ -66,13 +66,13 @@ var gTests = [
           content_uri: TEST_HTTP_PATH,
           channel_id: TEST_CHANNEL_ID,
           helpers: {
-            login: login
+            login
           }
         });
       });
 
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: TEST_BASE_URL + "?login"
       }, function* () {
         yield promiseLogin;
@@ -81,7 +81,7 @@ var gTests = [
   },
   {
     desc: "fxa web channel - can_link_account messages should respond",
-    run: function* () {
+    *run() {
       let properUrl = TEST_BASE_URL + "?can_link_account";
 
       let promiseEcho = new Promise((resolve, reject) => {
@@ -114,7 +114,7 @@ var gTests = [
       });
 
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: properUrl
       }, function* () {
         yield promiseEcho;
@@ -123,7 +123,7 @@ var gTests = [
   },
   {
     desc: "fxa web channel - logout messages should notify the fxAccounts object",
-    run: function* () {
+    *run() {
       let promiseLogout = new Promise((resolve, reject) => {
         let logout = (uid) => {
           Assert.equal(uid, 'uid');
@@ -136,13 +136,13 @@ var gTests = [
           content_uri: TEST_HTTP_PATH,
           channel_id: TEST_CHANNEL_ID,
           helpers: {
-            logout: logout
+            logout
           }
         });
       });
 
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: TEST_BASE_URL + "?logout"
       }, function* () {
         yield promiseLogout;
@@ -151,7 +151,7 @@ var gTests = [
   },
   {
     desc: "fxa web channel - delete messages should notify the fxAccounts object",
-    run: function* () {
+    *run() {
       let promiseDelete = new Promise((resolve, reject) => {
         let logout = (uid) => {
           Assert.equal(uid, 'uid');
@@ -164,13 +164,13 @@ var gTests = [
           content_uri: TEST_HTTP_PATH,
           channel_id: TEST_CHANNEL_ID,
           helpers: {
-            logout: logout
+            logout
           }
         });
       });
 
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: TEST_BASE_URL + "?delete"
       }, function* () {
         yield promiseDelete;

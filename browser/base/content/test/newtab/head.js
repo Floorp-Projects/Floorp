@@ -220,8 +220,8 @@ function fillHistory(aLinks) {
 
       PlacesUtils.asyncHistory.updatePlaces(place, {
         handleError: () => ok(false, "couldn't add visit to history"),
-        handleResult: function() {},
-        handleCompletion: function() {
+        handleResult() {},
+        handleCompletion() {
           if (--numLinks == 0) {
             resolve();
           }

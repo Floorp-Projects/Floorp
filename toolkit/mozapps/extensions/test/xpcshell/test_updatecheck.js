@@ -16,7 +16,7 @@ function checkUpdates(aId, aUpdateKey, aUpdateFile) {
     AddonUpdateChecker.checkForUpdates(aId, aUpdateKey, `http://localhost:4444/data/${aUpdateFile}`, {
       onUpdateCheckComplete: resolve,
 
-      onUpdateCheckError: function(status) {
+      onUpdateCheckError(status) {
         let error = new Error("Update check failed with status " + status);
         error.status = status;
         reject(error);

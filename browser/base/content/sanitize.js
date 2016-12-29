@@ -38,14 +38,14 @@ function Sanitizer() {
 }
 Sanitizer.prototype = {
   // warning to the caller: this one may raise an exception (e.g. bug #265028)
-  clearItem: function(aItemName)
+  clearItem(aItemName)
   {
     this.items[aItemName].clear();
   },
 
   prefDomain: "",
 
-  getNameFromPreference: function(aPreferenceName)
+  getNameFromPreference(aPreferenceName)
   {
     return aPreferenceName.substr(this.prefDomain.length);
   },
@@ -516,7 +516,7 @@ Sanitizer.prototype = {
 
     openWindows: {
       privateStateForNewWindow: "non-private",
-      _canCloseWindow: function(aWindow) {
+      _canCloseWindow(aWindow) {
         if (aWindow.CanCloseWindow()) {
           // We already showed PermitUnload for the window, so let's
           // make sure we don't do it again when we actually close the
@@ -526,7 +526,7 @@ Sanitizer.prototype = {
         }
         return false;
       },
-      _resetAllWindowClosures: function(aWindowList) {
+      _resetAllWindowClosures(aWindowList) {
         for (let win of aWindowList) {
           win.skipNextCanClose = false;
         }
